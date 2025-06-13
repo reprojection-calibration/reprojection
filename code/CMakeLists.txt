@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(
-        optimization-architecture
+        reprojection
         VERSION 0.0.1
         LANGUAGES CXX
 )

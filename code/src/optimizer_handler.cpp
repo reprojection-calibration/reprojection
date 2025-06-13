@@ -1,6 +1,6 @@
-#include "optimization_architecture/optimizer_handler.hpp"
+#include "reprojection/optimizer_handler.hpp"
 
-namespace reprojection_calibration::optimization_architecture {
+namespace reprojection_calibration::reprojection {
 
 void OptimizerHandler(double const data, CameraParameters* const camera_parameters,
                       std::function<ceres::CostFunction*(double)> cost_function_factory) {
@@ -13,4 +13,4 @@ void OptimizerHandler(double const data, CameraParameters* const camera_paramete
     ceres::Solve(options, &problem, &summary);
 }
 
-}  // namespace reprojection_calibration::optimization_architecture
+}  // namespace reprojection_calibration::reprojection

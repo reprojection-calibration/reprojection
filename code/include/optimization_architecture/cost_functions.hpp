@@ -2,7 +2,7 @@
 
 #include <ceres/ceres.h>
 
-namespace reprojection_calibration::optimization_architecture {
+namespace reprojection_calibration::reprojection {
 
 struct OneParameterCostFunction {
     explicit OneParameterCostFunction(double const data) : data_{data} {}
@@ -38,4 +38,4 @@ struct TwoParameterCostFunction {
     double data_;
 };
 
-}  // namespace reprojection_calibration::optimization_architecture
+}  // namespace reprojection_calibration::reprojection

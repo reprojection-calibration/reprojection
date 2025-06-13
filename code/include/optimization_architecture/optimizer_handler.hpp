@@ -5,7 +5,7 @@
 #include <array>
 #include <functional>
 
-namespace reprojection_calibration::optimization_architecture {
+namespace reprojection_calibration::reprojection {
 
 class CameraParameters {
    public:
@@ -35,4 +35,4 @@ class TwoParameterCamera : public CameraParameters {
 void OptimizerHandler(double const data, CameraParameters* const camera_parameters,
                       std::function<ceres::CostFunction*(double)> cost_function_factory);
 
-}  // namespace reprojection_calibration::optimization_architecture
+}  // namespace reprojection_calibration::reprojection
