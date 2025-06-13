@@ -1,0 +1,15 @@
+name: Docker Image CI
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the code-checks-stage
+      run: docker build . --file building/Dockerfile --tag optimization-architecture:code-checks-$(date +%s) --target code-checks-stage
+    - name: Build the build-stage
+      run: docker build . --file building/Dockerfile --tag optimization-architecture:build-$(date +%s) --target build-stage
