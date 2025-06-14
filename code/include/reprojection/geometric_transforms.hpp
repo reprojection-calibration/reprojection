@@ -1,8 +1,8 @@
 #pragma once
 
-#include <array>
+#include <ceres/rotation.h>
 
-#include "ceres/rotation.h"
+#include <array>
 
 namespace reprojection_calibration::reprojection {
 

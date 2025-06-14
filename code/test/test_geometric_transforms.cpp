@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "../cmake-build-debug-docker-reprojection/_deps/googletest-src/googletest/include/gtest/gtest.h"
 #include "reprojection/geometric_transforms.hpp"
 
 using namespace reprojection_calibration::reprojection;
