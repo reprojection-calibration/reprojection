@@ -4,36 +4,30 @@
 
 using namespace reprojection_calibration::reprojection;
 
-TEST(TestCostFunctions, OneParameterCostFunctionResidual) {
-    double const parameter{10.0};
-    OneParameterCostFunction const cost_function{parameter};
+TEST(TestCostFunctions, PinholeCostFunctionResidual) {
+    std::array<double, 2> const measured_pixel{250, 250};
+    PinholeCostFunction const cost_function{measured_pixel[0], measured_pixel[1]};
 
-    double residual{};
-    cost_function.operator()<double>(&parameter, &residual);
+    std::array<double, 4> const pinhole_intrinsics{100, 100, 250, 250};
+    std::array<double, 3> const point{0, 0, 10};  // point that will project to exact center of the image
+    std::array<double, 2> residual{};
+    cost_function.operator()<double>(pinhole_intrinsics.data(), point.data(), residual.data());
 
-    EXPECT_NEAR(residual, 0.0, 1e-6);
-}
-
-TEST(TestCostFunctions, TwoParameterCostFunctionResidual) {
-    std::array<double, 2> const parameters{6.0, 4.0};
-    TwoParameterCostFunction const cost_function{parameters[0] + parameters[1]};
-
-    double residual{};
-    cost_function.operator()<double>(parameters.data(), &residual);
-
-    EXPECT_NEAR(residual, 0.0, 1e-6);
+    EXPECT_NEAR(residual[0], 0.0, 1e-6);
+    EXPECT_NEAR(residual[1], 0.0, 1e-6);
 }
 
 // NOTE: We do not test cost_function->Evaluate() in the following test because
-// allocating the memory of the input pointers takes some thought, but the
-// evaluate should be tested when there is interest and time :)
+// allocating the memory of the input pointers takes some thought, but cost_function->Evaluate()
+// should be tested when there is interest and time :)
 TEST(TestCostFunctions, OneParameterCostFunctionCreate) {
-    double const parameter{10.0};
-    ceres::CostFunction const* const cost_function{OneParameterCostFunction::Create(parameter)};
+    std::array<double, 2> const measured_pixel{250, 250};
+    ceres::CostFunction const* const cost_function{PinholeCostFunction::Create(measured_pixel[0], measured_pixel[1])};
 
-    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 1);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 1);
-    EXPECT_EQ(cost_function->num_residuals(), 1);
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], 3);  // 3D point
+    EXPECT_EQ(cost_function->num_residuals(), 2);
 
     // WARN: The plain use of the ParameterCostFunction::Create() method does not
     // ensure the destruction of the resource allocated by the Create() method.
@@ -42,16 +36,5 @@ TEST(TestCostFunctions, OneParameterCostFunctionCreate) {
     // manages the memory allocation just cause this is a small part of a small
     // test. If we end up really ever using it outside of Ceres then we need to do
     // RAII.
-    delete cost_function;
-}
-
-TEST(TestCostFunctions, TwoParameterCostFunctionCreate) {
-    double const parameter{10.0};
-    ceres::CostFunction const* const cost_function{TwoParameterCostFunction::Create(parameter)};
-
-    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 1);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 2);
-    EXPECT_EQ(cost_function->num_residuals(), 1);
-
     delete cost_function;
 }
