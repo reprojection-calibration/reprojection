@@ -2,6 +2,7 @@
 
 #include <ceres/ceres.h>
 
+#include "reprojection/geometric_transforms.hpp"
 #include "reprojection/pinhole_projection.hpp"
 
 namespace reprojection_calibration::reprojection {
@@ -12,9 +13,9 @@ struct PinholeCostFunction {
     template <typename T>
     bool operator()(T const* const pinhole_intrinsics, T const* const pose, T const* const point,
                     T* const residual) const {
-        static_cast<void>(pose);
+        std::array<T, 3> const point_co{TransformPoint(pose, point)};
 
-        auto const [u, v]{PinholeProjection(pinhole_intrinsics, point)};
+        auto const [u, v]{PinholeProjection(pinhole_intrinsics, point_co.data())};
 
         residual[0] = T(u_) - u;
         residual[1] = T(v_) - v;

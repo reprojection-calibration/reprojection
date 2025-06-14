@@ -35,6 +35,7 @@ include(GoogleTest)
 
 set(TESTS
         test_cost_functions
+        test_geometric_transforms
         test_pinhole_projection
 )
 foreach(TEST IN LISTS TESTS)
