@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "optimization_architecture/cost_functions.hpp"
-#include "optimization_architecture/optimizer_handler.hpp"
+#include "reprojection/cost_functions.hpp"
+#include "reprojection/optimizer_handler.hpp"
 
-using namespace reprojection_calibration::optimization_architecture;
+using namespace reprojection_calibration::reprojection;
 
 TEST(TestOptimizerHandler, ParameterOverrides) {
     OneParameterCamera one_parameter{10.0};
