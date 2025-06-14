@@ -6,7 +6,7 @@
 
 using namespace reprojection_calibration::reprojection;
 
-TEST(TestPinholeProjection, XXX) {
+TEST(TestPinholeProjection, FiveSimplePoints) {
     std::array<double, 4> const pinhole_intrinsics{100, 100, 250, 250};
 
     std::array<double, 3> const point_1{1, -1, 10};
