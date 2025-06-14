@@ -4,8 +4,6 @@
 
 namespace reprojection_calibration::reprojection {
 
-
-
 struct OneParameterCostFunction {
     explicit OneParameterCostFunction(double const data) : data_{data} {}
 
