@@ -29,7 +29,6 @@ TEST(TestPinholeProjection, XXX) {
     EXPECT_FLOAT_EQ(u_4, 260);
     EXPECT_FLOAT_EQ(v_4, 260);
 
-
     std::array<double, 3> const point_5{0, 0, 10};
     auto const [u_5, v_5]{PinholeProjection(pinhole_intrinsics.data(), point_5.data())};
     EXPECT_FLOAT_EQ(u_5, 250);

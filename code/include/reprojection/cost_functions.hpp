@@ -10,8 +10,11 @@ struct PinholeCostFunction {
     explicit PinholeCostFunction(double const u, double const v) : u_{u}, v_{v} {}
 
     template <typename T>
-    bool operator()(T const* const camera, T const* const point, T* const residual) const {
-        auto const [u, v]{PinholeProjection(camera, point)};
+    bool operator()(T const* const pinhole_intrinsics, T const* const pose, T const* const point,
+                    T* const residual) const {
+        static_cast<void>(pose);
+
+        auto const [u, v]{PinholeProjection(pinhole_intrinsics, point)};
 
         residual[0] = T(u_) - u;
         residual[1] = T(v_) - v;
@@ -20,7 +23,7 @@ struct PinholeCostFunction {
     }
 
     static ceres::CostFunction* Create(double const u, double const v) {
-        return new ceres::AutoDiffCostFunction<PinholeCostFunction, 2, 4, 3>(new PinholeCostFunction(u, v));
+        return new ceres::AutoDiffCostFunction<PinholeCostFunction, 2, 4, 6, 3>(new PinholeCostFunction(u, v));
     }
 
     double u_;
