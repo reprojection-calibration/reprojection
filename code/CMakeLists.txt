@@ -35,7 +35,8 @@ include(GoogleTest)
 
 set(TESTS
         test_cost_functions
-        test_optimizer_handler
+        test_geometric_transforms
+        test_pinhole_projection
 )
 foreach(TEST IN LISTS TESTS)
     add_executable(${TEST} test/${TEST}.cpp)

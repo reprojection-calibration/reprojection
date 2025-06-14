@@ -2,40 +2,33 @@
 
 #include <ceres/ceres.h>
 
+#include "reprojection/geometric_transforms.hpp"
+#include "reprojection/pinhole_projection.hpp"
+
 namespace reprojection_calibration::reprojection {
 
-struct OneParameterCostFunction {
-    explicit OneParameterCostFunction(double const data) : data_{data} {}
+struct PinholeCostFunction {
+    explicit PinholeCostFunction(double const u, double const v) : u_{u}, v_{v} {}
 
     template <typename T>
-    bool operator()(const T* const x, T* const residual) const {
-        residual[0] = data_ - x[0];
+    bool operator()(T const* const pinhole_intrinsics, T const* const pose, T const* const point,
+                    T* const residual) const {
+        std::array<T, 3> const point_co{TransformPoint(pose, point)};
+
+        auto const [u, v]{PinholeProjection(pinhole_intrinsics, point_co.data())};
+
+        residual[0] = T(u_) - u;
+        residual[1] = T(v_) - v;
 
         return true;
     }
 
-    static ceres::CostFunction* Create(double const data) {
-        return new ceres::AutoDiffCostFunction<OneParameterCostFunction, 1, 1>(new OneParameterCostFunction(data));
+    static ceres::CostFunction* Create(double const u, double const v) {
+        return new ceres::AutoDiffCostFunction<PinholeCostFunction, 2, 4, 6, 3>(new PinholeCostFunction(u, v));
     }
 
-    double data_;
-};
-
-struct TwoParameterCostFunction {
-    explicit TwoParameterCostFunction(double const data) : data_{data} {}
-
-    template <typename T>
-    bool operator()(const T* const x, T* const residual) const {
-        residual[0] = data_ - x[0] - x[1];
-
-        return true;
-    }
-
-    static ceres::CostFunction* Create(double const data) {
-        return new ceres::AutoDiffCostFunction<TwoParameterCostFunction, 1, 2>(new TwoParameterCostFunction(data));
-    }
-
-    double data_;
+    double u_;
+    double v_;
 };
 
 }  // namespace reprojection_calibration::reprojection
