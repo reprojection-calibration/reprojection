@@ -30,17 +30,17 @@ FetchContent_Declare(
         URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
 FetchContent_MakeAvailable(googletest)
+
 enable_testing()
 include(GoogleTest)
-
 set(TESTS
-        test_cost_functions
-        test_geometric_transforms
-        test_pinhole_projection
-        test_unified_camera_model_projection
+        cost_functions
+        geometric_transforms
+        pinhole_projection
+        unified_camera_model_projection
 )
 foreach (TEST IN LISTS TESTS)
-    add_executable(${TEST} test/${TEST}.cpp)
+    add_executable(${TEST} src/${TEST}.test.cpp)
     target_include_directories(${TEST} PRIVATE
             include
     )

@@ -1,8 +1,8 @@
+#include "reprojection/unified_camera_model_projection.hpp"
+
 #include <gtest/gtest.h>
 
 #include <array>
-
-#include "reprojection/unified_camera_model_projection.hpp"
 
 using namespace reprojection_calibration::reprojection;
 
