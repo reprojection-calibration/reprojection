@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "reprojection/cost_functions.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace reprojection_calibration::reprojection;
 

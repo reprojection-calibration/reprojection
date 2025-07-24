@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "reprojection/geometric_transforms.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace reprojection_calibration::reprojection;
 

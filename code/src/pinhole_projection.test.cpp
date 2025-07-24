@@ -1,8 +1,8 @@
+#include "reprojection/pinhole_projection.hpp"
+
 #include <gtest/gtest.h>
 
 #include <array>
-
-#include "reprojection/pinhole_projection.hpp"
 
 using namespace reprojection_calibration::reprojection;
 
