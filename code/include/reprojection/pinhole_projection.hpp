@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 namespace reprojection_calibration::reprojection {
 
 template <typename T>
