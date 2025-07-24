@@ -4,7 +4,7 @@ set -eou pipefail
 
 usage() {
     echo "Usage: $0 -t <target-stage>"
-    echo "  -t <target-stage>     : Target build stage (e.g., build, development)"
+    echo "  -t <target-stage>     : Target build stage (e.g., build, code-checks, etc.)"
     exit 1
 }
 
