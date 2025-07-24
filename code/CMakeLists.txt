@@ -37,8 +37,9 @@ set(TESTS
         test_cost_functions
         test_geometric_transforms
         test_pinhole_projection
+        test_unified_camera_model_projection
 )
-foreach(TEST IN LISTS TESTS)
+foreach (TEST IN LISTS TESTS)
     add_executable(${TEST} test/${TEST}.cpp)
     target_include_directories(${TEST} PRIVATE
             include
@@ -48,5 +49,5 @@ foreach(TEST IN LISTS TESTS)
             ${PROJECT_NAME}
     )
     gtest_discover_tests(${TEST})
-endforeach()
+endforeach ()
 
