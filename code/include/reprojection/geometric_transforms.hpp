@@ -6,6 +6,10 @@
 
 namespace reprojection_calibration::reprojection {
 
+// NOTE(Jack): It might be that this function and others like it belong in an "optimization" or ceres namespace. All
+// functions that take raw pointers as input are that way only because I want to use them with the optimization
+// framework. In general with respect to this function we will probably need to define another one that does not depend
+// on ceres for use in the rest of the code base because we do not want to add a ceres depdendency everywhere.
 template <typename T>
 std::array<T, 3> TransformPoint(T const* const tf, T const* const point) {
     T const& e_x{tf[0]};
