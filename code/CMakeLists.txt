@@ -24,4 +24,5 @@ include(cmake_macros/add_library.cmake)
 include(cmake_macros/add_tests.cmake)
 
 enable_testing()
+
 add_subdirectory(geometry)
