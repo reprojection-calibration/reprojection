@@ -1,0 +1,17 @@
+name: Docker Image CI
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the code-checks-stage
+      run: docker build . --file building/Dockerfile --tag reprojection:code-checks-$(date +%s) --target code-checks-stage
+    - name: Build the build-stage
+      run: docker build . --file building/Dockerfile --tag reprojection:build-$(date +%s) --target build-stage
+    - name: Build the code-coverage-stage
+      run: docker build . --file building/Dockerfile --tag reprojection:build-$(date +%s) --target code-coverage-assertion-stage
