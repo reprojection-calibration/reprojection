@@ -1,5 +1,10 @@
 macro(AddTests)
-    enable_testing()
+    if (CODE_COVERAGE)
+        target_compile_options(${LIBRARY_NAME} PRIVATE --coverage -O0 -g)
+        target_link_options(${LIBRARY_NAME} PRIVATE --coverage)
+    endif ()
+
+
     include(GoogleTest)
 
     foreach (TEST IN LISTS TESTS)
@@ -9,6 +14,12 @@ macro(AddTests)
                 GTest::gtest_main
                 ${LIBRARY_NAME}
         )
+
+        if (CODE_COVERAGE)
+            target_compile_options(${TEST_NAME} PRIVATE --coverage -O0 -g)
+            target_link_options(${TEST_NAME} PRIVATE --coverage)
+        endif ()
+
         gtest_discover_tests(${TEST_NAME})
     endforeach ()
 endmacro()
