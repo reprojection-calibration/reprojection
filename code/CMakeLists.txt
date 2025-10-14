@@ -9,6 +9,10 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 
+# Helper macros to prevent insane copy and paste in all subdirectories
+include(cmake_macros/add_library.cmake)
+include(cmake_macros/add_tests.cmake)
+
 message(STATUS "Starting to FetchContent googletest - this requires a network connection. ")
 include(FetchContent)
 FetchContent_Declare(
