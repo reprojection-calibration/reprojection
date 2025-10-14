@@ -13,6 +13,6 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/lie.test.cpp
+        test/lie.test.cpp
 )
 AddTests()

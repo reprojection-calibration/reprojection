@@ -1,4 +1,4 @@
-#include "lie.hpp"
+#include "geometry/lie.hpp"
 
 namespace reprojection::geometry {
 

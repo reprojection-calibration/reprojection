@@ -1,4 +1,4 @@
-#include "lie.hpp"
+#include "geometry/lie.hpp"
 
 #include <gtest/gtest.h>
 
@@ -44,6 +44,6 @@ TEST(GeometryLie, TestInvertability) {
     EXPECT_TRUE(so3_random_processed.isApprox(so3_random));
 
     Eigen::Matrix3d const SO3_random{Eigen::Quaterniond::UnitRandom().toRotationMatrix()};
-    Eigen::Matrix3d  const SO3_random_processed{Exp(Log(SO3_random))};
+    Eigen::Matrix3d const SO3_random_processed{Exp(Log(SO3_random))};
     EXPECT_TRUE(SO3_random_processed.isApprox(SO3_random));
 }
