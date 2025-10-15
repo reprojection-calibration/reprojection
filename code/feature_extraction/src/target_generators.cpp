@@ -171,6 +171,8 @@ Eigen::MatrixXi AprilBoard3Generation::GenerateCodeMatrix(int const num_bits, ui
     for (int k{0}; k < 4; ++k) {
         for (int i{0}; i <= sqrt_num_bits / 2; ++i) {
             for (int j{i}; j < sqrt_num_bits - 1 - i; ++j) {
+                // WARN(Jack): Copy and pasted below in the center pixel edge case condition - consider a named method
+                // if we know what this really does and it would help
                 uint64_t const bit_sign{(tag_code & (static_cast<uint64_t>(1) << (num_bits - 1)))};
                 code_matrix(j, i) = not bit_sign;  // I switched i and j from what I thought they should be, and then it
                                                    // started working... the entire repo needs a check of consistency
@@ -182,11 +184,17 @@ Eigen::MatrixXi AprilBoard3Generation::GenerateCodeMatrix(int const num_bits, ui
         code_matrix = Rotate90(code_matrix, true);
     }
 
+    // WARN(Jack): The code which uses this function is essentially hardcoded to work with a 36 bit tag family, and our
+    // testing reflects that. Therefore, this code is never actually executed and I at this point I am not going to add
+    // a tag family with an odd number of bits JUST to test this condition. This means that we have to suppress the
+    // coverage tool (i.e. LCOV_EXCL_LINE) and we should interpret this as a warning that we have dead code here! If we
+    // ever expand to more tag families we need to really check this works :)
+    //
     // Set center pixel if there is one (i.e. odd number of bits) - this pixel will not be set in the 90 degree quadrant
     // rotations above -_-.
     if (sqrt_num_bits % 2 != 0) {
-        uint64_t const bit_sign{(tag_code & (static_cast<uint64_t>(1) << (num_bits - 1)))};  // COPY AND PASTE
-        code_matrix(sqrt_num_bits / 2, sqrt_num_bits / 2) = not bit_sign;
+        uint64_t const bit_sign{(tag_code & (static_cast<uint64_t>(1) << (num_bits - 1)))};  // LCOV_EXCL_LINE
+        code_matrix(sqrt_num_bits / 2, sqrt_num_bits / 2) = not bit_sign;                    // LCOV_EXCL_LINE
     }
 
     // WARN(Jack): Why I need this transpose I am not 100% sure, but compared to the official implementation we look
