@@ -14,7 +14,8 @@ TargetType ToEnum(std::string const& target_type) {
     } else if (target_type == "april_grid3") {
         return TargetType::AprilGrid3;
     } else {
-        throw std::runtime_error("The requested target type is not part of the TargetType enum parsing.");
+        throw std::runtime_error("The requested target type - " + target_type +
+                                 " - is not valid (see the TargetType enum).");
     }
 }
 
@@ -38,7 +39,7 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_
     if (type == TargetType::Checkerboard) {
         return std::make_unique<CheckerboardExtractor>(pattern_size, unit_dimension);
     } else if (type == TargetType::CircleGrid) {
-        if (not target_config["circle_grid_options"]["asymmetric"]) {
+        if (not target_config["circle_grid_options"] or not target_config["circle_grid_options"]["asymmetric"]) {
             throw std::runtime_error("The target cirle_grid_options.asymmetric was not specified.");
         }
         bool const asymmetric{target_config["circle_grid_options"]["asymmetric"].as<bool>()};
