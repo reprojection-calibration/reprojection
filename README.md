@@ -8,3 +8,4 @@ docker cache (needed to keep build times down) to work in between executions and
 was to put them in separate workflow files. This means that they do not execute in a specific order, but at least the
 cache works! within each pipeline. 
 
+But honestly even in this "working" state it seems flaky and cache hits are not always correctly calculated! :(
