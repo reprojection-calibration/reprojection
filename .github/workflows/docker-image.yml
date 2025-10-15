@@ -11,10 +11,11 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Build and push
+      - name: build-stage
         uses: docker/build-push-action@v6
         with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           file: building/Dockerfile
-          push: false
           tags: reprojection-build:latest
           target: build-stage
