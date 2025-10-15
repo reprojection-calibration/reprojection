@@ -1,8 +1,8 @@
-#include "geometry/lie.hpp"
-
 #include <gtest/gtest.h>
 
 #include <vector>
+
+#include "geometry/lie.hpp"
 
 using namespace reprojection::geometry;
 
@@ -16,7 +16,7 @@ std::vector<Eigen::Matrix3d> const SO3{Eigen::Vector3d{1, 1, 1}.asDiagonal(),   
                                        Eigen::Vector3d{-1, 1, -1}.asDiagonal(),  //
                                        Eigen::Vector3d{-1, -1, 1}.asDiagonal()};
 
-TEST(GeometryLie, TestExp) {
+TEST(GeometryLie, TestSo3Exp) {
     ASSERT_EQ(std::size(so3), std::size(SO3));
 
     for (size_t i{0}; i < std::size(so3); ++i) {
@@ -27,7 +27,7 @@ TEST(GeometryLie, TestExp) {
     }
 }
 
-TEST(GeometryLie, TestLog) {
+TEST(GeometryLie, TestSo3Log) {
     ASSERT_EQ(std::size(so3), std::size(SO3));
 
     for (size_t i{0}; i < std::size(so3); ++i) {
@@ -38,7 +38,7 @@ TEST(GeometryLie, TestLog) {
     }
 }
 
-TEST(GeometryLie, TestInvertability) {
+TEST(GeometryLie, TestSo3Invertability) {
     Eigen::Vector3d const so3_random{M_PI * Eigen::Vector3d::Random()};
     Eigen::Vector3d const so3_random_processed{Log(Exp(so3_random))};
     EXPECT_TRUE(so3_random_processed.isApprox(so3_random));

@@ -1,6 +1,6 @@
 #include "nonlinear_refinement.hpp"
 
-#include "pose_utilities.hpp"
+#include "geometry/lie.hpp"
 
 namespace reprojection::pnp {
 
@@ -13,7 +13,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::Matrix
                                                                    Eigen::MatrixX3d const& points,
                                                                    Eigen::Isometry3d const& initial_pose,
                                                                    Eigen::Matrix3d const& initial_K) {
-    Se3 pose_to_optimize{ToSe3(initial_pose)};
+    Eigen::Vector<double, 6> pose_to_optimize{geometry::Log(initial_pose)};
     Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{FromK(initial_K)};
 
     ceres::Problem problem;
@@ -30,7 +30,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::Matrix
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    return {FromSe3(pose_to_optimize), ToK(pinhole_intrinsics_to_optimize)};
+    return {geometry::Exp(pose_to_optimize), ToK(pinhole_intrinsics_to_optimize)};
 }
 
 // TODO(Jack): This might belong in some other file with camera geometry specific helper functions

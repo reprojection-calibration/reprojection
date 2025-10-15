@@ -42,7 +42,7 @@ std::optional<Eigen::Matrix3d> So3Spline::Evaluate(uint64_t const t_ns) const {
     // TODO(Jack): Can we replace this all with a std::accumulate call?
     Eigen::Matrix3d rotation{knots_[i]};
     for (int j{0}; j < (constants::k - 1); ++j) {
-        Eigen::Matrix3d const delta_R{geometry::Exp(weight0[j + 1] * delta_phis[j])};
+        Eigen::Matrix3d const delta_R{geometry::Exp((weight0[j + 1] * delta_phis[j]).eval())};
         rotation = delta_R * rotation;
     }
 
@@ -67,7 +67,9 @@ std::optional<Eigen::Vector3d> So3Spline::EvaluateVelocity(uint64_t const t_ns) 
 
     Eigen::Vector3d velocity{Eigen::Vector3d::Zero()};
     for (int j{0}; j < (constants::k - 1); ++j) {
-        Eigen::Matrix3d const inverse_delta_R{geometry::Exp(weight0[j + 1] * delta_phis[j]).inverse()};
+        // Must use .eval() because of Eigen expression ambiguity
+        // https://stackoverflow.com/questions/71437422/ambiguity-of-overloaded-function-taking-constant-eigen-argument
+        Eigen::Matrix3d const inverse_delta_R{geometry::Exp((weight0[j + 1] * delta_phis[j]).eval()).inverse()};
 
         Eigen::Vector3d const delta_v_j{weight1[j + 1] * delta_phis[j]};
         velocity = delta_v_j + (inverse_delta_R * velocity);
@@ -95,7 +97,7 @@ std::optional<Eigen::Vector3d> So3Spline::EvaluateAcceleration(uint64_t const t_
     Eigen::Vector3d velocity{Eigen::Vector3d::Zero()};
     Eigen::Vector3d acceleration{Eigen::Vector3d::Zero()};
     for (int j{0}; j < (constants::k - 1); ++j) {
-        Eigen::Matrix3d const inverse_delta_R{geometry::Exp(weight0[j + 1] * delta_phis[j]).inverse()};
+        Eigen::Matrix3d const inverse_delta_R{geometry::Exp((weight0[j + 1] * delta_phis[j]).eval()).inverse()};
 
         Eigen::Vector3d const delta_v_j{weight1[j + 1] * delta_phis[j]};
         velocity = delta_v_j + (inverse_delta_R * velocity);

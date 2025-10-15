@@ -2,8 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include "geometry/lie.hpp"
 #include "multiple_view_geometry_data_generator.hpp"
 
+using namespace reprojection;
 using namespace reprojection::pnp;
 
 TEST(Pnp, TestPnp) {
@@ -15,7 +17,7 @@ TEST(Pnp, TestPnp) {
         EXPECT_TRUE(std::holds_alternative<Eigen::Isometry3d>(pnp_result));
 
         Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(FromSe3(frame_i.pose)));
+        EXPECT_TRUE(pose_i.isApprox(geometry::Exp(frame_i.pose)));
     }
 }
 
@@ -42,10 +44,10 @@ TEST(Pnp, TestPnpWithNoisyInputData) {
         EXPECT_TRUE(std::holds_alternative<Eigen::Isometry3d>(pnp_result));
 
         Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
-        pose_estimates.row(i) = ToSe3(pose_i).transpose();
+        pose_estimates.row(i) = geometry::Log(pose_i).transpose();
     }
 
-    Se3 const mean_pose_estimate{pose_estimates.colwise().mean()};
+    Eigen::Vector<double, 6> const mean_pose_estimate{pose_estimates.colwise().mean()};
     EXPECT_TRUE(mean_pose_estimate.isApprox(frame.pose, 1e-2));  // Heuristic tolerance
 }
 

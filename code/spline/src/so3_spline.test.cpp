@@ -30,11 +30,11 @@ TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
 TEST(SplineSo3Spline, TestEvaluate) {
     uint64_t const delta_t_ns{5};
     So3Spline so3_spline{100, delta_t_ns};
-    so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero()));
+    so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero().eval()));
 
     for (int i{1}; i < constants::k; ++i) {
         so3_spline.knots_.push_back(so3_spline.knots_.back() *
-                                    geometry::Exp((static_cast<double>(i) / 10) * Eigen::Vector3d::Ones()));
+                                    geometry::Exp(((static_cast<double>(i) / 10) * Eigen::Vector3d::Ones()).eval()));
     }
 
     // Heuristic test as we have no theoretical testing strategy at this time.
@@ -53,13 +53,13 @@ TEST(SplineSo3Spline, TestEvaluate) {
 TEST(SplineSo3Spline, TestEvaluateVelocity) {
     uint64_t const delta_t_ns{5};
     So3Spline so3_spline{100, delta_t_ns};
-    so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero()));
+    so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero().eval()));
 
     EXPECT_EQ(so3_spline.EvaluateVelocity(100), std::nullopt);  // Not enough knots yet to evaluate velocity
 
     for (int i{1}; i < constants::k; ++i) {
         so3_spline.knots_.push_back(so3_spline.knots_.back() *
-                                    geometry::Exp((static_cast<double>(i) / 10) * Eigen::Vector3d::Ones()));
+                                    geometry::Exp(((static_cast<double>(i) / 10) * Eigen::Vector3d::Ones()).eval()));
     }
 
     // RANDOM HEURISTIC TESTS!
@@ -70,16 +70,17 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
     EXPECT_TRUE(v4.isApproxToConstant(0.046));
 }
 
+// TODO(Jack): We need a test fixture for the spline creation logic! It is copy and pasted many times.
 TEST(SplineSo3Spline, TestEvaluateAcceleration) {
     uint64_t const delta_t_ns{5};
     So3Spline so3_spline{100, delta_t_ns};
-    so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero()));
+    so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero().eval()));
 
     EXPECT_EQ(so3_spline.EvaluateAcceleration(100), std::nullopt);  // Not enough knots yet to evaluate acceleration
 
     for (int i{1}; i < constants::k; ++i) {
         so3_spline.knots_.push_back(so3_spline.knots_.back() *
-                                    geometry::Exp((static_cast<double>(i) / 10) * Eigen::Vector3d::Ones()));
+                                    geometry::Exp(((static_cast<double>(i) / 10) * Eigen::Vector3d::Ones()).eval()));
     }
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)

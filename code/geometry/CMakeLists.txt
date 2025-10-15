@@ -11,6 +11,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        test/lie.test.cpp
+        test/lie_se3.test.cpp
+        test/lie_so3.test.cpp
 )
 AddTests()

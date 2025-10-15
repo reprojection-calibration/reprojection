@@ -3,6 +3,8 @@
 #include <Eigen/Dense>
 #include <variant>
 
+// https://rpg.ifi.uzh.ch/docs/teaching/2020/03_camera_calibration.pdf
+
 namespace reprojection::pnp {
 
 // TODO(Jack): Should this be called an "error" code instead? If it was really status code I would expect that when it
