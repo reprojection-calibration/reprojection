@@ -18,7 +18,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           file: building/Dockerfile
-          push: true
           tags: reprojection-code-checks:latest
           target: code-checks-stage
       - name: build-stage
@@ -27,7 +26,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           file: building/Dockerfile
-          push: true
           tags: reprojection-build:latest
           target: build-stage
       - name: code-coverage-assertion-stage
@@ -36,6 +34,5 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           file: building/Dockerfile
-          push: true
           tags: reprojection-code-coverage-assertion:latest
           target: code-coverage-assertion-stage
