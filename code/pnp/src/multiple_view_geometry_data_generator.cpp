@@ -1,6 +1,6 @@
 #include "multiple_view_geometry_data_generator.hpp"
 
-#include "pose_utilities.hpp"
+#include "geometry/lie.hpp"
 
 namespace reprojection::pnp {
 
@@ -18,14 +18,14 @@ MvgFrame MvgFrameGenerator::Generate() const {
     Eigen::Vector3d const camera_direction{TrackPoint(origin, camera_position)};
 
     // TODO(Jack): Can we construct this directly or do we need to use << - this is done in more than one place.
-    Se3 viewing_pose_w_co;
+    Eigen::Vector<double, 6> viewing_pose_w_co;
     viewing_pose_w_co << camera_direction, camera_position;
 
     // Project points
-    Eigen::Isometry3d const tf_co_w{FromSe3(viewing_pose_w_co).inverse()};  // There is an inverse here!!!
+    Eigen::Isometry3d const tf_co_w{geometry::Exp(viewing_pose_w_co).inverse()};  // There is an inverse here!!!
     Eigen::MatrixX2d const pixels{MvgFrameGenerator::Project(points_, K_, tf_co_w)};
 
-    return MvgFrame{ToSe3(tf_co_w), pixels, points_};
+    return MvgFrame{geometry::Log(tf_co_w), pixels, points_};
 }
 
 Eigen::Matrix3d MvgFrameGenerator::GetK() const { return K_; }

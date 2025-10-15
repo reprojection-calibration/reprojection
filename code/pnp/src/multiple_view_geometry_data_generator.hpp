@@ -2,13 +2,11 @@
 
 #include <Eigen/Dense>
 
-#include "pose_utilities.hpp"
-
 namespace reprojection::pnp {
 
 // MVG = "multiple view geometry"
 struct MvgFrame {
-    Se3 pose;
+    Eigen::Vector<double, 6> pose;
     Eigen::MatrixX2d pixels;
     Eigen::MatrixX3d points;
 };

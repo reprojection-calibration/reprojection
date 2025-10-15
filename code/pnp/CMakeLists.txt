@@ -10,11 +10,11 @@ set(SRC_FILES
         src/multiple_view_geometry_data_generator.cpp
         src/nonlinear_refinement.cpp
         src/pnp.cpp
-        src/pose_utilities.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
+        geometry
 )
 AddLibrary()
 
@@ -25,7 +25,6 @@ set(TESTS
         src/matrix_utilities.test.cpp
         src/multiple_view_geometry_data_generator.test.cpp
         src/nonlinear_refinement.test.cpp
-        src/pose_utilities.test.cpp
         test/pnp.test.cpp
 )
 AddTests()

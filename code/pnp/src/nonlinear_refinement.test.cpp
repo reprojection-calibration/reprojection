@@ -2,8 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include "geometry/lie.hpp"
 #include "multiple_view_geometry_data_generator.hpp"
 
+using namespace reprojection;
 using namespace reprojection::pnp;
 
 TEST(PnpNonlinearRefinement, TestNonlinearRefinement) {
@@ -11,12 +13,12 @@ TEST(PnpNonlinearRefinement, TestNonlinearRefinement) {
     for (size_t i{0}; i < 20; ++i) {
         MvgFrame const frame_i{generator.Generate()};
 
-        auto const [tf,
-                    K]{NonlinearRefinement(frame_i.pixels, frame_i.points, FromSe3(frame_i.pose), generator.GetK())};
+        auto const [tf, K]{
+            NonlinearRefinement(frame_i.pixels, frame_i.points, geometry::Exp(frame_i.pose), generator.GetK())};
 
-        EXPECT_TRUE(tf.isApprox(FromSe3(frame_i.pose))) << "Optimization result:\n"
-                                                        << ToSe3(tf) << "\noptimization input:\n"
-                                                        << ToSe3(FromSe3(frame_i.pose));
+        EXPECT_TRUE(tf.isApprox(geometry::Exp(frame_i.pose))) << "Optimization result:\n"
+                                                              << geometry::Log(tf) << "\noptimization input:\n"
+                                                              << geometry::Log(geometry::Exp(frame_i.pose));
         EXPECT_TRUE(K.isApprox(generator.GetK())) << "Optimization result:\n"
                                                   << K << "\noptimization input:\n"
                                                   << generator.GetK();
