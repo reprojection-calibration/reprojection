@@ -26,3 +26,4 @@ include(cmake_macros/add_tests.cmake)
 enable_testing()
 
 add_subdirectory(geometry)
+add_subdirectory(spline)
