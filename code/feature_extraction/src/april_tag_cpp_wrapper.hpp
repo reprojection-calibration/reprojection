@@ -33,7 +33,7 @@ struct AprilTagFamily {
 struct AprilTagDetection {
     AprilTagDetection() = default;
 
-    explicit AprilTagDetection(apriltag_detection_t const& raw_detection) ;
+    explicit AprilTagDetection(apriltag_detection_t const& raw_detection);
 
     int id{};
     Eigen::Matrix3d H;
