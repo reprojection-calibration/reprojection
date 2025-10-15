@@ -7,11 +7,11 @@
 using namespace reprojection::geometry;
 
 Eigen::Isometry3d ConstructTestSE3(Eigen::Vector3d const& R_diagonal, Eigen::Vector3d const& t) {
-    Eigen::Isometry3d SE3{Eigen::Isometry3d::Identity()};
-    SE3.linear() = R_diagonal.asDiagonal();
-    SE3.translation() = t;
+    Eigen::Isometry3d T{Eigen::Isometry3d::Identity()};
+    T.linear() = R_diagonal.asDiagonal();
+    T.translation() = t;
 
-    return SE3;
+    return T;
 }
 
 std::vector<Eigen::Vector<double, 6>> const se3{Eigen::Vector<double, 6>{0, 0, 0, 0, 0, 0},     //

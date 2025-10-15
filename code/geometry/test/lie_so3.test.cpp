@@ -1,8 +1,8 @@
-#include "geometry/lie.hpp"
-
 #include <gtest/gtest.h>
 
 #include <vector>
+
+#include "geometry/lie.hpp"
 
 using namespace reprojection::geometry;
 
