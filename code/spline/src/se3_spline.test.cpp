@@ -8,7 +8,7 @@
 using namespace reprojection;
 using namespace reprojection::spline;
 
-TEST(Se3Spline, TestSe3SplineInvalidEvaluateConditions) {
+TEST(SplineSe3Spline, TestInvalidEvaluateConditions) {
     Se3Spline se3_spline{100, 5};
     EXPECT_EQ(se3_spline.Evaluate(115), std::nullopt);
 
@@ -23,7 +23,7 @@ TEST(Se3Spline, TestSe3SplineInvalidEvaluateConditions) {
     EXPECT_NE(se3_spline.Evaluate(105), std::nullopt);
 }
 
-TEST(Se3Spline, TestSe3SplineEvaluate) {
+TEST(SplineSe3Spline, TestEvaluate) {
     uint64_t const delta_t_ns{5};
     Se3Spline se3_spline{100, delta_t_ns};
 

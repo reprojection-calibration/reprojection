@@ -8,7 +8,7 @@ using namespace reprojection::spline;
 // Reference [2] Spline Fusion: A continuous-time representation for visual-inertial fusion with application to rolling
 // shutter cameras
 
-TEST(Utilities, TestNormalizedSegmentTime) {
+TEST(SplineUtilities, TestNormalizedSegmentTime) {
     // Zero elapsed time edge case
     auto const [u1, i1]{NormalizedSegmentTime(100, 100, 5)};
     EXPECT_EQ(u1, 0);
@@ -26,14 +26,14 @@ TEST(Utilities, TestNormalizedSegmentTime) {
     EXPECT_EQ(i4, 3);
 }
 
-TEST(Utilities, TestPolynomialCoefficients) {
+TEST(SplineUtilities, TestPolynomialCoefficients) {
     Eigen::Matrix4d const polynomial_coefficients{PolynomialCoefficients(4)};
 
     Eigen::Matrix4d const gt_polynomial_coefficients{{1, 1, 1, 1}, {0, 1, 2, 3}, {0, 0, 2, 6}, {0, 0, 0, 6}};
     EXPECT_TRUE(polynomial_coefficients.isApprox(gt_polynomial_coefficients));
 }
 
-TEST(Utilities, TestTimePolynomial) {
+TEST(SplineUtilities, TestTimePolynomial) {
     Eigen::VectorXd const result0{TimePolynomial(4, 0.1, 0)};
     EXPECT_EQ(result0.rows(), 4);
     EXPECT_TRUE(result0.isApprox(Eigen::Vector4d{1, 1.0 / 10, 1.0 / 100, 1.0 / 1000}));
@@ -47,7 +47,7 @@ TEST(Utilities, TestTimePolynomial) {
     EXPECT_TRUE(result2.isApprox(Eigen::Vector4d{0, 0, 1, 1.0 / 10}));
 }
 
-TEST(Utilities, TestBlendingMatrix) {
+TEST(SplineUtilities, TestBlendingMatrix) {
     Eigen::MatrixXd const blender{BlendingMatrix(4)};
     EXPECT_FLOAT_EQ(blender.norm(), 1.7480147);  // Heuristic
 
@@ -61,7 +61,7 @@ TEST(Utilities, TestBlendingMatrix) {
     EXPECT_TRUE(cumulative_blender.isApprox(gt_cumulative_blender));
 }
 
-TEST(Utilities, TestBinomialCoefficient) {
+TEST(SplineUtilities, TestBinomialCoefficient) {
     // Wiki: "where it gives the number of ways, disregarding order, that k objects can be chosen from among n objects"
     EXPECT_EQ(BinomialCoefficient(0, 0), 1);
     EXPECT_EQ(BinomialCoefficient(10, 0), 1);
@@ -70,7 +70,7 @@ TEST(Utilities, TestBinomialCoefficient) {
                                               // 3}, {1, 4}, {2, 3}, {2, 4} and {3, 4}.
 }
 
-TEST(Utilities, TestFactorial) {
+TEST(SplineUtilities, TestFactorial) {
     EXPECT_EQ(Factorial(0), 1);
     EXPECT_EQ(Factorial(1), 1);
     EXPECT_EQ(Factorial(2), 2);

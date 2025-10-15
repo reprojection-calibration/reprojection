@@ -7,7 +7,7 @@
 
 using namespace reprojection::spline;
 
-TEST(r3Spline, Testr3SplineInvalidEvaluateConditions) {
+TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     // Completely empty spline
     r3Spline r3_spline{100, 5};
     EXPECT_EQ(r3_spline.Evaluate(115), std::nullopt);
@@ -25,7 +25,7 @@ TEST(r3Spline, Testr3SplineInvalidEvaluateConditions) {
     EXPECT_NE(r3_spline.Evaluate(105), std::nullopt);
 }
 
-TEST(r3Spline, Testr3SplineEvaluate) {
+TEST(Spline_r3Spline, TestEvaluate) {
     // Completely empty spline
     r3Spline r3_spline{100, 5};
     for (int i{0}; i < constants::k; ++i) {
@@ -55,7 +55,7 @@ TEST(r3Spline, Testr3SplineEvaluate) {
     EXPECT_TRUE(p_5.value().isApproxToConstant(2));
 }
 
-TEST(r3Spline, Testr3SplineEvaluateDerivatives) {
+TEST(Spline_r3Spline, TestEvaluateDerivatives) {
     // Completely empty spline
     r3Spline r3_spline{100, 5};
     for (int i{0}; i < constants::k; ++i) {
@@ -76,7 +76,7 @@ TEST(r3Spline, Testr3SplineEvaluateDerivatives) {
 }
 
 // See the top of page five in [2] - the column vectors of u
-TEST(r3Spline, Testr3SplineCalculateUAtZero) {
+TEST(Spline_r3Spline, TestCalculateUAtZero) {
     double const u_i{0};
 
     VectorK const u{r3Spline::CalculateU(u_i)};
@@ -88,7 +88,7 @@ TEST(r3Spline, Testr3SplineCalculateUAtZero) {
     EXPECT_TRUE(dudu.isApprox(VectorK{0, 0, 2, 0}));
 }
 
-TEST(r3Spline, Testr3SplineCalculate) {
+TEST(Spline_r3Spline, TestCalculate) {
     double const u_i{0.5};
 
     VectorK const u{r3Spline::CalculateU(u_i)};

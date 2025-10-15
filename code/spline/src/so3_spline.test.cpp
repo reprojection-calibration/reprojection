@@ -9,7 +9,7 @@
 using namespace reprojection;
 using namespace reprojection::spline;
 
-TEST(So3Spline, TestSo3SplineInvalidEvaluateConditions) {
+TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
     // Completely empty spline
     So3Spline so3_spline{100, 5};
     EXPECT_EQ(so3_spline.Evaluate(115), std::nullopt);
@@ -27,7 +27,7 @@ TEST(So3Spline, TestSo3SplineInvalidEvaluateConditions) {
     EXPECT_NE(so3_spline.Evaluate(105), std::nullopt);
 }
 
-TEST(So3Spline, TestSo3SplineEvaluate) {
+TEST(SplineSo3Spline, TestEvaluate) {
     uint64_t const delta_t_ns{5};
     So3Spline so3_spline{100, delta_t_ns};
     so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero()));
@@ -50,7 +50,7 @@ TEST(So3Spline, TestSo3SplineEvaluate) {
                                  // that we can detect changes to the implementation quickly (hopefully. )
 }
 
-TEST(So3Spline, TestSo3SplineEvaluateVelocity) {
+TEST(SplineSo3Spline, TestEvaluateVelocity) {
     uint64_t const delta_t_ns{5};
     So3Spline so3_spline{100, delta_t_ns};
     so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero()));
@@ -70,7 +70,7 @@ TEST(So3Spline, TestSo3SplineEvaluateVelocity) {
     EXPECT_TRUE(v4.isApproxToConstant(0.046));
 }
 
-TEST(So3Spline, TestSo3SplineEvaluateAcceleration) {
+TEST(SplineSo3Spline, TestEvaluateAcceleration) {
     uint64_t const delta_t_ns{5};
     So3Spline so3_spline{100, delta_t_ns};
     so3_spline.knots_.push_back(geometry::Exp(Eigen::Vector3d::Zero()));
