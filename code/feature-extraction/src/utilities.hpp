@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 // Requesting even_only has the effect of allowing us to produce asymmetric grids like those required by the asymmetric
 // circle grid target.
@@ -18,4 +18,4 @@ Eigen::ArrayXi MaskIndices(Eigen::ArrayXi const& array);
 
 double AlternatingSum(int const n, double const increment_1, double const increment_2);
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

@@ -2,7 +2,7 @@
 
 #include "utilities.hpp"
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 // TODO(Jack): Consider using cv:Size instead of rows and cols.
 cv::Mat GenerateCheckerboard(cv::Size const& pattern_size, int const square_size_pixels) {
@@ -200,4 +200,4 @@ Eigen::MatrixXi AprilBoard3Generation::Rotate90(Eigen::MatrixXi const& matrix, b
     return clockwise ? matrix_star.rowwise().reverse().eval() : matrix_star.colwise().reverse().eval();
 }
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

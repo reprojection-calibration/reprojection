@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 Eigen::MatrixXd InterleaveRowWise(Eigen::MatrixXd const& matrix) {
     Eigen::Index const n_rows{matrix.rows()};
@@ -39,4 +39,4 @@ Eigen::Isometry3d ToIsometry3d(Eigen::MatrixX3d const& R, Eigen::Vector3d const&
     return tf;
 }
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

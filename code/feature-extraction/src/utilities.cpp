@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 Eigen::ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_only) {
     Eigen::ArrayXi const row_indices{Eigen::ArrayXi::LinSpaced(rows * cols, 0, rows - 1)};
@@ -63,4 +63,4 @@ double AlternatingSum(int const n, double const increment_1, double const increm
     return sum;
 }
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

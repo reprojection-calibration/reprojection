@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 class YamlConfigTestFixture : public ::testing::Test {
    public:
@@ -34,4 +34,4 @@ class YamlConfigTestFixture : public ::testing::Test {
     }
 };
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

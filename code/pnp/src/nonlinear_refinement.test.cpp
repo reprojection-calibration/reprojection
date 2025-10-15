@@ -4,7 +4,7 @@
 
 #include "multiple_view_geometry_data_generator.hpp"
 
-using namespace reprojection_calibration::pnp;
+using namespace reprojection::pnp;
 
 TEST(PnpNonlinearRefinement, TestNonlinearRefinement) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};

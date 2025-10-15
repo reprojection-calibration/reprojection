@@ -4,7 +4,7 @@
 
 #include "test_fixture_april_tag.hpp"
 
-using namespace reprojection_calibration::feature_extraction;
+using namespace reprojection::feature_extraction;
 
 TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilBoard) {
     cv::Size const pattern_size{4, 3};

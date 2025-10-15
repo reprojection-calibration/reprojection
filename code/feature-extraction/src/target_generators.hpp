@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 cv::Mat GenerateCheckerboard(cv::Size const& pattern_size, int const square_size_pixels);
 
@@ -23,4 +23,4 @@ struct AprilBoard3Generation {
     static Eigen::MatrixXi Rotate90(Eigen::MatrixXi const& matrix, bool const clockwise = false);
 };
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

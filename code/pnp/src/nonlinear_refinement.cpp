@@ -2,7 +2,7 @@
 
 #include "pose_utilities.hpp"
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 // TODO(Jack): Increase consistency of the use of SE3 or se3 - we really only introduced the se3 in the general source
 // code so that we could test pose values easily. Unless we are in the core optimization logic or testing we should be
@@ -48,4 +48,4 @@ Eigen::Array<double, 4, 1> FromK(Eigen::Matrix3d const& matrix) {
     return {matrix(0, 0), matrix(1, 1), matrix(0, 2), matrix(1, 2)};
 };
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

@@ -9,7 +9,7 @@ extern "C" {
 #include "generated_apriltag_code/tagCustom36h11.h"
 }
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 class AprilTagTestFixture : public ::testing::Test {
    public:
@@ -26,4 +26,4 @@ class AprilTagTestFixture : public ::testing::Test {
     int bit_size_pixel_;
 };
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

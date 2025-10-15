@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace reprojection_calibration::feature_extraction;
+using namespace reprojection::feature_extraction;
 
 TEST(Utilities, TestGenerateGridIndices) {
     int const rows{3};

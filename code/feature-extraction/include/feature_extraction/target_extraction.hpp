@@ -7,7 +7,7 @@
 #include <opencv2/opencv.hpp>
 #include <optional>
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 struct FeatureFrame {
     Eigen::MatrixX2d pixels;
@@ -41,4 +41,4 @@ enum class TargetType { Checkerboard, CircleGrid, AprilGrid3 };
 // eloquent way to do this for testing purposes with some test fixture utilities but I am not sure.
 std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_config);
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

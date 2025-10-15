@@ -1,6 +1,6 @@
 #include "pose_utilities.hpp"
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 Se3 ToSe3(Eigen::Isometry3d const& matrix) {
     Eigen::AngleAxisd const rotation(matrix.linear());
@@ -22,4 +22,4 @@ Eigen::Isometry3d FromSe3(Se3 const& se3) {
     return pose;
 }
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

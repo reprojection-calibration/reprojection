@@ -4,7 +4,7 @@
 
 #include "target_extractors.hpp"
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 TargetType ToEnum(std::string const& target_type) {
     if (target_type == "checkerboard") {
@@ -49,4 +49,4 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_
     }
 }
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

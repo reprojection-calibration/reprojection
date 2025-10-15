@@ -8,7 +8,7 @@ extern "C" {
 
 #include "utilities.hpp"
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 CheckerboardExtractor::CheckerboardExtractor(cv::Size const& pattern_size, const double unit_dimension)
     : TargetExtractor(pattern_size, unit_dimension) {
@@ -192,4 +192,4 @@ Eigen::Matrix<double, 4, 2> AprilGrid3Extractor::RefineCorners(cv::Mat const& im
     return refined_extraction_corners.cast<double>();
 }
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

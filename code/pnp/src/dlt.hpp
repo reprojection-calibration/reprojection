@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 // NOTE(Jack): We know the K matrix ahead of time, at least that is then assumption the opencv pnp implementation
 // makes, therefore the question is; Can we somehow use that knowledge to make our DLT better, and eliminate that we
@@ -14,4 +14,4 @@ Eigen::Matrix<double, Eigen::Dynamic, 12> ConstructA(Eigen::MatrixX2d const& pix
 
 Eigen::Matrix<double, 3, 4> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 12> const& A);
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

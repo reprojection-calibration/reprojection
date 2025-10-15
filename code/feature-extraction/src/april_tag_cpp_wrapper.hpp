@@ -16,7 +16,7 @@ extern "C" {
 // WARN(Jack): The const correctness and memory safety of all apriltag related code is not clear at this point
 // (26.09.2025)! I am 99% sure that there are some big footguns in here, and we will find some "presents" later.
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 struct AprilTagFamily {
     // WARN(Jack): Footgun, see comment in .cpp
@@ -61,4 +61,4 @@ struct AprilTagDetector {
     apriltag_detector_t* tag_detector;
 };
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

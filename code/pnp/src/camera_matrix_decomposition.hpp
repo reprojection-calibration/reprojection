@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <tuple>
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 // Inspired by https://www.physicsforums.com/threads/rq-decomposition-from-qr-decomposition.261739/
 // We implement RQ decomposition in terms of Eigen's built in QR decomposition
@@ -19,4 +19,4 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
 // do not see it just yet.
 Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P);
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

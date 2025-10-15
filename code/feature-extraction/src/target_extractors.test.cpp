@@ -6,7 +6,7 @@
 #include "test_fixture_april_tag.hpp"
 #include "utilities.hpp"  // REMOVE
 
-using namespace reprojection_calibration::feature_extraction;
+using namespace reprojection::feature_extraction;
 
 TEST(TargetExtractors, TestCheckerboardExtractor) {
     cv::Size const pattern_size{4, 3};  // (width, height) == (cols, rows)

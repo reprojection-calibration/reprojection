@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace reprojection_calibration::pnp;
+using namespace reprojection::pnp;
 
 TEST(PnpCameraMatrixDecomposition, TestRqDecomposition) {
     Eigen::Matrix3d const M{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};

@@ -5,7 +5,7 @@
 
 #include <Eigen/Dense>
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
                                                                    Eigen::MatrixX3d const& points,
@@ -83,4 +83,4 @@ Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array);
 
 Eigen::Array<double, 4, 1> FromK(Eigen::Matrix3d const& matrix);
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

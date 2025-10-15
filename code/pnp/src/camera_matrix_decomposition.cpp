@@ -1,6 +1,6 @@
 #include "camera_matrix_decomposition.hpp"
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 // Inspired by https://www.physicsforums.com/threads/rq-decomposition-from-qr-decomposition.261739/
 // We implement RQ decomposition in terms of Eigen's built in QR decomposition
@@ -48,4 +48,4 @@ Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
     return Eigen::Vector3d{x, y, z} / t;
 }
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

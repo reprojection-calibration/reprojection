@@ -9,7 +9,7 @@
 // sure our implementations are consistent (even though for the tfs it does not really mean that as we copy and pasted
 // the logic), and as a reminder that we need to solve this problem.
 
-using namespace reprojection_calibration::pnp;
+using namespace reprojection::pnp;
 
 TEST(PnpTempGeometricTransformsTest, Test3DTransformation) {
     Se3 const tf_slash_pose{ceres::constants::pi, ceres::constants::pi, ceres::constants::pi, 1, -2, 3};

@@ -4,7 +4,7 @@ extern "C" {
 
 #include "april_tag_cpp_wrapper.hpp"
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 // WARN(Jack): If the user passes mismatched _tag_family and _tag_family_destroy this class will not do what they
 // actually want it to! If for example the user did the following:
@@ -57,4 +57,4 @@ std::vector<AprilTagDetection> AprilTagDetector::Detect(cv::Mat const& gray) con
 
 AprilTagDetector::~AprilTagDetector() { apriltag_detector_destroy(tag_detector); }
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

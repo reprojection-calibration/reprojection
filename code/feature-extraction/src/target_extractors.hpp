@@ -7,7 +7,7 @@
 #include "april_tag_cpp_wrapper.hpp"
 #include "feature_extraction/target_extraction.hpp"
 
-namespace reprojection_calibration::feature_extraction {
+namespace reprojection::feature_extraction {
 
 class CheckerboardExtractor : public TargetExtractor {
    public:
@@ -52,4 +52,4 @@ class AprilGrid3Extractor : public TargetExtractor {
     AprilTagDetector tag_detector_;
 };
 
-}  // namespace reprojection_calibration::feature_extraction
+}  // namespace reprojection::feature_extraction

@@ -10,7 +10,7 @@
 // After doing that my toolchain "Container Settings" were:
 //      -e DISPLAY=:0.0 --entrypoint= -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev --privileged --rm
 
-using namespace reprojection_calibration::feature_extraction;
+using namespace reprojection::feature_extraction;
 
 // Adopted from https://stackoverflow.com/questions/865668/parsing-command-line-arguments-in-c
 char* GetCommandOption(char** begin, char** end, const std::string& option) {

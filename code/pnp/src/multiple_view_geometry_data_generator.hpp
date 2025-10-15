@@ -4,7 +4,7 @@
 
 #include "pose_utilities.hpp"
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 // MVG = "multiple view geometry"
 struct MvgFrame {
@@ -33,4 +33,4 @@ class MvgFrameGenerator {
     Eigen::Matrix3d K_;
 };
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp
