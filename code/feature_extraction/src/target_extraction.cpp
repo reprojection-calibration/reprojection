@@ -33,7 +33,7 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_
     if (not target_config["unit_dimension"]) {
         throw std::runtime_error("The target unit_dimension was not specified.");
     }
-    double const unit_dimension{target_config["unit_dimension"].as<double>()};  // comes from config file in the future
+    double const unit_dimension{target_config["unit_dimension"].as<double>()};
 
     if (type == TargetType::Checkerboard) {
         return std::make_unique<CheckerboardExtractor>(pattern_size, unit_dimension);
