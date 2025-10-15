@@ -91,6 +91,13 @@ RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY}
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${BUILD_LIBRARY}
 
+FROM base-stage AS feature-extraction-webcam-demo-stage
+
+# TODO(Jack): We should actually use cmakes install capability instead of just copying over the entire build folder!
+COPY --from=build-stage /buildroot/build /buildroot/build
+
+ENTRYPOINT ["/buildroot/build/feature-extraction/feature-extraction.webcam_demo", "-c", "/temporary/code/feature-extraction/examples/target_config.yaml"]
+
 
 FROM base-stage AS development-stage
 

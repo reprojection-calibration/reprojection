@@ -34,12 +34,24 @@ AddLibrary()
 # diverged from the original "tip" about using april grid in cmake found here (https://github.com/amy-tabb/apriltag-cmake-example/tree/master).
 # Because I only wanted to use target specific commands, I omitted the link_directories() command and instead add
 # the april grid libraries via a target_link_libraries() command to our library.
-target_link_directories(${LIBRARY_NAME}  PUBLIC
+target_link_directories(${LIBRARY_NAME} PUBLIC
         ${apriltag_LIBDIR}
 )
 
+# TODO(Jack): When we have multiple examples we can make this a macro like we did for the library and testing
+set(EXAMPLES
+        examples/webcam_demo.cpp
+)
+foreach (EXAMPLE IN LISTS EXAMPLES)
+    get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WLE)
+    set(EXAMPLE_NAME ${LIBRARY_NAME}.${EXAMPLE_NAME})
 
-# TODO ADD EXAMPLE!
+    add_executable(${EXAMPLE_NAME} ${EXAMPLE})
+    target_link_libraries(${EXAMPLE_NAME}
+            ${LIBRARY_NAME}
+    )
+endforeach ()
+
 
 set(TESTS
         src/april_tag_cpp_wrapper.test.cpp
