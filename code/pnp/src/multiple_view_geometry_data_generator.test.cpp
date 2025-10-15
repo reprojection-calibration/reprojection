@@ -4,7 +4,7 @@
 
 #include <Eigen/Dense>
 
-using namespace reprojection_calibration::pnp;
+using namespace reprojection::pnp;
 
 TEST(PnpMultipleViewGeometryDataGenerator, TestMvgFrameGenerator) {
     MvgFrameGenerator const test_data_generator{MvgFrameGenerator()};

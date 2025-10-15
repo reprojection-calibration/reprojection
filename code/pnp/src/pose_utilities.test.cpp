@@ -4,7 +4,7 @@
 
 #include <Eigen/Dense>
 
-using namespace reprojection_calibration::pnp;
+using namespace reprojection::pnp;
 
 // TODO(Jack): Replace with methods from geometry/lie
 TEST(PnpPoseUtilities, TestToSe3) {

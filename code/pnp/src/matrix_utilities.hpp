@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <tuple>
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 // Adopted from
 // https://stackoverflow.com/questions/46110917/eigen-replicate-items-along-one-dimension-without-useless-allocations?noredirect=1&lq=1
@@ -29,4 +29,4 @@ std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> NormalizeColumnWise(Eigen::MatrixXd
 
 Eigen::Isometry3d ToIsometry3d(Eigen::MatrixX3d const& R, Eigen::Vector3d const& T);
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

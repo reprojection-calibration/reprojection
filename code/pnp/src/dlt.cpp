@@ -3,7 +3,7 @@
 #include "camera_matrix_decomposition.hpp"
 #include "matrix_utilities.hpp"
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 // NOTE(Jack): The number of pixels and points has to match! However, because Dlt is part of the internal API, and the
 // number of correspondences is already check in the public facing interface, we do not check it again here.
@@ -66,4 +66,4 @@ Eigen::Matrix<double, 3, 4> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 12> 
     return P;
 }
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

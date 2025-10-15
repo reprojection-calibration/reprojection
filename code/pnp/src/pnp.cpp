@@ -3,7 +3,7 @@
 #include "dlt.hpp"
 #include "nonlinear_refinement.hpp"
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 // TODO(Jack): What is the canonical way to deal with the camera matrix? I want the pnp algo to know nothing about K if
 // possible, because the more we let information about the camera and camera models percolate through the code base, the
@@ -29,4 +29,4 @@ PnpResult Pnp(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
     return tf_star;
 }
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp

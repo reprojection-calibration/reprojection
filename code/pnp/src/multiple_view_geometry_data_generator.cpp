@@ -2,7 +2,7 @@
 
 #include "pose_utilities.hpp"
 
-namespace reprojection_calibration::pnp {
+namespace reprojection::pnp {
 
 MvgFrameGenerator::MvgFrameGenerator()
     : points_{Eigen::MatrixX3d::Random(50, 3)}, K_{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}} {}
@@ -61,4 +61,4 @@ Eigen::MatrixX2d MvgFrameGenerator::Project(Eigen::MatrixX3d const& points_w, Ei
     return pixels;
 }
 
-}  // namespace reprojection_calibration::pnp
+}  // namespace reprojection::pnp
