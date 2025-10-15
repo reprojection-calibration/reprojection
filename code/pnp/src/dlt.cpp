@@ -51,7 +51,7 @@ Eigen::Matrix<double, Eigen::Dynamic, 12> ConstructA(Eigen::MatrixX2d const& pix
     }
 
     return A;
-}
+}  // LCOV_EXCL_LINE
 
 Eigen::Matrix<double, 3, 4> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 12> const& A) {
     Eigen::JacobiSVD<Eigen::MatrixXd> svd;
