@@ -27,3 +27,4 @@ enable_testing()
 
 add_subdirectory(geometry)
 add_subdirectory(spline)
+add_subdirectory(pnp)
