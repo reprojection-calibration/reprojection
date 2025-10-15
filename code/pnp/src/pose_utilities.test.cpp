@@ -6,7 +6,8 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(PoseUtilities, TestToSe3) {
+// TODO(Jack): Replace with methods from geometry/lie
+TEST(PnpPoseUtilities, TestToSe3) {
     Eigen::Isometry3d const identity{Eigen::Isometry3d::Identity()};
     EXPECT_FLOAT_EQ(ToSe3(identity).sum(), 0.0);
 
@@ -30,7 +31,7 @@ TEST(PoseUtilities, TestToSe3) {
     EXPECT_TRUE(ToSe3(translation_and_rotation).isApprox(Se3{0, 0, 0.5 * EIGEN_PI, -1, 0, 1}));
 }
 
-TEST(PoseUtilities, TestFromSe3) {
+TEST(PnpPoseUtilities, TestFromSe3) {
     Se3 const identity{0, 0, 0, 0, 0, 0};
     EXPECT_FLOAT_EQ(FromSe3(identity).matrix().diagonal().sum(), 4.0);
 

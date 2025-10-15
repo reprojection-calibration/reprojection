@@ -9,7 +9,7 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(Dlt, TestDlt) {
+TEST(PnpDlt, TestDlt) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
     for (size_t i{0}; i < 20; ++i) {
         MvgFrame const frame_i{generator.Generate()};

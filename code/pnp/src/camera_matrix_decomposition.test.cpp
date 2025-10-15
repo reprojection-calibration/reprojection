@@ -4,7 +4,7 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(CameraMatrixDecomposition, TestRqDecomposition) {
+TEST(PnpCameraMatrixDecomposition, TestRqDecomposition) {
     Eigen::Matrix3d const M{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
 
     auto const [R, Q]{RqDecomposition(M)};
@@ -13,7 +13,7 @@ TEST(CameraMatrixDecomposition, TestRqDecomposition) {
     EXPECT_FLOAT_EQ((Q * Q.transpose()).diagonal().sum(), 3.0);  // Matrix is orthogonal - Q*Q^T returns identity
 }
 
-TEST(CameraMatrixDecomposition, TestDecomposeMIntoRk) {
+TEST(PnpCameraMatrixDecomposition, TestDecomposeMIntoRk) {
     Eigen::Matrix3d const M{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
 
     auto const [K, R]{DecomposeMIntoKr(M)};
@@ -24,7 +24,7 @@ TEST(CameraMatrixDecomposition, TestDecomposeMIntoRk) {
     EXPECT_FLOAT_EQ(R.determinant(), 1.0);
 }
 
-TEST(CameraMatrixDecomposition, TestCalculateCameraCenter) {
+TEST(PnpCameraMatrixDecomposition, TestCalculateCameraCenter) {
     Eigen::Matrix<double, 3, 4> P{{1, 0, 0, 100}, {0, 1, 0, 10}, {0, 0, 1, 1}};
 
     Eigen::Vector3d const camera_center{CalculateCameraCenter(P)};

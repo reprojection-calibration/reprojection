@@ -11,7 +11,7 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(TempGeometricTransformsTest, Test3DTransformation) {
+TEST(PnpTempGeometricTransformsTest, Test3DTransformation) {
     Se3 const tf_slash_pose{ceres::constants::pi, ceres::constants::pi, ceres::constants::pi, 1, -2, 3};
     Eigen::Vector3d const point{1, 2, 3};
 
@@ -23,7 +23,7 @@ TEST(TempGeometricTransformsTest, Test3DTransformation) {
     EXPECT_TRUE(ceres_point.isApprox(custom_point));
 }
 
-TEST(TempGeometricTransformsTest, TestPinholeProjection) {
+TEST(PnpTempGeometricTransformsTest, TestPinholeProjection) {
     Eigen::MatrixX3d const points_w{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
                                     {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
     Eigen::Matrix3d const K{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};

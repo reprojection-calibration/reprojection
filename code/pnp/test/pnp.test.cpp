@@ -49,7 +49,7 @@ TEST(Pnp, TestPnpWithNoisyInputData) {
     EXPECT_TRUE(mean_pose_estimate.isApprox(frame.pose, 1e-2));  // Heuristic tolerance
 }
 
-TEST(Pnp, MismatchedCorrespondence) {
+TEST(Pnp, TestMismatchedCorrespondence) {
     Eigen::MatrixX2d const four_pixels(4, 2);
     Eigen::MatrixX3d const five_points(5, 3);
     PnpResult const pnp_result{Pnp(four_pixels, five_points)};
@@ -59,7 +59,7 @@ TEST(Pnp, MismatchedCorrespondence) {
     EXPECT_EQ(pnp_status_code, PnpStatusCode::MismatchedCorrespondence);
 }
 
-TEST(Pnp, NotEnoughPoints) {
+TEST(Pnp, TestNotEnoughPoints) {
     Eigen::MatrixX2d const five_pixels(5, 2);
     Eigen::MatrixX3d const five_points(5, 3);
     PnpResult const pnp_result{Pnp(five_pixels, five_points)};

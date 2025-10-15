@@ -6,7 +6,7 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(NonlinearRefinement, xxx) {
+TEST(PnpNonlinearRefinement, TestNonlinearRefinement) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
     for (size_t i{0}; i < 20; ++i) {
         MvgFrame const frame_i{generator.Generate()};
@@ -24,7 +24,7 @@ TEST(NonlinearRefinement, xxx) {
 }
 
 // We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.
-TEST(NonlinearRefinement, TestPinholeCostFunctionResidual) {
+TEST(PnpNonlinearRefinement, TestPinholeCostFunctionResidual) {
     // NOTE(Jack): The reason that we have these ugly unfamiliar std::arrays and calls to .data(), but nowhere else, is
     // because in this test we are essentially manually simulating all the magic that Ceres will do behind the scenes
     // for us, managing the memory and passing arguments etc. during the optimization process. It is my hope and vision
@@ -46,7 +46,7 @@ TEST(NonlinearRefinement, TestPinholeCostFunctionResidual) {
 // NOTE: We do not test cost_function->Evaluate() in the following test because
 // allocating the memory of the input pointers takes some thought, but cost_function->Evaluate()
 // should be tested when there is interest and time :)
-TEST(NonlinearRefinement, TestPinholeCostFunctionCreate) {
+TEST(PnpNonlinearRefinement, TestPinholeCostFunctionCreate) {
     Eigen::Vector2d const pixel{360, 240};
     Eigen::Vector3d const point{0, 0, 10};
     ceres::CostFunction const* const cost_function{PinholeCostFunction::Create(pixel, point)};
@@ -66,7 +66,7 @@ TEST(NonlinearRefinement, TestPinholeCostFunctionCreate) {
     delete cost_function;
 }
 
-TEST(NonlinearRefinement, TestTransformPointsTranslation) {
+TEST(PnpNonlinearRefinement, TestTransformPointsTranslation) {
     Eigen::Vector<double, 6> const tf{0, 0, 0, 1, 2, 3};  // Translation only
     Eigen::Vector3d const point{5, 10, 15};
 
@@ -77,7 +77,7 @@ TEST(NonlinearRefinement, TestTransformPointsTranslation) {
     EXPECT_FLOAT_EQ(transformed_point[2], 18.0);
 }
 
-TEST(NonlinearRefinement, TestTransformPointsRotation) {
+TEST(PnpNonlinearRefinement, TestTransformPointsRotation) {
     Eigen::Vector<double, 6> const tf{0, 0, M_PI_2, 0, 0, 0};  // Rotation only
     Eigen::Vector<double, 3> const point{5, 10, 15};
 
@@ -88,7 +88,7 @@ TEST(NonlinearRefinement, TestTransformPointsRotation) {
     EXPECT_FLOAT_EQ(transformed_point[2], 15.0);
 }
 
-TEST(NonlinearRefinement, TestPinholeProjection) {
+TEST(PnpNonlinearRefinement, TestPinholeProjection) {
     Eigen::Array<double, 4, 1> const pinhole_intrinsics{600, 600, 360, 240};
 
     Eigen::Vector3d const center_point{0, 0, 10};

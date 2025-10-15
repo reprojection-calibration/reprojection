@@ -6,7 +6,7 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(MatrixUtilities, TestInterleaveRowWise) {
+TEST(PnpMatrixUtilities, TestInterleaveRowWise) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
     MvgFrame const frame_i{generator.Generate()};
 
@@ -21,7 +21,7 @@ TEST(MatrixUtilities, TestInterleaveRowWise) {
     EXPECT_TRUE(interleaved_pixels.row(3).isApprox(frame_i.pixels.row(1)));
 }
 
-TEST(MatrixUtilities, TestNormalizeColumnWise) {
+TEST(PnpMatrixUtilities, TestNormalizeColumnWise) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
     MvgFrame const frame_i{generator.Generate()};
 

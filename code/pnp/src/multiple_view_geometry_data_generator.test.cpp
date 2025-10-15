@@ -6,12 +6,12 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(MultipleViewGeometryDataGenerator, TestMvgFrameGenerator) {
+TEST(PnpMultipleViewGeometryDataGenerator, TestMvgFrameGenerator) {
     MvgFrameGenerator const test_data_generator{MvgFrameGenerator()};
     EXPECT_NO_THROW(test_data_generator.Generate());
 }
 
-TEST(MultipleViewGeometryDataGenerator, TestTrackPoint) {
+TEST(PnpMultipleViewGeometryDataGenerator, TestTrackPoint) {
     // 3D coordinate viewer: https://dugas.ch/transform_viewer/index.html
     Eigen::Vector3d tracking_direction{MvgFrameGenerator::TrackPoint({0, 0, 0}, {2, 0, 0})};
     EXPECT_TRUE(tracking_direction.isApprox(Eigen::Vector3d{0, -EIGEN_PI / 2.0, 0}));
@@ -23,7 +23,7 @@ TEST(MultipleViewGeometryDataGenerator, TestTrackPoint) {
     EXPECT_TRUE(tracking_direction.isApprox(Eigen::Vector3d{1.54593, -1.54593, 0}, 1e-4));  // Heuristic
 }
 
-TEST(MultipleViewGeometryDataGenerator, TestProject) {
+TEST(PnpMultipleViewGeometryDataGenerator, TestProject) {
     Eigen::MatrixX3d const points_w{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
                                     {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
     Eigen::Matrix3d const K{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
