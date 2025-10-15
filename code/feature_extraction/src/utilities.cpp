@@ -34,7 +34,7 @@ Eigen::MatrixX2d ToEigen(std::vector<cv::Point2f> const& points) {
     }
 
     return eigen_points;
-}
+}  // LCOV_EXCL_LINE
 
 Eigen::ArrayXi ToEigen(std::vector<int> const& vector) {
     return Eigen::Map<Eigen::ArrayXi const>(vector.data(), std::size(vector));

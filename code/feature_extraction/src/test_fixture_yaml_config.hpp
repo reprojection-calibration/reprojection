@@ -31,7 +31,7 @@ class YamlConfigTestFixture : public ::testing::Test {
         base_node["unit_dimension"] = unit_dimension;
 
         return base_node;
-    }
+    }  // LCOV_EXCL_LINE
 };
 
 }  // namespace reprojection::feature_extraction

@@ -149,7 +149,7 @@ Eigen::MatrixX3d AprilGrid3Extractor::CornerPositions(Eigen::ArrayX2i const& ind
     points.col(2).setZero();
 
     return points;
-}
+}  // LCOV_EXCL_LINE
 
 // From the apriltag documentation (https://github.com/AprilRobotics/apriltag/blob/master/apriltag.h)
 //

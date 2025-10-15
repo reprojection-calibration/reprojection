@@ -53,7 +53,7 @@ std::vector<AprilTagDetection> AprilTagDetector::Detect(cv::Mat const& gray) con
     apriltag_detections_destroy(raw_detections);
 
     return detections;
-}
+}  // LCOV_EXCL_LINE
 
 AprilTagDetector::~AprilTagDetector() { apriltag_detector_destroy(tag_detector); }
 
