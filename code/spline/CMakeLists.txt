@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.28)
-
 set(LIBRARY_NAME "spline")
 
 find_package(Eigen3 REQUIRED)
