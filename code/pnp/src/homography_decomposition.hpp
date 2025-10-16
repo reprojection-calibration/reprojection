@@ -2,6 +2,9 @@
 
 namespace reprojection::pnp {
 
+// TOOD PROPER NAME
+Eigen::MatrixX2d NormalizePointsForHomographySolving(Eigen::MatrixX3d const& points);
+
 // TODO(Jack): Not tested, is it even possible to test in a reasonable way?
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> WhatDoWeNameThis(Eigen::MatrixX3d const& points);
 
