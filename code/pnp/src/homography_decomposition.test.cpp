@@ -4,7 +4,9 @@
 
 using namespace reprojection::pnp;
 
+// NOTE(Jack): We should be able to use the same normalization here we used for the DLT
 void FindHomography(Eigen::MatrixX2d const& points_src, Eigen::MatrixX2d const& points_dst) {
+
     (void)points_dst;
     (void)points_src;
 }
