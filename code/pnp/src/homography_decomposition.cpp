@@ -1,8 +1,28 @@
 #include "homography_decomposition.hpp"
 
+#include "dlt.hpp"
+#include "geometry/lie.hpp"
 #include "matrix_utilities.hpp"
 
 namespace reprojection::pnp {
+
+std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d const& points_src,
+                                                            Eigen::MatrixX2d const& points_dst) {
+    auto const A{ConstructA<3>(points_src, points_dst)};
+    auto H{SolveForP<3>(A)};
+    H /= H(2, 2);
+
+    Eigen::Vector3d const h_norms{H.colwise().norm()};
+
+    H.col(0) = H.col(0) / h_norms(0);
+    H.col(1) = H.col(1) / h_norms(1);
+    Eigen::Vector3d const t{H.col(2) * (2.0 / (h_norms(0) + h_norms(1)))};
+    H.col(2) = H.col(0).cross(H.col(1));
+
+    Eigen::Matrix3d const cleaned_H{reprojection::geometry::Exp((reprojection::geometry::Log(H)))};
+
+    return {t, cleaned_H};
+}
 
 Eigen::MatrixX2d NormalizePointsForHomographySolving(Eigen::MatrixX3d const& points) {
     auto const [_, V]{WhatDoWeNameThis(points)};
