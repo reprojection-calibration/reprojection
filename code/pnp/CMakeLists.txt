@@ -21,10 +21,11 @@ AddLibrary()
 set(TESTS
         src/camera_matrix_decomposition.test.cpp
         src/dlt.test.cpp
-        src/temp_geometric_transforms.test.cpp
+        src/homography_decomposition.test.cpp
         src/matrix_utilities.test.cpp
         src/multiple_view_geometry_data_generator.test.cpp
         src/nonlinear_refinement.test.cpp
+        src/temp_geometric_transforms.test.cpp
         test/pnp.test.cpp
 )
 AddTests()
