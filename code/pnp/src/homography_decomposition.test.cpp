@@ -15,7 +15,7 @@ std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d con
     auto const H{SolveForP<3>(A)};
 
     Eigen::Matrix3d H_normalized{H / H(2, 2)};
-    Eigen::Vector3d const h_norms{H.colwise().norm()};
+    Eigen::Vector3d const h_norms{H_normalized.colwise().norm()};
 
     H_normalized.col(0) = H_normalized.col(0) / h_norms(0);
     H_normalized.col(1) = H_normalized.col(1) / h_norms(1);
@@ -31,13 +31,13 @@ TEST(PnpHomographyDecomposition, TestFindHomography) {
     // Same points for src and dst
     Eigen::MatrixX2d const points1{{0, 0}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
     auto const [t1, R1]{FindHomography(points1, points1)};
-    EXPECT_TRUE(t1.isApprox(Eigen::Vector3d{0, 0, std::sqrt(3)}));
+    EXPECT_TRUE(t1.isApprox(Eigen::Vector3d{0, 0, 1}));
     EXPECT_TRUE(R1.isApprox(Eigen::Matrix3d::Identity()));
 
     // Different points for src and dst
     Eigen::MatrixX2d const points2{2 * points1};
     auto const [t2, R2]{FindHomography(points1, points2)};
-    EXPECT_TRUE(t2.isApprox(Eigen::Vector3d{0, 0, std::sqrt(6)}));
+    EXPECT_TRUE(t2.isApprox(Eigen::Vector3d{0, 0, 2}));
     EXPECT_TRUE(R2.isApprox(Eigen::Matrix3d::Identity()));
 }
 
