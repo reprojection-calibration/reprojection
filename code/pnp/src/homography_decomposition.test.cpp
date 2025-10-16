@@ -3,29 +3,42 @@
 #include <gtest/gtest.h>
 
 #include "dlt.hpp"
+#include "geometry/lie.hpp"
 
 using namespace reprojection::pnp;
 
 // NOTE(Jack): We should be able to use the same normalization here we used for the DLT
 // pixels, 2d_points
-void FindHomography(Eigen::MatrixX2d const& points_src, Eigen::MatrixX2d const& points_dst) {
+std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d const& points_src,
+                                                            Eigen::MatrixX2d const& points_dst) {
     auto const A{ConstructA<3>(points_src, points_dst)};
-
     auto const H{SolveForP<3>(A)};
-    std::cout << H << std::endl;
 
-    auto const H_normalized{H / H(2, 2)};
-    std::cout << H_normalized << std::endl;
+
+    Eigen::Matrix3d H_normalized{H / H(2, 2)};
+
+    Eigen::Vector3d const h_norms{H.colwise().norm()};
+
+    H_normalized.col(0) = H_normalized.col(0) / h_norms(0);
+    H_normalized.col(1) = H_normalized.col(1) / h_norms(1);
+
+    Eigen::Vector3d const t{H_normalized.col(2) * (2.0 / (h_norms(0) + h_norms(1)))};
+
+    H_normalized.col(2) = H_normalized.col(0).cross(H_normalized.col(1));
+    Eigen::Matrix3d const cleaned_H{reprojection::geometry::Exp((reprojection::geometry::Log(H_normalized)))};
+
+    return {t, cleaned_H};
 }
 
 TEST(PnpHomographyDecomposition, TestFindHomography) {
     Eigen::MatrixX2d const points1{{0, 0}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
-    FindHomography(points1, points1);
+    auto const [t1, R1]{FindHomography(points1, points1)};
 
     std::cout << "second run" << std::endl;
 
     Eigen::MatrixX2d const points2{2 * points1};
-    FindHomography(points1, points2);
+    auto const [t2, R2]{FindHomography(points1, points2)};
+
 
     EXPECT_FALSE(true);
 }
@@ -35,13 +48,13 @@ TEST(PnpHomographyDecomposition, TestNormalizePointsForHomographySolving) {
     Eigen::MatrixX3d const three_points{{1, 1, 1}, {2, 2, 2}, {3, 3, 3}};
     Eigen::MatrixX2d const normalized_three_points{NormalizePointsForHomographySolving(three_points)};
     EXPECT_TRUE(normalized_three_points.isApprox(Eigen::MatrixX2d{{-0.538005, 0.876209}, {0, 0}, {0.538005, -0.876209}},
-                                                 1e-6));  // Heurstic
+                                                 1e-6));  // Heuristic
 
     // z=0 plane
     Eigen::MatrixX3d z_zero_plane{{0, 0, 0}, {1, 1, 0}, {-1, -1, 0}, {-1, 1, 0}, {1, -1, 0}};
     Eigen::MatrixX2d const normalized_z_zero_plane{NormalizePointsForHomographySolving(z_zero_plane)};
     EXPECT_TRUE(
-        normalized_z_zero_plane.isApprox(Eigen::MatrixX2d{{0, 0}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}}));  // Heurstic
+        normalized_z_zero_plane.isApprox(Eigen::MatrixX2d{{0, 0}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}}));  // Heuristic
 }
 
 TEST(PnpHomographyDecomposition, TestXXX) {
