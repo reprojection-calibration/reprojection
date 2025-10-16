@@ -4,6 +4,21 @@
 
 using namespace reprojection::pnp;
 
+void FindHomography(Eigen::MatrixX2d const& points_src, Eigen::MatrixX2d const& points_dst) {
+    (void)points_dst;
+    (void)points_src;
+}
+
+TEST(PnpHomographyDecomposition, TestFindHomography) {
+    Eigen::MatrixX2d const points1{{0, 0}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
+    FindHomography(points1, points1);
+
+    Eigen::MatrixX2d const points2{2 * points1};
+    FindHomography(points1, points2);
+
+    EXPECT_FALSE(true);
+}
+
 TEST(PnpHomographyDecomposition, TestNormalizePointsForHomographySolving) {
     // Any three non-colinear points are on a plane!
     Eigen::MatrixX3d const three_points{{1, 1, 1}, {2, 2, 2}, {3, 3, 3}};
