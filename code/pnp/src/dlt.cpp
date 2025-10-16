@@ -14,7 +14,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt(Eigen::MatrixX2d const& pixel
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
 
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA<4>(normalized_pixels, normalized_points)};
-    Eigen::Matrix<double, 3, 4> const P{SolveForP(A)};
+    Eigen::Matrix<double, 3, 4> const P{SolveForP<4>(A)};
     Eigen::Matrix<double, 3, 4> const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize
 
     // Extract camera parameters
@@ -26,17 +26,6 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt(Eigen::MatrixX2d const& pixel
 
 
 
-Eigen::Matrix<double, 3, 4> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 12> const& A) {
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd;
-    svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-    // TODO (Jack): There has to be a more expressive way to pack .col(11) into P.
-    Eigen::Matrix<double, 3, 4> P;
-    P.row(0) = svd.matrixV().col(11).topRows(4);
-    P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
-    P.row(2) = svd.matrixV().col(11).bottomRows(4);
-
-    return P;
-}
 
 }  // namespace reprojection::pnp

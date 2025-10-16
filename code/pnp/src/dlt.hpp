@@ -41,6 +41,20 @@ Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& 
     return A;
 }  // LCOV_EXCL_LINE
 
-Eigen::Matrix<double, 3, 4> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 12> const& A);
+// TODO(Jack): This solves for P when N=4 but solves for H when N=3 !!! Consider name change
+template <int N>
+Eigen::Matrix<double, 3, N> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 3 * N> const& A) {
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd;
+    svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+    // TODO (Jack): There has to be a more expressive way to pack .col(3*N -1) into P and select the column using 3*N -1
+    Eigen::Matrix<double, 3, N> P;
+    auto const last_col{svd.matrixV().col(3 * N - 1)};  // Has to be a better name than last col...
+    P.row(0) = last_col.topRows(N);
+    P.row(1) = last_col.middleRows(N, N);
+    P.row(2) = last_col.bottomRows(N);
+
+    return P;
+}
 
 }  // namespace reprojection::pnp

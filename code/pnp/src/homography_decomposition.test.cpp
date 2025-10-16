@@ -2,18 +2,27 @@
 
 #include <gtest/gtest.h>
 
+#include "dlt.hpp"
+
 using namespace reprojection::pnp;
 
 // NOTE(Jack): We should be able to use the same normalization here we used for the DLT
+// pixels, 2d_points
 void FindHomography(Eigen::MatrixX2d const& points_src, Eigen::MatrixX2d const& points_dst) {
+    auto const A{ConstructA<3>(points_src, points_dst)};
 
-    (void)points_dst;
-    (void)points_src;
+    auto const H{SolveForP<3>(A)};
+    std::cout << H << std::endl;
+
+    auto const H_normalized{H / H(2, 2)};
+    std::cout << H_normalized << std::endl;
 }
 
 TEST(PnpHomographyDecomposition, TestFindHomography) {
     Eigen::MatrixX2d const points1{{0, 0}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
     FindHomography(points1, points1);
+
+    std::cout << "second run" << std::endl;
 
     Eigen::MatrixX2d const points2{2 * points1};
     FindHomography(points1, points2);
