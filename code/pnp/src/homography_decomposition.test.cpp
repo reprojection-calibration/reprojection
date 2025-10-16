@@ -2,8 +2,8 @@
 
 #include <Eigen/Dense>
 
-// TODO THIS FUNCTION ACTUALLY BELONGS IN THE CORE PNP LOGIC TO DECIDE IF WE USE DLT OR HOMOGRAPHY DECOMPOSITION
-bool IsPlane(Eigen::MatrixX3d const& points) {
+// TODO(Jack): Not tested, is it even possible to test in a reasonable way?
+std::tuple<Eigen::Vector3d, Eigen::Matrix3d> WhatDoWeNameThis(Eigen::MatrixX3d const& points) {
     Eigen::Vector3d const center{points.colwise().mean()};
     Eigen::Matrix3d const covariance{(points.rowwise() - center.transpose()).transpose() *
                                      (points.rowwise() - center.transpose())};
@@ -12,7 +12,13 @@ bool IsPlane(Eigen::MatrixX3d const& points) {
     Eigen::JacobiSVD<Eigen::MatrixXd> svd;
     svd.compute(covariance, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-    Eigen::Vector3d const singular_values{svd.singularValues()};
+    return {svd.singularValues(), svd.matrixV()};
+}
+
+// TODO THIS FUNCTION ACTUALLY BELONGS IN THE CORE PNP LOGIC TO DECIDE IF WE USE DLT OR HOMOGRAPHY DECOMPOSITION
+bool IsPlane(Eigen::MatrixX3d const& points) {
+    auto const [singular_values, _]{WhatDoWeNameThis(points)};
+
     if (singular_values[2] / singular_values[1] < 1e-3) {
         return true;
     }
