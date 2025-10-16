@@ -2,6 +2,8 @@
 
 namespace reprojection::pnp {
 
+Eigen::Isometry3d FullPipeline(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points);
+
 // NOTE(Jack): We should be able to use the same normalization here we used for the DLT
 // pixels, 2d_points
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d const& points_src,

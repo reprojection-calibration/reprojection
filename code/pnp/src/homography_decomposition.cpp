@@ -6,6 +6,17 @@
 
 namespace reprojection::pnp {
 
+Eigen::Isometry3d FullPipeline(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
+    auto const [normalized_points, tf]{NormalizePointsForHomographySolving(points)};
+
+    auto const [t, R]{FindHomography(pixels, normalized_points)};
+
+    Eigen::Vector3d const t_xxx{t + R * tf.translation()};
+    Eigen::Matrix3d const R_xxx{R * tf.linear()};
+
+    return ToIsometry3d(R_xxx, t_xxx);
+}
+
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d const& points_src,
                                                             Eigen::MatrixX2d const& points_dst) {
     auto const A{ConstructA<3>(points_src, points_dst)};

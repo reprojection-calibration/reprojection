@@ -2,20 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "matrix_utilities.hpp"
-
 using namespace reprojection::pnp;
-
-Eigen::Isometry3d FullPipeline(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
-    auto const [normalized_points, tf]{NormalizePointsForHomographySolving(points)};
-
-    auto const [t, R]{FindHomography(pixels, normalized_points)};
-
-    Eigen::Vector3d const t_xxx{t + R * tf.translation()};
-    Eigen::Matrix3d const R_xxx{R * tf.linear()};
-
-    return ToIsometry3d(R_xxx, t_xxx);
-}
 
 TEST(PnpHomographyDecomposition, TestFullPipeline) {
     Eigen::MatrixX2d const pixels{{0, 0}, {2, 2}, {-2, -2}, {-2, 2}, {2, -2}};
