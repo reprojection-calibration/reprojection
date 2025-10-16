@@ -2,25 +2,29 @@
 
 #include <gtest/gtest.h>
 
+#include "matrix_utilities.hpp"
+
 using namespace reprojection::pnp;
 
-void FullPipeline(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
+Eigen::Isometry3d FullPipeline(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
     auto const [normalized_points, tf]{NormalizePointsForHomographySolving(points)};
-
-    std::cout << normalized_points << std::endl;
 
     auto const [t, R]{FindHomography(pixels, normalized_points)};
 
-    std::cout << tf.matrix() << std::endl;
-    std::cout << t << std::endl;
-    std::cout << R << std::endl;
+    Eigen::Vector3d const t_xxx{t + R * tf.translation()};
+    Eigen::Matrix3d const R_xxx{R * tf.linear()};
+
+    return ToIsometry3d(R_xxx, t_xxx);
 }
 
 TEST(PnpHomographyDecomposition, TestFullPipeline) {
     Eigen::MatrixX2d const pixels{{0, 0}, {2, 2}, {-2, -2}, {-2, 2}, {2, -2}};
     Eigen::MatrixX3d const points{{0, 0, 0}, {1, 1, 0}, {-1, -1, 0}, {-1, 1, 0}, {1, -1, 0}};
 
-    FullPipeline(pixels, points);
+    Eigen::Isometry3d const T{FullPipeline(pixels, points)};
+
+    EXPECT_TRUE(T.matrix().diagonal().isApproxToConstant(1));
+    EXPECT_EQ(T.translation()(2), 0.5);
 }
 
 TEST(PnpHomographyDecomposition, TestFindHomography) {
