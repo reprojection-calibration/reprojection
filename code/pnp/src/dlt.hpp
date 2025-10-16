@@ -23,9 +23,6 @@ Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& 
         A.middleCols(i * N, N) = InterleaveRowWise(points).rowwise().homogeneous();
     }
 
-    // TODO(Jack): There has to be a better way to do this than iterating over each pixel and doing this manually! This
-    // entire function upsets me because it feels so manual, and that we are missing the proper linear algebra
-    // abstraction to combine the matrices into A
     for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
         auto const pixel_i{pixels.row(i)};
         auto A_i{A.middleRows(i * 2, 2)};
