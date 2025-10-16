@@ -24,7 +24,7 @@ std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d con
     return {t, cleaned_H};
 }
 
-Eigen::MatrixX2d NormalizePointsForHomographySolving(Eigen::MatrixX3d const& points) {
+std::tuple<Eigen::MatrixX2d, Eigen::Isometry3d> NormalizePointsForHomographySolving(Eigen::MatrixX3d const& points) {
     auto const [_, V]{WhatDoWeNameThis(points)};
 
     Eigen::Matrix3d R{V};
@@ -41,7 +41,7 @@ Eigen::MatrixX2d NormalizePointsForHomographySolving(Eigen::MatrixX3d const& poi
     Eigen::MatrixX2d const normalized_chopped_points{
         (T * points.rowwise().homogeneous().transpose()).transpose()(Eigen::all, {0, 1})};
 
-    return normalized_chopped_points;
+    return {normalized_chopped_points, T};
 }
 
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> WhatDoWeNameThis(Eigen::MatrixX3d const& points) {

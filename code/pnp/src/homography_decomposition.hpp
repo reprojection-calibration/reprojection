@@ -8,7 +8,7 @@ std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d con
                                                             Eigen::MatrixX2d const& points_dst);
 
 // TOOD PROPER NAME
-Eigen::MatrixX2d NormalizePointsForHomographySolving(Eigen::MatrixX3d const& points);
+std::tuple<Eigen::MatrixX2d, Eigen::Isometry3d> NormalizePointsForHomographySolving(Eigen::MatrixX3d const& points);
 
 // TODO(Jack): Not tested, is it even possible to test in a reasonable way?
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> WhatDoWeNameThis(Eigen::MatrixX3d const& points);
