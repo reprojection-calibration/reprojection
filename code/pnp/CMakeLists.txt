@@ -6,6 +6,7 @@ find_package(Eigen3 REQUIRED)
 set(SRC_FILES
         src/camera_matrix_decomposition.cpp
         src/dlt.cpp
+        src/homography_decomposition.cpp
         src/matrix_utilities.cpp
         src/multiple_view_geometry_data_generator.cpp
         src/nonlinear_refinement.cpp
