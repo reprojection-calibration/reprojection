@@ -133,6 +133,13 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
     for (int i{0}; i < pattern_size.width * pattern_size.height; ++i) {
         AprilTagDetection detection_i;
         detection_i.id = i;
+        // WARN(Jack): Even though I do not use the following fields, when I compiled in release mode without these
+        // explicitly set I got the following error "may be used uninitialized [-Werror=maybe-uninitialized]". Therefore
+        // I have added these here to allow us to compile in release mode. The real answer probably is somewhere in the
+        // constructor or copy constructor design.
+        detection_i.H = Eigen::Matrix3d::Identity();
+        detection_i.c = Eigen::Vector2d::Zero();
+        detection_i.p = Eigen::Matrix<double, 4, 2>::Zero();
         detections.push_back(detection_i);
     }
 

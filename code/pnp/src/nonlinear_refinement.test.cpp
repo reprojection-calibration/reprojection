@@ -8,6 +8,8 @@
 using namespace reprojection;
 using namespace reprojection::pnp;
 
+// TODO(Jack): Test the nonlinear refinement with noisy data to make sure the optimization executes more than one step!
+
 TEST(PnpNonlinearRefinement, TestNonlinearRefinement) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
     for (size_t i{0}; i < 20; ++i) {

@@ -1,7 +1,5 @@
 #include "dlt_matrix_decompositions.hpp"
 
-#include <iostream>
-
 #include "geometry/lie.hpp"
 
 namespace reprojection::pnp {
