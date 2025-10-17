@@ -1,12 +1,10 @@
 #include "multiple_view_geometry_data_generator.hpp"
 
-#include <iostream>
-
 #include "geometry/lie.hpp"
 
 namespace reprojection::pnp {
 
-MvgFrameGenerator::MvgFrameGenerator(bool const flat, Eigen::Matrix3d const& K )
+MvgFrameGenerator::MvgFrameGenerator(bool const flat, Eigen::Matrix3d const& K)
     : points_{Eigen::MatrixX3d::Random(50, 3)}, K_{K} {
     if (flat) {
         points_.col(2).setZero();

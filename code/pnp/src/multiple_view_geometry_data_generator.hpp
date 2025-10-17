@@ -13,8 +13,8 @@ struct MvgFrame {
 
 class MvgFrameGenerator {
    public:
-    MvgFrameGenerator(bool const flat = false,
-                      Eigen::Matrix3d const& K = Eigen::Matrix3d{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}});
+    explicit MvgFrameGenerator(bool const flat = false,
+                               Eigen::Matrix3d const& K = Eigen::Matrix3d{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}});
 
     MvgFrame Generate() const;
 
