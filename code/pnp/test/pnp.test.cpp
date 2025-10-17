@@ -58,7 +58,7 @@ TEST(Pnp, TestMismatchedCorrespondence) {
 
     EXPECT_TRUE(std::holds_alternative<PnpStatusCode>(pnp_result));
     PnpStatusCode const pnp_status_code{std::get<PnpStatusCode>(pnp_result)};
-    EXPECT_EQ(pnp_status_code, PnpStatusCode::MismatchedCorrespondence);
+    EXPECT_EQ(pnp_status_code, PnpStatusCode::MismatchedCorrespondences);
 }
 
 TEST(Pnp, TestNotEnoughPoints) {

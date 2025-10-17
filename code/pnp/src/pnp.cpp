@@ -13,7 +13,7 @@ namespace reprojection::pnp {
 // nonlinear refinement? Right now I do not understand what coordinate context to do the nonlinear refinement in.
 PnpResult Pnp(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
     if (not(pixels.rows() == points.rows())) {
-        return PnpStatusCode::MismatchedCorrespondence;
+        return PnpStatusCode::MismatchedCorrespondences;
     } else if (pixels.rows() < 6) {
         return PnpStatusCode::NotEnoughPoints;
     }
