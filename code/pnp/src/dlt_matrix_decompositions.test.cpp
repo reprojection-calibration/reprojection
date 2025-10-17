@@ -1,6 +1,6 @@
-#include "camera_matrix_decomposition.hpp"
-
 #include <gtest/gtest.h>
+
+#include "dlt_matrix_decompositions.hpp"
 
 using namespace reprojection::pnp;
 

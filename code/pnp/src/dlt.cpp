@@ -1,6 +1,6 @@
 #include "dlt.hpp"
 
-#include "camera_matrix_decomposition.hpp"
+#include "dlt_matrix_decompositions.hpp"
 #include "dlt_solving.hpp"
 #include "matrix_utilities.hpp"
 #include "plane_utilities.hpp"
