@@ -8,6 +8,22 @@
 using namespace reprojection;
 using namespace reprojection::pnp;
 
+TEST(PnpDlt, TestDlt) {
+    Eigen::Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};  // Pixels must be in normalized space
+    MvgFrameGenerator const generator{MvgFrameGenerator(true, K)};
+
+    for (size_t i{0}; i < 20; ++i) {
+        MvgFrame const frame_i{generator.Generate()};
+
+        auto const tf{FullPipeline(frame_i.pixels, frame_i.points)};
+
+        EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
+
+        Eigen::Vector<double, 6> const pose_i{geometry::Log(tf)};
+        EXPECT_TRUE(pose_i.isApprox(frame_i.pose)) << "Result:\n" << pose_i << "\nexpected result:\n" << frame_i.pose;
+    }
+}
+
 TEST(PnpHomographyDecomposition, TestFullPipelineOpenCvData) {
     double const L = 0.2;
     Eigen::MatrixX3d const points_w{
