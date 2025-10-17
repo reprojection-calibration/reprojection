@@ -2,6 +2,7 @@
 
 #include "dlt.hpp"
 #include "nonlinear_refinement.hpp"
+#include "plane_utilities.hpp"
 
 namespace reprojection::pnp {
 
@@ -14,11 +15,19 @@ namespace reprojection::pnp {
 PnpResult Pnp(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
     if (not(pixels.rows() == points.rows())) {
         return PnpStatusCode::MismatchedCorrespondences;
-    } else if (pixels.rows() < 6) {
+    }
+
+    Eigen::Isometry3d tf;
+    Eigen::Matrix3d K;
+    if (pixels.rows() > 4 and IsPlane(points)) {
+        tf = Dlt22(pixels, points);
+        K = Eigen::Matrix3d::Identity();
+    } else if (pixels.rows() > 6) {
+        std::tie(tf, K) = Dlt23(pixels, points);
+    } else {
         return PnpStatusCode::NotEnoughPoints;
     }
 
-    auto const [tf, K]{Dlt23(pixels, points)};
     auto const [tf_star, _]{NonlinearRefinement(pixels, points, tf, K)};
 
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
