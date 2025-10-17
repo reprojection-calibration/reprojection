@@ -6,9 +6,11 @@
 
 namespace reprojection::pnp {
 
-// TODO(Jack): Fix comments to reflect new templated nature
-// The 2n x 12 matrix assembled by stacking up the constraints from (MVG Eq. 7.2)
-// NOTE(Jack): I am not gonna test this because I hope this function changes soon, see the note in the function.
+// NOTE(Jack): Constructs the constraint matrix for the dlt problem given two sets of points, it is templated to handle
+// both the plane to plane (Dlt22) and plane to points (Dlt23) case. In the Dlt22 case N=3 and A is 2nx9. In the Dlt23
+// case N=4 and A is 2nx12.
+// The math behind it for the Dlt23 case can be found in "Multiple View Geometry in computer vision", particularly be
+// noting that this function stacks Eq. 7.2 to form the A constraint matrix.
 template <int N>
 Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& pixels,
                                                         Eigen::Matrix<double, Eigen::Dynamic, N - 1> const& points) {
@@ -36,7 +38,7 @@ Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& 
 }  // LCOV_EXCL_LINE
 
 // NOTE(Jack): I am not exactly sure the best notation here! I think this does a more generic operation than the name
-// SolveForH suggests. It is use in Dlt22 to solve for the 3x3 H matrix and in Dlt23 to solve for the 3x4 P matrix. I
+// SolveForH suggests. It is used in Dlt22 to solve for the 3x3 H matrix and in Dlt23 to solve for the 3x4 P matrix. I
 // think P is a homography therefore SolveForH is a name that covers both use cases.
 template <int N>
 Eigen::Matrix<double, 3, N> SolveForH(Eigen::Matrix<double, Eigen::Dynamic, 3 * N> const& A) {
