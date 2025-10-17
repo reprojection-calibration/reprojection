@@ -2,6 +2,7 @@
 
 #include "camera_matrix_decomposition.hpp"
 #include "dlt_solving.hpp"
+#include "homography_decomposition.hpp"
 #include "matrix_utilities.hpp"
 
 namespace reprojection::pnp {
@@ -23,6 +24,15 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt23(Eigen::MatrixX2d const& pix
     Eigen::Vector3d const camera_center{CalculateCameraCenter(P_star)};
 
     return {ToIsometry3d(R, -R * camera_center), K};
+}
+
+// Assumes that the pixels are in normalized ideal image space
+Eigen::Isometry3d Dlt22(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
+    Eigen::MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};  // CUTS OFF THE Z DIMENSION NO MATTER WHAT!!!
+
+    auto const [t, R]{FindHomography(pixels, chopped_points)};
+
+    return ToIsometry3d(R, t);
 }
 
 }  // namespace reprojection::pnp

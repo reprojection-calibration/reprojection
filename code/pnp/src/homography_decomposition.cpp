@@ -6,14 +6,6 @@
 
 namespace reprojection::pnp {
 
-// Assumes that the pixels are in normalized ideal image space
-Eigen::Isometry3d FullPipeline(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
-    Eigen::MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};  // CUTS OFF THE Z DIMENSION NO MATTER WHAT!!!
-
-    auto const [t, R]{FindHomography(pixels, chopped_points)};
-
-    return ToIsometry3d(R, t);
-}
 
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d const& points_src,
                                                             Eigen::MatrixX2d const& points_dst) {

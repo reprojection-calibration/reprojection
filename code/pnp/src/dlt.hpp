@@ -12,5 +12,6 @@ namespace reprojection::pnp {
 // latter but let's keep our eyes peeled for possible simplifications in the future.
 std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt23(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points);
 
+Eigen::Isometry3d Dlt22(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points);
 
 }  // namespace reprojection::pnp
