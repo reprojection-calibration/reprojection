@@ -49,7 +49,7 @@ Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
     return Eigen::Vector3d{x, y, z} / t;
 }
 
-std::tuple<Eigen::Vector3d, Eigen::Matrix3d> DecomposeHIntoRt(Eigen::Matrix3d const& H) {
+std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d const& H) {
     // Reference https://docs.opencv.org/4.x/d9/dab/tutorial_homography.html
     Eigen::Matrix3d H_star{H / H.col(0).norm()};  // First column magnitude 1 - constrains scale
 
@@ -63,7 +63,7 @@ std::tuple<Eigen::Vector3d, Eigen::Matrix3d> DecomposeHIntoRt(Eigen::Matrix3d co
     // Introduces error but makes it a real rotation matrix !!!!!
     Eigen::Matrix3d const R{reprojection::geometry::Exp((reprojection::geometry::Log(H_star)))};
 
-    return {t, R};
+    return {R, t};
 }
 
 }  // namespace reprojection::pnp

@@ -2,8 +2,8 @@
 
 #include "camera_matrix_decomposition.hpp"
 #include "dlt_solving.hpp"
-#include "homography_decomposition.hpp"
 #include "matrix_utilities.hpp"
+#include "plane_utilities.hpp"
 
 namespace reprojection::pnp {
 
@@ -21,9 +21,9 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt23(Eigen::MatrixX2d const& pix
 
     // Extract camera parameters
     auto [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
-    Eigen::Vector3d const camera_center{CalculateCameraCenter(P_star)};
+    Eigen::Vector3d const t{CalculateCameraCenter(P_star)};
 
-    return {ToIsometry3d(R, -R * camera_center), K};
+    return {ToIsometry3d(R, -R * t), K};
 }
 
 // Assumes that the pixels are in normalized ideal image space
@@ -33,7 +33,7 @@ Eigen::Isometry3d Dlt22(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& 
     auto const A{ConstructA<3>(pixels, chopped_points)};
     auto H{SolveForP<3>(A)};
 
-    auto const [t, R]{DecomposeHIntoRt(H)};
+    auto const [R, t]{DecomposeHIntoRt(H)};
 
     return ToIsometry3d(R, t);
 }

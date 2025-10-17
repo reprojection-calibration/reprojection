@@ -1,4 +1,4 @@
-#include "homography_decomposition.hpp"
+#include "plane_utilities.hpp"
 
 #include <gtest/gtest.h>
 
@@ -35,7 +35,7 @@ TEST(PnpHomographyDecomposition, TestDlt22) {
     EXPECT_FLOAT_EQ(T.translation()(2), 0.5);
 }
 
-TEST(PnpHomographyDecomposition, TestXXX) {
+TEST(PnpHomographyDecomposition, TestIsPlane) {
     // Any three points are on a plane!
     Eigen::MatrixX3d const three_points{{1, 1, 1}, {2, 2, 2}, {3, 3, 3}};
     EXPECT_TRUE(IsPlane(three_points));
