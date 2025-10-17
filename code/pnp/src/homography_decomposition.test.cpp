@@ -35,20 +35,6 @@ TEST(PnpHomographyDecomposition, TestDlt22) {
     EXPECT_FLOAT_EQ(T.translation()(2), 0.5);
 }
 
-TEST(PnpHomographyDecomposition, TestFindHomography) {
-    // Same points for src and dst
-    Eigen::MatrixX2d const points1{{0, 0}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
-    auto const [t1, R1]{FindHomography(points1, points1)};
-    EXPECT_TRUE(t1.isApprox(Eigen::Vector3d{0, 0, 1}));
-    EXPECT_TRUE(R1.isApprox(Eigen::Matrix3d::Identity()));
-
-    // Different points for src and dst
-    Eigen::MatrixX2d const points2{2 * points1};
-    auto const [t2, R2]{FindHomography(points1, points2)};
-    EXPECT_TRUE(t2.isApprox(Eigen::Vector3d{0, 0, 2}));
-    EXPECT_TRUE(R2.isApprox(Eigen::Matrix3d::Identity()));
-}
-
 TEST(PnpHomographyDecomposition, TestNormalizePointsForHomographySolving) {
     // Any three non-colinear points are on a plane!
     Eigen::MatrixX3d const three_points{{1, 1, 1}, {2, 2, 2}, {3, 3, 3}};

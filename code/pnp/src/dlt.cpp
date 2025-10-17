@@ -30,7 +30,10 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt23(Eigen::MatrixX2d const& pix
 Eigen::Isometry3d Dlt22(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
     Eigen::MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};  // CUTS OFF THE Z DIMENSION NO MATTER WHAT!!!
 
-    auto const [t, R]{FindHomography(pixels, chopped_points)};
+    auto const A{ConstructA<3>(pixels, chopped_points)};
+    auto H{SolveForP<3>(A)};
+
+    auto const [t, R]{DecomposeHIntoRt(H)};
 
     return ToIsometry3d(R, t);
 }

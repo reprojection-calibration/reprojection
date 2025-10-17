@@ -1,5 +1,7 @@
 #include "camera_matrix_decomposition.hpp"
 
+#include "geometry/lie.hpp"
+
 namespace reprojection::pnp {
 
 // Inspired by https://www.physicsforums.com/threads/rq-decomposition-from-qr-decomposition.261739/
@@ -38,7 +40,6 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
     return {K_star, R_star};
 }
 
-// NOTE(Jack):
 Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
     double const x{P(Eigen::all, {1, 2, 3}).determinant()};
     double const y{-P(Eigen::all, {0, 2, 3}).determinant()};
@@ -46,6 +47,23 @@ Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
     double const t{-P(Eigen::all, {0, 1, 2}).determinant()};
 
     return Eigen::Vector3d{x, y, z} / t;
+}
+
+std::tuple<Eigen::Vector3d, Eigen::Matrix3d> DecomposeHIntoRt(Eigen::Matrix3d const& H) {
+    // Reference https://docs.opencv.org/4.x/d9/dab/tutorial_homography.html
+    Eigen::Matrix3d H_star{H / H.col(0).norm()};  // First column magnitude 1 - constrains scale
+
+    Eigen::Vector3d const h_norms{H_star.colwise().norm()};
+
+    H_star.col(0) = H_star.col(0) / h_norms(0);
+    H_star.col(1) = H_star.col(1) / h_norms(1);
+    Eigen::Vector3d const t{H_star.col(2) * (2.0 / (h_norms(0) + h_norms(1)))};
+    H_star.col(2) = H_star.col(0).cross(H_star.col(1));
+
+    // Introduces error but makes it a real rotation matrix !!!!!
+    Eigen::Matrix3d const R{reprojection::geometry::Exp((reprojection::geometry::Log(H_star)))};
+
+    return {t, R};
 }
 
 }  // namespace reprojection::pnp

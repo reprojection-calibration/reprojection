@@ -19,4 +19,6 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
 // do not see it just yet.
 Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P);
 
+std::tuple<Eigen::Vector3d, Eigen::Matrix3d> DecomposeHIntoRt(Eigen::Matrix3d const& H);
+
 }  // namespace reprojection::pnp
