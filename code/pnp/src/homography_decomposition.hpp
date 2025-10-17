@@ -2,11 +2,6 @@
 
 namespace reprojection::pnp {
 
-
-
-// TOOD PROPER NAME AND USAGE
-std::tuple<Eigen::MatrixX2d, Eigen::Isometry3d> NormalizePointsForHomographySolving(Eigen::MatrixX3d const& points);
-
 // TODO(Jack): Not tested, is it even possible to test in a reasonable way?
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> WhatDoWeNameThis(Eigen::MatrixX3d const& points);
 
