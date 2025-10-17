@@ -9,7 +9,7 @@ Eigen::Isometry3d FullPipeline(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d 
 std::tuple<Eigen::Vector3d, Eigen::Matrix3d> FindHomography(Eigen::MatrixX2d const& points_src,
                                                             Eigen::MatrixX2d const& points_dst);
 
-// TOOD PROPER NAME
+// TOOD PROPER NAME AND USAGE
 std::tuple<Eigen::MatrixX2d, Eigen::Isometry3d> NormalizePointsForHomographySolving(Eigen::MatrixX3d const& points);
 
 // TODO(Jack): Not tested, is it even possible to test in a reasonable way?

@@ -1,6 +1,6 @@
 #include "homography_decomposition.hpp"
 
-#include "dlt.hpp"
+#include "dlt_solving.hpp"
 #include "geometry/lie.hpp"
 #include "matrix_utilities.hpp"
 

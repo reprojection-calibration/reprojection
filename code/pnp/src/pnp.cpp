@@ -18,7 +18,7 @@ PnpResult Pnp(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
         return PnpStatusCode::NotEnoughPoints;
     }
 
-    auto const [tf, K]{Dlt(pixels, points)};
+    auto const [tf, K]{Dlt23(pixels, points)};
     auto const [tf_star, _]{NonlinearRefinement(pixels, points, tf, K)};
 
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT

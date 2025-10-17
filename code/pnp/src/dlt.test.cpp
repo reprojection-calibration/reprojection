@@ -15,7 +15,7 @@ TEST(PnpDlt, TestDlt) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
     for (size_t i{0}; i < 20; ++i) {
         MvgFrame const frame_i{generator.Generate()};
-        auto const [tf, K]{Dlt(frame_i.pixels, frame_i.points)};
+        auto const [tf, K]{Dlt23(frame_i.pixels, frame_i.points)};
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
 
