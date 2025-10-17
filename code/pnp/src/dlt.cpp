@@ -16,7 +16,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt23(Eigen::MatrixX2d const& pix
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
 
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA<4>(normalized_pixels, normalized_points)};
-    Eigen::Matrix<double, 3, 4> const P{SolveForP<4>(A)};
+    Eigen::Matrix<double, 3, 4> const P{SolveForH<4>(A)};
     Eigen::Matrix<double, 3, 4> const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize
 
     // Extract camera parameters
@@ -31,7 +31,7 @@ Eigen::Isometry3d Dlt22(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& 
     Eigen::MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};  // CUTS OFF THE Z DIMENSION NO MATTER WHAT!!!
 
     auto const A{ConstructA<3>(pixels, chopped_points)};
-    auto H{SolveForP<3>(A)};
+    auto H{SolveForH<3>(A)};
 
     auto const [R, t]{DecomposeHIntoRt(H)};
 

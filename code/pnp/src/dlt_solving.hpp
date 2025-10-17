@@ -6,7 +6,6 @@
 
 namespace reprojection::pnp {
 
-
 // TODO(Jack): Fix comments to reflect new templated nature
 // The 2n x 12 matrix assembled by stacking up the constraints from (MVG Eq. 7.2)
 // NOTE(Jack): I am not gonna test this because I hope this function changes soon, see the note in the function.
@@ -36,20 +35,22 @@ Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& 
     return A;
 }  // LCOV_EXCL_LINE
 
-// TODO(Jack): This solves for P when N=4 but solves for H when N=3 !!! Consider name change
+// NOTE(Jack): I am not exactly sure the best notation here! I think this does a more generic operation than the name
+// SolveForH suggests. It is use in Dlt22 to solve for the 3x3 H matrix and in Dlt23 to solve for the 3x4 P matrix. I
+// think P is a homography therefore SolveForH is a name that covers both use cases.
 template <int N>
-Eigen::Matrix<double, 3, N> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 3 * N> const& A) {
+Eigen::Matrix<double, 3, N> SolveForH(Eigen::Matrix<double, Eigen::Dynamic, 3 * N> const& A) {
     Eigen::JacobiSVD<Eigen::MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
     // TODO (Jack): There has to be a more expressive way to pack .col(3*N -1) into P and select the column using 3*N -1
-    Eigen::Matrix<double, 3, N> P;
+    Eigen::Matrix<double, 3, N> H;
     auto const last_col{svd.matrixV().col(3 * N - 1)};  // Has to be a better name than last col...
-    P.row(0) = last_col.topRows(N);
-    P.row(1) = last_col.middleRows(N, N);
-    P.row(2) = last_col.bottomRows(N);
+    H.row(0) = last_col.topRows(N);
+    H.row(1) = last_col.middleRows(N, N);
+    H.row(2) = last_col.bottomRows(N);
 
-    return P;
+    return H;
 }
 
 }  // namespace reprojection::pnp
