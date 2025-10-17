@@ -1,4 +1,4 @@
-#include "se3_spline.hpp"
+#include "spline/se3_spline.hpp"
 
 #include <gtest/gtest.h>
 

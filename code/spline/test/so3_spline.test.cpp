@@ -1,10 +1,10 @@
-#include "so3_spline.hpp"
+#include "spline/so3_spline.hpp"
 
 #include <gtest/gtest.h>
 
 #include "constants.hpp"
-#include "geometry/lie.hpp"
 #include "utilities_testing.hpp"
+#include "geometry/lie.hpp"
 
 using namespace reprojection;
 using namespace reprojection::spline;

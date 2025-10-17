@@ -1,4 +1,4 @@
-#include "r3_spline.hpp"
+#include "../include/spline/r3_spline.hpp"
 
 #include "constants.hpp"
 #include "types.hpp"

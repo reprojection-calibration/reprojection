@@ -1,4 +1,4 @@
-#include "r3_spline.hpp"
+#include "spline/r3_spline.hpp"
 
 #include <gtest/gtest.h>
 

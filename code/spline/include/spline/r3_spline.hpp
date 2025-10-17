@@ -18,7 +18,7 @@ class r3Spline {
     std::optional<VectorD> Evaluate(uint64_t const t_ns,
                                     DerivativeOrder const derivative = DerivativeOrder::Null) const;
 
-    // TODO(Jack): Can we use this same method also for the rotation spline?
+    // TODO(Jack): Factor this out as we use the same method for the SO3 spline as well!
     static VectorK CalculateU(double const u_i, DerivativeOrder const derivative = DerivativeOrder::Null);
 
     // TODO(Jack): Let us consider what benefit we would get from making this private at some later point

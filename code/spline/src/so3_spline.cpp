@@ -1,10 +1,10 @@
-#include "so3_spline.hpp"
+#include "../include/spline/so3_spline.hpp"
 
 #include <numeric>
 
+#include "../include/spline/r3_spline.hpp"
 #include "constants.hpp"
 #include "geometry/lie.hpp"
-#include "r3_spline.hpp"  // REMOVE AND USE COMMON GENERIC IMPLEMENTATION
 #include "types.hpp"
 #include "utilities.hpp"
 

@@ -1,4 +1,4 @@
-#include "se3_spline.hpp"
+#include "../include/spline/se3_spline.hpp"
 
 namespace reprojection::spline {
 

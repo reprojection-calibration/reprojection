@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "se3_spline.hpp"
+#include "spline/se3_spline.hpp"
 
 using namespace reprojection::testing_mocks;
 

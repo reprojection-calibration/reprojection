@@ -15,9 +15,9 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/r3_spline.test.cpp
-        src/se3_spline.test.cpp
-        src/so3_spline.test.cpp
         src/utilities.test.cpp
+        test/r3_spline.test.cpp
+        test/se3_spline.test.cpp
+        test/so3_spline.test.cpp
 )
 AddTests()
