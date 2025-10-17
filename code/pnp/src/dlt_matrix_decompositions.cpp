@@ -1,4 +1,5 @@
 #include "dlt_matrix_decompositions.hpp"
+
 #include "geometry/lie.hpp"
 
 namespace reprojection::pnp {
@@ -49,7 +50,6 @@ Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
 }
 
 std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d const& H) {
-    // Reference https://docs.opencv.org/4.x/d9/dab/tutorial_homography.html
     Eigen::Matrix3d H_star{H / H.col(0).norm()};  // First column magnitude 1 - constrains scale
 
     Eigen::Vector3d const h_norms{H_star.colwise().norm()};
@@ -59,7 +59,9 @@ std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d co
     Eigen::Vector3d const t{H_star.col(2) * (2.0 / (h_norms(0) + h_norms(1)))};
     H_star.col(2) = H_star.col(0).cross(H_star.col(1));
 
-    // Introduces error but makes it a real rotation matrix !!!!!
+    // WARN(Jack): This is a brute force method to get a "proper" rotation matrix - that being said it will probably
+    // introduce an error. For a better solution we should "apply a polar decomposition, or orthogonalization of the
+    // rotation matrix."
     Eigen::Matrix3d const R{reprojection::geometry::Exp((reprojection::geometry::Log(H_star)))};
 
     return {R, t};

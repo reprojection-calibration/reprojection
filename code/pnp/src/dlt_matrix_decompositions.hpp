@@ -19,6 +19,9 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
 // do not see it just yet.
 Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P);
 
+// NOTE(Jack): Reference https://docs.opencv.org/4.x/d9/dab/tutorial_homography.html - the material is taken from this
+// slide deck on web.archive.org
+// https://web.archive.org/web/20171226115739/https://ags.cs.uni-kl.de/fileadmin/inf_ags/3dcv-ws11-12/3DCV_WS11-12_lec04.pdf
 std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d const& H);
 
 }  // namespace reprojection::pnp
