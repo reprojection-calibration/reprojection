@@ -1,5 +1,7 @@
 #include "dlt_matrix_decompositions.hpp"
 
+#include <iostream>
+
 #include "geometry/lie.hpp"
 
 namespace reprojection::pnp {
@@ -50,21 +52,32 @@ Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
 }
 
 std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d const& H) {
-    Eigen::Matrix3d H_star{H / H.col(0).norm()};  // First column magnitude 1 - constrains scale
+    // The following discussion is based on the fact that all 3D points lie on one plane with Z=0. We start with H
+    // which is the product of a scale lambda, K and [r1 r2 t]. But because we are working with ideal normalized image
+    // coordinates (i.e. K = I) we can ignore K. Next, because r1 and r2 are columns or a rotation matrix we know their
+    // norm must be one and therefore that fixes the scale lambda. Finally, we know that the columns of a rotation
+    // matrix must be orthonormal, so we can calculate r3 as the cross product of the r1 and r2 vectors.
+    //
+    //      H = lambda * K * [r1 r2 t]
+    //      H = lambda * [r1 r2 t]              <- K = I, it disappears
+    //      H = [r1 r2 t]                       <- r1 and r2 are columns of a rotation matrix (l2 norm=1) - fixes lambda
+    //      [R|t] = [r1 r2 (r1 x r2)|t]         <- rotation matrix columns are orthonormal - fixes r3
 
-    Eigen::Vector3d const h_norms{H_star.colwise().norm()};
+    // Use the average magnitude of both r1 and r2 to fix scale - more stable than using just r1 or r2 alone
+    double const inv_lambda{(H.col(0).norm() + H.col(1).norm()) / 2};
+    Eigen::Matrix3d const H_star{H / inv_lambda};
 
-    H_star.col(0) = H_star.col(0) / h_norms(0);
-    H_star.col(1) = H_star.col(1) / h_norms(1);
-    Eigen::Vector3d const t{H_star.col(2) * (2.0 / (h_norms(0) + h_norms(1)))};
-    H_star.col(2) = H_star.col(0).cross(H_star.col(1));
+    Eigen::Matrix3d R;
+    R.col(0) = H_star.col(0);
+    R.col(1) = H_star.col(1);
+    R.col(2) = H_star.col(0).cross(H_star.col(1)); // r3 is orthogonal to r1 and r2
 
     // WARN(Jack): This is a brute force method to get a "proper" rotation matrix - that being said it will probably
     // introduce an error. For a better solution we should "apply a polar decomposition, or orthogonalization of the
-    // rotation matrix."
-    Eigen::Matrix3d const R{reprojection::geometry::Exp((reprojection::geometry::Log(H_star)))};
+    // rotation matrix" for an optimal solution.
+    Eigen::Matrix3d const R_star{reprojection::geometry::Exp((reprojection::geometry::Log(R)))};
 
-    return {R, t};
+    return {R_star, H_star.col(2)};
 }
 
 }  // namespace reprojection::pnp
