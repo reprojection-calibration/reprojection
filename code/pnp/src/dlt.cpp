@@ -3,7 +3,7 @@
 #include "dlt_matrix_decompositions.hpp"
 #include "dlt_solving.hpp"
 #include "matrix_utilities.hpp"
-#include "plane_utilities.hpp"
+
 
 namespace reprojection::pnp {
 
