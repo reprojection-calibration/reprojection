@@ -70,11 +70,11 @@ std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d co
     Eigen::Matrix3d R;
     R.col(0) = H_star.col(0);
     R.col(1) = H_star.col(1);
-    R.col(2) = H_star.col(0).cross(H_star.col(1)); // r3 is orthogonal to r1 and r2
+    R.col(2) = H_star.col(0).cross(H_star.col(1));  // r3 is orthogonal to r1 and r2
 
     // WARN(Jack): This is a brute force method to get a "proper" rotation matrix - that being said it will probably
     // introduce an error. For a better solution we should "apply a polar decomposition, or orthogonalization of the
-    // rotation matrix" for an optimal solution.
+    // rotation matrix" for an optimal solution. https://www.continuummechanics.org/polardecomposition.html
     Eigen::Matrix3d const R_star{reprojection::geometry::Exp((reprojection::geometry::Log(R)))};
 
     return {R_star, H_star.col(2)};

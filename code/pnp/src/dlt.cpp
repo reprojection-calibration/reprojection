@@ -2,8 +2,6 @@
 
 #include "dlt_matrix_decompositions.hpp"
 #include "dlt_solving.hpp"
-#include "matrix_utilities.hpp"
-
 
 namespace reprojection::pnp {
 
@@ -26,9 +24,11 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt23(Eigen::MatrixX2d const& pix
     return {ToIsometry3d(R, -R * t), K};
 }
 
-// Assumes that the pixels are in normalized ideal image space
+// WARN(Jack): Assumes that pixel coordinates are normalized ideal image coordinates, not pixel values.
 Eigen::Isometry3d Dlt22(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
-    Eigen::MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};  // CUTS OFF THE Z DIMENSION NO MATTER WHAT!!!
+    // ERROR(Jack): Always assumes we aligned with the Z dimension as the plane! CUTS OFF THE Z DIMENSION NO MATTER
+    // WHAT!!!
+    Eigen::MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};
 
     auto const A{ConstructA<3>(pixels, chopped_points)};
     auto H{SolveForH<3>(A)};

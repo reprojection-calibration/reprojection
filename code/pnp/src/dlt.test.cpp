@@ -28,8 +28,8 @@ TEST(PnpDlt, TestDlt23) {
 }
 
 TEST(PnpDlt, TestDlt22) {
-    Eigen::Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};  // Pixels must be in normalized space
-    MvgFrameGenerator const generator{MvgFrameGenerator(true, K)};
+    Eigen::Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};       // Pixels must be in normalized space for Dlt22
+    MvgFrameGenerator const generator{MvgFrameGenerator(true, K)};  // Points must have Z=0 (flat = true)
 
     for (size_t i{0}; i < 20; ++i) {
         MvgFrame const frame_i{generator.Generate()};
