@@ -21,6 +21,22 @@ TEST(Pnp, TestPnp) {
     }
 }
 
+// TODO(Jack): Add noisy point test for Dlt22 path of Pnp
+TEST(Pnp, TestPnpFlat) {
+    Eigen::Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};       // Pixels must be in normalized space for Dlt22
+    MvgFrameGenerator const generator{MvgFrameGenerator(true, K)};  // Points must have Z=0 (flat = true)
+
+    for (size_t i{0}; i < 20; ++i) {
+        MvgFrame const frame_i{generator.Generate()};
+
+        PnpResult const pnp_result{Pnp(frame_i.pixels, frame_i.points)};
+        EXPECT_TRUE(std::holds_alternative<Eigen::Isometry3d>(pnp_result));
+
+        Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
+        EXPECT_TRUE(pose_i.isApprox(geometry::Exp(frame_i.pose)));
+    }
+}
+
 // TODO(Jack): We need to rewrite these tests to check the known theoretical values. For example given certain input
 // noise covariances we can predict the results covariancce, or expected residual error etc. This current test simply
 // runs it with noise a few times and check that the mean value of all guesses is roughly equal to the input value. This
@@ -58,7 +74,7 @@ TEST(Pnp, TestMismatchedCorrespondence) {
 
     EXPECT_TRUE(std::holds_alternative<PnpStatusCode>(pnp_result));
     PnpStatusCode const pnp_status_code{std::get<PnpStatusCode>(pnp_result)};
-    EXPECT_EQ(pnp_status_code, PnpStatusCode::MismatchedCorrespondence);
+    EXPECT_EQ(pnp_status_code, PnpStatusCode::MismatchedCorrespondences);
 }
 
 TEST(Pnp, TestNotEnoughPoints) {
