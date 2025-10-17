@@ -30,6 +30,9 @@ Eigen::Isometry3d Dlt22(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& 
     // WHAT!!!
     Eigen::MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};
 
+    // WARN(Jack): If we had exactly four correspondences, this means that A would be 8x9. For the svd that follows is
+    // that ok? Do we need to zero pad anything or simply check that we have at least five points? Or is it no problem
+    // at all?
     auto const A{ConstructA<3>(pixels, chopped_points)};
     auto H{SolveForH<3>(A)};
 
