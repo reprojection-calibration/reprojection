@@ -33,7 +33,7 @@ TEST(SplineSe3Spline, TestEvaluate) {
     for (int i{1}; i < constants::k; ++i) {
         Eigen::Isometry3d delta{Eigen::Isometry3d::Identity()};
         delta.rotate(geometry::Exp(((static_cast<double>(i) / 10) * Eigen::Vector3d::Ones()).eval()));
-        delta.translation() = i * VectorD::Ones();  // Using defined constant types
+        delta.translation() = i * Eigen::Vector3d::Ones();  // Using defined constant types
 
         knot_i = delta * knot_i;
 

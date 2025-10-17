@@ -4,15 +4,23 @@
 
 namespace reprojection::spline {
 
-std::tuple<double, int> NormalizedSegmentTime(uint64_t const t0_ns, uint64_t const t_ns, uint64_t const delta_t_ns) {
-    assert(t0_ns <= t_ns);
-    assert(delta_t_ns > 0);
 
-    double const s_t{static_cast<double>(t_ns - t0_ns) / delta_t_ns};
-    double const i{std::floor(s_t)};
+// TODO(Jack): We also can calculate std::pow(delta_t_ns, derivative_order) in the constructor ahead of time if we
+// find out it causes some problems.
+VectorK CalculateU(double const u_i, DerivativeOrder const derivative) {
+    assert(0 <= u_i and u_i < 1);
 
-    return {(s_t - i), static_cast<int>(i)};
+    static MatrixKK const polynomial_coefficients{
+        PolynomialCoefficients(constants::k)};  // Static means it only evaluates once :)
+
+    int const derivative_order{static_cast<int>(derivative)};
+    VectorK const u{polynomial_coefficients.row(derivative_order).transpose().array() *
+                    TimePolynomial(constants::k, u_i, derivative_order).array()};
+
+    return u;
 }
+
+
 
 // For polynomial k=4
 //      1 1 1 1     - zero derivative coefficients

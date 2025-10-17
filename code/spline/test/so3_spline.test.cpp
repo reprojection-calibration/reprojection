@@ -2,9 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include "constants.hpp"
-#include "utilities_testing.hpp"
+#include "spline/constants.hpp"
 #include "geometry/lie.hpp"
+#include "utilities_testing.hpp"
 
 using namespace reprojection;
 using namespace reprojection::spline;
