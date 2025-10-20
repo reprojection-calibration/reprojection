@@ -4,36 +4,38 @@
 
 #include "geometry/lie.hpp"
 #include "multiple_view_geometry_data_generator.hpp"
+#include "testing_mocks/mvg_generator.hpp"
 
 using namespace reprojection;
 using namespace reprojection::pnp;
 
 TEST(Pnp, TestPnp) {
-    MvgFrameGenerator const generator{MvgFrameGenerator()};
+    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(false)};
     for (size_t i{0}; i < 20; ++i) {
-        MvgFrame const frame_i{generator.Generate()};
+        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
         PnpResult const pnp_result{Pnp(frame_i.pixels, frame_i.points)};
         EXPECT_TRUE(std::holds_alternative<Eigen::Isometry3d>(pnp_result));
 
         Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(geometry::Exp(frame_i.pose)));
+        EXPECT_TRUE(pose_i.isApprox(frame_i.pose));
     }
 }
 
 // TODO(Jack): Add noisy point test for Dlt22 path of Pnp
 TEST(Pnp, TestPnpFlat) {
-    Eigen::Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};       // Pixels must be in normalized space for Dlt22
-    MvgFrameGenerator const generator{MvgFrameGenerator(true, K)};  // Points must have Z=0 (flat = true)
+    Eigen::Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};  // Pixels must be in normalized space for Dlt22
+    testing_mocks::MvgGenerator const generator{
+        testing_mocks::MvgGenerator(true, K)};  // Points must have Z=0 (flat = true)
 
     for (size_t i{0}; i < 20; ++i) {
-        MvgFrame const frame_i{generator.Generate()};
+        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
         PnpResult const pnp_result{Pnp(frame_i.pixels, frame_i.points)};
         EXPECT_TRUE(std::holds_alternative<Eigen::Isometry3d>(pnp_result));
 
         Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(geometry::Exp(frame_i.pose)));
+        EXPECT_TRUE(pose_i.isApprox(frame_i.pose));
     }
 }
 
