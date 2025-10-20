@@ -88,7 +88,9 @@ class MvgGenerator {
     MvgGenerator(bool const flat = true,
                  Eigen::Matrix3d const& K = Eigen::Matrix3d{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}})
         : K_{K}, se3_spline_{constants::t0_ns, constants::delta_t_ns} {
-        CameraTrajectory const config{{0, 0, 0}, 1.0, {1, 1, 5}};
+        // TODO(Jack): Solve the xy plane alignment issues that gives us nans, cause I would like to be able to generate
+        // the sphere directly on the z axis
+        CameraTrajectory const config{{0, 0, 0}, 1.0, {0.01, 0.01, 5}};
         std::vector<Eigen::Isometry3d> const poses{SphereTrajectory(config)};
 
         // NOTE(Jack): To get to the actual ends of the sphere on the spline we would need to have one knot before the
@@ -118,7 +120,7 @@ class MvgGenerator {
 
     // Input is fractional time of trajectory from [0,1)
     MvgFrame Generate(double const t) const {
-        assert( 0 <=t and t < 1);
+        assert(0 <= t and t < 1);
 
         // TODO(Jack): Check boundary conditions!
         // Static cast means we loose some precision, but at nanosecond level this should not matter.
@@ -161,7 +163,7 @@ using namespace reprojection::testing_mocks;
 TEST(TestingMocks, XXX) {
     auto const generator{MvgGenerator()};
 
-    auto const frame{generator.Generate(0.5)};
+    auto const frame{generator.Generate(0.1)};
 
     std::cout << frame.pixels << std::endl;
 
