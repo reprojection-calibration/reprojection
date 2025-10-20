@@ -2,6 +2,7 @@
 
 #include "geometry/lie.hpp"
 #include "spline/se3_spline.hpp"
+#include "constants.hpp"
 
 namespace reprojection::testing_mocks {
 
@@ -14,8 +15,9 @@ Eigen::Vector3d Cartesian(double const theta, double const phi) {
 }
 
 Eigen::MatrixX3d SpherePoints(double const radius, Eigen::Vector3d const origin) {
-    int const points{100};
-    int const loops{4};
+    // TODO(Jack): These should be globals in the context of the test mocking
+    int const points{constants::num_poses};
+    int const loops{constants::num_loops};
 
     Eigen::MatrixX3d sphere(points, 3);
     for (int i{0}; i < points; ++i) {
