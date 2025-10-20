@@ -15,5 +15,6 @@ AddLibrary()
 
 set(TESTS
         src/sphere_trajectory.test.cpp
+        test/mvg_generator.test.cpp
 )
 AddTests()

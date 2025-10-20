@@ -2,45 +2,26 @@
 
 #include <gtest/gtest.h>
 
-#include <fstream>   // SAVING POINTS REMOVE
-#include <iostream>  // SAVING POINTS REMOVE
-
-namespace reprojection::testing_mocks {
-
-// Function to save a vector of Eigen::Isometry3d transformations to a CSV file
-void saveTransformsToCSV(const std::vector<Eigen::Isometry3d>& transforms, const std::string& filename) {
-    // Open the file to write the matrix
-    std::ofstream file(filename);
-
-    // Check if the file is open
-    if (file.is_open()) {
-        // Iterate over each transform in the vector
-        for (const auto& transform : transforms) {
-            // Write the 4x4 matrix of each transform on a new row
-            for (int i = 0; i < 4; ++i) {
-                for (int j = 0; j < 4; ++j) {
-                    file << transform.matrix()(i, j);
-                    if (not(i * j == 9)) file << ",";  // Add a comma if not the last column
-                }
-            }
-            file << "\n";  // Newline after tf
-        }
-        std::cout << "Transformation matrices saved to " << filename << std::endl;
-    } else {
-        std::cerr << "Unable to open file " << filename << "!" << std::endl;
-    }
-}
-
-}  // namespace reprojection::testing_mocks
-
 using namespace reprojection::testing_mocks;
 
-TEST(TestingMocks, TestTrajectoryGenerator) {
-    CameraTrajectory const config{{3, 3, 0}, 4, {0, 0, 0}};
+// WARN(Jack): In this test we do not test that the direction the tfs are pointing at is correct! Only the positions of
+// them.
+TEST(TestingMocksSphereTrajectory, TestSphereTrajectory) {
+    double const sphere_radius{1.5};
+    Eigen::Vector3d const sphere_origin{1, 2, 3};
+    CameraTrajectory const config{{0, 0, 0}, sphere_radius, sphere_origin};
 
     std::vector<Eigen::Isometry3d> const tfs{SphereTrajectory(config)};
 
-    saveTransformsToCSV(tfs, "sphere_cameras.txt");
+    double radius{0};
+    Eigen::Vector3d centroid{0, 0, 0};
+    for (auto const& tf : tfs) {
+        radius += (tf.translation() - sphere_origin).norm();
+        centroid += tf.translation();
+    }
+    radius = radius / std::size(tfs);
+    centroid = centroid / std::size(tfs);
 
-    EXPECT_FALSE(true);
+    EXPECT_FLOAT_EQ(radius, sphere_radius);
+    EXPECT_TRUE(centroid.isApprox(sphere_origin));
 }
