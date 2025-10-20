@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "geometry/lie.hpp"
-#include "multiple_view_geometry_data_generator.hpp"
+#include "testing_mocks/mvg_generator.hpp"
 
 using namespace reprojection;
 using namespace reprojection::pnp;
@@ -11,16 +11,15 @@ using namespace reprojection::pnp;
 // TODO(Jack): Test the nonlinear refinement with noisy data to make sure the optimization executes more than one step!
 
 TEST(PnpNonlinearRefinement, TestNonlinearRefinement) {
-    MvgFrameGenerator const generator{MvgFrameGenerator()};
+    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator()};
     for (size_t i{0}; i < 20; ++i) {
-        MvgFrame const frame_i{generator.Generate()};
+        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
-        auto const [tf, K]{
-            NonlinearRefinement(frame_i.pixels, frame_i.points, geometry::Exp(frame_i.pose), generator.GetK())};
+        auto const [tf, K]{NonlinearRefinement(frame_i.pixels, frame_i.points, frame_i.pose, generator.GetK())};
 
-        EXPECT_TRUE(tf.isApprox(geometry::Exp(frame_i.pose))) << "Optimization result:\n"
-                                                              << geometry::Log(tf) << "\noptimization input:\n"
-                                                              << geometry::Log(geometry::Exp(frame_i.pose));
+        EXPECT_TRUE(tf.isApprox(frame_i.pose)) << "Optimization result:\n"
+                                               << geometry::Log(tf) << "\noptimization input:\n"
+                                               << geometry::Log(frame_i.pose);
         EXPECT_TRUE(K.isApprox(generator.GetK())) << "Optimization result:\n"
                                                   << K << "\noptimization input:\n"
                                                   << generator.GetK();

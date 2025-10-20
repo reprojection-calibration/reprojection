@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 
 #include "geometry/lie.hpp"
-#include "multiple_view_geometry_data_generator.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 
 using namespace reprojection;
