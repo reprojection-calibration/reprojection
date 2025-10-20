@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 
 #include "geometry/lie.hpp"
-#include "multiple_view_geometry_data_generator.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 
 // TODO(Jack): I think we could add a test where we check more properties, like for example PC=0, etc. Even though these
@@ -19,7 +18,6 @@ TEST(PnpDlt, TestDlt23) {
         auto const [tf, K]{Dlt23(frame_i.pixels, frame_i.points)};
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
-
         EXPECT_TRUE(tf.isApprox(frame_i.pose)) << "Result:\n"
                                                << tf.matrix() << "\nexpected result:\n"
                                                << frame_i.pose.matrix();
@@ -30,17 +28,19 @@ TEST(PnpDlt, TestDlt23) {
 }
 
 TEST(PnpDlt, TestDlt22) {
-    Eigen::Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};       // Pixels must be in normalized space for Dlt22
-    MvgFrameGenerator const generator{MvgFrameGenerator(true, K)};  // Points must have Z=0 (flat = true)
+    Eigen::Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};  // Pixels must be in normalized space for Dlt22
+    testing_mocks::MvgGenerator const generator{
+        testing_mocks::MvgGenerator(true, K)};  // Points must have Z=0 (flat = true)
 
     for (size_t i{0}; i < 20; ++i) {
-        MvgFrame const frame_i{generator.Generate()};
+        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
         auto const tf{Dlt22(frame_i.pixels, frame_i.points)};
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
 
-        Eigen::Vector<double, 6> const pose_i{geometry::Log(tf)};
-        EXPECT_TRUE(pose_i.isApprox(frame_i.pose)) << "Result:\n" << pose_i << "\nexpected result:\n" << frame_i.pose;
+        EXPECT_TRUE(tf.isApprox(frame_i.pose)) << "Result:\n"
+                                               << tf.matrix() << "\nexpected result:\n"
+                                               << frame_i.pose.matrix();
     }
 }
