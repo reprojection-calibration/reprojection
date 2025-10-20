@@ -102,6 +102,8 @@ MvgFrame MvgGenerator::Generate(double const t) const {
     return {pose_t.value(), pixels, points_};
 }
 
+Eigen::Matrix3d MvgGenerator::GetK() const { return K_; }
+
 Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w, Eigen::Matrix3d const& K,
                                        Eigen::Isometry3d const& tf_co_w) {
     // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not

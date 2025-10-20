@@ -16,6 +16,7 @@ set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
         geometry
+        spline # needed because of testing_mocks dependency -_-
         testing_mocks
 )
 AddLibrary()
