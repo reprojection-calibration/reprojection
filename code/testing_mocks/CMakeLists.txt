@@ -4,6 +4,7 @@ find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
         src/mvg_generator.cpp
+        src/sphere_trajectory.cpp
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen
@@ -13,6 +14,6 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        test/mvg_generator.test.cpp
+        src/sphere_trajectory.test.cpp
 )
 AddTests()

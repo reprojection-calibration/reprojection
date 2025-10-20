@@ -1,4 +1,4 @@
-#include "testing_mocks/mvg_generator.hpp"
+#include "sphere_trajectory.hpp"
 
 #include <gtest/gtest.h>
 
