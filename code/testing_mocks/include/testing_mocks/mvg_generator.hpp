@@ -2,4 +2,42 @@
 
 #include <Eigen/Dense>
 
-namespace reprojection::testing_mocks {}  // namespace reprojection::testing_mocks
+#include "spline/se3_spline.hpp"
+
+
+namespace reprojection::testing_mocks {
+
+// COPIED FROM FEATURE EXTRACTION
+Eigen::ArrayXi ToEigen(std::vector<int> const& vector);
+
+// COPIED FROM FEATURE EXTRACTION
+// There has to be a more eloquent way to do this... but it gets the job done :)
+Eigen::ArrayXi MaskIndices(Eigen::ArrayXi const& array);
+
+// COPIED FROM FEATURE EXTRACTION
+Eigen::ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_only);
+
+struct MvgFrame {
+    Eigen::Isometry3d pose;
+    Eigen::MatrixX2d pixels;
+    Eigen::MatrixX3d points;
+};
+
+class MvgGenerator {
+   public:
+    MvgGenerator(bool const flat = true,
+                 Eigen::Matrix3d const& K = Eigen::Matrix3d{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}});
+
+    // Input is fractional time of trajectory from [0,1)
+    MvgFrame Generate(double const t) const;
+
+    static Eigen::MatrixX2d Project(Eigen::MatrixX3d const& points_w, Eigen::Matrix3d const& K,
+                                    Eigen::Isometry3d const& tf_co_w);
+
+   private:
+    Eigen::Matrix3d K_;
+    spline::Se3Spline se3_spline_;
+    Eigen::MatrixX3d points_;
+};
+
+}  // namespace reprojection::testing_mocks

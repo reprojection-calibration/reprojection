@@ -16,6 +16,7 @@ set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
         geometry
+        testing_mocks
 )
 AddLibrary()
 
