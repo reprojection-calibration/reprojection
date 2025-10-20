@@ -7,19 +7,19 @@ C1 = 10
 C2 = 0.1
 
 trajectory = []
-for i in range(200):
-    theta = 10* i *np.pi/200
-    phi = i/100
+len = 100
+for i in range(len):
+    loops = 4
+    theta = i * loops * 2 * np.pi / len
+    phi = 2 * np.pi * i / len
 
-    x=np.sin(theta)*np.cos(phi)
-    y=np.sin(theta)*np.sin(phi)
-    z=np.cos(theta)
+    x = np.sin(theta) * np.cos(phi)
+    y = np.sin(theta) * np.sin(phi)
+    z = np.cos(theta)
 
-    trajectory.append([x,y,z])
-
+    trajectory.append([x, y, z])
 
 trajectory = np.asarray(trajectory, dtype=np.float32)
-
 
 # Visualization
 fig = plt.figure()
