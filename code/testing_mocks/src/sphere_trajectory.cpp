@@ -29,13 +29,13 @@ Eigen::MatrixX3d SpherePoints(double const radius, Eigen::Vector3d const origin)
 }
 
 // COPY AND PASTED FROM ORIGINAL DATA GENERATOR
+// WARN(Jack): In testing this function I found that when the x and y coordinates of the origin and camera_position
+// are the same, i.e. the points  are aligned along the z-plane, the algorithm returns nans. There is probably a
+// simple test we can use to check this condition to avoid the nans, but for now we will just take this risk and
+// hope that we never have the same x and y coordinates for both camera and origin. This current implementation also
+// does not explicitly handle the case where the two points are the same, I assume that takes some error handling to
+// prevent nans as well.
 Eigen::Vector3d TrackPoint(Eigen::Vector3d const& origin, Eigen::Vector3d const& camera_position) {
-    // WARN(Jack): In testing this function I found that when the x and y coordinates of the origin and camera_position
-    // are the same, i.e. the points  are aligned along the z-plane, the algorithm returns nans. There is probably a
-    // simple test we can use to check this condition to avoid the nans, but for now we will just take this risk and
-    // hope that we never have the same x and y coordinates for both camera and origin. This current implementation also
-    // does not explicitly handle the case where the two points are the same, I assume that takes some error handling to
-    // prevent nans as well.
     Eigen::Vector3d const origin_direction{(origin - camera_position).normalized()};
     Eigen::Vector3d const camera_forward_direction{0, 0, 1};
 
