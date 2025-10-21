@@ -7,9 +7,7 @@
 
 namespace reprojection::testing_mocks {
 
-// Generates an "oriented" trajectory on a sphere. In this case oriented means that the +z-axis is pointed at/looking at
-// the world_origin as specified in the CameraTrajectory config. We do this to simulate a camera traveling around in a
-// 3D trajectory always facing a single point where the calibration board is.
+
 std::vector<Eigen::Isometry3d> SphereTrajectory(CameraTrajectory const& config) {
     Eigen::MatrixX3d const sphere_points{SpherePoints(config.sphere_radius, config.sphere_origin)};
 

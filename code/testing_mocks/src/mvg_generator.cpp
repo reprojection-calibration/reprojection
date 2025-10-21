@@ -9,12 +9,7 @@ namespace reprojection::testing_mocks {
 
 MvgGenerator::MvgGenerator(bool const flat, Eigen::Matrix3d const& K)
     : K_{K}, se3_spline_{constants::t0_ns, constants::delta_t_ns} {
-    CameraTrajectory const config{{0, 0, 0}, 1.0, {0, 0, 5}};
-    std::vector<Eigen::Isometry3d> const poses{SphereTrajectory(config)};
-
-    // NOTE(Jack): To get to the actual ends of the sphere on the spline we would need to have one knot before the
-    // start and three knots past the end of the sphere to allow for interpolation to work (for spline degree=4).
-    // Here we do not have that.
+    std::vector<Eigen::Isometry3d> const poses{SphereTrajectory(CameraTrajectory{{0, 0, 0}, 1.0, {0, 0, 5}})};
     for (auto const& pose : poses) {
         se3_spline_.AddKnot(pose);
     }
