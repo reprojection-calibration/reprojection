@@ -15,6 +15,7 @@ set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
         geometry
+        projection_functions
         spline # needed because of testing_mocks dependency -_-
         testing_mocks
 )

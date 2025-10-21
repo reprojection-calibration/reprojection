@@ -5,32 +5,14 @@
 
 #include <Eigen/Dense>
 
+#include "projection_functions/pinhole.hpp"
+
 namespace reprojection::pnp {
 
 std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
                                                                    Eigen::MatrixX3d const& points,
                                                                    Eigen::Isometry3d const& initial_pose,
                                                                    Eigen::Matrix3d const& initial_K);
-
-// TODO(Jack): What is the final and best type for camera going to be? Raw pointer smells to me, or is at least not 100%
-// necessary considering how far along with ceres we are (not far).
-template <typename T>
-Eigen::Vector<T, 2> PinholeProjection(T const* const camera, Eigen::Vector<T, 3> const& point) {
-    T const& fx{camera[0]};
-    T const& fy{camera[1]};
-    T const& cx{camera[2]};
-    T const& cy{camera[3]};
-
-    T const& x{point[0]};
-    T const& y{point[1]};
-    T const& z{point[2]};
-
-    // TODO(Jack): Can/should we replace this with eigen matrix operations?
-    T const u{(fx * x / z) + cx};
-    T const v{(fy * y / z) + cy};
-
-    return {u, v};
-}
 
 // TODO(Jack): Can we use the se3 type here?
 // NOTE(Jack): We use Eigen::Ref here so we can pass both maps (in the PinholeCostFunction.operator()) and the direct
@@ -63,7 +45,7 @@ struct PinholeCostFunction {
         Eigen::Map<Eigen::Vector<T, 6> const> pose(input_pose);
         Eigen::Vector<T, 3> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
 
-        Eigen::Vector<T, 2> const pixel{PinholeProjection(pinhole_intrinsics, point_co)};
+        Eigen::Vector<T, 2> const pixel{projection_functions::PinholeProjection(pinhole_intrinsics, point_co)};
 
         residual[0] = T(pixel_[0]) - pixel[0];
         residual[1] = T(pixel_[1]) - pixel[1];
