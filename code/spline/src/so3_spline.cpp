@@ -1,11 +1,11 @@
-#include "so3_spline.hpp"
+#include "spline/so3_spline.hpp"
 
 #include <numeric>
 
-#include "constants.hpp"
 #include "geometry/lie.hpp"
-#include "r3_spline.hpp"  // REMOVE AND USE COMMON GENERIC IMPLEMENTATION
-#include "types.hpp"
+#include "spline/constants.hpp"
+#include "spline/r3_spline.hpp"
+#include "spline/types.hpp"
 #include "utilities.hpp"
 
 namespace reprojection::spline {
@@ -30,9 +30,7 @@ std::optional<Eigen::Matrix3d> So3Spline::Evaluate(uint64_t const t_ns) const {
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    // TODO(Jack): Use common generic method one! Pay attention to how we use the constants here though! If we will
-    // always be the same dimension for both position and rotation maybe that simplifies things.
-    VectorK const u0{r3Spline::CalculateU(u_i, DerivativeOrder::Null)};
+    VectorK const u0{CalculateU(u_i, DerivativeOrder::Null)};
     VectorK const weight0{M_ * u0};
 
     // TODO(Jack): What is really the right size for all of these?
@@ -58,9 +56,9 @@ std::optional<Eigen::Vector3d> So3Spline::EvaluateVelocity(uint64_t const t_ns) 
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    VectorK const u0{r3Spline::CalculateU(u_i, DerivativeOrder::Null)};
+    VectorK const u0{CalculateU(u_i, DerivativeOrder::Null)};
     VectorK const weight0{M_ * u0};
-    VectorK const u1{r3Spline::CalculateU(u_i, DerivativeOrder::First)};
+    VectorK const u1{CalculateU(u_i, DerivativeOrder::First)};
     VectorK const weight1{M_ * u1 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::First))};
 
     std::array<Eigen::Vector3d, constants::k - 1> const delta_phis{DeltaPhi(knots_, i)};
@@ -85,11 +83,11 @@ std::optional<Eigen::Vector3d> So3Spline::EvaluateAcceleration(uint64_t const t_
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    VectorK const u0{r3Spline::CalculateU(u_i, DerivativeOrder::Null)};
+    VectorK const u0{CalculateU(u_i, DerivativeOrder::Null)};
     VectorK const weight0{M_ * u0};
-    VectorK const u1{r3Spline::CalculateU(u_i, DerivativeOrder::First)};
+    VectorK const u1{CalculateU(u_i, DerivativeOrder::First)};
     VectorK const weight1{M_ * u1 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::First))};
-    VectorK const u2{r3Spline::CalculateU(u_i, DerivativeOrder::Second)};
+    VectorK const u2{CalculateU(u_i, DerivativeOrder::Second)};
     VectorK const weight2{M_ * u2 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::Second))};
 
     std::array<Eigen::Vector3d, constants::k - 1> const delta_phis{DeltaPhi(knots_, i)};

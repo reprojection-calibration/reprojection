@@ -1,9 +1,9 @@
-#include "so3_spline.hpp"
+#include "spline/so3_spline.hpp"
 
 #include <gtest/gtest.h>
 
-#include "constants.hpp"
 #include "geometry/lie.hpp"
+#include "spline/constants.hpp"
 #include "utilities_testing.hpp"
 
 using namespace reprojection;

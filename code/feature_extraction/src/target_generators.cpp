@@ -1,5 +1,6 @@
 #include "target_generators.hpp"
 
+#include "eigen_utilities/grid.hpp"
 #include "utilities.hpp"
 
 namespace reprojection::feature_extraction {
@@ -16,7 +17,7 @@ cv::Mat GenerateCheckerboard(cv::Size const& pattern_size, int const square_size
     int const width{(square_size_pixels * cols) + white_space_border};
     cv::Mat checkerboard{255 * cv::Mat::ones(height, width, CV_8UC1)};  // Start with white image
 
-    Eigen::ArrayX2i const grid{GenerateGridIndices(rows, cols)};
+    Eigen::ArrayX2i const grid{eigen_utilities::GenerateGridIndices(rows, cols)};
     for (Eigen::Index i{0}; i < grid.rows(); ++i) {
         Eigen::Array2i const indices{grid.row(i)};
 
@@ -49,8 +50,9 @@ cv::Mat GenerateCircleGrid(cv::Size const& pattern_size, int const circle_radius
                     white_space_border};
     cv::Mat circlgrid{255 * cv::Mat::ones(height, width, CV_8UC1)};
 
-    Eigen::ArrayX2i const grid{asymmetric ? GenerateGridIndices(pattern_size.height, pattern_size.width, true)
-                                          : GenerateGridIndices(pattern_size.height, pattern_size.width, false)};
+    Eigen::ArrayX2i const grid{
+        asymmetric ? eigen_utilities::GenerateGridIndices(pattern_size.height, pattern_size.width, true)
+                   : eigen_utilities::GenerateGridIndices(pattern_size.height, pattern_size.width, false)};
 
     for (Eigen::Index i{0}; i < grid.rows(); ++i) {
         Eigen::Array2i const indices{grid.row(i)};
@@ -75,7 +77,7 @@ cv::Mat AprilBoard3Generation::GenerateBoard(int const num_bits, uint64_t const 
     cv::Mat april_board{cv::Mat::zeros(pattern_size.height * april_tag_size_pixels,
                                        pattern_size.width * april_tag_size_pixels, CV_8UC1)};
 
-    Eigen::ArrayX2i const tag_layout{GenerateGridIndices(pattern_size.height, pattern_size.width)};
+    Eigen::ArrayX2i const tag_layout{eigen_utilities::GenerateGridIndices(pattern_size.height, pattern_size.width)};
     for (Eigen::Index i{0}; i < tag_layout.rows(); ++i) {
         Eigen::Array2i const indices{tag_layout.row(i)};
 
@@ -140,7 +142,7 @@ cv::Mat AprilBoard3Generation::GenerateTag(int const bit_size_pixels, Eigen::Mat
     // Fill in all the bits of the data region
     // TODO(Jack): This logic is practically exactly the same as in the checkerboard generation... is there a practical
     // way to DRY ourselves here?
-    Eigen::ArrayX2i const grid{GenerateGridIndices(num_bits, num_bits)};
+    Eigen::ArrayX2i const grid{eigen_utilities::GenerateGridIndices(num_bits, num_bits)};
     for (Eigen::Index i{0}; i < grid.rows(); ++i) {
         Eigen::Array2i const indices{grid.row(i)};
 

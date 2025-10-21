@@ -2,10 +2,11 @@
 
 #include <gtest/gtest.h>
 
+#include "eigen_utilities/grid.hpp"
 #include "target_generators.hpp"
 #include "test_fixture_april_tag.hpp"
-#include "utilities.hpp"  // REMOVE
 
+using namespace reprojection;
 using namespace reprojection::feature_extraction;
 
 TEST(TargetExtractors, TestCheckerboardExtractor) {
@@ -133,6 +134,13 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
     for (int i{0}; i < pattern_size.width * pattern_size.height; ++i) {
         AprilTagDetection detection_i;
         detection_i.id = i;
+        // WARN(Jack): Even though I do not use the following fields, when I compiled in release mode without these
+        // explicitly set I got the following error "may be used uninitialized [-Werror=maybe-uninitialized]". Therefore
+        // I have added these here to allow us to compile in release mode. The real answer probably is somewhere in the
+        // constructor or copy constructor design.
+        detection_i.H = Eigen::Matrix3d::Identity();
+        detection_i.c = Eigen::Vector2d::Zero();
+        detection_i.p = Eigen::Matrix<double, 4, 2>::Zero();
         detections.push_back(detection_i);
     }
 
@@ -153,7 +161,7 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
 TEST_F(AprilTagTestFixture, TestAprilGrid3CornerPositions) {
     // Should be even because aprilgrids always have even points in each direction because it is always a multiple of
     // two of the board's tag rows/columns
-    Eigen::ArrayX2i const grid{GenerateGridIndices(6, 8)};
+    Eigen::ArrayX2i const grid{eigen_utilities::GenerateGridIndices(6, 8)};
     Eigen::MatrixX3d const points{AprilGrid3Extractor::CornerPositions(grid, 0.5)};
 
     EXPECT_EQ(points.rows(), grid.rows());

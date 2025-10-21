@@ -1,7 +1,7 @@
 #pragma once
 
+#include "spline/time_handler.hpp"
 #include "types.hpp"
-#include "utilities.hpp"
 
 namespace reprojection::spline {
 

@@ -25,7 +25,9 @@ include(cmake_macros/add_tests.cmake)
 
 enable_testing()
 
+add_subdirectory(eigen_utilities)
 add_subdirectory(geometry)
 add_subdirectory(spline)
+add_subdirectory(testing_mocks)
 add_subdirectory(pnp)
 add_subdirectory(feature_extraction)

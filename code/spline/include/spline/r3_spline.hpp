@@ -2,8 +2,8 @@
 
 #include <optional>
 
-#include "types.hpp"
-#include "utilities.hpp"
+#include "spline/time_handler.hpp"
+#include "spline/types.hpp"
 
 namespace reprojection::spline {
 
@@ -15,14 +15,11 @@ class r3Spline {
    public:
     r3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns);
 
-    std::optional<VectorD> Evaluate(uint64_t const t_ns,
-                                    DerivativeOrder const derivative = DerivativeOrder::Null) const;
-
-    // TODO(Jack): Can we use this same method also for the rotation spline?
-    static VectorK CalculateU(double const u_i, DerivativeOrder const derivative = DerivativeOrder::Null);
+    std::optional<Eigen::Vector3d> Evaluate(uint64_t const t_ns,
+                                            DerivativeOrder const derivative = DerivativeOrder::Null) const;
 
     // TODO(Jack): Let us consider what benefit we would get from making this private at some later point
-    std::vector<VectorD> knots_;  // A.k.a. "control points"
+    std::vector<Eigen::Vector3d> knots_;  // A.k.a. "control points"
 
    private:
     TimeHandler time_handler_;

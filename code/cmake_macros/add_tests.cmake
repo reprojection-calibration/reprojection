@@ -12,9 +12,14 @@ macro(AddTests)
         set(TEST_NAME ${LIBRARY_NAME}.${TEST_NAME})
 
         add_executable(${TEST_NAME} ${TEST})
-        target_link_libraries(${TEST_NAME}
+        target_include_directories(${TEST_NAME} PRIVATE
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
+                ${INCLUDE_DIRECTORIES}
+        )
+        target_link_libraries(${TEST_NAME} PRIVATE
                 GTest::gtest_main
                 ${LIBRARY_NAME}
+                ${LINK_LIBRARIES}
         )
 
         if (CODE_COVERAGE)

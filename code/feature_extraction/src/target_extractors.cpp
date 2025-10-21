@@ -6,13 +6,14 @@ extern "C" {
 #include "generated_apriltag_code/tagCustom36h11.h"
 }
 
+#include "eigen_utilities/grid.hpp"
 #include "utilities.hpp"
 
 namespace reprojection::feature_extraction {
 
 CheckerboardExtractor::CheckerboardExtractor(cv::Size const& pattern_size, const double unit_dimension)
     : TargetExtractor(pattern_size, unit_dimension) {
-    point_indices_ = GenerateGridIndices(pattern_size_.height, pattern_size_.width);
+    point_indices_ = eigen_utilities::GenerateGridIndices(pattern_size_.height, pattern_size_.width);
     points_ = Eigen::MatrixX3d{point_indices_.rows(), 3};
     points_.leftCols(2) = unit_dimension_ * point_indices_.cast<double>();
     points_.col(2).setZero();  // Flat on calibration board, z=0.
@@ -40,9 +41,9 @@ CircleGridExtractor::CircleGridExtractor(cv::Size const& pattern_size, const dou
     if (asymmetric_) {
         // NOTE(Jack): We reverse the order of the width and height here for the asymmetric case! Why that is... you
         // tell me boss...
-        point_indices_ = GenerateGridIndices(pattern_size.width, pattern_size.height, true);
+        point_indices_ = eigen_utilities::GenerateGridIndices(pattern_size.width, pattern_size.height, true);
     } else {
-        point_indices_ = GenerateGridIndices(pattern_size_.height, pattern_size_.width);
+        point_indices_ = eigen_utilities::GenerateGridIndices(pattern_size_.height, pattern_size_.width);
     }
 
     points_ = Eigen::MatrixX3d{point_indices_.rows(), 3};
@@ -84,7 +85,7 @@ AprilGrid3Extractor::AprilGrid3Extractor(cv::Size const& pattern_size, const dou
     : TargetExtractor(pattern_size, unit_dimension),
       tag_family_{AprilTagFamily{tagCustom36h11_create(), tagCustom36h11_destroy}},
       tag_detector_{AprilTagDetector{tag_family_, {2.0, 0.0, 1, false, false}}} {
-    point_indices_ = GenerateGridIndices(2 * pattern_size_.height, 2 * pattern_size_.width);
+    point_indices_ = eigen_utilities::GenerateGridIndices(2 * pattern_size_.height, 2 * pattern_size_.width);
     points_ = CornerPositions(point_indices_, unit_dimension);
 }
 
@@ -135,7 +136,7 @@ Eigen::ArrayXi AprilGrid3Extractor::VisibleGeometry(cv::Size const& pattern_size
         mask.push_back(corner_3);
     }
 
-    return ToEigen(mask);
+    return eigen_utilities::ToEigen(mask);
 }
 
 Eigen::MatrixX3d AprilGrid3Extractor::CornerPositions(Eigen::ArrayX2i const& indices, double const unit_dimension) {

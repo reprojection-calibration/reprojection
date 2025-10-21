@@ -23,6 +23,7 @@ set(INCLUDE_DIRECTORIES
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen
+        eigen_utilities
         ${apriltag_LIBRARIES}
         ${OpenCV_LIBS}
         ${YAML_CPP_LIBRARIES}
@@ -49,6 +50,7 @@ foreach (EXAMPLE IN LISTS EXAMPLES)
     add_executable(${EXAMPLE_NAME} ${EXAMPLE})
     target_link_libraries(${EXAMPLE_NAME}
             ${LIBRARY_NAME}
+            ${LINK_LIBRARIES}
     )
 endforeach ()
 

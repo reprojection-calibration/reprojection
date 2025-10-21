@@ -1,9 +1,10 @@
-#include "r3_spline.hpp"
+#include "spline/r3_spline.hpp"
 
 #include <gtest/gtest.h>
 
-#include "constants.hpp"
-#include "types.hpp"
+#include "spline/constants.hpp"
+#include "spline/types.hpp"
+#include "utilities.hpp"
 
 using namespace reprojection::spline;
 
@@ -14,14 +15,14 @@ TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
 
     // Add four knots which means we can ask for evaluations within the one time segment at the very start of the spline
     for (int i{0}; i < constants::k; ++i) {
-        r3_spline.knots_.push_back(VectorD::Zero());
+        r3_spline.knots_.push_back(Eigen::Vector3d::Zero());
     }
 
     EXPECT_NE(r3_spline.Evaluate(100), std::nullopt);  // Inside first time segment - valid
     EXPECT_EQ(r3_spline.Evaluate(105), std::nullopt);  // Outside first time segment - invalid
 
     // Add one more knot to see that we can now do a valid evaluation in the second time segment
-    r3_spline.knots_.push_back(VectorD::Zero());
+    r3_spline.knots_.push_back(Eigen::Vector3d::Zero());
     EXPECT_NE(r3_spline.Evaluate(105), std::nullopt);
 }
 
@@ -29,7 +30,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
     // Completely empty spline
     r3Spline r3_spline{100, 5};
     for (int i{0}; i < constants::k; ++i) {
-        r3_spline.knots_.push_back(i * VectorD::Ones());
+        r3_spline.knots_.push_back(i * Eigen::Vector3d::Ones());
     }
 
     // Test three elements in the first and only valid time segment
@@ -49,7 +50,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
     EXPECT_TRUE(p_2.value().isApproxToConstant(1.4));
 
     // Add one more element and test the first element in that second time segment
-    r3_spline.knots_.push_back(4 * VectorD::Ones());
+    r3_spline.knots_.push_back(4 * Eigen::Vector3d::Ones());
     auto const p_5{r3_spline.Evaluate(105)};
     ASSERT_TRUE(p_5.has_value());
     EXPECT_TRUE(p_5.value().isApproxToConstant(2));
@@ -59,7 +60,7 @@ TEST(Spline_r3Spline, TestEvaluateDerivatives) {
     // Completely empty spline
     r3Spline r3_spline{100, 5};
     for (int i{0}; i < constants::k; ++i) {
-        r3_spline.knots_.push_back(i * VectorD::Ones());
+        r3_spline.knots_.push_back(i * Eigen::Vector3d::Ones());
     }
 
     auto const p_du{r3_spline.Evaluate(101, DerivativeOrder::First)};
@@ -79,9 +80,9 @@ TEST(Spline_r3Spline, TestEvaluateDerivatives) {
 TEST(Spline_r3Spline, TestCalculateUAtZero) {
     double const u_i{0};
 
-    VectorK const u{r3Spline::CalculateU(u_i)};
-    VectorK const du{r3Spline::CalculateU(u_i, DerivativeOrder::First)};
-    VectorK const dudu{r3Spline::CalculateU(u_i, DerivativeOrder::Second)};
+    VectorK const u{CalculateU(u_i)};
+    VectorK const du{CalculateU(u_i, DerivativeOrder::First)};
+    VectorK const dudu{CalculateU(u_i, DerivativeOrder::Second)};
 
     EXPECT_TRUE(u.isApprox(VectorK{1, 0, 0, 0}));
     EXPECT_TRUE(du.isApprox(VectorK{0, 1, 0, 0}));
@@ -91,9 +92,9 @@ TEST(Spline_r3Spline, TestCalculateUAtZero) {
 TEST(Spline_r3Spline, TestCalculate) {
     double const u_i{0.5};
 
-    VectorK const u{r3Spline::CalculateU(u_i)};
-    VectorK const du{r3Spline::CalculateU(u_i, DerivativeOrder::First)};
-    VectorK const dudu{r3Spline::CalculateU(u_i, DerivativeOrder::Second)};
+    VectorK const u{CalculateU(u_i)};
+    VectorK const du{CalculateU(u_i, DerivativeOrder::First)};
+    VectorK const dudu{CalculateU(u_i, DerivativeOrder::Second)};
 
     EXPECT_TRUE(u.isApprox(VectorK{1, 0.5, 0.25, 0.125}));
     EXPECT_TRUE(du.isApprox(VectorK{0, 1, 1, 0.75}));
