@@ -2,7 +2,7 @@
 
 namespace reprojection::calibration {
 
-// Modified Least Squares method (MLS) from "A Few Methods for Fitting Circles to Data"
+// Modified Least Squares method (MLS) from "A Few Methods for Fitting Circles to Data" Dale Umbach, Kerry N. Jones
 std::tuple<Eigen::Vector2d, double> FitCircle(Eigen::MatrixX2d const& data) {
     Eigen::VectorXd const& x(data.col(0));
     Eigen::VectorXd const& y(data.col(1));
