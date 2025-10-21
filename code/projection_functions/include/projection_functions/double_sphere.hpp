@@ -4,6 +4,8 @@
 
 #include "projection_functions/pinhole.hpp"
 
+// Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957)
+
 namespace reprojection::projection_functions {
 
 template <typename T>

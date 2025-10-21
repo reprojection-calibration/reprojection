@@ -14,5 +14,6 @@ AddLibrary()
 set(TESTS
         test/double_sphere.test.cpp
         test/pinhole.test.cpp
+        test/pinhole_radtan4.test.cpp
 )
 AddTests()
