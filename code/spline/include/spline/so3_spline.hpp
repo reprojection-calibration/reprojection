@@ -5,8 +5,6 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): There is a non-trivial amount of copying and pasting between the r3 and s03 spline classes. Keep our eyes
-// peeled for cost effective and well abstracted optimizations!
 class So3Spline {
    public:
     So3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns);

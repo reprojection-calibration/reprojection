@@ -34,9 +34,6 @@ TEST(Spline_r3Spline, TestEvaluate) {
     }
 
     // Test three elements in the first and only valid time segment
-    // WARN(Jack): My first intuition is that there is an off by one error. I honestly expected p_0 to be zero not one.
-    // But maybe this is correct and does not match with online reference resources simply because [1] uses a different
-    // convention than most people use and I just do not understand yet.
     auto const p_0{r3_spline.Evaluate(100)};
     ASSERT_TRUE(p_0.has_value());
     EXPECT_TRUE(p_0.value().isApproxToConstant(1));
