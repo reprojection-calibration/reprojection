@@ -4,8 +4,8 @@
 
 namespace reprojection::projection_functions {
 
-// TODO(Jack): This function seems like it is missing some understanding of the fundamental problem we are facing, but
-// this is just the start :)
+// TODO(Jack): This is a kind of helper function so that when we are working with eigen and just need a quick projection
+// we can get it. What the long term prospects for a concise clear camera projection interface are still unclear.
 Eigen::MatrixX2d PinholeProjection(Eigen::Matrix3d const& K, Eigen::MatrixX3d points) {
     Eigen::Array<double, 4, 1> const K_star{eigen_utilities::FromK(K)};
 

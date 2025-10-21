@@ -12,6 +12,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        test/double_sphere.test.cpp
         test/pinhole.test.cpp
 )
 AddTests()
