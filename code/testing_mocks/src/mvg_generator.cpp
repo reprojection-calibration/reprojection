@@ -86,19 +86,31 @@ MvgGenerator::MvgGenerator(bool const flat, Eigen::Matrix3d const& K)
 MvgFrame MvgGenerator::Generate(double const t) const {
     assert(0 <= t and t < 1);
 
-    // TODO(Jack): Check boundary conditions!
-    // Static cast means we loose some precision, but at nanosecond level this should not matter.
-    uint64_t const spline_time{constants::t0_ns +
-                               static_cast<uint64_t>((constants::num_poses * constants::delta_t_ns) * t)};
+    // NOTE(Jack): Look how the "spline_time" is calculated here using constants::num_poses. You see that the fractional
+    // trajectory time t is converted back into a "metric" spline time in nanoseconds. However, because the spline
+    // requires points at each end for interpolation (one at the start three at the end), but our sphere trajectory does
+    // not include those points, we need to shorten the valid times/poses here by spline::constants::k - 1. That makes
+    // sure that the fractional spline time calculated from t always yields a valid pose, but that we will be missing
+    // one delta_t at the start and three delta_ts at the ends of the sphere trajectory. Why do we go through all this
+    // hassle here?
+    //
+    // (1) Because this test fixture should just work, and I do not want people to go through the trouble of checking if
+    // this Generate() function returns a valid value or not.
+    // (2) Because we can handle the problem here entirely in this one line of code. If we solved it another way for
+    // example extending the sphere trajectory to create points at the ends to facilitate the interpolation, or
+    // returning an optional value from Generate() to signal failure, we would need to change many places in the code
+    // base and therefore the hack that this really is would be harder to track.
+    uint64_t const spline_time{
+        constants::t0_ns +
+        static_cast<uint64_t>((constants::num_poses - (spline::constants::k - 1)) * constants::delta_t_ns * t)};
 
-    // WARN(Jack): This returns an optional but we do not check it! Assuming we calculated spline_time correctly and
-    // t is [0,1) then this should be no problem, but this will be a problem :)
     auto const pose_t{se3_spline_.Evaluate(spline_time)};
+    assert(pose_t.has_value());  // See note above
 
     Eigen::MatrixX2d const pixels{Project(points_, K_, pose_t.value())};
 
     // WARN(Jack): This assumes that all points are always visible! With careful engineering for the default value
-    // of K this will be true, but that cannot be guarantted for all K!!!
+    // of K this will be true, but that cannot be guaranteed for all K!!!
     return {pose_t.value(), pixels, points_};
 }
 

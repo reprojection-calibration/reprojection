@@ -36,11 +36,17 @@ void saveTransformsToCSV(const std::vector<Eigen::Isometry3d>& transforms, const
 using namespace reprojection::testing_mocks;
 
 TEST(TestingMocks, XXX) {
-    auto const generator{MvgGenerator()};
+    MvgGenerator const generator{MvgGenerator(false)};
 
-    auto const frame{generator.Generate(0.1)};
+    std::vector<Eigen::Isometry3d> tfs;
+    int const n{1000};
+    for (size_t i{0}; i < n; ++i) {
+        MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / n)};
 
-    std::cout << frame.pixels << std::endl;
+        tfs.push_back(frame_i.pose);
+    }
+
+    saveTransformsToCSV(tfs, "sphere_cameras.txt");
 
     EXPECT_FALSE(true);
 }
