@@ -24,4 +24,6 @@ Eigen::Vector<T, 2> PinholeProjection(T const* const camera, Eigen::Vector<T, 3>
     return {u, v};
 }
 
+Eigen::MatrixX2d PinholeProjection(Eigen::Matrix3d const& K, Eigen::MatrixX3d points);
+
 }  // namespace reprojection::projection_functions

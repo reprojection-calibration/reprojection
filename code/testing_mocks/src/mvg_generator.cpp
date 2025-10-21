@@ -1,7 +1,9 @@
 #include "testing_mocks/mvg_generator.hpp"
 
 #include "constants.hpp"
+#include "eigen_utilities/camera.hpp"
 #include "eigen_utilities/grid.hpp"
+#include "projection_functions/pinhole.hpp"
 #include "sphere_trajectory.hpp"
 #include "spline/se3_spline.hpp"
 
@@ -54,9 +56,8 @@ Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w, Eigen::
                                        Eigen::Isometry3d const& tf_co_w) {
     // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not
     // match our expectations about matrix dimensions after the fact.
-    // TODO(Jack): Should we use the pinhole projection from the nonlinear refinement optimization here?
     Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
-    Eigen::MatrixX2d const pixels{(K * points_homog_co.leftCols(3).transpose()).transpose().rowwise().hnormalized()};
+    Eigen::MatrixX2d const pixels(projection_functions::PinholeProjection(K, points_homog_co.leftCols(3)));
 
     return pixels;
 }
