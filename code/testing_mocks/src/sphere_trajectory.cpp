@@ -7,7 +7,6 @@
 
 namespace reprojection::testing_mocks {
 
-
 std::vector<Eigen::Isometry3d> SphereTrajectory(CameraTrajectory const& config) {
     Eigen::MatrixX3d const sphere_points{SpherePoints(config.sphere_radius, config.sphere_origin)};
 
