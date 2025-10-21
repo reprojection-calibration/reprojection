@@ -4,7 +4,7 @@
 
 using namespace reprojection::testing_mocks;
 
-TEST(TestingMocks, XXX) {
+TEST(TestingMocksMvgGenerator, TestGenerateNoError) {
     MvgGenerator const generator{MvgGenerator(false)};
 
     int const n{100};
@@ -13,7 +13,7 @@ TEST(TestingMocks, XXX) {
     }
 }
 
-TEST(TestingMocks, TestProject) {
+TEST(TestingMocksMvgGenerator, TestProject) {
     Eigen::MatrixX3d const points_w{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
                                     {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
     Eigen::Matrix3d const K{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
