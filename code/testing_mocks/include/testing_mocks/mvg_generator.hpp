@@ -6,16 +6,6 @@
 
 namespace reprojection::testing_mocks {
 
-// COPIED FROM FEATURE EXTRACTION
-Eigen::ArrayXi ToEigen(std::vector<int> const& vector);
-
-// COPIED FROM FEATURE EXTRACTION
-// There has to be a more eloquent way to do this... but it gets the job done :)
-Eigen::ArrayXi MaskIndices(Eigen::ArrayXi const& array);
-
-// COPIED FROM FEATURE EXTRACTION
-Eigen::ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_only);
-
 struct MvgFrame {
     Eigen::Isometry3d pose;
     Eigen::MatrixX2d pixels;

@@ -23,6 +23,7 @@ set(INCLUDE_DIRECTORIES
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen
+        eigen_utilities
         ${apriltag_LIBRARIES}
         ${OpenCV_LIBS}
         ${YAML_CPP_LIBRARIES}

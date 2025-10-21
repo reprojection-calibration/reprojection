@@ -2,10 +2,11 @@
 
 #include <gtest/gtest.h>
 
+#include "eigen_utilities/grid.hpp"
 #include "target_generators.hpp"
 #include "test_fixture_april_tag.hpp"
-#include "utilities.hpp"  // REMOVE
 
+using namespace reprojection;
 using namespace reprojection::feature_extraction;
 
 TEST(TargetExtractors, TestCheckerboardExtractor) {
@@ -160,7 +161,7 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
 TEST_F(AprilTagTestFixture, TestAprilGrid3CornerPositions) {
     // Should be even because aprilgrids always have even points in each direction because it is always a multiple of
     // two of the board's tag rows/columns
-    Eigen::ArrayX2i const grid{GenerateGridIndices(6, 8)};
+    Eigen::ArrayX2i const grid{eigen_utilities::GenerateGridIndices(6, 8)};
     Eigen::MatrixX3d const points{AprilGrid3Extractor::CornerPositions(grid, 0.5)};
 
     EXPECT_EQ(points.rows(), grid.rows());
