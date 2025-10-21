@@ -12,6 +12,7 @@ cppcheck /temporary/code --enable=all --error-exitcode=1 --suppress=missingInclu
   -I /temporary/code/geometry/include \
   -I /temporary/code/pnp/include \
   -I /temporary/code/pnp/src \
+  -I /temporary/code/projection_functions/include \
   -I /temporary/code/spline/include \
   -I /temporary/code/spline/src \
   -I /temporary/code/testing_mocks/include

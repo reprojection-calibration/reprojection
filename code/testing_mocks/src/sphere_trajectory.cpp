@@ -60,14 +60,12 @@ Eigen::Vector3d TrackPoint(Eigen::Vector3d const& origin, Eigen::Vector3d const&
 }
 
 Eigen::MatrixX3d SpherePoints(double const radius, Eigen::Vector3d const origin) {
-    // TODO(Jack): These should be globals in the context of the test mocking
-    int const points{constants::num_poses};
-    int const loops{constants::num_loops};
+    int const num_points{constants::num_poses};
 
-    Eigen::MatrixX3d sphere(points, 3);
-    for (int i{0}; i < points; ++i) {
-        double const theta{2 * M_PI * loops * i / points};
-        double const phi{2 * M_PI * i / points};
+    Eigen::MatrixX3d sphere(num_points, 3);
+    for (int i{0}; i < num_points; ++i) {
+        double const theta{2 * M_PI * constants::num_loops * i / num_points};
+        double const phi{2 * M_PI * i / num_points};
 
         sphere.row(i) = origin + (radius * Cartesian(theta, phi));
     }
