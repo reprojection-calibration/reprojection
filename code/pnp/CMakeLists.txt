@@ -14,6 +14,7 @@ set(SRC_FILES
 set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
+        eigen_utilities
         geometry
         projection_functions
         spline # needed because of testing_mocks dependency -_-

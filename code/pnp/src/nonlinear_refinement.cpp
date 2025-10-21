@@ -1,5 +1,6 @@
 #include "nonlinear_refinement.hpp"
 
+#include "eigen_utilities/camera.hpp"
 #include "geometry/lie.hpp"
 
 namespace reprojection::pnp {
@@ -14,7 +15,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::Matrix
                                                                    Eigen::Isometry3d const& initial_pose,
                                                                    Eigen::Matrix3d const& initial_K) {
     Eigen::Vector<double, 6> pose_to_optimize{geometry::Log(initial_pose)};
-    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{FromK(initial_K)};
+    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{eigen_utilities::FromK(initial_K)};
 
     ceres::Problem problem;
     for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
@@ -30,22 +31,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::Matrix
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    return {geometry::Exp(pose_to_optimize), ToK(pinhole_intrinsics_to_optimize)};
+    return {geometry::Exp(pose_to_optimize), eigen_utilities::ToK(pinhole_intrinsics_to_optimize)};
 }
-
-// TODO(Jack): This might belong in some other file with camera geometry specific helper functions
-Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array) {
-    Eigen::Matrix3d K{Eigen::Matrix3d::Identity()};
-    K(0, 0) = array[0];
-    K(1, 1) = array[1];
-    K(0, 2) = array[2];
-    K(1, 2) = array[3];
-
-    return K;
-};
-
-Eigen::Array<double, 4, 1> FromK(Eigen::Matrix3d const& matrix) {
-    return {matrix(0, 0), matrix(1, 1), matrix(0, 2), matrix(1, 2)};
-};
 
 }  // namespace reprojection::pnp

@@ -61,8 +61,4 @@ struct PinholeCostFunction {
     Eigen::Vector3d point_;
 };
 
-Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array);
-
-Eigen::Array<double, 4, 1> FromK(Eigen::Matrix3d const& matrix);
-
 }  // namespace reprojection::pnp

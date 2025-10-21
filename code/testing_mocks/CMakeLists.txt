@@ -10,6 +10,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         geometry
+        projection_functions
         spline
 )
 AddLibrary()
