@@ -9,9 +9,7 @@ namespace reprojection::testing_mocks {
 
 MvgGenerator::MvgGenerator(bool const flat, Eigen::Matrix3d const& K)
     : K_{K}, se3_spline_{constants::t0_ns, constants::delta_t_ns} {
-    // TODO(Jack): Solve the xy plane alignment issues that gives us nans, cause I would like to be able to generate
-    // the sphere directly on the z axis
-    CameraTrajectory const config{{0, 0, 0}, 1.0, {0.01, 0.01, 5}};
+    CameraTrajectory const config{{0, 0, 0}, 1.0, {0, 0, 5}};
     std::vector<Eigen::Isometry3d> const poses{SphereTrajectory(config)};
 
     // NOTE(Jack): To get to the actual ends of the sphere on the spline we would need to have one knot before the

@@ -31,8 +31,6 @@ TEST(GeometryLie, TestSe3Exp) {
         Eigen::Vector<double, 6> const se3_i{se3[i]};
         Eigen::Isometry3d const SE3_i{Exp(se3_i)};
 
-        std::cout << SE3_i.matrix() << std::endl;
-
         EXPECT_TRUE(SE3_i.isApprox(SE3[i]));
     }
 }
