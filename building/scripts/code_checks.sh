@@ -10,4 +10,7 @@ cppcheck /temporary/code --enable=all --error-exitcode=1 --suppress=missingInclu
   -I /temporary/code/feature_extraction/src \
   -I /temporary/code/geometry/include \
   -I /temporary/code/pnp/include \
-  -I /temporary/code/pnp/src
+  -I /temporary/code/pnp/src \
+  -I /temporary/code/spline/include \
+  -I /temporary/code/spline/src \
+  -I /temporary/code/testing_mocks/include

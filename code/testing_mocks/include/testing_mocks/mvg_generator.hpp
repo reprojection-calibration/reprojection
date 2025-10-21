@@ -4,7 +4,6 @@
 
 #include "spline/se3_spline.hpp"
 
-
 namespace reprojection::testing_mocks {
 
 // COPIED FROM FEATURE EXTRACTION
@@ -25,8 +24,8 @@ struct MvgFrame {
 
 class MvgGenerator {
    public:
-    MvgGenerator(bool const flat = true,
-                 Eigen::Matrix3d const& K = Eigen::Matrix3d{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}});
+    explicit MvgGenerator(bool const flat = true,
+                          Eigen::Matrix3d const& K = Eigen::Matrix3d{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}});
 
     // Input is fractional time of trajectory from [0,1)
     MvgFrame Generate(double const t) const;

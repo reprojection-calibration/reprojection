@@ -22,6 +22,4 @@ std::optional<Eigen::Vector3d> r3Spline::Evaluate(uint64_t const t_ns, Derivativ
     return (P * M * u) / std::pow(time_handler_.delta_t_ns_, static_cast<int>(derivative));
 }
 
-
-
 }  // namespace reprojection::spline

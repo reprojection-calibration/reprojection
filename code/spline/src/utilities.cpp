@@ -4,7 +4,6 @@
 
 namespace reprojection::spline {
 
-
 // TODO(Jack): We also can calculate std::pow(delta_t_ns, derivative_order) in the constructor ahead of time if we
 // find out it causes some problems.
 VectorK CalculateU(double const u_i, DerivativeOrder const derivative) {
@@ -19,8 +18,6 @@ VectorK CalculateU(double const u_i, DerivativeOrder const derivative) {
 
     return u;
 }
-
-
 
 // For polynomial k=4
 //      1 1 1 1     - zero derivative coefficients
