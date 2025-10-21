@@ -12,6 +12,7 @@ struct MvgFrame {
     Eigen::MatrixX3d points;
 };
 
+// MVG = "multiple view geometry"
 class MvgGenerator {
    public:
     explicit MvgGenerator(bool const flat = true,
@@ -26,6 +27,8 @@ class MvgGenerator {
                                     Eigen::Isometry3d const& tf_co_w);
 
    private:
+    static Eigen::MatrixX3d BuildTargetPoints(bool const flat);
+
     Eigen::Matrix3d K_;
     spline::Se3Spline se3_spline_;
     Eigen::MatrixX3d points_;

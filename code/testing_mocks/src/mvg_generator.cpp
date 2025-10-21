@@ -8,34 +8,11 @@
 namespace reprojection::testing_mocks {
 
 MvgGenerator::MvgGenerator(bool const flat, Eigen::Matrix3d const& K)
-    : K_{K}, se3_spline_{constants::t0_ns, constants::delta_t_ns} {
-    // TODO(Jack): Solve the xy plane alignment issues that gives us nans, cause I would like to be able to generate
-    // the sphere directly on the z axis
-    CameraTrajectory const config{{0, 0, 0}, 1.0, {0.01, 0.01, 5}};
-    std::vector<Eigen::Isometry3d> const poses{SphereTrajectory(config)};
+    : K_{K}, se3_spline_{constants::t0_ns, constants::delta_t_ns}, points_{BuildTargetPoints(flat)} {
+    std::vector<Eigen::Isometry3d> const poses{SphereTrajectory(CameraTrajectory{{0, 0, 0}, 1.0, {0, 0, 5}})};
 
-    // NOTE(Jack): To get to the actual ends of the sphere on the spline we would need to have one knot before the
-    // start and three knots past the end of the sphere to allow for interpolation to work (for spline degree=4).
-    // Here we do not have that.
     for (auto const& pose : poses) {
         se3_spline_.AddKnot(pose);
-    }
-
-    int const rows{5};
-    int const cols{rows};
-    int const num_points{rows * cols};
-    Eigen::ArrayX2i const grid{eigen_utilities::GenerateGridIndices(rows, cols, false)};
-    points_ = Eigen::MatrixX3d::Zero(num_points, 3);
-    points_.leftCols(2) = grid.cast<double>();
-    // Center around zero with unit range [-0.5, 0.5]
-    points_.col(0) = points_.col(0) / (rows - 1);
-    points_.col(0) = points_.col(0).array() - 0.5;
-    points_.col(1) = points_.col(1) / (cols - 1);
-    points_.col(1) = points_.col(1).array() - 0.5;
-
-    if (not flat) {
-        // Add z-axis values in range [-0.5, 0.5]
-        points_.col(2) = Eigen::VectorXd::Random(num_points) / 2;
     }
 }
 
@@ -82,6 +59,25 @@ Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w, Eigen::
     Eigen::MatrixX2d const pixels{(K * points_homog_co.leftCols(3).transpose()).transpose().rowwise().hnormalized()};
 
     return pixels;
+}
+
+Eigen::MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {
+    int const size{5};  // Square target - rows == cols
+    int const num_points{size * size};
+
+    Eigen::ArrayX2i const grid{eigen_utilities::GenerateGridIndices(size, size, false)};
+    Eigen::MatrixX3d points{Eigen::MatrixX3d::Zero(num_points, 3)};
+
+    // Center around zero with unit range [-0.5, 0.5]
+    points.leftCols(2) = grid.cast<double>();
+    points.leftCols(2).array() /= (size - 1);
+    points.leftCols(2).array() -= 0.5;
+
+    if (not flat) {
+        points.col(2) = Eigen::VectorXd::Random(num_points) / 2;  // Add random z-axis values in range [-0.5, 0.5]
+    }
+
+    return points;
 }
 
 }  // namespace reprojection::testing_mocks

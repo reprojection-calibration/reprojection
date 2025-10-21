@@ -25,21 +25,35 @@ std::vector<Eigen::Isometry3d> SphereTrajectory(CameraTrajectory const& config) 
     return tfs;
 }
 
-// WARN(Jack): In testing this function I found that when the x and y coordinates of the origin and camera_position
-// are the same, i.e. the points  are aligned along the z-plane, the algorithm returns nans. There is probably a
-// simple test we can use to check this condition to avoid the nans, but for now we will just take this risk and
-// hope that we never have the same x and y coordinates for both camera and origin. This current implementation also
-// does not explicitly handle the case where the two points are the same, I assume that takes some error handling to
-// prevent nans as well.
 Eigen::Vector3d TrackPoint(Eigen::Vector3d const& origin, Eigen::Vector3d const& camera_position) {
-    Eigen::Vector3d const origin_direction{(origin - camera_position).normalized()};
-    Eigen::Vector3d const camera_forward_direction{0, 0, 1};
+    Eigen::Vector3d const delta{origin - camera_position};
+    if (delta.norm() < 1e-8) {
+        // The origin and camera_position are the same point
+        return Eigen::Vector3d::Zero();
+    }
 
-    double const angle{std::acos(origin_direction.transpose() * camera_forward_direction)};
+    Eigen::Vector3d const origin_direction{delta.normalized()};
+    Eigen::Vector3d const camera_forward_direction{0, 0, 1};  // Camera standard z-axis forward
+
+    double const dot{origin_direction.dot(camera_forward_direction)};
+    double const angle{std::acos(dot)};
 
     Eigen::Vector3d const cross_product{camera_forward_direction.cross(origin_direction)};
-    Eigen::Vector3d const axis{cross_product / cross_product.norm()};
+    double const cross_norm{cross_product.norm()};
 
+    // Edge case handlign when camera position and origin lie on the same vertical line (i.e. case when x and y
+    // coordinates are the same for both).
+    if (cross_norm < 1e-8) {
+        if (dot > 0.9999999) {
+            // Parallel case
+            return Eigen::Vector3d::Zero();
+        } else {
+            // Anti-parallel case
+            return angle * Eigen::Vector3d::UnitX();  // Could also use the y-axis
+        }
+    }
+
+    Eigen::Vector3d const axis{cross_product / cross_norm};
     Eigen::Vector3d const tracking_direction{angle * axis};
 
     return tracking_direction;

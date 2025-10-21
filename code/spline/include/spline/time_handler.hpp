@@ -11,8 +11,6 @@ namespace reprojection::spline {
 // this is useful information for error/bounds checking and follows the "law of useful return" principle :)
 std::tuple<double, int> NormalizedSegmentTime(uint64_t const t0_ns, uint64_t const t_ns, uint64_t const delta_t_ns);
 
-// TODO(Jack): Where to define this?
-// TODO(Jack): Naming
 class TimeHandler {
    public:
     TimeHandler(uint64_t const t0_ns, uint64_t const delta_t_ns, int const k);

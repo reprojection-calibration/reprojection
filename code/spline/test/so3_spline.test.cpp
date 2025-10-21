@@ -10,19 +10,16 @@ using namespace reprojection;
 using namespace reprojection::spline;
 
 TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
-    // Completely empty spline
     So3Spline so3_spline{100, 5};
     EXPECT_EQ(so3_spline.Evaluate(115), std::nullopt);
 
-    // Add four knots which means we can ask for evaluations within the one time segment at the very start of the spline
     for (int i{0}; i < constants::k; ++i) {
         so3_spline.knots_.push_back(Eigen::Matrix3d::Identity());
     }
 
-    EXPECT_NE(so3_spline.Evaluate(100), std::nullopt);  // Inside first time segment - valid
-    EXPECT_EQ(so3_spline.Evaluate(105), std::nullopt);  // Outside first time segment - invalid
+    EXPECT_NE(so3_spline.Evaluate(100), std::nullopt);
+    EXPECT_EQ(so3_spline.Evaluate(105), std::nullopt);
 
-    // Add one more knot to see that we can now do a valid evaluation in the second time segment
     so3_spline.knots_.push_back(Eigen::Matrix3d::Identity());
     EXPECT_NE(so3_spline.Evaluate(105), std::nullopt);
 }
