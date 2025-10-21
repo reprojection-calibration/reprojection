@@ -15,6 +15,6 @@ Eigen::MatrixX2d PinholeProjection(Eigen::Matrix3d const& K, Eigen::MatrixX3d po
     }
 
     return pixels;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::projection_functions
