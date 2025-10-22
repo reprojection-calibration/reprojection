@@ -7,6 +7,10 @@
 using namespace reprojection;
 using namespace reprojection::calibration;
 
+std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& p1, Eigen::MatrixX2d const& p2) {
+
+}
+
 // COLINEAR WILL ALWAYS FAIL! I.e. the lines through the principal points will always be colinear for models like ds
 TEST(CalibrationFocalLengthInitialization, TestXXX) {
     Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
@@ -44,8 +48,8 @@ TEST(CalibrationFocalLengthInitialization, TestXXX) {
 }
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {
-    std::tuple<Eigen::Vector2d, double> const c1{{0, 0}, 1};
-    std::tuple<Eigen::Vector2d, double> const c2{{2, 0}, 2};
+    Circle const c1{{0, 0}, 1};
+    Circle const c2{{2, 0}, 2};
 
     auto const points{CircleCircleIntersection(c1, c2)};
     ASSERT_TRUE(points.has_value());
@@ -56,29 +60,29 @@ TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {
 }
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersectionSeperate) {
-    std::tuple<Eigen::Vector2d, double> const c1{{1, 1}, 1};
-    std::tuple<Eigen::Vector2d, double> const c2{{3, 3}, 1};  // Completely outside c1
+    Circle const c1{{1, 1}, 1};
+    Circle const c2{{3, 3}, 1};  // Completely outside c1
 
     EXPECT_EQ(CircleCircleIntersection(c1, c2), std::nullopt);
 }
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersectionContained) {
-    std::tuple<Eigen::Vector2d, double> const c1{{1, 1}, 1};
-    std::tuple<Eigen::Vector2d, double> const c2{{1.5, 1.5}, 0.1};  // Completely inside c1
+    Circle const c1{{1, 1}, 1};
+    Circle const c2{{1.5, 1.5}, 0.1};  // Completely inside c1
 
     EXPECT_EQ(CircleCircleIntersection(c1, c2), std::nullopt);
 }
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersectionCoincident) {
-    std::tuple<Eigen::Vector2d, double> const c1{{1, 1}, 1};
+    Circle const c1{{1, 1}, 1};
 
     // Coincident - infinite number of solutions
     EXPECT_EQ(CircleCircleIntersection(c1, c1), std::nullopt);
 }
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersectionOnePoint) {
-    std::tuple<Eigen::Vector2d, double> const c1{{1, 1}, 1};
-    std::tuple<Eigen::Vector2d, double> const c2{{3, 1}, 1};  // Only one intersection point - no calibration interest
+    Circle const c1{{1, 1}, 1};
+    Circle const c2{{3, 1}, 1};  // Only one intersection point - no calibration interest
 
     EXPECT_EQ(CircleCircleIntersection(c1, c2), std::nullopt);
 }

@@ -3,8 +3,8 @@
 namespace reprojection::calibration {
 
 // TODO(Jack): Do float math better and more expressive in the last condition - here and everywhere!
-std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersection(
-    std::tuple<Eigen::Vector2d, double> const& c1, std::tuple<Eigen::Vector2d, double> const& c2) {
+std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersection(Circle const& c1,
+                                                                                     Circle const& c2) {
     auto const [P0, r0]{c1};
     auto const [P1, r1]{c2};
 
@@ -34,7 +34,7 @@ std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersec
 }
 
 // Modified Least Squares method (MLS) from "A Few Methods for Fitting Circles to Data" Dale Umbach, Kerry N. Jones
-std::optional<std::tuple<Eigen::Vector2d, double>> FitCircle(Eigen::MatrixX2d const& data) {
+std::optional<Circle> FitCircle(Eigen::MatrixX2d const& data) {
     Eigen::VectorXd const& x(data.col(0));
     Eigen::VectorXd const& y(data.col(1));
     Eigen::Index const n{data.rows()};
@@ -66,7 +66,7 @@ std::optional<std::tuple<Eigen::Vector2d, double>> FitCircle(Eigen::MatrixX2d co
     Eigen::VectorXd const r{
         ((x.array() - cx) * (x.array() - cx) + (y.array() - cy) * (y.array() - cy)).sqrt()};  // II.15 (part)
 
-    return std::tuple<Eigen::Vector2d, double>{{cx, cy}, r.mean()};
+    return Circle{{cx, cy}, r.mean()};
 }
 
 }  // namespace reprojection::calibration
