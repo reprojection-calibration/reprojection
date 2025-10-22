@@ -5,7 +5,7 @@ namespace reprojection::calibration {
 std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& pixels1, Eigen::MatrixX2d const& pixels2) {
     auto const circle1{FitCircle(pixels1)};
     auto const circle2{FitCircle(pixels2)};
-    if (not (circle1.has_value() and circle2.has_value())) {
+    if (not(circle1.has_value() and circle2.has_value())) {
         return std::nullopt;
     }
 
