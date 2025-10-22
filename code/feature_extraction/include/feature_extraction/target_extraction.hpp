@@ -7,13 +7,12 @@
 #include <opencv2/opencv.hpp>
 #include <optional>
 
+#include "types/calibration_types.hpp"
+
 namespace reprojection::feature_extraction {
 
-struct FeatureFrame {
-    Eigen::MatrixX2d pixels;
-    Eigen::MatrixX3d points;
-    Eigen::ArrayX2i indices;
-};
+// TODO(Jack): What namespace should the types be in, they are practically universal so why subspace them into types::?
+using FeatureFrame = types::FeatureFrame;
 
 // NOTE(Jack): For detectors which can only detect "whole" boards the Extract() method will simply return the points and
 // indices in their entirety. For targets which can have partial detections (ex. AprilGrid3) their Extract() method will
