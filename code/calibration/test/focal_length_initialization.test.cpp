@@ -1,4 +1,4 @@
-#include "../src/focal_length_initialization.hpp"
+#include "focal_length_initialization.hpp"
 
 #include <gtest/gtest.h>
 
