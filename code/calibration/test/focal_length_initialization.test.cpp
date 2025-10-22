@@ -6,7 +6,6 @@ using namespace reprojection::calibration;
 
 // Adopted from https://stackoverflow.com/questions/3349125/circle-circle-intersection-points which copy and pasted from
 // here https://paulbourke.net/geometry/circlesphere/
-// Circles must be in common plane of course!
 // TODO(Jack): Do float math better and more expressive in the last condition - here and everywhere!
 std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersection(
     std::tuple<Eigen::Vector2d, double> const& c1, std::tuple<Eigen::Vector2d, double> const& c2) {
@@ -30,10 +29,24 @@ std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersec
 
     Eigen::Vector2d const P2{P0 + a * (P1 - P0) / d};
 
+    // TODO(Jack): Can we eloquently eliminate the copy and paste here? It is all done just to swap the signs for the
+    // points, but maybe this is ok here.
     Eigen::Vector2d const P3_i{P2(0) + h * (P1(1) - P0(1)) / d, P2(1) - h * (P1(0) - P0(0)) / d};
     Eigen::Vector2d const P3_j{P2(0) - h * (P1(1) - P0(1)) / d, P2(1) + h * (P1(0) - P0(0)) / d};
 
     return std::tuple<Eigen::Vector2d, Eigen::Vector2d>{P3_i, P3_j};
+}
+
+TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {
+    std::tuple<Eigen::Vector2d, double> const c1{{0, 0}, 1};
+    std::tuple<Eigen::Vector2d, double> const c2{{2, 0}, 2};
+
+    auto const points{CircleCircleIntersection(c1, c2)};
+    ASSERT_TRUE(points.has_value());
+
+    auto const [p1, p2]{points.value()};
+    EXPECT_TRUE(p1.isApprox(Eigen::Vector2d{0.25, -0.96824583655185426}));
+    EXPECT_TRUE(p2.isApprox(Eigen::Vector2d{0.25, 0.96824583655185426}));
 }
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersectionSeperate) {
