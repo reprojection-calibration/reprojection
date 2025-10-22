@@ -8,7 +8,7 @@ using namespace reprojection;
 using namespace reprojection::calibration;
 
 // COLINEAR WILL ALWAYS FAIL! I.e. the lines through the principal points will always be colinear for models like ds
-TEST(CalibrationFocalLengthInitialization, TestXXX) {
+TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
 
     Eigen::MatrixX3d const horizontal_points{{-360, 100, 600}, {-240, 100, 600}, {-120, 100, 600}, {0, 100, 600},
@@ -32,6 +32,24 @@ TEST(CalibrationFocalLengthInitialization, TestXXX) {
     ASSERT_TRUE(f.has_value());
     // ERROR(Jack): Off by and order of magnitude, where does that come from? Look at intrinsics to see the real value
     EXPECT_FLOAT_EQ(f.value(), 6035.6078019296829);
+}
+
+TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLengthBadCircles) {
+    // Check the first error condition where one of the pixel sets does not produce a valid circle
+    Eigen::MatrixX2d const pixels1{{1, 1}, {2, 2}, {2, 2}, {4, 4}};  // Collinear
+    Eigen::MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // (x-2)^2 + (y-2)^2 = 1
+
+    auto const f{EstimateFocalLength(pixels1, pixels2)};
+    EXPECT_EQ(f, std::nullopt);
+}
+
+TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLengthNoVanishingPoints) {
+    // Check the second error condition where the circles have no intersection
+    Eigen::MatrixX2d const pixels1{{0, 2}, {4, 2}, {2, 0}, {2, 4}};  // (x-2)^2 + (y-2)^2 = 2
+    Eigen::MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // Completely inside the pixels1 circle
+
+    auto const f{EstimateFocalLength(pixels1, pixels2)};
+    EXPECT_EQ(f, std::nullopt);
 }
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {
