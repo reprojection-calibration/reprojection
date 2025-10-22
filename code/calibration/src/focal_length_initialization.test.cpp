@@ -34,7 +34,6 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     }
 
     auto const f{EstimateFocalLength(horizontal_pixels, vertical_pixels)};
-
     ASSERT_TRUE(f.has_value());
     // ERROR(Jack): Off by and order of magnitude, where does that come from? Look at intrinsics to see the actual
     // expected value (600)
@@ -48,6 +47,17 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLengthBadCircles) {
 
     auto const f{EstimateFocalLength(pixels1, pixels2)};
     EXPECT_EQ(f, std::nullopt);
+}
+
+// TODO REMOVE REMOVE REMOVE
+TEST(CalibrationFocalLengthInitialization, REMOVEREMOVEREMOVE) {
+    // Check the first error condition where one of the pixel sets does not produce a valid circle
+    Eigen::MatrixX2d const pixels1{{0, 1}, {2, 1}, {1, 0}, {1, 2}};  // (x-1)^2 + (y-1)^2 = 1
+    Eigen::MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // (x-2)^2 + (y-2)^2 = 1
+
+    auto const f{EstimateFocalLength(pixels1, pixels2)};
+    ASSERT_TRUE(f.has_value());
+    EXPECT_FLOAT_EQ(f.value(), 0.45015815);
 }
 
 TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLengthNoVanishingPoints) {
