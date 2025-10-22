@@ -2,7 +2,46 @@
 
 #include <gtest/gtest.h>
 
+#include "projection_functions/double_sphere.hpp"
+
+using namespace reprojection;
 using namespace reprojection::calibration;
+
+// COLINEAR WILL ALWAYS FAIL! I.e. the lines through the principal points will always be colinear for models like ds
+TEST(CalibrationFocalLengthInitialization, TestXXX) {
+    Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
+
+    Eigen::MatrixX3d const horizontal_points{{-360, 100, 600}, {-240, 100, 600}, {-120, 100, 600}, {0, 100, 600},
+                                             {120, 100, 600},  {240, 100, 600},  {320, 100, 600}};
+    Eigen::MatrixX2d horizontal_pixels(horizontal_points.rows(), 2);
+    for (int i{0}; i < horizontal_points.rows(); ++i) {
+        horizontal_pixels.row(i) =
+            projection_functions::DoubleSphereProjection<double>(intrinsics.data(), horizontal_points.row(i));
+    }
+
+    Eigen::MatrixX3d const vertical_points{
+        {100, -240, 600}, {100, -120, 600}, {100, 0, 600}, {100, 120, 600}, {100, 240, 600}};
+    Eigen::MatrixX2d vertical_pixels(vertical_points.rows(), 2);
+    for (int i{0}; i < vertical_points.rows(); ++i) {
+        vertical_pixels.row(i) =
+            projection_functions::DoubleSphereProjection<double>(intrinsics.data(), vertical_points.row(i));
+    }
+
+    auto const circle1{FitCircle(horizontal_pixels)};
+    ASSERT_TRUE(circle1.has_value());
+
+    auto const circle2{FitCircle(vertical_pixels)};
+    ASSERT_TRUE(circle2.has_value());
+
+    auto const intersection_points{CircleCircleIntersection(circle1.value(), circle2.value())};
+    ASSERT_TRUE(intersection_points.has_value());
+
+    auto const [p1, p2]{intersection_points.value()};
+    double const f{(p1 - p2).norm() / M_PI};
+
+    // ERROR(Jack): Off by and order of magnitude, where does that come from? Look at intrinsics to see the real value
+    EXPECT_EQ(f, 6035.6078019296829);
+}
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {
     std::tuple<Eigen::Vector2d, double> const c1{{0, 0}, 1};
