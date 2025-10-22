@@ -7,7 +7,7 @@ find /temporary/building -iname '*.sh' -print0 | xargs --null shellcheck
 find /temporary/code \( -iname '*.cpp' -o -iname '*.hpp' -o -iname '*.c' -o -iname '*.h' \) -print0 | xargs --null clang-format --dry-run --Werror
 
 cppcheck /temporary/code --enable=all --error-exitcode=1 --suppress=missingIncludeSystem \
-  -I /temporary/code/calibration/include \
+  -I /temporary/code/calibration/src \
   -I /temporary/code/eigen_utilities/include \
   -I /temporary/code/feature_extraction/include \
   -I /temporary/code/feature_extraction/src \
