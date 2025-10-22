@@ -9,13 +9,13 @@ std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& pixels1, Eigen
         return std::nullopt;
     }
 
-    auto const intersection_points{CircleCircleIntersection(circle1.value(), circle2.value())};
-    if (not intersection_points.has_value()) {
+    auto const vanishing_points{CircleCircleIntersection(circle1.value(), circle2.value())};
+    if (not vanishing_points.has_value()) {
         return std::nullopt;
     }
 
-    auto const [p1, p2]{intersection_points.value()};
-    double const f{(p1 - p2).norm() / M_PI};
+    auto const [w1, w2]{vanishing_points.value()};
+    double const f{(w1 - w2).norm() / M_PI};  // Eqn. 8 from reference "Equidistant Fish-Eye Calibration ..."
 
     return f;
 }
