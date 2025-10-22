@@ -34,7 +34,7 @@ std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersec
 }
 
 // Modified Least Squares method (MLS) from "A Few Methods for Fitting Circles to Data" Dale Umbach, Kerry N. Jones
-std::tuple<Eigen::Vector2d, double> FitCircle(Eigen::MatrixX2d const& data) {
+std::optional<std::tuple<Eigen::Vector2d, double>> FitCircle(Eigen::MatrixX2d const& data) {
     Eigen::VectorXd const& x(data.col(0));
     Eigen::VectorXd const& y(data.col(1));
     Eigen::Index const n{data.rows()};
@@ -54,13 +54,19 @@ std::tuple<Eigen::Vector2d, double> FitCircle(Eigen::MatrixX2d const& data) {
                           n * (y.array() * y.array() * y.array()).sum() - sum_y * yy)};  // II.14
 
     double const denominator{A * C - B * B};
+    // TODO(Jack): We still need to figure out how line like is too generate for this to work and how we can catch that
+    // error. I.e. what is the epsilon for the error condition on the denominator here.
+    if (denominator < 1e-8) {
+        return std::nullopt;
+    }
+
     double const cx{(D * C - B * E) / denominator};  // II.8
     double const cy{(A * E - B * D) / denominator};  // II.9
 
     Eigen::VectorXd const r{
         ((x.array() - cx) * (x.array() - cx) + (y.array() - cy) * (y.array() - cy)).sqrt()};  // II.15 (part)
 
-    return {{cx, cy}, r.mean()};
+    return std::tuple<Eigen::Vector2d, double>{{cx, cy}, r.mean()};
 }
 
 }  // namespace reprojection::calibration

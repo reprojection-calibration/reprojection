@@ -11,6 +11,6 @@ namespace reprojection::calibration {
 std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersection(
     std::tuple<Eigen::Vector2d, double> const& c1, std::tuple<Eigen::Vector2d, double> const& c2);
 
-std::tuple<Eigen::Vector2d, double> FitCircle(Eigen::MatrixX2d const& data);
+std::optional<std::tuple<Eigen::Vector2d, double>> FitCircle(Eigen::MatrixX2d const& data);
 
 }  // namespace reprojection::calibration

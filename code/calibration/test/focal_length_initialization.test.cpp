@@ -48,7 +48,16 @@ TEST(CalibrationFocalLengthInitialization, TestFitCircle) {
     // Four points that sit exactly on the circle (x-2)^2 + (y-2)^2 = 1
     Eigen::MatrixX2d const data{{1, 2}, {3, 2}, {2, 1}, {2, 3}};
 
-    auto const [center, radius]{FitCircle(data)};
+    auto const circle{FitCircle(data)};
+    ASSERT_TRUE(circle.has_value());
+
+    auto const [center, radius]{circle.value()};
     EXPECT_TRUE(center.isApproxToConstant(2));
     EXPECT_EQ(radius, 1);
+}
+
+TEST(CalibrationFocalLengthInitialization, TestFitCircleStraightLine) {
+    // Degenerate condition when points are colinear
+    Eigen::MatrixX2d const data{{1, 1}, {2, 2}, {3, 3}, {4, 4}};
+    EXPECT_EQ(FitCircle(data), std::nullopt);
 }
