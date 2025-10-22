@@ -7,10 +7,6 @@
 using namespace reprojection;
 using namespace reprojection::calibration;
 
-std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& p1, Eigen::MatrixX2d const& p2) {
-
-}
-
 // COLINEAR WILL ALWAYS FAIL! I.e. the lines through the principal points will always be colinear for models like ds
 TEST(CalibrationFocalLengthInitialization, TestXXX) {
     Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
@@ -31,20 +27,11 @@ TEST(CalibrationFocalLengthInitialization, TestXXX) {
             projection_functions::DoubleSphereProjection<double>(intrinsics.data(), vertical_points.row(i));
     }
 
-    auto const circle1{FitCircle(horizontal_pixels)};
-    ASSERT_TRUE(circle1.has_value());
+    auto const f{EstimateFocalLength(horizontal_pixels, vertical_pixels)};
 
-    auto const circle2{FitCircle(vertical_pixels)};
-    ASSERT_TRUE(circle2.has_value());
-
-    auto const intersection_points{CircleCircleIntersection(circle1.value(), circle2.value())};
-    ASSERT_TRUE(intersection_points.has_value());
-
-    auto const [p1, p2]{intersection_points.value()};
-    double const f{(p1 - p2).norm() / M_PI};
-
+    ASSERT_TRUE(f.has_value());
     // ERROR(Jack): Off by and order of magnitude, where does that come from? Look at intrinsics to see the real value
-    EXPECT_EQ(f, 6035.6078019296829);
+    EXPECT_FLOAT_EQ(f.value(), 6035.6078019296829);
 }
 
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {

@@ -6,6 +6,8 @@
 
 namespace reprojection::calibration {
 
+std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& pixels1, Eigen::MatrixX2d const& pixels2);
+
 using Circle = std::tuple<Eigen::Vector2d, double>;
 
 // Adopted from https://stackoverflow.com/questions/3349125/circle-circle-intersection-points which copy and pasted from

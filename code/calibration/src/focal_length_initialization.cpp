@@ -2,6 +2,24 @@
 
 namespace reprojection::calibration {
 
+std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& pixels1, Eigen::MatrixX2d const& pixels2) {
+    auto const circle1{FitCircle(pixels1)};
+    auto const circle2{FitCircle(pixels2)};
+    if (not circle1.has_value() and circle2.has_value()) {
+        return std::nullopt;
+    }
+
+    auto const intersection_points{CircleCircleIntersection(circle1.value(), circle2.value())};
+    if (not intersection_points.has_value()) {
+        return std::nullopt;
+    }
+
+    auto const [p1, p2]{intersection_points.value()};
+    double const f{(p1 - p2).norm() / M_PI};
+
+    return f;
+}
+
 // TODO(Jack): Do float math better and more expressive in the last condition - here and everywhere!
 std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersection(Circle const& c1,
                                                                                      Circle const& c2) {
