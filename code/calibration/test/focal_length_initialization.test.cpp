@@ -7,12 +7,18 @@
 using namespace reprojection;
 using namespace reprojection::calibration;
 
-// COLINEAR WILL ALWAYS FAIL! I.e. the lines through the principal points will always be colinear for models like ds
 TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
 
+    // NOTE(Jack): Our strategy here is to use DoubleSphereProjection to project a row and column of points to pixels.
+    // EstimateFocalLength() then fits circles to each row, calculates their intersections and then from that the focal
+    // length. One thing to notice here in the choice of *_points is that a circle cannot be fit to collinear points.
+    // Therefore, we offset the points from the principal point by 100 units to make sure that we get "bend" and not
+    // just a displacement along the radial axis and failed circle fitting.
     Eigen::MatrixX3d const horizontal_points{{-360, 100, 600}, {-240, 100, 600}, {-120, 100, 600}, {0, 100, 600},
                                              {120, 100, 600},  {240, 100, 600},  {320, 100, 600}};
+    // TODO(Jack): Eliminate copy and paste by adding a helper to projection_functions like we already have for pinhole.
+    // This loop is copy and pasted here twice.
     Eigen::MatrixX2d horizontal_pixels(horizontal_points.rows(), 2);
     for (int i{0}; i < horizontal_points.rows(); ++i) {
         horizontal_pixels.row(i) =
@@ -30,7 +36,8 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     auto const f{EstimateFocalLength(horizontal_pixels, vertical_pixels)};
 
     ASSERT_TRUE(f.has_value());
-    // ERROR(Jack): Off by and order of magnitude, where does that come from? Look at intrinsics to see the real value
+    // ERROR(Jack): Off by and order of magnitude, where does that come from? Look at intrinsics to see the actual
+    // expected value (600)
     EXPECT_FLOAT_EQ(f.value(), 6035.6078019296829);
 }
 
