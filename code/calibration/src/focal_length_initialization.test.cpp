@@ -50,7 +50,7 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLengthBadCircles) {
 }
 
 // TODO REMOVE REMOVE REMOVE
-TEST(CalibrationFocalLengthInitialization, REMOVEREMOVEREMOVE) {
+TEST(REMOVEREMOVEREMOVE, REMOVEREMOVEREMOVE) {
     // Check the first error condition where one of the pixel sets does not produce a valid circle
     Eigen::MatrixX2d const pixels1{{0, 1}, {2, 1}, {1, 0}, {1, 2}};  // (x-1)^2 + (y-1)^2 = 1
     Eigen::MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // (x-2)^2 + (y-2)^2 = 1
