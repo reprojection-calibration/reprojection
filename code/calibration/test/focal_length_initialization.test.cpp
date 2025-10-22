@@ -4,39 +4,6 @@
 
 using namespace reprojection::calibration;
 
-// Adopted from https://stackoverflow.com/questions/3349125/circle-circle-intersection-points which copy and pasted from
-// here https://paulbourke.net/geometry/circlesphere/
-// TODO(Jack): Do float math better and more expressive in the last condition - here and everywhere!
-std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersection(
-    std::tuple<Eigen::Vector2d, double> const& c1, std::tuple<Eigen::Vector2d, double> const& c2) {
-    auto const [P0, r0]{c1};
-    auto const [P1, r1]{c2};
-
-    double const d{(P1 - P0).norm()};
-    if (d > r0 + r1) {
-        return std::nullopt;  // Do not overlap at all
-    } else if (d < std::abs(r0 - r1)) {
-        return std::nullopt;  // One is inside the other
-    } else if (d < 1e-8 and std::abs(r0 - r1) < 1e-8) {
-        return std::nullopt;  // Coincident circles - infinite number of solutions
-    }
-
-    double const a{(r0 * r0 - r1 * r1 + d * d) / (2 * d)};
-    double const h{std::sqrt(r0 * r0 - a * a)};
-    if (h < 1e-8) {
-        return std::nullopt;  // Circles intersect at one point, maybe generally interesting but not for us calibrating
-    }
-
-    Eigen::Vector2d const P2{P0 + a * (P1 - P0) / d};
-
-    // TODO(Jack): Can we eloquently eliminate the copy and paste here? It is all done just to swap the signs for the
-    // points, but maybe this is ok here.
-    Eigen::Vector2d const P3_i{P2(0) + h * (P1(1) - P0(1)) / d, P2(1) - h * (P1(0) - P0(0)) / d};
-    Eigen::Vector2d const P3_j{P2(0) - h * (P1(1) - P0(1)) / d, P2(1) + h * (P1(0) - P0(0)) / d};
-
-    return std::tuple<Eigen::Vector2d, Eigen::Vector2d>{P3_i, P3_j};
-}
-
 TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {
     std::tuple<Eigen::Vector2d, double> const c1{{0, 0}, 1};
     std::tuple<Eigen::Vector2d, double> const c2{{2, 0}, 2};
