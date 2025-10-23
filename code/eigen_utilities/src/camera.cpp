@@ -2,8 +2,8 @@
 
 namespace reprojection::eigen_utilities {
 
-Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array) {
-    Eigen::Matrix3d K{Eigen::Matrix3d::Identity()};
+Matrix3d ToK(Eigen::Array<double, 4, 1> const& array) {
+    Matrix3d K{Matrix3d::Identity()};
     K(0, 0) = array[0];
     K(1, 1) = array[1];
     K(0, 2) = array[2];
@@ -12,7 +12,7 @@ Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array) {
     return K;
 };
 
-Eigen::Array<double, 4, 1> FromK(Eigen::Matrix3d const& matrix) {
+Eigen::Array<double, 4, 1> FromK(Matrix3d const& matrix) {
     return {matrix(0, 0), matrix(1, 1), matrix(0, 2), matrix(1, 2)};
 };
 

@@ -19,6 +19,7 @@ set(LINK_LIBRARIES
         projection_functions
         spline # needed because of testing_mocks dependency -_-
         testing_mocks
+        types
 )
 AddLibrary()
 

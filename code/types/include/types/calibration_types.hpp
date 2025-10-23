@@ -1,13 +1,13 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include "types/eigen_types.hpp"
 
 namespace reprojection {
 
 struct FeatureFrame {
-    Eigen::MatrixX2d pixels;
-    Eigen::MatrixX3d points;
-    Eigen::ArrayX2i indices;
+    MatrixX2d pixels;
+    MatrixX3d points;
+    ArrayX2i indices;
 };
 
 }  // namespace reprojection

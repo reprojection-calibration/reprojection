@@ -1,15 +1,17 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
-// TODO(Jack): Should we really put this into the ::types sub-namespace? Maybe these are so universal they should be
-// directly available in the reprojection namespace directly
-namespace reprojection::types {
+namespace reprojection {
 
-using M
-    Eigen::MatrixX2d pixels;
-    Eigen::MatrixX3d points;
-    Eigen::ArrayX2i indices;
-};
+using VectorXd = Eigen::VectorXd;
+using Vector2d = Eigen::Vector2d;
+using Matrix3d = Eigen::Matrix3d;
+using MatrixX2d = Eigen::MatrixX2d;
+using MatrixX3d = Eigen::MatrixX3d;
+using ArrayXi = Eigen::ArrayXi;
+using ArrayX2i = Eigen::ArrayX2i;
+using Isometry3d = Eigen::Isometry3d;
 
-}  // namespace reprojection::types
+};  // namespace reprojection

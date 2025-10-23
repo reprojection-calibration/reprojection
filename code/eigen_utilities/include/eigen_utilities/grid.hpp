@@ -1,15 +1,15 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include "types/eigen_types.hpp"
 
 namespace reprojection::eigen_utilities {
 
 // Requesting even_only has the effect of allowing us to produce asymmetric grids like those required by the asymmetric
 // circle grid target.
-Eigen::ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_only = false);
+ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_only = false);
 
-Eigen::ArrayXi MaskIndices(Eigen::ArrayXi const& array);
+ArrayXi MaskIndices(ArrayXi const& array);
 
-Eigen::ArrayXi ToEigen(std::vector<int> const& vector);
+ArrayXi ToEigen(std::vector<int> const& vector);
 
 }  // namespace reprojection::eigen_utilities
