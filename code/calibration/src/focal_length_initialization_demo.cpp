@@ -7,20 +7,6 @@
 
 namespace reprojection::calibration {
 
-// THERE IS A PRETTY SIMILAR FUNCTION IN eigen_utilities (MaskIndices), FIGURE OUT HOW TO NOT COPY AND PASTE
-Eigen::ArrayXi MaskTargetIndicesDimension(Eigen::ArrayX2i const& indices, int const id, Dimension const dimension) {
-    std::vector<int> mask;
-    mask.reserve(indices.rows());
-
-    for (Eigen::Index i{0}; i < indices.rows(); i++) {
-        if (indices.row(i)(static_cast<int>(dimension)) == id) {
-            mask.push_back(i);
-        }
-    }
-
-    return eigen_utilities::ToEigen(mask);
-}
-
 double InitializeFocalLengthFromTarget(Eigen::MatrixX2d const& pixels, Eigen::ArrayX2i const& indices) {
     assert(pixels.rows() == indices.rows());
 
@@ -62,6 +48,21 @@ double InitializeFocalLengthFromTarget(Eigen::MatrixX2d const& pixels, Eigen::Ar
     double const mean_f{sum_f / std::size(estimated_focal_lengths)};
 
     return mean_f;
+}
+}
+
+// THERE IS A PRETTY SIMILAR FUNCTION IN eigen_utilities (MaskIndices), FIGURE OUT HOW TO NOT COPY AND PASTE
+Eigen::ArrayXi MaskTargetIndicesDimension(Eigen::ArrayX2i const& indices, int const id, Dimension const dimension) {
+    std::vector<int> mask;
+    mask.reserve(indices.rows());
+
+    for (Eigen::Index i{0}; i < indices.rows(); i++) {
+        if (indices.row(i)(static_cast<int>(dimension)) == id) {
+            mask.push_back(i);
+        }
+    }
+
+    return eigen_utilities::ToEigen(mask);
 }
 
 }  // namespace reprojection::calibration
