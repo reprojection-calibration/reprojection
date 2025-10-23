@@ -18,8 +18,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProjection) {
                                      {double_sphere_intrinsics[2], 453.95997455304922}};
 
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(
-            DoubleSphereProjection<double>(double_sphere_intrinsics.data(), gt_points.row(i)));
+        Eigen::Vector2d const pixel_i(DoubleSphereProjection<double>(double_sphere_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
     }
 }
@@ -35,7 +34,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
                                      {pinhole_intrinsics[2], 480}};
 
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(DoubleSphereProjection<double>(pinhole_intrinsics.data(), gt_points.row(i)));
+        Eigen::Vector2d const pixel_i(DoubleSphereProjection<double>(pinhole_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
     }
 }

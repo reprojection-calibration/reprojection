@@ -9,7 +9,7 @@
 namespace reprojection::projection_functions {
 
 template <typename T>
-Eigen::Vector<T, 2> DoubleSphereProjection(T const* const intrinsics, Eigen::Vector<T, 3> const& point) {
+Eigen::Vector<T, 2> DoubleSphereProjection(Eigen::Array<T, 6, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& point) {
     T const& xi{intrinsics[4]};
     T const& alpha{intrinsics[5]};
 
@@ -28,7 +28,7 @@ Eigen::Vector<T, 2> DoubleSphereProjection(T const* const intrinsics, Eigen::Vec
     T const z_star{(alpha * d2) + (1.0 - alpha) * (xi * d1 + z)};
     Eigen::Vector<T, 3> const point_star{x, y, z_star};
 
-    Eigen::Map<Eigen::Array<T, 4, 1> const> pinhole_intrinsics(intrinsics);
+    Eigen::Array<T, 4, 1> const pinhole_intrinsics{intrinsics.topRows(4)};
 
     return PinholeProjection<T>(pinhole_intrinsics, point_star);
 }

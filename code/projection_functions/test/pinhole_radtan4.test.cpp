@@ -18,8 +18,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Projection) {
                                      {360.096, 477.06240000000003}};
 
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(
-            PinholeRadtan4Projection<double>(pinhole_radtan4_intrinsics.data(), gt_points.row(i)));
+        Eigen::Vector2d const pixel_i(PinholeRadtan4Projection<double>(pinhole_radtan4_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
     }
 }
@@ -35,7 +34,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProjection) {
                                      {pinhole_intrinsics[2], 480}};
 
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(PinholeRadtan4Projection<double>(pinhole_intrinsics.data(), gt_points.row(i)));
+        Eigen::Vector2d const pixel_i(PinholeRadtan4Projection<double>(pinhole_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
     }
 }

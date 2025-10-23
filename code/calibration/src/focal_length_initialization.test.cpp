@@ -21,7 +21,7 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     MatrixX2d horizontal_pixels(horizontal_points.rows(), 2);
     for (int i{0}; i < horizontal_points.rows(); ++i) {
         horizontal_pixels.row(i) =
-            projection_functions::DoubleSphereProjection<double>(intrinsics.data(), horizontal_points.row(i));
+            projection_functions::DoubleSphereProjection<double>(intrinsics, horizontal_points.row(i));
     }
 
     MatrixX3d const vertical_points{
@@ -29,7 +29,7 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     MatrixX2d vertical_pixels(vertical_points.rows(), 2);
     for (int i{0}; i < vertical_points.rows(); ++i) {
         vertical_pixels.row(i) =
-            projection_functions::DoubleSphereProjection<double>(intrinsics.data(), vertical_points.row(i));
+            projection_functions::DoubleSphereProjection<double>(intrinsics, vertical_points.row(i));
     }
 
     auto const f{calibration::EstimateFocalLength(horizontal_pixels, vertical_pixels)};
