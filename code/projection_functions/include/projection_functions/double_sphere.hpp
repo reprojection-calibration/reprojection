@@ -9,7 +9,8 @@
 namespace reprojection::projection_functions {
 
 template <typename T>
-Eigen::Vector<T, 2> DoubleSphereProjection(Eigen::Array<T, 6, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& point) {
+Eigen::Vector<T, 2> DoubleSphereProjection(Eigen::Array<T, 6, 1> const& intrinsics,
+                                           Eigen::Array<T, 3, 1> const& point) {
     T const& xi{intrinsics[4]};
     T const& alpha{intrinsics[5]};
 
