@@ -12,6 +12,8 @@ cppcheck /temporary/code --enable=all --error-exitcode=1 --suppress=missingInclu
   -I /temporary/code/feature_extraction/include \
   -I /temporary/code/feature_extraction/src \
   -I /temporary/code/geometry/include \
+  -I /temporary/code/optimization/include \
+  -I /temporary/code/optimization/src \
   -I /temporary/code/pnp/include \
   -I /temporary/code/pnp/src \
   -I /temporary/code/projection_functions/include \

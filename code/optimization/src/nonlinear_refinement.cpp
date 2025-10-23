@@ -1,9 +1,12 @@
-#include "nonlinear_refinement.hpp"
+#include "optimization/nonlinear_refinement.hpp"
+
+#include <ceres/ceres.h>
 
 #include "eigen_utilities/camera.hpp"
 #include "geometry/lie.hpp"
+#include "pinhole_cost_function.hpp"
 
-namespace reprojection::pnp {
+namespace reprojection::optimization {
 
 // TODO(Jack): Increase consistency of the use of SE3 or se3 - we really only introduced the se3 in the general source
 // code so that we could test pose values easily. Unless we are in the core optimization logic or testing we should be
@@ -34,4 +37,4 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::Matrix
     return {geometry::Exp(pose_to_optimize), eigen_utilities::ToK(pinhole_intrinsics_to_optimize)};
 }
 
-}  // namespace reprojection::pnp
+}  // namespace  reprojection::optimization

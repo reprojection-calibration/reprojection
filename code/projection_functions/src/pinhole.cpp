@@ -11,7 +11,7 @@ Eigen::MatrixX2d PinholeProjection(Eigen::Matrix3d const& K, Eigen::MatrixX3d po
 
     Eigen::MatrixX2d pixels(points.rows(), 2);
     for (int i{0}; i < points.rows(); ++i) {
-        pixels.row(i) = PinholeProjection<double>(K_star.data(), points.row(i).leftCols(3));
+        pixels.row(i) = PinholeProjection<double>(K_star, points.row(i).leftCols(3));
     }
 
     return pixels;
