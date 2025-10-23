@@ -1,7 +1,8 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include <variant>
+
+#include "types/eigen_types.hpp"
 
 // https://rpg.ifi.uzh.ch/docs/teaching/2020/03_camera_calibration.pdf
 
@@ -15,8 +16,8 @@ enum class PnpStatusCode {
 };
 
 // TODO(Jack): Is it bad to use a using declaration here in the public API section?
-using PnpResult = std::variant<Eigen::Isometry3d, PnpStatusCode>;
+using PnpResult = std::variant<Isometry3d, PnpStatusCode>;
 
-PnpResult Pnp(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points);
+PnpResult Pnp(MatrixX2d const& pixels, MatrixX3d const& points);
 
 }  // namespace reprojection::pnp
