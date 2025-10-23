@@ -4,7 +4,6 @@ find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
         src/focal_length_initialization.cpp
-        src/focal_length_initialization_demo.cpp
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen
@@ -16,6 +15,5 @@ AddLibrary()
 
 set(TESTS
         src/focal_length_initialization.test.cpp
-        test/focal_length_initialization_demo.test.cpp
 )
 AddTests()

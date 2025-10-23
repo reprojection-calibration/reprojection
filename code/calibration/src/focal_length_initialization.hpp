@@ -17,6 +17,7 @@ std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& pixels1, Eigen
 std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersection(Circle const& c1,
                                                                                      Circle const& c2);
 
+// Modified Least Squares method (MLS) from "A Few Methods for Fitting Circles to Data" Dale Umbach, Kerry N. Jones
 std::optional<Circle> FitCircle(Eigen::MatrixX2d const& data);
 
 }  // namespace reprojection::calibration

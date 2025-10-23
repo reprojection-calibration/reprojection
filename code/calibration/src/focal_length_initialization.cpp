@@ -3,6 +3,10 @@
 namespace reprojection::calibration {
 
 std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& pixels1, Eigen::MatrixX2d const& pixels2) {
+    // NOTE(Jack): For grid targets, where we iterate over the rows and then the columns, we are repeating the
+    // computation of FitCircle for the row for each column. Technically we could compute that row circle once and then
+    // use that for all the columns. I do not think that optimization would really save us anything, but I just want to
+    // mention it here.
     auto const circle1{FitCircle(pixels1)};
     auto const circle2{FitCircle(pixels2)};
     if (not(circle1.has_value() and circle2.has_value())) {
@@ -51,7 +55,7 @@ std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersec
     return std::tuple<Eigen::Vector2d, Eigen::Vector2d>{P3_i, P3_j};
 }
 
-// Modified Least Squares method (MLS) from "A Few Methods for Fitting Circles to Data" Dale Umbach, Kerry N. Jones
+
 std::optional<Circle> FitCircle(Eigen::MatrixX2d const& data) {
     Eigen::VectorXd const& x(data.col(0));
     Eigen::VectorXd const& y(data.col(1));
@@ -73,7 +77,8 @@ std::optional<Circle> FitCircle(Eigen::MatrixX2d const& data) {
 
     double const denominator{A * C - B * B};
     // TODO(Jack): We still need to figure out how line like is too generate for this to work and how we can catch that
-    // error. I.e. what is the epsilon for the error condition on the denominator here.
+    // error. I.e. what is the epsilon for the error condition on the denominator here, how small of a denominator
+    // signals a problem in real world cases.
     if (denominator < 1e-8) {
         return std::nullopt;
     }
