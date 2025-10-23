@@ -9,7 +9,7 @@ using namespace reprojection;
 
 // TODO(Jack): Test the nonlinear refinement with noisy data to make sure the optimization executes more than one step!
 
-TEST(PnpNonlinearRefinement, TestNonlinearRefinement) {
+TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator()};
     for (size_t i{0}; i < 20; ++i) {
         testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};

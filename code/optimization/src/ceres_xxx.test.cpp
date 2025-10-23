@@ -7,7 +7,7 @@ using namespace reprojection;
 // TODO(Jack): Test the nonlinear refinement with noisy data to make sure the optimization executes more than one step!
 
 // We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.
-TEST(PnpNonlinearRefinement, TestPinholeCostFunctionResidual) {
+TEST(OptimizationCeresXxx, TestPinholeCostFunctionResidual) {
     // NOTE(Jack): The reason that we have these ugly unfamiliar std::arrays and calls to .data(), but nowhere else, is
     // because in this test we are essentially manually simulating all the magic that Ceres will do behind the scenes
     // for us, managing the memory and passing arguments etc. during the optimization process. It is my hope and vision
@@ -29,7 +29,7 @@ TEST(PnpNonlinearRefinement, TestPinholeCostFunctionResidual) {
 // NOTE: We do not test cost_function->Evaluate() in the following test because
 // allocating the memory of the input pointers takes some thought, but cost_function->Evaluate()
 // should be tested when there is interest and time :)
-TEST(PnpNonlinearRefinement, TestPinholeCostFunctionCreate) {
+TEST(OptimizationCeresXxx, TestPinholeCostFunctionCreate) {
     Eigen::Vector2d const pixel{360, 240};
     Eigen::Vector3d const point{0, 0, 10};
     ceres::CostFunction const* const cost_function{optimization::PinholeCostFunction::Create(pixel, point)};
@@ -49,7 +49,7 @@ TEST(PnpNonlinearRefinement, TestPinholeCostFunctionCreate) {
     delete cost_function;
 }
 
-TEST(PnpNonlinearRefinement, TestTransformPointsTranslation) {
+TEST(OptimizationCeresXxx, TestTransformPointsTranslation) {
     Eigen::Vector<double, 6> const tf{0, 0, 0, 1, 2, 3};  // Translation only
     Eigen::Vector3d const point{5, 10, 15};
 
@@ -60,7 +60,7 @@ TEST(PnpNonlinearRefinement, TestTransformPointsTranslation) {
     EXPECT_FLOAT_EQ(transformed_point[2], 18.0);
 }
 
-TEST(PnpNonlinearRefinement, TestTransformPointsRotation) {
+TEST(OptimizationCeresXxx, TestTransformPointsRotation) {
     Eigen::Vector<double, 6> const tf{0, 0, M_PI_2, 0, 0, 0};  // Rotation only
     Eigen::Vector<double, 3> const point{5, 10, 15};
 
