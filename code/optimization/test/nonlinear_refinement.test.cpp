@@ -14,7 +14,8 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
     for (size_t i{0}; i < 20; ++i) {
         testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
-        auto const [tf, K]{optimization::NonlinearRefinement(frame_i.pixels, frame_i.points, frame_i.pose, generator.GetK())};
+        auto const [tf, K]{
+            optimization::NonlinearRefinement(frame_i.pixels, frame_i.points, frame_i.pose, generator.GetK())};
 
         EXPECT_TRUE(tf.isApprox(frame_i.pose)) << "Optimization result:\n"
                                                << geometry::Log(tf) << "\noptimization input:\n"
@@ -24,4 +25,3 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
                                                   << generator.GetK();
     }
 }
-

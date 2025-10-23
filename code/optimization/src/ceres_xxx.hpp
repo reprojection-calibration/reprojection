@@ -3,6 +3,8 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
+#include <Eigen/Core>
+
 namespace reprojection::optimization {
 
 // TODO(Jack): Can we use the se3 type here?
