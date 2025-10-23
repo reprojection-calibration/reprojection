@@ -7,13 +7,9 @@
 #include <opencv2/opencv.hpp>
 #include <optional>
 
-namespace reprojection::feature_extraction {
+#include "types/calibration_types.hpp"
 
-struct FeatureFrame {
-    Eigen::MatrixX2d pixels;
-    Eigen::MatrixX3d points;
-    Eigen::ArrayX2i indices;
-};
+namespace reprojection::feature_extraction {
 
 // NOTE(Jack): For detectors which can only detect "whole" boards the Extract() method will simply return the points and
 // indices in their entirety. For targets which can have partial detections (ex. AprilGrid3) their Extract() method will

@@ -2,7 +2,11 @@
 
 namespace reprojection::calibration {
 
-std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& pixels1, Eigen::MatrixX2d const& pixels2) {
+std::optional<double> EstimateFocalLength(MatrixX2d const& pixels1, MatrixX2d const& pixels2) {
+    // NOTE(Jack): For grid targets, where we iterate over the rows and then the columns, we are repeating the
+    // computation of FitCircle for the row for each column. Technically we could compute that row circle once and then
+    // use that for all the columns. I do not think that optimization would really save us anything, but I just want to
+    // mention it here.
     auto const circle1{FitCircle(pixels1)};
     auto const circle2{FitCircle(pixels2)};
     if (not(circle1.has_value() and circle2.has_value())) {
@@ -21,8 +25,7 @@ std::optional<double> EstimateFocalLength(Eigen::MatrixX2d const& pixels1, Eigen
 }
 
 // TODO(Jack): Do float math better and more expressive in the last condition - here and everywhere!
-std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersection(Circle const& c1,
-                                                                                     Circle const& c2) {
+std::optional<std::tuple<Vector2d, Vector2d>> CircleCircleIntersection(Circle const& c1, Circle const& c2) {
     auto const [P0, r0]{c1};
     auto const [P1, r1]{c2};
 
@@ -41,20 +44,19 @@ std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersec
         return std::nullopt;  // Circles intersect at one point, maybe generally interesting but not for us calibrating
     }
 
-    Eigen::Vector2d const P2{P0 + a * (P1 - P0) / d};
+    Vector2d const P2{P0 + a * (P1 - P0) / d};
 
     // TODO(Jack): Can we eloquently eliminate the copy and paste here? It is all done just to swap the signs for the
     // points, but maybe this is ok here.
-    Eigen::Vector2d const P3_i{P2(0) + h * (P1(1) - P0(1)) / d, P2(1) - h * (P1(0) - P0(0)) / d};
-    Eigen::Vector2d const P3_j{P2(0) - h * (P1(1) - P0(1)) / d, P2(1) + h * (P1(0) - P0(0)) / d};
+    Vector2d const P3_i{P2(0) + h * (P1(1) - P0(1)) / d, P2(1) - h * (P1(0) - P0(0)) / d};
+    Vector2d const P3_j{P2(0) - h * (P1(1) - P0(1)) / d, P2(1) + h * (P1(0) - P0(0)) / d};
 
-    return std::tuple<Eigen::Vector2d, Eigen::Vector2d>{P3_i, P3_j};
+    return std::tuple<Vector2d, Vector2d>{P3_i, P3_j};
 }
 
-// Modified Least Squares method (MLS) from "A Few Methods for Fitting Circles to Data" Dale Umbach, Kerry N. Jones
-std::optional<Circle> FitCircle(Eigen::MatrixX2d const& data) {
-    Eigen::VectorXd const& x(data.col(0));
-    Eigen::VectorXd const& y(data.col(1));
+std::optional<Circle> FitCircle(MatrixX2d const& data) {
+    VectorXd const& x(data.col(0));
+    VectorXd const& y(data.col(1));
     Eigen::Index const n{data.rows()};
 
     double const xx{x.dot(x)};
@@ -73,7 +75,8 @@ std::optional<Circle> FitCircle(Eigen::MatrixX2d const& data) {
 
     double const denominator{A * C - B * B};
     // TODO(Jack): We still need to figure out how line like is too generate for this to work and how we can catch that
-    // error. I.e. what is the epsilon for the error condition on the denominator here.
+    // error. I.e. what is the epsilon for the error condition on the denominator here, how small of a denominator
+    // signals a problem in real world cases.
     if (denominator < 1e-8) {
         return std::nullopt;
     }
@@ -81,7 +84,7 @@ std::optional<Circle> FitCircle(Eigen::MatrixX2d const& data) {
     double const cx{(D * C - B * E) / denominator};  // II.8
     double const cy{(A * E - B * D) / denominator};  // II.9
 
-    Eigen::VectorXd const r{
+    VectorXd const r{
         ((x.array() - cx) * (x.array() - cx) + (y.array() - cy) * (y.array() - cy)).sqrt()};  // II.15 (part)
 
     return Circle{{cx, cy}, r.mean()};

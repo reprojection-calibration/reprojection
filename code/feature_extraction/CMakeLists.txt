@@ -1,4 +1,4 @@
-set(LIBRARY_NAME "feature-extraction")
+set(LIBRARY_NAME "feature_extraction")
 
 # Taken from https://github.com/amy-tabb/apriltag-cmake-example/tree/master (did not include the link_directories() command here)
 find_package(PkgConfig)
@@ -24,6 +24,7 @@ set(INCLUDE_DIRECTORIES
 set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
+        types
         ${apriltag_LIBRARIES}
         ${OpenCV_LIBS}
         ${YAML_CPP_LIBRARIES}

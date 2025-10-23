@@ -25,6 +25,7 @@ include(cmake_macros/add_tests.cmake)
 
 enable_testing()
 
+add_subdirectory(types)
 add_subdirectory(eigen_utilities)
 add_subdirectory(geometry)
 add_subdirectory(projection_functions)

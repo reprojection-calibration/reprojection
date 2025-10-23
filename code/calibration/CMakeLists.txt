@@ -9,10 +9,11 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         projection_functions
+        types
 )
 AddLibrary()
 
 set(TESTS
-        test/focal_length_initialization.test.cpp
+        src/focal_length_initialization.test.cpp
 )
 AddTests()
