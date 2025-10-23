@@ -17,4 +17,5 @@ cppcheck /temporary/code --enable=all --error-exitcode=1 --suppress=missingInclu
   -I /temporary/code/projection_functions/include \
   -I /temporary/code/spline/include \
   -I /temporary/code/spline/src \
-  -I /temporary/code/testing_mocks/include
+  -I /temporary/code/testing_mocks/include \
+  -I /temporary/code/types/include

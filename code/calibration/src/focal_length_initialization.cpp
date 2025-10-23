@@ -55,7 +55,6 @@ std::optional<std::tuple<Eigen::Vector2d, Eigen::Vector2d>> CircleCircleIntersec
     return std::tuple<Eigen::Vector2d, Eigen::Vector2d>{P3_i, P3_j};
 }
 
-
 std::optional<Circle> FitCircle(Eigen::MatrixX2d const& data) {
     Eigen::VectorXd const& x(data.col(0));
     Eigen::VectorXd const& y(data.col(1));
