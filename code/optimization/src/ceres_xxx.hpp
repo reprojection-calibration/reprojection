@@ -3,16 +3,11 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
-#include <Eigen/Dense>
+#include "types/eigen_types.hpp"
 
 #include "projection_functions/pinhole.hpp"
 
-namespace reprojection::pnp {
-
-std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
-                                                                   Eigen::MatrixX3d const& points,
-                                                                   Eigen::Isometry3d const& initial_pose,
-                                                                   Eigen::Matrix3d const& initial_K);
+namespace  reprojection::optimization {
 
 // TODO(Jack): Can we use the se3 type here?
 // NOTE(Jack): We use Eigen::Ref here so we can pass both maps (in the PinholeCostFunction.operator()) and the direct
@@ -32,7 +27,7 @@ Eigen::Vector<T, 3> TransformPoint(Eigen::Ref<Eigen::Vector<T, 6> const> const& 
 
 // Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
 struct PinholeCostFunction {
-    explicit PinholeCostFunction(Eigen::Vector2d const& pixel, Eigen::Vector3d const& point)
+    explicit PinholeCostFunction(Vector2d const& pixel, Vector3d const& point)
         : pixel_{pixel}, point_{point} {}
 
     // This is the contact line were ceres requirements for using raw pointers hits our desire to use more expressive
@@ -53,12 +48,12 @@ struct PinholeCostFunction {
         return true;
     }
 
-    static ceres::CostFunction* Create(Eigen::Vector2d const& pixel, Eigen::Vector3d const& point) {
+    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) {
         return new ceres::AutoDiffCostFunction<PinholeCostFunction, 2, 4, 6>(new PinholeCostFunction(pixel, point));
     }
 
-    Eigen::Vector2d pixel_;
-    Eigen::Vector3d point_;
+    Vector2d pixel_;
+    Vector3d point_;
 };
 
-}  // namespace reprojection::pnp
+}  // namespace  reprojection::optimization
