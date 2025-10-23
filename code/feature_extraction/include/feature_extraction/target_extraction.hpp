@@ -11,9 +11,6 @@
 
 namespace reprojection::feature_extraction {
 
-// TODO(Jack): What namespace should the types be in, they are practically universal so why subspace them into types::?
-using FeatureFrame = types::FeatureFrame;
-
 // NOTE(Jack): For detectors which can only detect "whole" boards the Extract() method will simply return the points and
 // indices in their entirety. For targets which can have partial detections (ex. AprilGrid3) their Extract() method will
 // mask out the indices and points which were visible and only return those.
