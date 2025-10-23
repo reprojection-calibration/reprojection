@@ -2,11 +2,11 @@
 
 #include <ceres/ceres.h>
 
-#include "ceres_xxx.hpp"
 #include "eigen_utilities/camera.hpp"
 #include "geometry/lie.hpp"
+#include "pinhole_cost_function.hpp"
 
-namespace  reprojection::optimization {
+namespace reprojection::optimization {
 
 // TODO(Jack): Increase consistency of the use of SE3 or se3 - we really only introduced the se3 in the general source
 // code so that we could test pose values easily. Unless we are in the core optimization logic or testing we should be

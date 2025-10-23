@@ -21,6 +21,7 @@ AddLibrary()
 
 set(TESTS
         src/ceres_xxx.test.cpp
+        src/pinhole_cost_function.test.cpp
         test/nonlinear_refinement.test.cpp
 )
 AddTests()
