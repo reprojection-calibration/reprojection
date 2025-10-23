@@ -3,32 +3,32 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
+#include "projection_functions/pinhole.hpp"
 #include "types/eigen_types.hpp"
 
-#include "projection_functions/pinhole.hpp"
-
-namespace  reprojection::optimization {
+namespace reprojection::optimization {
 
 // TODO(Jack): Can we use the se3 type here?
+// TODO(Jack): Are we sure that our convention for the top three being rotation and bottom three translation is
+// consistent across the project?
 // NOTE(Jack): We use Eigen::Ref here so we can pass both maps (in the PinholeCostFunction.operator()) and the direct
 // types (in the testing for example).
 template <typename T>
-Eigen::Vector<T, 3> TransformPoint(Eigen::Ref<Eigen::Vector<T, 6> const> const& tf,
-                                   Eigen::Ref<Eigen::Vector<T, 3> const> const& point) {
-    Eigen::Vector<T, 3> const axis_angle{tf.topRows(3)};
-    Eigen::Vector<T, 3> transformed_point;
-    ceres::AngleAxisRotatePoint(axis_angle.data(), point.data(), transformed_point.data());
+Eigen::Vector<T, 3> TransformPoint(Eigen::Ref<Eigen::Vector<T, 6> const> const& tf_i_j,
+                                   Eigen::Ref<Eigen::Vector<T, 3> const> const& point_j) {
+    Eigen::Vector<T, 3> const axis_angle{tf_i_j.topRows(3)};
+    Eigen::Vector<T, 3> point_i;
+    ceres::AngleAxisRotatePoint(axis_angle.data(), point_j.data(), point_i.data());
 
-    Eigen::Vector<T, 3> const translation{tf.bottomRows(3)};
-    transformed_point += translation;
+    Eigen::Vector<T, 3> const translation{tf_i_j.bottomRows(3)};
+    point_i += translation;
 
-    return transformed_point;
+    return point_i;
 }
 
 // Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
 struct PinholeCostFunction {
-    explicit PinholeCostFunction(Vector2d const& pixel, Vector3d const& point)
-        : pixel_{pixel}, point_{point} {}
+    explicit PinholeCostFunction(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
 
     // This is the contact line were ceres requirements for using raw pointers hits our desire to use more expressive
     // eigen types. That is why here in the operator() we find the usage of the Eigen::Map class.
