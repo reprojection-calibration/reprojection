@@ -40,25 +40,30 @@ Eigen::Array<T, 2, 1> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion,
     return {distorted_x_cam, distorted_y_cam};
 }
 
+// P_co is a 3D point {x, y, z} in the "camera optical" frame expressed
 template <typename T>
 Eigen::Array<T, 2, 1> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intrinsics,
-                                               Eigen::Array<T, 3, 1> const& point) {
-    T const& x{point[0]};
-    T const& y{point[1]};
-    T const& z{point[2]};
-
-    T const x_z{x / z};
-    T const y_z{y / z};
-    Eigen::Array<T, 2, 1> const projected_point{x_z, y_z};
+                                               Eigen::Array<T, 3, 1> const& P_co) {
+    T const& x{P_co[0]};
+    T const& y{P_co[1]};
+    T const& z{P_co[2]};
+    T const x_cam{x / z};
+    T const y_cam{y / z};
+    Eigen::Array<T, 2, 1> const p_cam{x_cam, y_cam};
 
     Eigen::Array<T, 4, 1> const distortion{intrinsics.bottomRows(4)};
-    Eigen::Array<T, 2, 1> const projected_point_distorted{Radtan4Distortion(distortion, projected_point)};
+    Eigen::Array<T, 2, 1> const distorted_p_cam{Radtan4Distortion(distortion, p_cam)};
 
     Eigen::Array<T, 4, 1> const pinhole_intrinsics{intrinsics.topRows(4)};
-    Eigen::Array<T, 3, 1> const point_star{projected_point_distorted[0], projected_point_distorted[1],
-                                           1};  // z=1 here because we already "projected" at the start
+    Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], 1};
 
-    return PinholeProjection<T>(pinhole_intrinsics, point_star);
+    // NOTE(Jack): Because we already did the ideal projective transform to the camera coordinate frame above
+    // (i.e. when we built p_cam), the pinhole projection here is actually only being used to convert the distorted
+    // point P_star into image pixel coordinates. In this sense P_star is itself a confusing construct because it
+    // masquerades as a 3D point but intuitively it does not have nearly the amount of "freedom" at this point when
+    // compared to the input P_co which was a real 3D point. That is the reason that I do not use a frame postfix like
+    // "_co" and instead just call it "_star".
+    return PinholeProjection<T>(pinhole_intrinsics, P_star);
 }
 
 // UNDISTORTION BELOW
