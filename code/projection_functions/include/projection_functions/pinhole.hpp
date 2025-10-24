@@ -15,7 +15,6 @@ Eigen::Vector<T, 2> PinholeProjection(Eigen::Array<T, 4, 1> const& intrinsics, E
     T const& y{point[1]};
     T const& z{point[2]};
 
-    // TODO(Jack): Can/should we replace this with eigen matrix operations?
     T const u{(fx * x / z) + cx};
     T const v{(fy * y / z) + cy};
 
