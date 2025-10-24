@@ -64,8 +64,8 @@ struct Radtan4DistortionCostFunctor {
 
 // TODO(Jack): This should take a 2d pixel not a 3d point! Figure out some consistency here!
 // TODO(Jack): Must be called with a normalized image plane point/pixel! z=1
-std::tuple<Vector2d, Eigen::Matrix2d> Xxx(Eigen::Array<double, 4, 1> const& radtan4_distortion,
-                                          Eigen::Array2d const& image_plane_point) {
+std::tuple<Vector2d, Eigen::Matrix2d> Radtan4DistortionUpdate(Eigen::Array<double, 4, 1> const& radtan4_distortion,
+                                                              Eigen::Array2d const& image_plane_point) {
     auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionCostFunctor, 2, 2>(
         new Radtan4DistortionCostFunctor(radtan4_distortion, image_plane_point));
 
@@ -87,11 +87,11 @@ std::tuple<Vector2d, Eigen::Matrix2d> Xxx(Eigen::Array<double, 4, 1> const& radt
     return {e, J};
 }
 
-TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionCostFunctor) {
+TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionUpdate) {
     Eigen::Array<double, 4, 1> const radtan4_distortion{-0.1, 0.1, 0.001, 0.001};
     // What kind of guarantee/requirement do we have that the z value of the ray is z=1?
     Eigen::Array2d const image_plane_point{-0.1, -0.1};
-    auto const [e, J]{Xxx(radtan4_distortion, image_plane_point)};
+    auto const [e, J]{Radtan4DistortionUpdate(radtan4_distortion, image_plane_point)};
 
     EXPECT_FLOAT_EQ(e[0], -0.00025600000000000622);
     EXPECT_FLOAT_EQ(e[1], -0.00025600000000000622);
@@ -114,7 +114,7 @@ Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intr
     Eigen::Array<T, 4, 1> const radtan4_distortion{intrinsics.bottomRows(4)};
     Eigen::Vector2d undistorted_ray{ray.topRows(2)};
     for (int i{0}; i < 5; ++i) {
-        auto const [e, J]{Xxx(radtan4_distortion, undistorted_ray)};
+        auto const [e, J]{Radtan4DistortionUpdate(radtan4_distortion, undistorted_ray)};
 
         Eigen::Vector2d const du{(J.transpose() * J).inverse() * J.transpose() * e};
         undistorted_ray += du;
