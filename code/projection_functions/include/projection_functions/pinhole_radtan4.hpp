@@ -63,25 +63,27 @@ Eigen::Array<T, 2, 1> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intr
     return PinholeProjection<T>(intrinsics.topRows(4), P_star);
 }
 
-// UNDISTORTION BELOW
+// NOTE(Jack): Here we are using ceres to calculate the jacobian of the Radtan4Distortion. Unlike most ceres "functors"
+// you will see, this is NOT a "cost" functor! It will not return the residual between some predicted and measured value
+// or anything like that. Instead it simply calls Radtan4Distortion and returns the value of the distorted point in the
+// place where the residual would normally be returned via the pointer.
+//
+// The jacobian calculated here is exactly the same (maybe there is a sign flip depending on how you do it) as if we
+// would have provided the measured value and calculated a residual instead. I guess in the context of calculating a
+// jacobian the "measured" value is a constant and therefore does actually effect the jacobian :) It might look like a
+// ceres cost functor because we need to fit into how ceres does it, and therefore at first glance you might be
+// confused what is going on here.
+struct Radtan4DistortionFunctor {
+    Radtan4DistortionFunctor(Eigen::Array<double, 4, 1> const& distortion) : distortion_{distortion} {}
 
-// TODO(Jack): Make this just return the distorted value also!
-// TODO(Jack): Would it be possible to repurpose the residual to return the point directly? Or do we need the residual
-// to calculate the derivative?
-struct Radtan4DistortionCostFunctor {
-    Radtan4DistortionCostFunctor(Eigen::Array<double, 4, 1> const& distortion) : distortion_{distortion} {}
-
-    // TODO(Jack): Clarify what is a point and what is a pixel! Unit/plane/normalized???
-    // TODO(Jack): Inconsistent use of array and vector
-    // Is this really a pure pixel of an image plane constrained 3D projected point?
+    // WARN(Jack): This is not a cost function operator! Read the context above in the note.
     template <typename T>
-    bool operator()(T const* const pixel_ptr, T* const residual) const {
-        Eigen::Map<Eigen::Array<T, 2, 1> const> const pixel(pixel_ptr);
-        Eigen::Array<T, 2, 1> const pixel_star{
-            projection_functions::Radtan4Distortion<T>(distortion_.cast<T>(), pixel)};
+    bool operator()(T const* const p_cam_ptr, T* const distorted_p_cam_ptr) const {
+        Eigen::Map<Eigen::Array<T, 2, 1> const> const p_cam(p_cam_ptr);
+        Eigen::Array<T, 2, 1> const distorted_p_cam{Radtan4Distortion<T>(distortion_.cast<T>(), p_cam)};
 
-        residual[0] = pixel_star[0];
-        residual[1] = pixel_star[1];
+        distorted_p_cam_ptr[0] = distorted_p_cam[0];
+        distorted_p_cam_ptr[1] = distorted_p_cam[1];
 
         return true;
     }
@@ -90,14 +92,10 @@ struct Radtan4DistortionCostFunctor {
     Eigen::Array<double, 4, 1> distortion_;
 };
 
-// TODO(Jack): This should take a 2d pixel not a 3d point! Figure out some consistency here!
-// TODO(Jack): Must be called with a normalized image plane point/pixel! z=1
-// TODO(Jack): Rename to reflect the fact that we ONLY get the derivative, forget the residual error! Do not even need
-// to return the residual because it alwazs should be zero right?
 std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionUpdate(Eigen::Array4d const& radtan4_distortion,
                                                                     Eigen::Array2d const& image_plane_point) {
-    auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionCostFunctor, 2, 2>(
-        new Radtan4DistortionCostFunctor(radtan4_distortion));
+    auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionFunctor, 2, 2>(
+        new Radtan4DistortionFunctor(radtan4_distortion));
 
     const double values[2] = {image_plane_point[0], image_plane_point[1]};
     const double* pValues = values;
