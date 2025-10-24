@@ -65,7 +65,7 @@ Eigen::Array<T, 2, 1> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intr
 
 // NOTE(Jack): This is not templated, unlike PinholeRadtan4Projection, because we are not going to be optimizing this!
 // We need the unprojection functions for analytic ancillary tasks, not the nonlinear optimization directly.
-Eigen::Vector<double, 3> PinholeRadtan4Unprojection(Eigen::Array<double, 8, 1> const& intrinsics,
+Eigen::Array3d PinholeRadtan4Unprojection(Eigen::Array<double, 8, 1> const& intrinsics,
                                                     Eigen::Array<double, 2, 1> const& pixel);
 
 std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionJacobianUpdate(Eigen::Array4d const& distortion,

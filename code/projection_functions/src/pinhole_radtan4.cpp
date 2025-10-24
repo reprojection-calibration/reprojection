@@ -11,8 +11,8 @@ namespace reprojection::projection_functions {
 
 // NOTE(Jack): This is not templated, unlike PinholeRadtan4Projection, because we are not going to be optimizing this!
 // We need the unprojection functions for analytic ancillary tasks, not the nonlinear optimization directly.
-Eigen::Vector<double, 3> PinholeRadtan4Unprojection(Eigen::Array<double, 8, 1> const& intrinsics,
-                                                    Eigen::Array<double, 2, 1> const& pixel) {
+Eigen::Array3d PinholeRadtan4Unprojection(Eigen::Array<double, 8, 1> const& intrinsics,
+                                          Eigen::Array<double, 2, 1> const& pixel) {
     Eigen::Array<double, 3, 1> const P_ray{PinholeUnprojection<double>(intrinsics.topRows(4), pixel)};
     Eigen::Vector2d const p_cam_0{P_ray.topRows(2)};
 
