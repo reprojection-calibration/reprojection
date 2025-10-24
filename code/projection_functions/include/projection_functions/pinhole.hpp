@@ -4,8 +4,6 @@
 
 namespace reprojection::projection_functions {
 
-// TODO(Jack): What is the final and best type for camera going to be? Raw pointer smells to me, or is at least not 100%
-// necessary considering how far along with ceres we are (not far).
 template <typename T>
 Eigen::Vector<T, 2> PinholeProjection(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& point) {
     T const& fx{intrinsics[0]};
@@ -25,5 +23,22 @@ Eigen::Vector<T, 2> PinholeProjection(Eigen::Array<T, 4, 1> const& intrinsics, E
 }
 
 Eigen::MatrixX2d PinholeProjection(Eigen::Matrix3d const& K, Eigen::MatrixX3d points);
+
+template <typename T>
+Eigen::Vector<T, 3> PinholeUnrojection(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 2, 1> const& pixel) {
+    T const& fx{intrinsics[0]};
+    T const& fy{intrinsics[1]};
+    T const& cx{intrinsics[2]};
+    T const& cy{intrinsics[3]};
+
+    T const& u{pixel[0]};
+    T const& v{pixel[1]};
+
+    T const x{(u - cx) / fx};
+    T const y{(v - cy) / fy};
+
+    // NOTE(Jack): These rays do not have unit length, instead they are on the image plane at z=1.
+    return {x, y, 1};
+}
 
 }  // namespace reprojection::projection_functions
