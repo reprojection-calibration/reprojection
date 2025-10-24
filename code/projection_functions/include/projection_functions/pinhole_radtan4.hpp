@@ -121,13 +121,11 @@ std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionJacobianUpdate(Eige
     return {distorted_p_cam, J};
 }
 
-// TODO(Jack): We are manually do an optimization here, therefore I am not sure if we can get jacobians here like a
-// classic templated "pass through" ceres autodiff capable function. Therefore maybe it does not make sense to template
-// here at all.
-template <typename T>
-Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intrinsics,
-                                               Eigen::Array<T, 2, 1> const& pixel) {
-    Eigen::Array<T, 3, 1> const P_ray{PinholeUnprojection<T>(intrinsics.topRows(4), pixel)};
+// NOTE(Jack): This is not templated, unlike PinholeRadtan4Projection, because we are not going to be optimizing this!
+// We need the unprojection functions for analytic ancillary tasks, not the nonlinear optimization directly.
+Eigen::Vector<double, 3> PinholeRadtan4Unprojection(Eigen::Array<double, 8, 1> const& intrinsics,
+                                                    Eigen::Array<double, 2, 1> const& pixel) {
+    Eigen::Array<double, 3, 1> const P_ray{PinholeUnprojection<double>(intrinsics.topRows(4), pixel)};
     Eigen::Vector2d const p_cam_0{P_ray.topRows(2)};
 
     // TODO(Jack): How many iterations do we really need here?

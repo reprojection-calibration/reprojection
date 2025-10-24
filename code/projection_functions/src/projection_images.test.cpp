@@ -99,7 +99,7 @@ TEST(ProjectionFunctionsProjectionImage, TestPinholeRadtan4Projection) {
         img.at<uchar>(pixel_j(1) - 1, pixel_j(0)) = 0;
         img.at<uchar>(pixel_j(1), pixel_j(0) - 1) = 0;
 
-        Eigen::Vector3d const point_i{PinholeRadtan4Unprojection<double>(pinhole_radtan4_intrinsics, pixel_j)};
+        Eigen::Vector3d const point_i{PinholeRadtan4Unprojection(pinhole_radtan4_intrinsics, pixel_j)};
         Eigen::Vector2d const pixel_i(PinholeRadtan4Projection<double>(pinhole_radtan4_intrinsics, point_i));
 
         if (pixel_i(0) < 1 or pixel_i(0) > width - 2 or pixel_i(1) < 1 or pixel_i(1) > height - 2) {

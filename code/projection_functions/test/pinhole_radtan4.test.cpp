@@ -40,8 +40,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProjection) {
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unprojection) {
     for (int i{0}; i < gt_pixels.rows(); i++) {
-        Eigen::Vector3d const ray_i{
-            PinholeRadtan4Unprojection<double>(pinhole_radtan4_intrinsics, gt_pixels.row(i).array())};
+        Eigen::Vector3d const ray_i{PinholeRadtan4Unprojection(pinhole_radtan4_intrinsics, gt_pixels.row(i).array())};
         EXPECT_TRUE(ray_i.isApprox(gt_points.row(i).transpose() / 600));  // Divide by focal length
     }
 }
