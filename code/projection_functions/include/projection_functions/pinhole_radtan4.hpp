@@ -11,7 +11,6 @@ namespace reprojection::projection_functions {
 template <typename T>
 Eigen::Vector<T, 2> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion,
                                       Eigen::Array<T, 2, 1> const& projected_point) {
-
     T const& x_z{projected_point[0]};
     T const& y_z{projected_point[1]};
     T const x_z2{x_z * x_z};
@@ -78,6 +77,8 @@ struct Radtan4DistortionCostFunctor {
 
 // TODO(Jack): This should take a 2d pixel not a 3d point! Figure out some consistency here!
 // TODO(Jack): Must be called with a normalized image plane point/pixel! z=1
+// TODO(Jack): Rename to reflect the fact that we ONLY get the derivative, forget the residual error! Do not even need
+// to return the residual because it alwazs should be zero right?
 std::tuple<Vector2d, Eigen::Matrix2d> Radtan4DistortionUpdate(Eigen::Array<double, 4, 1> const& radtan4_distortion,
                                                               Eigen::Array2d const& image_plane_point) {
     auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionCostFunctor, 2, 2>(
@@ -112,15 +113,20 @@ Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intr
 
     // TODO(Jack): How many iterations do we really need here?
     Eigen::Array<T, 4, 1> const radtan4_distortion{intrinsics.bottomRows(4)};
-    Eigen::Vector2d undistorted_ray{ray.topRows(2)};
+    Eigen::Vector2d const y{ray.topRows(2)};
+    Eigen::Vector2d ybar{y};
+    Eigen::Vector2d y_tmp;
     for (int i{0}; i < 5; ++i) {
-        auto const [e, J]{Radtan4DistortionUpdate(radtan4_distortion, undistorted_ray)};
+        y_tmp = ybar;
+        auto const [_, J]{Radtan4DistortionUpdate(radtan4_distortion, y_tmp)};
+        y_tmp = Radtan4Distortion<T>(radtan4_distortion, y_tmp);
 
+        Eigen::Vector2d const e{y - y_tmp};
         Eigen::Vector2d const du{(J.transpose() * J).inverse() * J.transpose() * e};
-        undistorted_ray += du;
+        ybar -= du;
     }
 
-    return {undistorted_ray[0], undistorted_ray[1], 1.0};
+    return {ybar[0], ybar[1], 1.0};
 }
 
 }  // namespace reprojection::projection_functions
