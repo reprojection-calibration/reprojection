@@ -127,27 +127,24 @@ std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionJacobianUpdate(Eige
 template <typename T>
 Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intrinsics,
                                                Eigen::Array<T, 2, 1> const& pixel) {
-    Eigen::Array<T, 4, 1> const pinhole_intrinsics{intrinsics.topRows(4)};
-    Eigen::Array<T, 3, 1> const ray{PinholeUnprojection(pinhole_intrinsics, pixel)};  // Normalized image plane ray
+    Eigen::Array<T, 3, 1> const P_ray{PinholeUnprojection<T>(intrinsics.topRows(4), pixel)};
+    Eigen::Vector2d const p_cam_0{P_ray.topRows(2)};
 
     // TODO(Jack): How many iterations do we really need here?
-    Eigen::Array<T, 4, 1> const radtan4_distortion{intrinsics.bottomRows(4)};
-    Eigen::Vector2d const y{ray.topRows(2)};
-    Eigen::Vector2d ybar{y};
-    Eigen::Vector2d y_tmp;
+    // TODO(Jack): Check error and exit early if the error is small, will this save us time?
+    // NOTE(Jack): The name part "*_n" signifies that this this is where we accumulate the result and have the final
+    // answer after n iterations. Inside the loop we use the name part "_i" to demonstrate that it is a variable that
+    // will only exist for the i'th iteration and be overwritten next time.
+    Eigen::Vector2d distorted_p_cam_n{p_cam_0};
     for (int i{0}; i < 5; ++i) {
-        y_tmp = ybar;
-        auto const [xxx, J]{Radtan4DistortionJacobianUpdate(radtan4_distortion, y_tmp)};
-        y_tmp = xxx;
+        auto const [distorted_p_cam_i, J]{Radtan4DistortionJacobianUpdate(intrinsics.bottomRows(4), distorted_p_cam_n)};
 
-        Eigen::Vector2d const e{y - y_tmp};
+        Eigen::Vector2d const e{distorted_p_cam_i.matrix() - p_cam_0};
         Eigen::Vector2d const du{(J.transpose() * J).inverse() * J.transpose() * e};
-        ybar += du;
-
-        // TODO(Jack): Check error and exit early if the error is small
+        distorted_p_cam_n -= du;
     }
 
-    return {ybar[0], ybar[1], 1.0};
+    return {distorted_p_cam_n[0], distorted_p_cam_n[1], 1.0};
 }
 
 }  // namespace reprojection::projection_functions
