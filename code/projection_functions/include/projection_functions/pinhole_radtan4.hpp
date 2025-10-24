@@ -7,15 +7,26 @@
 
 namespace reprojection::projection_functions {
 
-// TODO(Jack): Consistent naming of the point/pixel!
+// point_cam is a point in the ideal/normalized/projected camera coordinate frame. What does this actually mean for
+// practical purposes? Let us say we have a 3D point that is already in the "camera optical" frame P_co = {x, y, z}. To
+// transform this point to the ideal/normalized/projected camera coordinate frame we simply divide P_co by it's z-value
+// and then remove the last element.
+//
+//      Step 1) P_co: {x, y, z} -> {x/z, y/z, 1}
+//      Step 2) {x/z, y/z, 1} -> p_cam: {x/z, y/z}
+//
+// I am making this "ideal perspective projection" more complicated than it needs to be I think, but it does require
+// some emphasis here in the context of the radtan4 projection/unprojection. The user and maintainer of aforementioned
+// methods need to make sure when using the Radtan4Distortion method that the input p_cam is this
+// ideal/normalized/projected camera coordinate, otherwise it will not work properly! Or said another way, we need to
+// make sure that we do not accidentally use image coordinates given in pixels here.
 template <typename T>
-Eigen::Vector<T, 2> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion,
-                                      Eigen::Array<T, 2, 1> const& projected_point) {
-    T const& x_z{projected_point[0]};
-    T const& y_z{projected_point[1]};
-    T const x_z2{x_z * x_z};
-    T const y_z2{y_z * y_z};
-    T const r2{x_z2 + y_z2};
+Eigen::Vector<T, 2> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion, Eigen::Array<T, 2, 1> const& p_cam) {
+    T const& x_cam{p_cam[0]};
+    T const& y_cam{p_cam[1]};
+    T const x_cam2{x_cam * x_cam};
+    T const y_cam2{y_cam * y_cam};
+    T const r2{x_cam2 + y_cam2};
 
     T const& k1{distortion[0]};
     T const& k2{distortion[1]};
@@ -23,8 +34,8 @@ Eigen::Vector<T, 2> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion,
 
     T const& p1{distortion[2]};
     T const& p2{distortion[3]};
-    T const x_star{(r_prime * x_z) + (2.0 * p1 * x_z * y_z) + p2 * (r2 + 2.0 * x_z2)};
-    T const y_star{(r_prime * y_z) + (2.0 * p2 * x_z * y_z) + p1 * (r2 + 2.0 * y_z2)};
+    T const x_star{(r_prime * x_cam) + (2.0 * p1 * x_cam * y_cam) + p2 * (r2 + 2.0 * x_cam2)};
+    T const y_star{(r_prime * y_cam) + (2.0 * p2 * x_cam * y_cam) + p1 * (r2 + 2.0 * y_cam2)};
 
     return {x_star, y_star};
 }
@@ -110,7 +121,7 @@ template <typename T>
 Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intrinsics,
                                                Eigen::Array<T, 2, 1> const& pixel) {
     Eigen::Array<T, 4, 1> const pinhole_intrinsics{intrinsics.topRows(4)};
-    Eigen::Array<T, 3, 1> const ray{PinholeUnrojection(pinhole_intrinsics, pixel)};  // Normalized image plane ray
+    Eigen::Array<T, 3, 1> const ray{PinholeUnprojection(pinhole_intrinsics, pixel)};  // Normalized image plane ray
 
     // TODO(Jack): How many iterations do we really need here?
     Eigen::Array<T, 4, 1> const radtan4_distortion{intrinsics.bottomRows(4)};

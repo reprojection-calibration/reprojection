@@ -24,7 +24,7 @@ Eigen::Vector<T, 2> PinholeProjection(Eigen::Array<T, 4, 1> const& intrinsics, E
 Eigen::MatrixX2d PinholeProjection(Eigen::Matrix3d const& K, Eigen::MatrixX3d points);
 
 template <typename T>
-Eigen::Vector<T, 3> PinholeUnrojection(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 2, 1> const& pixel) {
+Eigen::Vector<T, 3> PinholeUnprojection(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 2, 1> const& pixel) {
     T const& fx{intrinsics[0]};
     T const& fy{intrinsics[1]};
     T const& cx{intrinsics[2]};

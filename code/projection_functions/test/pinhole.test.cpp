@@ -27,7 +27,7 @@ TEST(ProjectionFunctionsPinhole, TestPinholeProjection) {
 
 TEST(ProjectionFunctionsPinhole, TestPinholeUnprojection) {
     for (int i{0}; i < gt_pixels.rows(); i++) {
-        Eigen::Vector3d const ray_i{PinholeUnrojection<double>(pinhole_intrinsics, gt_pixels.row(i).array())};
+        Eigen::Vector3d const ray_i{PinholeUnprojection<double>(pinhole_intrinsics, gt_pixels.row(i).array())};
         EXPECT_TRUE(ray_i.isApprox(gt_points.row(i).transpose() / 600));  // Divide by focal length
     }
 }
