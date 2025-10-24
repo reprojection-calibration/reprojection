@@ -119,8 +119,8 @@ Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intr
     Eigen::Vector2d y_tmp;
     for (int i{0}; i < 5; ++i) {
         y_tmp = ybar;
-        auto const [_, J]{Radtan4DistortionUpdate(radtan4_distortion, y_tmp)};
-        y_tmp = Radtan4Distortion<T>(radtan4_distortion, y_tmp);
+        auto const [xxx, J]{Radtan4DistortionUpdate(radtan4_distortion, y_tmp)};
+        y_tmp = xxx;
 
         Eigen::Vector2d const e{y - y_tmp};
         Eigen::Vector2d const du{(J.transpose() * J).inverse() * J.transpose() * e};
