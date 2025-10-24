@@ -62,14 +62,12 @@ struct Radtan4DistortionCostFunctor {
     Vector2d pixel_;
 };
 
-TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionCostFunctor) {
-    Eigen::Array<double, 4, 1> const radtan4_distortion{-0.1, 0.1, 0.001, 0.001};
-    Eigen::Array3d const image_plane_point{-0.1, -0.1, 1};  // Center of image
+// TODO(Jack): This should take a 2d pixel not a 3d point! Figure out some consistency here!
+std::tuple<Vector2d, Eigen::Matrix2d> Xxx(Eigen::Array<double, 4, 1> const& radtan4_distortion,
+                                          Eigen::Array3d const& image_plane_point) {
     auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionCostFunctor, 2, 2>(
         new Radtan4DistortionCostFunctor(radtan4_distortion, image_plane_point.topRows(2)));
 
-    // MADNESS
-    // What kind of guarantee/requirement do we have that the z value of the ray is z=1?
     const double values[2] = {image_plane_point[0], image_plane_point[1]};
     const double* pValues = values;
     const double* const* pixel = &pValues;
@@ -78,18 +76,33 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionCostFunctor) {
     double jacobians_data[2 * 2];
     double* jacobians[] = {jacobians_data};
 
+    // TODO(Jack): What would we do if the evaluation here was not successful?
     bool success{cost_function->Evaluate(pixel, residuals, jacobians)};
+    static_cast<void>(success);
 
-    EXPECT_TRUE(success);
-    EXPECT_FLOAT_EQ(residuals[0], -0.00025600000000000622);
-    EXPECT_FLOAT_EQ(residuals[1], -0.00025600000000000622);
-    EXPECT_FLOAT_EQ(jacobians_data[0],-0.99531999999999998);
-    EXPECT_FLOAT_EQ(jacobians_data[1], 0.0023200000000000004);
-    EXPECT_FLOAT_EQ(jacobians_data[2], 0.0023200000000000004);
-    EXPECT_FLOAT_EQ(jacobians_data[3], -0.99531999999999998);
+    Eigen::Vector2d const e{residuals[0], residuals[1]};
+    Eigen::Matrix2d const J{Eigen::Map<const Eigen::Matrix2d>(jacobians_data)};
 
+    return {e, J};
 }
 
+TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionCostFunctor) {
+    Eigen::Array<double, 4, 1> const radtan4_distortion{-0.1, 0.1, 0.001, 0.001};
+    // What kind of guarantee/requirement do we have that the z value of the ray is z=1?
+    Eigen::Array3d const image_plane_point{-0.1, -0.1, 1};  // Center of image
+    auto const [e, J]{Xxx(radtan4_distortion, image_plane_point)};
+
+    EXPECT_FLOAT_EQ(e[0], -0.00025600000000000622);
+    EXPECT_FLOAT_EQ(e[1], -0.00025600000000000622);
+    EXPECT_FLOAT_EQ(J(0, 0), -0.99531999999999998);
+    EXPECT_FLOAT_EQ(J(0, 1), 0.0023200000000000004);
+    EXPECT_FLOAT_EQ(J(1, 0), 0.0023200000000000004);
+    EXPECT_FLOAT_EQ(J(1, 1), -0.99531999999999998);
+}
+
+// TODO(Jack): We are manually do an optimization here, therefore I am not sure if we can get jacobians here like a
+// classic templated "pass through" ceres autodiff capable function. Therefore maybe it does not make sense to template
+// here at all.
 template <typename T>
 Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intrinsics,
                                                Eigen::Array<T, 2, 1> const& pixel) {
