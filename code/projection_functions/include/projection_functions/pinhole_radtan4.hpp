@@ -21,7 +21,7 @@ namespace reprojection::projection_functions {
 // ideal/normalized/projected camera coordinate, otherwise it will not work properly! Or said another way, we need to
 // make sure that we do not accidentally use image coordinates given in pixels here.
 template <typename T>
-Eigen::Vector<T, 2> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion, Eigen::Array<T, 2, 1> const& p_cam) {
+Eigen::Array<T, 2, 1> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion, Eigen::Array<T, 2, 1> const& p_cam) {
     T const& x_cam{p_cam[0]};
     T const& y_cam{p_cam[1]};
     T const x_cam2{x_cam * x_cam};
@@ -34,15 +34,15 @@ Eigen::Vector<T, 2> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion, E
 
     T const& p1{distortion[2]};
     T const& p2{distortion[3]};
-    T const x_star{(r_prime * x_cam) + (2.0 * p1 * x_cam * y_cam) + p2 * (r2 + 2.0 * x_cam2)};
-    T const y_star{(r_prime * y_cam) + (2.0 * p2 * x_cam * y_cam) + p1 * (r2 + 2.0 * y_cam2)};
+    T const distorted_x_cam{(r_prime * x_cam) + (2.0 * p1 * x_cam * y_cam) + p2 * (r2 + 2.0 * x_cam2)};
+    T const distorted_y_cam{(r_prime * y_cam) + (2.0 * p2 * x_cam * y_cam) + p1 * (r2 + 2.0 * y_cam2)};
 
-    return {x_star, y_star};
+    return {distorted_x_cam, distorted_y_cam};
 }
 
 template <typename T>
-Eigen::Vector<T, 2> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intrinsics,
-                                             Eigen::Array<T, 3, 1> const& point) {
+Eigen::Array<T, 2, 1> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intrinsics,
+                                               Eigen::Array<T, 3, 1> const& point) {
     T const& x{point[0]};
     T const& y{point[1]};
     T const& z{point[2]};
@@ -75,7 +75,8 @@ struct Radtan4DistortionCostFunctor {
     template <typename T>
     bool operator()(T const* const pixel_ptr, T* const residual) const {
         Eigen::Map<Eigen::Array<T, 2, 1> const> const pixel(pixel_ptr);
-        Eigen::Vector<T, 2> const pixel_star{projection_functions::Radtan4Distortion<T>(distortion_.cast<T>(), pixel)};
+        Eigen::Array<T, 2, 1> const pixel_star{
+            projection_functions::Radtan4Distortion<T>(distortion_.cast<T>(), pixel)};
 
         residual[0] = pixel_star[0];
         residual[1] = pixel_star[1];
@@ -91,8 +92,8 @@ struct Radtan4DistortionCostFunctor {
 // TODO(Jack): Must be called with a normalized image plane point/pixel! z=1
 // TODO(Jack): Rename to reflect the fact that we ONLY get the derivative, forget the residual error! Do not even need
 // to return the residual because it alwazs should be zero right?
-std::tuple<Vector2d, Eigen::Matrix2d> Radtan4DistortionUpdate(Eigen::Array<double, 4, 1> const& radtan4_distortion,
-                                                              Eigen::Array2d const& image_plane_point) {
+std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionUpdate(Eigen::Array4d const& radtan4_distortion,
+                                                                    Eigen::Array2d const& image_plane_point) {
     auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionCostFunctor, 2, 2>(
         new Radtan4DistortionCostFunctor(radtan4_distortion));
 
