@@ -38,7 +38,7 @@ std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionJacobianUpdate(Eige
     // NOTE(Jack): The ceres type is AutoDiffCostFunction, but as we wrote above, this is not actually calculating a
     // residual cost! See above.
     // TODO(Jack): Do we need to manually deallocate this?
-    auto* const cost_function{
+    auto* const function{
         new ceres::AutoDiffCostFunction<Radtan4DistortionFunctor, 2, 2>(new Radtan4DistortionFunctor(distortion))};
 
     // This is a super annoying way to initialize the data for the format required by the Evaluate function, nothing
@@ -53,7 +53,7 @@ std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionJacobianUpdate(Eige
 
     // TODO(Jack): What would we do if the evaluation here was not successful? Is that even a worry we need to consider?
     // Right now we add an assertion so we can catch failures in development.
-    bool success{cost_function->Evaluate(p_cam_ptr_ptr, distorted_p_cam_ptr, J_ptr_ptr)};
+    bool success{function->Evaluate(p_cam_ptr_ptr, distorted_p_cam_ptr, J_ptr_ptr)};
     assert(success);
 
     Eigen::Vector2d const distorted_p_cam{distorted_p_cam_ptr[0], distorted_p_cam_ptr[1]};

@@ -57,3 +57,16 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionJacobianUpdate) {
     EXPECT_FLOAT_EQ(J(1, 0), -0.0023200000000000004);
     EXPECT_FLOAT_EQ(J(1, 1), 0.99531999999999998);
 }
+
+
+TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionFunctor) {
+    Eigen::Array<double, 4, 1> const distortion{-0.1, 0.1, 0.001, 0.001};
+    auto const distortion_functor{Radtan4DistortionFunctor(distortion)};
+
+    Eigen::Array2d const p_cam{-0.1, -0.1};
+    Eigen::Array2d distorted_p_cam;
+    distortion_functor(p_cam.data(), distorted_p_cam.data());
+
+    EXPECT_FLOAT_EQ(distorted_p_cam[0], -0.099743999999999999);
+    EXPECT_FLOAT_EQ(distorted_p_cam[1], -0.099743999999999999);
+}
