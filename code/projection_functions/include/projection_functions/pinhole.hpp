@@ -4,21 +4,37 @@
 
 namespace reprojection::projection_functions {
 
+// Applying ideal projection to "P_co" gives us "p_cam". Applying the calibration values of K to "p_cam" gives us
+// "pixel".
+//
+//      P_co: {x, y, z}
+//      p_cam: {x_cam, y_cam}
+//      pixel: {u, v}
+
+// NOTE(Jack): For the sake of verbosity/explicitness this function includes some lines operations which could be
+// combined but are instead done explicitly for emphasis of the relevant coordinate frames.
 template <typename T>
-Eigen::Vector<T, 2> PinholeProjection(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& point) {
+Eigen::Vector<T, 2> PinholeProjection(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
+    // Put into ideal/normalized/projected camera coordinate frame
+    T const& x{P_co[0]};
+    T const& y{P_co[1]};
+    T const& z{P_co[2]};
+
+    T const x_cam{x / z};
+    T const y_cam{y / z};
+
+    // Put into pixelized image coordinate frame
     T const& fx{intrinsics[0]};
     T const& fy{intrinsics[1]};
     T const& cx{intrinsics[2]};
     T const& cy{intrinsics[3]};
 
-    T const& x{point[0]};
-    T const& y{point[1]};
-    T const& z{point[2]};
+    T const u{(fx * x_cam) + cx};
+    T const v{(fy * y_cam) + cy};
 
-    T const u{(fx * x / z) + cx};
-    T const v{(fy * y / z) + cy};
+    Eigen::Vector<T, 2> const pixel{u, v};
 
-    return {u, v};
+    return pixel;
 }
 
 Eigen::MatrixX2d PinholeProjection(Eigen::Matrix3d const& K, Eigen::MatrixX3d points);
@@ -33,11 +49,13 @@ Eigen::Vector<T, 3> PinholeUnprojection(Eigen::Array<T, 4, 1> const& intrinsics,
     T const& u{pixel[0]};
     T const& v{pixel[1]};
 
-    T const x{(u - cx) / fx};
-    T const y{(v - cy) / fy};
+    T const x_cam{(u - cx) / fx};
+    T const y_cam{(v - cy) / fy};
 
-    // NOTE(Jack): These rays do not have unit length, instead they are on the image plane at z=1.
-    return {x, y, 1};
+    // NOTE(Jack): Setting the z value here to 1 essentially captures the pure essence of the loss of
+    // information/scale/depth associated with the projective transform. This returns a "ray" or direction, not a 3D
+    // point in the camera optical frame.
+    return {x_cam, y_cam, 1};
 }
 
 }  // namespace reprojection::projection_functions
