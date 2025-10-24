@@ -21,9 +21,9 @@ Eigen::Vector<T, 2> Radtan4Distortion(Eigen::Array<T, 4, 1> const& distortion,
     T const y_z2{y_z * y_z};
     T const r2{x_z2 + y_z2};
 
-    T const r_prime{1 + (k1 * r2) + (k2 * r2 * r2)};
-    T const x_star{(r_prime * x_z) + (2 * p1 * x_z * y_z) + p2 * (r2 + 2 * x_z2)};
-    T const y_star{(r_prime * y_z) + (2 * p2 * x_z * y_z) + p1 * (r2 + 2 * y_z2)};
+    T const r_prime{1.0 + (k1 * r2) + (k2 * r2 * r2)};
+    T const x_star{(r_prime * x_z) + (2.0 * p1 * x_z * y_z) + p2 * (r2 + 2.0 * x_z2)};
+    T const y_star{(r_prime * y_z) + (2.0 * p2 * x_z * y_z) + p1 * (r2 + 2.0 * y_z2)};
 
     return {x_star, y_star};
 }
