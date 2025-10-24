@@ -46,14 +46,13 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unprojection) {
     }
 }
 
-TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionUpdate) {
-    Eigen::Array<double, 4, 1> const radtan4_distortion{-0.1, 0.1, 0.001, 0.001};
-    // What kind of guarantee/requirement do we have that the z value of the ray is z=1?
-    Eigen::Array2d const image_plane_point{-0.1, -0.1};
-    auto const [e, J]{Radtan4DistortionUpdate(radtan4_distortion, image_plane_point)};
+TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionJacobianUpdate) {
+    Eigen::Array<double, 4, 1> const distortion{-0.1, 0.1, 0.001, 0.001};
+    Eigen::Array2d const p_cam{-0.1, -0.1};
+    auto const [distorted_p_cam, J]{Radtan4DistortionJacobianUpdate(distortion, p_cam)};
 
-    EXPECT_FLOAT_EQ(e[0],-0.099743999999999999);
-    EXPECT_FLOAT_EQ(e[1], -0.099743999999999999);
+    EXPECT_FLOAT_EQ(distorted_p_cam[0], -0.099743999999999999);
+    EXPECT_FLOAT_EQ(distorted_p_cam[1], -0.099743999999999999);
     EXPECT_FLOAT_EQ(J(0, 0), 0.99531999999999998);
     EXPECT_FLOAT_EQ(J(0, 1), -0.0023200000000000004);
     EXPECT_FLOAT_EQ(J(1, 0), -0.0023200000000000004);

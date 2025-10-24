@@ -92,27 +92,33 @@ struct Radtan4DistortionFunctor {
     Eigen::Array<double, 4, 1> distortion_;
 };
 
-std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionUpdate(Eigen::Array4d const& radtan4_distortion,
-                                                                    Eigen::Array2d const& image_plane_point) {
-    auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionFunctor, 2, 2>(
-        new Radtan4DistortionFunctor(radtan4_distortion));
+std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionJacobianUpdate(Eigen::Array4d const& distortion,
+                                                                            Eigen::Array2d const& p_cam) {
+    // NOTE(Jack): The ceres type is AutoDiffCostFunction, but as we wrote above, this is not actually calculating a
+    // residual cost! See above.
+    // TODO(Jack): Do we need to manually deallocate this?
+    auto* const cost_function{
+        new ceres::AutoDiffCostFunction<Radtan4DistortionFunctor, 2, 2>(new Radtan4DistortionFunctor(distortion))};
 
-    const double values[2] = {image_plane_point[0], image_plane_point[1]};
-    const double* pValues = values;
-    const double* const* pixel = &pValues;
+    // This is a super annoying way to initialize the data for the format required by the Evaluate function, nothing
+    // else I can do... Here and below.
+    double const p_cam_array[2]{p_cam[0], p_cam[1]};
+    double const* p_cam_ptr{p_cam_array};
+    double const* const* p_cam_ptr_ptr{&p_cam_ptr};
 
-    double residuals[2];
-    double jacobians_data[2 * 2];
-    double* jacobians[] = {jacobians_data};
+    double distorted_p_cam_ptr[2];
+    double J_ptr[2 * 2];
+    double* J_ptr_ptr[4]{J_ptr};
 
-    // TODO(Jack): What would we do if the evaluation here was not successful?
-    bool success{cost_function->Evaluate(pixel, residuals, jacobians)};
-    static_cast<void>(success);
+    // TODO(Jack): What would we do if the evaluation here was not successful? Is that even a worry we need to consider?
+    // Right now we add an assertion so we can catch failures in development.
+    bool success{cost_function->Evaluate(p_cam_ptr_ptr, distorted_p_cam_ptr, J_ptr_ptr)};
+    assert(success);
 
-    Eigen::Vector2d const e{residuals[0], residuals[1]};
-    Eigen::Matrix2d const J{Eigen::Map<const Eigen::Matrix2d>(jacobians_data)};
+    Eigen::Vector2d const distorted_p_cam{distorted_p_cam_ptr[0], distorted_p_cam_ptr[1]};
+    Eigen::Matrix2d const J{Eigen::Map<const Eigen::Matrix2d>(J_ptr)};
 
-    return {e, J};
+    return {distorted_p_cam, J};
 }
 
 // TODO(Jack): We are manually do an optimization here, therefore I am not sure if we can get jacobians here like a
@@ -131,7 +137,7 @@ Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intr
     Eigen::Vector2d y_tmp;
     for (int i{0}; i < 5; ++i) {
         y_tmp = ybar;
-        auto const [xxx, J]{Radtan4DistortionUpdate(radtan4_distortion, y_tmp)};
+        auto const [xxx, J]{Radtan4DistortionJacobianUpdate(radtan4_distortion, y_tmp)};
         y_tmp = xxx;
 
         Eigen::Vector2d const e{y - y_tmp};
