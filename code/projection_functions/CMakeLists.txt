@@ -6,6 +6,7 @@ find_package(OpenCV REQUIRED) # Only required to save projection images
 
 set(SRC_FILES
         src/pinhole.cpp
+        src/pinhole_radtan4.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -17,7 +18,6 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/projection_images.test.cpp
         test/double_sphere.test.cpp
         test/pinhole.test.cpp
         test/pinhole_radtan4.test.cpp
