@@ -66,7 +66,7 @@ Eigen::Array<T, 2, 1> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intr
 // NOTE(Jack): This is not templated, unlike PinholeRadtan4Projection, because we are not going to be optimizing this!
 // We need the unprojection functions for analytic ancillary tasks, not the nonlinear optimization directly.
 Eigen::Array3d PinholeRadtan4Unprojection(Eigen::Array<double, 8, 1> const& intrinsics,
-                                                    Eigen::Array<double, 2, 1> const& pixel);
+                                          Eigen::Array<double, 2, 1> const& pixel);
 
 std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionJacobianUpdate(Eigen::Array4d const& distortion,
                                                                             Eigen::Array2d const& p_cam);
@@ -78,11 +78,11 @@ std::tuple<Eigen::Array2d, Eigen::Matrix2d> Radtan4DistortionJacobianUpdate(Eige
 //
 // The jacobian calculated here is exactly the same (maybe there is a sign flip depending on how you do it) as if we
 // would have provided the measured value and calculated a residual instead. I guess in the context of calculating a
-// jacobian the "measured" value is a constant and therefore does actually effect the jacobian :) It might look like a
+// jacobian the "measured" value is a constant and therefore does actually affect the jacobian :) It might look like a
 // ceres cost functor because we need to fit into how ceres does it, and therefore at first glance you might be
 // confused what is going on here.
 struct Radtan4DistortionFunctor {
-    Radtan4DistortionFunctor(Eigen::Array<double, 4, 1> const& distortion) : distortion_{distortion} {}
+    explicit Radtan4DistortionFunctor(Eigen::Array<double, 4, 1> const& distortion) : distortion_{distortion} {}
 
     // WARN(Jack): This is not a cost function operator! Read the context above in the note.
     template <typename T>
