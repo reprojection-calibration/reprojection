@@ -56,8 +56,7 @@ Eigen::Vector<T, 2> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intrin
 // TODO(Jack): Would it be possible to repurpose the residual to return the point directly? Or do we need the residual
 // to calculate the derivative?
 struct Radtan4DistortionCostFunctor {
-    Radtan4DistortionCostFunctor(Eigen::Array<double, 4, 1> const& distortion, Eigen::Array2d const& pixel)
-        : distortion_{distortion}, pixel_{pixel} {}
+    Radtan4DistortionCostFunctor(Eigen::Array<double, 4, 1> const& distortion) : distortion_{distortion} {}
 
     // TODO(Jack): Clarify what is a point and what is a pixel! Unit/plane/normalized???
     // TODO(Jack): Inconsistent use of array and vector
@@ -67,15 +66,14 @@ struct Radtan4DistortionCostFunctor {
         Eigen::Map<Eigen::Array<T, 2, 1> const> const pixel(pixel_ptr);
         Eigen::Vector<T, 2> const pixel_star{projection_functions::Radtan4Distortion<T>(distortion_.cast<T>(), pixel)};
 
-        residual[0] = T(pixel_[0]) - pixel_star[0];
-        residual[1] = T(pixel_[1]) - pixel_star[1];
+        residual[0] = pixel_star[0];
+        residual[1] = pixel_star[1];
 
         return true;
     }
 
    private:
     Eigen::Array<double, 4, 1> distortion_;
-    Vector2d pixel_;
 };
 
 // TODO(Jack): This should take a 2d pixel not a 3d point! Figure out some consistency here!
@@ -85,7 +83,7 @@ struct Radtan4DistortionCostFunctor {
 std::tuple<Vector2d, Eigen::Matrix2d> Radtan4DistortionUpdate(Eigen::Array<double, 4, 1> const& radtan4_distortion,
                                                               Eigen::Array2d const& image_plane_point) {
     auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionCostFunctor, 2, 2>(
-        new Radtan4DistortionCostFunctor(radtan4_distortion, image_plane_point));
+        new Radtan4DistortionCostFunctor(radtan4_distortion));
 
     const double values[2] = {image_plane_point[0], image_plane_point[1]};
     const double* pValues = values;
@@ -126,7 +124,9 @@ Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intr
 
         Eigen::Vector2d const e{y - y_tmp};
         Eigen::Vector2d const du{(J.transpose() * J).inverse() * J.transpose() * e};
-        ybar -= du;
+        ybar += du;
+
+        // TODO(Jack): Check error and exit early if the error is small
     }
 
     return {ybar[0], ybar[1], 1.0};

@@ -38,7 +38,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProjection) {
     }
 }
 
-TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unrojection) {
+TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unprojection) {
     for (int i{0}; i < gt_pixels.rows(); i++) {
         Eigen::Vector3d const ray_i{
             PinholeRadtan4Unprojection<double>(pinhole_radtan4_intrinsics, gt_pixels.row(i).array())};
@@ -52,15 +52,10 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionUpdate) {
     Eigen::Array2d const image_plane_point{-0.1, -0.1};
     auto const [e, J]{Radtan4DistortionUpdate(radtan4_distortion, image_plane_point)};
 
-    EXPECT_FLOAT_EQ(e[0], -0.00025600000000000622);
-    EXPECT_FLOAT_EQ(e[1], -0.00025600000000000622);
-    EXPECT_FLOAT_EQ(J(0, 0), -0.99531999999999998);
-    EXPECT_FLOAT_EQ(J(0, 1), 0.0023200000000000004);
-    EXPECT_FLOAT_EQ(J(1, 0), 0.0023200000000000004);
-    EXPECT_FLOAT_EQ(J(1, 1), -0.99531999999999998);
-}
-
-TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unprojection) {
-    Eigen::Vector3d const ray{PinholeRadtan4Unprojection<double>(pinhole_radtan4_intrinsics, {370, 250})};
-    EXPECT_TRUE(ray.isApprox(Eigen::Vector3d{0.016665925436346887, 0.016665925436346887, 1}));
+    EXPECT_FLOAT_EQ(e[0],-0.099743999999999999);
+    EXPECT_FLOAT_EQ(e[1], -0.099743999999999999);
+    EXPECT_FLOAT_EQ(J(0, 0), 0.99531999999999998);
+    EXPECT_FLOAT_EQ(J(0, 1), -0.0023200000000000004);
+    EXPECT_FLOAT_EQ(J(1, 0), -0.0023200000000000004);
+    EXPECT_FLOAT_EQ(J(1, 1), 0.99531999999999998);
 }
