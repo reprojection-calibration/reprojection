@@ -63,10 +63,11 @@ struct Radtan4DistortionCostFunctor {
 };
 
 // TODO(Jack): This should take a 2d pixel not a 3d point! Figure out some consistency here!
+// TODO(Jack): Must be called with a normalized image plane point/pixel! z=1
 std::tuple<Vector2d, Eigen::Matrix2d> Xxx(Eigen::Array<double, 4, 1> const& radtan4_distortion,
-                                          Eigen::Array3d const& image_plane_point) {
+                                          Eigen::Array2d const& image_plane_point) {
     auto* cost_function = new ceres::AutoDiffCostFunction<Radtan4DistortionCostFunctor, 2, 2>(
-        new Radtan4DistortionCostFunctor(radtan4_distortion, image_plane_point.topRows(2)));
+        new Radtan4DistortionCostFunctor(radtan4_distortion, image_plane_point));
 
     const double values[2] = {image_plane_point[0], image_plane_point[1]};
     const double* pValues = values;
@@ -89,7 +90,7 @@ std::tuple<Vector2d, Eigen::Matrix2d> Xxx(Eigen::Array<double, 4, 1> const& radt
 TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionCostFunctor) {
     Eigen::Array<double, 4, 1> const radtan4_distortion{-0.1, 0.1, 0.001, 0.001};
     // What kind of guarantee/requirement do we have that the z value of the ray is z=1?
-    Eigen::Array3d const image_plane_point{-0.1, -0.1, 1};  // Center of image
+    Eigen::Array2d const image_plane_point{-0.1, -0.1};
     auto const [e, J]{Xxx(radtan4_distortion, image_plane_point)};
 
     EXPECT_FLOAT_EQ(e[0], -0.00025600000000000622);
@@ -109,11 +110,20 @@ Eigen::Vector<T, 3> PinholeRadtan4Unprojection(Eigen::Array<T, 8, 1> const& intr
     Eigen::Array<T, 4, 1> const pinhole_intrinsics{intrinsics.topRows(4)};
     Eigen::Array<T, 3, 1> const ray{PinholeUnrojection(pinhole_intrinsics, pixel)};  // Normalized image plane ray
 
-    return ray;
+    // TODO(Jack): How many iterations do we really need here?
+    Eigen::Array<T, 4, 1> const radtan4_distortion{intrinsics.bottomRows(4)};
+    Eigen::Vector2d undistorted_ray{ray.topRows(2)};
+    for (int i{0}; i < 5; ++i) {
+        auto const [e, J]{Xxx(radtan4_distortion, undistorted_ray)};
+
+        Eigen::Vector2d const du{(J.transpose() * J).inverse() * J.transpose() * e};
+        undistorted_ray += du;
+    }
+
+    return {undistorted_ray[0], undistorted_ray[1], 1.0};
 }
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unprojection) {
-    Eigen::Vector3d const center_ray{
-        PinholeRadtan4Unprojection<double>(pinhole_radtan4_intrinsics, gt_pixels.row(0).array())};
-    EXPECT_TRUE(center_ray.isApprox(Eigen::Vector3d{0, 0, 1}));
+    Eigen::Vector3d const ray{PinholeRadtan4Unprojection<double>(pinhole_radtan4_intrinsics, {370, 250})};
+    EXPECT_TRUE(ray.isApprox(Eigen::Vector3d{0.016670373066475275, 0.016670373066475275, 1}));
 }
