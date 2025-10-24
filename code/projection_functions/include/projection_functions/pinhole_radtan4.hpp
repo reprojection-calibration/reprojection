@@ -51,10 +51,7 @@ Eigen::Array<T, 2, 1> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intr
     T const y_cam{y / z};
     Eigen::Array<T, 2, 1> const p_cam{x_cam, y_cam};
 
-    Eigen::Array<T, 4, 1> const distortion{intrinsics.bottomRows(4)};
-    Eigen::Array<T, 2, 1> const distorted_p_cam{Radtan4Distortion(distortion, p_cam)};
-
-    Eigen::Array<T, 4, 1> const pinhole_intrinsics{intrinsics.topRows(4)};
+    Eigen::Array<T, 2, 1> const distorted_p_cam{Radtan4Distortion<T>(intrinsics.bottomRows(4), p_cam)};
     Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], 1};
 
     // NOTE(Jack): Because we already did the ideal projective transform to the camera coordinate frame above
@@ -63,7 +60,7 @@ Eigen::Array<T, 2, 1> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intr
     // masquerades as a 3D point but intuitively it does not have nearly the amount of "freedom" at this point when
     // compared to the input P_co which was a real 3D point. That is the reason that I do not use a frame postfix like
     // "_co" and instead just call it "_star".
-    return PinholeProjection<T>(pinhole_intrinsics, P_star);
+    return PinholeProjection<T>(intrinsics.topRows(4), P_star);
 }
 
 // UNDISTORTION BELOW
