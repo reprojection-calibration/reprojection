@@ -52,6 +52,9 @@ Eigen::Vector<T, 2> PinholeRadtan4Projection(Eigen::Array<T, 8, 1> const& intrin
 
 // UNDISTORTION BELOW
 
+// TODO(Jack): Make this just return the distorted value also!
+// TODO(Jack): Would it be possible to repurpose the residual to return the point directly? Or do we need the residual
+// to calculate the derivative?
 struct Radtan4DistortionCostFunctor {
     Radtan4DistortionCostFunctor(Eigen::Array<double, 4, 1> const& distortion, Eigen::Array2d const& pixel)
         : distortion_{distortion}, pixel_{pixel} {}

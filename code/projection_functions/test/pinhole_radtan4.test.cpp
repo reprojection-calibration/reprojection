@@ -8,7 +8,7 @@ using namespace reprojection;
 using namespace reprojection::projection_functions;
 
 Eigen::Array<double, 8, 1> const pinhole_radtan4_intrinsics{600, 600, 360, 240, -0.1, 0.1, 0.001, 0.001};
-Eigen::MatrixX3d const gt_points{{0, 0, 10}, {-360, 0, 600}, {360, 0, 600}, {0, -240, 600}, {0, 240, 600}};
+Eigen::MatrixX3d const gt_points{{0, 0, 600}, {-360, 0, 600}, {360, 0, 600}, {0, -240, 600}, {0, 240, 600}};
 // Heuristic groundtruth values caculated by running the projection functions itself once - hacky!
 Eigen::MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrinsics[3]},
                                  {8.9424000000000206, 240.21600000000001},
@@ -38,6 +38,14 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProjection) {
     }
 }
 
+TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unrojection) {
+    for (int i{0}; i < gt_pixels.rows(); i++) {
+        Eigen::Vector3d const ray_i{
+            PinholeRadtan4Unprojection<double>(pinhole_radtan4_intrinsics, gt_pixels.row(i).array())};
+        EXPECT_TRUE(ray_i.isApprox(gt_points.row(i).transpose() / 600));  // Divide by focal length
+    }
+}
+
 TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionUpdate) {
     Eigen::Array<double, 4, 1> const radtan4_distortion{-0.1, 0.1, 0.001, 0.001};
     // What kind of guarantee/requirement do we have that the z value of the ray is z=1?
@@ -54,5 +62,5 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionUpdate) {
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unprojection) {
     Eigen::Vector3d const ray{PinholeRadtan4Unprojection<double>(pinhole_radtan4_intrinsics, {370, 250})};
-    EXPECT_TRUE(ray.isApprox(Eigen::Vector3d{0.016670373066475275, 0.016670373066475275, 1}));
+    EXPECT_TRUE(ray.isApprox(Eigen::Vector3d{0.016665925436346887, 0.016665925436346887, 1}));
 }
