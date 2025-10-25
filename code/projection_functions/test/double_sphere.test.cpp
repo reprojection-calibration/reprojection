@@ -7,7 +7,7 @@ using namespace reprojection::projection_functions;
 
 Eigen::MatrixX3d const gt_points{{0, 0, 10}, {-360, 0, 600}, {360, 0, 600}, {0, -240, 600}, {0, 240, 600}};
 
-TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProjection) {
+TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
     Eigen::Array<double, 6, 1> const double_sphere_intrinsics{600, 600, 360, 240, 0.1, 0.2};
 
     // Heuristic groundtruth values caculated by running the projection functions itself once - hacky!
@@ -18,7 +18,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProjection) {
                                      {double_sphere_intrinsics[2], 453.95997455304922}};
 
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(DoubleSphereProjection<double>(double_sphere_intrinsics, gt_points.row(i)));
+        Eigen::Vector2d const pixel_i(DoubleSphere::Project<double>(double_sphere_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
     }
 }
@@ -34,7 +34,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
                                      {pinhole_intrinsics[2], 480}};
 
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(DoubleSphereProjection<double>(pinhole_intrinsics, gt_points.row(i)));
+        Eigen::Vector2d const pixel_i(DoubleSphere::Project<double>(pinhole_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
     }
 }

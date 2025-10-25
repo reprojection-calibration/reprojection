@@ -57,7 +57,7 @@ Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w, Eigen::
     // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not
     // match our expectations about matrix dimensions after the fact.
     Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
-    Eigen::MatrixX2d const pixels(projection_functions::PinholeProjection(K, points_homog_co.leftCols(3)));
+    Eigen::MatrixX2d const pixels(projection_functions::Pinhole::Project(K, points_homog_co.leftCols(3)));
 
     return pixels;
 }

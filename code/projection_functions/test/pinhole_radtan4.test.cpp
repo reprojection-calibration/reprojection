@@ -16,9 +16,9 @@ Eigen::MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4
                                  {360.096, 3.5135999999999683},
                                  {360.096, 477.06240000000003}};
 
-TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Projection) {
+TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Project) {
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(PinholeRadtan4Projection<double>(pinhole_radtan4_intrinsics, gt_points.row(i)));
+        Eigen::Vector2d const pixel_i(PinholeRadtan4::Project<double>(pinhole_radtan4_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
     }
 }
@@ -33,22 +33,22 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProjection) {
                                              {pinhole_intrinsics[2], 480}};
 
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(PinholeRadtan4Projection<double>(pinhole_intrinsics, gt_points.row(i)));
+        Eigen::Vector2d const pixel_i(PinholeRadtan4::Project<double>(pinhole_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pinhole_pixels.row(i).transpose()));
     }
 }
 
-TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unprojection) {
+TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Unproject) {
     for (int i{0}; i < gt_pixels.rows(); i++) {
-        Eigen::Vector3d const ray_i{PinholeRadtan4Unprojection(pinhole_radtan4_intrinsics, gt_pixels.row(i).array())};
+        Eigen::Vector3d const ray_i{PinholeRadtan4::Unproject(pinhole_radtan4_intrinsics, gt_pixels.row(i).array())};
         EXPECT_TRUE(ray_i.isApprox(gt_points.row(i).transpose() / 600));  // Divide by focal length
     }
 }
 
-TEST(ProjectionFunctionsPinholeRadtan4, TestRadtan4DistortionJacobianUpdate) {
+TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4JacobianUpdate) {
     Eigen::Array<double, 4, 1> const distortion{-0.1, 0.1, 0.001, 0.001};
     Eigen::Array2d const p_cam{-0.1, -0.1};
-    auto const [distorted_p_cam, J]{Radtan4DistortionJacobianUpdate(distortion, p_cam)};
+    auto const [distorted_p_cam, J]{PinholeRadtan4::JacobianUpdate(distortion, p_cam)};
 
     EXPECT_FLOAT_EQ(distorted_p_cam[0], -0.099743999999999999);
     EXPECT_FLOAT_EQ(distorted_p_cam[1], -0.099743999999999999);
