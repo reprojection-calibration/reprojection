@@ -23,7 +23,7 @@ Eigen::Array3d PinholeRadtan4::Unproject(Eigen::Array<double, 8, 1> const& intri
     // will only exist for the i'th iteration and be overwritten next time.
     Eigen::Vector2d distorted_p_cam_n{p_cam_0};
     for (int i{0}; i < 5; ++i) {
-        auto const [distorted_p_cam_i, J]{PinholeRadtan4::JacobianUpdate(intrinsics.bottomRows(4), distorted_p_cam_n)};
+        auto const [distorted_p_cam_i, J]{JacobianUpdate(intrinsics.bottomRows(4), distorted_p_cam_n)};
 
         Eigen::Vector2d const e{distorted_p_cam_i.matrix() - p_cam_0};
         Eigen::Vector2d const du{(J.transpose() * J).inverse() * J.transpose() * e};
@@ -38,8 +38,7 @@ std::tuple<Eigen::Array2d, Eigen::Matrix2d> PinholeRadtan4::JacobianUpdate(Eigen
     // NOTE(Jack): The ceres type is AutoDiffCostFunction, but as we wrote above, this is not actually calculating a
     // residual cost! See above.
     // TODO(Jack): Do we need to manually deallocate this?
-    auto* const function{
-        new ceres::AutoDiffCostFunction<Radtan4DistortionFunctor, 2, 2>(new Radtan4DistortionFunctor(distortion))};
+    auto* const function{new ceres::AutoDiffCostFunction<DistortFunctor, 2, 2>(new DistortFunctor(distortion))};
 
     // This is a super annoying way to initialize the data for the format required by the Evaluate function, nothing
     // else I can do... Here and below.

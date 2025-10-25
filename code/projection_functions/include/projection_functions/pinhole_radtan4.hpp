@@ -71,36 +71,35 @@ struct PinholeRadtan4 {
 
     static std::tuple<Eigen::Array2d, Eigen::Matrix2d> JacobianUpdate(Eigen::Array4d const& distortion,
                                                                       Eigen::Array2d const& p_cam);
-};
 
-// NOTE(Jack): Here we are using ceres to calculate the jacobian of the PinholeRadtan4::Distort. Unlike most ceres
-// "functors" you will see, this is NOT a "cost" functor! It will not return the residual between some predicted and
-// measured value or anything like that. Instead it simply calls PinholeRadtan4::Distort and returns the value of the
-// distorted point in the place where the residual would normally be returned via the pointer.
-//
-// The jacobian calculated here is exactly the same (maybe there is a sign flip depending on how you do it) as if we
-// would have provided the measured value and calculated a residual instead. I guess in the context of calculating a
-// jacobian the "measured" value is a constant and therefore does actually affect the jacobian :) It might look like a
-// ceres cost functor because we need to fit into how ceres does it, and therefore at first glance you might be
-// confused what is going on here.
-// TODO(Jack): Should this be part of the static class too?
-struct Radtan4DistortionFunctor {
-    explicit Radtan4DistortionFunctor(Eigen::Array<double, 4, 1> const& distortion) : distortion_{distortion} {}
+    // NOTE(Jack): Here we are using ceres to calculate the jacobian of the PinholeRadtan4::Distort. Unlike most ceres
+    // "functors" you will see, this is NOT a "cost" functor! It will not return the residual between some predicted and
+    // measured value or anything like that. Instead it simply calls PinholeRadtan4::Distort and returns the value of
+    // the distorted point in the place where the residual would normally be returned via the pointer.
+    //
+    // The jacobian calculated here is exactly the same (maybe there is a sign flip depending on how you do it) as if we
+    // would have provided the measured value and calculated a residual instead. I guess in the context of calculating a
+    // jacobian the "measured" value is a constant and therefore does actually affect the jacobian :) It might look like
+    // a ceres cost functor because we need to fit into how ceres does it, and therefore at first glance you might be
+    // confused what is going on here.
+    struct DistortFunctor {
+        explicit DistortFunctor(Eigen::Array<double, 4, 1> const& distortion) : distortion_{distortion} {}
 
-    // WARN(Jack): This is not a cost function operator! Read the context above in the note.
-    template <typename T>
-    bool operator()(T const* const p_cam_ptr, T* const distorted_p_cam_ptr) const {
-        Eigen::Map<Eigen::Array<T, 2, 1> const> const p_cam(p_cam_ptr);
-        Eigen::Array<T, 2, 1> const distorted_p_cam{PinholeRadtan4::Distort<T>(distortion_.cast<T>(), p_cam)};
+        // WARN(Jack): This is not a cost function operator! Read the context above in the note.
+        template <typename T>
+        bool operator()(T const* const p_cam_ptr, T* const distorted_p_cam_ptr) const {
+            Eigen::Map<Eigen::Array<T, 2, 1> const> const p_cam(p_cam_ptr);
+            Eigen::Array<T, 2, 1> const distorted_p_cam{Distort<T>(distortion_.cast<T>(), p_cam)};
 
-        distorted_p_cam_ptr[0] = distorted_p_cam[0];
-        distorted_p_cam_ptr[1] = distorted_p_cam[1];
+            distorted_p_cam_ptr[0] = distorted_p_cam[0];
+            distorted_p_cam_ptr[1] = distorted_p_cam[1];
 
-        return true;
-    }
+            return true;
+        }
 
-   private:
-    Eigen::Array<double, 4, 1> distortion_;
+       private:
+        Eigen::Array<double, 4, 1> distortion_;
+    };
 };
 
 }  // namespace reprojection::projection_functions
