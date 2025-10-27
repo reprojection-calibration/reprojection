@@ -37,7 +37,7 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
     double const xxx{nx * nx + ny * ny};  // TODO(Jack): What to name this...?
 
     if (xxx < 0.95) {
-        // Line is radial - threshold 0.95 taken directly from the reference publication
+        // Line is radial, goes too near the image center - threshold 0.95 taken directly from the reference publication
         return std::nullopt;
     }
 
