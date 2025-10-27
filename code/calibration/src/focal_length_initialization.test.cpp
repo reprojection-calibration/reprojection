@@ -9,7 +9,7 @@ using namespace reprojection;
 TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
 
-    // NOTE(Jack): Our strategy here is to use DoubleSphereProjection to project a row and column of points to pixels.
+    // NOTE(Jack): Our strategy here is to use DoubleSphere::Project to project a row and column of points to pixels.
     // EstimateFocalLength() then fits circles to each row, calculates their intersections and then from that the focal
     // length. One thing to notice here in the choice of *_points is that a circle cannot be fit to collinear points.
     // Therefore, we offset the points from the principal point by 100 units to make sure that we get "bend" and not
@@ -21,7 +21,7 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     MatrixX2d horizontal_pixels(horizontal_points.rows(), 2);
     for (int i{0}; i < horizontal_points.rows(); ++i) {
         horizontal_pixels.row(i) =
-            projection_functions::DoubleSphereProjection<double>(intrinsics, horizontal_points.row(i));
+            projection_functions::DoubleSphere::Project<double>(intrinsics, horizontal_points.row(i));
     }
 
     MatrixX3d const vertical_points{
@@ -29,7 +29,7 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
     MatrixX2d vertical_pixels(vertical_points.rows(), 2);
     for (int i{0}; i < vertical_points.rows(); ++i) {
         vertical_pixels.row(i) =
-            projection_functions::DoubleSphereProjection<double>(intrinsics, vertical_points.row(i));
+            projection_functions::DoubleSphere::Project<double>(intrinsics, vertical_points.row(i));
     }
 
     auto const f{calibration::EstimateFocalLength(horizontal_pixels, vertical_pixels)};

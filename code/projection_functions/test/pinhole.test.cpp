@@ -19,15 +19,15 @@ Eigen::MatrixX2d const gt_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
                                  {pinhole_intrinsics[2], 0},
                                  {pinhole_intrinsics[2], 480}};
 
-TEST(ProjectionFunctionsPinhole, TestPinholeProjection) {
-    Eigen::MatrixX2d const pixels(PinholeProjection(eigen_utilities::ToK(pinhole_intrinsics), gt_points));
+TEST(ProjectionFunctionsPinhole, TestPinholeProject) {
+    Eigen::MatrixX2d const pixels(Pinhole::Project(eigen_utilities::ToK(pinhole_intrinsics), gt_points));
 
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
 
-TEST(ProjectionFunctionsPinhole, TestPinholeUnprojection) {
+TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
     for (int i{0}; i < gt_pixels.rows(); i++) {
-        Eigen::Vector3d const ray_i{PinholeUnprojection<double>(pinhole_intrinsics, gt_pixels.row(i).array())};
+        Eigen::Vector3d const ray_i{Pinhole::Unproject<double>(pinhole_intrinsics, gt_pixels.row(i).array())};
         EXPECT_TRUE(ray_i.isApprox(gt_points.row(i).transpose() / 600));  // Divide by focal length
     }
 }

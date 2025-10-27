@@ -21,7 +21,7 @@ struct PinholeCostFunction {
         Eigen::Vector<T, 3> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
 
         Eigen::Map<Eigen::Array<T, 4, 1> const> intrinsics(intrinsics_ptr);
-        Eigen::Vector<T, 2> const pixel{projection_functions::PinholeProjection<T>(intrinsics, point_co)};
+        Eigen::Vector<T, 2> const pixel{projection_functions::Pinhole::Project<T>(intrinsics, point_co)};
 
         residual[0] = T(pixel_[0]) - pixel[0];
         residual[1] = T(pixel_[1]) - pixel[1];
