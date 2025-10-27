@@ -12,7 +12,7 @@ using Circle = std::tuple<Vector2d, double>;
 
 // Follows the method from "Equidistant Fish-Eye Calibration and Rectification by Vanishing Point Extraction" Ciara´n
 // Hughes, Patrick Denny, Martin Glavin, and Edward Jones
-std::optional<double> EstimateFocalLength(MatrixX2d const& pixels1, MatrixX2d const& pixels2);
+std::optional<double> VanishingPointInitialization(MatrixX2d const& pixels1, MatrixX2d const& pixels2);
 
 // Adopted from https://stackoverflow.com/questions/3349125/circle-circle-intersection-points which copy and pasted from
 // here https://paulbourke.net/geometry/circlesphere/

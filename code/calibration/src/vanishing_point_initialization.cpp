@@ -1,8 +1,8 @@
-#include "focal_length_initialization.hpp"
+#include "vanishing_point_initialization.hpp"
 
 namespace reprojection::calibration {
 
-std::optional<double> EstimateFocalLength(MatrixX2d const& pixels1, MatrixX2d const& pixels2) {
+std::optional<double> VanishingPointInitialization(MatrixX2d const& pixels1, MatrixX2d const& pixels2) {
     // NOTE(Jack): For grid targets, where we iterate over the rows and then the columns, we are repeating the
     // computation of FitCircle for the row for each column. Technically we could compute that row circle once and then
     // use that for all the columns. I do not think that optimization would really save us anything, but I just want to
