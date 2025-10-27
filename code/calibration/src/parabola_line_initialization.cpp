@@ -1,7 +1,5 @@
-#include <gtest/gtest.h>
+#include "parabola_line_initialization.hpp"
 
-#include "projection_functions/double_sphere.hpp"
-#include "types/eigen_types.hpp"
 namespace reprojection::calibration {
 
 // principal_point is provided in pixel coordinates and pixels is at least four pixels from from four 3D features which
@@ -48,24 +46,3 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
 }
 
 }  // namespace reprojection::calibration
-
-using namespace reprojection;
-
-TEST(CalibrationParaboleLineInitialization, TestParabolaLineInitialization) {
-    Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
-
-    MatrixX3d const horizontal_points{{-360, 100, 600}, {-240, 100, 600}, {-120, 100, 600}, {0, 100, 600},
-                                      {120, 100, 600},  {240, 100, 600},  {320, 100, 600}};
-    // TODO(Jack): Eliminate copy and paste by adding a helper to projection_functions like we already have for pinhole.
-    // This loop is copy and pasted here twice.
-    MatrixX2d horizontal_pixels(horizontal_points.rows(), 2);
-    for (int i{0}; i < horizontal_points.rows(); ++i) {
-        horizontal_pixels.row(i) =
-            projection_functions::DoubleSphere::Project<double>(intrinsics, horizontal_points.row(i));
-    }
-
-    auto const f{calibration::ParabolaLineInitialization({360, 240}, horizontal_pixels)};
-
-    ASSERT_TRUE(f.has_value());
-    EXPECT_FLOAT_EQ(f.value(), 1557.0753);
-}
