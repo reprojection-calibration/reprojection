@@ -18,17 +18,17 @@ PnpResult Pnp(MatrixX2d const& pixels, MatrixX3d const& points) {
     }
 
     Isometry3d tf;
-    Matrix3d K;
+    Array4d pinhole_intrinsics;
     if (pixels.rows() > 4 and IsPlane(points)) {
         tf = Dlt22(pixels, points);
-        K = Matrix3d::Identity();
+        pinhole_intrinsics = {1, 1, 0, 0};  // Equivalent to K = I_3x3
     } else if (pixels.rows() > 6) {
-        std::tie(tf, K) = Dlt23(pixels, points);
+        std::tie(tf, pinhole_intrinsics) = Dlt23(pixels, points);
     } else {
         return PnpStatusCode::NotEnoughPoints;
     }
 
-    auto const [tf_star, _]{optimization::NonlinearRefinement(pixels, points, tf, K)};
+    auto const [tf_star, _]{optimization::NonlinearRefinement(pixels, points, tf, pinhole_intrinsics)};
 
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
     // and nonlinear optimization that will tell us if we are on the right track? For example ceres should actually

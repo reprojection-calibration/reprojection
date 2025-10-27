@@ -1,8 +1,7 @@
 #pragma once
 
-#include <Eigen/Dense>
-
 #include "spline/se3_spline.hpp"
+#include "types/eigen_types.hpp"
 
 namespace reprojection::testing_mocks {
 
@@ -15,21 +14,20 @@ struct MvgFrame {
 // MVG = "multiple view geometry"
 class MvgGenerator {
    public:
-    explicit MvgGenerator(bool const flat = true,
-                          Eigen::Matrix3d const& K = Eigen::Matrix3d{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}});
+    explicit MvgGenerator(bool const flat = true, Array4d const& pinhole_intrinsics = Array4d{600, 600, 360, 240});
 
     // Input is fractional time of trajectory from [0,1)
     MvgFrame Generate(double const t) const;
 
-    Eigen::Matrix3d GetK() const;
+    Array4d GetK() const;
 
-    static Eigen::MatrixX2d Project(Eigen::MatrixX3d const& points_w, Eigen::Matrix3d const& K,
+    static Eigen::MatrixX2d Project(Eigen::MatrixX3d const& points_w, Array4d const& K,
                                     Eigen::Isometry3d const& tf_co_w);
 
    private:
     static Eigen::MatrixX3d BuildTargetPoints(bool const flat);
 
-    Eigen::Matrix3d K_;
+    Array4d pinhole_intrinsics_;
     spline::Se3Spline se3_spline_;
     Eigen::MatrixX3d points_;
 };

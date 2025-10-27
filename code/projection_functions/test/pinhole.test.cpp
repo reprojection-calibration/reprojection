@@ -20,7 +20,7 @@ Eigen::MatrixX2d const gt_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
                                  {pinhole_intrinsics[2], 480}};
 
 TEST(ProjectionFunctionsPinhole, TestPinholeProject) {
-    Eigen::MatrixX2d const pixels(Pinhole::Project(eigen_utilities::ToK(pinhole_intrinsics), gt_points));
+    Eigen::MatrixX2d const pixels(Pinhole::Project(pinhole_intrinsics, gt_points));
 
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }

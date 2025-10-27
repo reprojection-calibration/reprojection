@@ -13,6 +13,7 @@ using MatrixX2d = Eigen::MatrixX2d;
 using MatrixX3d = Eigen::MatrixX3d;
 using ArrayXi = Eigen::ArrayXi;
 using ArrayX2i = Eigen::ArrayX2i;
+using Array4d =Eigen::Array4d;
 using Isometry3d = Eigen::Isometry3d;
 
 };  // namespace reprojection

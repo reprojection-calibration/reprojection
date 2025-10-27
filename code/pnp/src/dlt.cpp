@@ -2,6 +2,7 @@
 
 #include "dlt_matrix_decompositions.hpp"
 #include "dlt_solving.hpp"
+#include "eigen_utilities/camera.hpp"
 
 namespace reprojection::pnp {
 
@@ -9,7 +10,7 @@ namespace reprojection::pnp {
 // number of correspondences is already check in the public facing interface, we do not check it again here.
 // NOTE(Jack): We probably mainly want only the pose, but we calculate K anyway as part of the process, so following the
 // "law of useful return", we return K too.
-std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt23(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
+std::tuple<Isometry3d, Array4d> Dlt23(MatrixX2d const& pixels, MatrixX3d const& points) {
     auto const [normalized_pixels, tf_pixels]{NormalizeColumnWise(pixels)};
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
 
@@ -19,16 +20,16 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt23(Eigen::MatrixX2d const& pix
 
     // Extract camera parameters
     auto [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
-    Eigen::Vector3d const t{CalculateCameraCenter(P_star)};
+    Vector3d const t{CalculateCameraCenter(P_star)};
 
-    return {ToIsometry3d(R, -R * t), K};
+    return {ToIsometry3d(R, -R * t), eigen_utilities::FromK(K)};
 }
 
 // WARN(Jack): Assumes that pixel coordinates are normalized ideal image coordinates, not pixel values.
-Eigen::Isometry3d Dlt22(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
+Isometry3d Dlt22(MatrixX2d const& pixels, MatrixX3d const& points) {
     // ERROR(Jack): Always assumes we aligned with the Z dimension as the plane! CUTS OFF THE Z DIMENSION NO MATTER
     // WHAT!!!
-    Eigen::MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};
+    MatrixX2d const chopped_points{points(Eigen::all, {0, 1})};
 
     // WARN(Jack): If we had exactly four correspondences, this means that A would be 8x9. For the svd that follows is
     // that ok? Do we need to zero pad anything or simply check that we have at least five points? Or is it no problem
