@@ -30,7 +30,7 @@ TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelUnproject) {
     auto const camera{projection_functions::UcmCamera(intrinsics)};
     MatrixX3d const rays{camera.Unproject(gt_pixels)};
 
-    // See note in double sphere testing about this normalization
+    // See note in double sphere test TestDoubleSphereUnproject about this normalization
     MatrixX3d normalized_gt_points{gt_points};
     normalized_gt_points.rowwise().normalize();
 
