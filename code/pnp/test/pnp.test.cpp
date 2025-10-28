@@ -10,7 +10,9 @@ using namespace reprojection;
 // TODO(Jack): Test all functions with noisy data!
 
 TEST(Pnp, TestPnp) {
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(false)};
+    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
+        false)};
     for (size_t i{0}; i < 20; ++i) {
         testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
@@ -23,9 +25,10 @@ TEST(Pnp, TestPnp) {
 }
 
 TEST(Pnp, TestPnpFlat) {
-    Array4d const K{1, 1, 0, 0};  // Equivalent to K = I_3x3 Pixels must be in normalized image space for Dlt22
-    testing_mocks::MvgGenerator const generator{
-        testing_mocks::MvgGenerator(true, K)};  // Points must have Z=0 (flat = true)
+    Array4d const intrinsics{1, 1, 0, 0};  // Equivalent to K = I_3x3 Pixels must be in normalized image space for Dlt22
+    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)),
+        true)};  // Points must have Z=0 (flat = true)
 
     for (size_t i{0}; i < 20; ++i) {
         testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};

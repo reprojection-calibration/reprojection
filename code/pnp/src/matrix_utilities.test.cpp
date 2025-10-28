@@ -8,7 +8,8 @@ using namespace reprojection;
 using namespace reprojection::pnp;
 
 TEST(PnpMatrixUtilities, TestInterleaveRowWise) {
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator()};
+    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})))};
     testing_mocks::MvgFrame const frame{generator.Generate(0.5)};  // Arbitrary spot in the middle
 
     Eigen::MatrixX2d const interleaved_pixels{InterleaveRowWise(frame.pixels)};
@@ -23,7 +24,9 @@ TEST(PnpMatrixUtilities, TestInterleaveRowWise) {
 }
 
 TEST(PnpMatrixUtilities, TestNormalizeColumnWise) {
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator()};
+    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})))};
+
     testing_mocks::MvgFrame const frame{generator.Generate(0.5)};  // Arbitrary spot in the middle
 
     auto const [normalized_test_pixels, tf_pixels]{NormalizeColumnWise(frame.pixels)};
