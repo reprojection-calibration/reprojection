@@ -5,8 +5,7 @@
 namespace reprojection::projection_functions {
 
 // TODO RETURN ARRAY TYPE
-Eigen::Vector3d projection_functions::DoubleSphere::Unproject(Eigen::Array<double, 6, 1> const& intrinsics,
-                                                              Eigen::Array<double, 2, 1> const& pixel) {
+Eigen::Vector3d DoubleSphere::Unproject(Array6d const& intrinsics, Array2d const& pixel) {
     Array3d const ray{Pinhole::Unproject(intrinsics.topRows(4), pixel)};
 
     double const& mx{ray[0]};
