@@ -14,25 +14,44 @@ using namespace reprojection;
 // this is the case where xi = 1. In our testing that uses a ucm camera with xi=1 we see that we get exactly the
 // focal length we expect. Satisfying!!!
 
-TEST(CalibrationParabolaLineInitialization, TestParabolaLineInitialization) {
-    Eigen::Array2d const principal_point{360, 240};
-    Eigen::Array<double, 5, 1> const intrinsics{600, 600, principal_point[0], principal_point[1], 1};
-
-    Eigen::ParametrizedLine<double, 3> const line({-100, -100, 600}, {60, 0, 20});
-    MatrixX3d points_co(10, 3);
-    for (int i{0}; i < 10; i++) {
+std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3d const& direction) {
+    // Generate four points on a line using the provided origin and direction
+    Eigen::ParametrizedLine<double, 3> const line(origin, direction);
+    MatrixX3d points_co(4, 3);
+    for (int i{0}; i < points_co.rows(); i++) {
         points_co.row(i) = line.pointAt(i);
     }
 
-
-    MatrixX2d linear_pixels(points_co.rows(), 2);
+    // Project the four points to pixels using the ucm camera model with xi=1 (i.e. parabola model) and a focal
+    // length/gamma of 600
+    Eigen::Array2d const principal_point{360, 240};
+    Eigen::Array<double, 5, 1> const intrinsics{600, 600, principal_point[0], principal_point[1], 1};
+    MatrixX2d pixels(points_co.rows(), 2);
     for (int i{0}; i < points_co.rows(); ++i) {
-        linear_pixels.row(i) = projection_functions::UnifiedCameraModel::Project<double>(intrinsics, points_co.row(i));
+        pixels.row(i) = projection_functions::UnifiedCameraModel::Project<double>(intrinsics, points_co.row(i));
     }
 
-    std::cout << linear_pixels << std::endl;
+    return {pixels, principal_point};
+}
 
-    auto const f{calibration::ParabolaLineInitialization(principal_point, linear_pixels)};
+TEST(CalibrationParabolaLineInitialization, TestParabolaLineInitialization) {
+    auto [pixels, principal_point]{LinearTestPixels({100, 100, 600}, {10, 5, 0})};
+    auto f{calibration::ParabolaLineInitialization(principal_point, pixels)};
+    ASSERT_TRUE(f.has_value());
+    EXPECT_FLOAT_EQ(f.value(), 600);
+
+    std::tie(pixels, principal_point) = LinearTestPixels({-100, -100, 600}, {5, 10, -10});
+    f = calibration::ParabolaLineInitialization(principal_point, pixels);
+    ASSERT_TRUE(f.has_value());
+    EXPECT_FLOAT_EQ(f.value(), 600);
+
+    std::tie(pixels, principal_point) = LinearTestPixels({100, -100, 600}, {-5, -10, -10});
+    f = calibration::ParabolaLineInitialization(principal_point, pixels);
+    ASSERT_TRUE(f.has_value());
+    EXPECT_FLOAT_EQ(f.value(), 600);
+
+    std::tie(pixels, principal_point) = LinearTestPixels({-100, 100, 600}, {-5, -10, 10});
+    f = calibration::ParabolaLineInitialization(principal_point, pixels);
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
 }
