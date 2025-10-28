@@ -9,8 +9,10 @@
 
 namespace reprojection::testing_mocks {
 
-MvgGenerator::MvgGenerator(bool const flat, Eigen::Matrix3d const& K)
-    : K_{K}, se3_spline_{constants::t0_ns, constants::delta_t_ns}, points_{BuildTargetPoints(flat)} {
+MvgGenerator::MvgGenerator(bool const flat, Array4d const& pinhole_intrinsics)
+    : pinhole_intrinsics_{pinhole_intrinsics},
+      se3_spline_{constants::t0_ns, constants::delta_t_ns},
+      points_{BuildTargetPoints(flat)} {
     std::vector<Eigen::Isometry3d> const poses{SphereTrajectory(CameraTrajectory{{0, 0, 0}, 1.0, {0, 0, 5}})};
 
     for (auto const& pose : poses) {
@@ -43,21 +45,22 @@ MvgFrame MvgGenerator::Generate(double const t) const {
     auto const pose_t{se3_spline_.Evaluate(spline_time)};
     assert(pose_t.has_value());  // See note above
 
-    Eigen::MatrixX2d const pixels{Project(points_, K_, pose_t.value())};
+    Eigen::MatrixX2d const pixels{Project(points_, pinhole_intrinsics_, pose_t.value())};
 
     // WARN(Jack): This assumes that all points are always visible! With careful engineering for the default value
     // of K this will be true, but that cannot be guaranteed for all K!!!
     return {pose_t.value(), pixels, points_};
 }
 
-Eigen::Matrix3d MvgGenerator::GetK() const { return K_; }
+Array4d MvgGenerator::GetK() const { return pinhole_intrinsics_; }
 
-Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w, Eigen::Matrix3d const& K,
+Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w, Array4d const& pinhole_intrinsics,
                                        Eigen::Isometry3d const& tf_co_w) {
     // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not
     // match our expectations about matrix dimensions after the fact.
     Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
-    Eigen::MatrixX2d const pixels(projection_functions::Pinhole::Project(K, points_homog_co.leftCols(3)));
+    Eigen::MatrixX2d const pixels(
+        projection_functions::Pinhole::Project(pinhole_intrinsics, points_homog_co.leftCols(3)));
 
     return pixels;
 }

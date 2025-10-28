@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Core>
+#include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {
 
@@ -38,7 +38,7 @@ struct Pinhole {
         return pixel;
     }
 
-    static Eigen::MatrixX2d Project(Eigen::Matrix3d const& K, Eigen::MatrixX3d points);
+    static Eigen::MatrixX2d Project(Array4d const& intrinsics, Eigen::MatrixX3d points);
 
     template <typename T>
     static Eigen::Vector<T, 3> Unproject(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 2, 1> const& pixel) {

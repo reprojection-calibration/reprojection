@@ -18,7 +18,7 @@ TEST(PnpDltMatrixDecompositions, TestDecomposeMIntoRk) {
 
     auto const [K, R]{DecomposeMIntoKr(M)};
 
-    EXPECT_TRUE(K.isUpperTriangular());
+    EXPECT_TRUE(K.isUpperTriangular());                          // Property of camera intrinsic matrix
     EXPECT_EQ(K.diagonal().array().sign().sum(), 3);             // All diagonal entries of K must be positive
     EXPECT_FLOAT_EQ((R * R.transpose()).diagonal().sum(), 3.0);  // Orthogonal
     EXPECT_FLOAT_EQ(R.determinant(), 1.0);

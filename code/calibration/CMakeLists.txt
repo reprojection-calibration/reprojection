@@ -3,7 +3,8 @@ set(LIBRARY_NAME "calibration")
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
-        src/focal_length_initialization.cpp
+        src/parabola_line_initialization.cpp
+        src/vanishing_point_initialization.cpp
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen
@@ -14,6 +15,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/focal_length_initialization.test.cpp
+        src/parabola_line_initialization.test.cpp
+        src/vanishing_point_initialization.test.cpp
 )
 AddTests()

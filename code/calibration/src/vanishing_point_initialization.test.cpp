@@ -1,4 +1,4 @@
-#include "focal_length_initialization.hpp"
+#include "vanishing_point_initialization.hpp"
 
 #include <gtest/gtest.h>
 
@@ -6,14 +6,14 @@
 
 using namespace reprojection;
 
-TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
+TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitialization) {
     Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
 
     // NOTE(Jack): Our strategy here is to use DoubleSphere::Project to project a row and column of points to pixels.
-    // EstimateFocalLength() then fits circles to each row, calculates their intersections and then from that the focal
-    // length. One thing to notice here in the choice of *_points is that a circle cannot be fit to collinear points.
-    // Therefore, we offset the points from the principal point by 100 units to make sure that we get "bend" and not
-    // just a displacement along the radial axis and failed circle fitting.
+    // VanishingPointInitialization() then fits circles to each row, calculates their intersections and then from that
+    // the focal length. One thing to notice here in the choice of *_points is that a circle cannot be fit to collinear
+    // points. Therefore, we offset the points from the principal point by 100 units to make sure that we get "bend" and
+    // not just a displacement along the radial axis and failed circle fitting.
     MatrixX3d const horizontal_points{{-360, 100, 600}, {-240, 100, 600}, {-120, 100, 600}, {0, 100, 600},
                                       {120, 100, 600},  {240, 100, 600},  {320, 100, 600}};
     // TODO(Jack): Eliminate copy and paste by adding a helper to projection_functions like we already have for pinhole.
@@ -32,41 +32,41 @@ TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLength) {
             projection_functions::DoubleSphere::Project<double>(intrinsics, vertical_points.row(i));
     }
 
-    auto const f{calibration::EstimateFocalLength(horizontal_pixels, vertical_pixels)};
+    auto const f{calibration::VanishingPointInitialization(horizontal_pixels, vertical_pixels)};
     ASSERT_TRUE(f.has_value());
     // ERROR(Jack): Off by and order of magnitude, where does that come from? Look at intrinsics to see the actual
     // expected value (600)
     EXPECT_FLOAT_EQ(f.value(), 6035.6078019296829);
 }
 
-//  NOTE(Jack): This test provides a more simple call to EstimateFocalLength(), where instead of projecting points with
-//  the double sphere model we use to circles that intersect as the simulated pixels. Of course this does not
-//  realistically reflect the situation of a imaging a gridded target, but the maths works out simply and exactly like
-//  we want.
-TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLengthPerfectCircles) {
+//  NOTE(Jack): This test provides a more simple call to VanishingPointInitialization(), where instead of projecting
+//  points with the double sphere model we use to circles that intersect as the simulated pixels. Of course this does
+//  not realistically reflect the situation of a imaging a gridded target, but the maths works out simply and exactly
+//  like we want.
+TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationPerfectCircles) {
     MatrixX2d const pixels1{{0, 1}, {2, 1}, {1, 0}, {1, 2}};  // (x-1)^2 + (y-1)^2 = 1
     MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // (x-2)^2 + (y-2)^2 = 1
 
-    auto const f{calibration::EstimateFocalLength(pixels1, pixels2)};
+    auto const f{calibration::VanishingPointInitialization(pixels1, pixels2)};
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 0.45015815);
 }
 
-TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLengthBadCircles) {
+TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationBadCircles) {
     // Check the first error condition where one of the pixel sets does not produce a valid circle
     MatrixX2d const pixels1{{1, 1}, {2, 2}, {2, 2}, {4, 4}};  // Collinear
     MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // (x-2)^2 + (y-2)^2 = 1
 
-    auto const f{calibration::EstimateFocalLength(pixels1, pixels2)};
+    auto const f{calibration::VanishingPointInitialization(pixels1, pixels2)};
     EXPECT_EQ(f, std::nullopt);
 }
 
-TEST(CalibrationFocalLengthInitialization, TestEstimateFocalLengthNoVanishingPoints) {
+TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationNoVanishingPoints) {
     // Check the second error condition where the circles have no intersection
     MatrixX2d const pixels1{{0, 2}, {4, 2}, {2, 0}, {2, 4}};  // (x-2)^2 + (y-2)^2 = 2
     MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // Completely inside the pixels1 circle
 
-    auto const f{calibration::EstimateFocalLength(pixels1, pixels2)};
+    auto const f{calibration::VanishingPointInitialization(pixels1, pixels2)};
     EXPECT_EQ(f, std::nullopt);
 }
 

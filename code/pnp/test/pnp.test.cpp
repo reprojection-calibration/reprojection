@@ -23,7 +23,7 @@ TEST(Pnp, TestPnp) {
 }
 
 TEST(Pnp, TestPnpFlat) {
-    Matrix3d const K{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};  // Pixels must be in normalized space for Dlt22
+    Array4d const K{1, 1, 0, 0};  // Equivalent to K = I_3x3 Pixels must be in normalized image space for Dlt22
     testing_mocks::MvgGenerator const generator{
         testing_mocks::MvgGenerator(true, K)};  // Points must have Z=0 (flat = true)
 

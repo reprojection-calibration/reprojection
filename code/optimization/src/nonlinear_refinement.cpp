@@ -13,12 +13,12 @@ namespace reprojection::optimization {
 // using SE3. Or at least that is my idea right now :)
 // TODO(Jack): A function that converts from the matrix and array representation of K easily
 // TODO(Jack): Would it help if we applied normalization?
-std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
-                                                                   Eigen::MatrixX3d const& points,
-                                                                   Eigen::Isometry3d const& initial_pose,
-                                                                   Eigen::Matrix3d const& initial_K) {
+std::tuple<Eigen::Isometry3d, Array4d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
+                                                           Eigen::MatrixX3d const& points,
+                                                           Eigen::Isometry3d const& initial_pose,
+                                                           Eigen::Array4d const& initial_pinhole_intrinsics) {
     Eigen::Vector<double, 6> pose_to_optimize{geometry::Log(initial_pose)};
-    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{eigen_utilities::FromK(initial_K)};
+    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{initial_pinhole_intrinsics};
 
     ceres::Problem problem;
     for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
@@ -34,7 +34,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::Matrix
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    return {geometry::Exp(pose_to_optimize), eigen_utilities::ToK(pinhole_intrinsics_to_optimize)};
+    return {geometry::Exp(pose_to_optimize), pinhole_intrinsics_to_optimize};
 }
 
 }  // namespace  reprojection::optimization
