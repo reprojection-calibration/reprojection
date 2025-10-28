@@ -25,19 +25,16 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
 TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
     // If xi and alpha are zero then double sphere should essentially just act as a pinhole camera.
     Array6d const pinhole_intrinsics{600, 600, 360, 240, 0, 0};
-
     MatrixX2d const pinhole_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
                                    {0, pinhole_intrinsics[3]},
                                    {720, pinhole_intrinsics[3]},
                                    {pinhole_intrinsics[2], 0},
                                    {pinhole_intrinsics[2], 480}};
 
-    // GET RID OF LOOP HERE, USE BASE CLASS
-    for (int i{0}; i < gt_points.rows(); ++i) {
-        Vector2d const pixel_i(
-            projection_functions::DoubleSphere::Project<double>(pinhole_intrinsics, gt_points.row(i)));
-        EXPECT_TRUE(pixel_i.isApprox(pinhole_pixels.row(i).transpose()));
-    }
+    auto const camera{projection_functions::DoubleSphereCamera(pinhole_intrinsics)};
+    MatrixX2d const pixels(camera.Project(gt_points));
+
+    EXPECT_TRUE(pixels.isApprox(pinhole_pixels));
 }
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnproject) {
