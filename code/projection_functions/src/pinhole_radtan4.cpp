@@ -9,8 +9,7 @@
 
 namespace reprojection::projection_functions {
 
-Eigen::Array3d PinholeRadtan4::Unproject(Eigen::Array<double, 8, 1> const& intrinsics,
-                                         Eigen::Array<double, 2, 1> const& pixel) {
+Eigen::Array3d PinholeRadtan4::Unproject(Eigen::Array<double, 8, 1> const& intrinsics, Array2d const& pixel) {
     Eigen::Array<double, 3, 1> const P_ray{Pinhole::Unproject(intrinsics.topRows(4), pixel)};
     Eigen::Vector2d const p_cam_0{P_ray.topRows(2)};
 

@@ -30,6 +30,9 @@ struct DoubleSphere {
 
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
+
+    static Eigen::Vector<double, 3> Unproject(Eigen::Array<double, 4, 1> const& intrinsics,
+                                              Eigen::Array<double, 2, 1> const& pixel);
 };
 
 }  // namespace reprojection::projection_functions

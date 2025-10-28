@@ -14,6 +14,7 @@ using MatrixX3d = Eigen::MatrixX3d;
 using ArrayXi = Eigen::ArrayXi;
 using ArrayX2i = Eigen::ArrayX2i;
 using Array2d = Eigen::Array2d;
+using Array3d = Eigen::Array3d;
 using Array4d = Eigen::Array4d;
 using Isometry3d = Eigen::Isometry3d;
 
