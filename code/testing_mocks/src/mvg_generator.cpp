@@ -3,7 +3,7 @@
 #include "constants.hpp"
 #include "eigen_utilities/camera.hpp"
 #include "eigen_utilities/grid.hpp"
-#include "projection_functions/pinhole.hpp"
+#include "projection_functions/camera_model.hpp"
 #include "sphere_trajectory.hpp"
 #include "spline/se3_spline.hpp"
 
@@ -59,8 +59,9 @@ Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w, Array4d
     // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not
     // match our expectations about matrix dimensions after the fact.
     Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
-    Eigen::MatrixX2d const pixels(
-        projection_functions::Pinhole::Project(pinhole_intrinsics, points_homog_co.leftCols(3)));
+
+    auto const camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
+    MatrixX2d const pixels{camera.Project(points_homog_co.leftCols(3))};
 
     return pixels;
 }
