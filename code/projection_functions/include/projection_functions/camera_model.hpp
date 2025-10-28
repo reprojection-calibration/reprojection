@@ -74,6 +74,6 @@ class Camera_T : public Camera {
 using DoubleSphereCamera = Camera_T<DoubleSphere, Array6d>;
 using PinholeCamera = Camera_T<Pinhole, Array4d>;
 using PinholeRadtan4Camera = Camera_T<PinholeRadtan4, Array8d>;
-using UnifiedCameraModelCamera = Camera_T<UnifiedCameraModel, Array5d>;
+using UcmCamera = Camera_T<UnifiedCameraModel, Array5d>;
 
 }  // namespace reprojection::projection_functions

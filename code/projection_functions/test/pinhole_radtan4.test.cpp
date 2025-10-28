@@ -8,7 +8,11 @@
 using namespace reprojection;
 
 Eigen::Array<double, 8, 1> const pinhole_radtan4_intrinsics{600, 600, 360, 240, -0.1, 0.1, 0.001, 0.001};
-Eigen::MatrixX3d const gt_points{{0, 0, 600}, {-360, 0, 600}, {360, 0, 600}, {0, -240, 600}, {0, 240, 600}};
+Eigen::MatrixX3d const gt_points{{0, 0, 600},  //
+                                 {-360, 0, 600},
+                                 {360, 0, 600},
+                                 {0, -240, 600},
+                                 {0, 240, 600}};
 Eigen::MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrinsics[3]},
                                  {8.9424000000000206, 240.21600000000001},
                                  {712.35359999999991, 240.21600000000001},
