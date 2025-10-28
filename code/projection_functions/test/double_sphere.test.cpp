@@ -6,7 +6,6 @@
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
-using namespace reprojection::projection_functions;
 
 Array6d const double_sphere_intrinsics{600, 600, 360, 240, 0.1, 0.2};
 MatrixX3d const gt_points{{0, 0, 10}, {-360, 0, 600}, {360, 0, 600}, {0, -240, 600}, {0, 240, 600}};
@@ -19,7 +18,8 @@ MatrixX2d const gt_pixels{{double_sphere_intrinsics[2], double_sphere_intrinsics
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
     // GET RID OF LOOP HERE, USE BASE CLASS
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Vector2d const pixel_i(DoubleSphere::Project<double>(double_sphere_intrinsics, gt_points.row(i)));
+        Vector2d const pixel_i(
+            projection_functions::DoubleSphere::Project<double>(double_sphere_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
     }
 }
@@ -36,7 +36,8 @@ TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
 
     // GET RID OF LOOP HERE, USE BASE CLASS
     for (int i{0}; i < gt_points.rows(); ++i) {
-        Vector2d const pixel_i(DoubleSphere::Project<double>(pinhole_intrinsics, gt_points.row(i)));
+        Vector2d const pixel_i(
+            projection_functions::DoubleSphere::Project<double>(pinhole_intrinsics, gt_points.row(i)));
         EXPECT_TRUE(pixel_i.isApprox(pinhole_pixels.row(i).transpose()));
     }
 }
