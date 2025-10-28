@@ -46,7 +46,7 @@ class Camera_T : public Camera {
         }
 
         return pixels;
-    }
+    }  // LCOV_EXCL_LINE
 
     MatrixX3d Unproject(MatrixX2d const& pixels) const override {
         Eigen::MatrixX3d rays_co(pixels.rows(), 3);
@@ -55,7 +55,7 @@ class Camera_T : public Camera {
         }
 
         return rays_co;
-    }
+    }  // LCOV_EXCL_LINE
 
    private:
     T_Intrinsics intrinsics_;
