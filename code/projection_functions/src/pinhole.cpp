@@ -1,13 +1,10 @@
 #include "projection_functions/pinhole.hpp"
 
-#include <eigen3/Eigen/src/Core/Array.h>
-
 #include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {
 
-// TODO(Jack): Return array type
-Vector3d Pinhole::Unproject(Array4d const& intrinsics, Array2d const& pixel) {
+Array3d Pinhole::Unproject(Array4d const& intrinsics, Array2d const& pixel) {
     double const& fx{intrinsics[0]};
     double const& fy{intrinsics[1]};
     double const& cx{intrinsics[2]};

@@ -15,7 +15,7 @@ struct Pinhole {
     // NOTE(Jack): For the sake of verbosity/explicitness this function includes some lines operations which could be
     // combined but are instead done explicitly for emphasis of the relevant coordinate frames.
     template <typename T>
-    static Eigen::Vector<T, 2> Project(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
+    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
         // Put into ideal/normalized/projected camera coordinate frame
         T const& x{P_co[0]};
         T const& y{P_co[1]};
@@ -33,13 +33,12 @@ struct Pinhole {
         T const u{(fx * x_cam) + cx};
         T const v{(fy * y_cam) + cy};
 
-        Eigen::Vector<T, 2> const pixel{u, v};
+        Eigen::Array<T, 2, 1> const pixel{u, v};
 
         return pixel;
     }
 
-    static Eigen::Vector<double, 3> Unproject(Eigen::Array<double, 4, 1> const& intrinsics,
-                                              Eigen::Array<double, 2, 1> const& pixel);
+    static Array3d Unproject(Eigen::Array<double, 4, 1> const& intrinsics, Eigen::Array<double, 2, 1> const& pixel);
 };
 
 }  // namespace reprojection::projection_functions

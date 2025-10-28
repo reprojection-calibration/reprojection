@@ -4,8 +4,7 @@
 
 namespace reprojection::projection_functions {
 
-// TODO RETURN ARRAY TYPE
-Eigen::Vector3d DoubleSphere::Unproject(Array6d const& intrinsics, Array2d const& pixel) {
+Array3d DoubleSphere::Unproject(Array6d const& intrinsics, Array2d const& pixel) {
     Array3d const ray{Pinhole::Unproject(intrinsics.topRows(4), pixel)};
 
     double const& mx{ray[0]};
@@ -21,7 +20,7 @@ Eigen::Vector3d DoubleSphere::Unproject(Array6d const& intrinsics, Array2d const
     const double xxx{(mz * xi + std::sqrt(mz2 + (1 - xi * xi) * r2)) / (mz2 + r2)};  // Eqn. 46 fraction part
 
     // Execute the rest of equation 46
-    Eigen::Vector3d m{mx, my, mz};
+    Array3d m{mx, my, mz};
     m *= xxx;
     m(2) -= xi;
 
