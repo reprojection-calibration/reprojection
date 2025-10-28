@@ -38,20 +38,18 @@ struct Pinhole {
         return pixel;
     }
 
-    static Eigen::MatrixX2d Project(Array4d const& intrinsics, Eigen::MatrixX3d points);
+    static Eigen::Vector<double, 3> Unproject(Eigen::Array<double, 4, 1> const& intrinsics,
+                                              Eigen::Array<double, 2, 1> const& pixel) {
+        double const& fx{intrinsics[0]};
+        double const& fy{intrinsics[1]};
+        double const& cx{intrinsics[2]};
+        double const& cy{intrinsics[3]};
 
-    template <typename T>
-    static Eigen::Vector<T, 3> Unproject(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 2, 1> const& pixel) {
-        T const& fx{intrinsics[0]};
-        T const& fy{intrinsics[1]};
-        T const& cx{intrinsics[2]};
-        T const& cy{intrinsics[3]};
+        double const& u{pixel[0]};
+        double const& v{pixel[1]};
 
-        T const& u{pixel[0]};
-        T const& v{pixel[1]};
-
-        T const x_cam{(u - cx) / fx};
-        T const y_cam{(v - cy) / fy};
+        double const x_cam{(u - cx) / fx};
+        double const y_cam{(v - cy) / fy};
 
         // NOTE(Jack): Setting the z value here to 1 essentially captures the pure essence of the loss of
         // information/scale/depth associated with the projective transform. This returns a "ray" or direction, not a 3D

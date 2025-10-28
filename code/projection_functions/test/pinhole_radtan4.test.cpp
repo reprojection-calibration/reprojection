@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "projection_functions/camera_model.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -17,10 +18,10 @@ Eigen::MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4
                                  {360.096, 477.06240000000003}};
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
-    for (int i{0}; i < gt_points.rows(); ++i) {
-        Eigen::Vector2d const pixel_i(PinholeRadtan4::Project<double>(pinhole_radtan4_intrinsics, gt_points.row(i)));
-        EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
-    }
+    auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics)};
+    MatrixX2d const pixels(camera.Project(gt_points));
+
+    EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {

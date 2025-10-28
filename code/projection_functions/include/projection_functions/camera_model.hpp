@@ -24,6 +24,14 @@ namespace reprojection::projection_functions {
 // just my imagination talking!) than using templated code directly. This is still an open point, and is the explanation
 // for why I did not just go all in using the Camera base class everywhere. In some places it is great because it keeps
 // templates away from the code, but we need to look at possible problems later when we get to the optimization.
+//
+// A different topic, but an idea which should also be written down here in a central location: The Project functions
+// are templated and the Unproject functions are not, because the former will be used in the nonlinear optimization and
+// need to handle ceres::Jet types. The Unproject functions will (I think!) not be required to handle anything besides a
+// double type because they are used only for tasks not directly related to the nonlinear optimization. I had started
+// out templating both the Project and Unproject functions because it looked consistent, but when developing the Camera
+// base class this turned into a problem. The side effect of this is that the Project implementation in Camera_T uses
+// "T_Model::template Project<double>()" but the Unproject method uses only "T_Model::Unproject()".
 
 class Camera {
    public:
@@ -51,7 +59,7 @@ class Camera_T : public Camera {
     MatrixX3d Unproject(MatrixX2d const& pixels) const override {
         Eigen::MatrixX3d rays_co(pixels.rows(), 3);
         for (int i{0}; i < pixels.rows(); ++i) {
-            rays_co.row(i) = T_Model::template Unproject<double>(intrinsics_, pixels.row(i));
+            rays_co.row(i) = T_Model::Unproject(intrinsics_, pixels.row(i));
         }
 
         return rays_co;

@@ -64,8 +64,6 @@ struct PinholeRadtan4 {
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
 
-    // NOTE(Jack): This is not templated, unlike PinholeRadtan4::Project, because we are not going to be optimizing
-    // this! We need the unprojection functions for analytic ancillary tasks, not the nonlinear optimization directly.
     static Eigen::Array3d Unproject(Eigen::Array<double, 8, 1> const& intrinsics,
                                     Eigen::Array<double, 2, 1> const& pixel);
 
