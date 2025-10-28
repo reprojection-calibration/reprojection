@@ -16,12 +16,10 @@ MatrixX2d const gt_pixels{{double_sphere_intrinsics[2], double_sphere_intrinsics
                           {double_sphere_intrinsics[2], 453.95997455304922}};
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
-    // GET RID OF LOOP HERE, USE BASE CLASS
-    for (int i{0}; i < gt_points.rows(); ++i) {
-        Vector2d const pixel_i(
-            projection_functions::DoubleSphere::Project<double>(double_sphere_intrinsics, gt_points.row(i)));
-        EXPECT_TRUE(pixel_i.isApprox(gt_pixels.row(i).transpose()));
-    }
+    auto const camera{projection_functions::DoubleSphereCamera(double_sphere_intrinsics)};
+    MatrixX2d const pixels(camera.Project(gt_points));
+
+    EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
 
 TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
