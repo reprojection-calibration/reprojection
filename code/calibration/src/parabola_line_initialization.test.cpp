@@ -55,3 +55,27 @@ TEST(CalibrationParabolaLineInitialization, TestParabolaLineInitialization) {
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
 }
+
+TEST(CalibrationParabolaLineInitialization, TestRadialLines) {
+    // Passes through origin
+    auto [pixels, principal_point]{LinearTestPixels({0, 0, 600}, {10, 10, 0})};
+    auto f{calibration::ParabolaLineInitialization(principal_point, pixels)};
+    EXPECT_FALSE(f.has_value());
+
+    // Passes through origin
+    std::tie(pixels, principal_point) = LinearTestPixels({100, -100, 600}, {-10, 10, 0});
+    f = calibration::ParabolaLineInitialization(principal_point, pixels);
+    EXPECT_FALSE(f.has_value());
+
+    // Passes near origin
+    std::tie(pixels, principal_point) = LinearTestPixels({-25, 25, 600}, {10, 10, 0});
+    f = calibration::ParabolaLineInitialization(principal_point, pixels);
+    EXPECT_FALSE(f.has_value());
+}
+
+TEST(CalibrationParabolaLineInitialization, TestOtherPossibleErrors) {
+    // All points at one single location
+    auto [pixels, principal_point]{LinearTestPixels({100, 100, 600}, {0, 0, 0})};
+    auto f{calibration::ParabolaLineInitialization(principal_point, pixels)};
+    EXPECT_FALSE(f.has_value());
+}

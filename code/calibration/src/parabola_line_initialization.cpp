@@ -1,9 +1,15 @@
 #include "parabola_line_initialization.hpp"
 
-#include <iostream>  // REMOVE
+#include <Eigen/SVD>
 
 namespace reprojection::calibration {
 
+// NOTEJack): In the original paper there is an assertion/check that t > 0. This comes from the fact that t represent a
+// normal vector and therefore its square magnitude has to be positive. I think the intent for the check is that if the
+// SVD fails is some special way, due to the relation of c3 and c4, we might get a negative t value. That being said I
+// am unable to get a scenario in a test that produces a negative t value. Let us keep our eyes peeled here to see if
+// this becomes a problem in the initialization! My experience so far shows that all error conditions are actually
+// caught with the nxnx_nyny > 0.95 "non-radial" line check.
 std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point, MatrixX2d const& pixels) {
     MatrixX2d const pixels_c{pixels.rowwise() - principal_point.transpose()};
     Eigen::MatrixX4d P(pixels.rows(), 4);
@@ -24,10 +30,16 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
     double const c4{C(3)};                        // b = nz / gamma --> c4
     double const t{c1 * c1 + c2 * c2 + c3 * c4};  // a * b = gamma * nz * nz / gamma = nz * nz --> c3 * c4
 
+    // WARN(Jack): In the reference paper there is a check here to make sure that t is positive! See note above. If it
+    // turns out we do get negative t here then the square root might cause problems...
     double const d{1.0 / std::sqrt(t)};
     double const nx{d * c1};
     double const ny{d * c2};
     double const nxnx_nyny{nx * nx + ny * ny};
+
+    if (nxnx_nyny > 0.95) {
+        return std::nullopt;
+    }
 
     double const nz{std::sqrt(1 - nxnx_nyny)};  // Solve using the constraint 1 = x^2 + y^2 + z^2 for line normal N
     double const gamma{d * c3 / nz};
