@@ -5,6 +5,7 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED) # Only required to save projection images
 
 set(SRC_FILES
+        src/double_sphere.cpp
         src/pinhole.cpp
         src/pinhole_radtan4.cpp
 )

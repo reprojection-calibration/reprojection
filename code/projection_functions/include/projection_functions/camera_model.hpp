@@ -1,5 +1,6 @@
 #pragma once
 
+#include "projection_functions/double_sphere.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "types/eigen_types.hpp"
@@ -69,6 +70,7 @@ class Camera_T : public Camera {
     T_Intrinsics intrinsics_;
 };
 
+using DoubleSphereCamera = Camera_T<DoubleSphere, Eigen::Array<double, 6, 1>>;
 using PinholeCamera = Camera_T<Pinhole, Array4d>;
 using PinholeRadtan4Camera = Camera_T<PinholeRadtan4, Eigen::Array<double, 8, 1>>;
 
