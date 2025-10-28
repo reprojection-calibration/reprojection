@@ -5,7 +5,11 @@
 using namespace reprojection;
 
 Array4d const pinhole_intrinsics{600, 600, 360, 240};
-MatrixX3d const gt_points{{0, 0, 600}, {-360, 0, 600}, {360, 0, 600}, {0, -240, 600}, {0, 240, 600}};
+MatrixX3d const gt_points{{0, 0, 600},  //
+                          {-360, 0, 600},
+                          {360, 0, 600},
+                          {0, -240, 600},
+                          {0, 240, 600}};
 // NOTE(Jack): I am not 100% sure if the pixels at x=720 should actually be part of the valid pixel group! These are
 // technically one out of bounds based on the discretization of the pixels in the image. Our camera model currently
 // does no bounds checking so this is not detected. If we add "valid pixel checking" these tests at the right and

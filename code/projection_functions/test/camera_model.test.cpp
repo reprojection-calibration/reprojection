@@ -7,8 +7,12 @@
 using namespace reprojection;
 
 TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
-    Eigen::Array<double, 4, 1> const intrinsics{600, 600, 360, 240};
-    Eigen::MatrixX3d const gt_points{{0, 0, 600}, {-360, 0, 600}, {360, 0, 600}, {0, -240, 600}, {0, 240, 600}};
+    Array4d const intrinsics{600, 600, 360, 240};
+    Eigen::MatrixX3d const gt_points{{0, 0, 600},  //
+                                     {-360, 0, 600},
+                                     {360, 0, 600},
+                                     {0, -240, 600},
+                                     {0, 240, 600}};
 
     auto const camera{projection_functions::PinholeCamera(intrinsics)};
     MatrixX2d const pixels{camera.Project(gt_points)};

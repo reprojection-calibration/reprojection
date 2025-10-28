@@ -1,8 +1,7 @@
 #pragma once
 
-#include <Eigen/Core>
-
 #include "projection_functions/pinhole.hpp"
+#include "types/eigen_types.hpp"
 
 // Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957)
 
@@ -10,7 +9,7 @@ namespace reprojection::projection_functions {
 
 struct DoubleSphere {
     template <typename T>
-    static Eigen::Vector<T, 2> Project(Eigen::Array<T, 6, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
+    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, 6, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -26,10 +25,12 @@ struct DoubleSphere {
 
         T const& alpha{intrinsics[5]};
         T const z_star{(alpha * d2) + (1.0 - alpha) * (xi * d1 + z)};
-        Eigen::Vector<T, 3> const P_star{x, y, z_star};
+        Eigen::Array<T, 3, 1> const P_star{x, y, z_star};
 
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
+
+    static Array3d Unproject(Array6d const& intrinsics, Array2d const& pixel);
 };
 
 }  // namespace reprojection::projection_functions

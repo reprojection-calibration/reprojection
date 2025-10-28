@@ -64,13 +64,9 @@ struct PinholeRadtan4 {
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
 
-    // NOTE(Jack): This is not templated, unlike PinholeRadtan4::Project, because we are not going to be optimizing
-    // this! We need the unprojection functions for analytic ancillary tasks, not the nonlinear optimization directly.
-    static Eigen::Array3d Unproject(Eigen::Array<double, 8, 1> const& intrinsics,
-                                    Eigen::Array<double, 2, 1> const& pixel);
+    static Array3d Unproject(Eigen::Array<double, 8, 1> const& intrinsics, Array2d const& pixel);
 
-    static std::tuple<Eigen::Array2d, Eigen::Matrix2d> JacobianUpdate(Eigen::Array4d const& distortion,
-                                                                      Eigen::Array2d const& p_cam);
+    static std::tuple<Array2d, Eigen::Matrix2d> JacobianUpdate(Array4d const& distortion, Array2d const& p_cam);
 
     // NOTE(Jack): Here we are using ceres to calculate the jacobian of the PinholeRadtan4::Distort. Unlike most ceres
     // "functors" you will see, this is NOT a "cost" functor! It will not return the residual between some predicted and
