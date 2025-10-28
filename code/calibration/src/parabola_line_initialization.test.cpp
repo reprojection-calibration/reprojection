@@ -14,6 +14,9 @@ using namespace reprojection;
 // this is the case where xi = 1. In our testing that uses a ucm camera with xi=1 we see that we get exactly the
 // focal length we expect. Satisfying!!!
 
+// NOTE(Jack): Linear in this sense means that the 3D points that the pixel projections are generated from a collinear,
+// the pixels themselves, having undergone a ucm projection will not be collinear (unless of course they are radial
+// along the x or y-axis :))
 std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3d const& direction) {
     // Generate four points on a line using the provided origin and direction
     Eigen::ParametrizedLine<double, 3> const line(origin, direction);
@@ -35,22 +38,22 @@ std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3
 }
 
 TEST(CalibrationParabolaLineInitialization, TestParabolaLineInitialization) {
-    auto [pixels, principal_point]{LinearTestPixels({100, 100, 600}, {10, 5, 0})};
+    auto [pixels, principal_point]{LinearTestPixels({150, 150, 600}, {-10, 5, 0})};
     auto f{calibration::ParabolaLineInitialization(principal_point, pixels)};
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
 
-    std::tie(pixels, principal_point) = LinearTestPixels({-100, -100, 600}, {5, 10, -10});
+    std::tie(pixels, principal_point) = LinearTestPixels({-150, -150, 600}, {5, -10, -10});
     f = calibration::ParabolaLineInitialization(principal_point, pixels);
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
 
-    std::tie(pixels, principal_point) = LinearTestPixels({100, -100, 600}, {-5, -10, -10});
+    std::tie(pixels, principal_point) = LinearTestPixels({150, -150, 600}, {-5, -10, -10});
     f = calibration::ParabolaLineInitialization(principal_point, pixels);
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
 
-    std::tie(pixels, principal_point) = LinearTestPixels({-100, 100, 600}, {-5, -10, 10});
+    std::tie(pixels, principal_point) = LinearTestPixels({-150, 150, 600}, {-5, -10, 10});
     f = calibration::ParabolaLineInitialization(principal_point, pixels);
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
