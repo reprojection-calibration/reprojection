@@ -3,6 +3,7 @@
 #include "projection_functions/double_sphere.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
+#include "projection_functions/unified_camera_model.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {
@@ -70,8 +71,9 @@ class Camera_T : public Camera {
     T_Intrinsics intrinsics_;
 };
 
-using DoubleSphereCamera = Camera_T<DoubleSphere, Eigen::Array<double, 6, 1>>;
+using DoubleSphereCamera = Camera_T<DoubleSphere, Array6d>;
 using PinholeCamera = Camera_T<Pinhole, Array4d>;
-using PinholeRadtan4Camera = Camera_T<PinholeRadtan4, Eigen::Array<double, 8, 1>>;
+using PinholeRadtan4Camera = Camera_T<PinholeRadtan4, Array8d>;
+using UnifiedCameraModelCamera = Camera_T<UnifiedCameraModel, Array5d>;
 
 }  // namespace reprojection::projection_functions

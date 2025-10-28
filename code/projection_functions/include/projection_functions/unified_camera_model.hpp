@@ -1,8 +1,7 @@
 #pragma once
 
-#include <Eigen/Core>
-
 #include "projection_functions/double_sphere.hpp"
+#include "types/eigen_types.hpp"
 
 // Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957) using the recognition that
 // the UCM and double sphere are the same when the double spheres alpha parameter is set to zero.
@@ -20,6 +19,9 @@ struct UnifiedCameraModel {
 
         return DoubleSphere::Project<T>(ds_intrinsics, P_co);
     }
+
+    // TODO RETURN ARRAY TYPE
+    static Eigen::Vector<double, 3> Unproject(Array5d const& intrinsics, Array2d const& pixel);
 };
 
 }  // namespace reprojection::projection_functions

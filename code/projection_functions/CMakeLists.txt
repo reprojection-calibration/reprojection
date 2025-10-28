@@ -8,6 +8,7 @@ set(SRC_FILES
         src/double_sphere.cpp
         src/pinhole.cpp
         src/pinhole_radtan4.cpp
+        src/unified_camera_model.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
