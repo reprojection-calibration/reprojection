@@ -44,8 +44,13 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnproject) {
     auto const camera{projection_functions::DoubleSphereCamera(double_sphere_intrinsics)};
     MatrixX3d const rays{camera.Unproject(gt_pixels)};
 
-    // Normalize the 3D points so we can compare them directly to the rays
-    MatrixX3d const normalized_gt_points{gt_points.array() / 600};
+    // NOTE(Jack): This is where the difference to a model like the pinhole model becomes apparent! For the pinhole
+    // model all unprojected rays have a z-value of 1, and are somehow normalized in that sense. Here on the other hand,
+    // for the double sphere model, all rays have a magnitude of one instead. Therefore instead of dividing the ground
+    // truth points by the focal length like we did for pinhole unprojection, we here instead normalize each point into
+    // a ray with magnitude one.
+    MatrixX3d normalized_gt_points{gt_points};
+    normalized_gt_points.rowwise().normalize();
 
     EXPECT_TRUE(rays.isApprox(normalized_gt_points));
 }
