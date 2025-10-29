@@ -13,15 +13,15 @@ TEST(OptimizationCeresXxx, TestPinholeCostFunctionResidual) {
     // for us, managing the memory and passing arguments etc. during the optimization process. It is my hope and vision
     // that these raw pointers etc. can be limited to testing, and not actually filter into the rest of the code if
     // handled smartly (ex. using Eigen::Map and Eigen::Ref).
-    std::array<double, 4> const pinhole_intrinsics{600, 600, 360, 240};
-    Eigen::Vector2d const pixel{pinhole_intrinsics[2], pinhole_intrinsics[3]};
-    Eigen::Vector3d const point{0, 0, 10};  // Point that will project to the center of the image
+    Array4d const pinhole_intrinsics{600, 600, 360, 240};
+    Array2d const pixel{pinhole_intrinsics[2], pinhole_intrinsics[3]};
+    Array3d const point{0, 0, 10};  // Point that will project to the center of the image
 
     using PinholeCostFunction = optimization::ProjectionCostFunction_T<projection_functions::Pinhole>;
     PinholeCostFunction const cost_function{pixel, point};
 
-    std::array<double, 6> const pose{0, 0, 0, 0, 0, 0};
-    std::array<double, 2> residual{};
+    Array6d const pose{0, 0, 0, 0, 0, 0};
+    Array2d residual{-1, -1};
     cost_function.operator()<double>(pinhole_intrinsics.data(), pose.data(), residual.data());
 
     EXPECT_FLOAT_EQ(residual[0], 0.0);
@@ -32,8 +32,8 @@ TEST(OptimizationCeresXxx, TestPinholeCostFunctionResidual) {
 // allocating the memory of the input pointers takes some thought, but cost_function->Evaluate()
 // should be tested when there is interest and time :)
 TEST(OptimizationCeresXxx, TestPinholeCostFunctionCreate) {
-    Eigen::Vector2d const pixel{360, 240};
-    Eigen::Vector3d const point{0, 0, 10};
+    Array2d const pixel{360, 240};
+    Array3d const point{0, 0, 600};
     ceres::CostFunction const* const cost_function{
         optimization::Create(optimization::CameraModel::Pinhole, pixel, point)};
 
