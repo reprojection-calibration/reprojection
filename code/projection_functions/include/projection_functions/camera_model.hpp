@@ -8,6 +8,7 @@
 
 namespace reprojection::projection_functions {
 
+// TODO REMOVE
 // High level design explanation:
 //
 // There is the everyday need to have the ability to project/unproject points and pixels. We need a generic interface
@@ -76,13 +77,12 @@ class Camera {
  * \brief Generates the code to implement concrete types from the Camera interface definition class.
  *
  * Given that we have a set of standard projection function classes that implement the project and unproject functions
- * of common camera models, there is no reason for us to copy and paste for each camera the looping logic required to
- * apply those functions to arrays. Therefore, we implement that looping logic one time here and instantiate the
- * template once for each projection function class (ex. PinholeCamera, DoubleSphereCamera, etc.).
+ * of common camera models (ex. Pinhole or DoubleSphere), there is no reason for us to copy and paste for each camera
+ * the looping logic required to apply those functions to arrays. Therefore, we implement that looping logic one time
+ * here and instantiate the template once for each projection function class.
  *
  * This class also uses the ::Size attribute of the provided projection function class to parameterize the size of the
- * intrinsics array. Adding the ::Size attribute allowed us to only have one single template parameter here, even if it
- * started to "bloat" the projection function classes.
+ * intrinsics array which varies for each camera model.
  *
  * @tparam T_Model A camera model projection function class that has ::Project<T>(), ::Unproject() and ::Size (ex.
  * Pinhole or DoubleSphere).
