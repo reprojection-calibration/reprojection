@@ -40,7 +40,7 @@ namespace reprojection::projection_functions {
  * code.
  *
  * We often need to project and unproject points/pixels for optimization adjacent tasks, for example generating test
- * data (reprojection::testing_mocks::MvgGenerator::Project()). This base class allows the consuming code to be
+ * data (testing_mocks::MvgGenerator::Project()). This base class allows the consuming code to be
  * agnostic to the specific camera model (ex. pinhole, double sphere, etc.) that is used.
  *
  * In essence this class prevents templated code from spreading throughout the code base, and provides a simple generic
@@ -53,11 +53,40 @@ class Camera {
    public:
     virtual ~Camera() = default;
 
+    /**
+     * \brief Defines the camera projection interface. Consumes a set of points in the camera optical frame ("*_co) and
+     * returns a set of image space pixels.
+     */
     virtual MatrixX2d Project(MatrixX3d const& points_co) const = 0;
 
+    /**
+     * \brief Defines the camera unprojection interface. Consumes a set of image space pixels and returns a set of 3D
+     * rays in the camera optical frame. Does NOT return the original 3D points (that would require depth information).
+     */
     virtual MatrixX3d Unproject(MatrixX2d const& pixels) const = 0;
 };
 
+// TODO(Jack): Can we add some static asserts here that will physically require that T_Model has the required
+// attributes? Because the projection function class methods will get used directly in the optimization I do not want to
+// introduce a pure virtual base class to enforce the interface because it might make things slower (i.e. vtable
+// lookup). But honestly if we are already using the concrete instantiations of the classes here then it might not be a
+// problem at all!
+
+/**
+ * \brief Generates the code to implement concrete types from the Camera interface definition class.
+ *
+ * Given that we have a set of standard projection function classes that implement the project and unproject functions
+ * of common camera models, there is no reason for us to copy and paste for each camera the looping logic required to
+ * apply those functions to arrays. Therefore, we implement that looping logic one time here and instantiate the
+ * template once for each projection function class (ex. PinholeCamera, DoubleSphereCamera, etc.).
+ *
+ * This class also uses the ::Size attribute of the provided projection function class to parameterize the size of the
+ * intrinsics array. Adding the ::Size attribute allowed us to only have one single template parameter here, even if it
+ * started to "bloat" the projection function classes.
+ *
+ * @tparam T_Model A camera model projection function class that has ::Project<T>(), ::Unproject() and ::Size (ex.
+ * Pinhole or DoubleSphere).
+ */
 template <typename T_Model>
 class Camera_T : public Camera {
    public:
