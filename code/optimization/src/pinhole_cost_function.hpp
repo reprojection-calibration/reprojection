@@ -40,8 +40,6 @@ class ProjectionCostFunction_T {
     Vector3d point_;
 };
 
-// TODO(Jack): We need to associate the size of the intriscs directly with the model. By passing both in here we are
-// really duplicating information.
 template <typename T_Model>
 ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
     using ProjectionCostFunction = ProjectionCostFunction_T<T_Model>;
@@ -50,7 +48,7 @@ ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
         new ProjectionCostFunction(pixel, point));
 }
 
-// TODO(Jack): Does the intrinsic size actually belong/should be taken from the static camera class?
+
 enum class CameraModel {
     DoubleSphere,  //
     Pinhole,
