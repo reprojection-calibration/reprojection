@@ -20,7 +20,7 @@ AddLibrary()
 
 set(TESTS
         src/ceres_geometry.test.cpp
-        src/pinhole_cost_function.test.cpp
+        src/projection_cost_function.test.cpp
         test/nonlinear_refinement.test.cpp
 )
 AddTests()

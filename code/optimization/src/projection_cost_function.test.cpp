@@ -1,6 +1,6 @@
-#include "pinhole_cost_function.hpp"
-
 #include <gtest/gtest.h>
+
+#include "projection_cost_function.hpp"
 
 using namespace reprojection;
 

@@ -4,21 +4,16 @@
 
 #include "eigen_utilities/camera.hpp"
 #include "geometry/lie.hpp"
-#include "pinhole_cost_function.hpp"
+#include "projection_cost_function.hpp"
 
 namespace reprojection::optimization {
 
-// TODO(Jack): Increase consistency of the use of SE3 or se3 - we really only introduced the se3 in the general source
-// code so that we could test pose values easily. Unless we are in the core optimization logic or testing we should be
-// using SE3. Or at least that is my idea right now :)
-// TODO(Jack): A function that converts from the matrix and array representation of K easily
 // TODO(Jack): Would it help if we applied normalization?
-std::tuple<Eigen::Isometry3d, Array4d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
-                                                           Eigen::MatrixX3d const& points,
-                                                           Eigen::Isometry3d const& initial_pose,
-                                                           Eigen::Array4d const& initial_pinhole_intrinsics) {
+std::tuple<Isometry3d, Array4d> NonlinearRefinement(MatrixX2d const& pixels, MatrixX3d const& points,
+                                                    Isometry3d const& initial_pose,
+                                                    Array4d const& initial_pinhole_intrinsics) {
     Eigen::Vector<double, 6> pose_to_optimize{geometry::Log(initial_pose)};
-    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{initial_pinhole_intrinsics};
+    Array4d pinhole_intrinsics_to_optimize{initial_pinhole_intrinsics};
 
     ceres::Problem problem;
     for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
