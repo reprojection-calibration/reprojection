@@ -16,7 +16,11 @@ TEST(OptimizationCeresXxx, TestPinholeCostFunctionResidual) {
     std::array<double, 4> const pinhole_intrinsics{600, 600, 360, 240};
     Eigen::Vector2d const pixel{pinhole_intrinsics[2], pinhole_intrinsics[3]};
     Eigen::Vector3d const point{0, 0, 10};  // Point that will project to the center of the image
-    optimization::PinholeCostFunction const cost_function{pixel, point};
+
+    using PinholeCostFunction =
+        optimization::ProjectionCostFunction_T<projection_functions::Pinhole,
+                                               static_cast<int>(optimization::CameraModel::Pinhole)>;
+    PinholeCostFunction const cost_function{pixel, point};
 
     std::array<double, 6> const pose{0, 0, 0, 0, 0, 0};
     std::array<double, 2> residual{};
@@ -32,7 +36,8 @@ TEST(OptimizationCeresXxx, TestPinholeCostFunctionResidual) {
 TEST(OptimizationCeresXxx, TestPinholeCostFunctionCreate) {
     Eigen::Vector2d const pixel{360, 240};
     Eigen::Vector3d const point{0, 0, 10};
-    ceres::CostFunction const* const cost_function{optimization::PinholeCostFunction::Create(pixel, point)};
+    ceres::CostFunction const* const cost_function{
+        optimization::Create(optimization::CameraModel::Pinhole, pixel, point)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics

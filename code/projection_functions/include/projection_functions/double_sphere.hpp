@@ -2,6 +2,7 @@
 
 #include "projection_functions/pinhole.hpp"
 #include "types/eigen_types.hpp"
+#include <ceres/ceres.h>
 
 // Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957)
 
@@ -17,11 +18,11 @@ struct DoubleSphere {
         T const xx{x * x};
         T const yy{y * y};
         T const r2{xx + yy};
-        T const d1{std::sqrt(r2 + z * z)};
+        T const d1{ceres::sqrt(r2 + z * z)};
 
         T const& xi{intrinsics[4]};
         T const wz{xi * d1 + z};  // wz = "weighted z"
-        T const d2{std::sqrt(r2 + wz * wz)};
+        T const d2{ceres::sqrt(r2 + wz * wz)};
 
         T const& alpha{intrinsics[5]};
         T const z_star{(alpha * d2) + (1.0 - alpha) * (xi * d1 + z)};

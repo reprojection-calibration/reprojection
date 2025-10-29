@@ -52,7 +52,7 @@ struct PinholeRadtan4 {
         Eigen::Array<T, 2, 1> const p_cam{x_cam, y_cam};
 
         Eigen::Array<T, 2, 1> const distorted_p_cam{Distort<T>(intrinsics.bottomRows(4), p_cam)};
-        Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], 1};
+        Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], T(1)};
 
         // NOTE(Jack): Because we already did the ideal projective transform to the camera coordinate frame above
         // (i.e. when we built p_cam), the pinhole projection here is actually only being used to convert the distorted
