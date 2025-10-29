@@ -1,7 +1,6 @@
-#include "ceres_xxx.hpp"
-
 #include <gtest/gtest.h>
 
+#include "ceres_geometry.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;

@@ -17,6 +17,8 @@ std::tuple<Eigen::Isometry3d, Array4d> NonlinearRefinement(Eigen::MatrixX2d cons
                                                            Eigen::MatrixX3d const& points,
                                                            Eigen::Isometry3d const& initial_pose,
                                                            Eigen::Array4d const& initial_pinhole_intrinsics) {
+
+
     Eigen::Vector<double, 6> pose_to_optimize{geometry::Log(initial_pose)};
     Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{initial_pinhole_intrinsics};
 

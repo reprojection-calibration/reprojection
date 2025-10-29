@@ -1,27 +1,46 @@
 #pragma once
 
-#include "ceres_xxx.hpp"
+#include "ceres_geometry.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
 
-// Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
-struct PinholeCostFunction {
-    explicit PinholeCostFunction(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
+class ProjectionCostFunction {
+   public:
+    explicit ProjectionCostFunction(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
 
-    // This is the contact line were ceres requirements for using raw pointers hits our desire to use more expressive
-    // eigen types. That is why here in the operator() we find the usage of the Eigen::Map class.
+    virtual ~ProjectionCostFunction() = default;
+
+    // NOTE(Jack): In ceres demos this function is usually static, however for this case here we cannot do that because
+    // it is virtual.
+    virtual ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) const = 0;
+
+    Vector2d pixel_;
+    Vector3d point_;
+};
+
+// NOTE(Jack): Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
+// TODO(Jack): Do we need to template the entire class? Or can we do just the subfunctions?
+// WARN(Jack): Is there a way to canonically force the program to make sure the right memory is allocated and
+// referenced to by these raw pointers? Ceres forces this pointer interface so I don't think we can easily do
+// that but consider how we  can design the program to handle that automatically.
+// NOTE(Jack): The operator() method  is the contact line were ceres requirements for using raw pointers hits
+// our desire to use more expressive eigen types. That is why here in the operator() we find the usage of the Eigen::Map
+// class.
+template <typename T_Model, int NumIntrinsics>
+class ProjectionCostFunction_T : public ProjectionCostFunction {
+   public:
+    explicit ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point)
+        : ProjectionCostFunction(pixel, point) {}
+
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const pose_ptr, T* const residual) const {
-        // WARN(Jack): Is there a way to canonically force the program to make sure the right memory is allocated and
-        // referenced to by these raw pointers? Ceres forces this pointer interface so I don't think we can easily do
-        // that but consider how we  can design the program to handle that automatically.
         Eigen::Map<Eigen::Vector<T, 6> const> pose(pose_ptr);
         Eigen::Vector<T, 3> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
 
-        Eigen::Map<Eigen::Array<T, 4, 1> const> intrinsics(intrinsics_ptr);
-        Eigen::Vector<T, 2> const pixel{projection_functions::Pinhole::Project<T>(intrinsics, point_co)};
+        Eigen::Map<Eigen::Array<T, NumIntrinsics, 1> const> intrinsics(intrinsics_ptr);
+        Eigen::Vector<T, 2> const pixel{T_Model::template Project<T>(intrinsics, point_co)};
 
         residual[0] = T(pixel_[0]) - pixel[0];
         residual[1] = T(pixel_[1]) - pixel[1];
@@ -29,12 +48,12 @@ struct PinholeCostFunction {
         return true;
     }
 
-    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) {
-        return new ceres::AutoDiffCostFunction<PinholeCostFunction, 2, 4, 6>(new PinholeCostFunction(pixel, point));
+    ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) const override {
+        return new ceres::AutoDiffCostFunction<ProjectionCostFunction_T, 2, NumIntrinsics, 6>(
+            new ProjectionCostFunction_T(pixel, point));
     }
-
-    Vector2d pixel_;
-    Vector3d point_;
 };
+
+using PinholeCostFunction = ProjectionCostFunction_T<projection_functions::Pinhole, 4>;
 
 }  // namespace  reprojection::optimization

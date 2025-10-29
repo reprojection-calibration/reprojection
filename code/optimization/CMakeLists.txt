@@ -4,7 +4,6 @@ find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
-        src/ceres_xxx.hpp
         src/nonlinear_refinement.cpp
 )
 set(LINK_LIBRARIES
@@ -20,7 +19,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/ceres_xxx.test.cpp
+        src/ceres_geometry.test.cpp
         src/pinhole_cost_function.test.cpp
         test/nonlinear_refinement.test.cpp
 )

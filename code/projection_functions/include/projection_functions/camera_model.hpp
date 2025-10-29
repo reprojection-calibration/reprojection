@@ -44,6 +44,8 @@ class Camera {
     virtual MatrixX3d Unproject(MatrixX2d const& pixels) const = 0;
 };
 
+// TODO(Jack): Should we instead just specify the length of the intrinsics array instead of the entire array type? We
+// should be conistent with the optimization regardless of what we do :)
 template <typename T_Model, typename T_Intrinsics>
 class Camera_T : public Camera {
    public:
