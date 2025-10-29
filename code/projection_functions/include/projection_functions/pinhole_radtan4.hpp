@@ -45,7 +45,8 @@ struct PinholeRadtan4 {
 
     // P_co is a 3D point {x, y, z} in the "camera optical" frame expressed
     template <typename T>
-    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, 8, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
+    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, Size, 1> const& intrinsics,
+                                         Eigen::Array<T, 3, 1> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -66,7 +67,7 @@ struct PinholeRadtan4 {
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
 
-    static Array3d Unproject(Eigen::Array<double, 8, 1> const& intrinsics, Array2d const& pixel);
+    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
 
     static std::tuple<Array2d, Eigen::Matrix2d> JacobianUpdate(Array4d const& distortion, Array2d const& p_cam);
 
