@@ -1,9 +1,12 @@
+#include "projection_cost_function.hpp"
+
 #include <gtest/gtest.h>
 
-#include "projection_cost_function.hpp"
+#include "projection_functions/pinhole.hpp"
 
 using namespace reprojection;
 
+// TODO(Jack): Test all other nonpinhole cost functions!
 // TODO(Jack): Test the nonlinear refinement with noisy data to make sure the optimization executes more than one step!
 
 // We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.

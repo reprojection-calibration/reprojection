@@ -1,13 +1,19 @@
 #pragma once
 
 #include "ceres_geometry.hpp"
-#include "projection_functions/double_sphere.hpp"
-#include "projection_functions/pinhole.hpp"
-#include "projection_functions/pinhole_radtan4.hpp"
-#include "projection_functions/unified_camera_model.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
+
+// TODO(Jack): Where should this actually live?
+enum class CameraModel {
+    DoubleSphere,  //
+    Pinhole,
+    PinholeRadtan4,
+    UnifiedCameraModel
+};
+
+ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point);
 
 // NOTE(Jack): Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
 // TODO(Jack): Do we need to template the entire class? Or can we do just the subfunctions?
@@ -15,8 +21,8 @@ namespace reprojection::optimization {
 // referenced to by these raw pointers? Ceres forces this pointer interface so I don't think we can easily do
 // that but consider how we  can design the program to handle that automatically.
 // NOTE(Jack): The operator() method  is the contact line were ceres requirements for using raw pointers hits
-// our desire to use more expressive eigen types. That is why here in the operator() we find the usage of the Eigen::Map
-// class.
+// our desire to use more expressive eigen types. That is why here in the operator() we find the usage of the
+// Eigen::Map class.
 template <typename T_Model>
 class ProjectionCostFunction_T {
    public:
@@ -40,36 +46,15 @@ class ProjectionCostFunction_T {
     Vector3d point_;
 };
 
+// TODO(Jack): In ceres examples this create method is normally a static member of the cost function itself. However
+// here because of how we are using templates I my assessment at this time is that this is not possible, and also
+// not necessary.
 template <typename T_Model>
 ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
     using ProjectionCostFunction = ProjectionCostFunction_T<T_Model>;
 
     return new ceres::AutoDiffCostFunction<ProjectionCostFunction, 2, T_Model::Size, 6>(
         new ProjectionCostFunction(pixel, point));
-}
-
-
-enum class CameraModel {
-    DoubleSphere,  //
-    Pinhole,
-    PinholeRadtan4 ,
-    UnifiedCameraModel
-};
-
-ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point) {
-    using namespace projection_functions;
-
-    if (projection_type == CameraModel::DoubleSphere) {
-        return Create_T<DoubleSphere>(pixel, point);
-    } else if (projection_type == CameraModel::Pinhole) {
-        return Create_T<Pinhole>(pixel, point);
-    } else if (projection_type == CameraModel::PinholeRadtan4) {
-        return Create_T<PinholeRadtan4>(pixel, point);
-    } else if (projection_type == CameraModel::UnifiedCameraModel) {
-        return Create_T<UnifiedCameraModel>(pixel, point);
-    } else {
-        throw std::runtime_error("BLAH BLAH BLAH");
-    }
 }
 
 }  // namespace  reprojection::optimization
