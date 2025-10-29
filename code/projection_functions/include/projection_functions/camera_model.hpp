@@ -35,6 +35,20 @@ namespace reprojection::projection_functions {
 // base class this turned into a problem. The side effect of this is that the Project implementation in Camera_T uses
 // "T_Model::template Project<double>()" but the Unproject method uses only "T_Model::Unproject()".
 
+/**
+ * \brief Defines the camera interface (i.e. it is a pure virtual "base" class) for use in non-optimization related
+ * code.
+ *
+ * We often need to project and unproject points/pixels for optimization adjacent tasks, for example generating test
+ * data (reprojection::testing_mocks::MvgGenerator::Project()). This base class allows the consuming code to be
+ * agnostic to the specific camera model (ex. pinhole, double sphere, etc.) that is used.
+ *
+ * In essence this class prevents templated code from spreading throughout the code base, and provides a simple generic
+ * interface to apply Project() and Unproject() methods to many data points at one time, regardless of which specific
+ * camera projection functions the consumer wants to use. In this context we hard-code the double type (because we do
+ * not need the ceres::Jet type required by ceres::AutoDiffCostFunction) and process entire data arrays (ex. n-pixels or
+ * n-points) instead of elementwise like we do in the core optimization code.
+ */
 class Camera {
    public:
     virtual ~Camera() = default;
