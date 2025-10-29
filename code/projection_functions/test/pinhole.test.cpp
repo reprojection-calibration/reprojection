@@ -4,6 +4,8 @@
 
 using namespace reprojection;
 
+// TODO(Jack): Add a test for all cameras on a single pixel NOT using the templated Eigen projection/unprojection.
+
 Array4d const pinhole_intrinsics{600, 600, 360, 240};
 MatrixX3d const gt_points{{0, 0, 600},  //
                           {-360, 0, 600},

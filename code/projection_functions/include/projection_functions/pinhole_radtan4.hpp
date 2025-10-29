@@ -8,6 +8,8 @@
 namespace reprojection::projection_functions {
 
 struct PinholeRadtan4 {
+    static int constexpr Size{8};
+
     // point_cam is a point in the ideal/normalized/projected camera coordinate frame. What does this actually mean for
     // practical purposes? Let us say we have a 3D point that is already in the "camera optical" frame P_co = {x, y, z}.
     // To transform this point to the ideal/normalized/projected camera coordinate frame we simply divide P_co by it's
@@ -43,7 +45,8 @@ struct PinholeRadtan4 {
 
     // P_co is a 3D point {x, y, z} in the "camera optical" frame expressed
     template <typename T>
-    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, 8, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
+    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, Size, 1> const& intrinsics,
+                                         Eigen::Array<T, 3, 1> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -52,7 +55,7 @@ struct PinholeRadtan4 {
         Eigen::Array<T, 2, 1> const p_cam{x_cam, y_cam};
 
         Eigen::Array<T, 2, 1> const distorted_p_cam{Distort<T>(intrinsics.bottomRows(4), p_cam)};
-        Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], 1};
+        Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], T(1)};
 
         // NOTE(Jack): Because we already did the ideal projective transform to the camera coordinate frame above
         // (i.e. when we built p_cam), the pinhole projection here is actually only being used to convert the distorted
@@ -64,7 +67,7 @@ struct PinholeRadtan4 {
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
 
-    static Array3d Unproject(Eigen::Array<double, 8, 1> const& intrinsics, Array2d const& pixel);
+    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
 
     static std::tuple<Array2d, Eigen::Matrix2d> JacobianUpdate(Array4d const& distortion, Array2d const& p_cam);
 

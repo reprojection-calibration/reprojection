@@ -4,7 +4,7 @@
 
 namespace reprojection::projection_functions {
 
-Array3d Pinhole::Unproject(Array4d const& intrinsics, Array2d const& pixel) {
+Array3d Pinhole::Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel) {
     double const& fx{intrinsics[0]};
     double const& fy{intrinsics[1]};
     double const& cx{intrinsics[2]};

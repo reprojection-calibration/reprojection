@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ceres/ceres.h>
+
 #include "projection_functions/pinhole.hpp"
 #include "types/eigen_types.hpp"
 
@@ -8,8 +10,11 @@
 namespace reprojection::projection_functions {
 
 struct DoubleSphere {
+    static int constexpr Size{6};
+
     template <typename T>
-    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, 6, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
+    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, Size, 1> const& intrinsics,
+                                         Eigen::Array<T, 3, 1> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -17,11 +22,11 @@ struct DoubleSphere {
         T const xx{x * x};
         T const yy{y * y};
         T const r2{xx + yy};
-        T const d1{std::sqrt(r2 + z * z)};
+        T const d1{ceres::sqrt(r2 + z * z)};
 
         T const& xi{intrinsics[4]};
         T const wz{xi * d1 + z};  // wz = "weighted z"
-        T const d2{std::sqrt(r2 + wz * wz)};
+        T const d2{ceres::sqrt(r2 + wz * wz)};
 
         T const& alpha{intrinsics[5]};
         T const z_star{(alpha * d2) + (1.0 - alpha) * (xi * d1 + z)};
@@ -30,7 +35,7 @@ struct DoubleSphere {
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
 
-    static Array3d Unproject(Array6d const& intrinsics, Array2d const& pixel);
+    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
 };
 
 }  // namespace reprojection::projection_functions

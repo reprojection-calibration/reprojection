@@ -7,17 +7,17 @@
 
 using namespace reprojection;
 
-Eigen::Array<double, 8, 1> const pinhole_radtan4_intrinsics{600, 600, 360, 240, -0.1, 0.1, 0.001, 0.001};
-Eigen::MatrixX3d const gt_points{{0, 0, 600},  //
-                                 {-360, 0, 600},
-                                 {360, 0, 600},
-                                 {0, -240, 600},
-                                 {0, 240, 600}};
-Eigen::MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrinsics[3]},
-                                 {8.9424000000000206, 240.21600000000001},
-                                 {712.35359999999991, 240.21600000000001},
-                                 {360.096, 3.5135999999999683},
-                                 {360.096, 477.06240000000003}};
+Array8d const pinhole_radtan4_intrinsics{600, 600, 360, 240, -0.1, 0.1, 0.001, 0.001};
+MatrixX3d const gt_points{{0, 0, 600},  //
+                          {-360, 0, 600},
+                          {360, 0, 600},
+                          {0, -240, 600},
+                          {0, 240, 600}};
+MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrinsics[3]},
+                          {8.9424000000000206, 240.21600000000001},
+                          {712.35359999999991, 240.21600000000001},
+                          {360.096, 3.5135999999999683},
+                          {360.096, 477.06240000000003}};
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
     auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics)};
@@ -52,8 +52,8 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestUnproject) {
 }
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestJacobianUpdate) {
-    Eigen::Array<double, 4, 1> const distortion{-0.1, 0.1, 0.001, 0.001};
-    Eigen::Array2d const p_cam{-0.1, -0.1};
+    Array4d const distortion{-0.1, 0.1, 0.001, 0.001};
+    Array2d const p_cam{-0.1, -0.1};
     auto const [distorted_p_cam, J]{projection_functions::PinholeRadtan4::JacobianUpdate(distortion, p_cam)};
 
     EXPECT_FLOAT_EQ(distorted_p_cam[0], -0.099743999999999999);
@@ -65,11 +65,11 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestJacobianUpdate) {
 }
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestDistortionFunctor) {
-    Eigen::Array<double, 4, 1> const distortion{-0.1, 0.1, 0.001, 0.001};
+    Array4d const distortion{-0.1, 0.1, 0.001, 0.001};
     auto const distortion_functor{projection_functions::PinholeRadtan4::DistortFunctor(distortion)};
 
-    Eigen::Array2d const p_cam{-0.1, -0.1};
-    Eigen::Array2d distorted_p_cam;
+    Array2d const p_cam{-0.1, -0.1};
+    Array2d distorted_p_cam;
     distortion_functor(p_cam.data(), distorted_p_cam.data());
 
     EXPECT_FLOAT_EQ(distorted_p_cam[0], -0.099743999999999999);

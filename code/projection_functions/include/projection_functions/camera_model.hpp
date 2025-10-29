@@ -44,10 +44,10 @@ class Camera {
     virtual MatrixX3d Unproject(MatrixX2d const& pixels) const = 0;
 };
 
-template <typename T_Model, typename T_Intrinsics>
+template <typename T_Model>
 class Camera_T : public Camera {
    public:
-    explicit Camera_T(T_Intrinsics const& intrinsics) : intrinsics_{intrinsics} {}
+    explicit Camera_T(Eigen::Array<double, T_Model::Size, 1> const& intrinsics) : intrinsics_{intrinsics} {}
 
     MatrixX2d Project(MatrixX3d const& points_co) const override {
         Eigen::MatrixX2d pixels(points_co.rows(), 2);
@@ -68,12 +68,12 @@ class Camera_T : public Camera {
     }  // LCOV_EXCL_LINE
 
    private:
-    T_Intrinsics intrinsics_;
+    Eigen::Array<double, T_Model::Size, 1> intrinsics_;
 };
 
-using DoubleSphereCamera = Camera_T<DoubleSphere, Array6d>;
-using PinholeCamera = Camera_T<Pinhole, Array4d>;
-using PinholeRadtan4Camera = Camera_T<PinholeRadtan4, Array8d>;
-using UcmCamera = Camera_T<UnifiedCameraModel, Array5d>;
+using DoubleSphereCamera = Camera_T<DoubleSphere>;
+using PinholeCamera = Camera_T<Pinhole>;
+using PinholeRadtan4Camera = Camera_T<PinholeRadtan4>;
+using UcmCamera = Camera_T<UnifiedCameraModel>;
 
 }  // namespace reprojection::projection_functions

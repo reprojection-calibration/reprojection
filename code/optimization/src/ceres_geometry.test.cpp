@@ -1,4 +1,4 @@
-#include "ceres_xxx.hpp"
+#include "ceres_geometry.hpp"
 
 #include <gtest/gtest.h>
 

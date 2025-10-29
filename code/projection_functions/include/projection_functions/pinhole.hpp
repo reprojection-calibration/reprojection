@@ -5,6 +5,8 @@
 namespace reprojection::projection_functions {
 
 struct Pinhole {
+    static int constexpr Size{4};
+
     // Applying ideal projection to "P_co" gives us "p_cam". Applying the calibration values of K to "p_cam" gives us
     // "pixel".
     //
@@ -15,7 +17,8 @@ struct Pinhole {
     // NOTE(Jack): For the sake of verbosity/explicitness this function includes some lines operations which could be
     // combined but are instead done explicitly for emphasis of the relevant coordinate frames.
     template <typename T>
-    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, 4, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
+    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, Size, 1> const& intrinsics,
+                                         Eigen::Array<T, 3, 1> const& P_co) {
         // Put into ideal/normalized/projected camera coordinate frame
         T const& x{P_co[0]};
         T const& y{P_co[1]};
@@ -38,7 +41,7 @@ struct Pinhole {
         return pixel;
     }
 
-    static Array3d Unproject(Eigen::Array<double, 4, 1> const& intrinsics, Eigen::Array<double, 2, 1> const& pixel);
+    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Eigen::Array<double, 2, 1> const& pixel);
 };
 
 }  // namespace reprojection::projection_functions

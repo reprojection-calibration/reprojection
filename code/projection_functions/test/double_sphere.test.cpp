@@ -8,7 +8,7 @@
 using namespace reprojection;
 
 Array6d const double_sphere_intrinsics{600, 600, 360, 240, 0.1, 0.2};
-MatrixX3d const gt_points{{0, 0, 10},  //
+MatrixX3d const gt_points{{0, 0, 600},  //
                           {-360, 0, 600},
                           {360, 0, 600},
                           {0, -240, 600},
