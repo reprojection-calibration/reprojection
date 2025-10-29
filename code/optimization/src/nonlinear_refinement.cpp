@@ -17,14 +17,12 @@ std::tuple<Eigen::Isometry3d, Array4d> NonlinearRefinement(Eigen::MatrixX2d cons
                                                            Eigen::MatrixX3d const& points,
                                                            Eigen::Isometry3d const& initial_pose,
                                                            Eigen::Array4d const& initial_pinhole_intrinsics) {
-
-
     Eigen::Vector<double, 6> pose_to_optimize{geometry::Log(initial_pose)};
     Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{initial_pinhole_intrinsics};
 
     ceres::Problem problem;
     for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
-        ceres::CostFunction* const cost_function{PinholeCostFunction::Create(pixels.row(i), points.row(i))};
+        ceres::CostFunction* const cost_function{Create(CameraModel::Pinhole, pixels.row(i), points.row(i))};
         problem.AddResidualBlock(cost_function, nullptr, pinhole_intrinsics_to_optimize.data(),
                                  pose_to_optimize.data());
     }

@@ -1,24 +1,13 @@
 #pragma once
 
 #include "ceres_geometry.hpp"
+#include "projection_functions/double_sphere.hpp"
 #include "projection_functions/pinhole.hpp"
+#include "projection_functions/pinhole_radtan4.hpp"
+#include "projection_functions/unified_camera_model.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
-
-class ProjectionCostFunction {
-   public:
-    explicit ProjectionCostFunction(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
-
-    virtual ~ProjectionCostFunction() = default;
-
-    // NOTE(Jack): In ceres demos this function is usually static, however for this case here we cannot do that because
-    // it is virtual.
-    virtual ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) const = 0;
-
-    Vector2d pixel_;
-    Vector3d point_;
-};
 
 // NOTE(Jack): Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
 // TODO(Jack): Do we need to template the entire class? Or can we do just the subfunctions?
@@ -29,10 +18,9 @@ class ProjectionCostFunction {
 // our desire to use more expressive eigen types. That is why here in the operator() we find the usage of the Eigen::Map
 // class.
 template <typename T_Model, int NumIntrinsics>
-class ProjectionCostFunction_T : public ProjectionCostFunction {
+class ProjectionCostFunction_T {
    public:
-    explicit ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point)
-        : ProjectionCostFunction(pixel, point) {}
+    explicit ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
 
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const pose_ptr, T* const residual) const {
@@ -48,12 +36,42 @@ class ProjectionCostFunction_T : public ProjectionCostFunction {
         return true;
     }
 
-    ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) const override {
-        return new ceres::AutoDiffCostFunction<ProjectionCostFunction_T, 2, NumIntrinsics, 6>(
-            new ProjectionCostFunction_T(pixel, point));
-    }
+    Vector2d pixel_;
+    Vector3d point_;
 };
 
-using PinholeCostFunction = ProjectionCostFunction_T<projection_functions::Pinhole, 4>;
+// TODO(Jack): We need to associate the size of the intriscs directly with the model. By passing both in here we are
+// really duplicating information.
+template <typename T_Model, int NumIntrinsics>
+ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
+    using ProjectionCostFunction = ProjectionCostFunction_T<T_Model, NumIntrinsics>;
+
+    return new ceres::AutoDiffCostFunction<ProjectionCostFunction, 2, NumIntrinsics, 6>(
+        new ProjectionCostFunction(pixel, point));
+}
+
+// TODO(Jack): Does the intrinsic size actually belong/should be taken from the static camera class?
+enum class CameraModel {
+    DoubleSphere = 6,  //
+    Pinhole = 4,
+    PinholeRadtan4 = 8,
+    UnifiedCameraModel = 5
+};
+
+ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point) {
+    if (projection_type == CameraModel::DoubleSphere) {
+        return Create_T<projection_functions::DoubleSphere, static_cast<int>(CameraModel::DoubleSphere)>(pixel, point);
+    } else if (projection_type == CameraModel::Pinhole) {
+        return Create_T<projection_functions::Pinhole, static_cast<int>(CameraModel::Pinhole)>(pixel, point);
+    } else if (projection_type == CameraModel::PinholeRadtan4) {
+        return Create_T<projection_functions::PinholeRadtan4, static_cast<int>(CameraModel::PinholeRadtan4)>(pixel,
+                                                                                                             point);
+    } else if (projection_type == CameraModel::UnifiedCameraModel) {
+        return Create_T<projection_functions::UnifiedCameraModel, static_cast<int>(CameraModel::UnifiedCameraModel)>(
+            pixel, point);
+    } else {
+        throw std::runtime_error("BLAH BLAH BLAH");
+    }
+}
 
 }  // namespace  reprojection::optimization
