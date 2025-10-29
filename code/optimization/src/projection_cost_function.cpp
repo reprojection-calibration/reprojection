@@ -8,6 +8,9 @@
 
 namespace reprojection::optimization {
 
+// WARN(Jack): This function will default to the UCM model if a match is not found! Some people might expect
+// it to actually fail if the requested model is not present! Rethink this if this turns into a problem! I.e. throw and
+// error and kill the program because it indicates that this function was not updated as new camera models were added.
 ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point) {
     if (projection_type == CameraModel::DoubleSphere) {
         return Create_T<projection_functions::DoubleSphere>(pixel, point);
@@ -15,11 +18,8 @@ ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& p
         return Create_T<projection_functions::Pinhole>(pixel, point);
     } else if (projection_type == CameraModel::PinholeRadtan4) {
         return Create_T<projection_functions::PinholeRadtan4>(pixel, point);
-    } else if (projection_type == CameraModel::UnifiedCameraModel) {
-        return Create_T<projection_functions::UnifiedCameraModel>(pixel, point);
     } else {
-        // TODO(Jack): Actually assess and handle possible error conditions!
-        throw std::runtime_error("BLAH BLAH BLAH");
+        return Create_T<projection_functions::UnifiedCameraModel>(pixel, point);
     }
 }
 
