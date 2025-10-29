@@ -9,6 +9,7 @@
 namespace reprojection::optimization {
 
 // TODO(Jack): Would it help if we applied normalization?
+// NOTE(Jack): Hardcoded only for pinhole
 std::tuple<Isometry3d, Array4d> NonlinearRefinement(MatrixX2d const& pixels, MatrixX3d const& points,
                                                     Isometry3d const& initial_pose,
                                                     Array4d const& initial_pinhole_intrinsics) {

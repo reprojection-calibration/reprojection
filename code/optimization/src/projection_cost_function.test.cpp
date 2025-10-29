@@ -10,18 +10,17 @@ using namespace reprojection;
 // TODO(Jack): Test the nonlinear refinement with noisy data to make sure the optimization executes more than one step!
 
 // We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.
-TEST(OptimizationCeresXxx, TestPinholeCostFunctionResidual) {
-    // NOTE(Jack): The reason that we have these ugly unfamiliar std::arrays and calls to .data(), but nowhere else, is
-    // because in this test we are essentially manually simulating all the magic that Ceres will do behind the scenes
-    // for us, managing the memory and passing arguments etc. during the optimization process. It is my hope and vision
-    // that these raw pointers etc. can be limited to testing, and not actually filter into the rest of the code if
-    // handled smartly (ex. using Eigen::Map and Eigen::Ref).
+TEST(OptimizationCeresXxx, TestProjectionCostFunction_T) {
+    // NOTE(Jack): The reason that we have these calls to .data(), but nowhere else, is because in this test we are
+    // essentially manually simulating all the magic that Ceres will do behind the scenes for us, managing the memory
+    // and passing arguments etc. during the optimization process. It is my hope and vision that these raw pointers etc.
+    // can be limited to testing, and not actually filter into the rest of the code if handled smartly (ex. using
+    // Eigen::Map and Eigen::Ref).
     Array4d const pinhole_intrinsics{600, 600, 360, 240};
     Array2d const pixel{pinhole_intrinsics[2], pinhole_intrinsics[3]};
     Array3d const point{0, 0, 10};  // Point that will project to the center of the image
 
-    using PinholeCostFunction = optimization::ProjectionCostFunction_T<projection_functions::Pinhole>;
-    PinholeCostFunction const cost_function{pixel, point};
+    optimization::ProjectionCostFunction_T<projection_functions::Pinhole> const cost_function{pixel, point};
 
     Array6d const pose{0, 0, 0, 0, 0, 0};
     Array2d residual{-1, -1};
@@ -34,11 +33,10 @@ TEST(OptimizationCeresXxx, TestPinholeCostFunctionResidual) {
 // NOTE: We do not test cost_function->Evaluate() in the following test because
 // allocating the memory of the input pointers takes some thought, but cost_function->Evaluate()
 // should be tested when there is interest and time :)
-TEST(OptimizationCeresXxx, TestPinholeCostFunctionCreate) {
+TEST(OptimizationCeresXxx, TestCreate_T) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
-    ceres::CostFunction const* const cost_function{
-        optimization::Create(optimization::CameraModel::Pinhole, pixel, point)};
+    ceres::CostFunction const* const cost_function{optimization::Create_T<projection_functions::Pinhole>(pixel, point)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics
