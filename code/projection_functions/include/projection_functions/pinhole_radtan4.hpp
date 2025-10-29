@@ -8,6 +8,8 @@
 namespace reprojection::projection_functions {
 
 struct PinholeRadtan4 {
+    static int constexpr Size{8};
+
     // point_cam is a point in the ideal/normalized/projected camera coordinate frame. What does this actually mean for
     // practical purposes? Let us say we have a 3D point that is already in the "camera optical" frame P_co = {x, y, z}.
     // To transform this point to the ideal/normalized/projected camera coordinate frame we simply divide P_co by it's

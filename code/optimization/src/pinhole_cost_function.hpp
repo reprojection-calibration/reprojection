@@ -17,7 +17,7 @@ namespace reprojection::optimization {
 // NOTE(Jack): The operator() method  is the contact line were ceres requirements for using raw pointers hits
 // our desire to use more expressive eigen types. That is why here in the operator() we find the usage of the Eigen::Map
 // class.
-template <typename T_Model, int NumIntrinsics>
+template <typename T_Model>
 class ProjectionCostFunction_T {
    public:
     explicit ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
@@ -27,7 +27,7 @@ class ProjectionCostFunction_T {
         Eigen::Map<Eigen::Vector<T, 6> const> pose(pose_ptr);
         Eigen::Vector<T, 3> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
 
-        Eigen::Map<Eigen::Array<T, NumIntrinsics, 1> const> intrinsics(intrinsics_ptr);
+        Eigen::Map<Eigen::Array<T, T_Model::Size, 1> const> intrinsics(intrinsics_ptr);
         Eigen::Vector<T, 2> const pixel{T_Model::template Project<T>(intrinsics, point_co)};
 
         residual[0] = T(pixel_[0]) - pixel[0];
@@ -42,33 +42,33 @@ class ProjectionCostFunction_T {
 
 // TODO(Jack): We need to associate the size of the intriscs directly with the model. By passing both in here we are
 // really duplicating information.
-template <typename T_Model, int NumIntrinsics>
+template <typename T_Model>
 ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
-    using ProjectionCostFunction = ProjectionCostFunction_T<T_Model, NumIntrinsics>;
+    using ProjectionCostFunction = ProjectionCostFunction_T<T_Model>;
 
-    return new ceres::AutoDiffCostFunction<ProjectionCostFunction, 2, NumIntrinsics, 6>(
+    return new ceres::AutoDiffCostFunction<ProjectionCostFunction, 2, T_Model::Size, 6>(
         new ProjectionCostFunction(pixel, point));
 }
 
 // TODO(Jack): Does the intrinsic size actually belong/should be taken from the static camera class?
 enum class CameraModel {
-    DoubleSphere = 6,  //
-    Pinhole = 4,
-    PinholeRadtan4 = 8,
-    UnifiedCameraModel = 5
+    DoubleSphere,  //
+    Pinhole,
+    PinholeRadtan4 ,
+    UnifiedCameraModel
 };
 
 ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point) {
+    using namespace projection_functions;
+
     if (projection_type == CameraModel::DoubleSphere) {
-        return Create_T<projection_functions::DoubleSphere, static_cast<int>(CameraModel::DoubleSphere)>(pixel, point);
+        return Create_T<DoubleSphere>(pixel, point);
     } else if (projection_type == CameraModel::Pinhole) {
-        return Create_T<projection_functions::Pinhole, static_cast<int>(CameraModel::Pinhole)>(pixel, point);
+        return Create_T<Pinhole>(pixel, point);
     } else if (projection_type == CameraModel::PinholeRadtan4) {
-        return Create_T<projection_functions::PinholeRadtan4, static_cast<int>(CameraModel::PinholeRadtan4)>(pixel,
-                                                                                                             point);
+        return Create_T<PinholeRadtan4>(pixel, point);
     } else if (projection_type == CameraModel::UnifiedCameraModel) {
-        return Create_T<projection_functions::UnifiedCameraModel, static_cast<int>(CameraModel::UnifiedCameraModel)>(
-            pixel, point);
+        return Create_T<UnifiedCameraModel>(pixel, point);
     } else {
         throw std::runtime_error("BLAH BLAH BLAH");
     }

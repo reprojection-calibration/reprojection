@@ -1,16 +1,20 @@
 #pragma once
 
+#include <ceres/ceres.h>
+
 #include "projection_functions/pinhole.hpp"
 #include "types/eigen_types.hpp"
-#include <ceres/ceres.h>
 
 // Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957)
 
 namespace reprojection::projection_functions {
 
 struct DoubleSphere {
+    static int constexpr Size{6};
+
     template <typename T>
-    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, 6, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
+    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, Size, 1> const& intrinsics,
+                                         Eigen::Array<T, 3, 1> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -31,7 +35,7 @@ struct DoubleSphere {
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
 
-    static Array3d Unproject(Array6d const& intrinsics, Array2d const& pixel);
+    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
 };
 
 }  // namespace reprojection::projection_functions

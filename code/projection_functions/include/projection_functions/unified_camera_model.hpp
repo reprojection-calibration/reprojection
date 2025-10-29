@@ -11,6 +11,8 @@
 namespace reprojection::projection_functions {
 
 struct UnifiedCameraModel {
+    static int constexpr Size{5};
+
     template <typename T>
     static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, 5, 1> const& intrinsics, Eigen::Array<T, 3, 1> const& P_co) {
         T const alpha{0};  // Set alpha to zero - make ds equivalent to ucm by collapsing the second sphere in ds
@@ -20,7 +22,6 @@ struct UnifiedCameraModel {
         return DoubleSphere::Project<T>(ds_intrinsics, P_co);
     }
 
-    // TODO RETURN ARRAY TYPE
     static Array3d Unproject(Array5d const& intrinsics, Array2d const& pixel);
 };
 
