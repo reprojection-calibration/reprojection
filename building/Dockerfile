@@ -59,8 +59,6 @@ FROM base-stage AS code-coverage-stage
 # statements. I am not the first person to face this problem (https://github.com/linux-test-project/lcov/issues/129) and
 # there might already be a solution, but I took the shortcut and just added some LCOV_EXCL_LINE suppression statements
 # to get past the problem.
-#
-# TODO(Jack): One thing that I am still not sure about is if LCOV_EXCL_LINE works for the html generated report
 
 ARG BUILD_LIBRARY=building/scripts/build_library.sh
 RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
