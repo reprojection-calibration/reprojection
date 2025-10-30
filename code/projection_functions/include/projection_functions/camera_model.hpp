@@ -8,26 +8,7 @@
 
 namespace reprojection::projection_functions {
 
-// TODO REMOVE
-// High level design explanation:
-//
-// There is the everyday need to have the ability to project/unproject points and pixels. We need a generic interface
-// that lets us do that. The code here are the tools used to achieve that generic interface. Part one of the toolset is
-// the Camera class, that provides the interface definition using two pure virtual functions (Project and Unproject)
-// that capture essence of what we define a "camera" to be. The second part of the toolset is the CameraT class, which
-// provides a templated override of the Camera class, giving us the ability to concrete implementations without code
-// duplication, from the existing projection function classes (projection_functions/pinhole.hpp,double_sphere.hpp etc.)
-// Those classes, which are static classes, were originally designed to serve primarily as namespaces, but also now
-// allow us to easily use the CameraT class to create specific cameras that operate on eigen arrays without a ton of
-// code duplication (see the use of "TModel::template ...").
-//
-// Something that is unsettled at this point (28.10.2025), and I want to delay the decision on as long as possible, is
-// how we will actually use the projection functions in the optimization. I think we want to avoid using a pure virtual
-// base class there because then we will have vtable calls and it will be "slower" (I did not benchmark this, that is
-// just my imagination talking!) than using templated code directly. This is still an open point, and is the explanation
-// for why I did not just go all in using the Camera base class everywhere. In some places it is great because it keeps
-// templates away from the code, but we need to look at possible problems later when we get to the optimization.
-//
+// TODO(Jack): Move the below comment to any documentation on the projection function base class.
 // A different topic, but an idea which should also be written down here in a central location: The Project functions
 // are templated and the Unproject functions are not, because the former will be used in the nonlinear optimization and
 // need to handle ceres::Jet types. The Unproject functions will (I think!) not be required to handle anything besides a
@@ -76,7 +57,7 @@ class Camera {
 /**
  * \brief Generates the code to implement concrete types from the Camera interface definition class.
  *
- * Given that we have a set of standard projection function classes that implement the project and unproject functions
+ * Given that we have a standard set of projection function classes that implement the project and unproject functions
  * of common camera models (ex. Pinhole or DoubleSphere), there is no reason for us to copy and paste for each camera
  * the looping logic required to apply those functions to arrays. Therefore, we implement that looping logic one time
  * here and instantiate the template once for each projection function class.

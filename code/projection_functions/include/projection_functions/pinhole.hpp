@@ -4,9 +4,11 @@
 
 namespace reprojection::projection_functions {
 
+// TODO(Jack): Enforce projection function interface with base class.
 struct Pinhole {
     static int constexpr Size{4};
 
+    // TODO(Jack): Move this documentation to a future base class.
     // Applying ideal projection to "P_co" gives us "p_cam". Applying the calibration values of K to "p_cam" gives us
     // "pixel".
     //
