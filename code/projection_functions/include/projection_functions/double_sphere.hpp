@@ -8,8 +8,8 @@
 namespace reprojection::projection_functions {
 
 /**
+ * \ingroup projection_classes
  * \brief Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957)
- * \ingroup projection_class
  */
 struct DoubleSphere {
     static int constexpr Size{6};

@@ -8,7 +8,8 @@
 namespace reprojection::projection_functions {
 
 /**
- * \ingroup projection_class
+ * \ingroup projection_classes
+ * \brief Classic four parameter radial-tangential distortion model [k1, k2, p1, p2] on top of a pinhole camera.
  */
 struct PinholeRadtan4 {
     static int constexpr Size{8};

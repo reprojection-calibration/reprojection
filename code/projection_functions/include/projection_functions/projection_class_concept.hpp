@@ -5,7 +5,7 @@
 namespace reprojection::projection_functions {
 
 /**
- * \defgroup projection_class Projection Classes
+ * \defgroup projection_classes Projection Classes
  * \brief The lowest level abstraction for defining camera model projection functions.
  *
  * These are the only places where the projection math is actually implemented, and are used in one form or another
