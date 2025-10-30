@@ -8,25 +8,7 @@
 
 namespace reprojection::projection_functions {
 
-// High level design explanation:
-//
-// There is the everyday need to have the ability to project/unproject points and pixels. We need a generic interface
-// that lets us do that. The code here are the tools used to achieve that generic interface. Part one of the toolset is
-// the Camera class, that provides the interface definition using two pure virtual functions (Project and Unproject)
-// that capture essence of what we define a "camera" to be. The second part of the toolset is the CameraT class, which
-// provides a templated override of the Camera class, giving us the ability to concrete implementations without code
-// duplication, from the existing projection function classes (projection_functions/pinhole.hpp,double_sphere.hpp etc.)
-// Those classes, which are static classes, were originally designed to serve primarily as namespaces, but also now
-// allow us to easily use the CameraT class to create specific cameras that operate on eigen arrays without a ton of
-// code duplication (see the use of "TModel::template ...").
-//
-// Something that is unsettled at this point (28.10.2025), and I want to delay the decision on as long as possible, is
-// how we will actually use the projection functions in the optimization. I think we want to avoid using a pure virtual
-// base class there because then we will have vtable calls and it will be "slower" (I did not benchmark this, that is
-// just my imagination talking!) than using templated code directly. This is still an open point, and is the explanation
-// for why I did not just go all in using the Camera base class everywhere. In some places it is great because it keeps
-// templates away from the code, but we need to look at possible problems later when we get to the optimization.
-//
+// TODO(Jack): Move the below comment to any documentation on the projection function base class.
 // A different topic, but an idea which should also be written down here in a central location: The Project functions
 // are templated and the Unproject functions are not, because the former will be used in the nonlinear optimization and
 // need to handle ceres::Jet types. The Unproject functions will (I think!) not be required to handle anything besides a
@@ -35,15 +17,57 @@ namespace reprojection::projection_functions {
 // base class this turned into a problem. The side effect of this is that the Project implementation in Camera_T uses
 // "T_Model::template Project<double>()" but the Unproject method uses only "T_Model::Unproject()".
 
+/**
+ * \brief Defines the camera interface (i.e. it is a pure virtual "base" class) for use in non-optimization related
+ * code.
+ *
+ * We often need to project and unproject points/pixels for optimization adjacent tasks, for example generating test
+ * data (testing_mocks::MvgGenerator::Project()). This base class allows the consuming code to be
+ * agnostic to the specific camera model (ex. pinhole, double sphere, etc.) that is used.
+ *
+ * In essence this class prevents templated code from spreading throughout the code base, and provides a simple generic
+ * interface to apply Project() and Unproject() methods to many data points at one time, regardless of which specific
+ * camera projection functions the consumer wants to use. In this context we hard-code the double type (because we do
+ * not need the ceres::Jet type required by ceres::AutoDiffCostFunction) and process entire data arrays (ex. n-pixels or
+ * n-points) instead of elementwise like we do in the core optimization code.
+ */
 class Camera {
    public:
     virtual ~Camera() = default;
 
+    /**
+     * \brief Defines the camera projection interface. Consumes a set of points in the camera optical frame ("*_co) and
+     * returns a set of image space pixels.
+     */
     virtual MatrixX2d Project(MatrixX3d const& points_co) const = 0;
 
+    /**
+     * \brief Defines the camera unprojection interface. Consumes a set of image space pixels and returns a set of 3D
+     * rays in the camera optical frame. Does NOT return the original 3D points (that would require depth information).
+     */
     virtual MatrixX3d Unproject(MatrixX2d const& pixels) const = 0;
 };
 
+// TODO(Jack): Can we add some static asserts here that will physically require that T_Model has the required
+// attributes? Because the projection function class methods will get used directly in the optimization I do not want to
+// introduce a pure virtual base class to enforce the interface because it might make things slower (i.e. vtable
+// lookup). But honestly if we are already using the concrete instantiations of the classes here then it might not be a
+// problem at all!
+
+/**
+ * \brief Generates the code to implement concrete types from the Camera interface definition class.
+ *
+ * Given that we have a standard set of projection function classes that implement the project and unproject functions
+ * of common camera models (ex. Pinhole or DoubleSphere), there is no reason for us to copy and paste for each camera
+ * the looping logic required to apply those functions to arrays. Therefore, we implement that looping logic one time
+ * here and instantiate the template once for each projection function class.
+ *
+ * This class also uses the ::Size attribute of the provided projection function class to parameterize the size of the
+ * intrinsics array which varies for each camera model.
+ *
+ * @tparam T_Model A camera model projection function class that has ::Project<T>(), ::Unproject() and ::Size (ex.
+ * Pinhole or DoubleSphere).
+ */
 template <typename T_Model>
 class Camera_T : public Camera {
    public:

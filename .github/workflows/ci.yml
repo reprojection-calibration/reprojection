@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# WARN(Jack): I had problems before with the docker cache actually working when all the jobs were in one file, and I
+# think I partially solved this by separating each process into its own workflow file. However, at this point I do not
+# notice the problem and have combined the workflows back into one file as it should be.
+jobs:
+  code-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: code-checks-stage
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: building/Dockerfile
+          tags: reprojection-code-checks:latest
+          target: code-checks-stage
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: build-stage
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: building/Dockerfile
+          tags: reprojection-build:latest
+          target: build-stage
+  code-coverage-assertion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: code-coverage-assertion-stage
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: building/Dockerfile
+          tags: reprojection-code-coverage-assertion:latest
+          target: code-coverage-assertion-stage

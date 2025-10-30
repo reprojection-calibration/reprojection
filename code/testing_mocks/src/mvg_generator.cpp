@@ -51,6 +51,14 @@ MvgFrame MvgGenerator::Generate(double const t) const {
     return {pose_t.value(), pixels, points_};
 }
 
+/**
+ * \brief Static helper method that projects points in the world frame to pixels. Do NOT use outside the testing mocks
+ * context!
+ *
+ * This method is intended only for use as part of the testing mocks test data generation class
+ * (reprojection::testing_mocks::MvgGenerator) and should NOT be used by other consuming code. It was left as a public
+ * method only so that it could be tested.
+ */
 Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w,
                                        std::unique_ptr<projection_functions::Camera> const& camera,
                                        Eigen::Isometry3d const& tf_co_w) {

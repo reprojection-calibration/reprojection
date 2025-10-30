@@ -3,13 +3,14 @@
 #include "projection_functions/double_sphere.hpp"
 #include "types/eigen_types.hpp"
 
-// Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957) using the recognition that
-// the UCM and double sphere are the same when the double spheres alpha parameter is set to zero.
 // TODO(Jack): See how the above assumptions fits when we are masking out invalid points! And double check that our
 // assumption here about being able to represent the ucm with the ds is correct!
 
 namespace reprojection::projection_functions {
 
+/**
+ * \brief Implemented as a degenerate case of the DoubleSphere model (xi=1, alpha=0).
+ */
 struct UnifiedCameraModel {
     static int constexpr Size{5};
 

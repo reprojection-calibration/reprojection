@@ -5,10 +5,11 @@
 #include "projection_functions/pinhole.hpp"
 #include "types/eigen_types.hpp"
 
-// Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957)
-
 namespace reprojection::projection_functions {
 
+/**
+ * \brief Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957)
+ */
 struct DoubleSphere {
     static int constexpr Size{6};
 
