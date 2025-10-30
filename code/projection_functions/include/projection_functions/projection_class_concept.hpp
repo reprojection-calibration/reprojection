@@ -22,6 +22,9 @@ namespace reprojection::projection_functions {
  * you look in the double sphere model you can see in both the project and uproject function how the pinhole models
  * project and unproject models are applied. This eliminates code/logic duplication.
  *
+ * Note that only the size parameter is encoded into a projection class, not the intrinsic array type itself. Each
+ * application where the projection classes are used must define its own intrinsic array as needed.
+ *
  * One open problem is that there is currently no model or interface which enforces a specific intrinsic parameter order
  * or usage. Given the many contexts and places we want to use the projection classes this is not trivial to do. The
  * size parameter is one step in the right direction, but maybe not the last one. One idea to consider would be defining
@@ -41,16 +44,23 @@ namespace reprojection::projection_functions {
  * directly measure and track the direction of a feature, but not its depth.
  */
 
+/**
+ * \brief Concept that enforces a type has an integer member named `Size`.
+ */
 template <typename T>
 concept HasIntrinsicsSize = requires {
     T::Size;
     std::is_integral_v<T>;
 };
 
-// TODO(Jack): Should we check HasIntrinsicSize before we do the requires section here? Because there we od T::Size
+// TODO(Jack): Should we check HasIntrinsicSize before we do the requires section here? Because there we do T::Size
 // without actually confirming that we have size which might cause errors. If we only use these in the ProjectionClass
 // concept then I think it is no problem because we check HasIntrinsicSize size first, but if we use them individually
 // the topic might come up again.
+/**
+ * \brief Concept that enforces a type has a `Project()` method that take an intrinsic array and 3D point and returns a
+ * 2D point.
+ */
 template <typename T>
 concept CanProject = requires(Eigen::Array<double, T::Size, 1> const& intrinsics, Array3d const& p_co) {
     // NOTE(Jack): We need to manually check the requirement parameters because Eigen does not play nice with concepts
@@ -62,6 +72,10 @@ concept CanProject = requires(Eigen::Array<double, T::Size, 1> const& intrinsics
     { T::template Project<double>(intrinsics, p_co) } -> std::same_as<Array2d>;
 };
 
+/**
+ * \brief Concept that enforces a type has an `Unproject()` method that take an intrinsic array and 2D point and returns
+ * a 3D point.
+ */
 template <typename T>
 concept CanUnproject = requires(Eigen::Array<double, T::Size, 1> const& intrinsics, Array2d const& pixel) {
     { intrinsics } -> std::same_as<Eigen::Array<double, T::Size, 1> const&>;
