@@ -7,6 +7,9 @@
 
 namespace reprojection::projection_functions {
 
+/**
+ * \ingroup projection_class
+ */
 struct PinholeRadtan4 {
     static int constexpr Size{8};
 

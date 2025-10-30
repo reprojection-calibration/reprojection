@@ -4,6 +4,14 @@
 
 namespace reprojection::projection_functions {
 
+/**
+ * \defgroup projection_class Projection Class
+ * \brief The lowest level abstraction for defining camera model projection functions.
+ *
+ * These are the only place where the projection math is found, and are used in one form or another throughout the
+ * entire code base, for both optimization and non-optimization related code.
+ */
+
 template <typename T>
 concept HasIntrinsicsSize = requires {
     T::Size;

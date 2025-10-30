@@ -4,6 +4,9 @@
 
 namespace reprojection::projection_functions {
 
+/**
+ * \ingroup projection_class
+ */
 struct Pinhole {
     static int constexpr Size{4};
 

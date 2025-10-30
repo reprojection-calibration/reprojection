@@ -10,6 +10,7 @@ namespace reprojection::projection_functions {
 
 /**
  * \brief Implemented as a degenerate case of the DoubleSphere model (xi=1, alpha=0).
+ * \ingroup projection_class
  */
 struct UnifiedCameraModel {
     static int constexpr Size{5};
