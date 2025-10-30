@@ -49,12 +49,6 @@ class Camera {
     virtual MatrixX3d Unproject(MatrixX2d const& pixels) const = 0;
 };
 
-// TODO(Jack): Can we add some static asserts here that will physically require that T_Model has the required
-// attributes? Because the projection function class methods will get used directly in the optimization I do not want to
-// introduce a pure virtual base class to enforce the interface because it might make things slower (i.e. vtable
-// lookup). But honestly if we are already using the concrete instantiations of the classes here then it might not be a
-// problem at all!
-
 /**
  * \brief Generates the code to implement concrete types from the Camera interface definition class.
  *
