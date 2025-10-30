@@ -44,6 +44,8 @@ namespace reprojection::projection_functions {
  * directly measure and track the direction of a feature, but not its depth.
  */
 
+// TODO(Jack): Make sure the concepts and their documentation are picked up by doxygen.
+
 /**
  * \brief Concept that enforces a type has an integer member named `Size`.
  */
@@ -60,6 +62,11 @@ concept HasIntrinsicsSize = requires {
 /**
  * \brief Concept that enforces a type has a `Project()` method that take an intrinsic array and 3D point and returns a
  * 2D point.
+ *
+ * The project function, unlike the unproject function, is templated. This is because the function is used in the core
+ * optimization where it needs to be able to handle ceres::Jet types to support using ceres::AutoDiffCostFunction. Maybe
+ * one day if we implement the jacobians for all project methods then we can hard-code this as a double, but we are not
+ * there yet!
  */
 template <typename T>
 concept CanProject = requires(Eigen::Array<double, T::Size, 1> const& intrinsics, Array3d const& p_co) {
