@@ -17,9 +17,4 @@ apt-get install --no-install-recommends --yes \
     bc \
     lcov
 
-# Required for Doxygen
-apt-get install --no-install-recommends --yes \
-    doxygen \
-    graphviz
-
 rm --force --recursive /var/lib/apt/lists/*
