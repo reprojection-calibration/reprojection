@@ -15,7 +15,7 @@ struct Pinhole {
     //
     // There are three reference frames/point types in the projection process. These are,
     //
-    //      P_co: {x, y, z} - A 3D point in the camera optical frame
+    //      P_co: {x, y, z} - A 3D point in the camera optical ("*_co") frame
     //      p_cam: {x_cam, y_cam} - A 2D point in the "ideal" or "normalized" camera frame.
     //      pixel: {u, v} - A 2D pixel in image space coordinates.
     //

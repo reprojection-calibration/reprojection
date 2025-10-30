@@ -9,15 +9,6 @@
 
 namespace reprojection::projection_functions {
 
-// TODO(Jack): Move the below comment to any documentation on the projection function base class.
-// A different topic, but an idea which should also be written down here in a central location: The Project functions
-// are templated and the Unproject functions are not, because the former will be used in the nonlinear optimization and
-// need to handle ceres::Jet types. The Unproject functions will (I think!) not be required to handle anything besides a
-// double type because they are used only for tasks not directly related to the nonlinear optimization. I had started
-// out templating both the Project and Unproject functions because it looked consistent, but when developing the Camera
-// base class this turned into a problem. The side effect of this is that the Project implementation in Camera_T uses
-// "T_Model::template Project<double>()" but the Unproject method uses only "T_Model::Unproject()".
-
 /**
  * \brief Defines the camera interface (i.e. it is a pure virtual "base" class) for use in non-optimization related
  * code.
@@ -37,14 +28,17 @@ class Camera {
     virtual ~Camera() = default;
 
     /**
-     * \brief Defines the camera projection interface. Consumes a set of points in the camera optical frame ("*_co) and
-     * returns a set of image space pixels.
+     * \brief Defines the camera projection interface.
+     *
+     * Consumes a set of points in the camera optical frame ("*_co) and returns a set of image space pixels.
      */
     virtual MatrixX2d Project(MatrixX3d const& points_co) const = 0;
 
     /**
-     * \brief Defines the camera unprojection interface. Consumes a set of image space pixels and returns a set of 3D
-     * rays in the camera optical frame. Does NOT return the original 3D points (that would require depth information).
+     * \brief Defines the camera unprojection interface.
+     *
+     * Consumes a set of image space pixels and returns a set of 3D rays in the camera optical frame. Does NOT return
+     * the original 3D points (that would require depth information).
      */
     virtual MatrixX3d Unproject(MatrixX2d const& pixels) const = 0;
 };
