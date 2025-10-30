@@ -1,4 +1,4 @@
-name: CI Code Coverage Assertion
+name: Code Coverage Assertion
 
 on:
   push:

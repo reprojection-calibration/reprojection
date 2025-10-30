@@ -1,4 +1,4 @@
-name: CI Code Checks
+name: Code Checks
 
 on:
   push:
