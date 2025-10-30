@@ -1,5 +1,3 @@
-
-
 #include "projection_functions/pinhole_radtan4.hpp"
 
 #include <ceres/ceres.h>
@@ -32,13 +30,11 @@ Eigen::Array3d PinholeRadtan4::Unproject(Eigen::Array<double, Size, 1> const& in
 
 std::tuple<Eigen::Array2d, Eigen::Matrix2d> PinholeRadtan4::JacobianUpdate(Eigen::Array4d const& distortion,
                                                                            Eigen::Array2d const& p_cam) {
-    // NOTE(Jack): The ceres type is AutoDiffCostFunction, but as we wrote above, this is not actually calculating a
-    // residual cost! See above.
     // TODO(Jack): Do we need to manually deallocate this?
     auto* const function{new ceres::AutoDiffCostFunction<DistortFunctor, 2, 2>(new DistortFunctor(distortion))};
 
     // This is a super annoying way to initialize the data for the format required by the Evaluate function, nothing
-    // else I can do... Here and below.
+    // else I can do... Here and below for the jacobian.
     double const p_cam_array[2]{p_cam[0], p_cam[1]};
     double const* p_cam_ptr{p_cam_array};
     double const* const* p_cam_ptr_ptr{&p_cam_ptr};
@@ -48,7 +44,7 @@ std::tuple<Eigen::Array2d, Eigen::Matrix2d> PinholeRadtan4::JacobianUpdate(Eigen
     double* J_ptr_ptr[4]{J_ptr};
 
     // TODO(Jack): What would we do if the evaluation here was not successful? Is that even a worry we need to consider?
-    // Right now we add an assertion so we can catch failures in development.
+    // Right now we add an assertion so we can catch failures in debug builds.
     bool success{function->Evaluate(p_cam_ptr_ptr, distorted_p_cam_ptr, J_ptr_ptr)};
     assert(success);
 

@@ -7,23 +7,17 @@
 
 namespace reprojection::projection_functions {
 
+/**
+ * \ingroup projection_classes
+ * \brief Classic four parameter radial-tangential distortion model on top of a pinhole camera.
+ */
 struct PinholeRadtan4 {
     static int constexpr Size{8};
 
-    // TODO(Jack): Move this documentation to a future common location for all projection functions
-    // point_cam is a point in the ideal/normalized/projected camera coordinate frame. What does this actually mean for
-    // practical purposes? Let us say we have a 3D point that is already in the "camera optical" frame P_co = {x, y, z}.
-    // To transform this point to the ideal/normalized/projected camera coordinate frame we simply divide P_co by it's
-    // z-value and then remove the last element.
-    //
-    //      Step 1) P_co: {x, y, z} -> {x/z, y/z, 1}
-    //      Step 2) {x/z, y/z, 1} -> p_cam: {x/z, y/z}
-    //
-    // I am making this "ideal perspective projection" more complicated than it needs to be I think, but it does require
-    // some emphasis here in the context of the radtan4 projection/unprojection. The user and maintainer of
-    // aforementioned methods need to make sure when using the PinholeRadtan4::Distort method that the input p_cam is
-    // this ideal/normalized/projected camera coordinate, otherwise it will not work properly! Or said another way, we
-    // need to make sure that we do not accidentally use image coordinates given in pixels here.
+    /**
+     * \brief Applies four parameter radtan distortion to a 2D point in the ideal/normalized camera frame, producing a
+     * "distorted" point in that same frame.
+     */
     template <typename T>
     static Eigen::Array<T, 2, 1> Distort(Eigen::Array<T, 4, 1> const& distortion, Eigen::Array<T, 2, 1> const& p_cam) {
         T const& x_cam{p_cam[0]};
@@ -44,8 +38,6 @@ struct PinholeRadtan4 {
         return {distorted_x_cam, distorted_y_cam};
     }
 
-    // TODO(Jack): Move this documentation to a future common location for all projection functions
-    // P_co is a 3D point {x, y, z} in the "camera optical" frame expressed
     template <typename T>
     static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, Size, 1> const& intrinsics,
                                          Eigen::Array<T, 3, 1> const& P_co) {
@@ -57,15 +49,14 @@ struct PinholeRadtan4 {
         Eigen::Array<T, 2, 1> const p_cam{x_cam, y_cam};
 
         Eigen::Array<T, 2, 1> const distorted_p_cam{Distort<T>(intrinsics.bottomRows(4), p_cam)};
-        Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], T(1)};
+        Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], T(1)};  // Set z=1
 
-        // NOTE(Jack): Because we already did the ideal projective transform to the camera coordinate frame above
-        // (i.e. when we built p_cam), the pinhole projection here is actually only being used to convert the distorted
-        // point P_star into image pixel coordinates. In this sense P_star is itself a confusing construct because it
-        // masquerades as a 3D point but intuitively it does not have nearly the amount of "freedom" at this point when
-        // compared to the input P_co which was a real 3D point. That is the reason that I do not use a frame postfix
-        // like
-        // "_co" and instead just call it "_star".
+        // NOTE(Jack): Because we already did the ideal projective transform to the camera coordinate frame above when
+        // we built p_cam, the pinhole projection below is actually only being used to convert the distorted point
+        // P_star into image pixel coordinates. In this sense P_star is itself a confusing construct because it
+        // masquerades as a 3D point, but it does not have nearly the amount of "freedom" at this point when compared to
+        // the input P_co which was a real 3D point. It is constrained to the ideal/normalized camera frame. That is the
+        // reason that I do not use a frame postfix like "_co" and instead just call it "_star".
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
     }
 

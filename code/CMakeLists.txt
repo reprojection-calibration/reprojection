@@ -7,7 +7,7 @@ project(
 
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 
 # Recommended way to get gtest - not via apt and find_package()

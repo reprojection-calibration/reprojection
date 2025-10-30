@@ -3,12 +3,12 @@
 #include "projection_functions/double_sphere.hpp"
 #include "types/eigen_types.hpp"
 
-// TODO(Jack): See how the above assumptions fits when we are masking out invalid points! And double check that our
-// assumption here about being able to represent the ucm with the ds is correct!
+// TODO(Jack): Double check that our assumption here about being able to represent the ucm with the ds is correct!
 
 namespace reprojection::projection_functions {
 
 /**
+ * \ingroup projection_classes
  * \brief Implemented as a degenerate case of the DoubleSphere model (xi=1, alpha=0).
  */
 struct UnifiedCameraModel {
