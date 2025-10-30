@@ -10,7 +10,7 @@ namespace reprojection::projection_functions {
 struct PinholeRadtan4 {
     static int constexpr Size{8};
 
-    // TODO(Jack): Move this documentation to a future base class.
+    // TODO(Jack): Move this documentation to a future common location for all projection functions
     // point_cam is a point in the ideal/normalized/projected camera coordinate frame. What does this actually mean for
     // practical purposes? Let us say we have a 3D point that is already in the "camera optical" frame P_co = {x, y, z}.
     // To transform this point to the ideal/normalized/projected camera coordinate frame we simply divide P_co by it's
@@ -44,7 +44,7 @@ struct PinholeRadtan4 {
         return {distorted_x_cam, distorted_y_cam};
     }
 
-    // TODO(Jack): Move this documentation to a future base class.
+    // TODO(Jack): Move this documentation to a future common location for all projection functions
     // P_co is a 3D point {x, y, z} in the "camera optical" frame expressed
     template <typename T>
     static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, Size, 1> const& intrinsics,
