@@ -55,15 +55,20 @@ class Camera {
 // problem at all!
 
 template <typename T>
-concept HasIntrinsicsSize = requires { T::Size; };
+concept HasIntrinsicsSize = requires {
+    T::Size;
+    std::is_integral_v<T>;
+};
 
 template <typename T>
 concept CanProject = requires(Eigen::ArrayXd const& intrinsics, Array3d const& point) {
+    { point } -> std::same_as<Array3d const&>;
     { T::template Project<double>(intrinsics, point) } -> std::same_as<Array2d>;
 };
 
 template <typename T>
 concept CanUnproject = requires(Eigen::ArrayXd const& intrinsics, Array2d const& pixel) {
+    { pixel } -> std::same_as<Array2d const&>;
     { T::Unproject(intrinsics, pixel) } -> std::same_as<Array3d>;
 };
 
