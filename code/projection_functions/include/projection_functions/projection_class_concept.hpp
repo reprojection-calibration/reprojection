@@ -11,7 +11,9 @@ namespace reprojection::projection_functions {
  * These are the only places where the projection math is actually implemented, and are used in one form or another
  * throughout the entire code base, for both optimization and non-optimization related code. A projection class consists
  * of three parts; (1) the intrinsic calibration size (ex. Pinhole::Size=4 [fx, fy, cx, cy]), (2) a Project() function
- * and (3) an Unproject() function.
+ * and (3) an Unproject() function. Due to the fact that we want to avoid virtual functions and the runtime cost
+ * associated with them, we use the ProjectionClass concept to enforce the interface, instead of using a pure virtual
+ * parent class.
  *
  * The size parameter defines the length of the intrinsics array used by the camera model. For example the pinhole
  * camera model has a size of four and the double sphere has a size of six [fx, fy, cx, cy, xi, alpha]. For all models
@@ -20,13 +22,23 @@ namespace reprojection::projection_functions {
  * you look in the double sphere model you can see in both the project and uproject function how the pinhole models
  * project and unproject models are applied. This eliminates code/logic duplication.
  *
- * One open problem is that there is currently no model or interface which enforces a certain intrinsic parameter order
- * or usage. Given the many contexts and places we want to use the projection classes this is no trivial. The size
- * parameter is one step in the right direction, but maybe not the last one. One idea to consider would be defining
- * structs like struct PinholeIntrinsics {double fx; double fy; etc.}; and then composing more compliated models
- * intrinsics like struct DoubleSphereIntrinsics {PinholeIntrinsics pinhole; double xi; double alpha;};
+ * One open problem is that there is currently no model or interface which enforces a specific intrinsic parameter order
+ * or usage. Given the many contexts and places we want to use the projection classes this is not trivial to do. The
+ * size parameter is one step in the right direction, but maybe not the last one. One idea to consider would be defining
+ * structs like `struct PinholeIntrinsics {double fx; double fy; etc.};` and then composing more complicated model's
+ * intrinsics like `struct DoubleSphereIntrinsics {PinholeIntrinsics pinhole; double xi; double alpha;};`. For now
+ * however that is future music.
  *
+ * The project function defines the heart of any camera model, projecting points to pixels. The project function expects
+ * points to be 3D and in the camera's optical frame (z-forward, x-left, y-down). A value in image pixel space is
+ * returned.
  *
+ * The unproject function defines how pixels are unprojected to rays in the 3D camera optical frame. The unproject
+ * function expects image space pixels as input. Note that the value returned will NOT be the same 3D point that was
+ * projected to form the pixel. We are talking about projective transforms here, which means we loose the depth
+ * dimension. This dimension cannot be magically recovered in the unproject function, we can only recover the direction.
+ * This fact explains why some people describe cameras in the context of 3D reconstruction as "bearing" sensors, able to
+ * directly measure and track the direction of a feature, but not its depth.
  */
 
 template <typename T>
