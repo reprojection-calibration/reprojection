@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# WARN(Jack): I had problems before with the docker cache actually working when all the jobs were in one file, and I
+# think I partially solved this by separating each process into its own workflow file. However, at this point I do not
+# notice the problem and have combined the workflows back into one file as it should be.
 jobs:
   code-checks:
     runs-on: ubuntu-latest
