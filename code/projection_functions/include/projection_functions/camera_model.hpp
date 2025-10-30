@@ -55,6 +55,9 @@ class Camera {
 // problem at all!
 
 template <typename T>
+concept HasIntrinsicsSize = requires { T::Size; };
+
+template <typename T>
 concept CanProject = requires(Eigen::ArrayXd const& intrinsics, Array3d const& point) {
     { T::template Project<double>(intrinsics, point) } -> std::same_as<Array2d>;
 };
@@ -65,7 +68,7 @@ concept CanUnproject = requires(Eigen::ArrayXd const& intrinsics, Array2d const&
 };
 
 template <typename T>
-concept ProjectionClass = CanProject<T> and CanUnproject<T>;
+concept ProjectionClass = HasIntrinsicsSize<T> and CanProject<T> and CanUnproject<T>;
 
 /**
  * \brief Generates the code to implement concrete types from the Camera interface definition class.
