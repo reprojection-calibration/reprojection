@@ -4,7 +4,6 @@
 
 namespace reprojection::projection_functions {
 
-// TODO(Jack): Enforce projection function interface
 struct Pinhole {
     static int constexpr Size{4};
 
