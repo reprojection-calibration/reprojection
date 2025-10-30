@@ -54,6 +54,19 @@ class Camera {
 // lookup). But honestly if we are already using the concrete instantiations of the classes here then it might not be a
 // problem at all!
 
+template <typename T>
+concept CanProject = requires(Eigen::ArrayXd const& intrinsics, Array3d const& point) {
+    { T::template Project<double>(intrinsics, point) } -> std::same_as<Array2d>;
+};
+
+template <typename T>
+concept CanUnproject = requires(Eigen::ArrayXd const& intrinsics, Array2d const& pixel) {
+    { T::Unproject(intrinsics, pixel) } -> std::same_as<Array3d>;
+};
+
+template <typename T>
+concept ProjectionClass = CanProject<T> and CanUnproject<T>;
+
 /**
  * \brief Generates the code to implement concrete types from the Camera interface definition class.
  *
@@ -69,6 +82,7 @@ class Camera {
  * Pinhole or DoubleSphere).
  */
 template <typename T_Model>
+    requires ProjectionClass<T_Model>
 class Camera_T : public Camera {
    public:
     explicit Camera_T(Eigen::Array<double, T_Model::Size, 1> const& intrinsics) : intrinsics_{intrinsics} {}
