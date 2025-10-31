@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ceres_geometry.hpp"
+#include "projection_functions/projection_class_concept.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
@@ -24,6 +25,7 @@ ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& p
 // our desire to use more expressive eigen types. That is why here in the operator() we find the usage of the
 // Eigen::Map class.
 template <typename T_Model>
+    requires projection_functions::ProjectionClass<T_Model>
 class ProjectionCostFunction_T {
    public:
     explicit ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
@@ -47,9 +49,10 @@ class ProjectionCostFunction_T {
 };
 
 // TODO(Jack): In ceres examples this create method is normally a static member of the cost function itself. However
-// here because of how we are using templates I my assessment at this time is that this is not possible, and also
+// here because of how we are using templates, my assessment at this time is that this is not possible, and also
 // not necessary.
 template <typename T_Model>
+    requires projection_functions::ProjectionClass<T_Model>
 ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
     using ProjectionCostFunction = ProjectionCostFunction_T<T_Model>;
 
