@@ -47,8 +47,8 @@ template <typename T_Model>
 // camera model they are not gonna just want to use it (or I do not want them) only here with ProjectionCostFunction_T.
 // Therefore, here and all other places where we expect a camera model we require compliance with the full
 // ProjectionClass<> concept. This makes the project more homogenous and will catch errors more quickly. That being said
-// maybe this also indicates we have an incorrect abstraction because information which is not needed strictly needed
-// (i.e. that CanUnproject<> is required) is present. Let's see how this plays out in the long term!
+// maybe this also indicates we have an incorrect abstraction because information which is not strictly needed (i.e.
+// that CanUnproject<> is required) is present here. Let's see how this plays out in the long term!
     requires projection_functions::ProjectionClass<T_Model>
 class ProjectionCostFunction_T {
    public:
@@ -72,9 +72,7 @@ class ProjectionCostFunction_T {
     Vector3d point_;
 };
 
-// TODO(Jack): In ceres examples this create method is normally a static member of the cost function itself. However
-// here because of how we are using templates, my assessment at this time is that this is not possible, and also
-// not necessary.
+// NOTE(Jack): In ceres examples this create method is normally a static member of the cost function itself.
 template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
 ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
