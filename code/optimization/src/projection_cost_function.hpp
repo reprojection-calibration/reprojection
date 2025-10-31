@@ -39,7 +39,16 @@ ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& p
 // NOTE(Jack): The operator() method  is the contact line were ceres requirements for using raw pointers hits
 // our desire to use more expressive eigen types. That is why here in the operator() we find the usage of the
 // Eigen::Map class.
+
 template <typename T_Model>
+// WARN(Jack): Technically for the cost function we only need the HasIntrinsicsSize<> and CanProject<> concepts.
+// Therefore, using the ProjectionClass<> concept is overkill because it requires template parameters to also satisfy
+// the CanUnproject<> requirement. That being said, in the context of the entire project, when some introduces a new
+// camera model they are not gonna just want to use it (or I do not want them) only here with ProjectionCostFunction_T.
+// Therefore, here and all other places where we expect a camera model we require compliance with the full
+// ProjectionClass<> concept. This makes the project more homogenous and will catch errors more quickly. That being said
+// maybe this also indicates we have an incorrect abstraction because information which is not needed strictly needed
+// (i.e. that CanUnproject<> is required) is present. Let's see how this plays out in the long term!
     requires projection_functions::ProjectionClass<T_Model>
 class ProjectionCostFunction_T {
    public:
