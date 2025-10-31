@@ -7,6 +7,9 @@
 namespace reprojection::optimization {
 
 // TODO(Jack): Where should this actually live?
+// NOTE(Jack): We need this idea at some point, because somewhere along the line the user is gonna have a config file or
+// a button that says which camera they want to calibrate. Where this actually ends up, or where the final battle line
+// between templated and non templated code is, we will find out later maybe. But for now it stands here.
 enum class CameraModel {
     DoubleSphere,  //
     Pinhole,
@@ -14,6 +17,18 @@ enum class CameraModel {
     UnifiedCameraModel
 };
 
+/**
+ * \brief Generates camera model specific projection cost functions for use in the optimization.
+ *
+ * This function delineates (or I hope it does) between templated and non-templated code for the camera projection
+ * functions. Ceres provides us the `ceres::CostFunction` abstraction, and we take advantage of that here to constrain
+ * the knowledge that the optimizer has to have about the camera model being optimized. Essentially the optimizer
+ * problem itself does not care at all if it is optimizing a pinhole or double sphere camera model, because all it needs
+ * to know is that it gets a ceres cost function.
+ *
+ * Because the ceres cost function abstraction and how we integrate it here in this function directly with our camera
+ * model projection functions, we can keep all consuming code free of templates and pure virtual classes! Cool :)
+ */
 ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point);
 
 // NOTE(Jack): Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
@@ -54,10 +69,8 @@ class ProjectionCostFunction_T {
 template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
 ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
-    using ProjectionCostFunction = ProjectionCostFunction_T<T_Model>;
-
-    return new ceres::AutoDiffCostFunction<ProjectionCostFunction, 2, T_Model::Size, 6>(
-        new ProjectionCostFunction(pixel, point));
+    return new ceres::AutoDiffCostFunction<ProjectionCostFunction_T<T_Model>, 2, T_Model::Size, 6>(
+        new ProjectionCostFunction_T<T_Model>(pixel, point));
 }
 
 }  // namespace  reprojection::optimization
