@@ -70,7 +70,8 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
 TEST(OptimizationProjectionCostFunction, TestCreate_T) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
-    ceres::CostFunction const* const cost_function{optimization::Create_T<projection_functions::Pinhole>(pixel, point)};
+    ceres::CostFunction const* const cost_function{
+        optimization::ProjectionCostFunction_T<projection_functions::Pinhole>::Create(pixel, point)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics

@@ -68,16 +68,13 @@ class ProjectionCostFunction_T {
         return true;
     }
 
+    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) {
+        return new ceres::AutoDiffCostFunction<ProjectionCostFunction_T, 2, T_Model::Size, 6>(
+            new ProjectionCostFunction_T(pixel, point));
+    }
+
     Vector2d pixel_;
     Vector3d point_;
 };
-
-// NOTE(Jack): In ceres examples this create method is normally a static member of the cost function itself.
-template <typename T_Model>
-    requires projection_functions::ProjectionClass<T_Model>
-ceres::CostFunction* Create_T(Vector2d const& pixel, Vector3d const& point) {
-    return new ceres::AutoDiffCostFunction<ProjectionCostFunction_T<T_Model>, 2, T_Model::Size, 6>(
-        new ProjectionCostFunction_T<T_Model>(pixel, point));
-}
 
 }  // namespace  reprojection::optimization
