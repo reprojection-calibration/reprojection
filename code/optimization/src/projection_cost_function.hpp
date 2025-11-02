@@ -18,7 +18,7 @@ enum class CameraModel {
 };
 
 /**
- * \brief Generates camera model specific projection cost functions for use in the optimization.
+ * \brief Generates a camera model specific projection cost function for use in the optimization.
  *
  * This function delineates (or I hope it does) between templated and non-templated code for the camera projection
  * functions. Ceres provides us the `ceres::CostFunction` abstraction, and we take advantage of that here to constrain
@@ -32,14 +32,9 @@ enum class CameraModel {
 ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point);
 
 // NOTE(Jack): Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
-// TODO(Jack): Do we need to template the entire class? Or can we do just the subfunctions?
-// WARN(Jack): Is there a way to canonically force the program to make sure the right memory is allocated and
-// referenced to by these raw pointers? Ceres forces this pointer interface so I don't think we can easily do
-// that but consider how we  can design the program to handle that automatically.
-// NOTE(Jack): The operator() method  is the contact line were ceres requirements for using raw pointers hits
-// our desire to use more expressive eigen types. That is why here in the operator() we find the usage of the
-// Eigen::Map class.
-
+// WARN(Jack): As we move past simple mono camera calibration we might find out that it is not the best option and that
+// the pose/transform will play a less central role here and instead be part of the spline. This is unclear at this
+// point, so I am gonna hold off from adding any documentation, it is not so hard to understand anyway.
 template <typename T_Model>
 // WARN(Jack): Technically for the cost function we only need the HasIntrinsicsSize<> and CanProject<> concepts.
 // Therefore, using the ProjectionClass<> concept is overkill because it requires template parameters to also satisfy
