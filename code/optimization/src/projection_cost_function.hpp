@@ -27,7 +27,9 @@ enum class CameraModel {
  * to know is that it gets a ceres cost function.
  *
  * Because the ceres cost function abstraction and how we integrate it here in this function directly with our camera
- * model projection functions, we can keep all consuming code free of templates and pure virtual classes! Cool :)
+ * model projection functions, we can keep all consuming code free of templates and pure virtual classes! Cool :) Note
+ * that if the pointer is not assigned to a ceres problem then you need to call delete yourself, otherwise the memory
+ * will leak!
  */
 ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point);
 
