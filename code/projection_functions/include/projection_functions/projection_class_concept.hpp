@@ -52,7 +52,8 @@ namespace reprojection::projection_functions {
 template <typename T>
 concept HasIntrinsicsSize = requires {
     T::Size;
-    std::is_integral_v<T>;
+    std::is_integral_v<T>;  // WARN(Jack): There are many integral types (ex. char), this condition should be more
+                            // strict!
 };
 
 // TODO(Jack): Should we check HasIntrinsicSize before we do the requires section here? Because there we do T::Size
