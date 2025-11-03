@@ -39,15 +39,15 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
     Array4d const intrinsics{600, 600, 360, 240};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
-    for (size_t i{0}; i < 20; ++i) {
-        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
-        auto const [tf, K]{optimization::NonlinearRefinement(frame_i.pixels, frame_i.points, frame_i.pose,
+    std::vector<testing_mocks::MvgFrame> const frames{generator.GenerateBatchFrames(20)};
+    for (auto const& frame : frames) {
+        auto const [tf, K]{optimization::NonlinearRefinement(frame.pixels, frame.points, frame.pose,
                                                              CameraModel::Pinhole, intrinsics)};
 
-        EXPECT_TRUE(tf.isApprox(frame_i.pose)) << "Optimization result:\n"
-                                               << geometry::Log(tf) << "\noptimization input:\n"
-                                               << geometry::Log(frame_i.pose);
+        EXPECT_TRUE(tf.isApprox(frame.pose)) << "Optimization result:\n"
+                                             << geometry::Log(tf) << "\noptimization input:\n"
+                                             << geometry::Log(frame.pose);
         EXPECT_TRUE(K.isApprox(intrinsics)) << "Optimization result:\n" << K << "\noptimization input:\n" << intrinsics;
     }
 }

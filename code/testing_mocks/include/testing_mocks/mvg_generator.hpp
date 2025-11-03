@@ -20,9 +20,6 @@ class MvgGenerator {
    public:
     explicit MvgGenerator(std::unique_ptr<projection_functions::Camera> const camera, bool const flat = true);
 
-    // Input is fractional time of trajectory from [0,1)
-    MvgFrame Generate(double const t) const;
-
     // Honestly we often almost always want the full batch, and then iterate over it, is there really a point to not
     // only support the batch api? Otherwise, we have a lot of looping logic copy and pasted throughout the testing
     // code. Furthermore,- if we control/only allow creation of the batch then we reduce the risk that someone requests
@@ -41,6 +38,9 @@ class MvgGenerator {
                                     Isometry3d const& tf_co_w);
 
    private:
+    // Input is fractional time of trajectory from [0,1)
+    MvgFrame Generate(double const t) const;
+
     static Eigen::MatrixX3d BuildTargetPoints(bool const flat);
 
     std::unique_ptr<projection_functions::Camera> camera_;

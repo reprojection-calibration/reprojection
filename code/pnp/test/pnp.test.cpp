@@ -13,14 +13,14 @@ TEST(Pnp, TestPnp) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
         false)};
-    for (size_t i{0}; i < 20; ++i) {
-        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.pixels, frame_i.points)};
+    std::vector<testing_mocks::MvgFrame> const frames{generator.GenerateBatchFrames(20)};
+    for (auto const& frame : frames) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame.pixels, frame.points)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(frame_i.pose));
+        EXPECT_TRUE(pose_i.isApprox(frame.pose));
     }
 }
 
@@ -30,14 +30,13 @@ TEST(Pnp, TestPnpFlat) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)),
         true)};  // Points must have Z=0 (flat = true)
 
-    for (size_t i{0}; i < 20; ++i) {
-        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
-
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.pixels, frame_i.points)};
+    std::vector<testing_mocks::MvgFrame> const frames{generator.GenerateBatchFrames(20)};
+    for (auto const& frame : frames) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame.pixels, frame.points)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(frame_i.pose));
+        EXPECT_TRUE(pose_i.isApprox(frame.pose));
     }
 }
 
