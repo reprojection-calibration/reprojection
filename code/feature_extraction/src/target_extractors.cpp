@@ -32,7 +32,7 @@ std::optional<ExtractedTarget> CheckerboardExtractor::Extract(cv::Mat const& ima
     cv::cornerSubPix(image, corners, cv::Size(11, 11), cv::Size(-1, -1),
                      cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
 
-    return ExtractedTarget{ToEigen(corners), points_, point_indices_};
+    return ExtractedTarget{{ToEigen(corners), points_}, point_indices_};
 }
 
 CircleGridExtractor::CircleGridExtractor(cv::Size const& pattern_size, const double unit_dimension,
@@ -76,7 +76,7 @@ std::optional<ExtractedTarget> CircleGridExtractor::Extract(cv::Mat const& image
         return std::nullopt;
     };
 
-    return ExtractedTarget{ToEigen(corners), points_, point_indices_};
+    return ExtractedTarget{{ToEigen(corners), points_}, point_indices_};
 }
 
 // NOTE(Jack): Use of the tagCustom36h11 and all settings are hardcoded here! This means no on can select another
@@ -109,7 +109,7 @@ std::optional<ExtractedTarget> AprilGrid3Extractor::Extract(cv::Mat const& image
     Eigen::ArrayXi const mask{AprilGrid3Extractor::VisibleGeometry(pattern_size_, raw_detections)};
 
     // TODO(Jack): Make corner and point naming consistent!
-    return ExtractedTarget{corners, points_(mask, Eigen::all), point_indices_(mask, Eigen::all)};
+    return ExtractedTarget{{corners, points_(mask, Eigen::all)}, point_indices_(mask, Eigen::all)};
 }
 
 // This function is responsible for handling the more complex indexing and grid arrangement that is inherent to an

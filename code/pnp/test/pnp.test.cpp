@@ -14,9 +14,9 @@ TEST(Pnp, TestPnp) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
         false)};
 
-    std::vector<MvgFrame> const frames{generator.GenerateBatchFrames(20)};
+    std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame.pixels, frame.points)};
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle.pixels, frame.bundle.points)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
@@ -30,9 +30,9 @@ TEST(Pnp, TestPnpFlat) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)),
         true)};  // Points must have Z=0 (flat = true)
 
-    std::vector<MvgFrame> const frames{generator.GenerateBatchFrames(20)};
+    std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame.pixels, frame.points)};
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle.pixels, frame.bundle.points)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};

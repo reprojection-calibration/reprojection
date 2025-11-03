@@ -20,7 +20,7 @@ class MvgGenerator {
     // code. Furthermore,- if we control/only allow creation of the batch then we reduce the risk that someone requests
     // and invalid time (i.e. outside 0 to 1). Asking the user "how many frames do you want might?" even just be more
     // intuitive over all.
-    std::vector<MvgFrame> GenerateBatchFrames(int const num_frames) const;
+    std::vector<Frame> GenerateBatchFrames(int const num_frames) const;
 
     // This an override which serves up types more amenable for use by the nonlinear optimization. At this point we
     // have no consistent logical strategy therefore we need these conversion methods. Hopefully we will figure out how
@@ -34,7 +34,7 @@ class MvgGenerator {
 
    private:
     // Input is fractional time of trajectory from [0,1)
-    MvgFrame Generate(double const t) const;
+    Frame Generate(double const t) const;
 
     static Eigen::MatrixX3d BuildTargetPoints(bool const flat);
 

@@ -20,7 +20,7 @@ MvgGenerator::MvgGenerator(std::unique_ptr<projection_functions::Camera> camera,
 }
 
 // Input is fractional time of trajectory from [0,1)
-MvgFrame MvgGenerator::Generate(double const t) const {
+Frame MvgGenerator::Generate(double const t) const {
     assert(0 <= t and t < 1);
 
     // NOTE(Jack): Look how the "spline_time" is calculated here using constants::num_poses. You see that the fractional
@@ -48,13 +48,13 @@ MvgFrame MvgGenerator::Generate(double const t) const {
 
     // WARN(Jack): This assumes that all points are always visible! With careful engineering for the default value
     // of K this will be true, but that cannot be guaranteed for all K!!!
-    return {pose_t.value(), pixels, points_};
+    return {{pixels, points_}, pose_t.value()};
 }
 
-std::vector<MvgFrame> MvgGenerator::GenerateBatchFrames(int const num_frames) const {
-    std::vector<MvgFrame> frames;
+std::vector<Frame> MvgGenerator::GenerateBatchFrames(int const num_frames) const {
+    std::vector<Frame> frames;
     for (int i{0}; i < num_frames; ++i) {
-        MvgFrame const frame_i{this->Generate(static_cast<double>(i) / num_frames)};
+        Frame const frame_i{this->Generate(static_cast<double>(i) / num_frames)};
         frames.push_back(frame_i);
     }
 
@@ -63,14 +63,14 @@ std::vector<MvgFrame> MvgGenerator::GenerateBatchFrames(int const num_frames) co
 
 std::tuple<std::vector<MatrixX2d>, std::vector<MatrixX3d>, std::vector<Isometry3d>> MvgGenerator::GenerateBatch(
     int const num_frames) const {
-    std::vector<MvgFrame> const frames{GenerateBatchFrames(num_frames)};
+    std::vector<Frame> const frames{GenerateBatchFrames(num_frames)};
 
     std::vector<MatrixX2d> pixels;
     std::vector<MatrixX3d> points;
     std::vector<Isometry3d> poses;
     for (auto const& frame : frames) {
-        pixels.push_back(frame.pixels);
-        points.push_back(frame.points);
+        pixels.push_back(frame.bundle.pixels);
+        points.push_back(frame.bundle.points);
         poses.push_back(frame.pose);
     }
 

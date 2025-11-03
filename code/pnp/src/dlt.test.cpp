@@ -14,9 +14,9 @@ TEST(PnpDlt, TestDlt23) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)), false)};
 
-    std::vector<MvgFrame> const frames{generator.GenerateBatchFrames(20)};
+    std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        auto const [tf, K]{pnp::Dlt23(frame.pixels, frame.points)};
+        auto const [tf, K]{pnp::Dlt23(frame.bundle.pixels, frame.bundle.points)};
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
         EXPECT_TRUE(tf.isApprox(frame.pose)) << "Result:\n"
@@ -33,9 +33,9 @@ TEST(PnpDlt, TestDlt22) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)),
         true)};  // Points must have Z=0 (flat = true)
 
-    std::vector<MvgFrame> const frames{generator.GenerateBatchFrames(20)};
+    std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        auto const tf{pnp::Dlt22(frame.pixels, frame.points)};
+        auto const tf{pnp::Dlt22(frame.bundle.pixels, frame.bundle.points)};
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
         EXPECT_TRUE(tf.isApprox(frame.pose)) << "Result:\n"

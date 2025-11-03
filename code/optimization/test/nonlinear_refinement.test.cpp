@@ -40,9 +40,10 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
 
-    std::vector<MvgFrame> const frames{generator.GenerateBatchFrames(20)};
+    std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        auto const [tf, K]{optimization::NonlinearRefinement(frame.pixels, frame.points, frame.pose,
+        // TODO(Jack): Should the bundle get passed directly as one argument of type Bundle?
+        auto const [tf, K]{optimization::NonlinearRefinement(frame.bundle.pixels, frame.bundle.points, frame.pose,
                                                              CameraModel::Pinhole, intrinsics)};
 
         EXPECT_TRUE(tf.isApprox(frame.pose)) << "Optimization result:\n"

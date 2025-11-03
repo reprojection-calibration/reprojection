@@ -20,13 +20,6 @@ struct Frame {
     Isometry3d pose;
 };
 
-// Output of the multiple view geometry data generator
-struct MvgFrame {
-    Isometry3d pose;
-    MatrixX2d pixels;
-    MatrixX3d points;
-};
-
 // TODO(Jack): There is some unclear consistency here! Right now we are coding the testing data generator mock
 // terminology into a very generic project wide data type!
 // TODO(Jack): Should we just stop beating around the bush and make the mvg frame generator also return the ids? By
