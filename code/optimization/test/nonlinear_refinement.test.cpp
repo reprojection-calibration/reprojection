@@ -4,6 +4,7 @@
 
 #include "geometry/lie.hpp"
 #include "testing_mocks/mvg_generator.hpp"
+#include "types/calibration_types.hpp"
 
 using namespace reprojection;
 
@@ -16,7 +17,8 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
     for (size_t i{0}; i < 20; ++i) {
         testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
-        auto const [tf, K]{optimization::NonlinearRefinement(frame_i.pixels, frame_i.points, frame_i.pose, intrinsics)};
+        auto const [tf, K]{optimization::NonlinearRefinement(frame_i.pixels, frame_i.points, frame_i.pose,
+                                                             CameraModel::Pinhole, intrinsics)};
 
         EXPECT_TRUE(tf.isApprox(frame_i.pose)) << "Optimization result:\n"
                                                << geometry::Log(tf) << "\noptimization input:\n"

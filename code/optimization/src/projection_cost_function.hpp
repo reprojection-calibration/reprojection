@@ -2,20 +2,10 @@
 
 #include "ceres_geometry.hpp"
 #include "projection_functions/projection_class_concept.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
-
-// TODO(Jack): Where should this actually live?
-// NOTE(Jack): We need this idea at some point, because somewhere along the line the user is gonna have a config file or
-// a button that says which camera they want to calibrate. Where this actually ends up, or where the final battle line
-// between templated and non templated code is, we will find out later maybe. But for now it stands here.
-enum class CameraModel {
-    DoubleSphere,  //
-    Pinhole,
-    PinholeRadtan4,
-    UnifiedCameraModel
-};
 
 /**
  * \brief Generates a camera model specific projection cost function for use in the optimization.

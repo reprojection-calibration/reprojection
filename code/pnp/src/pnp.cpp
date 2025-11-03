@@ -3,6 +3,7 @@
 #include "dlt.hpp"
 #include "optimization/nonlinear_refinement.hpp"
 #include "plane_utilities.hpp"
+#include "types/calibration_types.hpp"
 
 namespace reprojection::pnp {
 
@@ -28,7 +29,8 @@ PnpResult Pnp(MatrixX2d const& pixels, MatrixX3d const& points) {
         return PnpStatusCode::NotEnoughPoints;
     }
 
-    auto const [tf_star, _]{optimization::NonlinearRefinement(pixels, points, tf, pinhole_intrinsics)};
+    auto const [tf_star,
+                _]{optimization::NonlinearRefinement(pixels, points, tf, CameraModel::Pinhole, pinhole_intrinsics)};
 
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
     // and nonlinear optimization that will tell us if we are on the right track? For example ceres should actually
