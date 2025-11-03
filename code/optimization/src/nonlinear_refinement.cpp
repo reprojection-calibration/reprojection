@@ -8,7 +8,6 @@
 
 namespace reprojection::optimization {
 
-// NOTE(Jack): Hardcoded only for pinhole
 std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<MatrixX2d> const& pixels,
                                                                  std::vector<MatrixX3d> const& points,
                                                                  std::vector<Isometry3d> const& poses,

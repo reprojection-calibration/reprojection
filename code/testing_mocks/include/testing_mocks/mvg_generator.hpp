@@ -5,15 +5,10 @@
 
 #include "projection_functions/camera_model.hpp"
 #include "spline/se3_spline.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::testing_mocks {
-
-struct MvgFrame {
-    Isometry3d pose;
-    MatrixX2d pixels;
-    MatrixX3d points;
-};
 
 // MVG = "multiple view geometry"
 class MvgGenerator {
