@@ -18,30 +18,24 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
     std::vector<MatrixX2d> pixels;
     std::vector<MatrixX3d> points;
     // TODO(Jack): Find a canonical way to add noise!
-    std::vector<Isometry3d> poses_input;  // Will get added noise
-    std::vector<Isometry3d> poses_gt;
+    std::vector<Isometry3d> poses;
     for (size_t i{0}; i < 20; ++i) {
         testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
         pixels.push_back(frame_i.pixels);
         points.push_back(frame_i.points);
-        poses_input.push_back(frame_i.pose);
-        poses_gt.push_back(frame_i.pose);
-
-        poses_input.back().translation() += (0.1 * Eigen::Vector3d::Random(3));
+        poses.push_back(frame_i.pose);
     }
 
     auto const [poses_opt,
-                K]{optimization::NonlinearRefinement(pixels, points, poses_input, CameraModel::Pinhole, intrinsics)};
+                K]{optimization::NonlinearRefinement(pixels, points, poses, CameraModel::Pinhole, intrinsics)};
 
     for (size_t i{0}; i < std::size(poses_opt); ++i) {
         auto const pose_opt_i{poses_opt[i]};
-        auto const pose_gt_i{poses_gt[i]};
+        auto const pose_i{poses[i]};
 
-        EXPECT_TRUE(pose_opt_i.isApprox(pose_gt_i, 1e-6))
-            << "Optimization result:\n"
-            << geometry::Log(pose_opt_i).transpose() << "\nGround truth:\n"
-            << geometry::Log(pose_gt_i).transpose() << "\nOptimization input:\n"
-            << geometry::Log(poses_input[i]).transpose();
+        EXPECT_TRUE(pose_opt_i.isApprox(pose_i, 1e-6)) << "Optimization result:\n"
+                                                       << geometry::Log(pose_opt_i).transpose() << "\nGround truth:\n"
+                                                       << geometry::Log(pose_i).transpose();
     }
 
     EXPECT_TRUE(K.isApprox(intrinsics, 1e-6)) << "Optimization result:\n"
