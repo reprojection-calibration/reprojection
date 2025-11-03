@@ -10,7 +10,7 @@
 
 namespace reprojection::testing_mocks {
 
-// TODO(Jack): Why is this even a class if at almost all places we call GenerateBatchFrames() and then are done with it?
+// TODO(Jack): Why is this even a class if at almost all places we call GenerateBatch() and then are done with it?
 // I think this can probably be refactored into a single function call instead.
 // MVG = "multiple view geometry"
 class MvgGenerator {
@@ -22,7 +22,7 @@ class MvgGenerator {
     // code. Furthermore,- if we control/only allow creation of the batch then we reduce the risk that someone requests
     // and invalid time (i.e. outside 0 to 1). Asking the user "how many frames do you want might?" even just be more
     // intuitive over all.
-    std::vector<Frame> GenerateBatchFrames(int const num_frames) const;
+    std::vector<Frame> GenerateBatch(int const num_frames) const;
 
     static Eigen::MatrixX2d Project(MatrixX3d const& points_w,
                                     std::unique_ptr<projection_functions::Camera> const& camera,

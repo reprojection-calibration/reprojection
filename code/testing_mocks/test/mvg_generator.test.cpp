@@ -11,7 +11,7 @@ TEST(TestingMocksMvgGenerator, TestGenerateNoError) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
         false)};
 
-    EXPECT_NO_FATAL_FAILURE(generator.GenerateBatchFrames(100));
+    EXPECT_NO_FATAL_FAILURE(generator.GenerateBatch(100));
 }
 
 TEST(TestingMocksMvgGenerator, TestProject) {

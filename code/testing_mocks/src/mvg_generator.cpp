@@ -51,7 +51,7 @@ Frame MvgGenerator::Generate(double const t) const {
     return {{pixels, points_}, pose_t.value()};
 }
 
-std::vector<Frame> MvgGenerator::GenerateBatchFrames(int const num_frames) const {
+std::vector<Frame> MvgGenerator::GenerateBatch(int const num_frames) const {
     std::vector<Frame> frames;
     for (int i{0}; i < num_frames; ++i) {
         Frame const frame_i{this->Generate(static_cast<double>(i) / num_frames)};

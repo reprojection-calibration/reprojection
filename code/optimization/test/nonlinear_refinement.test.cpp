@@ -16,7 +16,7 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
 
     int const num_frames{20};
-    std::vector<Frame> const frames{generator.GenerateBatchFrames(num_frames)};
+    std::vector<Frame> const frames{generator.GenerateBatch(num_frames)};
 
     auto const [poses_opt, K]{optimization::NonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
 
@@ -40,7 +40,7 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
 
-    std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
+    std::vector<Frame> const frames{generator.GenerateBatch(20)};
     for (auto const& frame : frames) {
         auto const [tf, K]{optimization::NonlinearRefinement({frame}, CameraModel::Pinhole, intrinsics)};
         Isometry3d const tf_i{tf[0]};  // Only one frame is ever optimized at one time in this test.

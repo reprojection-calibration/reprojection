@@ -14,7 +14,7 @@ TEST(PnpDlt, TestDlt23) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)), false)};
 
-    std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
+    std::vector<Frame> const frames{generator.GenerateBatch(20)};
     for (auto const& frame : frames) {
         auto const [tf, K]{pnp::Dlt23(frame.bundle)};
 
@@ -33,7 +33,7 @@ TEST(PnpDlt, TestDlt22) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)),
         true)};  // Points must have Z=0 (flat = true)
 
-    std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
+    std::vector<Frame> const frames{generator.GenerateBatch(20)};
     for (auto const& frame : frames) {
         auto const tf{pnp::Dlt22(frame.bundle)};
 
