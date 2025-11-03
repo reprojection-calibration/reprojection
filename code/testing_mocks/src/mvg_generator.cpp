@@ -27,7 +27,7 @@ std::vector<Frame> MvgGenerator::GenerateBatch(int const num_frames) const {
     }
 
     return frames;
-}
+}  // LCOV_EXCL_LINE
 
 /**
  * \brief Static helper method that projects points in the world frame to pixels. Do NOT use outside the testing mocks
