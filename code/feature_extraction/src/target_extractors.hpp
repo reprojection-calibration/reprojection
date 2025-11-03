@@ -13,14 +13,14 @@ class CheckerboardExtractor : public TargetExtractor {
    public:
     explicit CheckerboardExtractor(cv::Size const& pattern_size, double const unit_dimension);
 
-    std::optional<FeatureFrame> Extract(cv::Mat const& image) const override;
+    std::optional<ExtractedTarget> Extract(cv::Mat const& image) const override;
 };
 
 class CircleGridExtractor : public TargetExtractor {
    public:
     CircleGridExtractor(cv::Size const& pattern_size, double const unit_dimension, bool const asymmetric);
 
-    std::optional<FeatureFrame> Extract(cv::Mat const& image) const override;
+    std::optional<ExtractedTarget> Extract(cv::Mat const& image) const override;
 
    private:
     bool asymmetric_;
@@ -30,7 +30,7 @@ class AprilGrid3Extractor : public TargetExtractor {
    public:
     explicit AprilGrid3Extractor(cv::Size const& pattern_size, double const unit_dimension);
 
-    std::optional<FeatureFrame> Extract(cv::Mat const& image) const override;
+    std::optional<ExtractedTarget> Extract(cv::Mat const& image) const override;
 
     // WARN(Jack): The corner indices as labeled here to not logically match the order of how they are extracted. You
     // can see this when running the live demo that the indices do not show up in the expected logical row and column

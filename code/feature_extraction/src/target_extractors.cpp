@@ -19,7 +19,7 @@ CheckerboardExtractor::CheckerboardExtractor(cv::Size const& pattern_size, const
     points_.col(2).setZero();  // Flat on calibration board, z=0.
 }
 
-std::optional<FeatureFrame> CheckerboardExtractor::Extract(cv::Mat const& image) const {
+std::optional<ExtractedTarget> CheckerboardExtractor::Extract(cv::Mat const& image) const {
     std::vector<cv::Point2f> corners;
     bool const pattern_found{cv::findChessboardCorners(
         image, pattern_size_, corners,
@@ -32,7 +32,7 @@ std::optional<FeatureFrame> CheckerboardExtractor::Extract(cv::Mat const& image)
     cv::cornerSubPix(image, corners, cv::Size(11, 11), cv::Size(-1, -1),
                      cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
 
-    return FeatureFrame{ToEigen(corners), points_, point_indices_};
+    return ExtractedTarget{ToEigen(corners), points_, point_indices_};
 }
 
 CircleGridExtractor::CircleGridExtractor(cv::Size const& pattern_size, const double unit_dimension,
@@ -51,7 +51,7 @@ CircleGridExtractor::CircleGridExtractor(cv::Size const& pattern_size, const dou
     points_.col(2).setZero();
 }
 
-std::optional<FeatureFrame> CircleGridExtractor::Extract(cv::Mat const& image) const {
+std::optional<ExtractedTarget> CircleGridExtractor::Extract(cv::Mat const& image) const {
     // cv::CALIB_CB_CLUSTERING - "uses a special algorithm for grid detection. It is more robust to perspective
     // distortions but much more sensitive to background clutter." - if I do not use this then I think I need to do
     // some tuning about what acceptable sizes and spacing are for the circle grid. For now this will do.
@@ -76,7 +76,7 @@ std::optional<FeatureFrame> CircleGridExtractor::Extract(cv::Mat const& image) c
         return std::nullopt;
     };
 
-    return FeatureFrame{ToEigen(corners), points_, point_indices_};
+    return ExtractedTarget{ToEigen(corners), points_, point_indices_};
 }
 
 // NOTE(Jack): Use of the tagCustom36h11 and all settings are hardcoded here! This means no on can select another
@@ -89,7 +89,7 @@ AprilGrid3Extractor::AprilGrid3Extractor(cv::Size const& pattern_size, const dou
     points_ = CornerPositions(point_indices_, unit_dimension);
 }
 
-std::optional<FeatureFrame> AprilGrid3Extractor::Extract(cv::Mat const& image) const {
+std::optional<ExtractedTarget> AprilGrid3Extractor::Extract(cv::Mat const& image) const {
     std::vector<AprilTagDetection> const raw_detections{tag_detector_.Detect(image)};
     if (std::size(raw_detections) == 0) {
         return std::nullopt;
@@ -109,7 +109,7 @@ std::optional<FeatureFrame> AprilGrid3Extractor::Extract(cv::Mat const& image) c
     Eigen::ArrayXi const mask{AprilGrid3Extractor::VisibleGeometry(pattern_size_, raw_detections)};
 
     // TODO(Jack): Make corner and point naming consistent!
-    return FeatureFrame{corners, points_(mask, Eigen::all), point_indices_(mask, Eigen::all)};
+    return ExtractedTarget{corners, points_(mask, Eigen::all), point_indices_(mask, Eigen::all)};
 }
 
 // This function is responsible for handling the more complex indexing and grid arrangement that is inherent to an

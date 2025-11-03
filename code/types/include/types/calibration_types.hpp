@@ -9,22 +9,15 @@ struct Bundle {
     MatrixX3d points;
 };
 
+// Formerly was FeatureFrame (remove comment after 1.1.2026)
 struct ExtractedTarget {
     Bundle bundle;
     ArrayX2i indices;
 };
 
-// TODO NAME!!!
 struct Frame {
     Bundle bundle;
     Isometry3d pose;
-};
-
-// Output of the feature extractor
-struct FeatureFrame {
-    MatrixX2d pixels;
-    MatrixX3d points;
-    ArrayX2i indices;
 };
 
 // Output of the multiple view geometry data generator
