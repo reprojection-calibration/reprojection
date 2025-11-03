@@ -59,6 +59,8 @@ std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Mat
     return {poses_to_return, intrinsics_to_optimize};
 }
 
+// NOTE(Jack): Wave this override because there are some places (ex. pnp) where we only ever process a single frame,
+// not entire groups.
 std::tuple<Isometry3d, ArrayXd> NonlinearRefinement(MatrixX2d const& pixels, MatrixX3d const& points,
                                                     Isometry3d const& poses, CameraModel const& camera_type,
                                                     ArrayXd const& intrinsics) {

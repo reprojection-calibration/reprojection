@@ -10,6 +10,36 @@ using namespace reprojection;
 
 // TODO(Jack): Test the nonlinear refinement with noisy data to make sure the optimization executes more than one step!
 
+TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
+    Array4d const intrinsics{600, 600, 360, 240};
+    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
+
+    std::vector<MatrixX2d> pixels;
+    std::vector<MatrixX3d> points;
+    std::vector<Isometry3d> poses;
+    for (size_t i{0}; i < 20; ++i) {
+        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
+        pixels.push_back(frame_i.pixels);
+        points.push_back(frame_i.points);
+        poses.push_back(frame_i.pose);
+    }
+
+    auto const [poses_opt,
+                K]{optimization::NonlinearRefinement(pixels, points, poses, CameraModel::Pinhole, intrinsics)};
+
+    for (size_t i{0}; i < std::size(poses_opt); ++i) {
+        auto const pose_opt_i{poses_opt[i]};
+        auto const pose_i{poses[i]};
+
+        EXPECT_TRUE(pose_opt_i.isApprox(poses[i])) << "Optimization result:\n"
+                                                   << geometry::Log(pose_opt_i) << "\noptimization input:\n"
+                                                   << geometry::Log(pose_i);
+    }
+
+    EXPECT_TRUE(K.isApprox(intrinsics)) << "Optimization result:\n" << K << "\noptimization input:\n" << intrinsics;
+}
+
 TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
     Array4d const intrinsics{600, 600, 360, 240};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
