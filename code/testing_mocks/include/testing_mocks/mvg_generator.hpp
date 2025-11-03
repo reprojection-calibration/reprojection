@@ -17,11 +17,6 @@ class MvgGenerator {
    public:
     explicit MvgGenerator(std::unique_ptr<projection_functions::Camera> const camera, bool const flat = true);
 
-    // Honestly we often almost always want the full batch, and then iterate over it, is there really a point to not
-    // only support the batch api? Otherwise, we have a lot of looping logic copy and pasted throughout the testing
-    // code. Furthermore,- if we control/only allow creation of the batch then we reduce the risk that someone requests
-    // and invalid time (i.e. outside 0 to 1). Asking the user "how many frames do you want might?" even just be more
-    // intuitive over all.
     std::vector<Frame> GenerateBatch(int const num_frames) const;
 
     static Eigen::MatrixX2d Project(MatrixX3d const& points_w,

@@ -21,9 +21,10 @@ TEST(PnpMatrixUtilities, TestInterleaveRowWise) {
 
 TEST(PnpMatrixUtilities, TestNormalizeColumnWise) {
     MatrixX2d const a{{0, 0}, {1, 1}, {2, 2}};
-    auto const [normalized_test_pixels, tf_pixels]{pnp::NormalizeColumnWise(a)};
+    auto const [normalized_test_pixels, _]{pnp::NormalizeColumnWise(a)};
     EXPECT_FLOAT_EQ(normalized_test_pixels.rowwise().norm().mean(), std::sqrt(a.cols()));
 
-    auto const [normalized_test_points, tf_points]{pnp::NormalizeColumnWise(a)};
-    EXPECT_FLOAT_EQ(normalized_test_points.rowwise().norm().mean(), std::sqrt(a.cols()));
+    MatrixX3d const b{{0, 0, 0}, {1, 1, 1}, {2, 2, 2}};
+    auto const [normalized_test_points, _1]{pnp::NormalizeColumnWise(b)};
+    EXPECT_FLOAT_EQ(normalized_test_points.rowwise().norm().mean(), std::sqrt(b.cols()));
 }

@@ -20,7 +20,7 @@ PnpResult Pnp(Bundle const& bundle) {
 
     Isometry3d tf;
     Array4d pinhole_intrinsics;
-    if (bundle.pixels.rows() > 4 and IsPlane(bundle.points)) {
+    if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         tf = Dlt22(bundle);
         pinhole_intrinsics = {1, 1, 0, 0};  // Equivalent to K = I_3x3
     } else if (bundle.pixels.rows() > 6) {
@@ -29,6 +29,9 @@ PnpResult Pnp(Bundle const& bundle) {
         return PnpStatusCode::NotEnoughPoints;
     }
 
+    // NOTE(Jack): The optimization::NonlinearRefinement function expects and returns vectors. For pnp however we just
+    // evaluate one frame at a time. Therefore we construct the "vector" input of frames from the one Bundle we have,
+    // and also return the first and only tf that is returned.
     auto const [tf_star, _]{optimization::NonlinearRefinement({{{bundle.pixels, bundle.points}, tf}},
                                                               CameraModel::Pinhole, pinhole_intrinsics)};
 
