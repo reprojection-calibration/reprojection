@@ -16,7 +16,7 @@ TEST(PnpDlt, TestDlt23) {
 
     std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        auto const [tf, K]{pnp::Dlt23(frame.bundle.pixels, frame.bundle.points)};
+        auto const [tf, K]{pnp::Dlt23(frame.bundle)};
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
         EXPECT_TRUE(tf.isApprox(frame.pose)) << "Result:\n"
@@ -35,7 +35,7 @@ TEST(PnpDlt, TestDlt22) {
 
     std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        auto const tf{pnp::Dlt22(frame.bundle.pixels, frame.bundle.points)};
+        auto const tf{pnp::Dlt22(frame.bundle)};
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
         EXPECT_TRUE(tf.isApprox(frame.pose)) << "Result:\n"

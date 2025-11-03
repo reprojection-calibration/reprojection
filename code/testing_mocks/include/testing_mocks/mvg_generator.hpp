@@ -10,6 +10,8 @@
 
 namespace reprojection::testing_mocks {
 
+// TODO(Jack): Why is this even a class if at almost all places we call GenerateBatchFrames() and then are done with it?
+// I think this can probably be refactored into a single function call instead.
 // MVG = "multiple view geometry"
 class MvgGenerator {
    public:

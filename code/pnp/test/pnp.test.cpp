@@ -16,7 +16,7 @@ TEST(Pnp, TestPnp) {
 
     std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle.pixels, frame.bundle.points)};
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
@@ -32,7 +32,7 @@ TEST(Pnp, TestPnpFlat) {
 
     std::vector<Frame> const frames{generator.GenerateBatchFrames(20)};
     for (auto const& frame : frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle.pixels, frame.bundle.points)};
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
@@ -41,9 +41,10 @@ TEST(Pnp, TestPnpFlat) {
 }
 
 TEST(Pnp, TestMismatchedCorrespondence) {
+    // TODO(Jack): Should the Bundle type not even allow a construction from mismatched sizes?
     MatrixX2d const four_pixels(4, 2);
     MatrixX3d const five_points(5, 3);
-    pnp::PnpResult const pnp_result{pnp::Pnp(four_pixels, five_points)};
+    pnp::PnpResult const pnp_result{pnp::Pnp({four_pixels, five_points})};
 
     EXPECT_TRUE(std::holds_alternative<pnp::PnpStatusCode>(pnp_result));
     pnp::PnpStatusCode const status{std::get<pnp::PnpStatusCode>(pnp_result)};
@@ -53,7 +54,7 @@ TEST(Pnp, TestMismatchedCorrespondence) {
 TEST(Pnp, TestNotEnoughPoints) {
     MatrixX2d const five_pixels(5, 2);
     MatrixX3d const five_points(5, 3);
-    pnp::PnpResult const pnp_result{pnp::Pnp(five_pixels, five_points)};
+    pnp::PnpResult const pnp_result{pnp::Pnp({five_pixels, five_points})};
 
     EXPECT_TRUE(std::holds_alternative<pnp::PnpStatusCode>(pnp_result));
     pnp::PnpStatusCode const status{std::get<pnp::PnpStatusCode>(pnp_result)};
