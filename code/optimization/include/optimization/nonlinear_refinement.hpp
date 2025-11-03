@@ -15,16 +15,8 @@ namespace reprojection::optimization {
 // poses) actually form one "type"? Lets see what happens and decide later!
 // NOTE(Jack): We are hardcoding that fact that the intrinsics are the same for all cameras! I.e. not that every image
 // could have another camera.
-std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<MatrixX2d> const& pixels,
-                                                                 std::vector<MatrixX3d> const& points,
-                                                                 std::vector<Isometry3d> const& poses,
+std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Frame> const& frames,
                                                                  CameraModel const& camera_type,
                                                                  ArrayXd const& intrinsics);
-
-// TODO(Jack): Does the fact that we need this override mean that we are doing something wrong with the types or looping
-// logic? It seems messy to have to handle the "edge" case like this, but for now we do it.
-std::tuple<Isometry3d, ArrayXd> NonlinearRefinement(MatrixX2d const& pixels, MatrixX3d const& points,
-                                                    Isometry3d const& poses, CameraModel const& camera_type,
-                                                    ArrayXd const& intrinsics);
 
 }  // namespace  reprojection::optimization

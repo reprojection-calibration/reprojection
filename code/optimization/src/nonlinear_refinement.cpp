@@ -8,27 +8,22 @@
 
 namespace reprojection::optimization {
 
-std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<MatrixX2d> const& pixels,
-                                                                 std::vector<MatrixX3d> const& points,
-                                                                 std::vector<Isometry3d> const& poses,
+// TODO(Jack): Should we have some assertions which force that the frames satisfy some basic properties like there is a
+// matching number of everything?
+std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Frame> const& frames,
                                                                  CameraModel const& camera_type,
                                                                  ArrayXd const& intrinsics) {
-    // NOTE(Jack): I think the fact that ALL the input parameters have some relation to another one indicates that these
-    // could actually be a type itself! THe benefit of that is that we could put conditions on the type to make sure the
-    // invariants are met, instead of having to check them here and at n other locations.
-    assert(std::size(pixels) == std::size(points));
-    assert(std::size(pixels) == std::size(poses));
     assert(static_cast<int>(camera_type) == intrinsics.rows());
 
     std::vector<Array6d> poses_to_optimize;
-    poses_to_optimize.reserve(std::size(poses));
+    poses_to_optimize.reserve(std::size(frames));
     ArrayXd intrinsics_to_optimize{intrinsics};  // Same intrinsics for ALL poses - mono camera constraint
 
     ceres::Problem problem;
-    for (size_t i{0}; i < std::size(pixels); ++i) {
-        MatrixX2d const& pixels_i{pixels[i]};
-        MatrixX3d const& points_i{points[i]};
-        poses_to_optimize.push_back(geometry::Log(poses[i]));
+    for (size_t i{0}; i < std::size(frames); ++i) {
+        MatrixX2d const& pixels_i{frames[i].bundle.pixels};
+        MatrixX3d const& points_i{frames[i].bundle.points};
+        poses_to_optimize.push_back(geometry::Log(frames[i].pose));
 
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
             ceres::CostFunction* const cost_function{Create(camera_type, pixels_i.row(j), points_i.row(j))};
@@ -56,21 +51,6 @@ std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Mat
     }
 
     return {poses_to_return, intrinsics_to_optimize};
-}
-
-// NOTE(Jack): Wave this override because there are some places (ex. pnp) where we only ever process a single frame,
-// not entire groups.
-std::tuple<Isometry3d, ArrayXd> NonlinearRefinement(MatrixX2d const& pixels, MatrixX3d const& points,
-                                                    Isometry3d const& poses, CameraModel const& camera_type,
-                                                    ArrayXd const& intrinsics) {
-    std::vector<MatrixX2d> const pixels_vector{pixels};
-    std::vector<MatrixX3d> const points_vector{points};
-    std::vector<Isometry3d> const poses_vector{poses};
-
-    auto const [optimized_poses, optimized_intrinsics]{
-        NonlinearRefinement(pixels_vector, points_vector, poses_vector, camera_type, intrinsics)};
-
-    return {optimized_poses[0], optimized_intrinsics};
 }
 
 }  // namespace  reprojection::optimization

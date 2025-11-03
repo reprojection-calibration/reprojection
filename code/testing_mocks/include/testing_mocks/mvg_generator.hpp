@@ -24,12 +24,6 @@ class MvgGenerator {
     // intuitive over all.
     std::vector<Frame> GenerateBatchFrames(int const num_frames) const;
 
-    // This an override which serves up types more amenable for use by the nonlinear optimization. At this point we
-    // have no consistent logical strategy therefore we need these conversion methods. Hopefully we will figure out how
-    // to handle the data values soon and remove such methods.
-    std::tuple<std::vector<MatrixX2d>, std::vector<MatrixX3d>, std::vector<Isometry3d>> GenerateBatch(
-        int const num_frames) const;
-
     static Eigen::MatrixX2d Project(MatrixX3d const& points_w,
                                     std::unique_ptr<projection_functions::Camera> const& camera,
                                     Isometry3d const& tf_co_w);

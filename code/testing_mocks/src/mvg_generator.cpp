@@ -61,22 +61,6 @@ std::vector<Frame> MvgGenerator::GenerateBatchFrames(int const num_frames) const
     return frames;
 }
 
-std::tuple<std::vector<MatrixX2d>, std::vector<MatrixX3d>, std::vector<Isometry3d>> MvgGenerator::GenerateBatch(
-    int const num_frames) const {
-    std::vector<Frame> const frames{GenerateBatchFrames(num_frames)};
-
-    std::vector<MatrixX2d> pixels;
-    std::vector<MatrixX3d> points;
-    std::vector<Isometry3d> poses;
-    for (auto const& frame : frames) {
-        pixels.push_back(frame.bundle.pixels);
-        points.push_back(frame.bundle.points);
-        poses.push_back(frame.pose);
-    }
-
-    return {pixels, points, poses};
-}
-
 /**
  * \brief Static helper method that projects points in the world frame to pixels. Do NOT use outside the testing mocks
  * context!

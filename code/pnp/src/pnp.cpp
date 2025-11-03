@@ -29,15 +29,15 @@ PnpResult Pnp(Bundle const& bundle) {
         return PnpStatusCode::NotEnoughPoints;
     }
 
-    auto const [tf_star, _]{
-        optimization::NonlinearRefinement(bundle.pixels, bundle.points, tf, CameraModel::Pinhole, pinhole_intrinsics)};
+    auto const [tf_star, _]{optimization::NonlinearRefinement({{{bundle.pixels, bundle.points}, tf}},
+                                                              CameraModel::Pinhole, pinhole_intrinsics)};
 
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
     // and nonlinear optimization that will tell us if we are on the right track? For example ceres should actually
     // provide a value direct that tells us if the optimization was successful or not. Lets wait until we have more
     // experience with optimizations and their failures on real data.
 
-    return tf_star;
+    return tf_star[0];
 }
 
 }  // namespace reprojection::pnp
