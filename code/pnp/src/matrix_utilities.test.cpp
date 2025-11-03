@@ -2,36 +2,29 @@
 
 #include <gtest/gtest.h>
 
-#include "testing_mocks/mvg_generator.hpp"
+#include "types/eigen_types.hpp"
 
 using namespace reprojection;
-using namespace reprojection::pnp;
 
 TEST(PnpMatrixUtilities, TestInterleaveRowWise) {
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})))};
-    testing_mocks::MvgFrame const frame{generator.Generate(0.5)};  // Arbitrary spot in the middle
+    MatrixX2d const a{{0, 0}, {1, 1}, {2, 2}};
+    Eigen::MatrixX2d const interleaved_pixels{pnp::InterleaveRowWise(a)};
 
-    Eigen::MatrixX2d const interleaved_pixels{InterleaveRowWise(frame.pixels)};
-
-    EXPECT_EQ(interleaved_pixels.rows(), 50);
-    // First pixel is duplicated
-    EXPECT_TRUE(interleaved_pixels.row(0).isApprox(frame.pixels.row(0)));
-    EXPECT_TRUE(interleaved_pixels.row(1).isApprox(frame.pixels.row(0)));
-    // And for good measure lets check that the second pixel is duplicated too :)
-    EXPECT_TRUE(interleaved_pixels.row(2).isApprox(frame.pixels.row(1)));
-    EXPECT_TRUE(interleaved_pixels.row(3).isApprox(frame.pixels.row(1)));
+    EXPECT_EQ(interleaved_pixels.rows(), 2 * a.rows());
+    // First row is duplicated
+    EXPECT_TRUE(interleaved_pixels.row(0).isApprox(a.row(0)));
+    EXPECT_TRUE(interleaved_pixels.row(1).isApprox(a.row(0)));
+    // And for good measure lets check that the second row is duplicated too :)
+    EXPECT_TRUE(interleaved_pixels.row(2).isApprox(a.row(1)));
+    EXPECT_TRUE(interleaved_pixels.row(3).isApprox(a.row(1)));
 }
 
 TEST(PnpMatrixUtilities, TestNormalizeColumnWise) {
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})))};
+    MatrixX2d const a{{0, 0}, {1, 1}, {2, 2}};
+    auto const [normalized_test_pixels, _]{pnp::NormalizeColumnWise(a)};
+    EXPECT_FLOAT_EQ(normalized_test_pixels.rowwise().norm().mean(), std::sqrt(a.cols()));
 
-    testing_mocks::MvgFrame const frame{generator.Generate(0.5)};  // Arbitrary spot in the middle
-
-    auto const [normalized_test_pixels, tf_pixels]{NormalizeColumnWise(frame.pixels)};
-    EXPECT_FLOAT_EQ(normalized_test_pixels.rowwise().norm().mean(), std::sqrt(frame.pixels.cols()));
-
-    auto const [normalized_test_points, tf_points]{NormalizeColumnWise(frame.points)};
-    EXPECT_FLOAT_EQ(normalized_test_points.rowwise().norm().mean(), std::sqrt(frame.points.cols()));
+    MatrixX3d const b{{0, 0, 0}, {1, 1, 1}, {2, 2, 2}};
+    auto const [normalized_test_points, _1]{pnp::NormalizeColumnWise(b)};
+    EXPECT_FLOAT_EQ(normalized_test_points.rowwise().norm().mean(), std::sqrt(b.cols()));
 }

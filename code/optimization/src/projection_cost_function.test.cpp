@@ -6,6 +6,7 @@
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
+#include "types/calibration_types.hpp"
 
 using namespace reprojection;
 
@@ -26,28 +27,28 @@ TEST(OptimizationProjectionCostFunction, TestCreate) {
     int const pose_size{6};             // se3 pose
     int const residual_size{2};         // pixel size: {u, v}
 
-    ceres::CostFunction* cost_function{optimization::Create(optimization::CameraModel::DoubleSphere, pixel, point)};
+    ceres::CostFunction* cost_function{optimization::Create(CameraModel::DoubleSphere, pixel, point)};
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::DoubleSphere::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
-    cost_function = optimization::Create(optimization::CameraModel::Pinhole, pixel, point);
+    cost_function = optimization::Create(CameraModel::Pinhole, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::Pinhole::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
-    cost_function = optimization::Create(optimization::CameraModel::PinholeRadtan4, pixel, point);
+    cost_function = optimization::Create(CameraModel::PinholeRadtan4, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::PinholeRadtan4::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
-    cost_function = optimization::Create(optimization::CameraModel::UnifiedCameraModel, pixel, point);
+    cost_function = optimization::Create(CameraModel::UnifiedCameraModel, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::UnifiedCameraModel::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);

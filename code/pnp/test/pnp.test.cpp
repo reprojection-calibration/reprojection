@@ -13,14 +13,14 @@ TEST(Pnp, TestPnp) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
         false)};
-    for (size_t i{0}; i < 20; ++i) {
-        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
 
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.pixels, frame_i.points)};
+    std::vector<Frame> const frames{generator.GenerateBatch(20)};
+    for (auto const& frame : frames) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(frame_i.pose));
+        EXPECT_TRUE(pose_i.isApprox(frame.pose));
     }
 }
 
@@ -30,21 +30,21 @@ TEST(Pnp, TestPnpFlat) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)),
         true)};  // Points must have Z=0 (flat = true)
 
-    for (size_t i{0}; i < 20; ++i) {
-        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
-
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.pixels, frame_i.points)};
+    std::vector<Frame> const frames{generator.GenerateBatch(20)};
+    for (auto const& frame : frames) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(frame_i.pose));
+        EXPECT_TRUE(pose_i.isApprox(frame.pose));
     }
 }
 
 TEST(Pnp, TestMismatchedCorrespondence) {
+    // TODO(Jack): Should the Bundle type not even allow a construction from mismatched sizes?
     MatrixX2d const four_pixels(4, 2);
     MatrixX3d const five_points(5, 3);
-    pnp::PnpResult const pnp_result{pnp::Pnp(four_pixels, five_points)};
+    pnp::PnpResult const pnp_result{pnp::Pnp({four_pixels, five_points})};
 
     EXPECT_TRUE(std::holds_alternative<pnp::PnpStatusCode>(pnp_result));
     pnp::PnpStatusCode const status{std::get<pnp::PnpStatusCode>(pnp_result)};
@@ -54,7 +54,7 @@ TEST(Pnp, TestMismatchedCorrespondence) {
 TEST(Pnp, TestNotEnoughPoints) {
     MatrixX2d const five_pixels(5, 2);
     MatrixX3d const five_points(5, 3);
-    pnp::PnpResult const pnp_result{pnp::Pnp(five_pixels, five_points)};
+    pnp::PnpResult const pnp_result{pnp::Pnp({five_pixels, five_points})};
 
     EXPECT_TRUE(std::holds_alternative<pnp::PnpStatusCode>(pnp_result));
     pnp::PnpStatusCode const status{std::get<pnp::PnpStatusCode>(pnp_result)};

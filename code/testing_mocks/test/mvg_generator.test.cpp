@@ -11,10 +11,7 @@ TEST(TestingMocksMvgGenerator, TestGenerateNoError) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
         false)};
 
-    int const n{100};
-    for (size_t i{0}; i < n; ++i) {
-        EXPECT_NO_FATAL_FAILURE(generator.Generate(static_cast<double>(i) / n));
-    }
+    EXPECT_NO_FATAL_FAILURE(generator.GenerateBatch(100));
 }
 
 TEST(TestingMocksMvgGenerator, TestProject) {

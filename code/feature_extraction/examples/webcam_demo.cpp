@@ -46,10 +46,10 @@ int main(int argc, char* argv[]) {
         cap >> frame;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
-        std::optional<FeatureFrame> const target{extractor->Extract(gray)};
+        std::optional<ExtractedTarget> const target{extractor->Extract(gray)};
         if (target.has_value()) {
-            Eigen::MatrixX2d const& pixels{target.value().pixels};
-            Eigen::ArrayX2i const& indices{target.value().indices};
+            Eigen::MatrixX2d const& pixels{target->bundle.pixels};
+            Eigen::ArrayX2i const& indices{target->indices};
             for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
                 cv::circle(frame, cv::Point(pixels.row(i)[0], pixels.row(i)[1]), 1, cv::Scalar(0, 255, 0), 5,
                            cv::LINE_8);

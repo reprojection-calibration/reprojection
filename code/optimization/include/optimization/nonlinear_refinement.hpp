@@ -1,10 +1,17 @@
 #pragma once
 
+#include <vector>
+
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
 
-std::tuple<Isometry3d, Array4d> NonlinearRefinement(MatrixX2d const& pixels, MatrixX3d const& points,
-                                                    Isometry3d const& initial_pose, Array4d const& initial_K);
+// TODO(Jack): What is our initialization strategy for real pinhole cameras?
+// NOTE(Jack): We are hardcoding that fact that the intrinsics are the same for all cameras! I.e. not that every image
+// could have another camera.
+std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Frame> const& frames,
+                                                                 CameraModel const& camera_type,
+                                                                 ArrayXd const& intrinsics);
 
 }  // namespace  reprojection::optimization

@@ -19,8 +19,38 @@ MvgGenerator::MvgGenerator(std::unique_ptr<projection_functions::Camera> camera,
     }
 }
 
+std::vector<Frame> MvgGenerator::GenerateBatch(int const num_frames) const {
+    std::vector<Frame> frames;
+    for (int i{0}; i < num_frames; ++i) {
+        Frame const frame_i{this->Generate(static_cast<double>(i) / num_frames)};
+        frames.push_back(frame_i);
+    }
+
+    return frames;
+}  // LCOV_EXCL_LINE
+
+/**
+ * \brief Static helper method that projects points in the world frame to pixels. Do NOT use outside the testing mocks
+ * context!
+ *
+ * This method is intended only for use as part of the testing mocks test data generation class
+ * (reprojection::testing_mocks::MvgGenerator) and should NOT be used by other consuming code. It was left as a public
+ * method only so that it could be tested.
+ */
+Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w,
+                                       std::unique_ptr<projection_functions::Camera> const& camera,
+                                       Eigen::Isometry3d const& tf_co_w) {
+    // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not
+    // match our expectations about matrix dimensions after the fact.
+    Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
+
+    MatrixX2d const pixels{camera->Project(points_homog_co.leftCols(3))};
+
+    return pixels;
+}
+
 // Input is fractional time of trajectory from [0,1)
-MvgFrame MvgGenerator::Generate(double const t) const {
+Frame MvgGenerator::Generate(double const t) const {
     assert(0 <= t and t < 1);
 
     // NOTE(Jack): Look how the "spline_time" is calculated here using constants::num_poses. You see that the fractional
@@ -48,27 +78,7 @@ MvgFrame MvgGenerator::Generate(double const t) const {
 
     // WARN(Jack): This assumes that all points are always visible! With careful engineering for the default value
     // of K this will be true, but that cannot be guaranteed for all K!!!
-    return {pose_t.value(), pixels, points_};
-}
-
-/**
- * \brief Static helper method that projects points in the world frame to pixels. Do NOT use outside the testing mocks
- * context!
- *
- * This method is intended only for use as part of the testing mocks test data generation class
- * (reprojection::testing_mocks::MvgGenerator) and should NOT be used by other consuming code. It was left as a public
- * method only so that it could be tested.
- */
-Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w,
-                                       std::unique_ptr<projection_functions::Camera> const& camera,
-                                       Eigen::Isometry3d const& tf_co_w) {
-    // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not
-    // match our expectations about matrix dimensions after the fact.
-    Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
-
-    MatrixX2d const pixels{camera->Project(points_homog_co.leftCols(3))};
-
-    return pixels;
+    return {{pixels, points_}, pose_t.value()};
 }
 
 Eigen::MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {

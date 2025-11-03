@@ -21,7 +21,7 @@ class TargetExtractor {
 
     virtual ~TargetExtractor() = default;
 
-    virtual std::optional<FeatureFrame> Extract(cv::Mat const& image) const = 0;
+    virtual std::optional<ExtractedTarget> Extract(cv::Mat const& image) const = 0;
 
    protected:
     cv::Size pattern_size_;
