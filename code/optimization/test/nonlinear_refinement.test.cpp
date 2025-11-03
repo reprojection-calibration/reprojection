@@ -15,16 +15,8 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
 
-    std::vector<MatrixX2d> pixels;
-    std::vector<MatrixX3d> points;
-    // TODO(Jack): Find a canonical way to add noise!
-    std::vector<Isometry3d> poses;
-    for (size_t i{0}; i < 20; ++i) {
-        testing_mocks::MvgFrame const frame_i{generator.Generate(static_cast<double>(i) / 20)};
-        pixels.push_back(frame_i.pixels);
-        points.push_back(frame_i.points);
-        poses.push_back(frame_i.pose);
-    }
+    int const num_frames{20};
+    auto const [pixels, points, poses]{generator.GenerateBatch(num_frames)};
 
     auto const [poses_opt,
                 K]{optimization::NonlinearRefinement(pixels, points, poses, CameraModel::Pinhole, intrinsics)};
