@@ -46,6 +46,8 @@ std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Mat
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
+    // TODO(Jack): If we use this logic in multiple places for conversions than make sure to put it into a helper
+    // method!
     std::vector<Isometry3d> poses_to_return;
     poses_to_return.reserve(std::size(poses_to_optimize));
     for (Array6d const& optimized_pose : poses_to_optimize) {
