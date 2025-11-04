@@ -1,13 +1,15 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include <optional>
 
 #include "april_tag_cpp_wrapper.hpp"
 #include "feature_extraction/target_extraction.hpp"
+#include "types/eigen_types.hpp"
 
 namespace reprojection::feature_extraction {
+
+using Matrix42d = Eigen::Matrix<double, 4, 2>;
 
 class CheckerboardExtractor : public TargetExtractor {
    public:
@@ -36,17 +38,15 @@ class AprilGrid3Extractor : public TargetExtractor {
     // can see this when running the live demo that the indices do not show up in the expected logical row and column
     // order.
     // TODO(Jack): We need a better name that conotates its more complicated function, also calculating the points
-    static Eigen::ArrayXi VisibleGeometry(cv::Size const& pattern_size,
-                                          std::vector<AprilTagDetection> const& detections);
+    static ArrayXi VisibleGeometry(cv::Size const& pattern_size, std::vector<AprilTagDetection> const& detections);
 
-    static Eigen::MatrixX3d CornerPositions(Eigen::ArrayX2i const& indices, double const unit_dimension);
+    static MatrixX3d CornerPositions(ArrayX2i const& indices, double const unit_dimension);
 
    private:
     // TODO(Jack): Consider making these two extraction functions public and testing them!
-    static Eigen::Matrix<double, 4, 2> EstimateExtractionCorners(Eigen::Matrix3d const& H, int const sqrt_num_bits);
+    static Matrix42d EstimateExtractionCorners(Matrix3d const& H, int const sqrt_num_bits);
 
-    static Eigen::Matrix<double, 4, 2> RefineCorners(cv::Mat const& image,
-                                                     Eigen::Matrix<double, 4, 2> const& extraction_corners);
+    static Matrix42d RefineCorners(cv::Mat const& image, Matrix42d const& extraction_corners);
 
     AprilTagFamily tag_family_;
     AprilTagDetector tag_detector_;
