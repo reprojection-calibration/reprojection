@@ -2,7 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "projection_functions/double_sphere.hpp"
+#include "projection_functions/camera_model.hpp"
+#include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
@@ -13,24 +14,15 @@ TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitialization) {
     // VanishingPointInitialization() then fits circles to each row, calculates their intersections and then from that
     // the focal length. One thing to notice here in the choice of *_points is that a circle cannot be fit to collinear
     // points. Therefore, we offset the points from the principal point by 100 units to make sure that we get "bend" and
-    // not just a displacement along the radial axis and failed circle fitting.
+    // not just a displacement along the radial axis and therefore a failed circle fitting.
     MatrixX3d const horizontal_points{{-360, 100, 600}, {-240, 100, 600}, {-120, 100, 600}, {0, 100, 600},
                                       {120, 100, 600},  {240, 100, 600},  {320, 100, 600}};
-    // TODO(Jack): Eliminate copy and paste by adding a helper to projection_functions like we already have for pinhole.
-    // This loop is copy and pasted here twice.
-    MatrixX2d horizontal_pixels(horizontal_points.rows(), 2);
-    for (int i{0}; i < horizontal_points.rows(); ++i) {
-        horizontal_pixels.row(i) =
-            projection_functions::DoubleSphere::Project<double>(intrinsics, horizontal_points.row(i));
-    }
+    auto const camera{projection_functions::DoubleSphereCamera(intrinsics)};
+    MatrixX2d const horizontal_pixels(camera.Project(horizontal_points));
 
     MatrixX3d const vertical_points{
         {100, -240, 600}, {100, -120, 600}, {100, 0, 600}, {100, 120, 600}, {100, 240, 600}};
-    MatrixX2d vertical_pixels(vertical_points.rows(), 2);
-    for (int i{0}; i < vertical_points.rows(); ++i) {
-        vertical_pixels.row(i) =
-            projection_functions::DoubleSphere::Project<double>(intrinsics, vertical_points.row(i));
-    }
+    MatrixX2d const vertical_pixels(camera.Project(vertical_points));
 
     auto const f{calibration::VanishingPointInitialization(horizontal_pixels, vertical_pixels)};
     ASSERT_TRUE(f.has_value());

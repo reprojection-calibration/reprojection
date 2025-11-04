@@ -4,7 +4,7 @@
 
 #include <Eigen/Geometry>
 
-#include "projection_functions/unified_camera_model.hpp"
+#include "projection_functions/camera_model.hpp"
 
 using namespace reprojection;
 
@@ -14,9 +14,9 @@ using namespace reprojection;
 // this is the case where xi = 1. In our testing that uses a ucm camera with xi=1 we see that we get exactly the
 // focal length we expect. Satisfying!!!
 
-// NOTE(Jack): Linear in this sense means that the 3D points that the pixel projections are generated from a collinear,
-// the pixels themselves, having undergone a ucm projection will not be collinear (unless of course they are radial
-// along the x or y-axis :))
+// NOTE(Jack): Linear in this sense means that the 3D points that the pixel projections are generated from a collinear
+// set of points, the pixels themselves having undergone a ucm projection will not be collinear (unless of course they
+// are radial along the x or y-axis :))
 std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3d const& direction) {
     // Generate four points on a line using the provided origin and direction
     Eigen::ParametrizedLine<double, 3> const line(origin, direction);
@@ -25,14 +25,12 @@ std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3
         points_co.row(i) = line.pointAt(i);
     }
 
-    // Project the four points to pixels using the ucm camera model with xi=1 (i.e. parabola model) and a focal
+    // Project the four points to pixels using the ucm camera model with xi=1 (i.e. parabola case) and a focal
     // length/gamma of 600
     Eigen::Array2d const principal_point{360, 240};
     Eigen::Array<double, 5, 1> const intrinsics{600, 600, principal_point[0], principal_point[1], 1};
-    MatrixX2d pixels(points_co.rows(), 2);
-    for (int i{0}; i < points_co.rows(); ++i) {
-        pixels.row(i) = projection_functions::UnifiedCameraModel::Project<double>(intrinsics, points_co.row(i));
-    }
+    auto const camera{projection_functions::UcmCamera(intrinsics)};
+    MatrixX2d const pixels(camera.Project(points_co));
 
     return {pixels, principal_point};
 }
