@@ -8,6 +8,7 @@ namespace reprojection {
 using Vector2i = Eigen::Vector2i;
 using Vector2d = Eigen::Vector2d;
 using Vector3d = Eigen::Vector3d;
+using Vector6d = Eigen::Vector<double, 6>;
 using VectorXd = Eigen::VectorXd;
 
 using Matrix3d = Eigen::Matrix3d;
