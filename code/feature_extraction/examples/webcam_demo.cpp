@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "feature_extraction/target_extraction.hpp"
+#include "types/eigen_types.hpp"
 
 // To get this working from CLion dev env I followed this link:
 // https://medium.com/@steffen.stautmeister/how-to-build-and-run-opencv-and-pytorch-c-with-cuda-support-in-docker-in-clion-6f485155deb8
@@ -11,7 +12,6 @@
 //      -e DISPLAY=:0.0 --entrypoint= -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev --privileged --rm
 
 using namespace reprojection;
-using namespace reprojection::feature_extraction;
 
 // Adopted from https://stackoverflow.com/questions/865668/parsing-command-line-arguments-in-c
 char* GetCommandOption(char** begin, char** end, const std::string& option) {
@@ -31,7 +31,8 @@ int main(int argc, char* argv[]) {
     }
 
     YAML::Node const config{YAML::LoadFile(filename)};
-    std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(config["target"])};
+    std::unique_ptr<feature_extraction::TargetExtractor> const extractor{
+        feature_extraction::CreateTargetExtractor(config["target"])};
 
     cv::VideoCapture cap(0);
     if (not cap.isOpened()) {
@@ -48,8 +49,8 @@ int main(int argc, char* argv[]) {
 
         std::optional<ExtractedTarget> const target{extractor->Extract(gray)};
         if (target.has_value()) {
-            Eigen::MatrixX2d const& pixels{target->bundle.pixels};
-            Eigen::ArrayX2i const& indices{target->indices};
+            MatrixX2d const& pixels{target->bundle.pixels};
+            ArrayX2i const& indices{target->indices};
             for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
                 cv::circle(frame, cv::Point(pixels.row(i)[0], pixels.row(i)[1]), 1, cv::Scalar(0, 255, 0), 5,
                            cv::LINE_8);

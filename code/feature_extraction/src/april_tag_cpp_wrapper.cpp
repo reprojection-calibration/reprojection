@@ -24,7 +24,7 @@ AprilTagFamily::~AprilTagFamily() { tag_family_destroy(tag_family); }
 AprilTagDetection::AprilTagDetection(apriltag_detection_t const& raw_detection)
     : id{raw_detection.id},
       H{Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>{raw_detection.H->data}},
-      c{Eigen::Vector2d{raw_detection.c[0], raw_detection.c[1]}},
+      c{Vector2d{raw_detection.c[0], raw_detection.c[1]}},
       p{Eigen::Map<Eigen::Matrix<double, 4, 2, Eigen::RowMajor>>{const_cast<double*>(&raw_detection.p[0][0])}} {}
 
 AprilTagDetector::AprilTagDetector(AprilTagFamily const& tag_family, AprilTagDetectorSettings const& settings)

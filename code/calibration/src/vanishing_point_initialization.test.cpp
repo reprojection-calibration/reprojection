@@ -32,9 +32,9 @@ TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitialization) {
 }
 
 //  NOTE(Jack): This test provides a more simple call to VanishingPointInitialization(), where instead of projecting
-//  points with the double sphere model we use to circles that intersect as the simulated pixels. Of course this does
-//  not realistically reflect the situation of a imaging a gridded target, but the maths works out simply and exactly
-//  like we want.
+//  points with the double sphere model we use two circles that intersect as the simulated pixels. Of course this does
+//  not realistically reflect the situation of a imaging a gridded target with a distorted lense, but the math works
+//  out simple and exact, good for debugging!
 TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationPerfectCircles) {
     MatrixX2d const pixels1{{0, 1}, {2, 1}, {1, 0}, {1, 2}};  // (x-1)^2 + (y-1)^2 = 1
     MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // (x-2)^2 + (y-2)^2 = 1
@@ -115,7 +115,7 @@ TEST(CalibrationFocalLengthInitialization, TestFitCircle) {
 }
 
 TEST(CalibrationFocalLengthInitialization, TestFitCircleStraightLine) {
-    // Degenerate condition when points are colinear
+    // Degenerate condition when points are collinear
     MatrixX2d const data{{1, 1}, {2, 2}, {3, 3}, {4, 4}};
     EXPECT_EQ(calibration::FitCircle(data), std::nullopt);
 }

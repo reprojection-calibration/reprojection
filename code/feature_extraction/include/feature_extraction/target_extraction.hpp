@@ -13,7 +13,8 @@ namespace reprojection::feature_extraction {
 
 // NOTE(Jack): For detectors which can only detect "whole" boards the Extract() method will simply return the points and
 // indices in their entirety. For targets which can have partial detections (ex. AprilGrid3) their Extract() method will
-// mask out the indices and points which were visible and only return those.
+// mask out the indices and points which were visible and only return those. Never assume a target is whole! Always use
+// the indices.
 class TargetExtractor {
    public:
     TargetExtractor(cv::Size const& pattern_size, const double unit_dimension)
@@ -32,9 +33,6 @@ class TargetExtractor {
 
 enum class TargetType { Checkerboard, CircleGrid, AprilGrid3 };
 
-// NOTE(Jack): One day the argument to CreateTargetExtractor() will be the path to a configuration file. Until then we
-// will probably hard code some things which in the future will come from that file. Maybe there would be a more
-// eloquent way to do this for testing purposes with some test fixture utilities but I am not sure.
 std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_config);
 
 }  // namespace reprojection::feature_extraction
