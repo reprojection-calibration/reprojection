@@ -147,16 +147,16 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
 
     ArrayXi const mask1{AprilGrid3Extractor::VisibleGeometry(pattern_size, detections)};
     EXPECT_EQ(mask1.rows(), 4 * pattern_size.width * pattern_size.height);
-    EXPECT_TRUE(mask1.topRows(4).isApprox(Eigen::Array4i{0, 1, 6, 7}));
-    EXPECT_TRUE(mask1.bottomRows(4).isApprox(Eigen::Array4i{16, 17, 22, 23}));
+    EXPECT_TRUE(mask1.topRows(4).isApprox(Array4i{0, 1, 6, 7}));
+    EXPECT_TRUE(mask1.bottomRows(4).isApprox(Array4i{16, 17, 22, 23}));
 
     // Now remove the first tag detection and see that it still works
     detections.erase(std::begin(detections));
 
     ArrayXi const mask2{AprilGrid3Extractor::VisibleGeometry(pattern_size, detections)};
     EXPECT_EQ(mask2.rows(), 4 * (pattern_size.width * pattern_size.height - 1));  // Four fewer elements
-    EXPECT_TRUE(mask2.topRows(4).isApprox(Eigen::Array4i{2, 3, 8, 9}));           // Moved one tag over along the row
-    EXPECT_TRUE(mask2.bottomRows(4).isApprox(Eigen::Array4i{16, 17, 22, 23}));    // Same as before removal
+    EXPECT_TRUE(mask2.topRows(4).isApprox(Array4i{2, 3, 8, 9}));                  // Moved one tag over along the row
+    EXPECT_TRUE(mask2.bottomRows(4).isApprox(Array4i{16, 17, 22, 23}));           // Same as before removal
 }
 
 TEST_F(AprilTagTestFixture, TestAprilGrid3CornerPositions) {

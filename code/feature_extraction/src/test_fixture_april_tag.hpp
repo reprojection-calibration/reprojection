@@ -4,6 +4,7 @@
 
 #include "april_tag_cpp_wrapper.hpp"
 #include "target_generators.hpp"
+#include "types/eigen_types.hpp"
 
 extern "C" {
 #include "generated_apriltag_code/tagCustom36h11.h"
@@ -22,7 +23,7 @@ class AprilTagTestFixture : public ::testing::Test {
 
     AprilTagFamily tag_family_handler_;
     AprilTagDetector tag_detector_;
-    Eigen::MatrixXi code_matrix_0_;  // Arbitrarily choose the first code for testing
+    MatrixXi code_matrix_0_;  // Arbitrarily choose the first code for testing
     int bit_size_pixel_;
 };
 

@@ -11,13 +11,14 @@ using Vector3d = Eigen::Vector3d;
 using VectorXd = Eigen::VectorXd;
 
 using Matrix3d = Eigen::Matrix3d;
-
+using MatrixXi = Eigen::MatrixXi;
 using MatrixX2d = Eigen::MatrixX2d;
 using MatrixX3d = Eigen::MatrixX3d;
 
 using ArrayXd = Eigen::ArrayXd;
 using ArrayXi = Eigen::ArrayXi;
 using ArrayX2i = Eigen::ArrayX2i;
+using Array2i = Eigen::Array2i;
 using Array4i = Eigen::Array4i;
 using Array2d = Eigen::Array2d;
 using Array3d = Eigen::Array3d;
