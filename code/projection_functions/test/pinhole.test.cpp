@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
+#include "types/eigen_types.hpp"
 
 using namespace reprojection;
 

@@ -11,6 +11,7 @@ using Vector3d = Eigen::Vector3d;
 using Vector6d = Eigen::Vector<double, 6>;
 using VectorXd = Eigen::VectorXd;
 
+using Matrix2d = Eigen::Matrix2d;
 using Matrix3d = Eigen::Matrix3d;
 using MatrixXi = Eigen::MatrixXi;
 using MatrixXd = Eigen::MatrixXd;

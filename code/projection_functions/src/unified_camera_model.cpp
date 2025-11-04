@@ -1,7 +1,5 @@
 #include "projection_functions/unified_camera_model.hpp"
 
-#include "projection_functions/double_sphere.hpp"
-
 namespace reprojection::projection_functions {
 
 // TODO(Jack): A continuation of my theory that UCM and DS are practically the same exact same! Could be wrong... see

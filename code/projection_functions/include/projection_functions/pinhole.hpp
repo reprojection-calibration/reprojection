@@ -55,7 +55,7 @@ struct Pinhole {
         return pixel;
     }
 
-    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Eigen::Array<double, 2, 1> const& pixel);
+    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
 };
 
 }  // namespace reprojection::projection_functions

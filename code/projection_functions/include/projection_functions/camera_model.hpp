@@ -64,7 +64,7 @@ class Camera_T : public Camera {
     explicit Camera_T(Eigen::Array<double, T_Model::Size, 1> const& intrinsics) : intrinsics_{intrinsics} {}
 
     MatrixX2d Project(MatrixX3d const& points_co) const override {
-        Eigen::MatrixX2d pixels(points_co.rows(), 2);
+        MatrixX2d pixels(points_co.rows(), 2);
         for (int i{0}; i < points_co.rows(); ++i) {
             pixels.row(i) = T_Model::template Project<double>(intrinsics_, points_co.row(i));
         }
@@ -73,7 +73,7 @@ class Camera_T : public Camera {
     }  // LCOV_EXCL_LINE
 
     MatrixX3d Unproject(MatrixX2d const& pixels) const override {
-        Eigen::MatrixX3d rays_co(pixels.rows(), 3);
+        MatrixX3d rays_co(pixels.rows(), 3);
         for (int i{0}; i < pixels.rows(); ++i) {
             rays_co.row(i) = T_Model::Unproject(intrinsics_, pixels.row(i));
         }
