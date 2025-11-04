@@ -5,6 +5,7 @@
 
 namespace reprojection {
 
+using Vector2i = Eigen::Vector2i;
 using Vector2d = Eigen::Vector2d;
 using Vector3d = Eigen::Vector3d;
 using VectorXd = Eigen::VectorXd;
@@ -17,6 +18,7 @@ using MatrixX3d = Eigen::MatrixX3d;
 using ArrayXd = Eigen::ArrayXd;
 using ArrayXi = Eigen::ArrayXi;
 using ArrayX2i = Eigen::ArrayX2i;
+using Array4i = Eigen::Array4i;
 using Array2d = Eigen::Array2d;
 using Array3d = Eigen::Array3d;
 using Array4d = Eigen::Array4d;
