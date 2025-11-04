@@ -1,10 +1,12 @@
-#include <Eigen/Dense>
+#pragma once
+
+#include "types/eigen_types.hpp"
 
 namespace reprojection::pnp {
 
-bool IsPlane(Eigen::MatrixX3d const& points);
+bool IsPlane(MatrixX3d const& points);
 
 // TODO(Jack): Not tested
-std::tuple<Eigen::Vector3d, Eigen::Matrix3d> Pca(Eigen::MatrixX3d const& points);
+std::tuple<Vector3d, Matrix3d> Pca(MatrixX3d const& points);
 
 }  // namespace reprojection::pnp

@@ -4,6 +4,7 @@
 
 #include "spline/time_handler.hpp"
 #include "spline/types.hpp"
+#include "types/eigen_types.hpp"
 
 namespace reprojection::spline {
 
@@ -15,11 +16,11 @@ class r3Spline {
    public:
     r3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns);
 
-    std::optional<Eigen::Vector3d> Evaluate(uint64_t const t_ns,
-                                            DerivativeOrder const derivative = DerivativeOrder::Null) const;
+    std::optional<Vector3d> Evaluate(uint64_t const t_ns,
+                                     DerivativeOrder const derivative = DerivativeOrder::Null) const;
 
     // TODO(Jack): Let us consider what benefit we would get from making this private at some later point
-    std::vector<Eigen::Vector3d> knots_;  // A.k.a. "control points"
+    std::vector<Vector3d> knots_;  // A.k.a. "control points"
 
    private:
     TimeHandler time_handler_;

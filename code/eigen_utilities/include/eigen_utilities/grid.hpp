@@ -4,8 +4,8 @@
 
 namespace reprojection::eigen_utilities {
 
-// Requesting even_only has the effect of allowing us to produce asymmetric grids like those required by the asymmetric
-// circle grid target.
+// Requesting even_only=true has the effect of allowing us to produce asymmetric grids like those required by the
+// asymmetric circle grid target.
 ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_only = false);
 
 ArrayXi MaskIndices(ArrayXi const& array);

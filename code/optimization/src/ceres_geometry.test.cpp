@@ -7,7 +7,7 @@
 using namespace reprojection;
 
 TEST(OptimizationCeresXxx, TestTransformPointsTranslation) {
-    Eigen::Vector<double, 6> const tf{0, 0, 0, 1, 2, 3};  // Translation only
+    Vector6d const tf{0, 0, 0, 1, 2, 3};  // Translation only
     Vector3d const point{5, 10, 15};
 
     Vector3d const transformed_point{optimization::TransformPoint<double>(tf, point)};
@@ -18,7 +18,7 @@ TEST(OptimizationCeresXxx, TestTransformPointsTranslation) {
 }
 
 TEST(OptimizationCeresXxx, TestTransformPointsRotation) {
-    Eigen::Vector<double, 6> const tf{0, 0, M_PI_2, 0, 0, 0};  // Rotation only
+    Vector6d const tf{0, 0, M_PI_2, 0, 0, 0};  // Rotation only
     Vector3d const point{5, 10, 15};
 
     Vector3d const transformed_point{optimization::TransformPoint<double>(tf, point)};

@@ -7,7 +7,7 @@
 
 namespace reprojection::calibration {
 
-// (center: (x,y), radius)
+// (center: (x,y), radius: double)
 using Circle = std::tuple<Vector2d, double>;
 
 // Follows the method from "Equidistant Fish-Eye Calibration and Rectification by Vanishing Point Extraction" Ciara´n

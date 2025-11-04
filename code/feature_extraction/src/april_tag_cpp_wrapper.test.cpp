@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "test_fixture_april_tag.hpp"
+#include "types/eigen_types.hpp"
 
 using namespace reprojection::feature_extraction;
 
@@ -16,7 +17,7 @@ TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilBoard) {
     int const num_tags{pattern_size.height * pattern_size.width};
     EXPECT_EQ(std::size(detections), num_tags);
     for (int i = 0; i < num_tags; i++) {
-        EXPECT_EQ(detections[i].id, i);  // AprilBoard3 tag IDs will always be generated in order as [0, num_tags)
+        EXPECT_EQ(detections[i].id, i);  // Tag IDs should always be generated in order as [0, num_tags)
     }
 }
 
@@ -30,23 +31,9 @@ TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilTag) {
     EXPECT_EQ(detection.id, 0);
 
     // Center point
-    EXPECT_FLOAT_EQ(detection.c[0], 71);
-    EXPECT_FLOAT_EQ(detection.c[1], 71);
+    EXPECT_TRUE(detection.c.isApproxToConstant(71));
 
-    // TODO(Jack): Replace with groundtruth values in one single matrix and check isApprox()
-    // Point zero
-    EXPECT_FLOAT_EQ(detection.p(0, 0), 30);
-    EXPECT_FLOAT_EQ(detection.p(0, 1), 112);
-
-    // Point one
-    EXPECT_FLOAT_EQ(detection.p(1, 0), 112);
-    EXPECT_FLOAT_EQ(detection.p(1, 1), 112);
-
-    // Point two
-    EXPECT_FLOAT_EQ(detection.p(2, 0), 112);
-    EXPECT_FLOAT_EQ(detection.p(2, 1), 30);
-
-    // Point three
-    EXPECT_FLOAT_EQ(detection.p(3, 0), 30);
-    EXPECT_FLOAT_EQ(detection.p(3, 1), 30);
+    // The four corner pixels in the apriltag native order.
+    Eigen::Matrix<double, 4, 2> gt_pixels{{30, 112}, {112, 112}, {112, 30}, {30, 30}};
+    EXPECT_TRUE(detection.p.isApprox(gt_pixels));
 }

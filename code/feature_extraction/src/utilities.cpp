@@ -1,11 +1,9 @@
 #include "utilities.hpp"
 
-#include <vector>
-
 namespace reprojection::feature_extraction {
 
-Eigen::MatrixX2d ToEigen(std::vector<cv::Point2f> const& points) {
-    Eigen::MatrixX2d eigen_points(std::size(points), 2);
+MatrixX2d ToEigen(std::vector<cv::Point2f> const& points) {
+    MatrixX2d eigen_points(std::size(points), 2);
     for (Eigen::Index i = 0; i < eigen_points.rows(); i++) {
         eigen_points.row(i)[0] = points[i].x;
         eigen_points.row(i)[1] = points[i].y;

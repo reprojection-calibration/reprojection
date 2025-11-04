@@ -4,9 +4,10 @@ extern "C" {
 #include <apriltag/apriltag.h>
 }
 
-#include <Eigen/Dense>
 #include <functional>
 #include <opencv2/opencv.hpp>
+
+#include "types/eigen_types.hpp"
 
 // This is my attempt to RAII-ify the  C code from the apriltag repository. The main thing I try to fight here is
 // manually having to deallocate memory. For the detector and tag detections themselves that is relatively easy because
@@ -36,8 +37,8 @@ struct AprilTagDetection {
     explicit AprilTagDetection(apriltag_detection_t const& raw_detection);
 
     int id{};
-    Eigen::Matrix3d H;
-    Eigen::Vector2d c;
+    Matrix3d H;
+    Vector2d c;
     Eigen::Matrix<double, 4, 2> p;
 };
 

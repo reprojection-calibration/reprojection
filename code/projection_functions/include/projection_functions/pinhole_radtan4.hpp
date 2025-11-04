@@ -62,7 +62,7 @@ struct PinholeRadtan4 {
 
     static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
 
-    static std::tuple<Array2d, Eigen::Matrix2d> JacobianUpdate(Array4d const& distortion, Array2d const& p_cam);
+    static std::tuple<Array2d, Matrix2d> JacobianUpdate(Array4d const& distortion, Array2d const& p_cam);
 
     // NOTE(Jack): Here we are using ceres to calculate the jacobian of the PinholeRadtan4::Distort. Unlike most ceres
     // "functors" you will see, this is NOT a "cost" functor! It will not return the residual between some predicted and
@@ -75,7 +75,7 @@ struct PinholeRadtan4 {
     // a ceres cost functor because we need to fit into how ceres does it, and therefore at first glance you might be
     // confused what is going on here.
     struct DistortFunctor {
-        explicit DistortFunctor(Eigen::Array<double, 4, 1> const& distortion) : distortion_{distortion} {}
+        explicit DistortFunctor(Array4d const& distortion) : distortion_{distortion} {}
 
         // WARN(Jack): This is not a cost function operator! Read the context above in the note.
         template <typename T>
@@ -90,7 +90,7 @@ struct PinholeRadtan4 {
         }
 
        private:
-        Eigen::Array<double, 4, 1> distortion_;
+        Array4d distortion_;
     };
 };
 

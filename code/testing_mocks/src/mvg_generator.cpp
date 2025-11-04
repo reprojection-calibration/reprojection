@@ -12,7 +12,7 @@ MvgGenerator::MvgGenerator(std::unique_ptr<projection_functions::Camera> camera,
     : camera_{std::move(camera)},
       se3_spline_{constants::t0_ns, constants::delta_t_ns},
       points_{BuildTargetPoints(flat)} {
-    std::vector<Eigen::Isometry3d> const poses{SphereTrajectory(CameraTrajectory{{0, 0, 0}, 1.0, {0, 0, 5}})};
+    std::vector<Isometry3d> const poses{SphereTrajectory(CameraTrajectory{{0, 0, 0}, 1.0, {0, 0, 5}})};
 
     for (auto const& pose : poses) {
         se3_spline_.AddKnot(pose);
@@ -37,12 +37,11 @@ std::vector<Frame> MvgGenerator::GenerateBatch(int const num_frames) const {
  * (reprojection::testing_mocks::MvgGenerator) and should NOT be used by other consuming code. It was left as a public
  * method only so that it could be tested.
  */
-Eigen::MatrixX2d MvgGenerator::Project(Eigen::MatrixX3d const& points_w,
-                                       std::unique_ptr<projection_functions::Camera> const& camera,
-                                       Eigen::Isometry3d const& tf_co_w) {
+MatrixX2d MvgGenerator::Project(MatrixX3d const& points_w, std::unique_ptr<projection_functions::Camera> const& camera,
+                                Isometry3d const& tf_co_w) {
     // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not
     // match our expectations about matrix dimensions after the fact.
-    Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
+    MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
 
     MatrixX2d const pixels{camera->Project(points_homog_co.leftCols(3))};
 
@@ -74,19 +73,19 @@ Frame MvgGenerator::Generate(double const t) const {
     auto const pose_t{se3_spline_.Evaluate(spline_time)};
     assert(pose_t.has_value());  // See note above
 
-    Eigen::MatrixX2d const pixels{Project(points_, camera_, pose_t.value())};
+    MatrixX2d const pixels{Project(points_, camera_, pose_t.value())};
 
     // WARN(Jack): This assumes that all points are always visible! With careful engineering for the default value
     // of K this will be true, but that cannot be guaranteed for all K!!!
     return {{pixels, points_}, pose_t.value()};
 }
 
-Eigen::MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {
+MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {
     int const size{5};  // Square target - rows == cols
     int const num_points{size * size};
 
-    Eigen::ArrayX2i const grid{eigen_utilities::GenerateGridIndices(size, size, false)};
-    Eigen::MatrixX3d points{Eigen::MatrixX3d::Zero(num_points, 3)};
+    ArrayX2i const grid{eigen_utilities::GenerateGridIndices(size, size, false)};
+    MatrixX3d points{MatrixX3d::Zero(num_points, 3)};
 
     // Center around zero with unit range [-0.5, 0.5]
     points.leftCols(2) = grid.cast<double>();
@@ -94,7 +93,7 @@ Eigen::MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {
     points.leftCols(2).array() -= 0.5;
 
     if (not flat) {
-        points.col(2) = Eigen::VectorXd::Random(num_points) / 2;  // Add random z-axis values in range [-0.5, 0.5]
+        points.col(2) = VectorXd::Random(num_points) / 2;  // Add random z-axis values in range [-0.5, 0.5]
     }
 
     return points;

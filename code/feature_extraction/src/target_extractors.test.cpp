@@ -5,6 +5,7 @@
 #include "eigen_utilities/grid.hpp"
 #include "target_generators.hpp"
 #include "test_fixture_april_tag.hpp"
+#include "types/eigen_types.hpp"
 
 using namespace reprojection;
 using namespace reprojection::feature_extraction;
@@ -20,20 +21,20 @@ TEST(TargetExtractors, TestCheckerboardExtractor) {
     std::optional<ExtractedTarget> const target{extractor.Extract(image)};
     ASSERT_TRUE(target.has_value());
 
-    Eigen::MatrixX2d const& pixels{target->bundle.pixels};
+    MatrixX2d const& pixels{target->bundle.pixels};
     EXPECT_EQ(pixels.rows(), pattern_size.height * pattern_size.width);
-    EXPECT_TRUE(pixels.row(0).isApprox(Eigen::Vector2d{100, 100}.transpose(), 1e-6));   // First pixel - heuristic
-    EXPECT_TRUE(pixels.row(11).isApprox(Eigen::Vector2d{250, 200}.transpose(), 1e-6));  // Last pixel - heuristic
+    EXPECT_TRUE(pixels.row(0).isApprox(Vector2d{100, 100}.transpose(), 1e-6));   // First pixel - heuristic
+    EXPECT_TRUE(pixels.row(11).isApprox(Vector2d{250, 200}.transpose(), 1e-6));  // Last pixel - heuristic
 
-    Eigen::MatrixX3d const& points{target->bundle.points};
+    MatrixX3d const& points{target->bundle.points};
     EXPECT_EQ(points.rows(), pattern_size.height * pattern_size.width);
-    EXPECT_TRUE(points.row(0).isApprox(Eigen::Vector3d{0, 0, 0}.transpose()));     // First pixel - heuristic
-    EXPECT_TRUE(points.row(11).isApprox(Eigen::Vector3d{1, 1.5, 0}.transpose()));  // Last pixel - heuristic
+    EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));     // First pixel - heuristic
+    EXPECT_TRUE(points.row(11).isApprox(Vector3d{1, 1.5, 0}.transpose()));  // Last pixel - heuristic
 
-    Eigen::ArrayX2i const& indices{target->indices};
+    ArrayX2i const& indices{target->indices};
     EXPECT_EQ(indices.rows(), pattern_size.width * pattern_size.height);
-    EXPECT_TRUE(indices.row(0).isApprox(Eigen::Vector2i{0, 0}.transpose()));   // First index - heuristic
-    EXPECT_TRUE(indices.row(11).isApprox(Eigen::Vector2i{2, 3}.transpose()));  // Last index - heuristic
+    EXPECT_TRUE(indices.row(0).isApprox(Vector2i{0, 0}.transpose()));   // First index - heuristic
+    EXPECT_TRUE(indices.row(11).isApprox(Vector2i{2, 3}.transpose()));  // Last index - heuristic
 }
 
 TEST(TargetExtractors, TestCircleGridExtractor) {
@@ -49,20 +50,20 @@ TEST(TargetExtractors, TestCircleGridExtractor) {
     std::optional<ExtractedTarget> const target{extractor.Extract(image)};
     ASSERT_TRUE(target.has_value());
 
-    Eigen::MatrixX2d const& pixels{target->bundle.pixels};
+    MatrixX2d const& pixels{target->bundle.pixels};
     EXPECT_EQ(pixels.rows(), pattern_size.width * pattern_size.height);
-    EXPECT_TRUE(pixels.row(0).isApprox(Eigen::Vector2d{265, 195}.transpose(), 1e-6));
-    EXPECT_TRUE(pixels.row(11).isApprox(Eigen::Vector2d{55, 55}.transpose(), 1e-6));
+    EXPECT_TRUE(pixels.row(0).isApprox(Vector2d{265, 195}.transpose(), 1e-6));
+    EXPECT_TRUE(pixels.row(11).isApprox(Vector2d{55, 55}.transpose(), 1e-6));
 
-    Eigen::MatrixX3d const& points{target->bundle.points};
+    MatrixX3d const& points{target->bundle.points};
     EXPECT_EQ(points.rows(), pattern_size.height * pattern_size.width);
-    EXPECT_TRUE(points.row(0).isApprox(Eigen::Vector3d{0, 0, 0}.transpose()));
-    EXPECT_TRUE(points.row(11).isApprox(Eigen::Vector3d{1, 1.5, 0}.transpose()));
+    EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));
+    EXPECT_TRUE(points.row(11).isApprox(Vector3d{1, 1.5, 0}.transpose()));
 
-    Eigen::ArrayX2i const& indices{target->indices};
+    ArrayX2i const& indices{target->indices};
     EXPECT_EQ(indices.rows(), pattern_size.height * pattern_size.width);
-    EXPECT_TRUE(indices.row(0).isApprox(Eigen::Vector2i{0, 0}.transpose()));
-    EXPECT_TRUE(indices.row(11).isApprox(Eigen::Vector2i{2, 3}.transpose()));
+    EXPECT_TRUE(indices.row(0).isApprox(Vector2i{0, 0}.transpose()));
+    EXPECT_TRUE(indices.row(11).isApprox(Vector2i{2, 3}.transpose()));
 }
 
 TEST(TargetExtractors, TestCircleGridExtractorAsymmetric) {
@@ -82,21 +83,21 @@ TEST(TargetExtractors, TestCircleGridExtractorAsymmetric) {
     std::optional<ExtractedTarget> const target{extractor.Extract(image)};
     ASSERT_TRUE(target.has_value());
 
-    Eigen::MatrixX2d const& pixels{target->bundle.pixels};
+    MatrixX2d const& pixels{target->bundle.pixels};
     EXPECT_EQ(pixels.rows(),
               (pattern_size.width * pattern_size.height) / 2);  // NOTE(Jack): Divide by two due to asymmetry!
-    EXPECT_TRUE(pixels.row(0).isApprox(Eigen::Vector2d{475, 55}.transpose(), 1e-6));
-    EXPECT_TRUE(pixels.row(20).isApprox(Eigen::Vector2d{55, 335}.transpose(), 1e-6));
+    EXPECT_TRUE(pixels.row(0).isApprox(Vector2d{475, 55}.transpose(), 1e-6));
+    EXPECT_TRUE(pixels.row(20).isApprox(Vector2d{55, 335}.transpose(), 1e-6));
 
-    Eigen::MatrixX3d const& points{target->bundle.points};
+    MatrixX3d const& points{target->bundle.points};
     EXPECT_EQ(points.rows(), (pattern_size.width * pattern_size.height) / 2);
-    EXPECT_TRUE(points.row(0).isApprox(Eigen::Vector3d{0, 0, 0}.transpose()));
-    EXPECT_TRUE(points.row(20).isApprox(Eigen::Vector3d{3, 2, 0}.transpose()));
+    EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));
+    EXPECT_TRUE(points.row(20).isApprox(Vector3d{3, 2, 0}.transpose()));
 
-    Eigen::ArrayX2i const& indices{target->indices};
+    ArrayX2i const& indices{target->indices};
     EXPECT_EQ(indices.rows(), (pattern_size.width * pattern_size.height) / 2);
-    EXPECT_TRUE(indices.row(0).isApprox(Eigen::Vector2i{0, 0}.transpose()));
-    EXPECT_TRUE(indices.row(20).isApprox(Eigen::Vector2i{6, 4}.transpose()));
+    EXPECT_TRUE(indices.row(0).isApprox(Vector2i{0, 0}.transpose()));
+    EXPECT_TRUE(indices.row(20).isApprox(Vector2i{6, 4}.transpose()));
 }
 
 TEST_F(AprilTagTestFixture, TestAprilGrid3Extractor) {
@@ -109,19 +110,19 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3Extractor) {
     std::optional<ExtractedTarget> const target{extractor.Extract(april_tag)};
     ASSERT_TRUE(target.has_value());
 
-    Eigen::MatrixX2d const& pixels{target->bundle.pixels};
+    MatrixX2d const& pixels{target->bundle.pixels};
     EXPECT_EQ(pixels.rows(), 4);  // One tag
-    Eigen::Matrix<double, 4, 2> const gt_pixels{{19.685731887817383, 19.685731887817383},
-                                                {119.27910614013672, 19.819416046142578},
-                                                {19.819417953491211, 119.27910614013672},
-                                                {119.13014984130859, 119.13014984130859}};
+    Matrix42d const gt_pixels{{19.685731887817383, 19.685731887817383},
+                              {119.27910614013672, 19.819416046142578},
+                              {19.819417953491211, 119.27910614013672},
+                              {119.13014984130859, 119.13014984130859}};
     EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-6));
 
-    Eigen::MatrixX3d const& points{target->bundle.points};
+    MatrixX3d const& points{target->bundle.points};
     Eigen::Matrix<double, 4, 3> const gt_points{{0, 0, 0}, {0.5, 0, 0}, {0, 0.5, 0}, {0.5, 0.5, 0}};
     EXPECT_TRUE(points.isApprox(gt_points));
 
-    Eigen::ArrayX2i const& indices{target->indices};
+    ArrayX2i const& indices{target->indices};
     Eigen::Array<int, 4, 2> const gt_indices{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     EXPECT_TRUE(indices.isApprox(gt_indices));
 }
@@ -138,33 +139,33 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
         // explicitly set I got the following error "may be used uninitialized [-Werror=maybe-uninitialized]". Therefore
         // I have added these here to allow us to compile in release mode. The real answer probably is somewhere in the
         // constructor or copy constructor design.
-        detection_i.H = Eigen::Matrix3d::Identity();
-        detection_i.c = Eigen::Vector2d::Zero();
-        detection_i.p = Eigen::Matrix<double, 4, 2>::Zero();
+        detection_i.H = Matrix3d::Identity();
+        detection_i.c = Vector2d::Zero();
+        detection_i.p = Matrix42d::Zero();
         detections.push_back(detection_i);
     }
 
-    Eigen::ArrayXi const mask1{AprilGrid3Extractor::VisibleGeometry(pattern_size, detections)};
+    ArrayXi const mask1{AprilGrid3Extractor::VisibleGeometry(pattern_size, detections)};
     EXPECT_EQ(mask1.rows(), 4 * pattern_size.width * pattern_size.height);
-    EXPECT_TRUE(mask1.topRows(4).isApprox(Eigen::Array<int, 4, 1>{0, 1, 6, 7}));
-    EXPECT_TRUE(mask1.bottomRows(4).isApprox(Eigen::Array<int, 4, 1>{16, 17, 22, 23}));
+    EXPECT_TRUE(mask1.topRows(4).isApprox(Array4i{0, 1, 6, 7}));
+    EXPECT_TRUE(mask1.bottomRows(4).isApprox(Array4i{16, 17, 22, 23}));
 
     // Now remove the first tag detection and see that it still works
     detections.erase(std::begin(detections));
 
-    Eigen::ArrayXi const mask2{AprilGrid3Extractor::VisibleGeometry(pattern_size, detections)};
+    ArrayXi const mask2{AprilGrid3Extractor::VisibleGeometry(pattern_size, detections)};
     EXPECT_EQ(mask2.rows(), 4 * (pattern_size.width * pattern_size.height - 1));  // Four fewer elements
-    EXPECT_TRUE(mask2.topRows(4).isApprox(Eigen::Array<int, 4, 1>{2, 3, 8, 9}));  // Moved one tag over along the row
-    EXPECT_TRUE(mask2.bottomRows(4).isApprox(Eigen::Array<int, 4, 1>{16, 17, 22, 23}));  // Same as before removal
+    EXPECT_TRUE(mask2.topRows(4).isApprox(Array4i{2, 3, 8, 9}));                  // Moved one tag over along the row
+    EXPECT_TRUE(mask2.bottomRows(4).isApprox(Array4i{16, 17, 22, 23}));           // Same as before removal
 }
 
 TEST_F(AprilTagTestFixture, TestAprilGrid3CornerPositions) {
     // Should be even because aprilgrids always have even points in each direction because it is always a multiple of
     // two of the board's tag rows/columns
-    Eigen::ArrayX2i const grid{eigen_utilities::GenerateGridIndices(6, 8)};
-    Eigen::MatrixX3d const points{AprilGrid3Extractor::CornerPositions(grid, 0.5)};
+    ArrayX2i const grid{eigen_utilities::GenerateGridIndices(6, 8)};
+    MatrixX3d const points{AprilGrid3Extractor::CornerPositions(grid, 0.5)};
 
     EXPECT_EQ(points.rows(), grid.rows());
-    EXPECT_TRUE(points.row(0).isApprox(Eigen::Vector3d{0, 0, 0}.transpose()));
-    EXPECT_TRUE(points.row(47).isApprox(Eigen::Vector3d{2.6, 1.9, 0}.transpose()));
+    EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));
+    EXPECT_TRUE(points.row(47).isApprox(Vector3d{2.6, 1.9, 0}.transpose()));
 };

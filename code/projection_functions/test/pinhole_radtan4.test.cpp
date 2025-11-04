@@ -28,12 +28,12 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {
     // If [k1, k2, p1, p2] are zero then pinhole radtan4 should essentially just act as a pinhole camera.
-    Eigen::Array<double, 8, 1> const pinhole_intrinsics{600, 600, 360, 240, 0, 0, 0, 0};
-    Eigen::MatrixX2d const gt_pinhole_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
-                                             {0, pinhole_intrinsics[3]},
-                                             {720, pinhole_intrinsics[3]},
-                                             {pinhole_intrinsics[2], 0},
-                                             {pinhole_intrinsics[2], 480}};
+    Array8d const pinhole_intrinsics{600, 600, 360, 240, 0, 0, 0, 0};
+    MatrixX2d const gt_pinhole_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
+                                      {0, pinhole_intrinsics[3]},
+                                      {720, pinhole_intrinsics[3]},
+                                      {pinhole_intrinsics[2], 0},
+                                      {pinhole_intrinsics[2], 480}};
 
     auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_intrinsics)};
     MatrixX2d const pixels(camera.Project(gt_points));

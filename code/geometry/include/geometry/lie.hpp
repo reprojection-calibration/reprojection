@@ -1,15 +1,15 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include "types/eigen_types.hpp"
 
 namespace reprojection::geometry {
 
-Eigen::Isometry3d Exp(Eigen::Vector<double, 6> const& se3);
+Isometry3d Exp(Vector6d const& se3);
 
-Eigen::Vector<double, 6> Log(Eigen::Isometry3d const& SE3);
+Vector6d Log(Isometry3d const& SE3);
 
-Eigen::Matrix3d Exp(Eigen::Vector3d const& so3);
+Matrix3d Exp(Vector3d const& so3);
 
-Eigen::Vector3d Log(Eigen::Matrix3d const& SO3);
+Vector3d Log(Matrix3d const& SO3);
 
 }  // namespace reprojection::geometry

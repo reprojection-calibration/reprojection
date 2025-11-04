@@ -1,7 +1,8 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
+
+#include "types/eigen_types.hpp"
 
 namespace reprojection::feature_extraction {
 
@@ -16,11 +17,11 @@ struct AprilBoard3Generation {
 
     static cv::Mat GenerateTag(int const num_bits, uint64_t const tag_code, int const bit_size_pixels);
 
-    static cv::Mat GenerateTag(int const bit_size_pixels, Eigen::MatrixXi const& code_matrix);
+    static cv::Mat GenerateTag(int const bit_size_pixels, MatrixXi const& code_matrix);
 
-    static Eigen::MatrixXi GenerateCodeMatrix(int const num_bits, uint64_t const tag_code);
+    static MatrixXi GenerateCodeMatrix(int const num_bits, uint64_t const tag_code);
 
-    static Eigen::MatrixXi Rotate90(Eigen::MatrixXi const& matrix, bool const clockwise = false);
+    static MatrixXi Rotate90(MatrixXi const& matrix, bool const clockwise = false);
 };
 
 }  // namespace reprojection::feature_extraction

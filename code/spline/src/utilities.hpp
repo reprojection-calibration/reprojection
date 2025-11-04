@@ -1,8 +1,7 @@
 #pragma once
 
-#include <Eigen/Dense>
-
 #include "spline/types.hpp"
+#include "types/eigen_types.hpp"
 
 namespace reprojection::spline {
 
@@ -12,13 +11,13 @@ namespace reprojection::spline {
 // the utilities file. Are we missing the point somewhere?
 VectorK CalculateU(double const u_i, DerivativeOrder const derivative = DerivativeOrder::Null);
 
-Eigen::VectorXd TimePolynomial(int const k, double const u, int const derivative);
+VectorXd TimePolynomial(int const k, double const u, int const derivative);
 
-Eigen::MatrixXd PolynomialCoefficients(int const k);
+MatrixXd PolynomialCoefficients(int const k);
 
-Eigen::MatrixXd BlendingMatrix(int const k);
+MatrixXd BlendingMatrix(int const k);
 
-Eigen::MatrixXd CumulativeBlendingMatrix(int const k);
+MatrixXd CumulativeBlendingMatrix(int const k);
 
 // Note the symbol variables n and k come directly from wikipedia and are not chosen to reflect any relation to any
 // other variable symbol in the spline library.

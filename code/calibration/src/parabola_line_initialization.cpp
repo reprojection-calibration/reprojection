@@ -24,10 +24,10 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
     Eigen::Vector4d const C{svd.matrixV().col(3)};
 
     // We are not normalized so we do not yet refer to that variables (ex. c1 or c2) as part of the line normal N
-    double const c1{C(0)};
-    double const c2{C(1)};
-    double const c3{C(2)};                        // a = gamma * nz --> c3
-    double const c4{C(3)};                        // b = nz / gamma --> c4
+    double const& c1{C(0)};
+    double const& c2{C(1)};
+    double const& c3{C(2)};                       // a = gamma * nz --> c3
+    double const& c4{C(3)};                       // b = nz / gamma --> c4
     double const t{c1 * c1 + c2 * c2 + c3 * c4};  // a * b = gamma * nz * nz / gamma = nz * nz --> c3 * c4
 
     // WARN(Jack): In the reference paper there is a check here to make sure that t is positive! See note above. If it

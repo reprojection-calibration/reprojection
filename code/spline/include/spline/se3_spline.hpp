@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Eigen/Geometry>
 #include <optional>
 
 // TODO(Jack): I wanted to keep these headers hidden, because they are really just an implementation detail of
@@ -11,6 +10,7 @@
 // do something like PIMPL.
 #include "spline/r3_spline.hpp"
 #include "spline/so3_spline.hpp"
+#include "types/eigen_types.hpp"
 
 namespace reprojection::spline {
 
@@ -18,9 +18,9 @@ class Se3Spline {
    public:
     Se3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns);
 
-    void AddKnot(Eigen::Isometry3d const knot);
+    void AddKnot(Isometry3d const knot);
 
-    std::optional<Eigen::Isometry3d> Evaluate(uint64_t const t_ns) const;
+    std::optional<Isometry3d> Evaluate(uint64_t const t_ns) const;
 
    private:
     r3Spline r3_spline_;
