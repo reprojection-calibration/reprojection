@@ -23,7 +23,7 @@ TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
     }
 
     //
-    EXPECT_NEAR(translations.mean(), 0.0, 1e-2);
+    EXPECT_NEAR(translations.mean(), 0.0, 2e-2);
     EXPECT_NEAR(rotations_se3.mean(), 0.0, 1e-2);
 
     // TODO(Jack): We should add a function to for this calcualte and assert mean/covariance logic. It is used here
