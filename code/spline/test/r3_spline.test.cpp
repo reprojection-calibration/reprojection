@@ -6,15 +6,15 @@
 #include "spline/types.hpp"
 #include "utilities.hpp"
 
-using namespace reprojection::spline;
+using namespace reprojection;
 
 TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     // Completely empty spline
-    r3Spline r3_spline{100, 5};
+    spline::r3Spline r3_spline{100, 5};
     EXPECT_EQ(r3_spline.Evaluate(115), std::nullopt);
 
     // Add four knots which means we can ask for evaluations within the one time segment at the very start of the spline
-    for (int i{0}; i < constants::k; ++i) {
+    for (int i{0}; i < spline::constants::k; ++i) {
         r3_spline.knots_.push_back(Eigen::Vector3d::Zero());
     }
 
@@ -28,8 +28,8 @@ TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
 
 TEST(Spline_r3Spline, TestEvaluate) {
     // Completely empty spline
-    r3Spline r3_spline{100, 5};
-    for (int i{0}; i < constants::k; ++i) {
+    spline::r3Spline r3_spline{100, 5};
+    for (int i{0}; i < spline::constants::k; ++i) {
         r3_spline.knots_.push_back(i * Eigen::Vector3d::Ones());
     }
 
@@ -55,19 +55,19 @@ TEST(Spline_r3Spline, TestEvaluate) {
 
 TEST(Spline_r3Spline, TestEvaluateDerivatives) {
     // Completely empty spline
-    r3Spline r3_spline{100, 5};
-    for (int i{0}; i < constants::k; ++i) {
+    spline::r3Spline r3_spline{100, 5};
+    for (int i{0}; i < spline::constants::k; ++i) {
         r3_spline.knots_.push_back(i * Eigen::Vector3d::Ones());
     }
 
-    auto const p_du{r3_spline.Evaluate(101, DerivativeOrder::First)};
+    auto const p_du{r3_spline.Evaluate(101, spline::DerivativeOrder::First)};
     ASSERT_TRUE(p_du.has_value());
     // Honestly I expected this to be one because our data is a linear line with slope one, but we are taking this
     // derivative with respect to time and not to the x-axis, therefore it is 0.2 m/ns because our time interval
     // (delta_t_ns) is 5.
     EXPECT_TRUE(p_du.value().isApproxToConstant(0.2));
 
-    auto const p_dudu{r3_spline.Evaluate(101, DerivativeOrder::Second)};
+    auto const p_dudu{r3_spline.Evaluate(101, spline::DerivativeOrder::Second)};
     ASSERT_TRUE(p_dudu.has_value());
     // Linear line has no acceleration.
     EXPECT_TRUE(p_dudu.value().isApproxToConstant(0));
@@ -77,23 +77,23 @@ TEST(Spline_r3Spline, TestEvaluateDerivatives) {
 TEST(Spline_r3Spline, TestCalculateUAtZero) {
     double const u_i{0};
 
-    VectorK const u{CalculateU(u_i)};
-    VectorK const du{CalculateU(u_i, DerivativeOrder::First)};
-    VectorK const dudu{CalculateU(u_i, DerivativeOrder::Second)};
+    spline::VectorK const u{spline::CalculateU(u_i)};
+    spline::VectorK const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
+    spline::VectorK const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
 
-    EXPECT_TRUE(u.isApprox(VectorK{1, 0, 0, 0}));
-    EXPECT_TRUE(du.isApprox(VectorK{0, 1, 0, 0}));
-    EXPECT_TRUE(dudu.isApprox(VectorK{0, 0, 2, 0}));
+    EXPECT_TRUE(u.isApprox(spline::VectorK{1, 0, 0, 0}));
+    EXPECT_TRUE(du.isApprox(spline::VectorK{0, 1, 0, 0}));
+    EXPECT_TRUE(dudu.isApprox(spline::VectorK{0, 0, 2, 0}));
 }
 
 TEST(Spline_r3Spline, TestCalculate) {
     double const u_i{0.5};
 
-    VectorK const u{CalculateU(u_i)};
-    VectorK const du{CalculateU(u_i, DerivativeOrder::First)};
-    VectorK const dudu{CalculateU(u_i, DerivativeOrder::Second)};
+    spline::VectorK const u{spline::CalculateU(u_i)};
+    spline::VectorK const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
+    spline::VectorK const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
 
-    EXPECT_TRUE(u.isApprox(VectorK{1, 0.5, 0.25, 0.125}));
-    EXPECT_TRUE(du.isApprox(VectorK{0, 1, 1, 0.75}));
-    EXPECT_TRUE(dudu.isApprox(VectorK{0, 0, 2, 3}));
+    EXPECT_TRUE(u.isApprox(spline::VectorK{1, 0.5, 0.25, 0.125}));
+    EXPECT_TRUE(du.isApprox(spline::VectorK{0, 1, 1, 0.75}));
+    EXPECT_TRUE(dudu.isApprox(spline::VectorK{0, 0, 2, 3}));
 }
