@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include "matrix_utilities.hpp"
 
@@ -10,7 +10,7 @@ namespace reprojection::pnp {
 // both the plane to plane (Dlt22) and plane to points (Dlt23) case. In the Dlt22 case N=3 and A is 2nx9. In the Dlt23
 // case N=4 and A is 2nx12.
 // The math behind it for the Dlt23 case can be found in "Multiple View Geometry in computer vision", particularly be
-// noting that this function stacks Eq. 7.2 to form the A constraint matrix.
+// noting that this function stacks Eq. 7.2 to form the A matrix.
 template <int N>
 Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& pixels,
                                                         Eigen::Matrix<double, Eigen::Dynamic, N - 1> const& points) {

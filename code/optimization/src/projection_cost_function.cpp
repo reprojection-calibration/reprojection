@@ -4,7 +4,6 @@
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
-#include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
 

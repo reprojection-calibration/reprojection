@@ -8,7 +8,7 @@ using namespace reprojection;
 
 TEST(PnpMatrixUtilities, TestInterleaveRowWise) {
     MatrixX2d const a{{0, 0}, {1, 1}, {2, 2}};
-    Eigen::MatrixX2d const interleaved_pixels{pnp::InterleaveRowWise(a)};
+    MatrixX2d const interleaved_pixels{pnp::InterleaveRowWise(a)};
 
     EXPECT_EQ(interleaved_pixels.rows(), 2 * a.rows());
     // First row is duplicated

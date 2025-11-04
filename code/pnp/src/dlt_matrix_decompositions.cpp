@@ -6,16 +6,16 @@ namespace reprojection::pnp {
 
 // Inspired by https://www.physicsforums.com/threads/rq-decomposition-from-qr-decomposition.261739/
 // We implement RQ decomposition in terms of Eigen's built in QR decomposition
-std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> RqDecomposition(Eigen::Matrix3d const& matrix) {
-    Eigen::Matrix3d const reverse_rows{{0, 0, 1}, {0, 1, 0}, {1, 0, 0}};
-    Eigen::Matrix3d const reversed_matrix{reverse_rows * matrix};
+std::tuple<Matrix3d, Matrix3d> RqDecomposition(Matrix3d const& matrix) {
+    Matrix3d const reverse_rows{{0, 0, 1}, {0, 1, 0}, {1, 0, 0}};
+    Matrix3d const reversed_matrix{reverse_rows * matrix};
 
-    Eigen::HouseholderQR<Eigen::Matrix3d> qr(reversed_matrix.transpose());
-    Eigen::Matrix3d const R{qr.matrixQR().triangularView<Eigen::Upper>()};
-    Eigen::Matrix3d const Q{qr.householderQ()};
+    Eigen::HouseholderQR<Matrix3d> qr(reversed_matrix.transpose());
+    Matrix3d const R{qr.matrixQR().triangularView<Eigen::Upper>()};
+    Matrix3d const Q{qr.householderQ()};
 
-    Eigen::Matrix3d const R_star{reverse_rows * R.transpose() * reverse_rows};
-    Eigen::Matrix3d const Q_star{reverse_rows * Q.transpose()};
+    Matrix3d const R_star{reverse_rows * R.transpose() * reverse_rows};
+    Matrix3d const Q_star{reverse_rows * Q.transpose()};
 
     return {R_star, Q_star};
 }
@@ -23,16 +23,16 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> RqDecomposition(Eigen::Matrix3d con
 // NOTE(Jack): MVG section "6.2.4 Decomposition of the camera matrix" refers to the first three columns of the camera
 // matrix P as M.
 // Adopted from https://ksimek.github.io/2012/08/14/decompose/
-std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d const& M) {
+std::tuple<Matrix3d, Matrix3d> DecomposeMIntoKr(Matrix3d const& M) {
     const auto [K, R]{RqDecomposition(M)};
 
     // TODO(Jack): Fix hacky sign names here - what we are doing here is to make sure that the matrix K has all positive
     // diagonal values. See the referenced link (https://ksimek.github.io/2012/08/14/decompose/) for more details.
-    Eigen::Vector3d const sign{K.diagonal().array().sign()};
-    Eigen::Matrix3d const sign_mat{sign.asDiagonal()};
+    Vector3d const sign{K.diagonal().array().sign()};
+    Matrix3d const sign_mat{sign.asDiagonal()};
 
-    Eigen::Matrix3d const K_star{(K / std::abs(K(2, 2))) * sign_mat};
-    Eigen::Matrix3d R_star{sign_mat * R};
+    Matrix3d const K_star{(K / std::abs(K(2, 2))) * sign_mat};
+    Matrix3d R_star{sign_mat * R};
     if (R_star.determinant() < 0) {
         R_star *= -1;
     }
@@ -40,16 +40,16 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
     return {K_star, R_star};
 }
 
-Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
+Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
     double const x{P(Eigen::all, {1, 2, 3}).determinant()};
     double const y{-P(Eigen::all, {0, 2, 3}).determinant()};
     double const z{P(Eigen::all, {0, 1, 3}).determinant()};
     double const t{-P(Eigen::all, {0, 1, 2}).determinant()};
 
-    return Eigen::Vector3d{x, y, z} / t;
+    return Vector3d{x, y, z} / t;
 }
 
-std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d const& H) {
+std::tuple<Matrix3d, Vector3d> DecomposeHIntoRt(Matrix3d const& H) {
     // The following discussion is based on the fact that all 3D points lie on one plane with Z=0. We start with H
     // which is the product of a scale lambda, K and [r1 r2 t]. But because we are working with ideal normalized image
     // coordinates (i.e. K = I) we can ignore K. Next, because r1 and r2 are columns or a rotation matrix we know their
@@ -63,9 +63,9 @@ std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d co
 
     // Use the average magnitude of both r1 and r2 to fix scale - more stable than using just r1 or r2 alone
     double const inv_lambda{(H.col(0).norm() + H.col(1).norm()) / 2};
-    Eigen::Matrix3d const H_star{H / inv_lambda};
+    Matrix3d const H_star{H / inv_lambda};
 
-    Eigen::Matrix3d R;
+    Matrix3d R;
     R.col(0) = H_star.col(0);
     R.col(1) = H_star.col(1);
     R.col(2) = H_star.col(0).cross(H_star.col(1));  // r3 is orthogonal to r1 and r2
@@ -73,7 +73,7 @@ std::tuple<Eigen::Matrix3d, Eigen::Vector3d> DecomposeHIntoRt(Eigen::Matrix3d co
     // WARN(Jack): This is a brute force method to get a "proper" rotation matrix - that being said it will probably
     // introduce an error. For a better solution we should "apply a polar decomposition, or orthogonalization of the
     // rotation matrix" for an optimal solution. https://www.continuummechanics.org/polardecomposition.html
-    Eigen::Matrix3d const R_star{reprojection::geometry::Exp((reprojection::geometry::Log(R)))};
+    Matrix3d const R_star{reprojection::geometry::Exp((reprojection::geometry::Log(R)))};
 
     return {R_star, H_star.col(2)};
 }

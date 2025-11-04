@@ -13,6 +13,7 @@ using VectorXd = Eigen::VectorXd;
 
 using Matrix3d = Eigen::Matrix3d;
 using MatrixXi = Eigen::MatrixXi;
+using MatrixXd = Eigen::MatrixXd;
 using MatrixX2d = Eigen::MatrixX2d;
 using MatrixX3d = Eigen::MatrixX3d;
 

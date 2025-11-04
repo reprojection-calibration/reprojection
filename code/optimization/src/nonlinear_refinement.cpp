@@ -2,7 +2,6 @@
 
 #include <ceres/ceres.h>
 
-#include "eigen_utilities/camera.hpp"
 #include "geometry/lie.hpp"
 #include "projection_cost_function.hpp"
 
@@ -13,7 +12,7 @@ namespace reprojection::optimization {
 std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Frame> const& frames,
                                                                  CameraModel const& camera_type,
                                                                  ArrayXd const& intrinsics) {
-    assert(static_cast<int>(camera_type) == intrinsics.rows());
+    assert(static_cast<int>(camera_type) == intrinsics.rows());  // This is not a real error handling stategy!
 
     std::vector<Array6d> poses_to_optimize;
     poses_to_optimize.reserve(std::size(frames));
@@ -46,7 +45,7 @@ std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Fra
     poses_to_return.reserve(std::size(poses_to_optimize));
     for (Array6d const& optimized_pose : poses_to_optimize) {
         // TODO(Jack): Remove temp! Required because of overloading problems with Array6d.
-        Eigen::Vector<double, 6> const temp{optimized_pose};
+        Vector6d const temp{optimized_pose};
         poses_to_return.push_back(geometry::Exp(temp));
     }
 

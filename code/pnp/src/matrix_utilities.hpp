@@ -1,7 +1,8 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include <tuple>
+
+#include "types/eigen_types.hpp"
 
 namespace reprojection::pnp {
 
@@ -20,13 +21,13 @@ namespace reprojection::pnp {
 //          2, 3,
 //          4, 5
 //          4, 5
-Eigen::MatrixXd InterleaveRowWise(Eigen::MatrixXd const& matrix);
+MatrixXd InterleaveRowWise(MatrixXd const& matrix);
 
 // This function was designed with the normalization required for the DLT in mind! This means that after normalization
 // we want the "average distance of a point x from the origin is equal to sqrt(n)" (where n is the dimension of the
 // non-homogeneous point). See MVG 4.4.4 heading "Isotropic Scaling"
-std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> NormalizeColumnWise(Eigen::MatrixXd const& matrix);
+std::tuple<MatrixXd, MatrixXd> NormalizeColumnWise(MatrixXd const& matrix);
 
-Eigen::Isometry3d ToIsometry3d(Eigen::MatrixX3d const& R, Eigen::Vector3d const& T);
+Isometry3d ToIsometry3d(MatrixX3d const& R, Vector3d const& T);
 
 }  // namespace reprojection::pnp
