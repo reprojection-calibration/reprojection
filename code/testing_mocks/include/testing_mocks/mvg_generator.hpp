@@ -10,6 +10,13 @@
 
 namespace reprojection::testing_mocks {
 
+struct NoiseProfile {
+    double sigma_pixel;
+    double sigma_point;
+    double sigma_pose_translation;
+    double sigma_pose_rotation;
+};
+
 // TODO(Jack): Why is this even a class if at almost all places we call GenerateBatch() and then are done with it?
 // I think this can probably be refactored into a single function call instead.
 // MVG = "multiple view geometry"

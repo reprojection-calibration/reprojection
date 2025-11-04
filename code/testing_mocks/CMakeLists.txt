@@ -17,6 +17,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/noise_generation.test.cpp
         src/sphere_trajectory.test.cpp
         test/mvg_generator.test.cpp
 )
