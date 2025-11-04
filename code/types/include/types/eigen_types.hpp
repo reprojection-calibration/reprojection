@@ -19,6 +19,7 @@ using MatrixXi = Eigen::MatrixXi;
 using MatrixXd = Eigen::MatrixXd;
 using MatrixX2d = Eigen::MatrixX2d;
 using MatrixX3d = Eigen::MatrixX3d;
+using MatrixX4d = Eigen::MatrixX4d;
 
 using ArrayXd = Eigen::ArrayXd;
 using ArrayXi = Eigen::ArrayXi;
