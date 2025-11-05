@@ -37,6 +37,10 @@ TEST(DemosImageFeed, VideoCaptureFeedMp4) {
     std::filesystem::remove(folder + "video.mp4");
 }
 
+TEST(DemosImageFeed, VideoCaptureFeedError) {
+    EXPECT_THROW(demos::VideoCaptureFeed image_feed{"non_existent_video.mp4"}, std::runtime_error);
+}
+
 TEST(DemosImageFeed, TestFolderFeed) {
     std::string const folder{"test/folder/feed/"};
     std::filesystem::create_directories(folder);

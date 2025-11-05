@@ -5,7 +5,9 @@
 
 namespace reprojection::demos {
 
-VideoCaptureFeed::VideoCaptureFeed(int const device_id) : VideoCaptureFeed{cv::VideoCapture(device_id)} {}
+// NOTE(Jack): We literally cannot unit test this because there is no way to simulate a physical camera device.
+VideoCaptureFeed::VideoCaptureFeed(int const device_id)  // LCOV_EXCL_LINE
+    : VideoCaptureFeed{cv::VideoCapture(device_id)} {}   // LCOV_EXCL_LINE
 
 VideoCaptureFeed::VideoCaptureFeed(std::string const& video_file) : VideoCaptureFeed{cv::VideoCapture(video_file)} {}
 
@@ -26,7 +28,7 @@ cv::Mat VideoCaptureFeed::GetImage() {
     cap_ >> frame;
 
     return frame;
-}
+}  // LCOV_EXCL_LINE
 
 FolderFeed::FolderFeed(std::string const& image_folder) {
     std::ranges::for_each(std::filesystem::directory_iterator(image_folder),
