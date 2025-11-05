@@ -5,14 +5,18 @@
 
 namespace reprojection::demos {
 
-WebcamFeed::WebcamFeed() {
-    cap_ = cv::VideoCapture(0);
-    if (not cap_.isOpened()) {
-        throw std::runtime_error("Couldn't open video capture device!");
-    }
-}
 
-cv::Mat WebcamFeed::GetImage() {
+VideoCaptureFeed::VideoCaptureFeed(int const device_id) : cap_{cv::VideoCapture(device_id)} {}
+
+VideoCaptureFeed::VideoCaptureFeed(std::string const& video_file) : cap_{cv::VideoCapture(video_file)} {}
+
+VideoCaptureFeed::~VideoCaptureFeed() { cap_.release(); }
+
+cv::Mat VideoCaptureFeed::GetImage() {
+    if (not cap_.isOpened()) {
+        throw std::runtime_error("Video capture device is not open!");
+    }
+
     cv::Mat frame;
     cap_ >> frame;
 

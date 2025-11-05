@@ -37,7 +37,8 @@ int main(int argc, char* argv[]) {
         image_feed = std::make_unique<demos::FolderFeed>(folder);
     } else {
         std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
-        image_feed = std::make_unique<demos::WebcamFeed>();
+        // TODO(Jack): Provide user option to select a different device
+        image_feed = std::make_unique<demos::VideoCaptureFeed>(0);
     }
 
     YAML::Node const config{YAML::LoadFile(config_file)};

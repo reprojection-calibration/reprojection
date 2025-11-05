@@ -13,9 +13,13 @@ class ImageFeed {
     virtual cv::Mat GetImage() = 0;
 };
 
-class WebcamFeed : public ImageFeed {
+class VideoCaptureFeed : public ImageFeed {
    public:
-    WebcamFeed();
+    VideoCaptureFeed(int const device_id);
+
+    VideoCaptureFeed(std::string const& video_file);
+
+    ~VideoCaptureFeed() override;
 
     cv::Mat GetImage() override;
 

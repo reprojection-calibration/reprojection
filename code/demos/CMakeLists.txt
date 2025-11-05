@@ -18,6 +18,11 @@ set(LINK_LIBRARIES
 )
 AddLibrary()
 
+set(TESTS
+        test/image_feed.test.cpp
+)
+AddTests()
+
 set(EXAMPLES
         examples/feature_extraction.cpp
 )
@@ -31,3 +36,4 @@ foreach (EXAMPLE IN LISTS EXAMPLES)
             ${LINK_LIBRARIES}
     )
 endforeach ()
+
