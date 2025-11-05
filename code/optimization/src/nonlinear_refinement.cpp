@@ -12,7 +12,7 @@ namespace reprojection::optimization {
 std::tuple<std::vector<Isometry3d>, ArrayXd, double> NonlinearRefinement(std::vector<Frame> const& frames,
                                                                          CameraModel const& camera_type,
                                                                          ArrayXd const& intrinsics) {
-    assert(static_cast<int>(camera_type) == intrinsics.rows());  // This is not a real error handling stategy!
+    assert(static_cast<int>(camera_type) == intrinsics.rows());  // This is not a real error handling strategy!
 
     std::vector<Array6d> poses_to_optimize;
     poses_to_optimize.reserve(std::size(frames));
@@ -32,22 +32,15 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> NonlinearRefinement(std::ve
         }
     }
 
-    // TODO(Jack): Law of useful return states that we should probably be returning this diagnostic information so that
-    // people can diagnose failures.
-    // TODO(Jack): Tune best optimizer options for the problem at hand
+    // TODO(Jack): Law of useful return states that we should probably be returning the summary!
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    // TODO(Jack): If we use this logic in multiple places for conversions than make sure to put it into a helper
-    // method!
     std::vector<Isometry3d> poses_to_return;
-    poses_to_return.reserve(std::size(poses_to_optimize));
     for (Array6d const& optimized_pose : poses_to_optimize) {
-        // TODO(Jack): Remove temp! Required because of overloading problems with Array6d.
-        Vector6d const temp{optimized_pose};
-        poses_to_return.push_back(geometry::Exp(temp));
+        poses_to_return.push_back(geometry::Exp(Vector6d{optimized_pose}));
     }
 
     return {poses_to_return, intrinsics_to_optimize, summary.final_cost};

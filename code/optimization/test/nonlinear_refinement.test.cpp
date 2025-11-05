@@ -9,8 +9,6 @@
 
 using namespace reprojection;
 
-// TODO(Jack): Test the nonlinear refinement with noisy data to make sure the optimization executes more than one step!
-
 TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
     Array4d const intrinsics{600, 600, 360, 240};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
