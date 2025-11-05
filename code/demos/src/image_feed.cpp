@@ -1,5 +1,6 @@
 #include "demos/image_feed.hpp"
 
+#include <algorithm>
 #include <filesystem>
 
 namespace reprojection::demos {

@@ -1,6 +1,5 @@
 #include <yaml-cpp/yaml.h>
 
-#include <algorithm>
 #include <iostream>
 
 #include "demos/image_feed.hpp"
