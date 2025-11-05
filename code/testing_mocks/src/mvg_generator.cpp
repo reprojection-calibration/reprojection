@@ -2,6 +2,8 @@
 
 #include "constants.hpp"
 #include "eigen_utilities/grid.hpp"
+#include "geometry/lie.hpp"
+#include "noise_generation.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "sphere_trajectory.hpp"
 #include "spline/se3_spline.hpp"
@@ -97,6 +99,21 @@ MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {
     }
 
     return points;
+}
+
+Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_rotation, Isometry3d pose) {
+    pose.translation() += GaussianNoise(0, sigma_translation, 3, 1);
+
+    // TODO(Jack): Confirm this is the right way to add noise to a rotation! Adding the gaussian noise element in the
+    // tangent space directly and then converting back to a rotation matrix.
+    Vector3d const rotation_noise{GaussianNoise(0, sigma_rotation, 3, 1)};
+    Vector3d const rotation_se3{geometry::Log(pose.rotation())};
+    Vector3d const perturbed_se3{rotation_noise.array() + rotation_se3.array()};
+
+    Matrix3d const perturbed_R{geometry::Exp(perturbed_se3)};
+    pose.linear() = perturbed_R;
+
+    return pose;
 }
 
 }  // namespace reprojection::testing_mocks

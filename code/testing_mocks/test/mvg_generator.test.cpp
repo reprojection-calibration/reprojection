@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "geometry/lie.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -26,4 +27,35 @@ TEST(TestingMocksMvgGenerator, TestProject) {
     MatrixX2d const test_pixels{{360.00, 240.00}, {480.00, 360.00}, {240.00, 120.00},
                                 {480.00, 180.00}, {240.00, 300.00}, {402.857, 197.144}};
     ASSERT_TRUE(pixels.isApprox(test_pixels, 1e-3));
+}
+
+TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
+    auto const identity{Isometry3d::Identity()};
+
+    double const sigma_translation{0.3};
+    double const sigma_rotation{0.15};
+
+    int trial_count{1000};
+    MatrixX3d translations{MatrixX3d(trial_count, 3)};
+    MatrixX3d rotations_se3{MatrixX3d(trial_count, 3)};
+    for (int i{0}; i < trial_count; ++i) {
+        Isometry3d const perturbed{testing_mocks::AddGaussianNoise(sigma_translation, sigma_rotation, identity)};
+
+        translations.row(i) = perturbed.translation();
+        rotations_se3.row(i) = geometry::Log(perturbed.rotation());
+    }
+
+    EXPECT_NEAR(translations.mean(), 0.0, 2e-2);
+    EXPECT_NEAR(rotations_se3.mean(), 0.0, 1e-2);
+
+    // TODO(Jack): We should add a function to for this calculate and assert mean/covariance logic. It is used here
+    // twice and once in TestGaussianNoise
+    MatrixXd const translations_centered{translations.array() - translations.mean()};
+    double const translations_sigma{std::sqrt((translations_centered.array() * translations_centered.array()).mean())};
+    EXPECT_NEAR(translations_sigma, sigma_translation, 2e-2);
+
+    MatrixXd const rotations_se3_centered{rotations_se3.array() - rotations_se3.mean()};
+    double const rotations_se3_sigma{
+        std::sqrt((rotations_se3_centered.array() * rotations_se3_centered.array()).mean())};
+    EXPECT_NEAR(rotations_se3_sigma, sigma_rotation, 1e-2);
 }

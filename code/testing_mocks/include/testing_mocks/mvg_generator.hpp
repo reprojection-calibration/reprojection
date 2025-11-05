@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <tuple>
 #include <vector>
 
 #include "projection_functions/camera_model.hpp"
@@ -10,8 +11,16 @@
 
 namespace reprojection::testing_mocks {
 
+// TODO(Jack): In general the strategy of how to testy given noisy data is at this time unclear! For the non-noisy
+// case we have exact answers, but for the noisy case we will have "random" answers that are part of a distribution.
+// At this time we still have not implemented predicting those distributions, therefore we have no formal way to
+// test using noisy data. For example I think if we know there is a specific pixel noise, then there will be a
+// specific error in the poses calculated. This is something we need to look at closely!
+
 // TODO(Jack): Why is this even a class if at almost all places we call GenerateBatch() and then are done with it?
 // I think this can probably be refactored into a single function call instead.
+// TODO(Jack): Refactor the class to explicitly generate targets, there is no reason to pretend it also needs to do 3D
+// random points.
 // MVG = "multiple view geometry"
 class MvgGenerator {
    public:
@@ -32,5 +41,7 @@ class MvgGenerator {
     spline::Se3Spline se3_spline_;
     MatrixX3d points_;
 };
+
+Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_rotation, Isometry3d pose);
 
 }  // namespace reprojection::testing_mocks

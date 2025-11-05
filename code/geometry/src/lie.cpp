@@ -34,4 +34,15 @@ Vector3d Log(Matrix3d const& SO3) {
     return so3;
 }
 
+// TODO(Jack): Put this into a utility file if we find the right place?
+std::vector<Isometry3d> ToSE3(std::vector<Array6d> const& se3) {
+    std::vector<Isometry3d> SE3;
+    SE3.reserve(std::size(se3));
+
+    std::transform(std::cbegin(se3), std::cend(se3), std::back_inserter(SE3),
+                   [](Array6d const& se3_i) { return Exp(Vector6d{se3_i}); });
+
+    return SE3;
+}  // LCOV_EXCL_LINE
+
 }  // namespace reprojection::geometry

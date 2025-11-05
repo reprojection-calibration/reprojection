@@ -8,7 +8,8 @@
 
 namespace reprojection::spline {
 
-std::tuple<double, int> NormalizedSegmentTime(uint64_t const t0_ns, uint64_t const t_ns, uint64_t const delta_t_ns) {
+std::tuple<double, int> NormalizedSegmentTime(std::uint64_t const t0_ns, std::uint64_t const t_ns,
+                                              std::uint64_t const delta_t_ns) {
     assert(t0_ns <= t_ns);
     assert(delta_t_ns > 0);
 
@@ -18,10 +19,11 @@ std::tuple<double, int> NormalizedSegmentTime(uint64_t const t0_ns, uint64_t con
     return {(s_t - i), static_cast<int>(i)};
 }
 
-TimeHandler::TimeHandler(uint64_t const t0_ns, uint64_t const delta_t_ns, int const k)
+TimeHandler::TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns, int const k)
     : t0_ns_{t0_ns}, delta_t_ns_{delta_t_ns}, k_{k} {}
 
-std::optional<std::tuple<double, int>> TimeHandler::SplinePosition(uint64_t const t_ns, size_t const num_knots) const {
+std::optional<std::tuple<double, int>> TimeHandler::SplinePosition(std::uint64_t const t_ns,
+                                                                   size_t const num_knots) const {
     auto const [u_i, i]{NormalizedSegmentTime(t0_ns_, t_ns, delta_t_ns_)};
 
     // From reference [1] - "At time t in [t_i, t_i+1) the value of p(t) only depends on the control points p_i,

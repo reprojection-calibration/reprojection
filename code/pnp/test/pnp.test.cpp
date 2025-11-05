@@ -2,7 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include "geometry/lie.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 
 using namespace reprojection;
