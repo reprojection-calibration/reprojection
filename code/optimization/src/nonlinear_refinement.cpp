@@ -7,6 +7,7 @@
 
 namespace reprojection::optimization {
 
+// TODO(Jack): Return the final cost
 // TODO(Jack): Should we have some assertions which force that the frames satisfy some basic properties like there is a
 // matching number of everything?
 std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Frame> const& frames,
@@ -36,6 +37,7 @@ std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Fra
     // people can diagnose failures.
     // TODO(Jack): Tune best optimizer options for the problem at hand
     ceres::Solver::Options options;
+    options.linear_solver_type = ceres::DENSE_SCHUR;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 

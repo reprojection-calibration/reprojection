@@ -34,20 +34,26 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
                                               << intrinsics;
 }
 
-// TODO(Jack): DO WE REALLY NEED THIS TEST IF WE HAVE THE BATCH TEST AND ALSO THIS GETS TESTED IN THE PNP CODE
-TEST(OptimizationNonlinearRefinement, TestNonlinearRefinement) {
+TEST(OptimizationNonlinearRefinement, TestNoisyNonlinearRefinement) {
     Array4d const intrinsics{600, 600, 360, 240};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
 
-    std::vector<Frame> const frames{generator.GenerateBatch(20)};
-    for (auto const& frame : frames) {
-        auto const [tf, K]{optimization::NonlinearRefinement({frame}, CameraModel::Pinhole, intrinsics)};
-        Isometry3d const tf_i{tf[0]};  // Only one frame is ever optimized at one time in this test.
+    // Given a perfect bundle (i.e. pixel and point noise sigmas=0) but noisy initial pose, we then get perfect poses
+    // and intrinsic back.
+    auto const [gt_frames, noisy_frames]{generator.GenerateBatchWithNoise(20, {0, 0, 0.5, 0.5})};
+    auto const [poses_opt, K]{optimization::NonlinearRefinement(noisy_frames, CameraModel::Pinhole, intrinsics)};
+    for (size_t i{0}; i < std::size(poses_opt); ++i) {
+        auto const pose_opt_i{poses_opt[i]};
+        auto const pose_gt_i{gt_frames[i].pose};
 
-        EXPECT_TRUE(tf_i.isApprox(frame.pose)) << "Optimization result:\n"
-                                               << geometry::Log(tf_i) << "\noptimization input:\n"
-                                               << geometry::Log(frame.pose);
-        EXPECT_TRUE(K.isApprox(intrinsics)) << "Optimization result:\n" << K << "\noptimization input:\n" << intrinsics;
+        EXPECT_TRUE(pose_opt_i.isApprox(pose_gt_i, 1e-6))
+            << "Optimization result:\n"
+            << geometry::Log(pose_opt_i).transpose() << "\nGround truth:\n"
+            << geometry::Log(pose_gt_i).transpose();
     }
+
+    EXPECT_TRUE(K.isApprox(intrinsics, 1e-6)) << "Optimization result:\n"
+                                              << K << "\noptimization input:\n"
+                                              << intrinsics;
 }

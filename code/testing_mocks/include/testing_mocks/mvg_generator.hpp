@@ -20,6 +20,8 @@ struct NoiseProfile {
 
 // TODO(Jack): Why is this even a class if at almost all places we call GenerateBatch() and then are done with it?
 // I think this can probably be refactored into a single function call instead.
+// TODO(Jack): Refactor the class to explicitly generate targets, there is no reason to pretend it also needs to do 3D
+// random points.
 // MVG = "multiple view geometry"
 class MvgGenerator {
    public:

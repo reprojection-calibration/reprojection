@@ -22,7 +22,6 @@ TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
         rotations_se3.row(i) = geometry::Log(perturbed.rotation());
     }
 
-    //
     EXPECT_NEAR(translations.mean(), 0.0, 2e-2);
     EXPECT_NEAR(rotations_se3.mean(), 0.0, 1e-2);
 

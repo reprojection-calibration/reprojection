@@ -38,7 +38,6 @@ std::tuple<std::vector<Frame>, std::vector<Frame>> MvgGenerator::GenerateBatchWi
     for (auto frame_i : frames) {
         frame_i.bundle.pixels += GaussianNoise(0, sigmas.sigma_pixel, frame_i.bundle.pixels.rows(), 2);
         frame_i.bundle.points += GaussianNoise(0, sigmas.sigma_point, frame_i.bundle.points.rows(), 3);
-
         frame_i.pose = AddGaussianNoise(sigmas.sigma_pose_translation, sigmas.sigma_pose_rotation, frame_i.pose);
 
         noisy_frames.push_back(frame_i);
