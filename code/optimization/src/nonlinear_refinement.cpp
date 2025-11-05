@@ -2,6 +2,8 @@
 
 #include <ceres/ceres.h>
 
+#include <algorithm>
+
 #include "geometry/lie.hpp"
 #include "projection_cost_function.hpp"
 
@@ -14,21 +16,20 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> NonlinearRefinement(std::ve
                                                                          ArrayXd const& intrinsics) {
     assert(static_cast<int>(camera_type) == intrinsics.rows());  // This is not a real error handling strategy!
 
-    std::vector<Array6d> poses_to_optimize;
-    poses_to_optimize.reserve(std::size(frames));
+    std::vector<Array6d> se3;
+    se3.reserve(std::size(frames));
     ArrayXd intrinsics_to_optimize{intrinsics};  // Same intrinsics for ALL poses - mono camera constraint
 
     ceres::Problem problem;
     for (size_t i{0}; i < std::size(frames); ++i) {
         MatrixX2d const& pixels_i{frames[i].bundle.pixels};
         MatrixX3d const& points_i{frames[i].bundle.points};
-        poses_to_optimize.push_back(geometry::Log(frames[i].pose));
+        se3.push_back(geometry::Log(frames[i].pose));
 
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
             ceres::CostFunction* const cost_function{Create(camera_type, pixels_i.row(j), points_i.row(j))};
 
-            problem.AddResidualBlock(cost_function, nullptr, intrinsics_to_optimize.data(),
-                                     poses_to_optimize[i].data());
+            problem.AddResidualBlock(cost_function, nullptr, intrinsics_to_optimize.data(), se3[i].data());
         }
     }
 
@@ -38,12 +39,11 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> NonlinearRefinement(std::ve
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    std::vector<Isometry3d> poses_to_return;
-    for (Array6d const& optimized_pose : poses_to_optimize) {
-        poses_to_return.push_back(geometry::Exp(Vector6d{optimized_pose}));
-    }
+    std::vector<Isometry3d> SE3;
+    std::transform(std::begin(se3), std::end(se3), std::back_inserter(SE3),
+                   [](Array6d const& se3_i) { return geometry::Exp(Vector6d{se3_i}); });
 
-    return {poses_to_return, intrinsics_to_optimize, summary.final_cost};
+    return {SE3, intrinsics_to_optimize, summary.final_cost};
 }
 
 }  // namespace  reprojection::optimization
