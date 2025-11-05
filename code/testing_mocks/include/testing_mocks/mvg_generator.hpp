@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <tuple>
 #include <vector>
 
 #include "projection_functions/camera_model.hpp"
@@ -25,6 +26,9 @@ class MvgGenerator {
     explicit MvgGenerator(std::unique_ptr<projection_functions::Camera> const camera, bool const flat = true);
 
     std::vector<Frame> GenerateBatch(int const num_frames) const;
+
+    std::tuple<std::vector<Frame>, std::vector<Frame>> GenerateBatchWithNoise(int const num_frames,
+                                                                              NoiseProfile const& sigmas) const;
 
     static MatrixX2d Project(MatrixX3d const& points_w, std::unique_ptr<projection_functions::Camera> const& camera,
                              Isometry3d const& tf_co_w);

@@ -2,6 +2,7 @@
 
 #include "constants.hpp"
 #include "eigen_utilities/grid.hpp"
+#include "noise_generation.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "sphere_trajectory.hpp"
 #include "spline/se3_spline.hpp"
@@ -28,6 +29,23 @@ std::vector<Frame> MvgGenerator::GenerateBatch(int const num_frames) const {
 
     return frames;
 }  // LCOV_EXCL_LINE
+
+std::tuple<std::vector<Frame>, std::vector<Frame>> MvgGenerator::GenerateBatchWithNoise(
+    int const num_frames, NoiseProfile const& sigmas) const {
+    std::vector<Frame> const frames{GenerateBatch(num_frames)};
+
+    std::vector<Frame> noisy_frames;
+    for (auto frame_i : frames) {
+        frame_i.bundle.pixels += GaussianNoise(0, sigmas.sigma_pixel, frame_i.bundle.pixels.rows(), 2);
+        frame_i.bundle.points += GaussianNoise(0, sigmas.sigma_point, frame_i.bundle.points.rows(), 3);
+
+        frame_i.pose = AddGaussianNoise(sigmas.sigma_pose_translation, sigmas.sigma_pose_rotation, frame_i.pose);
+
+        noisy_frames.push_back(frame_i);
+    }
+
+    return {frames, noisy_frames};
+}
 
 /**
  * \brief Static helper method that projects points in the world frame to pixels. Do NOT use outside the testing mocks
