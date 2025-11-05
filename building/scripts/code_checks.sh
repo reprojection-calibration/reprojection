@@ -8,6 +8,7 @@ find /temporary/code \( -iname '*.cpp' -o -iname '*.hpp' -o -iname '*.c' -o -ina
 
 cppcheck /temporary/code --enable=all --error-exitcode=1 --suppress=missingIncludeSystem \
   -I /temporary/code/calibration/src \
+  -I /temporary/code/demos/include \
   -I /temporary/code/eigen_utilities/include \
   -I /temporary/code/feature_extraction/include \
   -I /temporary/code/feature_extraction/src \

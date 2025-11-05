@@ -1,8 +1,8 @@
 #include <yaml-cpp/yaml.h>
 
-#include <algorithm>
 #include <iostream>
 
+#include "demos/image_feed.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "types/eigen_types.hpp"
 
@@ -24,27 +24,32 @@ char* GetCommandOption(char** begin, char** end, const std::string& option) {
 }
 
 int main(int argc, char* argv[]) {
-    char const* const filename{GetCommandOption(argv, argv + argc, "-c")};
-    if (not filename) {
+    char const* const config_file{GetCommandOption(argv, argv + argc, "-c")};
+    if (not config_file) {
         std::cerr << "Target configuration yaml not provided! (-c <target_config_yaml>)" << std::endl;
         return EXIT_FAILURE;
     }
 
-    YAML::Node const config{YAML::LoadFile(filename)};
+    // If no folder is provided then default to webcam demo.
+    std::unique_ptr<demos::ImageFeed> image_feed;
+    char const* const folder{GetCommandOption(argv, argv + argc, "-f")};
+    if (folder) {
+        image_feed = std::make_unique<demos::FolderFeed>(folder);
+    } else {
+        std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
+        // TODO(Jack): Provide user option to select a different device
+        image_feed = std::make_unique<demos::VideoCaptureFeed>(0);
+    }
+
+    YAML::Node const config{YAML::LoadFile(config_file)};
     std::unique_ptr<feature_extraction::TargetExtractor> const extractor{
         feature_extraction::CreateTargetExtractor(config["target"])};
-
-    cv::VideoCapture cap(0);
-    if (not cap.isOpened()) {
-        std::cerr << "Couldn't open video capture device!" << std::endl;
-        return EXIT_FAILURE;
-    }
 
     std::cout << "\n\tPress any key to close the window and end the demo.\n" << std::endl;
 
     cv::Mat frame, gray;
     while (true) {
-        cap >> frame;
+        frame = image_feed->GetImage();
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
         std::optional<ExtractedTarget> const target{extractor->Extract(gray)};

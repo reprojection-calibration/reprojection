@@ -3,7 +3,7 @@
 set -eou pipefail
 
 SCRIPT_FOLDER="$(dirname "$(realpath -s "$0")")"
-TAG=reprojection:feature-extraction-webcam-demo
+TAG=reprojection:feature-extraction-demo
 
 echo "Running container from image '$TAG'..."
 xhost +

@@ -40,22 +40,6 @@ target_link_directories(${LIBRARY_NAME} PUBLIC
         ${apriltag_LIBDIR}
 )
 
-# TODO(Jack): When we have multiple examples we can make this a macro like we did for the library and testing
-set(EXAMPLES
-        examples/webcam_demo.cpp
-)
-foreach (EXAMPLE IN LISTS EXAMPLES)
-    get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WLE)
-    set(EXAMPLE_NAME ${LIBRARY_NAME}.${EXAMPLE_NAME})
-
-    add_executable(${EXAMPLE_NAME} ${EXAMPLE})
-    target_link_libraries(${EXAMPLE_NAME}
-            ${LIBRARY_NAME}
-            ${LINK_LIBRARIES}
-    )
-endforeach ()
-
-
 set(TESTS
         src/april_tag_cpp_wrapper.test.cpp
         src/target_extractors.test.cpp

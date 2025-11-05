@@ -17,6 +17,8 @@ CheckerboardExtractor::CheckerboardExtractor(cv::Size const& pattern_size, const
     points_.col(2).setZero();  // Flat on calibration board, z=0.
 }
 
+// TODO(Jack): Scale down the image for the checkerboard extraction (faster) and then scale up the extracted points and
+// use the original image for the subpixel refinement.
 std::optional<ExtractedTarget> CheckerboardExtractor::Extract(cv::Mat const& image) const {
     std::vector<cv::Point2f> corners;
     bool const pattern_found{cv::findChessboardCorners(
