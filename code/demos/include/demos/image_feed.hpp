@@ -24,6 +24,8 @@ class VideoCaptureFeed : public ImageFeed {
     cv::Mat GetImage() override;
 
    private:
+    VideoCaptureFeed(cv::VideoCapture const& cap);
+
     cv::VideoCapture cap_;
 };
 
