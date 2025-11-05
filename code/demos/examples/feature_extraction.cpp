@@ -88,8 +88,7 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<feature_extraction::TargetExtractor> const extractor{
         feature_extraction::CreateTargetExtractor(config["target"])};
 
-    auto image_feed{
-        std::make_unique<FolderFeed>("data/data_fisheye_calibration/2013_05_29_drive_0000_extract/image_03/data_rgb")};
+    auto image_feed{std::make_unique<WebcamFeed>()};
 
     std::cout << "\n\tPress any key to close the window and end the demo.\n" << std::endl;
     cv::Mat frame, gray;
