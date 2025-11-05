@@ -13,6 +13,6 @@ MatrixXd GaussianNoise(double const mean, double const sigma, int const rows, in
     noise = noise.unaryExpr([sigma](double const& x) { return x + sigma * dist(gen); });
 
     return noise;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::testing_mocks
