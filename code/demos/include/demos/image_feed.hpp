@@ -13,25 +13,25 @@ class ImageFeed {
     virtual cv::Mat GetImage() = 0;
 };
 
-class VideoCaptureFeed : public ImageFeed {
+class VideoCaptureFeed final : public ImageFeed {
    public:
-    VideoCaptureFeed(int const device_id);
+    explicit VideoCaptureFeed(int const device_id);
 
-    VideoCaptureFeed(std::string const& video_file);
+    explicit VideoCaptureFeed(std::string const& video_file);
 
     ~VideoCaptureFeed() override;
 
     cv::Mat GetImage() override;
 
    private:
-    VideoCaptureFeed(cv::VideoCapture const& cap);
+    explicit VideoCaptureFeed(cv::VideoCapture const& cap);
 
     cv::VideoCapture cap_;
 };
 
-class FolderFeed : public ImageFeed {
+class FolderFeed final : public ImageFeed {
    public:
-    FolderFeed(std::string const& image_folder);
+    explicit FolderFeed(std::string const& image_folder);
 
     cv::Mat GetImage() override;
 
