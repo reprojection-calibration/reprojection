@@ -1,9 +1,9 @@
 #include <yaml-cpp/yaml.h>
 
 #include <algorithm>
-#include <filesystem>
 #include <iostream>
 
+#include "demos/image_feed.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "types/eigen_types.hpp"
 
@@ -24,59 +24,6 @@ char* GetCommandOption(char** begin, char** end, const std::string& option) {
     return 0;
 }
 
-class ImageFeed {
-   public:
-    virtual ~ImageFeed() = default;
-
-    virtual cv::Mat GetImage() = 0;
-};
-
-class WebcamFeed : public ImageFeed {
-   public:
-    WebcamFeed() {
-        cap_ = cv::VideoCapture(0);
-        if (not cap_.isOpened()) {
-            throw std::runtime_error("Couldn't open video capture device!");
-        }
-    }
-
-    cv::Mat GetImage() override {
-        cv::Mat frame;
-        cap_ >> frame;
-        return frame;
-    }
-
-   private:
-    cv::VideoCapture cap_;
-};
-
-class FolderFeed : public ImageFeed {
-   public:
-    FolderFeed(std::string const& image_folder) {
-        for (const auto& entry : std::filesystem::directory_iterator(image_folder)) {
-            image_files_.push_back(entry.path());
-        }
-
-        std::sort(std::begin(image_files_), std::end(image_files_));
-    }
-
-    cv::Mat GetImage() override {
-        if (current_id_ >= std::size(image_files_)) {
-            // Out of images to load, return empty, is this a valid way to handle this condition?
-            return cv::Mat();
-        }
-
-        cv::Mat const image{cv::imread(image_files_[current_id_])};
-        ++current_id_;
-
-        return image;
-    }
-
-   private:
-    std::vector<std::string> image_files_;
-    std::size_t current_id_{0};
-};
-
 int main(int argc, char* argv[]) {
     char const* const config_file{GetCommandOption(argv, argv + argc, "-c")};
     if (not config_file) {
@@ -85,13 +32,13 @@ int main(int argc, char* argv[]) {
     }
 
     // If no folder is provided then default to webcam demo.
-    std::unique_ptr<ImageFeed> image_feed;
+    std::unique_ptr<demos::ImageFeed> image_feed;
     char const* const folder{GetCommandOption(argv, argv + argc, "-f")};
     if (folder) {
-        image_feed = std::make_unique<FolderFeed>(folder);
+        image_feed = std::make_unique<demos::FolderFeed>(folder);
     } else {
         std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
-        image_feed = std::make_unique<WebcamFeed>();
+        image_feed = std::make_unique<demos::WebcamFeed>();
     }
 
     YAML::Node const config{YAML::LoadFile(config_file)};

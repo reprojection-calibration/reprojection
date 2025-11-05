@@ -4,6 +4,9 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
+set(SRC_FILES
+        src/image_feed.cpp
+)
 set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
@@ -13,7 +16,7 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         ${YAML_CPP_LIBRARIES}
 )
-
+AddLibrary()
 
 set(EXAMPLES
         examples/feature_extraction.cpp
@@ -24,6 +27,7 @@ foreach (EXAMPLE IN LISTS EXAMPLES)
 
     add_executable(${EXAMPLE_NAME} ${EXAMPLE})
     target_link_libraries(${EXAMPLE_NAME}
+            ${LIBRARY_NAME}
             ${LINK_LIBRARIES}
     )
 endforeach ()
