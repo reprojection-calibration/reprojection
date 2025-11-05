@@ -34,11 +34,11 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<demos::ImageFeed> image_feed;
     char const* const folder{GetCommandOption(argv, argv + argc, "-f")};
     if (folder) {
-        image_feed = std::make_unique<demos::FolderFeed>(folder);
+        image_feed = std::make_unique<demos::ImageFolder>(folder);
     } else {
         std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
         // TODO(Jack): Provide user option to select a different device
-        image_feed = std::make_unique<demos::VideoCaptureFeed>(0);
+        image_feed = std::make_unique<demos::VideoCapture>(0);
     }
 
     YAML::Node const config{YAML::LoadFile(config_file)};
