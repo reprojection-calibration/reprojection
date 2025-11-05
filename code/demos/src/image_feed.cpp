@@ -29,9 +29,8 @@ cv::Mat VideoCaptureFeed::GetImage() {
 }
 
 FolderFeed::FolderFeed(std::string const& image_folder) {
-    for (const auto& entry : std::filesystem::directory_iterator(image_folder)) {
-        image_files_.push_back(entry.path());
-    }
+    std::ranges::for_each(std::filesystem::directory_iterator(image_folder),
+                          [this](const auto& entry) { image_files_.push_back(entry.path()); });
 
     std::sort(std::begin(image_files_), std::end(image_files_));
 }
