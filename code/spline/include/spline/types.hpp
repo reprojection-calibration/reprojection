@@ -6,9 +6,9 @@
 
 namespace reprojection::spline {
 
-using Matrix3K = Eigen::Matrix<double, 3, constants::k>;
-using MatrixKK = Eigen::Matrix<double, constants::k, constants::k>;
-using VectorK = Eigen::Vector<double, constants::k>;
+using Matrix3K = Eigen::Matrix<double, 3, constants::order>;
+using MatrixKK = Eigen::Matrix<double, constants::order, constants::order>;
+using VectorK = Eigen::Vector<double, constants::order>;
 
 enum class DerivativeOrder { Null = 0, First = 1, Second = 2 };
 

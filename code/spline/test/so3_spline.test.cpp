@@ -13,7 +13,7 @@ TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
     spline::So3Spline so3_spline{100, 5};
     EXPECT_EQ(so3_spline.Evaluate(115), std::nullopt);
 
-    for (int i{0}; i < spline::constants::k; ++i) {
+    for (int i{0}; i < spline::constants::order; ++i) {
         so3_spline.knots_.push_back(Matrix3d::Identity());
     }
 
@@ -29,7 +29,7 @@ TEST(SplineSo3Spline, TestEvaluate) {
     spline::So3Spline so3_spline{100, delta_t_ns};
     so3_spline.knots_.push_back(geometry::Exp(Vector3d::Zero().eval()));
 
-    for (int i{1}; i < spline::constants::k; ++i) {
+    for (int i{1}; i < spline::constants::order; ++i) {
         so3_spline.knots_.push_back(so3_spline.knots_.back() *
                                     geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
     }
@@ -54,7 +54,7 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
 
     EXPECT_EQ(so3_spline.EvaluateVelocity(100), std::nullopt);  // Not enough knots yet to evaluate velocity
 
-    for (int i{1}; i < spline::constants::k; ++i) {
+    for (int i{1}; i < spline::constants::order; ++i) {
         so3_spline.knots_.push_back(so3_spline.knots_.back() *
                                     geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
     }
@@ -75,7 +75,7 @@ TEST(SplineSo3Spline, TestEvaluateAcceleration) {
 
     EXPECT_EQ(so3_spline.EvaluateAcceleration(100), std::nullopt);  // Not enough knots yet to evaluate acceleration
 
-    for (int i{1}; i < spline::constants::k; ++i) {
+    for (int i{1}; i < spline::constants::order; ++i) {
         so3_spline.knots_.push_back(so3_spline.knots_.back() *
                                     geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
     }

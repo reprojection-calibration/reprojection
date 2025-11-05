@@ -12,7 +12,7 @@ TEST(SplineSe3Spline, TestInvalidEvaluateConditions) {
     spline::Se3Spline se3_spline{100, 5};
     EXPECT_EQ(se3_spline.Evaluate(115), std::nullopt);
 
-    for (int i{0}; i < spline::constants::k; ++i) {
+    for (int i{0}; i < spline::constants::order; ++i) {
         se3_spline.AddKnot(Isometry3d::Identity());
     }
 
@@ -30,7 +30,7 @@ TEST(SplineSe3Spline, TestEvaluate) {
     Isometry3d knot_i{Isometry3d::Identity()};
     se3_spline.AddKnot(knot_i);
 
-    for (int i{1}; i < spline::constants::k; ++i) {
+    for (int i{1}; i < spline::constants::order; ++i) {
         Isometry3d delta{Isometry3d::Identity()};
         delta.rotate(geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
         delta.translation() = i * Vector3d::Ones();

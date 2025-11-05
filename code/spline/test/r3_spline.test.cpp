@@ -14,7 +14,7 @@ TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     EXPECT_EQ(r3_spline.Evaluate(115), std::nullopt);
 
     // Add four knots which means we can ask for evaluations within the one time segment at the very start of the spline
-    for (int i{0}; i < spline::constants::k; ++i) {
+    for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.knots_.push_back(Eigen::Vector3d::Zero());
     }
 
@@ -29,7 +29,7 @@ TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
 TEST(Spline_r3Spline, TestEvaluate) {
     // Completely empty spline
     spline::r3Spline r3_spline{100, 5};
-    for (int i{0}; i < spline::constants::k; ++i) {
+    for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.knots_.push_back(i * Eigen::Vector3d::Ones());
     }
 
@@ -56,7 +56,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
 TEST(Spline_r3Spline, TestEvaluateDerivatives) {
     // Completely empty spline
     spline::r3Spline r3_spline{100, 5};
-    for (int i{0}; i < spline::constants::k; ++i) {
+    for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.knots_.push_back(i * Eigen::Vector3d::Ones());
     }
 

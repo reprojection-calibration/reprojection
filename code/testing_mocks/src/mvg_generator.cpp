@@ -70,7 +70,7 @@ Frame MvgGenerator::Generate(double const t) const {
     // base and therefore the hack that this really is would be harder to track.
     uint64_t const spline_time{
         constants::t0_ns +
-        static_cast<uint64_t>((constants::num_poses - (spline::constants::k - 1)) * constants::delta_t_ns * t)};
+        static_cast<uint64_t>((constants::num_poses - (spline::constants::degree)) * constants::delta_t_ns * t)};
 
     auto const pose_t{se3_spline_.Evaluate(spline_time)};
     assert(pose_t.has_value());  // See note above

@@ -4,6 +4,8 @@
 #include <optional>
 #include <tuple>
 
+// https://math.stackexchange.com/questions/2599669/find-control-points-to-produce-a-given-curve
+
 namespace reprojection::spline {
 
 // Calculates what [1] calls "u" - "normalized time elapsed since start of the segment" - see the second paragraph in
@@ -14,6 +16,15 @@ std::tuple<double, int> NormalizedSegmentTime(std::uint64_t const t0_ns, std::ui
 
 class TimeHandler {
    public:
+    /**
+     * \brief Construct a spline time handler given the start time, time increment (time between knots, constant for
+     * uniform splines used here), and the spline order.
+     *
+     * @param t0_ns Start time in nanoseconds
+     * @param delta_t_ns Time increment between knots in nanoseconds. For uniform splines all knots are incremented
+     * equally, therefore if a knot is added we can also say that the spline is delta_t_ns longer.
+     * @param k Spline order. Evaluating a spline at time t in range [t_i, t_i+1) requires k-1 knots
+     */
     TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns, int const k);
 
     std::optional<std::tuple<double, int>> SplinePosition(std::uint64_t const t_ns, size_t const num_knots) const;
