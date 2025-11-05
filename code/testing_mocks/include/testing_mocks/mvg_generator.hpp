@@ -44,5 +44,4 @@ class MvgGenerator {
 
 Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_rotation, Isometry3d pose);
 
-
 }  // namespace reprojection::testing_mocks
