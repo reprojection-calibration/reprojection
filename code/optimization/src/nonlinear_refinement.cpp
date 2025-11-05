@@ -7,12 +7,11 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): Return the final cost
 // TODO(Jack): Should we have some assertions which force that the frames satisfy some basic properties like there is a
 // matching number of everything?
-std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Frame> const& frames,
-                                                                 CameraModel const& camera_type,
-                                                                 ArrayXd const& intrinsics) {
+std::tuple<std::vector<Isometry3d>, ArrayXd, double> NonlinearRefinement(std::vector<Frame> const& frames,
+                                                                         CameraModel const& camera_type,
+                                                                         ArrayXd const& intrinsics) {
     assert(static_cast<int>(camera_type) == intrinsics.rows());  // This is not a real error handling stategy!
 
     std::vector<Array6d> poses_to_optimize;
@@ -51,7 +50,7 @@ std::tuple<std::vector<Isometry3d>, ArrayXd> NonlinearRefinement(std::vector<Fra
         poses_to_return.push_back(geometry::Exp(temp));
     }
 
-    return {poses_to_return, intrinsics_to_optimize};
+    return {poses_to_return, intrinsics_to_optimize, summary.final_cost};
 }
 
 }  // namespace  reprojection::optimization

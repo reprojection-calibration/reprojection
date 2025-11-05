@@ -2,6 +2,7 @@
 
 #include "constants.hpp"
 #include "eigen_utilities/grid.hpp"
+#include "geometry/lie.hpp"
 #include "noise_generation.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "sphere_trajectory.hpp"
@@ -29,22 +30,6 @@ std::vector<Frame> MvgGenerator::GenerateBatch(int const num_frames) const {
 
     return frames;
 }  // LCOV_EXCL_LINE
-
-std::tuple<std::vector<Frame>, std::vector<Frame>> MvgGenerator::GenerateBatchWithNoise(
-    int const num_frames, NoiseProfile const& sigmas) const {
-    std::vector<Frame> const frames{GenerateBatch(num_frames)};
-
-    std::vector<Frame> noisy_frames;
-    for (auto frame_i : frames) {
-        frame_i.bundle.pixels += GaussianNoise(0, sigmas.sigma_pixel, frame_i.bundle.pixels.rows(), 2);
-        frame_i.bundle.points += GaussianNoise(0, sigmas.sigma_point, frame_i.bundle.points.rows(), 3);
-        frame_i.pose = AddGaussianNoise(sigmas.sigma_pose_translation, sigmas.sigma_pose_rotation, frame_i.pose);
-
-        noisy_frames.push_back(frame_i);
-    }
-
-    return {frames, noisy_frames};
-}
 
 /**
  * \brief Static helper method that projects points in the world frame to pixels. Do NOT use outside the testing mocks
@@ -114,6 +99,21 @@ MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {
     }
 
     return points;
+}
+
+Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_rotation, Isometry3d pose) {
+    pose.translation() += GaussianNoise(0, sigma_translation, 3, 1);
+
+    // TODO(Jack): Confirm this is the right way to add noise to a rotation! Adding the gaussian noise element in the
+    // tangert space directly and then converting back to a rotation matrix.
+    Vector3d const rotation_noise{GaussianNoise(0, sigma_rotation, 3, 1)};
+    Vector3d const rotation_se3{geometry::Log(pose.rotation())};
+    Vector3d const perturbed_se3{rotation_noise.array() + rotation_se3.array()};
+
+    Matrix3d const perturbed_R{geometry::Exp(perturbed_se3)};
+    pose.linear() = perturbed_R;
+
+    return pose;
 }
 
 }  // namespace reprojection::testing_mocks
