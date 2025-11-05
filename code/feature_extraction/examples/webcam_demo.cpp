@@ -1,6 +1,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 
 #include "feature_extraction/target_extraction.hpp"
@@ -23,6 +24,59 @@ char* GetCommandOption(char** begin, char** end, const std::string& option) {
     return 0;
 }
 
+class ImageFeed {
+   public:
+    virtual ~ImageFeed() = default;
+
+    virtual cv::Mat GetImage() = 0;
+};
+
+class WebcamFeed : public ImageFeed {
+   public:
+    WebcamFeed() {
+        cap_ = cv::VideoCapture(0);
+        if (not cap_.isOpened()) {
+            throw std::runtime_error("Couldn't open video capture device!");
+        }
+    }
+
+    cv::Mat GetImage() override {
+        cv::Mat frame;
+        cap_ >> frame;
+        return frame;
+    }
+
+   private:
+    cv::VideoCapture cap_;
+};
+
+class FolderFeed : public ImageFeed {
+   public:
+    FolderFeed(std::string const& image_folder) {
+        for (const auto& entry : std::filesystem::directory_iterator(image_folder)) {
+            image_files_.push_back(entry.path());
+        }
+
+        std::sort(std::begin(image_files_), std::end(image_files_));
+    }
+
+    cv::Mat GetImage() override {
+        if (current_id_ >= std::size(image_files_)) {
+            // Out of images to load, return empty.
+            return cv::Mat();
+        }
+
+        cv::Mat const image{cv::imread(image_files_[current_id_])};
+        ++current_id_;
+
+        return image;
+    }
+
+   private:
+    std::vector<std::string> image_files_;
+    std::size_t current_id_{0};
+};
+
 int main(int argc, char* argv[]) {
     char const* const filename{GetCommandOption(argv, argv + argc, "-c")};
     if (not filename) {
@@ -34,17 +88,13 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<feature_extraction::TargetExtractor> const extractor{
         feature_extraction::CreateTargetExtractor(config["target"])};
 
-    cv::VideoCapture cap(0);
-    if (not cap.isOpened()) {
-        std::cerr << "Couldn't open video capture device!" << std::endl;
-        return EXIT_FAILURE;
-    }
+    auto image_feed{
+        std::make_unique<FolderFeed>("data/data_fisheye_calibration/2013_05_29_drive_0000_extract/image_03/data_rgb")};
 
     std::cout << "\n\tPress any key to close the window and end the demo.\n" << std::endl;
-
     cv::Mat frame, gray;
     while (true) {
-        cap >> frame;
+        frame = image_feed->GetImage();
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
         std::optional<ExtractedTarget> const target{extractor->Extract(gray)};
