@@ -29,6 +29,16 @@ class MvgGenerator {
 
     std::vector<Frame> GenerateBatch(int const num_frames) const;
 
+    // TODO(Jack): In general the strategy of how to testy given noisy data is at this time unclear! For the non-noisy
+    // case we have exact answers, but for the noisy case we will have "random" answers that are part of a distribution.
+    // At this time we still have not implemented predicting those distributions, therefore we have no formal way to
+    // test using noisy data. For example I think if we know there is a specific pixel noise, then there will be a
+    // specific error in the poses calculated. This is something we need to look at closely!
+    // NOTE(Jack): This function simply adds gaussian noise to all respective values! It does not actually add noise to
+    // the points and then project those points to noisy pixels. That would be the more proper way to model that noise!
+    // But as of now I cannot be sure that is specifically of interest to us, as I believe corner extractors are modeled
+    // as simply adding noise in the pixel space directly. Furthermore we are not optimizing the extracted pixels or
+    // points so it really probably does not matter.
     std::tuple<std::vector<Frame>, std::vector<Frame>> GenerateBatchWithNoise(int const num_frames,
                                                                               NoiseProfile const& sigmas) const;
 
