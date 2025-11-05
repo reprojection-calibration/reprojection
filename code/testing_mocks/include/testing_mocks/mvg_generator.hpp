@@ -39,6 +39,7 @@ class MvgGenerator {
     // But as of now I cannot be sure that is specifically of interest to us, as I believe corner extractors are modeled
     // as simply adding noise in the pixel space directly. Furthermore we are not optimizing the extracted pixels or
     // points so it really probably does not matter.
+    // TODO(Jack): We honestly never have a test with noisy pixels/points, so should we just remove that?
     std::tuple<std::vector<Frame>, std::vector<Frame>> GenerateBatchWithNoise(int const num_frames,
                                                                               NoiseProfile const& sigmas) const;
 
