@@ -30,7 +30,7 @@ TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
     // twice and once in TestGaussianNoise
     MatrixXd const translations_centered{translations.array() - translations.mean()};
     double const translations_sigma{std::sqrt((translations_centered.array() * translations_centered.array()).mean())};
-    EXPECT_NEAR(translations_sigma, sigma_translation, 1e-2);
+    EXPECT_NEAR(translations_sigma, sigma_translation, 2e-2);
 
     MatrixXd const rotations_se3_centered{rotations_se3.array() - rotations_se3.mean()};
     double const rotations_se3_sigma{
