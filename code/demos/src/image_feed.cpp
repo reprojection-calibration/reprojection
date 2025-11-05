@@ -11,13 +11,6 @@ VideoCaptureFeed::VideoCaptureFeed(int const device_id)  // LCOV_EXCL_LINE
 
 VideoCaptureFeed::VideoCaptureFeed(std::string const& video_file) : VideoCaptureFeed{cv::VideoCapture(video_file)} {}
 
-// Private constructor intended for internal use only.
-VideoCaptureFeed::VideoCaptureFeed(cv::VideoCapture const& cap) : cap_{cap} {
-    if (not cap_.isOpened()) {
-        throw std::runtime_error("Video capture device is not open!");
-    }
-}
-
 VideoCaptureFeed::~VideoCaptureFeed() { cap_.release(); }
 
 cv::Mat VideoCaptureFeed::GetImage() {
@@ -29,6 +22,13 @@ cv::Mat VideoCaptureFeed::GetImage() {
 
     return frame;
 }  // LCOV_EXCL_LINE
+
+// Private constructor intended for internal use only.
+VideoCaptureFeed::VideoCaptureFeed(cv::VideoCapture const& cap) : cap_{cap} {
+    if (not cap_.isOpened()) {
+        throw std::runtime_error("Video capture device is not open!");
+    }
+}
 
 FolderFeed::FolderFeed(std::string const& image_folder) {
     std::ranges::for_each(std::filesystem::directory_iterator(image_folder),
