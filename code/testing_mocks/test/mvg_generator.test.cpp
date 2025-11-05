@@ -48,7 +48,7 @@ TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
     EXPECT_NEAR(translations.mean(), 0.0, 2e-2);
     EXPECT_NEAR(rotations_se3.mean(), 0.0, 1e-2);
 
-    // TODO(Jack): We should add a function to for this calcualte and assert mean/covariance logic. It is used here
+    // TODO(Jack): We should add a function to for this calculate and assert mean/covariance logic. It is used here
     // twice and once in TestGaussianNoise
     MatrixXd const translations_centered{translations.array() - translations.mean()};
     double const translations_sigma{std::sqrt((translations_centered.array() * translations_centered.array()).mean())};
