@@ -43,6 +43,6 @@ std::vector<Isometry3d> ToSE3(std::vector<Array6d> const& se3) {
                    [](Array6d const& se3_i) { return Exp(Vector6d{se3_i}); });
 
     return SE3;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::geometry
