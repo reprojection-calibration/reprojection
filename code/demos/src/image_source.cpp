@@ -1,4 +1,4 @@
-#include "demos/image_feed.hpp"
+#include "demos/image_source.hpp"
 
 #include <algorithm>
 #include <filesystem>

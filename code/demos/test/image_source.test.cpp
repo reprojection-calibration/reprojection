@@ -1,4 +1,4 @@
-#include "demos/image_feed.hpp"
+#include "demos/image_source.hpp"
 
 #include <gtest/gtest.h>
 
@@ -9,7 +9,7 @@ using namespace reprojection;
 
 // NOTE(Jack): We cannot simulate a USB camera or real device, therefore we test it using a video file. The opencv video
 // capture supports both input modalities with the same interface.
-TEST(DemosImageFeed, VideoCaptureMp4) {
+TEST(DemosImageSource, VideoCaptureMp4) {
     std::string const folder{"test/video_capture/feed/"};
     std::filesystem::create_directories(folder);
     cv::Mat const blank_image{cv::Mat::zeros(10, 10, CV_8UC1)};
@@ -37,11 +37,11 @@ TEST(DemosImageFeed, VideoCaptureMp4) {
     std::filesystem::remove(folder + "video.mp4");
 }
 
-TEST(DemosImageFeed, VideoCaptureError) {
+TEST(DemosImageSource, VideoCaptureError) {
     EXPECT_THROW(demos::VideoCapture image_feed{"non_existent_video.mp4"}, std::runtime_error);
 }
 
-TEST(DemosImageFeed, TestImageFolder) {
+TEST(DemosImageSource, TestImageFolder) {
     std::string const folder{"test/folder/feed/"};
     std::filesystem::create_directories(folder);
 

@@ -6,14 +6,14 @@
 
 namespace reprojection::demos {
 
-class ImageFeed {
+class ImageSource {
    public:
-    virtual ~ImageFeed() = default;
+    virtual ~ImageSource() = default;
 
     virtual cv::Mat GetImage() = 0;
 };
 
-class VideoCapture final : public ImageFeed {
+class VideoCapture final : public ImageSource {
    public:
     explicit VideoCapture(int const device_id);
 
@@ -29,7 +29,7 @@ class VideoCapture final : public ImageFeed {
     cv::VideoCapture cap_;
 };
 
-class ImageFolder final : public ImageFeed {
+class ImageFolder final : public ImageSource {
    public:
     explicit ImageFolder(std::string const& image_folder);
 
