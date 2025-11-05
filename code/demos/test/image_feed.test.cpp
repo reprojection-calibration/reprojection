@@ -7,6 +7,8 @@
 
 using namespace reprojection;
 
+// NOTE(Jack): We cannot simulate a USB camera or real device, therefore we test it using a video file. The opencv video
+// capture supports both input modalities with the same interface.
 TEST(DemosImageFeed, VideoCaptureFeedMp4) {
     std::string const folder{"test/video_capture/feed/"};
     std::filesystem::create_directories(folder);
@@ -43,6 +45,7 @@ TEST(DemosImageFeed, TestFolderFeed) {
     cv::imwrite(folder + "01.png", blank_image);
     cv::imwrite(folder + "02.png", blank_image);
 
+    // Load the folder and check that we get two frames
     demos::FolderFeed image_feed{folder};
 
     cv::Mat loaded_image{image_feed.GetImage()};
