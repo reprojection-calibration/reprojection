@@ -5,7 +5,6 @@
 
 namespace reprojection::demos {
 
-
 VideoCaptureFeed::VideoCaptureFeed(int const device_id) : cap_{cv::VideoCapture(device_id)} {}
 
 VideoCaptureFeed::VideoCaptureFeed(std::string const& video_file) : cap_{cv::VideoCapture(video_file)} {}
@@ -17,6 +16,9 @@ cv::Mat VideoCaptureFeed::GetImage() {
         throw std::runtime_error("Video capture device is not open!");
     }
 
+    // TODO(Jack): Formalize error handling strategy. If there are not more frames but we call cap_ >> frame I think it
+    // just does nothing and we will return empty cv::Mat. The testing for the mp4 video based version shows me this
+    // behavior, which I think is an OK policy. Not robust, but OK until we know better what to do.
     cv::Mat frame;
     cap_ >> frame;
 
