@@ -62,7 +62,7 @@ class FolderFeed : public ImageFeed {
 
     cv::Mat GetImage() override {
         if (current_id_ >= std::size(image_files_)) {
-            // Out of images to load, return empty.
+            // Out of images to load, return empty, is this a valid way to handle this condition?
             return cv::Mat();
         }
 
@@ -78,19 +78,28 @@ class FolderFeed : public ImageFeed {
 };
 
 int main(int argc, char* argv[]) {
-    char const* const filename{GetCommandOption(argv, argv + argc, "-c")};
-    if (not filename) {
+    char const* const config_file{GetCommandOption(argv, argv + argc, "-c")};
+    if (not config_file) {
         std::cerr << "Target configuration yaml not provided! (-c <target_config_yaml>)" << std::endl;
         return EXIT_FAILURE;
     }
 
-    YAML::Node const config{YAML::LoadFile(filename)};
+    // If no folder is provided then default to webcam demo.
+    std::unique_ptr<ImageFeed> image_feed;
+    char const* const folder{GetCommandOption(argv, argv + argc, "-f")};
+    if (folder) {
+        image_feed = std::make_unique<FolderFeed>(folder);
+    } else {
+        std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
+        image_feed = std::make_unique<WebcamFeed>();
+    }
+
+    YAML::Node const config{YAML::LoadFile(config_file)};
     std::unique_ptr<feature_extraction::TargetExtractor> const extractor{
         feature_extraction::CreateTargetExtractor(config["target"])};
 
-    auto image_feed{std::make_unique<WebcamFeed>()};
-
     std::cout << "\n\tPress any key to close the window and end the demo.\n" << std::endl;
+
     cv::Mat frame, gray;
     while (true) {
         frame = image_feed->GetImage();
