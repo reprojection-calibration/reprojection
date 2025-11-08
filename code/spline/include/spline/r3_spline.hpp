@@ -1,6 +1,8 @@
 #pragma once
 
 #include <optional>
+#include <vector>
+#include <cstdint>
 
 #include "spline/time_handler.hpp"
 #include "spline/types.hpp"
@@ -14,9 +16,9 @@ namespace reprojection::spline {
 // does not make sense to make them part of the class and crowd the class scope.
 class r3Spline {
    public:
-    r3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns);
+    r3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns);
 
-    std::optional<Vector3d> Evaluate(uint64_t const t_ns,
+    std::optional<Vector3d> Evaluate(std::uint64_t const t_ns,
                                      DerivativeOrder const derivative = DerivativeOrder::Null) const;
 
     // TODO(Jack): Let us consider what benefit we would get from making this private at some later point

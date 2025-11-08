@@ -21,10 +21,10 @@ std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Eigen::Matri
     return delta_phi;
 }
 
-So3Spline::So3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns)
+So3Spline::So3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
     : time_handler_{t0_ns, delta_t_ns, constants::order}, M_{CumulativeBlendingMatrix(constants::order)} {}
 
-std::optional<Matrix3d> So3Spline::Evaluate(uint64_t const t_ns) const {
+std::optional<Matrix3d> So3Spline::Evaluate(std::uint64_t const t_ns) const {
     auto const normalized_position{time_handler_.SplinePosition(t_ns, std::size(control_points_))};
     if (not normalized_position.has_value()) {
         return std::nullopt;
@@ -50,7 +50,7 @@ std::optional<Matrix3d> So3Spline::Evaluate(uint64_t const t_ns) const {
 
 // TODO(Jack): We could return matrices from all these by returning skew symmetric matrices, but I am not sure if that
 // makes sense yet :)
-std::optional<Vector3d> So3Spline::EvaluateVelocity(uint64_t const t_ns) const {
+std::optional<Vector3d> So3Spline::EvaluateVelocity(std::uint64_t const t_ns) const {
     auto const normalized_position{time_handler_.SplinePosition(t_ns, std::size(control_points_))};
     if (not normalized_position.has_value()) {
         return std::nullopt;
@@ -77,7 +77,7 @@ std::optional<Vector3d> So3Spline::EvaluateVelocity(uint64_t const t_ns) const {
     return velocity;
 }
 
-std::optional<Vector3d> So3Spline::EvaluateAcceleration(uint64_t const t_ns) const {
+std::optional<Vector3d> So3Spline::EvaluateAcceleration(std::uint64_t const t_ns) const {
     auto const normalized_position{time_handler_.SplinePosition(t_ns, std::size(control_points_))};
     if (not normalized_position.has_value()) {
         return std::nullopt;
