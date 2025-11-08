@@ -17,7 +17,7 @@ MvgGenerator::MvgGenerator(std::unique_ptr<projection_functions::Camera> camera,
     std::vector<Isometry3d> const poses{SphereTrajectory(CameraTrajectory{{0, 0, 0}, 1.0, {0, 0, 5}})};
 
     for (auto const& pose : poses) {
-        se3_spline_.AddKnot(pose);
+        se3_spline_.AddControlPoint(pose);
     }
 }
 

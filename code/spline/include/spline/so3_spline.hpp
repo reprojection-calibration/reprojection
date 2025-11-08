@@ -17,10 +17,10 @@ class So3Spline {
     std::optional<Vector3d> EvaluateAcceleration(uint64_t const t_ns) const;
 
     // NOTE(Jack): It would feel more natural to store the so3 vectors here but the math required in the evaluate
-    // function happens more in the SO3 space so it makes more sense to have the knots be in that format - it is also
-    // what people would expect to get returned from the Evaluate() function, so we are consistent.
-    // TODO(Jack): When adding a knot should we check that it is a rotation matrix?
-    std::vector<Matrix3d> knots_;
+    // function happens more in the SO3 space so it makes more sense to have the control_points be in that format - it
+    // is also what people would expect to get returned from the Evaluate() function, so we are consistent.
+    // TODO(Jack): When adding a control_point should we check that it is a rotation matrix?
+    std::vector<Matrix3d> control_points_;
 
    private:
     TimeHandler time_handler_;

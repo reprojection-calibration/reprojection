@@ -5,9 +5,9 @@ namespace reprojection::spline {
 Se3Spline::Se3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns)
     : r3_spline_{t0_ns, delta_t_ns}, so3_spline_{t0_ns, delta_t_ns} {}
 
-void Se3Spline::AddKnot(Isometry3d const knot) {
-    r3_spline_.knots_.push_back(knot.translation());
-    so3_spline_.knots_.push_back(knot.linear());
+void Se3Spline::AddControlPoint(Isometry3d const control_point) {
+    r3_spline_.control_points_.push_back(control_point.translation());
+    so3_spline_.control_points_.push_back(control_point.linear());
 }
 
 std::optional<Isometry3d> Se3Spline::Evaluate(uint64_t const t_ns) const {

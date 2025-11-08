@@ -18,7 +18,7 @@ class Se3Spline {
    public:
     Se3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns);
 
-    void AddKnot(Isometry3d const knot);
+    void AddControlPoint(Isometry3d const control_point);
 
     std::optional<Isometry3d> Evaluate(uint64_t const t_ns) const;
 

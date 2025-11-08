@@ -9,13 +9,13 @@ namespace reprojection::spline {
 r3Spline::r3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns) : time_handler_{t0_ns, delta_t_ns, constants::order} {}
 
 std::optional<Vector3d> r3Spline::Evaluate(uint64_t const t_ns, DerivativeOrder const derivative) const {
-    auto const normalized_position{time_handler_.SplinePosition(t_ns, std::size(knots_))};
+    auto const normalized_position{time_handler_.SplinePosition(t_ns, std::size(control_points_))};
     if (not normalized_position.has_value()) {
         return std::nullopt;
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    Matrix3K const P{Eigen::Map<const Matrix3K>(knots_[i].data(), 3, constants::order)};
+    Matrix3K const P{Eigen::Map<const Matrix3K>(control_points_[i].data(), 3, constants::order)};
     static MatrixKK const M{BlendingMatrix(constants::order)};  // Static means it only evaluates once :)
     VectorK const u{CalculateU(u_i, derivative)};
 
