@@ -7,7 +7,6 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): Template to handle velocity and acceleration also
 // TODO(Jack): We purposely pick r3 as the variable name because it is generic enough to represent the idea that
 // sometimes it is a value, a velocity, or an acceleration depending on the cost function.
 template <spline::DerivativeOrder D>
