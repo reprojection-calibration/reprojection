@@ -8,6 +8,8 @@
 
 using namespace reprojection;
 
+// TODO(Jack): Are our units of time right? Or are we accidentally calculating everything in m/ns?
+
 TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     // Completely empty spline
     spline::r3Spline r3_spline{100, 5};
@@ -72,40 +74,32 @@ TEST(Spline_r3Spline, TestTemplatedEvaluateNull) {
 
 double Squared(double const x) { return x * x; }
 
+// If you really want to understand this test you need to print out the P matrix below and go to
+// https://nurbscalculator.in/ to plot it (don't forget to set it to a degree 3 B-Spline!). There you will see that it
+// kind of looks like a parabola aligned along the x-axis. You can set the value of u to 0.5 to get the expected
+// position you see below, and then can manually inspect the graph to convince yourself that the first and second
+// derivatives (i.e. velocity and acceleration) make sense :)
+//
+// We added this test because we wanted a test where the derivatives could some how be roughly inferred and understood,
+// and where the second derivative was not just zero like it is for the linear control point case.
 TEST(Spline_r3Spline, TestTemplatedEvaluateFirstDerivative) {
-    std::uint64_t const delta_t_ns{1};
+    spline::Matrix3Kd const P1{{-1, -0.5, 0.5, 1},
+                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
+                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
+    double const u_middle{0.5};  // Middle/center and therefore "bottom" of the "parabola" specified by control points P
+    std::uint64_t const delta_t_ns{1};  // Setting to one avoids time dependent distortion to the velocity/acceleration
 
-    spline::Matrix3Kd const P1{{Squared(-0.1), Squared(-0.05), Squared(0.05), Squared(0.1)},
-                              {Squared(-0.1), Squared(-0.05), Squared(0.05), Squared(0.1)},
-                               {Squared(-0.1), Squared(-0.05), Squared(0.05), Squared(0.1)}};
-    Vector3d const r3_velocity{
-        spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::First>(P1, 0.5, delta_t_ns)};
+    Vector3d const position{
+        spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P1, u_middle, delta_t_ns)};
+    EXPECT_TRUE(position.isApprox(Vector3d{0, 0.28125, 0.28125}));  // Aligned and centered on the x-axis
 
-    std::cout << r3_velocity << std::endl;
+    Vector3d const velocity{
+        spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::First>(P1, u_middle, delta_t_ns)};
+    EXPECT_TRUE(velocity.isApprox(Vector3d{0.875, 0, 0}));  // Only x-axis motion at base of aligned parabola
 
-    Vector3d const r3_acceleration{
-        spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Second>(P1, 0.5, delta_t_ns)};
-
-    std::cout << r3_acceleration << std::endl;
-}
-
-TEST(Spline_r3Spline, TestEvaluateDerivatives) {
-    spline::r3Spline r3_spline{100, 5};
-    for (int i{0}; i < spline::constants::order; ++i) {
-        r3_spline.control_points_.push_back(i * Eigen::Vector3d::Ones());
-    }
-
-    auto const p_du{r3_spline.Evaluate(101, spline::DerivativeOrder::First)};
-    ASSERT_TRUE(p_du.has_value());
-    // Honestly I expected this to be one because our data is a linear line with slope one, but we are taking this
-    // derivative with respect to time and not to the x-axis, therefore it is 0.2 m/ns because our time interval
-    // (delta_t_ns) is 5.
-    EXPECT_TRUE(p_du.value().isApproxToConstant(0.2));
-
-    auto const p_dudu{r3_spline.Evaluate(101, spline::DerivativeOrder::Second)};
-    ASSERT_TRUE(p_dudu.has_value());
-    // Linear line has no acceleration.
-    EXPECT_TRUE(p_dudu.value().isApproxToConstant(0));
+    Vector3d const acceleration{
+        spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Second>(P1, u_middle, delta_t_ns)};
+    EXPECT_TRUE(acceleration.isApprox(Vector3d{0, 0.75, 0.75}));  // TODO(Jack): Explain why this makes sense!
 }
 
 // See the top of page five in [2] - the column vectors of u
@@ -121,7 +115,7 @@ TEST(Spline_r3Spline, TestCalculateUAtZero) {
     EXPECT_TRUE(dudu.isApprox(spline::VectorKd{0, 0, 2, 0}));
 }
 
-TEST(Spline_r3Spline, TestCalculate) {
+TEST(Spline_r3Spline, TestCalculateU) {
     double const u_i{0.5};
 
     spline::VectorKd const u{spline::CalculateU(u_i)};
