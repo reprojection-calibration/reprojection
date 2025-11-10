@@ -106,28 +106,3 @@ TEST(Spline_r3Spline, TestTemplatedEvaluateOnParabola) {
         spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Second>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(acceleration.isApprox(Vector3d{0, 0.75, 0.75}));  // TODO(Jack): Explain why this makes sense!
 }
-
-// See the top of page five in [2] - the column vectors of u
-TEST(Spline_r3Spline, TestCalculateUAtZero) {
-    double const u_i{0};
-
-    spline::VectorKd const u{spline::CalculateU(u_i)};
-    spline::VectorKd const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
-    spline::VectorKd const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
-
-    EXPECT_TRUE(u.isApprox(spline::VectorKd{1, 0, 0, 0}));
-    EXPECT_TRUE(du.isApprox(spline::VectorKd{0, 1, 0, 0}));
-    EXPECT_TRUE(dudu.isApprox(spline::VectorKd{0, 0, 2, 0}));
-}
-
-TEST(Spline_r3Spline, TestCalculateU) {
-    double const u_i{0.5};
-
-    spline::VectorKd const u{spline::CalculateU(u_i)};
-    spline::VectorKd const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
-    spline::VectorKd const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
-
-    EXPECT_TRUE(u.isApprox(spline::VectorKd{1, 0.5, 0.25, 0.125}));
-    EXPECT_TRUE(du.isApprox(spline::VectorKd{0, 1, 1, 0.75}));
-    EXPECT_TRUE(dudu.isApprox(spline::VectorKd{0, 0, 2, 3}));
-}

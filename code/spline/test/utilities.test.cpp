@@ -10,6 +10,31 @@ using namespace reprojection;
 // Reference [2] Spline Fusion: A continuous-time representation for visual-inertial fusion with application to rolling
 // shutter cameras
 
+// See the top of page five in [2] - the column vectors of u
+TEST(SplineUtilities, TestCalculateUAtZero) {
+    double const u_i{0};
+
+    spline::VectorKd const u{spline::CalculateU(u_i)};
+    spline::VectorKd const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
+    spline::VectorKd const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
+
+    EXPECT_TRUE(u.isApprox(spline::VectorKd{1, 0, 0, 0}));
+    EXPECT_TRUE(du.isApprox(spline::VectorKd{0, 1, 0, 0}));
+    EXPECT_TRUE(dudu.isApprox(spline::VectorKd{0, 0, 2, 0}));
+}
+
+TEST(SplineUtilities, TestCalculateU) {
+    double const u_i{0.5};
+
+    spline::VectorKd const u{spline::CalculateU(u_i)};
+    spline::VectorKd const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
+    spline::VectorKd const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
+
+    EXPECT_TRUE(u.isApprox(spline::VectorKd{1, 0.5, 0.25, 0.125}));
+    EXPECT_TRUE(du.isApprox(spline::VectorKd{0, 1, 1, 0.75}));
+    EXPECT_TRUE(dudu.isApprox(spline::VectorKd{0, 0, 2, 3}));
+}
+
 TEST(SplineUtilities, TestPolynomialCoefficients) {
     Matrix4d const polynomial_coefficients{spline::PolynomialCoefficients(4)};
 
