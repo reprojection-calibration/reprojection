@@ -9,7 +9,7 @@ using namespace reprojection;
 // COPY PASTED!!!!
 double Squared(double const x) { return x * x; }
 
-// NOTE(Jack): If you want to understand more about the ground truth values of position, velocity, and accleration
+// NOTE(Jack): If you want to understand more about the ground truth values of position, velocity, and acceleration
 // please see the "Spline_r3Spline, TestTemplatedEvaluateOnParabola" test :)
 TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
     double const u_i{0.5};

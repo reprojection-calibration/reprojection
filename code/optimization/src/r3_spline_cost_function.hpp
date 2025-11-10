@@ -10,7 +10,7 @@ ceres::CostFunction* CreateR3SplineCostFunction(spline::DerivativeOrder const de
                                                 double const u_i, std::uint64_t const delta_t_ns);
 
 // TODO(Jack): We purposely pick r3 as the variable name because it is generic enough to represent the idea that
-// sometimes it is a value, a velocity, or an acceleration depending on the cost function.
+// sometimes it is a value/posiiton, a velocity, or an acceleration depending on the derivative order.
 template <spline::DerivativeOrder D>
 class R3SplineCostFunction_T {
    public:
