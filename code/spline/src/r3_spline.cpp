@@ -1,8 +1,8 @@
 #include "spline/r3_spline.hpp"
 
-#include "spline/utilities.hpp"
 #include "spline/constants.hpp"
 #include "spline/types.hpp"
+#include "spline/utilities.hpp"
 
 namespace reprojection::spline {
 
@@ -17,10 +17,17 @@ std::optional<Vector3d> r3Spline::Evaluate(std::uint64_t const t_ns, DerivativeO
     auto const [u_i, i]{normalized_position.value()};
 
     Matrix3Kd const P{Eigen::Map<const Matrix3Kd>(control_points_[i].data(), 3, constants::order)};
-    static MatrixKK const M{BlendingMatrix(constants::order)};  // Static means it only evaluates once :)
-    VectorKd const u{CalculateU(u_i, derivative)};
 
-    return (P * M * u) / std::pow(time_handler_.delta_t_ns_, static_cast<int>(derivative));
+    // TODO(Jack): Handle the power canonically!
+    if (derivative == DerivativeOrder::Null) {
+        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Null>(P, u_i);
+    } else if (derivative == DerivativeOrder::First) {
+        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::First>(P, u_i) /
+               std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::First));
+    } else {
+        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Second>(P, u_i) /
+               std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::Second));
+    }
 }
 
 }  // namespace reprojection::spline
