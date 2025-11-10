@@ -31,25 +31,15 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
         r3_spline.control_points_.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
 
+    // Add noise so the optimization has to do some work :)
     std::vector<Vector3d> noisy_init{r3_spline.control_points_};
-
-    std::cout << "Gt" << std::endl;
-    for (auto const& control_point : noisy_init) {
-        std::cout << control_point.transpose() << std::endl;
-    }
-
     for (size_t i{0}; i < std::size(noisy_init); ++i) {
         noisy_init[i].array() += i * 0.1;
     }
 
-    std::cout << "Start" << std::endl;
-    for (auto const& control_point : noisy_init) {
-        std::cout << control_point.transpose() << std::endl;
-    }
-
     ceres::Problem problem;
 
-    // add one position constraint
+    // add one position constraint - otherwise it is not possible to converge!!!!
     auto const position_i{r3_spline.Evaluate(100, spline::DerivativeOrder::Null)};
     ceres::CostFunction* const cost_function_p{
         optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Null, position_i.value(), 0, delta_t_ns)};
@@ -79,10 +69,7 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    std::cout << "End" << std::endl;
-    for (auto const& control_point : noisy_init) {
-        std::cout << control_point.transpose() << std::endl;
+    for (size_t i{0}; i < std::size(noisy_init); ++i) {
+        EXPECT_TRUE(noisy_init[i].isApprox(r3_spline.control_points_[i], 1e-6));
     }
-
-    EXPECT_EQ(1, 2);
 }
