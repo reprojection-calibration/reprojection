@@ -6,6 +6,14 @@
 
 namespace reprojection::optimization {
 
+// NOTE(Jack): A general misfit idea is that we actually calculate the velocity and acceleration for the r3 spline
+// analytically. Therefore for the position and velocity, we have the analytic derivatives! However, for the sake of
+// consistency we are going to continue to use auto diff. If at a later date we find the performance is a problem, and
+// we need analytic jacobians than the r3 spline optimization can be a nice place to start.
+// TODO(Jack): Confirm that in the calibration problem itself we will use all the following types of cost functions for
+// r3, position, velocity and acceleration. I think we will use the "position" one for the IMU biases, but I am not so
+// sure about the others. Or can we use all of these to construct the larger SE3 cost functions, or does it not make
+// sense to compose them but to instead do them entirely by themselves.
 ceres::CostFunction* CreateR3SplineCostFunction(spline::DerivativeOrder const derivative, Vector3d const& r3,
                                                 double const u_i, std::uint64_t const delta_t_ns) {
     if (derivative == spline::DerivativeOrder::Null) {
@@ -26,10 +34,11 @@ using namespace reprojection;
 // COPY PASTED!!!!
 double Squared(double const x) { return x * x; }
 
-TEST(OptimizationR3SplineCostFunction, HHHH) {
-    Array3d const position{0, 0.28125, 0.28125};
+// NOTE(Jack): If you want to understand more about the ground truth values of position, velocity, and accleration
+// please see the "Spline_r3Spline, TestTemplatedEvaluateOnParabola" test :)
+TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
     double const u_i{0.5};
-    std::uint64_t const delta_t_ns{0};
+    std::uint64_t const delta_t_ns{1};
 
     // Is this column wise or row wise/does it matter?
     spline::Matrix3Kd const P{{-1, -0.5, 0.5, 1},
@@ -37,15 +46,33 @@ TEST(OptimizationR3SplineCostFunction, HHHH) {
                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
 
     // Set up the required input data for the Evaluate() method (normally handled internally by ceres).
-    double const* P_ptr{P.data()};
-    double const* const* P_ptr_ptr{&P_ptr};
+    double const* const P_ptr{P.data()};
+    double const* const* const P_ptr_ptr{&P_ptr};
     Vector3d residual;
 
+    // Position
+    Array3d const position{0, 0.28125, 0.28125};
     ceres::CostFunction* cost_function{
         optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
     bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};  // Do not need jacobian, pass nullptr
     delete cost_function;
+    EXPECT_TRUE(success);
+    EXPECT_TRUE(residual.isZero());
 
+    // Velocity
+    Array3d const velocity{0.875, 0, 0};
+    cost_function = optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::First, velocity, u_i, delta_t_ns);
+    success = cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr);
+    delete cost_function;
+    EXPECT_TRUE(success);
+    EXPECT_TRUE(residual.isZero());
+
+    // Acceleration
+    Array3d const acceleration{0, 0.75, 0.75};
+    cost_function =
+        optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Second, acceleration, u_i, delta_t_ns);
+    success = cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr);
+    delete cost_function;
     EXPECT_TRUE(success);
     EXPECT_TRUE(residual.isZero());
 }
