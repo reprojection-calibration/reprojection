@@ -1,48 +1,56 @@
-#include <ceres/ceres.h>
+#include "r3_spline_cost_function.hpp"
+
 #include <gtest/gtest.h>
 
-#include "spline/constants.hpp"
-#include "spline/r3_spline.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
 
-// TODO(Jack): We purposely pick r3 as the variable name because it is generic enough to represent the idea that
-// sometimes it is a value, a velocity, or an acceleration depending on the cost function.
-template <spline::DerivativeOrder D>
-class R3SplineCostFunction_T {
-   public:
-    R3SplineCostFunction_T(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns)
-        : r3_{r3}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
-
-    template <typename T>
-    bool operator()(T const* const control_points_ptr, T* const residual) const {
-        Eigen::Map<Eigen::Matrix<T, 3, spline::constants::order> const> control_points(control_points_ptr);
-
-        Eigen::Vector<T, 3> const r3{spline::R3SplineEvaluation::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
-
-        residual[0] = T(r3_[0]) - r3[0];
-        residual[1] = T(r3_[1]) - r3[1];
-        residual[2] = T(r3_[2]) - r3[2];
-
-        return true;
+ceres::CostFunction* CreateR3SplineCostFunction(spline::DerivativeOrder const derivative, Vector3d const& r3,
+                                                double const u_i, std::uint64_t const delta_t_ns) {
+    if (derivative == spline::DerivativeOrder::Null) {
+        return R3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns);
+    } else if (derivative == spline::DerivativeOrder::First) {
+        return R3SplineCostFunction_T<spline::DerivativeOrder::First>::Create(r3, u_i, delta_t_ns);
+    } else if (derivative == spline::DerivativeOrder::Second) {
+        return R3SplineCostFunction_T<spline::DerivativeOrder::Second>::Create(r3, u_i, delta_t_ns);
+    } else {
+        throw std::runtime_error("Requested unknown derivative order from CreateR3SplineCostFunction()");
     }
-
-    static ceres::CostFunction* Create(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<R3SplineCostFunction_T, 3, 3 * spline::constants::order>(
-            new R3SplineCostFunction_T(r3, u_i, delta_t_ns));
-    }
-
-    Vector3d r3_;
-    double u_i_;
-    std::uint64_t delta_t_ns_;
-};
+}
 
 }  // namespace reprojection::optimization
 
 using namespace reprojection;
 
-TEST(OptimizationR3SplineCostFunction, TestXXX) {
+// COPY PASTED!!!!
+double Squared(double const x) { return x * x; }
+
+TEST(OptimizationR3SplineCostFunction, HHHH) {
+    Array3d const position{0, 0.28125, 0.28125};
+    double const u_i{0.5};
+    std::uint64_t const delta_t_ns{0};
+
+    // Is this column wise or row wise/does it matter?
+    spline::Matrix3Kd const P{{-1, -0.5, 0.5, 1},
+                              {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
+                              {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
+
+    // Set up the required input data for the Evaluate() method (normally handled internally by ceres).
+    double const* P_ptr{P.data()};
+    double const* const* P_ptr_ptr{&P_ptr};
+    Vector3d residual;
+
+    ceres::CostFunction* cost_function{
+        optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
+    bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};  // Do not need jacobian, pass nullptr
+    delete cost_function;
+
+    EXPECT_TRUE(success);
+    EXPECT_TRUE(residual.isZero());
+}
+
+TEST(OptimizationR3SplineCostFunction, TestR3SplineCostFunctionCreate_T) {
     Vector3d const r3{0, 0, 0};
     double const u_i{0.2};
     std::uint64_t const delta_t_ns{5};
