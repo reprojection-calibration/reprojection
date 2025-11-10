@@ -14,10 +14,24 @@ VectorKd CalculateU(double const u_i, DerivativeOrder const derivative) {
 
     int const derivative_order{static_cast<int>(derivative)};
     VectorKd const u{polynomial_coefficients.row(derivative_order).transpose().array() *
-                    TimePolynomial(constants::order, u_i, derivative_order).array()};
+                     TimePolynomial(constants::order, u_i, derivative_order).array()};
 
     return u;
 }
+
+VectorXd TimePolynomial(int const k, double const u, int const derivative) {
+    assert(k >= 1);
+    assert(0 <= u and u < 1);
+    assert(0 <= derivative and derivative <= k - 1);
+
+    VectorXd result{VectorXd::Zero(k)};
+    result(derivative) = 1.0;
+    for (int i{1 + derivative}; i < k; ++i) {
+        result(i) = result(i - 1) * u;
+    }
+
+    return result;
+}  // LCOV_EXCL_LINE
 
 // TODO(Jack): Should this really be an integer type valued function?
 // For polynomial k=4
@@ -38,8 +52,6 @@ MatrixXd PolynomialCoefficients(int const k) {
 
     return result;
 }  // LCOV_EXCL_LINE
-
-
 
 MatrixXd BlendingMatrix(int const k) {
     MatrixXd result{MatrixXd::Zero(k, k)};

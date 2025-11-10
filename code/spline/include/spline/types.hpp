@@ -10,13 +10,10 @@ namespace reprojection::spline {
 // handle ceres autodiff Jet types too.
 template <typename T>
 using Matrix3k = Eigen::Matrix<T, 3, spline::constants::order>;
-template <typename T>
-using VectorK = Eigen::Vector<T, constants::order>;
 
-// TODO(Jack): Refactor names to include the double type! Also make these a specialization of the template base!
 using Matrix3Kd = Matrix3k<double>;
 using MatrixKK = Eigen::Matrix<double, constants::order, constants::order>;
-using VectorKd = VectorK<double>;
+using VectorKd = Eigen::Vector<double, constants::order>;
 
 enum class DerivativeOrder { Null = 0, First = 1, Second = 2 };
 

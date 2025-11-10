@@ -18,7 +18,8 @@ class R3SplineCostFunction {
     template <typename T>
     bool operator()(T const* const control_points_ptr, T* const residual) const {
         Eigen::Map<Eigen::Matrix<T, 3, spline::constants::order> const> control_points(control_points_ptr);
-        Eigen::Vector<T, 3> const r3{spline::R3SplineEvaluation::Evaluate<T, D>(control_points, T(u_i_))};
+
+        Eigen::Vector<T, 3> const r3{spline::R3SplineEvaluation::Evaluate<T, D>(control_points, u_i_)};
 
         residual[0] = T(r3_[0]) - r3[0];
         residual[1] = T(r3_[1]) - r3[1];

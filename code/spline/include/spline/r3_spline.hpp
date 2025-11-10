@@ -12,16 +12,18 @@
 namespace reprojection::spline {
 
 // TODO(Jack): Use vector/array consistently!
+// TODO(Jack): What parameters actually need to be templated for ceres autodiff to work, do the parameter constraints
+// need to be?
 struct R3SplineEvaluation {
     template <typename T, DerivativeOrder D>
-    static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, T const u_i) {
+    static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, double const u_i) {
         static int derivative_order{static_cast<int>(D)};
-        static VectorK<T> const du{polynomial_coefficients.row(derivative_order).transpose().cast<T>()};
+        static VectorKd const du{polynomial_coefficients.row(derivative_order).transpose()};
 
-        VectorK<T> const t{TimePolynomial(constants::order, u_i, derivative_order)};
-        VectorK<T> const u{du.cwiseProduct(t)};
+        VectorKd const t{TimePolynomial(constants::order, u_i, derivative_order)};
+        VectorKd const u{du.cwiseProduct(t)};
 
-        return P * M.cast<T>() * u;
+        return P * M.cast<T>() * u.cast<T>();
     }
 
     static inline MatrixKK const M{BlendingMatrix(constants::order)};

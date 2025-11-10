@@ -28,7 +28,6 @@ TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
 }
 
 TEST(Spline_r3Spline, TestEvaluate) {
-    // Completely empty spline
     spline::r3Spline r3_spline{100, 5};
     for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.control_points_.push_back(i * Eigen::Vector3d::Ones());
@@ -54,6 +53,8 @@ TEST(Spline_r3Spline, TestEvaluate) {
     EXPECT_TRUE(p_5.value().isApproxToConstant(2));
 }
 
+// NOTE(Jack): The templated methods do no error checking! They depend on the time handling logic already being done,
+// and if there is out of bounds access because the control points are not valid we will get a segfault here.
 TEST(Spline_r3Spline, TestTemplatedEvaluate) {
     spline::Matrix3Kd const P1{{0, 1, 2, 3}, {0, 1, 2, 3}, {0, 1, 2, 3}};
     Vector3d const r3_1{spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P1, 0.2)};
@@ -67,7 +68,6 @@ TEST(Spline_r3Spline, TestTemplatedEvaluate) {
 }
 
 TEST(Spline_r3Spline, TestEvaluateDerivatives) {
-    // Completely empty spline
     spline::r3Spline r3_spline{100, 5};
     for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.control_points_.push_back(i * Eigen::Vector3d::Ones());
