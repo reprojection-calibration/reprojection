@@ -18,7 +18,6 @@ std::optional<Vector3d> r3Spline::Evaluate(std::uint64_t const t_ns, DerivativeO
 
     Matrix3Kd const P{Eigen::Map<const Matrix3Kd>(control_points_[i].data(), 3, constants::order)};
 
-    // TODO(Jack): Handle the power canonically!
     if (derivative == DerivativeOrder::Null) {
         return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Null>(P, u_i, time_handler_.delta_t_ns_);
     } else if (derivative == DerivativeOrder::First) {

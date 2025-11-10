@@ -10,9 +10,9 @@ namespace reprojection::optimization {
 // TODO(Jack): We purposely pick r3 as the variable name because it is generic enough to represent the idea that
 // sometimes it is a value, a velocity, or an acceleration depending on the cost function.
 template <spline::DerivativeOrder D>
-class R3SplineCostFunction {
+class R3SplineCostFunction_T {
    public:
-    R3SplineCostFunction(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns)
+    R3SplineCostFunction_T(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns)
         : r3_{r3}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
 
     template <typename T>
@@ -29,8 +29,8 @@ class R3SplineCostFunction {
     }
 
     static ceres::CostFunction* Create(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<R3SplineCostFunction, 3, 3 * spline::constants::order>(
-            new R3SplineCostFunction(r3, u_i, delta_t_ns));
+        return new ceres::AutoDiffCostFunction<R3SplineCostFunction_T, 3, 3 * spline::constants::order>(
+            new R3SplineCostFunction_T(r3, u_i, delta_t_ns));
     }
 
     Vector3d r3_;
@@ -48,7 +48,7 @@ TEST(OptimizationR3SplineCostFunction, TestXXX) {
     std::uint64_t const delta_t_ns{5};
 
     ceres::CostFunction const* const cost_function{
-        optimization::R3SplineCostFunction<spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns)};
+        optimization::R3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 1);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 12);

@@ -55,7 +55,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
 
 // NOTE(Jack): The templated methods do no error checking! They depend on the time handling logic already being done,
 // and if there is out of bounds access because the control points are not valid we will get a segfault here.
-TEST(Spline_r3Spline, TestTemplatedEvaluate) {
+TEST(Spline_r3Spline, TestTemplatedEvaluateNull) {
     std::uint64_t const delta_t_ns{5};  // No effect when spline::DerivativeOrder::Null (raised to the zero power = 1)
 
     spline::Matrix3Kd const P1{{0, 1, 2, 3}, {0, 1, 2, 3}, {0, 1, 2, 3}};
@@ -68,6 +68,25 @@ TEST(Spline_r3Spline, TestTemplatedEvaluate) {
     spline::Matrix3Kd const P2{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}};
     Vector3d const r3_2{spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P2, 0, delta_t_ns)};
     EXPECT_TRUE(r3_2.isApproxToConstant(2));
+}
+
+double Squared(double const x) { return x * x; }
+
+TEST(Spline_r3Spline, TestTemplatedEvaluateFirstDerivative) {
+    std::uint64_t const delta_t_ns{1};
+
+    spline::Matrix3Kd const P1{{Squared(-0.1), Squared(-0.05), Squared(0.05), Squared(0.1)},
+                              {Squared(-0.1), Squared(-0.05), Squared(0.05), Squared(0.1)},
+                               {Squared(-0.1), Squared(-0.05), Squared(0.05), Squared(0.1)}};
+    Vector3d const r3_velocity{
+        spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::First>(P1, 0.5, delta_t_ns)};
+
+    std::cout << r3_velocity << std::endl;
+
+    Vector3d const r3_acceleration{
+        spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Second>(P1, 0.5, delta_t_ns)};
+
+    std::cout << r3_acceleration << std::endl;
 }
 
 TEST(Spline_r3Spline, TestEvaluateDerivatives) {
