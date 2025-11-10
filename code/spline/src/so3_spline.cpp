@@ -2,11 +2,11 @@
 
 #include <numeric>
 
-#include "spline/utilities.hpp"
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
 #include "spline/types.hpp"
+#include "spline/utilities.hpp"
 
 namespace reprojection::spline {
 
