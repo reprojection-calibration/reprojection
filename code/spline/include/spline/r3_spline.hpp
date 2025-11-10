@@ -13,9 +13,9 @@ namespace reprojection::spline {
 
 // TODO(Jack): Use vector/array consistently!
 struct R3SplineEvaluation {
-    template <typename T>
+    template <typename T, DerivativeOrder D>
     static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, T const u_i) {
-        static int derivative_order{static_cast<int>(DerivativeOrder::Null)};
+        static int derivative_order{static_cast<int>(D)};
         static VectorK<T> const du{polynomial_coefficients.row(derivative_order).transpose().cast<T>()};
 
         VectorK<T> const t{TimePolynomial(constants::order, u_i, derivative_order)};

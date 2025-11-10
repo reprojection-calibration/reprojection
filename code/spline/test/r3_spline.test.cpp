@@ -56,13 +56,13 @@ TEST(Spline_r3Spline, TestEvaluate) {
 
 TEST(Spline_r3Spline, TestTemplatedEvaluate) {
     spline::Matrix3Kd const P1{{0, 1, 2, 3}, {0, 1, 2, 3}, {0, 1, 2, 3}};
-    Vector3d const r3_1{spline::R3SplineEvaluation::Evaluate<double>(P1, 0.2)};
+    Vector3d const r3_1{spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P1, 0.2)};
     EXPECT_TRUE(r3_1.isApproxToConstant(1.2));
 
     // Shift the control points now to start at 1 and end at 4 manually by creating a new P, reflecting the last test in
     // "(Spline_r3Spline, TestEvaluate)".
     spline::Matrix3Kd const P2{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}};
-    Vector3d const r3_2{spline::R3SplineEvaluation::Evaluate<double>(P2, 0)};
+    Vector3d const r3_2{spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P2, 0)};
     EXPECT_TRUE(r3_2.isApproxToConstant(2));
 }
 
