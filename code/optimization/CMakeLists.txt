@@ -6,6 +6,7 @@ find_package(Eigen3 REQUIRED)
 set(SRC_FILES
         src/nonlinear_refinement.cpp
         src/projection_cost_function.cpp
+        src/r3_spline_cost_function.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
