@@ -13,13 +13,14 @@ namespace reprojection::optimization {
 template <spline::DerivativeOrder D>
 class R3SplineCostFunction {
    public:
-    R3SplineCostFunction(Vector3d const& r3, double const u_i) : r3_{r3}, u_i_{u_i} {}
+    R3SplineCostFunction(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns)
+        : r3_{r3}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
 
     template <typename T>
     bool operator()(T const* const control_points_ptr, T* const residual) const {
         Eigen::Map<Eigen::Matrix<T, 3, spline::constants::order> const> control_points(control_points_ptr);
 
-        Eigen::Vector<T, 3> const r3{spline::R3SplineEvaluation::Evaluate<T, D>(control_points, u_i_)};
+        Eigen::Vector<T, 3> const r3{spline::R3SplineEvaluation::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
 
         residual[0] = T(r3_[0]) - r3[0];
         residual[1] = T(r3_[1]) - r3[1];
@@ -28,13 +29,14 @@ class R3SplineCostFunction {
         return true;
     }
 
-    static ceres::CostFunction* Create(Vector3d const& r3, double const u_i) {
+    static ceres::CostFunction* Create(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns) {
         return new ceres::AutoDiffCostFunction<R3SplineCostFunction, 3, 3 * spline::constants::order>(
-            new R3SplineCostFunction(r3, u_i));
+            new R3SplineCostFunction(r3, u_i, delta_t_ns));
     }
 
     Vector3d r3_;
     double u_i_;
+    std::uint64_t delta_t_ns_;
 };
 
 }  // namespace reprojection::optimization
@@ -44,8 +46,10 @@ using namespace reprojection;
 TEST(OptimizationR3SplineCostFunction, TestXXX) {
     Vector3d const r3{0, 0, 0};
     double const u_i{0.2};
+    std::uint64_t const delta_t_ns{5};
+
     ceres::CostFunction const* const cost_function{
-        optimization::R3SplineCostFunction<spline::DerivativeOrder::Null>::Create(r3, u_i)};
+        optimization::R3SplineCostFunction<spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 1);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 12);

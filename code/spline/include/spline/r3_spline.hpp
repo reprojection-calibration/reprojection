@@ -16,14 +16,15 @@ namespace reprojection::spline {
 // need to be?
 struct R3SplineEvaluation {
     template <typename T, DerivativeOrder D>
-    static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, double const u_i) {
+    static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
         static int derivative_order{static_cast<int>(D)};
         static VectorKd const du{polynomial_coefficients.row(derivative_order).transpose()};
 
+        // TODO(Jack): Naming, does du and t make any sense here?
         VectorKd const t{TimePolynomial(constants::order, u_i, derivative_order)};
         VectorKd const u{du.cwiseProduct(t)};
 
-        return P * M.cast<T>() * u.cast<T>();
+        return P * M.cast<T>() * u.cast<T>() / std::pow(delta_t_ns, derivative_order);
     }
 
     static inline MatrixKK const M{BlendingMatrix(constants::order)};

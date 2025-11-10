@@ -20,13 +20,11 @@ std::optional<Vector3d> r3Spline::Evaluate(std::uint64_t const t_ns, DerivativeO
 
     // TODO(Jack): Handle the power canonically!
     if (derivative == DerivativeOrder::Null) {
-        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Null>(P, u_i);
+        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Null>(P, u_i, time_handler_.delta_t_ns_);
     } else if (derivative == DerivativeOrder::First) {
-        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::First>(P, u_i) /
-               std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::First));
+        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::First>(P, u_i, time_handler_.delta_t_ns_);
     } else {
-        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Second>(P, u_i) /
-               std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::Second));
+        return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Second>(P, u_i, time_handler_.delta_t_ns_);
     }
 }
 
