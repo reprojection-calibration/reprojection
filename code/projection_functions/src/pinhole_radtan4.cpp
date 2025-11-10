@@ -46,6 +46,7 @@ std::tuple<Array2d, Matrix2d> PinholeRadtan4::JacobianUpdate(Array4d const& dist
     // Right now we add an assertion so we can catch failures in debug builds.
     bool success{function->Evaluate(p_cam_ptr_ptr, distorted_p_cam_ptr, J_ptr_ptr)};
     assert(success);
+    static_cast<void>(success);
 
     Vector2d const distorted_p_cam{distorted_p_cam_ptr[0], distorted_p_cam_ptr[1]};
     Matrix2d const J{Eigen::Map<const Matrix2d>(J_ptr)};

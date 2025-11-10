@@ -39,7 +39,7 @@ template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
 class ProjectionCostFunction_T {
    public:
-    explicit ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
+    ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
 
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const pose_ptr, T* const residual) const {

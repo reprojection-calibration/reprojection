@@ -6,6 +6,7 @@ find_package(Eigen3 REQUIRED)
 set(SRC_FILES
         src/nonlinear_refinement.cpp
         src/projection_cost_function.cpp
+        src/r3_spline_cost_function.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -13,7 +14,7 @@ set(LINK_LIBRARIES
         eigen_utilities
         geometry
         projection_functions
-        spline # needed because of testing_mocks dependency -_-
+        spline
         testing_mocks
         types
 )
@@ -22,6 +23,7 @@ AddLibrary()
 set(TESTS
         src/ceres_geometry.test.cpp
         src/projection_cost_function.test.cpp
+        src/r3_spline_cost_function.test.cpp
         test/nonlinear_refinement.test.cpp
 )
 AddTests()

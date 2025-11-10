@@ -12,6 +12,7 @@ namespace reprojection::optimization {
 // consistent across the project?
 // NOTE(Jack): We use Eigen::Ref here so we can pass both maps (in the PinholeCostFunction.operator()) and the direct
 // types (in the testing for example).
+// TODO(Jack): Does the point here really need to be templated? Or as a constant can we avoid that?
 template <typename T>
 Eigen::Vector<T, 3> TransformPoint(Eigen::Ref<Eigen::Vector<T, 6> const> const& tf_i_j,
                                    Eigen::Ref<Eigen::Vector<T, 3> const> const& point_j) {
