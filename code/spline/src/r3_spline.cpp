@@ -1,8 +1,8 @@
 #include "spline/r3_spline.hpp"
 
+#include "spline/utilities.hpp"
 #include "spline/constants.hpp"
 #include "spline/types.hpp"
-#include "utilities.hpp"
 
 namespace reprojection::spline {
 
