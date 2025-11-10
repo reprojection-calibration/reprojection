@@ -23,12 +23,12 @@ TimeHandler::TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_
     : t0_ns_{t0_ns}, delta_t_ns_{delta_t_ns}, k_{k} {}
 
 std::optional<std::tuple<double, int>> TimeHandler::SplinePosition(std::uint64_t const t_ns,
-                                                                   size_t const num_knots) const {
+                                                                   size_t const num_control_points) const {
     auto const [u_i, i]{NormalizedSegmentTime(t0_ns_, t_ns, delta_t_ns_)};
 
     // From reference [1] - "At time t in [t_i, t_i+1) the value of p(t) only depends on the control points p_i,
     // p_i+1, ..., p_i+k-1" - See the start of the second paragraph in section 4.2 Matrix Representation.
-    if (num_knots < static_cast<size_t>(i + k_)) {
+    if (num_control_points < static_cast<size_t>(i + k_)) {
         return std::nullopt;
     }
 

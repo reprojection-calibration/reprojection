@@ -13,24 +13,25 @@ TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     spline::r3Spline r3_spline{100, 5};
     EXPECT_EQ(r3_spline.Evaluate(115), std::nullopt);
 
-    // Add four knots which means we can ask for evaluations within the one time segment at the very start of the spline
-    for (int i{0}; i < spline::constants::k; ++i) {
-        r3_spline.knots_.push_back(Eigen::Vector3d::Zero());
+    // Add four control_points which means we can ask for evaluations within the one time segment at the very start of
+    // the spline
+    for (int i{0}; i < spline::constants::order; ++i) {
+        r3_spline.control_points_.push_back(Eigen::Vector3d::Zero());
     }
 
     EXPECT_NE(r3_spline.Evaluate(100), std::nullopt);  // Inside first time segment - valid
     EXPECT_EQ(r3_spline.Evaluate(105), std::nullopt);  // Outside first time segment - invalid
 
-    // Add one more knot to see that we can now do a valid evaluation in the second time segment
-    r3_spline.knots_.push_back(Eigen::Vector3d::Zero());
+    // Add one more control_point to see that we can now do a valid evaluation in the second time segment
+    r3_spline.control_points_.push_back(Eigen::Vector3d::Zero());
     EXPECT_NE(r3_spline.Evaluate(105), std::nullopt);
 }
 
 TEST(Spline_r3Spline, TestEvaluate) {
     // Completely empty spline
     spline::r3Spline r3_spline{100, 5};
-    for (int i{0}; i < spline::constants::k; ++i) {
-        r3_spline.knots_.push_back(i * Eigen::Vector3d::Ones());
+    for (int i{0}; i < spline::constants::order; ++i) {
+        r3_spline.control_points_.push_back(i * Eigen::Vector3d::Ones());
     }
 
     // Test three elements in the first and only valid time segment
@@ -47,7 +48,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
     EXPECT_TRUE(p_2.value().isApproxToConstant(1.4));
 
     // Add one more element and test the first element in that second time segment
-    r3_spline.knots_.push_back(4 * Eigen::Vector3d::Ones());
+    r3_spline.control_points_.push_back(4 * Eigen::Vector3d::Ones());
     auto const p_5{r3_spline.Evaluate(105)};
     ASSERT_TRUE(p_5.has_value());
     EXPECT_TRUE(p_5.value().isApproxToConstant(2));
@@ -56,8 +57,8 @@ TEST(Spline_r3Spline, TestEvaluate) {
 TEST(Spline_r3Spline, TestEvaluateDerivatives) {
     // Completely empty spline
     spline::r3Spline r3_spline{100, 5};
-    for (int i{0}; i < spline::constants::k; ++i) {
-        r3_spline.knots_.push_back(i * Eigen::Vector3d::Ones());
+    for (int i{0}; i < spline::constants::order; ++i) {
+        r3_spline.control_points_.push_back(i * Eigen::Vector3d::Ones());
     }
 
     auto const p_du{r3_spline.Evaluate(101, spline::DerivativeOrder::First)};

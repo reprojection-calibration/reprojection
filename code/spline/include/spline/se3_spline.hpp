@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
 
 // TODO(Jack): I wanted to keep these headers hidden, because they are really just an implementation detail of
@@ -16,11 +17,11 @@ namespace reprojection::spline {
 
 class Se3Spline {
    public:
-    Se3Spline(uint64_t const t0_ns, uint64_t const delta_t_ns);
+    Se3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns);
 
-    void AddKnot(Isometry3d const knot);
+    void AddControlPoint(Isometry3d const control_point);
 
-    std::optional<Isometry3d> Evaluate(uint64_t const t_ns) const;
+    std::optional<Isometry3d> Evaluate(std::uint64_t const t_ns) const;
 
    private:
     r3Spline r3_spline_;

@@ -5,7 +5,7 @@ find_package(OpenCV REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 set(SRC_FILES
-        src/image_feed.cpp
+        src/image_source.cpp
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen
@@ -19,7 +19,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        test/image_feed.test.cpp
+        test/image_source.test.cpp
 )
 AddTests()
 

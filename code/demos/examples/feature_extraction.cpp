@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "demos/image_feed.hpp"
+#include "demos/image_source.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "types/eigen_types.hpp"
 
@@ -31,14 +31,14 @@ int main(int argc, char* argv[]) {
     }
 
     // If no folder is provided then default to webcam demo.
-    std::unique_ptr<demos::ImageFeed> image_feed;
+    std::unique_ptr<demos::ImageSource> image_feed;
     char const* const folder{GetCommandOption(argv, argv + argc, "-f")};
     if (folder) {
-        image_feed = std::make_unique<demos::FolderFeed>(folder);
+        image_feed = std::make_unique<demos::ImageFolder>(folder);
     } else {
         std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
         // TODO(Jack): Provide user option to select a different device
-        image_feed = std::make_unique<demos::VideoCaptureFeed>(0);
+        image_feed = std::make_unique<demos::VideoCapture>(0);
     }
 
     YAML::Node const config{YAML::LoadFile(config_file)};
