@@ -22,8 +22,10 @@ std::optional<Vector3d> r3Spline::Evaluate(std::uint64_t const t_ns, DerivativeO
         return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Null>(P, u_i, time_handler_.delta_t_ns_);
     } else if (derivative == DerivativeOrder::First) {
         return R3SplineEvaluation::Evaluate<double, DerivativeOrder::First>(P, u_i, time_handler_.delta_t_ns_);
-    } else {
+    } else if (derivative == DerivativeOrder::Second) {
         return R3SplineEvaluation::Evaluate<double, DerivativeOrder::Second>(P, u_i, time_handler_.delta_t_ns_);
+    } else {
+        throw std::runtime_error("Requested unknown derivative order from r3Spline::Evaluate()");  // LCOV_EXCL_LINE
     }
 }
 

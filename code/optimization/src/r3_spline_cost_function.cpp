@@ -19,7 +19,8 @@ ceres::CostFunction* CreateR3SplineCostFunction(spline::DerivativeOrder const de
     } else if (derivative == spline::DerivativeOrder::Second) {
         return R3SplineCostFunction_T<spline::DerivativeOrder::Second>::Create(r3, u_i, delta_t_ns);
     } else {
-        throw std::runtime_error("Requested unknown derivative order from CreateR3SplineCostFunction()");
+        throw std::runtime_error(
+            "Requested unknown derivative order from CreateR3SplineCostFunction()");  // LCOV_EXCL_LINE
     }
 }
 

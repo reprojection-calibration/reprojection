@@ -30,21 +30,32 @@ TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
 }
 
 TEST(Spline_r3Spline, TestEvaluate) {
+    // Fill spline so we have one valid segment with its four control points.
     spline::r3Spline r3_spline{100, 5};
     for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.control_points_.push_back(i * Eigen::Vector3d::Ones());
     }
 
-    // Test three elements in the first and only valid time segment
+    // Test first position
     auto const p_0{r3_spline.Evaluate(100)};
     ASSERT_TRUE(p_0.has_value());
     EXPECT_TRUE(p_0.value().isApproxToConstant(1));
 
-    // Add one more element and test the first element in that second time segment
+    // Velocity
+    auto const v_0{r3_spline.Evaluate(100, spline::DerivativeOrder::First)};
+    ASSERT_TRUE(v_0.has_value());
+    EXPECT_TRUE(v_0.value().isApproxToConstant(0.2));  // 1m/5ns
+
+    // Acceleration
+    auto const a_0{r3_spline.Evaluate(100, spline::DerivativeOrder::Second)};
+    ASSERT_TRUE(a_0.has_value());
+    EXPECT_TRUE(a_0.value().isApproxToConstant(0));  // Straight line has no acceleration
+
+    // Add one more element and test the first position in that second time segment
     r3_spline.control_points_.push_back(4 * Eigen::Vector3d::Ones());
-    auto const p_5{r3_spline.Evaluate(105)};
-    ASSERT_TRUE(p_5.has_value());
-    EXPECT_TRUE(p_5.value().isApproxToConstant(2));
+    auto const p_1{r3_spline.Evaluate(105)};
+    ASSERT_TRUE(p_1.has_value());
+    EXPECT_TRUE(p_1.value().isApproxToConstant(2));
 }
 
 // This test uses a linear set of four control points going from 0 to 3 to show the basic ranges of how a cubic b-spline
