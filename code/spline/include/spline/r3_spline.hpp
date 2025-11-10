@@ -14,6 +14,8 @@ namespace reprojection::spline {
 // TODO(Jack): Use vector/array consistently!
 // TODO(Jack): What parameters actually need to be templated for ceres autodiff to work, do the parameter constraints
 // need to be?
+// NOTE(Jack): The templated methods do no error checking! They depend on the time handling logic already being done,
+// and if there is out of bounds access because the control points are not valid we will get a segfault here.
 struct R3SplineEvaluation {
     template <typename T, DerivativeOrder D>
     static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
