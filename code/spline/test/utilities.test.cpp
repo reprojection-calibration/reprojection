@@ -1,4 +1,4 @@
-#include "utilities.hpp"
+#include "spline/utilities.hpp"
 
 #include <gtest/gtest.h>
 

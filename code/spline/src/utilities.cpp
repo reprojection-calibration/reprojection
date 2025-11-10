@@ -1,4 +1,4 @@
-#include "utilities.hpp"
+#include "spline/utilities.hpp"
 
 #include <cmath>
 
@@ -19,6 +19,7 @@ VectorK CalculateU(double const u_i, DerivativeOrder const derivative) {
     return u;
 }
 
+// TODO(Jack): Should this really be an integer type valued function?
 // For polynomial k=4
 //      1 1 1 1     - zero derivative coefficients
 //      0 1 2 3     - first derivative coefficients
@@ -38,21 +39,7 @@ MatrixXd PolynomialCoefficients(int const k) {
     return result;
 }  // LCOV_EXCL_LINE
 
-// NOTE(Jack): In the spline code in this package we sometimes we have to call it u or u_i depending if we also have the
-// vector u in the same namespace.
-VectorXd TimePolynomial(int const k, double const u, int const derivative) {
-    assert(k >= 1);
-    assert(0 <= u and u < 1);
-    assert(0 <= derivative and derivative <= k - 1);
 
-    VectorXd result{VectorXd::Zero(k)};
-    result(derivative) = 1;
-    for (int i{1 + derivative}; i < k; ++i) {
-        result(i) = result(i - 1) * u;
-    }
-
-    return result;
-}  // LCOV_EXCL_LINE
 
 MatrixXd BlendingMatrix(int const k) {
     MatrixXd result{MatrixXd::Zero(k, k)};

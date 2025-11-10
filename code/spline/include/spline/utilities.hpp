@@ -11,7 +11,23 @@ namespace reprojection::spline {
 // the utilities file. Are we missing the point somewhere?
 VectorK CalculateU(double const u_i, DerivativeOrder const derivative = DerivativeOrder::Null);
 
-VectorXd TimePolynomial(int const k, double const u, int const derivative);
+// NOTE(Jack): In the spline code in this package we sometimes we have to call it u or u_i depending if we also have the
+// vector u in the same namespace.
+// TODO(Jack): Add using def for Eigen::Vector<T, Eigen::Dynamic>?
+template <typename T>
+Eigen::Vector<T, Eigen::Dynamic> TimePolynomial(int const k, T const u, int const derivative) {
+    assert(k >= 1);
+    assert(0 <= u and u < 1);
+    assert(0 <= derivative and derivative <= k - 1);
+
+    Eigen::Vector<T, Eigen::Dynamic> result{Eigen::Vector<T, Eigen::Dynamic>::Zero(k)};
+    result(derivative) = T(1.0);
+    for (int i{1 + derivative}; i < k; ++i) {
+        result(i) = result(i - 1) * u;
+    }
+
+    return result;
+}  // LCOV_EXCL_LINE
 
 MatrixXd PolynomialCoefficients(int const k);
 
