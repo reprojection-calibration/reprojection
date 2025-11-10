@@ -6,14 +6,14 @@ namespace reprojection::spline {
 
 // TODO(Jack): We also can calculate std::pow(delta_t_ns, derivative_order) in the constructor ahead of time if we
 // find out it causes some problems.
-VectorK CalculateU(double const u_i, DerivativeOrder const derivative) {
+VectorKd CalculateU(double const u_i, DerivativeOrder const derivative) {
     assert(0 <= u_i and u_i < 1);
 
     static MatrixKK const polynomial_coefficients{
         PolynomialCoefficients(constants::order)};  // Static means it only evaluates once :)
 
     int const derivative_order{static_cast<int>(derivative)};
-    VectorK const u{polynomial_coefficients.row(derivative_order).transpose().array() *
+    VectorKd const u{polynomial_coefficients.row(derivative_order).transpose().array() *
                     TimePolynomial(constants::order, u_i, derivative_order).array()};
 
     return u;

@@ -16,9 +16,9 @@ std::optional<Vector3d> r3Spline::Evaluate(std::uint64_t const t_ns, DerivativeO
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    Matrix3K const P{Eigen::Map<const Matrix3K>(control_points_[i].data(), 3, constants::order)};
+    Matrix3Kd const P{Eigen::Map<const Matrix3Kd>(control_points_[i].data(), 3, constants::order)};
     static MatrixKK const M{BlendingMatrix(constants::order)};  // Static means it only evaluates once :)
-    VectorK const u{CalculateU(u_i, derivative)};
+    VectorKd const u{CalculateU(u_i, derivative)};
 
     return (P * M * u) / std::pow(time_handler_.delta_t_ns_, static_cast<int>(derivative));
 }

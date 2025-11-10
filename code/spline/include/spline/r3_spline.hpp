@@ -11,19 +11,15 @@
 
 namespace reprojection::spline {
 
-template <typename T>
-using Matrix3k = Eigen::Matrix<T, 3, spline::constants::order>;
-
-// REFACTOR TYPEDEF Eigen::Vector<T, spline::constants::order>
-// TODO(Jack): Use vector consistently and see if we can template the K types/spline types!
+// TODO(Jack): Use vector/array consistently!
 struct R3SplineEvaluation {
     template <typename T>
     static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, T const u_i) {
         static int derivative_order{static_cast<int>(DerivativeOrder::Null)};
-        static Eigen::Vector<T, spline::constants::order> const du{
-            polynomial_coefficients.row(derivative_order).transpose().cast<T>()};
-        Eigen::Vector<T, spline::constants::order> const t{TimePolynomial(constants::order, u_i, derivative_order)};
-        Eigen::Vector<T, spline::constants::order> const u{du.cwiseProduct(t)};
+        static VectorK<T> const du{polynomial_coefficients.row(derivative_order).transpose().cast<T>()};
+
+        VectorK<T> const t{TimePolynomial(constants::order, u_i, derivative_order)};
+        VectorK<T> const u{du.cwiseProduct(t)};
 
         return P * M.cast<T>() * u;
     }

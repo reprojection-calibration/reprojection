@@ -55,13 +55,13 @@ TEST(Spline_r3Spline, TestEvaluate) {
 }
 
 TEST(Spline_r3Spline, TestTemplatedEvaluate) {
-    spline::Matrix3K const P1{{0, 1, 2, 3}, {0, 1, 2, 3}, {0, 1, 2, 3}};
+    spline::Matrix3Kd const P1{{0, 1, 2, 3}, {0, 1, 2, 3}, {0, 1, 2, 3}};
     Vector3d const r3_1{spline::R3SplineEvaluation::Evaluate<double>(P1, 0.2)};
     EXPECT_TRUE(r3_1.isApproxToConstant(1.2));
 
     // Shift the control points now to start at 1 and end at 4 manually by creating a new P, reflecting the last test in
     // "(Spline_r3Spline, TestEvaluate)".
-    spline::Matrix3K const P2{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}};
+    spline::Matrix3Kd const P2{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}};
     Vector3d const r3_2{spline::R3SplineEvaluation::Evaluate<double>(P2, 0)};
     EXPECT_TRUE(r3_2.isApproxToConstant(2));
 }
@@ -90,23 +90,23 @@ TEST(Spline_r3Spline, TestEvaluateDerivatives) {
 TEST(Spline_r3Spline, TestCalculateUAtZero) {
     double const u_i{0};
 
-    spline::VectorK const u{spline::CalculateU(u_i)};
-    spline::VectorK const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
-    spline::VectorK const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
+    spline::VectorKd const u{spline::CalculateU(u_i)};
+    spline::VectorKd const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
+    spline::VectorKd const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
 
-    EXPECT_TRUE(u.isApprox(spline::VectorK{1, 0, 0, 0}));
-    EXPECT_TRUE(du.isApprox(spline::VectorK{0, 1, 0, 0}));
-    EXPECT_TRUE(dudu.isApprox(spline::VectorK{0, 0, 2, 0}));
+    EXPECT_TRUE(u.isApprox(spline::VectorKd{1, 0, 0, 0}));
+    EXPECT_TRUE(du.isApprox(spline::VectorKd{0, 1, 0, 0}));
+    EXPECT_TRUE(dudu.isApprox(spline::VectorKd{0, 0, 2, 0}));
 }
 
 TEST(Spline_r3Spline, TestCalculate) {
     double const u_i{0.5};
 
-    spline::VectorK const u{spline::CalculateU(u_i)};
-    spline::VectorK const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
-    spline::VectorK const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
+    spline::VectorKd const u{spline::CalculateU(u_i)};
+    spline::VectorKd const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
+    spline::VectorKd const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
 
-    EXPECT_TRUE(u.isApprox(spline::VectorK{1, 0.5, 0.25, 0.125}));
-    EXPECT_TRUE(du.isApprox(spline::VectorK{0, 1, 1, 0.75}));
-    EXPECT_TRUE(dudu.isApprox(spline::VectorK{0, 0, 2, 3}));
+    EXPECT_TRUE(u.isApprox(spline::VectorKd{1, 0.5, 0.25, 0.125}));
+    EXPECT_TRUE(du.isApprox(spline::VectorKd{0, 1, 1, 0.75}));
+    EXPECT_TRUE(dudu.isApprox(spline::VectorKd{0, 0, 2, 3}));
 }

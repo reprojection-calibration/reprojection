@@ -9,7 +9,7 @@ namespace reprojection::spline {
 // construction depends on which derivative of u we are evaluating the spline at.
 // TODO(Jack): I do not like that this method requires knowledge of the spline order k, but no other method does here in
 // the utilities file. Are we missing the point somewhere?
-VectorK CalculateU(double const u_i, DerivativeOrder const derivative = DerivativeOrder::Null);
+VectorKd CalculateU(double const u_i, DerivativeOrder const derivative = DerivativeOrder::Null);
 
 // NOTE(Jack): In the spline code in this package we sometimes we have to call it u or u_i depending if we also have the
 // vector u in the same namespace.

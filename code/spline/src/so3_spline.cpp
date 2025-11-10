@@ -31,8 +31,8 @@ std::optional<Matrix3d> So3Spline::Evaluate(std::uint64_t const t_ns) const {
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    VectorK const u0{CalculateU(u_i, DerivativeOrder::Null)};
-    VectorK const weight0{M_ * u0};
+    VectorKd const u0{CalculateU(u_i, DerivativeOrder::Null)};
+    VectorKd const weight0{M_ * u0};
 
     // TODO(Jack): What is really the right size for all of these?
     // TODO(Jack): Is it possible or worth it to functionalize the velocity calculation?
@@ -57,10 +57,10 @@ std::optional<Vector3d> So3Spline::EvaluateVelocity(std::uint64_t const t_ns) co
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    VectorK const u0{CalculateU(u_i, DerivativeOrder::Null)};
-    VectorK const weight0{M_ * u0};
-    VectorK const u1{CalculateU(u_i, DerivativeOrder::First)};
-    VectorK const weight1{M_ * u1 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::First))};
+    VectorKd const u0{CalculateU(u_i, DerivativeOrder::Null)};
+    VectorKd const weight0{M_ * u0};
+    VectorKd const u1{CalculateU(u_i, DerivativeOrder::First)};
+    VectorKd const weight1{M_ * u1 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::First))};
 
     std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(control_points_, i)};
 
@@ -84,12 +84,12 @@ std::optional<Vector3d> So3Spline::EvaluateAcceleration(std::uint64_t const t_ns
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    VectorK const u0{CalculateU(u_i, DerivativeOrder::Null)};
-    VectorK const weight0{M_ * u0};
-    VectorK const u1{CalculateU(u_i, DerivativeOrder::First)};
-    VectorK const weight1{M_ * u1 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::First))};
-    VectorK const u2{CalculateU(u_i, DerivativeOrder::Second)};
-    VectorK const weight2{M_ * u2 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::Second))};
+    VectorKd const u0{CalculateU(u_i, DerivativeOrder::Null)};
+    VectorKd const weight0{M_ * u0};
+    VectorKd const u1{CalculateU(u_i, DerivativeOrder::First)};
+    VectorKd const weight1{M_ * u1 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::First))};
+    VectorKd const u2{CalculateU(u_i, DerivativeOrder::Second)};
+    VectorKd const weight2{M_ * u2 / std::pow(time_handler_.delta_t_ns_, static_cast<int>(DerivativeOrder::Second))};
 
     std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(control_points_, i)};
 
