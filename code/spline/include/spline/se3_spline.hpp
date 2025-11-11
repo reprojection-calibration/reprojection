@@ -24,7 +24,7 @@ class Se3Spline {
     std::optional<Isometry3d> Evaluate(std::uint64_t const t_ns) const;
 
    private:
-    r3Spline r3_spline_;
+    R3SplineState r3_spline_;
     So3Spline so3_spline_;
 };
 

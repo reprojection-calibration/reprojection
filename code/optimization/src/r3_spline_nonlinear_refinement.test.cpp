@@ -25,14 +25,14 @@ double Squared(double const x) { return x * x; }
 
 TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     std::uint64_t const delta_t_ns{50};
-    spline::r3Spline r3_spline{100, delta_t_ns};
+    spline::R3SplineState r3_spline{100, delta_t_ns};
 
     for (auto const& x : std::vector<double>{-1, -0.5, 0.5, 1}) {
-        r3_spline.control_points_.push_back(Vector3d{x, Squared(x), Squared(x)});
+        r3_spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
 
     // Add noise so the optimization has to do some work :)
-    std::vector<Vector3d> noisy_init{r3_spline.control_points_};
+    std::vector<Vector3d> noisy_init{r3_spline.control_points};
     for (size_t i{0}; i < std::size(noisy_init); ++i) {
         noisy_init[i].array() += i * 0.1;
     }
@@ -40,14 +40,14 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     ceres::Problem problem;
 
     // add one position constraint - otherwise it is not possible to converge!!!!
-    auto const position_i{r3_spline.Evaluate(100, spline::DerivativeOrder::Null)};
+    auto const position_i{EvaluateR3(100, r3_spline, spline::DerivativeOrder::Null)};
     ceres::CostFunction* const cost_function_p{
         optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Null, position_i.value(), 0, delta_t_ns)};
     problem.AddResidualBlock(cost_function_p, nullptr, noisy_init[0].data());
 
     for (size_t i{0}; i < delta_t_ns; ++i) {
-        auto const velocity_i{r3_spline.Evaluate(100 + i, spline::DerivativeOrder::First)};
-        auto const acceleration_i{r3_spline.Evaluate(100 + i, spline::DerivativeOrder::Second)};
+        auto const velocity_i{EvaluateR3(100 + i, r3_spline, spline::DerivativeOrder::First)};
+        auto const acceleration_i{EvaluateR3(100 + i, r3_spline, spline::DerivativeOrder::Second)};
         if (not velocity_i.has_value() or not acceleration_i.has_value()) {
             std::cout << "Bad spline eval! " << i << std::endl;
             continue;
@@ -70,6 +70,6 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     ceres::Solve(options, &problem, &summary);
 
     for (size_t i{0}; i < std::size(noisy_init); ++i) {
-        EXPECT_TRUE(noisy_init[i].isApprox(r3_spline.control_points_[i], 1e-6));
+        EXPECT_TRUE(noisy_init[i].isApprox(r3_spline.control_points[i], 1e-6));
     }
 }
