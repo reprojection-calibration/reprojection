@@ -12,6 +12,8 @@ class R3SplineProblemHandler {
 
     // TODO(Jack): Should we have a type that makes the relationship between the time and the position explicit? I mean
     // they are really one thing!
+    // NOTE(Jack): We will keep this as no discard because I want to force the user to responsibly handle invalid
+    // conditions when adding constraints.
     [[nodiscard]] bool AddConstraint(std::uint64_t const t_ns, Vector3d const& r3_position,
                                      spline::DerivativeOrder const order) {
         auto const normalized_position{spline_.time_handler.SplinePosition(t_ns, std::size(spline_.control_points))};
@@ -69,7 +71,7 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     bool success{handler.AddConstraint(100, position_i.value(), spline::DerivativeOrder::Null)};
     ASSERT_TRUE(success);
 
-    for (size_t i{0}; i < 3*delta_t_ns; ++i) {
+    for (size_t i{0}; i < 3 * delta_t_ns; ++i) {
         std::uint64_t const t_i{100 + i};
 
         // Create fake measurement data by evaluating the gt spline
