@@ -24,70 +24,56 @@ TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
     EXPECT_NE(spline::EvaluateSO3(105, so3_spline), std::nullopt);
 }
 
-TEST(SplineSo3Spline, TestEvaluate) {
+spline::SO3SplineState BuildTestSpline() {
     uint64_t const delta_t_ns{5};
     spline::SO3SplineState so3_spline{100, delta_t_ns};
-    EXPECT_EQ(spline::EvaluateSO3(100, so3_spline),
-              std::nullopt);  // Not enough control_points yet to evaluate
 
     so3_spline.control_points.push_back(Vector3d::Zero());
     for (int i{1}; i < spline::constants::order; ++i) {
-        // TODO(Jack): Evaluate if we can do any of the math directly in tangent space. COPIED THREE TIMES
+        // TODO(Jack): Evaluate if we can do any of the math directly in tangent space
         so3_spline.control_points.push_back(
             geometry::Log(geometry::Exp(so3_spline.control_points.back()) *
                           geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
     }
 
+    return so3_spline;
+}
+
+TEST(SplineSo3Spline, TestEvaluate) {
+    spline::SO3SplineState const spline{BuildTestSpline()};
+
     // Heuristic test as we have no theoretical testing strategy at this time.
-    for (int i{0}; i < static_cast<int>(delta_t_ns); ++i) {
-        auto const p_i{spline::EvaluateSO3(100 + i, so3_spline)};
+    for (int i{0}; i < static_cast<int>(spline.time_handler.delta_t_ns_); ++i) {
+        auto const p_i{spline::EvaluateSO3(100 + i, spline)};
         ASSERT_TRUE(p_i.has_value());
         EXPECT_TRUE(spline::IsRotation(p_i.value()));
     }
 
-    auto const p_0{spline::EvaluateSO3(100, so3_spline)};
+    auto const p_0{spline::EvaluateSO3(100, spline)};
     EXPECT_FLOAT_EQ(p_0.value().diagonal().sum(),
                     2.9593055);  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
                                  // that we can detect changes to the implementation quickly (hopefully. )
 }
 
 TEST(SplineSo3Spline, TestEvaluateVelocity) {
-    uint64_t const delta_t_ns{5};
-    spline::SO3SplineState so3_spline{100, delta_t_ns};
-
-    so3_spline.control_points.push_back(Vector3d::Zero());
-    for (int i{1}; i < spline::constants::order; ++i) {
-        // TODO(Jack): Evaluate if we can do any of the math directly in tangent space. COPIED THREE TIMES
-        so3_spline.control_points.push_back(
-            geometry::Log(geometry::Exp(so3_spline.control_points.back()) *
-                          geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
-    }
+    spline::SO3SplineState const spline{BuildTestSpline()};
 
     // RANDOM HEURISTIC TESTS!
-    Vector3d const v0{spline::EvaluateSO3Velocity(100, so3_spline).value()};
+    Vector3d const v0{spline::EvaluateSO3Velocity(100, spline).value()};
     EXPECT_TRUE(v0.isApproxToConstant(0.03));
 
-    Vector3d const v4{spline::EvaluateSO3Velocity(104, so3_spline).value()};
+    Vector3d const v4{spline::EvaluateSO3Velocity(104, spline).value()};
     EXPECT_TRUE(v4.isApproxToConstant(0.046));
 }
 
 // TODO(Jack): We need a test fixture for the spline creation logic! It is copy and pasted many times.
 TEST(SplineSo3Spline, TestEvaluateAcceleration) {
-    uint64_t const delta_t_ns{5};
-    spline::SO3SplineState so3_spline{100, delta_t_ns};
-
-    so3_spline.control_points.push_back(Vector3d::Zero());
-    for (int i{1}; i < spline::constants::order; ++i) {
-        // TODO(Jack): Evaluate if we can do any of the math directly in tangent space. COPIED THREE TIMES
-        so3_spline.control_points.push_back(
-            geometry::Log(geometry::Exp(so3_spline.control_points.back()) *
-                          geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
-    }
+    spline::SO3SplineState const spline{BuildTestSpline()};
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)
-    Vector3d const v0{spline::EvaluateSO3Acceleration(100, so3_spline).value()};
+    Vector3d const v0{spline::EvaluateSO3Acceleration(100, spline).value()};
     EXPECT_TRUE(v0.isApproxToConstant(0.004));
 
-    Vector3d const v4{spline::EvaluateSO3Acceleration(104, so3_spline).value()};
+    Vector3d const v4{spline::EvaluateSO3Acceleration(104, spline).value()};
     EXPECT_TRUE(v4.isApproxToConstant(0.004));
 }
