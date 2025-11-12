@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "geometry/lie.hpp"
 #include "spline/time_handler.hpp"
 #include "spline/utilities.hpp"
 #include "types.hpp"
@@ -30,11 +31,42 @@ struct So3SplineEvaluationData {
 };
 
 struct So3SplineEvaluation {
-    static Vector3d xEvaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns);
+    template <DerivativeOrder D>
+    static Vector3d Evaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns) {
+        auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, D)};
 
-    static Vector3d xEvaluateVelocity(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns);
+        Vector3d rotation{Vector3d::Zero()};
+        Vector3d velocity{Vector3d::Zero()};
+        Vector3d acceleration{Vector3d::Zero()};
 
-    static Vector3d xEvaluateAcceleration(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns);
+        for (int j{0}; j < constants::degree; ++j) {
+            Matrix3d const delta_R_j{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
+            rotation = geometry::Log(delta_R_j * geometry::Exp(rotation));
+
+            if constexpr (D == DerivativeOrder::First or D == DerivativeOrder::Second) {
+                Matrix3d const inverse_delta_R_j{delta_R_j.inverse()};
+
+                Vector3d const delta_v_j{weights[1][j + 1] * delta_phis[j]};
+                velocity = delta_v_j + (inverse_delta_R_j * velocity);
+
+                if constexpr (D == DerivativeOrder::Second) {
+                    Vector3d const delta_a_j{weights[2][j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
+                    acceleration = delta_a_j + (inverse_delta_R_j * acceleration);
+                }
+            }
+        }
+
+        if constexpr (D == DerivativeOrder::Null) {
+            return rotation;
+        } else if constexpr (D == DerivativeOrder::First) {
+            return velocity;
+        } else if constexpr (D == DerivativeOrder::Second) {
+            return acceleration;
+        } else {
+            static_assert(D == DerivativeOrder::Null or D == DerivativeOrder::First or D == DerivativeOrder::Second,
+                          "Unsupported DerivativeOrder in So3SplineEvaluation::Evaluate()");
+        }
+    }
 
     static inline MatrixKK const M{CumulativeBlendingMatrix(constants::order)};
 
