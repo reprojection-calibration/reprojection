@@ -52,7 +52,7 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
         initialization.control_points[i].array() += 0.2 * i;
     }
 
-    optimization::R3SplineProblemHandler handler{initialization};
+    optimization::R3SplineNonlinearRefinement handler{initialization};
     for (auto const& measurement : simulated_measurements) {
         bool const success{handler.AddConstraint(measurement)};
         EXPECT_TRUE(success);  // All simulated measurements come from valid time range

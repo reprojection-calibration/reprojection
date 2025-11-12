@@ -41,13 +41,13 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(s
 }
 
 // TODO(Jack): Naming!
-R3SplineProblemHandler::R3SplineProblemHandler(spline::R3SplineState const& spline) : spline_{spline} {}
+R3SplineNonlinearRefinement::R3SplineNonlinearRefinement(spline::R3SplineState const& spline) : spline_{spline} {}
 
 // NOTE(Jack): We will keep this as no discard because I want to force the user to responsibly handle invalid
 // conditions when adding constraints. This is one distinction from the camera bundle adjustment case, that here we have
 // an explicit condition that determines what is valid and what is not, which requires more fine grained control from
 // the user side.
-[[nodiscard]] bool R3SplineProblemHandler::AddConstraint(R3Measurement const& constraint) {
+[[nodiscard]] bool R3SplineNonlinearRefinement::AddConstraint(R3Measurement const& constraint) {
     auto const normalized_position{
         spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
     if (not normalized_position.has_value()) {
@@ -65,7 +65,7 @@ R3SplineProblemHandler::R3SplineProblemHandler(spline::R3SplineState const& spli
     return true;
 }
 
-ceres::Solver::Summary R3SplineProblemHandler::Solve() {
+ceres::Solver::Summary R3SplineNonlinearRefinement::Solve() {
     ceres::Solver::Options options;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem_, &summary);
@@ -73,6 +73,6 @@ ceres::Solver::Summary R3SplineProblemHandler::Solve() {
     return summary;
 }
 
-spline::R3SplineState R3SplineProblemHandler::GetSpline() const { return spline_; }
+spline::R3SplineState R3SplineNonlinearRefinement::GetSpline() const { return spline_; }
 
 }  // namespace  reprojection::optimization

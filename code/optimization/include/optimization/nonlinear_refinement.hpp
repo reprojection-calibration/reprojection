@@ -17,7 +17,7 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(s
                                                                          CameraModel const& camera_type,
                                                                          ArrayXd const& intrinsics);
 
-// TODO(Jack): For now should we make this part of the R3SplineProblemHandler namespace?
+// TODO(Jack): For now should we make this part of the R3SplineNonlinearRefinement namespace?
 struct R3Measurement {
     std::uint64_t t_ns;
     Vector3d r3;
@@ -26,9 +26,9 @@ struct R3Measurement {
 
 // TODO(Jack): Do we really need a class here or can we make it a pass through function? There is no very strong reason
 // for state expect that maybe we can better handle invalid constraint input. But that is not clear yet.
-class R3SplineProblemHandler {
+class R3SplineNonlinearRefinement {
    public:
-    explicit R3SplineProblemHandler(spline::R3SplineState const& spline);
+    explicit R3SplineNonlinearRefinement(spline::R3SplineState const& spline);
 
     // NOTE(Jack): We will keep this as no discard because I want to force the user to responsibly handle invalid
     // conditions when adding constraints.
