@@ -28,7 +28,7 @@ TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
     Vector3d residual;
 
     // Position
-    Array3d const position{0, 0.28125, 0.28125};
+    Array3d const position{0, 0.28125, 0.28125};  // Actual ground truth at u_i=0.5 given control points P
     ceres::CostFunction* cost_function{
         optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
     bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};  // Do not need jacobian, pass nullptr

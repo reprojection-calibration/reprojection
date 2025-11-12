@@ -100,10 +100,10 @@ TEST(SplineSo3Spline, TestTemplatedEvaluateOnParabola) {
     Vector3d const velocity{
         spline::So3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::First>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(velocity.isApprox(Vector3d{0.8563971186898035, -0.1204280865611993,
-                                           0.12722122556164611}));  // Only x-axis motion at base of aligned parabola
+                                           0.12722122556164611}));
 
     Vector3d const acceleration{
         spline::So3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Second>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(acceleration.isApprox(Vector3d{0.0069974409407700944, 0.80095289350156396,
-                                               0.71108131312833733}));  // TODO(Jack): Explain why this makes sense!
+                                               0.71108131312833733}));
 }
