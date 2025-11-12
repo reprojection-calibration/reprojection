@@ -32,8 +32,8 @@ spline::So3SplineState BuildTestSpline() {
     for (int i{1}; i < spline::constants::order; ++i) {
         // TODO(Jack): Evaluate if we can do any of the math directly in tangent space
         so3_spline.control_points.push_back(
-            geometry::Log(geometry::Exp(so3_spline.control_points.back()) *
-                          geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
+            geometry::Log<double>(geometry::Exp<double>(so3_spline.control_points.back()) *
+                                  geometry::Exp<double>(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
     }
 
     return so3_spline;

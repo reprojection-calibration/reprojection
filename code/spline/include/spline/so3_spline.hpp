@@ -25,7 +25,16 @@ std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState con
                                     DerivativeOrder const derivative = DerivativeOrder::Null);
 
 // TODO(Jack): Test explicitly?
-std::array<Eigen::Vector3d, constants::degree> DeltaPhi(Matrix3Kd const& control_points);
+template <typename T>
+std::array<Eigen::Vector3<T>, constants::degree> DeltaPhi(Matrix3K<T> const& control_points) {
+    std::array<Eigen::Vector3<T>, constants::degree> delta_phi;
+    for (int j{0}; j < constants::degree; ++j) {
+        delta_phi[j] = geometry::Log<T>(geometry::Exp<T>(control_points.col(j)).inverse() *
+                                        geometry::Exp<T>(control_points.col(j + 1)));
+    }
+
+    return delta_phi;
+}
 
 struct So3SplineEvaluation {
     // NOTE(Jack): We are doing some compile time programming here with "if constexpr". The nature of the cumulative
@@ -41,7 +50,7 @@ struct So3SplineEvaluation {
     // online to see how "if constexpr" works, it is not the right place to explain it here.
     template <typename T, DerivativeOrder D>
     static Vector3d Evaluate(Matrix3K<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
-        std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(P)};
+        std::array<Eigen::Vector3<T>, constants::degree> const delta_phis{DeltaPhi(P)};
 
         int constexpr order{static_cast<int>(D)};
         std::array<VectorKd, order + 1> weights;  // We use an array because the required size is known at compile time
@@ -58,8 +67,8 @@ struct So3SplineEvaluation {
 
         for (int j{0}; j < constants::degree; ++j) {
             VectorKd const& weight0{weights[0]};
-            Matrix3d const delta_R_j{geometry::Exp((weight0[j + 1] * delta_phis[j]).eval())};
-            rotation = geometry::Log(delta_R_j * geometry::Exp(rotation));
+            Matrix3d const delta_R_j{geometry::Exp<T>((weight0[j + 1] * delta_phis[j]).eval())};
+            rotation = geometry::Log<T>(delta_R_j * geometry::Exp<T>(rotation));
 
             if constexpr (D == DerivativeOrder::First or D == DerivativeOrder::Second) {
                 Matrix3d const inverse_delta_R_j{delta_R_j.inverse()};

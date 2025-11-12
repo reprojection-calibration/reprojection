@@ -31,14 +31,6 @@ std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState con
     }
 }
 
-std::array<Eigen::Vector3d, constants::degree> DeltaPhi(Matrix3Kd const& control_points) {
-    std::array<Eigen::Vector3d, constants::degree> delta_phi;
-    for (int j{0}; j < constants::degree; ++j) {
-        delta_phi[j] = geometry::Log(geometry::Exp(control_points.col(j).eval()).inverse() *
-                                     geometry::Exp(control_points.col(j + 1).eval()));
-    }
 
-    return delta_phi;
-}
 
 }  // namespace reprojection::spline
