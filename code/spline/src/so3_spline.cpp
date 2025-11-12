@@ -21,18 +21,15 @@ std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Eigen::Matri
     return delta_phi;
 }
 
-So3Spline::So3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
-    : time_handler_{t0_ns, delta_t_ns, constants::order}, M_{CumulativeBlendingMatrix(constants::order)} {}
-
-std::optional<Matrix3d> So3Spline::Evaluate(std::uint64_t const t_ns) const {
-    auto const eval_data{SO3SplinePrepareEvaluation(t_ns, DerivativeOrder::Null)};
+std::optional<Matrix3d> EvaluateSO3(std::uint64_t const t_ns, SO3SplineState const& spline) {
+    auto const eval_data{SO3SplineEvaluation::SO3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Null)};
     if (not eval_data) {
         return std::nullopt;
     }
     auto const [i, delta_phis, weights]{eval_data.value()};
 
     // TODO(Jack): Can we replace this all with a std::accumulate call?
-    Matrix3d rotation{control_points_[i]};
+    Matrix3d rotation{spline.control_points[i]};
     for (int j{0}; j < (constants::degree); ++j) {
         Matrix3d const delta_R{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
         rotation = delta_R * rotation;
@@ -41,10 +38,8 @@ std::optional<Matrix3d> So3Spline::Evaluate(std::uint64_t const t_ns) const {
     return rotation;
 }
 
-// TODO(Jack): We could return matrices from all these by returning skew symmetric matrices, but I am not sure if that
-// makes sense yet :)
-std::optional<Vector3d> So3Spline::EvaluateVelocity(std::uint64_t const t_ns) const {
-    auto const eval_data{SO3SplinePrepareEvaluation(t_ns, DerivativeOrder::First)};
+std::optional<Vector3d> EvaluateSO3Velocity(std::uint64_t const t_ns, SO3SplineState const& spline) {
+    auto const eval_data{SO3SplineEvaluation::SO3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::First)};
     if (not eval_data) {
         return std::nullopt;
     }
@@ -63,8 +58,8 @@ std::optional<Vector3d> So3Spline::EvaluateVelocity(std::uint64_t const t_ns) co
     return velocity;
 }
 
-std::optional<Vector3d> So3Spline::EvaluateAcceleration(std::uint64_t const t_ns) const {
-    auto const eval_data{SO3SplinePrepareEvaluation(t_ns, DerivativeOrder::Second)};
+std::optional<Vector3d> EvaluateSO3Acceleration(std::uint64_t const t_ns, SO3SplineState const& spline) {
+    auto const eval_data{SO3SplineEvaluation::SO3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Second)};
     if (not eval_data) {
         return std::nullopt;
     }
@@ -86,21 +81,21 @@ std::optional<Vector3d> So3Spline::EvaluateAcceleration(std::uint64_t const t_ns
 }
 
 // TODO(Jack): Test
-std::optional<SO3SplineEvaluationData> So3Spline::SO3SplinePrepareEvaluation(std::uint64_t const t_ns,
-                                                                             DerivativeOrder const order) const {
-    auto const normalized_position{time_handler_.SplinePosition(t_ns, std::size(control_points_))};
+std::optional<SO3SplineEvaluationData> SO3SplineEvaluation::SO3SplinePrepareEvaluation(std::uint64_t const t_ns,
+                                                                                       SO3SplineState const& spline,
+                                                                                       DerivativeOrder const order) {
+    auto const normalized_position{spline.time_handler.SplinePosition(t_ns, std::size(spline.control_points))};
     if (not normalized_position.has_value()) {
         return std::nullopt;
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(control_points_, i)};
+    std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(spline.control_points, i)};
 
     std::vector<VectorKd> weights;
     for (int j{0}; j <= static_cast<int>(order); ++j) {
         VectorKd const u{CalculateU(u_i, order)};
-        VectorKd const weight{M_ * u / std::pow(time_handler_.delta_t_ns_, static_cast<int>(order))};
-
+        VectorKd const weight{M * u / std::pow(spline.time_handler.delta_t_ns_, static_cast<int>(order))};
         weights.push_back(weight);
     }
 
