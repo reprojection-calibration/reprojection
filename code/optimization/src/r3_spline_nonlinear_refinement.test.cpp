@@ -49,6 +49,7 @@ using namespace reprojection;
 
 double Squared(double const x) { return x * x; }
 
+// TODO USE THIS AND MAKE ORDER CONSISENT WITH THE HANDLER
 struct R3Measurement {
     Vector3d r3;
     std::uint64_t t_ns;
