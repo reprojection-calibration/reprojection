@@ -30,13 +30,11 @@ struct So3SplineEvaluationData {
 };
 
 struct So3SplineEvaluation {
-    static std::optional<Vector3d> xEvaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns);
+    static Vector3d xEvaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns);
 
-    static std::optional<Vector3d> xEvaluateVelocity(Matrix3Kd const& P, double const u_i,
-                                                     std::uint64_t const delta_t_ns);
+    static Vector3d xEvaluateVelocity(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns);
 
-    static std::optional<Vector3d> xEvaluateAcceleration(Matrix3Kd const& P, double const u_i,
-                                                         std::uint64_t const delta_t_ns);
+    static Vector3d xEvaluateAcceleration(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns);
 
     static inline MatrixKK const M{CumulativeBlendingMatrix(constants::order)};
 

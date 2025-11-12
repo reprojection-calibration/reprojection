@@ -41,23 +41,20 @@ std::array<Eigen::Vector3d, constants::degree> DeltaPhi(Matrix3Kd const& control
     return delta_phi;
 }
 
-// TODO(Jack): Return so3?
-std::optional<Vector3d> So3SplineEvaluation::xEvaluate(Matrix3Kd const& P, double const u_i,
-                                                       std::uint64_t const delta_t_ns) {
+Vector3d So3SplineEvaluation::xEvaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns) {
     auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::Null)};
 
     // TODO(Jack): Can we replace this all with a std::accumulate call?
-    Matrix3d rotation{geometry::Exp(P.col(0).eval())};  // Can be in vector space directly?
+    Vector3d rotation{P.col(0)};
     for (int j{0}; j < constants::degree; ++j) {
         Matrix3d const delta_R{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
-        rotation = delta_R * rotation;
+        rotation = geometry::Log(delta_R * geometry::Exp(rotation));
     }
 
-    return geometry::Log(rotation);
+    return rotation;
 }
 
-std::optional<Vector3d> So3SplineEvaluation::xEvaluateVelocity(Matrix3Kd const& P, double const u_i,
-                                                               std::uint64_t const delta_t_ns) {
+Vector3d So3SplineEvaluation::xEvaluateVelocity(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns) {
     auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::First)};
 
     Vector3d velocity{Vector3d::Zero()};
@@ -71,8 +68,8 @@ std::optional<Vector3d> So3SplineEvaluation::xEvaluateVelocity(Matrix3Kd const& 
     return velocity;
 }
 
-std::optional<Vector3d> So3SplineEvaluation::xEvaluateAcceleration(Matrix3Kd const& P, double const u_i,
-                                                                   std::uint64_t const delta_t_ns) {
+Vector3d So3SplineEvaluation::xEvaluateAcceleration(Matrix3Kd const& P, double const u_i,
+                                                    std::uint64_t const delta_t_ns) {
     auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::Second)};
 
     Vector3d velocity{Vector3d::Zero()};
