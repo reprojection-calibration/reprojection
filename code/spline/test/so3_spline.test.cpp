@@ -68,7 +68,6 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
     EXPECT_TRUE(v4.isApproxToConstant(0.046));
 }
 
-// TODO(Jack): We need a test fixture for the spline creation logic! It is copy and pasted many times.
 TEST(SplineSo3Spline, TestEvaluateAcceleration) {
     spline::So3SplineState const spline{BuildTestSpline()};
 
@@ -78,4 +77,33 @@ TEST(SplineSo3Spline, TestEvaluateAcceleration) {
 
     Vector3d const a4{spline::EvaluateSo3(104, spline, spline::DerivativeOrder::Second).value()};
     EXPECT_TRUE(a4.isApproxToConstant(0.004));
+}
+
+double Squared(double const x) { return x * x; }  // COPY PASTED
+
+// NOTE(Jack): We use the same parabola data used for testing the r3 spline (see "Spline_r3Spline,
+// TestTemplatedEvaluateOnParabola"). My hope was that it would be easier to interpret what is happening, but we are
+// working with rotations here and I cannot see any obvious pattern, which does not totally surprise. That being said we
+// some symmetry/alignment in the velocity and acceleration values. Maybe if we have time we can design a test that
+// really is correct by inspection and not just heuristic.
+TEST(SplineSo3Spline, TestTemplatedEvaluateOnParabola) {
+    spline::Matrix3Kd const P1{{-1, -0.5, 0.5, 1},
+                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
+                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
+    double const u_middle{0.5};
+    std::uint64_t const delta_t_ns{1};
+
+    Vector3d const position{
+        spline::So3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P1, u_middle, delta_t_ns)};
+    EXPECT_TRUE(position.isApprox(Vector3d{1.0319672855968482, -0.40184576778254827, -0.89024132986881044}));
+
+    Vector3d const velocity{
+        spline::So3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::First>(P1, u_middle, delta_t_ns)};
+    EXPECT_TRUE(velocity.isApprox(Vector3d{0.8563971186898035, -0.1204280865611993,
+                                           0.12722122556164611}));  // Only x-axis motion at base of aligned parabola
+
+    Vector3d const acceleration{
+        spline::So3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Second>(P1, u_middle, delta_t_ns)};
+    EXPECT_TRUE(acceleration.isApprox(Vector3d{0.0069974409407700944, 0.80095289350156396,
+                                               0.71108131312833733}));  // TODO(Jack): Explain why this makes sense!
 }
