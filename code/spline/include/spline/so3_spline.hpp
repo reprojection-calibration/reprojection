@@ -39,8 +39,8 @@ struct So3SplineEvaluation {
     // Our solution to this problem is to use "if constexpr" based on the DerivativeOrder template parameter D. This
     // allows us to generate all three version of the evaluate function from the same single source code. Please read
     // online to see how "if constexpr" works, it is not the right place to explain it here.
-    template <DerivativeOrder D>
-    static Vector3d Evaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns) {
+    template <typename T, DerivativeOrder D>
+    static Vector3d Evaluate(Matrix3K<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
         std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(P)};
 
         int constexpr order{static_cast<int>(D)};

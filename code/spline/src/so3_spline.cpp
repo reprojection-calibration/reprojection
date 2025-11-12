@@ -21,11 +21,11 @@ std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState con
     Matrix3Kd const P{Eigen::Map<const Matrix3Kd>(spline.control_points[i].data(), 3, constants::order)};
 
     if (derivative == DerivativeOrder::Null) {
-        return So3SplineEvaluation::Evaluate<DerivativeOrder::Null>(P, u_i, spline.time_handler.delta_t_ns_);
+        return So3SplineEvaluation::Evaluate<double, DerivativeOrder::Null>(P, u_i, spline.time_handler.delta_t_ns_);
     } else if (derivative == DerivativeOrder::First) {
-        return So3SplineEvaluation::Evaluate<DerivativeOrder::First>(P, u_i, spline.time_handler.delta_t_ns_);
+        return So3SplineEvaluation::Evaluate<double, DerivativeOrder::First>(P, u_i, spline.time_handler.delta_t_ns_);
     } else if (derivative == DerivativeOrder::Second) {
-        return So3SplineEvaluation::Evaluate<DerivativeOrder::Second>(P, u_i, spline.time_handler.delta_t_ns_);
+        return So3SplineEvaluation::Evaluate<double, DerivativeOrder::Second>(P, u_i, spline.time_handler.delta_t_ns_);
     } else {
         throw std::runtime_error("Requested unknown derivative order from EvaluateSo3()");  // LCOV_EXCL_LINE
     }
