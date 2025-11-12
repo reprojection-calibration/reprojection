@@ -44,12 +44,11 @@ std::array<Eigen::Vector3d, constants::degree> DeltaPhi(Matrix3Kd const& control
 // TODO(Jack): Return so3?
 std::optional<Vector3d> So3SplineEvaluation::xEvaluate(Matrix3Kd const& P, double const u_i,
                                                        std::uint64_t const delta_t_ns) {
-    auto const [delta_phis,
-                weights]{So3SplineEvaluation::So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::Null)};
+    auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::Null)};
 
     // TODO(Jack): Can we replace this all with a std::accumulate call?
     Matrix3d rotation{geometry::Exp(P.col(0).eval())};  // Can be in vector space directly?
-    for (int j{0}; j < (constants::degree); ++j) {
+    for (int j{0}; j < constants::degree; ++j) {
         Matrix3d const delta_R{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
         rotation = delta_R * rotation;
     }
@@ -62,9 +61,7 @@ std::optional<Vector3d> So3SplineEvaluation::xEvaluateVelocity(Matrix3Kd const& 
     auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::First)};
 
     Vector3d velocity{Vector3d::Zero()};
-    for (int j{0}; j < (constants::degree); ++j) {
-        // Must use .eval() because of Eigen expression ambiguity
-        // https://stackoverflow.com/questions/71437422/ambiguity-of-overloaded-function-taking-constant-eigen-argument
+    for (int j{0}; j < constants::degree; ++j) {
         Matrix3d const inverse_delta_R{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval()).inverse()};
 
         Vector3d const delta_v_j{weights[1][j + 1] * delta_phis[j]};
@@ -80,7 +77,7 @@ std::optional<Vector3d> So3SplineEvaluation::xEvaluateAcceleration(Matrix3Kd con
 
     Vector3d velocity{Vector3d::Zero()};
     Vector3d acceleration{Vector3d::Zero()};
-    for (int j{0}; j < (constants::degree); ++j) {
+    for (int j{0}; j < constants::degree; ++j) {
         Matrix3d const inverse_delta_R{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval()).inverse()};
 
         Vector3d const delta_v_j{weights[1][j + 1] * delta_phis[j]};
@@ -93,8 +90,8 @@ std::optional<Vector3d> So3SplineEvaluation::xEvaluateAcceleration(Matrix3Kd con
     return acceleration;
 }
 
-// TODO(Jack): Test - only ever provided valid data!
-// TODO MANY ARGS!
+// TODO(Jack): Test
+// TODO TOO MANY ARGS!
 So3SplineEvaluationData So3SplineEvaluation::So3SplinePrepareEvaluation(Matrix3Kd const& control_points,
                                                                         double const u_i,
                                                                         std::uint64_t const delta_t_ns,
