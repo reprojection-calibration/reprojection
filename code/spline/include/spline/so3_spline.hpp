@@ -26,7 +26,7 @@ struct So3SplineEvaluationData {
 };
 
 struct So3SplineEvaluation {
-    static std::optional<Matrix3d> Evaluate(std::uint64_t const t_ns, So3SplineState const& spline);
+    static std::optional<Vector3d> Evaluate(std::uint64_t const t_ns, So3SplineState const& spline);
 
     static std::optional<Vector3d> EvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline);
 

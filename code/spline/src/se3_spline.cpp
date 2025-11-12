@@ -23,7 +23,7 @@ std::optional<Isometry3d> Se3Spline::Evaluate(std::uint64_t const t_ns) const {
     }
 
     Isometry3d result{Isometry3d::Identity()};
-    result.rotate(rotation.value());
+    result.rotate(geometry::Exp(rotation.value()));
     result.translation() = position.value();
 
     return result;

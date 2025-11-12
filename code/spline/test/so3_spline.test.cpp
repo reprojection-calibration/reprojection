@@ -46,11 +46,12 @@ TEST(SplineSo3Spline, TestEvaluate) {
     for (int i{0}; i < static_cast<int>(spline.time_handler.delta_t_ns_); ++i) {
         auto const p_i{spline::So3SplineEvaluation::Evaluate(100 + i, spline)};
         ASSERT_TRUE(p_i.has_value());
-        EXPECT_TRUE(spline::IsRotation(p_i.value()));
     }
 
     auto const p_0{spline::So3SplineEvaluation::Evaluate(100, spline)};
-    EXPECT_FLOAT_EQ(p_0.value().diagonal().sum(),
+    // TODO(Jack): Update to just check the vector. Current value comes from when the evaluate method returned a
+    // rotation matrix.
+    EXPECT_FLOAT_EQ(geometry::Exp(p_0.value()).diagonal().sum(),
                     2.9593055);  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
                                  // that we can detect changes to the implementation quickly (hopefully. )
 }

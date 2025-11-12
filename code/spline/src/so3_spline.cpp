@@ -23,7 +23,7 @@ std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Vector3d> co
 }
 
 // TODO(Jack): Return so3?
-std::optional<Matrix3d> So3SplineEvaluation::Evaluate(std::uint64_t const t_ns, So3SplineState const& spline) {
+std::optional<Vector3d> So3SplineEvaluation::Evaluate(std::uint64_t const t_ns, So3SplineState const& spline) {
     auto const eval_data{So3SplineEvaluation::So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Null)};
     if (not eval_data) {
         return std::nullopt;
@@ -31,13 +31,13 @@ std::optional<Matrix3d> So3SplineEvaluation::Evaluate(std::uint64_t const t_ns, 
     auto const [i, delta_phis, weights]{eval_data.value()};
 
     // TODO(Jack): Can we replace this all with a std::accumulate call?
-    Matrix3d rotation{geometry::Exp(spline.control_points[i])};
+    Matrix3d rotation{geometry::Exp(spline.control_points[i])};  // Can be in vector space?
     for (int j{0}; j < (constants::degree); ++j) {
         Matrix3d const delta_R{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
         rotation = delta_R * rotation;
     }
 
-    return rotation;
+    return geometry::Log(rotation);
 }
 
 std::optional<Vector3d> So3SplineEvaluation::EvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline) {
