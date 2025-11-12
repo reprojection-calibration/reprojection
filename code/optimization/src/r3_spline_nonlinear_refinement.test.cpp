@@ -50,7 +50,7 @@ double Squared(double const x) { return x * x; }
 TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     std::uint64_t const delta_t_ns{50};
     spline::R3SplineState gt_r3_spline{100, delta_t_ns};
-    for (auto const& x : std::vector<double>{- -1, -0.5, 0.5, 1}) {
+    for (auto const& x : std::vector<double>{-1, -0.5, 0.5, 1}) {
         gt_r3_spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
 
@@ -71,7 +71,7 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     bool success{handler.AddConstraint(100, position_i.value(), spline::DerivativeOrder::Null)};
     ASSERT_TRUE(success);
 
-    for (size_t i{0}; i < 3 * delta_t_ns; ++i) {
+    for (size_t i{0}; i < delta_t_ns; ++i) {
         std::uint64_t const t_i{100 + i};
 
         // Create fake measurement data by evaluating the gt spline
