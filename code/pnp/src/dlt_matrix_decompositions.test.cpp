@@ -26,6 +26,19 @@ TEST(PnpDltMatrixDecompositions, TestDecomposeMIntoRk) {
     EXPECT_FLOAT_EQ(R.determinant(), 1.0);
 }
 
+TEST(PnpDltMatrixDecompositions, TestDecomposeMIntoRkNegativeDeterminant) {
+    Matrix3d const R_in{-1.0 * Matrix3d::Identity()};  // Negative determinant
+    Matrix3d const K_in{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
+    Matrix3d const M{R_in * K_in};
+
+    auto const [K, R]{pnp::DecomposeMIntoKr(M)};
+
+    EXPECT_TRUE(K.isUpperTriangular());                          // Property of camera intrinsic matrix
+    EXPECT_EQ(K.diagonal().array().sign().sum(), 3);             // All diagonal entries of K must be positive
+    EXPECT_FLOAT_EQ((R * R.transpose()).diagonal().sum(), 3.0);  // Orthogonal
+    EXPECT_FLOAT_EQ(R.determinant(), 1.0);
+}
+
 TEST(PnpDltMatrixDecompositions, TestCalculateCameraCenter) {
     Eigen::Matrix<double, 3, 4> P{{1, 0, 0, 100}, {0, 1, 0, 10}, {0, 0, 1, 1}};
 

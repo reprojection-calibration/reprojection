@@ -45,7 +45,7 @@ class R3SplineCostFunction_T {
         // starting at control_point_0_ptr and map the next 12 elements into a Matrix3k. However this is entering
         // sketchy territory where we might start to violate the principle of least surprise. Unless there is some
         // benchmark showing this would help solve a problem, lets no do it :)
-        spline::Matrix3k<T> control_points;
+        spline::Matrix3K<T> control_points;
         control_points << p0, p1, p2, p3;
 
         Eigen::Vector<T, 3> const r3{spline::R3SplineEvaluation::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};

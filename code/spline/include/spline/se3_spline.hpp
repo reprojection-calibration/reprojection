@@ -25,7 +25,7 @@ class Se3Spline {
 
    private:
     R3SplineState r3_spline_;
-    So3Spline so3_spline_;
+    So3SplineState so3_spline_;
 };
 
 }  // namespace reprojection::spline
