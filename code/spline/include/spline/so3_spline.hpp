@@ -38,9 +38,8 @@ struct So3SplineEvaluation {
 
     static inline MatrixKK const M{CumulativeBlendingMatrix(constants::order)};
 
-    static std::optional<So3SplineEvaluationData> So3SplinePrepareEvaluation(std::uint64_t const t_ns,
-                                                                             So3SplineState const& spline,
-                                                                             DerivativeOrder const order);
+    static So3SplineEvaluationData So3SplinePrepareEvaluation(std::uint64_t const t_ns, So3SplineState const& spline,
+                                                              DerivativeOrder const order);
 };
 
 }  // namespace reprojection::spline
