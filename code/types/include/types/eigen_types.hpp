@@ -15,8 +15,11 @@ using Vector4d = Eigen::Vector4d;
 using Vector6d = Eigen::Vector<double, 6>;
 using VectorXd = Eigen::VectorXd;
 
+template <typename T>
+using Matrix3 = Eigen::Matrix3<T>;
+
 using Matrix2d = Eigen::Matrix2d;
-using Matrix3d = Eigen::Matrix3d;
+using Matrix3d = Matrix3<double>;
 using Matrix4d = Eigen::Matrix4d;
 using MatrixXi = Eigen::MatrixXi;
 using MatrixXd = Eigen::MatrixXd;
