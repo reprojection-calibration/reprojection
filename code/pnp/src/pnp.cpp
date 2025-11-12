@@ -30,12 +30,12 @@ PnpResult Pnp(Bundle const& bundle) {
         return PnpStatusCode::NotEnoughPoints;
     }
 
-    // NOTE(Jack): The optimization::NonlinearRefinement function expects and returns vectors. For pnp however we just
-    // evaluate one frame at a time. Therefore we construct the "vector" input of frames from the one Bundle we have,
-    // and also return the first and only tf that is returned.
+    // NOTE(Jack): The optimization::CameraNonlinearRefinement function expects and returns vectors. For pnp however we
+    // just evaluate one frame at a time. Therefore we construct the "vector" input of frames from the one Bundle we
+    // have, and also return the first and only tf that is returned.
     // TODO(Jack): Return the reprojection error/final cost returned from the nonlinear refinement?
-    auto const [tf_star, _, _1]{optimization::NonlinearRefinement({{{bundle.pixels, bundle.points}, tf}},
-                                                                  CameraModel::Pinhole, pinhole_intrinsics)};
+    auto const [tf_star, _, _1]{optimization::CameraNonlinearRefinement({{{bundle.pixels, bundle.points}, tf}},
+                                                                        CameraModel::Pinhole, pinhole_intrinsics)};
 
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
     // and nonlinear optimization that will tell us if we are on the right track? For example ceres should actually

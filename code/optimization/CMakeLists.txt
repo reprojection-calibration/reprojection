@@ -24,6 +24,7 @@ set(TESTS
         src/ceres_geometry.test.cpp
         src/projection_cost_function.test.cpp
         src/r3_spline_cost_function.test.cpp
-        test/nonlinear_refinement.test.cpp
+        test/camera_nonlinear_refinement.test.cpp
+        test/r3_spline_nonlinear_refinement.test.cpp
 )
 AddTests()

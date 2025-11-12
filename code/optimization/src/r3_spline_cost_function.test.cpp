@@ -6,10 +6,9 @@
 
 using namespace reprojection;
 
-// COPY PASTED!!!!
-double Squared(double const x) { return x * x; }
+double Squared(double const x) { return x * x; }  // COPY PASTED!!!!
 
-// NOTE(Jack): If you want to understand more about the ground truth values of position, velocity, and accleration
+// NOTE(Jack): If you want to understand more about the ground truth values of position, velocity, and acceleration
 // please see the "Spline_r3Spline, TestTemplatedEvaluateOnParabola" test :)
 TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
     double const u_i{0.5};
@@ -21,8 +20,11 @@ TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
 
     // Set up the required input data for the Evaluate() method (normally handled internally by ceres).
-    double const* const P_ptr{P.data()};
-    double const* const* const P_ptr_ptr{&P_ptr};
+    double const* const P1_ptr{P.col(0).data()};
+    double const* const P2_ptr{P.col(1).data()};
+    double const* const P3_ptr{P.col(2).data()};
+    double const* const P4_ptr{P.col(3).data()};
+    double const* const P_ptr_ptr[4]{P1_ptr, P2_ptr, P3_ptr, P4_ptr};
     Vector3d residual;
 
     // Position
@@ -60,8 +62,12 @@ TEST(OptimizationR3SplineCostFunction, TestR3SplineCostFunctionCreate_T) {
     ceres::CostFunction const* const cost_function{
         optimization::R3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns)};
 
-    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 1);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 12);
+    // Four r3 control point parameter blocks of size three and a r3 residual
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 4);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], 3);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[2], 3);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[3], 3);
     EXPECT_EQ(cost_function->num_residuals(), 3);
     delete cost_function;
 }

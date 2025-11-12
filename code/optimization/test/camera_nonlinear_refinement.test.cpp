@@ -1,15 +1,14 @@
-#include "optimization/nonlinear_refinement.hpp"
-
 #include <gtest/gtest.h>
 
 #include "../../testing_mocks/src/noise_generation.hpp"
 #include "geometry/lie.hpp"
+#include "optimization/nonlinear_refinement.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
 
-TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
+TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
     Array4d const intrinsics{600, 600, 360, 240};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
@@ -17,7 +16,8 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
     int const num_frames{20};
     std::vector<Frame> const frames{generator.GenerateBatch(num_frames)};
 
-    auto const [poses_opt, K, final_cost]{optimization::NonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
+    auto const [poses_opt, K,
+                final_cost]{optimization::CameraNonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
 
     for (size_t i{0}; i < std::size(poses_opt); ++i) {
         auto const pose_opt_i{poses_opt[i]};
@@ -35,7 +35,7 @@ TEST(OptimizationNonlinearRefinement, TestNonlinearRefinementBatch) {
     EXPECT_NEAR(final_cost, 0.0, 1e-12);
 }
 
-TEST(OptimizationNonlinearRefinement, TestNoisyNonlinearRefinement) {
+TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
     Array4d const intrinsics{600, 600, 360, 240};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
@@ -49,7 +49,8 @@ TEST(OptimizationNonlinearRefinement, TestNoisyNonlinearRefinement) {
 
     // Given a perfect bundle (i.e. no noise in the pixels or points) but noisy initial pose, we then get perfect poses
     // and intrinsic back.
-    auto const [poses_opt, K, final_cost]{optimization::NonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
+    auto const [poses_opt, K,
+                final_cost]{optimization::CameraNonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
     for (size_t i{0}; i < std::size(poses_opt); ++i) {
         auto const pose_opt_i{poses_opt[i]};
         auto const pose_gt_i{gt_poses[i]};
