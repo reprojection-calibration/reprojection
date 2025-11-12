@@ -85,7 +85,7 @@ TEST(Spline_r3Spline, TestTemplatedEvaluateOnLine) {
     EXPECT_TRUE(position_3.isApproxToConstant(2));
 }
 
-double Squared(double const x) { return x * x; }
+double Squared(double const x) { return x * x; }  // COPY PASTED
 
 // If you really want to understand this test you need to print out the P matrix below and go to
 // https://nurbscalculator.in/ to plot it (don't forget to set it to a degree 3 B-Spline!). There you will see that it

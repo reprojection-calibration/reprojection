@@ -15,35 +15,35 @@ Isometry3d ConstructTestSE3(Vector3d const& R_diagonal, Vector3d const& t) {
     return T;
 }
 
-std::vector<Vector6d> const se3{Vector6d{0, 0, 0, 0, 0, 0},     //
-                                Vector6d{M_PI, 0, 0, 1, 0, 0},  //
-                                Vector6d{0, M_PI, 0, 0, 1, 0},  //
-                                Vector6d{0, 0, M_PI, 0, 0, 1}};
+std::vector<Vector6d> const test_se3{Vector6d{0, 0, 0, 0, 0, 0},     //
+                                     Vector6d{M_PI, 0, 0, 1, 0, 0},  //
+                                     Vector6d{0, M_PI, 0, 0, 1, 0},  //
+                                     Vector6d{0, 0, M_PI, 0, 0, 1}};
 
-std::vector<Isometry3d> const SE3{Isometry3d::Identity(),                    //
-                                  ConstructTestSE3({1, -1, -1}, {1, 0, 0}),  //
-                                  ConstructTestSE3({-1, 1, -1}, {0, 1, 0}),  //
-                                  ConstructTestSE3({-1, -1, 1}, {0, 0, 1})};
+std::vector<Isometry3d> const test_SE3{Isometry3d::Identity(),                    //
+                                       ConstructTestSE3({1, -1, -1}, {1, 0, 0}),  //
+                                       ConstructTestSE3({-1, 1, -1}, {0, 1, 0}),  //
+                                       ConstructTestSE3({-1, -1, 1}, {0, 0, 1})};
 
 TEST(GeometryLie, TestSe3Exp) {
-    ASSERT_EQ(std::size(se3), std::size(SE3));
+    ASSERT_EQ(std::size(test_se3), std::size(test_SE3));
 
-    for (size_t i{0}; i < std::size(se3); ++i) {
-        Vector6d const se3_i{se3[i]};
+    for (size_t i{0}; i < std::size(test_se3); ++i) {
+        Vector6d const se3_i{test_se3[i]};
         Isometry3d const SE3_i{geometry::Exp(se3_i)};
 
-        EXPECT_TRUE(SE3_i.isApprox(SE3[i]));
+        EXPECT_TRUE(SE3_i.isApprox(test_SE3[i]));
     }
 }
 
 TEST(GeometryLie, TestSe3Log) {
-    ASSERT_EQ(std::size(se3), std::size(SE3));
+    ASSERT_EQ(std::size(test_se3), std::size(test_SE3));
 
-    for (size_t i{0}; i < std::size(se3); ++i) {
-        Isometry3d const SE3_i{SE3[i]};
+    for (size_t i{0}; i < std::size(test_se3); ++i) {
+        Isometry3d const SE3_i{test_SE3[i]};
         Vector6d const se3_i{geometry::Log(SE3_i)};
 
-        EXPECT_TRUE(se3_i.isApprox(se3[i]));
+        EXPECT_TRUE(se3_i.isApprox(test_se3[i]));
     }
 }
 

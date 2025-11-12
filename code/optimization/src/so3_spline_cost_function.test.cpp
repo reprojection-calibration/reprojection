@@ -1,20 +1,19 @@
-#include "r3_spline_cost_function.hpp"
+#include "so3_spline_cost_function.hpp"
 
 #include <gtest/gtest.h>
 
+#include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
 double Squared(double const x) { return x * x; }  // COPY PASTED!!!!
 
-// NOTE(Jack): If you want to understand more about the ground truth values of position, velocity, and acceleration
-// please see the "Spline_r3Spline, TestTemplatedEvaluateOnParabola" test :)
-TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
+// Look in the so3 spline units test/r3 unit test to understand the testing values and philsophy.
+TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
     double const u_i{0.5};
     std::uint64_t const delta_t_ns{1};
 
-    // TODO(Jack): Is this column wise or row wise/does it matter?
     spline::Matrix3Kd const P{{-1, -0.5, 0.5, 1},
                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
@@ -28,39 +27,40 @@ TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
     Vector3d residual;
 
     // Position
-    Array3d const position{0, 0.28125, 0.28125};  // Actual ground truth at u_i=0.5 given control points P
+    Array3d const position{1.0319672855968482, -0.40184576778254827, -0.89024132986881044};
     ceres::CostFunction* cost_function{
-        optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
-    bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};  // Do not need jacobian, pass nullptr
+        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
+    bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};
     delete cost_function;
     EXPECT_TRUE(success);
     EXPECT_TRUE(residual.isZero());
 
     // Velocity
-    Array3d const velocity{0.875, 0, 0};
-    cost_function = optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::First, velocity, u_i, delta_t_ns);
+    Array3d const velocity{0.8563971186898035, -0.1204280865611993, 0.12722122556164611};
+    cost_function =
+        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::First, velocity, u_i, delta_t_ns);
     success = cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr);
     delete cost_function;
     EXPECT_TRUE(success);
     EXPECT_TRUE(residual.isZero());
 
     // Acceleration
-    Array3d const acceleration{0, 0.75, 0.75};
+    Array3d const acceleration{0.0069974409407700944, 0.80095289350156396, 0.71108131312833733};
     cost_function =
-        optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Second, acceleration, u_i, delta_t_ns);
+        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Second, acceleration, u_i, delta_t_ns);
     success = cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr);
     delete cost_function;
     EXPECT_TRUE(success);
     EXPECT_TRUE(residual.isZero());
 }
 
-TEST(OptimizationR3SplineCostFunction, TestR3SplineCostFunctionCreate_T) {
-    Vector3d const r3{0, 0, 0};
+TEST(OptimizationSo3SplineCostFunction, TestSo3SplineCostFunctionCreate_T) {
+    Vector3d const so3{0, 0, 0};
     double const u_i{0.2};
     std::uint64_t const delta_t_ns{5};
 
     ceres::CostFunction const* const cost_function{
-        optimization::R3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns)};
+        optimization::So3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(so3, u_i, delta_t_ns)};
 
     // Four r3 control point parameter blocks of size three and a r3 residual
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 4);

@@ -10,7 +10,7 @@ Se3Spline::Se3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
 // TODO(Jack): Refactor this to take se3 vector directly?
 void Se3Spline::AddControlPoint(Isometry3d const control_point) {
     r3_spline_.control_points.push_back(control_point.translation());
-    so3_spline_.control_points.push_back(geometry::Log(control_point.linear()));
+    so3_spline_.control_points.push_back(geometry::Log<double>(control_point.linear()));
 }
 
 std::optional<Isometry3d> Se3Spline::Evaluate(std::uint64_t const t_ns) const {

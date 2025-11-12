@@ -42,7 +42,7 @@ TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
         Isometry3d const perturbed{testing_mocks::AddGaussianNoise(sigma_translation, sigma_rotation, identity)};
 
         translations.row(i) = perturbed.translation();
-        rotations_se3.row(i) = geometry::Log(perturbed.rotation());
+        rotations_se3.row(i) = geometry::Log<double>(perturbed.rotation());
     }
 
     EXPECT_NEAR(translations.mean(), 0.0, 2e-2);

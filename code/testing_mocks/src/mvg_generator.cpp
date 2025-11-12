@@ -107,7 +107,7 @@ Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_r
     // TODO(Jack): Confirm this is the right way to add noise to a rotation! Adding the gaussian noise element in the
     // tangent space directly and then converting back to a rotation matrix.
     Vector3d const rotation_noise{GaussianNoise(0, sigma_rotation, 3, 1)};
-    Vector3d const rotation_se3{geometry::Log(pose.rotation())};
+    Vector3d const rotation_se3{geometry::Log<double>(pose.rotation())};
     Vector3d const perturbed_se3{rotation_noise.array() + rotation_se3.array()};
 
     Matrix3d const perturbed_R{geometry::Exp(perturbed_se3)};
