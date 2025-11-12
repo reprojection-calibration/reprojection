@@ -17,7 +17,7 @@ std::optional<Isometry3d> Se3Spline::Evaluate(std::uint64_t const t_ns) const {
     // TODO(Jack): This is in essence repeating logic that we already have implemented elsewhere, is there anything
     // we can do to streamline this?
     auto const position{EvaluateR3(t_ns, r3_spline_)};
-    auto const rotation{EvaluateSO3(t_ns, so3_spline_)};
+    auto const rotation{So3SplineEvaluation::Evaluate(t_ns, so3_spline_)};
     if (not(position.has_value() and rotation.has_value())) {
         return std::nullopt;
     }

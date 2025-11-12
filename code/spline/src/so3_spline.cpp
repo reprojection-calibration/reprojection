@@ -23,8 +23,8 @@ std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Vector3d> co
 }
 
 // TODO(Jack): Return so3?
-std::optional<Matrix3d> EvaluateSO3(std::uint64_t const t_ns, SO3SplineState const& spline) {
-    auto const eval_data{SO3SplineEvaluation::SO3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Null)};
+std::optional<Matrix3d> So3SplineEvaluation::Evaluate(std::uint64_t const t_ns, So3SplineState const& spline) {
+    auto const eval_data{So3SplineEvaluation::So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Null)};
     if (not eval_data) {
         return std::nullopt;
     }
@@ -40,8 +40,8 @@ std::optional<Matrix3d> EvaluateSO3(std::uint64_t const t_ns, SO3SplineState con
     return rotation;
 }
 
-std::optional<Vector3d> EvaluateSO3Velocity(std::uint64_t const t_ns, SO3SplineState const& spline) {
-    auto const eval_data{SO3SplineEvaluation::SO3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::First)};
+std::optional<Vector3d> So3SplineEvaluation::EvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline) {
+    auto const eval_data{So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::First)};
     if (not eval_data) {
         return std::nullopt;
     }
@@ -60,8 +60,9 @@ std::optional<Vector3d> EvaluateSO3Velocity(std::uint64_t const t_ns, SO3SplineS
     return velocity;
 }
 
-std::optional<Vector3d> EvaluateSO3Acceleration(std::uint64_t const t_ns, SO3SplineState const& spline) {
-    auto const eval_data{SO3SplineEvaluation::SO3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Second)};
+std::optional<Vector3d> So3SplineEvaluation::EvaluateAcceleration(std::uint64_t const t_ns,
+                                                                  So3SplineState const& spline) {
+    auto const eval_data{So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Second)};
     if (not eval_data) {
         return std::nullopt;
     }
@@ -83,8 +84,8 @@ std::optional<Vector3d> EvaluateSO3Acceleration(std::uint64_t const t_ns, SO3Spl
 }
 
 // TODO(Jack): Test
-std::optional<SO3SplineEvaluationData> SO3SplineEvaluation::SO3SplinePrepareEvaluation(std::uint64_t const t_ns,
-                                                                                       SO3SplineState const& spline,
+std::optional<So3SplineEvaluationData> So3SplineEvaluation::So3SplinePrepareEvaluation(std::uint64_t const t_ns,
+                                                                                       So3SplineState const& spline,
                                                                                        DerivativeOrder const order) {
     auto const normalized_position{spline.time_handler.SplinePosition(t_ns, std::size(spline.control_points))};
     if (not normalized_position.has_value()) {
@@ -101,7 +102,7 @@ std::optional<SO3SplineEvaluationData> SO3SplineEvaluation::SO3SplinePrepareEval
         weights.push_back(weight);
     }
 
-    return SO3SplineEvaluationData{i, delta_phis, weights};
+    return So3SplineEvaluationData{i, delta_phis, weights};
 }
 
 }  // namespace reprojection::spline
