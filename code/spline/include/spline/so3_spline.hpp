@@ -43,25 +43,32 @@ struct So3SplineEvaluation {
     static Vector3d Evaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns) {
         std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(P)};
 
+        int constexpr order{static_cast<int>(D)};
+        std::array<VectorKd, order + 1> weights;  // We use an array because the required size is known at compile time
+        for (int j{0}; j <= order; ++j) {
+            VectorKd const u_j{CalculateU(u_i, j)};
+            VectorKd const weight_j{M * u_j / std::pow(delta_t_ns, j)};
+
+            weights[j] = weight_j;
+        }
+
         Vector3d rotation{Vector3d::Zero()};
         Vector3d velocity{Vector3d::Zero()};
         Vector3d acceleration{Vector3d::Zero()};
 
         for (int j{0}; j < constants::degree; ++j) {
-            static VectorKd const weight0{M * CalculateU(u_i, DerivativeOrder::Null)};
-            Matrix3d const delta_R_j{geometry::Exp((weight0[j + 1] * delta_phis[j]).eval())};
+            Matrix3d const delta_R_j{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
             rotation = geometry::Log(delta_R_j * geometry::Exp(rotation));
 
             if constexpr (D == DerivativeOrder::First or D == DerivativeOrder::Second) {
-                static VectorKd const weight1{M * CalculateU(u_i, DerivativeOrder::First) / delta_t_ns};
-                Vector3d const delta_v_j{weight1[j + 1] * delta_phis[j]};
-                velocity = delta_v_j + delta_R_j.inverse() * velocity;
+                Matrix3d const inverse_delta_R_j{delta_R_j.inverse()};
+
+                Vector3d const delta_v_j{weights[1][j + 1] * delta_phis[j]};
+                velocity = delta_v_j + (inverse_delta_R_j * velocity);
 
                 if constexpr (D == DerivativeOrder::Second) {
-                    static VectorKd const weight2{M * CalculateU(u_i, DerivativeOrder::Second) /
-                                                  (delta_t_ns * delta_t_ns)};
-                    Vector3d const delta_a_j{weight2[j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
-                    acceleration = delta_a_j + delta_R_j.inverse() * acceleration;
+                    Vector3d const delta_a_j{weights[2][j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
+                    acceleration = delta_a_j + (inverse_delta_R_j * acceleration);
                 }
             }
         }

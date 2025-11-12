@@ -64,6 +64,8 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
     EXPECT_TRUE(v0.isApproxToConstant(0.03));
 
     Vector3d const v4{spline::EvaluateSo3(104, spline, spline::DerivativeOrder::First).value()};
+
+    std::cout << v4 <<std::endl;
     EXPECT_TRUE(v4.isApproxToConstant(0.046));
 }
 
