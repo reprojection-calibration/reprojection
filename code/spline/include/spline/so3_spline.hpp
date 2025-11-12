@@ -28,35 +28,40 @@ std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState con
 std::array<Eigen::Vector3d, constants::degree> DeltaPhi(Matrix3Kd const& control_points);
 
 struct So3SplineEvaluation {
+    // NOTE(Jack): We are doing some compile time programming here with "if constexpr". The nature of the cumulative
+    // b-spline means that the derivatives build up on top of each other incrementally. This resulted, in the first
+    // iteration, in a lot of copy and pasted code. The structure here is basically that the null evaluation goes from 0
+    // to 10, the first derivative goes from 0 to 20, and the second derivative goes from 0 to 30. However, the
+    // evaluation methods are so intertwined that you cannot simply compose and call the null and first derivative
+    // evaluations one after another to get the second derivative. They use intermediate results from eachother (see the
+    // loop below), this makes composition not possible without repeating lots of computation.
+    //
+    // Our solution to this problem is to use "if constexpr" based on the DerivativeOrder template parameter D. This
+    // allows us to generate all three version of the evaluate function from the same single source code. Please read
+    // online to see how "if constexpr" works, it is not the right place to explain it here.
     template <DerivativeOrder D>
     static Vector3d Evaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns) {
         std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(P)};
 
-        int constexpr order{static_cast<int>(D)};
-        std::array<VectorKd, order + 1> weights;  // We use an array because the required size is known at compile time
-        for (int j{0}; j <= order; ++j) {
-            VectorKd const u{CalculateU(u_i, D)};
-            VectorKd const weight{M * u / std::pow(delta_t_ns, order)};
-
-            weights[j] = weight;
-        }
-
         Vector3d rotation{Vector3d::Zero()};
         Vector3d velocity{Vector3d::Zero()};
         Vector3d acceleration{Vector3d::Zero()};
+
         for (int j{0}; j < constants::degree; ++j) {
-            Matrix3d const delta_R_j{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
+            static VectorKd const weight0{M * CalculateU(u_i, DerivativeOrder::Null)};
+            Matrix3d const delta_R_j{geometry::Exp((weight0[j + 1] * delta_phis[j]).eval())};
             rotation = geometry::Log(delta_R_j * geometry::Exp(rotation));
 
             if constexpr (D == DerivativeOrder::First or D == DerivativeOrder::Second) {
-                Matrix3d const inverse_delta_R_j{delta_R_j.inverse()};
-
-                Vector3d const delta_v_j{weights[1][j + 1] * delta_phis[j]};
-                velocity = delta_v_j + (inverse_delta_R_j * velocity);
+                static VectorKd const weight1{M * CalculateU(u_i, DerivativeOrder::First) / delta_t_ns};
+                Vector3d const delta_v_j{weight1[j + 1] * delta_phis[j]};
+                velocity = delta_v_j + delta_R_j.inverse() * velocity;
 
                 if constexpr (D == DerivativeOrder::Second) {
-                    Vector3d const delta_a_j{weights[2][j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
-                    acceleration = delta_a_j + (inverse_delta_R_j * acceleration);
+                    static VectorKd const weight2{M * CalculateU(u_i, DerivativeOrder::Second) /
+                                                  (delta_t_ns * delta_t_ns)};
+                    Vector3d const delta_a_j{weight2[j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
+                    acceleration = delta_a_j + delta_R_j.inverse() * acceleration;
                 }
             }
         }
