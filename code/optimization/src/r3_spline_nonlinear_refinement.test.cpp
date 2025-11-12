@@ -25,7 +25,9 @@ class R3SplineProblemHandler {
         ceres::CostFunction* const cost_function{
             optimization::CreateR3SplineCostFunction(order, r3_position, u_i, spline_.time_handler.delta_t_ns_)};
 
-        problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data());
+        problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
+                                  spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),
+                                  spline_.control_points[i + 3].data());
 
         return true;
     }
@@ -50,7 +52,7 @@ double Squared(double const x) { return x * x; }
 TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     std::uint64_t const delta_t_ns{50};
     spline::R3SplineState gt_r3_spline{100, delta_t_ns};
-    for (auto const& x : std::vector<double>{-1, -0.5, 0.5, 1}) {
+    for (auto const& x : std::vector<double>{-2, -1, -0.5, 0.5, 1, 2}) {
         gt_r3_spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
 
@@ -71,7 +73,7 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
     bool success{handler.AddConstraint(100, position_i.value(), spline::DerivativeOrder::Null)};
     ASSERT_TRUE(success);
 
-    for (size_t i{0}; i < delta_t_ns; ++i) {
+    for (size_t i{0}; i < 3 * delta_t_ns; ++i) {
         std::uint64_t const t_i{100 + i};
 
         // Create fake measurement data by evaluating the gt spline

@@ -9,7 +9,7 @@ namespace reprojection::optimization {
 ceres::CostFunction* CreateR3SplineCostFunction(spline::DerivativeOrder const derivative, Vector3d const& r3,
                                                 double const u_i, std::uint64_t const delta_t_ns);
 
-// TODO(Jack): We purposely pick r3 as the variable name because it is generic enough to represent the idea that
+// NOTE(Jack): We purposely pick r3 as the variable name because it is generic enough to represent the idea that
 // sometimes it is a value/posiiton, a velocity, or an acceleration depending on the derivative order.
 template <spline::DerivativeOrder D>
 class R3SplineCostFunction_T {
@@ -17,9 +17,36 @@ class R3SplineCostFunction_T {
     R3SplineCostFunction_T(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns)
         : r3_{r3}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
 
+    // NOTE(Jack): The reason that we need to pass each control point individually comes from ceres. Ceres does not
+    // allow parameter blocks to partially overlap. If you do partially overlap you will get an error like,
+    //
+    //      1 problem_impl.cc:78] Check failed: !RegionsAlias( existing_block, existing_block_size, new_block,
+    //      new_block_size)...
+    //
+    // My original intention was that we store the spline state (spline::R3SplineState) therefore we will optimize on
+    // the continuous memory representation as well and each residual will constrain the spline state like a sliding
+    // window. Ceres does not allow partially overlapping parameter blocks like would be required by this sliding window
+    // representation, therefore we have to break the parameter representation to a more granular form, and pass each
+    // point individually. This allows ceres to recognize which parameters are actually the same and then group them
+    // together for solving the problem.
     template <typename T>
-    bool operator()(T const* const control_points_ptr, T* const residual) const {
-        Eigen::Map<Eigen::Matrix<T, 3, spline::constants::order> const> control_points(control_points_ptr);
+    bool operator()(T const* const control_point_0_ptr, T const* const control_point_1_ptr,
+                    T const* const control_point_2_ptr, T const* const control_point_3_ptr, T* const residual) const {
+        // NOTE(Jack): We need to pass in the control points individually to satisfy ceres (see note above), but our
+        // R3SplineEvaluation::Evaluate() method takes a eigen matrix. Therefore, we have to organize them using maps
+        // into points and then  place them in the control points matrix.
+        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p0(control_point_0_ptr);
+        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p1(control_point_1_ptr);
+        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p2(control_point_2_ptr);
+        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p3(control_point_3_ptr);
+
+        // TODO(Jack): Makes a copy! Can this be avoided? Technically, the underlying vector which the
+        // control_point_*_ptr are passed in from should be continuous, and therefore we could just make a map taking
+        // starting at control_point_0_ptr and map the next 12 elements into a Matrix3k. However this is entering
+        // sketchy territory where we might start to violate the principle of least surprise. Unless there is some
+        // benchmark showing this would help solve a problem, lets no do it :)
+        spline::Matrix3k<T> control_points;
+        control_points << p0, p1, p2, p3;
 
         Eigen::Vector<T, 3> const r3{spline::R3SplineEvaluation::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
 
@@ -31,7 +58,7 @@ class R3SplineCostFunction_T {
     }
 
     static ceres::CostFunction* Create(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<R3SplineCostFunction_T, 3, 3 * spline::constants::order>(
+        return new ceres::AutoDiffCostFunction<R3SplineCostFunction_T, 3, 3, 3, 3, 3>(
             new R3SplineCostFunction_T(r3, u_i, delta_t_ns));
     }
 
