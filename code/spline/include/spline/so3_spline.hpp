@@ -57,17 +57,20 @@ struct So3SplineEvaluation {
         Vector3d acceleration{Vector3d::Zero()};
 
         for (int j{0}; j < constants::degree; ++j) {
-            Matrix3d const delta_R_j{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
+            VectorKd const& weight0{weights[0]};
+            Matrix3d const delta_R_j{geometry::Exp((weight0[j + 1] * delta_phis[j]).eval())};
             rotation = geometry::Log(delta_R_j * geometry::Exp(rotation));
 
             if constexpr (D == DerivativeOrder::First or D == DerivativeOrder::Second) {
                 Matrix3d const inverse_delta_R_j{delta_R_j.inverse()};
 
-                Vector3d const delta_v_j{weights[1][j + 1] * delta_phis[j]};
+                VectorKd const& weight1{weights[1]};
+                Vector3d const delta_v_j{weight1[j + 1] * delta_phis[j]};
                 velocity = delta_v_j + (inverse_delta_R_j * velocity);
 
                 if constexpr (D == DerivativeOrder::Second) {
-                    Vector3d const delta_a_j{weights[2][j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
+                    VectorKd const& weight2{weights[2]};
+                    Vector3d const delta_a_j{weight2[j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
                     acceleration = delta_a_j + (inverse_delta_R_j * acceleration);
                 }
             }
