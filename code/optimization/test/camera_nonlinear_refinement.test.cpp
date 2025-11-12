@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "../../testing_mocks/src/noise_generation.hpp"
 #include "geometry/lie.hpp"
 #include "optimization/nonlinear_refinement.hpp"
 #include "testing_mocks/mvg_generator.hpp"
