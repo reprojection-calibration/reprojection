@@ -48,12 +48,13 @@ TEST(SplineSo3Spline, TestEvaluate) {
         ASSERT_TRUE(p_i.has_value());
     }
 
-    auto const p_0{spline::EvaluateSo3(100, spline)};
-    // TODO(Jack): Update to just check the vector. Current value comes from when the evaluate method returned a
-    // rotation matrix.
-    EXPECT_FLOAT_EQ(geometry::Exp(p_0.value()).diagonal().sum(),
-                    2.9593055);  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
-                                 // that we can detect changes to the implementation quickly (hopefully. )
+    Vector3d const p0{spline::EvaluateSo3(100, spline).value()};
+    EXPECT_TRUE(p0.isApproxToConstant(
+        0.11666666666666659));  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
+                                // that we can detect changes to the implementation quickly (hopefully. )
+
+    Vector3d const p4{spline::EvaluateSo3(104, spline)->eval()};
+    EXPECT_TRUE(p4.isApproxToConstant(0.26866666666666655));
 }
 
 TEST(SplineSo3Spline, TestEvaluateVelocity) {
@@ -64,8 +65,6 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
     EXPECT_TRUE(v0.isApproxToConstant(0.03));
 
     Vector3d const v4{spline::EvaluateSo3(104, spline, spline::DerivativeOrder::First).value()};
-
-    std::cout << v4 <<std::endl;
     EXPECT_TRUE(v4.isApproxToConstant(0.046));
 }
 
@@ -74,9 +73,9 @@ TEST(SplineSo3Spline, TestEvaluateAcceleration) {
     spline::So3SplineState const spline{BuildTestSpline()};
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)
-    Vector3d const v0{spline::EvaluateSo3(100, spline, spline::DerivativeOrder::Second).value()};
-    EXPECT_TRUE(v0.isApproxToConstant(0.004));
+    Vector3d const a0{spline::EvaluateSo3(100, spline, spline::DerivativeOrder::Second).value()};
+    EXPECT_TRUE(a0.isApproxToConstant(0.004));
 
-    Vector3d const v4{spline::EvaluateSo3(104, spline, spline::DerivativeOrder::Second).value()};
-    EXPECT_TRUE(v4.isApproxToConstant(0.004));
+    Vector3d const a4{spline::EvaluateSo3(104, spline, spline::DerivativeOrder::Second).value()};
+    EXPECT_TRUE(a4.isApproxToConstant(0.004));
 }
