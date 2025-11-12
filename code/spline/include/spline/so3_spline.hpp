@@ -24,21 +24,26 @@ struct So3SplineState {
 std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState const& spline,
                                     DerivativeOrder const derivative = DerivativeOrder::Null);
 
-// TODO(Jack): Do we need this struct?
-struct So3SplineEvaluationData {
-    std::array<Vector3d, constants::degree> delta_phis;
-    std::vector<VectorKd> weights;
-};
+// TODO(Jack): Test explicitly?
+std::array<Eigen::Vector3d, constants::degree> DeltaPhi(Matrix3Kd const& control_points);
 
 struct So3SplineEvaluation {
     template <DerivativeOrder D>
     static Vector3d Evaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns) {
-        auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, D)};
+        std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(P)};
+
+        int constexpr order{static_cast<int>(D)};
+        std::array<VectorKd, order + 1> weights;  // We use an array because the required size is known at compile time
+        for (int j{0}; j <= order; ++j) {
+            VectorKd const u{CalculateU(u_i, D)};
+            VectorKd const weight{M * u / std::pow(delta_t_ns, order)};
+
+            weights[j] = weight;
+        }
 
         Vector3d rotation{Vector3d::Zero()};
         Vector3d velocity{Vector3d::Zero()};
         Vector3d acceleration{Vector3d::Zero()};
-
         for (int j{0}; j < constants::degree; ++j) {
             Matrix3d const delta_R_j{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
             rotation = geometry::Log(delta_R_j * geometry::Exp(rotation));
@@ -69,10 +74,6 @@ struct So3SplineEvaluation {
     }
 
     static inline MatrixKK const M{CumulativeBlendingMatrix(constants::order)};
-
-    static So3SplineEvaluationData So3SplinePrepareEvaluation(Matrix3Kd const& control_points, double const u_i,
-                                                              std::uint64_t const delta_t_ns,
-                                                              DerivativeOrder const derivative);
 };
 
 }  // namespace reprojection::spline

@@ -41,22 +41,4 @@ std::array<Eigen::Vector3d, constants::degree> DeltaPhi(Matrix3Kd const& control
     return delta_phi;
 }
 
-// TODO(Jack): Test
-// TODO TOO MANY ARGS!
-So3SplineEvaluationData So3SplineEvaluation::So3SplinePrepareEvaluation(Matrix3Kd const& control_points,
-                                                                        double const u_i,
-                                                                        std::uint64_t const delta_t_ns,
-                                                                        DerivativeOrder const derivative) {
-    std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(control_points)};
-
-    std::vector<VectorKd> weights;
-    for (int j{0}; j <= static_cast<int>(derivative); ++j) {
-        VectorKd const u{CalculateU(u_i, derivative)};
-        VectorKd const weight{M * u / std::pow(delta_t_ns, static_cast<int>(derivative))};
-        weights.push_back(weight);
-    }
-
-    return So3SplineEvaluationData{delta_phis, weights};
-}
-
 }  // namespace reprojection::spline
