@@ -14,24 +14,28 @@ TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
     EXPECT_EQ(spline::EvaluateSO3(115, so3_spline), std::nullopt);
 
     for (int i{0}; i < spline::constants::order; ++i) {
-        so3_spline.control_points.push_back(Matrix3d::Identity());
+        so3_spline.control_points.push_back(Vector3d::Zero());
     }
 
     EXPECT_NE(spline::EvaluateSO3(100, so3_spline), std::nullopt);
     EXPECT_EQ(spline::EvaluateSO3(105, so3_spline), std::nullopt);
 
-    so3_spline.control_points.push_back(Matrix3d::Identity());
+    so3_spline.control_points.push_back(Vector3d::Zero());
     EXPECT_NE(spline::EvaluateSO3(105, so3_spline), std::nullopt);
 }
 
 TEST(SplineSo3Spline, TestEvaluate) {
     uint64_t const delta_t_ns{5};
     spline::SO3SplineState so3_spline{100, delta_t_ns};
+    EXPECT_EQ(spline::EvaluateSO3(100, so3_spline),
+              std::nullopt);  // Not enough control_points yet to evaluate
 
-    so3_spline.control_points.push_back(geometry::Exp(Vector3d::Zero().eval()));
+    so3_spline.control_points.push_back(Vector3d::Zero());
     for (int i{1}; i < spline::constants::order; ++i) {
-        so3_spline.control_points.push_back(so3_spline.control_points.back() *
-                                            geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
+        // TODO(Jack): Evaluate if we can do any of the math directly in tangent space. COPIED THREE TIMES
+        so3_spline.control_points.push_back(
+            geometry::Log(geometry::Exp(so3_spline.control_points.back()) *
+                          geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
     }
 
     // Heuristic test as we have no theoretical testing strategy at this time.
@@ -50,14 +54,13 @@ TEST(SplineSo3Spline, TestEvaluate) {
 TEST(SplineSo3Spline, TestEvaluateVelocity) {
     uint64_t const delta_t_ns{5};
     spline::SO3SplineState so3_spline{100, delta_t_ns};
-    so3_spline.control_points.push_back(geometry::Exp(Vector3d::Zero().eval()));
 
-    EXPECT_EQ(spline::EvaluateSO3Velocity(100, so3_spline),
-              std::nullopt);  // Not enough control_points yet to evaluate velocity
-
+    so3_spline.control_points.push_back(Vector3d::Zero());
     for (int i{1}; i < spline::constants::order; ++i) {
-        so3_spline.control_points.push_back(so3_spline.control_points.back() *
-                                            geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
+        // TODO(Jack): Evaluate if we can do any of the math directly in tangent space. COPIED THREE TIMES
+        so3_spline.control_points.push_back(
+            geometry::Log(geometry::Exp(so3_spline.control_points.back()) *
+                          geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
     }
 
     // RANDOM HEURISTIC TESTS!
@@ -72,14 +75,13 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
 TEST(SplineSo3Spline, TestEvaluateAcceleration) {
     uint64_t const delta_t_ns{5};
     spline::SO3SplineState so3_spline{100, delta_t_ns};
-    so3_spline.control_points.push_back(geometry::Exp(Vector3d::Zero().eval()));
 
-    EXPECT_EQ(spline::EvaluateSO3Acceleration(100, so3_spline),
-              std::nullopt);  // Not enough control_points yet to evaluate acceleration
-
+    so3_spline.control_points.push_back(Vector3d::Zero());
     for (int i{1}; i < spline::constants::order; ++i) {
-        so3_spline.control_points.push_back(so3_spline.control_points.back() *
-                                            geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
+        // TODO(Jack): Evaluate if we can do any of the math directly in tangent space. COPIED THREE TIMES
+        so3_spline.control_points.push_back(
+            geometry::Log(geometry::Exp(so3_spline.control_points.back()) *
+                          geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
     }
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)

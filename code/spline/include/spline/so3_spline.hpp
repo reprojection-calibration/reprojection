@@ -16,7 +16,7 @@ struct SO3SplineState {
         : time_handler{t0_ns, delta_t_ns, constants::order} {}
 
     TimeHandler time_handler;
-    std::vector<Matrix3d> control_points;  // todo change to vector
+    std::vector<Vector3d> control_points;
 };
 
 struct SO3SplineEvaluationData {

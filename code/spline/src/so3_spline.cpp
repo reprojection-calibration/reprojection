@@ -12,15 +12,17 @@ namespace reprojection::spline {
 
 // WARN(Jack): Will not check that the control_points are valid to index! Depends on being called securely with an
 // index from the time handler.
-std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Eigen::Matrix3d> const& control_points,
+std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Vector3d> const& control_points,
                                                         int const segment) {
     std::array<Eigen::Vector3d, constants::degree> delta_phi;
-    for (int j{0}; j < (constants::degree); ++j) {
-        delta_phi[j] = geometry::Log(control_points[segment + j].inverse() * control_points[segment + j + 1]);
+    for (int j{0}; j < constants::degree; ++j) {
+        delta_phi[j] = geometry::Log(geometry::Exp(control_points[segment + j]).inverse() *
+                                     geometry::Exp(control_points[segment + j + 1]));
     }
     return delta_phi;
 }
 
+// TODO(Jack): Return so3?
 std::optional<Matrix3d> EvaluateSO3(std::uint64_t const t_ns, SO3SplineState const& spline) {
     auto const eval_data{SO3SplineEvaluation::SO3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Null)};
     if (not eval_data) {
@@ -29,7 +31,7 @@ std::optional<Matrix3d> EvaluateSO3(std::uint64_t const t_ns, SO3SplineState con
     auto const [i, delta_phis, weights]{eval_data.value()};
 
     // TODO(Jack): Can we replace this all with a std::accumulate call?
-    Matrix3d rotation{spline.control_points[i]};
+    Matrix3d rotation{geometry::Exp(spline.control_points[i])};
     for (int j{0}; j < (constants::degree); ++j) {
         Matrix3d const delta_R{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
         rotation = delta_R * rotation;
