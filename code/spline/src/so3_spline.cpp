@@ -16,40 +16,39 @@ std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState con
     if (not normalized_position.has_value()) {
         return std::nullopt;
     }
-    // auto const [u_i, i]{normalized_position.value()};
+    auto const [u_i, i]{normalized_position.value()};
 
-    // Matrix3Kd const P{Eigen::Map<const Matrix3Kd>(spline.control_points[i].data(), 3, constants::order)};
+    Matrix3Kd const P{Eigen::Map<const Matrix3Kd>(spline.control_points[i].data(), 3, constants::order)};
 
     if (derivative == DerivativeOrder::Null) {
-        return So3SplineEvaluation::xEvaluate(t_ns, spline);
+        return So3SplineEvaluation::xEvaluate(P, u_i, spline.time_handler.delta_t_ns_);
     } else if (derivative == DerivativeOrder::First) {
-        return So3SplineEvaluation::xEvaluateVelocity(t_ns, spline);
+        return So3SplineEvaluation::xEvaluateVelocity(P, u_i, spline.time_handler.delta_t_ns_);
     } else if (derivative == DerivativeOrder::Second) {
-        return So3SplineEvaluation::xEvaluateAcceleration(t_ns, spline);
+        return So3SplineEvaluation::xEvaluateAcceleration(P, u_i, spline.time_handler.delta_t_ns_);
     } else {
         throw std::runtime_error("Requested unknown derivative order from EvaluateSo3()");  // LCOV_EXCL_LINE
     }
 }
 
-// WARN(Jack): Will not check that the control_points are valid to index! Depends on being called securely with an
-// index from the time handler.
-std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Vector3d> const& control_points,
-                                                        int const segment) {
+std::array<Eigen::Vector3d, constants::degree> DeltaPhi(Matrix3Kd const& control_points) {
     std::array<Eigen::Vector3d, constants::degree> delta_phi;
     for (int j{0}; j < constants::degree; ++j) {
-        delta_phi[j] = geometry::Log(geometry::Exp(control_points[segment + j]).inverse() *
-                                     geometry::Exp(control_points[segment + j + 1]));
+        delta_phi[j] = geometry::Log(geometry::Exp(control_points.col(j).eval()).inverse() *
+                                     geometry::Exp(control_points.col(j + 1).eval()));
     }
+
     return delta_phi;
 }
 
 // TODO(Jack): Return so3?
-std::optional<Vector3d> So3SplineEvaluation::xEvaluate(std::uint64_t const t_ns, So3SplineState const& spline) {
-    auto const eval_data{So3SplineEvaluation::So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Null)};
-    auto const [i, delta_phis, weights]{eval_data};
+std::optional<Vector3d> So3SplineEvaluation::xEvaluate(Matrix3Kd const& P, double const u_i,
+                                                       std::uint64_t const delta_t_ns) {
+    auto const [delta_phis,
+                weights]{So3SplineEvaluation::So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::Null)};
 
     // TODO(Jack): Can we replace this all with a std::accumulate call?
-    Matrix3d rotation{geometry::Exp(spline.control_points[i])};  // Can be in vector space?
+    Matrix3d rotation{geometry::Exp(P.col(0).eval())};  // Can be in vector space directly?
     for (int j{0}; j < (constants::degree); ++j) {
         Matrix3d const delta_R{geometry::Exp((weights[0][j + 1] * delta_phis[j]).eval())};
         rotation = delta_R * rotation;
@@ -58,9 +57,9 @@ std::optional<Vector3d> So3SplineEvaluation::xEvaluate(std::uint64_t const t_ns,
     return geometry::Log(rotation);
 }
 
-std::optional<Vector3d> So3SplineEvaluation::xEvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline) {
-    auto const eval_data{So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::First)};
-    auto const [_, delta_phis, weights]{eval_data};
+std::optional<Vector3d> So3SplineEvaluation::xEvaluateVelocity(Matrix3Kd const& P, double const u_i,
+                                                               std::uint64_t const delta_t_ns) {
+    auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::First)};
 
     Vector3d velocity{Vector3d::Zero()};
     for (int j{0}; j < (constants::degree); ++j) {
@@ -75,10 +74,9 @@ std::optional<Vector3d> So3SplineEvaluation::xEvaluateVelocity(std::uint64_t con
     return velocity;
 }
 
-std::optional<Vector3d> So3SplineEvaluation::xEvaluateAcceleration(std::uint64_t const t_ns,
-                                                                   So3SplineState const& spline) {
-    auto const eval_data{So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Second)};
-    auto const [_, delta_phis, weights]{eval_data};
+std::optional<Vector3d> So3SplineEvaluation::xEvaluateAcceleration(Matrix3Kd const& P, double const u_i,
+                                                                   std::uint64_t const delta_t_ns) {
+    auto const [delta_phis, weights]{So3SplinePrepareEvaluation(P, u_i, delta_t_ns, DerivativeOrder::Second)};
 
     Vector3d velocity{Vector3d::Zero()};
     Vector3d acceleration{Vector3d::Zero()};
@@ -96,22 +94,21 @@ std::optional<Vector3d> So3SplineEvaluation::xEvaluateAcceleration(std::uint64_t
 }
 
 // TODO(Jack): Test - only ever provided valid data!
-So3SplineEvaluationData So3SplineEvaluation::So3SplinePrepareEvaluation(std::uint64_t const t_ns,
-                                                                        So3SplineState const& spline,
-                                                                        DerivativeOrder const order) {
-    auto const normalized_position{spline.time_handler.SplinePosition(t_ns, std::size(spline.control_points))};
-    auto const [u_i, i]{normalized_position.value()};  // UNPROTECTED OPTIONAL ACCESS!
-
-    std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(spline.control_points, i)};
+// TODO MANY ARGS!
+So3SplineEvaluationData So3SplineEvaluation::So3SplinePrepareEvaluation(Matrix3Kd const& control_points,
+                                                                        double const u_i,
+                                                                        std::uint64_t const delta_t_ns,
+                                                                        DerivativeOrder const derivative) {
+    std::array<Vector3d, constants::degree> const delta_phis{DeltaPhi(control_points)};
 
     std::vector<VectorKd> weights;
-    for (int j{0}; j <= static_cast<int>(order); ++j) {
-        VectorKd const u{CalculateU(u_i, order)};
-        VectorKd const weight{M * u / std::pow(spline.time_handler.delta_t_ns_, static_cast<int>(order))};
+    for (int j{0}; j <= static_cast<int>(derivative); ++j) {
+        VectorKd const u{CalculateU(u_i, derivative)};
+        VectorKd const weight{M * u / std::pow(delta_t_ns, static_cast<int>(derivative))};
         weights.push_back(weight);
     }
 
-    return So3SplineEvaluationData{i, delta_phis, weights};
+    return So3SplineEvaluationData{delta_phis, weights};
 }
 
 }  // namespace reprojection::spline

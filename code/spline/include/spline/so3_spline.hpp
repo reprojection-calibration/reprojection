@@ -23,23 +23,26 @@ struct So3SplineState {
 std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState const& spline,
                                     DerivativeOrder const derivative = DerivativeOrder::Null);
 
+// TODO(Jack): Do we need this struct?
 struct So3SplineEvaluationData {
-    int i;
     std::array<Vector3d, constants::degree> delta_phis;
     std::vector<VectorKd> weights;
 };
 
 struct So3SplineEvaluation {
-    static std::optional<Vector3d> xEvaluate(std::uint64_t const t_ns, So3SplineState const& spline);
+    static std::optional<Vector3d> xEvaluate(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns);
 
-    static std::optional<Vector3d> xEvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline);
+    static std::optional<Vector3d> xEvaluateVelocity(Matrix3Kd const& P, double const u_i,
+                                                     std::uint64_t const delta_t_ns);
 
-    static std::optional<Vector3d> xEvaluateAcceleration(std::uint64_t const t_ns, So3SplineState const& spline);
+    static std::optional<Vector3d> xEvaluateAcceleration(Matrix3Kd const& P, double const u_i,
+                                                         std::uint64_t const delta_t_ns);
 
     static inline MatrixKK const M{CumulativeBlendingMatrix(constants::order)};
 
-    static So3SplineEvaluationData So3SplinePrepareEvaluation(std::uint64_t const t_ns, So3SplineState const& spline,
-                                                              DerivativeOrder const order);
+    static So3SplineEvaluationData So3SplinePrepareEvaluation(Matrix3Kd const& control_points, double const u_i,
+                                                              std::uint64_t const delta_t_ns,
+                                                              DerivativeOrder const derivative);
 };
 
 }  // namespace reprojection::spline

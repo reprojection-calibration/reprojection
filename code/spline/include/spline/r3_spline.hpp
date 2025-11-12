@@ -18,7 +18,7 @@ namespace reprojection::spline {
 // and if there is out of bounds access because the control points are not valid we will get a segfault here.
 struct R3SplineEvaluation {
     template <typename T, DerivativeOrder D>
-    static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
+    static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3K<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
         static int constexpr derivative_order{static_cast<int>(D)};
         static VectorKd const du{polynomial_coefficients.row(derivative_order).transpose()};
 
