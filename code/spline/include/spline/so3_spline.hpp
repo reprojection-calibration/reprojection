@@ -61,7 +61,6 @@ struct So3SplineEvaluation {
             weights[j] = weight_j;
         }
 
-        // TODO(Jack): Add type def for Vector3<T> and mat
         Vector3<T> rotation{Vector3<T>::Zero()};
         Vector3<T> velocity{Vector3<T>::Zero()};
         Vector3<T> acceleration{Vector3<T>::Zero()};
