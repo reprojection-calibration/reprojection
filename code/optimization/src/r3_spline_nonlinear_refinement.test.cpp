@@ -49,45 +49,57 @@ using namespace reprojection;
 
 double Squared(double const x) { return x * x; }
 
-TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
+struct R3Measurement {
+    Vector3d r3;
+    std::uint64_t t_ns;
+    spline::DerivativeOrder type;
+};
+
+std::tuple<spline::R3SplineState, std::vector<R3Measurement>> R3SplineOptimizationTestData() {
+    // Build spline, we will generate our fake measurements from this, and later add noise to the control points to
+    // simulate a noisy initialization.
+    std::uint64_t const t0_ns{100};
     std::uint64_t const delta_t_ns{50};
     spline::R3SplineState gt_r3_spline{100, delta_t_ns};
     for (auto const& x : std::vector<double>{-2, -1, -0.5, 0.5, 1, 2}) {
         gt_r3_spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
 
-    // Make a copy and add noise so the optimization has to do some work :)
-    spline::R3SplineState initialization{gt_r3_spline};
-    for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
-        initialization.control_points[i].array() += 0.1 * i;
-    }
+    std::vector<R3Measurement> measurements;
 
-    optimization::R3SplineProblemHandler handler{initialization};
-
-    // add one position constraint - otherwise it is not possible to converge!!!!
-    auto const position_i{EvaluateR3(100, gt_r3_spline, spline::DerivativeOrder::Null)};
-    if (not position_i.has_value()) {
-        std::cout << "Bad spline eval! " << std::endl;
-        exit(1);
-    }
-    bool success{handler.AddConstraint(100, position_i.value(), spline::DerivativeOrder::Null)};
-    ASSERT_TRUE(success);
+    // NOTE(Jack): If we do not have any position constraints, and ony velocity or acceleration constraint the
+    // optimization will wander aimlessly because the derivatives are the same under any constant offset. Thefore we add
+    // one position constraint here. In future problems we might achieve this same thing by settings the first value to
+    // zero, of simply fixing it to something.
+    auto const position_i{EvaluateR3(t0_ns, gt_r3_spline, spline::DerivativeOrder::Null)};
+    measurements.push_back(R3Measurement{position_i.value(), t0_ns, spline::DerivativeOrder::Null});
 
     for (size_t i{0}; i < 3 * delta_t_ns; ++i) {
         std::uint64_t const t_i{100 + i};
 
-        // Create fake measurement data by evaluating the gt spline
         auto const velocity_i{EvaluateR3(t_i, gt_r3_spline, spline::DerivativeOrder::First)};
-        auto const acceleration_i{EvaluateR3(t_i, gt_r3_spline, spline::DerivativeOrder::Second)};
-        if (not velocity_i.has_value() or not acceleration_i.has_value()) {
-            std::cout << "Bad spline eval! " << i << std::endl;
-            continue;
-        }
+        measurements.push_back(R3Measurement{velocity_i.value(), t_i, spline::DerivativeOrder::First});
 
-        success = handler.AddConstraint(t_i, velocity_i.value(), spline::DerivativeOrder::First);
-        ASSERT_TRUE(success);
-        success = handler.AddConstraint(t_i, acceleration_i.value(), spline::DerivativeOrder::Second);
-        ASSERT_TRUE(success);
+        auto const acceleration_i{EvaluateR3(t_i, gt_r3_spline, spline::DerivativeOrder::Second)};
+        measurements.push_back(R3Measurement{acceleration_i.value(), t_i, spline::DerivativeOrder::Second});
+    }
+
+    return {gt_r3_spline, measurements};
+}
+
+TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
+    auto const [gt_spline, simulated_measurements]{R3SplineOptimizationTestData()};
+
+    // Make a copy and add noise so the optimization has to do some work :)
+    spline::R3SplineState initialization{gt_spline};
+    for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
+        initialization.control_points[i].array() += 0.2 * i;
+    }
+
+    optimization::R3SplineProblemHandler handler{initialization};
+    for (auto const& measurement : simulated_measurements) {
+        bool const success{handler.AddConstraint(measurement.t_ns, measurement.r3, measurement.type)};
+        EXPECT_TRUE(success);
     }
 
     ceres::Solver::Options options;
@@ -98,6 +110,6 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
 
     spline::R3SplineState const optimized_spline{handler.GetSpline()};
     for (size_t i{0}; i < std::size(optimized_spline.control_points); ++i) {
-        EXPECT_TRUE(optimized_spline.control_points[i].isApprox(gt_r3_spline.control_points[i], 1e-6));
+        EXPECT_TRUE(optimized_spline.control_points[i].isApprox(gt_spline.control_points[i], 1e-6));
     }
 }
