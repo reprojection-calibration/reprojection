@@ -43,7 +43,7 @@ std::tuple<spline::R3SplineState, std::vector<R3Measurement>> R3SplineOptimizati
     return {spline, measurements};
 }
 
-TEST(OptimizationR3SplineNonlinearRefinement, TestXxx) {
+TEST(OptimizationR3SplineNonlinearRefinement, TestNoisyR3SplineNonlinearRefinement) {
     auto const [gt_spline, simulated_measurements]{R3SplineOptimizationTestData()};
 
     // Make a copy and add noise so the optimization has to do some work :)
