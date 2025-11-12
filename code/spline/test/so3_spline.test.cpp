@@ -11,17 +11,17 @@ using namespace reprojection;
 
 TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
     spline::So3SplineState so3_spline{100, 5};
-    EXPECT_EQ(spline::So3SplineEvaluation::Evaluate(115, so3_spline), std::nullopt);
+    EXPECT_EQ(spline::EvaluateSo3(115, so3_spline), std::nullopt);
 
     for (int i{0}; i < spline::constants::order; ++i) {
         so3_spline.control_points.push_back(Vector3d::Zero());
     }
 
-    EXPECT_NE(spline::So3SplineEvaluation::Evaluate(100, so3_spline), std::nullopt);
-    EXPECT_EQ(spline::So3SplineEvaluation::Evaluate(105, so3_spline), std::nullopt);
+    EXPECT_NE(spline::EvaluateSo3(100, so3_spline), std::nullopt);
+    EXPECT_EQ(spline::EvaluateSo3(105, so3_spline), std::nullopt);
 
     so3_spline.control_points.push_back(Vector3d::Zero());
-    EXPECT_NE(spline::So3SplineEvaluation::Evaluate(105, so3_spline), std::nullopt);
+    EXPECT_NE(spline::EvaluateSo3(105, so3_spline), std::nullopt);
 }
 
 spline::So3SplineState BuildTestSpline() {
@@ -44,11 +44,11 @@ TEST(SplineSo3Spline, TestEvaluate) {
 
     // Heuristic test as we have no theoretical testing strategy at this time.
     for (int i{0}; i < static_cast<int>(spline.time_handler.delta_t_ns_); ++i) {
-        auto const p_i{spline::So3SplineEvaluation::Evaluate(100 + i, spline)};
+        auto const p_i{spline::EvaluateSo3(100 + i, spline)};
         ASSERT_TRUE(p_i.has_value());
     }
 
-    auto const p_0{spline::So3SplineEvaluation::Evaluate(100, spline)};
+    auto const p_0{spline::EvaluateSo3(100, spline)};
     // TODO(Jack): Update to just check the vector. Current value comes from when the evaluate method returned a
     // rotation matrix.
     EXPECT_FLOAT_EQ(geometry::Exp(p_0.value()).diagonal().sum(),
@@ -60,10 +60,10 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
     spline::So3SplineState const spline{BuildTestSpline()};
 
     // RANDOM HEURISTIC TESTS!
-    Vector3d const v0{spline::So3SplineEvaluation::EvaluateVelocity(100, spline).value()};
+    Vector3d const v0{spline::EvaluateSo3(100, spline, spline::DerivativeOrder::First).value()};
     EXPECT_TRUE(v0.isApproxToConstant(0.03));
 
-    Vector3d const v4{spline::So3SplineEvaluation::EvaluateVelocity(104, spline).value()};
+    Vector3d const v4{spline::EvaluateSo3(104, spline, spline::DerivativeOrder::First).value()};
     EXPECT_TRUE(v4.isApproxToConstant(0.046));
 }
 
@@ -72,9 +72,9 @@ TEST(SplineSo3Spline, TestEvaluateAcceleration) {
     spline::So3SplineState const spline{BuildTestSpline()};
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)
-    Vector3d const v0{spline::So3SplineEvaluation::EvaluateAcceleration(100, spline).value()};
+    Vector3d const v0{spline::EvaluateSo3(100, spline, spline::DerivativeOrder::Second).value()};
     EXPECT_TRUE(v0.isApproxToConstant(0.004));
 
-    Vector3d const v4{spline::So3SplineEvaluation::EvaluateAcceleration(104, spline).value()};
+    Vector3d const v4{spline::EvaluateSo3(104, spline, spline::DerivativeOrder::Second).value()};
     EXPECT_TRUE(v4.isApproxToConstant(0.004));
 }

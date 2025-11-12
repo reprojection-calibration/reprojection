@@ -10,6 +10,25 @@
 
 namespace reprojection::spline {
 
+std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState const& spline,
+                                    DerivativeOrder const derivative) {
+    auto const normalized_position{spline.time_handler.SplinePosition(t_ns, std::size(spline.control_points))};
+    if (not normalized_position.has_value()) {
+        return std::nullopt;
+    }
+    // auto const [u_i, i]{normalized_position.value()};
+
+    if (derivative == DerivativeOrder::Null) {
+        return So3SplineEvaluation::xEvaluate(t_ns, spline);
+    } else if (derivative == DerivativeOrder::First) {
+        return So3SplineEvaluation::xEvaluateVelocity(t_ns, spline);
+    } else if (derivative == DerivativeOrder::Second) {
+        return So3SplineEvaluation::xEvaluateAcceleration(t_ns, spline);
+    } else {
+        throw std::runtime_error("Requested unknown derivative order from EvaluateSo3()");  // LCOV_EXCL_LINE
+    }
+}
+
 // WARN(Jack): Will not check that the control_points are valid to index! Depends on being called securely with an
 // index from the time handler.
 std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Vector3d> const& control_points,
@@ -23,7 +42,7 @@ std::array<Eigen::Vector3d, constants::degree> DeltaPhi(std::vector<Vector3d> co
 }
 
 // TODO(Jack): Return so3?
-std::optional<Vector3d> So3SplineEvaluation::Evaluate(std::uint64_t const t_ns, So3SplineState const& spline) {
+std::optional<Vector3d> So3SplineEvaluation::xEvaluate(std::uint64_t const t_ns, So3SplineState const& spline) {
     auto const eval_data{So3SplineEvaluation::So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Null)};
     if (not eval_data) {
         return std::nullopt;
@@ -40,7 +59,7 @@ std::optional<Vector3d> So3SplineEvaluation::Evaluate(std::uint64_t const t_ns, 
     return geometry::Log(rotation);
 }
 
-std::optional<Vector3d> So3SplineEvaluation::EvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline) {
+std::optional<Vector3d> So3SplineEvaluation::xEvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline) {
     auto const eval_data{So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::First)};
     if (not eval_data) {
         return std::nullopt;
@@ -60,7 +79,7 @@ std::optional<Vector3d> So3SplineEvaluation::EvaluateVelocity(std::uint64_t cons
     return velocity;
 }
 
-std::optional<Vector3d> So3SplineEvaluation::EvaluateAcceleration(std::uint64_t const t_ns,
+std::optional<Vector3d> So3SplineEvaluation::xEvaluateAcceleration(std::uint64_t const t_ns,
                                                                   So3SplineState const& spline) {
     auto const eval_data{So3SplinePrepareEvaluation(t_ns, spline, DerivativeOrder::Second)};
     if (not eval_data) {

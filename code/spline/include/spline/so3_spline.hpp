@@ -19,6 +19,10 @@ struct So3SplineState {
     std::vector<Vector3d> control_points;
 };
 
+// TODO(Jack): Can we just name it Evaluate and depend on function overloading depending on the args?
+std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState const& spline,
+                                    DerivativeOrder const derivative = DerivativeOrder::Null);
+
 struct So3SplineEvaluationData {
     int i;
     std::array<Vector3d, constants::degree> delta_phis;
@@ -26,11 +30,11 @@ struct So3SplineEvaluationData {
 };
 
 struct So3SplineEvaluation {
-    static std::optional<Vector3d> Evaluate(std::uint64_t const t_ns, So3SplineState const& spline);
+    static std::optional<Vector3d> xEvaluate(std::uint64_t const t_ns, So3SplineState const& spline);
 
-    static std::optional<Vector3d> EvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline);
+    static std::optional<Vector3d> xEvaluateVelocity(std::uint64_t const t_ns, So3SplineState const& spline);
 
-    static std::optional<Vector3d> EvaluateAcceleration(std::uint64_t const t_ns, So3SplineState const& spline);
+    static std::optional<Vector3d> xEvaluateAcceleration(std::uint64_t const t_ns, So3SplineState const& spline);
 
     static inline MatrixKK const M{CumulativeBlendingMatrix(constants::order)};
 
