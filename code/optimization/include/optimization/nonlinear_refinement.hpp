@@ -24,6 +24,8 @@ struct R3Measurement {
     spline::DerivativeOrder type;
 };
 
+// NOTE(Jack): At this time it is still not entirely clear if we need to solve this type of problem at all, however this
+// code serves as a learning base and step on the way to full pose spline optimization.
 // TODO(Jack): Do we really need a class here or can we make it a pass through function? There is no very strong reason
 // for state expect that maybe we can better handle invalid constraint input. But that is not clear yet.
 class R3SplineNonlinearRefinement {

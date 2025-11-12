@@ -9,6 +9,12 @@
 
 namespace reprojection::spline {
 
+struct SO3SplineEvaluationData {
+    int i;
+    std::array<Vector3d, constants::degree> delta_phis;
+    std::vector<VectorKd> weights;
+};
+
 class So3Spline {
    public:
     So3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns);
@@ -26,6 +32,9 @@ class So3Spline {
     std::vector<Matrix3d> control_points_;
 
    private:
+    std::optional<SO3SplineEvaluationData> SO3SplinePrepareEvaluation(std::uint64_t const t_ns,
+                                                                      DerivativeOrder const order) const;
+
     TimeHandler time_handler_;
     MatrixKK const M_;
 };

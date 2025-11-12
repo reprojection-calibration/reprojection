@@ -19,7 +19,7 @@ namespace reprojection::spline {
 struct R3SplineEvaluation {
     template <typename T, DerivativeOrder D>
     static Eigen::Matrix<T, 3, 1> Evaluate(Matrix3k<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
-        static int const derivative_order{static_cast<int>(D)};
+        static int constexpr derivative_order{static_cast<int>(D)};
         static VectorKd const du{polynomial_coefficients.row(derivative_order).transpose()};
 
         // TODO(Jack): Naming, does du and t make any sense here?
