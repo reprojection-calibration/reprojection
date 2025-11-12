@@ -1,9 +1,8 @@
-#include "optimization/nonlinear_refinement.hpp"
-
 #include <gtest/gtest.h>
 
 #include "../../testing_mocks/src/noise_generation.hpp"
 #include "geometry/lie.hpp"
+#include "optimization/nonlinear_refinement.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "types/calibration_types.hpp"
 
@@ -17,7 +16,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
     int const num_frames{20};
     std::vector<Frame> const frames{generator.GenerateBatch(num_frames)};
 
-    auto const [poses_opt, K, final_cost]{optimization::CameraNonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
+    auto const [poses_opt, K,
+                final_cost]{optimization::CameraNonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
 
     for (size_t i{0}; i < std::size(poses_opt); ++i) {
         auto const pose_opt_i{poses_opt[i]};
@@ -49,7 +49,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
 
     // Given a perfect bundle (i.e. no noise in the pixels or points) but noisy initial pose, we then get perfect poses
     // and intrinsic back.
-    auto const [poses_opt, K, final_cost]{optimization::CameraNonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
+    auto const [poses_opt, K,
+                final_cost]{optimization::CameraNonlinearRefinement(frames, CameraModel::Pinhole, intrinsics)};
     for (size_t i{0}; i < std::size(poses_opt); ++i) {
         auto const pose_opt_i{poses_opt[i]};
         auto const pose_gt_i{gt_poses[i]};

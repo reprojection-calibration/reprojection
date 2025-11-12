@@ -7,7 +7,7 @@
 namespace reprojection::spline {
 
 std::optional<Vector3d> EvaluateR3(std::uint64_t const t_ns, R3SplineState const& spline,
-                                 DerivativeOrder const derivative) {
+                                   DerivativeOrder const derivative) {
     auto const normalized_position{spline.time_handler.SplinePosition(t_ns, std::size(spline.control_points))};
     if (not normalized_position.has_value()) {
         return std::nullopt;
