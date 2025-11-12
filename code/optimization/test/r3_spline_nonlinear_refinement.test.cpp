@@ -58,8 +58,11 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestNoisyR3SplineNonlinearRefineme
         EXPECT_TRUE(success);  // All simulated measurements come from valid time range
     }
 
-    ceres::Solver::Summary const summary{handler.Solve()};
+    // Check that we reject a bad measurement point outside the spline domain (bad time)
+    bool const success{handler.AddConstraint({66666, {0, 0, 0}, spline::DerivativeOrder::Null})};
+    EXPECT_FALSE(success);
 
+    ceres::Solver::Summary const summary{handler.Solve()};
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     spline::R3SplineState const optimized_spline{handler.GetSpline()};
