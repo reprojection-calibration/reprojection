@@ -42,7 +42,7 @@ spline::So3SplineState BuildTestSpline() {
 TEST(SplineSo3Spline, TestEvaluate) {
     spline::So3SplineState const spline{BuildTestSpline()};
 
-    // Heuristic test as we have no theoretical testing strategy at this time.
+    // Check that all timestamps from 100 to 104 evaluate without error
     for (int i{0}; i < static_cast<int>(spline.time_handler.delta_t_ns_); ++i) {
         auto const p_i{spline::EvaluateSo3(100 + i, spline)};
         ASSERT_TRUE(p_i.has_value());
@@ -53,7 +53,7 @@ TEST(SplineSo3Spline, TestEvaluate) {
         0.11666666666666659));  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
                                 // that we can detect changes to the implementation quickly (hopefully. )
 
-    Vector3d const p4{spline::EvaluateSo3(104, spline)->eval()};
+    Vector3d const p4{spline::EvaluateSo3(104, spline).value()};
     EXPECT_TRUE(p4.isApproxToConstant(0.26866666666666655));
 }
 
