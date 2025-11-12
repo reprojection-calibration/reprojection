@@ -49,7 +49,7 @@ struct So3SplineEvaluation {
     // allows us to generate all three version of the evaluate function from the same single source code. Please read
     // online to see how "if constexpr" works, it is not the right place to explain it here.
     template <typename T, DerivativeOrder D>
-    static Vector3d Evaluate(Matrix3K<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
+    static Eigen::Vector3<T> Evaluate(Matrix3K<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
         std::array<Eigen::Vector3<T>, constants::degree> const delta_phis{DeltaPhi(P)};
 
         int constexpr order{static_cast<int>(D)};
@@ -61,25 +61,26 @@ struct So3SplineEvaluation {
             weights[j] = weight_j;
         }
 
-        Vector3d rotation{Vector3d::Zero()};
-        Vector3d velocity{Vector3d::Zero()};
-        Vector3d acceleration{Vector3d::Zero()};
+        // TODO(Jack): Add type def for Eigen::Vector3<T> and mat
+        Eigen::Vector3<T> rotation{Eigen::Vector3<T>::Zero()};
+        Eigen::Vector3<T> velocity{Eigen::Vector3<T>::Zero()};
+        Eigen::Vector3<T> acceleration{Eigen::Vector3<T>::Zero()};
 
         for (int j{0}; j < constants::degree; ++j) {
             VectorKd const& weight0{weights[0]};
-            Matrix3d const delta_R_j{geometry::Exp<T>((weight0[j + 1] * delta_phis[j]).eval())};
+            Eigen::Matrix3<T> const delta_R_j{geometry::Exp<T>(weight0[j + 1] * delta_phis[j])};
             rotation = geometry::Log<T>(delta_R_j * geometry::Exp<T>(rotation));
 
             if constexpr (D == DerivativeOrder::First or D == DerivativeOrder::Second) {
-                Matrix3d const inverse_delta_R_j{delta_R_j.inverse()};
+                Eigen::Matrix3<T> const inverse_delta_R_j{delta_R_j.inverse()};
 
                 VectorKd const& weight1{weights[1]};
-                Vector3d const delta_v_j{weight1[j + 1] * delta_phis[j]};
+                Eigen::Vector3<T> const delta_v_j{weight1[j + 1] * delta_phis[j]};
                 velocity = delta_v_j + (inverse_delta_R_j * velocity);
 
                 if constexpr (D == DerivativeOrder::Second) {
                     VectorKd const& weight2{weights[2]};
-                    Vector3d const delta_a_j{weight2[j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
+                    Eigen::Vector3<T> const delta_a_j{weight2[j + 1] * delta_phis[j] + velocity.cross(delta_v_j)};
                     acceleration = delta_a_j + (inverse_delta_R_j * acceleration);
                 }
             }
