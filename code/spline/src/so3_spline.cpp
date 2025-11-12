@@ -31,6 +31,4 @@ std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState con
     }
 }
 
-
-
 }  // namespace reprojection::spline
