@@ -65,8 +65,6 @@ R3SplineProblemHandler::R3SplineProblemHandler(spline::R3SplineState const& spli
     return true;
 }
 
-// TODO(Jack): There is no protection which would prevent the user from calling this on an invalid problem (ex. they
-// forgot to add any data). We need to codify the real long term usage strategy here, this is not the final answer!
 ceres::Solver::Summary R3SplineProblemHandler::Solve() {
     ceres::Solver::Options options;
     ceres::Solver::Summary summary;

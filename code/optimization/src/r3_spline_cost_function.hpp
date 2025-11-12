@@ -1,7 +1,7 @@
 #include <ceres/ceres.h>
 
-#include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
+#include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
@@ -57,6 +57,8 @@ class R3SplineCostFunction_T {
         return true;
     }
 
+    // NOTE(Jack): At this point we are really hardcoding that we are dealing with cubic splines here! The code can now
+    // not be changed to any other spline degree without major rework.
     static ceres::CostFunction* Create(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns) {
         return new ceres::AutoDiffCostFunction<R3SplineCostFunction_T, 3, 3, 3, 3, 3>(
             new R3SplineCostFunction_T(r3, u_i, delta_t_ns));

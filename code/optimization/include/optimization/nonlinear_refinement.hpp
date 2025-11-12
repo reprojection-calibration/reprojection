@@ -34,9 +34,11 @@ class R3SplineProblemHandler {
     // conditions when adding constraints.
     [[nodiscard]] bool AddConstraint(R3Measurement const& constraint);
 
-    spline::R3SplineState GetSpline() const;
-
+    // TODO(Jack): There is no protection which would prevent the user from calling this on an invalid problem (ex. they
+    // forgot to add any data). We need to codify the real long term usage strategy here, this is not the final answer!
     ceres::Solver::Summary Solve();
+
+    spline::R3SplineState GetSpline() const;
 
    private:
     spline::R3SplineState spline_;  // Stores the state we are optimizing

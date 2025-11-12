@@ -6,8 +6,7 @@
 
 using namespace reprojection;
 
-// COPY PASTED!!!!
-double Squared(double const x) { return x * x; }
+double Squared(double const x) { return x * x; }  // COPY PASTED!!!!
 
 // NOTE(Jack): If you want to understand more about the ground truth values of position, velocity, and acceleration
 // please see the "Spline_r3Spline, TestTemplatedEvaluateOnParabola" test :)
@@ -63,7 +62,7 @@ TEST(OptimizationR3SplineCostFunction, TestR3SplineCostFunctionCreate_T) {
     ceres::CostFunction const* const cost_function{
         optimization::R3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns)};
 
-    // Four r3 control points and a r3 residual
+    // Four r3 control point parameter blocks of size three and a r3 residual
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 4);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], 3);
