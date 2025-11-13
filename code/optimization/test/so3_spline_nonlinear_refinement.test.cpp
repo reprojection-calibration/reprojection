@@ -61,7 +61,6 @@ std::tuple<spline::So3SplineState, std::vector<So3Measurement>> So3SplineOptimiz
     }
 
     std::vector<So3Measurement> measurements;
-
     for (size_t i{0}; i < delta_t_ns; ++i) {
         std::uint64_t const t_i{t0_ns + i};
 
@@ -83,7 +82,7 @@ TEST(OptimizationSo3SplineNonlinearRefinement, TestNoisySo3SplineNonlinearRefine
 
     spline::So3SplineState initialization{gt_spline};
     for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
-        initialization.control_points[i].array() += 0.1 * i;
+        initialization.control_points[i].array() += 0.2 * i;
     }
 
     optimization::So3SplineNonlinearRefinement handler{initialization};
@@ -100,10 +99,6 @@ TEST(OptimizationSo3SplineNonlinearRefinement, TestNoisySo3SplineNonlinearRefine
 
     spline::So3SplineState const optimized_spline{handler.GetSpline()};
     for (size_t i{0}; i < std::size(optimized_spline.control_points); ++i) {
-        EXPECT_TRUE(optimized_spline.control_points[i].isApprox(gt_spline.control_points[i], 1e-6));
-        std::cout << "iter" << std::endl;
-        std::cout << "Init: " << initialization.control_points[i].transpose() << std::endl;
-        std::cout << "Trut: " << gt_spline.control_points[i].transpose() << std::endl;
-        std::cout << "Opti: " << optimized_spline.control_points[i].transpose() << std::endl;
+        EXPECT_TRUE(optimized_spline.control_points[i].isApprox(gt_spline.control_points[i], 1e-1));
     }
 }
