@@ -12,7 +12,7 @@ Isometry3d Exp(Vector6d const& se3);
 
 Vector6d Log(Isometry3d const& SE3);
 
-// NOTE(Jack): We use ceres helper methods here because they are autodiff compliant by default.
+// NOTE(Jack): We use ceres here because the methods are autodiff compatible by default.
 template <typename T>
 Matrix3<T> Exp(Eigen::Vector3<T> const& so3) {
     T R[9];
