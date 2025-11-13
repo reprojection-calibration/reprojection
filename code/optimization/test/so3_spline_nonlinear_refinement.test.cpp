@@ -11,7 +11,7 @@ class So3SplineNonlinearRefinement {
    public:
     explicit So3SplineNonlinearRefinement(spline::So3SplineState const& spline) : spline_{spline} {}
 
-    [[nodiscard]] bool AddConstraint(R3Measurement const& constraint) {
+    [[nodiscard]] bool AddConstraint(So3Measurement const& constraint) {
         auto const normalized_position{
             spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
         if (not normalized_position.has_value()) {
@@ -20,7 +20,7 @@ class So3SplineNonlinearRefinement {
         auto const [u_i, i]{normalized_position.value()};
 
         ceres::CostFunction* const cost_function{optimization::CreateSo3SplineCostFunction(
-            constraint.type, constraint.r3, u_i, spline_.time_handler.delta_t_ns_)};
+            constraint.type, constraint.so3, u_i, spline_.time_handler.delta_t_ns_)};
 
         problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
                                   spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),
@@ -50,9 +50,9 @@ using namespace reprojection;
 
 double Squared(double const x) { return x * x; }  // COPY AND PASTED
 
-using R3Measurement = optimization::R3Measurement;
+using So3Measurement = optimization::So3Measurement;
 
-std::tuple<spline::So3SplineState, std::vector<R3Measurement>> So3SplineOptimizationTestData() {
+std::tuple<spline::So3SplineState, std::vector<So3Measurement>> So3SplineOptimizationTestData() {
     std::uint64_t const t0_ns{100};
     std::uint64_t const delta_t_ns{50};
     spline::So3SplineState spline{100, delta_t_ns};
@@ -60,19 +60,19 @@ std::tuple<spline::So3SplineState, std::vector<R3Measurement>> So3SplineOptimiza
         spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
 
-    std::vector<R3Measurement> measurements;
+    std::vector<So3Measurement> measurements;
 
     auto const position_i{EvaluateSo3(t0_ns, spline, spline::DerivativeOrder::Null)};
-    measurements.push_back(R3Measurement{t0_ns, position_i.value(), spline::DerivativeOrder::Null});
+    measurements.push_back(So3Measurement{t0_ns, position_i.value(), spline::DerivativeOrder::Null});
 
     for (size_t i{0}; i < 3 * delta_t_ns; ++i) {
         std::uint64_t const t_i{100 + i};
 
         auto const velocity_i{EvaluateSo3(t_i, spline, spline::DerivativeOrder::First)};
-        measurements.push_back(R3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
+        measurements.push_back(So3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
 
         auto const acceleration_i{EvaluateSo3(t_i, spline, spline::DerivativeOrder::Second)};
-        measurements.push_back(R3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
+        measurements.push_back(So3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
     }
 
     return {spline, measurements};

@@ -24,6 +24,12 @@ struct R3Measurement {
     spline::DerivativeOrder type;
 };
 
+struct So3Measurement {
+    std::uint64_t t_ns;
+    Vector3d so3;
+    spline::DerivativeOrder type;
+};
+
 // NOTE(Jack): At this time it is still not entirely clear if we need to solve this type of problem at all, however this
 // code serves as a learning base and step on the way to full pose spline optimization.
 // TODO(Jack): Do we really need a class here or can we make it a pass through function? There is no very strong reason
