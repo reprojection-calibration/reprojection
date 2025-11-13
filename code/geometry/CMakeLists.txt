@@ -1,11 +1,13 @@
 set(LIBRARY_NAME "geometry")
 
+find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
         src/lie.cpp
 )
 set(LINK_LIBRARIES
+        Ceres::ceres
         Eigen3::Eigen
         types
 )
