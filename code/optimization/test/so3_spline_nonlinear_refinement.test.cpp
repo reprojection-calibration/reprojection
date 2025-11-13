@@ -1,50 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "optimization/nonlinear_refinement.hpp"
-#include "so3_spline_cost_function.hpp"
 #include "spline/so3_spline.hpp"
 #include "types/eigen_types.hpp"
-
-namespace reprojection::optimization {
-
-class So3SplineNonlinearRefinement {
-   public:
-    explicit So3SplineNonlinearRefinement(spline::So3SplineState const& spline) : spline_{spline} {}
-
-    [[nodiscard]] bool AddConstraint(So3Measurement const& constraint) {
-        auto const normalized_position{
-            spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
-        if (not normalized_position.has_value()) {
-            return false;
-        }
-        auto const [u_i, i]{normalized_position.value()};
-
-        ceres::CostFunction* const cost_function{optimization::CreateSo3SplineCostFunction(
-            constraint.type, constraint.so3, u_i, spline_.time_handler.delta_t_ns_)};
-
-        problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
-                                  spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),
-                                  spline_.control_points[i + 3].data());
-
-        return true;
-    }
-
-    ceres::Solver::Summary Solve() {
-        ceres::Solver::Options options;
-        ceres::Solver::Summary summary;
-        ceres::Solve(options, &problem_, &summary);
-
-        return summary;
-    }
-
-    spline::So3SplineState GetSpline() const { return spline_; }
-
-   private:
-    spline::So3SplineState spline_;  // Stores the state we are optimizing
-    ceres::Problem problem_;
-};
-
-}  // namespace reprojection::optimization
 
 using namespace reprojection;
 

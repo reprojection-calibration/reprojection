@@ -5,7 +5,6 @@
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "types/eigen_types.hpp"
-#include "utilities_testing.hpp"
 
 using namespace reprojection;
 
