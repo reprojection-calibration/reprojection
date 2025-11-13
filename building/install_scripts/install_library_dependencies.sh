@@ -19,8 +19,16 @@ apt-get install --no-install-recommends --yes \
 rm --force --recursive /var/lib/apt/lists/*
 
 # Install ceres-solver from source
-
 wget http://ceres-solver.org/ceres-solver-2.2.0.tar.gz
+
+tar zxf ceres-solver-2.2.0.tar.gz
+mkdir ceres-bin
+cd ceres-bin
+# WARN(Jack): For building/developing/debugging we need debug symbols, but for a real release make sure to use Release!
+cmake ../ceres-solver-2.2.0 -DCMAKE_BUILD_TYPE=Debug
+make -j4
+make test
+make install
 
 # Install april tags from git repository
 git clone https://github.com/AprilRobotics/apriltag.git
