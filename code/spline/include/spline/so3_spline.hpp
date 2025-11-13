@@ -61,7 +61,7 @@ struct So3SplineEvaluation {
             weights[j] = weight_j;
         }
 
-        Vector3<T> rotation{Vector3<T>::Zero()};
+        Vector3<T> rotation{P.col(0)};
         Vector3<T> velocity{Vector3<T>::Zero()};
         Vector3<T> acceleration{Vector3<T>::Zero()};
 
