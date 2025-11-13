@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "spline/r3_spline.hpp"
+#include "spline/so3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -21,6 +22,12 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(s
 struct R3Measurement {
     std::uint64_t t_ns;
     Vector3d r3;
+    spline::DerivativeOrder type;
+};
+
+struct So3Measurement {
+    std::uint64_t t_ns;
+    Vector3d so3;
     spline::DerivativeOrder type;
 };
 
@@ -44,6 +51,21 @@ class R3SplineNonlinearRefinement {
 
    private:
     spline::R3SplineState spline_;  // Stores the state we are optimizing
+    ceres::Problem problem_;
+};
+
+class So3SplineNonlinearRefinement {
+   public:
+    explicit So3SplineNonlinearRefinement(spline::So3SplineState const& spline);
+
+    [[nodiscard]] bool AddConstraint(So3Measurement const& constraint);
+
+    ceres::Solver::Summary Solve();
+
+    spline::So3SplineState GetSpline() const;
+
+   private:
+    spline::So3SplineState spline_;  // Stores the state we are optimizing
     ceres::Problem problem_;
 };
 

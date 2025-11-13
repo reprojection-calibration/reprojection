@@ -11,6 +11,8 @@ double Squared(double const x) { return x * x; }  // COPY PASTED!!!!
 
 // Look in the so3 spline units test/r3 unit test to understand the testing values and philsophy.
 TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
+    // TODO(Jack): This should be/can be combined in a test fixture with the gradient checker test as the input data is
+    // practically the same.
     double const u_i{0.5};
     std::uint64_t const delta_t_ns{1};
 
@@ -27,7 +29,7 @@ TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
     Vector3d residual;
 
     // Position
-    Array3d const position{1.0319672855968482, -0.40184576778254827, -0.89024132986881044};
+    Array3d const position{0.1460482362445171, 0.3755842237411095, 0.39702710822143839};
     ceres::CostFunction* cost_function{
         optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
     bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};
@@ -54,10 +56,51 @@ TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
     EXPECT_TRUE(residual.isZero());
 }
 
+// TODO(Jack): Do gradient checking for all other autodiff cost functions
+// TODO(Jack): Use test fixture or data creation function!
+TEST(OptimizationSo3SplineCostFunction, TestSo3SplineGradients) {
+    Vector3d const r3{0, 0, 0};
+    double const u_i{0.5};
+    std::uint64_t const delta_t_ns{1};
+
+    spline::Matrix3Kd const P{{-1, -0.5, 0.5, 1},
+                              {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
+                              {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
+    std::vector<double const*> parameter_blocks;
+    parameter_blocks.push_back(P.col(0).data());
+    parameter_blocks.push_back(P.col(1).data());
+    parameter_blocks.push_back(P.col(2).data());
+    parameter_blocks.push_back(P.col(3).data());
+
+    ceres::NumericDiffOptions const numeric_diff_options;
+    ceres::GradientChecker::ProbeResults results;
+
+    ceres::CostFunction const* const position{
+        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Null, r3, u_i, delta_t_ns)};
+    ceres::GradientChecker const position_gradient_checker(position, nullptr, numeric_diff_options);
+    bool const good_position_gradient{position_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
+    delete position;
+    EXPECT_TRUE(good_position_gradient) << results.error_log;
+
+    ceres::CostFunction const* const velocity{
+        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::First, r3, u_i, delta_t_ns)};
+    ceres::GradientChecker const velocity_gradient_checker(velocity, nullptr, numeric_diff_options);
+    bool const good_velocity_gradient{velocity_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
+    delete velocity;
+    EXPECT_TRUE(good_velocity_gradient) << results.error_log;
+
+    ceres::CostFunction const* const acceleration{
+        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Second, r3, u_i, delta_t_ns)};
+    ceres::GradientChecker const acceleration_gradient_checker(acceleration, nullptr, numeric_diff_options);
+    bool const good_acceleration_gradient{acceleration_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
+    delete acceleration;
+    EXPECT_TRUE(good_acceleration_gradient) << results.error_log;
+}
+
 TEST(OptimizationSo3SplineCostFunction, TestSo3SplineCostFunctionCreate_T) {
     Vector3d const so3{0, 0, 0};
-    double const u_i{0.2};
-    std::uint64_t const delta_t_ns{5};
+    double const u_i{0.5};
+    std::uint64_t const delta_t_ns{1};
 
     ceres::CostFunction const* const cost_function{
         optimization::So3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(so3, u_i, delta_t_ns)};

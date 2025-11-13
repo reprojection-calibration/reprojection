@@ -5,7 +5,6 @@
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "types/eigen_types.hpp"
-#include "utilities_testing.hpp"
 
 using namespace reprojection;
 
@@ -95,7 +94,7 @@ TEST(SplineSo3Spline, TestTemplatedEvaluateOnParabola) {
 
     Vector3d const position{
         spline::So3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P1, u_middle, delta_t_ns)};
-    EXPECT_TRUE(position.isApprox(Vector3d{1.0319672855968482, -0.40184576778254827, -0.89024132986881044}));
+    EXPECT_TRUE(position.isApprox(Vector3d{0.1460482362445171, 0.3755842237411095, 0.39702710822143839}));
 
     Vector3d const velocity{
         spline::So3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::First>(P1, u_middle, delta_t_ns)};

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ceres/rotation.h>
+
 #include <vector>
 
 #include "types/eigen_types.hpp"
@@ -10,17 +12,21 @@ Isometry3d Exp(Vector6d const& se3);
 
 Vector6d Log(Isometry3d const& SE3);
 
+// NOTE(Jack): We use ceres here because the methods are autodiff compatible by default.
 template <typename T>
-Eigen::Matrix3<T> Exp(Eigen::Vector3<T> const& so3) {
-    Eigen::Matrix3<T> const SO3{Eigen::AngleAxis<T>(so3.norm(), so3.normalized()).toRotationMatrix()};
+Matrix3<T> Exp(Eigen::Vector3<T> const& so3) {
+    T R[9];
+    ceres::AngleAxisToRotationMatrix(so3.data(), R);
+
+    Eigen::Map<const Matrix3<T>> SO3(R);
 
     return SO3;
 }
 
 template <typename T>
-Eigen::Vector3<T> Log(Eigen::Matrix3<T> const& SO3) {
-    Eigen::AngleAxis<T> const rotation(SO3);
-    Eigen::Vector3<T> const so3{rotation.angle() * rotation.axis()};
+Eigen::Vector3<T> Log(Matrix3<T> const& SO3) {
+    Eigen::Vector3<T> so3;
+    ceres::RotationMatrixToAngleAxis(SO3.data(), so3.data());
 
     return so3;
 }

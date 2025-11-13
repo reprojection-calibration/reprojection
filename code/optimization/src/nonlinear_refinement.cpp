@@ -3,6 +3,7 @@
 #include "geometry/lie.hpp"
 #include "projection_cost_function.hpp"
 #include "r3_spline_cost_function.hpp"
+#include "so3_spline_cost_function.hpp"
 #include "spline/r3_spline.hpp"
 
 namespace reprojection::optimization {
@@ -74,5 +75,35 @@ ceres::Solver::Summary R3SplineNonlinearRefinement::Solve() {
 }
 
 spline::R3SplineState R3SplineNonlinearRefinement::GetSpline() const { return spline_; }
+
+So3SplineNonlinearRefinement::So3SplineNonlinearRefinement(spline::So3SplineState const& spline) : spline_{spline} {}
+
+bool So3SplineNonlinearRefinement::AddConstraint(So3Measurement const& constraint) {
+    auto const normalized_position{
+        spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
+    if (not normalized_position.has_value()) {
+        return false;
+    }
+    auto const [u_i, i]{normalized_position.value()};
+
+    ceres::CostFunction* const cost_function{
+        CreateSo3SplineCostFunction(constraint.type, constraint.so3, u_i, spline_.time_handler.delta_t_ns_)};
+
+    problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
+                              spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),
+                              spline_.control_points[i + 3].data());
+
+    return true;
+}
+
+ceres::Solver::Summary So3SplineNonlinearRefinement::Solve() {
+    ceres::Solver::Options options;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem_, &summary);
+
+    return summary;
+}
+
+spline::So3SplineState So3SplineNonlinearRefinement::GetSpline() const { return spline_; }
 
 }  // namespace  reprojection::optimization
