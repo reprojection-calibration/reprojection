@@ -14,7 +14,7 @@ std::tuple<spline::R3SplineState, std::vector<R3Measurement>> R3SplineOptimizati
     // Build spline, we will generate our fake measurements from this for the optimization test.
     std::uint64_t const t0_ns{100};
     std::uint64_t const delta_t_ns{50};
-    spline::R3SplineState spline{100, delta_t_ns};
+    spline::R3SplineState spline{t0_ns, delta_t_ns};
     for (auto const& x : std::vector<double>{-2, -1, -0.5, 0.5, 1, 2}) {
         spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
@@ -31,7 +31,7 @@ std::tuple<spline::R3SplineState, std::vector<R3Measurement>> R3SplineOptimizati
     // For a third degree spline with 6 control points there are three valid time segments! With only four control
     // points there would only be one valid time segment.
     for (size_t i{0}; i < 3 * delta_t_ns; ++i) {
-        std::uint64_t const t_i{100 + i};
+        std::uint64_t const t_i{t0_ns + i};
 
         auto const velocity_i{EvaluateR3(t_i, spline, spline::DerivativeOrder::First)};
         measurements.push_back(R3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
