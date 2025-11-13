@@ -1,8 +1,9 @@
 #pragma once
 
+#include <ceres/rotation.h>
+
 #include <vector>
 
-#include "ceres/rotation.h"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::geometry {
