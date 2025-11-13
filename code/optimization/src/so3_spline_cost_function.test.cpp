@@ -29,7 +29,7 @@ TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
     Vector3d residual;
 
     // Position
-    Array3d const position{1.0319672855968482, -0.40184576778254827, -0.89024132986881044};
+    Array3d const position{0.1460482362445171, 0.3755842237411095, 0.39702710822143839};
     ceres::CostFunction* cost_function{
         optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
     bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};
