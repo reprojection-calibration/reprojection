@@ -7,7 +7,6 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): Can we use the se3 type here?
 // TODO(Jack): Are we sure that our convention for the top three being rotation and bottom three translation is
 // consistent across the project?
 // NOTE(Jack): We use Eigen::Ref here so we can pass both maps (in the PinholeCostFunction.operator()) and the direct
