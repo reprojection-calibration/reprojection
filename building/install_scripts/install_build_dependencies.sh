@@ -8,7 +8,8 @@ apt-get install --no-install-recommends --yes \
     ca-certificates \
     cmake \
     git \
-    ninja-build
+    ninja-build \
+    wget
 
 # Required for code coverage
 apt-get install --no-install-recommends --yes \

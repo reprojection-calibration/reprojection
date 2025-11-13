@@ -16,6 +16,10 @@ ARG INSTALL_LIBRARY_DEPENDENCIES=building/install_scripts/install_library_depend
 RUN --mount=type=bind,source=${INSTALL_LIBRARY_DEPENDENCIES},target=/temporary/${INSTALL_LIBRARY_DEPENDENCIES} \
     /temporary/${INSTALL_LIBRARY_DEPENDENCIES}
 
+ARG INSTALLXXX=building/install_scripts/installxxx.sh
+RUN --mount=type=bind,source=${INSTALLXXX},target=/temporary/${INSTALLXXX} \
+    /temporary/${INSTALLXXX}
+
 
 FROM configuration-stage AS code-checks-stage
 

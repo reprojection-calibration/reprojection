@@ -4,12 +4,23 @@ set -eoux pipefail
 
 apt-get update
 apt-get install --no-install-recommends --yes \
-    libceres-dev \
     libeigen3-dev \
     libopencv-dev \
     libyaml-cpp-dev
 
+# Required for ceres-solver source build
+apt-get update
+apt-get install --no-install-recommends --yes \
+    libatlas-base-dev \
+    libgflags-dev \
+    libgoogle-glog-dev \
+    libsuitesparse-dev
+
 rm --force --recursive /var/lib/apt/lists/*
+
+# Install ceres-solver from source
+
+wget http://ceres-solver.org/ceres-solver-2.2.0.tar.gz
 
 # Install april tags from git repository
 git clone https://github.com/AprilRobotics/apriltag.git
