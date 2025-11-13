@@ -11,6 +11,8 @@ double Squared(double const x) { return x * x; }  // COPY PASTED!!!!
 
 // Look in the so3 spline units test/r3 unit test to understand the testing values and philsophy.
 TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
+    // TODO(Jack): This should be/can be combined in a test fixture with the gradient checker test as the input data is
+    // practically the same.
     double const u_i{0.5};
     std::uint64_t const delta_t_ns{1};
 
@@ -88,7 +90,8 @@ TEST(OptimizationSo3SplineCostFunction, TestSo3SplineAutodiffEquivalence) {
 
     ceres::CostFunction const* const acceleration_cost_function{
         optimization::So3SplineCostFunction_T<spline::DerivativeOrder::Second>::Create(r3, u_i, delta_t_ns)};
-    ceres::GradientChecker const acceleration_gradient_checker(acceleration_cost_function, nullptr, numeric_diff_options);
+    ceres::GradientChecker const acceleration_gradient_checker(acceleration_cost_function, nullptr,
+                                                               numeric_diff_options);
 
     bool const good_acceleration_gradient{acceleration_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
     delete acceleration_cost_function;
