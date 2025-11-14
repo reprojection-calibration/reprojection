@@ -14,7 +14,9 @@ template <typename T_Model, spline::DerivativeOrder D>
 class SplineCostFunction_T {
    public:
     SplineCostFunction_T(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns)
-        : r3_{r3}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
+        : r3_{r3}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {
+        // TODO(Jack): Where should we assert that u_i is between 0 and 1?
+    }
 
     // NOTE(Jack): The reason that we need to pass each control point individually comes from ceres. Ceres does not
     // allow parameter blocks to partially overlap. If you do partially overlap you will get an error like,
@@ -47,7 +49,7 @@ class SplineCostFunction_T {
         spline::Matrix3K<T> control_points;
         control_points << p0, p1, p2, p3;
 
-        Eigen::Vector<T, 3> const r3{spline::R3Spline::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
+        Eigen::Vector<T, 3> const r3{T_Model::template Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
 
         residual[0] = T(r3_[0]) - r3[0];
         residual[1] = T(r3_[1]) - r3[1];
