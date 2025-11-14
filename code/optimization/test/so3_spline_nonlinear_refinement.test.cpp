@@ -25,14 +25,14 @@ std::tuple<spline::CubicBSplineC3, std::vector<So3Measurement>> So3SplineOptimiz
 
         // ERRROR(Jack): How does EvaluateSPline get into this namespace? Does that work differently for templated
         // functions?
-        auto const position_i{EvaluateSpline<spline::So3SplineEvaluation>(t_i, spline, spline::DerivativeOrder::Null)};
+        auto const position_i{EvaluateSpline<spline::So3Spline>(t_i, spline, spline::DerivativeOrder::Null)};
         measurements.push_back(So3Measurement{t_i, position_i.value(), spline::DerivativeOrder::Null});
 
-        auto const velocity_i{EvaluateSpline<spline::So3SplineEvaluation>(t_i, spline, spline::DerivativeOrder::First)};
+        auto const velocity_i{EvaluateSpline<spline::So3Spline>(t_i, spline, spline::DerivativeOrder::First)};
         measurements.push_back(So3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
 
         auto const acceleration_i{
-            EvaluateSpline<spline::So3SplineEvaluation>(t_i, spline, spline::DerivativeOrder::Second)};
+            EvaluateSpline<spline::So3Spline>(t_i, spline, spline::DerivativeOrder::Second)};
         measurements.push_back(So3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
     }
 

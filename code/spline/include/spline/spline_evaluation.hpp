@@ -33,7 +33,7 @@ std::optional<Vector3d> EvaluateSpline(std::uint64_t const t_ns, CubicBSplineC3 
     } else if (derivative == DerivativeOrder::Second) {
         return T_Model::template Evaluate<double, DerivativeOrder::Second>(P, u_i, spline.time_handler.delta_t_ns_);
     } else {
-        throw std::runtime_error("Requested unknown derivative order from EvaluateR3()");  // LCOV_EXCL_LINE
+        throw std::runtime_error("Requested unknown derivative order from EvaluateSpline()");  // LCOV_EXCL_LINE
     }
 }
 

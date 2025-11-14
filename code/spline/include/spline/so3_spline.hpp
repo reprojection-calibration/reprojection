@@ -23,7 +23,7 @@ std::array<Vector3<T>, constants::degree> DeltaPhi(Matrix3K<T> const& control_po
     return delta_phi;
 }
 
-struct So3SplineEvaluation {
+struct So3Spline {
     // NOTE(Jack): We are doing some compile time programming here with "if constexpr". The nature of the cumulative
     // b-spline means that the derivatives build up on top of each other incrementally. This resulted, in the first
     // iteration, in a lot of copy and pasted code. The structure here is basically that the null evaluation goes from 0
@@ -80,7 +80,7 @@ struct So3SplineEvaluation {
             return acceleration;
         } else {
             static_assert(D == DerivativeOrder::Null or D == DerivativeOrder::First or D == DerivativeOrder::Second,
-                          "Unsupported DerivativeOrder in So3SplineEvaluation::Evaluate()");
+                          "Unsupported DerivativeOrder in So3Spline::Evaluate()");
         }
     }
 

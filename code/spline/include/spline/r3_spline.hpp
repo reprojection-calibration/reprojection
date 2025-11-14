@@ -11,7 +11,7 @@
 
 namespace reprojection::spline {
 
-struct R3SplineEvaluation {
+struct R3Spline {
     template <typename T, DerivativeOrder D>
     static Vector3<T> Evaluate(Matrix3K<T> const& P, double const u_i, std::uint64_t const delta_t_ns) {
         static int constexpr derivative_order{static_cast<int>(D)};

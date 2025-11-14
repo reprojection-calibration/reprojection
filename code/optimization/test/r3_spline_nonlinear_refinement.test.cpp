@@ -26,8 +26,7 @@ std::tuple<spline::CubicBSplineC3, std::vector<R3Measurement>> R3SplineOptimizat
     // optimization will wander aimlessly because the derivatives are the same under any constant offset. Thefore we add
     // one position constraint here. In future problems we might achieve this same thing by settings the first value to
     // zero, of simply fixing it to something.
-    auto const position_i{
-        spline::EvaluateSpline<spline::R3SplineEvaluation>(t0_ns, spline, spline::DerivativeOrder::Null)};
+    auto const position_i{spline::EvaluateSpline<spline::R3Spline>(t0_ns, spline, spline::DerivativeOrder::Null)};
     measurements.push_back(R3Measurement{t0_ns, position_i.value(), spline::DerivativeOrder::Null});
 
     // For a third degree spline with 6 control points there are three valid time segments! With only four control
@@ -35,12 +34,11 @@ std::tuple<spline::CubicBSplineC3, std::vector<R3Measurement>> R3SplineOptimizat
     for (size_t i{0}; i < 3 * delta_t_ns; ++i) {
         std::uint64_t const t_i{t0_ns + i};
 
-        auto const velocity_i{
-            spline::EvaluateSpline<spline::R3SplineEvaluation>(t_i, spline, spline::DerivativeOrder::First)};
+        auto const velocity_i{spline::EvaluateSpline<spline::R3Spline>(t_i, spline, spline::DerivativeOrder::First)};
         measurements.push_back(R3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
 
         auto const acceleration_i{
-            spline::EvaluateSpline<spline::R3SplineEvaluation>(t_i, spline, spline::DerivativeOrder::Second)};
+            spline::EvaluateSpline<spline::R3Spline>(t_i, spline, spline::DerivativeOrder::Second)};
         measurements.push_back(R3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
     }
 
