@@ -10,7 +10,18 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): Add concept requirement!
+template <typename T>
+concept CanEvaluateCubicBSplineC3 = requires(Matrix3Kd const& P, double const u_i, std::uint64_t const delta_t_ns) {
+    // See note in projection_functions::CanProject why we need this for the types.
+    { P } -> std::same_as<Matrix3Kd const&>;
+    // { u_i } -> std::same_as<double const>;
+    // { delta_t_ns } -> std::same_as<std::uint64_t const>;
+
+    { T::template Evaluate<double, DerivativeOrder::Null>(P, u_i, delta_t_ns) } -> std::same_as<Vector3d>;
+    { T::template Evaluate<double, DerivativeOrder::First>(P, u_i, delta_t_ns) } -> std::same_as<Vector3d>;
+    { T::template Evaluate<double, DerivativeOrder::Second>(P, u_i, delta_t_ns) } -> std::same_as<Vector3d>;
+};
+
 // TODO(Jack): The naming in the entire package is a little unclear because we use the generic "spline" to refere to the
 // C3 splines, and leave the C6 se3 spline out in lalaland. When we figure out better to optimize the se3 spline we
 // should clear up this delineation.
@@ -19,6 +30,7 @@ namespace reprojection::spline {
  * is not a valid time on the spline.
  */
 template <typename T_Model>
+    requires CanEvaluateCubicBSplineC3<T_Model>
 std::optional<Vector3d> EvaluateSpline(std::uint64_t const t_ns, CubicBSplineC3 const& spline,
                                        DerivativeOrder const derivative = DerivativeOrder::Null) {
     auto const normalized_position{spline.time_handler.SplinePosition(t_ns, std::size(spline.control_points))};
