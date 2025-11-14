@@ -43,7 +43,7 @@ struct So3Spline {
         std::array<VectorKd, order + 1> weights;  // We use an array because the required size is known at compile time
         for (int j{0}; j <= order; ++j) {
             VectorKd const u_j{CalculateU(u_i, j)};
-            VectorKd const weight_j{M * u_j / std::pow(delta_t_ns, j)};
+            VectorKd const weight_j{M_ * u_j / std::pow(delta_t_ns, j)};
 
             weights[j] = weight_j;
         }
@@ -84,7 +84,8 @@ struct So3Spline {
         }
     }
 
-    static inline MatrixKK const M{CumulativeBlendingMatrix(constants::order)};
+   private:
+    static inline MatrixKK const M_{CumulativeBlendingMatrix(constants::order)};
 };
 
 }  // namespace reprojection::spline
