@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <optional>
 
-#include "spline/spline_states.hpp"
+#include "spline/spline_state.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::spline {

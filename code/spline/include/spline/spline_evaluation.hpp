@@ -4,17 +4,20 @@
 #include <optional>
 #include <vector>
 
-#include "spline/spline_states.hpp"
+#include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::spline {
 
-/***
+// TODO(Jack): Add concept requirement!
+// TODO(Jack): The naming in the entire package is a little unclear because we use the generic "spline" to refere to the
+// C3 splines, and leave the C6 se3 spline out in lalaland. When we figure out better to optimize the se3 spline we
+// should clear up this delineation.
+/**
  * \brief Provides bounds checked evaluation of a spline. Will return std::nullopt if the requested evaluation time t_ns
  * is not a valid time on the spline.
  */
-// TODO(Jack): Add concept requirement!
 template <typename T_Model>
 std::optional<Vector3d> EvaluateSpline(std::uint64_t const t_ns, CubicBSplineC3 const& spline,
                                        DerivativeOrder const derivative = DerivativeOrder::Null) {

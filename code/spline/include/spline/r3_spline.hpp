@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-#include "spline/spline_states.hpp"
+#include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 #include "utilities.hpp"
