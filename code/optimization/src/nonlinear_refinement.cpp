@@ -2,9 +2,8 @@
 
 #include "geometry/lie.hpp"
 #include "projection_cost_function.hpp"
-#include "r3_spline_cost_function.hpp"
-#include "so3_spline_cost_function.hpp"
 #include "spline/r3_spline.hpp"
+#include "spline_cost_function.hpp"
 
 namespace reprojection::optimization {
 
@@ -56,7 +55,7 @@ R3SplineNonlinearRefinement::R3SplineNonlinearRefinement(spline::CubicBSplineC3 
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    ceres::CostFunction* const cost_function{optimization::CreateR3SplineCostFunction(
+    ceres::CostFunction* const cost_function{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
         constraint.type, constraint.r3, u_i, spline_.time_handler.delta_t_ns_)};
 
     problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
@@ -86,8 +85,8 @@ bool So3SplineNonlinearRefinement::AddConstraint(So3Measurement const& constrain
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    ceres::CostFunction* const cost_function{
-        CreateSo3SplineCostFunction(constraint.type, constraint.so3, u_i, spline_.time_handler.delta_t_ns_)};
+    ceres::CostFunction* const cost_function{CreateSplineCostFunction_T<spline::So3Spline>(
+        constraint.type, constraint.so3, u_i, spline_.time_handler.delta_t_ns_)};
 
     problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
                               spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),

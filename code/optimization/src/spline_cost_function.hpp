@@ -70,4 +70,20 @@ class SplineCostFunction_T {
     std::uint64_t delta_t_ns_;
 };
 
+template <typename T_Model>
+    requires spline::CanEvaluateCubicBSplineC3<T_Model>
+ceres::CostFunction* CreateSplineCostFunction_T(spline::DerivativeOrder const derivative, Vector3d const& r3,
+                                                double const u_i, std::uint64_t const delta_t_ns) {
+    if (derivative == spline::DerivativeOrder::Null) {
+        return SplineCostFunction_T<T_Model, spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns);
+    } else if (derivative == spline::DerivativeOrder::First) {
+        return SplineCostFunction_T<T_Model, spline::DerivativeOrder::First>::Create(r3, u_i, delta_t_ns);
+    } else if (derivative == spline::DerivativeOrder::Second) {
+        return SplineCostFunction_T<T_Model, spline::DerivativeOrder::Second>::Create(r3, u_i, delta_t_ns);
+    } else {
+        throw std::runtime_error(
+            "Requested unknown derivative order from CreateR3SplineCostFunction()");  // LCOV_EXCL_LINE
+    }
+}
+
 }  // namespace reprojection::optimization

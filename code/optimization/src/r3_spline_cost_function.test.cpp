@@ -1,7 +1,6 @@
-#include "r3_spline_cost_function.hpp"
-
 #include <gtest/gtest.h>
 
+#include "spline/r3_spline.hpp"
 #include "spline_cost_function.hpp"
 #include "types/eigen_types.hpp"
 
@@ -30,8 +29,8 @@ TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
 
     // Position
     Array3d const position{0, 0.28125, 0.28125};  // Actual ground truth at u_i=0.5 given control points P
-    ceres::CostFunction* cost_function{
-        optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
+    ceres::CostFunction* cost_function{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
+        spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
     bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};  // Do not need jacobian, pass nullptr
     delete cost_function;
     EXPECT_TRUE(success);
@@ -39,7 +38,8 @@ TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
 
     // Velocity
     Array3d const velocity{0.875, 0, 0};
-    cost_function = optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::First, velocity, u_i, delta_t_ns);
+    cost_function = optimization::CreateSplineCostFunction_T<spline::R3Spline>(spline::DerivativeOrder::First, velocity,
+                                                                               u_i, delta_t_ns);
     success = cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr);
     delete cost_function;
     EXPECT_TRUE(success);
@@ -47,8 +47,8 @@ TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
 
     // Acceleration
     Array3d const acceleration{0, 0.75, 0.75};
-    cost_function =
-        optimization::CreateR3SplineCostFunction(spline::DerivativeOrder::Second, acceleration, u_i, delta_t_ns);
+    cost_function = optimization::CreateSplineCostFunction_T<spline::R3Spline>(spline::DerivativeOrder::Second,
+                                                                               acceleration, u_i, delta_t_ns);
     success = cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr);
     delete cost_function;
     EXPECT_TRUE(success);
