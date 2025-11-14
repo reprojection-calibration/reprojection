@@ -9,8 +9,10 @@ using namespace reprojection;
 
 double Squared(double const x) { return x * x; }  // COPY AND PASTED
 
+// TODO(Jack): Unify measurement
 using R3Measurement = optimization::R3Measurement;
 
+// TODO(Jack): Unfify test data creation
 std::tuple<spline::CubicBSplineC3, std::vector<R3Measurement>> R3SplineOptimizationTestData() {
     // Build spline, we will generate our fake measurements from this for the optimization test.
     std::uint64_t const t0_ns{100};
