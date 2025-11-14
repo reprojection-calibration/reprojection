@@ -3,8 +3,9 @@
 #include <gtest/gtest.h>
 
 #include "spline/constants.hpp"
+#include "spline/spline_evaluation.hpp"
 #include "spline/types.hpp"
-#include "spline/utilities.hpp"
+#include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
@@ -13,47 +14,48 @@ using namespace reprojection;
 TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     // Completely empty spline
     spline::CubicBSplineC3 r3_spline{100, 5};
-    EXPECT_EQ(spline::EvaluateR3(115, r3_spline), std::nullopt);
+    EXPECT_EQ(spline::EvaluateSpline<spline::R3SplineEvaluation>(115, r3_spline), std::nullopt);
 
-    // Add four control_points which means we can ask for evaluations within the one time segment at the very start of
-    // the spline
+    // Add four control_points which means we can ask for evaluations within the one valid time segment.
     for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.control_points.push_back(Eigen::Vector3d::Zero());
     }
 
-    EXPECT_NE(EvaluateR3(100, r3_spline), std::nullopt);  // Inside first time segment - valid
-    EXPECT_EQ(EvaluateR3(105, r3_spline), std::nullopt);  // Outside first time segment - invalid
+    EXPECT_NE(spline::EvaluateSpline<spline::R3SplineEvaluation>(100, r3_spline),
+              std::nullopt);  // Inside first time segment - valid
+    EXPECT_EQ(spline::EvaluateSpline<spline::R3SplineEvaluation>(105, r3_spline),
+              std::nullopt);  // Outside first time segment - invalid
 
-    // Add one more control_point to see that we can now do a valid evaluation in the second time segment
+    // Add one more control_point to see that we can now do a valid evaluation in a second time segment
     r3_spline.control_points.push_back(Eigen::Vector3d::Zero());
-    EXPECT_NE(EvaluateR3(105, r3_spline), std::nullopt);
+    EXPECT_NE(spline::EvaluateSpline<spline::R3SplineEvaluation>(105, r3_spline), std::nullopt);
 }
 
 TEST(Spline_r3Spline, TestEvaluate) {
-    // Fill spline so we have one valid segment with its four control points.
+    // Fill spline with four control points which for a cubic b-spline gives us one valid time segment.
     spline::CubicBSplineC3 r3_spline{100, 5};
     for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.control_points.push_back(i * Eigen::Vector3d::Ones());
     }
 
-    // Test first position
-    auto const p_0{EvaluateR3(100, r3_spline)};
+    // Position
+    auto const p_0{spline::EvaluateSpline<spline::R3SplineEvaluation>(100, r3_spline)};
     ASSERT_TRUE(p_0.has_value());
     EXPECT_TRUE(p_0.value().isApproxToConstant(1));
 
     // Velocity
-    auto const v_0{EvaluateR3(100, r3_spline, spline::DerivativeOrder::First)};
+    auto const v_0{spline::EvaluateSpline<spline::R3SplineEvaluation>(100, r3_spline, spline::DerivativeOrder::First)};
     ASSERT_TRUE(v_0.has_value());
     EXPECT_TRUE(v_0.value().isApproxToConstant(0.2));  // 1m/5ns
 
     // Acceleration
-    auto const a_0{EvaluateR3(100, r3_spline, spline::DerivativeOrder::Second)};
+    auto const a_0{spline::EvaluateSpline<spline::R3SplineEvaluation>(100, r3_spline, spline::DerivativeOrder::Second)};
     ASSERT_TRUE(a_0.has_value());
     EXPECT_TRUE(a_0.value().isApproxToConstant(0));  // Straight line has no acceleration
 
     // Add one more element and test the first position in that second time segment
-    r3_spline.control_points.push_back(4 * Eigen::Vector3d::Ones());
-    auto const p_1{EvaluateR3(105, r3_spline)};
+    r3_spline.control_points.push_back(4 * Vector3d::Ones());
+    auto const p_1{spline::EvaluateSpline<spline::R3SplineEvaluation>(105, r3_spline)};
     ASSERT_TRUE(p_1.has_value());
     EXPECT_TRUE(p_1.value().isApproxToConstant(2));
 }
@@ -66,7 +68,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
 // estimated.
 TEST(Spline_r3Spline, TestTemplatedEvaluateOnLine) {
     spline::Matrix3Kd const P1{{0, 1, 2, 3}, {0, 1, 2, 3}, {0, 1, 2, 3}};
-    std::uint64_t const delta_t_ns{5};  // No effect when spline::DerivativeOrder::Null (raised to the zero power = 1)
+    std::uint64_t const delta_t_ns{5};  // No effect when spline::DerivativeOrder::Null (5^0 = 1)
 
     Vector3d const position_1{
         spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P1, 0, delta_t_ns)};
@@ -95,14 +97,14 @@ double Squared(double const x) { return x * x; }  // COPY PASTED
 //
 // We added this test because we wanted a test where the derivatives could somehow be roughly inferred and understood,
 // and where the second derivative was not just zero like it is for the linear control point case. Also note that the
-// control points are generated like a parabole, but that does not necessarily mean the spline is a parabola itself!
-// Look at the nurbs calculator viewer to understand what is going on here!
+// control points are generated like a parabola, but that does not necessarily mean the spline is a parabola itself!
+// Look at the nurbs calculator viewer to try to understand what is going on here!
 TEST(Spline_r3Spline, TestTemplatedEvaluateOnParabola) {
     spline::Matrix3Kd const P1{{-1, -0.5, 0.5, 1},
                                {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
                                {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
     double const u_middle{0.5};  // Middle/center and therefore "bottom" of the "parabola" specified by control points P
-    std::uint64_t const delta_t_ns{1};  // Setting to one avoids time dependent distortion to the velocity/acceleration
+    std::uint64_t const delta_t_ns{1};  // Setting to 1 avoids time dependent distortion to the velocity/acceleration
 
     Vector3d const position{
         spline::R3SplineEvaluation::Evaluate<double, spline::DerivativeOrder::Null>(P1, u_middle, delta_t_ns)};
