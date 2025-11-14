@@ -11,10 +11,6 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): Can we just name it Evaluate and depend on function overloading depending on the args?
-std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, CubicBSplineC3 const& spline,
-                                    DerivativeOrder const derivative = DerivativeOrder::Null);
-
 // TODO(Jack): Test explicitly?
 template <typename T>
 std::array<Vector3<T>, constants::degree> DeltaPhi(Matrix3K<T> const& control_points) {

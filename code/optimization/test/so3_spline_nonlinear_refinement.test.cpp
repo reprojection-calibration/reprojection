@@ -2,6 +2,7 @@
 
 #include "optimization/nonlinear_refinement.hpp"
 #include "spline/so3_spline.hpp"
+#include "spline/spline_evaluation.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -22,13 +23,16 @@ std::tuple<spline::CubicBSplineC3, std::vector<So3Measurement>> So3SplineOptimiz
     for (size_t i{0}; i < delta_t_ns; ++i) {
         std::uint64_t const t_i{t0_ns + i};
 
-        auto const position_i{EvaluateSo3(t_i, spline, spline::DerivativeOrder::Null)};
+        // ERRROR(Jack): How does EvaluateSPline get into this namespace? Does that work differently for templated
+        // functions?
+        auto const position_i{EvaluateSpline<spline::So3SplineEvaluation>(t_i, spline, spline::DerivativeOrder::Null)};
         measurements.push_back(So3Measurement{t_i, position_i.value(), spline::DerivativeOrder::Null});
 
-        auto const velocity_i{EvaluateSo3(t_i, spline, spline::DerivativeOrder::First)};
+        auto const velocity_i{EvaluateSpline<spline::So3SplineEvaluation>(t_i, spline, spline::DerivativeOrder::First)};
         measurements.push_back(So3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
 
-        auto const acceleration_i{EvaluateSo3(t_i, spline, spline::DerivativeOrder::Second)};
+        auto const acceleration_i{
+            EvaluateSpline<spline::So3SplineEvaluation>(t_i, spline, spline::DerivativeOrder::Second)};
         measurements.push_back(So3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
     }
 
