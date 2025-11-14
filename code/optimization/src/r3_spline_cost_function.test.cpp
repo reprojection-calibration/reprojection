@@ -14,7 +14,6 @@ TEST(OptimizationR3SplineCostFunction, TestCreateR3SplineCostFunction) {
     double const u_i{0.5};
     std::uint64_t const delta_t_ns{1};
 
-    // TODO(Jack): Is this column wise or row wise/does it matter?
     spline::Matrix3Kd const P{{-1, -0.5, 0.5, 1},
                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
                               {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};

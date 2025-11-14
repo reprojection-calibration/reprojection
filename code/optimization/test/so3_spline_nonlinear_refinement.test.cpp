@@ -23,7 +23,7 @@ std::tuple<spline::CubicBSplineC3, std::vector<So3Measurement>> So3SplineOptimiz
     for (size_t i{0}; i < delta_t_ns; ++i) {
         std::uint64_t const t_i{t0_ns + i};
 
-        // ERRROR(Jack): How does EvaluateSPline get into this namespace? Does that work differently for templated
+        // ERROR(Jack): How does EvaluateSpline get into this namespace? Does that work differently for templated
         // functions?
         auto const position_i{EvaluateSpline<spline::So3Spline>(t_i, spline, spline::DerivativeOrder::Null)};
         measurements.push_back(So3Measurement{t_i, position_i.value(), spline::DerivativeOrder::Null});
