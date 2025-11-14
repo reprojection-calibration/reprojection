@@ -37,7 +37,7 @@ struct So3Measurement {
 // for state expect that maybe we can better handle invalid constraint input. But that is not clear yet.
 class R3SplineNonlinearRefinement {
    public:
-    explicit R3SplineNonlinearRefinement(spline::R3SplineState const& spline);
+    explicit R3SplineNonlinearRefinement(spline::CubicBSplineC3 const& spline);
 
     // NOTE(Jack): We will keep this as no discard because I want to force the user to responsibly handle invalid
     // conditions when adding constraints.
@@ -47,25 +47,25 @@ class R3SplineNonlinearRefinement {
     // forgot to add any data). We need to codify the real long term usage strategy here, this is not the final answer!
     ceres::Solver::Summary Solve();
 
-    spline::R3SplineState GetSpline() const;
+    spline::CubicBSplineC3 GetSpline() const;
 
    private:
-    spline::R3SplineState spline_;  // Stores the state we are optimizing
+    spline::CubicBSplineC3 spline_;  // Stores the state we are optimizing
     ceres::Problem problem_;
 };
 
 class So3SplineNonlinearRefinement {
    public:
-    explicit So3SplineNonlinearRefinement(spline::So3SplineState const& spline);
+    explicit So3SplineNonlinearRefinement(spline::CubicBSplineC3 const& spline);
 
     [[nodiscard]] bool AddConstraint(So3Measurement const& constraint);
 
     ceres::Solver::Summary Solve();
 
-    spline::So3SplineState GetSpline() const;
+    spline::CubicBSplineC3 GetSpline() const;
 
    private:
-    spline::So3SplineState spline_;  // Stores the state we are optimizing
+    spline::CubicBSplineC3 spline_;  // Stores the state we are optimizing
     ceres::Problem problem_;
 };
 

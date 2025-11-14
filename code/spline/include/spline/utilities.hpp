@@ -15,8 +15,6 @@ VectorKd CalculateU(double const u_i, DerivativeOrder const derivative = Derivat
 
 // NOTE(Jack): In the spline code in this package we sometimes we have to call it u or u_i depending if we also have the
 // vector u in the same namespace.
-// TODO(Jack): Add using def for Eigen::Vector<T, Eigen::Dynamic>?
-// TODO SPLIT UP AGAIN
 VectorXd TimePolynomial(int const k, double const u, int const derivative);
 
 MatrixXd PolynomialCoefficients(int const k);

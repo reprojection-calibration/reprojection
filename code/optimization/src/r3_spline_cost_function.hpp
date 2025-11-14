@@ -23,7 +23,7 @@ class R3SplineCostFunction_T {
     //      1 problem_impl.cc:78] Check failed: !RegionsAlias( existing_block, existing_block_size, new_block,
     //      new_block_size)...
     //
-    // My original intention was that we store the spline state (spline::R3SplineState) therefore we will optimize on
+    // My original intention was that we store the spline state (spline::CubicBSplineC3) therefore we will optimize on
     // the continuous memory representation as well and each residual will constrain the spline state like a sliding
     // window. Ceres does not allow partially overlapping parameter blocks like would be required by this sliding window
     // representation, therefore we have to break the parameter representation to a more granular form, and pass each
@@ -33,7 +33,7 @@ class R3SplineCostFunction_T {
     bool operator()(T const* const control_point_0_ptr, T const* const control_point_1_ptr,
                     T const* const control_point_2_ptr, T const* const control_point_3_ptr, T* const residual) const {
         // NOTE(Jack): We need to pass in the control points individually to satisfy ceres (see note above), but our
-        // R3SplineEvaluation::Evaluate() method takes a eigen matrix. Therefore, we have to organize them using maps
+        // R3Spline::Evaluate() method takes a eigen matrix. Therefore, we have to organize them using maps
         // into points and then  place them in the control points matrix.
         Eigen::Map<const Eigen::Matrix<T, 3, 1>> p0(control_point_0_ptr);
         Eigen::Map<const Eigen::Matrix<T, 3, 1>> p1(control_point_1_ptr);
@@ -48,7 +48,7 @@ class R3SplineCostFunction_T {
         spline::Matrix3K<T> control_points;
         control_points << p0, p1, p2, p3;
 
-        Eigen::Vector<T, 3> const r3{spline::R3SplineEvaluation::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
+        Eigen::Vector<T, 3> const r3{spline::R3Spline::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
 
         residual[0] = T(r3_[0]) - r3[0];
         residual[1] = T(r3_[1]) - r3[1];

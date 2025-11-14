@@ -27,7 +27,7 @@ class So3SplineCostFunction_T {
         spline::Matrix3K<T> control_points;
         control_points << p0, p1, p2, p3;
 
-        Eigen::Vector<T, 3> const r3{spline::So3SplineEvaluation::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
+        Eigen::Vector<T, 3> const r3{spline::So3Spline::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
 
         residual[0] = T(r3_[0]) - r3[0];
         residual[1] = T(r3_[1]) - r3[1];

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ceres/autodiff_cost_function.h>
+
 #include "ceres_geometry.hpp"
 #include "projection_functions/projection_class_concept.hpp"
 #include "types/calibration_types.hpp"

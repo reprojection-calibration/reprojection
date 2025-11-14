@@ -4,25 +4,12 @@
 #include <optional>
 
 #include "geometry/lie.hpp"
-#include "spline/time_handler.hpp"
+#include "spline/spline_state.hpp"
 #include "spline/utilities.hpp"
 #include "types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::spline {
-
-// USE SAME STRUCT AS R3, they are the exact same if we store the rotation as vector3d not matrix3d!
-struct So3SplineState {
-    So3SplineState(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
-        : time_handler{t0_ns, delta_t_ns, constants::order} {}
-
-    TimeHandler time_handler;
-    std::vector<Vector3d> control_points;
-};
-
-// TODO(Jack): Can we just name it Evaluate and depend on function overloading depending on the args?
-std::optional<Vector3d> EvaluateSo3(std::uint64_t const t_ns, So3SplineState const& spline,
-                                    DerivativeOrder const derivative = DerivativeOrder::Null);
 
 // TODO(Jack): Test explicitly?
 template <typename T>
@@ -36,7 +23,7 @@ std::array<Vector3<T>, constants::degree> DeltaPhi(Matrix3K<T> const& control_po
     return delta_phi;
 }
 
-struct So3SplineEvaluation {
+struct So3Spline {
     // NOTE(Jack): We are doing some compile time programming here with "if constexpr". The nature of the cumulative
     // b-spline means that the derivatives build up on top of each other incrementally. This resulted, in the first
     // iteration, in a lot of copy and pasted code. The structure here is basically that the null evaluation goes from 0
@@ -56,7 +43,7 @@ struct So3SplineEvaluation {
         std::array<VectorKd, order + 1> weights;  // We use an array because the required size is known at compile time
         for (int j{0}; j <= order; ++j) {
             VectorKd const u_j{CalculateU(u_i, j)};
-            VectorKd const weight_j{M * u_j / std::pow(delta_t_ns, j)};
+            VectorKd const weight_j{M_ * u_j / std::pow(delta_t_ns, j)};
 
             weights[j] = weight_j;
         }
@@ -93,11 +80,12 @@ struct So3SplineEvaluation {
             return acceleration;
         } else {
             static_assert(D == DerivativeOrder::Null or D == DerivativeOrder::First or D == DerivativeOrder::Second,
-                          "Unsupported DerivativeOrder in So3SplineEvaluation::Evaluate()");
+                          "Unsupported DerivativeOrder in So3Spline::Evaluate()");
         }
     }
 
-    static inline MatrixKK const M{CumulativeBlendingMatrix(constants::order)};
+   private:
+    static inline MatrixKK const M_{CumulativeBlendingMatrix(constants::order)};
 };
 
 }  // namespace reprojection::spline

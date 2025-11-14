@@ -3,9 +3,7 @@ set(LIBRARY_NAME "spline")
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
-        src/r3_spline.cpp
         src/se3_spline.cpp
-        src/so3_spline.cpp
         src/time_handler.cpp
         src/utilities.cpp
 )
