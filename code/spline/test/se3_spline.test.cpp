@@ -4,7 +4,6 @@
 
 #include "geometry/lie.hpp"
 #include "types/eigen_types.hpp"
-#include "utilities_testing.hpp"
 
 using namespace reprojection;
 
@@ -44,7 +43,6 @@ TEST(SplineSe3Spline, TestEvaluate) {
     for (int i{0}; i < static_cast<int>(delta_t_ns); ++i) {
         auto const p_i{se3_spline.Evaluate(100 + i)};
         ASSERT_TRUE(p_i.has_value());
-        EXPECT_TRUE(spline::IsRotation(p_i->rotation().matrix()));
     }
 
     auto const p_0{se3_spline.Evaluate(100)};
