@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "spline_cost_function.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -60,7 +61,8 @@ TEST(OptimizationR3SplineCostFunction, TestR3SplineCostFunctionCreate_T) {
     std::uint64_t const delta_t_ns{5};
 
     ceres::CostFunction const* const cost_function{
-        optimization::R3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(r3, u_i, delta_t_ns)};
+        optimization::SplineCostFunction_T<spline::R3Spline, spline::DerivativeOrder::Null>::Create(r3, u_i,
+                                                                                                    delta_t_ns)};
 
     // Four r3 control point parameter blocks of size three and a r3 residual
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 4);
