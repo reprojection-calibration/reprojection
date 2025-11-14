@@ -24,8 +24,8 @@ class Se3Spline {
     std::optional<Isometry3d> Evaluate(std::uint64_t const t_ns) const;
 
    private:
-    R3SplineState r3_spline_;
-    So3SplineState so3_spline_;
+    CubicBSplineC3 r3_spline_;
+    CubicBSplineC3 so3_spline_;
 };
 
 }  // namespace reprojection::spline

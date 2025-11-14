@@ -9,7 +9,7 @@
 using namespace reprojection;
 
 TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
-    spline::So3SplineState so3_spline{100, 5};
+    spline::CubicBSplineC3 so3_spline{100, 5};
     EXPECT_EQ(spline::EvaluateSo3(115, so3_spline), std::nullopt);
 
     for (int i{0}; i < spline::constants::order; ++i) {
@@ -23,9 +23,9 @@ TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
     EXPECT_NE(spline::EvaluateSo3(105, so3_spline), std::nullopt);
 }
 
-spline::So3SplineState BuildTestSpline() {
+spline::CubicBSplineC3 BuildTestSpline() {
     uint64_t const delta_t_ns{5};
-    spline::So3SplineState so3_spline{100, delta_t_ns};
+    spline::CubicBSplineC3 so3_spline{100, delta_t_ns};
 
     so3_spline.control_points.push_back(Vector3d::Zero());
     for (int i{1}; i < spline::constants::order; ++i) {
@@ -39,7 +39,7 @@ spline::So3SplineState BuildTestSpline() {
 }
 
 TEST(SplineSo3Spline, TestEvaluate) {
-    spline::So3SplineState const spline{BuildTestSpline()};
+    spline::CubicBSplineC3 const spline{BuildTestSpline()};
 
     // Check that all timestamps from 100 to 104 evaluate without error
     for (int i{0}; i < static_cast<int>(spline.time_handler.delta_t_ns_); ++i) {
@@ -57,7 +57,7 @@ TEST(SplineSo3Spline, TestEvaluate) {
 }
 
 TEST(SplineSo3Spline, TestEvaluateVelocity) {
-    spline::So3SplineState const spline{BuildTestSpline()};
+    spline::CubicBSplineC3 const spline{BuildTestSpline()};
 
     // RANDOM HEURISTIC TESTS!
     Vector3d const v0{spline::EvaluateSo3(100, spline, spline::DerivativeOrder::First).value()};
@@ -68,7 +68,7 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
 }
 
 TEST(SplineSo3Spline, TestEvaluateAcceleration) {
-    spline::So3SplineState const spline{BuildTestSpline()};
+    spline::CubicBSplineC3 const spline{BuildTestSpline()};
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)
     Vector3d const a0{spline::EvaluateSo3(100, spline, spline::DerivativeOrder::Second).value()};

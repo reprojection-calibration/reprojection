@@ -10,11 +10,11 @@ double Squared(double const x) { return x * x; }  // COPY AND PASTED
 
 using R3Measurement = optimization::R3Measurement;
 
-std::tuple<spline::R3SplineState, std::vector<R3Measurement>> R3SplineOptimizationTestData() {
+std::tuple<spline::CubicBSplineC3, std::vector<R3Measurement>> R3SplineOptimizationTestData() {
     // Build spline, we will generate our fake measurements from this for the optimization test.
     std::uint64_t const t0_ns{100};
     std::uint64_t const delta_t_ns{50};
-    spline::R3SplineState spline{t0_ns, delta_t_ns};
+    spline::CubicBSplineC3 spline{t0_ns, delta_t_ns};
     for (auto const& x : std::vector<double>{-2, -1, -0.5, 0.5, 1, 2}) {
         spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
@@ -47,7 +47,7 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestNoisyR3SplineNonlinearRefineme
     auto const [gt_spline, simulated_measurements]{R3SplineOptimizationTestData()};
 
     // Make a copy and add noise so the optimization has to do some work :)
-    spline::R3SplineState initialization{gt_spline};
+    spline::CubicBSplineC3 initialization{gt_spline};
     for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
         initialization.control_points[i].array() += 0.2 * i;
     }
@@ -65,7 +65,7 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestNoisyR3SplineNonlinearRefineme
     ceres::Solver::Summary const summary{handler.Solve()};
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    spline::R3SplineState const optimized_spline{handler.GetSpline()};
+    spline::CubicBSplineC3 const optimized_spline{handler.GetSpline()};
     for (size_t i{0}; i < std::size(optimized_spline.control_points); ++i) {
         EXPECT_TRUE(optimized_spline.control_points[i].isApprox(gt_spline.control_points[i], 1e-6));
     }

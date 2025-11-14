@@ -23,7 +23,7 @@ class R3SplineCostFunction_T {
     //      1 problem_impl.cc:78] Check failed: !RegionsAlias( existing_block, existing_block_size, new_block,
     //      new_block_size)...
     //
-    // My original intention was that we store the spline state (spline::R3SplineState) therefore we will optimize on
+    // My original intention was that we store the spline state (spline::CubicBSplineC3) therefore we will optimize on
     // the continuous memory representation as well and each residual will constrain the spline state like a sliding
     // window. Ceres does not allow partially overlapping parameter blocks like would be required by this sliding window
     // representation, therefore we have to break the parameter representation to a more granular form, and pass each

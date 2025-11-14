@@ -12,7 +12,7 @@ using namespace reprojection;
 
 TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     // Completely empty spline
-    spline::R3SplineState r3_spline{100, 5};
+    spline::CubicBSplineC3 r3_spline{100, 5};
     EXPECT_EQ(spline::EvaluateR3(115, r3_spline), std::nullopt);
 
     // Add four control_points which means we can ask for evaluations within the one time segment at the very start of
@@ -31,7 +31,7 @@ TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
 
 TEST(Spline_r3Spline, TestEvaluate) {
     // Fill spline so we have one valid segment with its four control points.
-    spline::R3SplineState r3_spline{100, 5};
+    spline::CubicBSplineC3 r3_spline{100, 5};
     for (int i{0}; i < spline::constants::order; ++i) {
         r3_spline.control_points.push_back(i * Eigen::Vector3d::Ones());
     }

@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-#include "spline/time_handler.hpp"
+#include "spline/spline_states.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 #include "utilities.hpp"
@@ -33,18 +33,9 @@ struct R3SplineEvaluation {
     static inline MatrixKK const polynomial_coefficients{PolynomialCoefficients(constants::order)};
 };
 
-// TODO(Jack): Is this the right naming?
-struct R3SplineState {
-    R3SplineState(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
-        : time_handler{t0_ns, delta_t_ns, constants::order} {}
-
-    TimeHandler time_handler;
-    std::vector<Vector3d> control_points;
-};
-
 // TODO(Jack): Do we need to/should we append the R3 here? I needed to do this so the SE3 call could find the right
 // version of evaluate cause it could not from the arguments for some strange reason.
-std::optional<Vector3d> EvaluateR3(std::uint64_t const t_ns, R3SplineState const& spline,
+std::optional<Vector3d> EvaluateR3(std::uint64_t const t_ns, CubicBSplineC3 const& spline,
                                    DerivativeOrder const derivative = DerivativeOrder::Null);
 
 }  // namespace reprojection::spline
