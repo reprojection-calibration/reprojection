@@ -15,7 +15,7 @@ using namespace reprojection::spline;  // Use SOOO many times that we introduce 
 TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     // Completely empty spline
     CubicBSplineC3 r3_spline{100, 5};
-    EXPECT_EQ(EvaluateSpline<R3Spline>(115, r3_spline), std::nullopt);
+    EXPECT_EQ(EvaluateSpline<R3Spline>(100, r3_spline), std::nullopt);
 
     // Add four control_points which means we can ask for evaluations within the one valid time segment.
     for (int i{0}; i < constants::order; ++i) {
