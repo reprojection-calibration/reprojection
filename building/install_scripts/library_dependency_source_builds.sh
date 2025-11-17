@@ -2,26 +2,11 @@
 
 set -eoux pipefail
 
-
-# !!! DISCLAIMER !!! - The release build mentioned below has been removed! It was taking too long in CI and we are not
-# sure it was even working (as described below). When we need it again we will add it back.
-
-# WARN(Jack): My intention here by installing ceres from source is that we get much better source code navigation with
-# clion. The apt package only includes four headers (those required for autodiff) and no debug symbols. Therefore with
-# the source install we get much much better source code navigation, even if not 100%.
-#
-# We also want to be able to use the interactive debugger to step through the ceres source code, which requires that we
-# build ceres with "-DCMAKE_BUILD_TYPE=Debug". Ceres explicitly prints out a message that says roughly "Do not build in
-# debug, it is SUPER slow". Therefore I decide to also build and install the Release build version which means that we
-# end up with two installed configuration and two installed static libraries, the debug one
-# "/usr/local/lib/libceres-debug.a" and the release one "/usr/local/lib/libceres.a".
-#
-# It was my expectation/hope that when we do a debug build of the reprojection library that it would automatically go
-# select the debug ceres lib, and when we did a release build it would select the release ceres lib. However I cannot
-# prove that this is the case, and I have exhausted all avenues. I leave this as a note here for a future person with
-# more energy who can investigate this issue.
-
 # Install ceres-solver from source, both debug and release targets.
+# NOTE(Jack): When we build reprojection with# CMAKE_BUILD_TYPE=Debug it will use the debug ceres build and let us use
+# the debugger and when we use CMAKE_BUILD_TYPE=Release it will use the release version of ceres and be fast. It was
+# proven that this happens by building ceres as a shared library and using ldd to check what is linked. We cannot check
+# directly for the static  (ceres default build type) but it should also be the case.
 wget http://ceres-solver.org/ceres-solver-2.2.0.tar.gz
 
 tar zxf ceres-solver-2.2.0.tar.gz
@@ -31,6 +16,16 @@ cmake ../ceres-solver-2.2.0 -DBUILD_BENCHMARKS=OFF \
                             -DBUILD_EXAMPLES=OFF \
                             -DBUILD_TESTING=OFF \
                             -DCMAKE_BUILD_TYPE=Debug
+make -j4
+make install
+
+cd ..
+mkdir ceres-release
+cd ceres-release
+cmake ../ceres-solver-2.2.0 -DBUILD_BENCHMARKS=OFF \
+                            -DBUILD_EXAMPLES=OFF \
+                            -DBUILD_TESTING=OFF \
+                            -DCMAKE_BUILD_TYPE=Release
 make -j4
 make install
 
