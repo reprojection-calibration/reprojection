@@ -9,7 +9,6 @@ using namespace reprojection;
 
 double Squared(double const x) { return x * x; }  // COPY AND PASTED
 
-// TODO(Jack): Unify measurement
 using C3Measurement = optimization::C3Measurement;
 
 // TODO(Jack): Unfify test data creation

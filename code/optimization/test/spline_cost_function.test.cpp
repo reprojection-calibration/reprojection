@@ -35,7 +35,7 @@ class OptimizationSplineCostFunctionFixture : public ::testing::Test {
 };
 
 // NOTE(Jack): We use smart pointers here and below because there is no object which takes ownership of the cost
-// functions and we need to explicitly handle deallocation ourselves.
+// functions and we need to handle deallocation ourselves.
 void CheckSplineResidual(std::vector<double const*> const& parameter_blocks,
                          std::unique_ptr<ceres::CostFunction> const cost_function) {
     Vector3d residual;
@@ -68,8 +68,6 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_R3) {
 }
 
 TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_so3) {
-    Vector3d residual;
-
     // Position
     Array3d const position{0.1460482362445171, 0.3755842237411095, 0.39702710822143839};
     auto cost_function{std::unique_ptr<ceres::CostFunction>(optimization::CreateSplineCostFunction_T<spline::So3Spline>(
