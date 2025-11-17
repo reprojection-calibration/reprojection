@@ -17,9 +17,9 @@ RUN --mount=type=bind,source=${INSTALL_LIBRARY_DEPENDENCIES},target=/temporary/$
     /temporary/${INSTALL_LIBRARY_DEPENDENCIES}
 
 ARG LIBRARY_DEPENDENCY_SOURCE_BUILDS=building/install_scripts/library_dependency_source_builds.sh
-ARG CERES_SOURCE_BUILD_RELEASE=building/install_scripts/ceres_source_build_release.sh
+ARG CERES_SOURCE_BUILD=building/install_scripts/ceres_source_build.sh
 RUN --mount=type=bind,source=${LIBRARY_DEPENDENCY_SOURCE_BUILDS},target=/temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS} \
-    --mount=type=bind,source=${CERES_SOURCE_BUILD_RELEASE},target=/temporary/${CERES_SOURCE_BUILD_RELEASE} \
+    --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
     /temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS}
 
 
@@ -109,8 +109,9 @@ ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS development-stage
 
-ARG CERES_SOURCE_BUILD_DEBUG=building/install_scripts/ceres_source_build_debug.sh
-RUN --mount=type=bind,source=${CERES_SOURCE_BUILD_DEBUG},target=/temporary/${CERES_SOURCE_BUILD_DEBUG} \
-    /temporary/${CERES_SOURCE_BUILD_DEBUG}
+# We only need the ceres debug build if we are developing locally want to step through the code with a debugger.
+ARG CERES_SOURCE_BUILD=building/install_scripts/ceres_source_build.sh
+RUN --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
+    /temporary/${CERES_SOURCE_BUILD} --cmake_build_type=Debug
 
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
