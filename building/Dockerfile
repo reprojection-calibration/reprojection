@@ -17,7 +17,7 @@ RUN --mount=type=bind,source=${INSTALL_LIBRARY_DEPENDENCIES},target=/temporary/$
     /temporary/${INSTALL_LIBRARY_DEPENDENCIES}
 
 ARG LIBRARY_DEPENDENCY_SOURCE_BUILDS=building/install_scripts/library_dependency_source_builds.sh
-ARG CERES_SOURCE_BUILD_RELEASE=building/install_scripts/ceres_source_build.sh
+ARG CERES_SOURCE_BUILD=building/install_scripts/ceres_source_build.sh
 RUN --mount=type=bind,source=${LIBRARY_DEPENDENCY_SOURCE_BUILDS},target=/temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS} \
     --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
     /temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS}
