@@ -35,36 +35,34 @@ class OptimizationSplineCostFunctionFixture : public ::testing::Test {
     double static Squared(double const x) { return x * x; }
 };
 
-TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_R3) {
+void CheckSplineResidual(std::vector<double const*> const& parameter_blocks, ceres::CostFunction* cost_function) {
     Vector3d residual;
 
-    // Position
-    Array3d const position{0, 0.28125, 0.28125};  // Actual ground truth at u_i=0.5 given the fixture's control points.
-    ceres::CostFunction* cost_function{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
-        spline::DerivativeOrder::Null, position, u_i_, delta_t_ns_)};
-    bool success{cost_function->Evaluate(parameter_blocks_.data(), residual.data(),
-                                         nullptr)};  // Do not need jacobian, pass nullptr
+    bool success{cost_function->Evaluate(parameter_blocks.data(), residual.data(), nullptr)};
     delete cost_function;
+
     EXPECT_TRUE(success);
     EXPECT_TRUE(residual.isZero());
+}
+
+TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_R3) {
+    // Position
+    Array3d const position{0, 0.28125, 0.28125};
+    ceres::CostFunction* cost_function{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
+        spline::DerivativeOrder::Null, position, u_i_, delta_t_ns_)};
+    CheckSplineResidual(parameter_blocks_, cost_function);
 
     // Velocity
     Array3d const velocity{0.875, 0, 0};
     cost_function = optimization::CreateSplineCostFunction_T<spline::R3Spline>(spline::DerivativeOrder::First, velocity,
                                                                                u_i_, delta_t_ns_);
-    success = cost_function->Evaluate(parameter_blocks_.data(), residual.data(), nullptr);
-    delete cost_function;
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(residual.isZero());
+    CheckSplineResidual(parameter_blocks_, cost_function);
 
     // Acceleration
     Array3d const acceleration{0, 0.75, 0.75};
     cost_function = optimization::CreateSplineCostFunction_T<spline::R3Spline>(spline::DerivativeOrder::Second,
                                                                                acceleration, u_i_, delta_t_ns_);
-    success = cost_function->Evaluate(parameter_blocks_.data(), residual.data(), nullptr);
-    delete cost_function;
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(residual.isZero());
+    CheckSplineResidual(parameter_blocks_, cost_function);
 }
 
 TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_so3) {
@@ -74,28 +72,19 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_so3) 
     Array3d const position{0.1460482362445171, 0.3755842237411095, 0.39702710822143839};
     ceres::CostFunction* cost_function{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
         spline::DerivativeOrder::Null, position, u_i_, delta_t_ns_)};
-    bool success{cost_function->Evaluate(parameter_blocks_.data(), residual.data(), nullptr)};
-    delete cost_function;
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(residual.isZero());
+    CheckSplineResidual(parameter_blocks_, cost_function);
 
     // Velocity
     Array3d const velocity{0.8563971186898035, -0.1204280865611993, 0.12722122556164611};
     cost_function = optimization::CreateSplineCostFunction_T<spline::So3Spline>(spline::DerivativeOrder::First,
                                                                                 velocity, u_i_, delta_t_ns_);
-    success = cost_function->Evaluate(parameter_blocks_.data(), residual.data(), nullptr);
-    delete cost_function;
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(residual.isZero());
+    CheckSplineResidual(parameter_blocks_, cost_function);
 
     // Acceleration
     Array3d const acceleration{0.0069974409407700944, 0.80095289350156396, 0.71108131312833733};
     cost_function = optimization::CreateSplineCostFunction_T<spline::So3Spline>(spline::DerivativeOrder::Second,
                                                                                 acceleration, u_i_, delta_t_ns_);
-    success = cost_function->Evaluate(parameter_blocks_.data(), residual.data(), nullptr);
-    delete cost_function;
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(residual.isZero());
+    CheckSplineResidual(parameter_blocks_, cost_function);
 }
 
 // WARN DELETES THE COST FUNCTION! USE SMART POINTER INSTEAD
@@ -106,6 +95,7 @@ void CheckSplineGradient(std::vector<double const*> const& parameter_blocks, cer
     ceres::GradientChecker const position_gradient_checker(cost_function, nullptr, numeric_diff_options);
     bool const good_position_gradient{position_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
     delete cost_function;
+
     EXPECT_TRUE(good_position_gradient) << results.error_log;
 }
 
