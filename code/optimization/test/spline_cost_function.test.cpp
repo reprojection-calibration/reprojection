@@ -8,6 +8,8 @@
 
 using namespace reprojection;
 
+// NOTE(Jack): If you want to see where the control point values and ground truth evaluation values below come from
+// please look at the testing of the templated Evaluate() functions in the spline package.
 class OptimizationSplineCostFunctionFixture : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -97,6 +99,37 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_so3) 
 }
 
 // TODO(Jack): Do gradient checking for all other autodiff cost functions
+TEST_F(OptimizationSplineCostFunctionFixture, TestSplineGradients_R3) {
+    // The gradient checker uses a relative error and cannot handle nearly exact zeros well, so we add 1e-6 to the first
+    // position to avoid this problem.
+    Vector3d const r3{1e-6, 0, 0};
+
+    ceres::NumericDiffOptions const numeric_diff_options;
+    ceres::GradientChecker::ProbeResults results;
+
+    ceres::CostFunction const* const position{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
+        spline::DerivativeOrder::Null, r3, u_i_, delta_t_ns_)};
+    ceres::GradientChecker const position_gradient_checker(position, nullptr, numeric_diff_options);
+    bool const good_position_gradient{position_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
+    delete position;
+    EXPECT_TRUE(good_position_gradient) << results.error_log;
+
+    ceres::CostFunction const* const velocity{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
+        spline::DerivativeOrder::First, r3, u_i_, delta_t_ns_)};
+    ceres::GradientChecker const velocity_gradient_checker(velocity, nullptr, numeric_diff_options);
+    bool const good_velocity_gradient{velocity_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
+    delete velocity;
+    EXPECT_TRUE(good_velocity_gradient) << results.error_log;
+
+    ceres::CostFunction const* const acceleration{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
+        spline::DerivativeOrder::Second, r3, u_i_, delta_t_ns_)};
+    ceres::GradientChecker const acceleration_gradient_checker(acceleration, nullptr, numeric_diff_options);
+    bool const good_acceleration_gradient{
+        acceleration_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
+    delete acceleration;
+    EXPECT_TRUE(good_acceleration_gradient) << results.error_log;
+}
+
 TEST_F(OptimizationSplineCostFunctionFixture, TestSplineGradients_so3) {
     Vector3d const so3{0, 0, 0};
 
