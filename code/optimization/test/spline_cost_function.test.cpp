@@ -98,65 +98,50 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_so3) 
     EXPECT_TRUE(residual.isZero());
 }
 
-// TODO(Jack): Do gradient checking for all other autodiff cost functions
-TEST_F(OptimizationSplineCostFunctionFixture, TestSplineGradients_R3) {
-    // The gradient checker uses a relative error and cannot handle nearly exact zeros well, so we add 1e-6 to the first
-    // position to avoid this problem.
-    Vector3d const r3{1e-6, 0, 0};
-
+// WARN DELETES THE COST FUNCTION! USE SMART POINTER INSTEAD
+void CheckSplineGradient(std::vector<double const*> const& parameter_blocks, ceres::CostFunction* cost_function) {
     ceres::NumericDiffOptions const numeric_diff_options;
     ceres::GradientChecker::ProbeResults results;
 
-    ceres::CostFunction const* const position{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
-        spline::DerivativeOrder::Null, r3, u_i_, delta_t_ns_)};
-    ceres::GradientChecker const position_gradient_checker(position, nullptr, numeric_diff_options);
-    bool const good_position_gradient{position_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
-    delete position;
+    ceres::GradientChecker const position_gradient_checker(cost_function, nullptr, numeric_diff_options);
+    bool const good_position_gradient{position_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
+    delete cost_function;
     EXPECT_TRUE(good_position_gradient) << results.error_log;
+}
 
-    ceres::CostFunction const* const velocity{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
+// TODO(Jack): We violate RAII here with the cost functions, should we use unique pointers for the cost functions?
+TEST_F(OptimizationSplineCostFunctionFixture, TestSplineGradients_R3) {
+    // The gradient checker uses a relative error and cannot handle nearly exact zeros well, so we add 1e-6 to the first
+    // position to avoid this problem for the r3 case where the x-values evaluate to zero given the control points.
+    Vector3d const r3{1e-6, 0, 0};
+
+    ceres::CostFunction* position{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
+        spline::DerivativeOrder::Null, r3, u_i_, delta_t_ns_)};
+    CheckSplineGradient(parameter_blocks_, position);
+
+    ceres::CostFunction* velocity{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
         spline::DerivativeOrder::First, r3, u_i_, delta_t_ns_)};
-    ceres::GradientChecker const velocity_gradient_checker(velocity, nullptr, numeric_diff_options);
-    bool const good_velocity_gradient{velocity_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
-    delete velocity;
-    EXPECT_TRUE(good_velocity_gradient) << results.error_log;
+    CheckSplineGradient(parameter_blocks_, velocity);
 
-    ceres::CostFunction const* const acceleration{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
+    ceres::CostFunction* acceleration{optimization::CreateSplineCostFunction_T<spline::R3Spline>(
         spline::DerivativeOrder::Second, r3, u_i_, delta_t_ns_)};
-    ceres::GradientChecker const acceleration_gradient_checker(acceleration, nullptr, numeric_diff_options);
-    bool const good_acceleration_gradient{
-        acceleration_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
-    delete acceleration;
-    EXPECT_TRUE(good_acceleration_gradient) << results.error_log;
+    CheckSplineGradient(parameter_blocks_, acceleration);
 }
 
 TEST_F(OptimizationSplineCostFunctionFixture, TestSplineGradients_so3) {
     Vector3d const so3{0, 0, 0};
 
-    ceres::NumericDiffOptions const numeric_diff_options;
-    ceres::GradientChecker::ProbeResults results;
-
-    ceres::CostFunction const* const position{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
+    ceres::CostFunction* position{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
         spline::DerivativeOrder::Null, so3, u_i_, delta_t_ns_)};
-    ceres::GradientChecker const position_gradient_checker(position, nullptr, numeric_diff_options);
-    bool const good_position_gradient{position_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
-    delete position;
-    EXPECT_TRUE(good_position_gradient) << results.error_log;
+    CheckSplineGradient(parameter_blocks_, position);
 
-    ceres::CostFunction const* const velocity{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
+    ceres::CostFunction* velocity{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
         spline::DerivativeOrder::First, so3, u_i_, delta_t_ns_)};
-    ceres::GradientChecker const velocity_gradient_checker(velocity, nullptr, numeric_diff_options);
-    bool const good_velocity_gradient{velocity_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
-    delete velocity;
-    EXPECT_TRUE(good_velocity_gradient) << results.error_log;
+    CheckSplineGradient(parameter_blocks_, velocity);
 
-    ceres::CostFunction const* const acceleration{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
+    ceres::CostFunction* acceleration{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
         spline::DerivativeOrder::Second, so3, u_i_, delta_t_ns_)};
-    ceres::GradientChecker const acceleration_gradient_checker(acceleration, nullptr, numeric_diff_options);
-    bool const good_acceleration_gradient{
-        acceleration_gradient_checker.Probe(parameter_blocks_.data(), 1e-9, &results)};
-    delete acceleration;
-    EXPECT_TRUE(good_acceleration_gradient) << results.error_log;
+    CheckSplineGradient(parameter_blocks_, acceleration);
 }
 
 TEST(OptimizationSplineCostFunction, TestR3SplineCostFunctionCreate_T) {
