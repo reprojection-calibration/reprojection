@@ -35,10 +35,11 @@ class OptimizationSplineCostFunctionFixture : public ::testing::Test {
     double static Squared(double const x) { return x * x; }
 };
 
+// WARN DELETES THE COST FUNCTION! USE SMART POINTER INSTEAD
 void CheckSplineResidual(std::vector<double const*> const& parameter_blocks, ceres::CostFunction* cost_function) {
     Vector3d residual;
 
-    bool success{cost_function->Evaluate(parameter_blocks.data(), residual.data(), nullptr)};
+    bool const success{cost_function->Evaluate(parameter_blocks.data(), residual.data(), nullptr)};
     delete cost_function;
 
     EXPECT_TRUE(success);
@@ -87,7 +88,6 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_so3) 
     CheckSplineResidual(parameter_blocks_, cost_function);
 }
 
-// WARN DELETES THE COST FUNCTION! USE SMART POINTER INSTEAD
 void CheckSplineGradient(std::vector<double const*> const& parameter_blocks, ceres::CostFunction* cost_function) {
     ceres::NumericDiffOptions const numeric_diff_options;
     ceres::GradientChecker::ProbeResults results;
