@@ -8,12 +8,14 @@ apt-get install --no-install-recommends --yes \
     ca-certificates \
     cmake \
     git \
+    libgtest-dev \
     ninja-build \
     wget
 
 # Required for code coverage
 apt-get install --no-install-recommends --yes \
     bc \
-    lcov
+    lcov \
+    libjson-xs-perl
 
 rm --force --recursive /var/lib/apt/lists/*

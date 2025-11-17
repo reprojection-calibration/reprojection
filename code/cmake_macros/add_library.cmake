@@ -12,4 +12,10 @@ macro(AddLibrary)
     target_link_libraries(${LIBRARY_NAME} PRIVATE
             ${LINK_LIBRARIES}
     )
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(${LIBRARY_NAME} PRIVATE --coverage)
+        target_link_options(${LIBRARY_NAME} PRIVATE --coverage)
+    endif ()
+
 endmacro()

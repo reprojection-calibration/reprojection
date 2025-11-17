@@ -34,23 +34,15 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_CHECKS}
 
-FROM base-stage AS code-coverage-stage
+
+FROM base-stage AS debug-build-stage
 
 # General code coverage notes:
 #
 # The solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example
 #
-# The first thing which is a little suprising is that we build the library twice, once in the build-stage and once here
-# in the code-coverage-stage. This is because to build for code coverage you have to disable all optimizations,
-# therefore in the CMakeLists.txt we added the logic around the CODE_COVERAGE variable. That is used to set the settings
-# which are required for code coverage to work. That being said, because we do not have a release stage or any other use
-# of the artifacts from the build stage, we could have put this directly into the build stage and just made our regular
-# build there be code coverage compliant. However in all the repos so far we have a build-stage that just builds and
-# tests the project, therefore I left that as is. This is an arbitrary distinction, and something which we can remove
-# as we move forward.
-#
 # A difference from the tutorial we adopted this from, is that instead of doing it all in the github action, I wanted to
-# do it here in docker stages exactly like the build-stage or code-checks-stage. And to be perfectly honest I could not
+# do it here in docker stages. And to be perfectly honest I could not
 # quickly figure out how to do it like he did it in the reference repo, and this should be improved. For example in the
 # reference repo the html report is saved as an artefact which can be viewed on github, which is awesome and currently
 # not the case here. Instead we have two paths, (1) the code-coverage-report-stage which can be run and used to view the
@@ -67,41 +59,52 @@ FROM base-stage AS code-coverage-stage
 ARG BUILD_LIBRARY=building/scripts/build_library.sh
 RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
     --mount=type=bind,source=code/,target=/temporary/code \
-    /temporary/${BUILD_LIBRARY} --code-coverage
+    /temporary/${BUILD_LIBRARY} --cmake_build_type=Debug
 
 ARG CODE_COVERAGE=building/scripts/code_coverage.sh
 RUN --mount=type=bind,source=${CODE_COVERAGE},target=/temporary/${CODE_COVERAGE} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_COVERAGE}
 
-FROM nginx:1.29.2 AS code-coverage-report-stage
 
-# Open http://localhost:8080 to view the report
-COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/html
-
-FROM code-coverage-stage AS code-coverage-assertion-stage
+FROM debug-build-stage AS code-coverage-assertion-stage
 
 ARG CODE_COVERAGE_ASSERTION=building/scripts/code_coverage_assertion.sh
 RUN --mount=type=bind,source=${CODE_COVERAGE_ASSERTION},target=/temporary/${CODE_COVERAGE_ASSERTION} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_COVERAGE_ASSERTION}
 
-FROM base-stage AS build-stage
+
+# NOT EXECUTED IN CI!!!
+FROM nginx:1.29.2 AS code-coverage-report-stage
+
+# Open http://localhost:8080 to view the report
+COPY --from=debug-build-stage  /buildroot/coverage-report  /usr/share/nginx/html
+
+
+# NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
+# Debug builds. However for applications we want them to be as fast as possible so we need a Release type build. We add
+# this stage to host that build so that it can be used by all applications.
+# NOT EXECUTED IN CI!!!
+FROM base-stage AS release-build-stage
 
 ARG BUILD_LIBRARY=building/scripts/build_library.sh
 RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
     --mount=type=bind,source=code/,target=/temporary/code \
-    /temporary/${BUILD_LIBRARY}
+    /temporary/${BUILD_LIBRARY} --cmake_build_type=Release
 
-FROM base-stage AS feature-extraction-demo-stage
+
+# NOT EXECUTED IN CI!!!
+FROM release-build-stage AS feature-extraction-demo-stage
 
 # TODO(Jack): We should actually use cmakes install capability instead of just copying over the entire build folder!
-COPY --from=build-stage /buildroot/build /buildroot/build
+COPY --from=release-build-stage /buildroot/build /buildroot/build
 
 # NOTE(Jack): This requires that the folder having the config is properly mounted as a volume in the run command
 ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary/code/demos/examples/target_config.yaml"]
 
 
+# NOT EXECUTED IN CI!!!
 FROM base-stage AS development-stage
 
 RUN apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*

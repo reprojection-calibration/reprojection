@@ -23,20 +23,22 @@ jobs:
           file: building/Dockerfile
           tags: reprojection-code-checks:latest
           target: code-checks-stage
-  build:
+  debug-build:
+    needs: code-checks
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: build-stage
+      - name: debug-build-stage
         uses: docker/build-push-action@v6
         with:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           file: building/Dockerfile
-          tags: reprojection-build:latest
-          target: build-stage
+          tags: reprojection-debug-build:latest
+          target: debug-build-stage
   code-coverage-assertion:
+    needs: debug-build
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx

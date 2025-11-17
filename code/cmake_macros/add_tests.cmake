@@ -1,11 +1,5 @@
 macro(AddTests)
-    if (CODE_COVERAGE)
-        target_compile_options(${LIBRARY_NAME} PRIVATE --coverage -O0 -g)
-        target_link_options(${LIBRARY_NAME} PRIVATE --coverage)
-    endif ()
-
-
-    include(GoogleTest)
+    find_package(GTest REQUIRED)
 
     foreach (TEST IN LISTS TESTS)
         get_filename_component(TEST_NAME ${TEST} NAME_WLE)
@@ -22,8 +16,8 @@ macro(AddTests)
                 ${LINK_LIBRARIES}
         )
 
-        if (CODE_COVERAGE)
-            target_compile_options(${TEST_NAME} PRIVATE --coverage -O0 -g)
+        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+            target_compile_options(${TEST_NAME} PRIVATE --coverage)
             target_link_options(${TEST_NAME} PRIVATE --coverage)
         endif ()
 
