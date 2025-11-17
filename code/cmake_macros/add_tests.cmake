@@ -1,6 +1,4 @@
 macro(AddTests)
-    find_package(GTest REQUIRED)
-
     foreach (TEST IN LISTS TESTS)
         get_filename_component(TEST_NAME ${TEST} NAME_WLE)
         set(TEST_NAME ${LIBRARY_NAME}.${TEST_NAME})
