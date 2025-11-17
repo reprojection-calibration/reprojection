@@ -31,7 +31,7 @@ class SplineCostFunction_T {
     bool operator()(T const* const control_point_0_ptr, T const* const control_point_1_ptr,
                     T const* const control_point_2_ptr, T const* const control_point_3_ptr, T* const residual) const {
         // NOTE(Jack): We need to pass in the control points individually to satisfy ceres (see note above), but our
-        // R3Spline::Evaluate() method takes a eigen matrix. Therefore, we have to organize them using maps
+        // templated Evaluate() methods takes a eigen matrix. Therefore, we have to organize them using maps
         // into points and then  place them in the control points matrix.
         Eigen::Map<const Eigen::Matrix<T, 3, 1>> p0(control_point_0_ptr);
         Eigen::Map<const Eigen::Matrix<T, 3, 1>> p1(control_point_1_ptr);
@@ -42,7 +42,7 @@ class SplineCostFunction_T {
         // control_point_*_ptr are passed in from should be continuous, and therefore we could just make a map taking
         // starting at control_point_0_ptr and map the next 12 elements into a Matrix3k. However this is entering
         // sketchy territory where we might start to violate the principle of least surprise. Unless there is some
-        // benchmark showing this would help solve a problem, lets no do it :)
+        // benchmark showing this would help solve a problem, lets not do it :)
         spline::Matrix3K<T> control_points;
         control_points << p0, p1, p2, p3;
 
@@ -55,8 +55,6 @@ class SplineCostFunction_T {
         return true;
     }
 
-    // NOTE(Jack): At this point we are really hardcoding that we are dealing with cubic splines here! The code can now
-    // not be changed to any other spline degree without major rework.
     static ceres::CostFunction* Create(Vector3d const& p, double const u_i, std::uint64_t const delta_t_ns) {
         return new ceres::AutoDiffCostFunction<SplineCostFunction_T, 3, 3, 3, 3, 3>(
             new SplineCostFunction_T(p, u_i, delta_t_ns));
@@ -78,8 +76,8 @@ ceres::CostFunction* CreateSplineCostFunction_T(spline::DerivativeOrder const de
     } else if (derivative == spline::DerivativeOrder::Second) {
         return SplineCostFunction_T<T_Model, spline::DerivativeOrder::Second>::Create(p, u_i, delta_t_ns);
     } else {
-        throw std::runtime_error(
-            "Requested unknown derivative order from CreateR3SplineCostFunction()");  // LCOV_EXCL_LINE
+        throw std::runtime_error(                                                     // LCOV_EXCL_LINE
+            "Requested unknown derivative order from CreateSplineCostFunction_T()");  // LCOV_EXCL_LINE
     }
 }
 
