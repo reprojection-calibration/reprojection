@@ -19,12 +19,12 @@ for i in "$@"; do
   esac
 done
 
-mkdir /buildroot/ceres-${cmake_build_type}
-cd /buildroot/ceres-${cmake_build_type}
+mkdir /buildroot/ceres-"${cmake_build_type}"
+cd /buildroot/ceres-"${cmake_build_type}"
 cmake /buildroot/ceres-solver-2.2.0 -DBUILD_BENCHMARKS=OFF \
                                     -DBUILD_EXAMPLES=OFF \
                                     -DBUILD_TESTING=OFF \
-                                    -DCMAKE_BUILD_TYPE=${cmake_build_type}
+                                    -DCMAKE_BUILD_TYPE="${cmake_build_type}"
 make -j4
 make install
 
