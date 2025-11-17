@@ -14,6 +14,7 @@ apt-get install --no-install-recommends --yes \
 # Required for code coverage
 apt-get install --no-install-recommends --yes \
     bc \
-    lcov
+    lcov \
+    libjson-xs-perl
 
 rm --force --recursive /var/lib/apt/lists/*

@@ -3,6 +3,9 @@
 set -eoux pipefail
 
 
+# !!! DISCLAIMER !!! - The release build mentioned below has been removed! It was taking too long in CI and we are not
+# sure it was even working (as described below). When we need it again we will add it back.
+
 # WARN(Jack): My intention here by installing ceres from source is that we get much better source code navigation with
 # clion. The apt package only includes four headers (those required for autodiff) and no debug symbols. Therefore with
 # the source install we get much much better source code navigation, even if not 100%.
@@ -28,16 +31,6 @@ cmake ../ceres-solver-2.2.0 -DBUILD_BENCHMARKS=OFF \
                             -DBUILD_EXAMPLES=OFF \
                             -DBUILD_TESTING=OFF \
                             -DCMAKE_BUILD_TYPE=Debug
-make -j4
-make install
-
-cd ..
-mkdir ceres-release
-cd ceres-release
-cmake ../ceres-solver-2.2.0 -DBUILD_BENCHMARKS=OFF \
-                            -DBUILD_EXAMPLES=OFF \
-                            -DBUILD_TESTING=OFF \
-                            -DCMAKE_BUILD_TYPE=Release
 make -j4
 make install
 
