@@ -11,7 +11,7 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): Test explicitly?
+// TODO(Jack): Test explicitly and make part of SoSpline static class if not used elsehwere?
 template <typename T>
 std::array<Vector3<T>, constants::degree> DeltaPhi(Matrix3K<T> const& control_points) {
     std::array<Vector3<T>, constants::degree> delta_phi;

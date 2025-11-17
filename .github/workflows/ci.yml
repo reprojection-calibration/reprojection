@@ -6,9 +6,20 @@ on:
   pull_request:
     branches: [ "main" ]
 
-# WARN(Jack): I had problems before with the docker cache actually working when all the jobs were in one file, and I
-# think I partially solved this by separating each process into its own workflow file. However, at this point I do not
-# notice the problem and have combined the workflows back into one file as it should be.
+# NOTE(Jack): We use the scope tags (https://docs.docker.com/build/cache/backends/gha/#scope) here to preserve the cache
+# for each step. Otherwise it will by default use the same scope for all jobs and only preserve the last cache item.
+# NOTE(Jack): My finding is that the critical step to effectively get docker caching is to set the scope in the
+# "cache-from" and "cache-to" instruction. If this is not done then the default "buildkit" scope is used on only the
+# last cached item is saved, which doesn't do us any good. Read the docs here
+# (https://docs.docker.com/build/cache/backends/gha/#scope) for the official explanation.
+#
+# Our strategy at time of writing (17.11.2025) is to have the code checks isolated in their own scope because they have
+# no dependency on the rest of the build. The debug build will push and pull from its own scope because there are a lot
+# of built and installed dependencies there which can be cached. And finally the code coverage stage will pull from the
+# debug build cache, but not actually push any cache, because there is nothing really to cache there.
+#
+# Also note that we use the "needs" tag to explicitly setup dependencies between stages so that if the code checks fail
+# nothing else happens and we do not waste server time.
 jobs:
   code-checks:
     runs-on: ubuntu-latest
@@ -18,8 +29,8 @@ jobs:
       - name: code-checks-stage
         uses: docker/build-push-action@v6
         with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=code-checks
+          cache-to: type=gha,mode=max,scope=code-checks
           file: building/Dockerfile
           tags: reprojection-code-checks:latest
           target: code-checks-stage
@@ -32,8 +43,8 @@ jobs:
       - name: debug-build-stage
         uses: docker/build-push-action@v6
         with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=debug-build
+          cache-to: type=gha,mode=max,scope=debug-build
           file: building/Dockerfile
           tags: reprojection-debug-build:latest
           target: debug-build-stage
@@ -46,8 +57,7 @@ jobs:
       - name: code-coverage-assertion-stage
         uses: docker/build-push-action@v6
         with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=debug-build
           file: building/Dockerfile
           tags: reprojection-code-coverage-assertion:latest
           target: code-coverage-assertion-stage

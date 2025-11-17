@@ -9,9 +9,11 @@ using namespace reprojection;
 
 double Squared(double const x) { return x * x; }  // COPY AND PASTED
 
-using R3Measurement = optimization::R3Measurement;
+// TODO(Jack): Unify measurement
+using C3Measurement = optimization::C3Measurement;
 
-std::tuple<spline::CubicBSplineC3, std::vector<R3Measurement>> R3SplineOptimizationTestData() {
+// TODO(Jack): Unfify test data creation
+std::tuple<spline::CubicBSplineC3, std::vector<C3Measurement>> R3SplineOptimizationTestData() {
     // Build spline, we will generate our fake measurements from this for the optimization test.
     std::uint64_t const t0_ns{100};
     std::uint64_t const delta_t_ns{50};
@@ -20,14 +22,14 @@ std::tuple<spline::CubicBSplineC3, std::vector<R3Measurement>> R3SplineOptimizat
         spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
 
-    std::vector<R3Measurement> measurements;
+    std::vector<C3Measurement> measurements;
 
     // NOTE(Jack): If we do not have any position constraints, and ony velocity or acceleration constraint the
     // optimization will wander aimlessly because the derivatives are the same under any constant offset. Thefore we add
     // one position constraint here. In future problems we might achieve this same thing by settings the first value to
     // zero, of simply fixing it to something.
     auto const position_i{spline::EvaluateSpline<spline::R3Spline>(t0_ns, spline, spline::DerivativeOrder::Null)};
-    measurements.push_back(R3Measurement{t0_ns, position_i.value(), spline::DerivativeOrder::Null});
+    measurements.push_back(C3Measurement{t0_ns, position_i.value(), spline::DerivativeOrder::Null});
 
     // For a third degree spline with 6 control points there are three valid time segments! With only four control
     // points there would only be one valid time segment.
@@ -35,11 +37,11 @@ std::tuple<spline::CubicBSplineC3, std::vector<R3Measurement>> R3SplineOptimizat
         std::uint64_t const t_i{t0_ns + i};
 
         auto const velocity_i{spline::EvaluateSpline<spline::R3Spline>(t_i, spline, spline::DerivativeOrder::First)};
-        measurements.push_back(R3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
+        measurements.push_back(C3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
 
         auto const acceleration_i{
             spline::EvaluateSpline<spline::R3Spline>(t_i, spline, spline::DerivativeOrder::Second)};
-        measurements.push_back(R3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
+        measurements.push_back(C3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
     }
 
     return {spline, measurements};
@@ -54,14 +56,14 @@ TEST(OptimizationR3SplineNonlinearRefinement, TestNoisyR3SplineNonlinearRefineme
         initialization.control_points[i].array() += 0.2 * i;
     }
 
-    optimization::R3SplineNonlinearRefinement handler{initialization};
+    optimization::CubicBSplineC3Refinement handler{initialization};
     for (auto const& measurement : simulated_measurements) {
-        bool const success{handler.AddConstraint(measurement)};
+        bool const success{handler.AddConstraint<spline::R3Spline>(measurement)};
         EXPECT_TRUE(success);  // All simulated measurements come from valid time range
     }
 
     // Check that we reject a bad measurement point outside the spline domain (bad time)
-    bool const success{handler.AddConstraint({66666, {0, 0, 0}, spline::DerivativeOrder::Null})};
+    bool const success{handler.AddConstraint<spline::R3Spline>({66666, {0, 0, 0}, spline::DerivativeOrder::Null})};
     EXPECT_FALSE(success);
 
     ceres::Solver::Summary const summary{handler.Solve()};

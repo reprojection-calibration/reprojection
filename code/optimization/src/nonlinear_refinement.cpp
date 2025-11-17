@@ -2,9 +2,6 @@
 
 #include "geometry/lie.hpp"
 #include "projection_cost_function.hpp"
-#include "r3_spline_cost_function.hpp"
-#include "so3_spline_cost_function.hpp"
-#include "spline/r3_spline.hpp"
 
 namespace reprojection::optimization {
 
@@ -42,31 +39,9 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(s
 }
 
 // TODO(Jack): Naming!
-R3SplineNonlinearRefinement::R3SplineNonlinearRefinement(spline::CubicBSplineC3 const& spline) : spline_{spline} {}
+CubicBSplineC3Refinement::CubicBSplineC3Refinement(spline::CubicBSplineC3 const& spline) : spline_{spline} {}
 
-// NOTE(Jack): We will keep this as no discard because I want to force the user to responsibly handle invalid
-// conditions when adding constraints. This is one distinction from the camera bundle adjustment case, that here we have
-// an explicit condition that determines what is valid and what is not, which requires more fine grained control from
-// the user side.
-[[nodiscard]] bool R3SplineNonlinearRefinement::AddConstraint(R3Measurement const& constraint) {
-    auto const normalized_position{
-        spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
-    if (not normalized_position.has_value()) {
-        return false;
-    }
-    auto const [u_i, i]{normalized_position.value()};
-
-    ceres::CostFunction* const cost_function{optimization::CreateR3SplineCostFunction(
-        constraint.type, constraint.r3, u_i, spline_.time_handler.delta_t_ns_)};
-
-    problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
-                              spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),
-                              spline_.control_points[i + 3].data());
-
-    return true;
-}
-
-ceres::Solver::Summary R3SplineNonlinearRefinement::Solve() {
+ceres::Solver::Summary CubicBSplineC3Refinement::Solve() {
     ceres::Solver::Options options;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem_, &summary);
@@ -74,36 +49,6 @@ ceres::Solver::Summary R3SplineNonlinearRefinement::Solve() {
     return summary;
 }
 
-spline::CubicBSplineC3 R3SplineNonlinearRefinement::GetSpline() const { return spline_; }
-
-So3SplineNonlinearRefinement::So3SplineNonlinearRefinement(spline::CubicBSplineC3 const& spline) : spline_{spline} {}
-
-bool So3SplineNonlinearRefinement::AddConstraint(So3Measurement const& constraint) {
-    auto const normalized_position{
-        spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
-    if (not normalized_position.has_value()) {
-        return false;
-    }
-    auto const [u_i, i]{normalized_position.value()};
-
-    ceres::CostFunction* const cost_function{
-        CreateSo3SplineCostFunction(constraint.type, constraint.so3, u_i, spline_.time_handler.delta_t_ns_)};
-
-    problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
-                              spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),
-                              spline_.control_points[i + 3].data());
-
-    return true;
-}
-
-ceres::Solver::Summary So3SplineNonlinearRefinement::Solve() {
-    ceres::Solver::Options options;
-    ceres::Solver::Summary summary;
-    ceres::Solve(options, &problem_, &summary);
-
-    return summary;
-}
-
-spline::CubicBSplineC3 So3SplineNonlinearRefinement::GetSpline() const { return spline_; }
+spline::CubicBSplineC3 CubicBSplineC3Refinement::GetSpline() const { return spline_; }
 
 }  // namespace  reprojection::optimization

@@ -1,21 +1,19 @@
 #include <ceres/ceres.h>
 
-#include "spline/r3_spline.hpp"
+#include "spline/spline_evaluation_concept.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
 
-ceres::CostFunction* CreateR3SplineCostFunction(spline::DerivativeOrder const derivative, Vector3d const& r3,
-                                                double const u_i, std::uint64_t const delta_t_ns);
-
-// NOTE(Jack): We purposely pick r3 as the variable name because it is generic enough to represent the idea that
-// sometimes it is a value/posiiton, a velocity, or an acceleration depending on the derivative order.
-template <spline::DerivativeOrder D>
-class R3SplineCostFunction_T {
+template <typename T_Model, spline::DerivativeOrder D>
+    requires spline::CanEvaluateCubicBSplineC3<T_Model>
+class SplineCostFunction_T {
    public:
-    R3SplineCostFunction_T(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns)
-        : r3_{r3}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
+    SplineCostFunction_T(Vector3d const& p, double const u_i, std::uint64_t const delta_t_ns)
+        : p_{p}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {
+        // TODO(Jack): Where should we assert that u_i is between 0 and 1?
+    }
 
     // NOTE(Jack): The reason that we need to pass each control point individually comes from ceres. Ceres does not
     // allow parameter blocks to partially overlap. If you do partially overlap you will get an error like,
@@ -33,7 +31,7 @@ class R3SplineCostFunction_T {
     bool operator()(T const* const control_point_0_ptr, T const* const control_point_1_ptr,
                     T const* const control_point_2_ptr, T const* const control_point_3_ptr, T* const residual) const {
         // NOTE(Jack): We need to pass in the control points individually to satisfy ceres (see note above), but our
-        // R3Spline::Evaluate() method takes a eigen matrix. Therefore, we have to organize them using maps
+        // templated Evaluate() methods takes a eigen matrix. Therefore, we have to organize them using maps
         // into points and then  place them in the control points matrix.
         Eigen::Map<const Eigen::Matrix<T, 3, 1>> p0(control_point_0_ptr);
         Eigen::Map<const Eigen::Matrix<T, 3, 1>> p1(control_point_1_ptr);
@@ -44,29 +42,43 @@ class R3SplineCostFunction_T {
         // control_point_*_ptr are passed in from should be continuous, and therefore we could just make a map taking
         // starting at control_point_0_ptr and map the next 12 elements into a Matrix3k. However this is entering
         // sketchy territory where we might start to violate the principle of least surprise. Unless there is some
-        // benchmark showing this would help solve a problem, lets no do it :)
+        // benchmark showing this would help solve a problem, lets not do it :)
         spline::Matrix3K<T> control_points;
         control_points << p0, p1, p2, p3;
 
-        Eigen::Vector<T, 3> const r3{spline::R3Spline::Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
+        Eigen::Vector<T, 3> const p{T_Model::template Evaluate<T, D>(control_points, u_i_, delta_t_ns_)};
 
-        residual[0] = T(r3_[0]) - r3[0];
-        residual[1] = T(r3_[1]) - r3[1];
-        residual[2] = T(r3_[2]) - r3[2];
+        residual[0] = T(p_[0]) - p[0];
+        residual[1] = T(p_[1]) - p[1];
+        residual[2] = T(p_[2]) - p[2];
 
         return true;
     }
 
-    // NOTE(Jack): At this point we are really hardcoding that we are dealing with cubic splines here! The code can now
-    // not be changed to any other spline degree without major rework.
-    static ceres::CostFunction* Create(Vector3d const& r3, double const u_i, std::uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<R3SplineCostFunction_T, 3, 3, 3, 3, 3>(
-            new R3SplineCostFunction_T(r3, u_i, delta_t_ns));
+    static ceres::CostFunction* Create(Vector3d const& p, double const u_i, std::uint64_t const delta_t_ns) {
+        return new ceres::AutoDiffCostFunction<SplineCostFunction_T, 3, 3, 3, 3, 3>(
+            new SplineCostFunction_T(p, u_i, delta_t_ns));
     }
 
-    Vector3d r3_;
+    Vector3d p_;
     double u_i_;
     std::uint64_t delta_t_ns_;
 };
+
+template <typename T_Model>
+    requires spline::CanEvaluateCubicBSplineC3<T_Model>
+ceres::CostFunction* CreateSplineCostFunction_T(spline::DerivativeOrder const derivative, Vector3d const& p,
+                                                double const u_i, std::uint64_t const delta_t_ns) {
+    if (derivative == spline::DerivativeOrder::Null) {
+        return SplineCostFunction_T<T_Model, spline::DerivativeOrder::Null>::Create(p, u_i, delta_t_ns);
+    } else if (derivative == spline::DerivativeOrder::First) {
+        return SplineCostFunction_T<T_Model, spline::DerivativeOrder::First>::Create(p, u_i, delta_t_ns);
+    } else if (derivative == spline::DerivativeOrder::Second) {
+        return SplineCostFunction_T<T_Model, spline::DerivativeOrder::Second>::Create(p, u_i, delta_t_ns);
+    } else {
+        throw std::runtime_error(                                                     // LCOV_EXCL_LINE
+            "Requested unknown derivative order from CreateSplineCostFunction_T()");  // LCOV_EXCL_LINE
+    }
+}
 
 }  // namespace reprojection::optimization

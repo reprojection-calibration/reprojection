@@ -1,7 +1,7 @@
-#include "so3_spline_cost_function.hpp"
-
 #include <gtest/gtest.h>
 
+#include "optimization/spline_cost_function.hpp"
+#include "spline/so3_spline.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -30,8 +30,8 @@ TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
 
     // Position
     Array3d const position{0.1460482362445171, 0.3755842237411095, 0.39702710822143839};
-    ceres::CostFunction* cost_function{
-        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
+    ceres::CostFunction* cost_function{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
+        spline::DerivativeOrder::Null, position, u_i, delta_t_ns)};
     bool success{cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr)};
     delete cost_function;
     EXPECT_TRUE(success);
@@ -39,8 +39,8 @@ TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
 
     // Velocity
     Array3d const velocity{0.8563971186898035, -0.1204280865611993, 0.12722122556164611};
-    cost_function =
-        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::First, velocity, u_i, delta_t_ns);
+    cost_function = optimization::CreateSplineCostFunction_T<spline::So3Spline>(spline::DerivativeOrder::First,
+                                                                                velocity, u_i, delta_t_ns);
     success = cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr);
     delete cost_function;
     EXPECT_TRUE(success);
@@ -48,8 +48,8 @@ TEST(OptimizationSo3SplineCostFunction, TestCreateSo3SplineCostFunction) {
 
     // Acceleration
     Array3d const acceleration{0.0069974409407700944, 0.80095289350156396, 0.71108131312833733};
-    cost_function =
-        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Second, acceleration, u_i, delta_t_ns);
+    cost_function = optimization::CreateSplineCostFunction_T<spline::So3Spline>(spline::DerivativeOrder::Second,
+                                                                                acceleration, u_i, delta_t_ns);
     success = cost_function->Evaluate(P_ptr_ptr, residual.data(), nullptr);
     delete cost_function;
     EXPECT_TRUE(success);
@@ -75,22 +75,22 @@ TEST(OptimizationSo3SplineCostFunction, TestSo3SplineGradients) {
     ceres::NumericDiffOptions const numeric_diff_options;
     ceres::GradientChecker::ProbeResults results;
 
-    ceres::CostFunction const* const position{
-        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Null, r3, u_i, delta_t_ns)};
+    ceres::CostFunction const* const position{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
+        spline::DerivativeOrder::Null, r3, u_i, delta_t_ns)};
     ceres::GradientChecker const position_gradient_checker(position, nullptr, numeric_diff_options);
     bool const good_position_gradient{position_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
     delete position;
     EXPECT_TRUE(good_position_gradient) << results.error_log;
 
-    ceres::CostFunction const* const velocity{
-        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::First, r3, u_i, delta_t_ns)};
+    ceres::CostFunction const* const velocity{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
+        spline::DerivativeOrder::First, r3, u_i, delta_t_ns)};
     ceres::GradientChecker const velocity_gradient_checker(velocity, nullptr, numeric_diff_options);
     bool const good_velocity_gradient{velocity_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
     delete velocity;
     EXPECT_TRUE(good_velocity_gradient) << results.error_log;
 
-    ceres::CostFunction const* const acceleration{
-        optimization::CreateSo3SplineCostFunction(spline::DerivativeOrder::Second, r3, u_i, delta_t_ns)};
+    ceres::CostFunction const* const acceleration{optimization::CreateSplineCostFunction_T<spline::So3Spline>(
+        spline::DerivativeOrder::Second, r3, u_i, delta_t_ns)};
     ceres::GradientChecker const acceleration_gradient_checker(acceleration, nullptr, numeric_diff_options);
     bool const good_acceleration_gradient{acceleration_gradient_checker.Probe(parameter_blocks.data(), 1e-9, &results)};
     delete acceleration;
@@ -103,7 +103,8 @@ TEST(OptimizationSo3SplineCostFunction, TestSo3SplineCostFunctionCreate_T) {
     std::uint64_t const delta_t_ns{1};
 
     ceres::CostFunction const* const cost_function{
-        optimization::So3SplineCostFunction_T<spline::DerivativeOrder::Null>::Create(so3, u_i, delta_t_ns)};
+        optimization::SplineCostFunction_T<spline::So3Spline, spline::DerivativeOrder::Null>::Create(so3, u_i,
+                                                                                                     delta_t_ns)};
 
     // Four r3 control point parameter blocks of size three and a r3 residual
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 4);

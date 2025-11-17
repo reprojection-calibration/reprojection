@@ -14,6 +14,7 @@ add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 include(cmake_macros/add_library.cmake)
 include(cmake_macros/add_tests.cmake)
 
+find_package(GTest REQUIRED)
 enable_testing()
 
 add_subdirectory(types)
