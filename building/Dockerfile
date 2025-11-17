@@ -113,4 +113,4 @@ ARG CERES_SOURCE_BUILD_DEBUG=building/install_scripts/ceres_source_build_debug.s
 RUN --mount=type=bind,source=${CERES_SOURCE_BUILD_DEBUG},target=/temporary/${CERES_SOURCE_BUILD_DEBUG} \
     /temporary/${CERES_SOURCE_BUILD_DEBUG}
 
-RUN apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
+RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
