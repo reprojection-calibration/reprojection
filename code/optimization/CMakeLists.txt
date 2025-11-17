@@ -25,6 +25,7 @@ set(TESTS
         test/camera_nonlinear_refinement.test.cpp
         test/r3_spline_nonlinear_refinement.test.cpp
         test/spline_cost_function.test.cpp
+        test/spline_nonlinear_refinement.test.cpp
         test/so3_spline_nonlinear_refinement.test.cpp
 )
 AddTests()
