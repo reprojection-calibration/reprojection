@@ -9,9 +9,9 @@ using namespace reprojection;
 
 double Squared(double const x) { return x * x; }  // COPY AND PASTED
 
-using So3Measurement = optimization::So3Measurement;
+using C3Measurement = optimization::C3Measurement;
 
-std::tuple<spline::CubicBSplineC3, std::vector<So3Measurement>> So3SplineOptimizationTestData() {
+std::tuple<spline::CubicBSplineC3, std::vector<C3Measurement>> So3SplineOptimizationTestData() {
     std::uint64_t const t0_ns{100};
     std::uint64_t const delta_t_ns{50};
     spline::CubicBSplineC3 spline{t0_ns, delta_t_ns};
@@ -19,20 +19,20 @@ std::tuple<spline::CubicBSplineC3, std::vector<So3Measurement>> So3SplineOptimiz
         spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
     }
 
-    std::vector<So3Measurement> measurements;
+    std::vector<C3Measurement> measurements;
     for (size_t i{0}; i < delta_t_ns; ++i) {
         std::uint64_t const t_i{t0_ns + i};
 
         // ERROR(Jack): How does EvaluateSpline get into this namespace? Does that work differently for templated
         // functions?
         auto const position_i{EvaluateSpline<spline::So3Spline>(t_i, spline, spline::DerivativeOrder::Null)};
-        measurements.push_back(So3Measurement{t_i, position_i.value(), spline::DerivativeOrder::Null});
+        measurements.push_back(C3Measurement{t_i, position_i.value(), spline::DerivativeOrder::Null});
 
         auto const velocity_i{EvaluateSpline<spline::So3Spline>(t_i, spline, spline::DerivativeOrder::First)};
-        measurements.push_back(So3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
+        measurements.push_back(C3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
 
         auto const acceleration_i{EvaluateSpline<spline::So3Spline>(t_i, spline, spline::DerivativeOrder::Second)};
-        measurements.push_back(So3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
+        measurements.push_back(C3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
     }
 
     return {spline, measurements};
@@ -46,13 +46,13 @@ TEST(OptimizationSo3SplineNonlinearRefinement, TestNoisySo3SplineNonlinearRefine
         initialization.control_points[i].array() += 0.2 * i;
     }
 
-    optimization::So3SplineNonlinearRefinement handler{initialization};
+    optimization::CubicBSplineC3Refinement handler{initialization};
     for (auto const& measurement : simulated_measurements) {
-        bool const success{handler.AddConstraint(measurement)};
+        bool const success{handler.AddConstraint<spline::So3Spline>(measurement)};
         EXPECT_TRUE(success);
     }
 
-    bool const success{handler.AddConstraint({66666, {0, 0, 0}, spline::DerivativeOrder::Null})};
+    bool const success{handler.AddConstraint<spline::So3Spline>({66666, {0, 0, 0}, spline::DerivativeOrder::Null})};
     EXPECT_FALSE(success);
 
     ceres::Solver::Summary const summary{handler.Solve()};

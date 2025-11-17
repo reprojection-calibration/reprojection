@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
+#include "optimization/spline_cost_function.hpp"
+
 #include "spline/r3_spline.hpp"
-#include "spline_cost_function.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
