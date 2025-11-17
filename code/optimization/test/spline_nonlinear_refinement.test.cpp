@@ -4,6 +4,7 @@
 #include "spline/r3_spline.hpp"
 #include "spline/so3_spline.hpp"
 #include "spline/spline_evaluation.hpp"
+#include "spline/spline_evaluation_concept.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -17,24 +18,24 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
     }
 
     template <typename T_Model>
-    // REQUIRE CONCEPT
+        requires spline::CanEvaluateCubicBSplineC3<T_Model>
     std::vector<optimization::C3Measurement> CalculateMeasurements() {
-        std::vector<optimization::C3Measurement> measurements;
+        using namespace spline;
+        using C3Measurement = optimization::C3Measurement;
 
+        std::vector<C3Measurement> measurements;
         // Given five control points we get three valid time segments of length delta_t_ns_
         for (size_t i{0}; i < 3 * delta_t_ns_; ++i) {
             std::uint64_t const t_i{t0_ns_ + i};
 
-            auto const position_i{spline::EvaluateSpline<T_Model>(t_i, spline_, spline::DerivativeOrder::Null)};
-            measurements.push_back(optimization::C3Measurement{t_i, position_i.value(), spline::DerivativeOrder::Null});
+            auto const position_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::Null)};
+            measurements.push_back(C3Measurement{t_i, position_i.value(), DerivativeOrder::Null});
 
-            auto const velocity_i{spline::EvaluateSpline<T_Model>(t_i, spline_, spline::DerivativeOrder::First)};
-            measurements.push_back(
-                optimization::C3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
+            auto const velocity_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::First)};
+            measurements.push_back(C3Measurement{t_i, velocity_i.value(), DerivativeOrder::First});
 
-            auto const acceleration_i{spline::EvaluateSpline<T_Model>(t_i, spline_, spline::DerivativeOrder::Second)};
-            measurements.push_back(
-                optimization::C3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
+            auto const acceleration_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::Second)};
+            measurements.push_back(C3Measurement{t_i, acceleration_i.value(), DerivativeOrder::Second});
         }
 
         return measurements;
@@ -47,42 +48,6 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
    private:
     double static Squared(double const x) { return x * x; }
 };
-
-// REMOVE
-double Squared(double const x) { return x * x; }  // COPY AND PASTED
-
-// MOVE
-using C3Measurement = optimization::C3Measurement;
-
-std::tuple<spline::CubicBSplineC3, std::vector<C3Measurement>> R3SplineOptimizationTestData() {
-    // Build spline, we will generate our fake measurements from this for the optimization test.
-    std::uint64_t const t0_ns{100};
-    std::uint64_t const delta_t_ns{50};
-    spline::CubicBSplineC3 spline{t0_ns, delta_t_ns};
-    for (auto const& x : std::vector<double>{-2, -1, -0.5, 0.5, 1, 2}) {
-        spline.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
-    }
-
-    std::vector<C3Measurement> measurements;
-
-    // For a third degree spline with 6 control points there are three valid time segments! With only four control
-    // points there would only be one valid time segment.
-    for (size_t i{0}; i < 3 * delta_t_ns; ++i) {
-        std::uint64_t const t_i{t0_ns + i};
-
-        auto const position_i{spline::EvaluateSpline<spline::R3Spline>(t_i, spline, spline::DerivativeOrder::Null)};
-        measurements.push_back(C3Measurement{t_i, position_i.value(), spline::DerivativeOrder::Null});
-
-        auto const velocity_i{spline::EvaluateSpline<spline::R3Spline>(t_i, spline, spline::DerivativeOrder::First)};
-        measurements.push_back(C3Measurement{t_i, velocity_i.value(), spline::DerivativeOrder::First});
-
-        auto const acceleration_i{
-            spline::EvaluateSpline<spline::R3Spline>(t_i, spline, spline::DerivativeOrder::Second)};
-        measurements.push_back(C3Measurement{t_i, acceleration_i.value(), spline::DerivativeOrder::Second});
-    }
-
-    return {spline, measurements};
-}
 
 TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearRefinement) {
     auto const simulated_measurements{CalculateMeasurements<spline::R3Spline>()};
@@ -112,10 +77,10 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
     }
 }
 
-TEST(OptimizationSo3SplineNonlinearRefinement, TestNoisySo3SplineNonlinearRefinement) {
-    auto const [gt_spline, simulated_measurements]{R3SplineOptimizationTestData()};
+TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinearRefinement) {
+    auto const simulated_measurements{CalculateMeasurements<spline::So3Spline>()};
 
-    spline::CubicBSplineC3 initialization{gt_spline};
+    spline::CubicBSplineC3 initialization{spline_};
     for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
         initialization.control_points[i].array() += 0.1 * i;
     }
@@ -134,6 +99,6 @@ TEST(OptimizationSo3SplineNonlinearRefinement, TestNoisySo3SplineNonlinearRefine
 
     spline::CubicBSplineC3 const optimized_spline{handler.GetSpline()};
     for (size_t i{0}; i < std::size(optimized_spline.control_points); ++i) {
-        EXPECT_TRUE(optimized_spline.control_points[i].isApprox(gt_spline.control_points[i], 1e-1));
+        EXPECT_TRUE(optimized_spline.control_points[i].isApprox(spline_.control_points[i], 1e-1));
     }
 }
