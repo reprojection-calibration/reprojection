@@ -24,6 +24,7 @@ jobs:
           tags: reprojection-code-checks:latest
           target: code-checks-stage
   debug-build:
+    needs: code-checks
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
@@ -37,6 +38,7 @@ jobs:
           tags: reprojection-debug-build:latest
           target: debug-build-stage
   code-coverage-assertion:
+    needs: debug-build
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
