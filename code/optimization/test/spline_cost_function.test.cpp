@@ -8,8 +8,6 @@
 
 using namespace reprojection;
 
-double Squared(double const x) { return x * x; }
-
 class OptimizationSplineCostFunctionFixture : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -35,9 +33,7 @@ class OptimizationSplineCostFunctionFixture : public ::testing::Test {
     double static Squared(double const x) { return x * x; }
 };
 
-// NOTE(Jack): If you want to understand more about the ground truth values of position, velocity, and acceleration
-// please see the "Spline_r3Spline, TestTemplatedEvaluateOnParabola" test :)
-TEST_F(OptimizationSplineCostFunctionFixture, TestCreateR3SplineCostFunction) {
+TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_R3) {
     Vector3d residual;
 
     // Position
@@ -69,27 +65,7 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestCreateR3SplineCostFunction) {
     EXPECT_TRUE(residual.isZero());
 }
 
-TEST(OptimizationSplineCostFunction, TestR3SplineCostFunctionCreate_T) {
-    Vector3d const r3{0, 0, 0};
-    double const u_i{0.5};
-    std::uint64_t const delta_t_ns{1};
-
-    ceres::CostFunction const* const cost_function{
-        optimization::SplineCostFunction_T<spline::R3Spline, spline::DerivativeOrder::Null>::Create(r3, u_i,
-                                                                                                    delta_t_ns)};
-
-    // Four r3 control point parameter blocks of size three and a r3 residual
-    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 4);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[1], 3);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[2], 3);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[3], 3);
-    EXPECT_EQ(cost_function->num_residuals(), 3);
-    delete cost_function;
-}
-
-// Look in the so3 spline units test/r3 unit test to understand the testing values and philosophy.
-TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSo3SplineCostFunction) {
+TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_so3) {
     Vector3d residual;
 
     // Position
@@ -121,7 +97,7 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSo3SplineCostFunction) {
 }
 
 // TODO(Jack): Do gradient checking for all other autodiff cost functions
-TEST_F(OptimizationSplineCostFunctionFixture, TestSo3SplineGradients) {
+TEST_F(OptimizationSplineCostFunctionFixture, TestSplineGradients_so3) {
     Vector3d const so3{0, 0, 0};
 
     ceres::NumericDiffOptions const numeric_diff_options;
@@ -150,6 +126,24 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestSo3SplineGradients) {
     EXPECT_TRUE(good_acceleration_gradient) << results.error_log;
 }
 
+TEST(OptimizationSplineCostFunction, TestR3SplineCostFunctionCreate_T) {
+    Vector3d const r3{0, 0, 0};
+    double const u_i{0.5};
+    std::uint64_t const delta_t_ns{1};
+
+    ceres::CostFunction const* const cost_function{
+        optimization::SplineCostFunction_T<spline::R3Spline, spline::DerivativeOrder::Null>::Create(r3, u_i,
+                                                                                                    delta_t_ns)};
+
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 4);  // Four control points...
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);          // ... all of size three.
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], 3);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[2], 3);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[3], 3);
+    EXPECT_EQ(cost_function->num_residuals(), 3);  // One residual of size three.
+    delete cost_function;
+}
+
 TEST(OptimizationSplineCostFunction, TestSo3SplineCostFunctionCreate_T) {
     Vector3d const so3{0, 0, 0};
     double const u_i{0.5};
@@ -159,7 +153,7 @@ TEST(OptimizationSplineCostFunction, TestSo3SplineCostFunctionCreate_T) {
         optimization::SplineCostFunction_T<spline::So3Spline, spline::DerivativeOrder::Null>::Create(so3, u_i,
                                                                                                      delta_t_ns)};
 
-    // Four r3 control point parameter blocks of size three and a r3 residual
+    // See test above for explanation of the dimensions.
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 4);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], 3);
