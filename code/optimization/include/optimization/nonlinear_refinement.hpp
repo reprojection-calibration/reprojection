@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "optimization/spline_cost_function.hpp"
-#include "spline/r3_spline.hpp"
-#include "spline/so3_spline.hpp"
+#include "spline/spline_evaluation_concept.hpp"
+#include "spline/spline_state.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -38,7 +38,7 @@ class CubicBSplineC3Refinement {
     // have an explicit condition that determines what is valid and what is not, which requires more fine grained
     // control from the user side.
     template <typename T_Model>
-    // TODO(Add constraint requirement!)
+        requires spline::CanEvaluateCubicBSplineC3<T_Model>
     [[nodiscard]] bool AddConstraint(C3Measurement const& constraint) {
         auto const normalized_position{
             spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
