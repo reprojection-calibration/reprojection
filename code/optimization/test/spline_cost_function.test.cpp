@@ -23,7 +23,7 @@ class OptimizationSplineCostFunctionFixture : public ::testing::Test {
         parameter_blocks_.push_back(P_.col(3).data());
     }
 
-    double u_i_{0.5};  // cppcheck-supress unusedStructMember
+    double u_i_{0.5};
     std::uint64_t delta_t_ns_{1};
     // The P_ matrix can be used by the templated static evaluation functions directly and serves as the storage
     // container for the data referenced to by the ceres friendly parameter blocks initialized in the constructor.
@@ -49,8 +49,9 @@ void CheckSplineResidual(std::vector<double const*> const& parameter_blocks,
 TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_R3) {
     // Position
     Array3d const position{0, 0.28125, 0.28125};
+    // WARN(Jack): We have to use "this->u_i_" here to avoid an insuppressible cppcheck error. Who can solve this?
     auto cost_function{std::unique_ptr<ceres::CostFunction>(optimization::CreateSplineCostFunction_T<spline::R3Spline>(
-        spline::DerivativeOrder::Null, position, u_i_, delta_t_ns_))};
+        spline::DerivativeOrder::Null, position, this->u_i_, delta_t_ns_))};
     CheckSplineResidual(parameter_blocks_, std::move(cost_function));
 
     // Velocity
