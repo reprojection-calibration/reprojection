@@ -18,8 +18,8 @@ jobs:
       - name: code-checks-stage
         uses: docker/build-push-action@v6
         with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=code-checks
+          cache-to: type=gha,mode=max,scope=code-checks
           file: building/Dockerfile
           tags: reprojection-code-checks:latest
           target: code-checks-stage
@@ -32,8 +32,8 @@ jobs:
       - name: debug-build-stage
         uses: docker/build-push-action@v6
         with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=debug-build
+          cache-to: type=gha,mode=max,scope=debug-build
           file: building/Dockerfile
           tags: reprojection-debug-build:latest
           target: debug-build-stage
@@ -46,8 +46,8 @@ jobs:
       - name: code-coverage-assertion-stage
         uses: docker/build-push-action@v6
         with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=debug-build
+          cache-to: type=gha,mode=max,scope=code-coverage-assertion
           file: building/Dockerfile
           tags: reprojection-code-coverage-assertion:latest
           target: code-coverage-assertion-stage
