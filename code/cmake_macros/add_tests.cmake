@@ -1,5 +1,5 @@
 macro(AddTests)
-    include(GoogleTest)
+    find_package(GTest REQUIRED)
 
     foreach (TEST IN LISTS TESTS)
         get_filename_component(TEST_NAME ${TEST} NAME_WLE)
