@@ -2,6 +2,7 @@
 
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
+#include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -24,9 +25,11 @@
 // possible.
 //      problem dimension: b_6_1 = A_6_12 * x_12_1      - for two measurements defining one time segment
 
+namespace reprojection::spline {
 
+CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements);
 
-namespace reprojection::spline {}
+}
 
 using namespace reprojection;
 
