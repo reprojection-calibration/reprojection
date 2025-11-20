@@ -23,17 +23,25 @@
 // simple uniform spline it might happen that later we realize some symmetries that help us reduce the size of the
 // problem itself. However, it might also be that because the measurements are not evenly spaced that this is not
 // possible.
-//      problem dimension: b_6_1 = A_6_12 * x_12_1      - for two measurements defining one time segment
+//      problem dimension: A_6_12 * x_12_1 = b_6_1      - for two measurements defining one time segment
 
 namespace reprojection::spline {
 
 // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
 // and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
 // measurements! Time stamp must be non-decreasing, how can we enforce this?
-CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, int const num_segments) {
+CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
     // TODO(Jack): Will rounding effect the time handling here?
     // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
     CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
+
+    // NOTE(Jack): Is that a formal guarantee we can make somewhere, that all measurements have the same number of
+    // states as the control points? Is that implied by splines?
+    size_t const measurement_dim{std::size(measurements) * constants::states};
+    size_t const control_point_dim{constants::degree + num_segments};
+
+    MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
+    VectorXd b{VectorXd{measurement_dim, 1}};
 
     return spline;
 }
