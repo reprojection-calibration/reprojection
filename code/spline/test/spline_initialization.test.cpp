@@ -59,10 +59,31 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
     // NOTE(Jack): Is that a formal guarantee we can make somewhere, that all measurements have the same number of
     // states as the control points? Is that implied by splines?
     size_t const measurement_dim{std::size(measurements) * constants::states};
-    size_t const control_point_dim{constants::degree + num_segments};
+    size_t const num_control_points{constants::degree + num_segments};
+    size_t const control_point_dim{num_control_points * constants::states};
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
     VectorXd b{VectorXd{measurement_dim, 1}};
+
+    for (size_t j{0}; j < std::size(measurements); ++j) {
+        // TODO(Jack): What is a realistic method to deal with the end of a sequence??? Because the last measurement
+        // will always have a time stamp at the very end of a time segment, which means it will evaluate to u=1 which is
+        // not a valid position.
+        // ULTRA HACK! Also see note on unprotected optional access below.
+        std::uint64_t time_ns_i{measurements[j].t_ns};
+        if (j == std::size(measurements) - 1) {
+            time_ns_i -= 1;
+        }
+
+        // WARN(Jack): Unprotected optional access, but technically we should always been in a valid time segment
+        // because the measurement times are always non-decreasing and set the time limit themselves.
+        auto const [u_i, i]{spline.time_handler.SplinePosition(time_ns_i, num_control_points).value()};
+
+        A.block(constants::states * j, constants::states * i, constants::states, constants::states * constants::order) =
+            VectorizeWeights(u_i);
+    }
+
+    std::cout << A << std::endl;
 
     return spline;
 }
@@ -70,6 +91,16 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
 }  // namespace reprojection::spline
 
 using namespace reprojection::spline;
+
+TEST(SplineSplineInitialization, TestXXX) {
+    std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
+                                                  {5100, {1, 1, 1}, DerivativeOrder::Null},
+                                                  {5200, {2, 2, 2}, DerivativeOrder::Null}};
+
+    CubicBSplineC3 const two_segment_spline{InitializeSpline(measurements, 2)};
+    EXPECT_EQ(two_segment_spline.time_handler.t0_ns_, 5000);
+    EXPECT_EQ(two_segment_spline.time_handler.delta_t_ns_, 100);
+}
 
 // TODO(Jack): reorder tests and methods later during file split
 TEST(SplineSplineInitialization, TestTimeHandling) {
