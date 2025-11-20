@@ -2,6 +2,7 @@
 
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
+#include "spline/r3_spline.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
@@ -27,6 +28,26 @@
 
 namespace reprojection::spline {
 
+// TODO(Jack): Naming here! Technically this is really a "sparse" control point block, does that matter?
+// A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
+// stacked into one vector.
+using ControlPointBlock = Eigen::Matrix<double, constants::states, constants::states * constants::order>;
+
+// TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they can
+// be applied to vectorized control points. We should be more specific that we are actually working on the weights here,
+// and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire problem.
+ControlPointBlock VectorizeWeights(double const u_i) {
+    VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
+
+    ControlPointBlock sparse_weights{ControlPointBlock::Zero()};
+    for (int i{0}; i < constants::order; ++i) {
+        sparse_weights.block(0, constants::states * i, constants::states, constants::states) =
+            Matrix3d::Identity() * weights_i[i];
+    }
+
+    return sparse_weights;
+}
+
 // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
 // and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
 // measurements! Time stamp must be non-decreasing, how can we enforce this?
@@ -50,6 +71,7 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
 
 using namespace reprojection::spline;
 
+// TODO(Jack): reorder tests and methods later during file split
 TEST(SplineSplineInitialization, TestTimeHandling) {
     std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
                                                   {5100, {1, 1, 1}, DerivativeOrder::Null},
@@ -62,4 +84,14 @@ TEST(SplineSplineInitialization, TestTimeHandling) {
     CubicBSplineC3 const two_segment_spline{InitializeSpline(measurements, 2)};
     EXPECT_EQ(two_segment_spline.time_handler.t0_ns_, 5000);
     EXPECT_EQ(two_segment_spline.time_handler.delta_t_ns_, 100);
+}
+
+TEST(SplineSplineInitialization, TestVectorizeWeights) {
+    ControlPointBlock const w_0{VectorizeWeights(0.0)};
+    ASSERT_TRUE(w_0.block(0, 9, 3, 3).isZero());
+    // TODO(Jack): Assert a heurstic float equal of w_0 and w_1
+
+    ControlPointBlock const w_1{VectorizeWeights(0.99999999999)};
+    std::cout << w_1 << std::endl;
+    ASSERT_TRUE(w_1.block(0, 0, 3, 3).isZero());
 }
