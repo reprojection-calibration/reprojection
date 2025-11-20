@@ -49,7 +49,7 @@ ControlPointBlock VectorizeWeights(double const u_i) {
 }
 
 std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
-                                       CubicBSplineC3 const& spline) {
+                                       TimeHandler const& time_handler) {
     // NOTE(Jack): Is that a formal guarantee we can make somewhere, that all measurements have the same number of
     // states as the control points? Is that implied by splines?
     size_t const measurement_dim{std::size(measurements) * constants::states};
@@ -69,7 +69,7 @@ std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measure
 
         // WARN(Jack): Unprotected optional access, but technically we should always been in a valid time segment
         // because the measurement times are always non-decreasing and set the time limit themselves.
-        auto const [u_i, i]{spline.time_handler.SplinePosition(time_ns_i, num_control_points).value()};
+        auto const [u_i, i]{time_handler.SplinePosition(time_ns_i, num_control_points).value()};
 
         A.block(constants::states * j, constants::states * i, constants::states, constants::states * constants::order) =
             VectorizeWeights(u_i);
@@ -91,7 +91,7 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
     // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
     CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
 
-    auto const [A, b]{BuildAb(measurements, num_segments, spline)};
+    auto const [A, b]{BuildAb(measurements, num_segments, spline.time_handler)};
 
     std::cout << A << std::endl;
     std::cout << b << std::endl;
@@ -103,14 +103,21 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
 
 using namespace reprojection::spline;
 
-TEST(SplineSplineInitialization, TestXXX) {
+TEST(SplineSplineInitialization, TestBuildAb) {
     std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
                                                   {5100, {1, 1, 1}, DerivativeOrder::Null},
                                                   {5200, {2, 2, 2}, DerivativeOrder::Null}};
 
-    CubicBSplineC3 const two_segment_spline{InitializeSpline(measurements, 2)};
-    EXPECT_EQ(two_segment_spline.time_handler.t0_ns_, 5000);
-    EXPECT_EQ(two_segment_spline.time_handler.delta_t_ns_, 100);
+    int const num_segments{2};
+    TimeHandler const time_handler{5000, 100, constants::order};
+
+    auto const [A, b]{BuildAb(measurements, num_segments, time_handler)};
+    EXPECT_EQ(A.rows(), 9);
+    EXPECT_EQ(A.cols(), 15);
+    EXPECT_EQ(b.rows(), 9);
+
+    // TODO(Jack): At this point the actual time handling logic inside the function is not at all/or well tested. Can we
+    // test that from this view? Or is that already tested somehwere else?
 }
 
 // TODO(Jack): reorder tests and methods later during file split
