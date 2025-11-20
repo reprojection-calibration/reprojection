@@ -27,10 +27,29 @@
 
 namespace reprojection::spline {
 
-CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements);
+// WARN(Jack): Expects time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
+CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, int const num_segments) {
+    // TODO(Jack): Will rounding effect the time handling here?
+    // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
+    CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
 
+    return spline;
 }
 
-using namespace reprojection;
+}  // namespace reprojection::spline
 
-TEST(SplineSplineInitialization, TestXxx) { EXPECT_EQ(1, 2); }
+using namespace reprojection::spline;
+
+TEST(SplineSplineInitialization, TestTimeHandling) {
+    std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
+                                                  {5100, {1, 1, 1}, DerivativeOrder::Null},
+                                                  {5200, {2, 2, 2}, DerivativeOrder::Null}};
+
+    CubicBSplineC3 const one_segment_spline{InitializeSpline(measurements, 1)};
+    EXPECT_EQ(one_segment_spline.time_handler.t0_ns_, 5000);
+    EXPECT_EQ(one_segment_spline.time_handler.delta_t_ns_, 200);
+
+    CubicBSplineC3 const two_segment_spline{InitializeSpline(measurements, 2)};
+    EXPECT_EQ(two_segment_spline.time_handler.t0_ns_, 5000);
+    EXPECT_EQ(two_segment_spline.time_handler.delta_t_ns_, 100);
+}
