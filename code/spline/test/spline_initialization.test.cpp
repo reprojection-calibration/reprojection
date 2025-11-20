@@ -27,7 +27,9 @@
 
 namespace reprojection::spline {
 
-// WARN(Jack): Expects time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
+// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
+// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
+// measurements! Time stamp must be non-decreasing, how can we enforce this?
 CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, int const num_segments) {
     // TODO(Jack): Will rounding effect the time handling here?
     // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
