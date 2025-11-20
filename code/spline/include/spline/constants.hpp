@@ -15,5 +15,6 @@ namespace reprojection::spline::constants {
 // knot positions are known and can be calculated as fixed values once the order is known.
 inline constexpr int order{4};           // Number of control points required to evaluate the spline
 inline constexpr int degree{order - 1};  // Polynomial degree (ex. order=4 --> degree=3, i.e. "cubic spline")
+inline constexpr int states{3};          // Size of the state space for both R3 and so3 splines
 
 }  // namespace reprojection::spline::constants

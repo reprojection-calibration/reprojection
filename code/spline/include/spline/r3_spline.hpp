@@ -21,7 +21,7 @@ struct R3Spline {
         VectorKd const t{TimePolynomial(constants::order, u_i, derivative_order)};
         VectorKd const du{p.cwiseProduct(t)};
 
-        return C_ * du;
+        return M_ * du;
     }
 
     template <typename T, DerivativeOrder D>
@@ -32,7 +32,7 @@ struct R3Spline {
     }
 
    private:
-    static inline MatrixKK const C_{BlendingMatrix(constants::order)};
+    static inline MatrixKK const M_{BlendingMatrix(constants::order)};
     static inline MatrixKK const polynomial_coefficients_{PolynomialCoefficients(constants::order)};
 };
 
