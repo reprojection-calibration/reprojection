@@ -87,11 +87,13 @@ TEST(SplineSplineInitialization, TestTimeHandling) {
 }
 
 TEST(SplineSplineInitialization, TestVectorizeWeights) {
+    // At u=0 only the first three blocks will have weight - print out the weights to understand the values!
     ControlPointBlock const w_0{VectorizeWeights(0.0)};
-    ASSERT_TRUE(w_0.block(0, 9, 3, 3).isZero());
-    // TODO(Jack): Assert a heurstic float equal of w_0 and w_1
+    ASSERT_FLOAT_EQ(w_0.block(0, 3, 3, 3).sum(), 3 * (2.0 / 3));  // Second block has all the 2/3 weight elements
+    ASSERT_TRUE(w_0.block(0, 9, 3, 3).isZero());                  // Last block is empty
 
+    // At u=1 (in this case 0.9999 because we only have on time segment) the last three block will have values
     ControlPointBlock const w_1{VectorizeWeights(0.99999999999)};
-    std::cout << w_1 << std::endl;
-    ASSERT_TRUE(w_1.block(0, 0, 3, 3).isZero());
+    ASSERT_TRUE(w_1.block(0, 0, 3, 3).isZero());                  // First block is empty
+    ASSERT_FLOAT_EQ(w_1.block(0, 6, 3, 3).sum(), 3 * (2.0 / 3));  // Third block has all the 2/3 weights
 }
