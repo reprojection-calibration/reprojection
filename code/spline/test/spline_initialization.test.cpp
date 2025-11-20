@@ -48,14 +48,8 @@ ControlPointBlock VectorizeWeights(double const u_i) {
     return sparse_weights;
 }
 
-// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
-// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
-// measurements! Time stamp must be non-decreasing, how can we enforce this?
-CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
-    // TODO(Jack): Will rounding effect the time handling here?
-    // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
-    CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
-
+std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
+                                       CubicBSplineC3 const& spline) {
     // NOTE(Jack): Is that a formal guarantee we can make somewhere, that all measurements have the same number of
     // states as the control points? Is that implied by splines?
     size_t const measurement_dim{std::size(measurements) * constants::states};
@@ -63,8 +57,6 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
     size_t const control_point_dim{num_control_points * constants::states};
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
-    VectorXd b{VectorXd{measurement_dim, 1}};
-
     for (size_t j{0}; j < std::size(measurements); ++j) {
         // TODO(Jack): What is a realistic method to deal with the end of a sequence??? Because the last measurement
         // will always have a time stamp at the very end of a time segment, which means it will evaluate to u=1 which is
@@ -83,7 +75,26 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
             VectorizeWeights(u_i);
     }
 
+    VectorXd b{VectorXd{measurement_dim, 1}};
+    for (size_t i{0}; i < std::size(measurements); ++i) {
+        b.segment(constants::states * i, constants::states) = measurements[i].r3;
+    }
+
+    return {A, b};
+}
+
+// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
+// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
+// measurements! Time stamp must be non-decreasing, how can we enforce this?
+CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
+    // TODO(Jack): Will rounding effect the time handling here?
+    // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
+    CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
+
+    auto const [A, b]{BuildAb(measurements, num_segments, spline)};
+
     std::cout << A << std::endl;
+    std::cout << b << std::endl;
 
     return spline;
 }
