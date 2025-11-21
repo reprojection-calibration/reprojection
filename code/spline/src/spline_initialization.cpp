@@ -28,19 +28,31 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they can
-// be applied to vectorized control points. We should be more specific that we are actually working on the weights here,
-// and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire problem.
-ControlPointBlock VectorizeWeights(double const u_i) {
-    VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
+// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
+// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
+// measurements! Time stamp must be non-decreasing, how can we enforce this?
+CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
+    // TODO(Jack): Will rounding effect the time handling here?
+    // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
+    CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
+    auto const [A, b]{BuildAb(measurements, num_segments, spline.time_handler)};
 
-    ControlPointBlock sparse_weights{ControlPointBlock::Zero()};
-    for (int i{0}; i < constants::order; ++i) {
-        sparse_weights.block(0, constants::states * i, constants::states, constants::states) =
-            Matrix3d::Identity() * weights_i[i];
+    // TODO(Jack): Pass lambda as parameter
+    MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
+    for (size_t i{0}; i < num_segments; i++) {
+        Q.block(constants::states * i, constants::states * i, constants::states * constants::order,
+                constants::states * constants::order) += BuildOmega(spline.time_handler.delta_t_ns_, 1.0);
     }
 
-    return sparse_weights;
+    MatrixXd const A_n{A.transpose() * A + Q};
+    MatrixXd const b_n{A.transpose() * b};
+    VectorXd const x{A_n.ldlt().solve(b_n)};  // Solve
+
+    for (int i{0}; i < x.size(); i += 3) {
+        spline.control_points.push_back(x.segment<3>(i));
+    }
+
+    return spline;
 }
 
 std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
@@ -78,61 +90,19 @@ std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measure
     return {A, b};
 }
 
-// TODO MUST MULTIPLY RETURN BY DELTA T
-// For a discussion of the matrix derivative operator of a polynomial space please see the following links:
-//      (1) https://math.stackexchange.com/questions/4687306/derivative-as-a-matrix-mathbfd-dfrac-mathrmd-mathrmdx
-//      (2) https://math.stackexchange.com/questions/1003358/how-do-you-write-a-differential-operator-as-a-matrix
-//
-// For order=4 the matrix derivative operator will be a 4x4 matrix with the three elements on the super-diagonal equal
-// to [1, 2, 3], which correspond to the first derivative coefficients of the polynomial (a + bx + cx^2 + dx^3)
-MatrixXd DerivativeOperator(int const order) {
-    MatrixXd D{MatrixXd::Zero(order, order)};
-    D.diagonal(1) = PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
+// TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they can
+// be applied to vectorized control points. We should be more specific that we are actually working on the weights here,
+// and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire problem.
+ControlPointBlock VectorizeWeights(double const u_i) {
+    VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
 
-    return D;
-}
-
-// TODO MUST MULTIPLY RETURN BY DELTA T
-MatrixXd HankelMatrix(VectorXd const& coefficients) {
-    assert(coefficients.size() % 2 == 1);  // Only allowed odd number of coefficients (only square matrices!)
-
-    Eigen::Index const size{(coefficients.size() + 1) / 2};
-    MatrixXd hankel{MatrixXd(size, size)};
-    for (int row{0}; row < size; ++row) {
-        for (int col{0}; col < size; ++col) {
-            hankel(row, col) = coefficients(row + col);
-        }
+    ControlPointBlock sparse_weights{ControlPointBlock::Zero()};
+    for (int i{0}; i < constants::order; ++i) {
+        sparse_weights.block(0, constants::states * i, constants::states, constants::states) =
+            Matrix3d::Identity() * weights_i[i];
     }
 
-    return hankel;
-}
-
-MatrixXd HilbertMatrix(int const size) {
-    VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(size, 1, size).cwiseInverse()};
-
-    return HankelMatrix(hilbert_coefficients);
-}
-
-// See note above in the other "vectorize" function about what is really happening here.
-// TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
-// TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
-MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
-    auto build_block = [](Vector4d const& element) {
-        Eigen::Matrix<double, constants::states * constants::order, constants::states> X{
-            Eigen::Matrix<double, constants::states * constants::order, constants::states>::Zero()};
-        for (int i = 0; i < constants::states; i++) {
-            X.block(i * constants::order, i, constants::order, 1) = element;
-        }
-        return X;
-    };
-
-    Eigen::MatrixXd M{Eigen::MatrixXd::Zero(constants::order * 3, constants::order * 3)};
-    for (int j{0}; j < constants::order; j++) {
-        M.block(0, j * constants::states, constants::states * constants::order, constants::states) =
-            build_block(blending_matrix.row(j));
-    }
-
-    return M;
+    return sparse_weights;
 }
 
 // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
@@ -159,31 +129,61 @@ Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda) 
     return lambda * omega;
 }
 
-// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
-// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
-// measurements! Time stamp must be non-decreasing, how can we enforce this?
-CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
-    // TODO(Jack): Will rounding effect the time handling here?
-    // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
-    CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
-    auto const [A, b]{BuildAb(measurements, num_segments, spline.time_handler)};
+// TODO MUST MULTIPLY RETURN BY DELTA T
+// For a discussion of the matrix derivative operator of a polynomial space please see the following links:
+//      (1) https://math.stackexchange.com/questions/4687306/derivative-as-a-matrix-mathbfd-dfrac-mathrmd-mathrmdx
+//      (2) https://math.stackexchange.com/questions/1003358/how-do-you-write-a-differential-operator-as-a-matrix
+//
+// For order=4 the matrix derivative operator will be a 4x4 matrix with the three elements on the super-diagonal equal
+// to [1, 2, 3], which correspond to the first derivative coefficients of the polynomial (a + bx + cx^2 + dx^3)
+MatrixXd DerivativeOperator(int const order) {
+    MatrixXd D{MatrixXd::Zero(order, order)};
+    D.diagonal(1) = PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
 
-    // TODO(Jack): Pass lambda as parameter
-    MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
-    for (size_t i{0}; i < num_segments; i++) {
-        Q.block(constants::states * i, constants::states * i, constants::states * constants::order,
-                constants::states * constants::order) += BuildOmega(spline.time_handler.delta_t_ns_, 1.0);
+    return D;
+}
+
+MatrixXd HilbertMatrix(int const size) {
+    VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(size, 1, size).cwiseInverse()};
+
+    return HankelMatrix(hilbert_coefficients);
+}
+
+// TODO MUST MULTIPLY RETURN BY DELTA T
+MatrixXd HankelMatrix(VectorXd const& coefficients) {
+    assert(coefficients.size() % 2 == 1);  // Only allowed odd number of coefficients (only square matrices!)
+
+    Eigen::Index const size{(coefficients.size() + 1) / 2};
+    MatrixXd hankel{MatrixXd(size, size)};
+    for (int row{0}; row < size; ++row) {
+        for (int col{0}; col < size; ++col) {
+            hankel(row, col) = coefficients(row + col);
+        }
     }
 
-    MatrixXd const A_n{A.transpose() * A + Q};
-    MatrixXd const b_n{A.transpose() * b};
-    VectorXd const x{A_n.ldlt().solve(b_n)};  // Solve
+    return hankel;
+}
 
-    for (int i{0}; i < x.size(); i += 3) {
-        spline.control_points.push_back(x.segment<3>(i));
+// See note above in the other "vectorize" function about what is really happening here.
+// TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
+// TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
+MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
+    auto build_block = [](Vector4d const& element) {
+        Eigen::Matrix<double, constants::states * constants::order, constants::states> X{
+            Eigen::Matrix<double, constants::states * constants::order, constants::states>::Zero()};
+        for (int i = 0; i < constants::states; i++) {
+            X.block(i * constants::order, i, constants::order, 1) = element;
+        }
+        return X;
+    };
+
+    Eigen::MatrixXd M{Eigen::MatrixXd::Zero(constants::order * 3, constants::order * 3)};
+    for (int j{0}; j < constants::order; j++) {
+        M.block(0, j * constants::states, constants::states * constants::order, constants::states) =
+            build_block(blending_matrix.row(j));
     }
 
-    return spline;
+    return M;
 }
 
 }  // namespace reprojection::spline

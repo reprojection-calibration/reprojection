@@ -24,9 +24,18 @@
 
 namespace reprojection::spline {
 
+// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
+// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
+// measurements! Time stamp must be non-decreasing, how can we enforce this?
+CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments);
+
+std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
+                                       TimeHandler const& time_handler);
+
 // TODO(Jack): Naming here! Technically this is really a "sparse" control point block, does that matter?
 // A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
 // stacked into one vector.
+// TODO(Jack): Move this to where we have other type defs?
 using ControlPointBlock = Eigen::Matrix<double, constants::states, constants::states * constants::order>;
 
 // TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they can
@@ -34,8 +43,10 @@ using ControlPointBlock = Eigen::Matrix<double, constants::states, constants::st
 // and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire problem.
 ControlPointBlock VectorizeWeights(double const u_i);
 
-std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
-                                       TimeHandler const& time_handler);
+// https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
+//      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
+// TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
+Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
 
 // TODO MUST MULTIPLY RETURN BY DELTA T
 // For a discussion of the matrix derivative operator of a polynomial space please see the following links:
@@ -46,24 +57,14 @@ std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measure
 // to [1, 2, 3], which correspond to the first derivative coefficients of the polynomial (a + bx + cx^2 + dx^3)
 MatrixXd DerivativeOperator(int const order);
 
+MatrixXd HilbertMatrix(int const size);
+
 // TODO MUST MULTIPLY RETURN BY DELTA T
 MatrixXd HankelMatrix(VectorXd const& coefficients);
-
-MatrixXd HilbertMatrix(int const size);
 
 // See note above in the other "vectorize" function about what is really happening here.
 // TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
 // TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
 MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix);
-
-// https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
-//      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
-// TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
-Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
-
-// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
-// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
-// measurements! Time stamp must be non-decreasing, how can we enforce this?
-CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments);
 
 }  // namespace reprojection::spline
