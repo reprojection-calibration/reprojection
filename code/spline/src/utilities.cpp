@@ -9,7 +9,7 @@ namespace reprojection::spline {
 VectorKd CalculateU(double const u_i, int const derivative_order) {
     assert(0 <= u_i and u_i < 1);
 
-    static MatrixKK const polynomial_coefficients{
+    static MatrixKd const polynomial_coefficients{
         PolynomialCoefficients(constants::order)};  // Static means it only evaluates once :)
 
     VectorKd const u{polynomial_coefficients.row(derivative_order).transpose().array() *

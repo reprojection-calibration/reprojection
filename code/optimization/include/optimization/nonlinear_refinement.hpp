@@ -8,6 +8,7 @@
 #include "optimization/spline_cost_function.hpp"
 #include "spline/spline_evaluation_concept.hpp"
 #include "spline/spline_state.hpp"
+#include "spline/types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -18,12 +19,6 @@ namespace reprojection::optimization {
 std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(std::vector<Frame> const& frames,
                                                                                CameraModel const& camera_type,
                                                                                ArrayXd const& intrinsics);
-
-struct C3Measurement {
-    std::uint64_t t_ns;
-    Vector3d r3;
-    spline::DerivativeOrder type;
-};
 
 // NOTE(Jack): At this time it is still not entirely clear if we need to solve this type of problem at all, however this
 // code serves as a learning base and step on the way to full pose spline optimization.
@@ -39,7 +34,7 @@ class CubicBSplineC3Refinement {
     // control from the user side.
     template <typename T_Model>
         requires spline::CanEvaluateCubicBSplineC3<T_Model>
-    [[nodiscard]] bool AddConstraint(C3Measurement const& constraint) {
+    [[nodiscard]] bool AddConstraint(spline::C3Measurement const& constraint) {
         auto const normalized_position{
             spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
         if (not normalized_position.has_value()) {

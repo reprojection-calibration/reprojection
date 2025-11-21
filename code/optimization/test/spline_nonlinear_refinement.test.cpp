@@ -19,9 +19,9 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
 
     template <typename T_Model>
         requires spline::CanEvaluateCubicBSplineC3<T_Model>
-    std::vector<optimization::C3Measurement> CalculateMeasurements() {
+    std::vector<spline::C3Measurement> CalculateMeasurements() {
         using namespace spline;
-        using C3Measurement = optimization::C3Measurement;
+        using C3Measurement = spline::C3Measurement;
 
         std::vector<C3Measurement> measurements;
         // Given five control points we get three valid time segments of length delta_t_ns_
