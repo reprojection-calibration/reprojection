@@ -45,7 +45,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
     for (size_t j{0}; j < std::size(measurements); ++j) {
-        // TODO(Jack): What is a realistic method to deal with the end of a sequence??? Because the last measurement
+        // ERROR(Jack): What is a realistic method to deal with the end of a sequence??? Because the last measurement
         // will always have a time stamp at the very end of a time segment, which means it will evaluate to u=1 which is
         // not a valid position.
         // ULTRA HACK! Also see note on unprotected optional access below.
@@ -96,7 +96,7 @@ CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_
         V.block(i * K, i * K, K, K) = V_i;
     }
 
-    MatrixXd const M{VectorizeBlendingMatrix(R3Spline::M_)};
+    CoefficientBlock const M{VectorizeBlendingMatrix(R3Spline::M_)};
     CoefficientBlock const omega{M.transpose() * V * M};
 
     return lambda * omega;
