@@ -33,16 +33,14 @@ struct CubicBSplineC3Init {
     // stacked into one vector.
     using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
 
-    // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
-    // and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
-    // measurements! Time stamp must be non-decreasing, how can we enforce this?
+    // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at
+    // all, and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects
+    // time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
     static CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments);
+
+    static std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements,
+                                                  size_t const num_segments, TimeHandler const& time_handler);
 };
-
-
-
-std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
-                                       TimeHandler const& time_handler);
 
 // TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they can
 // be applied to vectorized control points. We should be more specific that we are actually working on the weights here,

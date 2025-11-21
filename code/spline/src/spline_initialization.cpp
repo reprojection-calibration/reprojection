@@ -33,13 +33,13 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
     return spline;
 }
 
-std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
-                                       TimeHandler const& time_handler) {
+std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measurement> const& measurements,
+                                                           size_t const num_segments, TimeHandler const& time_handler) {
     // NOTE(Jack): Is that a formal guarantee we can make somewhere, that all measurements have the same number of
     // states as the control points? Is that implied by splines?
-    size_t const measurement_dim{std::size(measurements) * constants::states};
-    size_t const num_control_points{constants::degree + num_segments};
-    size_t const control_point_dim{num_control_points * constants::states};
+    size_t const measurement_dim{std::size(measurements) * N};
+    size_t const num_control_points{num_segments + constants::degree};
+    size_t const control_point_dim{num_control_points * N};
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
     for (size_t j{0}; j < std::size(measurements); ++j) {
@@ -56,13 +56,12 @@ std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measure
         // because the measurement times are always non-decreasing and set the time limit themselves.
         auto const [u_i, i]{time_handler.SplinePosition(time_ns_i, num_control_points).value()};
 
-        A.block(constants::states * j, constants::states * i, constants::states, constants::states * constants::order) =
-            VectorizeWeights(u_i);
+        A.block(j * N, i * N, N, num_coefficients) = VectorizeWeights(u_i);
     }
 
     VectorXd b{VectorXd{measurement_dim, 1}};
     for (size_t i{0}; i < std::size(measurements); ++i) {
-        b.segment(constants::states * i, constants::states) = measurements[i].r3;
+        b.segment(i * N, N) = measurements[i].r3;
     }
 
     return {A, b};

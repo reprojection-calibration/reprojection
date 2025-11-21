@@ -42,7 +42,7 @@ TEST(SplineSplineInitialization, TestBuildAb) {
     int const num_segments{2};
     TimeHandler const time_handler{5000, 100, constants::order};
 
-    auto const [A, b]{BuildAb(measurements, num_segments, time_handler)};
+    auto const [A, b]{CubicBSplineC3Init::BuildAb(measurements, num_segments, time_handler)};
     EXPECT_EQ(A.rows(), 9);
     EXPECT_EQ(A.cols(), 15);
     EXPECT_EQ(b.rows(), 9);
