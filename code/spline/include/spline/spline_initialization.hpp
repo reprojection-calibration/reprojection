@@ -46,12 +46,12 @@ struct CubicBSplineC3Init {
     // weights here, and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire
     // problem.
     static ControlPointBlock VectorizeWeights(double const u_i);
-};
 
-// https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
-//      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
-// TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
-Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
+    // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
+    //      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
+    // TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
+    static MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
+};
 
 // TODO MUST MULTIPLY RETURN BY DELTA T
 // For a discussion of the matrix derivative operator of a polynomial space please see the following links:

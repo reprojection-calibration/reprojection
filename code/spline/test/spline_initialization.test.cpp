@@ -64,12 +64,12 @@ TEST(SplineSplineInitialization, TestVectorizeWeights) {
 }
 
 TEST(SplineSplineInitialization, TestBuildOmega) {
-    MatrixXd const Q_1{BuildOmega(1, 1)};
+    MatrixXd const Q_1{CubicBSplineC3Init::BuildOmega(1, 1)};
     EXPECT_EQ(Q_1.rows(), 12);
     EXPECT_EQ(Q_1.cols(), 12);
     EXPECT_FLOAT_EQ(Q_1.diagonal().sum(), 8);  // Heuristic!
 
-    MatrixXd const Q_100{BuildOmega(100, 1)};
+    MatrixXd const Q_100{CubicBSplineC3Init::BuildOmega(100, 1)};
     EXPECT_FLOAT_EQ(Q_100.diagonal().sum(), 8e-6);
 }
 

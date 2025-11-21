@@ -78,9 +78,9 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::VectorizeWeights(doubl
     return sparse_weights;
 }
 
-Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda) {
-    MatrixKd const derivative_op{DerivativeOperator(constants::order) / delta_t_ns};
-    MatrixXd const hilbert_matrix{HilbertMatrix(7)};  // Is this the right name? Or is it just coincidentally so?
+MatrixXd CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns, double const lambda) {
+    MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
+    MatrixKd const hilbert_matrix{HilbertMatrix(7)};  // Is this the right name? Or is it just coincidentally so?
 
     // Take the second derivative
     MatrixKd V_i{delta_t_ns * hilbert_matrix};
@@ -88,9 +88,9 @@ Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda) 
         V_i = derivative_op.transpose() * V_i * derivative_op;
     }
 
-    MatrixXd V{MatrixXd::Zero(constants::states * constants::order, constants::states * constants::order)};
-    for (int i = 0; i < constants::states; ++i) {
-        V.block(constants::order * i, constants::order * i, constants::order, constants::order) = V_i;
+    MatrixXd V{MatrixXd::Zero(num_coefficients, num_coefficients)};
+    for (int i = 0; i < N; ++i) {
+        V.block(i * K, i * K, K, K) = V_i;
     }
 
     Eigen::MatrixXd const M{VectorizeBlendingMatrix(R3Spline::M_)};
