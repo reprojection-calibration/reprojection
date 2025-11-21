@@ -128,55 +128,56 @@ MatrixXd HankelMatrix(VectorXd const& coefficients) {
     return hankel;
 }
 
-// TODO(Jack): Can the name "element" be more specific?
+MatrixXd HilbertMatrix(int const size) {
+    VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(size, 1, size).cwiseInverse()};
+
+    return HankelMatrix(hilbert_coefficients);
+}
 
 // See note above in the other "vectorize" function about what is really happening here.
 // TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
 // TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
-MatrixXd VectorizeBlendingMatrix(MatrixKd const& basis_matrix) {
+MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
     auto build_block = [](Vector4d const& element) {
-        Eigen::Matrix<double, constants::states * constants::order, constants::states> B{
+        Eigen::Matrix<double, constants::states * constants::order, constants::states> X{
             Eigen::Matrix<double, constants::states * constants::order, constants::states>::Zero()};
-
         for (int i = 0; i < constants::states; i++) {
-            B.block(i * constants::order, i, constants::order, 1) = element;
+            X.block(i * constants::order, i, constants::order, 1) = element;
         }
-
-        return B;
+        return X;
     };
 
     Eigen::MatrixXd M{Eigen::MatrixXd::Zero(constants::order * 3, constants::order * 3)};
     for (int j{0}; j < constants::order; j++) {
         M.block(0, j * constants::states, constants::states * constants::order, constants::states) =
-            build_block(basis_matrix.row(j));
+            build_block(blending_matrix.row(j));
     }
 
     return M;
 }
 
+// https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
+//      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
 // TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
-Eigen::MatrixXd BuildQ(std::uint64_t const delta_t_ns, double const lambda) {
-    MatrixKd D{DerivativeOperator(constants::order) / delta_t_ns};
+Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda) {
+    MatrixKd const derivative_op{DerivativeOperator(constants::order) / delta_t_ns};
+    MatrixXd const hilbert_matrix{HilbertMatrix(7)};  // Is this the right name? Or is it just coincidentally so?
 
-    // TODO(Jack): Add function to build hilbert matrix in one call, simple wrapper for hankel.
-    VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(7, 1, 7).cwiseInverse()};
-    MatrixXd const hilbert_matrix{HankelMatrix(hilbert_coefficients)};
-    MatrixKd V{delta_t_ns * hilbert_matrix};
-
-    // Numerical second derivative
+    // Take the second derivative
+    MatrixKd V_i{delta_t_ns * hilbert_matrix};
     for (int i = 0; i < 2; i++) {
-        V = (D.transpose() * V * D).eval();
+        V_i = derivative_op.transpose() * V_i * derivative_op;
     }
 
-    MatrixXd WV{MatrixXd::Zero(constants::states * constants::order, constants::states * constants::order)};
+    MatrixXd V{MatrixXd::Zero(constants::states * constants::order, constants::states * constants::order)};
     for (int i = 0; i < constants::states; ++i) {
-        WV.block(constants::order * i, constants::order * i, constants::order, constants::order) = lambda * V;
+        V.block(constants::order * i, constants::order * i, constants::order, constants::order) = V_i;
     }
 
-    Eigen::MatrixXd M{VectorizeBlendingMatrix(R3Spline::M_)};
-    Eigen::MatrixXd Q{M.transpose() * WV * M};
+    Eigen::MatrixXd const M{VectorizeBlendingMatrix(R3Spline::M_)};
+    Eigen::MatrixXd const omega{M.transpose() * V * M};
 
-    return Q;
+    return lambda * omega;
 }
 
 }  // namespace reprojection::spline
@@ -184,13 +185,13 @@ Eigen::MatrixXd BuildQ(std::uint64_t const delta_t_ns, double const lambda) {
 using namespace reprojection;
 using namespace reprojection::spline;
 
-TEST(SplineSplineInitialization, TestBuildQ) {
-    MatrixXd const Q_1{BuildQ(1, 1)};
+TEST(SplineSplineInitialization, TestBuildOmega) {
+    MatrixXd const Q_1{BuildOmega(1, 1)};
     EXPECT_EQ(Q_1.rows(), 12);
     EXPECT_EQ(Q_1.cols(), 12);
     EXPECT_FLOAT_EQ(Q_1.diagonal().sum(), 8);  // Heuristic!
 
-    MatrixXd const Q_100{BuildQ(100, 1)};
+    MatrixXd const Q_100{BuildOmega(100, 1)};
     EXPECT_FLOAT_EQ(Q_100.diagonal().sum(), 8e-6);
 }
 
@@ -211,10 +212,8 @@ TEST(SplineSplineInitialization, TestHankelMatrix) {
     EXPECT_EQ(hankel_matrix.cols(), 2);
     EXPECT_EQ(hankel_matrix(0, 1), 2);
 
-    // This should be the size and coefficients used for the cubic b-spline, it constructs a Hilbert matrix
-    // (https://planetmath.org/hilbertmatrix)
-    VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(7, 1, 7).cwiseInverse()};
-    MatrixXd const hilbert_matrix{HankelMatrix(hilbert_coefficients)};
+    // The type of hankel matrix actually used by the b-spline initialization - a hilbert matrix
+    MatrixXd const hilbert_matrix{HilbertMatrix(7)};
     EXPECT_EQ(hilbert_matrix.rows(), 4);
     EXPECT_EQ(hilbert_matrix.cols(), 4);
     EXPECT_EQ(hilbert_matrix(0, 3), 0.25);
