@@ -32,6 +32,7 @@ struct CubicBSplineC3Init {
     // A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
     // stacked into one vector.
     using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
+    using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
 
     // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at
     // all, and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects
@@ -51,6 +52,11 @@ struct CubicBSplineC3Init {
     //      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
     // TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
     static MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
+
+    // See note above in the other "vectorize" function about what is really happening here.
+    // TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
+    // TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
+    static MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix);
 };
 
 // TODO MUST MULTIPLY RETURN BY DELTA T
@@ -66,10 +72,5 @@ MatrixXd HilbertMatrix(int const size);
 
 // TODO MUST MULTIPLY RETURN BY DELTA T
 MatrixXd HankelMatrix(VectorXd const& coefficients);
-
-// See note above in the other "vectorize" function about what is really happening here.
-// TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
-// TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
-MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix);
 
 }  // namespace reprojection::spline

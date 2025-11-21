@@ -93,11 +93,29 @@ MatrixXd CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns, double c
         V.block(i * K, i * K, K, K) = V_i;
     }
 
-    Eigen::MatrixXd const M{VectorizeBlendingMatrix(R3Spline::M_)};
-    Eigen::MatrixXd const omega{M.transpose() * V * M};
+    MatrixXd const M{VectorizeBlendingMatrix(R3Spline::M_)};
+    MatrixXd const omega{M.transpose() * V * M};
 
     return lambda * omega;
 }
+
+MatrixXd CubicBSplineC3Init::VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
+    auto build_block = [](Vector4d const& element) {
+        Eigen::Matrix<double, num_coefficients, N> X{Eigen::Matrix<double, num_coefficients, N>::Zero()};
+        for (int i = 0; i < N; i++) {
+            X.block(i * K, i, K, 1) = element;
+        }
+
+        return X;
+    };
+
+    MatrixXd M{MatrixXd::Zero(num_coefficients, num_coefficients)};
+    for (int i{0}; i < constants::order; ++i) {
+        M.block(0, i * N, num_coefficients, N) = build_block(blending_matrix.row(i));
+    }
+
+    return M;
+}  // LCOV_EXCL_LINE
 
 MatrixXd DerivativeOperator(int const order) {
     MatrixXd D{MatrixXd::Zero(order, order)};
@@ -125,27 +143,6 @@ MatrixXd HankelMatrix(VectorXd const& coefficients) {
     }
 
     return hankel;
-}  // LCOV_EXCL_LINE
-
-MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
-    auto build_block = [](Vector4d const& element) {
-        Eigen::Matrix<double, constants::states * constants::order, constants::states> X{
-            Eigen::Matrix<double, constants::states * constants::order, constants::states>::Zero()};
-        for (int i = 0; i < constants::states; i++) {
-            X.block(i * constants::order, i, constants::order, 1) = element;
-        }
-
-        return X;
-    };
-
-    Eigen::MatrixXd M{
-        Eigen::MatrixXd::Zero(constants::order * constants::states, constants::order * constants::states)};
-    for (int j{0}; j < constants::order; j++) {
-        M.block(0, j * constants::states, constants::states * constants::order, constants::states) =
-            build_block(blending_matrix.row(j));
-    }
-
-    return M;
 }  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::spline

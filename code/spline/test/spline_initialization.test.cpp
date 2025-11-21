@@ -73,6 +73,17 @@ TEST(SplineSplineInitialization, TestBuildOmega) {
     EXPECT_FLOAT_EQ(Q_100.diagonal().sum(), 8e-6);
 }
 
+TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
+    MatrixKd const blending_matrix{R3Spline::M_};
+    MatrixXd const vectorized{
+        CubicBSplineC3Init::VectorizeBlendingMatrix(blending_matrix)};  // TODO(Jack): Better name than vectorized!
+
+    EXPECT_EQ(vectorized.rows(), 12);
+    EXPECT_EQ(vectorized.cols(), 12);
+    EXPECT_TRUE(vectorized.topLeftCorner(4, 1).isApprox(blending_matrix.row(0).transpose()));
+    EXPECT_TRUE(vectorized.bottomRightCorner(4, 1).isApprox(blending_matrix.row(3).transpose()));
+}
+
 TEST(SplineSplineInitialization, TestDerivativeOperator) {
     Matrix3d const D3{DerivativeOperator(3)};
     EXPECT_TRUE(D3.diagonal(1).isApprox(Vector2d{1, 2}));
@@ -94,14 +105,4 @@ TEST(SplineSplineInitialization, TestHankelMatrix) {
     EXPECT_EQ(hilbert_matrix.rows(), 4);
     EXPECT_EQ(hilbert_matrix.cols(), 4);
     EXPECT_EQ(hilbert_matrix(0, 3), 0.25);
-}
-
-TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
-    MatrixKd const blending_matrix{R3Spline::M_};
-    MatrixXd const vectorized{VectorizeBlendingMatrix(blending_matrix)};  // TODO(Jack): Better name than vectorized!
-
-    EXPECT_EQ(vectorized.rows(), 12);
-    EXPECT_EQ(vectorized.cols(), 12);
-    EXPECT_TRUE(vectorized.topLeftCorner(4, 1).isApprox(blending_matrix.row(0).transpose()));
-    EXPECT_TRUE(vectorized.bottomRightCorner(4, 1).isApprox(blending_matrix.row(3).transpose()));
 }
