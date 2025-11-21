@@ -15,7 +15,7 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
                                                   {5100, {1, 1, 1}, DerivativeOrder::Null},
                                                   {5200, {2, 2, 2}, DerivativeOrder::Null}};
 
-    CubicBSplineC3 const one_segment_spline{InitializeSpline(measurements, 1)};
+    CubicBSplineC3 const one_segment_spline{CubicBSplineC3Init::InitializeSpline(measurements, 1)};
     EXPECT_EQ(one_segment_spline.time_handler.t0_ns_, 5000);
     EXPECT_EQ(one_segment_spline.time_handler.delta_t_ns_, 200);
     EXPECT_EQ(std::size(one_segment_spline.control_points), 4);
@@ -25,7 +25,7 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
     EXPECT_TRUE(one_segment_spline.control_points[0].isApprox(Vector3d{-1.97611, -1.97611, -1.97611}, 1e-6));
     EXPECT_TRUE(one_segment_spline.control_points[3].isApprox(Vector3d{4.05394, 4.05394, 4.05394}, 1e-6));
 
-    CubicBSplineC3 const two_segment_spline{InitializeSpline(measurements, 2)};
+    CubicBSplineC3 const two_segment_spline{CubicBSplineC3Init::InitializeSpline(measurements, 2)};
     EXPECT_EQ(two_segment_spline.time_handler.t0_ns_, 5000);
     EXPECT_EQ(two_segment_spline.time_handler.delta_t_ns_, 100);
     EXPECT_EQ(std::size(two_segment_spline.control_points), 5);

@@ -9,7 +9,8 @@
 
 namespace reprojection::spline {
 
-CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
+CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> const& measurements,
+                                                    size_t const num_segments) {
     // TODO(Jack): Will rounding effect the time handling here?
     // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
     CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
@@ -18,8 +19,7 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
     // TODO(Jack): Pass lambda as parameter
     MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
     for (size_t i{0}; i < num_segments; i++) {
-        Q.block(constants::states * i, constants::states * i, constants::states * constants::order,
-                constants::states * constants::order) += BuildOmega(spline.time_handler.delta_t_ns_, 1.0);
+        Q.block(i * N, i * N, num_coefficients, num_coefficients) += BuildOmega(spline.time_handler.delta_t_ns_, 1.0);
     }
 
     MatrixXd const A_n{A.transpose() * A + Q};
@@ -140,7 +140,8 @@ MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
         return X;
     };
 
-    Eigen::MatrixXd M{Eigen::MatrixXd::Zero(constants::order * 3, constants::order * 3)};
+    Eigen::MatrixXd M{
+        Eigen::MatrixXd::Zero(constants::order * constants::states, constants::order * constants::states)};
     for (int j{0}; j < constants::order; j++) {
         M.block(0, j * constants::states, constants::states * constants::order, constants::states) =
             build_block(blending_matrix.row(j));
