@@ -31,8 +31,9 @@ struct R3Spline {
         return P * B<D>(u_i).template cast<T>() / std::pow(delta_t_ns, derivative_order);
     }
 
-   private:
     static inline MatrixKd const M_{BlendingMatrix(constants::order)};
+
+   private:
     static inline MatrixKd const polynomial_coefficients_{PolynomialCoefficients(constants::order)};
 };
 
