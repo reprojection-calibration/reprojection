@@ -83,22 +83,6 @@ std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measure
     return {A, b};
 }
 
-// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
-// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
-// measurements! Time stamp must be non-decreasing, how can we enforce this?
-CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
-    // TODO(Jack): Will rounding effect the time handling here?
-    // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
-    CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
-
-    auto const [A, b]{BuildAb(measurements, num_segments, spline.time_handler)};
-
-    std::cout << A << std::endl;
-    std::cout << b << std::endl;
-
-    return spline;
-}
-
 // TODO MUST MULTIPLY RETURN BY DELTA T
 // For a discussion of the matrix derivative operator of a polynomial space please see the following links:
 //      (1) https://math.stackexchange.com/questions/4687306/derivative-as-a-matrix-mathbfd-dfrac-mathrmd-mathrmdx
@@ -180,6 +164,33 @@ Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda) 
     return lambda * omega;
 }
 
+// TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
+// and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
+// measurements! Time stamp must be non-decreasing, how can we enforce this?
+CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
+    // TODO(Jack): Will rounding effect the time handling here?
+    // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
+    CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
+    auto const [A, b]{BuildAb(measurements, num_segments, spline.time_handler)};
+
+    // TODO(Jack): Pass lambda as parameter
+    MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
+    for (size_t i{0}; i < num_segments; i++) {
+        Q.block(constants::states * i, constants::states * i, constants::states * constants::order,
+                constants::states * constants::order) += BuildOmega(spline.time_handler.delta_t_ns_, 1.0);
+    }
+
+    MatrixXd const A_n{A.transpose() * A + Q};
+    MatrixXd const b_n{A.transpose() * b};
+    VectorXd const x{A_n.ldlt().solve(b_n)};  // Solve
+
+    for (int i{0}; i < x.size(); i += 3) {
+        spline.control_points.push_back(x.segment<3>(i));
+    }
+
+    return spline;
+}
+
 }  // namespace reprojection::spline
 
 using namespace reprojection;
@@ -245,8 +256,7 @@ TEST(SplineSplineInitialization, TestBuildAb) {
     // Can we test that from this view? Or is that already tested somehwere else?
 }
 
-// TODO(Jack): reorder tests and methods later during file split
-TEST(SplineSplineInitialization, TestTimeHandling) {
+TEST(SplineSplineInitialization, TestInitializeSpline) {
     std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
                                                   {5100, {1, 1, 1}, DerivativeOrder::Null},
                                                   {5200, {2, 2, 2}, DerivativeOrder::Null}};
@@ -254,10 +264,20 @@ TEST(SplineSplineInitialization, TestTimeHandling) {
     CubicBSplineC3 const one_segment_spline{InitializeSpline(measurements, 1)};
     EXPECT_EQ(one_segment_spline.time_handler.t0_ns_, 5000);
     EXPECT_EQ(one_segment_spline.time_handler.delta_t_ns_, 200);
+    EXPECT_EQ(std::size(one_segment_spline.control_points), 4);
+    // NOTE(Jack): At this point this and below are canary in the coal mine tests, to make sure nothing changes as we
+    // refactor. An unsolved problem is the time handling, and this is the reason why these values are not exact values
+    // on the integers, which given the test data they should be.
+    EXPECT_TRUE(one_segment_spline.control_points[0].isApprox(Vector3d{-1.97611, -1.97611, -1.97611}, 1e-6));
+    EXPECT_TRUE(one_segment_spline.control_points[3].isApprox(Vector3d{4.05394, 4.05394, 4.05394}, 1e-6));
 
     CubicBSplineC3 const two_segment_spline{InitializeSpline(measurements, 2)};
     EXPECT_EQ(two_segment_spline.time_handler.t0_ns_, 5000);
     EXPECT_EQ(two_segment_spline.time_handler.delta_t_ns_, 100);
+    EXPECT_EQ(std::size(two_segment_spline.control_points), 5);
+    // See note above on canary coal mine.
+    EXPECT_TRUE(two_segment_spline.control_points[0].isApprox(Vector3d{-0.997462, -0.997462, -0.997462}, 1e-6));
+    EXPECT_TRUE(two_segment_spline.control_points[4].isApprox(Vector3d{3.02269, 3.02269, 3.02269}, 1e-6));
 }
 
 TEST(SplineSplineInitialization, TestVectorizeWeights) {
