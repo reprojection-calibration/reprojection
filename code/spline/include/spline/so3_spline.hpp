@@ -85,7 +85,7 @@ struct So3Spline {
     }
 
    private:
-    static inline MatrixKK const M_{CumulativeBlendingMatrix(constants::order)};
+    static inline MatrixKd const M_{CumulativeBlendingMatrix(constants::order)};
 };
 
 }  // namespace reprojection::spline

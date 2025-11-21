@@ -154,7 +154,7 @@ TEST(SplineSplineInitialization, TestDerivativeOperator) {
     EXPECT_TRUE(D3.diagonal(1).isApprox(Vector2d{1, 2}));
 
     // This should be the size used for the cubic b-spline
-    MatrixKK const D4{DerivativeOperator(constants::order)};
+    MatrixKd const D4{DerivativeOperator(constants::order)};
     EXPECT_TRUE(D4.diagonal(1).isApprox(Vector3d{1, 2, 3}));
 }
 

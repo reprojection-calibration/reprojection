@@ -32,8 +32,8 @@ struct R3Spline {
     }
 
    private:
-    static inline MatrixKK const M_{BlendingMatrix(constants::order)};
-    static inline MatrixKK const polynomial_coefficients_{PolynomialCoefficients(constants::order)};
+    static inline MatrixKd const M_{BlendingMatrix(constants::order)};
+    static inline MatrixKd const polynomial_coefficients_{PolynomialCoefficients(constants::order)};
 };
 
 }  // namespace reprojection::spline
