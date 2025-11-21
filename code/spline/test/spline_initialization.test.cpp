@@ -118,14 +118,40 @@ MatrixXd HankelMatrix(VectorXd const& coefficients) {
     assert(coefficients.size() % 2 == 1);  // Only allowed odd number of coefficients (only square matrices!)
 
     Eigen::Index const size{(coefficients.size() + 1) / 2};
-    MatrixXd H{MatrixXd(size, size)};
+    MatrixXd hankel{MatrixXd(size, size)};
     for (int row{0}; row < size; ++row) {
         for (int col{0}; col < size; ++col) {
-            H(row, col) = coefficients(row + col);
+            hankel(row, col) = coefficients(row + col);
         }
     }
 
-    return H;
+    return hankel;
+}
+
+// TODO(Jack): Can the name "element" be more specific?
+
+// See note above in the other "vectorize" function about what is really happening here.
+// TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
+// TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
+MatrixXd VectorizeBlendingMatrix(MatrixKd const& basis_matrix) {
+    auto build_block = [](Vector4d const& element) {
+        Eigen::Matrix<double, constants::states * constants::order, constants::states> B{
+            Eigen::Matrix<double, constants::states * constants::order, constants::states>::Zero()};
+
+        for (int i = 0; i < constants::states; i++) {
+            B.block(i * constants::order, i, constants::order, 1) = element;
+        }
+
+        return B;
+    };
+
+    Eigen::MatrixXd M{Eigen::MatrixXd::Zero(constants::order * 3, constants::order * 3)};
+    for (int j{0}; j < constants::order; j++) {
+        M.block(0, j * constants::states, constants::states * constants::order, constants::states) =
+            build_block(basis_matrix.row(j));
+    }
+
+    return M;
 }
 
 }  // namespace reprojection::spline
@@ -133,20 +159,30 @@ MatrixXd HankelMatrix(VectorXd const& coefficients) {
 using namespace reprojection;
 using namespace reprojection::spline;
 
+TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
+    MatrixKd const blending_matrix{R3Spline::M_};
+    MatrixXd const vectorized{VectorizeBlendingMatrix(blending_matrix)};  // TODO(Jack): Better name than vectorized!
+
+    EXPECT_EQ(vectorized.rows(), 12);
+    EXPECT_EQ(vectorized.cols(), 12);
+    EXPECT_TRUE(vectorized.topLeftCorner(4, 1).isApprox(blending_matrix.row(0).transpose()));
+    EXPECT_TRUE(vectorized.bottomRightCorner(4, 1).isApprox(blending_matrix.row(3).transpose()));
+}
+
 TEST(SplineSplineInitialization, TestHankelMatrix) {
     Vector3d const coefficients{1, 2, 3};
     MatrixXd const hankel_matrix{HankelMatrix(coefficients)};
-    ASSERT_EQ(hankel_matrix.rows(), 2);
-    ASSERT_EQ(hankel_matrix.cols(), 2);
-    ASSERT_EQ(hankel_matrix(0, 1), 2);
+    EXPECT_EQ(hankel_matrix.rows(), 2);
+    EXPECT_EQ(hankel_matrix.cols(), 2);
+    EXPECT_EQ(hankel_matrix(0, 1), 2);
 
     // This should be the size and coefficients used for the cubic b-spline, it constructs a Hilbert matrix
     // (https://planetmath.org/hilbertmatrix)
     VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(7, 1, 7).cwiseInverse()};
     MatrixXd const hilbert_matrix{HankelMatrix(hilbert_coefficients)};
-    ASSERT_EQ(hilbert_matrix.rows(), 4);
-    ASSERT_EQ(hilbert_matrix.cols(), 4);
-    ASSERT_EQ(hilbert_matrix(0, 3), 0.25);
+    EXPECT_EQ(hilbert_matrix.rows(), 4);
+    EXPECT_EQ(hilbert_matrix.cols(), 4);
+    EXPECT_EQ(hilbert_matrix(0, 3), 0.25);
 }
 
 TEST(SplineSplineInitialization, TestDerivativeOperator) {
@@ -193,11 +229,11 @@ TEST(SplineSplineInitialization, TestTimeHandling) {
 TEST(SplineSplineInitialization, TestVectorizeWeights) {
     // At u=0 only the first three blocks will have weight - print out the weights to understand the values!
     ControlPointBlock const w_0{VectorizeWeights(0.0)};
-    ASSERT_FLOAT_EQ(w_0.block(0, 3, 3, 3).sum(), 3 * (2.0 / 3));  // Second block has all the 2/3 weight elements
-    ASSERT_TRUE(w_0.block(0, 9, 3, 3).isZero());                  // Last block is empty
+    EXPECT_FLOAT_EQ(w_0.block(0, 3, 3, 3).sum(), 3 * (2.0 / 3));  // Second block has all the 2/3 weight elements
+    EXPECT_TRUE(w_0.block(0, 9, 3, 3).isZero());                  // Last block is empty
 
     // At u=1 (in this case 0.9999 because we only have on time segment) the last three block will have values
     ControlPointBlock const w_1{VectorizeWeights(0.99999999999)};
-    ASSERT_TRUE(w_1.block(0, 0, 3, 3).isZero());                  // First block is empty
-    ASSERT_FLOAT_EQ(w_1.block(0, 6, 3, 3).sum(), 3 * (2.0 / 3));  // Third block has all the 2/3 weights
+    EXPECT_TRUE(w_1.block(0, 0, 3, 3).isZero());                  // First block is empty
+    EXPECT_FLOAT_EQ(w_1.block(0, 6, 3, 3).sum(), 3 * (2.0 / 3));  // Third block has all the 2/3 weights
 }
