@@ -9,7 +9,8 @@
 
 namespace reprojection::spline {
 
-CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
+CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> const& measurements,
+                                                    size_t const num_segments) {
     // TODO(Jack): Will rounding effect the time handling here?
     // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
     CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
@@ -18,8 +19,7 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
     // TODO(Jack): Pass lambda as parameter
     MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
     for (size_t i{0}; i < num_segments; i++) {
-        Q.block(constants::states * i, constants::states * i, constants::states * constants::order,
-                constants::states * constants::order) += BuildOmega(spline.time_handler.delta_t_ns_, 1.0);
+        Q.block(i * N, i * N, num_coefficients, num_coefficients) += BuildOmega(spline.time_handler.delta_t_ns_, 1.0);
     }
 
     MatrixXd const A_n{A.transpose() * A + Q};
@@ -33,17 +33,19 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
     return spline;
 }
 
-std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
-                                       TimeHandler const& time_handler) {
-    // NOTE(Jack): Is that a formal guarantee we can make somewhere, that all measurements have the same number of
-    // states as the control points? Is that implied by splines?
-    size_t const measurement_dim{std::size(measurements) * constants::states};
-    size_t const num_control_points{constants::degree + num_segments};
-    size_t const control_point_dim{num_control_points * constants::states};
+std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measurement> const& measurements,
+                                                           size_t const num_segments, TimeHandler const& time_handler) {
+    // NOTE(Jack): For both measurement_dim and control_point_dim we are talking about the "vectorized" dimensions.
+    // This means how many values are there when we stack all the individual vectors (i.e. measurements or
+    // control points) into one big vector to be used in the Ax=b problem. There x is the control points vector of
+    // length control_point_dim and b is the measurement vector of length measurement_dim.
+    size_t const measurement_dim{std::size(measurements) * N};
+    size_t const num_control_points{num_segments + constants::degree};
+    size_t const control_point_dim{num_control_points * N};
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
     for (size_t j{0}; j < std::size(measurements); ++j) {
-        // TODO(Jack): What is a realistic method to deal with the end of a sequence??? Because the last measurement
+        // ERROR(Jack): What is a realistic method to deal with the end of a sequence??? Because the last measurement
         // will always have a time stamp at the very end of a time segment, which means it will evaluate to u=1 which is
         // not a valid position.
         // ULTRA HACK! Also see note on unprotected optional access below.
@@ -56,33 +58,32 @@ std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measure
         // because the measurement times are always non-decreasing and set the time limit themselves.
         auto const [u_i, i]{time_handler.SplinePosition(time_ns_i, num_control_points).value()};
 
-        A.block(constants::states * j, constants::states * i, constants::states, constants::states * constants::order) =
-            VectorizeWeights(u_i);
+        A.block(j * N, i * N, N, num_coefficients) = VectorizeWeights(u_i);
     }
 
     VectorXd b{VectorXd{measurement_dim, 1}};
     for (size_t i{0}; i < std::size(measurements); ++i) {
-        b.segment(constants::states * i, constants::states) = measurements[i].r3;
+        b.segment(i * N, N) = measurements[i].r3;
     }
 
     return {A, b};
 }
 
-ControlPointBlock VectorizeWeights(double const u_i) {
+CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::VectorizeWeights(double const u_i) {
     VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
 
     ControlPointBlock sparse_weights{ControlPointBlock::Zero()};
-    for (int i{0}; i < constants::order; ++i) {
-        sparse_weights.block(0, constants::states * i, constants::states, constants::states) =
-            Matrix3d::Identity() * weights_i[i];
+    for (int i{0}; i < K; ++i) {
+        sparse_weights.block(0, i * N, N, N) = Matrix3d::Identity() * weights_i[i];
     }
 
     return sparse_weights;
 }
 
-Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda) {
-    MatrixKd const derivative_op{DerivativeOperator(constants::order) / delta_t_ns};
-    MatrixXd const hilbert_matrix{HilbertMatrix(7)};  // Is this the right name? Or is it just coincidentally so?
+CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns,
+                                                                    double const lambda) {
+    MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
+    MatrixKd const hilbert_matrix{HilbertMatrix(7)};  // Is this the right name? Or is it just coincidentally so?
 
     // Take the second derivative
     MatrixKd V_i{delta_t_ns * hilbert_matrix};
@@ -90,16 +91,34 @@ Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda) 
         V_i = derivative_op.transpose() * V_i * derivative_op;
     }
 
-    MatrixXd V{MatrixXd::Zero(constants::states * constants::order, constants::states * constants::order)};
-    for (int i = 0; i < constants::states; ++i) {
-        V.block(constants::order * i, constants::order * i, constants::order, constants::order) = V_i;
+    CoefficientBlock V{CoefficientBlock::Zero()};
+    for (int i = 0; i < N; ++i) {
+        V.block(i * K, i * K, K, K) = V_i;
     }
 
-    Eigen::MatrixXd const M{VectorizeBlendingMatrix(R3Spline::M_)};
-    Eigen::MatrixXd const omega{M.transpose() * V * M};
+    CoefficientBlock const M{VectorizeBlendingMatrix(R3Spline::M_)};
+    CoefficientBlock const omega{M.transpose() * V * M};
 
     return lambda * omega;
 }
+
+CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
+    auto build_block = [](Vector4d const& element) {
+        Eigen::Matrix<double, num_coefficients, N> X{Eigen::Matrix<double, num_coefficients, N>::Zero()};
+        for (int i = 0; i < N; i++) {
+            X.block(i * K, i, K, 1) = element;
+        }
+
+        return X;
+    };
+
+    CoefficientBlock M{CoefficientBlock::Zero()};
+    for (int i{0}; i < K; ++i) {
+        M.block(0, i * N, num_coefficients, N) = build_block(blending_matrix.row(i));
+    }
+
+    return M;
+}  // LCOV_EXCL_LINE
 
 MatrixXd DerivativeOperator(int const order) {
     MatrixXd D{MatrixXd::Zero(order, order)};
@@ -127,26 +146,6 @@ MatrixXd HankelMatrix(VectorXd const& coefficients) {
     }
 
     return hankel;
-}  // LCOV_EXCL_LINE
-
-MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
-    auto build_block = [](Vector4d const& element) {
-        Eigen::Matrix<double, constants::states * constants::order, constants::states> X{
-            Eigen::Matrix<double, constants::states * constants::order, constants::states>::Zero()};
-        for (int i = 0; i < constants::states; i++) {
-            X.block(i * constants::order, i, constants::order, 1) = element;
-        }
-
-        return X;
-    };
-
-    Eigen::MatrixXd M{Eigen::MatrixXd::Zero(constants::order * 3, constants::order * 3)};
-    for (int j{0}; j < constants::order; j++) {
-        M.block(0, j * constants::states, constants::states * constants::order, constants::states) =
-            build_block(blending_matrix.row(j));
-    }
-
-    return M;
 }  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::spline
