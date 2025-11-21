@@ -40,12 +40,13 @@ struct CubicBSplineC3Init {
 
     static std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements,
                                                   size_t const num_segments, TimeHandler const& time_handler);
-};
 
-// TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they can
-// be applied to vectorized control points. We should be more specific that we are actually working on the weights here,
-// and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire problem.
-CubicBSplineC3Init::ControlPointBlock VectorizeWeights(double const u_i);
+    // TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they
+    // can be applied to vectorized control points. We should be more specific that we are actually working on the
+    // weights here, and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire
+    // problem.
+    static ControlPointBlock VectorizeWeights(double const u_i);
+};
 
 // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
 //      "For smoothing splines, using a stiffer material corresponds to increasing lambda"

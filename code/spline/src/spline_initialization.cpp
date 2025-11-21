@@ -67,13 +67,12 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
     return {A, b};
 }
 
-CubicBSplineC3Init::ControlPointBlock VectorizeWeights(double const u_i) {
+CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::VectorizeWeights(double const u_i) {
     VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
 
-    CubicBSplineC3Init::ControlPointBlock sparse_weights{CubicBSplineC3Init::ControlPointBlock::Zero()};
-    for (int i{0}; i < constants::order; ++i) {
-        sparse_weights.block(0, constants::states * i, constants::states, constants::states) =
-            Matrix3d::Identity() * weights_i[i];
+    ControlPointBlock sparse_weights{ControlPointBlock::Zero()};
+    for (int i{0}; i < K; ++i) {
+        sparse_weights.block(0, i * N, N, N) = Matrix3d::Identity() * weights_i[i];
     }
 
     return sparse_weights;
