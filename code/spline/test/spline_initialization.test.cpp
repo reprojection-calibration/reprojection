@@ -99,9 +99,32 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
     return spline;
 }
 
+// TODO MUST MULTIPLY RETURN BY DELTA T
+// For a discussion of the matrix derivative operator of a polynomial space please see the following links:
+//      (1) https://math.stackexchange.com/questions/4687306/derivative-as-a-matrix-mathbfd-dfrac-mathrmd-mathrmdx
+//      (2) https://math.stackexchange.com/questions/1003358/how-do-you-write-a-differential-operator-as-a-matrix
+//
+// For order=4 the matrix derivative operator will be a 4x4 matrix with the three elements on the super-diagonal equal
+// to [1, 2, 3], which correspond to the first derivative coefficients of the polynomial (a + bx + cx^2 + dx^3)
+MatrixXd DerivativeOperator(int const order) {
+    MatrixXd D{MatrixXd::Zero(order, order)};
+    D.diagonal(1) = PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
+
+    return D;
+}
+
 }  // namespace reprojection::spline
 
+using namespace reprojection;
 using namespace reprojection::spline;
+
+TEST(SplineSplineInitialization, TestDerivativeOperator) {
+    Matrix3d const D3{DerivativeOperator(3)};
+    EXPECT_TRUE(D3.diagonal(1).isApprox(Vector2d{1, 2}));
+
+    MatrixKK const D4{DerivativeOperator(constants::order)};
+    EXPECT_TRUE(D4.diagonal(1).isApprox(Vector3d{1, 2, 3}));
+}
 
 TEST(SplineSplineInitialization, TestBuildAb) {
     std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
