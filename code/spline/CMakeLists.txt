@@ -4,6 +4,7 @@ find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
         src/se3_spline.cpp
+        src/spline_initialization.cpp
         src/time_handler.cpp
         src/utilities.cpp
 )
