@@ -113,15 +113,47 @@ MatrixXd DerivativeOperator(int const order) {
     return D;
 }
 
+// TODO MUST MULTIPLY RETURN BY DELTA T
+MatrixXd HankelMatrix(VectorXd const& coefficients) {
+    assert(coefficients.size() % 2 == 1);  // Only allowed odd number of coefficients (only square matrices!)
+
+    Eigen::Index const size{(coefficients.size() + 1) / 2};
+    MatrixXd H{MatrixXd(size, size)};
+    for (int row{0}; row < size; ++row) {
+        for (int col{0}; col < size; ++col) {
+            H(row, col) = coefficients(row + col);
+        }
+    }
+
+    return H;
+}
+
 }  // namespace reprojection::spline
 
 using namespace reprojection;
 using namespace reprojection::spline;
 
+TEST(SplineSplineInitialization, TestHankelMatrix) {
+    Vector3d const coefficients{1, 2, 3};
+    MatrixXd const hankel_matrix{HankelMatrix(coefficients)};
+    ASSERT_EQ(hankel_matrix.rows(), 2);
+    ASSERT_EQ(hankel_matrix.cols(), 2);
+    ASSERT_EQ(hankel_matrix(0, 1), 2);
+
+    // This should be the size and coefficients used for the cubic b-spline, it constructs a Hilbert matrix
+    // (https://planetmath.org/hilbertmatrix)
+    VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(7, 1, 7).cwiseInverse()};
+    MatrixXd const hilbert_matrix{HankelMatrix(hilbert_coefficients)};
+    ASSERT_EQ(hilbert_matrix.rows(), 4);
+    ASSERT_EQ(hilbert_matrix.cols(), 4);
+    ASSERT_EQ(hilbert_matrix(0, 3), 0.25);
+}
+
 TEST(SplineSplineInitialization, TestDerivativeOperator) {
     Matrix3d const D3{DerivativeOperator(3)};
     EXPECT_TRUE(D3.diagonal(1).isApprox(Vector2d{1, 2}));
 
+    // This should be the size used for the cubic b-spline
     MatrixKK const D4{DerivativeOperator(constants::order)};
     EXPECT_TRUE(D4.diagonal(1).isApprox(Vector3d{1, 2, 3}));
 }
