@@ -31,6 +31,8 @@ struct CubicBSplineC3Init {
     // TODO(Jack): Naming here! Technically this is really a "sparse" control point block, does that matter?
     // A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
     // stacked into one vector.
+    // NOTE(Jack): The matrix Eigen::Matrix<double, num_coefficients, N> also comes up more than once, can we/should we
+    // also have a type def for this?
     using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
     using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
 
@@ -51,7 +53,7 @@ struct CubicBSplineC3Init {
     // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
     //      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
     // TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
-    static MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
+    static CoefficientBlock BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
 
     // See note above in the other "vectorize" function about what is really happening here.
     // TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!

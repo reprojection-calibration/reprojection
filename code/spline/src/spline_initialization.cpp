@@ -78,7 +78,8 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::VectorizeWeights(doubl
     return sparse_weights;
 }
 
-MatrixXd CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns, double const lambda) {
+CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns,
+                                                                    double const lambda) {
     MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
     MatrixKd const hilbert_matrix{HilbertMatrix(7)};  // Is this the right name? Or is it just coincidentally so?
 
@@ -88,13 +89,13 @@ MatrixXd CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns, double c
         V_i = derivative_op.transpose() * V_i * derivative_op;
     }
 
-    MatrixXd V{MatrixXd::Zero(num_coefficients, num_coefficients)};
+    CoefficientBlock V{CoefficientBlock::Zero()};
     for (int i = 0; i < N; ++i) {
         V.block(i * K, i * K, K, K) = V_i;
     }
 
     MatrixXd const M{VectorizeBlendingMatrix(R3Spline::M_)};
-    MatrixXd const omega{M.transpose() * V * M};
+    CoefficientBlock const omega{M.transpose() * V * M};
 
     return lambda * omega;
 }
@@ -109,7 +110,7 @@ MatrixXd CubicBSplineC3Init::VectorizeBlendingMatrix(MatrixKd const& blending_ma
         return X;
     };
 
-    MatrixXd M{MatrixXd::Zero(num_coefficients, num_coefficients)};
+    CoefficientBlock M{CoefficientBlock::Zero()};
     for (int i{0}; i < constants::order; ++i) {
         M.block(0, i * N, num_coefficients, N) = build_block(blending_matrix.row(i));
     }
