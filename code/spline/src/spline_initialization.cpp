@@ -129,7 +129,6 @@ Eigen::MatrixXd BuildOmega(std::uint64_t const delta_t_ns, double const lambda) 
     return lambda * omega;
 }
 
-// TODO MUST MULTIPLY RETURN BY DELTA T
 // For a discussion of the matrix derivative operator of a polynomial space please see the following links:
 //      (1) https://math.stackexchange.com/questions/4687306/derivative-as-a-matrix-mathbfd-dfrac-mathrmd-mathrmdx
 //      (2) https://math.stackexchange.com/questions/1003358/how-do-you-write-a-differential-operator-as-a-matrix
@@ -144,12 +143,12 @@ MatrixXd DerivativeOperator(int const order) {
 }  // LCOV_EXCL_LINE
 
 MatrixXd HilbertMatrix(int const size) {
+    // Hilbert matrix coefficients are as follows: 1/1, 1/2, 1/3,..., 1/size
     VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(size, 1, size).cwiseInverse()};
 
     return HankelMatrix(hilbert_coefficients);
 }
 
-// TODO MUST MULTIPLY RETURN BY DELTA T
 MatrixXd HankelMatrix(VectorXd const& coefficients) {
     assert(coefficients.size() % 2 == 1);  // Only allowed odd number of coefficients (only square matrices!)
 
@@ -174,6 +173,7 @@ MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
         for (int i = 0; i < constants::states; i++) {
             X.block(i * constants::order, i, constants::order, 1) = element;
         }
+
         return X;
     };
 
