@@ -154,10 +154,45 @@ MatrixXd VectorizeBlendingMatrix(MatrixKd const& basis_matrix) {
     return M;
 }
 
+// TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
+Eigen::MatrixXd BuildQ(std::uint64_t const delta_t_ns, double const lambda) {
+    MatrixKd D{DerivativeOperator(constants::order) / delta_t_ns};
+
+    // TODO(Jack): Add function to build hilbert matrix in one call, simple wrapper for hankel.
+    VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(7, 1, 7).cwiseInverse()};
+    MatrixXd const hilbert_matrix{HankelMatrix(hilbert_coefficients)};
+    MatrixKd V{delta_t_ns * hilbert_matrix};
+
+    // Numerical second derivative
+    for (int i = 0; i < 2; i++) {
+        V = (D.transpose() * V * D).eval();
+    }
+
+    MatrixXd WV{MatrixXd::Zero(constants::states * constants::order, constants::states * constants::order)};
+    for (int i = 0; i < constants::states; ++i) {
+        WV.block(constants::order * i, constants::order * i, constants::order, constants::order) = lambda * V;
+    }
+
+    Eigen::MatrixXd M{VectorizeBlendingMatrix(R3Spline::M_)};
+    Eigen::MatrixXd Q{M.transpose() * WV * M};
+
+    return Q;
+}
+
 }  // namespace reprojection::spline
 
 using namespace reprojection;
 using namespace reprojection::spline;
+
+TEST(SplineSplineInitialization, TestBuildQ) {
+    MatrixXd const Q_1{BuildQ(1, 1)};
+    EXPECT_EQ(Q_1.rows(), 12);
+    EXPECT_EQ(Q_1.cols(), 12);
+    EXPECT_FLOAT_EQ(Q_1.diagonal().sum(), 8);  // Heuristic!
+
+    MatrixXd const Q_100{BuildQ(100, 1)};
+    EXPECT_FLOAT_EQ(Q_100.diagonal().sum(), 8e-6);
+}
 
 TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
     MatrixKd const blending_matrix{R3Spline::M_};
@@ -207,8 +242,8 @@ TEST(SplineSplineInitialization, TestBuildAb) {
     EXPECT_EQ(A.cols(), 15);
     EXPECT_EQ(b.rows(), 9);
 
-    // TODO(Jack): At this point the actual time handling logic inside the function is not at all/or well tested. Can we
-    // test that from this view? Or is that already tested somehwere else?
+    // TODO(Jack): At this point the actual time handling logic inside the function is not at all/or well tested.
+    // Can we test that from this view? Or is that already tested somehwere else?
 }
 
 // TODO(Jack): reorder tests and methods later during file split
