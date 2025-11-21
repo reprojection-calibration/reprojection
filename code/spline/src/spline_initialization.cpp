@@ -141,7 +141,7 @@ MatrixXd DerivativeOperator(int const order) {
     D.diagonal(1) = PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
 
     return D;
-}
+}  // LCOV_EXCL_LINE
 
 MatrixXd HilbertMatrix(int const size) {
     VectorXd const hilbert_coefficients{Eigen::VectorXd::LinSpaced(size, 1, size).cwiseInverse()};
@@ -162,7 +162,7 @@ MatrixXd HankelMatrix(VectorXd const& coefficients) {
     }
 
     return hankel;
-}
+}  // LCOV_EXCL_LINE
 
 // See note above in the other "vectorize" function about what is really happening here.
 // TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
@@ -184,6 +184,6 @@ MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
     }
 
     return M;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::spline
