@@ -58,7 +58,7 @@ struct CubicBSplineC3Init {
     // See note above in the other "vectorize" function about what is really happening here.
     // TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
     // TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
-    static MatrixXd VectorizeBlendingMatrix(MatrixKd const& blending_matrix);
+    static CoefficientBlock VectorizeBlendingMatrix(MatrixKd const& blending_matrix);
 };
 
 // TODO MUST MULTIPLY RETURN BY DELTA T
