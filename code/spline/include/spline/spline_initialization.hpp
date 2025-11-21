@@ -24,6 +24,13 @@
 
 namespace reprojection::spline {
 
+struct CubicBSplineC3Init {
+    // TODO(Jack): Naming here! Technically this is really a "sparse" control point block, does that matter?
+    // A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
+    // stacked into one vector.
+    using ControlPointBlock = Eigen::Matrix<double, constants::states, constants::states * constants::order>;
+};
+
 // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at all,
 // and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects time sorted
 // measurements! Time stamp must be non-decreasing, how can we enforce this?
@@ -32,16 +39,10 @@ CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, 
 std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements, size_t const num_segments,
                                        TimeHandler const& time_handler);
 
-// TODO(Jack): Naming here! Technically this is really a "sparse" control point block, does that matter?
-// A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
-// stacked into one vector.
-// TODO(Jack): Move this to where we have other type defs?
-using ControlPointBlock = Eigen::Matrix<double, constants::states, constants::states * constants::order>;
-
 // TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they can
 // be applied to vectorized control points. We should be more specific that we are actually working on the weights here,
 // and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire problem.
-ControlPointBlock VectorizeWeights(double const u_i);
+CubicBSplineC3Init::ControlPointBlock VectorizeWeights(double const u_i);
 
 // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
 //      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
