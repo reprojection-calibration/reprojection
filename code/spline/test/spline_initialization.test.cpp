@@ -10,6 +10,18 @@
 using namespace reprojection;
 using namespace reprojection::spline;
 
+TEST(SplineSplineInitialization, TestLLL) {
+    std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
+                                                  {5150, {1, 1, 1}, DerivativeOrder::Null},
+                                                  {5200, {2, 2, 2}, DerivativeOrder::Null}};
+
+    CubicBSplineC3 const one_segment_spline{CubicBSplineC3Init::InitializeSpline(measurements, 3)};
+    EXPECT_EQ(one_segment_spline.time_handler.t0_ns_, 5000);
+    EXPECT_EQ(one_segment_spline.time_handler.delta_t_ns_, 200);
+    EXPECT_EQ(std::size(one_segment_spline.control_points), 4);
+
+}
+
 TEST(SplineSplineInitialization, TestInitializeSpline) {
     std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
                                                   {5100, {1, 1, 1}, DerivativeOrder::Null},
