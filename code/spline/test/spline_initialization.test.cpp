@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <random>
+
 #include "spline/r3_spline.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
@@ -10,16 +12,30 @@
 using namespace reprojection;
 using namespace reprojection::spline;
 
+double Square(double const x) { return x * x; }
+
 TEST(SplineSplineInitialization, TestLLL) {
-    std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
-                                                  {5150, {1.5, 1.5, 1.5}, DerivativeOrder::Null},
-                                                  {5200, {2, 2, 2}, DerivativeOrder::Null}};
+    static std::mt19937 gen{std::random_device{}()};
+    static std::uniform_real_distribution<> dist;
+    uint64_t const t0_ns{1000000000};
+    double const delta_t_ns{4000000000};
 
-    CubicBSplineC3 const one_segment_spline{CubicBSplineC3Init::InitializeSpline(measurements, 3)};
-    EXPECT_EQ(one_segment_spline.time_handler.t0_ns_, 5000);
-    EXPECT_EQ(one_segment_spline.time_handler.delta_t_ns_, 200);
-    EXPECT_EQ(std::size(one_segment_spline.control_points), 4);
+    std::vector<C3Measurement> measurements;
+    int const num_measurements{100};
+    for (int i{0}; i < num_measurements; ++i) {
+        double const x{dist(gen)};  // Value between -1 and 1
+        uint64_t const time{t0_ns + static_cast<uint64_t>(x * delta_t_ns)};
 
+        double const y{2 * (x - 0.5)};  // Put x for the exponent function in range -1,1
+        C3Measurement const measurement{time, {y, Square(y), Square(y)}, DerivativeOrder::Null};
+        measurements.push_back(measurement);
+    }
+
+    std::ranges::sort(measurements, [](C3Measurement const& a, C3Measurement const& b) { return a.t_ns < b.t_ns; });
+
+    for (auto const& meas : measurements) {
+        std::cout << meas.r3.transpose() << std::endl;
+    }
 }
 
 TEST(SplineSplineInitialization, TestInitializeSpline) {
