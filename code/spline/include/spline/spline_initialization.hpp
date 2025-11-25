@@ -4,17 +4,17 @@
 #include "types/eigen_types.hpp"
 
 // We are building a linear problem Ax=b,
-//      A: comes from our spline basis matrices
-//      x: our unknown evenly spaced control points that created b - we want to find x
+//      A: constructed from the spline basis matrices
+//      x: our unknown evenly spaced control points that created b - our goal is to solve for this
 //      b: our measurements in the state space (same dimensions state space as the control points)
 //
 // The smallest problem we can build for a cubic b-spline is; given two measurements and two unique times, interpolate
-// the four evenly spaced control points that define a spline which passes through the measurements.
+// the four evenly spaced control points that define a spline with one time interval which passes through the
+// measurements.
 //
 // If we have two measurements then we can define one time segment with four control points, if we have three
 // measurements we can either still define one time segment as before, or define two time segments now defined by five
-// control points. How this works when measurements are missing, or too many or too few time segments are selected is at
-// this time not clear.
+// control points.
 //
 // Our first strategy will be to stack all measurements and control points into vectors. Because we are dealing with a
 // simple uniform spline it might happen that later we realize some symmetries that help us reduce the size of the
@@ -25,14 +25,28 @@
 namespace reprojection::spline {
 
 struct CubicBSplineC3Init {
+    // NOTE(Jack): We define these variables in the context of the spline initialization static class because they get
+    // used so often it made it necessary to find shorter or more meaningful variable names.
     static inline int const K{constants::order};
+    /**
+     * \brief The size of the state space (=3 for both R3 and so3, translation and rotation).
+     */
     static inline int const N{constants::states};
+    /**
+     * \brief Length of a vectorized control point block (=12 for a cubic b-spline with 3D state space).
+     */
     static inline int const num_coefficients{K * N};
     // TODO(Jack): Naming here! Technically this is really a "sparse" control point block, does that matter?
     // A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
     // stacked into one vector.
     // NOTE(Jack): The matrix Eigen::Matrix<double, num_coefficients, N> also comes up more than once, can we/should we
     // also have a type def for this?
+    /**
+     * \brief A matrix used to hold the sparsified/diagonalized spline weights.
+     *
+     * A matrix of shape (N x num_coefficients) holding the sparsified/diagonalized spline weights can be directly
+     * multiplied by a vectorized control points block (a vector with length=num_coefficients) to evaluate the spline.
+     */
     using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
     using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
 

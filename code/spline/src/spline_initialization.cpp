@@ -16,10 +16,14 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
     CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
     auto const [A, b]{BuildAb(measurements, num_segments, spline.time_handler)};
 
-    // TODO(Jack): Pass lambda as parameter
+    // TODO(Jack): At this time lambda here is hardcoded, it might make sense at some time in the future to paramaterize
+    // this, but currently I see no scenario where we can really expect the user to parameterize it, so we leave it
+    // hardcoded for now.
+    CoefficientBlock const omega{BuildOmega(spline.time_handler.delta_t_ns_, 1e7)};
+
     MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
     for (size_t i{0}; i < num_segments; i++) {
-        Q.block(i * N, i * N, num_coefficients, num_coefficients) += BuildOmega(spline.time_handler.delta_t_ns_, 1.0);
+        Q.block(i * N, i * N, num_coefficients, num_coefficients) += omega;
     }
 
     MatrixXd const A_n{A.transpose() * A + Q};
@@ -51,7 +55,8 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
         // ULTRA HACK! Also see note on unprotected optional access below.
         std::uint64_t time_ns_i{measurements[j].t_ns};
         if (j == std::size(measurements) - 1) {
-            time_ns_i -= 1;
+            // TODO(Jack): How much do we need to clamp here? Should this clamping be a percentage of the delta_t?
+            time_ns_i -= static_cast<std::uint64_t>(1 + 0.01 * time_handler.delta_t_ns_);
         }
 
         // WARN(Jack): Unprotected optional access, but technically we should always been in a valid time segment
@@ -83,7 +88,9 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::VectorizeWeights(doubl
 CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns,
                                                                     double const lambda) {
     MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
-    MatrixKd const hilbert_matrix{HilbertMatrix(7)};  // Is this the right name? Or is it just coincidentally so?
+    // NOTE(Jack): This is a hilbert matrix, but is it just conicdentally so? Or is there a better name that better
+    // reflects its role in taking the matrix second derivative below?
+    static MatrixKd const hilbert_matrix{HilbertMatrix(7)};
 
     // Take the second derivative
     MatrixKd V_i{delta_t_ns * hilbert_matrix};
@@ -96,7 +103,7 @@ CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_
         V.block(i * K, i * K, K, K) = V_i;
     }
 
-    CoefficientBlock const M{VectorizeBlendingMatrix(R3Spline::M_)};
+    static CoefficientBlock const M{VectorizeBlendingMatrix(R3Spline::M_)};
     CoefficientBlock const omega{M.transpose() * V * M};
 
     return lambda * omega;
