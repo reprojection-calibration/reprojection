@@ -43,7 +43,7 @@ spline::Se3Spline Se3Interpolate(std::vector<Vector6d> const& se3, std::vector<u
     spline::CubicBSplineC3 const translation_spline{
         spline::CubicBSplineC3Init::InitializeSpline(translation_measurements, num_segments)};
 
-    return spline::Se3Spline{translation_spline, rotation_spline};
+    return spline::Se3Spline{rotation_spline, translation_spline};
 }
 
 TEST(XXX, FFF) {
@@ -61,11 +61,11 @@ TEST(XXX, FFF) {
 
     std::vector<Vector6d> se3;
     std::vector<uint64_t> times;
-    int const num_evaluations{50};
+    int  num_evaluations{50};
     for (int i{0}; i < num_evaluations - 2; ++i) {
         uint64_t const t_i{
             static_cast<uint64_t>(delta_t_ns * std::size(poses) * (static_cast<double>(i) / num_evaluations))};
-        auto const se3_i{se3_spline.EvaluateVec(t0_ns + t_i)};  // WARN UNPROTECTED OPTIONAL ACCESS!
+        auto const se3_i{se3_spline.Evaluate(t0_ns + t_i)};  // WARN UNPROTECTED OPTIONAL ACCESS!
         if (not se3_i.has_value()) {
             continue;
         }
@@ -79,14 +79,19 @@ TEST(XXX, FFF) {
     // Do the interpolation
     auto const interpolated_spline{Se3Interpolate(se3, times)};
 
-    std::vector<Vector6d> se3_interp_control_points;
-    for (size_t i{0}; i < interpolated_spline.r3_spline_.control_points.size(); ++i) {
-        Vector6d cp;
-        cp.topRows(3) = interpolated_spline.so3_spline_.control_points[i];
-        cp.bottomRows(3) = interpolated_spline.r3_spline_.control_points[i];
+    std::vector<Vector6d> interpolated_spline_se3;
+    num_evaluations =100;
+    for (int i{0}; i < num_evaluations; ++i) {
+        uint64_t const t_i{
+            static_cast<uint64_t>(delta_t_ns * std::size(poses) * (static_cast<double>(i) / num_evaluations))};
 
-        se3_interp_control_points.push_back(cp);
+        auto const se3_i{interpolated_spline.Evaluate(t0_ns + t_i)};  // WARN UNPROTECTED OPTIONAL ACCESS!
+        if (not se3_i.has_value()) {
+            continue;
+        }
+
+        interpolated_spline_se3.push_back(se3_i.value());
     }
 
-    writeSe3VectorToFile(se3_interp_control_points, "interpolated_sphere_trajectory.txt");
+    writeSe3VectorToFile(interpolated_spline_se3, "interpolated_sphere_trajectory.txt");
 }

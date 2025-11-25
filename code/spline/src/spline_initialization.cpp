@@ -23,7 +23,7 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
     // hardcoded for now.
     // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
     // timestamps which results in very small values in the omega matrix otherwise.
-    CoefficientBlock const omega{BuildOmega(spline.time_handler.delta_t_ns_, 1e9)};
+    CoefficientBlock const omega{BuildOmega(spline.time_handler.delta_t_ns_, 1e7)};
     MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
     for (size_t i{0}; i < num_segments; i++) {
         Q.block(i * N, i * N, num_coefficients, num_coefficients) += omega;
