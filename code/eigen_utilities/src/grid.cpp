@@ -15,7 +15,7 @@ ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_onl
         // unaryExpr() that we adopted from here
         // (https://stackoverflow.com/questions/35798698/eigen-matrix-library-coefficient-wise-modulo-operation)
         ArrayXi const is_even{
-            ((grid_indices.rowwise().sum().unaryExpr([](int const x) { return x % 2; })) == 0).cast<int>()};
+            (grid_indices.rowwise().sum().unaryExpr([](int const x) { return x % 2; }) == 0).cast<int>()};
         ArrayXi const mask{MaskIndices(is_even)};
 
         return grid_indices(mask, Eigen::all);

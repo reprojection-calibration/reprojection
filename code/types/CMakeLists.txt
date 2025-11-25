@@ -7,3 +7,12 @@ add_library(${LIBRARY_NAME} INTERFACE)
 target_include_directories(${LIBRARY_NAME} INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
 )
+
+set(LINK_LIBRARIES
+        Eigen3::Eigen
+)
+
+set(TESTS
+        test/calibration_types.test.cpp
+)
+AddTests()

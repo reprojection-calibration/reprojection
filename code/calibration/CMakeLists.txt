@@ -17,5 +17,6 @@ AddLibrary()
 set(TESTS
         src/parabola_line_initialization.test.cpp
         src/vanishing_point_initialization.test.cpp
+        test/initialize_focal_length.test.cpp
 )
 AddTests()
