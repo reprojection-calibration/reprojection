@@ -7,7 +7,7 @@
 
 using namespace reprojection;
 
-TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitialization) {
+TEST(CalibrationVanishingPointInitialization, TestVanishingPointInitialization) {
     Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
 
     // NOTE(Jack): Our strategy here is to use DoubleSphere::Project to project a row and column of points to pixels.
@@ -44,7 +44,7 @@ TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationPerfe
     EXPECT_FLOAT_EQ(f.value(), 0.45015815);
 }
 
-TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationBadCircles) {
+TEST(CalibrationVanishingPointInitialization, TestVanishingPointInitializationBadCircles) {
     // Check the first error condition where one of the pixel sets does not produce a valid circle
     MatrixX2d const pixels1{{1, 1}, {2, 2}, {2, 2}, {4, 4}};  // Collinear
     MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // (x-2)^2 + (y-2)^2 = 1
@@ -53,7 +53,7 @@ TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationBadCi
     EXPECT_EQ(f, std::nullopt);
 }
 
-TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationNoVanishingPoints) {
+TEST(CalibrationVanishingPointInitialization, TestVanishingPointInitializationNoVanishingPoints) {
     // Check the second error condition where the circles have no intersection
     MatrixX2d const pixels1{{0, 2}, {4, 2}, {2, 0}, {2, 4}};  // (x-2)^2 + (y-2)^2 = 2
     MatrixX2d const pixels2{{1, 2}, {3, 2}, {2, 1}, {2, 3}};  // Completely inside the pixels1 circle
@@ -62,7 +62,7 @@ TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitializationNoVan
     EXPECT_EQ(f, std::nullopt);
 }
 
-TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {
+TEST(CalibrationVanishingPointInitialization, TestCircleCircleIntersection) {
     calibration::Circle const c1{{0, 0}, 1};
     calibration::Circle const c2{{2, 0}, 2};
 
@@ -74,14 +74,14 @@ TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersection) {
     EXPECT_TRUE(p2.isApprox(Vector2d{0.25, 0.96824583655185426}));
 }
 
-TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersectionSeperate) {
+TEST(CalibrationVanishingPointInitialization, TestCircleCircleIntersectionSeperate) {
     calibration::Circle const c1{{1, 1}, 1};
     calibration::Circle const c2{{3, 3}, 1};  // Completely outside c1
 
     EXPECT_EQ(calibration::CircleCircleIntersection(c1, c2), std::nullopt);
 }
 
-TEST(CalibrationFocalLengthInitialization, TestCircleCircleIntersectionContained) {
+TEST(CalibrationVanishingPointInitialization, TestCircleCircleIntersectionContained) {
     calibration::Circle const c1{{1, 1}, 1};
     calibration::Circle const c2{{1.5, 1.5}, 0.1};  // Completely inside c1
 

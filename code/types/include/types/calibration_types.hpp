@@ -5,12 +5,20 @@
 namespace reprojection {
 
 struct Bundle {
+    Bundle(MatrixX2d const& _pixels, MatrixX3d const& _points) : pixels{_pixels}, points{_points} {
+        assert(pixels.rows() == points.rows());
+    }
+
     MatrixX2d pixels;
     MatrixX3d points;
 };
 
 // Formerly was FeatureFrame (remove comment after 1.1.2026)
 struct ExtractedTarget {
+    ExtractedTarget(Bundle const& _bundle, ArrayX2i const& _indices) : bundle{_bundle}, indices{_indices} {
+        assert(bundle.pixels.rows() == indices.rows());  // Could also have used bundle.points.rows()
+    }
+
     Bundle bundle;
     ArrayX2i indices;
 };
