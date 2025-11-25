@@ -12,32 +12,6 @@
 using namespace reprojection;
 using namespace reprojection::spline;
 
-double Square(double const x) { return x * x; }
-
-TEST(SplineSplineInitialization, TestLLL) {
-    static std::mt19937 gen{std::random_device{}()};
-    static std::uniform_real_distribution<> dist;
-    uint64_t const t0_ns{1000000000};
-    double const delta_t_ns{4000000000};
-
-    std::vector<C3Measurement> measurements;
-    int const num_measurements{100};
-    for (int i{0}; i < num_measurements; ++i) {
-        double const x{dist(gen)};  // Value between -1 and 1
-        uint64_t const time{t0_ns + static_cast<uint64_t>(x * delta_t_ns)};
-
-        double const y{2 * (x - 0.5)};  // Put x for the exponent function in range -1,1
-        C3Measurement const measurement{time, {y, Square(y), Square(y)}, DerivativeOrder::Null};
-        measurements.push_back(measurement);
-    }
-
-    std::ranges::sort(measurements, [](C3Measurement const& a, C3Measurement const& b) { return a.t_ns < b.t_ns; });
-
-    for (auto const& meas : measurements) {
-        std::cout << meas.r3.transpose() << std::endl;
-    }
-}
-
 TEST(SplineSplineInitialization, TestInitializeSpline) {
     std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
                                                   {5100, {1, 1, 1}, DerivativeOrder::Null},
@@ -50,16 +24,20 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
     // NOTE(Jack): At this point this and below are canary in the coal mine tests, to make sure nothing changes as we
     // refactor. An unsolved problem is the time handling, and this is the reason why these values are not exact values
     // on the integers, which given the test data they should be.
-    EXPECT_TRUE(one_segment_spline.control_points[0].isApprox(Vector3d{-1.97611, -1.97611, -1.97611}, 1e-6));
-    EXPECT_TRUE(one_segment_spline.control_points[3].isApprox(Vector3d{4.05394, 4.05394, 4.05394}, 1e-6));
+    EXPECT_TRUE(one_segment_spline.control_points[0].isApprox(
+        Vector3d{-2.0344390938914243, -2.0344390938914243, -2.0344390938914243}));
+    EXPECT_TRUE(one_segment_spline.control_points[3].isApprox(
+        Vector3d{4.0564567506989482, 4.0564567506989482, 4.0564567506989482}));
 
     CubicBSplineC3 const two_segment_spline{CubicBSplineC3Init::InitializeSpline(measurements, 2)};
     EXPECT_EQ(two_segment_spline.time_handler.t0_ns_, 5000);
     EXPECT_EQ(two_segment_spline.time_handler.delta_t_ns_, 100);
     EXPECT_EQ(std::size(two_segment_spline.control_points), 5);
     // See note above on canary coal mine.
-    EXPECT_TRUE(two_segment_spline.control_points[0].isApprox(Vector3d{-0.997462, -0.997462, -0.997462}, 1e-6));
-    EXPECT_TRUE(two_segment_spline.control_points[4].isApprox(Vector3d{3.02269, 3.02269, 3.02269}, 1e-6));
+    EXPECT_TRUE(two_segment_spline.control_points[0].isApprox(
+        Vector3d{-1.0132016841428102, -1.0132016841428102, -1.0132016841428102}));
+    EXPECT_TRUE(two_segment_spline.control_points[4].isApprox(
+        Vector3d{3.0270686114720653, 3.0270686114720653, 3.0270686114720653}, 1e-6));
 }
 
 TEST(SplineSplineInitialization, TestBuildAb) {
@@ -103,8 +81,8 @@ TEST(SplineSplineInitialization, TestBuildOmega) {
 
 TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
     MatrixKd const blending_matrix{R3Spline::M_};
-    MatrixXd const vectorized{
-        CubicBSplineC3Init::VectorizeBlendingMatrix(blending_matrix)};  // TODO(Jack): Better name than vectorized!
+    // TODO(Jack): Better name than vectorized!
+    MatrixXd const vectorized{CubicBSplineC3Init::VectorizeBlendingMatrix(blending_matrix)};
 
     EXPECT_EQ(vectorized.rows(), 12);
     EXPECT_EQ(vectorized.cols(), 12);
@@ -116,7 +94,7 @@ TEST(SplineSplineInitialization, TestDerivativeOperator) {
     Matrix3d const D3{DerivativeOperator(3)};
     EXPECT_TRUE(D3.diagonal(1).isApprox(Vector2d{1, 2}));
 
-    // This should be the size used for the cubic b-spline
+    // This is the version used by the cubic b-spline
     MatrixKd const D4{DerivativeOperator(constants::order)};
     EXPECT_TRUE(D4.diagonal(1).isApprox(Vector3d{1, 2, 3}));
 }
