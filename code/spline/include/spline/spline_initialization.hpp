@@ -4,17 +4,17 @@
 #include "types/eigen_types.hpp"
 
 // We are building a linear problem Ax=b,
-//      A: comes from our spline basis matrices
-//      x: our unknown evenly spaced control points that created b - we want to find x
+//      A: constructed from the spline basis matrices
+//      x: our unknown evenly spaced control points that created b - our goal is to solve for this
 //      b: our measurements in the state space (same dimensions state space as the control points)
 //
 // The smallest problem we can build for a cubic b-spline is; given two measurements and two unique times, interpolate
-// the four evenly spaced control points that define a spline which passes through the measurements.
+// the four evenly spaced control points that define a spline with one time interval which passes through the
+// measurements.
 //
 // If we have two measurements then we can define one time segment with four control points, if we have three
 // measurements we can either still define one time segment as before, or define two time segments now defined by five
-// control points. How this works when measurements are missing, or too many or too few time segments are selected is at
-// this time not clear.
+// control points.
 //
 // Our first strategy will be to stack all measurements and control points into vectors. Because we are dealing with a
 // simple uniform spline it might happen that later we realize some symmetries that help us reduce the size of the
@@ -25,43 +25,51 @@
 namespace reprojection::spline {
 
 struct CubicBSplineC3Init {
-    static inline int const K{constants::order};
-    static inline int const N{constants::states};
-    static inline int const num_coefficients{K * N};
-    // TODO(Jack): Naming here! Technically this is really a "sparse" control point block, does that matter?
-    // A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
-    // stacked into one vector.
-    // NOTE(Jack): The matrix Eigen::Matrix<double, num_coefficients, N> also comes up more than once, can we/should we
-    // also have a type def for this?
-    using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
-    using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
-
     // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at
-    // all, and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects
-    // time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
+    // all, and it makse it impossible to use a map because the data is not contiguous in memory.
+    // WARN(Jack): Expects time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
     static CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments);
 
     static std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements,
                                                   size_t const num_segments, TimeHandler const& time_handler);
 
-    // TODO(Jack): This name is not really correct, because we are manipulating the control point weights such that they
-    // can be applied to vectorized control points. We should be more specific that we are actually working on the
-    // weights here, and not vectorizing them. This is actually more a general tool in helping us "vectorize" the entire
-    // problem.
-    static ControlPointBlock VectorizeWeights(double const u_i);
+    /**
+     * \brief How many control points are required to evaluate the spline (=3 for cubic spline).
+     */
+    static inline int const K{constants::order};
+    /**
+     * \brief The size of the state space (=3 for both R3 and so3, translation and rotation).
+     */
+    static inline int const N{constants::states};
+    /**
+     * \brief Length of a vectorized control point block (=12 for a cubic b-spline with 3D state space).
+     *
+     * NOTE(Jack): We are entering a mixed terminology space because in the context of splines the coefficients often
+     * refer to the values multiplied by the control points. Here however we are actually referring to the control
+     * points themselves as coefficients. And further in the code we refer to what we normally would call the spline
+     * coefficients as "weights". This is a confusing aspect that should be addressed if it causes problems.
+     */
+    static inline int const num_coefficients{K * N};
+    /**
+     * \brief A matrix used to hold the sparsified/diagonalized spline weights.
+     *
+     * A matrix of shape (N x num_coefficients) holding the sparsified/diagonalized spline weights can be directly
+     * multiplied by a vectorized control points block (a vector with length=num_coefficients) to evaluate the spline.
+     */
+    using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
+    using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
+
+    // TODO(Jack): Is weights really the right term here? We are blockifying the entire B vector which combines both the
+    // basis matrix contribution and the time weighting.
+    static ControlPointBlock BlockifyWeights(double const u_i);
 
     // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
     //      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
-    // TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
     static CoefficientBlock BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
 
-    // See note above in the other "vectorize" function about what is really happening here.
-    // TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
-    // TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
-    static CoefficientBlock VectorizeBlendingMatrix(MatrixKd const& blending_matrix);
+    static CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix);
 };
 
-// TODO MUST MULTIPLY RETURN BY DELTA T
 // For a discussion of the matrix derivative operator of a polynomial space please see the following links:
 //      (1) https://math.stackexchange.com/questions/4687306/derivative-as-a-matrix-mathbfd-dfrac-mathrmd-mathrmdx
 //      (2) https://math.stackexchange.com/questions/1003358/how-do-you-write-a-differential-operator-as-a-matrix
@@ -72,7 +80,6 @@ MatrixXd DerivativeOperator(int const order);
 
 MatrixXd HilbertMatrix(int const size);
 
-// TODO MUST MULTIPLY RETURN BY DELTA T
 MatrixXd HankelMatrix(VectorXd const& coefficients);
 
 }  // namespace reprojection::spline
