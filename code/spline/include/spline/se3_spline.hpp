@@ -12,13 +12,15 @@ class Se3Spline {
    public:
     Se3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns);
 
+    Se3Spline(CubicBSplineC3 const& r3_spline, CubicBSplineC3 const& so3_spline)
+        : r3_spline_{r3_spline}, so3_spline_{so3_spline} {}
+
     void AddControlPoint(Isometry3d const control_point);
 
     std::optional<Isometry3d> Evaluate(std::uint64_t const t_ns) const;
 
     std::optional<Vector6d> EvaluateVec(std::uint64_t const t_ns) const;
 
-   private:
     CubicBSplineC3 r3_spline_;
     CubicBSplineC3 so3_spline_;
 };
