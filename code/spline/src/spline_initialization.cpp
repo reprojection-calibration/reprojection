@@ -80,6 +80,10 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
 }
 
 CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double const u_i) {
+    // WARN(Jack): We use R3Spline::B<> even for the so3 spline interpolation! This is somehow inconsistent because the
+    // so3 spline is a cumulative spline and has a different basis matrix than the R3 spline. During testing of the
+    // interpolation on the spline trajectory it seemed to work regardless, but maybe there is an error here anyway that
+    // will come out in edge cases!
     VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
 
     ControlPointBlock sparse_weights{ControlPointBlock::Zero()};
