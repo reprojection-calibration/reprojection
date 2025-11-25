@@ -82,7 +82,7 @@ TEST(SplineSplineInitialization, TestBuildOmega) {
 TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
     MatrixKd const blending_matrix{R3Spline::M_};
     // TODO(Jack): Better name than vectorized!
-    MatrixXd const vectorized{CubicBSplineC3Init::VectorizeBlendingMatrix(blending_matrix)};
+    MatrixXd const vectorized{CubicBSplineC3Init::BlockifyBlendingMatrix(blending_matrix)};
 
     EXPECT_EQ(vectorized.rows(), 12);
     EXPECT_EQ(vectorized.cols(), 12);

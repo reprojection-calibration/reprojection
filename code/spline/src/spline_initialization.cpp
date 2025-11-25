@@ -103,13 +103,13 @@ CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_
         V.block(i * K, i * K, K, K) = V_i;
     }
 
-    static CoefficientBlock const M{VectorizeBlendingMatrix(R3Spline::M_)};
+    static CoefficientBlock const M{BlockifyBlendingMatrix(R3Spline::M_)};
     CoefficientBlock const omega{M.transpose() * V * M};
 
     return lambda * omega;
 }
 
-CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::VectorizeBlendingMatrix(MatrixKd const& blending_matrix) {
+CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
     auto build_block = [](Vector4d const& element) {
         Eigen::Matrix<double, num_coefficients, N> X{Eigen::Matrix<double, num_coefficients, N>::Zero()};
         for (int i = 0; i < N; i++) {

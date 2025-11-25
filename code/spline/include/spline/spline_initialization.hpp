@@ -62,16 +62,11 @@ struct CubicBSplineC3Init {
 
     // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
     //      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
-    // TODO(Jack): Given that the constants are set and fixed, I think we can make a lot of these matrices fixed sizes.
     static CoefficientBlock BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
 
-    // See note above in the other "vectorize" function about what is really happening here.
-    // TODO(Jack): We can definitely use some typedegs of constants to make the matrices easier to read!
-    // TODO(Jack): Are any of the places where we have constants::states actually supposed to be degree?
-    static CoefficientBlock VectorizeBlendingMatrix(MatrixKd const& blending_matrix);
+    static CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix);
 };
 
-// TODO MUST MULTIPLY RETURN BY DELTA T
 // For a discussion of the matrix derivative operator of a polynomial space please see the following links:
 //      (1) https://math.stackexchange.com/questions/4687306/derivative-as-a-matrix-mathbfd-dfrac-mathrmd-mathrmdx
 //      (2) https://math.stackexchange.com/questions/1003358/how-do-you-write-a-differential-operator-as-a-matrix
@@ -82,7 +77,6 @@ MatrixXd DerivativeOperator(int const order);
 
 MatrixXd HilbertMatrix(int const size);
 
-// TODO MUST MULTIPLY RETURN BY DELTA T
 MatrixXd HankelMatrix(VectorXd const& coefficients);
 
 }  // namespace reprojection::spline
