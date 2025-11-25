@@ -25,8 +25,17 @@
 namespace reprojection::spline {
 
 struct CubicBSplineC3Init {
-    // NOTE(Jack): We define these variables in the context of the spline initialization static class because they get
-    // used so often it made it necessary to find shorter or more meaningful variable names.
+    // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at
+    // all, and it makse it impossible to use a map because the data is not contiguous in memory.
+    // WARN(Jack): Expects time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
+    static CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments);
+
+    static std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements,
+                                                  size_t const num_segments, TimeHandler const& time_handler);
+
+    /**
+     * \brief How many control points are required to evaluate the spline (=3 for cubic spline).
+     */
     static inline int const K{constants::order};
     /**
      * \brief The size of the state space (=3 for both R3 and so3, translation and rotation).
@@ -36,11 +45,6 @@ struct CubicBSplineC3Init {
      * \brief Length of a vectorized control point block (=12 for a cubic b-spline with 3D state space).
      */
     static inline int const num_coefficients{K * N};
-    // TODO(Jack): Naming here! Technically this is really a "sparse" control point block, does that matter?
-    // A control point block holds the spline weights in a sparse fashing, that can be multiplied by the control points
-    // stacked into one vector.
-    // NOTE(Jack): The matrix Eigen::Matrix<double, num_coefficients, N> also comes up more than once, can we/should we
-    // also have a type def for this?
     /**
      * \brief A matrix used to hold the sparsified/diagonalized spline weights.
      *
@@ -50,14 +54,8 @@ struct CubicBSplineC3Init {
     using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
     using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
 
-    // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at
-    // all, and it makse it impossible to use a map because the data is not contigious in memory. WARN(Jack): Expects
-    // time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
-    static CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments);
-
-    static std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements,
-                                                  size_t const num_segments, TimeHandler const& time_handler);
-
+    // TODO(Jack): Is weights really the right term here? We are blockifying the entire B vector which combines both the
+    // basis matrix contribution and the time weighting.
     static ControlPointBlock BlockifyWeights(double const u_i);
 
     // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
