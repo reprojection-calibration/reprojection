@@ -43,6 +43,11 @@ struct CubicBSplineC3Init {
     static inline int const N{constants::states};
     /**
      * \brief Length of a vectorized control point block (=12 for a cubic b-spline with 3D state space).
+     *
+     * NOTE(Jack): We are entering a mixed terminology space because in the context of splines the coefficients often
+     * refer to the values multiplied by the control points. Here however we are actually referring to the control
+     * points themselves as coefficients. And further in the code we refer to what we normally would call the spline
+     * coefficients as "weights". This is a confusing aspect that should be addressed if it causes problems.
      */
     static inline int const num_coefficients{K * N};
     /**

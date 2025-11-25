@@ -12,6 +12,10 @@
 using namespace reprojection;
 using namespace reprojection::spline;
 
+// NOTE(Jack): In this test we do not get the exact start and end of the spline back like we might expect given the
+// perfect input data. This happens because we do not handle the end conditions in a principled manner. Please see the
+// implementation of CubicBSplineC3Init::BuildAb to understand this better. This is the reason why we get -2.0344...
+// instead if just -2 for example in the tests below.
 TEST(SplineSplineInitialization, TestInitializeSpline) {
     std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
                                                   {5100, {1, 1, 1}, DerivativeOrder::Null},
@@ -54,7 +58,8 @@ TEST(SplineSplineInitialization, TestBuildAb) {
     EXPECT_EQ(b.rows(), 9);
 
     // TODO(Jack): At this point the actual time handling logic inside the function is not at all/or well tested.
-    // Can we test that from this view? Or is that already tested somehwere else?
+    // Can we test that from this here? See the notes in the implementation to better understand the open problems there
+    // regarding valid data and end conditions.
 }
 
 TEST(SplineSplineInitialization, TestVectorizeWeights) {

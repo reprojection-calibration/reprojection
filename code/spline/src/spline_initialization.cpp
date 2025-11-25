@@ -11,16 +11,17 @@ namespace reprojection::spline {
 
 CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> const& measurements,
                                                     size_t const num_segments) {
-    // TODO(Jack): Will rounding effect the time handling here?
-    // TODO(Jack): Given a certain number of measurement is there a limit/boundary to valid num_segments?
+    // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known
+    // problem.
     CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
     auto const [A, b]{BuildAb(measurements, num_segments, spline.time_handler)};
 
-    // TODO(Jack): At this time lambda here is hardcoded, it might make sense at some time in the future to paramaterize
+    // TODO(Jack): Consider putting the loop and code to construct Q into a function. We are mixing levels of
+    // abstraction here and it is confusing.
+    // NOTE(Jack): At this time lambda here is hardcoded, it might make sense at some time in the future to parameterize
     // this, but currently I see no scenario where we can really expect the user to parameterize it, so we leave it
     // hardcoded for now.
     CoefficientBlock const omega{BuildOmega(spline.time_handler.delta_t_ns_, 1e7)};
-
     MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
     for (size_t i{0}; i < num_segments; i++) {
         Q.block(i * N, i * N, num_coefficients, num_coefficients) += omega;
@@ -28,7 +29,7 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
 
     MatrixXd const A_n{A.transpose() * A + Q};
     MatrixXd const b_n{A.transpose() * b};
-    VectorXd const x{A_n.ldlt().solve(b_n)};  // Solve
+    VectorXd const x{A_n.ldlt().solve(b_n)};
 
     for (int i{0}; i < x.size(); i += 3) {
         spline.control_points.push_back(x.segment<3>(i));
@@ -49,18 +50,20 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
     for (size_t j{0}; j < std::size(measurements); ++j) {
-        // ERROR(Jack): What is a realistic method to deal with the end of a sequence??? Because the last measurement
-        // will always have a time stamp at the very end of a time segment, which means it will evaluate to u=1 which is
-        // not a valid position.
-        // ULTRA HACK! Also see note on unprotected optional access below.
+        // ERROR(Jack): At this time we have no principled strategy to deal with the end conditions of the spline,
+        // therefore we need this hack here. What this hack does is ensure that at the very end of the spline, when
+        // time_ns_i is at the end (corresponds to the last measurement), it does not start another time segment past
+        // the end of the spline, but instead stays on the last valid segment at the very end (ex. u_i=0.99999). This is
+        // definitely a hack, but it works!
         std::uint64_t time_ns_i{measurements[j].t_ns};
         if (j == std::size(measurements) - 1) {
-            // TODO(Jack): How much do we need to clamp here? Should this clamping be a percentage of the delta_t?
             time_ns_i -= static_cast<std::uint64_t>(1 + 0.01 * time_handler.delta_t_ns_);
         }
 
-        // WARN(Jack): Unprotected optional access, but technically we should always been in a valid time segment
-        // because the measurement times are always non-decreasing and set the time limit themselves.
+        // WARN(Jack): Unprotected optional access! Technically we should always been in a valid time segment because
+        // the measurement times are always non-decreasing and define the limit of the valid times themselves. In
+        // combination with the hack described above, we should not get problems here. However, in reality this shows
+        // that maybe we are not describing or capturing the problem well. A better solution here is welcome!
         auto const [u_i, i]{time_handler.SplinePosition(time_ns_i, num_control_points).value()};
 
         A.block(j * N, i * N, N, num_coefficients) = BlockifyWeights(u_i);
@@ -88,7 +91,7 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double
 CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns,
                                                                     double const lambda) {
     MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
-    // NOTE(Jack): This is a hilbert matrix, but is it just conicdentally so? Or is there a better name that better
+    // NOTE(Jack): This is a hilbert matrix, but is it just coincidentally so? Or is there a better name that better
     // reflects its role in taking the matrix second derivative below?
     static MatrixKd const hilbert_matrix{HilbertMatrix(7)};
 
