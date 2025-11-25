@@ -9,7 +9,7 @@
 using namespace reprojection;
 
 // NOTE(Jack): Reading the original paper "Single View Point Omnidirectional Camera Calibration from Planar Grids" you
-// see that there derivation for initializing the focal length (also sometimes referred to as gamma) makes an
+// see that their derivation for initializing the focal length (also sometimes referred to as gamma) makes an
 // assumption, and that is that the camera/mirror being modeled is a parabola. In the context of the ucm camera model
 // this is the case where xi = 1. In our testing that uses a ucm camera with xi=1 we see that we get exactly the
 // focal length we expect. Satisfying!!!

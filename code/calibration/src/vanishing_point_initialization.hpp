@@ -10,8 +10,13 @@ namespace reprojection::calibration {
 // (center: (x,y), radius: double)
 using Circle = std::tuple<Vector2d, double>;
 
-// Follows the method from "Equidistant Fish-Eye Calibration and Rectification by Vanishing Point Extraction" Ciara´n
-// Hughes, Patrick Denny, Martin Glavin, and Edward Jones
+/**
+ * \brief Initial the focal length based on the pixels observed from two perpendicular 3D lines, for example a row and
+ * column from a calibration target.
+ *
+ * Follows the method from "Equidistant Fish-Eye Calibration and Rectification by Vanishing Point Extraction" Ciara´n
+ * Hughes, Patrick Denny, Martin Glavin, and Edward Jones
+ */
 std::optional<double> VanishingPointInitialization(MatrixX2d const& pixels1, MatrixX2d const& pixels2);
 
 // Adopted from https://stackoverflow.com/questions/3349125/circle-circle-intersection-points which copy and pasted from
