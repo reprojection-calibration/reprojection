@@ -32,4 +32,18 @@ std::optional<Isometry3d> Se3Spline::Evaluate(std::uint64_t const t_ns) const {
     return result;
 }
 
+std::optional<Vector6d> Se3Spline::EvaluateVec(std::uint64_t const t_ns) const {
+    auto const position{EvaluateSpline<R3Spline>(t_ns, r3_spline_)};
+    auto const rotation{EvaluateSpline<So3Spline>(t_ns, so3_spline_)};
+    if (not(position.has_value() and rotation.has_value())) {
+        return std::nullopt;
+    }
+
+    Vector6d result;
+    result.topRows(3) = rotation.value();
+    result.bottomRows(3) = position.value();
+
+    return result;
+}
+
 }  // namespace reprojection::spline

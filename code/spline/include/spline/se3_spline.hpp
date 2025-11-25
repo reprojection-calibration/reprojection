@@ -16,6 +16,8 @@ class Se3Spline {
 
     std::optional<Isometry3d> Evaluate(std::uint64_t const t_ns) const;
 
+    std::optional<Vector6d> EvaluateVec(std::uint64_t const t_ns) const;
+
    private:
     CubicBSplineC3 r3_spline_;
     CubicBSplineC3 so3_spline_;

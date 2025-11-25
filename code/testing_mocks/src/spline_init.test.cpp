@@ -43,7 +43,7 @@ TEST(XXX, FFF) {
         uint64_t const t_i{
             static_cast<uint64_t>(delta_t_ns * std::size(poses) * (static_cast<double>(i) / num_evaluations))};
         // WARN UNPROTECTED OPTIONAL ACCESS!
-        Vector6d const se3_i{geometry::Log(se3_spline.Evaluate(t0_ns + t_i).value())};
+        Vector6d const se3_i{se3_spline.EvaluateVec(t0_ns + t_i).value()};
         se3.push_back(se3_i);
     }
 
