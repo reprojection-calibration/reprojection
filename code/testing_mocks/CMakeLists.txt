@@ -20,6 +20,7 @@ AddLibrary()
 set(TESTS
         src/noise_generation.test.cpp
         src/sphere_trajectory.test.cpp
+        src/spline_init.test.cpp
         test/mvg_generator.test.cpp
 )
 AddTests()
