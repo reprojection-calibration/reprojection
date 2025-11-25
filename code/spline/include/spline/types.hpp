@@ -22,10 +22,4 @@ struct C3Measurement {
     DerivativeOrder type;
 };
 
-struct C6Measurement {
-    std::uint64_t t_ns;
-    Vector3d r3;
-    DerivativeOrder type;
-};
-
 }  // namespace reprojection::spline
