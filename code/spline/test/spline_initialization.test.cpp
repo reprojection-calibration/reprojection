@@ -2,8 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <random>
-
 #include "spline/r3_spline.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
@@ -86,13 +84,12 @@ TEST(SplineSplineInitialization, TestBuildOmega) {
 
 TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
     MatrixKd const blending_matrix{R3Spline::M_};
-    // TODO(Jack): Better name than vectorized!
-    MatrixXd const vectorized{CubicBSplineC3Init::BlockifyBlendingMatrix(blending_matrix)};
+    MatrixXd const blockified{CubicBSplineC3Init::BlockifyBlendingMatrix(blending_matrix)};
 
-    EXPECT_EQ(vectorized.rows(), 12);
-    EXPECT_EQ(vectorized.cols(), 12);
-    EXPECT_TRUE(vectorized.topLeftCorner(4, 1).isApprox(blending_matrix.row(0).transpose()));
-    EXPECT_TRUE(vectorized.bottomRightCorner(4, 1).isApprox(blending_matrix.row(3).transpose()));
+    EXPECT_EQ(blockified.rows(), 12);
+    EXPECT_EQ(blockified.cols(), 12);
+    EXPECT_TRUE(blockified.topLeftCorner(4, 1).isApprox(blending_matrix.row(0).transpose()));
+    EXPECT_TRUE(blockified.bottomRightCorner(4, 1).isApprox(blending_matrix.row(3).transpose()));
 }
 
 TEST(SplineSplineInitialization, TestDerivativeOperator) {
