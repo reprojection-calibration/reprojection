@@ -63,7 +63,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
         // because the measurement times are always non-decreasing and set the time limit themselves.
         auto const [u_i, i]{time_handler.SplinePosition(time_ns_i, num_control_points).value()};
 
-        A.block(j * N, i * N, N, num_coefficients) = VectorizeWeights(u_i);
+        A.block(j * N, i * N, N, num_coefficients) = BlockifyWeights(u_i);
     }
 
     VectorXd b{VectorXd{measurement_dim, 1}};
@@ -74,7 +74,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
     return {A, b};
 }
 
-CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::VectorizeWeights(double const u_i) {
+CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double const u_i) {
     VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
 
     ControlPointBlock sparse_weights{ControlPointBlock::Zero()};
