@@ -75,11 +75,11 @@ Frame MvgGenerator::Generate(double const t) const {
     auto const pose_t{se3_spline_.Evaluate(spline_time)};
     assert(pose_t.has_value());  // See note above
 
-    MatrixX2d const pixels{Project(points_, camera_, pose_t.value())};
+    MatrixX2d const pixels{Project(points_, camera_, geometry::Exp(pose_t.value()))};
 
     // WARN(Jack): This assumes that all points are always visible! With careful engineering for the default value
     // of K this will be true, but that cannot be guaranteed for all K!!!
-    return {{pixels, points_}, pose_t.value()};
+    return {{pixels, points_}, geometry::Exp(pose_t.value())};
 }
 
 MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {

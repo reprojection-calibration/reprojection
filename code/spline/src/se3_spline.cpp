@@ -8,7 +8,7 @@
 namespace reprojection::spline {
 
 Se3Spline::Se3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
-    : r3_spline_{t0_ns, delta_t_ns}, so3_spline_{t0_ns, delta_t_ns} {}
+    : so3_spline_{t0_ns, delta_t_ns}, r3_spline_{t0_ns, delta_t_ns} {}
 
 // TODO(Jack): Refactor this to take se3 vector directly?
 void Se3Spline::AddControlPoint(Isometry3d const control_point) {
@@ -16,7 +16,7 @@ void Se3Spline::AddControlPoint(Isometry3d const control_point) {
     so3_spline_.control_points.push_back(geometry::Log<double>(control_point.linear()));
 }
 
-std::optional<Isometry3d> Se3Spline::Evaluate(std::uint64_t const t_ns) const {
+std::optional<Vector6d> Se3Spline::Evaluate(std::uint64_t const t_ns) const {
     // TODO(Jack): This is in essence repeating logic that we already have implemented elsewhere, is there anything
     // we can do to streamline this?
     auto const position{EvaluateSpline<R3Spline>(t_ns, r3_spline_)};
@@ -25,9 +25,8 @@ std::optional<Isometry3d> Se3Spline::Evaluate(std::uint64_t const t_ns) const {
         return std::nullopt;
     }
 
-    Isometry3d result{Isometry3d::Identity()};
-    result.rotate(geometry::Exp(rotation.value()));
-    result.translation() = position.value();
+    Vector6d result;
+    result << rotation.value(), position.value();
 
     return result;
 }

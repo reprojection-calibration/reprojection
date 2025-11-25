@@ -46,7 +46,7 @@ TEST(SplineSe3Spline, TestEvaluate) {
     }
 
     auto const p_0{se3_spline.Evaluate(100)};
-    EXPECT_FLOAT_EQ(p_0->matrix().diagonal().sum(),
+    EXPECT_FLOAT_EQ(geometry::Exp(p_0.value()).matrix().diagonal().sum(),
                     3.9593055);  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
     // that we can detect changes to the implementation quickly (hopefully. )
 }

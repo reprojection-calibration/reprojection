@@ -21,6 +21,8 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
     // NOTE(Jack): At this time lambda here is hardcoded, it might make sense at some time in the future to parameterize
     // this, but currently I see no scenario where we can really expect the user to parameterize it, so we leave it
     // hardcoded for now.
+    // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
+    // timestamps which results in very small values in the omega matrix otherwise.
     CoefficientBlock const omega{BuildOmega(spline.time_handler.delta_t_ns_, 1e7)};
     MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
     for (size_t i{0}; i < num_segments; i++) {
@@ -78,6 +80,10 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
 }
 
 CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double const u_i) {
+    // WARN(Jack): We use R3Spline::B<> even for the so3 spline interpolation! This is somehow inconsistent because the
+    // so3 spline is a cumulative spline and has a different basis matrix than the R3 spline. During testing of the
+    // interpolation on the spline trajectory it seemed to work regardless, but maybe there is an error here anyway that
+    // will come out in edge cases!
     VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
 
     ControlPointBlock sparse_weights{ControlPointBlock::Zero()};

@@ -4,6 +4,10 @@
 
 namespace reprojection::testing_mocks {
 
+// ERROR(Jack): There is something wrong with the camera trajectory generation code! It works if the sphere cameras are
+// looking in hte positive z-direction and the world origin lies outside the sphere. If however the world origin is for
+// example inside the sphere than it does not work! This is a material error and should be addressed.
+
 struct CameraTrajectory {
     Vector3d world_origin;
     double sphere_radius;
