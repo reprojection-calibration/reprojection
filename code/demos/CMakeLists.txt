@@ -8,7 +8,6 @@ set(SRC_FILES
         src/image_source.cpp
 )
 set(LINK_LIBRARIES
-        calibration
         Eigen3::Eigen
         eigen_utilities
         feature_extraction
