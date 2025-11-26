@@ -3,6 +3,7 @@ set(LIBRARY_NAME "calibration")
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
+        src/initialize_focal_length.cpp
         src/parabola_line_initialization.cpp
         src/vanishing_point_initialization.cpp
 )
