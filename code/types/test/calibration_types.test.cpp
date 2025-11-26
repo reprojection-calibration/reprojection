@@ -20,4 +20,8 @@ TEST(TypesCalibrationTypes, TestBundleMaskOperator) {
     EXPECT_TRUE(sub_bundle.pixels.row(1).isApprox(bundle.pixels.row(3)));
     EXPECT_TRUE(sub_bundle.points.row(0).isApprox(bundle.points.row(1)));
     EXPECT_TRUE(sub_bundle.points.row(1).isApprox(bundle.points.row(3)));
+
+    // No ids requested
+    Bundle const none{bundle(ArrayXi{})};
+    EXPECT_EQ(none.pixels.rows(), 0);  // Could have also checked points :)
 }
