@@ -22,6 +22,7 @@ std::tuple<std::vector<Bundle>, std::vector<Bundle>> SortIntoRowsAndCols(Extract
         rows.push_back(target.bundle(indices));
     }
 
+    // TODO(Jack): Can we avoid the copy and paste?
     // Get cols
     std::set<int> const col_ids{target.indices.col(1).cbegin(), target.indices.col(1).cend()};
     std::vector<Bundle> cols;
@@ -40,9 +41,7 @@ std::tuple<std::vector<Bundle>, std::vector<Bundle>> SortIntoRowsAndCols(Extract
 
 using namespace reprojection;
 
-TEST(CalibrationInitializeFocalLength, TestXXX) {}
-
-TEST(CalibrationInitializeFocalLength, TestYYY) {
+TEST(CalibrationInitializeFocalLength, TestSortIntoRowsAndCols) {
     Bundle const bundle{MatrixX2d{{1, 2}, {3, 4}, {5, 6}, {7, 8}, {0, 0}, {0, 0}},
                         MatrixX3d{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {7, 8, 9}, {4, 5, 6}, {1, 2, 3}}};
     ArrayX2i const indices{eigen_utilities::GenerateGridIndices(2, 3)};
@@ -50,15 +49,9 @@ TEST(CalibrationInitializeFocalLength, TestYYY) {
 
     auto const [rows, cols]{calibration::SortIntoRowsAndCols(target)};
 
-    for (auto const& row_bundle : rows) {
-        std::cout << "row_bundle" << std::endl;
-        std::cout << row_bundle.pixels << std::endl;
-        std::cout << row_bundle.points << std::endl;
-    }
+    EXPECT_EQ(std::size(rows), 2);
+    EXPECT_TRUE(rows[0].pixels.isApprox(bundle.pixels.block(0, 0, 3, 2)));
 
-    for (auto const& col_bundle : cols) {
-        std::cout << "col_bundle" << std::endl;
-        std::cout << col_bundle.pixels << std::endl;
-        std::cout << col_bundle.points << std::endl;
-    }
+    EXPECT_EQ(std::size(cols), 3);
+    EXPECT_TRUE(cols[0].pixels.isApprox(Eigen::MatrixX2d{{1, 2}, {7, 8}}));
 }
