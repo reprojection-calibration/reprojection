@@ -3,8 +3,43 @@
 #include <set>
 
 #include "eigen_utilities/grid.hpp"
+#include "parabola_line_initialization.hpp"
+#include "vanishing_point_initialization.hpp"
 
 namespace reprojection::calibration {
+
+// NOTE(Jack): Principle point only required for ParabolaLineInitialization, is there anyway to prevent this?
+std::vector<double> InitializeFocalLength(ExtractedTarget const& target, InitializationMethod const method,
+                                          Vector2d const& principal_point) {
+    auto const [rows, cols]{calibration::SortIntoRowsAndCols(target)};
+
+    std::vector<double> focal_lengths;
+    if (method == InitializationMethod::ParabolaLine) {
+        for (auto const& row : rows) {
+            auto f{calibration::ParabolaLineInitialization(principal_point, row.pixels)};
+            if (f.has_value()) {
+                focal_lengths.push_back(f.value());
+            }
+        }
+        for (auto const& col : cols) {
+            auto f{ParabolaLineInitialization(principal_point, col.pixels)};
+            if (f.has_value()) {
+                focal_lengths.push_back(f.value());
+            }
+        }
+    } else if (method == InitializationMethod::VanishingPoint) {
+        for (auto const& row : rows) {
+            for (auto const& col : cols) {
+                auto const f{VanishingPointInitialization(row.pixels, col.pixels)};
+                if (f.has_value()) {
+                    focal_lengths.push_back(f.value());
+                }
+            }
+        }
+    }
+
+    return focal_lengths;
+}
 
 std::tuple<std::vector<Bundle>, std::vector<Bundle>> SortIntoRowsAndCols(ExtractedTarget const& target) {
     // Get rows
