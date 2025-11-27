@@ -14,13 +14,6 @@ namespace reprojection::pnp {
 // I have is should we normalize the points at the top level pnp function and then feed those both to the DLT and the
 // nonlinear refinement? Right now I do not understand what coordinate context to do the nonlinear refinement in.
 PnpResult Pnp(Bundle const& bundle) {
-    // NOTE(Jack): There is a assert() in Bundle's constructor that checks this, but these will not be present in
-    // release builds, so for now we leave this runtime check here. Our concept for error handling across the entire
-    // project is clearly not complete :)
-    if (not(bundle.pixels.rows() == bundle.points.rows())) {
-        return PnpStatusCode::MismatchedCorrespondences;
-    }
-
     Isometry3d tf;
     Array4d pinhole_intrinsics;
     if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
@@ -35,16 +28,17 @@ PnpResult Pnp(Bundle const& bundle) {
     // NOTE(Jack): The optimization::CameraNonlinearRefinement function expects and returns vectors. For pnp however we
     // just evaluate one frame at a time. Therefore we construct the "vector" input of frames from the one Bundle we
     // have, and also return the first and only tf that is returned.
-    // TODO(Jack): Return the reprojection error/final cost returned from the nonlinear refinement?
-    auto const [tf_star, _, _1]{optimization::CameraNonlinearRefinement({{{bundle.pixels, bundle.points}, tf}},
-                                                                        CameraModel::Pinhole, pinhole_intrinsics)};
+    // TODO(Jack): Can we find a way to fix the intrinsic parameters so that they are not optimized?
+    auto const [tf_star, _1, reprojection_error]{optimization::CameraNonlinearRefinement(
+        {{{bundle.pixels, bundle.points}, tf}}, CameraModel::Pinhole, pinhole_intrinsics)};
 
+    std::cout << _1.transpose() << std::endl;
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
     // and nonlinear optimization that will tell us if we are on the right track? For example ceres should actually
     // provide a value direct that tells us if the optimization was successful or not. Lets wait until we have more
     // experience with optimizations and their failures on real data.
 
-    return tf_star[0];
+    return PnpOutput{tf_star[0], reprojection_error};
 }
 
 }  // namespace reprojection::pnp

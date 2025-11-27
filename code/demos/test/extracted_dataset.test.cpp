@@ -6,9 +6,11 @@
 
 #include "calibration/initialize_focal_length.hpp"
 #include "demos/image_source.hpp"
+#include "geometry/lie.hpp"
+#include "pnp/pnp.hpp"
+#include "projection_functions/camera_model.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
-#include "projection_functions/camera_model.hpp"
 
 namespace reprojection::demos {
 
@@ -44,7 +46,7 @@ EigenType LoadEigenArray(std::filesystem::path const& file) {
     return out;
 }
 
-std::map<double, ExtractedTarget> LoadExtractedTargets(const std::filesystem::path& root) {
+std::map<double, ExtractedTarget> LoadExtractedTargets(std::filesystem::path const& root) {
     std::vector<double> timestamps;
     {
         std::ifstream tsfile(root / "timestamps.txt");
@@ -97,17 +99,56 @@ std::map<double, ExtractedTarget> LoadExtractedTargets(const std::filesystem::pa
 
 using namespace reprojection;
 
+bool saveVector6dListToFile(const std::vector<Vector6d>& vec_list, const std::string& filename) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file: " << filename << std::endl;
+        return false;
+    }
+
+    for (const auto& v : vec_list) {
+        // Write the six components separated by spaces
+        file << v(0) << " " << v(1) << " " << v(2) << " " << v(3) << " " << v(4) << " " << v(5) << "\n";
+    }
+
+    file.close();
+    return true;
+}
+
 TEST(DemosExtractedDataset, TestXXX) {
     std::map<double, ExtractedTarget> const data{demos::LoadExtractedTargets(
         "/data/cvg.cit.tum.de_visual-inertial-dataset/dataset-calib-imu4_512_16_extracted/imgs")};
 
+    std::vector<Vector6d> poses;
     for (const auto& [timestamp, target] : data) {
         std::vector<double> const fs{calibration::InitializeFocalLength(
             target, calibration::InitializationMethod::ParabolaLine, Vector2d{256, 256})};
 
+        double lowest_error{1e10};
+        Isometry3d best_pose;
+        ;
         for (auto const f : fs) {
-            Array6d const intrinsics {f/2, f/2, 256, 256, 0, 0.5};
-            auto const camera{projection_functions::DoubleSphereCamera(intrinsics)};
+            Array6d const ds_intrinsics{f / 2, f / 2, 256, 256, 0, 0.5};
+            auto const ds_camera{projection_functions::DoubleSphereCamera(ds_intrinsics)};
+            MatrixX3d const rays{ds_camera.Unproject(target.bundle.pixels)};
+
+            // ERROR(Jack): We are not accounting for the fact of valid field of views!
+            Array4d const pinhole_intrinsics{1, 1, 0, 0};
+            auto const pinhole_camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
+            MatrixX2d const pixels{pinhole_camera.Project(rays)};
+
+            pnp::PnpResult const pnp_result{pnp::Pnp({pixels, target.bundle.points})};
+
+            EXPECT_TRUE(std::holds_alternative<pnp::PnpOutput>(pnp_result));
+            auto const result{std::get<pnp::PnpOutput>(pnp_result)};
+            if (result.reprojection_error < lowest_error) {
+                lowest_error = result.reprojection_error;
+                best_pose = result.pose;
+            }
         }
+        poses.push_back(geometry::Log(best_pose.inverse()));
     }
+
+    saveVector6dListToFile(poses, "tum_dataset_poses.txt");
+
 }

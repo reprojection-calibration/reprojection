@@ -16,10 +16,11 @@ TEST(Pnp, TestPnp) {
     std::vector<Frame> const frames{generator.GenerateBatch(20)};
     for (auto const& frame : frames) {
         pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle)};
-        EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
+        EXPECT_TRUE(std::holds_alternative<pnp::PnpOutput>(pnp_result));
 
-        Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(frame.pose));
+        auto const output_i{std::get<pnp::PnpOutput>(pnp_result)};
+        EXPECT_TRUE(output_i.pose.isApprox(frame.pose));
+        EXPECT_LT(output_i.reprojection_error, 1e-9);  // Because there is no noise the error is extremely low!
     }
 }
 
@@ -32,22 +33,12 @@ TEST(Pnp, TestPnpFlat) {
     std::vector<Frame> const frames{generator.GenerateBatch(20)};
     for (auto const& frame : frames) {
         pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle)};
-        EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
+        EXPECT_TRUE(std::holds_alternative<pnp::PnpOutput>(pnp_result));
 
-        Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(frame.pose));
+        auto const output_i{std::get<pnp::PnpOutput>(pnp_result)};
+        EXPECT_TRUE(output_i.pose.isApprox(frame.pose));
+        EXPECT_LT(output_i.reprojection_error, 1e-9);
     }
-}
-
-TEST(Pnp, TestMismatchedCorrespondence) {
-    // TODO(Jack): Should the Bundle type not even allow a construction from mismatched sizes?
-    MatrixX2d const four_pixels(4, 2);
-    MatrixX3d const five_points(5, 3);
-    pnp::PnpResult const pnp_result{pnp::Pnp({four_pixels, five_points})};
-
-    EXPECT_TRUE(std::holds_alternative<pnp::PnpStatusCode>(pnp_result));
-    pnp::PnpStatusCode const status{std::get<pnp::PnpStatusCode>(pnp_result)};
-    EXPECT_EQ(status, pnp::PnpStatusCode::MismatchedCorrespondences);
 }
 
 TEST(Pnp, TestNotEnoughPoints) {

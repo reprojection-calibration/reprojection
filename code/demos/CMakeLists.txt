@@ -12,6 +12,8 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         feature_extraction
+        geometry
+        pnp
         projection_functions
         types
         ${apriltag_LIBRARIES}
