@@ -12,6 +12,7 @@ namespace reprojection::calibration {
 // caught with the nxnx_nyny > 0.95 "non-radial" line check.
 std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point, MatrixX2d const& pixels) {
     if (pixels.rows() <= 4) {
+        // If the P matrix is not at least 4 rows (i.e. P is a 4x4 matrix) then we cannot get a good SVD solution below
         return std::nullopt;
     }
 
