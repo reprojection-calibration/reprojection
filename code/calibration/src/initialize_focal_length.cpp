@@ -15,6 +15,8 @@ std::vector<double> InitializeFocalLength(ExtractedTarget const& target, Initial
 
     std::vector<double> focal_lengths;
     if (method == InitializationMethod::ParabolaLine) {
+        // TODO(Jack): Do we really need to iterate over the rows and columns? Or would just the rows or just the
+        // columns already be enough?
         for (auto const& row : rows) {
             auto f{calibration::ParabolaLineInitialization(principal_point, row.pixels)};
             if (f.has_value()) {

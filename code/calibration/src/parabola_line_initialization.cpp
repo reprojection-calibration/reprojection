@@ -4,15 +4,9 @@
 
 namespace reprojection::calibration {
 
-// NOTE(Jack): In the original paper there is an assertion/check that t > 0. This comes from the fact that t represent a
-// normal vector and therefore its square magnitude has to be positive. I think the intent for the check is that if the
-// SVD fails is some special way, due to the relation of c3 and c4, we might get a negative t value. That being said I
-// am unable to get a scenario in a test that produces a negative t value. Let us keep our eyes peeled here to see if
-// this becomes a problem in the initialization! My experience so far shows that all error conditions are actually
-// caught with the nxnx_nyny > 0.95 "non-radial" line check.
 std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point, MatrixX2d const& pixels) {
-    if (pixels.rows() <= 4) {
-        // If the P matrix is not at least 4 rows (i.e. P is a 4x4 matrix) then we cannot get a good SVD solution below
+    if (pixels.rows() < 4) {
+        // If the P matrix is not at least 4 rows (i.e. P is a 4x4 matrix) then we cannot get a SVD solution below
         return std::nullopt;
     }
 

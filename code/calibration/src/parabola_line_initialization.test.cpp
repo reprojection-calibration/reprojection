@@ -41,17 +41,17 @@ TEST(CalibrationParabolaLineInitialization, TestParabolaLineInitialization) {
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
 
-    std::tie(pixels, principal_point) = LinearTestPixels({-150, -150, 600}, {5, -10, -10});
+    std::tie(pixels, principal_point) = LinearTestPixels({-150, -150, 600}, {5, -10, 10});
     f = calibration::ParabolaLineInitialization(principal_point, pixels);
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
 
-    std::tie(pixels, principal_point) = LinearTestPixels({150, -150, 600}, {-5, -10, -10});
+    std::tie(pixels, principal_point) = LinearTestPixels({150, -150, 600}, {-5, -10, 10});
     f = calibration::ParabolaLineInitialization(principal_point, pixels);
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
 
-    std::tie(pixels, principal_point) = LinearTestPixels({-150, 150, 600}, {-5, -10, 10});
+    std::tie(pixels, principal_point) = LinearTestPixels({-150, 150, 600}, {-5, -10, -10});
     f = calibration::ParabolaLineInitialization(principal_point, pixels);
     ASSERT_TRUE(f.has_value());
     EXPECT_FLOAT_EQ(f.value(), 600);
