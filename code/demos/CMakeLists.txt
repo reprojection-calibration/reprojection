@@ -8,6 +8,7 @@ set(SRC_FILES
         src/image_source.cpp
 )
 set(LINK_LIBRARIES
+        calibration
         Eigen3::Eigen
         eigen_utilities
         feature_extraction
@@ -19,6 +20,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        test/extracted_dataset.test.cpp
         test/image_source.test.cpp
 )
 AddTests()
