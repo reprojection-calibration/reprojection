@@ -8,6 +8,7 @@
 #include "demos/image_source.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
+#include "projection_functions/camera_model.hpp"
 
 namespace reprojection::demos {
 
@@ -105,8 +106,8 @@ TEST(DemosExtractedDataset, TestXXX) {
             target, calibration::InitializationMethod::ParabolaLine, Vector2d{256, 256})};
 
         for (auto const f : fs) {
-            std::cout << f << " ";
+            Array6d const intrinsics {f/2, f/2, 256, 256, 0, 0.5};
+            auto const camera{projection_functions::DoubleSphereCamera(intrinsics)};
         }
-        std::cout << std::endl;
     }
 }

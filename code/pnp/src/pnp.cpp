@@ -14,7 +14,9 @@ namespace reprojection::pnp {
 // I have is should we normalize the points at the top level pnp function and then feed those both to the DLT and the
 // nonlinear refinement? Right now I do not understand what coordinate context to do the nonlinear refinement in.
 PnpResult Pnp(Bundle const& bundle) {
-    // TODO(Jack): Design this error out of existence by requiring that bundle have matching correspondence!
+    // NOTE(Jack): There is a assert() in Bundle's constructor that checks this, but these will not be present in
+    // release builds, so for now we leave this runtime check here. Our concept for error handling across the entire
+    // project is clearly not complete :)
     if (not(bundle.pixels.rows() == bundle.points.rows())) {
         return PnpStatusCode::MismatchedCorrespondences;
     }
