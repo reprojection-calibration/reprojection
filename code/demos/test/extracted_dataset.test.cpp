@@ -6,8 +6,10 @@
 
 #include "calibration/initialize_focal_length.hpp"
 #include "demos/image_source.hpp"
+#include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
-#include "pnp/pnp.hpp"
+#include "optimization/nonlinear_refinement.hpp"
+#include "pnp/dlt.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
@@ -119,36 +121,108 @@ TEST(DemosExtractedDataset, TestXXX) {
     std::map<double, ExtractedTarget> const data{demos::LoadExtractedTargets(
         "/data/cvg.cit.tum.de_visual-inertial-dataset/dataset-calib-imu4_512_16_extracted/imgs")};
 
-    std::vector<Vector6d> poses;
+    std::vector<Vector6d> dlt_poses;
+    std::vector<Vector6d> nl_poses;
     for (const auto& [timestamp, target] : data) {
         std::vector<double> const fs{calibration::InitializeFocalLength(
             target, calibration::InitializationMethod::ParabolaLine, Vector2d{256, 256})};
 
-        double lowest_error{1e10};
-        Isometry3d best_pose;
-        ;
-        for (auto const f : fs) {
-            Array6d const ds_intrinsics{f / 2, f / 2, 256, 256, 0, 0.5};
-            auto const ds_camera{projection_functions::DoubleSphereCamera(ds_intrinsics)};
-            MatrixX3d const rays{ds_camera.Unproject(target.bundle.pixels)};
+        Array6d const ds_intrinsics{156.6221, 156.598, 254.974, 256.97158, -0.180193, 0.5910415};
+        auto const ds_camera{projection_functions::DoubleSphereCamera(ds_intrinsics)};
+        MatrixX3d const rays{ds_camera.Unproject(target.bundle.pixels)};
 
-            // ERROR(Jack): We are not accounting for the fact of valid field of views!
-            Array4d const pinhole_intrinsics{1, 1, 0, 0};
-            auto const pinhole_camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
-            MatrixX2d const pixels{pinhole_camera.Project(rays)};
+        // ERROR(Jack): We are not accounting for the fact of valid field of views!
+        Array4d const pinhole_intrinsics{1, 1, 0, 0};
+        auto const pinhole_camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
+        MatrixX2d const pixels{pinhole_camera.Project(rays)};
 
-            pnp::PnpResult const pnp_result{pnp::Pnp({pixels, target.bundle.points})};
+        Bundle const to_opt{pixels, target.bundle.points};
 
-            EXPECT_TRUE(std::holds_alternative<pnp::PnpOutput>(pnp_result));
-            auto const result{std::get<pnp::PnpOutput>(pnp_result)};
-            if (result.reprojection_error < lowest_error) {
-                lowest_error = result.reprojection_error;
-                best_pose = result.pose;
-            }
-        }
-        poses.push_back(geometry::Log(best_pose.inverse()));
+        Isometry3d const tf{pnp::Dlt22(to_opt)};
+        dlt_poses.push_back(geometry::Log(tf));
+
+        auto const [tf_star, _1, reprojection_error]{optimization::CameraNonlinearRefinement(
+            {{{to_opt.pixels, to_opt.points}, tf}}, CameraModel::Pinhole, pinhole_intrinsics)};
+        nl_poses.push_back(geometry::Log(tf_star[0]));
     }
 
-    saveVector6dListToFile(poses, "tum_dataset_poses.txt");
+    saveVector6dListToFile(nl_poses, "nl_poses.txt");
+    saveVector6dListToFile(dlt_poses, "dlt_poses.txt");
+}
 
+Eigen::Isometry3d pnpEigen(const Eigen::MatrixX3d& points3D,  // Nx3
+                           const Eigen::MatrixX2d& pixels2D,  // Nx2
+                           const Eigen::Matrix3d& K,          // 3x3 intrinsics
+                           bool useExtrinsicGuess = false) {
+    // --- 1. Convert Eigen → cv::Mat ---
+    cv::Mat objectPoints(points3D.rows(), 3, CV_64F);
+    cv::Mat imagePoints(pixels2D.rows(), 2, CV_64F);
+
+    for (int i = 0; i < points3D.rows(); ++i) {
+        objectPoints.at<double>(i, 0) = points3D(i, 0);
+        objectPoints.at<double>(i, 1) = points3D(i, 1);
+        objectPoints.at<double>(i, 2) = points3D(i, 2);
+
+        imagePoints.at<double>(i, 0) = pixels2D(i, 0);
+        imagePoints.at<double>(i, 1) = pixels2D(i, 1);
+    }
+
+    cv::Mat cameraMatrix(3, 3, CV_64F);
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c) cameraMatrix.at<double>(r, c) = K(r, c);
+
+    cv::Mat distCoeffs = cv::Mat::zeros(1, 5, CV_64F);  // modify if you have distortion
+
+    // --- 2. Run solvePnP ---
+    cv::Mat rvec, tvec;
+    bool ok = cv::solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec, useExtrinsicGuess,
+                           cv::SOLVEPNP_ITERATIVE);
+
+    if (!ok) throw std::runtime_error("solvePnP failed!");
+
+    // --- 3. Convert rvec → rotation matrix ---
+    cv::Mat R_cv;
+    cv::Rodrigues(rvec, R_cv);
+
+    Eigen::Matrix3d R;
+    Eigen::Vector3d t;
+
+    for (int r = 0; r < 3; ++r) {
+        for (int c = 0; c < 3; ++c) R(r, c) = R_cv.at<double>(r, c);
+        t(r) = tvec.at<double>(r);
+    }
+
+    // --- 4. Build Eigen Isometry (4×4 pose) ---
+    Eigen::Isometry3d T = Eigen::Isometry3d::Identity();
+    T.linear() = R;
+    T.translation() = t;
+
+    return T;
+}
+
+TEST(DemosExtractedDataset, TestOpenCv) {
+    std::map<double, ExtractedTarget> const data{demos::LoadExtractedTargets(
+        "/data/cvg.cit.tum.de_visual-inertial-dataset/dataset-calib-imu4_512_16_extracted/imgs")};
+
+    std::vector<Vector6d> opencv_poses;
+    for (const auto& [timestamp, target] : data) {
+        std::vector<double> const fs{calibration::InitializeFocalLength(
+            target, calibration::InitializationMethod::ParabolaLine, Vector2d{256, 256})};
+
+        Array6d const ds_intrinsics{156.6221, 156.598, 254.974, 256.97158, -0.180193, 0.5910415};
+        auto const ds_camera{projection_functions::DoubleSphereCamera(ds_intrinsics)};
+        MatrixX3d const rays{ds_camera.Unproject(target.bundle.pixels)};
+
+        // ERROR(Jack): We are not accounting for the fact of valid field of views!
+        Array4d const pinhole_intrinsics{1, 1, 0, 0};
+        auto const pinhole_camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
+        MatrixX2d const pixels{pinhole_camera.Project(rays)};
+
+        Bundle const to_opt{pixels, target.bundle.points};
+
+        opencv_poses.push_back(geometry::Log(pnpEigen(to_opt.points, to_opt.pixels, Matrix3d::Identity())));
+        opencv_poses.back().bottomRows(3) *= 10;
+    }
+
+    saveVector6dListToFile(opencv_poses, "opencv_poses.txt");
 }

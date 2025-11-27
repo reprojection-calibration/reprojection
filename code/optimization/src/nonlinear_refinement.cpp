@@ -27,7 +27,7 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(s
 
             problem.AddResidualBlock(cost_function, nullptr, intrinsics_to_optimize.data(), se3[i].data());
             // TODO(Jack): Make the problem fully configurable with what gets optimized and not!
-            problem.SetParameterBlockConstant(intrinsics_to_optimize.data()); // HARDCODE ERROR
+            problem.SetParameterBlockConstant(intrinsics_to_optimize.data());  // HARDCODE ERROR
         }
     }
 

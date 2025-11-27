@@ -13,8 +13,10 @@ set(LINK_LIBRARIES
         eigen_utilities
         feature_extraction
         geometry
+        optimization
         pnp
         projection_functions
+        spline
         types
         ${apriltag_LIBRARIES}
         ${OpenCV_LIBS}
