@@ -123,6 +123,7 @@ TEST(DemosExtractedDataset, TestXXX) {
 
     std::vector<Vector6d> dlt_poses;
     std::vector<Vector6d> nl_poses;
+    Vector3d const se3_n_1{1,0,0};
     for (const auto& [timestamp, target] : data) {
         std::vector<double> const fs{calibration::InitializeFocalLength(
             target, calibration::InitializationMethod::ParabolaLine, Vector2d{256, 256})};
@@ -139,11 +140,29 @@ TEST(DemosExtractedDataset, TestXXX) {
         Bundle const to_opt{pixels, target.bundle.points};
 
         Isometry3d const tf{pnp::Dlt22(to_opt)};
-        dlt_poses.push_back(geometry::Log(tf));
+        MatrixX4d const points_homog_co{(tf.inverse() * target.bundle.points.rowwise().homogeneous().transpose()).transpose()};
+
+        //if (points_homog_co.col(2).mean() <0) {
+        //    continue;
+        //}
+
+        Vector6d se3_i = geometry::Log(tf);
+        if (se3_i.topRows<3>().dot(se3_n_1) < 0) {
+            se3_i.topRows<3>() *= -1;
+        }
+
+        dlt_poses.push_back(se3_i);
+
 
         auto const [tf_star, _1, reprojection_error]{optimization::CameraNonlinearRefinement(
             {{{to_opt.pixels, to_opt.points}, tf}}, CameraModel::Pinhole, pinhole_intrinsics)};
-        nl_poses.push_back(geometry::Log(tf_star[0]));
+
+        Vector6d se3_nl = geometry::Log(tf_star[0]);
+        if (se3_nl.topRows<3>().dot(se3_n_1) < 0) {
+            se3_nl.topRows<3>() *= -1;
+        }
+
+        nl_poses.push_back(se3_nl);
     }
 
     saveVector6dListToFile(nl_poses, "nl_poses.txt");
@@ -221,7 +240,6 @@ TEST(DemosExtractedDataset, TestOpenCv) {
         Bundle const to_opt{pixels, target.bundle.points};
 
         opencv_poses.push_back(geometry::Log(pnpEigen(to_opt.points, to_opt.pixels, Matrix3d::Identity())));
-        opencv_poses.back().bottomRows(3) *= 10;
     }
 
     saveVector6dListToFile(opencv_poses, "opencv_poses.txt");
