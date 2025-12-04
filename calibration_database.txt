@@ -1,0 +1,25 @@
+Problems that will come:
+1) Cache hit swill be miscalculated, or the users understanding of what a cache hit should/will be will not match the implementation.
+2) There is some non-determinism in the system which is not modeled (if there is). This means that different runs of the system will produce different results.
+    - Any non-determinsm discovered essentiallly should disqualify that part of the calibration process from being cachable
+3) The structure of the database and visualization function will change over time and need to be versioned. How these versions are maintained, tested nad made interoperable is not clear.
+    - The visualization functions are not possible to unit unit test because the visual nature of the output. However we can put strict testing for accepting the content of the database. If the database does not match the conditions programmed into the visualization library, this indicates a version mismatch and should kill the program.
+    - The database needs to store the version of the library that was used to create it! This is a way to effectively version
+ 4) Partial or incomplete records will get written to the database, these corrupted records will/can destroy all trust in the database! It is critical to program functionality into the database that ensures only complete records are written.
+
+Basic idea:
+The database serves two purposes:
+    1) Serving as a record of the calibration process
+        - Records can be partial! This results likely from the calibration process stopping in the middle of execution.
+        - The database record is the universal source of truth for visualization and diagnostic functions
+    2) Serving as a cache for the calibration process. This allows for an accelerated calibration process by for example not needing to repeat feature extraction everytime we want to test some optimization config for example.
+
+Cache hit policy:
+Each part of the calibration process has a configuration, whether that is the target config or some yet to be invented optimizaton function. For any single dataset, if the configuration used is the same as the configuration found in the database then the elements of that section may be cached.
+
+Note that we do not cache entire sections! Instead a section of the database is either cachable or not, but this is actually implemented on a per frame bases. This means that we need to load each data frame (imu, image etc), check its timestamp and compare that to the timestamps already found in the database.
+
+Mutable database policy:
+
+Data structure:
+Can we should we depend on the fact that the data is ordered in increasing timestamp? Intuitively I think this makes sense. What about the independence of data, what happens when there is a repeated timestamp? What is the cost of not assuming things come with increasing timestamps? Does that make it more complicated to calculate a cache hit?
