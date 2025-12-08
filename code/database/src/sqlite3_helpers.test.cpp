@@ -1,0 +1,50 @@
+#include "sqlite3_helpers.hpp"
+
+#include <gtest/gtest.h>
+#include <sqlite3.h>
+
+#include <filesystem>
+#include <string>
+
+using namespace reprojection;
+
+// WARN COPY AND PASTED
+class TempFolder : public ::testing::Test {
+   protected:
+    void SetUp() override { std::filesystem::create_directories(database_path_); }
+
+    void TearDown() override { std::filesystem::remove_all(database_path_); }
+
+    std::string database_path_{"sandbox"};
+};
+
+// Test where we create a simple auto incremented table and add some values using
+TEST_F(TempFolder, TestExecute) {
+    std::string const record{database_path_ + "/record_lll.db3"};
+
+    sqlite3* db;
+    sqlite3_open(record.c_str(), &db);
+
+    std::string const init_dummy_data_table_sql{
+        "CREATE TABLE example_data ("
+        "record_id INTEGER, "  // Alias for the ROWID which is included and incremented by sqlite for each record row
+        "value REAL NOT NULL, "
+        "PRIMARY KEY (record_Id)"
+        ");"};
+
+    bool const table_created{database::Sqlite3Tools::Execute(init_dummy_data_table_sql, db)};
+    ASSERT_TRUE(table_created);
+
+    // Returns false because we cannot create duplicated table (use CREATE TABLE IF NOT EXISTS to silently pass this)
+    bool const table_duplicated{database::Sqlite3Tools::Execute(init_dummy_data_table_sql, db)};
+    ASSERT_FALSE(table_duplicated);
+
+    std::string const add_value_sql{
+        "INSERT INTO example_data (value) "
+        "VALUES (0), (1), (2);"};
+
+    bool values_added{database::Sqlite3Tools::Execute(add_value_sql, db)};
+    EXPECT_TRUE(values_added);
+
+    sqlite3_close(db);
+}

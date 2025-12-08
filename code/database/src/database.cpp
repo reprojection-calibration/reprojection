@@ -61,10 +61,9 @@ CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
         return false;
     }
 
-    (void)data;
     std::string const add_imu_row{
         "INSERT INTO imu_data (timestamp_ns, sensor_name, omega_x, omega_y, omega_z, ax, ay, az) "
-        "VALUES(" +
+        "VALUES (" +
         std::to_string(timestamp_ns) + ", '" + sensor_name + "', " + std::to_string(data.angular_velocity[0]) + ", " +
         std::to_string(data.angular_velocity[1]) + ", " + std::to_string(data.angular_velocity[2]) + ", " +
         std::to_string(data.linear_acceleration[0]) + ", " + std::to_string(data.linear_acceleration[1]) + ", " +

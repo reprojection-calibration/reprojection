@@ -5,7 +5,6 @@
 #include <filesystem>
 #include <string>
 
-namespace reprojection::database {}  // namespace reprojection::database
 
 using namespace reprojection;
 
@@ -34,7 +33,7 @@ TEST_F(TempFolder, TestAddImuData) {
     success = db.AddImuData(0, "/imu/polaris/456", {});
     EXPECT_TRUE(success);
 
-    // Add a repeated record - this fails because the primary key must always be unique!
+    // Add a repeated record - this is not successful because the primary key must always be unique!
     testing::internal::CaptureStderr(); // WARN USING INTERNAL GTEST API!
     success = db.AddImuData(0, "/imu/polaris/456", {});
     EXPECT_FALSE(success);

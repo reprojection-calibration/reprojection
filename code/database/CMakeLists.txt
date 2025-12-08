@@ -12,6 +12,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/sqlite3_helpers.test.cpp
         test/database.test.cpp
 )
 AddTests()
