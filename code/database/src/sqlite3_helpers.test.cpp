@@ -49,17 +49,6 @@ TEST_F(TempFolder, TestExecute) {
     sqlite3_close(db);
 }
 
-int callback(void* data, int argc, char** argv, char** col_name) {
-    static_cast<void>(argc);
-    static_cast<void>(col_name);
-
-    std::vector<int>* vec{reinterpret_cast<std::vector<int>*>(data)};
-
-    vec->push_back(std::stod(argv[0])); // Hardcode the fact there is only one value in the row
-
-    return 0;
-}
-
 TEST_F(TempFolder, TestExecuteCallback) {
     std::string const record{database_path_ + "/record_sss.db3"};
 
@@ -71,11 +60,24 @@ TEST_F(TempFolder, TestExecuteCallback) {
     static_cast<void>(database::Sqlite3Tools::Execute(add_value_sql, db));
 
     std::string const select_all_data_sql{"SELECT value FROM example_data;"};
-    std::vector<int> values;
-    values.reserve(3);
+    std::vector<double> values;
+
+    auto callback = [](void* data, int argc, char** argv, char** col_name) -> int {
+        static_cast<void>(argc);
+        static_cast<void>(col_name);
+
+        auto* vec = reinterpret_cast<std::vector<double>*>(data);
+        vec->push_back(std::stod(argv[0]));  // Hardcoded: one value per row
+
+        return 0;
+    };
+
     bool const data_selected{database::Sqlite3Tools::Execute(select_all_data_sql, db, callback, &values)};
     EXPECT_TRUE(data_selected);
     EXPECT_EQ(std::size(values), 3);
+    EXPECT_FLOAT_EQ(values[0], 0);
+    EXPECT_FLOAT_EQ(values[1], 1.1);
+    EXPECT_FLOAT_EQ(values[2], 2.2);
 
     sqlite3_close(db);
 }
