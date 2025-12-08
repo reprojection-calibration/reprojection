@@ -4,6 +4,7 @@ find_package(SQLite3)
 
 set(SRC_FILES
         src/database.cpp
+        src/sqlite3_helpers.cpp
 )
 set(LINK_LIBRARIES
         SQLite::SQLite3

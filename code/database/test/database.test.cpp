@@ -35,12 +35,12 @@ TEST_F(TempFolder, TestAddImuData) {
     EXPECT_TRUE(success);
 
     // Add a repeated record - this fails because the primary key must always be unique!
-    testing::internal::CaptureStderr(); // USING INTERNAL GTEST API!
+    testing::internal::CaptureStderr(); // WARN USING INTERNAL GTEST API!
     success = db.AddImuData(0, "/imu/polaris/456", {});
     EXPECT_FALSE(success);
 
     // Check that the expected error message is sent to cerr
-    std::string const output{testing::internal::GetCapturedStderr()};
+    std::string const output{testing::internal::GetCapturedStderr()}; // WARN USING INTERNAL GTEST API!
     EXPECT_EQ(output, "SQL error: UNIQUE constraint failed: imu_data.timestamp_ns, imu_data.sensor_name\n");
 }
 
