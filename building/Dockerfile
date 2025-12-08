@@ -22,6 +22,10 @@ RUN --mount=type=bind,source=${LIBRARY_DEPENDENCY_SOURCE_BUILDS},target=/tempora
     --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
     /temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS}
 
+ARG INSTALL_SQLITE=building/install_scripts/install_sqlite.sh
+RUN --mount=type=bind,source=${INSTALL_SQLITE},target=/temporary/${INSTALL_SQLITE} \
+    /temporary/${INSTALL_SQLITE}
+
 
 FROM configuration-stage AS code-checks-stage
 
