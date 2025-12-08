@@ -16,34 +16,38 @@ class TempFolder : public ::testing::Test {
     void TearDown() override { std::filesystem::remove_all(database_path_); }
 
     std::string database_path_{"sandbox"};
+
+    std::string const data_table_{
+        "CREATE TABLE example_data ("
+        "record_id INTEGER, "
+        "value REAL NOT NULL, "
+        "PRIMARY KEY (record_Id)"
+        ");"};
+
+    std::string const add_data_{
+        "INSERT INTO example_data (value) "
+        "VALUES (0.0), (1.1), (2.2);"};
 };
 
-std::string const init_dummy_data_table_sql{
-    "CREATE TABLE example_data ("
-    "record_id INTEGER, "  // Alias for the ROWID which is included and incremented by sqlite for each record row
-    "value REAL NOT NULL, "
-    "PRIMARY KEY (record_Id)"
-    ");"};
 
-std::string const add_value_sql{
-    "INSERT INTO example_data (value) "
-    "VALUES (0.0), (1.1), (2.2);"};
 
-// Test where we create a simple auto incremented table and add some values using
+
+
+// Test where we create a simple auto incremented table and add some values
 TEST_F(TempFolder, TestExecute) {
     std::string const record{database_path_ + "/record_lll.db3"};
 
     sqlite3* db;
     sqlite3_open(record.c_str(), &db);
 
-    bool const table_created{database::Sqlite3Tools::Execute(init_dummy_data_table_sql, db)};
+    bool const table_created{database::Sqlite3Tools::Execute(data_table_, db)};
     ASSERT_TRUE(table_created);
 
     // Returns false because we cannot create duplicated table (use CREATE TABLE IF NOT EXISTS to silently pass this)
-    bool const table_duplicated{database::Sqlite3Tools::Execute(init_dummy_data_table_sql, db)};
+    bool const table_duplicated{database::Sqlite3Tools::Execute(data_table_, db)};
     EXPECT_FALSE(table_duplicated);
 
-    bool const values_added{database::Sqlite3Tools::Execute(add_value_sql, db)};
+    bool const values_added{database::Sqlite3Tools::Execute(add_data_, db)};
     EXPECT_TRUE(values_added);
 
     sqlite3_close(db);
@@ -55,22 +59,21 @@ TEST_F(TempFolder, TestExecuteCallback) {
     sqlite3* db;
     sqlite3_open(record.c_str(), &db);
 
-    // Create the table and fill it with some values
-    static_cast<void>(database::Sqlite3Tools::Execute(init_dummy_data_table_sql, db));
-    static_cast<void>(database::Sqlite3Tools::Execute(add_value_sql, db));
+    // Create the table and fill it with some values but ignore return codes, they are tested above
+    static_cast<void>(database::Sqlite3Tools::Execute(data_table_, db));
+    static_cast<void>(database::Sqlite3Tools::Execute(add_data_, db));
 
     std::string const select_all_data_sql{"SELECT value FROM example_data;"};
-    std::vector<double> values;
-
     auto callback = [](void* data, int argc, char** argv, char** col_name) -> int {
         static_cast<void>(argc);
         static_cast<void>(col_name);
 
         auto* vec = reinterpret_cast<std::vector<double>*>(data);
-        vec->push_back(std::stod(argv[0]));  // Hardcoded: one value per row
+        vec->push_back(std::stod(argv[0]));  // Hardcoded because only one value per row
 
         return 0;
     };
+    std::vector<double> values;
 
     bool const data_selected{database::Sqlite3Tools::Execute(select_all_data_sql, db, callback, &values)};
     EXPECT_TRUE(data_selected);

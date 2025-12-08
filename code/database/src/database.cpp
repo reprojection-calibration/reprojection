@@ -20,7 +20,7 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     // TODO(Jack): Consider using sqlite3_errcode for better terminal output https://sqlite.org/c3ref/errcode.html
     int code;
     if (create) {
-        // WARN(Jack): Shoudl it be an error if create is true and the database already exists. Is that a problem?
+        // WARN(Jack): Should it be an error if create is true and the database already exists. Is that a problem?
         code = sqlite3_open_v2(db_path.c_str(), &db_,
                                static_cast<int>(SqliteFlag::OpenReadWrite) | static_cast<int>(SqliteFlag::OpenCreate),
                                nullptr);
