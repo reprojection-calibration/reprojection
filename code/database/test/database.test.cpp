@@ -5,7 +5,6 @@
 #include <filesystem>
 #include <string>
 
-
 using namespace reprojection;
 
 // Test fixture used to facilitate isolated filesystem state. This is useful when testing database creation to prevent
@@ -23,23 +22,23 @@ TEST_F(TempFolder, TestAddImuData) {
     std::string const record{database_path_ + "/record_hhh.db3"};
     database::CalibrationDatabase db{record, true};
 
-    bool success{db.AddImuData(0, "/imu/polaris/123", {})};
+    bool success{db.AddImuData("/imu/polaris/123", {0, {}, {}})};
     EXPECT_TRUE(success);
-    success = db.AddImuData(1, "/imu/polaris/123", {});
+    success = db.AddImuData("/imu/polaris/123", {1, {}, {}});
     EXPECT_TRUE(success);
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary key
     // (timestamp_ns, sensor_name)
-    success = db.AddImuData(0, "/imu/polaris/456", {});
+    success = db.AddImuData("/imu/polaris/456", {0, {}, {}});
     EXPECT_TRUE(success);
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
-    testing::internal::CaptureStderr(); // WARN USING INTERNAL GTEST API!
-    success = db.AddImuData(0, "/imu/polaris/456", {});
+    testing::internal::CaptureStderr();  // WARN USING INTERNAL GTEST API!
+    success = db.AddImuData("/imu/polaris/456", {0, {}, {}});
     EXPECT_FALSE(success);
 
     // Check that the expected error message is sent to cerr
-    std::string const output{testing::internal::GetCapturedStderr()}; // WARN USING INTERNAL GTEST API!
+    std::string const output{testing::internal::GetCapturedStderr()};  // WARN USING INTERNAL GTEST API!
     EXPECT_EQ(output, "SQL error: UNIQUE constraint failed: imu_data.timestamp_ns, imu_data.sensor_name\n");
 }
 

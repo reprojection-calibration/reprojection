@@ -38,8 +38,7 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
 
 CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
 
-[[nodiscard]] bool CalibrationDatabase::AddImuData(uint64_t const timestamp_ns, std::string const& sensor_name,
-                                                   ImuData const& data) {
+[[nodiscard]] bool CalibrationDatabase::AddImuData(std::string const& sensor_name, ImuData const& data) {
     // TODO(Jack): This is hacky! We need to find a principle way to create all data tables, not recreate it
     // everytime we want to add data!
     // TODO(Jack): Is there any problem we will have storing our time type (uint64t) here as a signed integer type?
@@ -64,7 +63,7 @@ CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
     std::string const add_imu_row{
         "INSERT INTO imu_data (timestamp_ns, sensor_name, omega_x, omega_y, omega_z, ax, ay, az) "
         "VALUES (" +
-        std::to_string(timestamp_ns) + ", '" + sensor_name + "', " + std::to_string(data.angular_velocity[0]) + ", " +
+        std::to_string(data.timestamp_ns) + ", '" + sensor_name + "', " + std::to_string(data.angular_velocity[0]) + ", " +
         std::to_string(data.angular_velocity[1]) + ", " + std::to_string(data.angular_velocity[2]) + ", " +
         std::to_string(data.linear_acceleration[0]) + ", " + std::to_string(data.linear_acceleration[1]) + ", " +
         std::to_string(data.linear_acceleration[2]) + ");"};

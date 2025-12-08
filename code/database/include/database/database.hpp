@@ -6,7 +6,10 @@
 #include <string>
 
 namespace reprojection::database {
+
 struct ImuData {
+    uint64_t const timestamp_ns;
+
     double angular_velocity[3];
     double linear_acceleration[3];
 };
@@ -20,7 +23,7 @@ class CalibrationDatabase {
 
     ~CalibrationDatabase();
 
-    [[nodiscard]] bool AddImuData(uint64_t const timestamp_ns, std::string const& sensor_name, ImuData const& data);
+    [[nodiscard]] bool AddImuData( std::string const& sensor_name, ImuData const& data);
 
    private:
     sqlite3* db_;
