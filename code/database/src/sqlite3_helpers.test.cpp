@@ -60,10 +60,7 @@ TEST_F(TempFolder, TestExecuteCallback) {
     static_cast<void>(database::Sqlite3Tools::Execute(add_data_, db));
 
     std::string const select_all_data_sql{"SELECT value FROM example_data;"};
-    auto callback = [](void* data, int argc, char** argv, char** col_name) -> int {
-        static_cast<void>(argc);
-        static_cast<void>(col_name);
-
+    auto callback = [](void* data, int, char** argv, char**) -> int {
         auto* vec = reinterpret_cast<std::vector<double>*>(data);
         vec->push_back(std::stod(argv[0]));  // Hardcoded because only one value per row
 
