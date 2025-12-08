@@ -29,10 +29,6 @@ class TempFolder : public ::testing::Test {
         "VALUES (0.0), (1.1), (2.2);"};
 };
 
-
-
-
-
 // Test where we create a simple auto incremented table and add some values
 TEST_F(TempFolder, TestExecute) {
     std::string const record{database_path_ + "/record_lll.db3"};
