@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <string>
 
+
 using namespace reprojection;
 
 // Test fixture used to facilitate isolated filesystem state. This is useful when testing database creation to prevent
@@ -17,6 +18,20 @@ class TempFolder : public ::testing::Test {
 
     std::string database_path_{"sandbox"};
 };
+
+TEST_F(TempFolder, TestGetImuData) {
+std::set<database::ImuData> data;
+    data.insert({0,{},{}});
+    data.insert({0,{},{}});
+    data.insert({1,{},{}});
+    data.insert({2,{},{}});
+
+    for (const auto& d : data) {
+        std::cout << d.timestamp_ns << "\n";
+    }
+
+    EXPECT_EQ(data.size(), 3);
+}
 
 TEST_F(TempFolder, TestAddImuData) {
     std::string const record{database_path_ + "/record_hhh.db3"};
