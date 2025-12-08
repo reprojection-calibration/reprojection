@@ -40,6 +40,7 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
     // NOTE(Jack): This seems to be a pretty aggressive threshold. In some cases a line within 100 pixels of the origin
     // can be classified as "radial", that feels like too much. Testing with real data over time will tell if this
     // matters or not.
+    // TODO(Jack): Frame this condition here actually in terms of nznz itself, not nxnx_nyny. They are interchangable.
     if (nxnx_nyny > 0.95) {
         return std::nullopt;
     }
