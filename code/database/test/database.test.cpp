@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <sqlite3.h>
 
+#include <filesystem>
+
 namespace reprojection::database {
 
 enum class SqliteFlag {
@@ -15,8 +17,16 @@ enum class SqliteFlag {
 class CalibrationDatabase {
    public:
     CalibrationDatabase(std::string const& db_path, bool const create, bool const read_only = false) {
+        if (create and read_only) {
+            throw std::runtime_error(
+                "You requested to open a database object with both options 'create' and 'read_only' true. This is "
+                "an invalid combination as creating a database requires writing to it!");
+        }
+
+        // TODO(Jack): Consider using sqlite3_errcode for better terminal output https://sqlite.org/c3ref/errcode.html
         int code;
         if (create) {
+            // WARN(Jack): It is not an error if create is true and the database already exists. Is that a problem?
             code = sqlite3_open_v2(
                 db_path.c_str(), &db_,
                 static_cast<int>(SqliteFlag::OpenReadWrite) | static_cast<int>(SqliteFlag::OpenCreate), nullptr);
@@ -42,8 +52,41 @@ class CalibrationDatabase {
 
 using namespace reprojection;
 
-TEST(DatabaseDatabase, TestWhat) {
-    database::CalibrationDatabase const db{"record1.d", false, false};
+// Test fixture used to facilitate isolated filesystem state. This is useful when testing database creation to prevent
+// artefacts from previous or parallel testing interfering with the system currently under test.
+class TempFolder : public ::testing::Test {
+   protected:
+    void SetUp() override { std::filesystem::create_directories(database_path_); }
 
-    EXPECT_EQ(1, 2);
+    void TearDown() override { std::filesystem::remove_all(database_path_); }
+
+    std::string database_path_{"sandbox"};
+};
+
+TEST_F(TempFolder, TestCreate) {
+    std::string const record{database_path_ + "/record_xxx.db3"};
+
+    // Cannot create a database when read_only is true - creating a database requires writing to it!
+    EXPECT_THROW(database::CalibrationDatabase(record, true, true), std::runtime_error);
+
+    // Cannot open a non-existent database
+    EXPECT_THROW(database::CalibrationDatabase(record, false), std::runtime_error);
+
+    // Create a database (found on the filesystem) and then check that we can open it
+    database::CalibrationDatabase(record, true);
+    EXPECT_NO_THROW(database::CalibrationDatabase(record, false));
+}
+
+TEST_F(TempFolder, TestReadWrite) {
+    std::string const record{database_path_ + "/record_yyy.db3"};
+    database::CalibrationDatabase(record, true);
+
+    EXPECT_NO_THROW(database::CalibrationDatabase(record, false, false));
+}
+
+TEST_F(TempFolder, TestReadOnly) {
+    std::string const record{database_path_ + "/record_zzz.db3"};
+    database::CalibrationDatabase(record, true);
+
+    EXPECT_NO_THROW(database::CalibrationDatabase(record, false, true));
 }
