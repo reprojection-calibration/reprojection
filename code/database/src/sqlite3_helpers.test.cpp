@@ -9,7 +9,7 @@
 using namespace reprojection;
 
 // WARN COPY AND PASTED
-class TempFolder : public ::testing::Test {
+class TempFolder2 : public ::testing::Test {
    protected:
     void SetUp() override { std::filesystem::create_directories(database_path_); }
 
@@ -30,7 +30,7 @@ class TempFolder : public ::testing::Test {
 };
 
 // Test where we create a simple auto incremented table and add some values
-TEST_F(TempFolder, TestExecute) {
+TEST_F(TempFolder2, TestExecute) {
     std::string const record{database_path_ + "/record_lll.db3"};
 
     sqlite3* db;
@@ -39,6 +39,7 @@ TEST_F(TempFolder, TestExecute) {
     bool const table_created{database::Sqlite3Tools::Execute(data_table_, db)};
     ASSERT_TRUE(table_created);
 
+    // TODO(Jack): Capture and test stderr output without using gtest internal API!
     // Returns false because we cannot create duplicated table (use CREATE TABLE IF NOT EXISTS to silently pass this)
     bool const table_duplicated{database::Sqlite3Tools::Execute(data_table_, db)};
     EXPECT_FALSE(table_duplicated);
@@ -49,7 +50,7 @@ TEST_F(TempFolder, TestExecute) {
     sqlite3_close(db);
 }
 
-TEST_F(TempFolder, TestExecuteCallback) {
+TEST_F(TempFolder2, TestExecuteCallback) {
     std::string const record{database_path_ + "/record_sss.db3"};
 
     sqlite3* db;

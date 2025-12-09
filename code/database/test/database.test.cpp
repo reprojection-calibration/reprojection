@@ -5,7 +5,6 @@
 #include <filesystem>
 #include <string>
 
-
 using namespace reprojection;
 
 // Test fixture used to facilitate isolated filesystem state. This is useful when testing database creation to prevent
@@ -20,17 +19,21 @@ class TempFolder : public ::testing::Test {
 };
 
 TEST_F(TempFolder, TestGetImuData) {
-std::set<database::ImuData> data;
-    data.insert({0,{},{}});
-    data.insert({0,{},{}});
-    data.insert({1,{},{}});
-    data.insert({2,{},{}});
+    std::string const record{database_path_ + "/record_aaa.db3"};
+    database::CalibrationDatabase db{record, true};
 
-    for (const auto& d : data) {
-        std::cout << d.timestamp_ns << "\n";
-    }
+    (void)db.AddImuData("/imu/polaris/123", {0, {}, {}});
+    (void)db.AddImuData("/imu/polaris/123", {1, {}, {}});
+    (void)db.AddImuData("/imu/polaris/123", {2, {}, {}});
 
-    EXPECT_EQ(data.size(), 3);
+    (void)db.AddImuData("/imu/polaris/456", {10, {}, {}});
+    (void)db.AddImuData("/imu/polaris/456", {20, {}, {}});
+
+    std::set<database::ImuData> const imu_123_data{db.GetImuData("/imu/polaris/123")};
+    EXPECT_EQ(std::size(imu_123_data), 3);
+
+    std::set<database::ImuData> const imu_456_data{db.GetImuData("/imu/polaris/456")};
+    EXPECT_EQ(std::size(imu_456_data), 2);
 }
 
 TEST_F(TempFolder, TestAddImuData) {

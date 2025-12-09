@@ -63,12 +63,35 @@ CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
     std::string const add_imu_row{
         "INSERT INTO imu_data (timestamp_ns, sensor_name, omega_x, omega_y, omega_z, ax, ay, az) "
         "VALUES (" +
-        std::to_string(data.timestamp_ns) + ", '" + sensor_name + "', " + std::to_string(data.angular_velocity[0]) + ", " +
-        std::to_string(data.angular_velocity[1]) + ", " + std::to_string(data.angular_velocity[2]) + ", " +
+        std::to_string(data.timestamp_ns) + ", '" + sensor_name + "', " + std::to_string(data.angular_velocity[0]) +
+        ", " + std::to_string(data.angular_velocity[1]) + ", " + std::to_string(data.angular_velocity[2]) + ", " +
         std::to_string(data.linear_acceleration[0]) + ", " + std::to_string(data.linear_acceleration[1]) + ", " +
         std::to_string(data.linear_acceleration[2]) + ");"};
 
     return Sqlite3Tools::Execute(add_imu_row, db_);
+}
+
+// TODO(Jack): Return a variant here to indicate success or failure
+std::set<ImuData> CalibrationDatabase::GetImuData(std::string const& sensor_name) {
+    std::string const query_imu_sensor_data{
+        "SELECT timestamp_ns, omega_x, omega_y, omega_z, ax, ay, az "
+        "FROM imu_data WHERE sensor_name = '" +
+        sensor_name + "' ORDER BY timestamp_ns ASC;"};
+
+    auto callback = [](void* data, int, char** argv, char**) -> int {
+        auto* set = reinterpret_cast<std::set<ImuData>*>(data);
+
+        set->insert(ImuData{std::stoull(argv[0]),
+                            {std::stod(argv[1]), std::stod(argv[2]), std::stod(argv[3])},
+                            {std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6])}});
+
+        return 0;
+    };
+
+    std::set<ImuData> data;
+    (void)Sqlite3Tools::Execute(query_imu_sensor_data, db_, callback, &data);  // REMOVE CAST, RETURN VARIANT
+
+    return data;
 }
 
 };  // namespace reprojection::database
