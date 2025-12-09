@@ -26,6 +26,14 @@ class CalibrationDatabase {
    public:
     CalibrationDatabase(std::string const& db_path, bool const create, bool const read_only = false);
 
+    CalibrationDatabase(CalibrationDatabase const& other) = delete;
+
+    CalibrationDatabase(CalibrationDatabase&& other) noexcept = delete;
+
+    CalibrationDatabase& operator=(CalibrationDatabase const& other) = delete;
+
+    CalibrationDatabase& operator=(CalibrationDatabase&& other) noexcept = delete;
+
     ~CalibrationDatabase();
 
     [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data);

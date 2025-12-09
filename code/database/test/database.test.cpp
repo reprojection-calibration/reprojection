@@ -21,11 +21,21 @@ class TempFolder : public ::testing::Test {
 
 TEST_F(TempFolder, TestAddImage) {
     std::string const record_path{database_path_ + "/record_uuu.db3"};
-    database::CalibrationDatabase db{record_path, true};
+    database::CalibrationDatabase{record_path, true};
 
     cv::Mat const image(480, 720, CV_8UC1);
 
-    EXPECT_TRUE(db.AddImage("/cam/retro/123", 0, image));
+    // NOTE(Jack): We use the local scopes here so that we can have on read only and one read/write database instance in
+    // the same test.
+    {
+        // TODO(Jack): Catch std error output and test it!
+        database::CalibrationDatabase db{record_path, false, true};
+        EXPECT_FALSE(db.AddImage("/cam/retro/123", 0, image));
+    }
+    {
+        database::CalibrationDatabase db{record_path, false, false};
+        EXPECT_TRUE(db.AddImage("/cam/retro/123", 0, image));
+    }
 }
 
 TEST_F(TempFolder, TestFullImuAddGetCycle) {

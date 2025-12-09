@@ -108,7 +108,7 @@ bool CalibrationDatabase::AddImage(std::string const& sensor_name, uint64_t cons
 
     sqlite3_finalize(stmt);
 
-    return true;  // REPLACE
+    return true;
 }
 
 };  // namespace reprojection::database
