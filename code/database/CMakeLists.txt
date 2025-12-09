@@ -1,12 +1,17 @@
 set(LIBRARY_NAME "database")
 
+find_package(OpenCV REQUIRED)
 find_package(SQLite3)
 
 set(SRC_FILES
         src/database.cpp
         src/sqlite3_helpers.cpp
 )
+set(INCLUDE_DIRECTORIES
+        ${OpenCV_INCLUDE_DIRS}
+)
 set(LINK_LIBRARIES
+        ${OpenCV_LIBS}
         SQLite::SQLite3
 )
 AddLibrary()

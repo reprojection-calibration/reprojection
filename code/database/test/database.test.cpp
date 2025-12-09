@@ -19,6 +19,15 @@ class TempFolder : public ::testing::Test {
     std::string database_path_{"sandbox"};
 };
 
+TEST_F(TempFolder, TestAddImage) {
+    std::string const record_path{database_path_ + "/record_uuu.db3"};
+    database::CalibrationDatabase db{record_path, true};
+
+    cv::Mat const image(480, 720, CV_8UC1);
+
+    EXPECT_TRUE(db.AddImage("/cam/retro/123", 0, image));
+}
+
 TEST_F(TempFolder, TestFullImuAddGetCycle) {
     // TODO(Jack): Should we use this test data for all the IMU tests?
     std::map<std::string, std::set<database::ImuData>> const imu_data{

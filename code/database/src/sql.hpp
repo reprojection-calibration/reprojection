@@ -31,6 +31,7 @@ std::string InsertImuDataSql(std::uint64_t const timestamp_ns, std::string const
 
     return sql;
 }
+
 std::string SelectImuSensorDataSql(std::string const& sensor_name) {
     std::string const sql{
         "SELECT timestamp_ns, omega_x, omega_y, omega_z, ax, ay, az "
@@ -42,5 +43,12 @@ std::string SelectImuSensorDataSql(std::string const& sensor_name) {
 
     return sql;
 }
+
+inline const std::string images_table_sql{
+    "CREATE TABLE IF NOT EXISTS images ("
+    "timestamp_ns INTEGER NOT NULL, "
+    "sensor_name TEXT NOT NULL, "
+    "data BLOB NOT NULL, "
+    "PRIMARY KEY (timestamp_ns, sensor_name));"};
 
 }  // namespace reprojection::database

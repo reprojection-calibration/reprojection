@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 
 #include <cstdint>
+#include <opencv2/opencv.hpp>
 #include <optional>
 #include <set>
 #include <string>
@@ -30,6 +31,8 @@ class CalibrationDatabase {
     [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data);
 
     std::optional<std::set<ImuData>> GetImuData(std::string const& sensor_name);
+
+    [[nodiscard]] bool AddImage(std::string const& sensor_name, uint64_t const timestamp_ns, cv::Mat const& image);
 
    private:
     sqlite3* db_;

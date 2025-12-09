@@ -41,6 +41,7 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     // exists maybe we might actually want an error instead, or we only write the tables if we are creating the database
     // from scratch?
     static_cast<void>(Sqlite3Tools::Execute(imu_table_sql, db_));
+    static_cast<void>(Sqlite3Tools::Execute(images_table_sql, db_));
 }
 
 CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
@@ -73,6 +74,43 @@ std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string con
     }
 
     return data;
+}
+
+// Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
+bool CalibrationDatabase::AddImage(std::string const& sensor_name, uint64_t const timestamp_ns, cv::Mat const& image) {
+    sqlite3_stmt* stmt{nullptr};
+    std::string const insert_image_sql{
+        "INSERT INTO images (timestamp_ns, sensor_name, data) "
+        "VALUES(" +
+        std::to_string(timestamp_ns) + ", '" + sensor_name + "', ?)"};  // TODO PUT SQL IN sql.hpp
+    int code{sqlite3_prepare_v2(db_, insert_image_sql.c_str(), -1, &stmt, nullptr)};
+    if (code != static_cast<int>(SqliteFlag::Ok)) {
+        std::cerr << "Image add sqlite3_prepare_v2() failed: " << sqlite3_errmsg(db_) << std::endl;
+        return false;
+    }
+
+    std::vector<uchar> buffer;
+    if (not cv::imencode(".png", image, buffer)) {
+        std::cerr << "Failed to encode image as PNG" << std::endl;
+        return false;
+    }
+
+    // https://stackoverflow.com/questions/1229102/when-to-use-sqlite-transient-vs-sqlite-static
+    // Note that the position is not zero indexed here! Therefore 1 corresponds to the first (and only) binding.
+    code = sqlite3_bind_blob(stmt, 1, buffer.data(), static_cast<int>(buffer.size()), SQLITE_STATIC);
+    if (code != static_cast<int>(SqliteFlag::Ok)) {
+        std::cerr << "Image add sqlite3_bind_blob() failed: " << sqlite3_errmsg(db_) << std::endl;
+        return false;
+    }
+
+    code = sqlite3_step(stmt);
+    if (code != static_cast<int>(SqliteFlag::Done)) {
+        return false;
+    }
+
+    sqlite3_finalize(stmt);
+
+    return true;  // REPLACE
 }
 
 };  // namespace reprojection::database
