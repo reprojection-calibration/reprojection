@@ -40,12 +40,12 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
     // NOTE(Jack): This seems to be a pretty aggressive threshold. In some cases a line within 100 pixels of the origin
     // can be classified as "radial", that feels like too much. Testing with real data over time will tell if this
     // matters or not.
-    if (nxnx_nyny > 0.95) {
+    double const nznz{1 - nxnx_nyny};  // Using the constraint 1 = x^2 + y^2 + z^2 for line normal N
+    if (nznz < 0.05) {
+        // Too close to image center (i.e. line is "radial" which is a singularity case)
         return std::nullopt;
     }
-
-    double const nz{std::sqrt(1 - nxnx_nyny)};  // Solve using the constraint 1 = x^2 + y^2 + z^2 for line normal N
-    double const gamma{d * c3 / nz};
+    double const gamma{d * c3 / std::sqrt(nznz)};
 
     return gamma;
 }

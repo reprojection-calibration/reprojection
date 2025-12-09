@@ -6,6 +6,7 @@ apt-get update
 apt-get install --no-install-recommends --yes \
     libeigen3-dev \
     libopencv-dev \
+    libsqlite3-dev \
     libyaml-cpp-dev
 
 # Required for ceres-solver source build
