@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 
 #include <cstdint>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -28,7 +29,7 @@ class CalibrationDatabase {
 
     [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data);
 
-    std::set<ImuData> GetImuData(std::string const& sensor_name);
+    std::optional<std::set<ImuData>> GetImuData(std::string const& sensor_name);
 
    private:
     sqlite3* db_;

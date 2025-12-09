@@ -35,18 +35,15 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
         sqlite3_close(db_);
         throw std::runtime_error("Attempted to open database at path - " + db_path + " - but was unsuccessful");
     }
+
+    // WARN(Jack): Is there any cirumstance under which the data table creation might fail, and casting to void here
+    // instead of explicitly handling the status makes sense?
+    static_cast<void>(Sqlite3Tools::Execute(imu_table_sql, db_));
 }
 
 CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
 
 [[nodiscard]] bool CalibrationDatabase::AddImuData(std::string const& sensor_name, ImuData const& data) {
-    // TODO(Jack): This is hacky! We need to find a principle way to create all data tables, not attempt to recreate it
-    // everytime we want to add data!
-    bool success{Sqlite3Tools::Execute(imu_table_sql, db_)};
-    if (not success) {
-        return false;
-    }
-
     std::string const insert_imu_data_sql{
         InsertImuDataSql(data.timestamp_ns, sensor_name, data.angular_velocity, data.linear_acceleration)};
 
@@ -54,7 +51,7 @@ CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
 }
 
 // TODO(Jack): Return a variant here to indicate success or failure
-std::set<ImuData> CalibrationDatabase::GetImuData(std::string const& sensor_name) {
+std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string const& sensor_name) {
     std::string const select_imu_sensor_data_sql{SelectImuSensorDataSql(sensor_name)};
 
     auto callback = [](void* data, int, char** argv, char**) -> int {
@@ -68,7 +65,10 @@ std::set<ImuData> CalibrationDatabase::GetImuData(std::string const& sensor_name
     };
 
     std::set<ImuData> data;
-    (void)Sqlite3Tools::Execute(select_imu_sensor_data_sql, db_, callback, &data);  // REMOVE VOID CAST, RETURN VARIANT
+    bool const success{Sqlite3Tools::Execute(select_imu_sensor_data_sql, db_, callback, &data)};
+    if (not success) {
+        return std::nullopt;
+    }
 
     return data;
 }

@@ -29,11 +29,13 @@ TEST_F(TempFolder, TestGetImuData) {
     (void)db.AddImuData("/imu/polaris/456", {10, {}, {}});
     (void)db.AddImuData("/imu/polaris/456", {20, {}, {}});
 
-    std::set<database::ImuData> const imu_123_data{db.GetImuData("/imu/polaris/123")};
-    EXPECT_EQ(std::size(imu_123_data), 3);
+    auto const imu_123_data{db.GetImuData("/imu/polaris/123")};
+    ASSERT_TRUE(imu_123_data.has_value());
+    EXPECT_EQ(std::size(imu_123_data.value()), 3);
 
-    std::set<database::ImuData> const imu_456_data{db.GetImuData("/imu/polaris/456")};
-    EXPECT_EQ(std::size(imu_456_data), 2);
+    auto const imu_456_data{db.GetImuData("/imu/polaris/456")};
+    ASSERT_TRUE(imu_456_data.has_value());
+    EXPECT_EQ(std::size(imu_456_data.value()), 2);
 }
 
 TEST_F(TempFolder, TestAddImuData) {
