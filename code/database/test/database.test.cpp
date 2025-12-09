@@ -28,7 +28,7 @@ TEST_F(TempFolder, TestAddImuData) {
     EXPECT_TRUE(success);
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary key
-    // (timestamp_ns, sensor_name)
+    // (timestamp_ns, sensor_name) so it is not a duplicate
     success = db.AddImuData("/imu/polaris/456", {0, {}, {}});
     EXPECT_TRUE(success);
 
@@ -46,10 +46,11 @@ TEST_F(TempFolder, TestGetImuData) {
     std::string const record_path{database_path_ + "/record_aaa.db3"};
     database::CalibrationDatabase db{record_path, true};
 
+    // Data from imu 123
     (void)db.AddImuData("/imu/polaris/123", {0, {}, {}});
     (void)db.AddImuData("/imu/polaris/123", {1, {}, {}});
     (void)db.AddImuData("/imu/polaris/123", {2, {}, {}});
-
+    // Data from imu 456
     (void)db.AddImuData("/imu/polaris/456", {10, {}, {}});
     (void)db.AddImuData("/imu/polaris/456", {20, {}, {}});
 
