@@ -11,10 +11,16 @@
 namespace reprojection::database {
 
 struct ImuData {
-    uint64_t const timestamp_ns;
+    uint64_t timestamp_ns;
 
     double angular_velocity[3];
     double linear_acceleration[3];
+};
+
+struct ImageData {
+    uint64_t timestamp_ns;
+
+    cv::Mat image;
 };
 
 bool operator<(ImuData const& x, ImuData const& y) { return x.timestamp_ns < y.timestamp_ns; }
@@ -40,7 +46,7 @@ class CalibrationDatabase {
 
     std::optional<std::set<ImuData>> GetImuData(std::string const& sensor_name) const;
 
-    [[nodiscard]] bool AddImage(std::string const& sensor_name, uint64_t const timestamp_ns, cv::Mat const& image);
+    [[nodiscard]] bool AddImage(std::string const& sensor_name, ImageData const& data);
 
    private:
     sqlite3* db_;

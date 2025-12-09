@@ -74,8 +74,8 @@ std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string con
 }
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
-bool CalibrationDatabase::AddImage(std::string const& sensor_name, uint64_t const timestamp_ns, cv::Mat const& image) {
-    std::string const insert_image_sql{InsertImageSql(sensor_name, timestamp_ns)};
+bool CalibrationDatabase::AddImage(std::string const& sensor_name, ImageData const& data) {
+    std::string const insert_image_sql{InsertImageSql(sensor_name, data.timestamp_ns)};
     sqlite3_stmt* stmt{nullptr};
     int code{sqlite3_prepare_v2(db_, insert_image_sql.c_str(), -1, &stmt, nullptr)};
     if (code != static_cast<int>(SqliteFlag::Ok)) {
@@ -84,7 +84,7 @@ bool CalibrationDatabase::AddImage(std::string const& sensor_name, uint64_t cons
     }
 
     std::vector<uchar> buffer;
-    if (not cv::imencode(".png", image, buffer)) {
+    if (not cv::imencode(".png", data.image, buffer)) {
         std::cerr << "Failed to encode image as PNG" << std::endl;
         return false;
     }

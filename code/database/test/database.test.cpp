@@ -26,7 +26,7 @@ TEST_F(TempFolder, TestAddImage) {
     cv::Mat const image(480, 720, CV_8UC1);
 
     database::CalibrationDatabase db{record_path, false, false};
-    EXPECT_TRUE(db.AddImage("/cam/retro/123", 0, image));
+    EXPECT_TRUE(db.AddImage("/cam/retro/123", {0, image}));
 }
 
 TEST_F(TempFolder, TestFullImuAddGetCycle) {
