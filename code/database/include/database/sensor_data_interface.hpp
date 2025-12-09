@@ -35,6 +35,7 @@ bool operator<(ImuData const& x, ImuData const& y) { return x.timestamp_ns < y.t
 std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                             std::string const& sensor_name);
 
+// TODO(Jack): Code protections that only grayscale images are stored here? Or is this not the right place?
 [[nodiscard]] bool AddImage(std::string const& sensor_name, ImageData const& data,
                             std::shared_ptr<CalibrationDatabase> const database);
 

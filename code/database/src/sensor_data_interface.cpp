@@ -104,7 +104,6 @@ std::optional<ImageData> ImageStreamer::Next() {
     // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or other
     // bad output?
     uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(stmt_, 0)))};
-    std::cout << timestamp_ns << std::endl;
 
     void const* const blob{sqlite3_column_blob(stmt_, 1)};
     int const blob_size{sqlite3_column_bytes(stmt_, 1)};

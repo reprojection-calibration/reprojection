@@ -24,21 +24,17 @@ class TempFolder : public ::testing::Test {
 
 TEST_F(TempFolder, TestAddImage) {
     std::string const record_path{database_path_ + "/record_uuu.db3"};
-    database::CalibrationDatabase{record_path, true};
-
     cv::Mat const image(480, 720, CV_8UC1);
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
     EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
 }
 
 TEST_F(TempFolder, TestImageStreamer) {
     std::string const record_path{database_path_ + "/record_uuu.db3"};
-    database::CalibrationDatabase{record_path, true};
-
     cv::Mat const image(480, 720, CV_8UC1);
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
     EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
     EXPECT_TRUE(database::AddImage("/cam/retro/123", {2, image}, db));
     EXPECT_TRUE(database::AddImage("/cam/retro/123", {4, image}, db));
@@ -50,10 +46,30 @@ TEST_F(TempFolder, TestImageStreamer) {
     EXPECT_EQ(frame_0.value().image.rows, 480);
     EXPECT_EQ(frame_0.value().image.cols, 720);
 
-    EXPECT_TRUE(streamer.Next().has_value()); // Frame 2
-    EXPECT_TRUE(streamer.Next().has_value()); // Frame 3, last frame
+    EXPECT_TRUE(streamer.Next().has_value());  // Frame 2
+    EXPECT_TRUE(streamer.Next().has_value());  // Frame 3, last frame
     EXPECT_FALSE(streamer.Next().has_value());
+}
 
+// This simulates the case where we have already processed the images up to a certain time and only want to load the
+// images after that point.
+TEST_F(TempFolder, TestImageStreamerStartTime) {
+    std::string const record_path{database_path_ + "/record_uuu.db3"};
+    cv::Mat const image(480, 720, CV_8UC1);
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
+    EXPECT_TRUE(database::AddImage("/cam/retro/123", {2, image}, db));
+    EXPECT_TRUE(database::AddImage("/cam/retro/123", {4, image}, db));
+
+    database::ImageStreamer streamer{db, "/cam/retro/123", 1};
+
+    auto const frame_0{streamer.Next()};
+    ASSERT_TRUE(frame_0.has_value());
+    EXPECT_EQ(frame_0.value().timestamp_ns, 2); // First frame starts at 2ns
+
+    EXPECT_TRUE(streamer.Next().has_value());
+    EXPECT_FALSE(streamer.Next().has_value());
 }
 
 TEST_F(TempFolder, TestFullImuAddGetCycle) {
