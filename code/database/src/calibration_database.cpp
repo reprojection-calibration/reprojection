@@ -1,10 +1,9 @@
-#include "database/database.hpp"
-
 #include <sqlite3.h>
 
 #include <filesystem>
 #include <string>
 
+#include "database/calibration_database.hpp"
 #include "sql.hpp"
 #include "sqlite3_helpers.hpp"
 
