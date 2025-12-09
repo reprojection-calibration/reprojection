@@ -66,7 +66,7 @@ TEST_F(TempFolderDummySql, TestExecuteCallback) {
 
     std::string const select_all_data_sql{"SELECT value FROM example_data;"};
     auto callback = [](void* data, int, char** argv, char**) -> int {
-        auto* vec = reinterpret_cast<std::vector<double>*>(data);
+        auto* vec = static_cast<std::vector<double>*>(data);
         vec->push_back(std::stod(argv[0]));  // Hardcoded because only one value per row
 
         return 0;

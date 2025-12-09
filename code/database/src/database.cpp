@@ -55,7 +55,7 @@ std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string con
     std::string const select_imu_sensor_data_sql{SelectImuSensorDataSql(sensor_name)};
 
     auto callback = [](void* data, int, char** argv, char**) -> int {
-        auto* set = reinterpret_cast<std::set<ImuData>*>(data);
+        auto* set = static_cast<std::set<ImuData>*>(data);
 
         set->insert(ImuData{std::stoull(argv[0]),
                             {std::stod(argv[1]), std::stod(argv[2]), std::stod(argv[3])},

@@ -70,9 +70,9 @@ TEST_F(TempFolder, TestGetImuData) {
     database::CalibrationDatabase db{record_path, true};
 
     // Data from imu 123
-    (void)db.AddImuData("/imu/polaris/123", {0, {}, {}});
-    (void)db.AddImuData("/imu/polaris/123", {1, {}, {}});
-    (void)db.AddImuData("/imu/polaris/123", {2, {}, {}});
+    (void)db.AddImuData("/imu/polaris/123", {5, {1, 2, 3}, {4, 5, 6}});
+    (void)db.AddImuData("/imu/polaris/123", {10, {}, {}});
+    (void)db.AddImuData("/imu/polaris/123", {15, {}, {}});
     // Data from imu 456
     (void)db.AddImuData("/imu/polaris/456", {10, {}, {}});
     (void)db.AddImuData("/imu/polaris/456", {20, {}, {}});
@@ -80,6 +80,16 @@ TEST_F(TempFolder, TestGetImuData) {
     auto const imu_123_data{db.GetImuData("/imu/polaris/123")};
     ASSERT_TRUE(imu_123_data.has_value());
     EXPECT_EQ(std::size(imu_123_data.value()), 3);
+
+    // Check the values of the first element to make sure the callback lambda reading logic is correct
+    database::ImuData const sample{*std::cbegin(imu_123_data.value())};
+    EXPECT_EQ(sample.timestamp_ns, 5);
+    EXPECT_EQ(sample.angular_velocity[0], 1);
+    EXPECT_EQ(sample.angular_velocity[1], 2);
+    EXPECT_EQ(sample.angular_velocity[2], 3);
+    EXPECT_EQ(sample.linear_acceleration[0], 4);
+    EXPECT_EQ(sample.linear_acceleration[1], 5);
+    EXPECT_EQ(sample.linear_acceleration[2], 6);
 
     auto const imu_456_data{db.GetImuData("/imu/polaris/456")};
     ASSERT_TRUE(imu_456_data.has_value());
