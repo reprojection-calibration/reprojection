@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <map>
 #include <string>
 
 using namespace reprojection;
@@ -17,6 +18,28 @@ class TempFolder : public ::testing::Test {
 
     std::string database_path_{"sandbox"};
 };
+
+TEST_F(TempFolder, TestFullImuAddGetCycle) {
+    // TODO(Jack): Should we use this test data for all the IMU tests?
+    std::map<std::string, std::set<database::ImuData>> const imu_data{
+        {"/imu/polaris/123", {{0, {0, 0, 0}, {1, 1, 1}}, {1, {2, 2, 2}, {3, 3, 3}}, {3, {4, 4, 4}, {5, 5, 5}}}},
+        {"/imu/polaris/456", {{1, {0, 0, 0}, {-1, -1, -1}}, {2, {-2, -2, -2}, {-3, -3, -3}}}}};
+
+    std::string const record_path{database_path_ + "/record_aaa.db3"};
+    database::CalibrationDatabase db{record_path, true};
+    for (auto const& [sensor, measurements] : imu_data) {
+        for (auto const& measurement_i : measurements) {
+            bool const success_i{db.AddImuData(sensor, measurement_i)};
+            EXPECT_TRUE(success_i);
+        }
+    }
+
+    for (auto const& [sensor, measurements] : imu_data) {
+        auto const imu_i_data{db.GetImuData(sensor)};
+        ASSERT_TRUE(imu_i_data.has_value());
+        EXPECT_EQ(std::size(imu_i_data.value()), std::size(measurements));
+    }
+}
 
 TEST_F(TempFolder, TestAddImuData) {
     std::string const record_path{database_path_ + "/record_hhh.db3"};
