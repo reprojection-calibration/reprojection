@@ -17,14 +17,14 @@ class TempFolder2 : public ::testing::Test {
 
     std::string database_path_{"sandbox"};
 
-    std::string const data_table_{
+    std::string const data_table_sql_{
         "CREATE TABLE example_data ("
         "record_id INTEGER, "
         "value REAL NOT NULL, "
         "PRIMARY KEY (record_Id)"
         ");"};
 
-    std::string const add_data_{
+    std::string const add_data_sql_{
         "INSERT INTO example_data (value) "
         "VALUES (0.0), (1.1), (2.2);"};
 };
@@ -36,15 +36,15 @@ TEST_F(TempFolder2, TestExecute) {
     sqlite3* db;
     sqlite3_open(record.c_str(), &db);
 
-    bool const table_created{database::Sqlite3Tools::Execute(data_table_, db)};
+    bool const table_created{database::Sqlite3Tools::Execute(data_table_sql_, db)};
     ASSERT_TRUE(table_created);
 
     // TODO(Jack): Capture and test stderr output without using gtest internal API!
     // Returns false because we cannot create duplicated table (use CREATE TABLE IF NOT EXISTS to silently pass this)
-    bool const table_duplicated{database::Sqlite3Tools::Execute(data_table_, db)};
+    bool const table_duplicated{database::Sqlite3Tools::Execute(data_table_sql_, db)};
     EXPECT_FALSE(table_duplicated);
 
-    bool const values_added{database::Sqlite3Tools::Execute(add_data_, db)};
+    bool const values_added{database::Sqlite3Tools::Execute(add_data_sql_, db)};
     EXPECT_TRUE(values_added);
 
     sqlite3_close(db);
@@ -57,8 +57,8 @@ TEST_F(TempFolder2, TestExecuteCallback) {
     sqlite3_open(record.c_str(), &db);
 
     // Create the table and fill it with some values but ignore return codes, they are tested above
-    static_cast<void>(database::Sqlite3Tools::Execute(data_table_, db));
-    static_cast<void>(database::Sqlite3Tools::Execute(add_data_, db));
+    static_cast<void>(database::Sqlite3Tools::Execute(data_table_sql_, db));
+    static_cast<void>(database::Sqlite3Tools::Execute(add_data_sql_, db));
 
     std::string const select_all_data_sql{"SELECT value FROM example_data;"};
     auto callback = [](void* data, int, char** argv, char**) -> int {
