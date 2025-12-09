@@ -44,7 +44,8 @@ TEST_F(TempFolderDummySql, TestExecute) {
     ASSERT_TRUE(table_created);
 
     // TODO(Jack): Capture and test stderr output without using gtest internal API!
-    // Returns false because we cannot create duplicated table (use CREATE TABLE IF NOT EXISTS to silently pass this)
+    // Returns false because we cannot create duplicated table. Use CREATE TABLE IF NOT EXISTS if you want to silently
+    // handle this.
     bool const table_duplicated{database::Sqlite3Tools::Execute(data_table_sql_, db)};
     EXPECT_FALSE(table_duplicated);
 
@@ -61,8 +62,8 @@ TEST_F(TempFolderDummySql, TestExecuteCallback) {
     sqlite3_open(record.c_str(), &db);
 
     // Create the table and fill it with some values but ignore return codes, they are tested above
-    static_cast<void>(database::Sqlite3Tools::Execute(data_table_sql_, db));
-    static_cast<void>(database::Sqlite3Tools::Execute(add_data_sql_, db));
+    (void)database::Sqlite3Tools::Execute(data_table_sql_, db);
+    (void)database::Sqlite3Tools::Execute(add_data_sql_, db);
 
     std::string const select_all_data_sql{"SELECT value FROM example_data;"};
     auto callback = [](void* data, int, char** argv, char**) -> int {
