@@ -49,7 +49,7 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
         }
     }
     {
-        database::CalibrationDatabase const db{record_path, false, true};  // read only
+        database::CalibrationDatabase const db{record_path, false, true};  // const read only
         for (auto const& [sensor, measurements] : imu_data) {
             auto const imu_i_data{db.GetImuData(sensor)};
             ASSERT_TRUE(imu_i_data.has_value());
