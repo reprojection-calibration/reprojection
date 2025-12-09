@@ -105,20 +105,18 @@ std::optional<ImageData> ImageStreamer::Next() {
     // bad output?
     uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(stmt_, 0)))};
 
-    void const* const blob{sqlite3_column_blob(stmt_, 1)};
+    uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt_, 1))};
     int const blob_size{sqlite3_column_bytes(stmt_, 1)};
-
     if (not blob or blob_size <= 0) {
         std::cerr << "Empty blob for timestamp: " << timestamp_ns << std::endl;
         return std::nullopt;
     }
 
-    // TODO FIX CASTING HERE
-    std::vector<uchar> const buffer((uchar*)blob, (uchar*)blob + blob_size);
+    std::vector<uchar> const buffer(blob, blob + blob_size);
     cv::Mat const image{cv::imdecode(buffer, cv::IMREAD_UNCHANGED)};
-
     if (image.empty()) {
         std::cerr << "Failed to decode PNG for timestamp: " << timestamp_ns << std::endl;
+        return std::nullopt;
     };
 
     return ImageData{timestamp_ns, image};
