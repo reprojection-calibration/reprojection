@@ -35,6 +35,8 @@ std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase 
                                             std::string const& sensor_name);
 
 // TODO(Jack): Code protections that only grayscale images are stored here? Or is this not the right place?
+// NOTE(Jack): There are so many different error conditions that we definsively program against, but that we cannot
+// reasonably test against, so we have to use LCOV_EXCL_LINE a lot in the database image handling :(
 [[nodiscard]] bool AddImage(std::string const& sensor_name, ImageData const& data,
                             std::shared_ptr<CalibrationDatabase> const database);
 

@@ -49,28 +49,30 @@ bool AddImage(std::string const& sensor_name, ImageData const& data,
     sqlite3_stmt* stmt{nullptr};
     int code{sqlite3_prepare_v2(database->db, insert_image_sql.c_str(), -1, &stmt, nullptr)};
     if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "Add image sqlite3_prepare_v2() failed: " << sqlite3_errmsg(database->db) << std::endl;
-        return false;
+        std::cerr << "Add image sqlite3_prepare_v2() failed: " << sqlite3_errmsg(database->db)  // LCOV_EXCL_LINE
+                  << "\n";                                                                      // LCOV_EXCL_LINE
+        return false;                                                                           // LCOV_EXCL_LINE
     }
 
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
-        std::cerr << "Failed to encode image as PNG" << std::endl;
-        return false;
+        std::cerr << "Failed to encode image as PNG" << "\n";  // LCOV_EXCL_LINE
+        return false;                                          // LCOV_EXCL_LINE
     }
 
     // https://stackoverflow.com/questions/1229102/when-to-use-sqlite-transient-vs-sqlite-static
     // Note that the position is not zero indexed here! Therefore 1 corresponds to the first (and only) binding.
     code = sqlite3_bind_blob(stmt, 1, buffer.data(), static_cast<int>(buffer.size()), SQLITE_STATIC);
     if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "Add image sqlite3_bind_blob() failed: " << sqlite3_errmsg(database->db) << std::endl;
-        return false;
+        std::cerr << "Add image sqlite3_bind_blob() failed: " << sqlite3_errmsg(database->db)  // LCOV_EXCL_LINE
+                  << "\n";                                                                     // LCOV_EXCL_LINE
+        return false;                                                                          // LCOV_EXCL_LINE
     }
 
     code = sqlite3_step(stmt);
     if (code != static_cast<int>(SqliteFlag::Done)) {
-        std::cerr << "Add image sqlite3_step() failed: " << sqlite3_errmsg(database->db) << std::endl;
-        return false;
+        std::cerr << "Add image sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                              // LCOV_EXCL_LINE
     }
 
     sqlite3_finalize(stmt);
@@ -85,8 +87,8 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
 
     int code{sqlite3_prepare_v2(database_->db, image_streamer_sql.c_str(), -1, &stmt_, nullptr)};
     if (code != static_cast<int>(SqliteFlag::Ok)) {
-        throw std::runtime_error("Add image sqlite3_prepare_v2() failed: " +
-                                 std::string{sqlite3_errmsg(database_->db)});
+        throw std::runtime_error("Add image sqlite3_prepare_v2() failed: " +   // LCOV_EXCL_LINE
+                                 std::string{sqlite3_errmsg(database_->db)});  // LCOV_EXCL_LINE
     }
 }
 
@@ -97,8 +99,8 @@ std::optional<ImageData> ImageStreamer::Next() {
     if (code == static_cast<int>(SqliteFlag::Done)) {
         return std::nullopt;
     } else if (code != static_cast<int>(SqliteFlag::Row)) {
-        std::cerr << "Error stepping: " << sqlite3_errmsg(database_->db) << std::endl;
-        return std::nullopt;
+        std::cerr << "Error stepping: " << sqlite3_errmsg(database_->db) << "\n";  // LCOV_EXCL_LINE
+        return std::nullopt;                                                       // LCOV_EXCL_LINE
     }
 
     // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or other
@@ -108,15 +110,15 @@ std::optional<ImageData> ImageStreamer::Next() {
     uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt_, 1))};
     int const blob_size{sqlite3_column_bytes(stmt_, 1)};
     if (not blob or blob_size <= 0) {
-        std::cerr << "Empty blob for timestamp: " << timestamp_ns << std::endl;
-        return std::nullopt;
+        std::cerr << "Empty blob for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
+        return std::nullopt;                                                // LCOV_EXCL_LINE
     }
 
     std::vector<uchar> const buffer(blob, blob + blob_size);
     cv::Mat const image{cv::imdecode(buffer, cv::IMREAD_UNCHANGED)};
     if (image.empty()) {
-        std::cerr << "Failed to decode PNG for timestamp: " << timestamp_ns << std::endl;
-        return std::nullopt;
+        std::cerr << "Failed to decode PNG for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
+        return std::nullopt;                                                          // LCOV_EXCL_LINE
     };
 
     return ImageData{timestamp_ns, image};
