@@ -16,3 +16,11 @@ TEST(DatabaseSql, TestInsertImuDataSql) {
               "INSERT INTO imu_data (timestamp_ns, sensor_name, omega_x, omega_y, omega_z, ax, ay, az) VALUES "
               "(1765265480996386555, 'abcdefg', 1.000000, 2.000000, 3.000000, 4.000000, 5.000000, 6.000000);");
 }
+
+TEST(DatabaseSql, TestSelectImuSensorDataSql) {
+    std::string const sql{database::SelectImuSensorDataSql("abcdefg")};
+
+    EXPECT_EQ(sql,
+              "SELECT timestamp_ns, omega_x, omega_y, omega_z, ax, ay, az FROM imu_data WHERE sensor_name = 'abcdefg' "
+              "ORDER BY timestamp_ns ASC;");
+}
