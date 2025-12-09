@@ -61,8 +61,8 @@ TEST_F(TempFolder, TestAddImuData) {
     EXPECT_FALSE(success);
 
     // Check that the expected error message is sent to cerr
-    std::string const output{testing::internal::GetCapturedStderr()};  // WARN USING INTERNAL GTEST API!
-    EXPECT_EQ(output, "SQL error: UNIQUE constraint failed: imu_data.timestamp_ns, imu_data.sensor_name\n");
+    std::string const error_message{testing::internal::GetCapturedStderr()};  // WARN USING INTERNAL GTEST API!
+    EXPECT_EQ(error_message, "SQL error: UNIQUE constraint failed: imu_data.timestamp_ns, imu_data.sensor_name\n");
 }
 
 TEST_F(TempFolder, TestGetImuData) {
@@ -84,6 +84,11 @@ TEST_F(TempFolder, TestGetImuData) {
     auto const imu_456_data{db.GetImuData("/imu/polaris/456")};
     ASSERT_TRUE(imu_456_data.has_value());
     EXPECT_EQ(std::size(imu_456_data.value()), 2);
+
+    // If the sensor is not present we simply get an empty set back, this is not an error
+    auto const unknown_sensor{db.GetImuData("/imu/polaris/unknown")};
+    ASSERT_TRUE(unknown_sensor.has_value());
+    EXPECT_EQ(std::size(unknown_sensor.value()), 0);
 }
 
 TEST_F(TempFolder, TestCreate) {

@@ -67,7 +67,10 @@ std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string con
     std::set<ImuData> data;
     bool const success{Sqlite3Tools::Execute(select_imu_sensor_data_sql, db_, callback, &data)};
     if (not success) {
-        return std::nullopt;
+        // NOTE(Jack): I do not know under what conditions we will ever hit this failure condition, and cannot engineer
+        // a test to cover this branch, so we have to supress the code coverage requirement. This is a sign maybe we are
+        // missing the point with our design of Execute.
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     return data;
