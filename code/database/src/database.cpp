@@ -1,4 +1,3 @@
-
 #include "database/database.hpp"
 
 #include <sqlite3.h>
@@ -36,8 +35,12 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
         throw std::runtime_error("Attempted to open database at path - " + db_path + " - but was unsuccessful");
     }
 
-    // WARN(Jack): Is there any cirumstance under which the data table creation might fail, and casting to void here
+    // WARN(Jack): Is there any circumstance under which the data table creation might fail, and casting to void here
     // instead of explicitly handling the status makes sense?
+    // TODO(Jack): Are we sure that anytime we open a database we will want to create these tables? If the table already
+    // exists maybe we might actually want an error instead, or we only write the tables if we are creating the database
+    // from scratch?
+    // ERROR(Jack): Why does this not cause an error when we open an existing table as read only?
     static_cast<void>(Sqlite3Tools::Execute(imu_table_sql, db_));
 }
 
