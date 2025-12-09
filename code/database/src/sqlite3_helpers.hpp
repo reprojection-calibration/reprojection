@@ -2,10 +2,8 @@
 
 #include <sqlite3.h>
 
-#include <string>
 #include <functional>
-
-
+#include <string>
 
 namespace reprojection::database {
 
@@ -19,8 +17,8 @@ enum class SqliteFlag {
 struct Sqlite3Tools {
     using CallbackType = int (*)(void*, int, char**, char**);
 
-    [[nodiscard]] static bool Execute(std::string const& sql_statement, sqlite3* const db, CallbackType callback = nullptr,
-                                      void* data_structure = nullptr);
+    [[nodiscard]] static bool Execute(std::string const& sql_statement, sqlite3* const db,
+                                      CallbackType callback = nullptr, void* data_structure = nullptr);
 };
 
 }  // namespace reprojection::database

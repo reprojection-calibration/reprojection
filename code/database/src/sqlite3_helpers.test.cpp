@@ -8,8 +8,8 @@
 
 using namespace reprojection;
 
-// WARN COPY AND PASTED
-class TempFolder2 : public ::testing::Test {
+// WARN PARTIALLY COPY AND PASTED from TempFolder!!!
+class TempFolderDummySql : public ::testing::Test {
    protected:
     void SetUp() override { std::filesystem::create_directories(database_path_); }
 
@@ -30,7 +30,7 @@ class TempFolder2 : public ::testing::Test {
 };
 
 // Test where we create a simple auto incremented table and add some values
-TEST_F(TempFolder2, TestExecute) {
+TEST_F(TempFolderDummySql, TestExecute) {
     std::string const record{database_path_ + "/record_lll.db3"};
 
     sqlite3* db;
@@ -50,7 +50,7 @@ TEST_F(TempFolder2, TestExecute) {
     sqlite3_close(db);
 }
 
-TEST_F(TempFolder2, TestExecuteCallback) {
+TEST_F(TempFolderDummySql, TestExecuteCallback) {
     std::string const record{database_path_ + "/record_sss.db3"};
 
     sqlite3* db;
