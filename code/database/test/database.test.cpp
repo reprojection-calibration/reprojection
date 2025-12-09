@@ -18,29 +18,9 @@ class TempFolder : public ::testing::Test {
     std::string database_path_{"sandbox"};
 };
 
-TEST_F(TempFolder, TestGetImuData) {
-    std::string const record{database_path_ + "/record_aaa.db3"};
-    database::CalibrationDatabase db{record, true};
-
-    (void)db.AddImuData("/imu/polaris/123", {0, {}, {}});
-    (void)db.AddImuData("/imu/polaris/123", {1, {}, {}});
-    (void)db.AddImuData("/imu/polaris/123", {2, {}, {}});
-
-    (void)db.AddImuData("/imu/polaris/456", {10, {}, {}});
-    (void)db.AddImuData("/imu/polaris/456", {20, {}, {}});
-
-    auto const imu_123_data{db.GetImuData("/imu/polaris/123")};
-    ASSERT_TRUE(imu_123_data.has_value());
-    EXPECT_EQ(std::size(imu_123_data.value()), 3);
-
-    auto const imu_456_data{db.GetImuData("/imu/polaris/456")};
-    ASSERT_TRUE(imu_456_data.has_value());
-    EXPECT_EQ(std::size(imu_456_data.value()), 2);
-}
-
 TEST_F(TempFolder, TestAddImuData) {
-    std::string const record{database_path_ + "/record_hhh.db3"};
-    database::CalibrationDatabase db{record, true};
+    std::string const record_path{database_path_ + "/record_hhh.db3"};
+    database::CalibrationDatabase db{record_path, true};
 
     bool success{db.AddImuData("/imu/polaris/123", {0, {}, {}})};
     EXPECT_TRUE(success);
@@ -62,30 +42,50 @@ TEST_F(TempFolder, TestAddImuData) {
     EXPECT_EQ(output, "SQL error: UNIQUE constraint failed: imu_data.timestamp_ns, imu_data.sensor_name\n");
 }
 
+TEST_F(TempFolder, TestGetImuData) {
+    std::string const record_path{database_path_ + "/record_aaa.db3"};
+    database::CalibrationDatabase db{record_path, true};
+
+    (void)db.AddImuData("/imu/polaris/123", {0, {}, {}});
+    (void)db.AddImuData("/imu/polaris/123", {1, {}, {}});
+    (void)db.AddImuData("/imu/polaris/123", {2, {}, {}});
+
+    (void)db.AddImuData("/imu/polaris/456", {10, {}, {}});
+    (void)db.AddImuData("/imu/polaris/456", {20, {}, {}});
+
+    auto const imu_123_data{db.GetImuData("/imu/polaris/123")};
+    ASSERT_TRUE(imu_123_data.has_value());
+    EXPECT_EQ(std::size(imu_123_data.value()), 3);
+
+    auto const imu_456_data{db.GetImuData("/imu/polaris/456")};
+    ASSERT_TRUE(imu_456_data.has_value());
+    EXPECT_EQ(std::size(imu_456_data.value()), 2);
+}
+
 TEST_F(TempFolder, TestCreate) {
-    std::string const record{database_path_ + "/record_xxx.db3"};
+    std::string const record_path{database_path_ + "/record_xxx.db3"};
 
     // Cannot create a database when read_only is true - creating a database requires writing to it!
-    EXPECT_THROW(database::CalibrationDatabase(record, true, true), std::runtime_error);
+    EXPECT_THROW(database::CalibrationDatabase(record_path, true, true), std::runtime_error);
 
     // Cannot open a non-existent database
-    EXPECT_THROW(database::CalibrationDatabase(record, false), std::runtime_error);
+    EXPECT_THROW(database::CalibrationDatabase(record_path, false), std::runtime_error);
 
     // Create a database (found on the filesystem) and then check that we can open it
-    database::CalibrationDatabase(record, true);
-    EXPECT_NO_THROW(database::CalibrationDatabase(record, false));
+    database::CalibrationDatabase(record_path, true);
+    EXPECT_NO_THROW(database::CalibrationDatabase(record_path, false));
 }
 
 TEST_F(TempFolder, TestReadWrite) {
-    std::string const record{database_path_ + "/record_yyy.db3"};
-    database::CalibrationDatabase(record, true);
+    std::string const record_path{database_path_ + "/record_yyy.db3"};
+    database::CalibrationDatabase(record_path, true);
 
-    EXPECT_NO_THROW(database::CalibrationDatabase(record, false, false));
+    EXPECT_NO_THROW(database::CalibrationDatabase(record_path, false, false));
 }
 
 TEST_F(TempFolder, TestReadOnly) {
-    std::string const record{database_path_ + "/record_zzz.db3"};
-    database::CalibrationDatabase(record, true);
+    std::string const record_path{database_path_ + "/record_zzz.db3"};
+    database::CalibrationDatabase(record_path, true);
 
-    EXPECT_NO_THROW(database::CalibrationDatabase(record, false, true));
+    EXPECT_NO_THROW(database::CalibrationDatabase(record_path, false, true));
 }
