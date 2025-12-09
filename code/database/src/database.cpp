@@ -50,17 +50,14 @@ CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
     return Sqlite3Tools::Execute(insert_imu_data_sql, db_);
 }
 
-// TODO(Jack): Return a variant here to indicate success or failure
 std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string const& sensor_name) {
     std::string const select_imu_sensor_data_sql{SelectImuSensorDataSql(sensor_name)};
-
+    // This callback will be executed on every row returned by the select_imu_sensor_data_sql query.
     auto callback = [](void* data, int, char** argv, char**) -> int {
-        auto* set = static_cast<std::set<ImuData>*>(data);
-
+        auto* const set = static_cast<std::set<ImuData>*>(data);
         set->insert(ImuData{std::stoull(argv[0]),
                             {std::stod(argv[1]), std::stod(argv[2]), std::stod(argv[3])},
                             {std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6])}});
-
         return 0;
     };
 
