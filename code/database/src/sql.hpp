@@ -32,6 +32,7 @@ std::string InsertImuDataSql(std::uint64_t const timestamp_ns, std::string const
     return sql;
 }
 
+// ERROR(Jack): Risk of sql injection here?
 std::string SelectImuSensorDataSql(std::string const& sensor_name) {
     std::string const sql{
         "SELECT timestamp_ns, omega_x, omega_y, omega_z, ax, ay, az "
