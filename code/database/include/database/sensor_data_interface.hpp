@@ -32,10 +32,22 @@ bool operator<(ImuData const& x, ImuData const& y) { return x.timestamp_ns < y.t
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database);
 
-std::optional<std::set<ImuData>> GetImuData(std::string const& sensor_name,
-                                            std::shared_ptr<CalibrationDatabase const> const database);
+std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
+                                            std::string const& sensor_name);
 
 [[nodiscard]] bool AddImage(std::string const& sensor_name, ImageData const& data,
                             std::shared_ptr<CalibrationDatabase> const database);
+
+class ImageStreamer {
+   public:
+    ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
+                  uint64_t const start_time = 0);
+
+    std::optional<ImageData> Next();
+
+   private:
+    std::shared_ptr<CalibrationDatabase const> database_;
+    sqlite3_stmt* stmt_{nullptr};
+};
 
 }  // namespace reprojection::database

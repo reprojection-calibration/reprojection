@@ -55,7 +55,7 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
         auto const db{
             std::make_shared<database::CalibrationDatabase const>(record_path, false, true)};  // const read only
         for (auto const& [sensor, measurements] : imu_data) {
-            auto const imu_i_data{database::GetImuData(sensor, db)};
+            auto const imu_i_data{database::GetImuData(db, sensor)};
             ASSERT_TRUE(imu_i_data.has_value());
             EXPECT_EQ(std::size(imu_i_data.value()), std::size(measurements));
         }
@@ -98,7 +98,7 @@ TEST_F(TempFolder, TestGetImuData) {
     (void)database::AddImuData("/imu/polaris/456", {10, {}, {}}, db);
     (void)database::AddImuData("/imu/polaris/456", {20, {}, {}}, db);
 
-    auto const imu_123_data{database::GetImuData("/imu/polaris/123", db)};
+    auto const imu_123_data{database::GetImuData(db, "/imu/polaris/123")};
     ASSERT_TRUE(imu_123_data.has_value());
     EXPECT_EQ(std::size(imu_123_data.value()), 3);
 
@@ -112,12 +112,12 @@ TEST_F(TempFolder, TestGetImuData) {
     EXPECT_EQ(sample.linear_acceleration[1], 5);
     EXPECT_EQ(sample.linear_acceleration[2], 6);
 
-    auto const imu_456_data{database::GetImuData("/imu/polaris/456", db)};
+    auto const imu_456_data{database::GetImuData(db, "/imu/polaris/456")};
     ASSERT_TRUE(imu_456_data.has_value());
     EXPECT_EQ(std::size(imu_456_data.value()), 2);
 
     // If the sensor is not present we simply get an empty set back, this is not an error
-    auto const unknown_sensor{database::GetImuData("/imu/polaris/unknown", db)};
+    auto const unknown_sensor{database::GetImuData(db, "/imu/polaris/unknown")};
     ASSERT_TRUE(unknown_sensor.has_value());
     EXPECT_EQ(std::size(unknown_sensor.value()), 0);
 }
