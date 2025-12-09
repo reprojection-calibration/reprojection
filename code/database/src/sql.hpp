@@ -66,7 +66,7 @@ inline std::string ImageStreamerSql(std::string const& sensor_name, uint64_t con
         "SELECT timestamp_ns, data "
         "FROM images "
         "WHERE sensor_name = '" +
-        sensor_name + "' AND timestamp_ns > " + std::to_string(start_time) + " ORDER BY timestamp_ns ASC;"};
+        sensor_name + "' AND timestamp_ns >= " + std::to_string(start_time) + " ORDER BY timestamp_ns ASC;"};
 
     return sql;
 }

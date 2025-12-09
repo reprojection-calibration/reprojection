@@ -90,6 +90,8 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
     }
 }
 
+ImageStreamer::~ImageStreamer() { sqlite3_finalize(stmt_); }
+
 std::optional<ImageData> ImageStreamer::Next() {
     int const code{sqlite3_step(stmt_)};
     if (code == static_cast<int>(SqliteFlag::Done)) {

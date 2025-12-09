@@ -43,6 +43,8 @@ class ImageStreamer {
     ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
                   uint64_t const start_time = 0);
 
+    ~ImageStreamer();
+
     std::optional<ImageData> Next();
 
    private:
