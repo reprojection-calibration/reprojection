@@ -40,7 +40,6 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     // TODO(Jack): Are we sure that anytime we open a database we will want to create these tables? If the table already
     // exists maybe we might actually want an error instead, or we only write the tables if we are creating the database
     // from scratch?
-    // ERROR(Jack): Why does this not cause an error when we open an existing table as read only?
     static_cast<void>(Sqlite3Tools::Execute(imu_table_sql, db_));
 }
 
