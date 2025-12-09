@@ -19,8 +19,8 @@ inline const std::string imu_table_sql{
     "az REAL NOT NULL, "
     "PRIMARY KEY (timestamp_ns, sensor_name));"};
 
-std::string InsertImuDataSql(std::uint64_t const timestamp_ns, std::string const& sensor_name,
-                             double const angular_velocity[3], double const linear_acceleration[3]) {
+inline std::string InsertImuDataSql(std::uint64_t const timestamp_ns, std::string const& sensor_name,
+                                    double const angular_velocity[3], double const linear_acceleration[3]) {
     std::string const sql{
         "INSERT INTO imu_data (timestamp_ns, sensor_name, omega_x, omega_y, omega_z, ax, ay, az) "
         "VALUES (" +
@@ -33,7 +33,7 @@ std::string InsertImuDataSql(std::uint64_t const timestamp_ns, std::string const
 }
 
 // ERROR(Jack): Risk of sql injection here?
-std::string SelectImuSensorDataSql(std::string const& sensor_name) {
+inline std::string SelectImuSensorDataSql(std::string const& sensor_name) {
     std::string const sql{
         "SELECT timestamp_ns, omega_x, omega_y, omega_z, ax, ay, az "
         "FROM imu_data "
@@ -52,7 +52,7 @@ inline const std::string images_table_sql{
     "data BLOB NOT NULL, "
     "PRIMARY KEY (timestamp_ns, sensor_name));"};
 
-std::string InsertImageSql(std::string const& sensor_name, uint64_t const timestamp_ns) {
+inline std::string InsertImageSql(std::string const& sensor_name, uint64_t const timestamp_ns) {
     std::string const sql{
         "INSERT INTO images (timestamp_ns, sensor_name, data) "
         "VALUES(" +
