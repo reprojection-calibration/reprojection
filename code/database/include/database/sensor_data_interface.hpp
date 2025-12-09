@@ -39,6 +39,10 @@ std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase 
 [[nodiscard]] bool AddImage(std::string const& sensor_name, ImageData const& data,
                             std::shared_ptr<CalibrationDatabase> const database);
 
+// NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
+// we will run into problems here with memory. Therefore we create this streamer class which loads the images one by one
+// from the database. We include the start_time parameter so that applications can skip loading images prior to that
+// timestamp (i.e. if the images before start_time were already processed).
 class ImageStreamer {
    public:
     ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
