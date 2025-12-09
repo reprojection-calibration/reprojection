@@ -11,12 +11,15 @@ using namespace reprojection;
 // WARN PARTIALLY COPY AND PASTED from TempFolder!!!
 class TempFolderDummySql : public ::testing::Test {
    protected:
+    // cppcheck-suppress unusedFunction
     void SetUp() override { std::filesystem::create_directories(database_path_); }
 
+    // cppcheck-suppress unusedFunction
     void TearDown() override { std::filesystem::remove_all(database_path_); }
 
     std::string database_path_{"sandbox"};
 
+    // cppcheck-suppress unusedStructMember
     std::string const data_table_sql_{
         "CREATE TABLE example_data ("
         "record_id INTEGER, "
@@ -24,6 +27,7 @@ class TempFolderDummySql : public ::testing::Test {
         "PRIMARY KEY (record_Id)"
         ");"};
 
+    // cppcheck-suppress unusedStructMember
     std::string const add_data_sql_{
         "INSERT INTO example_data (value) "
         "VALUES (0.0), (1.1), (2.2);"};
