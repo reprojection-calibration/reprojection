@@ -78,14 +78,11 @@ std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string con
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
 bool CalibrationDatabase::AddImage(std::string const& sensor_name, uint64_t const timestamp_ns, cv::Mat const& image) {
+    std::string const insert_image_sql{InsertImageSql(sensor_name, timestamp_ns)};
     sqlite3_stmt* stmt{nullptr};
-    std::string const insert_image_sql{
-        "INSERT INTO images (timestamp_ns, sensor_name, data) "
-        "VALUES(" +
-        std::to_string(timestamp_ns) + ", '" + sensor_name + "', ?)"};  // TODO PUT SQL IN sql.hpp
     int code{sqlite3_prepare_v2(db_, insert_image_sql.c_str(), -1, &stmt, nullptr)};
     if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "Image add sqlite3_prepare_v2() failed: " << sqlite3_errmsg(db_) << std::endl;
+        std::cerr << "Add image sqlite3_prepare_v2() failed: " << sqlite3_errmsg(db_) << std::endl;
         return false;
     }
 
@@ -99,12 +96,13 @@ bool CalibrationDatabase::AddImage(std::string const& sensor_name, uint64_t cons
     // Note that the position is not zero indexed here! Therefore 1 corresponds to the first (and only) binding.
     code = sqlite3_bind_blob(stmt, 1, buffer.data(), static_cast<int>(buffer.size()), SQLITE_STATIC);
     if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "Image add sqlite3_bind_blob() failed: " << sqlite3_errmsg(db_) << std::endl;
+        std::cerr << "Add image sqlite3_bind_blob() failed: " << sqlite3_errmsg(db_) << std::endl;
         return false;
     }
 
     code = sqlite3_step(stmt);
     if (code != static_cast<int>(SqliteFlag::Done)) {
+        std::cerr << "Add image sqlite3_step() failed: " << sqlite3_errmsg(db_) << std::endl;
         return false;
     }
 
