@@ -53,7 +53,7 @@ CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db_); }
     return Sqlite3Tools::Execute(insert_imu_data_sql, db_);
 }
 
-std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string const& sensor_name) {
+std::optional<std::set<ImuData>> CalibrationDatabase::GetImuData(std::string const& sensor_name) const {
     std::string const select_imu_sensor_data_sql{SelectImuSensorDataSql(sensor_name)};
     // This callback will be executed on every row returned by the select_imu_sensor_data_sql query.
     auto callback = [](void* data, int, char** argv, char**) -> int {

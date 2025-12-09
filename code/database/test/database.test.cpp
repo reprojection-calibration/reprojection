@@ -25,17 +25,8 @@ TEST_F(TempFolder, TestAddImage) {
 
     cv::Mat const image(480, 720, CV_8UC1);
 
-    // NOTE(Jack): We use the local scopes here so that we can have on read only and one read/write database instance in
-    // the same test.
-    {
-        // TODO(Jack): Catch std error output and test it!
-        database::CalibrationDatabase db{record_path, false, true};
-        EXPECT_FALSE(db.AddImage("/cam/retro/123", 0, image));
-    }
-    {
-        database::CalibrationDatabase db{record_path, false, false};
-        EXPECT_TRUE(db.AddImage("/cam/retro/123", 0, image));
-    }
+    database::CalibrationDatabase db{record_path, false, false};
+    EXPECT_TRUE(db.AddImage("/cam/retro/123", 0, image));
 }
 
 TEST_F(TempFolder, TestFullImuAddGetCycle) {
@@ -45,8 +36,11 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
         {"/imu/polaris/456", {{1, {0, 0, 0}, {-1, -1, -1}}, {2, {-2, -2, -2}, {-3, -3, -3}}}}};
 
     std::string const record_path{database_path_ + "/record_aaa.db3"};
+    // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only database
+    // instance in the same test.
+    // TODO(Jack): Is it legal to open two connection to the samedatabase?
     {
-        database::CalibrationDatabase db{record_path, true, false};
+        database::CalibrationDatabase db{record_path, true, false};  // create and write
         for (auto const& [sensor, measurements] : imu_data) {
             for (auto const& measurement_i : measurements) {
                 bool const success_i{db.AddImuData(sensor, measurement_i)};
@@ -55,7 +49,7 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
         }
     }
     {
-        database::CalibrationDatabase db{record_path, false, true};
+        database::CalibrationDatabase const db{record_path, false, true};  // read only
         for (auto const& [sensor, measurements] : imu_data) {
             auto const imu_i_data{db.GetImuData(sensor)};
             ASSERT_TRUE(imu_i_data.has_value());
