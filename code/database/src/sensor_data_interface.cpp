@@ -17,7 +17,9 @@ namespace reprojection::database {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {
-        return false;  // LCOV_EXCL_LINE
+        std::cerr << "ExtractedTarget serialization failed at: " << std::to_string(data.timestamp_ns)  // LCOV_EXCL_LINE
+                  << "\n";                                                                             // LCOV_EXCL_LINE
+        return false;                                                                                  // LCOV_EXCL_LINE
     }
 
     std::string const insert_extracted_target_sql{InsertExtractedTargetSql(sensor_name, data.timestamp_ns)};
@@ -111,8 +113,8 @@ bool AddImage(std::string const& sensor_name, ImageData const& data,
               std::shared_ptr<CalibrationDatabase> const database) {
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
-        std::cerr << "Failed to encode image as PNG" << "\n";  // LCOV_EXCL_LINE
-        return false;                                          // LCOV_EXCL_LINE
+        std::cerr << "Image serialization failed at: " << std::to_string(data.timestamp_ns) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                                 // LCOV_EXCL_LINE
     }
 
     std::string const insert_image_sql{InsertImageSql(sensor_name, data.timestamp_ns)};
