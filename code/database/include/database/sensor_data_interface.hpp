@@ -15,14 +15,12 @@ namespace reprojection::database {
 
 struct ImuData {
     uint64_t timestamp_ns;
-
     double angular_velocity[3];
     double linear_acceleration[3];
 };
 
 struct ImageData {
     uint64_t timestamp_ns;
-
     cv::Mat image;
 };
 

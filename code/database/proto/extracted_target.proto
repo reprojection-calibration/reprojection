@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package protobuf_serialization;
+
+message BundleProto {
+  int32 pixel_rows = 1;
+  repeated double pixel_data = 2;
+
+  int32 point_rows = 3;
+  repeated double point_data = 4;
+}
+
+message ExtractedTargetProto {
+  BundleProto bundle = 1;
+
+  int32 indices_rows = 2;
+  repeated int32 indices_data = 3;
+}

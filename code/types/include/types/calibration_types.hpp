@@ -9,7 +9,6 @@ struct Bundle {
     MatrixX3d points;
 };
 
-// Formerly was FeatureFrame (remove comment after 1.1.2026)
 struct ExtractedTarget {
     Bundle bundle;
     ArrayX2i indices;
