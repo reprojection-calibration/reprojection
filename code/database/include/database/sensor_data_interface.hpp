@@ -40,6 +40,10 @@ bool operator<(ImuData const& x, ImuData const& y) { return x.timestamp_ns < y.t
 [[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
                                           std::shared_ptr<CalibrationDatabase> const database);
 
+// WARN(Jack): Assumes only one single target
+std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
+    std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name);
+
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database);
 

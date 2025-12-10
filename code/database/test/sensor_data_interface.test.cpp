@@ -17,7 +17,7 @@ class TempFolder : public ::testing::Test {
    protected:
     void SetUp() override { std::filesystem::create_directories(database_path_); }
 
-    // void TearDown() override { std::filesystem::remove_all(database_path_); }
+    void TearDown() override { std::filesystem::remove_all(database_path_); }
 
     std::string database_path_{"sandbox"};
 };
