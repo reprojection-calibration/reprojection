@@ -27,6 +27,8 @@ namespace reprojection::database {
     return Sqlite3Tools::AddBlob(insert_extracted_target_sql, buffer.c_str(), std::size(buffer), database->db);
 }
 
+// NOTE(Jack): The logic here is very similar to the ImageStreamer class, but there are enough differences that we
+// cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
 std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
     std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name) {
     std::string const select_extracted_target_data_sql{SelectExtractedTargetDataSql(sensor_name)};
@@ -45,20 +47,21 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            std::cerr << "Error stepping: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-            return std::nullopt;                                                      // LCOV_EXCL_LINE
+            std::cerr << "GetExtractedTargetData() sqlite3_step() failed:  "  // LCOV_EXCL_LINE
+                      << sqlite3_errmsg(database->db) << "\n";                // LCOV_EXCL_LINE
+            return std::nullopt;                                              // LCOV_EXCL_LINE
         }
 
+        // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or
+        // other bad output? Also happens like this in the image streamer.
         uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(stmt_, 0)))};
 
         uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt_, 1))};
         int const blob_size{sqlite3_column_bytes(stmt_, 1)};
         if (not blob or blob_size <= 0) {
-            // TODO(Jack): This seems to be an aggressive error handling strategy, that if there is problem with any
-            // single blob we kill the entire process. Is there any "better" way to do this or any real reason why this
-            // is as it is bad?
-            std::cerr << "Empty blob for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
-            return std::nullopt;                                                // LCOV_EXCL_LINE
+            std::cerr << "GetExtractedTargetData() blob empty for timestamp: " << timestamp_ns  // LCOV_EXCL_LINE
+                      << "\n";                                                                  // LCOV_EXCL_LINE
+            continue;                                                                           // LCOV_EXCL_LINE
         }
 
         std::vector<uchar> const buffer(blob, blob + blob_size);
@@ -67,13 +70,15 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
 
         auto const deserialized{Deserialize(serialized)};
         if (not deserialized.has_value()) {
-            // TODO(Jack): Very aggressive error handling like above!
-            std::cerr << "Could not deserialize protobuf for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
-            return std::nullopt;                                                                    // LCOV_EXCL_LINE
+            std::cerr << "GetExtractedTargetData() deserialization failed for timestamp: "  // LCOV_EXCL_LINE
+                      << timestamp_ns << "\n";                                              // LCOV_EXCL_LINE
+            continue;                                                                       // LCOV_EXCL_LINE
         }
 
         data.insert(ExtractedTargetData{timestamp_ns, deserialized.value()});
     }
+
+    sqlite3_finalize(stmt_);
 
     return data;
 }
@@ -143,26 +148,26 @@ std::optional<ImageData> ImageStreamer::Next() {
     if (code == static_cast<int>(SqliteFlag::Done)) {
         return std::nullopt;
     } else if (code != static_cast<int>(SqliteFlag::Row)) {
-        std::cerr << "Error stepping: " << sqlite3_errmsg(database_->db) << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                       // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() sqlite3_step() failed:  "  // LCOV_EXCL_LINE
+                  << sqlite3_errmsg(database_->db) << "\n";            // LCOV_EXCL_LINE
+        return std::nullopt;                                           // LCOV_EXCL_LINE
     }
 
-    // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or other
-    // bad output?
     uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(stmt_, 0)))};
 
     uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt_, 1))};
     int const blob_size{sqlite3_column_bytes(stmt_, 1)};
     if (not blob or blob_size <= 0) {
-        std::cerr << "Empty blob for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() blob empty for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
+        return std::nullopt;                                                                      // LCOV_EXCL_LINE
     }
 
     std::vector<uchar> const buffer(blob, blob + blob_size);
     cv::Mat const image{cv::imdecode(buffer, cv::IMREAD_UNCHANGED)};
     if (image.empty()) {
-        std::cerr << "Failed to decode PNG for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                          // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() deserialization failed for timestamp: "  // LCOV_EXCL_LINE
+                  << timestamp_ns << "\n";                                           // LCOV_EXCL_LINE
+        return std::nullopt;                                                         // LCOV_EXCL_LINE
     }
 
     return ImageData{timestamp_ns, image};
