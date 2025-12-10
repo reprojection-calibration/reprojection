@@ -37,19 +37,24 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     std::string const record_path{database_path_ + "/record_qqq.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    ExtractedTarget const bundle{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
+    ExtractedTarget const target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {0, bundle}, db));
-    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {1, bundle}, db));
-    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {2, bundle}, db));
+    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {0, target}, db));
+    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {1, target}, db));
+    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {2, target}, db));
 
     auto const data{database::GetExtractedTargetData(db, "/cam/retro/123")};
     ASSERT_TRUE(data.has_value());
 
+    int timestamp{0};
     for (auto const& data_i : data.value()) {
-        std::cout << data_i.timestamp_ns << std::endl;
+        EXPECT_EQ(data_i.timestamp_ns, timestamp);
+        timestamp = timestamp + 1;
+        EXPECT_TRUE(data_i.target.bundle.pixels.isApprox(target.bundle.pixels));
+        EXPECT_TRUE(data_i.target.bundle.points.isApprox(target.bundle.points));
+        EXPECT_TRUE(data_i.target.indices.isApprox(target.indices));
     }
 }
 
