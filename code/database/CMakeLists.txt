@@ -6,7 +6,7 @@ find_package(Protobuf REQUIRED)
 find_package(SQLite3 REQUIRED)
 
 # Protobuf logic adopted from https://stackoverflow.com/questions/20824194/cmake-with-google-protocol-buffers
-# TODO(Jack): Should we compile database_proto as static like in the example?
+# TODO(Jack): Should we compile database_proto as static like in the example linked above?
 protobuf_generate_cpp(ProtoSources ProtoHeaders
         "proto/extracted_target.proto"
 )
