@@ -37,8 +37,7 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
     if (code != static_cast<int>(SqliteFlag::Ok)) {
         std::cerr << "GetExtractedTargetData() sqlite3_prepare_v2() failed: "  // LCOV_EXCL_LINE
                   << sqlite3_errmsg(database->db) << "\n";                     // LCOV_EXCL_LINE
-
-        return std::nullopt;
+        return std::nullopt;                                                   // LCOV_EXCL_LINE
     }
 
     std::set<ExtractedTargetData> data;
