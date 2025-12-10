@@ -115,4 +115,4 @@ RUN --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOU
     /temporary/${CERES_SOURCE_BUILD} --cmake_build_type=Debug
 
 # MOVE PROTOBUF INSTALL
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes protobuf-compiler libprotobuf-dev gdb; rm --force --recursive /var/lib/apt/lists/*
+RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
