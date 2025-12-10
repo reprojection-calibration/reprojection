@@ -32,9 +32,9 @@ TEST(DatabaseSerialization, TestSerializationEmpty) {
     auto const deserialized_opt{database::Deserialize(serialized)};
 
     ASSERT_TRUE(deserialized_opt.has_value());
-    ExtractedTarget const deserialized{deserialized_opt.value()};
+    auto const [bundle, indices]{deserialized_opt.value()};
 
-    EXPECT_EQ(deserialized.bundle.pixels.size(), 0);
-    EXPECT_EQ(deserialized.bundle.points.size(), 0);
-    EXPECT_EQ(deserialized.indices.size(), 0);
+    EXPECT_EQ(bundle.pixels.size(), 0);
+    EXPECT_EQ(bundle.points.size(), 0);
+    EXPECT_EQ(indices.size(), 0);
 }
