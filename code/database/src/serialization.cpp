@@ -6,13 +6,14 @@
 namespace reprojection::database {
 
 namespace {
-// Helper to check if data size matches expected matrix dimensions
+
 [[nodiscard]] bool validate_dimensions(int rows, int cols, size_t data_size) {
     return (static_cast<size_t>(rows) * static_cast<size_t>(cols)) == data_size;
 }
+
 }  // namespace
 
-protobuf_serialization::ExtractedTargetProto serialize(const ExtractedTarget& target) {
+protobuf_serialization::ExtractedTargetProto Serialize( ExtractedTarget const& target) {
     protobuf_serialization::ExtractedTargetProto proto_out;
     protobuf_serialization::BundleProto* bundle_proto = proto_out.mutable_bundle();
 
@@ -48,7 +49,7 @@ protobuf_serialization::ExtractedTargetProto serialize(const ExtractedTarget& ta
     return proto_out;
 }
 
-std::optional<ExtractedTarget> deserialize(const protobuf_serialization::ExtractedTargetProto& proto) {
+std::optional<ExtractedTarget> Deserialize( protobuf_serialization::ExtractedTargetProto const& proto) {
     // 1. Validate Bundle::pixels
     const auto& bundle_proto = proto.bundle();
     if (!validate_dimensions(bundle_proto.pixel_rows(), 2, bundle_proto.pixel_data_size())) {

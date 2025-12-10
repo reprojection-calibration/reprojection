@@ -33,6 +33,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/serialization.test.cpp
         src/sql.test.cpp
         src/sqlite3_helpers.test.cpp
         test/calibration_database.test.cpp
