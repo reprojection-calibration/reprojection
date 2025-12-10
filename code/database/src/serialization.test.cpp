@@ -23,3 +23,17 @@ TEST(DatabaseSerialization, TestSerialization) {
     EXPECT_TRUE(deserialized.bundle.points.isApprox(original.bundle.points));
     EXPECT_TRUE(deserialized.indices.isApprox(original.indices));
 }
+
+TEST(DatabaseSerialization, TestSerializationEmpty) {
+    ExtractedTarget const original{};
+
+    protobuf_serialization::ExtractedTargetProto const serialized{database::Serialize(original)};
+    auto const deserialized_opt{database::Deserialize(serialized)};
+
+    ASSERT_TRUE(deserialized_opt.has_value());
+    ExtractedTarget const deserialized{deserialized_opt.value()};
+
+    EXPECT_EQ(deserialized.bundle.pixels.size(), 0);
+    EXPECT_EQ(deserialized.bundle.points.size(), 0);
+    EXPECT_EQ(deserialized.indices.size(), 0);
+}
