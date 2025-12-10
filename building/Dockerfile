@@ -114,4 +114,5 @@ ARG CERES_SOURCE_BUILD=building/install_scripts/ceres_source_build.sh
 RUN --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
     /temporary/${CERES_SOURCE_BUILD} --cmake_build_type=Debug
 
+# MOVE PROTOBUF INSTALL
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*

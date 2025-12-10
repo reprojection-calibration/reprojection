@@ -6,8 +6,10 @@ apt-get update
 apt-get install --no-install-recommends --yes \
     libeigen3-dev \
     libopencv-dev \
+    libprotobuf-dev \
     libsqlite3-dev \
-    libyaml-cpp-dev
+    libyaml-cpp-dev \
+    protobuf-compiler
 
 # Required for ceres-solver source build
 apt-get update
