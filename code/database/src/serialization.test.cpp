@@ -10,8 +10,9 @@
 using namespace reprojection;
 
 TEST(DatabaseSerialization, TestSerialization) {
-    ExtractedTarget const original{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}}, MatrixX3d{{3.25, 3.45}, {6.18, 6.78}}},
-                                   {{5, 6}, {2, 3}}};
+    ExtractedTarget const original{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
+                                          MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
+                                   {{5, 6}, {2, 3}, {650}}};
 
     protobuf_serialization::ExtractedTargetProto const serialized{database::Serialize(original)};
     auto const deserialized_opt{database::Deserialize(serialized)};
