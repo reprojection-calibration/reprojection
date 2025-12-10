@@ -5,10 +5,51 @@
 #include <filesystem>
 #include <string>
 
+#include "serialization.hpp"
 #include "sql.hpp"
 #include "sqlite3_helpers.hpp"
 
 namespace reprojection::database {
+
+// TODO(Jack): There is really a lot of copy and paste between here and the image version!
+[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
+                                          std::shared_ptr<CalibrationDatabase> const database) {
+    std::string const insert_extracted_target_sql{InsertExtractedTargetSql(sensor_name, data.timestamp_ns)};
+    sqlite3_stmt* stmt{nullptr};
+    int code{sqlite3_prepare_v2(database->db, insert_extracted_target_sql.c_str(), -1, &stmt, nullptr)};
+    if (code != static_cast<int>(SqliteFlag::Ok)) {
+        std::cerr << "Add extracted target sqlite3_prepare_v2() failed: "
+                  << sqlite3_errmsg(database->db)  // LCOV_EXCL_LINE
+                  << "\n";                         // LCOV_EXCL_LINE
+        return false;                              // LCOV_EXCL_LINE
+    }
+
+    protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
+    std::string buffer;
+    if (not serialized.SerializeToString(&buffer)) {
+        std::cerr << "Add extracted target SerializeToString() failed." << "\n";  // LCOV_EXCL_LINE
+        return false;                                                             // LCOV_EXCL_LINE
+    }
+
+    code = sqlite3_bind_blob(stmt, 1, buffer.c_str(), static_cast<int>(std::size(buffer)), SQLITE_STATIC);
+    if (code != static_cast<int>(SqliteFlag::Ok)) {
+        std::cerr << "Add extracted target sqlite3_bind_blob() failed: "
+                  << sqlite3_errmsg(database->db)  // LCOV_EXCL_LINE
+                  << "\n";                         // LCOV_EXCL_LINE
+        return false;                              // LCOV_EXCL_LINE
+    }
+
+    code = sqlite3_step(stmt);
+    if (code != static_cast<int>(SqliteFlag::Done)) {
+        std::cerr << "Add extracted target sqlite3_step() failed: " << sqlite3_errmsg(database->db)
+                  << "\n";  // LCOV_EXCL_LINE
+        return false;       // LCOV_EXCL_LINE
+    }
+
+    sqlite3_finalize(stmt);
+
+    return true;
+}
 
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database) {

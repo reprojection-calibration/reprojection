@@ -5,6 +5,22 @@
 
 namespace reprojection::database {
 
+inline const std::string extracted_target_table_sql{
+    "CREATE TABLE IF NOT EXISTS extracted_targets ("
+    "timestamp_ns INTEGER NOT NULL, "
+    "sensor_name TEXT NOT NULL, "
+    "data BLOB NOT NULL, "
+    "PRIMARY KEY (timestamp_ns, sensor_name));"};
+
+inline std::string InsertExtractedTargetSql(std::string const& sensor_name, uint64_t const timestamp_ns) {
+    std::string const sql{
+        "INSERT INTO extracted_targets (timestamp_ns, sensor_name, data) "
+        "VALUES(" +
+        std::to_string(timestamp_ns) + ", '" + sensor_name + "', ?)"};
+
+    return sql;
+}
+
 // TODO(Jack): Is there any problem we will have storing our time type (uint64t) here as a signed integer type?
 // TODO(Jack): Should index the sensor by an integer id or by a string?
 inline const std::string imu_table_sql{

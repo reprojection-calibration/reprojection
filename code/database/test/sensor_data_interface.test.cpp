@@ -17,10 +17,23 @@ class TempFolder : public ::testing::Test {
    protected:
     void SetUp() override { std::filesystem::create_directories(database_path_); }
 
-    void TearDown() override { std::filesystem::remove_all(database_path_); }
+    // void TearDown() override { std::filesystem::remove_all(database_path_); }
 
     std::string database_path_{"sandbox"};
 };
+
+TEST_F(TempFolder, TestAddExtractedTargetData) {
+    std::string const record_path{database_path_ + "/record_qqq.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    ExtractedTarget const bundle{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
+                                        MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
+                                 {{5, 6}, {2, 3}, {650, 600}}};
+
+    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {0, bundle}, db));
+    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {1, bundle}, db));
+    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {2, bundle}, db));
+}
 
 TEST_F(TempFolder, TestAddImage) {
     std::string const record_path{database_path_ + "/record_uuu.db3"};

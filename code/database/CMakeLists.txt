@@ -21,12 +21,13 @@ set(SRC_FILES
 set(INCLUDE_DIRECTORIES
         ${CMAKE_BINARY_DIR}/database
         ${OpenCV_INCLUDE_DIRS}
+        ${Protobuf_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
         database_proto
         Eigen3::Eigen
         ${OpenCV_LIBS}
-        ${PROTOBUF_LIBRARY}
+        ${Protobuf_LIBRARIES}
         SQLite::SQLite3
         types
 )

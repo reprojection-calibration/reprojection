@@ -14,6 +14,12 @@
 
 namespace reprojection::database {
 
+// TODO(Jack): Can we thinkg of a better process here than simply appending "Data" to indicate that it has the time?
+struct ExtractedTargetData {
+    uint64_t timestamp_ns;
+    ExtractedTarget target;
+};
+
 struct ImuData {
     uint64_t timestamp_ns;
     double angular_velocity[3];
@@ -31,8 +37,8 @@ bool operator<(ImuData const& x, ImuData const& y) { return x.timestamp_ns < y.t
 // calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to
 // each data here, because it can be that a user would want to use multiple targets and identify the extracted features
 // uniquely based on the timestamp, which sensor they belong to, and from which target they come from.
-[[nodiscard]] bool AddExtractedTarget(std::string const& sensor_name, ExtractedTarget const& data,
-                                      std::shared_ptr<CalibrationDatabase> const database);
+[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
+                                          std::shared_ptr<CalibrationDatabase> const database);
 
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database);
