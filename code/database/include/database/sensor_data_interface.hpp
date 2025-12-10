@@ -10,6 +10,7 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
+#include "types/calibration_types.hpp"
 
 namespace reprojection::database {
 
@@ -25,6 +26,13 @@ struct ImageData {
 };
 
 bool operator<(ImuData const& x, ImuData const& y) { return x.timestamp_ns < y.timestamp_ns; }
+
+// TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
+// calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to
+// each data here, because it can be that a user would want to use multiple targets and identify the extracted features
+// uniquely based on the timestamp, which sensor they belong to, and from which target they come from.
+[[nodiscard]] bool AddExtractedTarget(std::string const& sensor_name, ExtractedTarget const& data,
+                                      std::shared_ptr<CalibrationDatabase> const database);
 
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database);
