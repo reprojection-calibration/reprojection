@@ -10,8 +10,15 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
+#include "types/calibration_types.hpp"
 
 namespace reprojection::database {
+
+// TODO(Jack): Can we thinkg of a better process here than simply appending "Data" to indicate that it has the time?
+struct ExtractedTargetData {
+    uint64_t timestamp_ns;
+    ExtractedTarget target;
+};
 
 struct ImuData {
     uint64_t timestamp_ns;
@@ -24,7 +31,22 @@ struct ImageData {
     cv::Mat image;
 };
 
-bool operator<(ImuData const& x, ImuData const& y) { return x.timestamp_ns < y.timestamp_ns; }
+// TODO(Jack): Add concept requirements
+template <typename T>
+bool operator<(T const& x, T const& y) {
+    return x.timestamp_ns < y.timestamp_ns;
+}
+
+// TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
+// calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to
+// each data here, because it can be that a user would want to use multiple targets and identify the extracted features
+// uniquely based on the timestamp, which sensor they belong to, and from which target they come from.
+[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
+                                          std::shared_ptr<CalibrationDatabase> const database);
+
+// WARN(Jack): Assumes only one single target
+std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
+    std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name);
 
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database);

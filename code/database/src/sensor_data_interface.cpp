@@ -5,10 +5,82 @@
 #include <filesystem>
 #include <string>
 
+#include "serialization.hpp"
 #include "sql.hpp"
 #include "sqlite3_helpers.hpp"
 
 namespace reprojection::database {
+
+// TODO(Jack): There is really a lot of copy and paste between here and the image version!
+[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
+                                          std::shared_ptr<CalibrationDatabase> const database) {
+    protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
+    std::string buffer;
+    if (not serialized.SerializeToString(&buffer)) {
+        std::cerr << "ExtractedTarget serialization failed at: " << std::to_string(data.timestamp_ns)  // LCOV_EXCL_LINE
+                  << "\n";                                                                             // LCOV_EXCL_LINE
+        return false;                                                                                  // LCOV_EXCL_LINE
+    }
+
+    std::string const insert_extracted_target_sql{InsertExtractedTargetSql(sensor_name, data.timestamp_ns)};
+
+    return Sqlite3Tools::AddBlob(insert_extracted_target_sql, buffer.c_str(), std::size(buffer), database->db);
+}
+
+// NOTE(Jack): The logic here is very similar to the ImageStreamer class, but there are enough differences that we
+// cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
+std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
+    std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name) {
+    std::string const select_extracted_target_data_sql{SelectExtractedTargetDataSql(sensor_name)};
+    sqlite3_stmt* stmt_{nullptr};
+    int code{sqlite3_prepare_v2(database->db, select_extracted_target_data_sql.c_str(), -1, &stmt_, nullptr)};
+    if (code != static_cast<int>(SqliteFlag::Ok)) {
+        std::cerr << "GetExtractedTargetData() sqlite3_prepare_v2() failed: "  // LCOV_EXCL_LINE
+                  << sqlite3_errmsg(database->db) << "\n";                     // LCOV_EXCL_LINE
+        return std::nullopt;                                                   // LCOV_EXCL_LINE
+    }
+
+    std::set<ExtractedTargetData> data;
+    while (true) {
+        code = sqlite3_step(stmt_);
+        if (code == static_cast<int>(SqliteFlag::Done)) {
+            break;
+        } else if (code != static_cast<int>(SqliteFlag::Row)) {
+            std::cerr << "GetExtractedTargetData() sqlite3_step() failed:  "  // LCOV_EXCL_LINE
+                      << sqlite3_errmsg(database->db) << "\n";                // LCOV_EXCL_LINE
+            return std::nullopt;                                              // LCOV_EXCL_LINE
+        }
+
+        // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or
+        // other bad output? Also happens like this in the image streamer.
+        uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(stmt_, 0)))};
+
+        uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt_, 1))};
+        int const blob_size{sqlite3_column_bytes(stmt_, 1)};
+        if (not blob or blob_size <= 0) {
+            std::cerr << "GetExtractedTargetData() blob empty for timestamp: " << timestamp_ns  // LCOV_EXCL_LINE
+                      << "\n";                                                                  // LCOV_EXCL_LINE
+            continue;                                                                           // LCOV_EXCL_LINE
+        }
+
+        std::vector<uchar> const buffer(blob, blob + blob_size);
+        protobuf_serialization::ExtractedTargetProto serialized;
+        serialized.ParseFromArray(buffer.data(), buffer.size());
+
+        auto const deserialized{Deserialize(serialized)};
+        if (not deserialized.has_value()) {
+            std::cerr << "GetExtractedTargetData() deserialization failed for timestamp: "  // LCOV_EXCL_LINE
+                      << timestamp_ns << "\n";                                              // LCOV_EXCL_LINE
+            continue;                                                                       // LCOV_EXCL_LINE
+        }
+
+        data.insert(ExtractedTargetData{timestamp_ns, deserialized.value()});
+    }
+
+    sqlite3_finalize(stmt_);
+
+    return data;
+}
 
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database) {
@@ -45,39 +117,15 @@ std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
 bool AddImage(std::string const& sensor_name, ImageData const& data,
               std::shared_ptr<CalibrationDatabase> const database) {
-    std::string const insert_image_sql{InsertImageSql(sensor_name, data.timestamp_ns)};
-    sqlite3_stmt* stmt{nullptr};
-    int code{sqlite3_prepare_v2(database->db, insert_image_sql.c_str(), -1, &stmt, nullptr)};
-    if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "Add image sqlite3_prepare_v2() failed: " << sqlite3_errmsg(database->db)  // LCOV_EXCL_LINE
-                  << "\n";                                                                      // LCOV_EXCL_LINE
-        return false;                                                                           // LCOV_EXCL_LINE
-    }
-
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
-        std::cerr << "Failed to encode image as PNG" << "\n";  // LCOV_EXCL_LINE
-        return false;                                          // LCOV_EXCL_LINE
+        std::cerr << "Image serialization failed at: " << std::to_string(data.timestamp_ns) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                                 // LCOV_EXCL_LINE
     }
 
-    // https://stackoverflow.com/questions/1229102/when-to-use-sqlite-transient-vs-sqlite-static
-    // Note that the position is not zero indexed here! Therefore 1 corresponds to the first (and only) binding.
-    code = sqlite3_bind_blob(stmt, 1, buffer.data(), static_cast<int>(buffer.size()), SQLITE_STATIC);
-    if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "Add image sqlite3_bind_blob() failed: " << sqlite3_errmsg(database->db)  // LCOV_EXCL_LINE
-                  << "\n";                                                                     // LCOV_EXCL_LINE
-        return false;                                                                          // LCOV_EXCL_LINE
-    }
+    std::string const insert_image_sql{InsertImageSql(sensor_name, data.timestamp_ns)};
 
-    code = sqlite3_step(stmt);
-    if (code != static_cast<int>(SqliteFlag::Done)) {
-        std::cerr << "Add image sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                              // LCOV_EXCL_LINE
-    }
-
-    sqlite3_finalize(stmt);
-
-    return true;
+    return Sqlite3Tools::AddBlob(insert_image_sql, buffer.data(), std::size(buffer), database->db);
 }
 
 ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
@@ -99,27 +147,27 @@ std::optional<ImageData> ImageStreamer::Next() {
     if (code == static_cast<int>(SqliteFlag::Done)) {
         return std::nullopt;
     } else if (code != static_cast<int>(SqliteFlag::Row)) {
-        std::cerr << "Error stepping: " << sqlite3_errmsg(database_->db) << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                       // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() sqlite3_step() failed:  "  // LCOV_EXCL_LINE
+                  << sqlite3_errmsg(database_->db) << "\n";            // LCOV_EXCL_LINE
+        return std::nullopt;                                           // LCOV_EXCL_LINE
     }
 
-    // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or other
-    // bad output?
     uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(stmt_, 0)))};
 
     uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt_, 1))};
     int const blob_size{sqlite3_column_bytes(stmt_, 1)};
     if (not blob or blob_size <= 0) {
-        std::cerr << "Empty blob for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() blob empty for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
+        return std::nullopt;                                                                      // LCOV_EXCL_LINE
     }
 
     std::vector<uchar> const buffer(blob, blob + blob_size);
     cv::Mat const image{cv::imdecode(buffer, cv::IMREAD_UNCHANGED)};
     if (image.empty()) {
-        std::cerr << "Failed to decode PNG for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                          // LCOV_EXCL_LINE
-    };
+        std::cerr << "ImageStreamer::Next() deserialization failed for timestamp: "  // LCOV_EXCL_LINE
+                  << timestamp_ns << "\n";                                           // LCOV_EXCL_LINE
+        return std::nullopt;                                                         // LCOV_EXCL_LINE
+    }
 
     return ImageData{timestamp_ns, image};
 }
