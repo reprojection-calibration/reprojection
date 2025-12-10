@@ -21,7 +21,10 @@ struct Sqlite3Tools {
     [[nodiscard]] static bool Execute(std::string const& sql_statement, sqlite3* const db,
                                       CallbackType callback = nullptr, void* data_structure = nullptr);
 
-    // TODO(Jack): Test!
+    // WARN(Jack): Not individually tested!
+    // NOTE(Jack): We use a void* here for blob_ptr because opencv uses uchar but protobuf uses char, and the
+    // sqlite3_bind_blob() function interface itself uses void*. Of course, we could have also templated the method, but
+    // I did not see that we could gain too much from that.
     [[nodiscard]] static bool AddBlob(std::string const& sql_statement, void const* const blob_ptr, int const blob_size,
                                       sqlite3* const db);
 };
