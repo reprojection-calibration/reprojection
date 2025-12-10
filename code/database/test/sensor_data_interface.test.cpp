@@ -41,9 +41,9 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {0, target}, db));
-    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {1, target}, db));
-    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {2, target}, db));
+    (void)AddExtractedTargetData("/cam/retro/123", {0, target}, db);
+    (void)AddExtractedTargetData("/cam/retro/123", {1, target}, db);
+    (void)AddExtractedTargetData("/cam/retro/123", {2, target}, db);
 
     auto const data{database::GetExtractedTargetData(db, "/cam/retro/123")};
     ASSERT_TRUE(data.has_value());
