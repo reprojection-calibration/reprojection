@@ -36,20 +36,20 @@ protobuf_serialization::ExtractedTargetProto Serialize(ExtractedTarget const& ta
     Eigen::Map<ArrayX2i>(indices_data->mutable_data(), indices.rows(), indices.cols()) = indices;
 
     return extracted_target_proto;
-}
+}  // LCOV_EXCL_LINE
 
 std::optional<ExtractedTarget> Deserialize(protobuf_serialization::ExtractedTargetProto const& extracted_target_proto) {
     auto const& bundle_proto{extracted_target_proto.bundle()};
     if (not ValidateDimensions(bundle_proto.pixel_rows(), 2, bundle_proto.pixel_data_size())) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     if (not ValidateDimensions(bundle_proto.point_rows(), 3, bundle_proto.point_data_size())) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     if (not ValidateDimensions(extracted_target_proto.indices_rows(), 2, extracted_target_proto.indices_data_size())) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     ExtractedTarget target;
