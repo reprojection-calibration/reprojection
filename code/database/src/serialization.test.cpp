@@ -18,11 +18,11 @@ TEST(DatabaseSerialization, TestSerialization) {
     auto const deserialized_opt{database::Deserialize(serialized)};
 
     ASSERT_TRUE(deserialized_opt.has_value());
-    ExtractedTarget const deserialized{deserialized_opt.value()};
+    auto const [bundle, indices]{deserialized_opt.value()};
 
-    EXPECT_TRUE(deserialized.bundle.pixels.isApprox(original.bundle.pixels));
-    EXPECT_TRUE(deserialized.bundle.points.isApprox(original.bundle.points));
-    EXPECT_TRUE(deserialized.indices.isApprox(original.indices));
+    EXPECT_TRUE(bundle.pixels.isApprox(original.bundle.pixels));
+    EXPECT_TRUE(bundle.points.isApprox(original.bundle.points));
+    EXPECT_TRUE(indices.isApprox(original.indices));
 }
 
 TEST(DatabaseSerialization, TestSerializationEmpty) {
