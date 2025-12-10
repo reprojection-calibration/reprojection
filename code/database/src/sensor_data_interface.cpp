@@ -51,6 +51,55 @@ namespace reprojection::database {
     return true;
 }
 
+std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
+    std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name) {
+    std::string const select_extracted_target_data_sql{SelectExtractedTargetDataSql(sensor_name)};
+    sqlite3_stmt* stmt_{nullptr};
+    int code{sqlite3_prepare_v2(database->db, select_extracted_target_data_sql.c_str(), -1, &stmt_, nullptr)};
+    if (code != static_cast<int>(SqliteFlag::Ok)) {
+        throw std::runtime_error("Get extracted target sqlite3_prepare_v2() failed: " +  // LCOV_EXCL_LINE
+                                 std::string{sqlite3_errmsg(database->db)});             // LCOV_EXCL_LINE
+    }
+
+    std::set<ExtractedTargetData> data;
+    while (true) {
+        code = sqlite3_step(stmt_);
+        if (code == static_cast<int>(SqliteFlag::Done)) {
+            break;
+        } else if (code != static_cast<int>(SqliteFlag::Row)) {
+            std::cerr << "Error stepping: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+            return std::nullopt;                                                      // LCOV_EXCL_LINE
+        }
+
+        uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(stmt_, 0)))};
+
+        uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt_, 1))};
+        int const blob_size{sqlite3_column_bytes(stmt_, 1)};
+        if (not blob or blob_size <= 0) {
+            // TODO(Jack): This seems to be an aggressive error handling strategy, that if there is problem with any
+            // single blob we kill the entire process. Is there any "better" way to do this or any real reason why this
+            // is as it is bad?
+            std::cerr << "Empty blob for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
+            return std::nullopt;                                                // LCOV_EXCL_LINE
+        }
+
+        std::vector<uchar> const buffer(blob, blob + blob_size);
+        protobuf_serialization::ExtractedTargetProto serialized;
+        serialized.ParseFromArray(buffer.data(), buffer.size());
+
+        auto const deserialized{Deserialize(serialized)};
+        if (not deserialized.has_value()) {
+            // TODO(Jack): Very aggressive error handling like above!
+            std::cerr << "Could not deserialize protobuf for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
+            return std::nullopt;                                                                    // LCOV_EXCL_LINE
+        }
+
+        data.insert(ExtractedTargetData{timestamp_ns, deserialized.value()});
+    }
+
+    return data;
+}
+
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database) {
     std::string const insert_imu_data_sql{
@@ -160,7 +209,7 @@ std::optional<ImageData> ImageStreamer::Next() {
     if (image.empty()) {
         std::cerr << "Failed to decode PNG for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
         return std::nullopt;                                                          // LCOV_EXCL_LINE
-    };
+    }
 
     return ImageData{timestamp_ns, image};
 }

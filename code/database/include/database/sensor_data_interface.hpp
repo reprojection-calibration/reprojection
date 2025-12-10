@@ -31,7 +31,11 @@ struct ImageData {
     cv::Mat image;
 };
 
-bool operator<(ImuData const& x, ImuData const& y) { return x.timestamp_ns < y.timestamp_ns; }
+// TODO(Jack): Add concept requirements
+template <typename T>
+bool operator<(T const& x, T const& y) {
+    return x.timestamp_ns < y.timestamp_ns;
+}
 
 // TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
 // calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to

@@ -21,6 +21,18 @@ inline std::string InsertExtractedTargetSql(std::string const& sensor_name, uint
     return sql;
 }
 
+// NOTE(Jack): Assumes that we can load all target into memory not problem - no need for streaming like we need to do
+// for the images.
+inline std::string SelectExtractedTargetDataSql(std::string const& sensor_name) {
+    std::string const sql{
+        "SELECT timestamp_ns, data "
+        "FROM extracted_targets "
+        "WHERE sensor_name = '" +
+        sensor_name + "' ORDER BY timestamp_ns ASC;"};
+
+    return sql;
+}
+
 // TODO(Jack): Is there any problem we will have storing our time type (uint64t) here as a signed integer type?
 // TODO(Jack): Should index the sensor by an integer id or by a string?
 inline const std::string imu_table_sql{
