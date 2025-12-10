@@ -33,8 +33,10 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
     sqlite3_stmt* stmt_{nullptr};
     int code{sqlite3_prepare_v2(database->db, select_extracted_target_data_sql.c_str(), -1, &stmt_, nullptr)};
     if (code != static_cast<int>(SqliteFlag::Ok)) {
-        throw std::runtime_error("Get extracted target sqlite3_prepare_v2() failed: " +  // LCOV_EXCL_LINE
-                                 std::string{sqlite3_errmsg(database->db)});             // LCOV_EXCL_LINE
+        std::cerr << "GetExtractedTargetData() sqlite3_prepare_v2() failed: "  // LCOV_EXCL_LINE
+                  << sqlite3_errmsg(database->db) << "\n";                     // LCOV_EXCL_LINE
+
+        return std::nullopt;
     }
 
     std::set<ExtractedTargetData> data;
