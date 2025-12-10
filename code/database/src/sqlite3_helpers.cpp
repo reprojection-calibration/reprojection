@@ -19,4 +19,32 @@ namespace reprojection::database {
     return true;
 }
 
+[[nodiscard]] bool Sqlite3Tools::AddBlob(std::string const& sql_statement, void const* const blob_ptr,
+                                         int const blob_size, sqlite3* const db) {
+    sqlite3_stmt* stmt{nullptr};
+    int code{sqlite3_prepare_v2(db, sql_statement.c_str(), -1, &stmt, nullptr)};
+    if (code != static_cast<int>(SqliteFlag::Ok)) {
+        std::cerr << "AddBlob() sqlite3_prepare_v2() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                          // LCOV_EXCL_LINE
+    }
+
+    // Transient vs static - https://stackoverflow.com/questions/1229102/when-to-use-sqlite-transient-vs-sqlite-static
+    // Note that the position is not zero indexed here! Therefore, 1 corresponds to the first (and only) binding.
+    code = sqlite3_bind_blob(stmt, 1, blob_ptr, blob_size, SQLITE_STATIC);
+    if (code != static_cast<int>(SqliteFlag::Ok)) {
+        std::cerr << "AddBlob() sqlite3_bind_blob() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                         // LCOV_EXCL_LINE
+    }
+
+    code = sqlite3_step(stmt);
+    if (code != static_cast<int>(SqliteFlag::Done)) {
+        std::cerr << "AddBlob() sqlite3_step() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                    // LCOV_EXCL_LINE
+    }
+
+    sqlite3_finalize(stmt);
+
+    return true;
+}
+
 }  // namespace reprojection::database

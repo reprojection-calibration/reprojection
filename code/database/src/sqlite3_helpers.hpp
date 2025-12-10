@@ -2,7 +2,6 @@
 
 #include <sqlite3.h>
 
-#include <functional>
 #include <string>
 
 namespace reprojection::database {
@@ -21,6 +20,10 @@ struct Sqlite3Tools {
 
     [[nodiscard]] static bool Execute(std::string const& sql_statement, sqlite3* const db,
                                       CallbackType callback = nullptr, void* data_structure = nullptr);
+
+    // TODO(Jack): Test!
+    [[nodiscard]] static bool AddBlob(std::string const& sql_statement, void const* const blob_ptr, int const blob_size,
+                                      sqlite3* const db);
 };
 
 }  // namespace reprojection::database
