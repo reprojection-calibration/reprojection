@@ -26,15 +26,21 @@ TEST(DatabaseSerialization, TestSerialization) {
 }
 
 TEST(DatabaseSerialization, TestSerializationEmpty) {
-    ExtractedTarget const original{};
-
+    ExtractedTarget const original;
     protobuf_serialization::ExtractedTargetProto const serialized{database::Serialize(original)};
-    auto const deserialized_opt{database::Deserialize(serialized)};
+
+    EXPECT_TRUE(serialized.has_bundle());
+    EXPECT_EQ(serialized.bundle().pixel_data_size(), 0);
+    EXPECT_EQ(serialized.bundle().point_data_size(), 0);
+    EXPECT_EQ(serialized.indices_data_size(), 0);
+}
+
+TEST(DatabaseSerialization, TestDeserializationEmpty) {
+    protobuf_serialization::ExtractedTargetProto const original;
+    auto const deserialized_opt{database::Deserialize(original)};
 
     ASSERT_TRUE(deserialized_opt.has_value());
-    auto const [bundle, indices]{deserialized_opt.value()};
-
-    EXPECT_EQ(bundle.pixels.size(), 0);
-    EXPECT_EQ(bundle.points.size(), 0);
-    EXPECT_EQ(indices.size(), 0);
+    EXPECT_EQ(deserialized_opt->bundle.pixels.size(), 0);
+    EXPECT_EQ(deserialized_opt->bundle.points.size(), 0);
+    EXPECT_EQ(deserialized_opt->indices.size(), 0);
 }
