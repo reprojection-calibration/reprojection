@@ -131,6 +131,7 @@ std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase 
             return std::nullopt;                                                                  // LCOV_EXCL_LINE
         }
 
+        // TODO(Jack): Should we be doing any error checking here while reading the columns?
         uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(statement.stmt, 0))};  // Warn cast!
         double const omega_x{sqlite3_column_double(statement.stmt, 1)};
         double const omega_y{sqlite3_column_double(statement.stmt, 2)};
