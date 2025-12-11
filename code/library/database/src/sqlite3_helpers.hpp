@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 
 namespace reprojection::database {
@@ -35,6 +36,15 @@ struct Sqlite3Tools {
     [[nodiscard]] static bool AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
                                       std::string const& sensor_name, void const* const blob_ptr, int const blob_size,
                                       sqlite3* const db);
+};
+
+class SqlStatement {
+   public:
+    SqlStatement(sqlite3* db, const char* sql);
+
+    ~SqlStatement();
+
+    sqlite3_stmt* stmt_{nullptr};
 };
 
 }  // namespace reprojection::database

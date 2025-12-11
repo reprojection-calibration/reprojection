@@ -10,6 +10,7 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
+#include "sqlite3_helpers.hpp"
 #include "types/calibration_types.hpp"
 
 namespace reprojection::database {
@@ -71,13 +72,11 @@ class ImageStreamer {
     ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
                   uint64_t const start_time = 0);
 
-    ~ImageStreamer();
-
     std::optional<ImageData> Next();
 
    private:
     std::shared_ptr<CalibrationDatabase const> database_;
-    sqlite3_stmt* stmt_{nullptr};
+    SqlStatement statement_;
 };
 
 }  // namespace reprojection::database
