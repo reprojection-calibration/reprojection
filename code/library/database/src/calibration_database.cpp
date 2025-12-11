@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <string>
 
+// cppcheck-suppress missingInclude
 #include "generated/sql_statements.hpp"
 #include "sqlite3_helpers.hpp"
 

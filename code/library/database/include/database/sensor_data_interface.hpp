@@ -10,7 +10,6 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
-#include "sqlite3_helpers.hpp"
 #include "types/calibration_types.hpp"
 
 namespace reprojection::database {
@@ -37,6 +36,14 @@ template <typename T>
 bool operator<(T const& x, T const& y) {
     return x.timestamp_ns < y.timestamp_ns;
 }
+
+struct SqlStatement {
+    SqlStatement(sqlite3* const db, char const* const sql);
+
+    ~SqlStatement();
+
+    sqlite3_stmt* stmt{nullptr};
+};
 
 // TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
 // calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to

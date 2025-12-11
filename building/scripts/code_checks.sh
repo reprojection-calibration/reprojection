@@ -4,22 +4,22 @@ set -eoux pipefail
 
 find /temporary/building -iname '*.sh' -print0 | xargs --null shellcheck
 
-find /temporary/code \( -iname '*.cpp' -o -iname '*.hpp' -o -iname '*.c' -o -iname '*.h' \) -print0 | xargs --null clang-format --dry-run --Werror
+find /temporary/code/library \( -iname '*.cpp' -o -iname '*.hpp' -o -iname '*.c' -o -iname '*.h' \) -print0 | xargs --null clang-format --dry-run --Werror
 
-cppcheck /temporary/code --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
-  -I /temporary/code/calibration/src \
-  -I /temporary/code/database/include \
-  -I /temporary/code/demos/include \
-  -I /temporary/code/eigen_utilities/include \
-  -I /temporary/code/feature_extraction/include \
-  -I /temporary/code/feature_extraction/src \
-  -I /temporary/code/geometry/include \
-  -I /temporary/code/optimization/include \
-  -I /temporary/code/optimization/src \
-  -I /temporary/code/pnp/include \
-  -I /temporary/code/pnp/src \
-  -I /temporary/code/projection_functions/include \
-  -I /temporary/code/spline/include \
-  -I /temporary/code/spline/src \
-  -I /temporary/code/testing_mocks/include \
-  -I /temporary/code/types/include
+cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
+  -I /temporary/code/library/calibration/src \
+  -I /temporary/code/library/database/include \
+  -I /temporary/code/library/demos/include \
+  -I /temporary/code/library/eigen_utilities/include \
+  -I /temporary/code/library/feature_extraction/include \
+  -I /temporary/code/library/feature_extraction/src \
+  -I /temporary/code/library/geometry/include \
+  -I /temporary/code/library/optimization/include \
+  -I /temporary/code/library/optimization/src \
+  -I /temporary/code/library/pnp/include \
+  -I /temporary/code/library/pnp/src \
+  -I /temporary/code/library/projection_functions/include \
+  -I /temporary/code/library/spline/include \
+  -I /temporary/code/library/spline/src \
+  -I /temporary/code/library/testing_mocks/include \
+  -I /temporary/code/library/types/include

@@ -5,11 +5,20 @@
 #include <filesystem>
 #include <string>
 
+// cppcheck-suppress missingInclude
 #include "generated/sql_statements.hpp"
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 
 namespace reprojection::database {
+
+SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        throw std::runtime_error(sqlite3_errmsg(db));
+    }
+}
+
+SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 
 [[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
@@ -161,7 +170,7 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
                              uint64_t const start_time)
     : database_{database}, statement_{database_->db, sql_statements::images_select} {
     try {
-        Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name.c_str());
+        Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name);
         Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));  // Warn cast!
     } catch (std::runtime_error const& e) {
         std::cerr << "ImageStreamer() runtime error during binding: " << e.what()               // LCOV_EXCL_LINE

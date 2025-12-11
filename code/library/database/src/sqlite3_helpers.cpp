@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+// TODO(Jack): Is this not kind of a circular include?
+#include "database/sensor_data_interface.hpp"
+
 namespace reprojection::database {
 
 [[nodiscard]] bool Sqlite3Tools::Execute(std::string const& sql_statement, sqlite3* const db) {
@@ -40,13 +43,5 @@ namespace reprojection::database {
 
     return true;
 }
-
-SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
-        throw std::runtime_error(sqlite3_errmsg(db));
-    }
-}
-
-SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); };
 
 }  // namespace reprojection::database
