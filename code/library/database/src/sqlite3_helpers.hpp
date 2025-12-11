@@ -39,7 +39,7 @@ struct Sqlite3Tools {
 };
 
 struct SqlStatement {
-    SqlStatement(sqlite3* db, const char* sql);
+    SqlStatement(sqlite3* const db, char const* const sql);
 
     ~SqlStatement();
 

@@ -53,7 +53,7 @@ namespace reprojection::database {
     return true;
 }
 
-SqlStatement::SqlStatement(sqlite3* db, const char* sql) {
+SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error(sqlite3_errmsg(db));
     }
