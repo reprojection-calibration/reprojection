@@ -24,28 +24,11 @@ namespace reprojection::database {
                                          int const blob_size, sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
-    // Transient vs static - https://stackoverflow.com/questions/1229102/when-to-use-sqlite-transient-vs-sqlite-static
-    // Note that the position is not zero indexed here! Therefore, 1 corresponds to the first (and only) binding.
-    int code{sqlite3_bind_int64(statement.stmt, 1, timestamp_ns)};
-    if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "AddBlob() sqlite3_bind_int64() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                          // LCOV_EXCL_LINE
-    }
+    Bind(statement.stmt, 1, timestamp_ns);
+    Bind(statement.stmt, 2, sensor_name.c_str());
+    BindBlob(statement.stmt, 3, blob_ptr, blob_size);
 
-    code = sqlite3_bind_text(statement.stmt, 2, sensor_name.c_str(), -1, SQLITE_STATIC);
-    if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "AddBlob() sqlite3_bind_text() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                         // LCOV_EXCL_LINE
-    }
-
-    code = sqlite3_bind_blob(statement.stmt, 3, blob_ptr, blob_size, SQLITE_STATIC);
-    if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "AddBlob() sqlite3_bind_blob() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                         // LCOV_EXCL_LINE
-    }
-
-    code = sqlite3_step(statement.stmt);
-    if (code != static_cast<int>(SqliteFlag::Done)) {
+    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
         std::cerr << "AddBlob() sqlite3_step() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
         return false;                                                                    // LCOV_EXCL_LINE
     }

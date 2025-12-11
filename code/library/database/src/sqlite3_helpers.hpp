@@ -36,6 +36,25 @@ struct Sqlite3Tools {
     [[nodiscard]] static bool AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
                                       std::string const& sensor_name, void const* const blob_ptr, int const blob_size,
                                       sqlite3* const db);
+
+    static void Bind(sqlite3_stmt* const stmt, int const index, std::string const& value) {
+        // TODO replace SQLITE_TRANSIENT with flag
+        if (sqlite3_bind_text(stmt, index, value.c_str(), -1, SQLITE_TRANSIENT) != static_cast<int>(SqliteFlag::Ok)) {
+            throw std::runtime_error("sqlite3_bind_text() failed");
+        }
+    }
+
+    static void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value) {
+        if (sqlite3_bind_int64(stmt, index, value) != static_cast<int>(SqliteFlag::Ok)) {
+            throw std::runtime_error("sqlite3_bind_int64() failed");
+        }
+    }
+
+    static void BindBlob(sqlite3_stmt* const stmt, int const index, void const* const blob_ptr, int const blob_size) {
+        if (sqlite3_bind_blob(stmt, index, blob_ptr, blob_size, SQLITE_STATIC) != static_cast<int>(SqliteFlag::Ok)) {
+            throw std::runtime_error("sqlite3_bind_blob() failed");
+        }
+    }
 };
 
 struct SqlStatement {
