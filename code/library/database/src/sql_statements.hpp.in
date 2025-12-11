@@ -1,0 +1,7 @@
+#pragma once
+
+namespace reprojection::sql_statements {
+
+@SQL_STRING_ENTRIES@
+
+}

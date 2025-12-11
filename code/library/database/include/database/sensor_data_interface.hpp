@@ -37,6 +37,14 @@ bool operator<(T const& x, T const& y) {
     return x.timestamp_ns < y.timestamp_ns;
 }
 
+struct SqlStatement {
+    SqlStatement(sqlite3* const db, char const* const sql);
+
+    ~SqlStatement();
+
+    sqlite3_stmt* stmt{nullptr};
+};
+
 // TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
 // calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to
 // each data here, because it can be that a user would want to use multiple targets and identify the extracted features
@@ -71,13 +79,11 @@ class ImageStreamer {
     ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
                   uint64_t const start_time = 0);
 
-    ~ImageStreamer();
-
     std::optional<ImageData> Next();
 
    private:
     std::shared_ptr<CalibrationDatabase const> database_;
-    sqlite3_stmt* stmt_{nullptr};
+    SqlStatement statement_;
 };
 
 }  // namespace reprojection::database
