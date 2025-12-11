@@ -4,10 +4,9 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool Sqlite3Tools::Execute(std::string const& sql_statement, sqlite3* const db, CallbackType callback,
-                                         void* data_structure) {
+[[nodiscard]] bool Sqlite3Tools::Execute(std::string const& sql_statement, sqlite3* const db) {
     char* errror_msg{nullptr};
-    int const code{sqlite3_exec(db, sql_statement.c_str(), callback, data_structure, &errror_msg)};
+    int const code{sqlite3_exec(db, sql_statement.c_str(), nullptr, nullptr, &errror_msg)};
 
     if (code != static_cast<int>(SqliteFlag::Ok)) {
         std::cerr << "SQL error: " << errror_msg << std::endl;
@@ -25,7 +24,7 @@ namespace reprojection::database {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     try {
-        Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns)); // Possible dangerous cast!
+        Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
         Bind(statement.stmt, 2, sensor_name.c_str());
         BindBlob(statement.stmt, 3, blob_ptr, blob_size);
     } catch (std::runtime_error const& e) {

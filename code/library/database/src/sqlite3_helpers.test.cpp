@@ -54,32 +54,3 @@ TEST_F(TempFolderDummySql, TestExecute) {
 
     sqlite3_close(db);
 }
-
-TEST_F(TempFolderDummySql, TestExecuteCallback) {
-    std::string const record{database_path_ + "/record_sss.db3"};
-
-    sqlite3* db;
-    sqlite3_open(record.c_str(), &db);
-
-    // Create the table and fill it with some values but ignore return codes, they are tested above
-    (void)database::Sqlite3Tools::Execute(data_table_sql_, db);
-    (void)database::Sqlite3Tools::Execute(add_data_sql_, db);
-
-    std::string const select_all_data_sql{"SELECT value FROM example_data;"};
-    auto callback = [](void* data, int, char** argv, char**) -> int {
-        auto* vec = static_cast<std::vector<double>*>(data);
-        vec->push_back(std::stod(argv[0]));  // Hardcoded because only one value per row
-
-        return 0;
-    };
-    std::vector<double> values;
-
-    bool const data_selected{database::Sqlite3Tools::Execute(select_all_data_sql, db, callback, &values)};
-    EXPECT_TRUE(data_selected);
-    EXPECT_EQ(std::size(values), 3);
-    EXPECT_FLOAT_EQ(values[0], 0);
-    EXPECT_FLOAT_EQ(values[1], 1.1);
-    EXPECT_FLOAT_EQ(values[2], 2.2);
-
-    sqlite3_close(db);
-}

@@ -20,8 +20,7 @@ enum class SqliteFlag {
 struct Sqlite3Tools {
     using CallbackType = int (*)(void*, int, char**, char**);
 
-    [[nodiscard]] static bool Execute(std::string const& sql_statement, sqlite3* const db,
-                                      CallbackType callback = nullptr, void* data_structure = nullptr);
+    [[nodiscard]] static bool Execute(std::string const& sql_statement, sqlite3* const db);
 
     // TODO(Jack): Test!
     // TODO(Jack): My original intention was a AddBlob function where the blob itself was the only parameter, and the
