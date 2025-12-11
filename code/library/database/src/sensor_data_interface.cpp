@@ -83,10 +83,29 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
 
 [[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
                               std::shared_ptr<CalibrationDatabase> const database) {
-    std::string const insert_imu_data_sql{
-        InsertImuDataSql(data.timestamp_ns, sensor_name, data.angular_velocity, data.linear_acceleration)};
+    SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
-    return Sqlite3Tools::Execute(insert_imu_data_sql, database->db);
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
+        Sqlite3Tools::Bind(statement.stmt, 2, sensor_name.c_str());
+        Sqlite3Tools::Bind(statement.stmt, 3, data.angular_velocity[0]);
+        Sqlite3Tools::Bind(statement.stmt, 4, data.angular_velocity[1]);
+        Sqlite3Tools::Bind(statement.stmt, 5, data.angular_velocity[2]);
+        Sqlite3Tools::Bind(statement.stmt, 6, data.linear_acceleration[0]);
+        Sqlite3Tools::Bind(statement.stmt, 7, data.linear_acceleration[1]);
+        Sqlite3Tools::Bind(statement.stmt, 8, data.linear_acceleration[2]);
+    } catch (std::runtime_error const& e) {
+        std::cerr << "AddImuData() runtime error during binding: " << e.what()                  // LCOV_EXCL_LINE
+                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+        return false;
+    }
+
+    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
+        std::cerr << "AddImuData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
+        return false;
+    }
+
+    return true;
 }
 
 std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,

@@ -25,7 +25,7 @@ namespace reprojection::database {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     try {
-        Bind(statement.stmt, 1, timestamp_ns);
+        Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns)); // Possible dangerous cast!
         Bind(statement.stmt, 2, sensor_name.c_str());
         BindBlob(statement.stmt, 3, blob_ptr, blob_size);
     } catch (std::runtime_error const& e) {

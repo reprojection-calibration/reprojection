@@ -13,6 +13,7 @@ set(SQL_FILES
         sql/extracted_targets_table.sql
         sql/image_insert.sql
         sql/images_table.sql
+        sql/imu_data_insert.sql
         sql/imu_data_table.sql
 )
 

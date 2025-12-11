@@ -44,9 +44,16 @@ struct Sqlite3Tools {
         }
     }
 
+    // WARN(Jack): We store out timestamps in uint64_t but sqlite only takes signed int64. How should we fix this?
     static void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value) {
         if (sqlite3_bind_int64(stmt, index, value) != static_cast<int>(SqliteFlag::Ok)) {
             throw std::runtime_error("sqlite3_bind_int64() failed");
+        }
+    }
+
+    static void Bind(sqlite3_stmt* const stmt, int const index, double const value) {
+        if (sqlite3_bind_double(stmt, index, value) != static_cast<int>(SqliteFlag::Ok)) {
+            throw std::runtime_error("sqlite3_bind_double() failed");
         }
     }
 
