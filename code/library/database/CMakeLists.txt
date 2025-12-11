@@ -14,6 +14,7 @@ set(SQL_FILES
         sql/image_insert.sql
         sql/images_table.sql
         sql/imu_data_insert.sql
+        sql/imu_data_select.sql
         sql/imu_data_table.sql
 )
 

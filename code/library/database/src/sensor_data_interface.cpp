@@ -110,23 +110,36 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
 
 std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                             std::string const& sensor_name) {
-    std::string const select_imu_sensor_data_sql{SelectImuSensorDataSql(sensor_name)};
-    // This callback will be executed on every row returned by the select_imu_sensor_data_sql query.
-    auto callback = [](void* data, int, char** argv, char**) -> int {
-        auto* const set = static_cast<std::set<ImuData>*>(data);
-        set->insert(ImuData{std::stoull(argv[0]),
-                            {std::stod(argv[1]), std::stod(argv[2]), std::stod(argv[3])},
-                            {std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6])}});
-        return 0;
-    };
+    SqlStatement const statement{database->db, sql_statements::imu_data_select};
+
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, sensor_name.c_str());
+    } catch (std::runtime_error const& e) {
+        std::cerr << "GetImuData() runtime error during binding: " << e.what()                  // LCOV_EXCL_LINE
+                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+        return std::nullopt;
+    }
 
     std::set<ImuData> data;
-    bool const success{Sqlite3Tools::Execute(select_imu_sensor_data_sql, database->db, callback, &data)};
-    if (not success) {
-        // NOTE(Jack): I do not know under what conditions we will ever hit this failure condition, and cannot engineer
-        // a test to cover this branch, so we have to supress the code coverage requirement. This is a sign maybe we are
-        // missing the point with our design of Execute.
-        return std::nullopt;  // LCOV_EXCL_LINE
+    while (true) {
+        int const code{sqlite3_step(statement.stmt)};
+        if (code == static_cast<int>(SqliteFlag::Done)) {
+            break;
+        } else if (code != static_cast<int>(SqliteFlag::Row)) {
+            std::cerr << "GetImuData() sqlite3_step() failed:  " << sqlite3_errmsg(database->db)  // LCOV_EXCL_LINE
+                      << "\n";                                                                    // LCOV_EXCL_LINE
+            return std::nullopt;                                                                  // LCOV_EXCL_LINE
+        }
+
+        uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(statement.stmt, 0))};  // Warn cast!
+        double const omega_x{sqlite3_column_double(statement.stmt, 1)};
+        double const omega_y{sqlite3_column_double(statement.stmt, 2)};
+        double const omega_z{sqlite3_column_double(statement.stmt, 3)};
+        double const ax{sqlite3_column_double(statement.stmt, 4)};
+        double const ay{sqlite3_column_double(statement.stmt, 5)};
+        double const az{sqlite3_column_double(statement.stmt, 6)};
+
+        data.insert(ImuData{timestamp_ns, {omega_x, omega_y, omega_z}, {ax, ay, az}});
     }
 
     return data;
