@@ -11,7 +11,6 @@
 
 namespace reprojection::database {
 
-// TODO(Jack): There is really a lot of copy and paste between here and the image version!
 [[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
@@ -69,9 +68,9 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
 
         auto const deserialized{Deserialize(serialized)};
         if (not deserialized.has_value()) {
-            std::cerr << "GetExtractedTargetData() deserialization failed for timestamp: "  // LCOV_EXCL_LINE
-                      << timestamp_ns << "\n";                                              // LCOV_EXCL_LINE
-            continue;                                                                       // LCOV_EXCL_LINE
+            std::cerr << "GetExtractedTargetData() protobuf deserialization failed for timestamp: "  // LCOV_EXCL_LINE
+                      << timestamp_ns << "\n";                                                       // LCOV_EXCL_LINE
+            continue;                                                                                // LCOV_EXCL_LINE
         }
 
         data.insert(ExtractedTargetData{timestamp_ns, deserialized.value()});
