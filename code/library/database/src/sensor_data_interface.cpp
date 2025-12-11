@@ -7,7 +7,6 @@
 
 #include "generated/sql_statements.hpp"
 #include "serialization.hpp"
-#include "sql.hpp"
 #include "sqlite3_helpers.hpp"
 
 namespace reprojection::database {
