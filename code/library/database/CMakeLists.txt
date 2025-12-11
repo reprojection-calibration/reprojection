@@ -10,6 +10,7 @@ find_package(SQLite3 REQUIRED)
 set(SQL_FILES
         sql/extracted_target_insert.sql
         sql/extracted_targets_table.sql
+        sql/image_insert.sql
         sql/images_table.sql
         sql/imu_data_table.sql
 )

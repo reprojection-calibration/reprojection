@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <string>
 
+#include "generated/sql_statements.hpp"
 #include "serialization.hpp"
 #include "sql.hpp"
 #include "sqlite3_helpers.hpp"
@@ -22,9 +23,8 @@ namespace reprojection::database {
         return false;                                                                                  // LCOV_EXCL_LINE
     }
 
-    std::string const insert_extracted_target_sql{InsertExtractedTargetSql(sensor_name, data.timestamp_ns)};
-
-    return Sqlite3Tools::AddBlob(insert_extracted_target_sql, buffer.c_str(), std::size(buffer), database->db);
+    return Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, data.timestamp_ns, sensor_name,
+                                 buffer.c_str(), std::size(buffer), database->db);
 }
 
 // NOTE(Jack): The logic here is very similar to the ImageStreamer class, but there are enough differences that we
@@ -123,9 +123,8 @@ bool AddImage(std::string const& sensor_name, ImageData const& data,
         return false;                                                                                 // LCOV_EXCL_LINE
     }
 
-    std::string const insert_image_sql{InsertImageSql(sensor_name, data.timestamp_ns)};
-
-    return Sqlite3Tools::AddBlob(insert_image_sql, buffer.data(), std::size(buffer), database->db);
+    return Sqlite3Tools::AddBlob(sql_statements::image_insert, data.timestamp_ns, sensor_name, buffer.data(),
+                                 std::size(buffer), database->db);
 }
 
 ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
