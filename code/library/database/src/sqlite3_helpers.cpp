@@ -26,25 +26,25 @@ namespace reprojection::database {
 
     // Transient vs static - https://stackoverflow.com/questions/1229102/when-to-use-sqlite-transient-vs-sqlite-static
     // Note that the position is not zero indexed here! Therefore, 1 corresponds to the first (and only) binding.
-    int code{sqlite3_bind_int64(statement.stmt_, 1, timestamp_ns)};
+    int code{sqlite3_bind_int64(statement.stmt, 1, timestamp_ns)};
     if (code != static_cast<int>(SqliteFlag::Ok)) {
         std::cerr << "AddBlob() sqlite3_bind_int64() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
         return false;                                                                          // LCOV_EXCL_LINE
     }
 
-    code = sqlite3_bind_text(statement.stmt_, 2, sensor_name.c_str(), -1, SQLITE_STATIC);
+    code = sqlite3_bind_text(statement.stmt, 2, sensor_name.c_str(), -1, SQLITE_STATIC);
     if (code != static_cast<int>(SqliteFlag::Ok)) {
         std::cerr << "AddBlob() sqlite3_bind_text() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
         return false;                                                                         // LCOV_EXCL_LINE
     }
 
-    code = sqlite3_bind_blob(statement.stmt_, 3, blob_ptr, blob_size, SQLITE_STATIC);
+    code = sqlite3_bind_blob(statement.stmt, 3, blob_ptr, blob_size, SQLITE_STATIC);
     if (code != static_cast<int>(SqliteFlag::Ok)) {
         std::cerr << "AddBlob() sqlite3_bind_blob() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
         return false;                                                                         // LCOV_EXCL_LINE
     }
 
-    code = sqlite3_step(statement.stmt_);
+    code = sqlite3_step(statement.stmt);
     if (code != static_cast<int>(SqliteFlag::Done)) {
         std::cerr << "AddBlob() sqlite3_step() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
         return false;                                                                    // LCOV_EXCL_LINE
@@ -54,11 +54,11 @@ namespace reprojection::database {
 }
 
 SqlStatement::SqlStatement(sqlite3* db, const char* sql) {
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt_, nullptr) != SQLITE_OK) {
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
         throw std::runtime_error(sqlite3_errmsg(db));
     }
 }
 
-SqlStatement::~SqlStatement() { sqlite3_finalize(stmt_); };
+SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); };
 
 }  // namespace reprojection::database

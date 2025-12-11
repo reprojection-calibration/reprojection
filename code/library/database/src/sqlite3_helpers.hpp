@@ -38,13 +38,12 @@ struct Sqlite3Tools {
                                       sqlite3* const db);
 };
 
-class SqlStatement {
-   public:
+struct SqlStatement {
     SqlStatement(sqlite3* db, const char* sql);
 
     ~SqlStatement();
 
-    sqlite3_stmt* stmt_{nullptr};
+    sqlite3_stmt* stmt{nullptr};
 };
 
 }  // namespace reprojection::database
