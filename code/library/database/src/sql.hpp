@@ -5,18 +5,6 @@
 
 namespace reprojection::database {
 
-// NOTE(Jack): Assumes that we can load all target into memory not problem - no need for streaming like we need to do
-// for the images.
-inline std::string SelectExtractedTargetDataSql(std::string const& sensor_name) {
-    std::string const sql{
-        "SELECT timestamp_ns, data "
-        "FROM extracted_targets "
-        "WHERE sensor_name = '" +
-        sensor_name + "' ORDER BY timestamp_ns ASC;"};
-
-    return sql;
-}
-
 inline std::string InsertImuDataSql(std::uint64_t const timestamp_ns, std::string const& sensor_name,
                                     double const angular_velocity[3], double const linear_acceleration[3]) {
     std::string const sql{

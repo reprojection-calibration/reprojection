@@ -9,6 +9,7 @@ find_package(SQLite3 REQUIRED)
 # not be reflected in the generated header file.
 set(SQL_FILES
         sql/extracted_target_insert.sql
+        sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
         sql/image_insert.sql
         sql/images_table.sql
