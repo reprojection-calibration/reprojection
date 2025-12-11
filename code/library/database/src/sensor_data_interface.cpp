@@ -161,7 +161,16 @@ bool AddImage(std::string const& sensor_name, ImageData const& data,
 
 ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
                              uint64_t const start_time)
-    : database_{database}, statement_{database_->db, ImageStreamerSql(sensor_name, start_time).c_str()} {}
+    : database_{database}, statement_{database_->db, sql_statements::images_select} {
+    try {
+        Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name.c_str());
+        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));  // Warn cast!
+    } catch (std::runtime_error const& e) {
+        std::cerr << "ImageStreamer() runtime error during binding: " << e.what()               // LCOV_EXCL_LINE
+                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+        throw;
+    }
+}
 
 std::optional<ImageData> ImageStreamer::Next() {
     int const code{sqlite3_step(statement_.stmt)};

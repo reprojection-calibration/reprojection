@@ -12,6 +12,7 @@ set(SQL_FILES
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
         sql/image_insert.sql
+        sql/images_select.sql
         sql/images_table.sql
         sql/imu_data_insert.sql
         sql/imu_data_select.sql
