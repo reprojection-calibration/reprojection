@@ -24,9 +24,15 @@ namespace reprojection::database {
                                          int const blob_size, sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
-    Bind(statement.stmt, 1, timestamp_ns);
-    Bind(statement.stmt, 2, sensor_name.c_str());
-    BindBlob(statement.stmt, 3, blob_ptr, blob_size);
+    try {
+        Bind(statement.stmt, 1, timestamp_ns);
+        Bind(statement.stmt, 2, sensor_name.c_str());
+        BindBlob(statement.stmt, 3, blob_ptr, blob_size);
+    } catch (std::runtime_error const& e) {
+        std::cerr << "AddBlob() runtime error during binding: " << e.what()           // LCOV_EXCL_LINE
+                  << " with database error message: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
+        return false;
+    }
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
         std::cerr << "AddBlob() sqlite3_step() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
