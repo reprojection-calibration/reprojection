@@ -14,7 +14,7 @@ namespace reprojection::database {
 
 SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
-        throw std::runtime_error(sqlite3_errmsg(db));
+        throw std::runtime_error(sqlite3_errmsg(db));  // LCOV_EXCL_LINE
     }
 }
 
@@ -42,11 +42,11 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, sensor_name.c_str());
-    } catch (std::runtime_error const& e) {
+    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
         std::cerr << "GetExtractedTargetData() runtime error during binding: " << e.what()      // LCOV_EXCL_LINE
                   << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;
-    }
+        return std::nullopt;                                                                    // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     std::set<ExtractedTargetData> data;
     while (true) {
@@ -101,11 +101,11 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
         Sqlite3Tools::Bind(statement.stmt, 6, data.linear_acceleration[0]);
         Sqlite3Tools::Bind(statement.stmt, 7, data.linear_acceleration[1]);
         Sqlite3Tools::Bind(statement.stmt, 8, data.linear_acceleration[2]);
-    } catch (std::runtime_error const& e) {
+    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
         std::cerr << "AddImuData() runtime error during binding: " << e.what()                  // LCOV_EXCL_LINE
                   << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return false;
-    }
+        return false;                                                                           // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
         std::cerr << "AddImuData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
@@ -121,11 +121,11 @@ std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase 
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, sensor_name.c_str());
-    } catch (std::runtime_error const& e) {
+    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
         std::cerr << "GetImuData() runtime error during binding: " << e.what()                  // LCOV_EXCL_LINE
                   << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;
-    }
+        return std::nullopt;                                                                    // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     std::set<ImuData> data;
     while (true) {
@@ -171,12 +171,12 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
     : database_{database}, statement_{database_->db, sql_statements::images_select} {
     try {
         Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name);
-        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));  // Warn cast!
-    } catch (std::runtime_error const& e) {
+        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));               // Warn cast!
+    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
         std::cerr << "ImageStreamer() runtime error during binding: " << e.what()               // LCOV_EXCL_LINE
                   << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        throw;
-    }
+        throw;                                                                                  // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 }
 
 std::optional<ImageData> ImageStreamer::Next() {

@@ -30,11 +30,11 @@ namespace reprojection::database {
         Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
         Bind(statement.stmt, 2, sensor_name.c_str());
         BindBlob(statement.stmt, 3, blob_ptr, blob_size);
-    } catch (std::runtime_error const& e) {
+    } catch (std::runtime_error const& e) {                                           // LCOV_EXCL_LINE
         std::cerr << "AddBlob() runtime error during binding: " << e.what()           // LCOV_EXCL_LINE
                   << " with database error message: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE
-        return false;
-    }
+        return false;                                                                 // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
         std::cerr << "AddBlob() sqlite3_step() failed: " << sqlite3_errmsg(db) << "\n";  // LCOV_EXCL_LINE

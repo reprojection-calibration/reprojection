@@ -23,7 +23,7 @@ done
 
 
 # TODO(Jack): Make release build by default! Note that release builds cannot be built with code coverage enabled!
-cmake -B "${build_directory}" -DCMAKE_BUILD_TYPE="${cmake_build_type}"  -G Ninja -S /temporary/code
+cmake -B "${build_directory}" -DCMAKE_BUILD_TYPE="${cmake_build_type}"  -G Ninja -S /temporary/code/library
 cmake --build "${build_directory}"
 
 ctest --output-on-failure --progress --test-dir "${build_directory}"
