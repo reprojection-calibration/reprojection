@@ -5,8 +5,13 @@ find_package(OpenCV REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(SQLite3 REQUIRED)
 
+# WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
+# not be reflected in the generated header file.
 set(SQL_FILES
-        sql/insert_extracted_target.sql
+        sql/extracted_target_insert.sql
+        sql/extracted_targets_table.sql
+        sql/images_table.sql
+        sql/imu_data_table.sql
 )
 
 foreach (sql ${SQL_FILES})
@@ -18,7 +23,7 @@ foreach (sql ${SQL_FILES})
 endforeach ()
 
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql_statement.hpp.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql_statements.hpp.in
         ${CMAKE_CURRENT_BINARY_DIR}/generated/sql_statements.hpp
         @ONLY
 
