@@ -39,5 +39,6 @@ set(TESTS
         src/sqlite3_helpers.test.cpp
         test/calibration_database.test.cpp
         test/sensor_data_interface.test.cpp
+        test/write_database.test.cpp
 )
 AddTests()
