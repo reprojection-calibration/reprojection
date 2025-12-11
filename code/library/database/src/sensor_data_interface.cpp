@@ -33,16 +33,17 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
     std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name) {
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
-    int code{sqlite3_bind_text(statement.stmt, 1, sensor_name.c_str(), -1, SQLITE_STATIC)};
-    if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "GetExtractedTargetData() sqlite3_bind_text() failed: "  // LCOV_EXCL_LINE
-                  << sqlite3_errmsg(database->db) << "\n";                    // LCOV_EXCL_LINE
-        return std::nullopt;                                                  // LCOV_EXCL_LINE
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, sensor_name.c_str());
+    } catch (std::runtime_error const& e) {
+        std::cerr << "GetExtractedTargetData() runtime error during binding: " << e.what()      // LCOV_EXCL_LINE
+                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+        return std::nullopt;
     }
 
     std::set<ExtractedTargetData> data;
     while (true) {
-        code = sqlite3_step(statement.stmt);
+        int const code{sqlite3_step(statement.stmt)};
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
@@ -53,8 +54,7 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
 
         // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or
         // other bad output? Also happens like this in the image streamer.
-        uint64_t const timestamp_ns{
-            std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(statement.stmt, 0)))};
+        uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(statement.stmt, 0)))};
 
         uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(statement.stmt, 1))};
         int const blob_size{sqlite3_column_bytes(statement.stmt, 1)};
@@ -145,8 +145,9 @@ std::optional<ImageData> ImageStreamer::Next() {
     uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(statement_.stmt, 1))};
     int const blob_size{sqlite3_column_bytes(statement_.stmt, 1)};
     if (not blob or blob_size <= 0) {
-        std::cerr << "ImageStreamer::Next() blob empty for timestamp: " << timestamp_ns << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                                      // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() error reading blob for timestamp: " << timestamp_ns  // LCOV_EXCL_LINE
+                  << "\n";                                                                       // LCOV_EXCL_LINE
+        return std::nullopt;                                                                     // LCOV_EXCL_LINE
     }
 
     std::vector<uchar> const buffer(blob, blob + blob_size);
