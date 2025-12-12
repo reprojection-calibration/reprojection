@@ -30,14 +30,16 @@ Isometry3d Dlt22(Bundle const& bundle) {
     // ERROR(Jack): Always assumes we aligned with the Z dimension as the plane! CUTS OFF THE Z DIMENSION NO MATTER
     // WHAT!!!
     MatrixX2d const chopped_points{bundle.points(Eigen::all, {0, 1})};
+    auto const [normalized_points, tf_points]{NormalizeColumnWise(chopped_points)};
 
     // WARN(Jack): If we had exactly four correspondences, this means that A would be 8x9. For the svd that follows is
     // that ok? Do we need to zero pad anything or simply check that we have at least five points? Or is it no problem
     // at all?
-    auto const A{ConstructA<3>(bundle.pixels, chopped_points)};
-    auto H{SolveForH<3>(A)};
+    auto const A{ConstructA<3>(bundle.pixels, normalized_points)};
+    Matrix3d const H{SolveForH<3>(A)};
+    Matrix3d const H_star{H * tf_points};  //  Denormalize
 
-    auto const [R, t]{DecomposeHIntoRt(H)};
+    auto const [R, t]{DecomposeHIntoRt(H_star)};
 
     return ToIsometry3d(R, t);
 }
