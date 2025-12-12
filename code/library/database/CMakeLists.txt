@@ -17,6 +17,8 @@ set(SQL_FILES
         sql/imu_data_insert.sql
         sql/imu_data_select.sql
         sql/imu_data_table.sql
+        sql/initial_camera_poses_insert.sql
+        sql/initial_camera_poses_table.sql
 )
 
 foreach (sql ${SQL_FILES})

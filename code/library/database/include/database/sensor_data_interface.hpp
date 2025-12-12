@@ -51,6 +51,14 @@ struct SqlStatement {
     sqlite3_stmt* stmt{nullptr};
 };
 
+// TODO(Jack): The pose topic here is not well fleshed out in the sql idea so far! You cannot pass the table name
+// dynamically which means, given our current code generation in the cmakelists, that just need to make a set of pose
+// statements for every pose table we want to have. Considering that the only difference between them all will be the
+// name of the table, this is a bad case of code duplication! We need to find a way to solve this by parameterizing the
+// table name somehow, possibly just at run time.
+[[nodiscard]] bool AddInitialCameraPoseData(std::string const& sensor_name, PoseData const& data,
+                                            std::shared_ptr<CalibrationDatabase> const database);
+
 // TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
 // calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to
 // each data here, because it can be that a user would want to use multiple targets and identify the extracted features

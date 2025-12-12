@@ -22,6 +22,21 @@ class TempFolder : public ::testing::Test {
     std::string database_path_{"sandbox"};
 };
 
+TEST_F(TempFolder, TestAddInitialCameraPoseData) {
+    std::string const record_path{database_path_ + "/record_ddd.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    Vector6d const pose{0, 1, 2, 3, 4, 5};
+
+    // Fails foreign key constraint because there is no corresponding extracted target entry yet
+    EXPECT_FALSE(database::AddInitialCameraPoseData("/cam/retro/123", {0, pose}, db));
+
+    // Now we add a extracted target with matching sensor name and timestamp (i.e. the foreign key constraint) and now
+    // we can add the intial camera pose no problem :)
+    (void)AddExtractedTargetData("/cam/retro/123", {0, ExtractedTarget{}}, db);
+    EXPECT_TRUE(database::AddInitialCameraPoseData("/cam/retro/123", {0, pose}, db));
+}
+
 TEST_F(TempFolder, TestAddExtractedTargetData) {
     std::string const record_path{database_path_ + "/record_qqq.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};

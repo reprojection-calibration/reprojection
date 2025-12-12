@@ -12,7 +12,7 @@ using namespace reprojection;
 
 TEST(CalibrationLinearPoseInitialization, TestXxxx) {
     std::string const record_path{"/data/cvg.cit.tum.de_visual-inertial-dataset/dataset-calib-imu4_512_16.db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, true)};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
     auto const cam0_data{database::GetExtractedTargetData(db, "/cam0/image_raw")};
     ASSERT_TRUE(cam0_data.has_value());

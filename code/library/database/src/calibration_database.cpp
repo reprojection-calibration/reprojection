@@ -41,6 +41,7 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::extracted_targets_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::images_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::imu_data_table, db));
+    static_cast<void>(Sqlite3Tools::Execute(sql_statements::initial_camera_poses_table, db));
 
     // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For example a row
     // in initial_camera_poses can only possibly exist if there is a corresponding entry in extracted_targets. Which

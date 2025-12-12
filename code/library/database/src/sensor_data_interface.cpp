@@ -20,6 +20,33 @@ SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
 
 SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 
+[[nodiscard]] bool AddInitialCameraPoseData(std::string const& sensor_name, PoseData const& data,
+                                            std::shared_ptr<CalibrationDatabase> const database) {
+    SqlStatement const statement{database->db, sql_statements::initial_camera_poses_insert};
+
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
+        Sqlite3Tools::Bind(statement.stmt, 2, sensor_name.c_str());
+        Sqlite3Tools::Bind(statement.stmt, 3, data.pose[0]);
+        Sqlite3Tools::Bind(statement.stmt, 4, data.pose[1]);
+        Sqlite3Tools::Bind(statement.stmt, 5, data.pose[2]);
+        Sqlite3Tools::Bind(statement.stmt, 6, data.pose[3]);
+        Sqlite3Tools::Bind(statement.stmt, 7, data.pose[4]);
+        Sqlite3Tools::Bind(statement.stmt, 8, data.pose[5]);
+    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
+        std::cerr << "AddInitialCameraPoseData() runtime error during binding: " << e.what()    // LCOV_EXCL_LINE
+                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                           // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
+
+    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
+        std::cerr << "AddInitialCameraPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
+        return false;
+    }
+
+    return true;
+}
+
 [[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
