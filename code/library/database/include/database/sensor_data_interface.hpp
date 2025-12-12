@@ -14,7 +14,7 @@
 
 namespace reprojection::database {
 
-// TODO(Jack): Can we thinkg of a better process here than simply appending "Data" to indicate that it has the time?
+// TODO(Jack): Can we think of a better process here than simply appending "Data" to indicate that it has the time?
 struct ExtractedTargetData {
     uint64_t timestamp_ns;
     ExtractedTarget target;
@@ -29,6 +29,12 @@ struct ImuData {
 struct ImageData {
     uint64_t timestamp_ns;
     cv::Mat image;
+};
+
+// TODO(Jack): Do better than just appending data to indicate it has a timestamp!
+struct PoseData {
+    uint64_t timestamp_ns;
+    Vector6d pose;
 };
 
 // TODO(Jack): Add concept requirements

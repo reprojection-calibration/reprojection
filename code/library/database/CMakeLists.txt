@@ -34,7 +34,6 @@ configure_file(
 
 )
 
-
 # Protobuf logic adopted from https://stackoverflow.com/questions/20824194/cmake-with-google-protocol-buffers
 # TODO(Jack): Should we compile database_proto as static like in the example linked above?
 # TODO(Jack): Is there anyway to have the generated code go to the "generated/" folder? It would add some consistency
@@ -51,7 +50,7 @@ set(SRC_FILES
         src/sqlite3_helpers.cpp
 )
 set(INCLUDE_DIRECTORIES
-        ${CMAKE_BINARY_DIR}/database
+        ${CMAKE_BINARY_DIR}/database # Generated sql header files and protobuf headers are found here
         ${OpenCV_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
