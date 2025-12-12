@@ -35,7 +35,21 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(result));
 
         Isometry3d const pose_i{std::get<Isometry3d>(result)};
-        Vector6d const se3_i{geometry::Log(pose_i)};
+        Vector6d se3_i{geometry::Log(pose_i)};
+
+        // TODO(Jack): There has to be a better way to do this? Maybe just hardcode se3_n_1
+        if (std::size(cam0_pnp_poses) <= 1) {
+            cam0_pnp_poses.insert(database::PoseData{timestamp_ns, se3_i});
+            continue;
+        }
+
+        database::PoseData const pose_n_1{*std::prev(cam0_pnp_poses.end())};
+        if (se3_i.topRows<3>().dot(pose_n_1.pose.topRows<3>()) < 0) {
+            se3_i.topRows<3>() *= -1;
+        }
+
         cam0_pnp_poses.insert(database::PoseData{timestamp_ns, se3_i});
     }
+
+    ASSERT_TRUE(AddInitialCameraPoseData("/cam0/image_raw", cam0_pnp_poses, db));
 }
