@@ -47,6 +47,23 @@ SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
     return true;
 }
 
+[[nodiscard]] bool AddInitialCameraPoseData(std::string const& sensor_name, std::set<PoseData> const& data,
+                                            std::shared_ptr<CalibrationDatabase> const database) {
+    if (not Sqlite3Tools::Execute("BEGIN TRANSACTION", database->db)) {
+        return false;
+    }
+    for (auto const& data_i : data) {
+        if (not AddInitialCameraPoseData(sensor_name, data_i, database)) {
+            return false;
+        }
+    }
+    if (not Sqlite3Tools::Execute("END TRANSACTION", database->db)) {
+        return false;
+    }
+
+    return true;
+}
+
 [[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
