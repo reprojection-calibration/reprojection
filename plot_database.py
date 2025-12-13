@@ -5,8 +5,8 @@ from collections import defaultdict, deque
 from scipy.spatial.transform import Rotation as R
 
 DB_PATH = "/home/stable-genius-gram/data/cvg.cit.tum.de_visual-inertial-dataset/dataset-calib-imu4_512_16.db3"
-MAX_POSES = 50
-AXIS_LENGTH = 0.5  # Length of camera axes in world units
+MAX_POSES = 900
+AXIS_LENGTH = 0.25  # Length of camera axes in world units
 
 # -------------------------------------------------------
 # Load poses from SQLite
@@ -24,7 +24,7 @@ def load_poses(db_path):
     return rows
 
 # -------------------------------------------------------
-# Plot poses incrementally with orientations
+# Plot poses incrementally with orientations and annotations
 # -------------------------------------------------------
 def plot_poses(rows):
     pose_buffers = defaultdict(lambda: deque(maxlen=MAX_POSES))
@@ -40,9 +40,9 @@ def plot_poses(rows):
     ax = fig.add_subplot(111, projection="3d")
     plt.ion()
 
-    for row in rows:
+    for idx, row in enumerate(rows):
         timestamp, sensor, rx, ry, rz, x, y, z = row
-        pose_buffers[sensor].append((np.array([x, y, z]), np.array([rx, ry, rz])))
+        pose_buffers[sensor].append((np.array([x, y, z]), np.array([rx, ry, rz]), idx))
 
         ax.cla()
 
@@ -53,7 +53,7 @@ def plot_poses(rows):
         ax.set_box_aspect([1, 1, 1])
         ax.set_autoscale_on(False)
 
-        # Draw trajectories and orientations
+        # Draw trajectories, orientations, and annotations
         for sensor_name, poses in pose_buffers.items():
             if not poses:
                 continue
@@ -63,11 +63,9 @@ def plot_poses(rows):
             ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], marker='o', linestyle='-', label=sensor_name)
 
             # Orientation axes for most recent pose
-            pos, rvec = poses[-1]
+            pos, rvec, pid = poses[-1]
             rot = R.from_rotvec(rvec)
             R_mat = rot.as_matrix()
-
-            # Camera axes in world coordinates
             axes = R_mat * AXIS_LENGTH
             origin = pos[:, np.newaxis]
 
@@ -75,25 +73,31 @@ def plot_poses(rows):
             ax.plot([origin[0,0], origin[0,0] + axes[0,0]],
                     [origin[1,0], origin[1,0] + axes[1,0]],
                     [origin[2,0], origin[2,0] + axes[2,0]], color='r')
-
             # Y axis (green)
             ax.plot([origin[0,0], origin[0,0] + axes[0,1]],
                     [origin[1,0], origin[1,0] + axes[1,1]],
                     [origin[2,0], origin[2,0] + axes[2,1]], color='g')
-
             # Z axis (blue)
             ax.plot([origin[0,0], origin[0,0] + axes[0,2]],
                     [origin[1,0], origin[1,0] + axes[1,2]],
                     [origin[2,0], origin[2,0] + axes[2,2]], color='b')
 
-        ax.set_title("Initial Camera Poses with Orientation")
+            # Annotate with timestamp and integer ID
+            ax.text(pos[0], pos[1], pos[2],
+                    f"ID:{pid}",
+                    color='k',
+                    fontsize=8,
+                    horizontalalignment='left',
+                    verticalalignment='bottom')
+
+        ax.set_title("Initial Camera Poses with Orientation and IDs")
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")
         ax.legend(loc="upper right")
 
         plt.draw()
-        plt.pause(0.005)
+        plt.pause(0.01)
 
     plt.ioff()
     plt.show()
