@@ -1,119 +1,100 @@
 import sqlite3
 import numpy as np
-import matplotlib.pyplot as plt
-from collections import defaultdict, deque
+import open3d as o3d
 from scipy.spatial.transform import Rotation as R
 
 DB_PATH = "/home/stable-genius-gram/data/cvg.cit.tum.de_visual-inertial-dataset/dataset-calib-imu4_512_16.db3"
-MAX_POSES = 900
-AXIS_LENGTH = 0.25  # Length of camera axes in world units
+AXIS_LENGTH = 0.25
 
-# -------------------------------------------------------
-# Load poses from SQLite
-# -------------------------------------------------------
 def load_poses(db_path):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    cur.execute("""
-                SELECT timestamp_ns, sensor_name, rx, ry, rz, x, y, z
-                FROM initial_camera_poses
-                ORDER BY timestamp_ns ASC
-                """)
+    cur.execute("SELECT timestamp_ns, sensor_name, rx, ry, rz, x, y, z FROM initial_camera_poses ORDER BY timestamp_ns ASC")
     rows = cur.fetchall()
     conn.close()
     return rows
 
-# -------------------------------------------------------
-# Fast incremental plotting with lines and orientation axes
-# -------------------------------------------------------
-def plot_poses(rows):
-    pose_buffers = defaultdict(lambda: deque(maxlen=MAX_POSES))
+def run_open3d_viz(rows):
+    vis = o3d.visualization.Visualizer()
+    vis.create_window(window_name="Open3D Pose Visualizer", width=1280, height=720)
+
     sensors = list(sorted(set(r[1] for r in rows)))
+    traj_geoms = {}
+    coord_frames = {}
+    # We need to store the PREVIOUS transformation matrix for each sensor
+    # Initialize all previous transformations to the Identity matrix (4x4)
+    previous_transforms = {s: np.eye(4) for s in sensors}
+    trajectories = {s: [] for s in sensors}
 
-    # Precompute static plot bounds
-    positions = np.array([[r[5], r[6], r[7]] for r in rows])
-    min_xyz = positions.min(axis=0)
-    max_xyz = positions.max(axis=0)
-    center = 0.5 * (min_xyz + max_xyz)
-    radius = 0.5 * np.max(max_xyz - min_xyz) * 1.2
+    # Setup geometries
+    for s in sensors:
+        # 1. Path LineSet
+        ls = o3d.geometry.LineSet()
+        traj_geoms[s] = ls
+        vis.add_geometry(ls)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
-    plt.ion()
+        # 2. Coordinate Frame (Camera Axis)
+        cf = o3d.geometry.TriangleMesh.create_coordinate_frame(size=AXIS_LENGTH)
+        coord_frames[s] = cf
+        vis.add_geometry(cf)
 
-    # Pre-create trajectory lines, orientation axes, and text annotations
-    traj_lines = {}
-    axes_lines = {}
-    text_annotations = {}
-    colors = plt.cm.tab10.colors  # Up to 10 distinct colors
-    for i, sensor in enumerate(sensors):
-        traj_lines[sensor], = ax.plot([], [], [], '-', color=colors[i % 10], label=sensor)
-        axes_lines[sensor] = [
-            ax.plot([], [], [], 'r')[0],  # X axis
-            ax.plot([], [], [], 'g')[0],  # Y axis
-            ax.plot([], [], [], 'b')[0],  # Z axis
-        ]
-        text_annotations[sensor] = ax.text(0, 0, 0, '', color='k', fontsize=8)
+    # Reference World Grid
+    world_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.5)
+    vis.add_geometry(world_frame)
 
-    # Static axes limits
-    ax.set_xlim(center[0] - radius, center[0] + radius)
-    ax.set_ylim(center[1] - radius, center[1] + radius)
-    ax.set_zlim(center[2] - radius, center[2] + radius)
-    ax.set_box_aspect([1, 1, 1])
-    ax.set_autoscale_on(False)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-    ax.set_title("Initial Camera Poses (IDs Only)")
-    ax.legend(loc="upper right")
-
-    # Iterate through poses
     for idx, row in enumerate(rows):
-        timestamp, sensor, rx, ry, rz, x, y, z = row
-        pose_buffers[sensor].append((np.array([x, y, z]), np.array([rx, ry, rz]), idx))
+        _, sensor, rx, ry, rz, x, y, z = row
+        pos = np.array([x, y, z])
+        rvec = np.array([rx, ry, rz])
 
-        # Update trajectory line
-        traj = np.array([p[0] for p in pose_buffers[sensor]])
-        traj_lines[sensor].set_data(traj[:,0], traj[:,1])
-        traj_lines[sensor].set_3d_properties(traj[:,2])
+        # --- Update Trajectory ---
+        # (This part is identical and works correctly)
+        trajectories[sensor].append(pos)
+        points = np.array(trajectories[sensor])
 
-        # Update orientation axes for latest pose
-        pos, rvec, pid = pose_buffers[sensor][-1]
-        rot = R.from_rotvec(rvec)
-        R_mat = rot.as_matrix()
-        axes = R_mat * AXIS_LENGTH
+        if len(points) > 1:
+            lines = np.vstack([np.arange(len(points)-1), np.arange(1, len(points))]).T
+            traj_geoms[sensor].points = o3d.utility.Vector3dVector(points)
+            traj_geoms[sensor].lines = o3d.utility.Vector2iVector(lines)
 
-        # X axis (red)
-        axes_lines[sensor][0].set_data([pos[0], pos[0]+axes[0,0]],
-                                       [pos[1], pos[1]+axes[1,0]])
-        axes_lines[sensor][0].set_3d_properties([pos[2], pos[2]+axes[2,0]])
-        # Y axis (green)
-        axes_lines[sensor][1].set_data([pos[0], pos[0]+axes[0,1]],
-                                       [pos[1], pos[1]+axes[1,1]])
-        axes_lines[sensor][1].set_3d_properties([pos[2], pos[2]+axes[2,1]])
-        # Z axis (blue)
-        axes_lines[sensor][2].set_data([pos[0], pos[0]+axes[0,2]],
-                                       [pos[1], pos[1]+axes[1,2]])
-        axes_lines[sensor][2].set_3d_properties([pos[2], pos[2]+axes[2,2]])
+            color = [0, 0.4, 0.8] if sensor == sensors[0] else [1, 0.5, 0]
+            traj_geoms[sensor].paint_uniform_color(color)
+            vis.update_geometry(traj_geoms[sensor])
 
-        # Update ID annotation
-        text_annotations[sensor].set_position((pos[0], pos[1]))
-        text_annotations[sensor].set_3d_properties(pos[2])
-        text_annotations[sensor].set_text(f"ID:{pid}")
+        # --- Update Camera Pose (Absolute Positioning) ---
 
-        plt.draw()
-        plt.pause(0.01)
+        # 1. Calculate the NEW 4x4 Transformation Matrix
+        rot_mat = R.from_rotvec(rvec).as_matrix()
+        new_transform_4x4 = np.eye(4)
+        new_transform_4x4[:3, :3] = rot_mat
+        new_transform_4x4[:3, 3] = pos
 
-    plt.ioff()
-    plt.show()
+        # 2. Calculate the "undo" matrix: Inverse of the previous transformation
+        undo_transform = np.linalg.inv(previous_transforms[sensor])
 
+        # 3. Calculate the matrix that jumps from T_old to T_new: T_jump = T_new @ T_old_inverse
+        # This is the relative transformation needed to jump to the new absolute pose.
+        # This is equivalent to T_jump = T_new @ T_old_inverse
+        absolute_jump = new_transform_4x4 @ undo_transform
 
-# -------------------------------------------------------
-# Entry point
-# -------------------------------------------------------
+        # 4. Apply the ABSOLUTE JUMP using the reliable transform() method
+        coord_frames[sensor].transform(absolute_jump)
+
+        # 5. Store the NEW transformation for the next frame's "undo" calculation
+        previous_transforms[sensor] = new_transform_4x4
+
+        vis.update_geometry(coord_frames[sensor])
+
+        # --- Render ---
+        if not vis.poll_events():
+            break
+        vis.update_renderer()
+
+    print("Sequence finished. Manual inspection mode enabled.")
+    vis.run()
+    vis.destroy_window()
+
 if __name__ == "__main__":
     rows = load_poses(DB_PATH)
-    if not rows:
-        print("No poses found.")
-    else:
-        plot_poses(rows)
+    if rows:
+        run_open3d_viz(rows)
