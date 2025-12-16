@@ -14,25 +14,25 @@
 namespace reprojection::database {
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
-bool AddImage(std::string const& sensor_name, ImageStamped const& data,
-              std::shared_ptr<CalibrationDatabase> const database) {
-    if (not AddFrame({data.timestamp_ns, sensor_name}, database)) {
+bool AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
+    if (not AddFrame(data.header, database)) {
         return false;
     }
 
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
-        std::cerr << "Image serialization failed at: " << std::to_string(data.timestamp_ns) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                                 // LCOV_EXCL_LINE
+        std::cerr << "Image serialization failed at: " << std::to_string(data.header.timestamp_ns)
+                  << "\n";  // LCOV_EXCL_LINE
+        return false;       // LCOV_EXCL_LINE
     }
 
-    return Sqlite3Tools::AddBlob(sql_statements::image_insert, data.timestamp_ns, sensor_name, buffer.data(),
-                                 std::size(buffer), database->db);
+    return Sqlite3Tools::AddBlob(sql_statements::image_insert, data.header.timestamp_ns, data.header.sensor_name,
+                                 buffer.data(), std::size(buffer), database->db);
 }
 
 ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
                              uint64_t const start_time)
-    : database_{database}, statement_{database_->db, sql_statements::images_select} {
+    : database_{database}, statement_{database_->db, sql_statements::images_select}, sensor_name_{sensor_name} {
     try {
         Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name);
         Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));               // Warn cast!
@@ -71,7 +71,7 @@ std::optional<ImageStamped> ImageStreamer::Next() {
         return std::nullopt;                                                         // LCOV_EXCL_LINE
     }
 
-    return ImageStamped{timestamp_ns, image};
+    return ImageStamped{{timestamp_ns, sensor_name_}, image};
 }
 
 };  // namespace reprojection::database

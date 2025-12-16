@@ -26,7 +26,7 @@ TEST_F(TempFolder, TestAddImage) {
     cv::Mat const image(480, 720, CV_8UC1);
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
+    EXPECT_TRUE(database::AddImage({{0, "/cam/retro/123"}, image}, db));
 }
 
 TEST_F(TempFolder, TestImageStreamer) {
@@ -34,14 +34,15 @@ TEST_F(TempFolder, TestImageStreamer) {
     cv::Mat const image(480, 720, CV_8UC1);
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {2, image}, db));
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {4, image}, db));
+    EXPECT_TRUE(database::AddImage({{0, "/cam/retro/123"}, image}, db));
+    EXPECT_TRUE(database::AddImage({{2, "/cam/retro/123"}, image}, db));
+    EXPECT_TRUE(database::AddImage({{4, "/cam/retro/123"}, image}, db));
 
     database::ImageStreamer streamer{db, "/cam/retro/123"};
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().timestamp_ns, 0);
+    EXPECT_EQ(frame_0.value().header.timestamp_ns, 0);
+    EXPECT_EQ(frame_0.value().header.sensor_name, "/cam/retro/123");
     EXPECT_EQ(frame_0.value().image.rows, 480);
     EXPECT_EQ(frame_0.value().image.cols, 720);
 
@@ -57,15 +58,15 @@ TEST_F(TempFolder, TestImageStreamerStartTime) {
     cv::Mat const image(480, 720, CV_8UC1);
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {2, image}, db));
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {4, image}, db));
+    EXPECT_TRUE(database::AddImage({{0, "/cam/retro/123"}, image}, db));
+    EXPECT_TRUE(database::AddImage({{2, "/cam/retro/123"}, image}, db));
+    EXPECT_TRUE(database::AddImage({{4, "/cam/retro/123"}, image}, db));
 
     database::ImageStreamer streamer{db, "/cam/retro/123", 1};
 
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().timestamp_ns, 2);  // First frame starts at 2ns now
+    EXPECT_EQ(frame_0.value().header.timestamp_ns, 2);  // First frame starts at 2ns now
 
     EXPECT_TRUE(streamer.Next().has_value());
     EXPECT_FALSE(streamer.Next().has_value());

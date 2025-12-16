@@ -27,7 +27,7 @@ struct ImuStamped {
 };
 
 struct ImageStamped {
-    uint64_t timestamp_ns;
+    FrameHeader header;
     cv::Mat image;
 };
 

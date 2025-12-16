@@ -19,8 +19,7 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddImage(std::string const& sensor_name, ImageStamped const& data,
-                            std::shared_ptr<CalibrationDatabase> const database);
+[[nodiscard]] bool AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
 
 class ImageStreamer {
    public:
@@ -32,6 +31,7 @@ class ImageStreamer {
    private:
     std::shared_ptr<CalibrationDatabase const> database_;
     SqlStatement statement_;
+    std::string sensor_name_;
 };
 
 }  // namespace reprojection::database
