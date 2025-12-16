@@ -16,8 +16,10 @@ set(LINK_LIBRARIES
         eigen_utilities
         geometry
         ${OpenCV_LIBS}
+        optimization
         pnp
         projection_functions
+        spline
         types
 )
 AddLibrary()

@@ -4,6 +4,7 @@
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
+#include "optimization/nonlinear_refinement.hpp"
 #include "pnp/pnp.hpp"
 #include "projection_functions/camera_model.hpp"
 
@@ -18,10 +19,10 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
     auto const cam0_data{database::GetExtractedTargetData(db, "/cam1/image_raw")};
     ASSERT_TRUE(cam0_data.has_value());
 
+    Array6d const cam0_ds_intrinsics{156.82590211, 156.79756958, 254.99978685, 256.9744566, -0.17931409, 0.59133716};
+
     std::set<database::PoseData> cam0_pnp_poses;
     for (auto const& [timestamp_ns, extracted_target] : cam0_data.value()) {
-        Array6d const cam0_ds_intrinsics{156.82590211, 156.79756958, 254.99978685,
-                                         256.9744566,  -0.17931409,  0.59133716};
         auto const cam0_ds{projection_functions::DoubleSphereCamera(cam0_ds_intrinsics)};
         MatrixX3d const rays{cam0_ds.Unproject(extracted_target.bundle.pixels)};
 
@@ -61,4 +62,39 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
     }
 
     ASSERT_TRUE(AddCameraPoseData("/cam1/image_raw", cam0_pnp_poses, sql_statements::initial_camera_poses_insert, db));
+
+    std::vector<Frame> frames;
+    {
+        auto it1 = cam0_data.value().cbegin();
+        auto it2 = cam0_pnp_poses.cbegin();
+        while (it1 != cam0_data.value().cend() and it2 != cam0_pnp_poses.cend()) {
+            database::ExtractedTargetData i1 = *it1;
+            database::PoseData i2 = *it2;
+
+            frames.push_back(Frame{i1.target.bundle, geometry::Exp(i2.pose)});
+
+            it1++;
+            it2++;
+        }
+    }
+
+    auto const [poses_opt, K, final_cost]{
+        optimization::CameraNonlinearRefinement(frames, CameraModel::DoubleSphere, cam0_ds_intrinsics)};
+
+    std::set<database::PoseData> cam0_nl_poses;
+    {
+        auto it1 = cam0_data.value().cbegin();
+        auto it2 = poses_opt.cbegin();
+        while (it1 != cam0_data.value().cend() and it2 != poses_opt.cend()) {
+            database::ExtractedTargetData i1 = *it1;
+            Isometry3d i2 = *it2;
+
+            cam0_nl_poses.insert({i1.timestamp_ns, geometry::Log(i2)});
+
+            it1++;
+            it2++;
+        }
+    }
+
+    ASSERT_TRUE(AddCameraPoseData("/cam1/image_raw", cam0_nl_poses, sql_statements::optimized_camera_poses_insert, db));
 }
