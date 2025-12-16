@@ -7,19 +7,10 @@ set(SRC_FILES
         src/parabola_line_initialization.cpp
         src/vanishing_point_initialization.cpp
 )
-set(INCLUDE_DIRECTORIES
-        ${OpenCV_INCLUDE_DIRS}
-)
 set(LINK_LIBRARIES
-        database
         Eigen3::Eigen
         eigen_utilities
-        geometry
-        ${OpenCV_LIBS}
-        optimization
-        pnp
         projection_functions
-        spline
         types
 )
 AddLibrary()
