@@ -20,12 +20,13 @@ def toggle_pause(vis):
     return False
 
 
-def load_poses(db_path):
+def load_poses(db_path, pose_type):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(
-        "SELECT timestamp_ns, sensor_name, rx, ry, rz, x, y, z "
-        "FROM initial_camera_poses ORDER BY timestamp_ns ASC"
+        "SELECT timestamp_ns, sensor_name, type, rx, ry, rz, x, y, z "
+        "FROM camera_poses WHERE type = ? ORDER BY timestamp_ns ASC",
+        (pose_type,)
     )
     rows = cur.fetchall()
     conn.close()
@@ -119,7 +120,7 @@ def run_open3d_viz(pose_rows, target_data):
     row_idx = 0
     while True:
         if not paused and row_idx < len(pose_rows):
-            ts, sensor, rx, ry, rz, x, y, z = pose_rows[row_idx]
+            ts, sensor, type, rx, ry, rz, x, y, z = pose_rows[row_idx]
             row_idx += 1
 
             pos = np.array([x, y, z])
@@ -170,7 +171,7 @@ def run_open3d_viz(pose_rows, target_data):
 
 
 if __name__ == "__main__":
-    poses = load_poses(DB_PATH)
+    poses = load_poses(DB_PATH, 'initial')
     targets = load_extracted_targets(DB_PATH)
 
     if poses:

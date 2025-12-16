@@ -37,6 +37,18 @@ struct PoseData {
     Vector6d pose;
 };
 
+enum class PoseType { Initial, Optimized };
+
+inline std::string ToString(PoseType const t) {
+    switch (t) {
+        case PoseType::Initial:
+            return "initial";
+        case PoseType::Optimized:
+            return "optimized";
+    }
+    throw std::logic_error("Invalid PoseType");
+}
+
 // TODO(Jack): Add concept requirements
 template <typename T>
 bool operator<(T const& x, T const& y) {
@@ -56,13 +68,11 @@ struct SqlStatement {
 // statements for every pose table we want to have. Considering that the only difference between them all will be the
 // name of the table, this is a bad case of code duplication! We need to find a way to solve this by parameterizing the
 // table name somehow, possibly just at run time.
-[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseData const& data,
-                                     std::string const& sql_statement,
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseData const& data, PoseType const type,
                                      std::shared_ptr<CalibrationDatabase> const database);
 
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseData> const& data,
-                                     std::string const& sql_statement,
-                                     std::shared_ptr<CalibrationDatabase> const database);
+                                     PoseType const type, std::shared_ptr<CalibrationDatabase> const database);
 
 // TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
 // calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to

@@ -20,22 +20,20 @@ SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
 
 SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 
-// TODO(Jack): Make a generic pose handling utility that can be used regardless of which type of pose we are dealing
-// with.
-[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseData const& data,
-                                     std::string const& sql_statement,
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseData const& data, PoseType const type,
                                      std::shared_ptr<CalibrationDatabase> const database) {
-    SqlStatement const statement{database->db, sql_statement.c_str()};
+    SqlStatement const statement{database->db, sql_statements::camera_poses_insert};
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
         Sqlite3Tools::Bind(statement.stmt, 2, sensor_name.c_str());
-        Sqlite3Tools::Bind(statement.stmt, 3, data.pose[0]);
-        Sqlite3Tools::Bind(statement.stmt, 4, data.pose[1]);
-        Sqlite3Tools::Bind(statement.stmt, 5, data.pose[2]);
-        Sqlite3Tools::Bind(statement.stmt, 6, data.pose[3]);
-        Sqlite3Tools::Bind(statement.stmt, 7, data.pose[4]);
-        Sqlite3Tools::Bind(statement.stmt, 8, data.pose[5]);
+        Sqlite3Tools::Bind(statement.stmt, 3, ToString(type));
+        Sqlite3Tools::Bind(statement.stmt, 4, data.pose[0]);
+        Sqlite3Tools::Bind(statement.stmt, 5, data.pose[1]);
+        Sqlite3Tools::Bind(statement.stmt, 6, data.pose[2]);
+        Sqlite3Tools::Bind(statement.stmt, 7, data.pose[3]);
+        Sqlite3Tools::Bind(statement.stmt, 8, data.pose[4]);
+        Sqlite3Tools::Bind(statement.stmt, 9, data.pose[5]);
     } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
         std::cerr << "AddInitialCameraPoseData() runtime error during binding: " << e.what()    // LCOV_EXCL_LINE
                   << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
@@ -51,13 +49,12 @@ SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 }
 
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseData> const& data,
-                                     std::string const& sql_statement,
-                                     std::shared_ptr<CalibrationDatabase> const database) {
+                                     PoseType const type, std::shared_ptr<CalibrationDatabase> const database) {
     if (not Sqlite3Tools::Execute("BEGIN TRANSACTION", database->db)) {
         return false;
     }
     for (auto const& data_i : data) {
-        if (not AddCameraPoseData(sensor_name, data_i, sql_statement, database)) {
+        if (not AddCameraPoseData(sensor_name, data_i, type, database)) {
             return false;
         }
     }
