@@ -12,6 +12,14 @@
 #include "database/calibration_database.hpp"
 #include "database/database_data_types.hpp"
 
+// TODO(Jack): Add note in docs that we are hardcoding one target only by not adding target_id
+// TODO(Jack): Add not in docs that we cannot cover all error conditions in unit test so we suppress the errors
+// NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
+// we will run into problems here with memory. Therefore, we create this streamer class which loads the images one by
+// one from the database. We include the start_time parameter so that applications can skip loading images prior to that
+// timestamp (i.e. if the images before start_time were already processed).
+// WARN(Jack): We need to codify how we deal with const with the database. At this point I think there is no clear
+// strategy or we might think we have protection where we do not really.
 
 namespace reprojection::database {
 
@@ -23,25 +31,15 @@ struct SqlStatement {
     sqlite3_stmt* stmt{nullptr};
 };
 
-// TODO(Jack): The pose topic here is not well fleshed out in the sql idea so far! You cannot pass the table name
-// dynamically which means, given our current code generation in the cmakelists, that just need to make a set of pose
-// statements for every pose table we want to have. Considering that the only difference between them all will be the
-// name of the table, this is a bad case of code duplication! We need to find a way to solve this by parameterizing the
-// table name somehow, possibly just at run time.
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseStamped const& data, PoseType const type,
                                      std::shared_ptr<CalibrationDatabase> const database);
 
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseStamped> const& data,
                                      PoseType const type, std::shared_ptr<CalibrationDatabase> const database);
 
-// TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
-// calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to
-// each data here, because it can be that a user would want to use multiple targets and identify the extracted features
-// uniquely based on the timestamp, which sensor they belong to, and from which target they come from.
 [[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database);
 
-// WARN(Jack): Assumes only one single target
 std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
     std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name);
 
@@ -49,20 +47,11 @@ std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
                               std::shared_ptr<CalibrationDatabase> const database);
 
 std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
-                                            std::string const& sensor_name);
+                                               std::string const& sensor_name);
 
-// TODO(Jack): Code protections that only grayscale images are stored here? Or is this not the right place?
-// NOTE(Jack): There are so many different error conditions that we definsively program against, but that we cannot
-// reasonably test against, so we have to use LCOV_EXCL_LINE a lot in the database image handling :(
 [[nodiscard]] bool AddImage(std::string const& sensor_name, ImageStamped const& data,
                             std::shared_ptr<CalibrationDatabase> const database);
 
-// NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
-// we will run into problems here with memory. Therefore, we create this streamer class which loads the images one by
-// one from the database. We include the start_time parameter so that applications can skip loading images prior to that
-// timestamp (i.e. if the images before start_time were already processed).
-// WARN(Jack): We need to codify how we deal with const with the database. At this point I think there is no clear
-// strategy or we might think we have protection where we do not really.
 class ImageStreamer {
    public:
     ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
