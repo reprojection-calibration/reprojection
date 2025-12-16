@@ -7,6 +7,7 @@ namespace reprojection::optimization {
 
 // TODO(Jack): Should we have some assertions which force that the frames satisfy some basic properties like there is a
 // matching number of everything?
+// TODO(Jack): Refactor to accept se3 pose directly?
 std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(std::vector<Frame> const& frames,
                                                                                CameraModel const& camera_type,
                                                                                ArrayXd const& intrinsics) {

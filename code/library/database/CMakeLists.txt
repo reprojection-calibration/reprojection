@@ -11,12 +11,16 @@ set(SQL_FILES
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
+        sql/frame_insert.sql
+        sql/frames_table.sql
         sql/image_insert.sql
         sql/images_select.sql
         sql/images_table.sql
         sql/imu_data_insert.sql
         sql/imu_data_select.sql
         sql/imu_data_table.sql
+        sql/camera_poses_insert.sql
+        sql/camera_poses_table.sql
 )
 
 foreach (sql ${SQL_FILES})
@@ -28,12 +32,11 @@ foreach (sql ${SQL_FILES})
 endforeach ()
 
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql_statements.hpp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql_statements.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql.hpp.in
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql.hpp
         @ONLY
 
 )
-
 
 # Protobuf logic adopted from https://stackoverflow.com/questions/20824194/cmake-with-google-protocol-buffers
 # TODO(Jack): Should we compile database_proto as static like in the example linked above?
@@ -46,12 +49,14 @@ add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 
 set(SRC_FILES
         src/calibration_database.cpp
+        src/image_interface.cpp
         src/sensor_data_interface.cpp
         src/serialization.cpp
         src/sqlite3_helpers.cpp
+        src/sqlite_wrappers.cpp
 )
 set(INCLUDE_DIRECTORIES
-        ${CMAKE_BINARY_DIR}/database
+        ${CMAKE_BINARY_DIR}/database # Generated sql header files are found here
         ${OpenCV_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
@@ -68,6 +73,7 @@ set(TESTS
         src/serialization.test.cpp
         src/sqlite3_helpers.test.cpp
         test/calibration_database.test.cpp
+        test/image_interface.test.cpp
         test/sensor_data_interface.test.cpp
 )
 AddTests()

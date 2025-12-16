@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "calibration")
 
 find_package(Eigen3 REQUIRED)
+find_package(OpenCV REQUIRED) # REMOVE when/if database is removed
 
 set(SRC_FILES
         src/parabola_line_initialization.cpp

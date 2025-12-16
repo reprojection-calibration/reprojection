@@ -22,6 +22,34 @@ class TempFolder : public ::testing::Test {
     std::string database_path_{"sandbox"};
 };
 
+TEST_F(TempFolder, TestAddFrame) {
+    std::string const record_path{database_path_ + "/record_sss.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    EXPECT_TRUE(database::AddFrame({0, "/cam/retro/123"}, db));
+    EXPECT_TRUE(database::AddFrame({1, "/cam/retro/123"}, db));
+
+    // Does not fail when data is duplicated! For the frames table we need this behavior because we call Add* methods
+    // from many different places. This is the only table like this, where attempted duplicated entries are acceptable.
+    EXPECT_TRUE(database::AddFrame({1, "/cam/retro/123"}, db));
+}
+
+TEST_F(TempFolder, TestAddCameraPoseData) {
+    std::string const record_path{database_path_ + "/record_ddd.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    Vector6d const pose{0, 1, 2, 3, 4, 5};
+
+    // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
+    EXPECT_FALSE(database::AddCameraPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseType::Initial, db));
+    EXPECT_FALSE(database::AddCameraPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseType::Optimized, db));
+
+    // Now we add an extracted target with matching sensor name and timestamp (i.e. the foreign key constraint) and now
+    // we can add the initial camera pose no problem :)
+    (void)AddExtractedTargetData({{0, "/cam/retro/123"}, {}}, db);
+    EXPECT_TRUE(database::AddCameraPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseType::Initial, db));
+}
+
 TEST_F(TempFolder, TestAddExtractedTargetData) {
     std::string const record_path{database_path_ + "/record_qqq.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
@@ -30,7 +58,7 @@ TEST_F(TempFolder, TestAddExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {0, bundle}, db));
+    EXPECT_TRUE(AddExtractedTargetData({{0, "/cam/retro/123"}, bundle}, db));
 }
 
 TEST_F(TempFolder, TestGetExtractedTargetData) {
@@ -41,16 +69,16 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    (void)AddExtractedTargetData("/cam/retro/123", {0, target}, db);
-    (void)AddExtractedTargetData("/cam/retro/123", {1, target}, db);
-    (void)AddExtractedTargetData("/cam/retro/123", {2, target}, db);
+    (void)AddExtractedTargetData({{0, "/cam/retro/123"}, target}, db);
+    (void)AddExtractedTargetData({{1, "/cam/retro/123"}, target}, db);
+    (void)AddExtractedTargetData({{2, "/cam/retro/123"}, target}, db);
 
     auto const data{database::GetExtractedTargetData(db, "/cam/retro/123")};
     ASSERT_TRUE(data.has_value());
 
     int timestamp{0};
     for (auto const& data_i : data.value()) {
-        EXPECT_EQ(data_i.timestamp_ns, timestamp);
+        EXPECT_EQ(data_i.header.timestamp_ns, timestamp);
         timestamp = timestamp + 1;
         EXPECT_TRUE(data_i.target.bundle.pixels.isApprox(target.bundle.pixels));
         EXPECT_TRUE(data_i.target.bundle.points.isApprox(target.bundle.points));
@@ -58,61 +86,15 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     }
 }
 
-TEST_F(TempFolder, TestAddImage) {
-    std::string const record_path{database_path_ + "/record_uuu.db3"};
-    cv::Mat const image(480, 720, CV_8UC1);
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
-
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
-}
-
-TEST_F(TempFolder, TestImageStreamer) {
-    std::string const record_path{database_path_ + "/record_uuu.db3"};
-    cv::Mat const image(480, 720, CV_8UC1);
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
-
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {2, image}, db));
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {4, image}, db));
-
-    database::ImageStreamer streamer{db, "/cam/retro/123"};
-    auto const frame_0{streamer.Next()};
-    ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().timestamp_ns, 0);
-    EXPECT_EQ(frame_0.value().image.rows, 480);
-    EXPECT_EQ(frame_0.value().image.cols, 720);
-
-    EXPECT_TRUE(streamer.Next().has_value());  // Frame 2
-    EXPECT_TRUE(streamer.Next().has_value());  // Frame 3, last frame
-    EXPECT_FALSE(streamer.Next().has_value());
-}
-
-// This simulates the case where we have already processed the images up to a certain time and only want to load the
-// images after that point.
-TEST_F(TempFolder, TestImageStreamerStartTime) {
-    std::string const record_path{database_path_ + "/record_uuu.db3"};
-    cv::Mat const image(480, 720, CV_8UC1);
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
-
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {0, image}, db));
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {2, image}, db));
-    EXPECT_TRUE(database::AddImage("/cam/retro/123", {4, image}, db));
-
-    database::ImageStreamer streamer{db, "/cam/retro/123", 1};
-
-    auto const frame_0{streamer.Next()};
-    ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().timestamp_ns, 2);  // First frame starts at 2ns now
-
-    EXPECT_TRUE(streamer.Next().has_value());
-    EXPECT_FALSE(streamer.Next().has_value());
-}
-
 TEST_F(TempFolder, TestFullImuAddGetCycle) {
     // TODO(Jack): Should we use this test data for all the IMU tests?
-    std::map<std::string, std::set<database::ImuData>> const imu_data{
-        {"/imu/polaris/123", {{0, {0, 0, 0}, {1, 1, 1}}, {1, {2, 2, 2}, {3, 3, 3}}, {3, {4, 4, 4}, {5, 5, 5}}}},
-        {"/imu/polaris/456", {{1, {0, 0, 0}, {-1, -1, -1}}, {2, {-2, -2, -2}, {-3, -3, -3}}}}};
+    std::map<std::string, std::set<database::ImuStamped>> const imu_data{
+        {"/imu/polaris/123",
+         {{{0, "/imu/polaris/123"}, {0, 0, 0}, {1, 1, 1}},
+          {{1, "/imu/polaris/123"}, {2, 2, 2}, {3, 3, 3}},
+          {{3, "/imu/polaris/123"}, {4, 4, 4}, {5, 5, 5}}}},
+        {"/imu/polaris/456",
+         {{{1, "/imu/polaris/456"}, {0, 0, 0}, {-1, -1, -1}}, {{2, "/imu/polaris/456"}, {-2, -2, -2}, {-3, -3, -3}}}}};
 
     std::string const record_path{database_path_ + "/record_aaa.db3"};
     // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only database
@@ -122,7 +104,7 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
         auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};  // create and write
         for (auto const& [sensor, measurements] : imu_data) {
             for (auto const& measurement_i : measurements) {
-                bool const success_i{database::AddImuData(sensor, measurement_i, db)};
+                bool const success_i{database::AddImuData(measurement_i, db)};
                 EXPECT_TRUE(success_i);
             }
         }
@@ -142,19 +124,19 @@ TEST_F(TempFolder, TestAddImuData) {
     std::string const record_path{database_path_ + "/record_hhh.db3"};
     auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true)};
 
-    bool success{database::AddImuData("/imu/polaris/123", {0, {}, {}}, db)};
+    bool success{database::AddImuData({{0, "/imu/polaris/123"}, {}, {}}, db)};
     EXPECT_TRUE(success);
-    success = database::AddImuData("/imu/polaris/123", {1, {}, {}}, db);
+    success = database::AddImuData({{1, "/imu/polaris/123"}, {}, {}}, db);
     EXPECT_TRUE(success);
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary key
     // (timestamp_ns, sensor_name) so it is not a duplicate
-    success = database::AddImuData("/imu/polaris/456", {0, {}, {}}, db);
+    success = database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db);
     EXPECT_TRUE(success);
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
     testing::internal::CaptureStderr();  // WARN USING INTERNAL GTEST API!
-    success = database::AddImuData("/imu/polaris/456", {0, {}, {}}, db);
+    success = database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db);
     EXPECT_FALSE(success);
 
     // Check that the expected error message is sent to cerr
@@ -169,20 +151,20 @@ TEST_F(TempFolder, TestGetImuData) {
     auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true)};
 
     // Data from imu 123
-    (void)database::AddImuData("/imu/polaris/123", {5, {1, 2, 3}, {4, 5, 6}}, db);
-    (void)database::AddImuData("/imu/polaris/123", {10, {}, {}}, db);
-    (void)database::AddImuData("/imu/polaris/123", {15, {}, {}}, db);
+    (void)database::AddImuData({{5, "/imu/polaris/123"}, {1, 2, 3}, {4, 5, 6}}, db);
+    (void)database::AddImuData({{10, "/imu/polaris/123"}, {}, {}}, db);
+    (void)database::AddImuData({{15, "/imu/polaris/123"}, {}, {}}, db);
     // Data from imu 456
-    (void)database::AddImuData("/imu/polaris/456", {10, {}, {}}, db);
-    (void)database::AddImuData("/imu/polaris/456", {20, {}, {}}, db);
+    (void)database::AddImuData({{10, "/imu/polaris/456"}, {}, {}}, db);
+    (void)database::AddImuData({{20, "/imu/polaris/456"}, {}, {}}, db);
 
     auto const imu_123_data{database::GetImuData(db, "/imu/polaris/123")};
     ASSERT_TRUE(imu_123_data.has_value());
     EXPECT_EQ(std::size(imu_123_data.value()), 3);
 
     // Check the values of the first element to make sure the callback lambda reading logic is correct
-    database::ImuData const sample{*std::cbegin(imu_123_data.value())};
-    EXPECT_EQ(sample.timestamp_ns, 5);
+    database::ImuStamped const sample{*std::cbegin(imu_123_data.value())};
+    EXPECT_EQ(sample.header.timestamp_ns, 5);
     EXPECT_EQ(sample.angular_velocity[0], 1);
     EXPECT_EQ(sample.angular_velocity[1], 2);
     EXPECT_EQ(sample.angular_velocity[2], 3);

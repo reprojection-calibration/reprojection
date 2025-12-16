@@ -6,7 +6,7 @@
 #include <string>
 
 // cppcheck-suppress missingInclude
-#include "generated/sql_statements.hpp"
+#include "generated/sql.hpp"
 #include "sqlite3_helpers.hpp"
 
 namespace reprojection::database {
@@ -39,8 +39,19 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     // WARN(Jack): Is there any circumstance under which the data table creation might fail, and casting to void here
     // instead of explicitly handling the status makes sense?
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::extracted_targets_table, db));
+    static_cast<void>(Sqlite3Tools::Execute(sql_statements::frames_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::images_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::imu_data_table, db));
+    static_cast<void>(Sqlite3Tools::Execute(sql_statements::camera_poses_table, db));
+
+    // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For example a row
+    // in initial_camera_poses can only possibly exist if there is a corresponding entry in extracted_targets. Which
+    // tables have explicit relationships at this point is not 100% clear. For example we do not require images in the
+    // database so we do not make extracted_targets depend on the images table.
+    //
+    // That being said sqlite has the foreign key option off by default (https://sqlite.org/foreignkeys.html) so we need
+    // to manually turn it on here.
+    static_cast<void>(Sqlite3Tools::Execute("PRAGMA foreign_keys = ON;", db));
 }
 
 CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db); }
