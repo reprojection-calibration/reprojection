@@ -34,7 +34,7 @@ TEST_F(TempFolder, TestAddFrame) {
     EXPECT_TRUE(database::AddFrame({1, "/cam/retro/123"}, db));
 }
 
-TEST_F(TempFolder, TestAddInitialCameraPoseData) {
+TEST_F(TempFolder, TestAddCameraPoseData) {
     std::string const record_path{database_path_ + "/record_ddd.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
