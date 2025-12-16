@@ -19,7 +19,7 @@ struct SqlTransaction {
 
    private:
     // TODO(Jack): Should this be a smart pointer?
-    sqlite3* db_;
+    sqlite3* db_{nullptr};
 };
 
 }  // namespace reprojection::database

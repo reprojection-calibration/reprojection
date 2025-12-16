@@ -10,7 +10,7 @@
 
 #include "database/calibration_database.hpp"
 #include "database/database_data_types.hpp"
-#include "database/sql_statement_wrapper.hpp"
+#include "database/sqlite_wrappers.hpp"
 
 // NOTE(Jack): We put the image interface in its own file because the image streamer interface/concept is so different
 // from the other data interfaces that it deserves some separation. The basic idea is that we should not load all images

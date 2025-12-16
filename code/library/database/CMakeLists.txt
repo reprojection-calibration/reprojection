@@ -53,10 +53,10 @@ set(SRC_FILES
         src/sensor_data_interface.cpp
         src/serialization.cpp
         src/sqlite3_helpers.cpp
-        src/sql_statement_wrapper.cpp
+        src/sqlite_wrappers.cpp
 )
 set(INCLUDE_DIRECTORIES
-        ${CMAKE_BINARY_DIR}/database # Generated sql header files and protobuf headers are found here
+        ${CMAKE_BINARY_DIR}/database # Generated sql header files are found here
         ${OpenCV_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES

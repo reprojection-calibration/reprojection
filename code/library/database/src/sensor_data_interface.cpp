@@ -6,7 +6,7 @@
 #include <string>
 
 // cppcheck-suppress missingInclude
-#include "database/sql_statement_wrapper.hpp"
+#include "database/sqlite_wrappers.hpp"
 #include "generated/sql.hpp"
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"

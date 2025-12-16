@@ -4,7 +4,7 @@
 
 // TODO(Jack): Is this not kind of a circular include?
 #include "database/sensor_data_interface.hpp"
-#include "database/sql_statement_wrapper.hpp"
+#include "database/sqlite_wrappers.hpp"
 
 namespace reprojection::database {
 
