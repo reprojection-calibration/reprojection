@@ -40,8 +40,9 @@ TEST_F(TempFolder, TestAddCameraPoseData) {
 
     Vector6d const pose{0, 1, 2, 3, 4, 5};
 
-    // Fails foreign key constraint because there is no corresponding extracted target entry yet
+    // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
     EXPECT_FALSE(database::AddCameraPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseType::Initial, db));
+    EXPECT_FALSE(database::AddCameraPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseType::Optimized, db));
 
     // Now we add an extracted target with matching sensor name and timestamp (i.e. the foreign key constraint) and now
     // we can add the initial camera pose no problem :)

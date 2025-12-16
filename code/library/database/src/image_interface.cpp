@@ -16,14 +16,14 @@ namespace reprojection::database {
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
 bool AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
     if (not AddFrame(data.header, database)) {
-        return false;
+        return false;  // LCOV_EXCL_LINE
     }
 
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
-        std::cerr << "Image serialization failed at: " << std::to_string(data.header.timestamp_ns)
-                  << "\n";  // LCOV_EXCL_LINE
-        return false;       // LCOV_EXCL_LINE
+        std::cerr << "Image serialization failed at: " << std::to_string(data.header.timestamp_ns)  // LCOV_EXCL_LINE
+                  << "\n";                                                                          // LCOV_EXCL_LINE
+        return false;                                                                               // LCOV_EXCL_LINE
     }
 
     return Sqlite3Tools::AddBlob(sql_statements::image_insert, data.header.timestamp_ns, data.header.sensor_name,

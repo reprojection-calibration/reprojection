@@ -46,7 +46,8 @@ inline std::string ToString(PoseType const t) {
         case PoseType::Optimized:
             return "optimized";
     }
-    throw std::logic_error("Invalid PoseType");
+
+    throw std::logic_error("Invalid PoseType");  // LCOV_EXCL_LINE
 }
 
 // TODO(Jack): Add concept requirements

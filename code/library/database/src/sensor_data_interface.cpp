@@ -27,8 +27,8 @@ namespace reprojection::database {
     }  // LCOV_EXCL_LINE
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        std::cerr << "AddFrame() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
-        return false;
+        std::cerr << "AddFrame() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                               // LCOV_EXCL_LINE
     }
 
     return true;
@@ -51,17 +51,15 @@ namespace reprojection::database {
             Sqlite3Tools::Bind(statement.stmt, 8, data_i.pose[4]);
             Sqlite3Tools::Bind(statement.stmt, 9, data_i.pose[5]);
         } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-            std::cerr << "AddInitialCameraPoseData() runtime error during binding: " << e.what()    // LCOV_EXCL_LINE
+            std::cerr << "AddCameraPoseData() runtime error during binding: " << e.what()           // LCOV_EXCL_LINE
                       << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
             return false;                                                                           // LCOV_EXCL_LINE
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            std::cerr << "AddInitialCameraPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
+            std::cerr << "AddCameraPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
             return false;
         }
-
-        return true;
     }
 
     return true;
@@ -70,7 +68,7 @@ namespace reprojection::database {
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
     if (not AddFrame(data.header, database)) {
-        return false;
+        return false;  // LCOV_EXCL_LINE
     }
 
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
