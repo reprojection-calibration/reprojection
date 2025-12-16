@@ -1,5 +1,6 @@
 set(LIBRARY_NAME "database")
 
+find_package(Ceres REQUIRED) # REMOVE
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Protobuf REQUIRED)
@@ -62,6 +63,7 @@ set(INCLUDE_DIRECTORIES
         ${OpenCV_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
+        Ceres::ceres # REMOVE
         database_proto
         Eigen3::Eigen
         ${OpenCV_LIBS}
