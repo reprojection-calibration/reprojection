@@ -61,40 +61,5 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
         cam0_pnp_poses.insert(database::PoseData{timestamp_ns, se3_i});
     }
 
-    ASSERT_TRUE(AddCameraPoseData("/cam1/image_raw", cam0_pnp_poses, sql_statements::initial_camera_poses_insert, db));
-
-    std::vector<Frame> frames;
-    {
-        auto it1 = cam0_data.value().cbegin();
-        auto it2 = cam0_pnp_poses.cbegin();
-        while (it1 != cam0_data.value().cend() and it2 != cam0_pnp_poses.cend()) {
-            database::ExtractedTargetData i1 = *it1;
-            database::PoseData i2 = *it2;
-
-            frames.push_back(Frame{i1.target.bundle, geometry::Exp(i2.pose)});
-
-            it1++;
-            it2++;
-        }
-    }
-
-    auto const [poses_opt, K, final_cost]{
-        optimization::CameraNonlinearRefinement(frames, CameraModel::DoubleSphere, cam0_ds_intrinsics)};
-
-    std::set<database::PoseData> cam0_nl_poses;
-    {
-        auto it1 = cam0_data.value().cbegin();
-        auto it2 = poses_opt.cbegin();
-        while (it1 != cam0_data.value().cend() and it2 != poses_opt.cend()) {
-            database::ExtractedTargetData i1 = *it1;
-            Isometry3d i2 = *it2;
-
-            cam0_nl_poses.insert({i1.timestamp_ns, geometry::Log(i2)});
-
-            it1++;
-            it2++;
-        }
-    }
-
-    ASSERT_TRUE(AddCameraPoseData("/cam1/image_raw", cam0_nl_poses, sql_statements::optimized_camera_poses_insert, db));
+    ASSERT_TRUE(AddCameraPoseData("/cam1/image_raw", cam0_pnp_poses, database::PoseType::Initial, db));
 }
