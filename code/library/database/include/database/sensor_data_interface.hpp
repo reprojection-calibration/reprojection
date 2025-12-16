@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sqlite3.h>
+
 
 #include <cstdint>
 #include <memory>
@@ -23,14 +23,6 @@
 
 namespace reprojection::database {
 
-struct SqlStatement {
-    SqlStatement(sqlite3* const db, char const* const sql);
-
-    ~SqlStatement();
-
-    sqlite3_stmt* stmt{nullptr};
-};
-
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseStamped const& data, PoseType const type,
                                      std::shared_ptr<CalibrationDatabase> const database);
 
@@ -48,20 +40,5 @@ std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
 
 std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                                std::string const& sensor_name);
-
-[[nodiscard]] bool AddImage(std::string const& sensor_name, ImageStamped const& data,
-                            std::shared_ptr<CalibrationDatabase> const database);
-
-class ImageStreamer {
-   public:
-    ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
-                  uint64_t const start_time = 0);
-
-    std::optional<ImageStamped> Next();
-
-   private:
-    std::shared_ptr<CalibrationDatabase const> database_;
-    SqlStatement statement_;
-};
 
 }  // namespace reprojection::database

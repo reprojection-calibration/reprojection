@@ -30,8 +30,8 @@ foreach (sql ${SQL_FILES})
 endforeach ()
 
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql_statements.hpp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql_statements.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql.hpp.in
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql.hpp
         @ONLY
 
 )
@@ -47,9 +47,11 @@ add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 
 set(SRC_FILES
         src/calibration_database.cpp
+        src/image_interface.cpp
         src/sensor_data_interface.cpp
         src/serialization.cpp
         src/sqlite3_helpers.cpp
+        src/sql_statement_wrapper.cpp
 )
 set(INCLUDE_DIRECTORIES
         ${CMAKE_BINARY_DIR}/database # Generated sql header files and protobuf headers are found here
@@ -69,6 +71,7 @@ set(TESTS
         src/serialization.test.cpp
         src/sqlite3_helpers.test.cpp
         test/calibration_database.test.cpp
+        test/image_interface.test.cpp
         test/sensor_data_interface.test.cpp
 )
 AddTests()

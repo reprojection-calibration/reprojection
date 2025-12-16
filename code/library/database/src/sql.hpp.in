@@ -1,5 +1,6 @@
 #pragma once
 
+// TODO RENAME TO QUERY
 namespace reprojection::sql_statements {
 
 @SQL_STRING_ENTRIES@
