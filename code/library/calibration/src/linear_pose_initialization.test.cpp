@@ -14,7 +14,7 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
     std::string const record_path{"/data/cvg.cit.tum.de_visual-inertial-dataset/dataset-calib-imu4_512_16.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
-    auto const cam0_data{database::GetExtractedTargetData(db, "/cam0/image_raw")};
+    auto const cam0_data{database::GetExtractedTargetData(db, "/cam1/image_raw")};
     ASSERT_TRUE(cam0_data.has_value());
 
     std::set<database::PoseData> cam0_pnp_poses;
@@ -59,5 +59,5 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
         cam0_pnp_poses.insert(database::PoseData{timestamp_ns, se3_i});
     }
 
-    ASSERT_TRUE(AddInitialCameraPoseData("/cam0/image_raw", cam0_pnp_poses, db));
+    ASSERT_TRUE(AddInitialCameraPoseData("/cam1/image_raw", cam0_pnp_poses, db));
 }
