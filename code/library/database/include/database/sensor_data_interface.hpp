@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include <cstdint>
 #include <memory>
 #include <opencv2/opencv.hpp>
@@ -23,11 +21,12 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseStamped const& data, PoseType const type,
-                                     std::shared_ptr<CalibrationDatabase> const database);
-
+// WARN(Jack): Not tested!
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseStamped> const& data,
                                      PoseType const type, std::shared_ptr<CalibrationDatabase> const database);
+
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseStamped const& data, PoseType const type,
+                                     std::shared_ptr<CalibrationDatabase> const database);
 
 [[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database);
