@@ -28,33 +28,33 @@ struct SqlStatement {
 // statements for every pose table we want to have. Considering that the only difference between them all will be the
 // name of the table, this is a bad case of code duplication! We need to find a way to solve this by parameterizing the
 // table name somehow, possibly just at run time.
-[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseData const& data, PoseType const type,
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseStamped const& data, PoseType const type,
                                      std::shared_ptr<CalibrationDatabase> const database);
 
-[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseData> const& data,
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseStamped> const& data,
                                      PoseType const type, std::shared_ptr<CalibrationDatabase> const database);
 
 // TODO(Jack): At this time we are going to hardcode the fact that there is only one possible target for any
 // calibration, by not adding a target_id to the table. However it might also make sense to attach a target name/id to
 // each data here, because it can be that a user would want to use multiple targets and identify the extracted features
 // uniquely based on the timestamp, which sensor they belong to, and from which target they come from.
-[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
+[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database);
 
 // WARN(Jack): Assumes only one single target
-std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
+std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
     std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name);
 
-[[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
+[[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuStamped const& data,
                               std::shared_ptr<CalibrationDatabase> const database);
 
-std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
+std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                             std::string const& sensor_name);
 
 // TODO(Jack): Code protections that only grayscale images are stored here? Or is this not the right place?
 // NOTE(Jack): There are so many different error conditions that we definsively program against, but that we cannot
 // reasonably test against, so we have to use LCOV_EXCL_LINE a lot in the database image handling :(
-[[nodiscard]] bool AddImage(std::string const& sensor_name, ImageData const& data,
+[[nodiscard]] bool AddImage(std::string const& sensor_name, ImageStamped const& data,
                             std::shared_ptr<CalibrationDatabase> const database);
 
 // NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
@@ -68,7 +68,7 @@ class ImageStreamer {
     ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
                   uint64_t const start_time = 0);
 
-    std::optional<ImageData> Next();
+    std::optional<ImageStamped> Next();
 
    private:
     std::shared_ptr<CalibrationDatabase const> database_;

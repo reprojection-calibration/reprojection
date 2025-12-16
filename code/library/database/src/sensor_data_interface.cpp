@@ -20,7 +20,7 @@ SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
 
 SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 
-[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseData const& data, PoseType const type,
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseStamped const& data, PoseType const type,
                                      std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::camera_poses_insert};
 
@@ -48,7 +48,7 @@ SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
     return true;
 }
 
-[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseData> const& data,
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseStamped> const& data,
                                      PoseType const type, std::shared_ptr<CalibrationDatabase> const database) {
     if (not Sqlite3Tools::Execute("BEGIN TRANSACTION", database->db)) {
         return false;
@@ -65,7 +65,7 @@ SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
     return true;
 }
 
-[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetData const& data,
+[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
@@ -81,7 +81,7 @@ SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 
 // NOTE(Jack): The logic here is very similar to the ImageStreamer class, but there are enough differences that we
 // cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
-std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
+std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
     std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name) {
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
@@ -93,7 +93,7 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
         return std::nullopt;                                                                    // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
-    std::set<ExtractedTargetData> data;
+    std::set<ExtractedTargetStamped> data;
     while (true) {
         int const code{sqlite3_step(statement.stmt)};
         if (code == static_cast<int>(SqliteFlag::Done)) {
@@ -127,13 +127,13 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
             continue;                                                                                // LCOV_EXCL_LINE
         }
 
-        data.insert(ExtractedTargetData{timestamp_ns, deserialized.value()});
+        data.insert(ExtractedTargetStamped{timestamp_ns, deserialized.value()});
     }
 
     return data;
 }
 
-[[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuData const& data,
+[[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuStamped const& data,
                               std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
@@ -160,7 +160,7 @@ std::optional<std::set<ExtractedTargetData>> GetExtractedTargetData(
     return true;
 }
 
-std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
+std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                             std::string const& sensor_name) {
     SqlStatement const statement{database->db, sql_statements::imu_data_select};
 
@@ -172,7 +172,7 @@ std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase 
         return std::nullopt;                                                                    // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
-    std::set<ImuData> data;
+    std::set<ImuStamped> data;
     while (true) {
         int const code{sqlite3_step(statement.stmt)};
         if (code == static_cast<int>(SqliteFlag::Done)) {
@@ -192,14 +192,14 @@ std::optional<std::set<ImuData>> GetImuData(std::shared_ptr<CalibrationDatabase 
         double const ay{sqlite3_column_double(statement.stmt, 5)};
         double const az{sqlite3_column_double(statement.stmt, 6)};
 
-        data.insert(ImuData{timestamp_ns, {omega_x, omega_y, omega_z}, {ax, ay, az}});
+        data.insert(ImuStamped{timestamp_ns, {omega_x, omega_y, omega_z}, {ax, ay, az}});
     }
 
     return data;
 }
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
-bool AddImage(std::string const& sensor_name, ImageData const& data,
+bool AddImage(std::string const& sensor_name, ImageStamped const& data,
               std::shared_ptr<CalibrationDatabase> const database) {
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
@@ -224,7 +224,7 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
     }  // LCOV_EXCL_LINE
 }
 
-std::optional<ImageData> ImageStreamer::Next() {
+std::optional<ImageStamped> ImageStreamer::Next() {
     int const code{sqlite3_step(statement_.stmt)};
     if (code == static_cast<int>(SqliteFlag::Done)) {
         return std::nullopt;
@@ -252,7 +252,7 @@ std::optional<ImageData> ImageStreamer::Next() {
         return std::nullopt;                                                         // LCOV_EXCL_LINE
     }
 
-    return ImageData{timestamp_ns, image};
+    return ImageStamped{timestamp_ns, image};
 }
 
 };  // namespace reprojection::database

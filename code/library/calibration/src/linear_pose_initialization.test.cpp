@@ -21,7 +21,7 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
 
     Array6d const cam0_ds_intrinsics{156.82590211, 156.79756958, 254.99978685, 256.9744566, -0.17931409, 0.59133716};
 
-    std::set<database::PoseData> cam0_pnp_poses;
+    std::set<database::PoseStamped> cam0_pnp_poses;
     for (auto const& [timestamp_ns, extracted_target] : cam0_data.value()) {
         auto const cam0_ds{projection_functions::DoubleSphereCamera(cam0_ds_intrinsics)};
         MatrixX3d const rays{cam0_ds.Unproject(extracted_target.bundle.pixels)};
@@ -41,11 +41,11 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
 
         // TODO(Jack): There has to be a better way to do this? Maybe just hardcode se3_n_1 as the forward z direction?
         if (std::size(cam0_pnp_poses) <= 1) {
-            cam0_pnp_poses.insert(database::PoseData{timestamp_ns, se3_i});
+            cam0_pnp_poses.insert(database::PoseStamped{timestamp_ns, se3_i});
             continue;
         }
 
-        database::PoseData const pose_n_1{*std::prev(cam0_pnp_poses.end())};
+        database::PoseStamped const pose_n_1{*std::prev(cam0_pnp_poses.end())};
         if (se3_i.topRows<3>().dot(pose_n_1.pose.topRows<3>()) < 0) {
             se3_i.topRows<3>() *= -1;
         }
@@ -58,7 +58,7 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
             se3_i.bottomRows<3>() *= -1;
         }
 
-        cam0_pnp_poses.insert(database::PoseData{timestamp_ns, se3_i});
+        cam0_pnp_poses.insert(database::PoseStamped{timestamp_ns, se3_i});
     }
 
     ASSERT_TRUE(AddCameraPoseData("/cam1/image_raw", cam0_pnp_poses, database::PoseType::Initial, db));

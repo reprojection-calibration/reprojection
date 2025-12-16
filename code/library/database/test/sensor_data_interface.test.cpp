@@ -125,7 +125,7 @@ TEST_F(TempFolder, TestImageStreamerStartTime) {
 
 TEST_F(TempFolder, TestFullImuAddGetCycle) {
     // TODO(Jack): Should we use this test data for all the IMU tests?
-    std::map<std::string, std::set<database::ImuData>> const imu_data{
+    std::map<std::string, std::set<database::ImuStamped>> const imu_data{
         {"/imu/polaris/123", {{0, {0, 0, 0}, {1, 1, 1}}, {1, {2, 2, 2}, {3, 3, 3}}, {3, {4, 4, 4}, {5, 5, 5}}}},
         {"/imu/polaris/456", {{1, {0, 0, 0}, {-1, -1, -1}}, {2, {-2, -2, -2}, {-3, -3, -3}}}}};
 
@@ -196,7 +196,7 @@ TEST_F(TempFolder, TestGetImuData) {
     EXPECT_EQ(std::size(imu_123_data.value()), 3);
 
     // Check the values of the first element to make sure the callback lambda reading logic is correct
-    database::ImuData const sample{*std::cbegin(imu_123_data.value())};
+    database::ImuStamped const sample{*std::cbegin(imu_123_data.value())};
     EXPECT_EQ(sample.timestamp_ns, 5);
     EXPECT_EQ(sample.angular_velocity[0], 1);
     EXPECT_EQ(sample.angular_velocity[1], 2);

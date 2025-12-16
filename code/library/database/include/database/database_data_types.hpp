@@ -9,24 +9,24 @@
 
 namespace reprojection::database {
 
-struct ExtractedTargetData {
+struct ExtractedTargetStamped {
     uint64_t timestamp_ns;
     ExtractedTarget target;
 };
 
-struct ImuData {
+struct ImuStamped {
     uint64_t timestamp_ns;
+    // TODO(Jack): In future should we refactor the angular_velocity and linear_acceleration into an Imu struct?
     double angular_velocity[3];
     double linear_acceleration[3];
 };
 
-struct ImageData {
+struct ImageStamped {
     uint64_t timestamp_ns;
     cv::Mat image;
 };
 
-// TODO(Jack): Do better than just appending data to indicate it has a timestamp!
-struct PoseData {
+struct PoseStamped {
     uint64_t timestamp_ns;
     Vector6d pose;
 };
