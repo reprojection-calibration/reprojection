@@ -22,6 +22,18 @@ class TempFolder : public ::testing::Test {
     std::string database_path_{"sandbox"};
 };
 
+TEST_F(TempFolder, TestAddFrame) {
+    std::string const record_path{database_path_ + "/record_sss.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    EXPECT_TRUE(database::AddFrame("/cam/retro/123", 0, db));
+    EXPECT_TRUE(database::AddFrame("/cam/retro/123", 1, db));
+
+    // Does not fail when data is duplicated! For the frames table we need this behavior because we call Add* methods
+    // from many different places. This is the only table like this, where attempted duplicated entries are acceptable.
+    EXPECT_TRUE(database::AddFrame("/cam/retro/123", 1, db));
+}
+
 TEST_F(TempFolder, TestAddInitialCameraPoseData) {
     std::string const record_path{database_path_ + "/record_ddd.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};

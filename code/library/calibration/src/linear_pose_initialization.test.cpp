@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "../../cmake-build-release-docker-reprojection/database/generated/sql_statements.hpp"
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"

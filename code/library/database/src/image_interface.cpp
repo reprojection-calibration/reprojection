@@ -5,17 +5,21 @@
 #include <filesystem>
 #include <string>
 
+#include "database/sensor_data_interface.hpp"
+
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 #include "sqlite3_helpers.hpp"
-
-
 
 namespace reprojection::database {
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
 bool AddImage(std::string const& sensor_name, ImageStamped const& data,
               std::shared_ptr<CalibrationDatabase> const database) {
+    if (not AddFrame(sensor_name, data.timestamp_ns, database)) {
+        return false;
+    }
+
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
         std::cerr << "Image serialization failed at: " << std::to_string(data.timestamp_ns) << "\n";  // LCOV_EXCL_LINE

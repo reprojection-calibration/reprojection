@@ -13,10 +13,31 @@
 
 namespace reprojection::database {
 
+[[nodiscard]] bool AddFrame(std::string const& sensor_name, uint64_t const timestamp_ns,
+                            std::shared_ptr<CalibrationDatabase> const database) {
+    SqlStatement const statement{database->db, sql_statements::frame_insert};
+
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
+        Sqlite3Tools::Bind(statement.stmt, 2, sensor_name.c_str());
+
+    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
+        std::cerr << "AddFrame() runtime error during binding: " << e.what()                    // LCOV_EXCL_LINE
+                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+        return false;                                                                           // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
+
+    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
+        std::cerr << "AddFrame() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
+        return false;
+    }
+
+    return true;
+}
+
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseStamped const& data, PoseType const type,
                                      std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::camera_poses_insert};
-
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
         Sqlite3Tools::Bind(statement.stmt, 2, sensor_name.c_str());
@@ -60,6 +81,10 @@ namespace reprojection::database {
 
 [[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
+    if (not AddFrame(sensor_name, data.timestamp_ns, database)) {
+        return false;
+    }
+
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {
