@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "../../cmake-build-release-docker-reprojection/database/generated/sql_statements.hpp"
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
@@ -59,5 +60,5 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
         cam0_pnp_poses.insert(database::PoseData{timestamp_ns, se3_i});
     }
 
-    ASSERT_TRUE(AddInitialCameraPoseData("/cam1/image_raw", cam0_pnp_poses, db));
+    ASSERT_TRUE(AddCameraPoseData("/cam1/image_raw", cam0_pnp_poses, sql_statements::initial_camera_poses_insert, db));
 }

@@ -20,9 +20,12 @@ SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
 
 SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 
-[[nodiscard]] bool AddInitialCameraPoseData(std::string const& sensor_name, PoseData const& data,
-                                            std::shared_ptr<CalibrationDatabase> const database) {
-    SqlStatement const statement{database->db, sql_statements::initial_camera_poses_insert};
+// TODO(Jack): Make a generic pose handling utility that can be used regardless of which type of pose we are dealing
+// with.
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseData const& data,
+                                     std::string const& sql_statement,
+                                     std::shared_ptr<CalibrationDatabase> const database) {
+    SqlStatement const statement{database->db, sql_statement.c_str()};
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
@@ -47,13 +50,14 @@ SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
     return true;
 }
 
-[[nodiscard]] bool AddInitialCameraPoseData(std::string const& sensor_name, std::set<PoseData> const& data,
-                                            std::shared_ptr<CalibrationDatabase> const database) {
+[[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseData> const& data,
+                                     std::string const& sql_statement,
+                                     std::shared_ptr<CalibrationDatabase> const database) {
     if (not Sqlite3Tools::Execute("BEGIN TRANSACTION", database->db)) {
         return false;
     }
     for (auto const& data_i : data) {
-        if (not AddInitialCameraPoseData(sensor_name, data_i, database)) {
+        if (not AddCameraPoseData(sensor_name, data_i, sql_statement, database)) {
             return false;
         }
     }
