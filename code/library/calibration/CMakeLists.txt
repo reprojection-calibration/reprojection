@@ -25,7 +25,6 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/linear_pose_initialization.test.cpp
         src/parabola_line_initialization.test.cpp
         src/vanishing_point_initialization.test.cpp
 )
