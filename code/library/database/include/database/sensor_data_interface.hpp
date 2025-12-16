@@ -36,8 +36,7 @@ namespace reprojection::database {
 std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
     std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name);
 
-[[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuStamped const& data,
-                              std::shared_ptr<CalibrationDatabase> const database);
+[[nodiscard]] bool AddImuData(ImuStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
 
 std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                                std::string const& sensor_name);

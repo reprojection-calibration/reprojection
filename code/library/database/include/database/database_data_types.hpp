@@ -20,7 +20,7 @@ struct ExtractedTargetStamped {
 };
 
 struct ImuStamped {
-    uint64_t timestamp_ns;
+    FrameHeader header;
     // TODO(Jack): In future should we refactor the angular_velocity and linear_acceleration into an Imu struct?
     double angular_velocity[3];
     double linear_acceleration[3];
@@ -58,6 +58,10 @@ bool operator<(T const& x, T const& y) {
 }
 
 inline bool operator<(ExtractedTargetStamped const& x, ExtractedTargetStamped const& y) {
+    return x.header.timestamp_ns < y.header.timestamp_ns;
+}
+
+inline bool operator<(ImuStamped const& x, ImuStamped const& y) {
     return x.header.timestamp_ns < y.header.timestamp_ns;
 }
 

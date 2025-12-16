@@ -151,13 +151,12 @@ std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
     return data;
 }
 
-[[nodiscard]] bool AddImuData(std::string const& sensor_name, ImuStamped const& data,
-                              std::shared_ptr<CalibrationDatabase> const database) {
+[[nodiscard]] bool AddImuData(ImuStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
-        Sqlite3Tools::Bind(statement.stmt, 2, sensor_name.c_str());
+        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.header.timestamp_ns));  // Warn cast!
+        Sqlite3Tools::Bind(statement.stmt, 2, data.header.sensor_name);
         Sqlite3Tools::Bind(statement.stmt, 3, data.angular_velocity[0]);
         Sqlite3Tools::Bind(statement.stmt, 4, data.angular_velocity[1]);
         Sqlite3Tools::Bind(statement.stmt, 5, data.angular_velocity[2]);
@@ -210,7 +209,7 @@ std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDataba
         double const ay{sqlite3_column_double(statement.stmt, 5)};
         double const az{sqlite3_column_double(statement.stmt, 6)};
 
-        data.insert(ImuStamped{timestamp_ns, {omega_x, omega_y, omega_z}, {ax, ay, az}});
+        data.insert(ImuStamped{{timestamp_ns, sensor_name}, {omega_x, omega_y, omega_z}, {ax, ay, az}});
     }
 
     return data;

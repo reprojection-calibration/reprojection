@@ -88,8 +88,12 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
 TEST_F(TempFolder, TestFullImuAddGetCycle) {
     // TODO(Jack): Should we use this test data for all the IMU tests?
     std::map<std::string, std::set<database::ImuStamped>> const imu_data{
-        {"/imu/polaris/123", {{0, {0, 0, 0}, {1, 1, 1}}, {1, {2, 2, 2}, {3, 3, 3}}, {3, {4, 4, 4}, {5, 5, 5}}}},
-        {"/imu/polaris/456", {{1, {0, 0, 0}, {-1, -1, -1}}, {2, {-2, -2, -2}, {-3, -3, -3}}}}};
+        {"/imu/polaris/123",
+         {{{0, "/imu/polaris/123"}, {0, 0, 0}, {1, 1, 1}},
+          {{1, "/imu/polaris/123"}, {2, 2, 2}, {3, 3, 3}},
+          {{3, "/imu/polaris/123"}, {4, 4, 4}, {5, 5, 5}}}},
+        {"/imu/polaris/456",
+         {{{1, "/imu/polaris/456"}, {0, 0, 0}, {-1, -1, -1}}, {{2, "/imu/polaris/456"}, {-2, -2, -2}, {-3, -3, -3}}}}};
 
     std::string const record_path{database_path_ + "/record_aaa.db3"};
     // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only database
@@ -99,7 +103,7 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
         auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};  // create and write
         for (auto const& [sensor, measurements] : imu_data) {
             for (auto const& measurement_i : measurements) {
-                bool const success_i{database::AddImuData(sensor, measurement_i, db)};
+                bool const success_i{database::AddImuData(measurement_i, db)};
                 EXPECT_TRUE(success_i);
             }
         }
@@ -119,19 +123,19 @@ TEST_F(TempFolder, TestAddImuData) {
     std::string const record_path{database_path_ + "/record_hhh.db3"};
     auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true)};
 
-    bool success{database::AddImuData("/imu/polaris/123", {0, {}, {}}, db)};
+    bool success{database::AddImuData({{0, "/imu/polaris/123"}, {}, {}}, db)};
     EXPECT_TRUE(success);
-    success = database::AddImuData("/imu/polaris/123", {1, {}, {}}, db);
+    success = database::AddImuData({{1, "/imu/polaris/123"}, {}, {}}, db);
     EXPECT_TRUE(success);
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary key
     // (timestamp_ns, sensor_name) so it is not a duplicate
-    success = database::AddImuData("/imu/polaris/456", {0, {}, {}}, db);
+    success = database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db);
     EXPECT_TRUE(success);
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
     testing::internal::CaptureStderr();  // WARN USING INTERNAL GTEST API!
-    success = database::AddImuData("/imu/polaris/456", {0, {}, {}}, db);
+    success = database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db);
     EXPECT_FALSE(success);
 
     // Check that the expected error message is sent to cerr
@@ -146,12 +150,12 @@ TEST_F(TempFolder, TestGetImuData) {
     auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true)};
 
     // Data from imu 123
-    (void)database::AddImuData("/imu/polaris/123", {5, {1, 2, 3}, {4, 5, 6}}, db);
-    (void)database::AddImuData("/imu/polaris/123", {10, {}, {}}, db);
-    (void)database::AddImuData("/imu/polaris/123", {15, {}, {}}, db);
+    (void)database::AddImuData({{5, "/imu/polaris/123"}, {1, 2, 3}, {4, 5, 6}}, db);
+    (void)database::AddImuData({{10, "/imu/polaris/123"}, {}, {}}, db);
+    (void)database::AddImuData({{15, "/imu/polaris/123"}, {}, {}}, db);
     // Data from imu 456
-    (void)database::AddImuData("/imu/polaris/456", {10, {}, {}}, db);
-    (void)database::AddImuData("/imu/polaris/456", {20, {}, {}}, db);
+    (void)database::AddImuData({{10, "/imu/polaris/456"}, {}, {}}, db);
+    (void)database::AddImuData({{20, "/imu/polaris/456"}, {}, {}}, db);
 
     auto const imu_123_data{database::GetImuData(db, "/imu/polaris/123")};
     ASSERT_TRUE(imu_123_data.has_value());
@@ -159,7 +163,7 @@ TEST_F(TempFolder, TestGetImuData) {
 
     // Check the values of the first element to make sure the callback lambda reading logic is correct
     database::ImuStamped const sample{*std::cbegin(imu_123_data.value())};
-    EXPECT_EQ(sample.timestamp_ns, 5);
+    EXPECT_EQ(sample.header.timestamp_ns, 5);
     EXPECT_EQ(sample.angular_velocity[0], 1);
     EXPECT_EQ(sample.angular_velocity[1], 2);
     EXPECT_EQ(sample.angular_velocity[2], 3);
