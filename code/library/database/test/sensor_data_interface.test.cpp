@@ -26,12 +26,12 @@ TEST_F(TempFolder, TestAddFrame) {
     std::string const record_path{database_path_ + "/record_sss.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    EXPECT_TRUE(database::AddFrame("/cam/retro/123", 0, db));
-    EXPECT_TRUE(database::AddFrame("/cam/retro/123", 1, db));
+    EXPECT_TRUE(database::AddFrame({0, "/cam/retro/123"}, db));
+    EXPECT_TRUE(database::AddFrame({1, "/cam/retro/123"}, db));
 
     // Does not fail when data is duplicated! For the frames table we need this behavior because we call Add* methods
     // from many different places. This is the only table like this, where attempted duplicated entries are acceptable.
-    EXPECT_TRUE(database::AddFrame("/cam/retro/123", 1, db));
+    EXPECT_TRUE(database::AddFrame({1, "/cam/retro/123"}, db));
 }
 
 TEST_F(TempFolder, TestAddInitialCameraPoseData) {
@@ -45,7 +45,7 @@ TEST_F(TempFolder, TestAddInitialCameraPoseData) {
 
     // Now we add a extracted target with matching sensor name and timestamp (i.e. the foreign key constraint) and now
     // we can add the initial camera pose no problem :)
-    (void)AddExtractedTargetData("/cam/retro/123", {0, ExtractedTarget{}}, db);
+    (void)AddExtractedTargetData({{0, "/cam/retro/123"}, ExtractedTarget{}}, db);
     EXPECT_TRUE(database::AddCameraPoseData("/cam/retro/123", {0, pose}, database::PoseType::Initial, db));
 }
 
@@ -57,7 +57,7 @@ TEST_F(TempFolder, TestAddExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    EXPECT_TRUE(AddExtractedTargetData("/cam/retro/123", {0, bundle}, db));
+    EXPECT_TRUE(AddExtractedTargetData({{0, "/cam/retro/123"}, bundle}, db));
 }
 
 TEST_F(TempFolder, TestGetExtractedTargetData) {
@@ -68,16 +68,16 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    (void)AddExtractedTargetData("/cam/retro/123", {0, target}, db);
-    (void)AddExtractedTargetData("/cam/retro/123", {1, target}, db);
-    (void)AddExtractedTargetData("/cam/retro/123", {2, target}, db);
+    (void)AddExtractedTargetData({{0, "/cam/retro/123"}, target}, db);
+    (void)AddExtractedTargetData({{1, "/cam/retro/123"}, target}, db);
+    (void)AddExtractedTargetData({{2, "/cam/retro/123"}, target}, db);
 
     auto const data{database::GetExtractedTargetData(db, "/cam/retro/123")};
     ASSERT_TRUE(data.has_value());
 
     int timestamp{0};
     for (auto const& data_i : data.value()) {
-        EXPECT_EQ(data_i.timestamp_ns, timestamp);
+        EXPECT_EQ(data_i.header.timestamp_ns, timestamp);
         timestamp = timestamp + 1;
         EXPECT_TRUE(data_i.target.bundle.pixels.isApprox(target.bundle.pixels));
         EXPECT_TRUE(data_i.target.bundle.points.isApprox(target.bundle.points));

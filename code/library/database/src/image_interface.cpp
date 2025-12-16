@@ -16,7 +16,7 @@ namespace reprojection::database {
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
 bool AddImage(std::string const& sensor_name, ImageStamped const& data,
               std::shared_ptr<CalibrationDatabase> const database) {
-    if (not AddFrame(sensor_name, data.timestamp_ns, database)) {
+    if (not AddFrame({data.timestamp_ns, sensor_name}, database)) {
         return false;
     }
 

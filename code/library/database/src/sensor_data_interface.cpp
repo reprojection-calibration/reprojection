@@ -13,13 +13,12 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddFrame(std::string const& sensor_name, uint64_t const timestamp_ns,
-                            std::shared_ptr<CalibrationDatabase> const database) {
+[[nodiscard]] bool AddFrame(FrameHeader const& data, std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::frame_insert};
 
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
-        Sqlite3Tools::Bind(statement.stmt, 2, sensor_name.c_str());
+        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
+        Sqlite3Tools::Bind(statement.stmt, 2, data.sensor_name);
 
     } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
         std::cerr << "AddFrame() runtime error during binding: " << e.what()                    // LCOV_EXCL_LINE
@@ -79,22 +78,23 @@ namespace reprojection::database {
     return true;
 }
 
-[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetStamped const& data,
+[[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
-    if (not AddFrame(sensor_name, data.timestamp_ns, database)) {
+    if (not AddFrame(data.header, database)) {
         return false;
     }
 
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {
-        std::cerr << "ExtractedTarget serialization failed at: " << std::to_string(data.timestamp_ns)  // LCOV_EXCL_LINE
-                  << "\n";                                                                             // LCOV_EXCL_LINE
-        return false;                                                                                  // LCOV_EXCL_LINE
+        std::cerr << "ExtractedTarget serialization failed at: "
+                  << std::to_string(data.header.timestamp_ns)  // LCOV_EXCL_LINE
+                  << "\n";                                     // LCOV_EXCL_LINE
+        return false;                                          // LCOV_EXCL_LINE
     }
 
-    return Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, data.timestamp_ns, sensor_name,
-                                 buffer.c_str(), std::size(buffer), database->db);
+    return Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, data.header.timestamp_ns,
+                                 data.header.sensor_name, buffer.c_str(), std::size(buffer), database->db);
 }
 
 // NOTE(Jack): The logic here is very similar to the ImageStreamer class, but there are enough differences that we
@@ -145,7 +145,7 @@ std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
             continue;                                                                                // LCOV_EXCL_LINE
         }
 
-        data.insert(ExtractedTargetStamped{timestamp_ns, deserialized.value()});
+        data.insert(ExtractedTargetStamped{{timestamp_ns, sensor_name}, deserialized.value()});
     }
 
     return data;

@@ -21,8 +21,7 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddFrame(std::string const& sensor_name, uint64_t const timestamp_ns,
-                            std::shared_ptr<CalibrationDatabase> const database);
+[[nodiscard]] bool AddFrame(FrameHeader const& data, std::shared_ptr<CalibrationDatabase> const database);
 
 // WARN(Jack): Not tested!
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, std::set<PoseStamped> const& data,
@@ -31,7 +30,7 @@ namespace reprojection::database {
 [[nodiscard]] bool AddCameraPoseData(std::string const& sensor_name, PoseStamped const& data, PoseType const type,
                                      std::shared_ptr<CalibrationDatabase> const database);
 
-[[nodiscard]] bool AddExtractedTargetData(std::string const& sensor_name, ExtractedTargetStamped const& data,
+[[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database);
 
 std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
