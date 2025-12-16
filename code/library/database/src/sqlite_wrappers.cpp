@@ -1,6 +1,7 @@
+#include "database/sqlite_wrappers.hpp"
+
 #include <stdexcept>
 
-#include "database/sqlite_wrappers.hpp"
 #include "sqlite3_helpers.hpp"
 
 namespace reprojection::database {

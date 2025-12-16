@@ -13,7 +13,8 @@ struct SqlStatement {
 };
 
 struct SqlTransaction {
-    SqlTransaction(sqlite3* const db);
+    // TODO(Jack): Should this be a smart pointer?
+    explicit SqlTransaction(sqlite3* const db);
 
     ~SqlTransaction();
 

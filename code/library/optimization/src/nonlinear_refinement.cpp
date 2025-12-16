@@ -27,7 +27,6 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(s
             ceres::CostFunction* const cost_function{Create(camera_type, pixels_i.row(j), points_i.row(j))};
 
             problem.AddResidualBlock(cost_function, nullptr, intrinsics_to_optimize.data(), se3[i].data());
-            //problem.SetParameterBlockConstant(intrinsics_to_optimize.data()); // HARDCODE ERROR
         }
     }
 
