@@ -8,6 +8,10 @@ find_package(SQLite3 REQUIRED)
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
+        sql/camera_poses_insert.sql
+        sql/camera_poses_table.sql
+        sql/external_poses_insert.sql
+        sql/external_poses_table.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
@@ -19,8 +23,6 @@ set(SQL_FILES
         sql/imu_data_insert.sql
         sql/imu_data_select.sql
         sql/imu_data_table.sql
-        sql/camera_poses_insert.sql
-        sql/camera_poses_table.sql
 )
 
 foreach (sql ${SQL_FILES})
@@ -75,5 +77,6 @@ set(TESTS
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface.test.cpp
+        test/write_database.test.cpp
 )
 AddTests()

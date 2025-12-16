@@ -65,6 +65,37 @@ namespace reprojection::database {
     return true;
 }
 
+// TODO(Jack): Eliminate copy and paste?
+[[nodiscard]] bool AddExternalPoses(std::set<PoseStamped> const& data,
+                                    std::shared_ptr<CalibrationDatabase> const database) {
+    SqlTransaction const lock{(database->db)};
+
+    for (auto const& data_i : data) {
+        SqlStatement const statement{database->db, sql_statements::external_poses_insert};
+        try {
+            Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data_i.header.timestamp_ns));  // Warn cast!
+            Sqlite3Tools::Bind(statement.stmt, 2, data_i.header.sensor_name);
+            Sqlite3Tools::Bind(statement.stmt, 3, data_i.pose[0]);
+            Sqlite3Tools::Bind(statement.stmt, 4, data_i.pose[1]);
+            Sqlite3Tools::Bind(statement.stmt, 5, data_i.pose[2]);
+            Sqlite3Tools::Bind(statement.stmt, 6, data_i.pose[3]);
+            Sqlite3Tools::Bind(statement.stmt, 7, data_i.pose[4]);
+            Sqlite3Tools::Bind(statement.stmt, 8, data_i.pose[5]);
+        } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
+            std::cerr << "AddExternalPoses() runtime error during binding: " << e.what()            // LCOV_EXCL_LINE
+                      << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
+            return false;                                                                           // LCOV_EXCL_LINE
+        }  // LCOV_EXCL_LINE
+
+        if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
+            std::cerr << "AddExternalPoses() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
+            return false;
+        }
+    }
+
+    return true;
+}
+
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
     if (not AddFrame(data.header, database)) {

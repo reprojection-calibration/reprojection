@@ -1,5 +1,7 @@
 #pragma once
 
+#include <opencv2/opencv.hpp>
+
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
