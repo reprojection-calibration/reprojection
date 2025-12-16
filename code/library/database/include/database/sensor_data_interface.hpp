@@ -37,7 +37,7 @@ struct PoseData {
     Vector6d pose;
 };
 
-enum class PoseType { Initial, Optimized, GroundTruth };
+enum class PoseType { Initial, Optimized };
 
 inline std::string ToString(PoseType const t) {
     switch (t) {
@@ -45,8 +45,6 @@ inline std::string ToString(PoseType const t) {
             return "initial";
         case PoseType::Optimized:
             return "optimized";
-        case PoseType::GroundTruth:
-            return "ground_truth";
     }
     throw std::logic_error("Invalid PoseType");
 }
