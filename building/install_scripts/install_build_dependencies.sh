@@ -8,7 +8,6 @@ apt-get install --no-install-recommends --yes \
     ca-certificates \
     cmake \
     git \
-    git-lfs \
     libgtest-dev \
     ninja-build \
     wget
