@@ -40,7 +40,7 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
 
         // TODO(Jack): There has to be a better way to do this? Maybe just hardcode se3_n_1 as the forward z direction?
         if (std::size(cam0_pnp_poses) <= 1) {
-            cam0_pnp_poses.insert(database::PoseStamped{header.timestamp_ns, se3_i});
+            cam0_pnp_poses.insert(database::PoseStamped{{header.timestamp_ns, "/cam1/image_raw"}, se3_i});
             continue;
         }
 
@@ -57,8 +57,8 @@ TEST(CalibrationLinearPoseInitialization, TestXxxx) {
             se3_i.bottomRows<3>() *= -1;
         }
 
-        cam0_pnp_poses.insert(database::PoseStamped{header.timestamp_ns, se3_i});
+        cam0_pnp_poses.insert(database::PoseStamped{{header.timestamp_ns, "/cam1/image_raw"}, se3_i});
     }
 
-    ASSERT_TRUE(AddCameraPoseData("/cam1/image_raw", cam0_pnp_poses, database::PoseType::Initial, db));
+    ASSERT_TRUE(AddCameraPoseData(cam0_pnp_poses, database::PoseType::Initial, db));
 }

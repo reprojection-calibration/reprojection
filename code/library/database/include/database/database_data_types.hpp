@@ -32,7 +32,7 @@ struct ImageStamped {
 };
 
 struct PoseStamped {
-    uint64_t timestamp_ns;
+    FrameHeader header;
     Vector6d pose;
 };
 
@@ -64,5 +64,10 @@ inline bool operator<(ExtractedTargetStamped const& x, ExtractedTargetStamped co
 inline bool operator<(ImuStamped const& x, ImuStamped const& y) {
     return x.header.timestamp_ns < y.header.timestamp_ns;
 }
+
+inline bool operator<(PoseStamped const& x, PoseStamped const& y) {
+    return x.header.timestamp_ns < y.header.timestamp_ns;
+}
+
 
 }  // namespace reprojection::database
