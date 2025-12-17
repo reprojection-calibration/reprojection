@@ -8,5 +8,5 @@ cd /temporary/code/python_tooling
 
 python3 setup.py build --build-base "${build_directory}"
 
-python3 -m unittest discover -s tests -p "*.py"
+python3 -m unittest --verbose
 
