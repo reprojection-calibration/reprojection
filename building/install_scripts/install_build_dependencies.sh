@@ -11,6 +11,7 @@ apt-get install --no-install-recommends --yes \
     git-lfs \
     libgtest-dev \
     ninja-build \
+    python3 \
     wget
 
 # Required for code coverage

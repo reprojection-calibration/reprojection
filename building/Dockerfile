@@ -22,6 +22,10 @@ RUN --mount=type=bind,source=${LIBRARY_DEPENDENCY_SOURCE_BUILDS},target=/tempora
     --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
     /temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS}
 
+ARG INSTALL_PYTHON_DEPENDENCIES=building/install_scripts/install_python_dependencies.sh
+RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPENDENCIES},target=/temporary/${INSTALL_PYTHON_DEPENDENCIES} \
+    /temporary/${INSTALL_PYTHON_DEPENDENCIES}
+
 
 FROM configuration-stage AS code-checks-stage
 
