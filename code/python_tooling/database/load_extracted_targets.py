@@ -47,8 +47,7 @@ def build_indices(msg_data):
 def load_extracted_targets(db_path):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    # ERROR(Jack): Dangerous copy paste, see TODO below.
-    # TODO(Jack): Load this sql definition from the sql folder!
+    # ERROR(Jack): Dangerous copy paste, use common sql defs for all code
     cur.execute(
         "SELECT timestamp_ns, sensor_name, data "
         "FROM extracted_targets ORDER BY timestamp_ns ASC"

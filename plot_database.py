@@ -24,11 +24,14 @@ def load_poses(db_path):
     cur = conn.cursor()
     cur.execute(
         "SELECT timestamp_ns, sensor_name, rx, ry, rz, x, y, z "
-        "FROM external_poses ORDER BY timestamp_ns ASC"
+        "FROM external_poses WHERE type = ? ORDER BY timestamp_ns ASC"
     )
     rows = cur.fetchall()
     conn.close()
     return rows
+
+"FROM camera_poses WHERE type = ? ORDER BY timestamp_ns ASC",
+(pose_type,)
 
 
 def create_grid_lines():

@@ -46,6 +46,8 @@ namespace reprojection::database {
             statement = std::make_unique<SqlStatement>(database->db, sql_statements::camera_poses_insert);
         } else if (table == PoseTable::External) {
             statement = std::make_unique<SqlStatement>(database->db, sql_statements::external_poses_insert);
+        } else {
+            throw std::runtime_error("Requested an invalid PoseTable from AddPoseData()");  // LCOV_EXCL_LINE
         }
 
         try {
