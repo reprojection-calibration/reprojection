@@ -6,7 +6,7 @@ from database.example import add_one
 class TestStringMethods(unittest.TestCase):
 
     def test_add_one(self):
-        self.assertEqual(add_one(3), 10)
+        self.assertEqual(add_one(3), 4)
 
     def test_isupper(self):
         self.assertTrue('FOO'.isupper())
