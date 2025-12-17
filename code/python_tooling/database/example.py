@@ -3,11 +3,52 @@ import sqlite3
 import numpy as np
 
 
+class ExtractedTarget:
+    def __init__(self, pixels, points, indices):
+        assert pixels.shape[0] == points.shape[0] == indices.shape[0]
+
+        self.pixels = pixels
+        self.points = points
+        self.indices = indices
+
+
+def build_pixels(msg_data):
+    rows = msg_data.pixel_rows
+    data = np.array(msg_data.pixel_data, dtype=np.float64)
+
+    if rows == 0 or data.size == 0:
+        return np.empty((0, 2))
+    else:
+        # NOTE(Jack): We need the transpose here because eigen stores the data column wise. At least I think that is
+        # why :)
+        return data.reshape(2, rows).transpose()
+
+
+def build_points(msg_data):
+    rows = msg_data.point_rows
+    data = np.array(msg_data.point_data, dtype=np.float64)
+
+    if rows == 0 or data.size == 0:
+        return np.empty((0, 3))
+    else:
+        return data.reshape(3, rows).transpose()
+
+
+def build_indices(msg_data):
+    rows = msg_data.indices_rows
+    data = np.array(msg_data.indices_data, dtype=np.int32)
+
+    if rows == 0 or data.size == 0:
+        return np.empty((0, 2))
+    else:
+        return data.reshape(2, rows).transpose()
+
+
 def load_extracted_targets(db_path):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     # ERROR(Jack): Dangerous copy paste, see TODO below.
-    # TODO(Jack): Load this sql defintiion from the sql folder!
+    # TODO(Jack): Load this sql definition from the sql folder!
     cur.execute(
         "SELECT timestamp_ns, sensor_name, data "
         "FROM extracted_targets ORDER BY timestamp_ns ASC"
@@ -18,15 +59,10 @@ def load_extracted_targets(db_path):
         msg = ExtractedTargetProto()
         msg.ParseFromString(blob)
 
-        rows = msg.bundle.point_rows
-        data = np.array(msg.bundle.point_data, dtype=np.float64)
+        data = ExtractedTarget(build_pixels(msg.bundle), build_points(msg.bundle), build_indices(msg))
 
-        if rows == 0 or data.size == 0:
-            points = np.empty((0, 3))
-        else:
-            points = data.reshape(3, rows).transpose()  # Eigen::MatrixX3d
-
-        targets.setdefault(sensor, {})[ts] = points
+        # TODO(Jack): What is the deal here with this set default thing?
+        targets.setdefault(sensor, {})[ts] = data
 
     conn.close()
 
