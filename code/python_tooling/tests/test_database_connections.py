@@ -1,6 +1,6 @@
 import unittest
 
-from database.example import load_extracted_targets
+from database.load_extracted_targets import load_extracted_targets
 
 
 class TestDatabaseConnections(unittest.TestCase):
