@@ -37,7 +37,7 @@ namespace reprojection::database {
 }
 
 [[nodiscard]] bool AddPoseData(std::set<PoseStamped> const& data, PoseTable const table, PoseType const type,
-                                     std::shared_ptr<CalibrationDatabase> const database) {
+                               std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
     for (auto const& data_i : data) {
@@ -59,20 +59,19 @@ namespace reprojection::database {
             Sqlite3Tools::Bind(statement->stmt, 8, data_i.pose[4]);
             Sqlite3Tools::Bind(statement->stmt, 9, data_i.pose[5]);
         } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-            std::cerr << "AddCameraPoseData() runtime error during binding: " << e.what()           // LCOV_EXCL_LINE
+            std::cerr << "AddPoseData() runtime error during binding: " << e.what()                 // LCOV_EXCL_LINE
                       << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
             return false;                                                                           // LCOV_EXCL_LINE
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement->stmt) != static_cast<int>(SqliteFlag::Done)) {
-            std::cerr << "AddCameraPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
+            std::cerr << "AddPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
             return false;
         }
     }
 
     return true;
 }
-
 
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
