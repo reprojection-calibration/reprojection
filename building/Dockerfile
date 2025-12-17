@@ -44,7 +44,7 @@ FROM base-stage AS python-tooling-stage
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
-    --mount=type=bind,source=code/,target=/temporary/code \
+    --mount=type=bind,source=code/python_tooling,target=/temporary/code/python_tooling \
     /temporary/${BUILD_PYTHON_TOOLING}
 
 
