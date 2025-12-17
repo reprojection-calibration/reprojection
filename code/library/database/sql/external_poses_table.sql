@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS external_poses
 (
     timestamp_ns INTEGER NOT NULL,
     sensor_name  TEXT    NOT NULL,
+    type         TEXT    NOT NULL,
     rx           REAL    NOT NULL,
     ry           REAL    NOT NULL,
     rz           REAL    NOT NULL,

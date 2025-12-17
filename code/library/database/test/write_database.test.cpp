@@ -177,8 +177,10 @@ TEST(Xxxx, Yyyyy) {
     std::vector<database::PoseStamped> const mocap_data{text_files::loadMocapFile(
         "/data/cvg.cit.tum.de_visual-inertial-dataset/dataset-calib-imu4_512_16/mav0/mocap0/data.csv")};
 
+    // TODO(Jack): Insert set directly to make much faster
     for (auto const& pose_i : mocap_data) {
-        EXPECT_TRUE(database::AddExternalPoses({pose_i}, db));
+        EXPECT_TRUE(
+            database::AddPoseData({pose_i}, database::PoseTable::External, database::PoseType::GroundTruth, db));
     }
 
     std::map<double, ExtractedTarget> const cam0_data{text_files::LoadExtractedTargets("/data/cam0")};

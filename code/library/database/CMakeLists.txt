@@ -81,5 +81,6 @@ set(TESTS
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface.test.cpp
+        test/write_database.test.cpp
 )
 AddTests()
