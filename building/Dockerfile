@@ -40,6 +40,13 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_CHECKS}
 
+FROM base-stage AS python-tooling-stage
+
+ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
+RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
+    --mount=type=bind,source=code/,target=/temporary/code \
+    /temporary/${BUILD_PYTHON_TOOLING}
+
 
 FROM base-stage AS debug-build-stage
 

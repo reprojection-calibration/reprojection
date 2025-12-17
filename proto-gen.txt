@@ -1,1 +1,0 @@
-python package generate protobuf code automatically as part of package
