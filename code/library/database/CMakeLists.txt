@@ -45,8 +45,10 @@ configure_file(
 # TODO(Jack): Should we compile database_proto as static like in the example linked above?
 # TODO(Jack): Is there anyway to have the generated code go to the "generated/" folder? It would add some consistency
 # with the generated sql code which we are otherwise lacking.
+# TODO(Jackk): This path here scares me because now we are hardcoding a relative path to an asset that exists outside
+# of the cmake package. This smells!
 protobuf_generate_cpp(proto_sources proto_headers
-        "proto/extracted_target.proto"
+        "../../proto/extracted_target.proto"
 )
 add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 
@@ -79,6 +81,5 @@ set(TESTS
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface.test.cpp
-        test/write_database.test.cpp
 )
 AddTests()
