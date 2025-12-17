@@ -3,10 +3,6 @@ import sqlite3
 import numpy as np
 
 
-def add_one(number):
-    return number + 1
-
-
 def load_extracted_targets(db_path):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
