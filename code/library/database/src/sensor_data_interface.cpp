@@ -3,38 +3,16 @@
 #include <sqlite3.h>
 
 #include <filesystem>
+#include <memory>
 #include <string>
 
 #include "database/sqlite_wrappers.hpp"
 // cppcheck-suppress missingInclude
-#include <memory>
-
 #include "generated/sql.hpp"
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 
 namespace reprojection::database {
-
-[[nodiscard]] bool AddFrame(FrameHeader const& data, std::shared_ptr<CalibrationDatabase> const database) {
-    SqlStatement const statement{database->db, sql_statements::frame_insert};
-
-    try {
-        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
-        Sqlite3Tools::Bind(statement.stmt, 2, data.sensor_name);
-
-    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-        std::cerr << "AddFrame() runtime error during binding: " << e.what()                    // LCOV_EXCL_LINE
-                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                           // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
-
-    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        std::cerr << "AddFrame() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                               // LCOV_EXCL_LINE
-    }
-
-    return true;
-}
 
 [[nodiscard]] bool AddPoseData(std::set<PoseStamped> const& data, PoseTable const table, PoseType const type,
                                std::shared_ptr<CalibrationDatabase> const database) {
@@ -77,10 +55,6 @@ namespace reprojection::database {
 
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
-    if (not AddFrame(data.header, database)) {
-        return false;  // LCOV_EXCL_LINE
-    }
-
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {

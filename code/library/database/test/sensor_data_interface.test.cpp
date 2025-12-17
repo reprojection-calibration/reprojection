@@ -8,6 +8,7 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
+#include "database/image_interface.hpp"
 
 using namespace reprojection;
 
@@ -22,18 +23,6 @@ class TempFolder : public ::testing::Test {
     std::string database_path_{"sandbox"};
 };
 
-TEST_F(TempFolder, TestAddFrame) {
-    std::string const record_path{database_path_ + "/record_sss.db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
-
-    EXPECT_TRUE(database::AddFrame({0, "/cam/retro/123"}, db));
-    EXPECT_TRUE(database::AddFrame({1, "/cam/retro/123"}, db));
-
-    // Does not fail when data is duplicated! For the frames table we need this behavior because we call Add* methods
-    // from many different places. This is the only table like this, where attempted duplicated entries are acceptable.
-    EXPECT_TRUE(database::AddFrame({1, "/cam/retro/123"}, db));
-}
-
 TEST_F(TempFolder, TestAddPoseData) {
     std::string const record_path{database_path_ + "/record_ddd.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
@@ -46,11 +35,12 @@ TEST_F(TempFolder, TestAddPoseData) {
     EXPECT_FALSE(database::AddPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseTable::Camera,
                                        database::PoseType::Optimized, db));
 
-    // Now we add an extracted target with matching sensor name and timestamp (i.e. the foreign key constraint) and now
-    // we can add the initial camera pose no problem :)
-    (void)AddExtractedTargetData({{0, "/cam/retro/123"}, {}}, db);
-    EXPECT_TRUE(database::AddPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseTable::Camera,
-                                      database::PoseType::Initial, db));
+    // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
+    // constraint) and now we can add the initial camera pose no problem :)
+    database::FrameHeader const header{0, "/cam/retro/123"};
+    (void)database::AddImage(header, db);
+    (void)AddExtractedTargetData({header, {}}, db);
+    EXPECT_TRUE(database::AddPoseData({{header, pose}}, database::PoseTable::Camera, database::PoseType::Initial, db));
 }
 
 TEST_F(TempFolder, TestAddExtractedTargetData) {
@@ -61,7 +51,10 @@ TEST_F(TempFolder, TestAddExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    EXPECT_TRUE(AddExtractedTargetData({{0, "/cam/retro/123"}, bundle}, db));
+    database::FrameHeader const header{0, "/cam/retro/123"};
+    (void)database::AddImage(header, db);
+
+    EXPECT_TRUE(AddExtractedTargetData({header, bundle}, db));
 }
 
 TEST_F(TempFolder, TestGetExtractedTargetData) {

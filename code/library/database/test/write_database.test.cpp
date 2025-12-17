@@ -6,6 +6,7 @@
 
 #include "database/calibration_database.hpp"
 #include "database/database_data_types.hpp"
+#include "database/image_interface.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "sqlite3_helpers.hpp"
 
@@ -187,7 +188,9 @@ TEST(Xxxx, Yyyyy) {
     (void)database::Sqlite3Tools::Execute("BEGIN TRANSACTION;", db->db);
     for (auto const& [time, target] : cam0_data) {
         uint64_t const timestamp_ns_i{static_cast<uint64_t>(time * 1e9)};
-        EXPECT_TRUE(AddExtractedTargetData({{timestamp_ns_i, "/cam0/image_raw"}, target}, db));
+        database::FrameHeader const header{timestamp_ns_i, "/cam0/image_raw"};
+        EXPECT_TRUE(database::AddImage(header, db));
+        EXPECT_TRUE(AddExtractedTargetData({header, target}, db));
     }
     (void)database::Sqlite3Tools::Execute("COMMIT TRANSACTION;", db->db);
 
@@ -195,7 +198,9 @@ TEST(Xxxx, Yyyyy) {
     (void)database::Sqlite3Tools::Execute("BEGIN TRANSACTION;", db->db);
     for (auto const& [time, target] : cam1_data) {
         uint64_t const timestamp_ns_i{static_cast<uint64_t>(time * 1e9)};
-        EXPECT_TRUE(AddExtractedTargetData({{timestamp_ns_i, "/cam1/image_raw"}, target}, db));
+        database::FrameHeader const header{timestamp_ns_i, "/cam1/image_raw"};
+        EXPECT_TRUE(database::AddImage(header, db));
+        EXPECT_TRUE(AddExtractedTargetData({header, target}, db));
     }
     (void)database::Sqlite3Tools::Execute("COMMIT TRANSACTION;", db->db);
 

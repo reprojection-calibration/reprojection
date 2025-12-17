@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS extracted_targets
     data         BLOB    NOT NULL,
     PRIMARY KEY (timestamp_ns, sensor_name),
     FOREIGN KEY (timestamp_ns, sensor_name)
-        REFERENCES frames (timestamp_ns, sensor_name)
+        REFERENCES images (timestamp_ns, sensor_name)
 );
