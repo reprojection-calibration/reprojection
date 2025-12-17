@@ -43,28 +43,20 @@ components of this process are:
 
 ### Camera Data
 
-A camera "frame" is identified by its timestamp and sensor name, these two pieces form the fundamental "primary
-key" we use to identify camera data throughout the database. In sql we form a "composite" primary key from the
-`timestamp_ns` and `sensor_name` rows. Every piece of information which is associated with a specific camera image must
-reference this unique ID (directly or indirectly).
+Some parts of the calibration process are inextricably linked to an image. For example extracted target features or an
+optimized camera pose correspond to exactly the image that they were calculated from. We take advantage of this relation
+to design the primary keys and foreign keys for image related data.
 
-Intuitively the calibration process forms a one way chain from the images to the extracted features to the pose
-initialization etc. Therefore, one would imagine that the pose table has a foreign key dependency on the extracted
-features, which in turn has a foreign key dependency on the images. This would enforce that a extracted feature or pose
-record can only exist if there is a corresponding entry in the image table. While this enforces the uniqueness and
-record relationship record very well, it also requires that the images be present in the database. Given the large size
-of images we do not want this. A 10MB record without images is nearly as valuable as a 1.01GB record with images for
-many use cases.
+Please read external documentation on primary keys and foreign keys before reading further. TODO INSERT LINKS.
 
-Therefore, we must reserve the ability to remove the images from the database if they are not needed. In our linear
-model this would break the relation dependency as the images cannot serve as the parent for the extracted features
-anymore (Note that if we allow the image blob to be null, then maybe we can eliminate the hub and spoke design and
-return to the linear relation design).
+Every row in the `images` table is identified by a composite primary key `(timestmap_ns, sensor_name)`. This uniquely
+identifies every single image (primary keys must be unique!). It is not possible for one camera (`sensor_name`) to take
+two images at the same exact time (`timestamp_ns`).
 
-To solve this we use a "hub and spoke" model. In this data model we have a central `frames` table which has contains the
-timestamp and sensor name. Both the images table (if it has data) and the extracted features have a foreign key
-dependency on the frames table. The frames table acts as a central registrar of the image frames present in the
-calibration process. Every quanitity that corresponds to a specific image frame must refernce (directly or indirectly)
-the frames table.
+A special feature of the `images` table is that, unlike almost all other columns in all other tables, the data columns
+which holds the compressed image "blob" can be `NULL`. This allows us to remove the images if they are not needed
+anymore, which keeps the database size small, while maintaining the dependent foreign key relationships.
 
-Sqlite expresses dependent relationships between keys with the "foreign key" concept. 
+For a more in depth understanding of the database structure please use generic analysis tools like those built into
+CLion.
+
