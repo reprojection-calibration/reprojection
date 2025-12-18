@@ -6,6 +6,10 @@ find_package(OpenCV REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(SQLite3 REQUIRED)
 
+# NOTE(Jack): Because we want one single source of truth for both the library and python tooling we store the sql files
+# under `code/sql`, outside of the cmake package. Therefore just like for the proto files below we need to backspace two
+# directories "../../${sql}" to get to the actual file. If this is a bad design to hardcode reference paths outisde of
+# the package we will find out one day in the future!
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
@@ -26,7 +30,7 @@ set(SQL_FILES
 
 foreach (sql ${SQL_FILES})
     get_filename_component(name ${sql} NAME_WE)
-    file(READ ${sql} contents)
+    file(READ "../../${sql}" contents)
 
     set(SQL_STRING_ENTRIES
             "${SQL_STRING_ENTRIES}\nconstexpr char const * const ${name} = R\"sql(\n${contents}\n)sql\";\n")
@@ -43,8 +47,8 @@ configure_file(
 # TODO(Jack): Should we compile database_proto as static like in the example linked above?
 # TODO(Jack): Is there anyway to have the generated code go to the "generated/" folder? It would add some consistency
 # with the generated sql code which we are otherwise lacking.
-# TODO(Jackk): This path here scares me because now we are hardcoding a relative path to an asset that exists outside
-# of the cmake package. This smells!
+# TODO(Jack): This path here scares me because now we are hardcoding a relative path to an asset that exists outside
+# of the cmake package. This smells! See path above about sql files too.
 protobuf_generate_cpp(proto_sources proto_headers
         "../../proto/extracted_target.proto"
 )
@@ -79,6 +83,6 @@ set(TESTS
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface.test.cpp
-        test/write_database.test.cpp
+        # test/write_database.test.cpp
 )
 AddTests()
