@@ -22,6 +22,4 @@ pip install --upgrade \
 pip install --upgrade \
   grpcio \
   grpcio-tools \
-  protobuf \
-  pyasn1 \
-  pyasn1-modules
+  protobuf
