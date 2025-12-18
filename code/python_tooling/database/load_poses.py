@@ -7,7 +7,7 @@ def load_poses(db_path, table, type):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    # TODO(Jack): Is there a better way to paramaterize the table type?
+    # TODO(Jack): Is there a better way to parameterize the table type?
     # TODO(Jack): For some reason I could not pass the sql statement as text variable to cur.execute() but instead
     # had to copy and paste the entire logic twice.
     if table == "camera":
