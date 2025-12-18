@@ -39,6 +39,8 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
 # ERROR ADD TO GHA
 FROM configuration-stage AS python-tooling-stage
 
+ENV VENV_DIR="~/.reprojection_venv"
+
 # TODO(Jack): Should these go into the base stage? Or is the python workflow unique enough?
 ARG INSTALL_PYTHON_DEPENDENCIES=building/install_scripts/install_python_dependencies.sh
 RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPENDENCIES},target=/temporary/${INSTALL_PYTHON_DEPENDENCIES} \
