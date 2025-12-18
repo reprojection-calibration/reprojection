@@ -6,13 +6,13 @@ set -eoux pipefail
 VENV_DIR=~/.reprojection-venv
 source "$VENV_DIR/bin/activate"
 
-# TODO(Jack): Can we do this all "out of source"? Or do we need to change the directory?
-cd /temporary/code/python_tooling
+# TODO(Jack): I would have liked to have the protobuf definition as an integrated part of the package (ex. in setup.py)
+#  but I could not get grpc_tools recognized in the setup.py script. Possibly to do with the fact that setup.py does not
+# have access to all the packages in the venv. But this is speculation and needs more reasearch.
+proto_directory=/temporary/code/proto
+package_directory=/temporary/code/python_tooling
+python3 -m grpc_tools.protoc -I "${proto_directory}" --python_out="${package_directory}/generated" "${proto_directory}"/*.proto
 
-python3 -m grpc_tools.protoc -I ../proto --python_out=generated ../proto/*.proto
-
-# TODO(Jack): Is this the real best way to do this? Do the tests run the tests that we actually want to run in the build
-# folder? Or are they run from the soruce code?
-pip install -e .
-python3 -m unittest discover -s tests -v
+python3 -m pip install --editable "${package_directory}"
+python3 -m unittest discover --start-directory "${package_directory}/tests" --verbose
 
