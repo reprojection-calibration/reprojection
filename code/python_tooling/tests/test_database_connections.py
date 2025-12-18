@@ -1,6 +1,6 @@
 import unittest
 
-from database.load_extracted_targets import load_extracted_targets
+from database.load_extracted_targets import load_all_extracted_targets
 from database.load_poses import load_poses
 
 
@@ -25,7 +25,7 @@ class TestDatabaseConnections(unittest.TestCase):
         # WARN(Jack): Is there a better way to define this global value here? We might want to test inside of the
         # container and sometimes outside.
         db_path = "/home/stable-genius-gram/github/reprojection-calibration/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"
-        loaded_data = load_extracted_targets(db_path)
+        loaded_data = load_all_extracted_targets(db_path)
 
         # Two cameras
         self.assertEqual(len(loaded_data), 2)

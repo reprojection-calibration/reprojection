@@ -2,6 +2,9 @@ from database.extracted_target_pb2 import ExtractedTargetProto
 import sqlite3
 import numpy as np
 
+from database.sql_statement_loading import load_sql
+from pyasn1.compat.octets import null
+
 
 class ExtractedTarget:
     def __init__(self, pixels, points, indices):
@@ -44,13 +47,11 @@ def build_indices(msg_data):
         return data.reshape(2, rows).transpose()
 
 
-def load_extracted_targets(db_path):
+def load_all_extracted_targets(db_path):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    # ERROR(Jack): Dangerous copy paste, use common sql defs for all code
     cur.execute(
-        "SELECT timestamp_ns, sensor_name, data "
-        "FROM extracted_targets ORDER BY timestamp_ns ASC"
+        load_sql("extracted_targets_select_all.sql")
     )
 
     targets = {}
@@ -58,7 +59,9 @@ def load_extracted_targets(db_path):
         msg = ExtractedTargetProto()
         msg.ParseFromString(blob)
 
-        data = ExtractedTarget(build_pixels(msg.bundle), build_points(msg.bundle), build_indices(msg))
+        data = ExtractedTarget(
+            build_pixels(msg.bundle), build_points(msg.bundle), build_indices(msg)
+        )
 
         # TODO(Jack): What is the deal here with this set default thing?
         targets.setdefault(sensor, {})[ts] = data
