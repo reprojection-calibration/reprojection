@@ -13,14 +13,14 @@ apt-get install --no-install-recommends --yes \
 python3 -m venv "${VENV_DIR}"
 source "${VENV_DIR}/bin/activate"
 
-pip install --upgrade \
+python3 -m pip install \
  build \
  numpy \
  pip \
  setuptools
 
 # Protobuf deps
-pip install --upgrade \
+python3 -m pip install \
   grpcio \
   grpcio-tools \
   protobuf
