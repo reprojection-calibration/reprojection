@@ -1,9 +1,8 @@
-from database.extracted_target_pb2 import ExtractedTargetProto
+from generated.extracted_target_pb2 import ExtractedTargetProto
 import sqlite3
 import numpy as np
 
 from database.sql_statement_loading import load_sql
-from pyasn1.compat.octets import null
 
 
 class ExtractedTarget:

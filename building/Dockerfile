@@ -42,9 +42,12 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
 
 FROM base-stage AS python-tooling-stage
 
+COPY code/python_tooling /temporary/code/python_tooling
+
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
-    --mount=type=bind,source=code/python_tooling,target=/temporary/code/python_tooling \
+    --mount=type=bind,source=code/proto,target=/temporary/code/proto \
+    --mount=type=bind,source=code/sql,target=/temporary/code/sql \
     /temporary/${BUILD_PYTHON_TOOLING}
 
 

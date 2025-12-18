@@ -1,8 +1,5 @@
 from setuptools import setup
 
-# TODO(Jack): Use setuptools-protobuf package
-# ERROR(Jack): Automatically generate the protobuf python file!
-
 setup(
     name="python_tooling",
     version="0.0.0",
@@ -11,5 +8,5 @@ setup(
     description=("A package for handling and visualization of calibration data."),
     license="GNU AGPL",
     url="https://github.com/reprojection-calibration/reprojection",
-    packages=['database', 'tests'],
+    packages=['database', 'generated', 'tests'],
 )
