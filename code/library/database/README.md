@@ -47,7 +47,8 @@ Some parts of the calibration process are inextricably linked to an image. For e
 optimized camera pose correspond to exactly the image that they were calculated from. We take advantage of this relation
 to design the primary keys and foreign keys for image related data.
 
-Please read external documentation on primary keys and foreign keys before reading further. TODO INSERT LINKS.
+Please read external documentation on [primary keys](https://www.sqlite.org/lang_createtable.html#the_primary_key) and
+[foreign keys](https://www.sqlite.org/foreignkeys.html) before reading further.
 
 Every row in the `images` table is identified by a composite primary key `(timestmap_ns, sensor_name)`. This uniquely
 identifies every single image (primary keys must be unique!). It is not possible for one camera (`sensor_name`) to take
