@@ -6,8 +6,7 @@ set -eoux pipefail
 apt-get update
 apt-get install --no-install-recommends --yes \
     python3 \
-    python3-venv \
-    python3-pip
+    python3-venv
 
 # Create and activate virtual environment
 python3 -m venv "${VENV_DIR}"
@@ -16,7 +15,6 @@ source "${VENV_DIR}/bin/activate"
 python3 -m pip install \
  build \
  numpy \
- pip \
  setuptools
 
 # Protobuf deps
