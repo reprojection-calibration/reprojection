@@ -4,10 +4,7 @@ set -eoux pipefail
 
 # ERROR(Jack): Copy pasted from install_python_deps script!!!
 VENV_DIR=~/.reprojection-venv
-python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
-
-build_directory=/buildroot/build/python
 
 # TODO(Jack): Can we do this all "out of source"? Or do we need to change the directory?
 cd /temporary/code/python_tooling

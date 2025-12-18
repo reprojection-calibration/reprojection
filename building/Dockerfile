@@ -22,10 +22,6 @@ RUN --mount=type=bind,source=${LIBRARY_DEPENDENCY_SOURCE_BUILDS},target=/tempora
     --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
     /temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS}
 
-ARG INSTALL_PYTHON_DEPENDENCIES=building/install_scripts/install_python_dependencies.sh
-RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPENDENCIES},target=/temporary/${INSTALL_PYTHON_DEPENDENCIES} \
-    /temporary/${INSTALL_PYTHON_DEPENDENCIES}
-
 
 FROM configuration-stage AS code-checks-stage
 
@@ -40,14 +36,19 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_CHECKS}
 
-FROM base-stage AS python-tooling-stage
+FROM configuration-stage AS python-tooling-stage
 
-COPY code/python_tooling /temporary/code/python_tooling
+# TODO(Jack): Should these go into the base stage?
+ARG INSTALL_PYTHON_DEPENDENCIES=building/install_scripts/install_python_dependencies.sh
+RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPENDENCIES},target=/temporary/${INSTALL_PYTHON_DEPENDENCIES} \
+    /temporary/${INSTALL_PYTHON_DEPENDENCIES}
+
+# TODO(Jack): Figure out a better way to deal with the paths here!
+COPY code /temporary/code
+COPY code/sql /temporary/code/python_tooling/database/sql
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
-    --mount=type=bind,source=code/proto,target=/temporary/code/proto \
-    --mount=type=bind,source=code/sql,target=/temporary/code/sql \
     /temporary/${BUILD_PYTHON_TOOLING}
 
 

@@ -6,7 +6,7 @@ from database.load_poses import load_poses
 
 class TestDatabaseConnections(unittest.TestCase):
     def test_pose_loading(self):
-        db_path = "/home/stable-genius-gram/github/reprojection-calibration/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"
+        db_path = "/temporary/code/test_data/dataset-calib-imu4_512_16.db3"
 
         # At time of writing there is no camera pose data in the test_data database
         loaded_data = load_poses(db_path, "camera", "initial")
@@ -24,7 +24,7 @@ class TestDatabaseConnections(unittest.TestCase):
     def test_extracted_target_loading(self):
         # WARN(Jack): Is there a better way to define this global value here? We might want to test inside of the
         # container and sometimes outside.
-        db_path = "/home/stable-genius-gram/github/reprojection-calibration/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"
+        db_path = "/temporary/code/test_data/dataset-calib-imu4_512_16.db3"
         loaded_data = load_all_extracted_targets(db_path)
 
         # Two cameras
