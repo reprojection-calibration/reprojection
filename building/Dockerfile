@@ -36,19 +36,33 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_CHECKS}
 
+# ERROR ADD TO GHA
 FROM configuration-stage AS python-tooling-stage
 
-# TODO(Jack): Should these go into the base stage?
+# TODO(Jack): Should these go into the base stage? Or is the python workflow unique enough?
 ARG INSTALL_PYTHON_DEPENDENCIES=building/install_scripts/install_python_dependencies.sh
 RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPENDENCIES},target=/temporary/${INSTALL_PYTHON_DEPENDENCIES} \
     /temporary/${INSTALL_PYTHON_DEPENDENCIES}
 
-# TODO(Jack): Figure out a better way to deal with the paths here!
-COPY code /temporary/code
+
+COPY code/python_tooling /temporary/code/python_tooling
+
+# TODO(Jack): We want to have a single source of truth for the sql files. Therefore we symlinked the `code/sql` directory
+# to the `python_tooling/database/sql` directory. Unfortunately in the dockerized python testing workflow this does not
+# work! Locally it works fine, but in the docker build we get the error "ModuleNotFoundError: No module named
+# 'database.sql'". To Test that this is the case I copied the sql files directly into the database package and then the
+# dockerized workflow worked no problem.
+#
+# This copy command copies the sql files over the symlinked directory in the python package and then the testing can
+# find the files no problem. This is technically acceptable because the "single source of truth" rule is only violated
+# here ephermally in the build process. But if there was just a way to make it work without this and simply with the the
+# symlinks, like it works for local testing, that would be great.
 COPY code/sql /temporary/code/python_tooling/database/sql
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
+    --mount=type=bind,source=code/proto,target=/temporary/code/proto \
+    --mount=type=bind,source=code/test_data,target=/temporary/code/test_data \
     /temporary/${BUILD_PYTHON_TOOLING}
 
 
