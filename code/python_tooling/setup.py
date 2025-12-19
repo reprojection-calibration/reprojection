@@ -9,5 +9,5 @@ setup(
         "A package for handling and visualization of calibration data."),
     license="GNU AGPL",
     url="https://github.com/reprojection-calibration/reprojection",
-    packages=['database', 'generated', 'tests'],
+    packages=['dashboard', 'database', 'generated', 'tests'],
 )
