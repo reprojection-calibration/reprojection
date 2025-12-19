@@ -85,11 +85,14 @@ app.layout = html.Div(
                 data=[go.Scattergl(x=[], y=[], mode="markers",
                                    marker=dict(size=4, color="red"))],
                 layout=go.Layout(
-                    xaxis=dict(range=X_RANGE, title="X", scaleanchor="y", scaleratio=1),
-                    yaxis=dict(range=Y_RANGE, title="Y", autorange="reversed"),
-                    width=600, height=600,
+                    xaxis=dict(range=[0,512], title="X", scaleanchor="y", scaleratio=1, autorange=False),
+                    yaxis=dict(range=[0,512], title="Y", autorange=False),  # FIXED 0-512
+                    width=512,
+                    height=512,
+                    autosize=False,
                     template="plotly_white",
-                    uirevision="constant"  # preserve zoom/pan
+                    uirevision="constant",
+                    title=""
                 )
             )
         )
@@ -140,14 +143,15 @@ def load_database(db_file):
 
 app.clientside_callback(
     """
-    function(slider_idx, sensor, data_store) {
-        if (!data_store || !sensor) { return window.dash_clientside.no_update; }
+    function(slider_idx, sensor, data_store, fig) {
+        if (!data_store || !sensor || !fig) { return window.dash_clientside.no_update; }
         const times = data_store[sensor]["_times"];
         if (slider_idx >= times.length) { return window.dash_clientside.no_update; }
 
         const current_time = times[slider_idx];
         const frame = data_store[sensor][current_time];
 
+        // Create a new figure object
         return {
             data: [{
                 x: frame["x"],
@@ -155,14 +159,25 @@ app.clientside_callback(
                 mode: "markers",
                 marker: {size: 4, color: "red"}
             }],
-            layout: {title: `Sensor: ${sensor} | Time: ${current_time}`}
+            layout: {
+                ...fig.layout,                 // copy all layout settings
+                xaxis: {range: [0, 512], scaleanchor: 'y', scaleratio: 1, autorange: false, title: 'X'},
+                yaxis: {range: [0, 512], autorange: false, title: 'Y'},
+                width: 512,
+                height: 512,
+                autosize: false,
+                template: "plotly_white",
+                uirevision: "constant",
+                title: `Sensor: ${sensor} | Time: ${current_time}`
+            }
         };
     }
     """,
     Output("pixel-plot", "figure"),
     Input("time-slider", "value"),
     Input("sensor-dropdown", "value"),
-    Input("global-data-store", "data")
+    Input("global-data-store", "data"),
+    Input("pixel-plot", "figure")
 )
 
 # ------------------------
