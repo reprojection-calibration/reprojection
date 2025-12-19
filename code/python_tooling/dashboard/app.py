@@ -1,6 +1,7 @@
 import os
 from dash import Dash, dcc, html, Input, Output
 import plotly.graph_objects as go
+import numpy as np
 
 from database.load_extracted_targets import load_all_extracted_targets
 
@@ -14,8 +15,8 @@ SENSOR_COL = "sensor"
 X_COL = "x"
 Y_COL = "y"
 
-X_RANGE = [0, 1920]
-Y_RANGE = [0, 1080]
+X_RANGE = [0, 512]
+Y_RANGE = [0, 512]
 
 
 # ------------------------
@@ -65,8 +66,11 @@ app.layout = html.Div(
             max=0,
             step=1,
             value=0,
+            updatemode="drag",
             tooltip={"always_visible": True}
         ),
+
+        dcc.Store(id="pixel-data-store"),
 
         dcc.Graph(id="pixel-plot")
     ]
@@ -84,6 +88,34 @@ app.layout = html.Div(
 )
 def reload_database_list(_):
     return [{"label": db, "value": db} for db in list_databases()]
+
+
+# Needed because the ExtractedTarget struct is not a JSON-serializable object
+def extracted_targets_to_records(target_map):
+    out = {}
+
+    for sensor, time_map in target_map.items():
+        out[sensor] = {}
+
+        for timestamp, target in time_map.items():
+            out[sensor][str(timestamp)] = {
+                "pixels": target.pixels,
+                "points": target.points,
+                "indices": target.indices,
+            }
+
+    return out
+
+
+@app.callback(
+    Output("pixel-data-store", "data"),
+    Input("db-dropdown", "value")
+)
+def load_db_to_store(db_file):
+    if not DB_DIR + db_file:
+        return None
+
+    return extracted_targets_to_records(load_all_extracted_targets(DB_DIR + db_file))
 
 
 # Populate sensors + slider when DB changes
@@ -112,27 +144,27 @@ def update_db_dependent_controls(db_file):
 # Update plot
 @app.callback(
     Output("pixel-plot", "figure"),
-    Input("db-dropdown", "value"),
+    Input("pixel-data-store", "data"),
     Input("sensor-dropdown", "value"),
     Input("time-slider", "value")
 )
-def update_plot(db_file, sensor, slider_idx):
-    if not DB_DIR + db_file or not sensor:
+def update_plot(extracted_targets, sensor, slider_idx):
+    if not extracted_targets or not sensor:
         return go.Figure()
 
-    db = load_all_extracted_targets(DB_DIR + db_file)  # DO NOT ALWAYS RELEAD
-    times = list(db[sensor].keys())  # BAD TO CONVERT TO LIST?
+    times = list(extracted_targets[sensor].keys())  # BAD TO CONVERT TO LIST?
 
     if slider_idx >= len(times):
         return go.Figure()
 
     current_time = times[slider_idx]
-    extracted_target = db[sensor][current_time]
+    extracted_target = extracted_targets[sensor][current_time]
 
     fig = go.Figure(
         data=go.Scattergl(
-            x=extracted_target.pixels[:, 0],
-            y=extracted_target.pixels[:, 1],
+            # MORE ELOQUENT WAY TO INDEX THE PIXELS
+            x=np.asarray(extracted_target["pixels"], dtype=np.float32)[:, 0],
+            y=np.asarray(extracted_target["pixels"], dtype=np.float32)[:, 1],
             mode="markers",
             marker=dict(size=4, color="red")
         )
