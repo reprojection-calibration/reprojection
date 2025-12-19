@@ -2,6 +2,7 @@
 
 set -eoux pipefail
 
+# shellcheck disable=SC1091
 source "${VENV_DIR}/bin/activate"
 
 proto_directory=/temporary/code/proto
