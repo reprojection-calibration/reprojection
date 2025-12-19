@@ -3,7 +3,7 @@
 set -eoux pipefail
 
 # NOTE(Jack): This needs to be a separate script because we need to write the script to the .bash_profile and then
-# source that. Doing that in one single script
+# source that.
 
 wget -qO- https://pyenv.run | bash
 
