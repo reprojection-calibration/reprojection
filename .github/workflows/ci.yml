@@ -64,6 +64,7 @@ jobs:
   python-tooling:
     runs-on: ubuntu-latest
     steps:
+      # https://github.com/roim/docker-action-lfs/blob/main/.github/workflows/custom-context--working.yml
       - uses: actions/checkout@v2
         with:
           lfs: true
@@ -78,5 +79,4 @@ jobs:
           file: building/Dockerfile
           tags: reprojection-python-tooling:latest
           target: python-tooling-stage
-          with:
-            context: .
+          context: .
