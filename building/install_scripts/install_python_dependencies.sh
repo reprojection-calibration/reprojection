@@ -2,14 +2,12 @@
 
 set -eoux pipefail
 
-# Required system dependencies for working with python in a venv
-apt-get update
-apt-get install --no-install-recommends --yes \
-    python3 \
-    python3-venv
+source ~/.bash_profile
+pyenv shell 3.12.12
 
+export VENV_DIR="~/.reprojection_venv"
 # Create and activate virtual environment
-python3 -m venv "${VENV_DIR}"
+python3.12 -m venv "${VENV_DIR}"
 source "${VENV_DIR}/bin/activate"
 
 python3 -m pip install \

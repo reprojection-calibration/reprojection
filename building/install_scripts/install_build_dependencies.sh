@@ -7,6 +7,7 @@ apt-get install --no-install-recommends --yes \
     build-essential \
     ca-certificates \
     cmake \
+    curl \
     git \
     git-lfs \
     libgtest-dev \
