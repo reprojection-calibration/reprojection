@@ -80,8 +80,7 @@ app.layout = html.Div(
             ]
         ),
 
-        # Interval component for the "Play" functionality (disabled by default)
-        dcc.Interval(id="play-interval", interval=20, n_intervals=0, disabled=True),
+        dcc.Interval(id="play-interval", interval=50, n_intervals=0, disabled=False),
 
         dcc.Store(id="global-data-store"),
 
