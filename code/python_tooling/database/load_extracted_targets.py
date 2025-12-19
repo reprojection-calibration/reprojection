@@ -59,7 +59,8 @@ def load_all_extracted_targets(db_path):
         msg.ParseFromString(blob)
 
         data = ExtractedTarget(
-            build_pixels(msg.bundle), build_points(msg.bundle), build_indices(msg)
+            build_pixels(msg.bundle), build_points(
+                msg.bundle), build_indices(msg)
         )
 
         # TODO(Jack): What is the deal here with this set default thing?

@@ -10,7 +10,8 @@ class TestDatabaseConnections(unittest.TestCase):
     # see if this works or we just end up removing it later :)
     @classmethod
     def setUpClass(self):
-        self.db_path = os.getenv("DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3")
+        self.db_path = os.getenv(
+            "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3")
 
     def test_pose_loading(self):
         # At time of writing there is no camera pose data in the test_data database
@@ -18,7 +19,8 @@ class TestDatabaseConnections(unittest.TestCase):
         self.assertEqual(len(loaded_data), 0)
 
         # If we make a query to a non-existent table that returns no data we just get an object with length zero
-        loaded_data = load_poses(self.db_path, "does_not_exist", "also_not_there")
+        loaded_data = load_poses(
+            self.db_path, "does_not_exist", "also_not_there")
         self.assertEqual(len(loaded_data), 0)
 
         loaded_data = load_poses(self.db_path, "external", "ground_truth")
