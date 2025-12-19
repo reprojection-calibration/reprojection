@@ -112,7 +112,7 @@ def extracted_targets_to_records(target_map):
     Input("db-dropdown", "value")
 )
 def load_db_to_store(db_file):
-    if not DB_DIR + db_file:
+    if not db_file or not os.path.exists(os.path.join(DB_DIR, db_file)):
         return None
 
     return extracted_targets_to_records(load_all_extracted_targets(DB_DIR + db_file))
