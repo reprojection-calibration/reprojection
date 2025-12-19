@@ -64,6 +64,7 @@ jobs:
   python-tooling:
     runs-on: ubuntu-latest
     steps:
+      # Objects stored with git-lfs need to be pulled, we follow the example at this link:
       # https://github.com/roim/docker-action-lfs/blob/main/.github/workflows/custom-context--working.yml
       - uses: actions/checkout@v2
         with:
