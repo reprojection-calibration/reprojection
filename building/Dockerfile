@@ -36,7 +36,7 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_CHECKS}
 
-# ERROR ADD TO GHA
+
 FROM base-stage AS python-tooling-stage
 
 ENV VENV_DIR="~/.reprojection_venv"
@@ -44,8 +44,6 @@ ENV VENV_DIR="~/.reprojection_venv"
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
     /temporary/${INSTALL_PYENV}
-
-RUN set -eoux pipefail; source ~/.bash_profile; pyenv install 3.12
 
 # TODO(Jack): Should these go into the base stage? Or is the python workflow unique enough?
 ARG INSTALL_PYTHON_DEPENDENCIES=building/install_scripts/install_python_dependencies.sh

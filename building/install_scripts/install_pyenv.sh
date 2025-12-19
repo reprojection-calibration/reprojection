@@ -2,8 +2,7 @@
 
 set -eoux pipefail
 
-# NOTE(Jack): This needs to be a separate script because we need to write the script to the .bash_profile and then
-# source that.
+# NOTE(Jack): This needs to be a separate script because we need to write the .bash_profile and then source that.
 
 # System deps required for pyenv to build python - I am not 100% sure we need all of these.
 apt-get update
@@ -16,7 +15,6 @@ apt-get install --no-install-recommends --yes \
     libxmlsec1-dev \
     libxml2-dev \
     tk-dev
-
 rm --force --recursive /var/lib/apt/lists/*
 
 wget -qO- https://pyenv.run | bash

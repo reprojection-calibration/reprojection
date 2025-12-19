@@ -4,7 +4,8 @@ set -eoux pipefail
 
 # shellcheck disable=SC1090
 source ~/.bash_profile
-pyenv shell 3.12.12
+pyenv install 3.12
+pyenv shell 3.12
 
 python3.12 -m venv "${VENV_DIR}"
 
