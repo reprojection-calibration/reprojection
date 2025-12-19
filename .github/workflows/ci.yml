@@ -76,7 +76,7 @@ jobs:
         with:
           cache-from: type=gha,scope=python-tooling
           cache-to: type=gha,mode=max,scope=python-tooling
+          context: .
           file: building/Dockerfile
           tags: reprojection-python-tooling:latest
           target: python-tooling-stage
-          context: .
