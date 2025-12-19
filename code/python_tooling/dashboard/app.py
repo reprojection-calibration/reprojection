@@ -1,7 +1,6 @@
 import os
 from dash import Dash, dcc, html, Input, Output
 import plotly.graph_objects as go
-import numpy as np
 
 from database.load_extracted_targets import load_all_extracted_targets
 
@@ -99,10 +98,11 @@ def extracted_targets_to_records(target_map):
 
         for timestamp, target in time_map.items():
             out[sensor][str(timestamp)] = {
-                "pixels": target.pixels,
-                "points": target.points,
-                "indices": target.indices,
+                "pixels": target.pixels.tolist(),
+                "points": target.points.tolist(),
+                "indices": target.indices.tolist(),
             }
+        out[sensor]["_times"] = sorted([str(ts) for ts in time_map.keys()])
 
     return out
 
@@ -125,15 +125,14 @@ def load_db_to_store(db_file):
     Output("time-slider", "max"),
     Output("time-slider", "marks"),
     Output("time-slider", "value"),
-    Input("db-dropdown", "value")
+    Input("pixel-data-store", "data")
 )
-def update_db_dependent_controls(db_file):
-    if not DB_DIR + db_file:
+def update_db_dependent_controls(extracted_targets):
+    if not extracted_targets:
         return [], None, 0, {}, 0
 
-    db = load_all_extracted_targets(DB_DIR + db_file)
     sensors = ["/cam0/image_raw", "/cam1/image_raw"]  # DO NOT HARDCODE
-    times = db["/cam0/image_raw"].keys()  # ONLY FROM ONE CAMERA!
+    times = extracted_targets["/cam0/image_raw"]["_times"]  # ONLY FROM ONE CAMERA!
 
     sensor_options = [{"label": s, "value": s} for s in sensors]
     marks = {i: str(t) for i, t in enumerate(times)}
@@ -152,19 +151,23 @@ def update_plot(extracted_targets, sensor, slider_idx):
     if not extracted_targets or not sensor:
         return go.Figure()
 
-    times = list(extracted_targets[sensor].keys())  # BAD TO CONVERT TO LIST?
+    times = extracted_targets[sensor]["_times"]
 
     if slider_idx >= len(times):
         return go.Figure()
 
     current_time = times[slider_idx]
-    extracted_target = extracted_targets[sensor][current_time]
+    extracted_target_i = extracted_targets[sensor][current_time]
+
+    pixels = extracted_target_i["pixels"]
+    x = [p[0] for p in pixels]
+    y = [p[1] for p in pixels]
 
     fig = go.Figure(
         data=go.Scattergl(
             # MORE ELOQUENT WAY TO INDEX THE PIXELS
-            x=np.asarray(extracted_target["pixels"], dtype=np.float32)[:, 0],
-            y=np.asarray(extracted_target["pixels"], dtype=np.float32)[:, 1],
+            x=x,
+            y=y,
             mode="markers",
             marker=dict(size=4, color="red")
         )
