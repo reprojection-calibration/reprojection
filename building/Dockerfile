@@ -41,15 +41,6 @@ FROM base-stage AS python-tooling-stage
 
 ENV VENV_DIR="~/.reprojection_venv"
 
-RUN apt-get update && apt-get install --no-install-recommends --yes \
-    build-essential \
-    libssl-dev libbz2-dev \
-    libreadline-dev \
-    libffi-dev libncursesw5-dev \
-    tk-dev \
-    libxml2-dev libxmlsec1-dev \
- && rm -rf /var/lib/apt/lists/*
-
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
     /temporary/${INSTALL_PYENV}

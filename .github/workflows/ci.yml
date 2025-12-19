@@ -61,3 +61,16 @@ jobs:
           file: building/Dockerfile
           tags: reprojection-code-coverage-assertion:latest
           target: code-coverage-assertion-stage
+  python-tooling:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: python-tooling-stage
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha,scope=python-tooling
+          cache-to: type=gha,mode=max,scope=python-tooling
+          file: building/Dockerfile
+          tags: reprojection-python-tooling:latest
+          target: python-tooling-stage
