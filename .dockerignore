@@ -1,3 +1,14 @@
+# Cpp related stuff
 **/cmake-build-*
+
+# All ython related stuff
+__pycache__/
+*.egg-info/
+.eggs/
+*_pb2.py
+*_pb2_grpc.py
+
+# Dev environemnt related stuff
 .github/
 .git/
+.idea/

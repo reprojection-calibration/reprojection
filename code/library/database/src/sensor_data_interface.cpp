@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 
 #include <filesystem>
+#include <memory>
 #include <string>
 
 #include "database/sqlite_wrappers.hpp"
@@ -13,51 +14,38 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddFrame(FrameHeader const& data, std::shared_ptr<CalibrationDatabase> const database) {
-    SqlStatement const statement{database->db, sql_statements::frame_insert};
-
-    try {
-        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
-        Sqlite3Tools::Bind(statement.stmt, 2, data.sensor_name);
-
-    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-        std::cerr << "AddFrame() runtime error during binding: " << e.what()                    // LCOV_EXCL_LINE
-                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                           // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
-
-    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        std::cerr << "AddFrame() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                               // LCOV_EXCL_LINE
-    }
-
-    return true;
-}
-
-[[nodiscard]] bool AddCameraPoseData(std::set<PoseStamped> const& data, PoseType const type,
-                                     std::shared_ptr<CalibrationDatabase> const database) {
+[[nodiscard]] bool AddPoseData(std::set<PoseStamped> const& data, PoseTable const table, PoseType const type,
+                               std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
     for (auto const& data_i : data) {
-        SqlStatement const statement{database->db, sql_statements::camera_poses_insert};
+        std::unique_ptr<SqlStatement> statement;
+        if (table == PoseTable::Camera) {
+            statement = std::make_unique<SqlStatement>(database->db, sql_statements::camera_poses_insert);
+        } else if (table == PoseTable::External) {
+            statement = std::make_unique<SqlStatement>(database->db, sql_statements::external_poses_insert);
+        } else {
+            throw std::runtime_error("Requested an invalid PoseTable from AddPoseData()");  // LCOV_EXCL_LINE
+        }
+
         try {
-            Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data_i.header.timestamp_ns));  // Warn cast!
-            Sqlite3Tools::Bind(statement.stmt, 2, data_i.header.sensor_name);
-            Sqlite3Tools::Bind(statement.stmt, 3, ToString(type));
-            Sqlite3Tools::Bind(statement.stmt, 4, data_i.pose[0]);
-            Sqlite3Tools::Bind(statement.stmt, 5, data_i.pose[1]);
-            Sqlite3Tools::Bind(statement.stmt, 6, data_i.pose[2]);
-            Sqlite3Tools::Bind(statement.stmt, 7, data_i.pose[3]);
-            Sqlite3Tools::Bind(statement.stmt, 8, data_i.pose[4]);
-            Sqlite3Tools::Bind(statement.stmt, 9, data_i.pose[5]);
+            Sqlite3Tools::Bind(statement->stmt, 1, static_cast<int64_t>(data_i.header.timestamp_ns));  // Warn cast!
+            Sqlite3Tools::Bind(statement->stmt, 2, data_i.header.sensor_name);
+            Sqlite3Tools::Bind(statement->stmt, 3, ToString(type));
+            Sqlite3Tools::Bind(statement->stmt, 4, data_i.pose[0]);
+            Sqlite3Tools::Bind(statement->stmt, 5, data_i.pose[1]);
+            Sqlite3Tools::Bind(statement->stmt, 6, data_i.pose[2]);
+            Sqlite3Tools::Bind(statement->stmt, 7, data_i.pose[3]);
+            Sqlite3Tools::Bind(statement->stmt, 8, data_i.pose[4]);
+            Sqlite3Tools::Bind(statement->stmt, 9, data_i.pose[5]);
         } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-            std::cerr << "AddCameraPoseData() runtime error during binding: " << e.what()           // LCOV_EXCL_LINE
+            std::cerr << "AddPoseData() runtime error during binding: " << e.what()                 // LCOV_EXCL_LINE
                       << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
             return false;                                                                           // LCOV_EXCL_LINE
         }  // LCOV_EXCL_LINE
 
-        if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            std::cerr << "AddCameraPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
+        if (sqlite3_step(statement->stmt) != static_cast<int>(SqliteFlag::Done)) {
+            std::cerr << "AddPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
             return false;
         }
     }
@@ -67,10 +55,6 @@ namespace reprojection::database {
 
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
-    if (not AddFrame(data.header, database)) {
-        return false;  // LCOV_EXCL_LINE
-    }
-
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {

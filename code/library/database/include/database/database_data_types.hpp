@@ -1,5 +1,7 @@
 #pragma once
 
+#include <opencv2/opencv.hpp>
+
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -36,11 +38,15 @@ struct PoseStamped {
     Vector6d pose;
 };
 
-enum class PoseType { Initial, Optimized };
+enum class PoseTable { Camera, External };
+
+enum class PoseType { GroundTruth, Initial, Optimized };
 
 // TODO(Jack): Where does this belong?
 inline std::string ToString(PoseType const t) {
     switch (t) {
+        case PoseType::GroundTruth:
+            return "ground_truth";
         case PoseType::Initial:
             return "initial";
         case PoseType::Optimized:
