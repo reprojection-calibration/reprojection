@@ -41,19 +41,18 @@ FROM base-stage AS python-tooling-stage
 
 ENV VENV_DIR="~/.reprojection_venv"
 
+RUN apt-get update && apt-get install --no-install-recommends --yes \
+    build-essential \
+    libssl-dev libbz2-dev \
+    libreadline-dev \
+    libffi-dev libncursesw5-dev \
+    tk-dev \
+    libxml2-dev libxmlsec1-dev \
+ && rm -rf /var/lib/apt/lists/*
+
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
     /temporary/${INSTALL_PYENV}
-
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libssl-dev zlib1g-dev libbz2-dev \
-    libreadline-dev libsqlite3-dev \
-    libffi-dev libncursesw5-dev \
-    xz-utils tk-dev \
-    libxml2-dev libxmlsec1-dev liblzma-dev \
-    ca-certificates curl \
- && rm -rf /var/lib/apt/lists/*
 
 RUN set -eoux pipefail; source ~/.bash_profile; pyenv install 3.12
 
