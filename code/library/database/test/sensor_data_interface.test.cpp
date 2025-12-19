@@ -41,6 +41,11 @@ TEST_F(TempFolder, TestAddPoseData) {
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, {}}, db);
     EXPECT_TRUE(database::AddPoseData({{header, pose}}, database::PoseTable::Camera, database::PoseType::Initial, db));
+
+    // The external poses table has no foreign key constraint because external poses are not restricted to the image
+    // frames. Therefore, we can add a pose here directly.
+    EXPECT_TRUE(
+        database::AddPoseData({{header, pose}}, database::PoseTable::External, database::PoseType::GroundTruth, db));
 }
 
 TEST_F(TempFolder, TestAddExtractedTargetData) {
@@ -65,12 +70,20 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    (void)AddExtractedTargetData({{0, "/cam/retro/123"}, target}, db);
-    (void)AddExtractedTargetData({{1, "/cam/retro/123"}, target}, db);
-    (void)AddExtractedTargetData({{2, "/cam/retro/123"}, target}, db);
+    // Due to foreign key relationship we need add an image before we add the extracted target
+    database::FrameHeader header{0, "/cam/retro/123"};
+    (void)database::AddImage(header, db);
+    (void)AddExtractedTargetData({header, target}, db);
+    header.timestamp_ns = 1;
+    (void)database::AddImage(header, db);
+    (void)AddExtractedTargetData({header, target}, db);
+    header.timestamp_ns = 2;
+    (void)database::AddImage(header, db);
+    (void)AddExtractedTargetData({header, target}, db);
 
     auto const data{database::GetExtractedTargetData(db, "/cam/retro/123")};
     ASSERT_TRUE(data.has_value());
+    EXPECT_EQ(std::size(data.value()), 3);
 
     int timestamp{0};
     for (auto const& data_i : data.value()) {
