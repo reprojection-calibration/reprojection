@@ -100,8 +100,8 @@ def update_db_dependent_controls(db_file):
         return [], None, 0, {}, 0
 
     db = load_all_extracted_targets(DB_DIR + db_file)
-    sensors = ["/cam0/image_raw", "/cam1/image_raw"]
-    times = db["/cam0/image_raw"].keys()
+    sensors = ["/cam0/image_raw", "/cam1/image_raw"]  # DO NOT HARDCODE
+    times = db["/cam0/image_raw"].keys()  # ONLY FROM ONE CAMERA!
 
     sensor_options = [{"label": s, "value": s} for s in sensors]
     marks = {i: str(t) for i, t in enumerate(times)}
@@ -120,22 +120,19 @@ def update_plot(db_file, sensor, slider_idx):
     if not DB_DIR + db_file or not sensor:
         return go.Figure()
 
-    df = load_all_extracted_targets(DB_DIR + db_file)
-    times = df[TIME_COL].unique()
+    db = load_all_extracted_targets(DB_DIR + db_file)  # DO NOT ALWAYS RELEAD
+    times = list(db[sensor].keys())  # BAD TO CONVERT TO LIST?
 
     if slider_idx >= len(times):
         return go.Figure()
 
     current_time = times[slider_idx]
-    frame_df = df[
-        (df[TIME_COL] == current_time) &
-        (df[SENSOR_COL] == sensor)
-        ]
+    extracted_target = db[sensor][current_time]
 
     fig = go.Figure(
         data=go.Scattergl(
-            x=frame_df[X_COL],
-            y=frame_df[Y_COL],
+            x=extracted_target.pixels[:, 0],
+            y=extracted_target.pixels[:, 1],
             mode="markers",
             marker=dict(size=4, color="red")
         )
