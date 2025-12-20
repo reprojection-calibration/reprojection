@@ -26,6 +26,7 @@ app.layout = html.Div([
         ]
     ),
 
+    dcc.Graph(id='rotation-graph'),
     dcc.Graph(id='translation-graph'),
 
     dcc.Store(id='database-store'),
@@ -70,6 +71,7 @@ def refresh_sensor_list(data):
 
 
 @callback(
+    Output('rotation-graph', 'figure'),
     Output('translation-graph', 'figure'),
     Input('sensor-dropdown', 'value'),
     State('database-store', 'data'),
@@ -83,19 +85,30 @@ def update_translation_graph(selected_sensor, data):
     frames = data[selected_sensor]['data']
     frames = dict(sorted(frames.items()))
     external_poses = [frames[key]['external_pose'] for key in frames]
-    translations = [x[4:] for x in external_poses]  # x,y,z
 
+    rotations = [x[1:4] for x in external_poses]  # x,y,z
+    # TODO(Jack): Use numpy arrays here if possible?
+    rotations_x = [r[0] for r in rotations]
+    rotations_y = [r[1] for r in rotations]
+    rotations_z = [r[2] for r in rotations]
+
+    # TODO(Jack): Make plot legend consistent
+    rot_fig = px.scatter(x=times, y=rotations_x, labels={'x': 'Time(ns)', 'y': 'Axis Angle Rotation'})
+    rot_fig.add_scatter(x=times, y=rotations_y, mode='lines+markers', name='Y')
+    rot_fig.add_scatter(x=times, y=rotations_z, mode='lines+markers', name='Z')
+
+    translations = [x[4:] for x in external_poses]  # x,y,z
     # TODO(Jack): Use numpy arrays here if possible?
     translations_x = [t[0] for t in translations]
     translations_y = [t[1] for t in translations]
     translations_z = [t[2] for t in translations]
 
     # TODO(Jack): Make plot legend consistent
-    fig = px.scatter(x=times, y=translations_x, labels={'x': 'Time(ns)','y':'Translation(m)'})
-    fig.add_scatter(x=times, y=translations_y, mode='lines+markers', name='Y')
-    fig.add_scatter(x=times, y=translations_z, mode='lines+markers', name='Z')
+    trans_fig = px.scatter(x=times, y=translations_x, labels={'x': 'Time(ns)', 'y': 'Translation(m)'})
+    trans_fig.add_scatter(x=times, y=translations_y, mode='lines+markers', name='Y')
+    trans_fig.add_scatter(x=times, y=translations_z, mode='lines+markers', name='Z')
 
-    return fig
+    return rot_fig, trans_fig
 
 
 if __name__ == '__main__':
