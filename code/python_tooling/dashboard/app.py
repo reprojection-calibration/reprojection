@@ -86,24 +86,33 @@ def update_translation_graph(selected_sensor, data):
     frames = dict(sorted(frames.items()))
     external_poses = [frames[key]['external_pose'] for key in frames]
 
-    rotations = [x[1:4] for x in external_poses]  # rx, ry, rz
     # TODO(Jack): Use numpy arrays here if possible?
-    rotations_x = [r[0] for r in rotations]
-    rotations_y = [r[1] for r in rotations]
-    rotations_z = [r[2] for r in rotations]
+    rotations_x = [d[1] for d in external_poses]
+    rotations_y = [d[2] for d in external_poses]
+    rotations_z = [d[3] for d in external_poses]
 
-    # TODO(Jack): Make plot legend consistent
     rot_fig = go.Figure()
     rot_fig.add_scatter(x=times, y=rotations_x, mode='lines+markers', name='X')
     rot_fig.add_scatter(x=times, y=rotations_y, mode='lines+markers', name='Y')
     rot_fig.add_scatter(x=times, y=rotations_z, mode='lines+markers', name='Z')
-
     rot_fig.update_layout(
         xaxis_title='Time(ns)',
         yaxis_title='Axis Angle Rotation'
     )
 
+    translation_x = [d[4] for d in external_poses]
+    translation_y = [d[5] for d in external_poses]
+    translation_z = [d[6] for d in external_poses]
+
     trans_fig = go.Figure()
+    trans_fig.add_scatter(x=times, y=translation_x, mode='lines+markers', name='rx')
+    trans_fig.add_scatter(x=times, y=translation_y, mode='lines+markers', name='ry')
+    trans_fig.add_scatter(x=times, y=translation_z, mode='lines+markers', name='rz')
+    trans_fig.update_layout(
+        xaxis_title='Time(ns)',
+        yaxis_title='Translation(m)'
+    )
+
 
     return rot_fig, trans_fig
 
