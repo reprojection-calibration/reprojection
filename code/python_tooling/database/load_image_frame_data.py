@@ -42,4 +42,17 @@ def load_image_frame_data(db_path):
                 match = closest_timestamp(external_pose_times, timestamp_i)
                 image_frames[sensor][timestamp_i]['external_pose'] = external_poses['/mocap0'][match]
 
+
+    initial_poses = load_poses(db_path, 'camera', 'initial')
+    if initial_poses is not None:
+        for sensor, frames in initial_poses.items():
+            for timestamp_i in frames:
+                image_frames[sensor][timestamp_i]['initial_pose'] = initial_poses[sensor][timestamp_i]
+
+    optimized_poses = load_poses(db_path, 'camera', 'optimized')
+    if optimized_poses is not None:
+        for sensor, frames in optimized_poses.items():
+            for timestamp_i in frames:
+                image_frames[sensor][timestamp_i]['optimized_pose'] = optimized_poses[sensor][timestamp_i]
+
     return image_frames

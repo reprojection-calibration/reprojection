@@ -22,12 +22,11 @@ class TestDatabaseConnections(unittest.TestCase):
 
         image_data_i = loaded_data["/cam0/image_raw"][1520528314264184064]
         self.assertEqual(len(image_data_i['external_pose']), 7)
+        self.assertTrue('initial_pose' not in image_data_i)
+        self.assertTrue('optimized_pose' not in image_data_i)
 
         image_data_i = loaded_data["/cam1/image_raw"][1520528314264184064]
         self.assertEqual(len(image_data_i['external_pose']), 7)
-
-
-
 
     def test_pose_loading(self):
         # At time of writing there is no camera pose data in the test_data database
