@@ -86,7 +86,7 @@ def update_translation_graph(selected_sensor, data):
     frames = dict(sorted(frames.items()))
     external_poses = [frames[key]['external_pose'] for key in frames]
 
-    rotations = [x[1:4] for x in external_poses]  # x,y,z
+    rotations = [x[1:4] for x in external_poses]  # rx, ry, rz
     # TODO(Jack): Use numpy arrays here if possible?
     rotations_x = [r[0] for r in rotations]
     rotations_y = [r[1] for r in rotations]
