@@ -6,8 +6,25 @@ DB_DIR = '../../test_data/'
 
 app = Dash()
 app.layout = html.Div([
-    html.Button('Refresh Database List', id='refresh-database-list-button', n_clicks=0),
-    dcc.Dropdown(id='database-dropdown', placeholder="Select a database", style={"width": "50%"}),
+    html.H2("Reprojection - the future is calibrated."),
+
+    html.Div(
+        style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
+        children=[
+            html.Label('Load'),
+            dcc.Dropdown(id='database-dropdown', placeholder="Select a database", style={"width": "50%"}),
+            html.Button('Refresh Database List', id='refresh-database-list-button', n_clicks=0),
+        ]
+    ),
+
+    html.Div(
+        style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
+        children=[
+            html.Label('Select'),
+            dcc.Dropdown(id='sensor-dropdown', placeholder="Select a camera sensor", style={"width": "50%"}),
+        ]
+    ),
+
     dcc.Store(id='database-store'),
 ])
 
@@ -16,7 +33,7 @@ app.layout = html.Div([
     Output('database-dropdown', 'options'),
     Input('refresh-database-list-button', 'n_clicks')
 )
-def refresh_database_list(value):
+def refresh_database_list(_):
     if not os.path.exists(DB_DIR):
         return []
 
@@ -36,6 +53,17 @@ def load_database_to_store(db_file):
         return None
 
     return load_image_frame_data(full_path)
+
+
+@callback(
+    Output('sensor-dropdown', 'options'),
+    Input('database-store', 'data')
+)
+def refresh_sensor_list(data):
+    if not data:
+        return []
+
+    return list(data.keys())
 
 
 if __name__ == '__main__':
