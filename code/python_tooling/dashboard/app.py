@@ -85,6 +85,7 @@ def update_translation_graph(selected_sensor, data):
     external_poses = [frames[key]['external_pose'] for key in frames]
     translations = [x[4:] for x in external_poses]  # x,y,z
 
+    # TODO(Jack): Use numpy arrays here if possible?
     translations_x = [t[0] for t in translations]
     translations_y = [t[1] for t in translations]
     translations_z = [t[2] for t in translations]
