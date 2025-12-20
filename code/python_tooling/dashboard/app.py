@@ -157,14 +157,17 @@ app.clientside_callback(
         }
 
         const current_time = times[next_slider_val];
-        const frame = data_store[sensor][current_time];
+        
+        const pixels = data_store[sensor]["data"][current_time]["extracted_target"]["pixels"];
+        const x = pixels.map(p => p[0]);
+        const y = pixels.map(p => p[1]);
 
         return [
             next_slider_val, 
             {
                 data: [{
-                    x: frame["x"],
-                    y: frame["y"],
+                    x: x,
+                    y: y,
                     type: "scattergl",
                     mode: "markers",
                     marker: {size: 4, color: "red"}

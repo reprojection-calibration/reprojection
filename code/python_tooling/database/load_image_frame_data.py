@@ -33,6 +33,7 @@ def load_image_frame_data(db_path):
     for sensor, frames in image_frames.items():
         timestamps = [ts for ts in frames['data'].keys()]
         sorted_ts = sorted(timestamps, key=lambda x: float(x))
+        # Calculated values/metadata keys should begin with `_*`, like `_times`
         image_frames[sensor]["_times"] = sorted_ts
 
     # For external poses there is no timestamp matching requirement, so if they are available we just take the closest
