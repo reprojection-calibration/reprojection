@@ -30,6 +30,11 @@ def load_image_frame_data(db_path):
     # that any camera pose has to match an extracted target.
     image_frames = load_all_extracted_targets(db_path)
 
+    for sensor, frames in image_frames.items():
+        timestamps = [ts for ts in frames['data'].keys()]
+        sorted_ts = sorted(timestamps, key=lambda x: float(x))
+        image_frames[sensor]["_times"] = sorted_ts
+
     # For external poses there is no timestamp matching requirement, so if they are available we just take the closest
     # to the time from our extracted target frames.
     external_poses = load_poses(db_path, 'external', 'ground_truth')
@@ -38,9 +43,10 @@ def load_image_frame_data(db_path):
         external_pose_times = sorted(external_poses['/mocap0'].keys())
 
         for sensor, frames in image_frames.items():
-            for timestamp_i in frames:
-                match = closest_timestamp(external_pose_times, timestamp_i)
-                image_frames[sensor][timestamp_i]['external_pose'] = external_poses['/mocap0'][match]
+            for timestamp_i in frames['data']:
+                if isinstance(timestamp_i, int):
+                    match = closest_timestamp(external_pose_times, timestamp_i)
+                    image_frames[sensor]['data'][timestamp_i]['external_pose'] = external_poses['/mocap0'][match]
 
 
     initial_poses = load_poses(db_path, 'camera', 'initial')

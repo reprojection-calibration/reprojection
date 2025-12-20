@@ -45,14 +45,14 @@ def load_all_extracted_targets(db_path):
         load_sql("extracted_targets_select_all.sql")
     )
 
-    data = defaultdict(lambda: defaultdict(lambda: {"extracted_target": {}}))
+    data = defaultdict(lambda: {"data": defaultdict(lambda: {"extracted_target": {}})})
     for ts, sensor, blob in cur.fetchall():
         msg = ExtractedTargetProto()
         msg.ParseFromString(blob)
 
-        data[sensor][ts]["extracted_target"]["pixels"] = build_pixels(msg.bundle).tolist()
-        data[sensor][ts]["extracted_target"]["points"] = build_points(msg.bundle).tolist()
-        data[sensor][ts]["extracted_target"]["indices"] = build_indices(msg).tolist()
+        data[sensor]['data'][ts]["extracted_target"]["pixels"] = build_pixels(msg.bundle).tolist()
+        data[sensor]['data'][ts]["extracted_target"]["points"] = build_points(msg.bundle).tolist()
+        data[sensor]['data'][ts]["extracted_target"]["indices"] = build_indices(msg).tolist()
 
     conn.close()
 
