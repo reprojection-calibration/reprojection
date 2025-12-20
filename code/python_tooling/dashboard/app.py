@@ -91,7 +91,7 @@ def update_translation_graph(selected_sensor, data):
     translations_z = [t[2] for t in translations]
 
     # TODO(Jack): Make plot legend consistent
-    fig = px.scatter(x=times, y=translations_x, labels={'y':'X Translation'})
+    fig = px.scatter(x=times, y=translations_x, labels={'x': 'Time(ns)','y':'Translation(m)'})
     fig.add_scatter(x=times, y=translations_y, mode='lines+markers', name='Y')
     fig.add_scatter(x=times, y=translations_z, mode='lines+markers', name='Z')
 
