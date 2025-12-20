@@ -1,5 +1,6 @@
-from dash import Dash, dcc, html, Input, Output, callback
+from dash import Dash, dcc, html, Input, Output, State, callback
 import os
+import plotly.express as px
 from database.load_image_frame_data import load_image_frame_data
 
 DB_DIR = '../../test_data/'
@@ -24,6 +25,8 @@ app.layout = html.Div([
             dcc.Dropdown(id='sensor-dropdown', placeholder="Select a camera sensor", style={"width": "50%"}),
         ]
     ),
+
+    dcc.Graph(id='translation-graph'),
 
     dcc.Store(id='database-store'),
 ])
@@ -64,6 +67,34 @@ def refresh_sensor_list(data):
         return []
 
     return list(data.keys())
+
+
+@callback(
+    Output('translation-graph', 'figure'),
+    Input('sensor-dropdown', 'value'),
+    State('database-store', 'data'),
+)
+def update_translation_graph(selected_sensor, data):
+    if not selected_sensor or not data:
+        return {}
+
+    times = data[selected_sensor]['_times']
+
+    frames = data[selected_sensor]['data']
+    frames = dict(sorted(frames.items()))
+    external_poses = [frames[key]['external_pose'] for key in frames]
+    translations = [x[4:] for x in external_poses]  # x,y,z
+
+    translations_x = [t[0] for t in translations]
+    translations_y = [t[1] for t in translations]
+    translations_z = [t[2] for t in translations]
+
+    # TODO(Jack): Make plot legend consistent
+    fig = px.scatter(x=times, y=translations_x, labels={'y':'X Translation'})
+    fig.add_scatter(x=times, y=translations_y, mode='lines+markers', name='Y')
+    fig.add_scatter(x=times, y=translations_z, mode='lines+markers', name='Z')
+
+    return fig
 
 
 if __name__ == '__main__':
