@@ -12,6 +12,7 @@ DB_DIR = "../../test_data/"
 X_RANGE = [0, 512]
 Y_RANGE = [0, 512]
 
+
 # ------------------------
 # Helpers
 # ------------------------
@@ -19,6 +20,7 @@ def list_databases():
     if not os.path.exists(DB_DIR):
         return []
     return sorted([f for f in os.listdir(DB_DIR) if f.endswith(".db3")])
+
 
 # ------------------------
 # Dash App
@@ -83,6 +85,7 @@ app.layout = html.Div(
     ]
 )
 
+
 # ------------------------
 # Server-side Callbacks
 # ------------------------
@@ -92,6 +95,7 @@ app.layout = html.Div(
 )
 def reload_db_list(_):
     return [{"label": db, "value": db} for db in list_databases()]
+
 
 @app.callback(
     Output("global-data-store", "data"),
@@ -117,6 +121,7 @@ def load_database(db_file):
 
     return dataset, sensor_options, first_sensor, num_times - 1
 
+
 # ------------------------
 # Play/Pause Logic
 # ------------------------
@@ -132,50 +137,60 @@ def toggle_play(n_clicks, is_disabled):
         return False, "■ Stop"
     return True, "▶ Play"
 
+
 # ------------------------
 # Clientside Callback: Auto-advance Slider & Update Plot
 # ------------------------
 app.clientside_callback(
     """
     function(n_intervals, slider_val, sensor, data_store, fig, interval_disabled) {
-        const ctx = dash_clientside.callback_context;
-        const triggered_id = ctx.triggered.length > 0 ? ctx.triggered[0].prop_id : "";
-        
+
+        // Normalize fig (CRITICAL)
+        fig = fig || {};
+        fig.layout = fig.layout || {};
+    
         if (!data_store || !sensor || !data_store[sensor]) {
-            return [0, window.dash_clientside.no_update];
+            return [0, fig];
         }
-
-        let next_slider_val = slider_val;
+    
         const times = data_store[sensor]["_times"];
-        const max_idx = times.length - 1;
-
-        if (triggered_id.includes("global-data-store.data")) {
-            next_slider_val = 0;
-        } 
-        else if (triggered_id.includes("play-interval.n_intervals") && !interval_disabled) {
-            next_slider_val = (slider_val >= max_idx) ? 0 : slider_val + 1;
+        if (!times || times.length === 0) {
+            return [0, fig];
         }
-
+    
+        let next_slider_val = slider_val ?? 0;
+        const max_idx = times.length - 1;
+    
+        if (!interval_disabled && n_intervals > 0) {
+            next_slider_val = (next_slider_val >= max_idx) ? 0 : next_slider_val + 1;
+        }
+    
         const current_time = times[next_slider_val];
-        
-        const pixels = data_store[sensor]["data"][current_time]["extracted_target"]["pixels"];
+        const frame =
+            data_store[sensor]?.data?.[current_time];
+    
+        if (!frame || !frame.extracted_target || !frame.extracted_target.pixels) {
+            return [next_slider_val, fig];
+        }
+    
+        const pixels = frame.extracted_target.pixels;
         const x = pixels.map(p => p[0]);
         const y = pixels.map(p => p[1]);
-
+    
         return [
-            next_slider_val, 
+            next_slider_val,
             {
                 data: [{
-                    x: x,
-                    y: y,
+                    x,
+                    y,
                     type: "scattergl",
                     mode: "markers",
-                    marker: {size: 4, color: "red"}
+                    marker: { size: 4, color: "red" }
                 }],
                 layout: {
                     ...fig.layout,
-                    xaxis: {range: [0,512], scaleanchor: "y", scaleratio: 1, autorange: false},
-                    yaxis: {range: [0,512], autorange: false},
+                    xaxis: { range: [0,512], scaleanchor: "y", scaleratio: 1, autorange: false },
+                    yaxis: { range: [0,512], autorange: false },
                     width: 512,
                     height: 512,
                     uirevision: "constant",

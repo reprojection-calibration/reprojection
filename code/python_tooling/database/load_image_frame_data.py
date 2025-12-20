@@ -53,13 +53,17 @@ def load_image_frame_data(db_path):
     initial_poses = load_poses(db_path, 'camera', 'initial')
     if initial_poses is not None:
         for sensor, frames in initial_poses.items():
+            if sensor not in image_frames:
+                continue
             for timestamp_i in frames:
-                image_frames[sensor][timestamp_i]['initial_pose'] = initial_poses[sensor][timestamp_i]
+                image_frames[sensor]['data'][timestamp_i]['initial_pose'] = initial_poses[sensor][timestamp_i]
 
     optimized_poses = load_poses(db_path, 'camera', 'optimized')
     if optimized_poses is not None:
         for sensor, frames in optimized_poses.items():
+            if sensor not in image_frames:
+                continue
             for timestamp_i in frames:
-                image_frames[sensor][timestamp_i]['optimized_pose'] = optimized_poses[sensor][timestamp_i]
+                image_frames[sensor]['data'][timestamp_i]['optimized_pose'] = optimized_poses[sensor][timestamp_i]
 
     return image_frames
