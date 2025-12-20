@@ -1,4 +1,6 @@
 import sqlite3
+from collections import defaultdict
+
 from database.sql_statement_loading import load_sql
 
 
@@ -22,4 +24,8 @@ def load_poses(db_path, table, type):
     rows = cur.fetchall()
     conn.close()
 
-    return rows
+    poses_dict = defaultdict(dict)
+    for ts, sensor, *rest in rows:
+        poses_dict[sensor][ts] = list(rest)
+
+    return poses_dict

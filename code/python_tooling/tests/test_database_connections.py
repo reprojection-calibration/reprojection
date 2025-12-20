@@ -3,6 +3,7 @@ import os
 
 from database.load_extracted_targets import load_all_extracted_targets
 from database.load_poses import load_poses
+from database.load_image_frame_data import load_image_frame_data
 
 
 class TestDatabaseConnections(unittest.TestCase):
@@ -12,6 +13,10 @@ class TestDatabaseConnections(unittest.TestCase):
     def setUpClass(self):
         self.db_path = os.getenv(
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3")
+
+    def test_load_image_frame_data(self):
+        data = load_image_frame_data(self.db_path)
+        print(data)
 
     def test_pose_loading(self):
         # At time of writing there is no camera pose data in the test_data database
@@ -24,9 +29,10 @@ class TestDatabaseConnections(unittest.TestCase):
         self.assertEqual(len(loaded_data), 0)
 
         loaded_data = load_poses(self.db_path, "external", "ground_truth")
-        self.assertEqual(len(loaded_data), 4730)
+        self.assertEqual(len(loaded_data), 1)
+        self.assertEqual(len(loaded_data['/mocap0']), 4730)
 
-        self.assertEqual(len(loaded_data[0]), 9)
+        self.assertEqual(len(loaded_data['/mocap0'][1520528318209068667]), 7)
 
     def test_extracted_target_loading(self):
         loaded_data = load_all_extracted_targets(self.db_path)
@@ -39,9 +45,9 @@ class TestDatabaseConnections(unittest.TestCase):
 
         # Check that the dimensions of one of the loaded extracted targets matches our expectations (ex. 2,3,2)
         extracted_target_i = loaded_data["/cam0/image_raw"][1520528314264184064]
-        self.assertEqual(extracted_target_i.pixels.shape, (144, 2))
-        self.assertEqual(extracted_target_i.points.shape, (144, 3))
-        self.assertEqual(extracted_target_i.indices.shape, (144, 2))
+        self.assertEqual(len(extracted_target_i["extracted_target"]['pixels']), 144)
+        self.assertEqual(len(extracted_target_i["extracted_target"]['points']), 144)
+        self.assertEqual(len(extracted_target_i["extracted_target"]['indices']), 144)
 
 
 if __name__ == '__main__':

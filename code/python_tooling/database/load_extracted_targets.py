@@ -1,17 +1,9 @@
 from generated.extracted_target_pb2 import ExtractedTargetProto
 import sqlite3
 import numpy as np
+from collections import defaultdict
 
 from database.sql_statement_loading import load_sql
-
-
-class ExtractedTarget:
-    def __init__(self, pixels, points, indices):
-        assert pixels.shape[0] == points.shape[0] == indices.shape[0]
-
-        self.pixels = pixels
-        self.points = points
-        self.indices = indices
 
 
 def build_pixels(msg_data):
@@ -53,19 +45,15 @@ def load_all_extracted_targets(db_path):
         load_sql("extracted_targets_select_all.sql")
     )
 
-    targets = {}
+    data = defaultdict(lambda: defaultdict(lambda: {"extracted_target": {}}))
     for ts, sensor, blob in cur.fetchall():
         msg = ExtractedTargetProto()
         msg.ParseFromString(blob)
 
-        data = ExtractedTarget(
-            build_pixels(msg.bundle), build_points(
-                msg.bundle), build_indices(msg)
-        )
-
-        # TODO(Jack): What is the deal here with this set default thing?
-        targets.setdefault(sensor, {})[ts] = data
+        data[sensor][ts]["extracted_target"]["pixels"] = build_pixels(msg.bundle).tolist()
+        data[sensor][ts]["extracted_target"]["points"] = build_points(msg.bundle).tolist()
+        data[sensor][ts]["extracted_target"]["indices"] = build_indices(msg).tolist()
 
     conn.close()
 
-    return targets
+    return data
