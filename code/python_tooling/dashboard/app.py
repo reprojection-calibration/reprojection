@@ -1,6 +1,6 @@
 from dash import Dash, dcc, html, Input, Output, State, callback
 import os
-import plotly.express as px
+import plotly.graph_objects as go
 from database.load_image_frame_data import load_image_frame_data
 
 DB_DIR = '../../test_data/'
@@ -78,7 +78,7 @@ def refresh_sensor_list(data):
 )
 def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
-        return {}
+        return {}, {}
 
     times = data[selected_sensor]['_times']
 
@@ -93,20 +93,17 @@ def update_translation_graph(selected_sensor, data):
     rotations_z = [r[2] for r in rotations]
 
     # TODO(Jack): Make plot legend consistent
-    rot_fig = px.scatter(x=times, y=rotations_x, labels={'x': 'Time(ns)', 'y': 'Axis Angle Rotation'})
+    rot_fig = go.Figure()
+    rot_fig.add_scatter(x=times, y=rotations_x, mode='lines+markers', name='X')
     rot_fig.add_scatter(x=times, y=rotations_y, mode='lines+markers', name='Y')
     rot_fig.add_scatter(x=times, y=rotations_z, mode='lines+markers', name='Z')
 
-    translations = [x[4:] for x in external_poses]  # x,y,z
-    # TODO(Jack): Use numpy arrays here if possible?
-    translations_x = [t[0] for t in translations]
-    translations_y = [t[1] for t in translations]
-    translations_z = [t[2] for t in translations]
+    rot_fig.update_layout(
+        xaxis_title='Time(ns)',
+        yaxis_title='Axis Angle Rotation'
+    )
 
-    # TODO(Jack): Make plot legend consistent
-    trans_fig = px.scatter(x=times, y=translations_x, labels={'x': 'Time(ns)', 'y': 'Translation(m)'})
-    trans_fig.add_scatter(x=times, y=translations_y, mode='lines+markers', name='Y')
-    trans_fig.add_scatter(x=times, y=translations_z, mode='lines+markers', name='Z')
+    trans_fig = go.Figure()
 
     return rot_fig, trans_fig
 
