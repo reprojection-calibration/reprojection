@@ -30,8 +30,7 @@ class TestDatabaseConnections(unittest.TestCase):
 
     def test_pose_loading(self):
         # If we make a query to a non-existent table that returns no data we just get an object with length zero
-        df = load_poses(
-            self.db_path, "does_not_exist", "also_not_there")
+        df = load_poses(self.db_path, "does_not_exist", "also_not_there")
         self.assertIsNone(df)
 
         # At time of writing there is no camera pose data in the test_data database
@@ -50,19 +49,25 @@ class TestDatabaseConnections(unittest.TestCase):
         self.assertEqual(pose_i.shape, (1, 9))
 
     def test_extracted_target_loading(self):
-        loaded_data = load_all_extracted_targets(self.db_path)
+        # Query nonexistent table
+        df = load_all_extracted_targets('nonexistent.db3')
+        self.assertIsNone(df)
+
+        df = load_all_extracted_targets(self.db_path)
 
         # Two cameras
-        self.assertEqual(len(loaded_data), 2)
+        self.assertEqual(df.shape, (1758, 3))
         # Each with 879 extracted targets
-        self.assertEqual(len(loaded_data["/cam0/image_raw"]['data']), 879)
-        self.assertEqual(len(loaded_data["/cam1/image_raw"]['data']), 879)
+        cam0 = df.loc[df['sensor_name'] == '/cam0/image_raw']
+        self.assertEqual(cam0.shape, (879, 3))
+        cam1 = df.loc[df['sensor_name'] == '/cam1/image_raw']
+        self.assertEqual(cam1.shape, (879, 3))
 
-        # Check that the dimensions of one of the loaded extracted targets matches our expectations (ex. 2,3,2)
-        extracted_target_i = loaded_data["/cam0/image_raw"]['data'][1520528314264184064]
-        self.assertEqual(len(extracted_target_i["extracted_target"]['pixels']), 144)
-        self.assertEqual(len(extracted_target_i["extracted_target"]['points']), 144)
-        self.assertEqual(len(extracted_target_i["extracted_target"]['indices']), 144)
+        # Check the dimensions of one of the loaded extracted targets
+        cam0_target_i = cam0.loc[cam0['timestamp_ns'] == 1520528314264184064, 'data'].iloc[0]
+        self.assertEqual(len(cam0_target_i['pixels']), 144)
+        self.assertEqual(len(cam0_target_i['points']), 144)
+        self.assertEqual(len(cam0_target_i['indices']), 144)
 
 
 if __name__ == '__main__':
