@@ -29,20 +29,25 @@ class TestDatabaseConnections(unittest.TestCase):
         self.assertEqual(len(image_data_i['external_pose']), 7)
 
     def test_pose_loading(self):
-        # At time of writing there is no camera pose data in the test_data database
-        loaded_data = load_poses(self.db_path, "camera", "initial")
-        self.assertEqual(len(loaded_data), 0)
-
         # If we make a query to a non-existent table that returns no data we just get an object with length zero
-        loaded_data = load_poses(
+        df = load_poses(
             self.db_path, "does_not_exist", "also_not_there")
-        self.assertEqual(len(loaded_data), 0)
+        self.assertIsNone(df)
 
-        loaded_data = load_poses(self.db_path, "external", "ground_truth")
-        self.assertEqual(len(loaded_data), 1)
-        self.assertEqual(len(loaded_data['/mocap0']), 4730)
+        # At time of writing there is no camera pose data in the test_data database
+        df = load_poses(self.db_path, "camera", "initial")
+        self.assertEqual(df.size, 0)
 
-        self.assertEqual(len(loaded_data['/mocap0'][1520528318209068667]), 7)
+        # Load the external poses table and test some simple values
+        df = load_poses(self.db_path, "external", "ground_truth")
+        self.assertEqual(df.shape, (4730, 9))
+
+        # At this time there are only mocap poses so the shape is the same!
+        mocap_poses = df.loc[df['sensor_name'] == '/mocap0']
+        self.assertEqual(mocap_poses.shape, (4730, 9))
+
+        pose_i = df.loc[df["timestamp_ns"] == 1520528318209068667]
+        self.assertEqual(pose_i.shape, (1, 9))
 
     def test_extracted_target_loading(self):
         loaded_data = load_all_extracted_targets(self.db_path)
