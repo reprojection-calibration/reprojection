@@ -46,6 +46,7 @@ def load_image_frame_data(db_path):
     # to the time from our extracted target frames.
     df_external_poses = load_poses(db_path, 'external', 'ground_truth')
     if df_external_poses is None:
+        # WARN(Jack): External poses are not technically mandatory!
         return None
     df_external_poses = df_external_poses.sort_values("timestamp_ns")
 

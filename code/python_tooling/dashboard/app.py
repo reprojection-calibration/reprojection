@@ -56,7 +56,13 @@ def load_database_to_store(db_file):
     if not os.path.isfile(full_path):
         return None
 
-    return load_image_frame_data(full_path)
+    df = load_image_frame_data(full_path)
+
+    # Need to flatten multiindex to allow for json serialization
+    df = df.reset_index(drop=True)
+    df.columns = ['_'.join(col) if isinstance(col, tuple) else col for col in df.columns]
+
+    return df.to_dict('records')
 
 
 @callback(
