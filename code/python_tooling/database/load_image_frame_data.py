@@ -1,5 +1,6 @@
 from database.load_extracted_targets import load_all_extracted_targets
 from database.load_poses import load_poses
+import pandas as pd
 from bisect import bisect_left
 
 
@@ -25,45 +26,49 @@ def closest_timestamp(timestamps, timestamp_x):
         return before
 
 
+# NOTE(Jack): In this function we take advantage of the fact that for image data the foreign key relationships force
+# that any camera pose has to match an extracted target.
 def load_image_frame_data(db_path):
-    # NOTE(Jack): In this function we take advantage of the fact that for image data the foreign key relationships force
-    # that any camera pose has to match an extracted target.
-    image_frames = load_all_extracted_targets(db_path)
+    df = load_all_extracted_targets(db_path)
+    if df is None:
+        return None
+    df = df.sort_values("timestamp_ns")
 
-    for sensor, frames in image_frames.items():
-        timestamps = [ts for ts in frames['data'].keys()]
-        sorted_ts = sorted(timestamps, key=lambda x: float(x))
-        # Calculated values/metadata keys should begin with `_*`, like `_times`
-        image_frames[sensor]["_times"] = sorted_ts
+    tuples = [
+        ("frame_id", "timestamp_ns"),
+        ("frame_id", "sensor_name"),
+        ("extracted_target", "data"),
+    ]
+    multi_index = pd.MultiIndex.from_tuples(tuples)
+    df.columns = multi_index
 
     # For external poses there is no timestamp matching requirement, so if they are available we just take the closest
     # to the time from our extracted target frames.
-    external_poses = load_poses(db_path, 'external', 'ground_truth')
-    if external_poses is not None:
-        # WARN(Jack): Hardcoded '/mocap0'
-        external_pose_times = sorted(external_poses['/mocap0'].keys())
+    df_external_poses = load_poses(db_path, 'external', 'ground_truth')
+    if df_external_poses is None:
+        return None
+    df_external_poses = df_external_poses.sort_values("timestamp_ns")
 
-        for sensor, frames in image_frames.items():
-            for timestamp_i in frames['data']:
-                if isinstance(timestamp_i, int):
-                    match = closest_timestamp(external_pose_times, timestamp_i)
-                    image_frames[sensor]['data'][timestamp_i]['external_pose'] = external_poses['/mocap0'][match]
+    # TODO(Jack): Maximum allowable tolerancce
+    df_matched = pd.merge_asof(
+        df['frame_id'],
+        df_external_poses,
+        on="timestamp_ns",
+        direction="nearest"
+    )
 
+    df_matched = df_matched[['rx', 'ry', 'rz', 'x', 'y', 'z']]
+    tuples = [
+        ("external_pose", "rx"),
+        ("external_pose", "ry"),
+        ("external_pose", "rz"),
+        ("external_pose", "x"),
+        ("external_pose", "y"),
+        ("external_pose", "z"),
+    ]
+    multi_index = pd.MultiIndex.from_tuples(tuples)
+    df_matched.columns = multi_index
 
-    initial_poses = load_poses(db_path, 'camera', 'initial')
-    if initial_poses is not None:
-        for sensor, frames in initial_poses.items():
-            if sensor not in image_frames:
-                continue
-            for timestamp_i in frames:
-                image_frames[sensor]['data'][timestamp_i]['initial_pose'] = initial_poses[sensor][timestamp_i]
+    df = pd.concat([df, df_matched], axis=1)
 
-    optimized_poses = load_poses(db_path, 'camera', 'optimized')
-    if optimized_poses is not None:
-        for sensor, frames in optimized_poses.items():
-            if sensor not in image_frames:
-                continue
-            for timestamp_i in frames:
-                image_frames[sensor]['data'][timestamp_i]['optimized_pose'] = optimized_poses[sensor][timestamp_i]
-
-    return image_frames
+    return df
