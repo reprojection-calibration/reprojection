@@ -15,18 +15,19 @@ class TestDatabaseConnections(unittest.TestCase):
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3")
 
     def test_load_image_frame_data(self):
-        loaded_data = load_image_frame_data(self.db_path)
-        self.assertEqual(len(loaded_data), 2)
-        self.assertEqual(len(loaded_data["/cam0/image_raw"]['data']), 879)
-        self.assertEqual(len(loaded_data["/cam1/image_raw"]['data']), 879)
+        df = load_image_frame_data('nonexistent.db3')
+        self.assertIsNone(df)
 
-        image_data_i = loaded_data["/cam0/image_raw"]['data'][1520528314264184064]
-        self.assertEqual(len(image_data_i['external_pose']), 7)
-        self.assertTrue('initial_pose' not in image_data_i)
-        self.assertTrue('optimized_pose' not in image_data_i)
+        df = load_image_frame_data(self.db_path)
+        self.assertEqual(df.shape, (1758, 9))
 
-        image_data_i = loaded_data["/cam1/image_raw"]['data'][1520528314264184064]
-        self.assertEqual(len(image_data_i['external_pose']), 7)
+        cam0 = df.loc[df['frame_id']['sensor_name'] == '/cam0/image_raw']
+        self.assertEqual(cam0.shape, (879, 9))
+
+        # Check the dimensions of one of the loaded extracted targets
+        cam0_external_pose_i = cam0.loc[cam0['frame_id']['timestamp_ns'] == 1520528314264184064, 'external_pose'].iloc[
+            0]
+        self.assertEqual(cam0_external_pose_i.shape, (6,))
 
     def test_pose_loading(self):
         # If we make a query to a non-existent table that returns no data we just get an object with length zero
