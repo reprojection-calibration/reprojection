@@ -73,7 +73,10 @@ def refresh_sensor_list(data):
     if not data:
         return []
 
-    return list(data.keys())
+    # We use a set here (e.g. the {} brackets) to enforce uniqueness
+    sensor_name = sorted(list({row['frame_id_sensor_name'] for row in data}))
+
+    return sensor_name
 
 
 @callback(
