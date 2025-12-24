@@ -115,8 +115,8 @@ def update_translation_graph(selected_sensor, data):
     )
 
     translation_x = [d['external_pose_x'] for d in sorted_subset]
-    translation_y = [d['external_pose_ry'] for d in sorted_subset]
-    translation_z = [d['external_pose_rz'] for d in sorted_subset]
+    translation_y = [d['external_pose_y'] for d in sorted_subset]
+    translation_z = [d['external_pose_z'] for d in sorted_subset]
 
     # TODO(Jack): Add legend group
     trans_fig = go.Figure()
