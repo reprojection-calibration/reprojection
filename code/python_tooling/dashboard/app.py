@@ -26,10 +26,14 @@ app.layout = html.Div([
         ]
     ),
 
-    dcc.Graph(id='rotation-graph'),
-    dcc.Graph(id='translation-graph'),
-
-    dcc.Store(id='database-store'),
+    dcc.Loading(
+        id="loading-animation",
+        children=[
+            dcc.Graph(id='rotation-graph'),
+            dcc.Graph(id='translation-graph'),
+            dcc.Store(id='database-store'),
+        ]
+    ),
 ])
 
 
@@ -89,6 +93,7 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
+    # TODO(Jack): Extract times array from new panda flattend map!!!
     times = data[selected_sensor]['_times']
 
     frames = data[selected_sensor]['data']
