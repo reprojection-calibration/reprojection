@@ -72,16 +72,18 @@ def load_database_to_store(db_file):
 
 @callback(
     Output('sensor-dropdown', 'options'),
+    Output('sensor-dropdown', 'value'),
     Input('database-store', 'data')
 )
 def refresh_sensor_list(data):
     if not data:
-        return []
+        return [], None
 
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_name = sorted(list({row['frame_id_sensor_name'] for row in data}))
+    sensor_names = sorted(list({row['frame_id_sensor_name'] for row in data}))
 
-    return sensor_name
+    # Set the default dropdown sensor value to the first sensor
+    return sensor_names, sensor_names[0]
 
 
 @callback(
