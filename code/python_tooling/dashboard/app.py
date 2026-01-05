@@ -3,6 +3,9 @@ import os
 import plotly.graph_objects as go
 from database.load_image_frame_data import load_image_frame_data
 
+# TODO(Jack): Visualize extracted targets
+
+# TODO(Jack): Do not hardcode this
 DB_DIR = '../../test_data/'
 
 app = Dash()
@@ -96,15 +99,15 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
-    sorted_subset = sorted([sensor for sensor in data if sensor['frame_id_sensor_name'] == selected_sensor], key=lambda x: x['frame_id_timestamp_ns'])
-    times = [n['frame_id_timestamp_ns'] for n in sorted_subset]
+    sorted_sensor_subset = sorted([sensor for sensor in data if sensor['frame_id_sensor_name'] == selected_sensor], key=lambda x: x['frame_id_timestamp_ns'])
+    times = [n['frame_id_timestamp_ns'] for n in sorted_sensor_subset]
 
 
     # TODO(Jack): Eliminate copy and paste here!
     # TODO(Jack): Use numpy arrays here if possible?
-    rotations_x = [d['external_pose_rx'] for d in sorted_subset]
-    rotations_y = [d['external_pose_ry'] for d in sorted_subset]
-    rotations_z = [d['external_pose_rz'] for d in sorted_subset]
+    rotations_x = [d['external_pose_rx'] for d in sorted_sensor_subset]
+    rotations_y = [d['external_pose_ry'] for d in sorted_sensor_subset]
+    rotations_z = [d['external_pose_rz'] for d in sorted_sensor_subset]
 
     rot_fig = go.Figure()
     rot_fig.add_scatter(x=times, y=rotations_x, mode='lines+markers', name='X', legendgroup='ExternalPose')
@@ -116,9 +119,9 @@ def update_translation_graph(selected_sensor, data):
         legend_title_text='Sources'
     )
 
-    translation_x = [d['external_pose_x'] for d in sorted_subset]
-    translation_y = [d['external_pose_y'] for d in sorted_subset]
-    translation_z = [d['external_pose_z'] for d in sorted_subset]
+    translation_x = [d['external_pose_x'] for d in sorted_sensor_subset]
+    translation_y = [d['external_pose_y'] for d in sorted_sensor_subset]
+    translation_z = [d['external_pose_z'] for d in sorted_sensor_subset]
 
     # TODO(Jack): Add legend group
     trans_fig = go.Figure()

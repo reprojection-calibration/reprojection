@@ -41,7 +41,7 @@ def build_indices(msg_data):
 
 # TODO(Jack): I really am not sure here, but is storing a dict in a pandas datatable a crime? Might be but for not the
 # clarity of the abstraction takes precedence! But lets be ready to refactor this if it turns into a problem.
-def parse_proto(blob: bytes) -> ExtractedTargetProto:
+def parse_proto(blob):
     msg = ExtractedTargetProto()
     msg.ParseFromString(blob)
 
