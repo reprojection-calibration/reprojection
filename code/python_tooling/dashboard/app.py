@@ -33,36 +33,34 @@ app.layout = html.Div([
             dcc.Graph(id='rotation-graph'),
             dcc.Graph(id='translation-graph'),
         ]),
-        dcc.Tab(label='Feature Extraction', children=[
-            html.Div(
-                style={"display": "flex", "gap": "20px"},
+        dcc.Tab(label='Feature Extraction',
                 children=[
-                    dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
-                    dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
-                ]
-            ),
-            dcc.Slider(
-                id="targets-frame-slider",
-                min=0,
-                max=0,
-                step=1,
-                value=0,
-            ),
-            html.Div(
-                style={"display": "flex", "alignItems": "center", "gap": "10px", "marginTop": "10px"},
-                children=[
-                    html.Button("▶ Play", id="play-button", n_clicks=0),
-                    dcc.Interval(
-                        id="play-interval",
-                        interval=50,  # ms per frame (10 Hz)
-                        disabled=True,
+                    dcc.Slider(
+                        id="targets-frame-slider",
+                        min=0,
+                        max=0,
+                        step=1,
+                        value=0,
+                        updatemode="drag",
+                        marks=None,
+                        tooltip={"placement": "bottom", "always_visible": True},
                     ),
-                ],
-            ),
-        ]),
+                    html.Div(
+                        style={"display": "flex", "gap": "20px"},
+                        children=[
+                            dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
+                            dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
+                        ]
+                    ),
+                    html.Button("▶ Play", id="play-button", n_clicks=0),
+                ]),
     ]),
 
-
+    dcc.Interval(
+        id="play-interval",
+        interval=50,
+        disabled=True,
+    ),
 
     dcc.Store(id='database-store'),
 ])
@@ -225,7 +223,7 @@ def init_2d_target_figures(sensor, data):
         "layout": {
             "title": "Extracted Feature",
             "xaxis": {
-                "range": [0, 512], # ERROR(Jack): Do not hardcode image dimensions!
+                "range": [0, 512],  # ERROR(Jack): Do not hardcode image dimensions!
                 "title": "u",
                 "constrain": "domain",
             },
