@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 
-def plot_rotation_figure(data, fig = None):
+
+def plot_rotation_figure(data, fig=None, legendgroup=None, marker='circle'):
     times = [n['timestamp_ns'] for n in data]
 
     # TODO(Jack): Eliminate copy and paste here!
@@ -11,18 +12,22 @@ def plot_rotation_figure(data, fig = None):
 
     if fig is None:
         fig = go.Figure()
-    fig.add_scatter(x=times, y=rotations_x, mode='lines+markers', name='X', legendgroup='ExternalPose')
-    fig.add_scatter(x=times, y=rotations_y, mode='lines+markers', name='Y', legendgroup='ExternalPose')
-    fig.add_scatter(x=times, y=rotations_z, mode='lines+markers', name='Z', legendgroup='ExternalPose')
+    fig.add_scatter(x=times, y=rotations_x, marker=dict(symbol=marker, color='rgb(255, 0, 0)'), mode='lines+markers',
+                    name='rx',
+                    legendgroup=legendgroup)
+    fig.add_scatter(x=times, y=rotations_y, marker=dict(symbol=marker, color='rgb(18, 174, 0)'), mode='lines+markers', name='ry',
+                    legendgroup=legendgroup)
+    fig.add_scatter(x=times, y=rotations_z, marker=dict(symbol=marker, color='rgb(0, 0, 255)'), mode='lines+markers', name='rz',
+                    legendgroup=legendgroup)
     fig.update_layout(
-        xaxis_title='Time(ns)',
+        xaxis_title='Time (ns)',
         yaxis_title='Axis Angle Rotation',
-        legend_title_text='Sources'
     )
 
     return fig
 
-def plot_translation_figure(data, fig = None):
+
+def plot_translation_figure(data, fig=None, legendgroup=None, marker='circle'):
     times = [n['timestamp_ns'] for n in data]
 
     translation_x = [d['x'] for d in data]
@@ -32,12 +37,19 @@ def plot_translation_figure(data, fig = None):
     # TODO(Jack): Add legend group
     if fig is None:
         fig = go.Figure()
-    fig.add_scatter(x=times, y=translation_x, mode='lines+markers', name='rx')
-    fig.add_scatter(x=times, y=translation_y, mode='lines+markers', name='ry')
-    fig.add_scatter(x=times, y=translation_z, mode='lines+markers', name='rz')
+    fig.add_scatter(x=times, y=translation_x, marker=dict(symbol=marker, color='rgb(255, 0, 0)'),
+                    mode='lines+markers',
+                    name='x',
+                    legendgroup=legendgroup)
+    fig.add_scatter(x=times, y=translation_y, marker=dict(symbol=marker, color='rgb(18, 174, 0)' ),
+                    mode='lines+markers', name='y',
+                    legendgroup=legendgroup)
+    fig.add_scatter(x=times, y=translation_z, marker=dict(symbol=marker, color='rgb(0, 0, 255)' ),
+                    mode='lines+markers', name='z',
+                    legendgroup=legendgroup)
     fig.update_layout(
-        xaxis_title='Time(ns)',
-        yaxis_title='Translation(m)'
+        xaxis_title='Time (ns)',
+        yaxis_title='Translation (m)',
     )
 
     return fig

@@ -108,11 +108,16 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
-    sorted_sensor_subset = sorted([sensor for sensor in data['initial'] if sensor['sensor_name'] == selected_sensor],
-                                  key=lambda x: x['timestamp_ns'])
+    initial_pose = sorted([sensor for sensor in data['initial'] if sensor['sensor_name'] == selected_sensor],
+                          key=lambda x: x['timestamp_ns'])
 
-    rot_fig = plot_rotation_figure(sorted_sensor_subset)
-    trans_fig = plot_translation_figure(sorted_sensor_subset)
+    rot_fig = plot_rotation_figure(initial_pose, legendgroup='Initial', marker='x')
+    trans_fig = plot_translation_figure(initial_pose, legendgroup='Initial', marker='x')
+
+    if data['external'] is not None:
+        gt_poses = sorted([sensor for sensor in data['external']], key=lambda x: x['timestamp_ns'])
+        rot_fig = plot_rotation_figure(gt_poses, fig=rot_fig, legendgroup='External')
+        trans_fig = plot_translation_figure(gt_poses, fig=trans_fig, legendgroup='External')
 
     return rot_fig, trans_fig
 
