@@ -25,6 +25,7 @@ AddTests()
 
 set(EXAMPLES
         examples/feature_extraction.cpp
+        examples/pose_initialization.cpp
 )
 foreach (EXAMPLE IN LISTS EXAMPLES)
     get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WLE)
