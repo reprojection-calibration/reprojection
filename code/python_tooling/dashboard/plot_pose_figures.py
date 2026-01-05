@@ -15,9 +15,11 @@ def plot_rotation_figure(data, fig=None, legendgroup=None, marker='circle'):
     fig.add_scatter(x=times, y=rotations_x, marker=dict(symbol=marker, color='rgb(255, 0, 0)'), mode='lines+markers',
                     name='rx',
                     legendgroup=legendgroup)
-    fig.add_scatter(x=times, y=rotations_y, marker=dict(symbol=marker, color='rgb(18, 174, 0)'), mode='lines+markers', name='ry',
+    fig.add_scatter(x=times, y=rotations_y, marker=dict(symbol=marker, color='rgb(18, 174, 0)'), mode='lines+markers',
+                    name='ry',
                     legendgroup=legendgroup)
-    fig.add_scatter(x=times, y=rotations_z, marker=dict(symbol=marker, color='rgb(0, 0, 255)'), mode='lines+markers', name='rz',
+    fig.add_scatter(x=times, y=rotations_z, marker=dict(symbol=marker, color='rgb(0, 0, 255)'), mode='lines+markers',
+                    name='rz',
                     legendgroup=legendgroup)
     fig.update_layout(
         xaxis_title='Time (ns)',
@@ -41,10 +43,10 @@ def plot_translation_figure(data, fig=None, legendgroup=None, marker='circle'):
                     mode='lines+markers',
                     name='x',
                     legendgroup=legendgroup)
-    fig.add_scatter(x=times, y=translation_y, marker=dict(symbol=marker, color='rgb(18, 174, 0)' ),
+    fig.add_scatter(x=times, y=translation_y, marker=dict(symbol=marker, color='rgb(18, 174, 0)'),
                     mode='lines+markers', name='y',
                     legendgroup=legendgroup)
-    fig.add_scatter(x=times, y=translation_z, marker=dict(symbol=marker, color='rgb(0, 0, 255)' ),
+    fig.add_scatter(x=times, y=translation_z, marker=dict(symbol=marker, color='rgb(0, 0, 255)'),
                     mode='lines+markers', name='z',
                     legendgroup=legendgroup)
     fig.update_layout(
