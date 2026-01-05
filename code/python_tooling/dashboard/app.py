@@ -52,6 +52,17 @@ app.layout = html.Div([
         max=0,
         step=1,
         value=0,
+    ),
+    html.Div(
+        style={"display": "flex", "alignItems": "center", "gap": "10px", "marginTop": "10px"},
+        children=[
+            html.Button("▶ Play", id="play-button", n_clicks=0),
+            dcc.Interval(
+                id="play-interval",
+                interval=50,  # ms per frame (10 Hz)
+                disabled=True,
+            ),
+        ],
     )
 ])
 
@@ -71,6 +82,29 @@ def refresh_database_list(_):
 
     return database_names, database_names[0]
 
+@callback(
+    Output("play-interval", "disabled"),
+    Output("play-button", "children"),
+    Input("play-button", "n_clicks"),
+    prevent_initial_call=True,
+)
+def toggle_play(n_clicks):
+    playing = n_clicks % 2 == 1
+    return not playing, "⏸ Pause" if playing else "▶ Play"
+
+@callback(
+    Output("targets-frame-slider", "value", allow_duplicate=True),
+    Input("play-interval", "n_intervals"),
+    State("targets-frame-slider", "value"),
+    State("targets-frame-slider", "max"),
+    prevent_initial_call=True,
+)
+def advance_slider(_, value, max_value):
+    if value is None:
+        return 0
+    if value >= max_value:
+        return 0  # loop playback
+    return value + 1
 
 @callback(
     Output('database-store', 'data'),
@@ -142,6 +176,7 @@ def update_translation_graph(selected_sensor, data):
     Output("targets-xy-graph", "figure", allow_duplicate=True),
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
     Output("targets-frame-slider", "max"),
+    Output("targets-frame-slider", "value"),  # 👈 ADD
     Input("sensor-dropdown", "value"),
     State("database-store", "data"),
     prevent_initial_call=True,
@@ -193,7 +228,7 @@ def init_2d_target_figures(sensor, data):
         }
     }
 
-    return xy_fig, pixel_fig, max(n_frames - 1, 0)
+    return xy_fig, pixel_fig, max(n_frames - 1, 0), 0
 
 
 app.clientside_callback(
