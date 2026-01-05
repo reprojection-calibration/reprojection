@@ -10,12 +10,16 @@ from bisect import bisect_left
 # TODO(Jack): This function does not have the right name! Align what is actually being loaded here with the name. Just
 #  because we are loading data associated with an image frames does not mean it belongs in a data named load_image_frame_data
 def load_calibration_poses(db_path):
-    # For external poses there is no timestamp matching requirement, so if they are available we just take the closest
-    # to the time from our extracted target frames.
-    df_external_poses = load_poses(db_path, 'external', 'ground_truth')
-    if df_external_poses is None:
-        # WARN(Jack): External poses are not technically mandatory!
-        return None
-    df_external_poses = df_external_poses.sort_values("timestamp_ns")
+    df_initial_camera_poses = load_poses(db_path, 'camera', 'initial')
+    if df_initial_camera_poses is not None:
+        df_initial_camera_poses = df_initial_camera_poses.sort_values("timestamp_ns")
 
-    return df_external_poses
+    df_optimized_camera_poses = load_poses(db_path, 'camera', 'optimized')
+    if df_optimized_camera_poses is not None:
+        df_optimized_camera_poses = df_optimized_camera_poses.sort_values("timestamp_ns")
+
+    df_external_poses = load_poses(db_path, 'external', 'ground_truth')
+    if df_external_poses is not None:
+        df_external_poses = df_external_poses.sort_values("timestamp_ns")
+
+    return df_initial_camera_poses, df_optimized_camera_poses, df_external_poses

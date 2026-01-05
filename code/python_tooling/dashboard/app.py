@@ -1,7 +1,7 @@
 from dash import Dash, dcc, html, Input, Output, State, callback
 import os
 import plotly.graph_objects as go
-from database.load_image_frame_data import load_calibration_poses
+from database.load_calibration_poses import load_calibration_poses
 
 # TODO(Jack): Visualize extracted targets
 
@@ -69,9 +69,14 @@ def load_database_to_store(db_file):
     if not os.path.isfile(full_path):
         return None
 
-    df = load_calibration_poses(full_path)
+    initial, optimized, external = load_calibration_poses(full_path)
 
-    return df.to_dict('records')
+    data = {'initial': initial, 'optimized': optimized, 'external': external}
+
+    # Make pandas data frame json serializable which is required for anything sent to the browser in dash
+    data = {key: value.to_dict('records') for key, value in data.items()}
+
+    return data
 
 
 @callback(
@@ -84,7 +89,7 @@ def refresh_sensor_list(data):
         return [], None
 
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({row['sensor_name'] for row in data}))
+    sensor_names = sorted(list({row['sensor_name'] for row in data['initial']}))
     if len(sensor_names) == 0:
         return [], ''
 
@@ -102,9 +107,9 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
-    sorted_sensor_subset = sorted([sensor for sensor in data if sensor['sensor_name'] == selected_sensor], key=lambda x: x['timestamp_ns'])
+    sorted_sensor_subset = sorted([sensor for sensor in data['initial'] if sensor['sensor_name'] == selected_sensor],
+                                  key=lambda x: x['timestamp_ns'])
     times = [n['timestamp_ns'] for n in sorted_sensor_subset]
-
 
     # TODO(Jack): Eliminate copy and paste here!
     # TODO(Jack): Use numpy arrays here if possible?
