@@ -1,17 +1,10 @@
 from generated.extracted_target_pb2 import ExtractedTargetProto
 import sqlite3
 import numpy as np
+import pandas as pd
+import os
 
 from database.sql_statement_loading import load_sql
-
-
-class ExtractedTarget:
-    def __init__(self, pixels, points, indices):
-        assert pixels.shape[0] == points.shape[0] == indices.shape[0]
-
-        self.pixels = pixels
-        self.points = points
-        self.indices = indices
 
 
 def build_pixels(msg_data):
@@ -46,26 +39,40 @@ def build_indices(msg_data):
         return data.reshape(2, rows).transpose()
 
 
+# TODO(Jack): I really am not sure here, but is storing a dict in a pandas datatable a crime? Might be but for not the
+# clarity of the abstraction takes precedence! But lets be ready to refactor this if it turns into a problem.
+def parse_proto(blob):
+    msg = ExtractedTargetProto()
+    msg.ParseFromString(blob)
+
+    return {'pixels': build_pixels(msg.bundle).tolist(),
+            'points': build_points(msg.bundle).tolist(),
+            'indices': build_indices(msg).tolist()}
+
+
 def load_all_extracted_targets(db_path):
-    conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
-    cur.execute(
-        load_sql("extracted_targets_select_all.sql")
-    )
+    if not os.path.isfile(db_path):
+        print(f"Database file does not exist: {db_path}")
+        return None
 
-    targets = {}
-    for ts, sensor, blob in cur.fetchall():
-        msg = ExtractedTargetProto()
-        msg.ParseFromString(blob)
+    try:
+        with sqlite3.connect(db_path) as conn:
+            sql_query = load_sql('extracted_targets_select_all.sql')
+            df = pd.read_sql(sql_query, conn)
 
-        data = ExtractedTarget(
-            build_pixels(msg.bundle), build_points(
-                msg.bundle), build_indices(msg)
-        )
+            if 'data' not in df.columns:
+                raise KeyError("'data' column not found in query result")
 
-        # TODO(Jack): What is the deal here with this set default thing?
-        targets.setdefault(sensor, {})[ts] = data
+            def safe_parse(blob):
+                try:
+                    return parse_proto(blob)
+                except Exception as e:
+                    print(f"Failed to parse blob: {e}")
+                    return None
 
-    conn.close()
+            df['data'] = df['data'].apply(safe_parse)
+    except Exception as e:
+        print(f"Unexpected error in load_all_extracted_targets(db_path={db_path}): {e}")
+        return None
 
-    return targets
+    return df
