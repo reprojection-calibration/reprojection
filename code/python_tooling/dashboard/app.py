@@ -43,13 +43,18 @@ app.layout = html.Div([
 
 @callback(
     Output('database-dropdown', 'options'),
+    Output('database-dropdown', 'value'),
     Input('refresh-database-list-button', 'n_clicks')
 )
 def refresh_database_list(_):
     if not os.path.exists(DB_DIR):
-        return []
+        return [], ''
 
-    return sorted([f for f in os.listdir(DB_DIR) if f.endswith(".db3")])
+    database_names = sorted([f for f in os.listdir(DB_DIR) if f.endswith(".db3")])
+    if len(database_names) == 0:
+        return [], ''
+
+    return database_names, database_names[0]
 
 
 @callback(
@@ -84,6 +89,8 @@ def refresh_sensor_list(data):
 
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
     sensor_names = sorted(list({row['frame_id_sensor_name'] for row in data}))
+    if len(sensor_names) == 0:
+        return [], ''
 
     # Set the default dropdown sensor value to the first sensor
     return sensor_names, sensor_names[0]
