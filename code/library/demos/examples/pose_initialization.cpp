@@ -24,7 +24,7 @@ Bundle Fov(Bundle const& bundle,MatrixX3d const& rays) {
         double const xy_distance{std::sqrt(point(0) * point(0) + point(1) * point(1))};
         double const fov{std::acos(xy_distance) / point(2)};
 
-        if (fov > M_PI / 3) {
+        if (fov > M_PI / 2.5) {
             continue;
         }
 
@@ -32,11 +32,11 @@ Bundle Fov(Bundle const& bundle,MatrixX3d const& rays) {
         points.push_back(bundle.points.row(i));
     }
 
-    Matrix2d pixels_eigen{std::size(pixels), 2};
+    MatrixX2d pixels_eigen{std::size(pixels), 2};
     for (size_t i{0}; i < std::size(pixels); ++i) {
         pixels_eigen.row(i) = pixels[i];
     }
-    Matrix3d points_eigen{std::size(points), 3};
+    MatrixX3d points_eigen{std::size(points), 3};
     for (size_t i{0}; i < std::size(pixels); ++i) {
         points_eigen.row(i) = points[i];
     }
