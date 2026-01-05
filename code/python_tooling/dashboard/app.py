@@ -2,6 +2,7 @@ from dash import Dash, dcc, html, Input, Output, State, callback
 import os
 import plotly.graph_objects as go
 from database.load_calibration_poses import load_calibration_poses
+from plot_pose_figures import plot_rotation_figure, plot_translation_figure
 
 # TODO(Jack): Visualize extracted targets
 
@@ -109,37 +110,9 @@ def update_translation_graph(selected_sensor, data):
 
     sorted_sensor_subset = sorted([sensor for sensor in data['initial'] if sensor['sensor_name'] == selected_sensor],
                                   key=lambda x: x['timestamp_ns'])
-    times = [n['timestamp_ns'] for n in sorted_sensor_subset]
 
-    # TODO(Jack): Eliminate copy and paste here!
-    # TODO(Jack): Use numpy arrays here if possible?
-    rotations_x = [d['rx'] for d in sorted_sensor_subset]
-    rotations_y = [d['ry'] for d in sorted_sensor_subset]
-    rotations_z = [d['rz'] for d in sorted_sensor_subset]
-
-    rot_fig = go.Figure()
-    rot_fig.add_scatter(x=times, y=rotations_x, mode='lines+markers', name='X', legendgroup='ExternalPose')
-    rot_fig.add_scatter(x=times, y=rotations_y, mode='lines+markers', name='Y', legendgroup='ExternalPose')
-    rot_fig.add_scatter(x=times, y=rotations_z, mode='lines+markers', name='Z', legendgroup='ExternalPose')
-    rot_fig.update_layout(
-        xaxis_title='Time(ns)',
-        yaxis_title='Axis Angle Rotation',
-        legend_title_text='Sources'
-    )
-
-    translation_x = [d['x'] for d in sorted_sensor_subset]
-    translation_y = [d['y'] for d in sorted_sensor_subset]
-    translation_z = [d['z'] for d in sorted_sensor_subset]
-
-    # TODO(Jack): Add legend group
-    trans_fig = go.Figure()
-    trans_fig.add_scatter(x=times, y=translation_x, mode='lines+markers', name='rx')
-    trans_fig.add_scatter(x=times, y=translation_y, mode='lines+markers', name='ry')
-    trans_fig.add_scatter(x=times, y=translation_z, mode='lines+markers', name='rz')
-    trans_fig.update_layout(
-        xaxis_title='Time(ns)',
-        yaxis_title='Translation(m)'
-    )
+    rot_fig = plot_rotation_figure(sorted_sensor_subset)
+    trans_fig = plot_translation_figure(sorted_sensor_subset)
 
     return rot_fig, trans_fig
 

@@ -1,7 +1,5 @@
 from database.load_extracted_targets import load_all_extracted_targets
 from database.load_poses import load_poses
-import pandas as pd
-from bisect import bisect_left
 
 
 # NOTE(Jack): In this function we take advantage of the fact that for image data the foreign key relationships force
