@@ -7,7 +7,11 @@
 #include "projection_functions/camera_model.hpp"
 
 // ERROR NOT ACTUALLY ASSERTION OR TESTING STRATEGY
+#ifdef NDEBUG
 #undef NDEBUG
+#endif
+
+#include <cassert>
 
 using namespace reprojection;
 
@@ -61,7 +65,7 @@ int main() {
         cam0_pnp_poses.insert(database::PoseStamped{{header.timestamp_ns, "/cam0/image_raw"}, se3_i});
     }
 
-    assert(AddCameraPoseData(cam0_pnp_poses, database::PoseType::Initial, db));
+    assert(AddPoseData(cam0_pnp_poses,database::PoseTable::Camera, database::PoseType::Initial, db));
 
     return EXIT_SUCCESS;
 }
