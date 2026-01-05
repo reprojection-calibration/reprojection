@@ -15,35 +15,6 @@
 
 using namespace reprojection;
 
-Bundle Fov(Bundle const& bundle,MatrixX3d const& rays) {
-    std::vector<Vector2d> pixels;
-    std::vector<Vector3d> points;
-    for (int i{0}; i < bundle.pixels.rows(); ++i) {
-        Vector3d const point{rays.row(i)};
-
-        double const xy_distance{std::sqrt(point(0) * point(0) + point(1) * point(1))};
-        double const fov{std::acos(xy_distance) / point(2)};
-
-        if (fov > M_PI / 2.5) {
-            continue;
-        }
-
-        pixels.push_back(bundle.pixels.row(i));
-        points.push_back(bundle.points.row(i));
-    }
-
-    MatrixX2d pixels_eigen{std::size(pixels), 2};
-    for (size_t i{0}; i < std::size(pixels); ++i) {
-        pixels_eigen.row(i) = pixels[i];
-    }
-    MatrixX3d points_eigen{std::size(points), 3};
-    for (size_t i{0}; i < std::size(pixels); ++i) {
-        points_eigen.row(i) = points[i];
-    }
-
-    return {pixels_eigen, points_eigen};
-}
-
 int main() {
     // ERROR(Jack): Hardcoded to work in clion
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
@@ -65,11 +36,8 @@ int main() {
         MatrixX2d const pixels{pinhole_camera.Project(rays)};
 
         Bundle const linearized_target{pixels, extracted_target.bundle.points};
-        std::cout << "started fov" << std::endl;
-        Bundle const fov_cleaned_target{Fov(linearized_target, rays)};
-        std::cout << "cleaned fov" << std::endl;
 
-        auto const result{pnp::Pnp(fov_cleaned_target)};
+        auto const result{pnp::Pnp(linearized_target)};
         if (not std::holds_alternative<Isometry3d>(result)) {
             continue;
         }
