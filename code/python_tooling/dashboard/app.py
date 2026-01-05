@@ -4,66 +4,67 @@ from database.load_extracted_targets import load_all_extracted_targets, split_ex
 from database.load_calibration_poses import load_calibration_poses
 from plot_pose_figures import plot_rotation_figure, plot_translation_figure
 
-# TODO(Jack): Visualize extracted targets
-
 # TODO(Jack): Do not hardcode this
 DB_DIR = '../../test_data/'
 
-app = Dash()
+app = Dash(title='Reprojection', update_title=None)
 app.layout = html.Div([
     html.H2("Reprojection - the future is calibrated."),
 
     html.Div(
-        style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
         children=[
             html.Label('Load'),
             dcc.Dropdown(id='database-dropdown', placeholder="Select a database", style={"width": "50%"}),
             html.Button('Refresh Database List', id='refresh-database-list-button', n_clicks=0),
-        ]
+        ],
+        style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
     ),
 
     html.Div(
-        style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
         children=[
             html.Label('Select'),
-            # TODO(Jack): Autoload the first sensor as the default picked value in the dropdown
             dcc.Dropdown(id='sensor-dropdown', placeholder="Select a camera sensor", style={"width": "50%"}),
-        ]
+        ],
+        style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
     ),
 
-    dcc.Loading(
-        id="loading-animation",
-        children=[
+    dcc.Tabs([
+        dcc.Tab(label='Poses', children=[
             dcc.Graph(id='rotation-graph'),
             dcc.Graph(id='translation-graph'),
-            dcc.Store(id='database-store'),
-        ]
-    ),
-    html.Div(
-        style={"display": "flex", "gap": "20px"},
-        children=[
-            dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
-            dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
-        ]
-    ),
-    dcc.Slider(
-        id="targets-frame-slider",
-        min=0,
-        max=0,
-        step=1,
-        value=0,
-    ),
-    html.Div(
-        style={"display": "flex", "alignItems": "center", "gap": "10px", "marginTop": "10px"},
-        children=[
-            html.Button("▶ Play", id="play-button", n_clicks=0),
-            dcc.Interval(
-                id="play-interval",
-                interval=50,  # ms per frame (10 Hz)
-                disabled=True,
+        ]),
+        dcc.Tab(label='Feature Extraction', children=[
+            html.Div(
+                style={"display": "flex", "gap": "20px"},
+                children=[
+                    dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
+                    dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
+                ]
             ),
-        ],
-    )
+            dcc.Slider(
+                id="targets-frame-slider",
+                min=0,
+                max=0,
+                step=1,
+                value=0,
+            ),
+            html.Div(
+                style={"display": "flex", "alignItems": "center", "gap": "10px", "marginTop": "10px"},
+                children=[
+                    html.Button("▶ Play", id="play-button", n_clicks=0),
+                    dcc.Interval(
+                        id="play-interval",
+                        interval=50,  # ms per frame (10 Hz)
+                        disabled=True,
+                    ),
+                ],
+            ),
+        ]),
+    ]),
+
+
+
+    dcc.Store(id='database-store'),
 ])
 
 
@@ -82,6 +83,7 @@ def refresh_database_list(_):
 
     return database_names, database_names[0]
 
+
 @callback(
     Output("play-interval", "disabled"),
     Output("play-button", "children"),
@@ -92,8 +94,9 @@ def toggle_play(n_clicks):
     playing = n_clicks % 2 == 1
     return not playing, "⏸ Pause" if playing else "▶ Play"
 
+
 @callback(
-    Output("targets-frame-slider", "value", allow_duplicate=True),
+    Output("targets-frame-slider", "value"),
     Input("play-interval", "n_intervals"),
     State("targets-frame-slider", "value"),
     State("targets-frame-slider", "max"),
@@ -105,6 +108,7 @@ def advance_slider(_, value, max_value):
     if value >= max_value:
         return 0  # loop playback
     return value + 1
+
 
 @callback(
     Output('database-store', 'data'),
@@ -172,11 +176,11 @@ def update_translation_graph(selected_sensor, data):
 
     return rot_fig, trans_fig
 
+
 @callback(
     Output("targets-xy-graph", "figure", allow_duplicate=True),
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
     Output("targets-frame-slider", "max"),
-    Output("targets-frame-slider", "value"),  # 👈 ADD
     Input("sensor-dropdown", "value"),
     State("database-store", "data"),
     prevent_initial_call=True,
@@ -199,12 +203,17 @@ def init_2d_target_figures(sensor, data):
         }],
         "layout": {
             "title": "Target points (XY)",
-            "xaxis": {"title": "X", "scaleanchor": "y"},
-            "yaxis": {"title": "Y"},
+            "xaxis": {"range": [0, 1],
+                      "title": "X",
+                      "constrain": "domain",
+                      "scaleanchor": "y",
+                      },
+            "yaxis": {"range": [0, 1],
+                      "title": "Y",
+                      },
         }
     }
 
-    # Image pixel figure
     pixel_fig = {
         "data": [{
             "type": "scatter",
@@ -214,9 +223,9 @@ def init_2d_target_figures(sensor, data):
             "marker": {"size": 6},
         }],
         "layout": {
-            "title": "Image pixels (512×512)",
+            "title": "Extracted Feature",
             "xaxis": {
-                "range": [0, 512],
+                "range": [0, 512], # ERROR(Jack): Do not hardcode image dimensions!
                 "title": "u",
                 "constrain": "domain",
             },
@@ -228,7 +237,7 @@ def init_2d_target_figures(sensor, data):
         }
     }
 
-    return xy_fig, pixel_fig, max(n_frames - 1, 0), 0
+    return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
 
 app.clientside_callback(
@@ -272,7 +281,6 @@ app.clientside_callback(
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),
 )
-
 
 if __name__ == '__main__':
     app.run(debug=True)
