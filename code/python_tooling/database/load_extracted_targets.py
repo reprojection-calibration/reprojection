@@ -76,3 +76,25 @@ def load_all_extracted_targets(db_path):
         return None
 
     return df
+
+def split_extracted_targets_by_sensor(df):
+    targets_by_sensor = {}
+
+    for sensor_name, group in df.groupby("sensor_name", sort=True):
+        # Sort by time so slider order is correct
+        group = group.sort_values("timestamp_ns")
+
+        frames = []
+        for _, (_, row) in enumerate(group.iterrows()):
+            target = row["data"]
+
+            frames.append({
+                "timestamp_ns": int(row["timestamp_ns"]),
+                "pixels": target["pixels"],
+                "points": target["points"],
+                "indices": target["indices"],
+            })
+
+        targets_by_sensor[sensor_name] = frames
+
+    return targets_by_sensor
