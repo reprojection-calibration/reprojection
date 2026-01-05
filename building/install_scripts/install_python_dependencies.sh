@@ -14,7 +14,9 @@ source "${VENV_DIR}/bin/activate"
 python3 -m pip install \
  build \
  numpy \
+ pandas \
  setuptools
+
 # Protobuf deps
 python3 -m pip install \
   grpcio \
