@@ -8,12 +8,18 @@ set(SRC_FILES
         src/image_source.cpp
 )
 set(LINK_LIBRARIES
+        database
         Eigen3::Eigen
         eigen_utilities
         feature_extraction
+        geometry
         types
         ${apriltag_LIBRARIES}
+        optimization
         ${OpenCV_LIBS}
+        pnp
+        projection_functions
+        spline
         ${YAML_CPP_LIBRARIES}
 )
 AddLibrary()
