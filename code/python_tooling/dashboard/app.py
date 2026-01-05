@@ -1,7 +1,7 @@
 from dash import Dash, dcc, html, Input, Output, State, callback
 import os
 import plotly.graph_objects as go
-from database.load_image_frame_data import load_image_frame_data
+from database.load_image_frame_data import load_calibration_poses
 
 # TODO(Jack): Visualize extracted targets
 
@@ -69,11 +69,7 @@ def load_database_to_store(db_file):
     if not os.path.isfile(full_path):
         return None
 
-    df = load_image_frame_data(full_path)
-
-    # Need to flatten multiindex to allow for json serialization
-    df = df.reset_index(drop=True)
-    df.columns = ['_'.join(col) if isinstance(col, tuple) else col for col in df.columns]
+    df = load_calibration_poses(full_path)
 
     return df.to_dict('records')
 
@@ -88,7 +84,7 @@ def refresh_sensor_list(data):
         return [], None
 
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({row['frame_id_sensor_name'] for row in data}))
+    sensor_names = sorted(list({row['sensor_name'] for row in data}))
     if len(sensor_names) == 0:
         return [], ''
 
@@ -106,15 +102,15 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
-    sorted_sensor_subset = sorted([sensor for sensor in data if sensor['frame_id_sensor_name'] == selected_sensor], key=lambda x: x['frame_id_timestamp_ns'])
-    times = [n['frame_id_timestamp_ns'] for n in sorted_sensor_subset]
+    sorted_sensor_subset = sorted([sensor for sensor in data if sensor['sensor_name'] == selected_sensor], key=lambda x: x['timestamp_ns'])
+    times = [n['timestamp_ns'] for n in sorted_sensor_subset]
 
 
     # TODO(Jack): Eliminate copy and paste here!
     # TODO(Jack): Use numpy arrays here if possible?
-    rotations_x = [d['external_pose_rx'] for d in sorted_sensor_subset]
-    rotations_y = [d['external_pose_ry'] for d in sorted_sensor_subset]
-    rotations_z = [d['external_pose_rz'] for d in sorted_sensor_subset]
+    rotations_x = [d['rx'] for d in sorted_sensor_subset]
+    rotations_y = [d['ry'] for d in sorted_sensor_subset]
+    rotations_z = [d['rz'] for d in sorted_sensor_subset]
 
     rot_fig = go.Figure()
     rot_fig.add_scatter(x=times, y=rotations_x, mode='lines+markers', name='X', legendgroup='ExternalPose')
@@ -126,9 +122,9 @@ def update_translation_graph(selected_sensor, data):
         legend_title_text='Sources'
     )
 
-    translation_x = [d['external_pose_x'] for d in sorted_sensor_subset]
-    translation_y = [d['external_pose_y'] for d in sorted_sensor_subset]
-    translation_z = [d['external_pose_z'] for d in sorted_sensor_subset]
+    translation_x = [d['x'] for d in sorted_sensor_subset]
+    translation_y = [d['y'] for d in sorted_sensor_subset]
+    translation_z = [d['z'] for d in sorted_sensor_subset]
 
     # TODO(Jack): Add legend group
     trans_fig = go.Figure()
