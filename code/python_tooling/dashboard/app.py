@@ -72,10 +72,9 @@ def load_database_to_store(db_file):
 
     initial, optimized, external = load_calibration_poses(full_path)
 
-    data = {'initial': initial, 'optimized': optimized, 'external': external}
-
     # Make pandas data frame json serializable which is required for anything sent to the browser in dash
-    data = {key: value.to_dict('records') for key, value in data.items()}
+    data = {'poses': {'initial': initial.to_dict('records'), 'optimized': optimized.to_dict('records'),
+                      'external': external.to_dict('records')}}
 
     return data
 
@@ -90,7 +89,7 @@ def refresh_sensor_list(data):
         return [], None
 
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({row['sensor_name'] for row in data['initial']}))
+    sensor_names = sorted(list({row['sensor_name'] for row in data['poses']['initial']}))
     if len(sensor_names) == 0:
         return [], ''
 
@@ -108,14 +107,14 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
-    initial_pose = sorted([sensor for sensor in data['initial'] if sensor['sensor_name'] == selected_sensor],
+    initial_pose = sorted([sensor for sensor in data['poses']['initial'] if sensor['sensor_name'] == selected_sensor],
                           key=lambda x: x['timestamp_ns'])
 
     rot_fig = plot_rotation_figure(initial_pose, legendgroup='Initial', marker='x')
     trans_fig = plot_translation_figure(initial_pose, legendgroup='Initial', marker='x')
 
-    if data['external'] is not None:
-        gt_poses = sorted([sensor for sensor in data['external']], key=lambda x: x['timestamp_ns'])
+    if data['poses']['external'] is not None:
+        gt_poses = sorted([sensor for sensor in data['poses']['external']], key=lambda x: x['timestamp_ns'])
         rot_fig = plot_rotation_figure(gt_poses, fig=rot_fig, legendgroup='External')
         trans_fig = plot_translation_figure(gt_poses, fig=trans_fig, legendgroup='External')
 
