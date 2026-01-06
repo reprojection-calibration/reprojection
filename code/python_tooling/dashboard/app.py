@@ -32,35 +32,42 @@ app.layout = html.Div([
     ),
 
     dcc.Tabs([
-        dcc.Tab(children=[
-            dcc.Graph(id='rotation-graph'),
-            dcc.Graph(id='translation-graph'), ],
+        dcc.Tab(
+            children=[
+                dcc.Graph(id='rotation-graph'),
+                dcc.Graph(id='translation-graph'), ],
             label='Poses',
         ),
-        dcc.Tab(children=[
-            dcc.Slider(
-                id="targets-frame-slider",
-                marks=None,
-                min=0, max=0, step=1, value=0,
-                tooltip={"placement": "bottom", "always_visible": True},
-                updatemode="drag",
-            ),
-            html.Div(
-                style={"display": "flex", "gap": "20px"},
-                children=[
-                    dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
-                    dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
-                ]
-            ),
-            html.Button("▶ Play", id="play-button", n_clicks=0), ],
-            label='Feature Extraction', ),
+        dcc.Tab(
+            children=[
+                # TODO(Jack): We should have one slider at the top level, not in any specific tab or section that drives all
+                #  related animations.
+                dcc.Slider(
+                    id="frame-id-slider",
+                    marks=None,
+                    min=0, max=0, step=1, value=0,
+                    tooltip={"placement": "bottom", "always_visible": True},
+                    updatemode="drag",
+                ),
+                html.Div(
+                    children=[
+                        dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
+                        dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
+                    ],
+                    style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
+                ),
+                # The animation plays by default therefore the button is initialized with the pause graphic and text
+                html.Button(children="⏸ Pause", id="play-button", n_clicks=0),
+            ],
+            label='Feature Extraction',
+        ),
     ]),
 
     # Components without a visual representation are found here at the bottom (ex. Interval or Store etc.)
     dcc.Interval(
+        disabled=False,
         id="play-interval",
         interval=50,
-        disabled=True,
     ),
 
     dcc.Store(id='database-store'),
@@ -90,15 +97,16 @@ def refresh_database_list(_):
     prevent_initial_call=True,
 )
 def toggle_play(n_clicks):
-    playing = n_clicks % 2 == 1
+    playing = n_clicks % 2 == 0
+
     return not playing, "⏸ Pause" if playing else "▶ Play"
 
 
 @callback(
-    Output("targets-frame-slider", "value"),
+    Output("frame-id-slider", "value"),
     Input("play-interval", "n_intervals"),
-    State("targets-frame-slider", "value"),
-    State("targets-frame-slider", "max"),
+    State("frame-id-slider", "value"),
+    State("frame-id-slider", "max"),
     prevent_initial_call=True,
 )
 def advance_slider(_, value, max_value):
@@ -106,6 +114,7 @@ def advance_slider(_, value, max_value):
         return 0
     if value >= max_value:
         return 0  # loop playback
+
     return value + 1
 
 
@@ -179,7 +188,7 @@ def update_translation_graph(selected_sensor, data):
 @callback(
     Output("targets-xy-graph", "figure", allow_duplicate=True),
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
-    Output("targets-frame-slider", "max"),
+    Output("frame-id-slider", "max"),
     Input("sensor-dropdown", "value"),
     State("database-store", "data"),
     prevent_initial_call=True,
@@ -274,7 +283,7 @@ app.clientside_callback(
     """,
     Output("targets-xy-graph", "figure"),
     Output("targets-pixels-graph", "figure"),
-    Input("targets-frame-slider", "value"),
+    Input("frame-id-slider", "value"),
     State("database-store", "data"),
     State("sensor-dropdown", "value"),
     State("targets-xy-graph", "figure"),
