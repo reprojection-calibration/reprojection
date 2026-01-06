@@ -1,9 +1,9 @@
 import unittest
 import os
 
-from database.load_extracted_targets import load_all_extracted_targets
-from database.load_poses import load_poses
-from database.load_image_frame_data import load_image_frame_data
+from database.load_extracted_targets import load_extracted_targets_df
+from database.load_poses import load_poses_df
+from database.load_images import split_images_by_sensor, load_images_df
 
 
 class TestDatabaseConnections(unittest.TestCase):
@@ -14,32 +14,34 @@ class TestDatabaseConnections(unittest.TestCase):
         self.db_path = os.getenv(
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3")
 
-    def test_load_image_frame_data(self):
-        df = load_image_frame_data('nonexistent.db3')
+    def test_load_images(self):
+        df = load_images_df('nonexistent.db3')
         self.assertIsNone(df)
 
-        df = load_image_frame_data(self.db_path)
-        self.assertEqual(df.shape, (1758, 9))
+        df = load_images_df(self.db_path)
+        self.assertEqual(df.shape, (1758, 3))
 
-        cam0 = df.loc[df['frame_id']['sensor_name'] == '/cam0/image_raw']
-        self.assertEqual(cam0.shape, (879, 9))
+        data = split_images_by_sensor(df)
+
+        cam0 = data['/cam0/image_raw']
+        self.assertEqual(len(cam0), 879)
 
         # Check the dimensions of one of the loaded extracted targets
-        cam0_external_pose_i = cam0.loc[cam0['frame_id']['timestamp_ns'] == 1520528314264184064, 'external_pose'].iloc[
-            0]
-        self.assertEqual(cam0_external_pose_i.shape, (6,))
+        image_n = cam0[0]
+        self.assertEqual(image_n['timestamp_ns'], 1520528314264184064)
+        self.assertIsNone(image_n['data']) # The checked in database has no images
 
     def test_pose_loading(self):
         # If we make a query to a non-existent table that returns no data we just get an object with length zero
-        df = load_poses(self.db_path, "does_not_exist", "also_not_there")
+        df = load_poses_df(self.db_path, "does_not_exist", "also_not_there")
         self.assertIsNone(df)
 
         # At time of writing there is no camera pose data in the test_data database
-        df = load_poses(self.db_path, "camera", "initial")
-        self.assertEqual(df.size, 0)
+        df = load_poses_df(self.db_path, "camera", "initial")
+        self.assertIsNone(df)
 
         # Load the external poses table and test some simple values
-        df = load_poses(self.db_path, "external", "ground_truth")
+        df = load_poses_df(self.db_path, "external", "ground_truth")
         self.assertEqual(df.shape, (4730, 9))
 
         # At this time there are only mocap poses so the shape is the same!
@@ -51,10 +53,10 @@ class TestDatabaseConnections(unittest.TestCase):
 
     def test_extracted_target_loading(self):
         # Query nonexistent table
-        df = load_all_extracted_targets('nonexistent.db3')
+        df = load_extracted_targets_df('nonexistent.db3')
         self.assertIsNone(df)
 
-        df = load_all_extracted_targets(self.db_path)
+        df = load_extracted_targets_df(self.db_path)
 
         # Two cameras
         self.assertEqual(df.shape, (1758, 3))
