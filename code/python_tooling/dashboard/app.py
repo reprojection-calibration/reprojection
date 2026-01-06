@@ -12,7 +12,7 @@ IMAGE_DIMENSIONS = (512, 512)
 
 app = Dash(title='Reprojection', update_title=None)
 app.layout = html.Div([
-    html.H2("Reprojection - The future is calibrated."),
+    html.H2('Reprojection - The future is calibrated.'),
 
     html.Div(
         children=[
@@ -20,15 +20,15 @@ app.layout = html.Div([
             dcc.Dropdown(id='database-dropdown', placeholder='Select a database', style={'width': '50%'}),
             html.Button(children='Refresh Database List', id='refresh-database-list-button', n_clicks=0),
         ],
-        style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
+        style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
     ),
 
     html.Div(
         children=[
             html.Label('Select'),
-            dcc.Dropdown(id='sensor-dropdown', placeholder="Select a camera sensor", style={"width": "50%"}),
+            dcc.Dropdown(id='sensor-dropdown', placeholder='Select a camera sensor', style={'width': '50%'}),
         ],
-        style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
+        style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
     ),
 
     dcc.Tabs([
