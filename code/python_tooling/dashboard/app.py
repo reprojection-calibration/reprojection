@@ -133,7 +133,6 @@ def refresh_database_list(_):
     Output("play-interval", "disabled"),
     Output("play-button", "children"),
     Input("play-button", "n_clicks"),
-    prevent_initial_call=True,
 )
 def toggle_play(n_clicks):
     playing = n_clicks % 2 == 0
