@@ -25,38 +25,35 @@ app.layout = html.Div([
 
     html.Div(
         children=[
-            html.Label('Select'),
+            html.Label(children='Select'),
             dcc.Dropdown(id='sensor-dropdown', placeholder='Select a camera sensor', style={'width': '50%'}),
         ],
         style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
     ),
 
     dcc.Tabs([
-        dcc.Tab(label='Poses', children=[
+        dcc.Tab(children=[
             dcc.Graph(id='rotation-graph'),
-            dcc.Graph(id='translation-graph'),
-        ]),
-        dcc.Tab(label='Feature Extraction',
+            dcc.Graph(id='translation-graph'), ],
+            label='Poses',
+        ),
+        dcc.Tab(children=[
+            dcc.Slider(
+                id="targets-frame-slider",
+                marks=None,
+                min=0, max=0, step=1, value=0,
+                tooltip={"placement": "bottom", "always_visible": True},
+                updatemode="drag",
+            ),
+            html.Div(
+                style={"display": "flex", "gap": "20px"},
                 children=[
-                    dcc.Slider(
-                        id="targets-frame-slider",
-                        min=0,
-                        max=0,
-                        step=1,
-                        value=0,
-                        updatemode="drag",
-                        marks=None,
-                        tooltip={"placement": "bottom", "always_visible": True},
-                    ),
-                    html.Div(
-                        style={"display": "flex", "gap": "20px"},
-                        children=[
-                            dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
-                            dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
-                        ]
-                    ),
-                    html.Button("▶ Play", id="play-button", n_clicks=0),
-                ]),
+                    dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
+                    dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
+                ]
+            ),
+            html.Button("▶ Play", id="play-button", n_clicks=0), ],
+            label='Feature Extraction', ),
     ]),
 
     # Components without a visual representation are found here at the bottom (ex. Interval or Store etc.)
