@@ -66,8 +66,8 @@ app.layout = html.Div([
         ),
         dcc.Tab(
             children=[
-                # TODO(Jack): We should have one slider at the top level, not in any specific tab or section that drives all
-                #  related animations.
+                # TODO(Jack): We should have one slider/play button at the top level, not in any specific tab or section
+                #  that drives all related animations.
                 # TODO(Jack): Once the data is loaded and we know the real number of frames we should either display
                 #  some frame ids and or timestamps along the slider so the user can have some intuition of time and
                 #  scale.
@@ -143,7 +143,8 @@ def load_database_to_store(db_file):
 
     df_initial, df_optimized, df_external = load_calibration_poses(full_path)
 
-    # Make pandas data frame json serializable which is required for anything sent to the browser in dash
+    # Use .to_dict('records') to make pandas data frame json serializable, which is required for anything sent to the
+    # browser in dash.
     data = {'poses': {'initial': df_initial.to_dict('records'), 'optimized': df_optimized.to_dict('records'),
                       'external': df_external.to_dict('records')}}
 
