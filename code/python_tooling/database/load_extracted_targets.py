@@ -79,9 +79,7 @@ def load_all_extracted_targets(db_path):
 
 def split_extracted_targets_by_sensor(df):
     targets_by_sensor = {}
-
     for sensor_name, group in df.groupby("sensor_name", sort=True):
-        # Sort by time so slider order is correct
         group = group.sort_values("timestamp_ns")
 
         frames = []
