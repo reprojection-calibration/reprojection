@@ -1,16 +1,21 @@
-from dash import Dash, dcc, html, Input, Output, State, callback
 import os
-from database.load_extracted_targets import load_all_extracted_targets, split_extracted_targets_by_sensor
-from database.load_calibration_poses import load_calibration_poses
+from dash import callback, Dash, dcc, html, Input, Output, State
+
 from plot_pose_figures import plot_rotation_figure, plot_translation_figure
 
-# TODO(Jack): Do not hardcode this
-DB_DIR = '../../test_data/'
+from database.load_extracted_targets import load_all_extracted_targets, split_extracted_targets_by_sensor
+from database.load_calibration_poses import load_calibration_poses
 
+# TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
+#  trivial but can be done with some tk tools or other libraries
+DB_DIR = '../../test_data/'
 # TODO(Jack): Place meta data like this in config file or in datatbase. For now we use globals...
 IMAGE_DIMENSIONS = (512, 512)
 
+# NOTE(Jack): If we do not specify the title and update behavior update here the browser tab will constantly and
+# annoyingly show "Updating..." constantly.
 app = Dash(title='Reprojection', update_title=None)
+
 app.layout = html.Div([
     html.H2('Reprojection - The future is calibrated.'),
 
@@ -36,12 +41,15 @@ app.layout = html.Div([
             children=[
                 dcc.Graph(id='rotation-graph'),
                 dcc.Graph(id='translation-graph'), ],
-            label='Poses',
+            label='Camera Poses',
         ),
         dcc.Tab(
             children=[
                 # TODO(Jack): We should have one slider at the top level, not in any specific tab or section that drives all
                 #  related animations.
+                # TODO(Jack): Once the data is loaded and we know the real number of frames we should either display
+                #  some frame ids and or timestamps along the slider so the user can have some intuition of time and
+                #  scale.
                 dcc.Slider(
                     id="frame-id-slider",
                     marks=None,
@@ -56,14 +64,14 @@ app.layout = html.Div([
                     ],
                     style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
                 ),
-                # The animation plays by default therefore the button is initialized with the pause graphic and text
+                # The animation plays by default therefore the button is initialized with the pause graphic
                 html.Button(children="⏸ Pause", id="play-button", n_clicks=0),
             ],
             label='Feature Extraction',
         ),
     ]),
 
-    # Components without a visual representation are found here at the bottom (ex. Interval or Store etc.)
+    # Components without a visual representation are found here at the bottom (ex. Interval, Store etc.)
     dcc.Interval(
         disabled=False,
         id="play-interval",
