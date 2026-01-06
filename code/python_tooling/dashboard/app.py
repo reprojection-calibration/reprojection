@@ -1,5 +1,6 @@
 import os
 from dash import callback, Dash, dcc, html, Input, Output, State
+import plotly.graph_objects as go
 
 from plot_pose_figures import plot_rotation_figure, plot_translation_figure
 
@@ -243,6 +244,9 @@ def advance_slider(_, value, max_value):
     return value + 1
 
 
+# TODO(Jack): Technically we only need the sensor name to get the frame-id-slider output, but this does not necessarily
+#  have anything to do with configuring the figures initially. It might make sense to move the frame id slider
+#  dependency to another place that is more related or independent than here.
 @callback(
     Output("targets-xy-graph", "figure", allow_duplicate=True),
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
@@ -251,54 +255,60 @@ def advance_slider(_, value, max_value):
     State("database-store", "data"),
     prevent_initial_call=True,
 )
-def init_2d_target_figures(sensor, data):
+def init_extracted_target_figures(sensor, data):
     if not sensor or not data:
         return {}, {}, 0
 
-    xy_fig = {
-        "data": [{
-            "type": "scatter",
-            "mode": "markers",
-            "x": [],
-            "y": [],
-            "marker": {"size": 6},
-        }],
-        "layout": {
-            "title": "Target points (XY)",
-            "xaxis": {"range": [0, 1],
-                      "title": "X",
-                      "constrain": "domain",
-                      "scaleanchor": "y",
-                      },
-            "yaxis": {"range": [0, 1],
-                      "title": "Y",
-                      },
-        }
-    }
+    # TODO(Jack): Confirm/test ALL axes properties (ranges, names, orders etc.) None of this has been checked! Even the
+    #  coordinate conventions of the pixels and points needs to be checked!
+    xy_fig = go.Figure()
+    xy_fig.add_trace(
+        go.Scatter(
+            x=[],
+            y=[],
+            mode="markers",
+            marker=dict(size=6),
+        )
+    )
+    xy_fig.update_layout(
+        title="Target Points (XY)",
+        xaxis=dict(
+            range=[-1, 1],  # ERROR(Jack): Do not hardcode or use global
+            title=dict(text="x"),
+            constrain="domain",
+        ),
+        yaxis=dict(
+            range=[-1, 1],  # ERROR(Jack): Do not hardcode or use global
+            title=dict(text="y"),
+            scaleanchor="x",
+        ),
+    )
 
-    pixel_fig = {
-        "data": [{
-            "type": "scatter",
-            "mode": "markers",
-            "x": [],
-            "y": [],
-            "marker": {"size": 6},
-        }],
-        "layout": {
-            "title": "Extracted Feature",
-            "xaxis": {
-                "range": [0, IMAGE_DIMENSIONS[0]],  # ERROR(Jack): Do not hardcode image dimensions!
-                "title": "u",
-                "constrain": "domain",
-            },
-            "yaxis": {
-                "range": [IMAGE_DIMENSIONS[1], 0],  # invert Y for image coords
-                "title": "v",
-                "scaleanchor": "x",
-            },
-        }
-    }
+    pixel_fig = go.Figure()
+    pixel_fig.add_trace(
+        go.Scatter(
+            x=[],
+            y=[],
+            mode="markers",
+            marker=dict(size=6),
+            name="Pixels",
+        )
+    )
+    pixel_fig.update_layout(
+        title="Extracted Pixel Features",
+        xaxis=dict(
+            range=[0, IMAGE_DIMENSIONS[0]],  # ERROR(Jack): Do not hardcode or use global
+            title=dict(text="u"),
+            constrain="domain",
+        ),
+        yaxis=dict(
+            range=[IMAGE_DIMENSIONS[1], 0],  # invert Y for image coords
+            title=dict(text="v"),
+            scaleanchor="x",
+        ),
+    )
 
+    # TODO(Jack): Why is this in this method??? See comment at top of function.
     # Get the number of frames to fill the max value of the slider
     frames = data["extracted_targets"].get(sensor, [])
     n_frames = len(frames)
