@@ -36,4 +36,3 @@ foreach (EXAMPLE IN LISTS EXAMPLES)
             ${LINK_LIBRARIES}
     )
 endforeach ()
-

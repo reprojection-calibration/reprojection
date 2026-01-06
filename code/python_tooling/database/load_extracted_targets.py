@@ -50,15 +50,16 @@ def parse_proto(blob):
             'indices': build_indices(msg).tolist()}
 
 
-def load_all_extracted_targets(db_path):
+def load_extracted_targets_df(db_path):
     if not os.path.isfile(db_path):
         print(f"Database file does not exist: {db_path}")
         return None
 
     try:
         with sqlite3.connect(db_path) as conn:
-            sql_query = load_sql('extracted_targets_select_all.sql')
-            df = pd.read_sql(sql_query, conn)
+            df = pd.read_sql(
+                load_sql('extracted_targets_select_all.sql'), conn
+            )
 
             if 'data' not in df.columns:
                 raise KeyError("'data' column not found in query result")
@@ -76,3 +77,24 @@ def load_all_extracted_targets(db_path):
         return None
 
     return df
+
+
+def split_extracted_targets_by_sensor(df):
+    targets_by_sensor = {}
+    for sensor_name, group in df.groupby("sensor_name", sort=True):
+        group = group.sort_values("timestamp_ns")
+
+        frames = []
+        for _, (_, row) in enumerate(group.iterrows()):
+            target = row["data"]
+
+            frames.append({
+                "timestamp_ns": int(row["timestamp_ns"]),
+                "pixels": target["pixels"],
+                "points": target["points"],
+                "indices": target["indices"],
+            })
+
+        targets_by_sensor[sensor_name] = frames
+
+    return targets_by_sensor
