@@ -78,6 +78,7 @@ def load_extracted_targets_df(db_path):
 
     return df
 
+
 def split_extracted_targets_by_sensor(df):
     targets_by_sensor = {}
     for sensor_name, group in df.groupby("sensor_name", sort=True):

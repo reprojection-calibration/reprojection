@@ -1,5 +1,6 @@
 import plotly.graph_objects as go
 
+
 # TODO(Jack): There is a lot of copy and paste in this file! We can eliminate this, only question is is it worth it?
 
 def plot_rotation_figure(data, fig=None, legendgroup=None, marker='circle'):

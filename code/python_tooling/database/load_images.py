@@ -21,6 +21,7 @@ def load_images_df(db_path):
 
     return df
 
+
 def split_images_by_sensor(df):
     images_by_sensor = {}
     for sensor_name, group in df.groupby("sensor_name", sort=True):
