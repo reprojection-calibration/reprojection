@@ -8,12 +8,18 @@ set(SRC_FILES
         src/image_source.cpp
 )
 set(LINK_LIBRARIES
+        database
         Eigen3::Eigen
         eigen_utilities
         feature_extraction
+        geometry
         types
         ${apriltag_LIBRARIES}
+        optimization
         ${OpenCV_LIBS}
+        pnp
+        projection_functions
+        spline
         ${YAML_CPP_LIBRARIES}
 )
 AddLibrary()
@@ -25,6 +31,7 @@ AddTests()
 
 set(EXAMPLES
         examples/feature_extraction.cpp
+        examples/pose_initialization.cpp
 )
 foreach (EXAMPLE IN LISTS EXAMPLES)
     get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WLE)
