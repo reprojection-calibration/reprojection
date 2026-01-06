@@ -217,9 +217,11 @@ def update_translation_graph(selected_sensor, data):
     Input("play-button", "n_clicks"),
 )
 def toggle_play(n_clicks):
-    # We play be default (n_clicks=0), which means that only when we have an odd number of clicks is "playing" false.
+    # We play by default (n_clicks=0), which means that only when we have an odd number of clicks is "playing" false.
     playing = n_clicks % 2 == 0
 
+    # If we want to play then we do NOT want the play interval disabled and we want the button to display the pause
+    # graphic and message so the user knows to click there to pause. If we are already paused then the opposite is true.
     if playing:
         return False, "⏸ Pause"
     else:
