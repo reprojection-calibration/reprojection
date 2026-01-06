@@ -9,7 +9,7 @@ from database.load_calibration_poses import load_calibration_poses
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
 DB_DIR = '../../test_data/'
-# TODO(Jack): Place meta data like this in config file or in datatbase. For now we use globals...
+# TODO(Jack): Place meta data like this in config file or in database. For now we use globals...
 IMAGE_DIMENSIONS = (512, 512)
 
 # NOTE(Jack): If we do not specify the title and update behavior update here the browser tab will constantly and
@@ -21,17 +21,33 @@ app.layout = html.Div([
 
     html.Div(
         children=[
-            html.Label(children='Load'),
-            dcc.Dropdown(id='database-dropdown', placeholder='Select a database', style={'width': '50%'}),
-            html.Button(children='Refresh Database List', id='refresh-database-list-button', n_clicks=0),
+            html.Label(
+                children='Load',
+            ),
+            dcc.Dropdown(
+                id='database-dropdown',
+                placeholder='Select a database',
+                style={'width': '50%'},
+            ),
+            html.Button(
+                children='Refresh Database List',
+                id='refresh-database-list-button',
+                n_clicks=0,
+            ),
         ],
         style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
     ),
 
     html.Div(
         children=[
-            html.Label(children='Select'),
-            dcc.Dropdown(id='sensor-dropdown', placeholder='Select a camera sensor', style={'width': '50%'}),
+            html.Label(
+                children='Select',
+            ),
+            dcc.Dropdown(
+                id='sensor-dropdown',
+                placeholder='Select a camera sensor',
+                style={'width': '50%'},
+            ),
         ],
         style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
     ),
@@ -39,8 +55,13 @@ app.layout = html.Div([
     dcc.Tabs([
         dcc.Tab(
             children=[
-                dcc.Graph(id='rotation-graph'),
-                dcc.Graph(id='translation-graph'), ],
+                dcc.Graph(
+                    id='rotation-graph',
+                ),
+                dcc.Graph(
+                    id='translation-graph',
+                ),
+            ],
             label='Camera Poses',
         ),
         dcc.Tab(
@@ -59,13 +80,23 @@ app.layout = html.Div([
                 ),
                 html.Div(
                     children=[
-                        dcc.Graph(id="targets-xy-graph", style={"width": "50%"}),
-                        dcc.Graph(id="targets-pixels-graph", style={"width": "50%"}),
+                        dcc.Graph(
+                            id="targets-xy-graph",
+                            style={"width": "50%"}
+                        ),
+                        dcc.Graph(
+                            id="targets-pixels-graph",
+                            style={"width": "50%"}
+                        ),
                     ],
                     style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
                 ),
                 # The animation plays by default therefore the button is initialized with the pause graphic
-                html.Button(children="⏸ Pause", id="play-button", n_clicks=0),
+                html.Button(
+                    children="⏸ Pause",
+                    id="play-button",
+                    n_clicks=0,
+                ),
             ],
             label='Feature Extraction',
         ),
