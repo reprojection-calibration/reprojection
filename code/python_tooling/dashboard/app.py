@@ -3,8 +3,9 @@ from dash import callback, Dash, dcc, html, Input, Output, State
 
 from plot_pose_figures import plot_rotation_figure, plot_translation_figure
 
-from database.load_extracted_targets import load_all_extracted_targets, split_extracted_targets_by_sensor
-from database.load_calibration_poses import load_calibration_poses
+from database.load_extracted_targets import load_extracted_targets_df, split_extracted_targets_by_sensor
+from database.load_poses import load_calibration_poses
+from database.load_images import load_images_df, split_images_by_sensor
 
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
@@ -143,13 +144,19 @@ def load_database_to_store(db_file):
 
     data = {}
 
+    # WARN(Jack): This has only been tested with databases where the images were not there! When we actually have a
+    # database with images we can first just ignore them explicitly, and then eventually figure out a visualization
+    # strategy. This means that the image "data" here is expected to be null.
+    df_images = load_images_df(full_path)
+    data['images'] = split_images_by_sensor(df_images)
+
     # Use .to_dict('records') to make pandas data frame json serializable, which is required for anything sent to the
     # browser in dash.
     df_initial, df_optimized, df_external = load_calibration_poses(full_path)
     data['poses'] = {'initial': df_initial.to_dict('records'), 'optimized': df_optimized.to_dict('records'),
                      'external': df_external.to_dict('records')}
 
-    df_extracted_targets = load_all_extracted_targets(full_path)
+    df_extracted_targets = load_extracted_targets_df(full_path)
     data['extracted_targets'] = split_extracted_targets_by_sensor(df_extracted_targets)
 
     return data
@@ -164,9 +171,8 @@ def refresh_sensor_list(data):
     if not data:
         return [], None
 
-    # TODO(Jack): We should get the sensor name from the images or extracted targets, as they are more likely to be there than the initial poses!
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({row['sensor_name'] for row in data['poses']['initial']}))
+    sensor_names = sorted(list({sensor_name for sensor_name in data['images'].keys()}))
     if len(sensor_names) == 0:
         return [], ''
 
