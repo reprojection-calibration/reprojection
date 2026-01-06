@@ -130,37 +130,6 @@ def refresh_database_list(_):
 
 
 @callback(
-    Output("play-interval", "disabled"),
-    Output("play-button", "children"),
-    Input("play-button", "n_clicks"),
-)
-def toggle_play(n_clicks):
-    # We play be default (n_clicks=0), which means that only when we have an odd number of clicks is "playing" false.
-    playing = n_clicks % 2 == 0
-
-    if playing:
-        return False, "⏸ Pause"
-    else:
-        return True, "▶ Play"
-
-
-@callback(
-    Output("frame-id-slider", "value"),
-    Input("play-interval", "n_intervals"),
-    State("frame-id-slider", "value"),
-    State("frame-id-slider", "max"),
-    prevent_initial_call=True,
-)
-def advance_slider(_, value, max_value):
-    if value is None:
-        return 0
-    if value >= max_value:
-        return 0  # loop playback
-
-    return value + 1
-
-
-@callback(
     Output('database-store', 'data'),
     Input('database-dropdown', 'value')
 )
@@ -225,6 +194,37 @@ def update_translation_graph(selected_sensor, data):
         trans_fig = plot_translation_figure(gt_poses, fig=trans_fig, legendgroup='External')
 
     return rot_fig, trans_fig
+
+
+@callback(
+    Output("play-interval", "disabled"),
+    Output("play-button", "children"),
+    Input("play-button", "n_clicks"),
+)
+def toggle_play(n_clicks):
+    # We play be default (n_clicks=0), which means that only when we have an odd number of clicks is "playing" false.
+    playing = n_clicks % 2 == 0
+
+    if playing:
+        return False, "⏸ Pause"
+    else:
+        return True, "▶ Play"
+
+
+@callback(
+    Output("frame-id-slider", "value"),
+    Input("play-interval", "n_intervals"),
+    State("frame-id-slider", "value"),
+    State("frame-id-slider", "max"),
+    prevent_initial_call=True,
+)
+def advance_slider(_, value, max_value):
+    if value is None:
+        return 0
+    if value >= max_value:
+        return 0  # loop playback
+
+    return value + 1
 
 
 @callback(
