@@ -190,16 +190,19 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
-    # The initial pose in the context of calibration is the pose calculated via DLT and/or PNP that is used as the input
-    # for the full nonlinear optimization later. It is important, but also just an intermediate output on the path to
-    # full calibration
-    initial_poses = sorted([sensor for sensor in data['poses']['initial'] if sensor['sensor_name'] == selected_sensor],
-                           key=lambda x: x['timestamp_ns'])
+    rot_fig, trans_fig = {}, {}
+    if data['poses']['initial'] is not None:
+        # The initial pose in the context of calibration is the pose calculated via DLT and/or PNP that is used as the input
+        # for the full nonlinear optimization later. It is important, but also just an intermediate output on the path to
+        # full calibration
+        initial_poses = sorted(
+            [sensor for sensor in data['poses']['initial'] if sensor['sensor_name'] == selected_sensor],
+            key=lambda x: x['timestamp_ns'])
 
-    # TODO(Jack): Figure out a way to display the legend group name in the legend so that people actually know what they
-    #  are looking at.
-    rot_fig = plot_rotation_figure(initial_poses, legendgroup='Initial', marker='x')
-    trans_fig = plot_translation_figure(initial_poses, legendgroup='Initial', marker='x')
+        # TODO(Jack): Figure out a way to display the legend group name in the legend so that people actually know what they
+        #  are looking at.
+        rot_fig = plot_rotation_figure(initial_poses, legendgroup='Initial', marker='x')
+        trans_fig = plot_translation_figure(initial_poses, legendgroup='Initial', marker='x')
 
     # TODO(Jack): Should we give the user the option to explicitly toggle the external poses? Or should we always
     #  display them anyway? For most real world data there will be no external pose.
