@@ -176,7 +176,6 @@ def refresh_sensor_list(data):
     if len(sensor_names) == 0:
         return [], ''
 
-    # Set the default dropdown sensor value to the first sensor
     return sensor_names, sensor_names[0]
 
 
@@ -190,16 +189,24 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
-    initial_pose = sorted([sensor for sensor in data['poses']['initial'] if sensor['sensor_name'] == selected_sensor],
-                          key=lambda x: x['timestamp_ns'])
+    # The initial pose in the context of calibration is the pose calculated via DLT and/or PNP that is used as the input
+    # for the full nonlinear optimization later. It is important, but also just an intermediate output on the path to
+    # full calibration
+    initial_poses = sorted([sensor for sensor in data['poses']['initial'] if sensor['sensor_name'] == selected_sensor],
+                           key=lambda x: x['timestamp_ns'])
 
-    rot_fig = plot_rotation_figure(initial_pose, legendgroup='Initial', marker='x')
-    trans_fig = plot_translation_figure(initial_pose, legendgroup='Initial', marker='x')
+    # TODO(Jack): Figure out a way to display the legend group name in the legend so that people actually know what they
+    #  are looking at.
+    rot_fig = plot_rotation_figure(initial_poses, legendgroup='Initial', marker='x')
+    trans_fig = plot_translation_figure(initial_poses, legendgroup='Initial', marker='x')
 
+    # TODO(Jack): Should we give the user the option to explicitly toggle the external poses? Or should we always
+    #  display them anyway? For most real world data there will be no external pose.
     if data['poses']['external'] is not None:
-        gt_poses = sorted([sensor for sensor in data['poses']['external']], key=lambda x: x['timestamp_ns'])
-        rot_fig = plot_rotation_figure(gt_poses, fig=rot_fig, legendgroup='External')
-        trans_fig = plot_translation_figure(gt_poses, fig=trans_fig, legendgroup='External')
+        external_poses = sorted([sensor for sensor in data['poses']['external']], key=lambda x: x['timestamp_ns'])
+
+        rot_fig = plot_rotation_figure(external_poses, fig=rot_fig, legendgroup='External')
+        trans_fig = plot_translation_figure(external_poses, fig=trans_fig, legendgroup='External')
 
     return rot_fig, trans_fig
 
