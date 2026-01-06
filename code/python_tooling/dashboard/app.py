@@ -339,13 +339,13 @@ app.clientside_callback(
         // with the new points we add below. Here we use these JSON helper functions to create a copy of the figure 
         // which when returned will be recognized by Dash as a new figure which needs to be rendered. There are several 
         // issues on github (ex. https://github.com/plotly/dash/issues/1040) with people confused by this. 
-        xy_fig = JSON.parse(JSON.stringify(xy_fig));
-        pixel_fig = JSON.parse(JSON.stringify(pixel_fig));
 
+        xy_fig = JSON.parse(JSON.stringify(xy_fig));
         const pts = frame.points;
         xy_fig.data[0].x = pts.map(p => p[0]);
         xy_fig.data[0].y = pts.map(p => p[1]);
 
+        pixel_fig = JSON.parse(JSON.stringify(pixel_fig));
         const pix = frame.pixels;
         pixel_fig.data[0].x = pix.map(p => p[0]);
         pixel_fig.data[0].y = pix.map(p => p[1]);
