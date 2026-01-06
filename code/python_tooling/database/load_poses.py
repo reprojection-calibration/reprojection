@@ -28,6 +28,7 @@ def load_poses_df(db_path, table, type):
 
     return df
 
+
 # NOTE(Jack): In this function we take advantage of the fact that for image data the foreign key relationships force
 # that any camera pose has to match an extracted target - and we timestamp sync our external pose to that time
 # TODO(Jack): Only plot external targets if they are available
