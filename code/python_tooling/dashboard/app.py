@@ -141,12 +141,13 @@ def load_database_to_store(db_file):
     if not os.path.isfile(full_path):
         return None
 
-    df_initial, df_optimized, df_external = load_calibration_poses(full_path)
+    data = {}
 
     # Use .to_dict('records') to make pandas data frame json serializable, which is required for anything sent to the
     # browser in dash.
-    data = {'poses': {'initial': df_initial.to_dict('records'), 'optimized': df_optimized.to_dict('records'),
-                      'external': df_external.to_dict('records')}}
+    df_initial, df_optimized, df_external = load_calibration_poses(full_path)
+    data['poses'] = {'initial': df_initial.to_dict('records'), 'optimized': df_optimized.to_dict('records'),
+                     'external': df_external.to_dict('records')}
 
     df_extracted_targets = load_all_extracted_targets(full_path)
     data['extracted_targets'] = split_extracted_targets_by_sensor(df_extracted_targets)
