@@ -333,8 +333,12 @@ app.clientside_callback(
             return [xy_fig, pixel_fig];
         }
 
-        // TODO(Jack): Is this really required?
-        // IMPORTANT: clone figures so Dash detects changes
+        // NOTE(Jack): Dash will only update the graph if it gets a new figure. If you only mutate the input figure then
+        // the reference/addrress/figure id is the same and dash will think you simply returned the same figure, and 
+        // not re-render it. Therefore we need to actually create a new figure so that Dash is forced to re-render it 
+        // with the new points we add below. Here we use these JSON helper functions to create a copy of the figure 
+        // which when returned will be recognized by Dash as a new figure which needs to be rendered. There are several 
+        // issues on github (ex. https://github.com/plotly/dash/issues/1040) with people confused by this. 
         xy_fig = JSON.parse(JSON.stringify(xy_fig));
         pixel_fig = JSON.parse(JSON.stringify(pixel_fig));
 
