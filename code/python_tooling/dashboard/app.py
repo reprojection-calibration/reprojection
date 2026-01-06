@@ -7,15 +7,18 @@ from plot_pose_figures import plot_rotation_figure, plot_translation_figure
 # TODO(Jack): Do not hardcode this
 DB_DIR = '../../test_data/'
 
+# TODO(Jack): Place meta data like this in config file or in datatbase. For now we use globals...
+IMAGE_DIMENSIONS = (512, 512)
+
 app = Dash(title='Reprojection', update_title=None)
 app.layout = html.Div([
-    html.H2("Reprojection - the future is calibrated."),
+    html.H2("Reprojection - The future is calibrated."),
 
     html.Div(
         children=[
-            html.Label('Load'),
-            dcc.Dropdown(id='database-dropdown', placeholder="Select a database", style={"width": "50%"}),
-            html.Button('Refresh Database List', id='refresh-database-list-button', n_clicks=0),
+            html.Label(children='Load'),
+            dcc.Dropdown(id='database-dropdown', placeholder='Select a database', style={'width': '50%'}),
+            html.Button(children='Refresh Database List', id='refresh-database-list-button', n_clicks=0),
         ],
         style={"display": "flex", "gap": "10px", "marginBottom": "20px"},
     ),
@@ -56,6 +59,7 @@ app.layout = html.Div([
                 ]),
     ]),
 
+    # Components without a visual representation are found here at the bottom (ex. Interval or Store etc.)
     dcc.Interval(
         id="play-interval",
         interval=50,
@@ -187,10 +191,6 @@ def init_2d_target_figures(sensor, data):
     if not sensor or not data:
         return {}, {}, 0
 
-    frames = data["extracted_targets"].get(sensor, [])
-    n_frames = len(frames)
-
-    # World XY figure
     xy_fig = {
         "data": [{
             "type": "scatter",
@@ -223,17 +223,21 @@ def init_2d_target_figures(sensor, data):
         "layout": {
             "title": "Extracted Feature",
             "xaxis": {
-                "range": [0, 512],  # ERROR(Jack): Do not hardcode image dimensions!
+                "range": [0, IMAGE_DIMENSIONS[0]],  # ERROR(Jack): Do not hardcode image dimensions!
                 "title": "u",
                 "constrain": "domain",
             },
             "yaxis": {
-                "range": [512, 0],  # invert Y for image coords
+                "range": [IMAGE_DIMENSIONS[1], 0],  # invert Y for image coords
                 "title": "v",
                 "scaleanchor": "x",
             },
         }
     }
+
+    # Get the number of frames to fill the max value of the slider
+    frames = data["extracted_targets"].get(sensor, [])
+    n_frames = len(frames)
 
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
