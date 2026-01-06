@@ -233,7 +233,6 @@ def toggle_play(n_clicks):
     Input("play-interval", "n_intervals"),
     State("frame-id-slider", "value"),
     State("frame-id-slider", "max"),
-    prevent_initial_call=True,
 )
 def advance_slider(_, value, max_value):
     if value is None:
