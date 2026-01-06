@@ -337,7 +337,7 @@ app.clientside_callback(
         }
 
         // NOTE(Jack): Dash will only update the graph if it gets a new figure. If you only mutate the input figure then
-        // the reference/addrress/figure id is the same and dash will think you simply returned the same figure, and 
+        // the reference/address/figure id is the same and dash will think you simply returned the same figure, and 
         // not re-render it. Therefore we need to actually create a new figure so that Dash is forced to re-render it 
         // with the new points we add below. Here we use these JSON helper functions to create a copy of the figure 
         // which when returned will be recognized by Dash as a new figure which needs to be rendered. There are several 
