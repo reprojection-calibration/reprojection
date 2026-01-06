@@ -135,9 +135,13 @@ def refresh_database_list(_):
     Input("play-button", "n_clicks"),
 )
 def toggle_play(n_clicks):
+    # We play be default (n_clicks=0), which means that only when we have an odd number of clicks is "playing" false.
     playing = n_clicks % 2 == 0
 
-    return not playing, "⏸ Pause" if playing else "▶ Play"
+    if playing:
+        return False, "⏸ Pause"
+    else:
+        return True, "▶ Play"
 
 
 @callback(
