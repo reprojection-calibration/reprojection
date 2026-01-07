@@ -5,6 +5,7 @@ find_package(OpenCV REQUIRED) # REMOVE when/if database is removed
 
 set(SRC_FILES
         src/parabola_line_initialization.cpp
+        src/linear_pose_initialization.cpp
         src/vanishing_point_initialization.cpp
 )
 set(LINK_LIBRARIES
@@ -20,8 +21,8 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/linear_pose_initialization.test.cpp
         src/parabola_line_initialization.test.cpp
         src/vanishing_point_initialization.test.cpp
+        test/linear_pose_initialization.test.cpp
 )
 AddTests()
