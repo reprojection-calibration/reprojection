@@ -151,11 +151,11 @@ def load_database_to_store(db_file):
     df_images = load_images_df(full_path)
     data['images'] = split_images_by_sensor(df_images)
 
+    # TODO(Jack): We should also organize the poses like we do the image and target data, grouped by the sensor.
     # Use .to_dict('records') to make pandas data frame json serializable, which is required for anything sent to the
     # browser in dash.
-    df_initial, df_optimized, df_external = load_calibration_poses(full_path)
-    data['poses'] = {'initial': df_initial.to_dict('records'), 'optimized': df_optimized.to_dict('records'),
-                     'external': df_external.to_dict('records')}
+    df_initial, df_optimized = load_calibration_poses(full_path)
+    data['poses'] = {'initial': df_initial.to_dict('records'), 'optimized': df_optimized.to_dict('records')}
 
     df_extracted_targets = load_extracted_targets_df(full_path)
     data['extracted_targets'] = split_extracted_targets_by_sensor(df_extracted_targets)
@@ -203,14 +203,6 @@ def update_translation_graph(selected_sensor, data):
         #  are looking at.
         rot_fig = plot_rotation_figure(initial_poses, legendgroup='Initial', marker='x')
         trans_fig = plot_translation_figure(initial_poses, legendgroup='Initial', marker='x')
-
-    # TODO(Jack): Should we give the user the option to explicitly toggle the external poses? Or should we always
-    #  display them anyway? For most real world data there will be no external pose.
-    if data['poses']['external'] is not None:
-        external_poses = sorted([sensor for sensor in data['poses']['external']], key=lambda x: x['timestamp_ns'])
-
-        rot_fig = plot_rotation_figure(external_poses, fig=rot_fig, legendgroup='External')
-        trans_fig = plot_translation_figure(external_poses, fig=trans_fig, legendgroup='External')
 
     return rot_fig, trans_fig
 

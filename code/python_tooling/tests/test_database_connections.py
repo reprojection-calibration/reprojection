@@ -36,10 +36,9 @@ class TestDatabaseConnections(unittest.TestCase):
         df = load_poses_df(self.db_path, "does_not_exist", "also_not_there")
         self.assertIsNone(df)
 
-        df_initial, df_optimized, df_external = load_calibration_poses(self.db_path)
+        df_initial, df_optimized = load_calibration_poses(self.db_path)
         self.assertEqual(df_initial.shape, (0, 9))
         self.assertEqual(df_optimized.shape, (0, 9))
-        self.assertEqual(df_external.shape, (4730, 9))
 
     def test_extracted_target_loading(self):
         # Query nonexistent table

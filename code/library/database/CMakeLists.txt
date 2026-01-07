@@ -15,8 +15,6 @@ find_package(SQLite3 REQUIRED)
 set(SQL_FILES
         sql/camera_poses_insert.sql
         sql/camera_poses_table.sql
-        sql/external_poses_insert.sql
-        sql/external_poses_table.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
