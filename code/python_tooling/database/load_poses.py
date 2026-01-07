@@ -6,6 +6,8 @@ from database.sql_statement_loading import load_sql
 
 
 # TODO(Jack): Can we use an enum for table and type?
+# TODO(Jack): We originally also had an "external_poses" table, but that was removed and therefore this makes the table
+#   parameter redundant. This should probably be removed.
 def load_poses_df(db_path, table, type):
     if not os.path.isfile(db_path):
         print(f"Database file does not exist: {db_path}")
