@@ -9,7 +9,7 @@
 
 using namespace reprojection;
 
-TEST(CalibrationLinearPoseInitialization, TestXXX) {
+TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     // TODO(Jack): Find a way to use the same camera for both calls! Instead of using the same intrinsics can we
     //  actually just make one camera and use that in both places? Right now we compromise by building both cameras from
     //  the same intrinsics.
