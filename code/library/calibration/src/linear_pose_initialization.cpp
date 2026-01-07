@@ -25,7 +25,7 @@ std::set<PoseStamped> LinearPoseInitialization(std::set<ExtractedTargetStamped> 
         //  should already be aware of he fact that they must use the set key for correspondence and not simply the
         //  position in the container.
         if (not std::holds_alternative<Isometry3d>(result)) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
 
         // WARN(Jack): What is the proper place to do this inverse? Do we need this inverse at all really? When we have

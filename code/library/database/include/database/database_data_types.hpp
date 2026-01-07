@@ -8,13 +8,11 @@ namespace reprojection::database {
 //  We should work to remove all traces of the development from the code base.
 enum class PoseTable { Camera };
 
-enum class PoseType { GroundTruth, Initial, Optimized };
+enum class PoseType { Initial, Optimized };
 
 // TODO(Jack): Where does this belong?
 inline std::string ToString(PoseType const t) {
     switch (t) {
-        case PoseType::GroundTruth:
-            return "ground_truth";
         case PoseType::Initial:
             return "initial";
         case PoseType::Optimized:
