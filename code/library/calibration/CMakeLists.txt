@@ -10,12 +10,17 @@ set(SRC_FILES
 set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
+        geometry
+        pnp
         projection_functions
+        spline
+        testing_mocks
         types
 )
 AddLibrary()
 
 set(TESTS
+        src/linear_pose_initialization.test.cpp
         src/parabola_line_initialization.test.cpp
         src/vanishing_point_initialization.test.cpp
 )
