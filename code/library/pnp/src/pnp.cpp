@@ -7,6 +7,8 @@
 
 namespace reprojection::pnp {
 
+// TODO(Jack): Remove 3d pnp
+
 // TODO(Jack): What is the canonical way to deal with the camera matrix? I want the pnp algo to know nothing about K if
 // possible, because the more we let information about the camera and camera models percolate through the code base, the
 // more combined everything will get. That being said, should we specifically pass the pixels here in image coordinates?

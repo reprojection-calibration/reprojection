@@ -9,6 +9,7 @@
 
 #include "database/calibration_database.hpp"
 #include "database/image_interface.hpp"
+#include "types/sensor_types.hpp"
 
 using namespace reprojection;
 
@@ -37,7 +38,7 @@ TEST_F(TempFolder, TestAddPoseData) {
 
     // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
     // constraint) and now we can add the initial camera pose no problem :)
-    database::FrameHeader const header{0, "/cam/retro/123"};
+    FrameHeader const header{0, "/cam/retro/123"};
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, {}}, db);
     EXPECT_TRUE(database::AddPoseData({{header, pose}}, database::PoseTable::Camera, database::PoseType::Initial, db));
@@ -56,7 +57,7 @@ TEST_F(TempFolder, TestAddExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    database::FrameHeader const header{0, "/cam/retro/123"};
+    FrameHeader const header{0, "/cam/retro/123"};
     (void)database::AddImage(header, db);
 
     EXPECT_TRUE(AddExtractedTargetData({header, bundle}, db));
@@ -71,7 +72,7 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
     // Due to foreign key relationship we need add an image before we add the extracted target
-    database::FrameHeader header{0, "/cam/retro/123"};
+    FrameHeader header{0, "/cam/retro/123"};
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, target}, db);
     header.timestamp_ns = 1;
@@ -97,7 +98,7 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
 
 TEST_F(TempFolder, TestFullImuAddGetCycle) {
     // TODO(Jack): Should we use this test data for all the IMU tests?
-    std::map<std::string, std::set<database::ImuStamped>> const imu_data{
+    std::map<std::string, std::set<ImuStamped>> const imu_data{
         {"/imu/polaris/123",
          {{{0, "/imu/polaris/123"}, {0, 0, 0}, {1, 1, 1}},
           {{1, "/imu/polaris/123"}, {2, 2, 2}, {3, 3, 3}},
@@ -172,7 +173,7 @@ TEST_F(TempFolder, TestGetImuData) {
     EXPECT_EQ(std::size(imu_123_data.value()), 3);
 
     // Check the values of the first element to make sure the callback lambda reading logic is correct
-    database::ImuStamped const sample{*std::cbegin(imu_123_data.value())};
+    ImuStamped const sample{*std::cbegin(imu_123_data.value())};
     EXPECT_EQ(sample.header.timestamp_ns, 5);
     EXPECT_EQ(sample.angular_velocity[0], 1);
     EXPECT_EQ(sample.angular_velocity[1], 2);
