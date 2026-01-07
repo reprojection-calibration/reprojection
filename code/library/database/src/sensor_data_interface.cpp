@@ -22,8 +22,7 @@ namespace reprojection::database {
         std::unique_ptr<SqlStatement> statement;
         if (table == PoseTable::Camera) {
             statement = std::make_unique<SqlStatement>(database->db, sql_statements::camera_poses_insert);
-        } else if (table == PoseTable::External) {
-            statement = std::make_unique<SqlStatement>(database->db, sql_statements::external_poses_insert);
+
         } else {
             throw std::runtime_error("Requested an invalid PoseTable from AddPoseData()");  // LCOV_EXCL_LINE
         }
@@ -185,5 +184,4 @@ std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDataba
 
     return data;
 }
-
 };  // namespace reprojection::database

@@ -42,11 +42,6 @@ TEST_F(TempFolder, TestAddPoseData) {
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, {}}, db);
     EXPECT_TRUE(database::AddPoseData({{header, pose}}, database::PoseTable::Camera, database::PoseType::Initial, db));
-
-    // The external poses table has no foreign key constraint because external poses are not restricted to the image
-    // frames. Therefore, we can add a pose here directly.
-    EXPECT_TRUE(
-        database::AddPoseData({{header, pose}}, database::PoseTable::External, database::PoseType::GroundTruth, db));
 }
 
 TEST_F(TempFolder, TestAddExtractedTargetData) {

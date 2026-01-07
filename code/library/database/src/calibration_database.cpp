@@ -39,9 +39,7 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     // WARN(Jack): Is there any circumstance under which the data table creation might fail, and casting to void here
     // instead of explicitly handling the status makes sense?
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::images_table, db));
-    static_cast<void>(Sqlite3Tools::Execute(sql_statements::external_poses_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::extracted_targets_table, db));
-
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::imu_data_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::camera_poses_table, db));
 
