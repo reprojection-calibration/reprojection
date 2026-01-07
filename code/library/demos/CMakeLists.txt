@@ -8,6 +8,7 @@ set(SRC_FILES
         src/image_source.cpp
 )
 set(LINK_LIBRARIES
+        calibration
         database
         Eigen3::Eigen
         eigen_utilities
