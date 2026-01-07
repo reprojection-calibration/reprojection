@@ -49,7 +49,7 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
         // timestamp is not acceptable in any application code, and even here in the testing it will likely cause us
         // pain in the future!
         Isometry3d const gt_pose_i{frames[stamped_pose_i.header.timestamp_ns].pose};
-        Vector6d const se3_gt_pose_i{geometry::Log(gt_pose_i.inverse())}; // Note the inverse!
+        Vector6d const se3_gt_pose_i{geometry::Log(gt_pose_i.inverse())};  // Note the inverse!
 
         EXPECT_TRUE(stamped_pose_i.pose.isApprox(se3_gt_pose_i, 1e-6))
             << "Linear pose initialization result:\n"
