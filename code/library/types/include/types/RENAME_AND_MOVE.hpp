@@ -52,9 +52,9 @@ class InitializationDataView {
    public:
     explicit InitializationDataView(CameraSensorData& data) : data_{data} {}
 
-    CameraModel camera_model() const { return data_.sensor.camera_model; }
+    CameraModel const& camera_model() const { return data_.sensor.camera_model; }
 
-    ArrayXd initial_intrinsics() const { return data_.initial_intrinsics; }
+    ArrayXd const& initial_intrinsics() const { return data_.initial_intrinsics; }
 
     class Iterator {
        public:
@@ -109,9 +109,9 @@ class OptimizationDataView {
    public:
     explicit OptimizationDataView(CameraSensorData& data) : data_{data} {}
 
-    CameraModel camera_model() const { return data_.sensor.camera_model; }
+    CameraModel const& camera_model() const { return data_.sensor.camera_model; }
 
-    ArrayXd initial_intrinsics() const { return data_.initial_intrinsics; }
+    ArrayXd const& initial_intrinsics() const { return data_.initial_intrinsics; }
 
     ArrayXd& optimized_intrinsics() { return data_.optimized_intrinsics; }
 
