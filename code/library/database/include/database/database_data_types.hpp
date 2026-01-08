@@ -4,10 +4,6 @@
 
 namespace reprojection::database {
 
-// TODO(Jack): At one point in time we had an "External" poses table for external groundtruth but then this was removed.
-//  We should work to remove all traces of the development from the code base.
-enum class PoseTable { Camera };
-
 enum class PoseType { Initial, Optimized };
 
 // TODO(Jack): Where does this belong?

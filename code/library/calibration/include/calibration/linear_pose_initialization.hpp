@@ -1,10 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <set>
-
-#include "calibration/RENAME_AND_MOVE.hpp"
-#include "types/sensor_types.hpp"
+#include "types/RENAME_AND_MOVE.hpp"
 
 namespace reprojection::calibration {
 
