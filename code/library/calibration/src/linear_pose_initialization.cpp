@@ -13,6 +13,8 @@ namespace reprojection::calibration {
 std::unique_ptr<projection_functions::Camera> InitializeCamera(CameraModel model, ArrayXd const& intrinsics) {
     if (model == CameraModel::DoubleSphere) {
         return std::unique_ptr<projection_functions::Camera>(new projection_functions::DoubleSphereCamera(intrinsics));
+    } else {
+        throw std::runtime_error("invlida camera modellelsld");
     }
 
     // ERROR ERRROR ERROR

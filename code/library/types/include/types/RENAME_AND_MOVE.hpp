@@ -18,8 +18,8 @@ struct CameraSensor {
 
 struct CalibrationFrame {
     ExtractedTarget extracted_target;
-    Vector6d initial_pose;
-    Vector6d optimized_pose;
+    Array6d initial_pose;
+    Array6d optimized_pose;
 };
 
 using CalibrationData = std::map<std::uint64_t, CalibrationFrame>;
@@ -34,18 +34,18 @@ struct CameraSensorData {
 
 class InitializationFrameView {
    public:
-    InitializationFrameView(ExtractedTarget const& extracted_target, Vector6d& initial_pose)
+    InitializationFrameView(ExtractedTarget const& extracted_target, Array6d& initial_pose)
         : extracted_target_{extracted_target}, initial_pose_{initial_pose} {}
 
     // TODO(Jack): Does the const in the return here really do what I think/want it to do? That is to protect the
     // extracted target from modification?
     ExtractedTarget const& extracted_target() const { return extracted_target_; }
 
-    Vector6d& initial_pose() { return initial_pose_; }
+    Array6d& initial_pose() { return initial_pose_; }
 
    private:
     ExtractedTarget const& extracted_target_;
-    Vector6d& initial_pose_;
+    Array6d& initial_pose_;
 };
 
 class InitializationDataView {
@@ -87,22 +87,21 @@ class InitializationDataView {
 // after the linear initialization.
 class OptimizationFrameView {
    public:
-    OptimizationFrameView(ExtractedTarget const& extracted_target, Vector6d const& initial_pose,
-                          Vector6d& optimized_pose)
+    OptimizationFrameView(ExtractedTarget const& extracted_target, Array6d const& initial_pose, Array6d& optimized_pose)
         : extracted_target_{extracted_target}, initial_pose_{initial_pose}, optimized_pose_{optimized_pose} {}
 
     // TODO(Jack): Does the const in the return here really do what I think/want it to do? That is to protect the
     // extracted target from modification?
     ExtractedTarget const& extracted_target() const { return extracted_target_; }
 
-    Vector6d const& initial_pose() const { return initial_pose_; }
+    Array6d const& initial_pose() const { return initial_pose_; }
 
-    Vector6d& optimized_pose() { return optimized_pose_; }
+    Array6d& optimized_pose() { return optimized_pose_; }
 
    private:
     ExtractedTarget const& extracted_target_;
-    Vector6d const& initial_pose_;
-    Vector6d& optimized_pose_;
+    Array6d const& initial_pose_;
+    Array6d& optimized_pose_;
 };
 
 class OptimizationDataView {

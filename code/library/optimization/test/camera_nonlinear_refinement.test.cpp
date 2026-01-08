@@ -33,7 +33,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
     for (auto const& frame_i : data.frames) {
         // WARN(Jack): we are abusing the psuedo timestamp from the frame map to index into a vector. Hack!
         Isometry3d const gt_pose_i{mvg_frames[frame_i.first].pose};
-        Vector6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
+        Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
 
         EXPECT_TRUE(frame_i.second.optimized_pose.isApprox(se3_gt_pose_i, 1e-6))
             << "Nonlinear refinement result:\n"
@@ -75,7 +75,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
 
     for (auto const& frame_i : data.frames) {
         Isometry3d const gt_pose_i{gt_poses[frame_i.first]};
-        Vector6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
+        Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
 
         EXPECT_TRUE(frame_i.second.optimized_pose.isApprox(se3_gt_pose_i, 1e-6))
             << "Nonlinear refinement result:\n"
