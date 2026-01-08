@@ -19,7 +19,7 @@ int main() {
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
     CameraSensorData cam0{{"/cam0/image_raw", CameraModel::DoubleSphere},
-                          Array6d{156.82590211, 156.79756958, 154.99978685, 256.9744566, -0.17931409, 0.59133716},
+                          Array6d{156.82590211, 156.79756958, 254.99978685, 256.9744566, -0.17931409, 0.59133716},
                           {},
                           {}};
 
