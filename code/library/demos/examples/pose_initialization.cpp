@@ -38,7 +38,7 @@ int main() {
     for (auto const& frame_i : cam0.frames) {
         cam0_poses.insert({{frame_i.first, cam0.sensor.sensor_name}, frame_i.second.initial_pose});
     }
-    (void)AddPoseData(cam0_poses, database::PoseTable::Camera, database::PoseType::Initial, db);
+    (void)AddPoseData(cam0_poses, database::PoseType::Initial, db);
 
     int del{0};
     std::vector<Frame> frames;
@@ -65,7 +65,7 @@ int main() {
             break;
         }
     }
-    (void)AddPoseData(db_poses_opt, database::PoseTable::Camera, database::PoseType::Optimized, db);
+    (void)AddPoseData(db_poses_opt, database::PoseType::Optimized, db);
 
     return EXIT_SUCCESS;
 }
