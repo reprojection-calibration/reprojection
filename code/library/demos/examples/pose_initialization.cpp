@@ -34,38 +34,25 @@ int main() {
     calibration::LinearPoseInitialization(InitializationDataView(cam0));
 
     // TODO HANDLE POSE DATA AND DATABASE INTERACTIONS NATIVELY WITH A VIEW/THE NEW DATA STRUCT
+    std::set<PoseStamped> cam0_linear_poses;
+    for (auto const& frame_i : cam0.frames) {
+        cam0_linear_poses.insert({{frame_i.first, cam0.sensor.sensor_name}, frame_i.second.initial_pose});
+    }
+    (void)AddPoseData(cam0_linear_poses, database::PoseType::Initial, db);
+
+    // Artificially restrict ourselves to the first couple hundred frames where we converge successfully.
+    auto it = cam0.frames.upper_bound(1520528332714760192);
+    cam0.frames.erase(it, cam0.frames.end());
+
+    optimization::CameraNonlinearRefinement(OptimizationDataView(cam0));
+
     std::set<PoseStamped> cam0_poses;
     for (auto const& frame_i : cam0.frames) {
-        cam0_poses.insert({{frame_i.first, cam0.sensor.sensor_name}, frame_i.second.initial_pose});
+        cam0_poses.insert({{frame_i.first, cam0.sensor.sensor_name}, frame_i.second.optimized_pose});
     }
-    (void)AddPoseData(cam0_poses, database::PoseType::Initial, db);
+    (void)AddPoseData(cam0_poses, database::PoseType::Optimized, db);
 
-    int del{0};
-    std::vector<Frame> frames;
-    for (auto const& frame_i : cam0.frames) {
-        frames.push_back({frame_i.second.extracted_target.bundle, geometry::Exp(frame_i.second.initial_pose)});
-
-        ++del;
-        if (del > 400) {
-            break;
-        }
-    }
-
-    auto const [poses_opt, K, final_cost]{
-        optimization::CameraNonlinearRefinement(frames, CameraModel::DoubleSphere, cam0.initial_intrinsics)};
-
-    std::cout << K.transpose() << std::endl;
-
-    std::set<PoseStamped> db_poses_opt;
-    int i{0};
-    for (auto const& header_i : cam0_targets_stamped) {
-        db_poses_opt.insert({header_i.header, geometry::Log(poses_opt[i].inverse())});  // INVERSE???
-        i++;
-        if (i > 400) {
-            break;
-        }
-    }
-    (void)AddPoseData(db_poses_opt, database::PoseType::Optimized, db);
+    std::cout << cam0.optimized_intrinsics.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }
