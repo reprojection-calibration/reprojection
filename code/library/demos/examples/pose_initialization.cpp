@@ -40,27 +40,16 @@ int main() {
     }
     (void)AddPoseData(cam0_poses, database::PoseTable::Camera, database::PoseType::Initial, db);
 
-    // ERROR COUNTS ON DATA BEING PERFECTlY SYNCED AND NO FRAMES DROPPING OUT FOR ALIGNMENT!
-    auto it1 = cam0_targets_stamped.begin();
-    auto it2 = cam0_poses.begin();
-
-    std::cout << std::size(cam0_targets_stamped) << std::endl;
-    std::cout << std::size(cam0_poses) << std::endl;
-
-    std::vector<Frame> frames;
     int del{0};
-    while (it1 != cam0_targets_stamped.end() && it2 != cam0_poses.end()) {
-        frames.push_back({it1->target.bundle, geometry::Exp(it2->pose)});  // INVERSE???
+    std::vector<Frame> frames;
+    for (auto const& frame_i : cam0.frames) {
+        frames.push_back({frame_i.second.extracted_target.bundle, geometry::Exp(frame_i.second.initial_pose)});
 
-        ++it1;
-        ++it2;
         ++del;
-
         if (del > 400) {
             break;
         }
     }
-    std::cout << "got all frames" << std::endl;
 
     auto const [poses_opt, K, final_cost]{
         optimization::CameraNonlinearRefinement(frames, CameraModel::DoubleSphere, cam0.initial_intrinsics)};
