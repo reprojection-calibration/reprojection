@@ -21,26 +21,27 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
         testing_mocks::MvgGenerator(std::unique_ptr<projection_functions::Camera>(
             new projection_functions::DoubleSphereCamera(double_sphere_intrinsics)))};
     int const num_frames{20};
-    std::vector<Frame> const frames{generator.GenerateBatch(num_frames)};
+    std::vector<Frame> const mvg_frames{generator.GenerateBatch(num_frames)};
 
-    CameraSensorData cam0{{"/cam/retro/123", CameraModel::DoubleSphere}, Array6d{600, 600, 360, 240, 0.1, 0.2}, {}, {}};
+    CameraSensorData data{{"", CameraModel::DoubleSphere}, Array6d{600, 600, 360, 240, 0.1, 0.2}, {}, {}};
 
     // TODO(Jack): Refactor mvg generator to use new calibration types??? Or does that not make any sense? At least
     // provide an adaptor that converts frames into the data field of the dict.
     uint64_t pseudo_time{0};
-    for (auto const& frame_i : frames) {
+    for (auto const& mvg_frame_i : mvg_frames) {
         // Unlike real extracted targets this target has 3D points (not 2D z=0 target points) and does not have indices.
-        cam0.frames[pseudo_time].extracted_target.bundle = frame_i.bundle;
+        data.frames[pseudo_time].extracted_target.bundle = mvg_frame_i.bundle;
         pseudo_time += 1;
     }
 
     // NOTE(Jack): Because the mvg points are 3d (i.e. z!=0) the underlying pnp implementation tested here will use
     // Dlt23 and not Dlt22 which is what is normally used during the calibration process. Technically this does not make
     // a difference, but if we remove the Dlt23 at some later date we might need to change something here.
-    calibration::LinearPoseInitialization(InitializationDataView(cam0));
+    calibration::LinearPoseInitialization(InitializationDataView(data));
 
-    for (auto const& frame_i : cam0.frames) {
-        Isometry3d const gt_pose_i{frames[frame_i.first].pose};
+    for (auto const& frame_i : data.frames) {
+        // WARN(Jack): we are abusing the psuedo timestamp from the frame map to index into a vector. Hack!
+        Isometry3d const gt_pose_i{mvg_frames[frame_i.first].pose};
         Vector6d const se3_gt_pose_i{geometry::Log(gt_pose_i.inverse())};  // Note the inverse!
 
         EXPECT_TRUE(frame_i.second.initial_pose.isApprox(se3_gt_pose_i, 1e-6))

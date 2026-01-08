@@ -9,16 +9,13 @@
 #include "spline/spline_evaluation_concept.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
-#include "types/calibration_types.hpp"
-#include "types/eigen_types.hpp"
+#include "types/RENAME_AND_MOVE.hpp"
 
 namespace reprojection::optimization {
 
 // NOTE(Jack): We are hardcoding that fact that the intrinsics are the same for all cameras! I.e. not that every image
-// could have another camera.
-std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(std::vector<Frame> const& frames,
-                                                                               CameraModel const& camera_type,
-                                                                               ArrayXd const& intrinsics);
+// could have another camera. Each data view is a view into one single camera so this makes sense!
+void CameraNonlinearRefinement(OptimizationDataView data_view);
 
 // NOTE(Jack): At this time it is still not entirely clear if we need to solve this type of problem at all, however this
 // code serves as a learning base and step on the way to full pose spline optimization.
