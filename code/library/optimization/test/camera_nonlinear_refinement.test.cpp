@@ -74,7 +74,6 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
     for (auto const& frame_i : data.frames) {
-        std::cout << frame_i.first << std::endl;
         Isometry3d const gt_pose_i{gt_poses[frame_i.first]};
         Vector6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
 
