@@ -52,7 +52,7 @@ struct CameraCalibrationData {
           optimized_intrinsics{_optimized_intrinsics},
           frames{_frames} {}
 
-    CameraCalibrationData(CameraSensorInfo const& _sensor) : sensor{_sensor} {}
+    explicit CameraCalibrationData(CameraSensorInfo const& _sensor) : sensor{_sensor} {}
 
     CameraCalibrationData(CameraSensorInfo const& _sensor, ArrayXd const& _initial_intrinsics)
         : sensor{_sensor}, initial_intrinsics{_initial_intrinsics} {}
