@@ -44,7 +44,7 @@ void LinearPoseInitialization(InitializationDataView data_view) {
             continue;  // LCOV_EXCL_LINE
         }
 
-        // WARN(Jack): What is the proper place to do this inverse? Do we need this inverse at all really? When we have
+        // ERROR(Jack): What is the proper place to do this inverse? Do we need this inverse at all really? When we have
         // some consistency in our coordinate systems we can decide this.
         Vector6d const se3_i{geometry::Log(std::get<Isometry3d>(result).inverse())};  // INVERSE!!!
 

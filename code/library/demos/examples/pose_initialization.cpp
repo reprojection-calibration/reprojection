@@ -19,42 +19,43 @@ int main() {
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
     std::string const sensor_name{"/cam0/image_raw"};
 
-    CameraSensorData cam0{{sensor_name, CameraModel::DoubleSphere},
-                          Array6d{156.82590211, 156.79756958, 154.99978685, 256.9744566, -0.17931409, 0.59133716},
-                          {},
-                          {}};
+    CameraSensorData cam_data{{sensor_name, CameraModel::DoubleSphere},
+                              Array6d{156.82590211, 156.79756958, 154.99978685, 256.9744566, -0.17931409, 0.59133716},
+                              {},
+                              {}};
 
     // Cam 0
     // TODO LOAD THE TARGET DIRECTLY INTO THE NEW DATA STRUCTURE
     auto const cam0_targets_stamped{
         database::GetExtractedTargetData(db, sensor_name).value()};  // WARN UNPROTECTED OPTIONAL ACCESS
     for (auto const& target : cam0_targets_stamped) {
-        cam0.frames[target.header.timestamp_ns].extracted_target = target.target;
+        cam_data.frames[target.header.timestamp_ns].extracted_target = target.target;
     }
 
-    calibration::LinearPoseInitialization(InitializationDataView(cam0));
+    calibration::LinearPoseInitialization(InitializationDataView(cam_data));
 
     // TODO HANDLE POSE DATA AND DATABASE INTERACTIONS NATIVELY WITH A VIEW/THE NEW DATA STRUCT
-    std::set<PoseStamped> cam0_linear_poses;
-    for (auto const& frame_i : cam0.frames) {
-        cam0_linear_poses.insert({{frame_i.first, cam0.sensor.sensor_name}, frame_i.second.initial_pose});
+    std::set<PoseStamped> linear_poses;
+    for (auto const& frame_i : cam_data.frames) {
+        linear_poses.insert({{frame_i.first, cam_data.sensor.sensor_name}, frame_i.second.initial_pose});
     }
-    (void)AddPoseData(cam0_linear_poses, database::PoseType::Initial, db);
+    (void)AddPoseData(linear_poses, database::PoseType::Initial, db);
 
     // Artificially restrict ourselves to the first couple hundred frames where we converge successfully.
-    auto it = cam0.frames.upper_bound(1520528332714760192);
-    cam0.frames.erase(it, cam0.frames.end());
+    auto it = cam_data.frames.upper_bound(1520528332714760192);
+    cam_data.frames.erase(it, cam_data.frames.end());
 
-    optimization::CameraNonlinearRefinement(OptimizationDataView(cam0));
+    optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
 
-    std::set<PoseStamped> cam0_poses;
-    for (auto const& frame_i : cam0.frames) {
-        cam0_poses.insert({{frame_i.first, cam0.sensor.sensor_name},
-                           geometry::Log(geometry::Exp(frame_i.second.optimized_pose).inverse())});
+    std::set<PoseStamped> optimized_poses;
+    for (auto const& frame_i : cam_data.frames) {
+        optimized_poses.insert({{frame_i.first, cam_data.sensor.sensor_name},
+                                geometry::Log(geometry::Exp(frame_i.second.optimized_pose)
+                                                  .inverse())});  // INVERSE ERROR - WHAT IS THE PROPER PLACE TO DO THIS
     }
-    (void)AddPoseData(cam0_poses, database::PoseType::Optimized, db);
+    (void)AddPoseData(optimized_poses, database::PoseType::Optimized, db);
 
-    std::cout << cam0.optimized_intrinsics.transpose() << std::endl;
+    std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }
