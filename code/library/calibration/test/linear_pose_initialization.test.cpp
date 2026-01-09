@@ -23,10 +23,11 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     int const num_frames{20};
     std::vector<Frame> const mvg_frames{generator.GenerateBatch(num_frames)};
 
-    CameraCalibrationData data{{"", CameraModel::DoubleSphere}, Array6d{600, 600, 360, 240, 0.1, 0.2}, {}, {}};
+    CameraCalibrationData data{{"", CameraModel::DoubleSphere}, double_sphere_intrinsics};
 
     // TODO(Jack): Refactor mvg generator to use new calibration types??? Or does that not make any sense? At least
-    // provide an adaptor that converts frames into the data field of the dict.
+    // provide an adaptor that converts frames into the data field of the dict because we have similar code like this in
+    // multiple places now.
     uint64_t pseudo_time{0};
     for (auto const& mvg_frame_i : mvg_frames) {
         // Unlike real extracted targets this target has 3D points (not 2D z=0 target points) and does not have indices.
