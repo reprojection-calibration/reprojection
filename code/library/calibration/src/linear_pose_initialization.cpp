@@ -15,7 +15,7 @@ std::unique_ptr<projection_functions::Camera> InitializeCamera(CameraModel model
     if (model == CameraModel::DoubleSphere) {
         return std::unique_ptr<projection_functions::Camera>(new projection_functions::DoubleSphereCamera(intrinsics));
     } else {
-        throw std::runtime_error("invalid camera model");  // LVOV_EXCL_LINE
+        throw std::runtime_error("invalid camera model");  // LCOV_EXCL_LINE
     }
 }
 
