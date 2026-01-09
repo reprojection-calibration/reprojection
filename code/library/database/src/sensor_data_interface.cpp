@@ -14,32 +14,42 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddPoseData(std::set<PoseStamped> const& data, PoseType const type,
+[[nodiscard]] bool AddPoseData(CameraCalibrationData const& data, PoseType const type,
                                std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
-    for (auto const& data_i : data) {
-        // TODO(Jack): Why is this a unique pointer? Can we simplify this type?
-        std::unique_ptr<SqlStatement> statement{
-            std::make_unique<SqlStatement>(database->db, sql_statements::camera_poses_insert)};
+    for (auto const& frame_i : data.frames) {
+        SqlStatement const statement{database->db, sql_statements::camera_poses_insert};
+
+        Vector6d pose;
+        if (type == PoseType::Initial) {
+            pose = frame_i.second.initial_pose;
+        } else if (type == PoseType::Optimized) {
+            pose = frame_i.second.optimized_pose;
+        } else {
+            // NOTE(Jack): We choose to throw here instead of simply returning false because this indicates that there
+            // is a problem with the core library implementation, not with the data or anything else, the actual source
+            // code has not been properly updated, and we need to kill the program.
+            throw std::runtime_error("AddPoseData() invalid PoseType selected");  // LCOV_EXCL_LINE
+        }
 
         try {
-            Sqlite3Tools::Bind(statement->stmt, 1, static_cast<int64_t>(data_i.header.timestamp_ns));  // Warn cast!
-            Sqlite3Tools::Bind(statement->stmt, 2, data_i.header.sensor_name);
-            Sqlite3Tools::Bind(statement->stmt, 3, ToString(type));
-            Sqlite3Tools::Bind(statement->stmt, 4, data_i.pose[0]);
-            Sqlite3Tools::Bind(statement->stmt, 5, data_i.pose[1]);
-            Sqlite3Tools::Bind(statement->stmt, 6, data_i.pose[2]);
-            Sqlite3Tools::Bind(statement->stmt, 7, data_i.pose[3]);
-            Sqlite3Tools::Bind(statement->stmt, 8, data_i.pose[4]);
-            Sqlite3Tools::Bind(statement->stmt, 9, data_i.pose[5]);
+            Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(frame_i.first));  // Warn cast!
+            Sqlite3Tools::Bind(statement.stmt, 2, data.sensor.sensor_name);
+            Sqlite3Tools::Bind(statement.stmt, 3, ToString(type));
+            Sqlite3Tools::Bind(statement.stmt, 4, pose[0]);
+            Sqlite3Tools::Bind(statement.stmt, 5, pose[1]);
+            Sqlite3Tools::Bind(statement.stmt, 6, pose[2]);
+            Sqlite3Tools::Bind(statement.stmt, 7, pose[3]);
+            Sqlite3Tools::Bind(statement.stmt, 8, pose[4]);
+            Sqlite3Tools::Bind(statement.stmt, 9, pose[5]);
         } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
             std::cerr << "AddPoseData() runtime error during binding: " << e.what()                 // LCOV_EXCL_LINE
                       << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
             return false;                                                                           // LCOV_EXCL_LINE
         }  // LCOV_EXCL_LINE
 
-        if (sqlite3_step(statement->stmt) != static_cast<int>(SqliteFlag::Done)) {
+        if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
             std::cerr << "AddPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
             return false;
         }

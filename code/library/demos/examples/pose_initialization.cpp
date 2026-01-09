@@ -36,12 +36,7 @@ int main() {
 
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
 
-    // TODO HANDLE POSE DATA AND DATABASE INTERACTIONS NATIVELY WITH A VIEW/THE NEW DATA STRUCT
-    std::set<PoseStamped> linear_poses;
-    for (auto const& frame_i : cam_data.frames) {
-        linear_poses.insert({{frame_i.first, cam_data.sensor.sensor_name}, frame_i.second.initial_pose});
-    }
-    (void)AddPoseData(linear_poses, database::PoseType::Initial, db);
+    (void)AddPoseData(cam_data, database::PoseType::Initial, db);
 
     // Artificially restrict ourselves to the first couple hundred frames where we converge successfully.
     auto it = cam_data.frames.upper_bound(1520528332714760192);
@@ -49,13 +44,8 @@ int main() {
 
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
 
-    std::set<PoseStamped> optimized_poses;
-    for (auto const& frame_i : cam_data.frames) {
-        optimized_poses.insert({{frame_i.first, cam_data.sensor.sensor_name},
-                                geometry::Log(geometry::Exp(frame_i.second.optimized_pose)
-                                                  .inverse())});  // INVERSE ERROR - WHAT IS THE PROPER PLACE TO DO THIS
-    }
-    (void)AddPoseData(optimized_poses, database::PoseType::Optimized, db);
+    // TODO INVERT THE POSES ERROR ERROR ERROR DO THIS IN THE NL REFINEMENT
+    (void)AddPoseData(cam_data, database::PoseType::Optimized, db);
 
     std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
