@@ -6,7 +6,6 @@
 #include "projection_functions/camera_model.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "types/calibration_types.hpp"
-#include "types/sensor_types.hpp"
 
 using namespace reprojection;
 
