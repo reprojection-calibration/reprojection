@@ -55,7 +55,7 @@ ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
     }
 
     return residuals;
-}
+}  // LCOV_EXCL_LINE
 
 // TODO(Jack): Naming!
 CubicBSplineC3Refinement::CubicBSplineC3Refinement(spline::CubicBSplineC3 const& spline) : spline_{spline} {}
