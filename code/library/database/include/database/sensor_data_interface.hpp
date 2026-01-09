@@ -11,6 +11,14 @@
 #include "types/calibration_types.hpp"
 #include "types/sensor_types.hpp"
 
+// TOP LEVEL DESIGN NOTE
+// We are at an in between point now (09.01.2026) where we have begun to migrate away from "stamped" data and individual
+// "sets" of sensor data. We have instead moved towards the more centralized CameraCalibrationData representation, but
+// have not yet transitioned all database funtions to work with that representations yet.
+//
+// Furthermore, we also began to transition away from std::optional and boolean flags towards a more strict policy of
+// failure will be treated with a throw. We should also adopt this policy for all sensor data methods.
+
 // TODO(Jack): Add note in docs that we are hardcoding one target only by not adding a target_id identifier
 // TODO(Jack): Add not in docs that we cannot cover all error conditions in unit test so we suppress the errors
 // NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
