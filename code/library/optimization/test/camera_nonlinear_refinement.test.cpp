@@ -75,12 +75,21 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
 
     for (auto const& frame_i : data.frames) {
         Isometry3d const gt_pose_i{gt_poses[frame_i.first]};
-        Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
 
-        EXPECT_TRUE(frame_i.second.optimized_pose.isApprox(se3_gt_pose_i, 1e-6))
+        // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
+        // happened that I will explain. This test using noisy poses had been working for months, no problems to report.
+        // Comparing the Vector6d ses poses directly worked perfectly and the optimization returned the ground truth
+        // value. Then suddenly, when we transitioned to the "view" concept, this test started to fail. And what would
+        // happen is that the optimized answer would have he right translation but the se3 axis-angle rotation would be
+        // flipped (similar to what we observed when plotting the poses in Dash). It was not flipped for all poses, but
+        // only sometimes and seemingly randomly. As I still do not have a solution for this, we actually changed this
+        // test to instead compare the 4x4 SE3 transformation  matrices. Now it passes again, essentially the same as
+        // before, but now working in the matrix space. Why all of a sudden the optimized poses start flipping, I cannot
+        // explain.
+        EXPECT_TRUE(geometry::Exp(frame_i.second.optimized_pose).isApprox(gt_pose_i, 1e-6))
             << "Nonlinear refinement result:\n"
-            << frame_i.second.optimized_pose.transpose() << "\nGround truth:\n"
-            << se3_gt_pose_i.transpose();
+            << geometry::Exp(frame_i.second.optimized_pose).matrix() << "\nGround truth:\n"
+            << gt_pose_i.matrix();
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))
