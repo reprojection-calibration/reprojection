@@ -31,6 +31,4 @@ Eigen::Vector3<T> Log(Matrix3<T> const& SO3) {
     return so3;
 }
 
-std::vector<Isometry3d> ToSE3(std::vector<Array6d> const& se3);
-
 }  // namespace reprojection::geometry
