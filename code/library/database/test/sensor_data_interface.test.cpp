@@ -39,6 +39,8 @@ TEST_F(TempFolder, TestAddPoseData) {
 
     // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
     // constraint) and now we can add the initial camera pose no problem :)
+    // NOTE(Jack): We are dealing with a map for the frames so getting the elements key (the timestamp) looks a little
+    // ugly :) Here we are counting on the fact that there is only one element in the map; only for testing acceptable.
     FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, {}}, db);
