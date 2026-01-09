@@ -42,10 +42,11 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
             Sqlite3Tools::Bind(statement.stmt, 7, pose[3]);
             Sqlite3Tools::Bind(statement.stmt, 8, pose[4]);
             Sqlite3Tools::Bind(statement.stmt, 9, pose[5]);
-        } catch (std::runtime_error const& e) {
-            std::throw_with_nested(
-                std::runtime_error("AddPoseData() runtime error during binding: " + std::string(e.what()) +
-                                   " with database error message: " + sqlite3_errmsg(database->db)));
+        } catch (std::runtime_error const& e) {                                               // LCOV_EXCL_LINE
+            std::throw_with_nested(                                                           // LCOV_EXCL_LINE
+                std::runtime_error(                                                           // LCOV_EXCL_LINE
+                    "AddPoseData() runtime error during binding: " + std::string(e.what()) +  // LCOV_EXCL_LINE
+                    " with database error message: " + sqlite3_errmsg(database->db)));        // LCOV_EXCL_LINE
 
         }  // LCOV_EXCL_LINE
 
@@ -79,12 +80,12 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, data.sensor.sensor_name.c_str());
-    } catch (std::runtime_error const& e) {
+    } catch (std::runtime_error const& e) {                                                          // LCOV_EXCL_LINE
         std::throw_with_nested(                                                                      // LCOV_EXCL_LINE
             std::runtime_error(                                                                      // LCOV_EXCL_LINE
                 "GetExtractedTargetData() runtime error during binding: " + std::string(e.what()) +  // LCOV_EXCL_LINE
                 " with database error message: " + sqlite3_errmsg(database->db)));                   // LCOV_EXCL_LINE
-    }
+    }  // LCOV_EXCL_LINE
 
     while (true) {
         int const code{sqlite3_step(statement.stmt)};
