@@ -1,13 +1,13 @@
 #include "pnp/pnp.hpp"
 
+#include "calibration_data_views/optimization_view.hpp"
 #include "dlt.hpp"
+#include "geometry/lie.hpp"
 #include "optimization/nonlinear_refinement.hpp"
 #include "plane_utilities.hpp"
 #include "types/calibration_types.hpp"
 
 namespace reprojection::pnp {
-
-// TODO(Jack): Remove 3d pnp
 
 // TODO(Jack): What is the canonical way to deal with the camera matrix? I want the pnp algo to know nothing about K if
 // possible, because the more we let information about the camera and camera models percolate through the code base, the
@@ -32,19 +32,17 @@ PnpResult Pnp(Bundle const& bundle) {
         return PnpStatusCode::NotEnoughPoints;
     }
 
-    // NOTE(Jack): The optimization::CameraNonlinearRefinement function expects and returns vectors. For pnp however we
-    // just evaluate one frame at a time. Therefore we construct the "vector" input of frames from the one Bundle we
-    // have, and also return the first and only tf that is returned.
-    // TODO(Jack): Return the reprojection error/final cost returned from the nonlinear refinement?
-    auto const [tf_star, _, _1]{optimization::CameraNonlinearRefinement({{{bundle.pixels, bundle.points}, tf}},
-                                                                        CameraModel::Pinhole, pinhole_intrinsics)};
+    CameraSensorData data{
+        {"", CameraModel::Pinhole}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf), Vector6d::Zero()}}}};
+    optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
     // and nonlinear optimization that will tell us if we are on the right track? For example ceres should actually
     // provide a value direct that tells us if the optimization was successful or not. Lets wait until we have more
     // experience with optimizations and their failures on real data.
 
-    return tf_star[0];
+    // There is only one single frame here, therefore we can simply use std::cbegin to access the result.
+    return geometry::Exp(std::cbegin(data.frames)->second.optimized_pose);
 }
 
 }  // namespace reprojection::pnp

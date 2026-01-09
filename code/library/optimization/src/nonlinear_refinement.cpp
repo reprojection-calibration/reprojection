@@ -6,27 +6,25 @@
 namespace reprojection::optimization {
 
 // TODO(Jack): Should we have some assertions which force that the frames satisfy some basic properties like there is a
-// matching number of everything?
-// TODO(Jack): Refactor to accept se3 pose directly?
-std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(std::vector<Frame> const& frames,
-                                                                               CameraModel const& camera_type,
-                                                                               ArrayXd const& intrinsics) {
-    assert(static_cast<int>(camera_type) == intrinsics.rows());  // This is not a real error handling strategy!
-
-    std::vector<Array6d> se3;
-    se3.reserve(std::size(frames));
-    ArrayXd intrinsics_to_optimize{intrinsics};  // Same intrinsics for ALL poses - mono camera constraint
+// matching number of everything? Yes but maybe this is already to deep into the code to do that here.
+// TODO(Jack): Refactor to accept se3 pose directly? No! Use quaterions!
+void CameraNonlinearRefinement(OptimizationDataView data_view) {
+    // Setting the "optimized" value here and below (i.e. optimized_pose) is how we initialize the values with the
+    // initial value and which are then used and optimized in place by the solver.
+    data_view.optimized_intrinsics() = data_view.initial_intrinsics();
 
     ceres::Problem problem;
-    for (size_t i{0}; i < std::size(frames); ++i) {
-        MatrixX2d const& pixels_i{frames[i].bundle.pixels};
-        MatrixX3d const& points_i{frames[i].bundle.points};
-        se3.push_back(geometry::Log(frames[i].pose));
+    for (OptimizationFrameView frame_i : data_view) {
+        MatrixX2d const& pixels_i{frame_i.extracted_target().bundle.pixels};
+        MatrixX3d const& points_i{frame_i.extracted_target().bundle.points};
+        frame_i.optimized_pose() = frame_i.initial_pose();
 
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
-            ceres::CostFunction* const cost_function{Create(camera_type, pixels_i.row(j), points_i.row(j))};
+            ceres::CostFunction* const cost_function{
+                Create(data_view.camera_model(), pixels_i.row(j), points_i.row(j))};
 
-            problem.AddResidualBlock(cost_function, nullptr, intrinsics_to_optimize.data(), se3[i].data());
+            problem.AddResidualBlock(cost_function, nullptr, data_view.optimized_intrinsics().data(),
+                                     frame_i.optimized_pose().data());
         }
     }
 
@@ -36,7 +34,7 @@ std::tuple<std::vector<Isometry3d>, ArrayXd, double> CameraNonlinearRefinement(s
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    return {geometry::ToSE3(se3), intrinsics_to_optimize, summary.final_cost};
+    // TODO(Jack): Do we need to inverse here to match our convention for consistency?
 }
 
 // TODO(Jack): Naming!

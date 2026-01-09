@@ -9,6 +9,7 @@ set(SRC_FILES
 )
 set(LINK_LIBRARIES
         calibration
+        calibration_data_views
         database
         Eigen3::Eigen
         eigen_utilities

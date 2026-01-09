@@ -204,6 +204,14 @@ def update_translation_graph(selected_sensor, data):
         rot_fig = plot_rotation_figure(initial_poses, legendgroup='Initial', marker='x')
         trans_fig = plot_translation_figure(initial_poses, legendgroup='Initial', marker='x')
 
+    if data['poses']['optimized'] is not None:
+        optimized_poses = sorted(
+            [sensor for sensor in data['poses']['optimized'] if sensor['sensor_name'] == selected_sensor],
+            key=lambda x: x['timestamp_ns'])
+
+        rot_fig = plot_rotation_figure(optimized_poses, fig=rot_fig, legendgroup='Optimized', marker='square')
+        trans_fig = plot_translation_figure(optimized_poses, fig=trans_fig, legendgroup='Optimized', marker='square')
+
     return rot_fig, trans_fig
 
 

@@ -14,18 +14,14 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddPoseData(std::set<PoseStamped> const& data, PoseTable const table, PoseType const type,
+[[nodiscard]] bool AddPoseData(std::set<PoseStamped> const& data, PoseType const type,
                                std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
     for (auto const& data_i : data) {
-        std::unique_ptr<SqlStatement> statement;
-        if (table == PoseTable::Camera) {
-            statement = std::make_unique<SqlStatement>(database->db, sql_statements::camera_poses_insert);
-
-        } else {
-            throw std::runtime_error("Requested an invalid PoseTable from AddPoseData()");  // LCOV_EXCL_LINE
-        }
+        // TODO(Jack): Why is this a unique pointer? Can we simplify this type?
+        std::unique_ptr<SqlStatement> statement{
+            std::make_unique<SqlStatement>(database->db, sql_statements::camera_poses_insert)};
 
         try {
             Sqlite3Tools::Bind(statement->stmt, 1, static_cast<int64_t>(data_i.header.timestamp_ns));  // Warn cast!
