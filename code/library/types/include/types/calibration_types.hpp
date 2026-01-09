@@ -17,9 +17,29 @@ struct CameraSensorInfo {
 };
 
 struct CalibrationDataFrame {
+    CalibrationDataFrame() = default;
+
+    CalibrationDataFrame(ExtractedTarget const& _extracted_target, Array6d const& _initial_pose,
+                         ArrayX2d const& _initial_reprojection_error, Array6d const& _optimized_pose,
+                         ArrayX2d const& _optimized_reprojection_error)
+        : extracted_target{_extracted_target},
+          initial_pose{_initial_pose},
+          initial_reprojection_error{_initial_reprojection_error},
+          optimized_pose{_optimized_pose},
+          optimized_reprojection_error{_optimized_reprojection_error} {}
+
+    // NOTE(Jack): We need to initialize optimized_pose with zeros otherwise we get warnings (which are considered
+    // errors) about using/copying uninitialized memory (i.e. -Werror=maybe-uninitialized).
+    CalibrationDataFrame(ExtractedTarget const& _extracted_target, Array6d const& _initial_pose)
+        : extracted_target{_extracted_target}, initial_pose{_initial_pose}, optimized_pose{Array6d::Zero()} {}
+
     ExtractedTarget extracted_target;
+
     Array6d initial_pose;
+    ArrayX2d initial_reprojection_error;
+
     Array6d optimized_pose;
+    ArrayX2d optimized_reprojection_error;
 };
 
 using CameraFrameSequence = std::map<std::uint64_t, CalibrationDataFrame>;

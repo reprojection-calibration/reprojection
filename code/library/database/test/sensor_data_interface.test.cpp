@@ -31,7 +31,7 @@ TEST_F(TempFolder, TestAddPoseData) {
     CameraCalibrationData const data{{"/cam/retro/123", CameraModel::Pinhole},  //
                                      {},
                                      {},
-                                     {{0, {{{}, {}}, {0, 1, 2, 3, 4, 5}, Array6d::Zero()}}}};
+                                     {{0, {{{}, {}}, Array6d::Zero(), {}, Array6d::Zero(), {}}}}};
 
     // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
     EXPECT_THROW(database::AddPoseData(data, database::PoseType::Initial, db), std::runtime_error);

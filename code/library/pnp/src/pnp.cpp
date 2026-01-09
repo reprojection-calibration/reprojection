@@ -34,7 +34,7 @@ PnpResult Pnp(Bundle const& bundle) {
     }
 
     CameraCalibrationData data{
-        {"", CameraModel::Pinhole}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf), Vector6d::Zero()}}}};
+        {"", CameraModel::Pinhole}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf)}}}};
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
     // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
