@@ -5,6 +5,7 @@
 #include "geometry/lie.hpp"
 #include "optimization/nonlinear_refinement.hpp"
 #include "plane_utilities.hpp"
+#include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
 
 namespace reprojection::pnp {
@@ -32,7 +33,7 @@ PnpResult Pnp(Bundle const& bundle) {
         return PnpStatusCode::NotEnoughPoints;
     }
 
-    CameraSensorData data{
+    CameraCalibrationData data{
         {"", CameraModel::Pinhole}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf), Vector6d::Zero()}}}};
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 

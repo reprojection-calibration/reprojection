@@ -1,6 +1,6 @@
 #pragma once
 
-#include "calibration_data_views/view_types.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection {
@@ -28,7 +28,7 @@ class OptimizationFrameView {
 
 class OptimizationDataView {
    public:
-    explicit OptimizationDataView(CameraSensorData& data) : data_{data} {}
+    explicit OptimizationDataView(CameraCalibrationData& data) : data_{data} {}
 
     CameraModel const& camera_model() const { return data_.sensor.camera_model; }
 
@@ -38,9 +38,9 @@ class OptimizationDataView {
 
     class Iterator {
        public:
-        using MapIter = CalibrationData::iterator;
+        using DataFrameIterator = CameraFrameSequence::iterator;
 
-        explicit Iterator(MapIter it) : it_{it} {}
+        explicit Iterator(DataFrameIterator it) : it_{it} {}
 
         OptimizationFrameView operator*() const {
             return {it_->second.extracted_target, it_->second.initial_pose, it_->second.optimized_pose};
@@ -54,7 +54,7 @@ class OptimizationDataView {
         bool operator!=(Iterator const& other) const { return it_ != other.it_; }
 
        private:
-        MapIter it_;
+        DataFrameIterator it_;
     };
 
     Iterator begin() { return Iterator{std::begin(data_.frames)}; }
@@ -62,7 +62,7 @@ class OptimizationDataView {
     Iterator end() { return Iterator{std::end(data_.frames)}; }
 
    private:
-    CameraSensorData& data_;
+    CameraCalibrationData& data_;
 };
 
 }  // namespace reprojection

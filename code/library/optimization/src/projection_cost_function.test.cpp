@@ -6,7 +6,7 @@
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
-#include "types/calibration_types.hpp"
+#include "types/algorithm_types.hpp"
 
 using namespace reprojection;
 

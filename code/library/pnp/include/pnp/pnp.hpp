@@ -2,7 +2,7 @@
 
 #include <variant>
 
-#include "types/calibration_types.hpp"
+#include "types/algorithm_types.hpp"
 #include "types/eigen_types.hpp"
 
 // https://rpg.ifi.uzh.ch/docs/teaching/2020/03_camera_calibration.pdf

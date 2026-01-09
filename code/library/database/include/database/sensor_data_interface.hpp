@@ -11,7 +11,7 @@
 #include "database/database_data_types.hpp"
 #include "types/sensor_types.hpp"
 
-// TODO(Jack): Add note in docs that we are hardcoding one target only by not adding target_id
+// TODO(Jack): Add note in docs that we are hardcoding one target only by not adding a target_id identifier
 // TODO(Jack): Add not in docs that we cannot cover all error conditions in unit test so we suppress the errors
 // NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
 // we will run into problems here with memory. Therefore, we create this streamer class which loads the images one by

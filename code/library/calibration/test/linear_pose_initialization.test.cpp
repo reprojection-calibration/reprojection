@@ -5,6 +5,7 @@
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "testing_mocks/mvg_generator.hpp"
+#include "types/calibration_types.hpp"
 #include "types/sensor_types.hpp"
 
 using namespace reprojection;
@@ -23,7 +24,7 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     int const num_frames{20};
     std::vector<Frame> const mvg_frames{generator.GenerateBatch(num_frames)};
 
-    CameraSensorData data{{"", CameraModel::DoubleSphere}, Array6d{600, 600, 360, 240, 0.1, 0.2}, {}, {}};
+    CameraCalibrationData data{{"", CameraModel::DoubleSphere}, Array6d{600, 600, 360, 240, 0.1, 0.2}, {}, {}};
 
     // TODO(Jack): Refactor mvg generator to use new calibration types??? Or does that not make any sense? At least
     // provide an adaptor that converts frames into the data field of the dict.

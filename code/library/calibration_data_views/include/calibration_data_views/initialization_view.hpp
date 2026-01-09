@@ -1,6 +1,7 @@
 #pragma once
 
-#include "calibration_data_views/view_types.hpp"
+#include "types/calibration_types.hpp"
+#include "types/camera_types.hpp"
 #include "types/eigen_types.hpp"
 
 // TODO(Jack): It looks like there will be a lot of copy and pasted code between the views, eliminate this!
@@ -25,7 +26,7 @@ class InitializationFrameView {
 
 class InitializationDataView {
    public:
-    explicit InitializationDataView(CameraSensorData& data) : data_{data} {}
+    explicit InitializationDataView(CameraCalibrationData& data) : data_{data} {}
 
     CameraModel const& camera_model() const { return data_.sensor.camera_model; }
 
@@ -33,9 +34,9 @@ class InitializationDataView {
 
     class Iterator {
        public:
-        using MapIter = CalibrationData::iterator;
+        using DataFrameIterator = CameraFrameSequence::iterator;
 
-        explicit Iterator(MapIter it) : it_{it} {}
+        explicit Iterator(DataFrameIterator it) : it_{it} {}
 
         InitializationFrameView operator*() const { return {it_->second.extracted_target, it_->second.initial_pose}; }
 
@@ -47,7 +48,7 @@ class InitializationDataView {
         bool operator!=(Iterator const& other) const { return it_ != other.it_; }
 
        private:
-        MapIter it_;
+        DataFrameIterator it_;
     };
 
     Iterator begin() { return Iterator{std::begin(data_.frames)}; }
@@ -55,7 +56,7 @@ class InitializationDataView {
     Iterator end() { return Iterator{std::end(data_.frames)}; }
 
    private:
-    CameraSensorData& data_;
+    CameraCalibrationData& data_;
 };
 
 }  // namespace reprojection

@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <string>
 
-#include "types/calibration_types.hpp"
+#include "types/algorithm_types.hpp"
 
 using namespace reprojection;
 

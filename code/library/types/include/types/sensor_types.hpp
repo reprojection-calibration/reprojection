@@ -2,7 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "types/calibration_types.hpp"
+#include "types/algorithm_types.hpp"
 #include "types/eigen_types.hpp"
 
 // NOTE(Jack): We use the word "sensor" to indicate the idea that at this point we are making the relationship between
