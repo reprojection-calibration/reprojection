@@ -10,6 +10,7 @@ set(SRC_FILES
         src/pnp.cpp
 )
 set(LINK_LIBRARIES
+        calibration_data_views
         Eigen3::Eigen
         eigen_utilities
         geometry

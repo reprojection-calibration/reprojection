@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/RENAME_AND_MOVE.hpp"
+#include "calibration_data_views/initialization_view.hpp"
 
 namespace reprojection::calibration {
 

@@ -10,15 +10,13 @@ namespace reprojection::calibration {
 // TODO MOVE TO FOLDER
 // TODO ADD SANITY CHECKS?
 // TODO MAKE SURE THIS IS NOT ALREADY IMPLEMENTED SOMEHWERE
+// TODO(Jack): Add all other camera models and check the above listed TODO points.
 std::unique_ptr<projection_functions::Camera> InitializeCamera(CameraModel model, ArrayXd const& intrinsics) {
     if (model == CameraModel::DoubleSphere) {
         return std::unique_ptr<projection_functions::Camera>(new projection_functions::DoubleSphereCamera(intrinsics));
     } else {
-        throw std::runtime_error("invlida camera modellelsld");
+        throw std::runtime_error("invalid camera model");  // LVOV_EXCL_LINE
     }
-
-    // ERROR ERRROR ERROR
-    return nullptr;
 }
 
 // Doxygen notes: only work because we have same camera center for the pinhole and ds/other camera model used. The goal

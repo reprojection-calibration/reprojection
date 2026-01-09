@@ -5,11 +5,11 @@
 #include <tuple>
 #include <vector>
 
+#include "calibration_data_views/optimization_view.hpp"
 #include "optimization/spline_cost_function.hpp"
 #include "spline/spline_evaluation_concept.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
-#include "types/RENAME_AND_MOVE.hpp"
 
 namespace reprojection::optimization {
 

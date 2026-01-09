@@ -9,6 +9,7 @@ find /temporary/code/library \( -iname '*.cpp' -o -iname '*.hpp' -o -iname '*.c'
 cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
   -I /temporary/code/library/calibration/include \
   -I /temporary/code/library/calibration/src \
+  -I /temporary/code/library/calibration_data_views/include \
   -I /temporary/code/library/database/include \
   -I /temporary/code/library/demos/include \
   -I /temporary/code/library/eigen_utilities/include \

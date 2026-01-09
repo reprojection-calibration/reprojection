@@ -18,6 +18,7 @@ find_package(GTest REQUIRED)
 enable_testing()
 
 add_subdirectory(types)
+add_subdirectory(calibration_data_views)
 add_subdirectory(database)
 add_subdirectory(eigen_utilities)
 add_subdirectory(geometry)
