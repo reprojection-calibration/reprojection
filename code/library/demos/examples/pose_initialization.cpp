@@ -44,7 +44,12 @@ int main() {
 
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
 
-    // TODO INVERT THE POSES ERROR ERROR ERROR DO THIS IN THE NL REFINEMENT
+    // WARN(Jack): At this time we have unsettled coordinate frame connventions. Because of this we need to invert the
+    // poses here to match the initial poses. This is a well known problem!
+    for (auto& frame_i : cam_data.frames) {
+        frame_i.second.optimized_pose = geometry::Log(geometry::Exp(frame_i.second.optimized_pose).inverse());
+    }
+
     (void)AddPoseData(cam_data, database::PoseType::Optimized, db);
 
     std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
