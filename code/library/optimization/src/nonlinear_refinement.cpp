@@ -33,6 +33,8 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     options.linear_solver_type = ceres::DENSE_SCHUR;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
+
+    // TODO(Jack): Do we need to inverse here to match our convention for consistency?
 }
 
 // TODO(Jack): Naming!
