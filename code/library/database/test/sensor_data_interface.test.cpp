@@ -34,8 +34,8 @@ TEST_F(TempFolder, TestAddPoseData) {
                                      {{0, {{{}, {}}, {0, 1, 2, 3, 4, 5}, Array6d::Zero()}}}};
 
     // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
-    EXPECT_FALSE(database::AddPoseData(data, database::PoseType::Initial, db));
-    EXPECT_FALSE(database::AddPoseData(data, database::PoseType::Optimized, db));
+    EXPECT_THROW(database::AddPoseData(data, database::PoseType::Initial, db), std::runtime_error);
+    EXPECT_THROW(database::AddPoseData(data, database::PoseType::Optimized, db), std::runtime_error);
 
     // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
     // constraint) and now we can add the initial camera pose no problem :)
@@ -44,7 +44,7 @@ TEST_F(TempFolder, TestAddPoseData) {
     FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, {}}, db);
-    EXPECT_TRUE(database::AddPoseData(data, database::PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddPoseData(data, database::PoseType::Initial, db));
 }
 
 TEST_F(TempFolder, TestAddExtractedTargetData) {

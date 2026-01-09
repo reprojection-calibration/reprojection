@@ -31,8 +31,8 @@ namespace reprojection::database {
 // add a lot of boilerplate code and not really move us forward to the end goal, or protect us from henious abuses. It
 // is already a const& so the only risk is that someone does too much with the extra non-pose data in this method. But
 // if someone does that in a method named AddPoseData, then I think we have bigger problems :)
-[[nodiscard]] bool AddPoseData(CameraCalibrationData const& data, PoseType const type,
-                               std::shared_ptr<CalibrationDatabase> const database);
+void AddPoseData(CameraCalibrationData const& data, PoseType const type,
+                 std::shared_ptr<CalibrationDatabase> const database);
 
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database);

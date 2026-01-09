@@ -14,8 +14,9 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddPoseData(CameraCalibrationData const& data, PoseType const type,
-                               std::shared_ptr<CalibrationDatabase> const database) {
+// TODO(Jack): Should we refactor this to have a more aggressive throwing policy rather than returning false?
+void AddPoseData(CameraCalibrationData const& data, PoseType const type,
+                 std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
     for (auto const& frame_i : data.frames) {
@@ -27,10 +28,8 @@ namespace reprojection::database {
         } else if (type == PoseType::Optimized) {
             pose = frame_i.second.optimized_pose;
         } else {
-            // NOTE(Jack): We choose to throw here instead of simply returning false because this indicates that there
-            // is a problem with the core library implementation, not with the data or anything else, the actual source
-            // code has not been properly updated, and we need to kill the program.
-            throw std::runtime_error("AddPoseData() invalid PoseType selected");  // LCOV_EXCL_LINE
+            throw std::runtime_error(
+                "AddPoseData() invalid PoseType selected, this is a library implementation error!");  // LCOV_EXCL_LINE
         }
 
         try {
@@ -43,19 +42,18 @@ namespace reprojection::database {
             Sqlite3Tools::Bind(statement.stmt, 7, pose[3]);
             Sqlite3Tools::Bind(statement.stmt, 8, pose[4]);
             Sqlite3Tools::Bind(statement.stmt, 9, pose[5]);
-        } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-            std::cerr << "AddPoseData() runtime error during binding: " << e.what()                 // LCOV_EXCL_LINE
-                      << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-            return false;                                                                           // LCOV_EXCL_LINE
+        } catch (std::runtime_error const& e) {
+            std::throw_with_nested(
+                std::runtime_error("AddPoseData() runtime error during binding: " + std::string(e.what()) +
+                                   " with database error message: " + sqlite3_errmsg(database->db)));
+
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            std::cerr << "AddPoseData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
-            return false;
+            throw std::runtime_error("AddPoseData() sqlite3_step() failed:  " +   // LCOV_EXCL_LINE
+                                     std::string(sqlite3_errmsg(database->db)));  // LCOV_EXCL_LINE
         }
     }
-
-    return true;
 }
 
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
