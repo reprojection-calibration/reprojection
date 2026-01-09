@@ -3,7 +3,6 @@
 #include "geometry/lie.hpp"
 #include "pnp/pnp.hpp"
 #include "projection_functions/camera_model.hpp"
-#include "types/sensor_types.hpp"
 
 namespace reprojection::calibration {
 

@@ -28,18 +28,23 @@ TEST_F(TempFolder, TestAddPoseData) {
     std::string const record_path{database_path_ + "/record_ddd.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    Vector6d const pose{0, 1, 2, 3, 4, 5};
+    CameraCalibrationData const data{{"/cam/retro/123", CameraModel::Pinhole},  //
+                                     {},
+                                     {},
+                                     {{0, {{{}, {}}, {0, 1, 2, 3, 4, 5}, Array6d::Zero()}}}};
 
     // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
-    EXPECT_FALSE(database::AddPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseType::Initial, db));
-    EXPECT_FALSE(database::AddPoseData({{{0, "/cam/retro/123"}, pose}}, database::PoseType::Optimized, db));
+    EXPECT_THROW(database::AddPoseData(data, database::PoseType::Initial, db), std::runtime_error);
+    EXPECT_THROW(database::AddPoseData(data, database::PoseType::Optimized, db), std::runtime_error);
 
     // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
     // constraint) and now we can add the initial camera pose no problem :)
-    FrameHeader const header{0, "/cam/retro/123"};
+    // NOTE(Jack): We are dealing with a map for the frames so getting the elements key (the timestamp) looks a little
+    // ugly :) Here we are counting on the fact that there is only one element in the map; only for testing acceptable.
+    FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, {}}, db);
-    EXPECT_TRUE(database::AddPoseData({{header, pose}}, database::PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddPoseData(data, database::PoseType::Initial, db));
 }
 
 TEST_F(TempFolder, TestAddExtractedTargetData) {
@@ -75,17 +80,22 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, target}, db);
 
-    auto const data{database::GetExtractedTargetData(db, "/cam/retro/123")};
-    ASSERT_TRUE(data.has_value());
-    EXPECT_EQ(std::size(data.value()), 3);
+    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole},  //
+                               {},
+                               {},
+                               {}};
+
+    database::GetExtractedTargetData(db, data);
+    EXPECT_EQ(std::size(data.frames), 3);
 
     int timestamp{0};
-    for (auto const& data_i : data.value()) {
-        EXPECT_EQ(data_i.header.timestamp_ns, timestamp);
+    for (auto const& frame_i : data.frames) {
+        EXPECT_EQ(frame_i.first, timestamp);
         timestamp = timestamp + 1;
-        EXPECT_TRUE(data_i.target.bundle.pixels.isApprox(target.bundle.pixels));
-        EXPECT_TRUE(data_i.target.bundle.points.isApprox(target.bundle.points));
-        EXPECT_TRUE(data_i.target.indices.isApprox(target.indices));
+
+        EXPECT_TRUE(frame_i.second.extracted_target.bundle.pixels.isApprox(target.bundle.pixels));
+        EXPECT_TRUE(frame_i.second.extracted_target.bundle.points.isApprox(target.bundle.points));
+        EXPECT_TRUE(frame_i.second.extracted_target.indices.isApprox(target.indices));
     }
 }
 
@@ -100,8 +110,8 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
          {{{1, "/imu/polaris/456"}, {0, 0, 0}, {-1, -1, -1}}, {{2, "/imu/polaris/456"}, {-2, -2, -2}, {-3, -3, -3}}}}};
 
     std::string const record_path{database_path_ + "/record_aaa.db3"};
-    // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only database
-    // instance in the same test.
+    // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only
+    // database instance in the same test.
     // TODO(Jack): Is it legal to open two connection to the samedatabase?
     {
         auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};  // create and write
@@ -132,8 +142,8 @@ TEST_F(TempFolder, TestAddImuData) {
     success = database::AddImuData({{1, "/imu/polaris/123"}, {}, {}}, db);
     EXPECT_TRUE(success);
 
-    // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary key
-    // (timestamp_ns, sensor_name) so it is not a duplicate
+    // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary
+    // key (timestamp_ns, sensor_name) so it is not a duplicate
     success = database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db);
     EXPECT_TRUE(success);
 
@@ -144,9 +154,9 @@ TEST_F(TempFolder, TestAddImuData) {
 
     // Check that the expected error message is sent to cerr
     std::string const error_message{testing::internal::GetCapturedStderr()};  // WARN USING INTERNAL GTEST API!
-    EXPECT_EQ(
-        error_message,
-        "AddImuData() sqlite3_step() failed: UNIQUE constraint failed: imu_data.timestamp_ns, imu_data.sensor_name\n");
+    EXPECT_EQ(error_message,
+              "AddImuData() sqlite3_step() failed: UNIQUE constraint failed: imu_data.timestamp_ns, "
+              "imu_data.sensor_name\n");
 }
 
 TEST_F(TempFolder, TestGetImuData) {

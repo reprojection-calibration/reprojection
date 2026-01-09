@@ -32,7 +32,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
     for (auto const& frame_i : data.frames) {
-        // WARN(Jack): we are abusing the psuedo timestamp from the frame map to index into a vector. Hack!
+        // WARN(Jack): we are abusing the pseudo timestamp from the frame map to index into a vector. Hack!
         Isometry3d const gt_pose_i{mvg_frames[frame_i.first].pose};
         Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
 
@@ -79,7 +79,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
 
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
         // happened that I will explain. This test using noisy poses had been working for months, no problems to report.
-        // Comparing the Vector6d ses poses directly worked perfectly and the optimization returned the ground truth
+        // Comparing the Vector6d se3 poses directly worked perfectly and the optimization returned the ground truth
         // value. Then suddenly, when we transitioned to the "view" concept, this test started to fail. And what would
         // happen is that the optimized answer would have he right translation but the se3 axis-angle rotation would be
         // flipped (similar to what we observed when plotting the poses in Dash). It was not flipped for all poses, but
