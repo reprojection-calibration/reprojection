@@ -50,6 +50,7 @@ void LinearPoseInitialization(InitializationDataView data_view) {
         // some consistency in our coordinate systems we can decide this.
         Vector6d const se3_i{geometry::Log(std::get<Isometry3d>(result).inverse())};  // INVERSE!!!
 
+        // cppcheck-suppress unreadVariable
         frame_i.initial_pose() = se3_i;
     }
 }
