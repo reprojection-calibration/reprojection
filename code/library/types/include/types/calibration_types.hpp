@@ -25,6 +25,18 @@ struct CalibrationDataFrame {
 using CameraFrameSequence = std::map<std::uint64_t, CalibrationDataFrame>;
 
 struct CameraCalibrationData {
+    CameraCalibrationData(CameraSensorInfo const& _sensor, ArrayXd const& _initial_intrinsics,
+                          ArrayXd const& _optimized_intrinsics, CameraFrameSequence const& _frames)
+        : sensor{_sensor},
+          initial_intrinsics{_initial_intrinsics},
+          optimized_intrinsics{_optimized_intrinsics},
+          frames{_frames} {}
+
+    CameraCalibrationData(CameraSensorInfo const& _sensor) : sensor{_sensor} {}
+
+    CameraCalibrationData(CameraSensorInfo const& _sensor, ArrayXd const& _initial_intrinsics)
+        : sensor{_sensor}, initial_intrinsics{_initial_intrinsics} {}
+
     CameraSensorInfo sensor;
     ArrayXd initial_intrinsics;
     ArrayXd optimized_intrinsics;

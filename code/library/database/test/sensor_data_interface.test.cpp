@@ -80,10 +80,7 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, target}, db);
 
-    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole},  //
-                               {},
-                               {},
-                               {}};
+    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole}};
 
     database::GetExtractedTargetData(db, data);
     EXPECT_EQ(std::size(data.frames), 3);
