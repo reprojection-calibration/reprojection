@@ -3,6 +3,7 @@
 #include "geometry/lie.hpp"
 #include "optimization/nonlinear_refinement.hpp"
 #include "testing_mocks/mvg_generator.hpp"
+#include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
@@ -15,7 +16,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
     int const num_frames{20};
     std::vector<Frame> const mvg_frames{generator.GenerateBatch(num_frames)};
 
-    CameraSensorData data{{"", CameraModel::Pinhole}, intrinsics, {}, {}};
+    CameraCalibrationData data{{"", CameraModel::Pinhole}, intrinsics, {}, {}};
 
     // TODO(Jack): Refactor mvg generator to use new calibration types??? Or does that not make any sense? At least
     // provide an adaptor that converts frames into the data field of the dict.
@@ -61,7 +62,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         mvg_frame_i.pose = testing_mocks::AddGaussianNoise(0.5, 0.5, mvg_frame_i.pose);
     }
 
-    CameraSensorData data{{"", CameraModel::Pinhole}, intrinsics, {}, {}};
+    CameraCalibrationData data{{"", CameraModel::Pinhole}, intrinsics, {}, {}};
 
     uint64_t pseudo_time{0};
     for (auto const& mvg_frame_i : mvg_frames) {

@@ -7,7 +7,7 @@
 // TODO(Jack): Remove the spline dependency from this file as it forces a dependency on the spline package for all
 // consumers of the testing mocks! Could we maybe just make the spline a static variable?
 #include "spline/se3_spline.hpp"
-#include "types/calibration_types.hpp"
+#include "types/algorithm_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::testing_mocks {

@@ -7,7 +7,7 @@
 #include <opencv2/opencv.hpp>
 #include <optional>
 
-#include "types/calibration_types.hpp"
+#include "types/algorithm_types.hpp"
 
 namespace reprojection::feature_extraction {
 

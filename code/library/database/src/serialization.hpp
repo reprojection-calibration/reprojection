@@ -5,7 +5,7 @@
 // TODO(Jack): How can we point cppcheck to the generated protobuf cpp files?
 // cppcheck-suppress missingInclude
 #include "extracted_target.pb.h"
-#include "types/calibration_types.hpp"
+#include "types/algorithm_types.hpp"
 
 namespace reprojection::database {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/calibration_types.hpp"
+#include "types/algorithm_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::pnp {

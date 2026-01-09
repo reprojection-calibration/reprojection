@@ -5,20 +5,18 @@
 
 namespace reprojection {
 
-template <typename T>
-using Vector3 = Eigen::Vector3<T>;
-
 using Vector2i = Eigen::Vector2i;
 using Vector2d = Eigen::Vector2d;
+template <typename T>
+using Vector3 = Eigen::Vector3<T>;
 using Vector3d = Vector3<double>;
 using Vector4d = Eigen::Vector4d;
 using Vector6d = Eigen::Vector<double, 6>;
 using VectorXd = Eigen::VectorXd;
 
+using Matrix2d = Eigen::Matrix2d;
 template <typename T>
 using Matrix3 = Eigen::Matrix3<T>;
-
-using Matrix2d = Eigen::Matrix2d;
 using Matrix3d = Matrix3<double>;
 using Matrix4d = Eigen::Matrix4d;
 using MatrixXi = Eigen::MatrixXi;

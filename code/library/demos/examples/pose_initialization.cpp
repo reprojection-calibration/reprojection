@@ -6,6 +6,7 @@
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
 #include "optimization/nonlinear_refinement.hpp"
+#include "types/calibration_types.hpp"
 
 using namespace reprojection;
 
@@ -19,10 +20,11 @@ int main() {
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
     std::string const sensor_name{"/cam0/image_raw"};
 
-    CameraSensorData cam_data{{sensor_name, CameraModel::DoubleSphere},
-                              Array6d{156.82590211, 156.79756958, 154.99978685, 256.9744566, -0.17931409, 0.59133716},
-                              {},
-                              {}};
+    CameraCalibrationData cam_data{
+        {sensor_name, CameraModel::DoubleSphere},
+        Array6d{156.82590211, 156.79756958, 254.99978685, 256.9744566, -0.17931409, 0.59133716},
+        {},
+        {}};
 
     // Cam 0
     // TODO LOAD THE TARGET DIRECTLY INTO THE NEW DATA STRUCTURE
