@@ -80,17 +80,22 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, target}, db);
 
-    auto const data{database::GetExtractedTargetData(db, "/cam/retro/123")};
-    ASSERT_TRUE(data.has_value());
-    EXPECT_EQ(std::size(data.value()), 3);
+    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole},  //
+                               {},
+                               {},
+                               {}};
+
+    database::GetExtractedTargetData(db, data);
+    EXPECT_EQ(std::size(data.frames), 3);
 
     int timestamp{0};
-    for (auto const& data_i : data.value()) {
-        EXPECT_EQ(data_i.header.timestamp_ns, timestamp);
+    for (auto const& frame_i : data.frames) {
+        EXPECT_EQ(frame_i.first, timestamp);
         timestamp = timestamp + 1;
-        EXPECT_TRUE(data_i.target.bundle.pixels.isApprox(target.bundle.pixels));
-        EXPECT_TRUE(data_i.target.bundle.points.isApprox(target.bundle.points));
-        EXPECT_TRUE(data_i.target.indices.isApprox(target.indices));
+
+        EXPECT_TRUE(frame_i.second.extracted_target.bundle.pixels.isApprox(target.bundle.pixels));
+        EXPECT_TRUE(frame_i.second.extracted_target.bundle.points.isApprox(target.bundle.points));
+        EXPECT_TRUE(frame_i.second.extracted_target.indices.isApprox(target.indices));
     }
 }
 

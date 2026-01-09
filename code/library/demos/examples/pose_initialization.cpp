@@ -27,12 +27,7 @@ int main() {
         {}};
 
     // Cam 0
-    // TODO LOAD THE TARGET DIRECTLY INTO THE NEW DATA STRUCTURE
-    auto const cam0_targets_stamped{
-        database::GetExtractedTargetData(db, sensor_name).value()};  // WARN UNPROTECTED OPTIONAL ACCESS
-    for (auto const& target : cam0_targets_stamped) {
-        cam_data.frames[target.header.timestamp_ns].extracted_target = target.target;
-    }
+    database::GetExtractedTargetData(db, cam_data);
 
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
     (void)AddPoseData(cam_data, database::PoseType::Initial, db);

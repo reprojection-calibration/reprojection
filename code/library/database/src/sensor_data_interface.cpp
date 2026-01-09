@@ -73,29 +73,28 @@ namespace reprojection::database {
                                  data.header.sensor_name, buffer.c_str(), std::size(buffer), database->db);
 }
 
-// NOTE(Jack): The logic here is very similar to the ImageStreamer class, but there are enough differences that we
-// cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
-std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
-    std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name) {
+// NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
+// differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
+// TODO(Jack): Implement much more agressive error throwing strategy rather than returning nullopt.
+void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, CameraCalibrationData& data) {
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, sensor_name.c_str());
-    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-        std::cerr << "GetExtractedTargetData() runtime error during binding: " << e.what()      // LCOV_EXCL_LINE
-                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                                    // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement.stmt, 1, data.sensor.sensor_name.c_str());
+    } catch (std::runtime_error const& e) {
+        std::throw_with_nested(                                                                      // LCOV_EXCL_LINE
+            std::runtime_error(                                                                      // LCOV_EXCL_LINE
+                "GetExtractedTargetData() runtime error during binding: " + std::string(e.what()) +  // LCOV_EXCL_LINE
+                " with database error message: " + sqlite3_errmsg(database->db)));                   // LCOV_EXCL_LINE
+    }
 
-    std::set<ExtractedTargetStamped> data;
     while (true) {
         int const code{sqlite3_step(statement.stmt)};
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            std::cerr << "GetExtractedTargetData() sqlite3_step() failed:  "  // LCOV_EXCL_LINE
-                      << sqlite3_errmsg(database->db) << "\n";                // LCOV_EXCL_LINE
-            return std::nullopt;                                              // LCOV_EXCL_LINE
+            throw std::runtime_error("GetExtractedTargetData() sqlite3_step() failed:  " +  // LCOV_EXCL_LINE
+                                     std::string(sqlite3_errmsg(database->db)));            // LCOV_EXCL_LINE
         }
 
         // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or
@@ -121,10 +120,8 @@ std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
             continue;                                                                                // LCOV_EXCL_LINE
         }
 
-        data.insert(ExtractedTargetStamped{{timestamp_ns, sensor_name}, deserialized.value()});
+        data.frames[timestamp_ns].extracted_target = deserialized.value();
     }
-
-    return data;
 }
 
 [[nodiscard]] bool AddImuData(ImuStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {

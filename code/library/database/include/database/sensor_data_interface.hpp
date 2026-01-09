@@ -37,8 +37,8 @@ namespace reprojection::database {
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database);
 
-std::optional<std::set<ExtractedTargetStamped>> GetExtractedTargetData(
-    std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name);
+// See the note above AddPoseData. Here we are mutating the data, should we use a controlled view here?
+void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, CameraCalibrationData& data);
 
 [[nodiscard]] bool AddImuData(ImuStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
 
