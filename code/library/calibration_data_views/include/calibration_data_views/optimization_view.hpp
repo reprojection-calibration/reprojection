@@ -9,11 +9,19 @@ namespace reprojection {
 // after the linear initialization.
 class OptimizationFrameView {
    public:
-    OptimizationFrameView(ExtractedTarget const& extracted_target, Array6d const& initial_pose, Array6d& optimized_pose)
-        : extracted_target_{extracted_target}, initial_pose_{initial_pose}, optimized_pose_{optimized_pose} {}
+    OptimizationFrameView(uint64_t const& timestamp_ns, ExtractedTarget const& extracted_target,
+                          Array6d const& initial_pose, Array6d& optimized_pose)
+        : timestamp_ns_{timestamp_ns},
+          extracted_target_{extracted_target},
+          initial_pose_{initial_pose},
+          optimized_pose_{optimized_pose} {}
 
-    // TODO(Jack): Does the const in the return here really do what I think/want it to do? That is to protect the
-    // extracted target from modification?
+    // NOTE(Jack): I am actually not thrilled here about adding the timestamp here because it is not actually used as
+    // data in the optimization itself. It is used to help track the correspondence of the residual ids (see the
+    // optimization function itself). If it is possible to easily achieve this same correspondence without using the
+    // timestamps then we can and I think we should remove the timestamp here.
+    uint64_t const& timestamp_ns() const { return timestamp_ns_; }
+
     ExtractedTarget const& extracted_target() const { return extracted_target_; }
 
     Array6d const& initial_pose() const { return initial_pose_; }
@@ -21,6 +29,7 @@ class OptimizationFrameView {
     Array6d& optimized_pose() { return optimized_pose_; }
 
    private:
+    uint64_t const& timestamp_ns_;
     ExtractedTarget const& extracted_target_;
     Array6d const& initial_pose_;
     Array6d& optimized_pose_;
@@ -43,7 +52,7 @@ class OptimizationDataView {
         explicit Iterator(DataFrameIterator it) : it_{it} {}
 
         OptimizationFrameView operator*() const {
-            return {it_->second.extracted_target, it_->second.initial_pose, it_->second.optimized_pose};
+            return {it_->first, it_->second.extracted_target, it_->second.initial_pose, it_->second.optimized_pose};
         }
 
         Iterator& operator++() {

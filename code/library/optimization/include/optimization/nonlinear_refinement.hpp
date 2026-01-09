@@ -17,6 +17,11 @@ namespace reprojection::optimization {
 // could have another camera. Each data view is a view into one single camera so this makes sense!
 void CameraNonlinearRefinement(OptimizationDataView data_view);
 
+// TODO(Jack): This does not need to be part of the public interface as it is used internally only as part of
+//  CameraNonlinearRefinement, maybe we should also test this, but it is so simple.
+ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
+                                       std::vector<ceres::ResidualBlockId> const& residual_ids);
+
 // NOTE(Jack): At this time it is still not entirely clear if we need to solve this type of problem at all, however this
 // code serves as a learning base and step on the way to full pose spline optimization.
 // TODO(Jack): Do we really need a class here or can we make it a pass through function? There is no very strong reason

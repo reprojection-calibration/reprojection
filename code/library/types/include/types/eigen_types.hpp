@@ -30,6 +30,7 @@ using ArrayXi = Eigen::ArrayXi;
 using ArrayX2i = Eigen::ArrayX2i;
 using Array2i = Eigen::Array2i;
 using Array4i = Eigen::Array4i;
+using ArrayX2d = Eigen::ArrayX2d;
 using Array2d = Eigen::Array2d;
 using Array3d = Eigen::Array3d;
 using Array4d = Eigen::Array4d;
