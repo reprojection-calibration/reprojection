@@ -10,11 +10,14 @@ namespace reprojection {
 class OptimizationFrameView {
    public:
     OptimizationFrameView(uint64_t const& timestamp_ns, ExtractedTarget const& extracted_target,
-                          Array6d const& initial_pose, Array6d& optimized_pose)
+                          Array6d const& initial_pose, ArrayX2d& initial_reprojection_error, Array6d& optimized_pose,
+                          ArrayX2d& optimized_reprojection_error)
         : timestamp_ns_{timestamp_ns},
           extracted_target_{extracted_target},
           initial_pose_{initial_pose},
-          optimized_pose_{optimized_pose} {}
+          initial_reprojection_error_{initial_reprojection_error},
+          optimized_pose_{optimized_pose},
+          optimized_reprojection_error_{optimized_reprojection_error} {}
 
     // NOTE(Jack): I am actually not thrilled here about adding the timestamp here because it is not actually used as
     // data in the optimization itself. It is used to help track the correspondence of the residual ids (see the
@@ -26,13 +29,19 @@ class OptimizationFrameView {
 
     Array6d const& initial_pose() const { return initial_pose_; }
 
+    ArrayX2d& initial_reprojection_error() { return initial_reprojection_error_; }
+
     Array6d& optimized_pose() { return optimized_pose_; }
+
+    ArrayX2d& optimized_reprojection_error() { return optimized_reprojection_error_; }
 
    private:
     uint64_t const& timestamp_ns_;
     ExtractedTarget const& extracted_target_;
     Array6d const& initial_pose_;
+    ArrayX2d& initial_reprojection_error_;
     Array6d& optimized_pose_;
+    ArrayX2d& optimized_reprojection_error_;
 };
 
 class OptimizationDataView {
@@ -52,7 +61,12 @@ class OptimizationDataView {
         explicit Iterator(DataFrameIterator it) : it_{it} {}
 
         OptimizationFrameView operator*() const {
-            return {it_->first, it_->second.extracted_target, it_->second.initial_pose, it_->second.optimized_pose};
+            return {it_->first,
+                    it_->second.extracted_target,
+                    it_->second.initial_pose,
+                    it_->second.initial_reprojection_error,
+                    it_->second.optimized_pose,
+                    it_->second.optimized_reprojection_error};
         }
 
         Iterator& operator++() {

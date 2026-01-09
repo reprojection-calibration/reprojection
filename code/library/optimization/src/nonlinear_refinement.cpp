@@ -11,13 +11,13 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     data_view.optimized_intrinsics() = data_view.initial_intrinsics();
 
     ceres::Problem problem;
-    std::map<uint64_t, std::vector<ceres::ResidualBlockId>> residual_id_map;
+    std::map<uint64_t, std::vector<ceres::ResidualBlockId>> residual_id_map;  // TODO(Jack): Naming?
     for (OptimizationFrameView frame_i : data_view) {
         MatrixX2d const& pixels_i{frame_i.extracted_target().bundle.pixels};
         MatrixX3d const& points_i{frame_i.extracted_target().bundle.points};
         frame_i.optimized_pose() = frame_i.initial_pose();
 
-        std::vector<ceres::ResidualBlockId> residual_ids_i;
+        std::vector<ceres::ResidualBlockId> residual_ids_i;  // TODO(Jack): Naming?
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
             ceres::CostFunction* const cost_function{
                 Create(data_view.camera_model(), pixels_i.row(j), points_i.row(j))};
@@ -29,10 +29,9 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
         residual_id_map[frame_i.timestamp_ns()] = residual_ids_i;
     }
 
-    std::cout << "Before Solve" << std::endl;
     for (OptimizationFrameView frame_i : data_view) {
-        std::cout << EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]).mean()
-                  << std::endl;
+        frame_i.initial_reprojection_error() =
+            EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]);
     }
 
     // TODO(Jack): Law of useful return states that we should probably be returning the summary!
@@ -41,10 +40,9 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    std::cout << "After Solve" << std::endl;
     for (OptimizationFrameView frame_i : data_view) {
-        std::cout << EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]).mean()
-                  << std::endl;
+        frame_i.optimized_reprojection_error() =
+            EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]);
     }
 }
 
