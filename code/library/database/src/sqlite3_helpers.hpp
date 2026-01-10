@@ -47,9 +47,10 @@ struct Sqlite3Tools {
                                                       std::string const& sensor_name, void const* const blob_ptr,
                                                       int const blob_size, sqlite3* const db);
 
-    [[nodiscard]] static bool AddTimeNameTypeBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                  std::string const& type, std::string const& sensor_name,
-                                                  void const* const blob_ptr, int const blob_size, sqlite3* const db);
+    [[nodiscard]] static SqliteResult AddTimeNameTypeBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
+                                                          std::string const& type, std::string const& sensor_name,
+                                                          void const* const blob_ptr, int const blob_size,
+                                                          sqlite3* const db);
 
     static void Bind(sqlite3_stmt* const stmt, int const index, std::string const& value) {
         // TODO replace SQLITE_TRANSIENT with flag
