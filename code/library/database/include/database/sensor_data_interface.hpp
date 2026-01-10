@@ -42,6 +42,9 @@ namespace reprojection::database {
 void AddPoseData(CameraCalibrationData const& data, PoseType const type,
                  std::shared_ptr<CalibrationDatabase> const database);
 
+void AddReprojectionError(CameraCalibrationData const& data, PoseType const type,
+                          std::shared_ptr<CalibrationDatabase> const database);
+
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database);
 

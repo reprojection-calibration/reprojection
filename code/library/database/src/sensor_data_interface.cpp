@@ -57,6 +57,42 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
     }
 }
 
+// TODO(Jack): Decide on a real error handling strategy!!! Should we continue to refactor to always throw? Or just print
+// error messages, or bool, or nullopt or what or what or what!!??
+void AddReprojectionError(CameraCalibrationData const& data, PoseType const type,
+                          std::shared_ptr<CalibrationDatabase> const database) {
+    SqlTransaction const lock{(database->db)};
+
+    for (auto const& [timestamp_ns, frame_i] : data.frames) {
+        // TODO(Jack): Can we make this a reference somehow? There is no good reason to make a copy here.
+        ArrayX2d reprojection_error;
+        if (type == PoseType::Initial) {
+            reprojection_error = frame_i.initial_reprojection_error;
+        } else if (type == PoseType::Optimized) {
+            reprojection_error = frame_i.optimized_reprojection_error;
+        } else {
+            throw std::runtime_error(
+                "AddReprojectionError() invalid PoseType selected, this is a library implementation error!");  // LCOV_EXCL_LINE
+        }
+
+        protobuf_serialization::ArrayX2dProto const serialized{Serialize(reprojection_error)};
+        std::string buffer;
+        if (not serialized.SerializeToString(&buffer)) {
+            std::cerr << "AddReprojectionError() ArrayX2dProto serialization failed at: "  // LCOV_EXCL_LINE
+                      << std::to_string(timestamp_ns) << "\n";                             // LCOV_EXCL_LINE
+            continue;                                                                      // LCOV_EXCL_LINE
+        }
+
+        bool const success{Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, timestamp_ns,
+                                                 data.sensor.sensor_name, buffer.c_str(), std::size(buffer),
+                                                 database->db)};
+        if (not success) {
+            std::cerr << "AddReprojectionError() AddBlob failed at: " << std::to_string(timestamp_ns)  // LCOV_EXCL_LINE
+                      << "\n";                                                                         // LCOV_EXCL_LINE
+        }
+    }
+}
+
 [[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
                                           std::shared_ptr<CalibrationDatabase> const database) {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
