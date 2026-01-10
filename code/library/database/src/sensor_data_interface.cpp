@@ -77,16 +77,14 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
         protobuf_serialization::ArrayX2dProto const serialized{Serialize(reprojection_error)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
-            std::cerr << "AddReprojectionError() ArrayX2dProto serialization failed at: "  // LCOV_EXCL_LINE
-                      << std::to_string(timestamp_ns) << "\n";                             // LCOV_EXCL_LINE
-            continue;                                                                      // LCOV_EXCL_LINE
+            std::cerr << "AddReprojectionError() ArrayX2dProto serialization failed at: "
+                      << std::to_string(timestamp_ns) << "\n";
+            continue;
         }
 
-        // TODO(Jack): How should AddBlob actually handle errors and how do we integrate it here? For now we just catch
-        // the boolean flag and throw a error from this method if we do not like it.
-        SqliteResult const result{Sqlite3Tools::AddTimeNameTypeBlob(
-            sql_statements::reprojection_error_insert, timestamp_ns, ToString(type), data.sensor.sensor_name,
-            buffer.c_str(), std::size(buffer), database->db)};
+        SqliteResult const result{Sqlite3Tools::AddTimeNameTypeBlob(sql_statements::reprojection_error_insert,
+                                                                    timestamp_ns, type, data.sensor.sensor_name,
+                                                                    buffer.c_str(), std::size(buffer), database->db)};
 
         if (std::holds_alternative<SqliteErrorCode>(result)) {
             throw std::runtime_error("AddReprojectionError() with database error message: " +

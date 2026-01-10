@@ -7,6 +7,8 @@
 #include <string>
 #include <variant>
 
+#include "database/database_data_types.hpp"
+
 namespace reprojection::database {
 
 enum class SqliteFlag {
@@ -48,12 +50,15 @@ struct Sqlite3Tools {
                                                       int const blob_size, sqlite3* const db);
 
     [[nodiscard]] static SqliteResult AddTimeNameTypeBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                          std::string const& type, std::string const& sensor_name,
+                                                          PoseType const type, std::string const& sensor_name,
                                                           void const* const blob_ptr, int const blob_size,
                                                           sqlite3* const db);
 
+    //[[nodiscard]] static AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
+    //                                                  std::string const& sensor_name, void const* const blob_ptr,
+    //                                                  int const blob_size, sqlite3* const db, std::optional<PoseType>)
+
     static void Bind(sqlite3_stmt* const stmt, int const index, std::string const& value) {
-        // TODO replace SQLITE_TRANSIENT with flag
         if (sqlite3_bind_text(stmt, index, value.c_str(), -1, SQLITE_TRANSIENT) != static_cast<int>(SqliteFlag::Ok)) {
             throw std::runtime_error("sqlite3_bind_text() failed");  // LCOV_EXCL_LINE
         }

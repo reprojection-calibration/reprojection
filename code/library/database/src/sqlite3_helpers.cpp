@@ -44,7 +44,7 @@ namespace reprojection::database {
 
 // WARN TOTALLY DUPLICATED!!!
 [[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameTypeBlob(std::string const& sql_statement,
-                                                             uint64_t const timestamp_ns, std::string const& type,
+                                                             uint64_t const timestamp_ns, PoseType const type,
                                                              std::string const& sensor_name, void const* const blob_ptr,
                                                              int const blob_size, sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
@@ -52,7 +52,7 @@ namespace reprojection::database {
     try {
         Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
         Bind(statement.stmt, 2, sensor_name.c_str());
-        Bind(statement.stmt, 3, type.c_str());
+        Bind(statement.stmt, 3, ToString(type));
         BindBlob(statement.stmt, 4, blob_ptr, blob_size);
     } catch (std::runtime_error const& e) {
         return SqliteErrorCode::FailedBinding;
