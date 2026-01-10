@@ -84,12 +84,12 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
 
         // TODO(Jack): How should AddBlob actually handle errors and how do we integrate it here? For now we just catch
         // the boolean flag and throw a error from this method if we do not like it.
-        bool const success{Sqlite3Tools::AddReprojectionErrorBlob(sql_statements::reprojection_error_insert,
-                                                                  timestamp_ns, ToString(type), data.sensor.sensor_name,
-                                                                  buffer.c_str(), std::size(buffer), database->db)};
+        bool const success{Sqlite3Tools::AddTimeNameTypeBlob(sql_statements::reprojection_error_insert, timestamp_ns,
+                                                             ToString(type), data.sensor.sensor_name, buffer.c_str(),
+                                                             std::size(buffer), database->db)};
         if (not success) {
-            throw std::runtime_error("AddReprojectionError() AddBlob() failed:  " +  // LCOV_EXCL_LINE
-                                     std::string(sqlite3_errmsg(database->db)));     // LCOV_EXCL_LINE
+            throw std::runtime_error("AddTimeNameTypeBlob() AddBlob() failed:  " +  // LCOV_EXCL_LINE
+                                     std::string(sqlite3_errmsg(database->db)));    // LCOV_EXCL_LINE
         }
     }
 }
@@ -103,9 +103,9 @@ void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<
             " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));
     }
 
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, data.header.timestamp_ns,
-                                                    data.header.sensor_name, buffer.c_str(), std::size(buffer),
-                                                    database->db)};
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert,
+                                                            data.header.timestamp_ns, data.header.sensor_name,
+                                                            buffer.c_str(), std::size(buffer), database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error("AddExtractedTargetData() with database error message: " +

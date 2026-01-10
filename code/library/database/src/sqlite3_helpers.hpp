@@ -19,12 +19,13 @@ enum class SqliteFlag {
 };
 
 // TODO(Jack): Is there anyway that we can use official sqlite error codes like the Sqlite flags above?
-enum class SqliteErrorCode {
-    FailedBinding,
-    FailedStep,
-};
+enum class SqliteErrorCode { FailedBinding, FailedStep };
 
 // TODO(Jack): Naming! "result" is way too generic!
+// WARN(Jack): We are abusing the SqliteFlag here because I am not really sure that they are the positive result of the
+// operation, I simply saw it was "ok" and saw a flag that said Ok and was happy with it. This is different than there
+// usage in the sensor interface code (ex. code == static_cast<int>(SqliteFlag::Done)) where they correspond to actually
+// codes returned by the sqlite functions.
 using SqliteResult = std::variant<SqliteFlag, SqliteErrorCode>;
 
 struct Sqlite3Tools {
@@ -42,14 +43,13 @@ struct Sqlite3Tools {
     // eliminated and generic component of the function and it now means that this method can only be used for inserting
     // into a table that holds blobs indexed by timestamp and the sensor name. This is no strictly a problem, but the
     // fact that this method now takes six arguments tells you that maybe we are missing an abstraction :)
-    [[nodiscard]] static SqliteResult AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                              std::string const& sensor_name, void const* const blob_ptr,
-                                              int const blob_size, sqlite3* const db);
+    [[nodiscard]] static SqliteResult AddTimeNameBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
+                                                      std::string const& sensor_name, void const* const blob_ptr,
+                                                      int const blob_size, sqlite3* const db);
 
-    [[nodiscard]] static bool AddReprojectionErrorBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                       std::string const& type, std::string const& sensor_name,
-                                                       void const* const blob_ptr, int const blob_size,
-                                                       sqlite3* const db);
+    [[nodiscard]] static bool AddTimeNameTypeBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
+                                                  std::string const& type, std::string const& sensor_name,
+                                                  void const* const blob_ptr, int const blob_size, sqlite3* const db);
 
     static void Bind(sqlite3_stmt* const stmt, int const index, std::string const& value) {
         // TODO replace SQLITE_TRANSIENT with flag

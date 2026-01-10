@@ -22,9 +22,9 @@ namespace reprojection::database {
     return true;
 }
 
-[[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                 std::string const& sensor_name, void const* const blob_ptr,
-                                                 int const blob_size, sqlite3* const db) {
+[[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
+                                                         std::string const& sensor_name, void const* const blob_ptr,
+                                                         int const blob_size, sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     try {
@@ -43,10 +43,10 @@ namespace reprojection::database {
 }
 
 // WARN TOTALLY DUPLICATED!!!
-[[nodiscard]] bool Sqlite3Tools::AddReprojectionErrorBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                          std::string const& type, std::string const& sensor_name,
-                                                          void const* const blob_ptr, int const blob_size,
-                                                          sqlite3* const db) {
+[[nodiscard]] bool Sqlite3Tools::AddTimeNameTypeBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
+                                                     std::string const& type, std::string const& sensor_name,
+                                                     void const* const blob_ptr, int const blob_size,
+                                                     sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     try {
@@ -54,10 +54,10 @@ namespace reprojection::database {
         Bind(statement.stmt, 2, sensor_name.c_str());
         Bind(statement.stmt, 3, type.c_str());
         BindBlob(statement.stmt, 4, blob_ptr, blob_size);
-    } catch (std::runtime_error const& e) {                                                   // LCOV_EXCL_LINE
-        std::cerr << "AddReprojectionErrorBlob() runtime error during binding: " << e.what()  // LCOV_EXCL_LINE
-                  << " with database error message: " << sqlite3_errmsg(db) << "\n";          // LCOV_EXCL_LINE
-        return false;                                                                         // LCOV_EXCL_LINE
+    } catch (std::runtime_error const& e) {                                              // LCOV_EXCL_LINE
+        std::cerr << "AddTimeNameTypeBlob() runtime error during binding: " << e.what()  // LCOV_EXCL_LINE
+                  << " with database error message: " << sqlite3_errmsg(db) << "\n";     // LCOV_EXCL_LINE
+        return false;                                                                    // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {

@@ -21,9 +21,9 @@ void AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> con
                                  " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));
     }
 
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, data.header.timestamp_ns,
-                                                    data.header.sensor_name, buffer.data(), std::size(buffer),
-                                                    database->db)};
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, data.header.timestamp_ns,
+                                                            data.header.sensor_name, buffer.data(), std::size(buffer),
+                                                            database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error("AddImage() failed for sensor: " + data.header.sensor_name +
@@ -33,8 +33,8 @@ void AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> con
 }
 
 void AddImage(FrameHeader const& header, std::shared_ptr<CalibrationDatabase> const database) {
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, header.timestamp_ns,
-                                                    header.sensor_name, nullptr, -1, database->db)};
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, header.timestamp_ns,
+                                                            header.sensor_name, nullptr, -1, database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error("AddImage() failed for sensor: " + header.sensor_name +
