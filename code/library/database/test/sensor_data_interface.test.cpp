@@ -84,9 +84,11 @@ TEST_F(TempFolder, TestAddExtractedTargetData) {
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
     FrameHeader const header{0, "/cam/retro/123"};
-    (void)database::AddImage(header, db);
+    // Adding a target with no corresponding image database entry is invalid! Foreign key constraint :)
+    EXPECT_THROW(AddExtractedTargetData({header, bundle}, db), std::runtime_error);
 
-    EXPECT_TRUE(AddExtractedTargetData({header, bundle}, db));
+    (void)database::AddImage(header, db);
+    EXPECT_NO_THROW(AddExtractedTargetData({header, bundle}, db));
 }
 
 TEST_F(TempFolder, TestGetExtractedTargetData) {

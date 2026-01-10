@@ -47,7 +47,6 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
                 std::runtime_error(                                                           // LCOV_EXCL_LINE
                     "AddPoseData() runtime error during binding: " + std::string(e.what()) +  // LCOV_EXCL_LINE
                     " with database error message: " + sqlite3_errmsg(database->db)));        // LCOV_EXCL_LINE
-
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
@@ -95,19 +94,23 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
     }
 }
 
-[[nodiscard]] bool AddExtractedTargetData(ExtractedTargetStamped const& data,
-                                          std::shared_ptr<CalibrationDatabase> const database) {
+void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {
-        std::cerr << "ExtractedTarget serialization failed at: "
-                  << std::to_string(data.header.timestamp_ns)  // LCOV_EXCL_LINE
-                  << "\n";                                     // LCOV_EXCL_LINE
-        return false;                                          // LCOV_EXCL_LINE
+        throw std::runtime_error(
+            "AddExtractedTargetData() protobuf SerializeToString() failed for sensor: " + data.header.sensor_name +
+            " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));
     }
 
-    return Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, data.header.timestamp_ns,
-                                 data.header.sensor_name, buffer.c_str(), std::size(buffer), database->db);
+    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, data.header.timestamp_ns,
+                                                    data.header.sensor_name, buffer.c_str(), std::size(buffer),
+                                                    database->db)};
+
+    if (std::holds_alternative<SqliteErrorCode>(result)) {
+        throw std::runtime_error("AddExtractedTargetData() with database error message: " +
+                                 std::string(sqlite3_errmsg(database->db)));
+    }
 }
 
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
