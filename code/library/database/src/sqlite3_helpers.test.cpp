@@ -54,3 +54,10 @@ TEST_F(TempFolderDummySql, TestExecute) {
 
     sqlite3_close(db);
 }
+
+TEST(TestSqlite3Helpers, TestBindFailures) {
+    EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, ""), std::runtime_error);
+    EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, static_cast<int64_t>(123)), std::runtime_error);
+    EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, 1.23), std::runtime_error);
+    EXPECT_THROW(database::Sqlite3Tools::BindBlob(nullptr, 1, nullptr, -1), std::runtime_error);
+}
