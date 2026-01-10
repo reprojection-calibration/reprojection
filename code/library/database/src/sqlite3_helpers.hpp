@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <variant>
 
 namespace reprojection::database {
 
@@ -16,6 +17,15 @@ enum class SqliteFlag {
     OpenCreate = SQLITE_OPEN_CREATE,
     Row = SQLITE_ROW
 };
+
+// TODO(Jack): Is there anyway that we can use official sqlite error codes like the Sqlite flags above?
+enum class SqliteErrorCode {
+    FailedBinding,
+    FailedStep,
+};
+
+// TODO(Jack): Naming! "result" is way too generic!
+using SqliteResult = std::variant<SqliteFlag, SqliteErrorCode>;
 
 struct Sqlite3Tools {
     using CallbackType = int (*)(void*, int, char**, char**);
@@ -32,9 +42,9 @@ struct Sqlite3Tools {
     // eliminated and generic component of the function and it now means that this method can only be used for inserting
     // into a table that holds blobs indexed by timestamp and the sensor name. This is no strictly a problem, but the
     // fact that this method now takes six arguments tells you that maybe we are missing an abstraction :)
-    [[nodiscard]] static bool AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                      std::string const& sensor_name, void const* const blob_ptr, int const blob_size,
-                                      sqlite3* const db);
+    [[nodiscard]] static SqliteResult AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
+                                              std::string const& sensor_name, void const* const blob_ptr,
+                                              int const blob_size, sqlite3* const db);
 
     [[nodiscard]] static bool AddReprojectionErrorBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
                                                        std::string const& type, std::string const& sensor_name,
