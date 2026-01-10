@@ -23,7 +23,6 @@ class TempFolderDummySql : public ::testing::Test {
 // Test where we create a simple auto incremented table and add some values
 TEST_F(TempFolderDummySql, TestExecute) {
     std::string const record{database_path_ + "/record_lll.db3"};
-
     sqlite3* db;
     sqlite3_open(record.c_str(), &db);
 
@@ -33,7 +32,6 @@ TEST_F(TempFolderDummySql, TestExecute) {
         "value REAL NOT NULL, "
         "PRIMARY KEY (record_Id)"
         ");"};
-
     bool const table_created{database::Sqlite3Tools::Execute(data_table_sql_, db)};
     ASSERT_TRUE(table_created);
 
@@ -54,7 +52,6 @@ TEST_F(TempFolderDummySql, TestExecute) {
 
 TEST_F(TempFolderDummySql, TestAddBlob) {
     std::string const record{database_path_ + "/record_lll.db3"};
-
     sqlite3* db;
     sqlite3_open(record.c_str(), &db);
 
@@ -83,11 +80,12 @@ TEST_F(TempFolderDummySql, TestAddBlob) {
     ASSERT_TRUE(std::holds_alternative<database::SqliteErrorCode>(result));
     EXPECT_EQ(std::get<database::SqliteErrorCode>(result), database::SqliteErrorCode::FailedStep);
 
-    // Failure case "failed binding" - malformed sql statement does not match the table in the datebase
+    // Failure case "failed binding" - malformed sql statement does not match the table in the database
     std::string const malformed_add_blob_sql_{
         "INSERT INTO example_blob_table (timestamp_ns, sensor_name) "
         "VALUES (?, ?);"};
-    result = database::Sqlite3Tools::AddBlob(malformed_add_blob_sql_, 0, "/cam/retro/123", nullptr, -1, db);
+    result = database::Sqlite3Tools::AddBlob(malformed_add_blob_sql_, 0, "/cam/retro/123", buffer.c_str(),
+                                             std::size(buffer), db);
     ASSERT_TRUE(std::holds_alternative<database::SqliteErrorCode>(result));
     EXPECT_EQ(std::get<database::SqliteErrorCode>(result), database::SqliteErrorCode::FailedBinding);
 }

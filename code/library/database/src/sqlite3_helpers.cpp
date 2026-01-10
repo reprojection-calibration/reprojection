@@ -9,12 +9,12 @@
 namespace reprojection::database {
 
 [[nodiscard]] bool Sqlite3Tools::Execute(std::string const& sql_statement, sqlite3* const db) {
-    char* errror_msg{nullptr};
-    int const code{sqlite3_exec(db, sql_statement.c_str(), nullptr, nullptr, &errror_msg)};
+    char* error_msg{nullptr};
+    int const code{sqlite3_exec(db, sql_statement.c_str(), nullptr, nullptr, &error_msg)};
 
     if (code != static_cast<int>(SqliteFlag::Ok)) {
-        std::cerr << "SQL error: " << errror_msg << std::endl;
-        sqlite3_free(errror_msg);  // WARN(Jack): Violating RAII here! Should wrap errror_msg with class.
+        std::cerr << "SQL error: " << error_msg << std::endl;
+        sqlite3_free(error_msg);  // WARN(Jack): Violating RAII here! Should wrap errror_msg with class?
 
         return false;
     }
