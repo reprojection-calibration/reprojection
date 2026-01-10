@@ -13,6 +13,10 @@
 // from the other data interfaces that it deserves some separation. The basic idea is that we should not load all images
 // at once, but rather "stream" them one at a time. If we try to load all images at once we can easily blow up the
 // entire memory of a computer if the dataset is large enough.
+// WARN(Jack): The image and extracted target sensor/database interface are unique because those are the only parts
+// which will likely be used by external parties. Most other database interfaces are used exclusively by the core
+// calibration algorithm. Maybe for external facing components it would be nice to provide an interface with bool or
+// std::optional instead of void+throw. Think about this over time!
 
 namespace reprojection::database {
 
