@@ -4,6 +4,33 @@
 
 namespace reprojection::database {
 
+protobuf_serialization::ArrayX2dProto Serialize(ArrayX2d const& eigen_array) {
+    protobuf_serialization::ArrayX2dProto array_x2d_proto;
+
+    // TOOD(Jack): See the note in the protobuf definition file, but this logic is essentially copied exactly from the
+    //  target pixel serialization code. If we used a common protobuf definition (which we should!) then we could
+    //  eliminate the copy and  paste code/logic here.
+    array_x2d_proto.set_rows(static_cast<int>(eigen_array.rows()));
+    auto* const proto_data{array_x2d_proto.mutable_array_data()};
+    proto_data->Resize(static_cast<int>(eigen_array.size()), 0);
+
+    Eigen::Map<ArrayX2d>(proto_data->mutable_data(), eigen_array.rows(), eigen_array.cols()) = eigen_array;
+
+    return array_x2d_proto;
+}
+
+std::optional<ArrayX2d> Deserialize(protobuf_serialization::ArrayX2dProto const& eigen_array_proto) {
+    if (not ValidateDimensions(eigen_array_proto.rows(), 2, eigen_array_proto.array_data_size())) {
+        return std::nullopt;  // LCOV_EXCL_LINE
+    }
+
+    ArrayX2d eigen_array;
+    eigen_array.resize(eigen_array_proto.rows(), 2);
+    eigen_array = Eigen::Map<ArrayX2d const>(eigen_array_proto.array_data().data(), eigen_array_proto.rows(), 2);
+
+    return eigen_array;
+}
+
 protobuf_serialization::ExtractedTargetProto Serialize(ExtractedTarget const& target) {
     protobuf_serialization::ExtractedTargetProto extracted_target_proto;
     protobuf_serialization::BundleProto* const bundle_proto{extracted_target_proto.mutable_bundle()};
