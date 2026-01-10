@@ -25,35 +25,32 @@ namespace reprojection::database {
 [[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
                                                          std::string const& sensor_name, void const* const blob_ptr,
                                                          int const blob_size, sqlite3* const db) {
-    SqlStatement const statement{db, sql_statement.c_str()};
-
-    try {
-        Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
-        Bind(statement.stmt, 2, sensor_name.c_str());
-        BindBlob(statement.stmt, 3, blob_ptr, blob_size);
-    } catch (std::runtime_error const& e) {
-        return SqliteErrorCode::FailedBinding;
-    }
-
-    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        return SqliteErrorCode::FailedStep;
-    }
-
-    return SqliteFlag::Ok;
+    return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db);
 }
 
-// WARN TOTALLY DUPLICATED!!!
 [[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameTypeBlob(std::string const& sql_statement,
                                                              uint64_t const timestamp_ns, PoseType const type,
                                                              std::string const& sensor_name, void const* const blob_ptr,
                                                              int const blob_size, sqlite3* const db) {
+    return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db, type);
+}
+
+[[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
+                                                 std::string const& sensor_name, void const* const blob_ptr,
+                                                 int const blob_size, sqlite3* const db,
+                                                 std::optional<PoseType> const& type) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     try {
         Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
         Bind(statement.stmt, 2, sensor_name.c_str());
-        Bind(statement.stmt, 3, ToString(type));
-        BindBlob(statement.stmt, 4, blob_ptr, blob_size);
+
+        if (type.has_value()) {
+            Bind(statement.stmt, 3, ToString(type.value()));
+            BindBlob(statement.stmt, 4, blob_ptr, blob_size);
+        } else {
+            BindBlob(statement.stmt, 3, blob_ptr, blob_size);
+        }
     } catch (std::runtime_error const& e) {
         return SqliteErrorCode::FailedBinding;
     }
