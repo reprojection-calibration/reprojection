@@ -17,7 +17,7 @@ protobuf_serialization::ArrayX2dProto Serialize(ArrayX2d const& eigen_array) {
     Eigen::Map<ArrayX2d>(proto_data->mutable_data(), eigen_array.rows(), eigen_array.cols()) = eigen_array;
 
     return array_x2d_proto;
-}
+}  // LCOV_EXCL_LINE
 
 std::optional<ArrayX2d> Deserialize(protobuf_serialization::ArrayX2dProto const& eigen_array_proto) {
     if (not ValidateDimensions(eigen_array_proto.rows(), 2, eigen_array_proto.array_data_size())) {
