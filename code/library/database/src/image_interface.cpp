@@ -48,12 +48,12 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
     : database_{database}, statement_{database_->db, sql_statements::images_select}, sensor_name_{sensor_name} {
     try {
         Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name);
-        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));               // Warn cast!
-    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-        std::cerr << "ImageStreamer() runtime error during binding: " << e.what()               // LCOV_EXCL_LINE
-                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        throw;                                                                                  // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));  // Warn cast!
+    } catch (std::runtime_error const& e) {
+        std::cerr << "ImageStreamer() runtime error during binding: " << e.what()
+                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";
+        throw;
+    }
 }
 
 std::optional<ImageStamped> ImageStreamer::Next() {
@@ -61,9 +61,8 @@ std::optional<ImageStamped> ImageStreamer::Next() {
     if (code == static_cast<int>(SqliteFlag::Done)) {
         return std::nullopt;
     } else if (code != static_cast<int>(SqliteFlag::Row)) {
-        std::cerr << "ImageStreamer::Next() sqlite3_step() failed:  "  // LCOV_EXCL_LINE
-                  << sqlite3_errmsg(database_->db) << "\n";            // LCOV_EXCL_LINE
-        return std::nullopt;                                           // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() sqlite3_step() failed:  " << sqlite3_errmsg(database_->db) << "\n";
+        return std::nullopt;
     }
 
     uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(statement_.stmt, 0)))};
@@ -71,17 +70,15 @@ std::optional<ImageStamped> ImageStreamer::Next() {
     uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(statement_.stmt, 1))};
     int const blob_size{sqlite3_column_bytes(statement_.stmt, 1)};
     if (not blob or blob_size <= 0) {
-        std::cerr << "ImageStreamer::Next() error reading blob for timestamp: " << timestamp_ns  // LCOV_EXCL_LINE
-                  << "\n";                                                                       // LCOV_EXCL_LINE
-        return std::nullopt;                                                                     // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() error reading blob for timestamp: " << timestamp_ns << "\n";
+        return std::nullopt;
     }
 
     std::vector<uchar> const buffer(blob, blob + blob_size);
     cv::Mat const image{cv::imdecode(buffer, cv::IMREAD_UNCHANGED)};
     if (image.empty()) {
-        std::cerr << "ImageStreamer::Next() deserialization failed for timestamp: "  // LCOV_EXCL_LINE
-                  << timestamp_ns << "\n";                                           // LCOV_EXCL_LINE
-        return std::nullopt;                                                         // LCOV_EXCL_LINE
+        std::cerr << "ImageStreamer::Next() deserialization failed for timestamp: " << timestamp_ns << "\n";
+        return std::nullopt;
     }
 
     return ImageStamped{{timestamp_ns, sensor_name_}, image};

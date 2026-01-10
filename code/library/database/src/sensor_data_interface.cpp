@@ -42,16 +42,15 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
             Sqlite3Tools::Bind(statement.stmt, 7, pose[3]);
             Sqlite3Tools::Bind(statement.stmt, 8, pose[4]);
             Sqlite3Tools::Bind(statement.stmt, 9, pose[5]);
-        } catch (std::runtime_error const& e) {                                               // LCOV_EXCL_LINE
-            std::throw_with_nested(                                                           // LCOV_EXCL_LINE
-                std::runtime_error(                                                           // LCOV_EXCL_LINE
-                    "AddPoseData() runtime error during binding: " + std::string(e.what()) +  // LCOV_EXCL_LINE
-                    " with database error message: " + sqlite3_errmsg(database->db)));        // LCOV_EXCL_LINE
+        } catch (std::runtime_error const& e) {
+            std::throw_with_nested(
+                std::runtime_error("AddPoseData() runtime error during binding: " + std::string(e.what()) +
+                                   " with database error message: " + sqlite3_errmsg(database->db)));
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            throw std::runtime_error("AddPoseData() sqlite3_step() failed:  " +   // LCOV_EXCL_LINE
-                                     std::string(sqlite3_errmsg(database->db)));  // LCOV_EXCL_LINE
+            throw std::runtime_error("AddPoseData() sqlite3_step() failed:  " +
+                                     std::string(sqlite3_errmsg(database->db)));
         }
     }
 }
@@ -120,20 +119,19 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, data.sensor.sensor_name.c_str());
-    } catch (std::runtime_error const& e) {                                                          // LCOV_EXCL_LINE
-        std::throw_with_nested(                                                                      // LCOV_EXCL_LINE
-            std::runtime_error(                                                                      // LCOV_EXCL_LINE
-                "GetExtractedTargetData() runtime error during binding: " + std::string(e.what()) +  // LCOV_EXCL_LINE
-                " with database error message: " + sqlite3_errmsg(database->db)));                   // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
+    } catch (std::runtime_error const& e) {
+        std::throw_with_nested(
+            std::runtime_error("GetExtractedTargetData() runtime error during binding: " + std::string(e.what()) +
+                               " with database error message: " + sqlite3_errmsg(database->db)));
+    }
 
     while (true) {
         int const code{sqlite3_step(statement.stmt)};
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            throw std::runtime_error("GetExtractedTargetData() sqlite3_step() failed:  " +  // LCOV_EXCL_LINE
-                                     std::string(sqlite3_errmsg(database->db)));            // LCOV_EXCL_LINE
+            throw std::runtime_error("GetExtractedTargetData() sqlite3_step() failed:  " +
+                                     std::string(sqlite3_errmsg(database->db)));
         }
 
         // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or
@@ -143,9 +141,8 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
         uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(statement.stmt, 1))};
         int const blob_size{sqlite3_column_bytes(statement.stmt, 1)};
         if (not blob or blob_size <= 0) {
-            std::cerr << "GetExtractedTargetData() blob empty for timestamp: " << timestamp_ns  // LCOV_EXCL_LINE
-                      << "\n";                                                                  // LCOV_EXCL_LINE
-            continue;                                                                           // LCOV_EXCL_LINE
+            std::cerr << "GetExtractedTargetData() blob empty for timestamp: " << timestamp_ns << "\n";
+            continue;
         }
 
         std::vector<uchar> const buffer(blob, blob + blob_size);
@@ -154,9 +151,9 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
 
         auto const deserialized{Deserialize(serialized)};
         if (not deserialized.has_value()) {
-            std::cerr << "GetExtractedTargetData() protobuf deserialization failed for timestamp: "  // LCOV_EXCL_LINE
-                      << timestamp_ns << "\n";                                                       // LCOV_EXCL_LINE
-            continue;                                                                                // LCOV_EXCL_LINE
+            std::cerr << "GetExtractedTargetData() protobuf deserialization failed for timestamp: " << timestamp_ns
+                      << "\n";
+            continue;
         }
 
         data.frames[timestamp_ns].extracted_target = deserialized.value();
@@ -175,11 +172,11 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
         Sqlite3Tools::Bind(statement.stmt, 6, data.linear_acceleration[0]);
         Sqlite3Tools::Bind(statement.stmt, 7, data.linear_acceleration[1]);
         Sqlite3Tools::Bind(statement.stmt, 8, data.linear_acceleration[2]);
-    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-        std::cerr << "AddImuData() runtime error during binding: " << e.what()                  // LCOV_EXCL_LINE
-                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return false;                                                                           // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
+    } catch (std::runtime_error const& e) {
+        std::cerr << "AddImuData() runtime error during binding: " << e.what()
+                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";
+        return false;
+    }
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
         std::cerr << "AddImuData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
