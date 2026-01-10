@@ -16,9 +16,9 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
+void AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
 
-bool AddImage(FrameHeader const& data, std::shared_ptr<CalibrationDatabase> const database);
+void AddImage(FrameHeader const& data, std::shared_ptr<CalibrationDatabase> const database);
 
 class ImageStreamer {
    public:

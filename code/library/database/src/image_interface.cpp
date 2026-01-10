@@ -14,21 +14,33 @@
 namespace reprojection::database {
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
-bool AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
+void AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
-        std::cerr << "Image serialization failed at: " << std::to_string(data.header.timestamp_ns)  // LCOV_EXCL_LINE
-                  << "\n";                                                                          // LCOV_EXCL_LINE
-        return false;                                                                               // LCOV_EXCL_LINE
+        throw std::runtime_error("AddImage() cv::imencode() failed for sensor: " + data.header.sensor_name +
+                                 " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));
     }
 
-    return Sqlite3Tools::AddBlob(sql_statements::image_insert, data.header.timestamp_ns, data.header.sensor_name,
-                                 buffer.data(), std::size(buffer), database->db);
+    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, data.header.timestamp_ns,
+                                                    data.header.sensor_name, buffer.data(), std::size(buffer),
+                                                    database->db)};
+
+    if (std::holds_alternative<SqliteErrorCode>(result)) {
+        throw std::runtime_error("AddImage() failed for sensor: " + data.header.sensor_name +
+                                 " at timestamp_ns: " + std::to_string(data.header.timestamp_ns) +
+                                 " with database error message: " + std::string(sqlite3_errmsg(database->db)));
+    }
 }
 
-bool AddImage(FrameHeader const& data, std::shared_ptr<CalibrationDatabase> const database) {
-    return Sqlite3Tools::AddBlob(sql_statements::image_insert, data.timestamp_ns, data.sensor_name, nullptr, -1,
-                                 database->db);
+void AddImage(FrameHeader const& header, std::shared_ptr<CalibrationDatabase> const database) {
+    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, header.timestamp_ns,
+                                                    header.sensor_name, nullptr, -1, database->db)};
+
+    if (std::holds_alternative<SqliteErrorCode>(result)) {
+        throw std::runtime_error("AddImage() failed for sensor: " + header.sensor_name +
+                                 " at timestamp_ns: " + std::to_string(header.timestamp_ns) +
+                                 " with database error message: " + std::string(sqlite3_errmsg(database->db)));
+    }
 }
 
 ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
