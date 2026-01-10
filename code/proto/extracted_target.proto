@@ -16,3 +16,13 @@ message ExtractedTargetProto {
   int32 indices_rows = 2;
   repeated int32 indices_data = 3;
 }
+
+// TODO(Jack): We should use this type (which we added to support reprojection error) for the pixels in BundleProto!!!
+//  This would however require a little more complicated migration because then you need to rewrite the test_data db
+//  targets with this new slightly modified message definition. Therfore, in what I would consider a bad practice, we
+//  just add this new message definition instead, which means now we have two equivalent ways to represent a MatrixX2d.
+//  One directly in BundleProto for the pixels and another here. Too bad :)
+message MatrixX2dProto {
+  int32 rows = 1;
+  repeated double data = 2;
+}
