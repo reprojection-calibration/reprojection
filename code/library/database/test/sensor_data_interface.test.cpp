@@ -47,6 +47,34 @@ TEST_F(TempFolder, TestAddPoseData) {
     EXPECT_NO_THROW(database::AddPoseData(data, database::PoseType::Initial, db));
 }
 
+TEST_F(TempFolder, TestAddReprojectionError) {
+    std::string const record_path{database_path_ + "/record_ddd.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    CameraCalibrationData const data{
+        {"/cam/retro/123", CameraModel::Pinhole},  //
+        {},
+        {},
+        {{0, {{{}, {}}, Array6d::Zero(), ArrayX2d::Zero(1, 2), Array6d::Zero(), ArrayX2d::Zero(1, 2)}}}};
+
+    // Fails foreign key constraint because there is no corresponding camera_poses table entry yet
+    EXPECT_THROW(database::AddReprojectionError(data, database::PoseType::Initial, db), std::runtime_error);
+    EXPECT_THROW(database::AddReprojectionError(data, database::PoseType::Optimized, db), std::runtime_error);
+
+    // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
+    // constraint) and now we can add the initial camera pose no problem :)
+    // NOTE(Jack): We are dealing with a map for the frames so getting the elements key (the timestamp) looks a little
+    // ugly :) Here we are counting on the fact that there is only one element in the map; only for testing acceptable.
+    FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
+    (void)database::AddImage(header, db);
+    (void)AddExtractedTargetData({header, {}}, db);
+    database::AddPoseData(data, database::PoseType::Initial, db);
+    database::AddPoseData(data, database::PoseType::Optimized, db);
+
+    EXPECT_NO_THROW(database::AddReprojectionError(data, database::PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddReprojectionError(data, database::PoseType::Optimized, db));
+}
+
 TEST_F(TempFolder, TestAddExtractedTargetData) {
     std::string const record_path{database_path_ + "/record_qqq.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};

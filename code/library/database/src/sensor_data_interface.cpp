@@ -83,12 +83,14 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
             continue;                                                                      // LCOV_EXCL_LINE
         }
 
-        bool const success{Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, timestamp_ns,
-                                                 data.sensor.sensor_name, buffer.c_str(), std::size(buffer),
-                                                 database->db)};
+        // TODO(Jack): How should AddBlob actually handle errors and how do we integrate it here? For now we just catch
+        // the boolean flag and throw a error from this method if we do not like it.
+        bool const success{Sqlite3Tools::AddReprojectionErrorBlob(sql_statements::reprojection_error_insert,
+                                                                  timestamp_ns, ToString(type), data.sensor.sensor_name,
+                                                                  buffer.c_str(), std::size(buffer), database->db)};
         if (not success) {
-            std::cerr << "AddReprojectionError() AddBlob failed at: " << std::to_string(timestamp_ns)  // LCOV_EXCL_LINE
-                      << "\n";                                                                         // LCOV_EXCL_LINE
+            throw std::runtime_error("AddReprojectionError() AddBlob() failed:  " +  // LCOV_EXCL_LINE
+                                     std::string(sqlite3_errmsg(database->db)));     // LCOV_EXCL_LINE
         }
     }
 }
