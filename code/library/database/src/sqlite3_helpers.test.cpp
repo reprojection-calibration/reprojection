@@ -80,7 +80,8 @@ TEST_F(TempFolderDummySql, TestAddBlob) {
     ASSERT_TRUE(std::holds_alternative<database::SqliteErrorCode>(result));
     EXPECT_EQ(std::get<database::SqliteErrorCode>(result), database::SqliteErrorCode::FailedStep);
 
-    // Failure case "failed binding" - malformed sql statement does not match the table in the database
+    // Failure case "failed binding" - malformed sql statement does not match the table in the database (its missing
+    // 'data'!)
     std::string const malformed_add_blob_sql_{
         "INSERT INTO example_blob_table (timestamp_ns, sensor_name) "
         "VALUES (?, ?);"};
