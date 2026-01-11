@@ -14,26 +14,28 @@
 
 namespace reprojection::database {
 
-// TODO(Jack): Should we refactor this to have a more aggressive throwing policy rather than returning false?
+// NOTE(Jack): We supress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
+// trigger that is via a malformed sql statement, but that is hardcoded into this function (i.e.
+// sql_statements::camera_poses_insert) abd cannot and should not be changed!
 void AddPoseData(CameraCalibrationData const& data, PoseType const type,
                  std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
-    for (auto const& frame_i : data.frames) {
+    for (auto const& [timestamp_ns, frame_i] : data.frames) {
         SqlStatement const statement{database->db, sql_statements::camera_poses_insert};
 
         Vector6d pose;
         if (type == PoseType::Initial) {
-            pose = frame_i.second.initial_pose;
+            pose = frame_i.initial_pose;
         } else if (type == PoseType::Optimized) {
-            pose = frame_i.second.optimized_pose;
+            pose = frame_i.optimized_pose;
         } else {
             throw std::runtime_error(
                 "AddPoseData() invalid PoseType selected, this is a library implementation error!");  // LCOV_EXCL_LINE
         }
 
         try {
-            Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(frame_i.first));  // Warn cast!
+            Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
             Sqlite3Tools::Bind(statement.stmt, 2, data.sensor.sensor_name);
             Sqlite3Tools::Bind(statement.stmt, 3, ToString(type));
             Sqlite3Tools::Bind(statement.stmt, 4, pose[0]);
@@ -42,15 +44,17 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
             Sqlite3Tools::Bind(statement.stmt, 7, pose[3]);
             Sqlite3Tools::Bind(statement.stmt, 8, pose[4]);
             Sqlite3Tools::Bind(statement.stmt, 9, pose[5]);
-        } catch (std::runtime_error const& e) {
-            std::throw_with_nested(
-                std::runtime_error("AddPoseData() runtime error during binding: " + std::string(e.what()) +
-                                   " with database error message: " + sqlite3_errmsg(database->db)));
+        } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
+            std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
+                ErrorMessage("AddPoseData()", data.sensor.sensor_name, timestamp_ns,  // LCOV_EXCL_LINE
+                             SqliteErrorCode::FailedBinding,                          // LCOV_EXCL_LINE
+                             std::string(sqlite3_errmsg(database->db)))));            // LCOV_EXCL_LINE
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            throw std::runtime_error("AddPoseData() sqlite3_step() failed:  " +
-                                     std::string(sqlite3_errmsg(database->db)));
+            throw std::runtime_error(ErrorMessage("AddPoseData()", data.sensor.sensor_name, timestamp_ns,
+                                                  SqliteErrorCode::FailedStep,
+                                                  std::string(sqlite3_errmsg(database->db))));
         }
     }
 }
