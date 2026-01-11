@@ -9,6 +9,10 @@
 
 namespace reprojection::database {
 
+protobuf_serialization::ArrayX2dProto Serialize(ArrayX2d const& data);
+
+std::optional<ArrayX2d> Deserialize(protobuf_serialization::ArrayX2dProto const& eigen_array_proto);
+
 // TODO(Jack): Should this also be optional? Or is the serialization certain to work given a ExtractedTarget?
 protobuf_serialization::ExtractedTargetProto Serialize(ExtractedTarget const& target);
 

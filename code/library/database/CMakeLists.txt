@@ -24,6 +24,8 @@ set(SQL_FILES
         sql/imu_data_insert.sql
         sql/imu_data_select.sql
         sql/imu_data_table.sql
+        sql/reprojection_error_insert.sql
+        sql/reprojection_error_table.sql
 )
 
 foreach (sql ${SQL_FILES})
@@ -81,5 +83,6 @@ set(TESTS
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface.test.cpp
+        test/sqlite_wrappers.test.cpp
 )
 AddTests()

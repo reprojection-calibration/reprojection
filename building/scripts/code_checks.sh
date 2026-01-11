@@ -11,6 +11,7 @@ cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr 
   -I /temporary/code/library/calibration/src \
   -I /temporary/code/library/calibration_data_views/include \
   -I /temporary/code/library/database/include \
+  -I /temporary/code/library/database/src \
   -I /temporary/code/library/demos/include \
   -I /temporary/code/library/eigen_utilities/include \
   -I /temporary/code/library/feature_extraction/include \

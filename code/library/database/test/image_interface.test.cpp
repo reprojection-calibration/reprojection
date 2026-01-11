@@ -23,28 +23,56 @@ class TempFolder : public ::testing::Test {
 
 TEST_F(TempFolder, TestAddImage) {
     std::string const record_path{database_path_ + "/record_uuu.db3"};
-    cv::Mat const image(480, 720, CV_8UC1);
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    EXPECT_TRUE(database::AddImage({{0, "/cam/retro/123"}, image}, db));
+    cv::Mat const image(10, 20, CV_8UC1);
+    EXPECT_NO_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db));
+}
+
+TEST_F(TempFolder, TestAddImageHeaderOnly) {
+    std::string const record_path{database_path_ + "/record_uuu.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    cv::Mat const image(10, 20, CV_8UC1);
+    EXPECT_NO_THROW(database::AddImage(FrameHeader{0, "/cam/retro/123"}, db));
+}
+
+TEST_F(TempFolder, TestAddImageError) {
+    // Here we make a database and then close it, and then open another database that is read only and cannot have an
+    // image written to it.
+    std::string const record_path{database_path_ + "/record_uuu.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+    db = std::make_shared<database::CalibrationDatabase>(record_path, false, true);
+
+    cv::Mat const image(10, 20, CV_8UC1);
+    EXPECT_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db), std::runtime_error);
+}
+
+TEST_F(TempFolder, TestAddImageHeaderOnlyError) {
+    std::string const record_path{database_path_ + "/record_uuu.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+    db = std::make_shared<database::CalibrationDatabase>(record_path, false, true);
+
+    cv::Mat const image(10, 20, CV_8UC1);
+    EXPECT_THROW(database::AddImage(FrameHeader{0, "/cam/retro/123"}, db), std::runtime_error);
 }
 
 TEST_F(TempFolder, TestImageStreamer) {
     std::string const record_path{database_path_ + "/record_uuu.db3"};
-    cv::Mat const image(480, 720, CV_8UC1);
+    cv::Mat const image(10, 20, CV_8UC1);
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    EXPECT_TRUE(database::AddImage({{0, "/cam/retro/123"}, image}, db));
-    EXPECT_TRUE(database::AddImage({{2, "/cam/retro/123"}, image}, db));
-    EXPECT_TRUE(database::AddImage({{4, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({{2, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({{4, "/cam/retro/123"}, image}, db));
 
     database::ImageStreamer streamer{db, "/cam/retro/123"};
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());
     EXPECT_EQ(frame_0.value().header.timestamp_ns, 0);
     EXPECT_EQ(frame_0.value().header.sensor_name, "/cam/retro/123");
-    EXPECT_EQ(frame_0.value().image.rows, 480);
-    EXPECT_EQ(frame_0.value().image.cols, 720);
+    EXPECT_EQ(frame_0.value().image.rows, 10);
+    EXPECT_EQ(frame_0.value().image.cols, 20);
 
     EXPECT_TRUE(streamer.Next().has_value());  // Frame 2
     EXPECT_TRUE(streamer.Next().has_value());  // Frame 3, last frame
@@ -55,12 +83,12 @@ TEST_F(TempFolder, TestImageStreamer) {
 // images after that point.
 TEST_F(TempFolder, TestImageStreamerStartTime) {
     std::string const record_path{database_path_ + "/record_uuu.db3"};
-    cv::Mat const image(480, 720, CV_8UC1);
+    cv::Mat const image(10, 20, CV_8UC1);
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    EXPECT_TRUE(database::AddImage({{0, "/cam/retro/123"}, image}, db));
-    EXPECT_TRUE(database::AddImage({{2, "/cam/retro/123"}, image}, db));
-    EXPECT_TRUE(database::AddImage({{4, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({{2, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({{4, "/cam/retro/123"}, image}, db));
 
     database::ImageStreamer streamer{db, "/cam/retro/123", 1};
 

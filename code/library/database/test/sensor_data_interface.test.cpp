@@ -9,6 +9,7 @@
 
 #include "database/calibration_database.hpp"
 #include "database/image_interface.hpp"
+#include "sqlite3_helpers.hpp"
 #include "types/sensor_types.hpp"
 
 using namespace reprojection;
@@ -47,6 +48,34 @@ TEST_F(TempFolder, TestAddPoseData) {
     EXPECT_NO_THROW(database::AddPoseData(data, database::PoseType::Initial, db));
 }
 
+TEST_F(TempFolder, TestAddReprojectionError) {
+    std::string const record_path{database_path_ + "/record_ddd.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+
+    CameraCalibrationData const data{
+        {"/cam/retro/123", CameraModel::Pinhole},  //
+        {},
+        {},
+        {{0, {{{}, {}}, Array6d::Zero(), ArrayX2d::Zero(1, 2), Array6d::Zero(), ArrayX2d::Zero(1, 2)}}}};
+
+    // Fails foreign key constraint because there is no corresponding camera_poses table entry yet
+    EXPECT_THROW(database::AddReprojectionError(data, database::PoseType::Initial, db), std::runtime_error);
+    EXPECT_THROW(database::AddReprojectionError(data, database::PoseType::Optimized, db), std::runtime_error);
+
+    // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
+    // constraint) and now we can add the initial camera pose no problem :)
+    // NOTE(Jack): We are dealing with a map for the frames so getting the elements key (the timestamp) looks a little
+    // ugly :) Here we are counting on the fact that there is only one element in the map; only for testing acceptable.
+    FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
+    (void)database::AddImage(header, db);
+    (void)AddExtractedTargetData({header, {}}, db);
+    database::AddPoseData(data, database::PoseType::Initial, db);
+    database::AddPoseData(data, database::PoseType::Optimized, db);
+
+    EXPECT_NO_THROW(database::AddReprojectionError(data, database::PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddReprojectionError(data, database::PoseType::Optimized, db));
+}
+
 TEST_F(TempFolder, TestAddExtractedTargetData) {
     std::string const record_path{database_path_ + "/record_qqq.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
@@ -56,9 +85,11 @@ TEST_F(TempFolder, TestAddExtractedTargetData) {
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
     FrameHeader const header{0, "/cam/retro/123"};
-    (void)database::AddImage(header, db);
+    // Adding a target with no corresponding image database entry is invalid! Foreign key constraint :)
+    EXPECT_THROW(AddExtractedTargetData({header, bundle}, db), std::runtime_error);
 
-    EXPECT_TRUE(AddExtractedTargetData({header, bundle}, db));
+    (void)database::AddImage(header, db);
+    EXPECT_NO_THROW(AddExtractedTargetData({header, bundle}, db));
 }
 
 TEST_F(TempFolder, TestGetExtractedTargetData) {
@@ -86,13 +117,13 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     EXPECT_EQ(std::size(data.frames), 3);
 
     int timestamp{0};
-    for (auto const& frame_i : data.frames) {
-        EXPECT_EQ(frame_i.first, timestamp);
+    for (auto const& [timestamp_ns, frame_i] : data.frames) {
+        EXPECT_EQ(timestamp_ns, timestamp);
         timestamp = timestamp + 1;
 
-        EXPECT_TRUE(frame_i.second.extracted_target.bundle.pixels.isApprox(target.bundle.pixels));
-        EXPECT_TRUE(frame_i.second.extracted_target.bundle.points.isApprox(target.bundle.points));
-        EXPECT_TRUE(frame_i.second.extracted_target.indices.isApprox(target.indices));
+        EXPECT_TRUE(frame_i.extracted_target.bundle.pixels.isApprox(target.bundle.pixels));
+        EXPECT_TRUE(frame_i.extracted_target.bundle.points.isApprox(target.bundle.points));
+        EXPECT_TRUE(frame_i.extracted_target.indices.isApprox(target.indices));
     }
 }
 
@@ -145,15 +176,7 @@ TEST_F(TempFolder, TestAddImuData) {
     EXPECT_TRUE(success);
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
-    testing::internal::CaptureStderr();  // WARN USING INTERNAL GTEST API!
-    success = database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db);
-    EXPECT_FALSE(success);
-
-    // Check that the expected error message is sent to cerr
-    std::string const error_message{testing::internal::GetCapturedStderr()};  // WARN USING INTERNAL GTEST API!
-    EXPECT_EQ(error_message,
-              "AddImuData() sqlite3_step() failed: UNIQUE constraint failed: imu_data.timestamp_ns, "
-              "imu_data.sensor_name\n");
+    EXPECT_THROW((void)database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db), std::runtime_error);
 }
 
 TEST_F(TempFolder, TestGetImuData) {
