@@ -2,6 +2,7 @@ import unittest
 import os
 
 from database.load_extracted_targets import load_extracted_targets_df, split_extracted_targets_by_sensor
+from database.load_reprojection_error import load_reprojection_error_df, split_reprojection_error_by_sensor
 from database.load_poses import load_poses_df, load_calibration_poses
 from database.load_images import split_images_by_sensor, load_images_df
 
@@ -49,6 +50,27 @@ class TestDatabaseConnections(unittest.TestCase):
         self.assertEqual(df.shape, (1758, 3))
 
         data = split_extracted_targets_by_sensor(df)
+
+        cam0 = data['/cam0/image_raw']
+        self.assertEqual(len(cam0), 879)
+        cam1 = data['/cam1/image_raw']
+        self.assertEqual(len(cam1), 879)
+
+        # Check the dimensions of one of the loaded extracted targets
+        target_i = cam0[0]
+        self.assertEqual(len(target_i['pixels']), 144)
+        self.assertEqual(len(target_i['points']), 144)
+        self.assertEqual(len(target_i['indices']), 144)
+
+    def test_reprojection_error_loading(self):
+        # Query nonexistent table
+        df = load_reprojection_error_df('nonexistent.db3')
+        self.assertIsNone(df)
+
+        df = load_reprojection_error_df(self.db_path)
+        self.assertEqual(df.shape, (1758, 3))
+
+        data = split_reprojection_error_by_sensor(df)
 
         cam0 = data['/cam0/image_raw']
         self.assertEqual(len(cam0), 879)
