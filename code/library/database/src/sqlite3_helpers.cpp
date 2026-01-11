@@ -77,8 +77,8 @@ std::string ToString(SqliteErrorCode const enumerator) {
 
 std::string ErrorMessage(std::string const& function_name, std::string const& sensor_name, uint64_t const timestamp_ns,
                          SqliteErrorCode const error_code, std::string const& db_error_message) {
-    return function_name + " failed for sensor: " + sensor_name + " at timestamp_ns: " + std::to_string(timestamp_ns) +
-           " with SqliteErrorCode: " + ToString(error_code) + " and database error message: " + db_error_message;
+    return function_name + " failed at timestamp_ns: " + std::to_string(timestamp_ns) + " for sensor: " + sensor_name +
+           " with: " + ToString(error_code) + " and database error message: " + db_error_message;
 }
 
 }  // namespace reprojection::database

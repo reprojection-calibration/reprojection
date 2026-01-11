@@ -176,15 +176,7 @@ TEST_F(TempFolder, TestAddImuData) {
     EXPECT_TRUE(success);
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
-    testing::internal::CaptureStderr();  // WARN USING INTERNAL GTEST API!
-    success = database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db);
-    EXPECT_FALSE(success);
-
-    // Check that the expected error message is sent to cerr
-    std::string const error_message{testing::internal::GetCapturedStderr()};  // WARN USING INTERNAL GTEST API!
-    EXPECT_EQ(error_message,
-              "AddImuData() sqlite3_step() failed: UNIQUE constraint failed: imu_data.timestamp_ns, "
-              "imu_data.sensor_name\n");
+    EXPECT_THROW((void)database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db), std::runtime_error);
 }
 
 TEST_F(TempFolder, TestGetImuData) {

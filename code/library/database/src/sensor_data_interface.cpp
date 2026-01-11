@@ -121,6 +121,7 @@ void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<
 
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
 // differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
+// NOTE(Jack): See notes above to understand why we suppress code coverage.
 void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, CameraCalibrationData& data) {
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
@@ -150,9 +151,9 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
         uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(statement.stmt, 1))};
         int const blob_size{sqlite3_column_bytes(statement.stmt, 1)};
         if (not blob or blob_size <= 0) {
-            throw std::runtime_error("GetExtractedTargetData() blob reading failed for sensor: " +
-                                     data.sensor.sensor_name +                              // LCOV_EXCL_LINE
-                                     " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
+            throw std::runtime_error("GetExtractedTargetData() blob reading failed for sensor: " +  // LCOV_EXCL_LINE
+                                     data.sensor.sensor_name +                                      // LCOV_EXCL_LINE
+                                     " at timestamp_ns: " + std::to_string(timestamp_ns));          // LCOV_EXCL_LINE
         }
 
         std::vector<uchar> const buffer(blob, blob + blob_size);
@@ -161,15 +162,16 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
 
         auto const deserialized{Deserialize(serialized)};
         if (not deserialized.has_value()) {
-            throw std::runtime_error("GetExtractedTargetData() Deserialize() failed for sensor: " +
-                                     data.sensor.sensor_name +                              // LCOV_EXCL_LINE
-                                     " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
+            throw std::runtime_error("GetExtractedTargetData() Deserialize() failed for sensor: " +  // LCOV_EXCL_LINE
+                                     data.sensor.sensor_name +                                       // LCOV_EXCL_LINE
+                                     " at timestamp_ns: " + std::to_string(timestamp_ns));           // LCOV_EXCL_LINE
         }
 
         data.frames[timestamp_ns].extracted_target = deserialized.value();
     }
 }
 
+// TODO(Jack): Update to void and throw interface and consistent error messages!
 [[nodiscard]] bool AddImuData(ImuStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
@@ -182,20 +184,22 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
         Sqlite3Tools::Bind(statement.stmt, 6, data.linear_acceleration[0]);
         Sqlite3Tools::Bind(statement.stmt, 7, data.linear_acceleration[1]);
         Sqlite3Tools::Bind(statement.stmt, 8, data.linear_acceleration[2]);
-    } catch (std::runtime_error const& e) {
-        std::cerr << "AddImuData() runtime error during binding: " << e.what()
-                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";
-        return false;
-    }
+    } catch (std::runtime_error const& e) {                            // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(ErrorMessage(        // LCOV_EXCL_LINE
+            "AddImuData()", data.header.sensor_name,                   // LCOV_EXCL_LINE
+            data.header.timestamp_ns, SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
+            std::string(sqlite3_errmsg(database->db)))));              // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        std::cerr << "AddImuData() sqlite3_step() failed: " << sqlite3_errmsg(database->db) << "\n";
-        return false;
+        throw std::runtime_error(ErrorMessage("AddImuData()", data.header.sensor_name, data.header.timestamp_ns,
+                                              SqliteErrorCode::FailedStep, std::string(sqlite3_errmsg(database->db))));
     }
 
     return true;
 }
 
+// TODO(Jack): Update to void and throw interface and consistent error messages!
 std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                                std::string const& sensor_name) {
     SqlStatement const statement{database->db, sql_statements::imu_data_select};
