@@ -17,8 +17,9 @@ namespace reprojection::database {
 void AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
-        throw std::runtime_error("AddImage() cv::imencode() failed for sensor: " + data.header.sensor_name +
-                                 " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));
+        throw std::runtime_error(
+            "AddImage() cv::imencode() failed for sensor: " + data.header.sensor_name +  // LCOV_EXCL_LINE
+            " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));            // LCOV_EXCL_LINE
     }
 
     SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, data.header.timestamp_ns,
