@@ -65,12 +65,12 @@ def split_reprojection_error_by_sensor(df):
 
         frames = []
         for _, (_, row) in enumerate(group.iterrows()):
-            reprojection_error = row["data"]
-
-            # TODO(Jack): How should we handle dealing with possibly both initial/optimized/etc. reprojection errors?
+            # TODO(Jack): How should we handle dealing with both initial/optimized/etc. reprojection errors? Is having
+            # here inside the dict acceptable?
             frames.append({
                 "timestamp_ns": int(row["timestamp_ns"]),
-                "data": reprojection_error,
+                'type': row['type'],
+                "data": row["data"],
             })
 
         targets_by_sensor[sensor_name] = frames
