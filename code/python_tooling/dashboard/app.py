@@ -7,6 +7,7 @@ from plot_pose_figures import plot_rotation_figure, plot_translation_figure
 from database.load_extracted_targets import load_extracted_targets_df, split_extracted_targets_by_sensor
 from database.load_poses import load_calibration_poses
 from database.load_images import load_images_df, split_images_by_sensor
+from database.load_reprojection_error import load_reprojection_error_df, split_reprojection_error_by_sensor
 
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
@@ -159,6 +160,9 @@ def load_database_to_store(db_file):
 
     df_extracted_targets = load_extracted_targets_df(full_path)
     data['extracted_targets'] = split_extracted_targets_by_sensor(df_extracted_targets)
+
+    df_reprojection_error = load_reprojection_error_df(full_path)
+    data['reprojection_error'] = split_reprojection_error_by_sensor(df_reprojection_error)
 
     return data
 
