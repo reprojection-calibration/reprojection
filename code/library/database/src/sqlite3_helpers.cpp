@@ -10,8 +10,7 @@ namespace reprojection::database {
 
 std::string ToString(SqliteErrorCode const enumerator) {
     if (enumerator == SqliteErrorCode::FailedBinding) {
-        return "SqliteErrorCode::FailedBinding";
-
+        return "SqliteErrorCode::FailedBinding";  // LCOV_EXCL_LINE
     } else if (enumerator == SqliteErrorCode::FailedStep) {
         return "SqliteErrorCode::FailedStep";
     } else {

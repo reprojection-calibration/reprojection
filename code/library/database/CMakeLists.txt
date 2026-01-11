@@ -83,5 +83,6 @@ set(TESTS
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface.test.cpp
+        test/sqlite_wrappers.test.cpp
 )
 AddTests()
