@@ -23,7 +23,7 @@ def parse_proto(blob):
     msg = ArrayX2dProto()
     msg.ParseFromString(blob)
 
-    return build_arrayx2d(msg.bundle).tolist()
+    return build_arrayx2d(msg).tolist()
 
 
 # TODO(Jack): This is extremely similar to load_extracted_targets_df(), can we eliminate copy and paste at all?
@@ -67,9 +67,10 @@ def split_reprojection_error_by_sensor(df):
         for _, (_, row) in enumerate(group.iterrows()):
             reprojection_error = row["data"]
 
+            # TODO(Jack): How should we handle dealing with possibly both initial/optimized/etc. reprojection errors?
             frames.append({
                 "timestamp_ns": int(row["timestamp_ns"]),
-                "reprojection_error": reprojection_error,
+                "data": reprojection_error,
             })
 
         targets_by_sensor[sensor_name] = frames
