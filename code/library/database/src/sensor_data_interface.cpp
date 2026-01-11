@@ -80,9 +80,9 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
         protobuf_serialization::ArrayX2dProto const serialized{Serialize(reprojection_error)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
-            std::cerr << "AddReprojectionError() ArrayX2dProto serialization failed at: "
-                      << std::to_string(timestamp_ns) << "\n";
-            continue;
+            throw std::runtime_error(
+                "AddReprojectionError() protobuf SerializeToString() failed for sensor: " + data.sensor.sensor_name +
+                " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
         }
 
         SqliteResult const result{Sqlite3Tools::AddTimeNameTypeBlob(sql_statements::reprojection_error_insert,
@@ -90,8 +90,9 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
                                                                     buffer.c_str(), std::size(buffer), database->db)};
 
         if (std::holds_alternative<SqliteErrorCode>(result)) {
-            throw std::runtime_error("AddReprojectionError() with database error message: " +
-                                     std::string(sqlite3_errmsg(database->db)));
+            throw std::runtime_error(ErrorMessage("AddReprojectionError()", data.sensor.sensor_name, timestamp_ns,
+                                                  std::get<SqliteErrorCode>(result),
+                                                  std::string(sqlite3_errmsg(database->db))));
         }
     }
 }
@@ -110,8 +111,9 @@ void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<
                                                             buffer.c_str(), std::size(buffer), database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error("AddExtractedTargetData() with database error message: " +
-                                 std::string(sqlite3_errmsg(database->db)));
+        throw std::runtime_error(ErrorMessage("AddReprojectionError()", data.header.sensor_name,
+                                              data.header.timestamp_ns, std::get<SqliteErrorCode>(result),
+                                              std::string(sqlite3_errmsg(database->db))));
     }
 }
 
