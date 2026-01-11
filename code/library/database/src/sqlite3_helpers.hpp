@@ -89,4 +89,9 @@ struct Sqlite3Tools {
     }
 };
 
+
+
+std::string ErrorMessage(std::string const& function_name, std::string const& sensor_name, uint64_t const timestamp_ns,
+                         SqliteErrorCode const error_code, std::string const& db_error_message);
+
 }  // namespace reprojection::database
