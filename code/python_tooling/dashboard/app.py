@@ -92,7 +92,7 @@ app.layout = html.Div([
                             style={"width": "50%"}
                         ),
                     ],
-                    style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
+                    style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px', 'height': '80vh'},
                 ),
                 # The animation plays by default therefore the button is initialized with the pause graphic
                 html.Button(
@@ -274,7 +274,7 @@ def init_extracted_target_figures(sensor, data):
             x=[],
             y=[],
             mode="markers",
-            marker=dict(size=6),
+            marker=dict(size=12),
         )
     )
     xy_fig.update_layout(
@@ -297,7 +297,7 @@ def init_extracted_target_figures(sensor, data):
             x=[],
             y=[],
             mode="markers",
-            marker=dict(size=6),
+            marker=dict(size=12),
             name="Pixels",
         )
     )
@@ -357,7 +357,18 @@ app.clientside_callback(
         pixel_fig.data[0].x = pix.map(p => p[0]);
         pixel_fig.data[0].y = pix.map(p => p[1]);
         
-
+        const reprojection_error_frames = data.reprojection_error[sensor];
+        if (!reprojection_error_frames || reprojection_error_frames.length === 0) {
+            return [xy_fig, pixel_fig];
+        }
+        
+        // WARN WE ARE IMPLYING THE CORRESPONDENCE BETWEEN VALUES BY THEIR POSITION IN THE VECTOR! WE SHOULD INSTEAD USE TIMESTAMPS FOR ALL INDEXING
+        const reprojection_error_i = reprojection_error_frames[frame_idx];
+        if (!reprojection_error_i) {
+            return [xy_fig, pixel_fig];
+        }
+        
+        pixel_fig.data[0].marker = {size: 12, color: reprojection_error_i.data.map(p =>  Math.sqrt(p[0] * p[0] + p[1] * p[1])), colorscale: "Jet", cmin: 0, cmax: 0.25};
 
         return [xy_fig, pixel_fig];
     }

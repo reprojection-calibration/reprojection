@@ -67,9 +67,13 @@ def split_reprojection_error_by_sensor(df):
         for _, (_, row) in enumerate(group.iterrows()):
             # TODO(Jack): How should we handle dealing with both initial/optimized/etc. reprojection errors? Is having
             # here inside the dict acceptable?
+
+            # HACK HACK HACK - actually incorporate this informaton in the data dict!!!!
+            if row['type'] == 'initial':
+                continue
+
             frames.append({
                 "timestamp_ns": int(row["timestamp_ns"]),
-                'type': row['type'],
                 "data": row["data"],
             })
 
