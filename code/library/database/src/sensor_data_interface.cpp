@@ -59,8 +59,8 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
     }
 }
 
-// TODO(Jack): Decide on a real error handling strategy!!! Should we continue to refactor to always throw? Or just print
-// error messages, or bool, or nullopt or what or what or what!!??
+// NOTE(Jack): We supress the code coverage for the SerializeToString() because I do not know how to malform/change the
+// eigen array input to trigger this.
 void AddReprojectionError(CameraCalibrationData const& data, PoseType const type,
                           std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
@@ -81,8 +81,8 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
             throw std::runtime_error(
-                "AddReprojectionError() protobuf SerializeToString() failed for sensor: " + data.sensor.sensor_name +
-                " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
+                "AddReprojectionError() protobuf SerializeToString() failed for sensor: " +      // LCOV_EXCL_LINE
+                data.sensor.sensor_name + " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
         }
 
         SqliteResult const result{Sqlite3Tools::AddTimeNameTypeBlob(sql_statements::reprojection_error_insert,
@@ -97,13 +97,15 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
     }
 }
 
+// NOTE(Jack): See note above AddReprojectionError about suppressing the SerializeToString throw.
 void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {
         throw std::runtime_error(
-            "AddExtractedTargetData() protobuf SerializeToString() failed for sensor: " + data.header.sensor_name +
-            " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));
+            "AddExtractedTargetData() protobuf SerializeToString() failed for sensor: " +  // LCOV_EXCL_LINE
+            data.header.sensor_name +                                                      // LCOV_EXCL_LINE
+            " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));              // LCOV_EXCL_LINE
     }
 
     SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert,
@@ -119,7 +121,6 @@ void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<
 
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
 // differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
-// TODO(Jack): Implement much more agressive error throwing strategy rather than returning nullopt.
 void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, CameraCalibrationData& data) {
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
