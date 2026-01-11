@@ -330,13 +330,13 @@ app.clientside_callback(
             return [xy_fig, pixel_fig];
         }
 
-        const frames = data.extracted_targets[sensor];
-        if (!frames || frames.length === 0) {
+        const extracted_target_frames = data.extracted_targets[sensor];
+        if (!extracted_target_frames || extracted_target_frames.length === 0) {
             return [xy_fig, pixel_fig];
         }
 
-        const frame = frames[frame_idx];
-        if (!frame) {
+        const extracted_target_i = extracted_target_frames[frame_idx];
+        if (!extracted_target_i) {
             return [xy_fig, pixel_fig];
         }
 
@@ -348,14 +348,16 @@ app.clientside_callback(
         // issues on github (ex. https://github.com/plotly/dash/issues/1040) with people confused by this. 
 
         xy_fig = JSON.parse(JSON.stringify(xy_fig));
-        const pts = frame.points;
+        const pts = extracted_target_i.points;
         xy_fig.data[0].x = pts.map(p => p[0]);
         xy_fig.data[0].y = pts.map(p => p[1]);
 
         pixel_fig = JSON.parse(JSON.stringify(pixel_fig));
-        const pix = frame.pixels;
+        const pix = extracted_target_i.pixels;
         pixel_fig.data[0].x = pix.map(p => p[0]);
         pixel_fig.data[0].y = pix.map(p => p[1]);
+        
+
 
         return [xy_fig, pixel_fig];
     }
