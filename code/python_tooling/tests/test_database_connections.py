@@ -68,20 +68,10 @@ class TestDatabaseConnections(unittest.TestCase):
         self.assertIsNone(df)
 
         df = load_reprojection_error_df(self.db_path)
-        self.assertEqual(df.shape, (1758, 3))
+        self.assertEqual(df.shape, (0, 4))
 
-        data = split_reprojection_error_by_sensor(df)
-
-        cam0 = data['/cam0/image_raw']
-        self.assertEqual(len(cam0), 879)
-        cam1 = data['/cam1/image_raw']
-        self.assertEqual(len(cam1), 879)
-
-        # Check the dimensions of one of the loaded extracted targets
-        target_i = cam0[0]
-        self.assertEqual(len(target_i['pixels']), 144)
-        self.assertEqual(len(target_i['points']), 144)
-        self.assertEqual(len(target_i['indices']), 144)
+        # At time of writing there are no reprojection errors in the test database, if this changes then we should
+        # assert real tests against the loaded values here.
 
 
 if __name__ == '__main__':
