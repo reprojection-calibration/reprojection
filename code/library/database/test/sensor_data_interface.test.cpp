@@ -9,6 +9,7 @@
 
 #include "database/calibration_database.hpp"
 #include "database/image_interface.hpp"
+#include "sqlite3_helpers.hpp"
 #include "types/sensor_types.hpp"
 
 using namespace reprojection;
@@ -116,13 +117,13 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     EXPECT_EQ(std::size(data.frames), 3);
 
     int timestamp{0};
-    for (auto const& frame_i : data.frames) {
-        EXPECT_EQ(frame_i.first, timestamp);
+    for (auto const& [timestamp_ns, frame_i] : data.frames) {
+        EXPECT_EQ(timestamp_ns, timestamp);
         timestamp = timestamp + 1;
 
-        EXPECT_TRUE(frame_i.second.extracted_target.bundle.pixels.isApprox(target.bundle.pixels));
-        EXPECT_TRUE(frame_i.second.extracted_target.bundle.points.isApprox(target.bundle.points));
-        EXPECT_TRUE(frame_i.second.extracted_target.indices.isApprox(target.indices));
+        EXPECT_TRUE(frame_i.extracted_target.bundle.pixels.isApprox(target.bundle.pixels));
+        EXPECT_TRUE(frame_i.extracted_target.bundle.points.isApprox(target.bundle.points));
+        EXPECT_TRUE(frame_i.extracted_target.indices.isApprox(target.indices));
     }
 }
 

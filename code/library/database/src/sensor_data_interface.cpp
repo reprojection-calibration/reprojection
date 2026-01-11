@@ -126,30 +126,33 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, data.sensor.sensor_name.c_str());
-    } catch (std::runtime_error const& e) {
-        std::throw_with_nested(
-            std::runtime_error("GetExtractedTargetData() runtime error during binding: " + std::string(e.what()) +
-                               " with database error message: " + sqlite3_errmsg(database->db)));
-    }
+    } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
+            ErrorMessage("GetExtractedTargetData()", data.sensor.sensor_name, 0,  // LCOV_EXCL_LINE
+                         SqliteErrorCode::FailedBinding,                          // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));            // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     while (true) {
         int const code{sqlite3_step(statement.stmt)};
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            throw std::runtime_error("GetExtractedTargetData() sqlite3_step() failed:  " +
-                                     std::string(sqlite3_errmsg(database->db)));
+            throw std::runtime_error(ErrorMessage(                                         // LCOV_EXCL_LINE
+                "GetExtractedTargetData()", data.sensor.sensor_name, 0,                    // LCOV_EXCL_LINE
+                SqliteErrorCode::FailedStep, std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
         }
 
         // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or
-        // other bad output? Also happens like this in the image streamer.
+        // other bad output? Also happens like this in the image streamer and possibly other places.
         uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(statement.stmt, 0)))};
 
         uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(statement.stmt, 1))};
         int const blob_size{sqlite3_column_bytes(statement.stmt, 1)};
         if (not blob or blob_size <= 0) {
-            std::cerr << "GetExtractedTargetData() blob empty for timestamp: " << timestamp_ns << "\n";
-            continue;
+            throw std::runtime_error("GetExtractedTargetData() blob reading failed for sensor: " +
+                                     data.sensor.sensor_name +                              // LCOV_EXCL_LINE
+                                     " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
         }
 
         std::vector<uchar> const buffer(blob, blob + blob_size);
@@ -158,9 +161,9 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
 
         auto const deserialized{Deserialize(serialized)};
         if (not deserialized.has_value()) {
-            std::cerr << "GetExtractedTargetData() protobuf deserialization failed for timestamp: " << timestamp_ns
-                      << "\n";
-            continue;
+            throw std::runtime_error("GetExtractedTargetData() Deserialize() failed for sensor: " +
+                                     data.sensor.sensor_name +                              // LCOV_EXCL_LINE
+                                     " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
         }
 
         data.frames[timestamp_ns].extracted_target = deserialized.value();

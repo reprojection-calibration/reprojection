@@ -20,6 +20,7 @@ std::string ToString(SqliteErrorCode const enumerator) {
     }
 }
 
+// TODO(Jack): Update to be consistent with error handling strategy of the Blob helpers!
 [[nodiscard]] bool Sqlite3Tools::Execute(std::string const& sql_statement, sqlite3* const db) {
     char* error_msg{nullptr};
     int const code{sqlite3_exec(db, sql_statement.c_str(), nullptr, nullptr, &error_msg)};
