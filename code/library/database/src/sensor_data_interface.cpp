@@ -206,10 +206,11 @@ std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDataba
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, sensor_name.c_str());
-    } catch (std::runtime_error const& e) {                                                     // LCOV_EXCL_LINE
-        std::cerr << "GetImuData() runtime error during binding: " << e.what()                  // LCOV_EXCL_LINE
-                  << " with database error message: " << sqlite3_errmsg(database->db) << "\n";  // LCOV_EXCL_LINE
-        return std::nullopt;                                                                    // LCOV_EXCL_LINE
+    } catch (std::runtime_error const& e) {                                                        // LCOV_EXCL_LINE
+        std::cerr << ErrorMessage("GetImuData()", sensor_name, 0, SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
+                                  std::string(sqlite3_errmsg(database->db)))                       // LCOV_EXCL_LINE
+                  << "\n";                                                                         // LCOV_EXCL_LINE
+        return std::nullopt;                                                                       // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     std::set<ImuStamped> data;
@@ -218,9 +219,10 @@ std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDataba
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            std::cerr << "GetImuData() sqlite3_step() failed:  " << sqlite3_errmsg(database->db)  // LCOV_EXCL_LINE
-                      << "\n";                                                                    // LCOV_EXCL_LINE
-            return std::nullopt;                                                                  // LCOV_EXCL_LINE
+            std::cerr << ErrorMessage("GetImuData()", sensor_name, 0, SqliteErrorCode::FailedStep,  // LCOV_EXCL_LINE
+                                      std::string(sqlite3_errmsg(database->db)))                    // LCOV_EXCL_LINE
+                      << "\n";                                                                      // LCOV_EXCL_LINE
+            return std::nullopt;                                                                    // LCOV_EXCL_LINE
         }
 
         // TODO(Jack): Should we be doing any error checking here while reading the columns?
