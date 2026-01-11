@@ -8,6 +8,18 @@
 
 namespace reprojection::database {
 
+std::string ToString(SqliteErrorCode const enumerator) {
+    if (enumerator == SqliteErrorCode::FailedBinding) {
+        return "SqliteErrorCode::FailedBinding";
+
+    } else if (enumerator == SqliteErrorCode::FailedStep) {
+        return "SqliteErrorCode::FailedStep";
+    } else {
+        throw std::runtime_error(
+            "Unknown SqliteErrorCode - this is a library implementation error!");  // LCOV_EXCL_LINE
+    }
+}
+
 [[nodiscard]] bool Sqlite3Tools::Execute(std::string const& sql_statement, sqlite3* const db) {
     char* error_msg{nullptr};
     int const code{sqlite3_exec(db, sql_statement.c_str(), nullptr, nullptr, &error_msg)};

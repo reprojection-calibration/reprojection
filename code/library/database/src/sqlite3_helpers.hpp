@@ -21,8 +21,11 @@ enum class SqliteFlag {
     Row = SQLITE_ROW
 };
 
-// TODO(Jack): Is there anyway that we can use official sqlite error codes like the Sqlite flags above?
+// TODO(Jack): Is there anyway that we can use official sqlite error codes like the Sqlite flags above? See note above
+// SqliteResult.
 enum class SqliteErrorCode { FailedBinding, FailedStep };
+
+std::string ToString(SqliteErrorCode const enumerator);
 
 // TODO(Jack): Naming! "result" is way too generic!
 // WARN(Jack): We are abusing the SqliteFlag here because I am not really sure that they are the positive result of the
@@ -66,7 +69,7 @@ struct Sqlite3Tools {
         }
     }
 
-    // WARN(Jack): We store out timestamps in uint64_t but sqlite only takes signed int64. How should we fix this?
+    // WARN(Jack): We store our timestamps in uint64_t but sqlite only takes signed int64. How should we fix this?
     static void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value) {
         if (sqlite3_bind_int64(stmt, index, value) != static_cast<int>(SqliteFlag::Ok)) {
             throw std::runtime_error("sqlite3_bind_int64() failed");

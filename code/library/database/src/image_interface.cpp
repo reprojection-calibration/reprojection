@@ -28,7 +28,8 @@ void AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> con
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error("AddImage() failed for sensor: " + data.header.sensor_name +
                                  " at timestamp_ns: " + std::to_string(data.header.timestamp_ns) +
-                                 " with database error message: " + std::string(sqlite3_errmsg(database->db)));
+                                 " with SqliteErrorCode: " + ToString(std::get<SqliteErrorCode>(result)) +
+                                 " and database error message: " + std::string(sqlite3_errmsg(database->db)));
     }
 }
 
@@ -39,7 +40,8 @@ void AddImage(FrameHeader const& header, std::shared_ptr<CalibrationDatabase> co
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error("AddImage() failed for sensor: " + header.sensor_name +
                                  " at timestamp_ns: " + std::to_string(header.timestamp_ns) +
-                                 " with database error message: " + std::string(sqlite3_errmsg(database->db)));
+                                 " with SqliteErrorCode: " + ToString(std::get<SqliteErrorCode>(result)) +
+                                 " and database error message: " + std::string(sqlite3_errmsg(database->db)));
     }
 }
 
