@@ -35,6 +35,10 @@ def plot_pose_figure(timestamps, data, title, yaxis_title, fig=None, legendgroup
     if fig is None:
         fig = go.Figure()
 
+    # Convert to human-readable "seconds from start of recording" format.
+    t0 = int(timestamps[0])
+    timestamps = [(int(t) - t0) / 1e9 for t in timestamps]
+
     fig.add_scatter(x=timestamps, y=x, marker=dict(symbol=marker, color='rgb(255, 0, 0)'), mode='lines+markers',
                     name=x_name,
                     legendgroup=legendgroup)
@@ -46,7 +50,7 @@ def plot_pose_figure(timestamps, data, title, yaxis_title, fig=None, legendgroup
                     legendgroup=legendgroup)
     fig.update_layout(
         title=title,
-        xaxis_title='Time (ns)',
+        xaxis_title='Time (s)',
         yaxis_title=yaxis_title,
     )
 
