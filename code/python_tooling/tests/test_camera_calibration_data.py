@@ -2,6 +2,7 @@ import unittest
 import os
 import pandas as pd
 
+from database.load_camera_calibration_data import get_camera_calibration_data_statistics, load_camera_calibration_data
 from database.load_extracted_targets import load_extracted_targets_df, \
     add_extracted_targets_df_to_camera_calibration_data
 from database.load_camera_poses import add_camera_poses_df_to_camera_calibration_data
@@ -15,6 +16,21 @@ class TestCameraCalibrationData(unittest.TestCase):
     def setUpClass(self):
         self.db_path = os.getenv(
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3")
+
+    def test_load_camera_calibration_data(self):
+        data = load_camera_calibration_data(self.db_path)
+        statistics = get_camera_calibration_data_statistics(data)
+
+        self.assertEqual(len(statistics.keys()), 2)
+
+        cam0_statistics = statistics['/cam0/image_raw']
+        self.assertEqual(len(cam0_statistics.keys()), 5)
+
+        self.assertEqual(cam0_statistics['total_frames'], 879)
+        self.assertEqual(cam0_statistics['frames_with_image'], 0)
+        self.assertEqual(cam0_statistics['frames_with_extracted_target'], 879)
+        self.assertEqual(cam0_statistics['frames_with_initial_pose'], 0)
+        self.assertEqual(cam0_statistics['frames_with_optimized_pose'], 0)
 
     def test_image_df_to_camera_calibration_data(self):
         df = load_images_df(self.db_path)
