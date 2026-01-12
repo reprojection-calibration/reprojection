@@ -1,5 +1,6 @@
 import unittest
 import os
+import pandas as pd
 
 from database.load_extracted_targets import load_extracted_targets_df, \
     add_extracted_targets_df_to_camera_calibration_data
@@ -20,13 +21,13 @@ class TestCameraCalibrationData(unittest.TestCase):
         data = image_df_to_camera_calibration_data(df)
 
         self.assertEqual(len(data.keys()), 2)
-        # At this time it only contains the "frames" key and no other information/metadata
+        # At this time it only contains the "frames" key and no other information/metadata.
         self.assertEqual(len(data['/cam0/image_raw']), 1)
 
         self.assertEqual(len(data['/cam0/image_raw']['frames']), 879)
         self.assertEqual(len(data['/cam1/image_raw']['frames']), 879)
 
-        # Check one random image to check that is it None - at this time the database has no actual images in it
+        # Check one random image to check that is it None - at this time the database has no actual images in it.
         self.assertIsNone(data['/cam0/image_raw']['frames'][1520528314314184960]['image'])
 
     def test_add_extracted_targets_df_to_camera_calibration_data(self):
@@ -36,10 +37,10 @@ class TestCameraCalibrationData(unittest.TestCase):
         df = load_extracted_targets_df(self.db_path)
         add_extracted_targets_df_to_camera_calibration_data(df, data)
 
-        # Check that no new frames got added by accident
+        # Check that no new frames got added by accident.
         self.assertEqual(len(data['/cam0/image_raw']['frames']), 879)
 
-        # Check one random target
+        # Check one random target.
         extracted_target_i = data['/cam0/image_raw']['frames'][1520528314314184960]['extracted_target']
         self.assertEqual(len(extracted_target_i.keys()), 3)
         self.assertEqual(len(extracted_target_i['pixels']), 143)
@@ -52,17 +53,35 @@ class TestCameraCalibrationData(unittest.TestCase):
         self.assertRaises(RuntimeError, add_extracted_targets_df_to_camera_calibration_data, df, {})
 
     def test_add_camera_poses_df_to_camera_calibration_data(self):
-        db_path = '/home/stable-genius-gram/github/reprojection-calibration/reprojection/code/test_data/dataset-calib-imu4_512_16_del.db3'  # ERROR ERROR ERROR
-        df = load_images_df(db_path)
+        df = load_images_df(self.db_path)
         data = image_df_to_camera_calibration_data(df)
 
-        df = load_camera_poses_df(db_path)
+        # We should use load_camera_poses_df() but as of time of writing there is no pose data in the test database.
+        # Therefore, we manually create a pose dataframe. If at some later date pose data gets added to the database we
+        # should refactor this to use that instead of hardcoding it here.
+        pose_data = [{'timestamp_ns': 1520528314314184960, 'sensor_name': '/cam0/image_raw', 'type': 'initial',
+                      'rx': 1, 'ry': 2, 'rz': 3, 'x': -1, 'y': -2, 'z': -3
+                      },
+                     {'timestamp_ns': 1520528314314184960, 'sensor_name': '/cam0/image_raw', 'type': 'optimized',
+                      'rx': 11, 'ry': 22, 'rz': 33, 'x': -11, 'y': -22, 'z': -33
+                      },
+                     ]
+
+        df = pd.DataFrame(pose_data)
         add_camera_poses_df_to_camera_calibration_data(df, data)
 
+        # Check that no new frames got added by accident.
         self.assertEqual(len(data['/cam0/image_raw']['frames']), 879)
 
+        # Check the artificially created poses.
         poses_i = data['/cam0/image_raw']['frames'][1520528314314184960]['poses']
         self.assertEqual(len(poses_i.keys()), 2)
+        self.assertEqual(poses_i['initial'], [1, 2, 3, -1, -2, -3])
+        self.assertEqual(poses_i['optimized'], [11, 22, 33, -11, -22, -33])
+
+        # Foreign key constraint check, see comment in test_add_extracted_targets_df_to_camera_calibration_data.
+        self.assertRaises(RuntimeError, add_camera_poses_df_to_camera_calibration_data, df, {})
+
 
 if __name__ == '__main__':
     unittest.main()
