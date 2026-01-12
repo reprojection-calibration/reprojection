@@ -4,9 +4,10 @@ import plotly.graph_objects as go
 
 from plot_pose_figures import plot_rotation_figure, plot_translation_figure
 
-from database.load_extracted_targets import load_extracted_targets_df, split_extracted_targets_by_sensor
-from database.load_poses import load_calibration_poses
-from database.load_images import load_images_df, split_images_by_sensor
+from database.load_extracted_targets import add_extracted_targets_df_to_camera_calibration_data, \
+    load_extracted_targets_df
+from database.load_camera_poses import add_camera_poses_df_to_camera_calibration_data, load_camera_poses_df
+from database.load_images import image_df_to_camera_calibration_data, load_images_df
 
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
@@ -139,26 +140,18 @@ def load_database_to_store(db_file):
     if not db_file:
         return None
 
-    full_path = DB_DIR + db_file
-    if not os.path.isfile(full_path):
+    db_path = DB_DIR + db_file
+    if not os.path.isfile(db_path):
         return None
 
-    data = {}
+    df = load_images_df(db_path)
+    data = image_df_to_camera_calibration_data(df)
 
-    # WARN(Jack): This has only been tested with databases where the images were not there! When we actually have a
-    # database with images we can first just ignore them explicitly, and then eventually figure out a visualization
-    # strategy. This means that the image "data" here is expected to be null.
-    df_images = load_images_df(full_path)
-    data['images'] = split_images_by_sensor(df_images)
+    df = load_extracted_targets_df(db_path)
+    add_extracted_targets_df_to_camera_calibration_data(df, data)
 
-    # TODO(Jack): We should also organize the poses like we do the image and target data, grouped by the sensor.
-    # Use .to_dict('records') to make pandas data frame json serializable, which is required for anything sent to the
-    # browser in dash.
-    df_initial, df_optimized = load_calibration_poses(full_path)
-    data['poses'] = {'initial': df_initial.to_dict('records'), 'optimized': df_optimized.to_dict('records')}
-
-    df_extracted_targets = load_extracted_targets_df(full_path)
-    data['extracted_targets'] = split_extracted_targets_by_sensor(df_extracted_targets)
+    df = load_camera_poses_df(db_path)
+    add_camera_poses_df_to_camera_calibration_data(df, data)
 
     return data
 
