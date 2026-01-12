@@ -22,40 +22,53 @@ app.layout = html.Div([
 
     html.Div(
         children=[
-            html.Label(
-                children='Load',
-            ),
-            dcc.Dropdown(
-                id='database-dropdown',
-                placeholder='Select a database',
-                style={'width': '50%'},
-            ),
-            html.Button(
-                children='Refresh Database List',
-                id='refresh-database-list-button',
-                n_clicks=0,
-            ),
             html.Div(
-                [
-                    html.Div(id="statistics-display"),
-                ]
+                children=[
+                    html.Label(
+                        children='Load',
+                    ),
+                    dcc.Dropdown(
+                        id='database-dropdown',
+                        placeholder='Select a database',
+                        style={'width': '50%'},
+                    ),
+                    html.Button(
+                        children='Refresh Database List',
+                        id='refresh-database-list-button',
+                        n_clicks=0,
+                    ),
+                ],
+                style={'align-items': 'center',
+                       'display': 'flex',
+                       'flex-direction': 'row',
+                       'gap': '10px',
+                       'margin': '10px', },
             ),
-        ],
-        style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
-    ),
 
-    html.Div(
-        children=[
-            html.Label(
-                children='Select',
-            ),
-            dcc.Dropdown(
-                id='sensor-dropdown',
-                placeholder='Select a camera sensor',
-                style={'width': '50%'},
+            html.Div(
+                children=[
+                    html.Label(
+                        children='Select',
+                    ),
+                    dcc.Dropdown(
+                        id='sensor-dropdown',
+                        placeholder='Select a camera sensor',
+                        style={'width': '50%'},
+                    ),
+                    html.Div(
+                        [
+                            html.Div(id="statistics-display"),
+                        ]
+                    ),
+                ],
+                style={'align-items': 'top',
+                       'display': 'flex',
+                       'flex-direction': 'row',
+                       'gap': '10px',
+                       'margin': '10px', },
             ),
         ],
-        style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
+
     ),
 
     dcc.Tabs([
