@@ -304,18 +304,27 @@ def init_extracted_target_figures(sensor, data):
 
 app.clientside_callback(
     """
-    function(frame_idx, data, sensor, xy_fig, pixel_fig) {
-        if (!data || !sensor || !xy_fig || !pixel_fig) {
+    function(frame_idx, raw_data, processed_data, sensor, xy_fig, pixel_fig) {
+        if (!raw_data || !processed_data || !sensor || !xy_fig || !pixel_fig) {
+              console.log("One or more of the inputs is missing.");
             return [xy_fig, pixel_fig];
         }
-
-        const frames = data.extracted_targets[sensor];
-        if (!frames || frames.length === 0) {
+        
+        const timestamps = processed_data[1][sensor]
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
+              console.log("Invalid timestamps or frame index out of bounds:", sensor);
             return [xy_fig, pixel_fig];
         }
-
-        const frame = frames[frame_idx];
-        if (!frame) {
+        
+        const timestamp_i = BigInt(timestamps[frame_idx])
+        if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
+              console.log("Raw data structure is incomplete for sensor:", sensor);
+            return [xy_fig, pixel_fig];
+        }
+        
+        const extracted_target = raw_data[sensor]['frames'][timestamp_i].extracted_target
+        if (!extracted_target) {
+            console.log("No extracted_target found at frame:", frame_idx, "for sensor:", sensor);
             return [xy_fig, pixel_fig];
         }
 
@@ -327,12 +336,12 @@ app.clientside_callback(
         // issues on github (ex. https://github.com/plotly/dash/issues/1040) with people confused by this. 
 
         xy_fig = JSON.parse(JSON.stringify(xy_fig));
-        const pts = frame.points;
+        const pts = extracted_target.points;
         xy_fig.data[0].x = pts.map(p => p[0]);
         xy_fig.data[0].y = pts.map(p => p[1]);
 
         pixel_fig = JSON.parse(JSON.stringify(pixel_fig));
-        const pix = frame.pixels;
+        const pix = extracted_target.pixels;
         pixel_fig.data[0].x = pix.map(p => p[0]);
         pixel_fig.data[0].y = pix.map(p => p[1]);
 
@@ -343,6 +352,7 @@ app.clientside_callback(
     Output("targets-pixels-graph", "figure"),
     Input("frame-id-slider", "value"),
     State("raw-data-store", "data"),
+    State("processed-data-store", "data"),
     State("sensor-dropdown", "value"),
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),
