@@ -29,7 +29,7 @@ class TestCameraCalibrationData(unittest.TestCase):
         # Check one random image to check that is it None - at this time the database has no actual images in it
         self.assertIsNone(data['/cam0/image_raw']['frames'][1520528314314184960]['image'])
 
-    def test_extracted_targets_df_to_camera_calibration_data(self):
+    def test_add_extracted_targets_df_to_camera_calibration_data(self):
         df = load_images_df(self.db_path)
         data = image_df_to_camera_calibration_data(df)
 
@@ -51,7 +51,7 @@ class TestCameraCalibrationData(unittest.TestCase):
         # here in python. At least partially.
         self.assertRaises(RuntimeError, add_extracted_targets_df_to_camera_calibration_data, df, {})
 
-    def test_camera_poses_df_to_camera_calibration_data(self):
+    def test_add_camera_poses_df_to_camera_calibration_data(self):
         db_path = '/home/stable-genius-gram/github/reprojection-calibration/reprojection/code/test_data/dataset-calib-imu4_512_16_del.db3'  # ERROR ERROR ERROR
         df = load_images_df(db_path)
         data = image_df_to_camera_calibration_data(df)
