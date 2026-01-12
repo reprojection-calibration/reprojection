@@ -240,6 +240,7 @@ def update_translation_graph(selected_sensor, raw_data):
     if frames is None:
         return {}, {}
 
+    # TODO WARN ERROR
     # TODO TODO TODO
     # TODO(Jack): Add optimized pose initialization! Or the option to choose between the two.
     # TODO TODO TODO
@@ -391,7 +392,6 @@ app.clientside_callback(
         // with the new points we add below. Here we use these JSON helper functions to create a copy of the figure 
         // which when returned will be recognized by Dash as a new figure which needs to be rendered. There are several 
         // issues on github (ex. https://github.com/plotly/dash/issues/1040) with people confused by this. 
-
         xy_fig = JSON.parse(JSON.stringify(xy_fig));
         const pts = extracted_target.points;
         xy_fig.data[0].x = pts.map(p => p[0]);
@@ -401,7 +401,34 @@ app.clientside_callback(
         const pix = extracted_target.pixels;
         pixel_fig.data[0].x = pix.map(p => p[0]);
         pixel_fig.data[0].y = pix.map(p => p[1]);
-
+        
+        // If reprojection errors are available we will color the points and pixels according to them. If not available
+        // simply return the figures with the plain colored points and pixels.
+        const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
+        if (!reprojection_errors) {
+            // If no reprojection errors are available then return to default marker configuration.
+            xy_fig.data[0].marker = {size: 6}
+            pixel_fig.data[0].marker = {size: 6}
+            
+            return [xy_fig, pixel_fig];
+        }
+        
+        // TODO WARN ERROR
+        // TODO WARN ERROR
+        // TODO WARN ERROR
+        // TODO WARN ERROR HANDLE INTIIAL VS OPTIMIZED!!! For now we just hardcode initial.
+        const initial_reprojection_error = reprojection_errors['optimized']
+        if (!initial_reprojection_error) {
+            return [xy_fig, pixel_fig];
+        }
+        
+        const markers = {size: 6, 
+                        color: initial_reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
+                        colorscale: "Bluered", 
+                        cmin: 0, cmax: 1};
+        xy_fig.data[0].marker = markers
+        pixel_fig.data[0].marker = markers
+        
         return [xy_fig, pixel_fig];
     }
     """,
