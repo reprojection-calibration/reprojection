@@ -4,6 +4,7 @@ import os
 from database.load_extracted_targets import load_extracted_targets_df
 from database.load_camera_poses import load_camera_poses_df
 from database.load_images import load_images_df
+from database.load_reprojection_errors import load_reprojection_errors_df
 
 
 class TestDatabaseConnections(unittest.TestCase):
@@ -22,7 +23,6 @@ class TestDatabaseConnections(unittest.TestCase):
         self.assertEqual(df.shape, (1758, 3))
 
     def test_load_extracted_targets_df(self):
-        # Query nonexistent table
         df = load_extracted_targets_df('nonexistent.db3')
         self.assertIsNone(df)
 
@@ -35,6 +35,13 @@ class TestDatabaseConnections(unittest.TestCase):
 
         df = load_camera_poses_df(self.db_path)
         self.assertEqual(df.shape, (0, 9))
+
+    def test_load_reprojection_errors_df(self):
+        df = load_reprojection_errors_df('nonexistent.db3')
+        self.assertIsNone(df)
+
+        df = load_reprojection_errors_df(self.db_path)
+        self.assertEqual(df.shape, (0, 4))
 
 
 if __name__ == '__main__':
