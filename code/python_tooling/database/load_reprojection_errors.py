@@ -12,7 +12,7 @@ from database.sql_statement_loading import load_sql
 #  representation we can combine them and use one common function.
 def build_array_x2d(msg_data):
     rows = msg_data.rows
-    data = np.array(msg_data.data_array, dtype=np.float64)
+    data = np.array(msg_data.array_data, dtype=np.float64)
 
     if rows == 0 or data.size == 0:
         return np.empty((0, 2))
