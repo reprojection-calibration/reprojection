@@ -4,7 +4,7 @@ import pandas as pd
 
 from database.load_extracted_targets import load_extracted_targets_df, \
     add_extracted_targets_df_to_camera_calibration_data
-from database.load_camera_poses import load_camera_poses_df, add_camera_poses_df_to_camera_calibration_data
+from database.load_camera_poses import add_camera_poses_df_to_camera_calibration_data
 from database.load_images import image_df_to_camera_calibration_data, load_images_df
 
 
