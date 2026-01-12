@@ -35,6 +35,11 @@ app.layout = html.Div([
                 id='refresh-database-list-button',
                 n_clicks=0,
             ),
+            html.Div(
+                [
+                    html.Div(id="statistics-display"),
+                ]
+            ),
         ],
         style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
     ),
@@ -176,6 +181,33 @@ def refresh_sensor_list(data):
         return [], ''
 
     return sensor_names, sensor_names[0]
+
+
+# Callback to update the loaded statuses
+@app.callback(
+    Output("statistics-display", "children"),
+    [Input("sensor-dropdown", "value")],
+    State("processed-data-store", "data"),
+)
+def update_status(selected_sensor, data):
+    statistics, _ = data
+
+    return [
+        html.Div(
+            [
+                html.Div(
+                    "",
+                    style={
+                        "width": "20px", "height": "20px", "backgroundColor": "green" if value != 0 else "red",
+                        "display": "inline-block", "margin-right": "10px"
+                    },
+                ),
+                html.Div(value, style={"width": "35px", "display": "inline-block"}),
+                html.Div(key, style={"width": "200px", "display": "inline-block"}),
+            ],
+        )
+        for key, value in statistics[selected_sensor].items()
+    ]
 
 
 @callback(
