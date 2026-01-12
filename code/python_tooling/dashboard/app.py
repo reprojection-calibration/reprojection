@@ -2,12 +2,9 @@ import os
 from dash import callback, Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
 
-from plot_pose_figures import plot_rotation_figure, plot_translation_figure
+from plot_pose_figures import extract_timestamps_and_poses, plot_pose_figure
 
-from database.load_extracted_targets import add_extracted_targets_df_to_camera_calibration_data, \
-    load_extracted_targets_df
-from database.load_camera_poses import add_camera_poses_df_to_camera_calibration_data, load_camera_poses_df
-from database.load_images import image_df_to_camera_calibration_data, load_images_df
+from database.load_camera_calibration_data import get_camera_calibration_data_statistics, load_camera_calibration_data
 
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
@@ -144,14 +141,9 @@ def load_database_to_store(db_file):
     if not os.path.isfile(db_path):
         return None
 
-    df = load_images_df(db_path)
-    data = image_df_to_camera_calibration_data(df)
-
-    df = load_extracted_targets_df(db_path)
-    add_extracted_targets_df_to_camera_calibration_data(df, data)
-
-    df = load_camera_poses_df(db_path)
-    add_camera_poses_df_to_camera_calibration_data(df, data)
+    data = load_camera_calibration_data(db_path)
+    # TODO(Jack): visualize the statistics in a data panel!
+    # statistics = get_camera_calibration_data_statistics(data)
 
     return data
 
@@ -166,7 +158,7 @@ def refresh_sensor_list(data):
         return [], None
 
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({sensor_name for sensor_name in data['images'].keys()}))
+    sensor_names = sorted(list({sensor_name for sensor_name in data.keys()}))
     if len(sensor_names) == 0:
         return [], ''
 
@@ -183,27 +175,18 @@ def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
         return {}, {}
 
-    rot_fig, trans_fig = {}, {}
-    if data['poses']['initial'] is not None:
-        # The initial pose in the context of calibration is the pose calculated via DLT and/or PNP that is used as the input
-        # for the full nonlinear optimization later. It is important, but also just an intermediate output on the path to
-        # full calibration
-        initial_poses = sorted(
-            [sensor for sensor in data['poses']['initial'] if sensor['sensor_name'] == selected_sensor],
-            key=lambda x: x['timestamp_ns'])
+    frames = data[selected_sensor]['frames']
+    if frames is None:
+        return {}, {}
 
-        # TODO(Jack): Figure out a way to display the legend group name in the legend so that people actually know what they
-        #  are looking at.
-        rot_fig = plot_rotation_figure(initial_poses, legendgroup='Initial', marker='x')
-        trans_fig = plot_translation_figure(initial_poses, legendgroup='Initial', marker='x')
+    timestamps, data = extract_timestamps_and_poses(frames, 'initial')
 
-    if data['poses']['optimized'] is not None:
-        optimized_poses = sorted(
-            [sensor for sensor in data['poses']['optimized'] if sensor['sensor_name'] == selected_sensor],
-            key=lambda x: x['timestamp_ns'])
+    rotations = [d[:3] for d in data]
+    rot_fig = plot_pose_figure(timestamps, rotations, "Orientation", 'Axis Angle (rad)', x_name='rx', y_name='ry',
+                               z_name='rz')
 
-        rot_fig = plot_rotation_figure(optimized_poses, fig=rot_fig, legendgroup='Optimized', marker='square')
-        trans_fig = plot_translation_figure(optimized_poses, fig=trans_fig, legendgroup='Optimized', marker='square')
+    translations = [d[3:] for d in data]
+    trans_fig = plot_pose_figure(timestamps, translations, "Translation", 'Meter (m)')
 
     return rot_fig, trans_fig
 
@@ -305,9 +288,9 @@ def init_extracted_target_figures(sensor, data):
     )
 
     # TODO(Jack): Why is this in this method??? See comment at top of function.
+    # TODO(Jack): The number of frames is already calculated in the statistics function which we should use maybe?
     # Get the number of frames to fill the max value of the slider
-    frames = data["extracted_targets"].get(sensor, [])
-    n_frames = len(frames)
+    n_frames = len(data[sensor]['frames'])
 
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
