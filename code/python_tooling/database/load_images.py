@@ -16,7 +16,7 @@ def load_images_df(db_path):
                 load_sql('images_select_all.sql'), conn
             )
     except Exception as e:
-        print(f"Unexpected error in load_poses(db_path={db_path}): {e}")
+        print(f"Unexpected error in load_images_df(db_path={db_path}): {e}")
         return None
 
     return df

@@ -1,9 +1,9 @@
 import unittest
 import os
 
-from database.load_extracted_targets import load_extracted_targets_df, split_extracted_targets_by_sensor
-from database.load_poses import load_poses_df, load_calibration_poses
-from database.load_images import split_images_by_sensor, load_images_df
+from database.load_extracted_targets import load_extracted_targets_df
+from database.load_camera_poses import load_camera_poses_df
+from database.load_images import load_images_df
 
 
 class TestDatabaseConnections(unittest.TestCase):
@@ -14,14 +14,14 @@ class TestDatabaseConnections(unittest.TestCase):
         self.db_path = os.getenv(
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3")
 
-    def test_load_images(self):
+    def test_load_images_df(self):
         df = load_images_df('nonexistent.db3')
         self.assertIsNone(df)
 
         df = load_images_df(self.db_path)
         self.assertEqual(df.shape, (1758, 3))
 
-    def test_extracted_target_loading(self):
+    def test_load_extracted_targets_df(self):
         # Query nonexistent table
         df = load_extracted_targets_df('nonexistent.db3')
         self.assertIsNone(df)
@@ -29,7 +29,12 @@ class TestDatabaseConnections(unittest.TestCase):
         df = load_extracted_targets_df(self.db_path)
         self.assertEqual(df.shape, (1758, 3))
 
+    def test_load_camera_poses_df(self):
+        df = load_camera_poses_df('nonexistent.db3')
+        self.assertIsNone(df)
 
+        df = load_camera_poses_df(self.db_path)
+        self.assertEqual(df.shape, (0, 9))
 
 
 if __name__ == '__main__':

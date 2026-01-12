@@ -73,7 +73,7 @@ def load_extracted_targets_df(db_path):
 
             df['data'] = df['data'].apply(safe_parse)
     except Exception as e:
-        print(f"Unexpected error in load_all_extracted_targets(db_path={db_path}): {e}")
+        print(f"Unexpected error in load_extracted_targets_df(db_path={db_path}): {e}")
         return None
 
     return df
