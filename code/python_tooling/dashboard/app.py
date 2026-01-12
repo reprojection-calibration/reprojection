@@ -155,14 +155,16 @@ def load_database_to_store(db_file):
 @callback(
     Output('sensor-dropdown', 'options'),
     Output('sensor-dropdown', 'value'),
-    Input('raw-data-store', 'data')
+    Input('processed-data-store', 'data')
 )
 def refresh_sensor_list(data):
     if not data:
         return [], None
 
+    statistics, _ = data
+
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({sensor_name for sensor_name in data.keys()}))
+    sensor_names = sorted(list({sensor_name for sensor_name in statistics.keys()}))
     if len(sensor_names) == 0:
         return [], ''
 
@@ -175,14 +177,15 @@ def refresh_sensor_list(data):
     Input('sensor-dropdown', 'value'),
     State('raw-data-store', 'data'),
 )
-def update_translation_graph(selected_sensor, data):
-    if not selected_sensor or not data:
+def update_translation_graph(selected_sensor, raw_data):
+    if not selected_sensor or not raw_data:
         return {}, {}
 
-    frames = data[selected_sensor]['frames']
+    frames = raw_data[selected_sensor]['frames']
     if frames is None:
         return {}, {}
 
+    # TODO(Jack): Add optimized pose initialization! Or the option to choose between the two.
     timestamps, data = extract_timestamps_and_poses(frames, 'initial')
 
     rotations = [d[:3] for d in data]
@@ -235,7 +238,7 @@ def advance_slider(_, value, max_value):
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
     Output("frame-id-slider", "max"),
     Input("sensor-dropdown", "value"),
-    State("raw-data-store", "data"),
+    State("processed-data-store", "data"),
     prevent_initial_call=True,
 )
 def init_extracted_target_figures(sensor, data):
@@ -292,9 +295,9 @@ def init_extracted_target_figures(sensor, data):
     )
 
     # TODO(Jack): Why is this in this method??? See comment at top of function.
-    # TODO(Jack): The number of frames is already calculated in the statistics function which we should use maybe?
     # Get the number of frames to fill the max value of the slider
-    n_frames = len(data[sensor]['frames'])
+    statistics, _ = data
+    n_frames = statistics[sensor]['total_frames']
 
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
