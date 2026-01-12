@@ -49,10 +49,18 @@ def get_camera_calibration_data_statistics(data):
     return statistics
 
 
+# This has a really complicated name, probably because I have not yet found how to integrate it cleanly into the
+# dashboard. But let me quickly explain it. The motivation for this is that dash provides the dcc.Interval which we use
+# to get a slider which lets us animate our entire dashboard as a function of time. Our data is however stored and
+# mapped by timestamp, and using indexes blindly would not be scalable. Imagine what would happen when a frame has a
+# value for some times and not others. If we blindly use an index we might get the wrong value or access out of bounds.
+# Therefore, we have this function to simply provide us a sorted list of all the timestamps for each sensor. We can then
+# index into this from the dcc.Interval output, and use the retried timestamp to fetch the data we want. If the data
+# does not exist then we can handle that easily.
 def get_indexable_timestamp_record(data):
     timestamp_record = {}
     for sensor, sensor_data in data.items():
-        timestamps = list(sensor_data['frames'].keys())
+        timestamps = sorted(list(sensor_data['frames'].keys()))
 
         timestamp_record[sensor] = timestamps
 
