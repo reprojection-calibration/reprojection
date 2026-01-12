@@ -4,7 +4,8 @@ import plotly.graph_objects as go
 
 from plot_pose_figures import extract_timestamps_and_poses, plot_pose_figure
 
-from database.load_camera_calibration_data import get_camera_calibration_data_statistics, load_camera_calibration_data
+from database.load_camera_calibration_data import get_camera_calibration_data_statistics, \
+    get_indexable_timestamp_record, load_camera_calibration_data
 
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
@@ -109,7 +110,8 @@ app.layout = html.Div([
         interval=50,
     ),
 
-    dcc.Store(id='database-store'),
+    dcc.Store(id='raw-data-store'),
+    dcc.Store(id='processed-data-store'),
 ])
 
 
@@ -130,7 +132,8 @@ def refresh_database_list(_):
 
 
 @callback(
-    Output('database-store', 'data'),
+    Output('raw-data-store', 'data'),
+    Output('processed-data-store', 'data'),
     Input('database-dropdown', 'value')
 )
 def load_database_to_store(db_file):
@@ -141,17 +144,18 @@ def load_database_to_store(db_file):
     if not os.path.isfile(db_path):
         return None
 
-    data = load_camera_calibration_data(db_path)
-    # TODO(Jack): visualize the statistics in a data panel!
-    # statistics = get_camera_calibration_data_statistics(data)
+    raw_data = load_camera_calibration_data(db_path)
+    statistics = get_camera_calibration_data_statistics(raw_data)
+    indexable_timestamps = get_indexable_timestamp_record(raw_data)
 
-    return data
+    # TODO(Jack): visualize the statistics in a data panel!
+    return raw_data, [statistics, indexable_timestamps]
 
 
 @callback(
     Output('sensor-dropdown', 'options'),
     Output('sensor-dropdown', 'value'),
-    Input('database-store', 'data')
+    Input('raw-data-store', 'data')
 )
 def refresh_sensor_list(data):
     if not data:
@@ -169,7 +173,7 @@ def refresh_sensor_list(data):
     Output('rotation-graph', 'figure'),
     Output('translation-graph', 'figure'),
     Input('sensor-dropdown', 'value'),
-    State('database-store', 'data'),
+    State('raw-data-store', 'data'),
 )
 def update_translation_graph(selected_sensor, data):
     if not selected_sensor or not data:
@@ -231,7 +235,7 @@ def advance_slider(_, value, max_value):
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
     Output("frame-id-slider", "max"),
     Input("sensor-dropdown", "value"),
-    State("database-store", "data"),
+    State("raw-data-store", "data"),
     prevent_initial_call=True,
 )
 def init_extracted_target_figures(sensor, data):
@@ -335,7 +339,7 @@ app.clientside_callback(
     Output("targets-xy-graph", "figure"),
     Output("targets-pixels-graph", "figure"),
     Input("frame-id-slider", "value"),
-    State("database-store", "data"),
+    State("raw-data-store", "data"),
     State("sensor-dropdown", "value"),
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),
