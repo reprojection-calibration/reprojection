@@ -4,7 +4,19 @@ from database.load_camera_poses import add_camera_poses_df_to_camera_calibration
 from database.load_images import image_df_to_camera_calibration_data, load_images_df
 
 
-# TODO(Jack): Add poses!
+def load_camera_calibration_data(db_path):
+    df = load_images_df(db_path)
+    data = image_df_to_camera_calibration_data(df)
+
+    df = load_extracted_targets_df(db_path)
+    add_extracted_targets_df_to_camera_calibration_data(df, data)
+
+    df = load_camera_poses_df(db_path)
+    add_camera_poses_df_to_camera_calibration_data(df, data)
+
+    return data
+
+
 def get_camera_calibration_data_statistics(data):
     statistics = {}
     for sensor, sensor_data in data.items():
@@ -37,14 +49,11 @@ def get_camera_calibration_data_statistics(data):
     return statistics
 
 
-def load_camera_calibration_data(db_path):
-    df = load_images_df(db_path)
-    data = image_df_to_camera_calibration_data(df)
+def get_indexable_timestamp_record(data):
+    timestamp_record = {}
+    for sensor, sensor_data in data.items():
+        timestamps = list(sensor_data['frames'].keys())
 
-    df = load_extracted_targets_df(db_path)
-    add_extracted_targets_df_to_camera_calibration_data(df, data)
+        timestamp_record[sensor] = timestamps
 
-    df = load_camera_poses_df(db_path)
-    add_camera_poses_df_to_camera_calibration_data(df, data)
-
-    return data
+    return timestamp_record
