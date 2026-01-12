@@ -16,24 +16,24 @@ def load_images_df(db_path):
                 load_sql('images_select_all.sql'), conn
             )
     except Exception as e:
-        print(f"Unexpected error in load_poses(db_path={db_path}): {e}")
+        print(f"Unexpected error in load_images_df(db_path={db_path}): {e}")
         return None
 
     return df
 
 
-def split_images_by_sensor(df):
-    images_by_sensor = {}
-    for sensor_name, group in df.groupby("sensor_name", sort=True):
-        group = group.sort_values("timestamp_ns")
+# NOTE(Jack): The images hold a special place in the database that sets it apart from all tables. And that is, it is the
+# only table with NO foreign key relationship. That means that it defines what can and what can not exist as data in the
+# rest of the database. All other tables have one way or another a foreign key relationship on the image table.
+def image_df_to_camera_calibration_data(df):
+    data = {}
+    for index, row in df.iterrows():
+        sensor = row['sensor_name']
+        timestamp = row['timestamp_ns']
 
-        frames = []
-        for _, (_, row) in enumerate(group.iterrows()):
-            frames.append({
-                "timestamp_ns": int(row["timestamp_ns"]),
-                "data": row["data"]
-            })
+        if sensor not in data:
+            data[sensor] = {'frames': {}}
 
-        images_by_sensor[sensor_name] = frames
+        data[sensor]['frames'][timestamp] = {'image': row['data']}
 
-    return images_by_sensor
+    return data

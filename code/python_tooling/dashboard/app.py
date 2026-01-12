@@ -2,11 +2,10 @@ import os
 from dash import callback, Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
 
-from plot_pose_figures import plot_rotation_figure, plot_translation_figure
+from plot_pose_figures import extract_timestamps_and_poses, plot_pose_figure
 
-from database.load_extracted_targets import load_extracted_targets_df, split_extracted_targets_by_sensor
-from database.load_poses import load_calibration_poses
-from database.load_images import load_images_df, split_images_by_sensor
+from database.load_camera_calibration_data import get_camera_calibration_data_statistics, \
+    get_indexable_timestamp_record, load_camera_calibration_data
 
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
@@ -111,7 +110,15 @@ app.layout = html.Div([
         interval=50,
     ),
 
-    dcc.Store(id='database-store'),
+    # NOTE(Jack): What we want to prevent is that big chunks of data get sent to and from the browse more than they
+    # need to. As the calibration data might be 10, 30, or even 100mb it is important to make sure we only send that to
+    # the browser when we need to. Therefore, we designed these two data stores, one heavy one (raw-data-store) and one
+    # light one (processed-data-store). In the light one we should find all the metadata required to parameterize and
+    # build most of the dashboard (ex. timestamps, number of frames etc.) and the heavy one we find the entire dataset
+    # which we actually need to process to build our figures. Unless you absolutely need the raw data you should only
+    # use the processed data!
+    dcc.Store(id='raw-data-store'),
+    dcc.Store(id='processed-data-store'),
 ])
 
 
@@ -132,48 +139,39 @@ def refresh_database_list(_):
 
 
 @callback(
-    Output('database-store', 'data'),
+    Output('raw-data-store', 'data'),
+    Output('processed-data-store', 'data'),
     Input('database-dropdown', 'value')
 )
 def load_database_to_store(db_file):
     if not db_file:
         return None
 
-    full_path = DB_DIR + db_file
-    if not os.path.isfile(full_path):
+    db_path = DB_DIR + db_file
+    if not os.path.isfile(db_path):
         return None
 
-    data = {}
+    raw_data = load_camera_calibration_data(db_path)
+    statistics = get_camera_calibration_data_statistics(raw_data)
+    indexable_timestamps = get_indexable_timestamp_record(raw_data)
 
-    # WARN(Jack): This has only been tested with databases where the images were not there! When we actually have a
-    # database with images we can first just ignore them explicitly, and then eventually figure out a visualization
-    # strategy. This means that the image "data" here is expected to be null.
-    df_images = load_images_df(full_path)
-    data['images'] = split_images_by_sensor(df_images)
-
-    # TODO(Jack): We should also organize the poses like we do the image and target data, grouped by the sensor.
-    # Use .to_dict('records') to make pandas data frame json serializable, which is required for anything sent to the
-    # browser in dash.
-    df_initial, df_optimized = load_calibration_poses(full_path)
-    data['poses'] = {'initial': df_initial.to_dict('records'), 'optimized': df_optimized.to_dict('records')}
-
-    df_extracted_targets = load_extracted_targets_df(full_path)
-    data['extracted_targets'] = split_extracted_targets_by_sensor(df_extracted_targets)
-
-    return data
+    # TODO(Jack): visualize the statistics in a data panel!
+    return raw_data, [statistics, indexable_timestamps]
 
 
 @callback(
     Output('sensor-dropdown', 'options'),
     Output('sensor-dropdown', 'value'),
-    Input('database-store', 'data')
+    Input('processed-data-store', 'data')
 )
 def refresh_sensor_list(data):
     if not data:
         return [], None
 
+    statistics, _ = data
+
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({sensor_name for sensor_name in data['images'].keys()}))
+    sensor_names = sorted(list({sensor_name for sensor_name in statistics.keys()}))
     if len(sensor_names) == 0:
         return [], ''
 
@@ -184,33 +182,30 @@ def refresh_sensor_list(data):
     Output('rotation-graph', 'figure'),
     Output('translation-graph', 'figure'),
     Input('sensor-dropdown', 'value'),
-    State('database-store', 'data'),
+    State('raw-data-store', 'data'),
 )
-def update_translation_graph(selected_sensor, data):
-    if not selected_sensor or not data:
+def update_translation_graph(selected_sensor, raw_data):
+    if not selected_sensor or not raw_data:
         return {}, {}
 
-    rot_fig, trans_fig = {}, {}
-    if data['poses']['initial'] is not None:
-        # The initial pose in the context of calibration is the pose calculated via DLT and/or PNP that is used as the input
-        # for the full nonlinear optimization later. It is important, but also just an intermediate output on the path to
-        # full calibration
-        initial_poses = sorted(
-            [sensor for sensor in data['poses']['initial'] if sensor['sensor_name'] == selected_sensor],
-            key=lambda x: x['timestamp_ns'])
+    # TODO(Jack): Technically this is not nice. To access a key (frames) without checking that it exists. However this
+    # is so fundamental to the data structure I think I can be forgiven for this. Remove this todo later if it turns out
+    # to be a nothing burger.
+    frames = raw_data[selected_sensor]['frames']
+    if frames is None:
+        return {}, {}
 
-        # TODO(Jack): Figure out a way to display the legend group name in the legend so that people actually know what they
-        #  are looking at.
-        rot_fig = plot_rotation_figure(initial_poses, legendgroup='Initial', marker='x')
-        trans_fig = plot_translation_figure(initial_poses, legendgroup='Initial', marker='x')
+    # TODO TODO TODO
+    # TODO(Jack): Add optimized pose initialization! Or the option to choose between the two.
+    # TODO TODO TODO
+    timestamps, data = extract_timestamps_and_poses(frames, 'initial')
 
-    if data['poses']['optimized'] is not None:
-        optimized_poses = sorted(
-            [sensor for sensor in data['poses']['optimized'] if sensor['sensor_name'] == selected_sensor],
-            key=lambda x: x['timestamp_ns'])
+    rotations = [d[:3] for d in data]
+    rot_fig = plot_pose_figure(timestamps, rotations, 'Orientation', 'Axis Angle (rad)', x_name='rx', y_name='ry',
+                               z_name='rz')
 
-        rot_fig = plot_rotation_figure(optimized_poses, fig=rot_fig, legendgroup='Optimized', marker='square')
-        trans_fig = plot_translation_figure(optimized_poses, fig=trans_fig, legendgroup='Optimized', marker='square')
+    translations = [d[3:] for d in data]
+    trans_fig = plot_pose_figure(timestamps, translations, 'Translation', 'Meter (m)')
 
     return rot_fig, trans_fig
 
@@ -255,7 +250,7 @@ def advance_slider(_, value, max_value):
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
     Output("frame-id-slider", "max"),
     Input("sensor-dropdown", "value"),
-    State("database-store", "data"),
+    State("processed-data-store", "data"),
     prevent_initial_call=True,
 )
 def init_extracted_target_figures(sensor, data):
@@ -313,26 +308,35 @@ def init_extracted_target_figures(sensor, data):
 
     # TODO(Jack): Why is this in this method??? See comment at top of function.
     # Get the number of frames to fill the max value of the slider
-    frames = data["extracted_targets"].get(sensor, [])
-    n_frames = len(frames)
+    statistics, _ = data
+    n_frames = statistics[sensor]['total_frames']
 
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
 
 app.clientside_callback(
     """
-    function(frame_idx, data, sensor, xy_fig, pixel_fig) {
-        if (!data || !sensor || !xy_fig || !pixel_fig) {
+    function(frame_idx, raw_data, processed_data, sensor, xy_fig, pixel_fig) {
+        if (!raw_data || !processed_data || !sensor || !xy_fig || !pixel_fig) {
+              console.log("One or more of the inputs is missing.");
             return [xy_fig, pixel_fig];
         }
-
-        const frames = data.extracted_targets[sensor];
-        if (!frames || frames.length === 0) {
+        
+        const timestamps = processed_data[1][sensor]
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
+              console.log("Invalid timestamps or frame index out of bounds:", sensor);
             return [xy_fig, pixel_fig];
         }
-
-        const frame = frames[frame_idx];
-        if (!frame) {
+        
+        const timestamp_i = BigInt(timestamps[frame_idx])
+        if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
+              console.log("Raw data structure is incomplete for sensor:", sensor);
+            return [xy_fig, pixel_fig];
+        }
+        
+        const extracted_target = raw_data[sensor]['frames'][timestamp_i].extracted_target
+        if (!extracted_target) {
+            console.log("No extracted_target found at frame:", frame_idx, "for sensor:", sensor);
             return [xy_fig, pixel_fig];
         }
 
@@ -344,12 +348,12 @@ app.clientside_callback(
         // issues on github (ex. https://github.com/plotly/dash/issues/1040) with people confused by this. 
 
         xy_fig = JSON.parse(JSON.stringify(xy_fig));
-        const pts = frame.points;
+        const pts = extracted_target.points;
         xy_fig.data[0].x = pts.map(p => p[0]);
         xy_fig.data[0].y = pts.map(p => p[1]);
 
         pixel_fig = JSON.parse(JSON.stringify(pixel_fig));
-        const pix = frame.pixels;
+        const pix = extracted_target.pixels;
         pixel_fig.data[0].x = pix.map(p => p[0]);
         pixel_fig.data[0].y = pix.map(p => p[1]);
 
@@ -359,7 +363,8 @@ app.clientside_callback(
     Output("targets-xy-graph", "figure"),
     Output("targets-pixels-graph", "figure"),
     Input("frame-id-slider", "value"),
-    State("database-store", "data"),
+    State("raw-data-store", "data"),
+    State("processed-data-store", "data"),
     State("sensor-dropdown", "value"),
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),

@@ -73,28 +73,31 @@ def load_extracted_targets_df(db_path):
 
             df['data'] = df['data'].apply(safe_parse)
     except Exception as e:
-        print(f"Unexpected error in load_all_extracted_targets(db_path={db_path}): {e}")
+        print(f"Unexpected error in load_extracted_targets_df(db_path={db_path}): {e}")
         return None
 
     return df
 
 
-def split_extracted_targets_by_sensor(df):
-    targets_by_sensor = {}
-    for sensor_name, group in df.groupby("sensor_name", sort=True):
-        group = group.sort_values("timestamp_ns")
+def add_extracted_targets_df_to_camera_calibration_data(df, data):
+    for index, row in df.iterrows():
+        # NOTE(Jack): The reason we are being so string here and throwing errors to kill the program so quickly is
+        # simple. Our calibration database has foreign key constraints. This means that a piece of data in the extracted
+        # target table CANNOT exist (under no circumstance!!!) unless it has a corresponding entry in the image table.
+        # Therefore, if at this point we have a sensor or a timestamp that is not already in 'data' it means we have a
+        # big problem.
+        sensor = row['sensor_name']
+        if sensor not in data:
+            raise RuntimeError(f'Sensor {sensor} not present in camera calibration data dictionary', )
 
-        frames = []
-        for _, (_, row) in enumerate(group.iterrows()):
-            target = row["data"]
+        timestamp = row['timestamp_ns']
+        if timestamp not in data[sensor]['frames']:
+            raise RuntimeError(
+                f'Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary')
 
-            frames.append({
-                "timestamp_ns": int(row["timestamp_ns"]),
-                "pixels": target["pixels"],
-                "points": target["points"],
-                "indices": target["indices"],
-            })
+        target = row["data"]
+        data[sensor]['frames'][timestamp].update({'extracted_target': {'pixels': target['pixels'],
+                                                                       'points': target['points'],
+                                                                       'indices': target['indices']}})
 
-        targets_by_sensor[sensor_name] = frames
-
-    return targets_by_sensor
+    return data
