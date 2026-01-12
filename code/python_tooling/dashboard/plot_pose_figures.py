@@ -5,15 +5,15 @@ import plotly.graph_objects as go
 def extract_timestamps_and_poses(frames, pose_type):
     timestamps = []
     poses = []
-    for timestamp, frame_data in frames.items():
-        if 'poses' not in frame_data:
+    for timestamp, frame_i in frames.items():
+        if 'poses' not in frame_i:
             continue
 
-        if pose_type not in frame_data['poses']:
+        if pose_type not in frame_i['poses']:
             continue
 
         timestamps.append(timestamp)
-        poses.append(frame_data['poses'][pose_type])
+        poses.append(frame_i['poses'][pose_type])
 
     return timestamps, poses
 

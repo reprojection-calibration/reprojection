@@ -110,6 +110,13 @@ app.layout = html.Div([
         interval=50,
     ),
 
+    # NOTE(Jack): What we want to prevent is that big chunks of data get sent to and from the browse more than they
+    # need to. As the calibration data might be 10, 30, or even 100mb it is important to make sure we only send that to
+    # the browser when we need to. Therefore, we designed these two data stores, one heavy one (raw-data-store) and one
+    # light one (processed-data-store). In the light one we should find all the metadata required to parameterize and
+    # build most of the dashboard (ex. timestamps, number of frames etc.) and the heavy one we find the entire dataset
+    # which we actually need to process to build our figures. Unless you absolutely need the raw data you should only
+    # use the processed data!
     dcc.Store(id='raw-data-store'),
     dcc.Store(id='processed-data-store'),
 ])
@@ -181,19 +188,24 @@ def update_translation_graph(selected_sensor, raw_data):
     if not selected_sensor or not raw_data:
         return {}, {}
 
+    # TODO(Jack): Technically this is not nice. To access a key (frames) without checking that it exists. However this
+    # is so fundamental to the data structure I think I can be forgiven for this. Remove this todo later if it turns out
+    # to be a nothing burger.
     frames = raw_data[selected_sensor]['frames']
     if frames is None:
         return {}, {}
 
+    # TODO TODO TODO
     # TODO(Jack): Add optimized pose initialization! Or the option to choose between the two.
+    # TODO TODO TODO
     timestamps, data = extract_timestamps_and_poses(frames, 'initial')
 
     rotations = [d[:3] for d in data]
-    rot_fig = plot_pose_figure(timestamps, rotations, "Orientation", 'Axis Angle (rad)', x_name='rx', y_name='ry',
+    rot_fig = plot_pose_figure(timestamps, rotations, 'Orientation', 'Axis Angle (rad)', x_name='rx', y_name='ry',
                                z_name='rz')
 
     translations = [d[3:] for d in data]
-    trans_fig = plot_pose_figure(timestamps, translations, "Translation", 'Meter (m)')
+    trans_fig = plot_pose_figure(timestamps, translations, 'Translation', 'Meter (m)')
 
     return rot_fig, trans_fig
 

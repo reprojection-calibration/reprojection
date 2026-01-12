@@ -26,16 +26,16 @@ def get_camera_calibration_data_statistics(data):
         frames_with_initial_pose = 0
         frames_with_optimized_pose = 0
 
-        for frame_id, frame_data in sensor_data.get('frames', {}).items():
+        for frame_id, frame_i in sensor_data.get('frames', {}).items():
             total_frames += 1
-            if frame_data.get('image') is not None:
+            if frame_i.get('image') is not None:
                 frames_with_image += 1
-            if frame_data.get('extracted_target'):
+            if frame_i.get('extracted_target'):
                 frames_with_extracted_target += 1
-            if frame_data.get('poses'):
-                if frame_data['poses'].get('initial'):
+            if frame_i.get('poses'):
+                if frame_i['poses'].get('initial'):
                     frames_with_initial_pose += 1
-                if frame_data['poses'].get('optimized'):
+                if frame_i['poses'].get('optimized'):
                     frames_with_optimized_pose += 1
 
         statistics[sensor] = {
