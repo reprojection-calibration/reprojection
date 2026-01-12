@@ -26,13 +26,15 @@ class TestCameraCalibrationData(unittest.TestCase):
         self.assertEqual(len(statistics.keys()), 2)
 
         cam0_statistics = statistics['/cam0/image_raw']
-        self.assertEqual(len(cam0_statistics.keys()), 5)
+        self.assertEqual(len(cam0_statistics.keys()), 7)
 
         self.assertEqual(cam0_statistics['total_frames'], 879)
         self.assertEqual(cam0_statistics['frames_with_image'], 0)
         self.assertEqual(cam0_statistics['frames_with_extracted_target'], 879)
         self.assertEqual(cam0_statistics['frames_with_initial_pose'], 0)
+        self.assertEqual(cam0_statistics['frames_with_initial_reprojection_error'], 0)
         self.assertEqual(cam0_statistics['frames_with_optimized_pose'], 0)
+        self.assertEqual(cam0_statistics['frames_with_optimized_reprojection_error'], 0)
 
     def test_image_df_to_camera_calibration_data(self):
         df = load_images_df(self.db_path)
