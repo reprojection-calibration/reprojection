@@ -56,3 +56,26 @@ def load_reprojection_errors_df(db_path):
         return None
 
     return df
+
+
+# TODO(Jack): All of these functions are pretty similar to eachother, is there any way that we can combine them and
+#  eliminate code duplication?
+def add_reprojection_errors_df_to_camera_calibration_data(df, data):
+    for index, row in df.iterrows():
+        sensor = row['sensor_name']
+        if sensor not in data:
+            raise RuntimeError(f'Sensor {sensor} not present in camera calibration data dictionary', )
+
+        timestamp = row['timestamp_ns']
+        if timestamp not in data[sensor]['frames']:
+            raise RuntimeError(
+                f'Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary')
+
+        reprojection_error_type = row['type']
+        reprojection_error = row['data']
+
+        if 'reprojection_errors' not in data[sensor]['frames'][timestamp]:
+            data[sensor]['frames'][timestamp]['reprojection_errors'] = {}
+        data[sensor]['frames'][timestamp]['reprojection_errors'][reprojection_error_type] = reprojection_error
+
+    return data
