@@ -3,7 +3,7 @@ import os
 
 from database.load_extracted_targets import load_extracted_targets_df, \
     add_extracted_targets_df_to_camera_calibration_data
-from database.load_camera_poses import load_camera_poses_df
+from database.load_camera_poses import load_camera_poses_df, add_camera_poses_df_to_camera_calibration_data
 from database.load_images import image_df_to_camera_calibration_data, load_images_df
 
 
@@ -51,6 +51,18 @@ class TestCameraCalibrationData(unittest.TestCase):
         # here in python. At least partially.
         self.assertRaises(RuntimeError, add_extracted_targets_df_to_camera_calibration_data, df, {})
 
+    def test_camera_poses_df_to_camera_calibration_data(self):
+        db_path = '/home/stable-genius-gram/github/reprojection-calibration/reprojection/code/test_data/dataset-calib-imu4_512_16_del.db3'  # ERROR ERROR ERROR
+        df = load_images_df(db_path)
+        data = image_df_to_camera_calibration_data(df)
+
+        df = load_camera_poses_df(db_path)
+        add_camera_poses_df_to_camera_calibration_data(df, data)
+
+        self.assertEqual(len(data['/cam0/image_raw']['frames']), 879)
+
+        poses_i = data['/cam0/image_raw']['frames'][1520528314314184960]['poses']
+        self.assertEqual(len(poses_i.keys()), 2)
 
 if __name__ == '__main__':
     unittest.main()

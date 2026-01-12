@@ -20,3 +20,24 @@ def load_camera_poses_df(db_path):
         return None
 
     return df
+
+
+def add_camera_poses_df_to_camera_calibration_data(df, data):
+    for index, row in df.iterrows():
+        sensor = row['sensor_name']
+        if sensor not in data:
+            raise RuntimeError(f'Sensor {sensor} not present in camera calibration data dictionary', )
+
+        timestamp = row['timestamp_ns']
+        if timestamp not in data[sensor]['frames']:
+            raise RuntimeError(
+                f'Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary')
+
+        pose_type = row['type']
+        pose = row.iloc[-6:].tolist()
+
+        if 'poses' not in data[sensor]['frames'][timestamp]:
+            data[sensor]['frames'][timestamp]['poses'] = {}
+        data[sensor]['frames'][timestamp]['poses'][pose_type] = pose
+
+    return data
