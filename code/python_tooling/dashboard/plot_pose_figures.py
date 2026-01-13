@@ -73,13 +73,13 @@ def plot_pose_figure(timestamps_ns, data, title, yaxis_title, fig=None, legendgr
     timestamps_ns = [int(t) for t in timestamps_ns]
     timestamps_s = to_human_readable(timestamps_ns)
 
-    fig.add_scatter(x=timestamps_s, y=x, marker=dict(symbol=marker, color='rgb(255, 0, 0)'), mode='lines+markers',
+    fig.add_scatter(x=timestamps_s, y=x, marker=dict(symbol=marker, color='rgb(255, 0, 0)'), mode='markers',
                     name=x_name,
                     legendgroup=legendgroup)
-    fig.add_scatter(x=timestamps_s, y=y, marker=dict(symbol=marker, color='rgb(18, 174, 0)'), mode='lines+markers',
+    fig.add_scatter(x=timestamps_s, y=y, marker=dict(symbol=marker, color='rgb(18, 174, 0)'), mode='markers',
                     name=y_name,
                     legendgroup=legendgroup)
-    fig.add_scatter(x=timestamps_s, y=z, marker=dict(symbol=marker, color='rgb(0, 0, 255)'), mode='lines+markers',
+    fig.add_scatter(x=timestamps_s, y=z, marker=dict(symbol=marker, color='rgb(0, 0, 255)'), mode='markers',
                     name=z_name,
                     legendgroup=legendgroup)
 
