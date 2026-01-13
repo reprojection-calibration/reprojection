@@ -205,8 +205,9 @@ def update_slider_ticks(selected_sensor, data):
     timestamps_i = indexable_timestamps[selected_sensor]
 
     marks = {
-        i: f"{(timestamps_i[i] - timestamps_i[0]) / 1e9:.1f}s"
-        for i in range(0, len(timestamps_i), max(1, len(timestamps_i) // 10))
+        i: f"{int(round(sec / 5) * 5)}s"
+        for i, t in enumerate(timestamps_i)
+        if abs((sec := (t - timestamps_i[0]) / 1e9) % 5) < 0.05
     }
 
     return marks
