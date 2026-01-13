@@ -3,7 +3,7 @@ from dash import callback, Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
 from dash.exceptions import PreventUpdate
 
-from plot_pose_figures import extract_timestamps_and_poses, plot_pose_figure
+from plot_pose_figures import calculate_ticks_from_timestamps, extract_timestamps_and_poses_sorted, plot_pose_figure
 
 from database.load_camera_calibration_data import get_camera_calibration_data_statistics, \
     get_indexable_timestamp_record, load_camera_calibration_data
@@ -279,51 +279,21 @@ def refresh_sensor_list(data):
     return sensor_names, sensor_names[0]
 
 
-# NOTE(Jack): We want the user to be able to understand intuitively the time relationships of all components. Therefore
-# instead of only displaying the frame index or stamp in nanoseconds we add "seconds from start" tick marks to the
-# slider.
-# TODO(Jack): Can we use one single function to calculate the marks for all figures? At time of writing I think it is
-#  just a coincidence that the pose figure markers match this every five second tempo. We should do this
-#  programmatically if it helps us drive uniformity of time representation across different plots.
 @app.callback(
     Output("frame-id-slider", "marks"),
     Input("sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def calculate_slider_ticks(selected_sensor, data):
+def update_slider_marks(selected_sensor, data):
     if selected_sensor is None or data is None:
         raise PreventUpdate
 
-    _, indexable_timestamps = data
-    timestamps_i = indexable_timestamps[selected_sensor]
+    _, timestamps_sorted = data
+    timestamps_ns = timestamps_sorted[selected_sensor]
 
-    t0 = timestamps_i[0]
-    seconds_list = [(t - t0) / 1e9 for t in timestamps_i]
+    tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
 
-    max_time = seconds_list[-1]
-    # TODO(Jack): This line here hardcodes the function to generate marks with a spacing of 5s. For long datasets this
-    #  can get cramped! Figure a intelligent way to configure this. At time of writing the 5s interval matched the pose
-    #  pose figure interval, but this is not programmatically set!
-    target_times = range(0, int(max_time) + 1, 5)
-
-    marks = {}
-    for target in target_times:
-        closest_index = None
-        smallest_error = float("inf")
-
-        for i, seconds in enumerate(seconds_list):
-            error = abs(seconds - target)
-            if error < smallest_error:
-                smallest_error = error
-                closest_index = i
-
-        # WARN(Jack): This is not a critical warning, but note that in this function we are introducing some
-        # approximation error. Yes we are picking the closest index/timestamp to the target time, but it is not exactly
-        # the same time. I do not know where this might cause problems one day, but we should not forget this
-        # possibility!
-        marks[closest_index] = f"{target}s"
-
-    return marks
+    return dict(zip(tickvals_idx, ticktext))
 
 
 # TODO(Jack): We need to display the exact nanosecond timestamp of the current frame somewhere and somehow. If this is
@@ -382,7 +352,6 @@ def update_statistics(selected_sensor, data):
     ]
 
 
-# TODO(Jack): Use the same axes markers here that we calculate for the sliding index!!!
 @callback(
     Output('rotation-graph', 'figure'),
     Output('translation-graph', 'figure'),
@@ -407,17 +376,14 @@ def update_translation_graph(selected_sensor, pose_type, raw_data):
     if frames is None:
         return {}, {}
 
-    # TODO(Jack): Make sure we are not recalculating any timestamp related thing! One thing here that means it is maybe
-    #  not required to use the indexed timestamps is that here we depend only on correspondence and not order to plot
-    #  these figures.
-    timestamps, data = extract_timestamps_and_poses(frames, pose_type)
+    timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
-    rotations = [d[:3] for d in data]
-    rot_fig = plot_pose_figure(timestamps, rotations, 'Orientation', 'Axis Angle (rad)', x_name='rx', y_name='ry',
+    rotations = [d[:3] for d in poses]
+    rot_fig = plot_pose_figure(timestamps_ns, rotations, 'Orientation', 'Axis Angle (rad)', x_name='rx', y_name='ry',
                                z_name='rz')
 
-    translations = [d[3:] for d in data]
-    trans_fig = plot_pose_figure(timestamps, translations, 'Translation', 'Meter (m)')
+    translations = [d[3:] for d in poses]
+    trans_fig = plot_pose_figure(timestamps_ns, translations, 'Translation', 'Meter (m)')
 
     return rot_fig, trans_fig
 
