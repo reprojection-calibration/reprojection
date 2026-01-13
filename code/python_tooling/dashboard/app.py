@@ -1,6 +1,7 @@
 import os
 from dash import callback, Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
+from dash.exceptions import PreventUpdate
 
 from plot_pose_figures import extract_timestamps_and_poses, plot_pose_figure
 
@@ -252,6 +253,9 @@ def refresh_sensor_list(data):
     State("processed-data-store", "data"),
 )
 def calculate_slider_ticks(selected_sensor, data):
+    if selected_sensor is None or data is None:
+        raise PreventUpdate
+
     _, indexable_timestamps = data
     timestamps_i = indexable_timestamps[selected_sensor]
 
@@ -317,6 +321,9 @@ app.clientside_callback(
     State("processed-data-store", "data"),
 )
 def update_statistics(selected_sensor, data):
+    if selected_sensor is None or data is None:
+        raise PreventUpdate
+
     statistics, _ = data
 
     return [
