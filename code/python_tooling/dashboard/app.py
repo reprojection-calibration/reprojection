@@ -118,66 +118,63 @@ app.layout = html.Div([
                'margin': '10px', },
 
     ),
+    html.Div(
+        children=[
+            # The animation plays by default therefore the button is initialized with the pause graphic
+            html.Button(
+                children="⏸ Pause",
+                id="play-button",
+                n_clicks=0,
+                style={
+                    "width": "50px",
+                },
+            ),
+            html.Div(
+                children=[
+                    dcc.Slider(
+                        id="frame-id-slider",
+                        marks=None,
+                        min=0, max=0, step=1, value=0,
+                        tooltip={"placement": "top", "always_visible": True},
+                        updatemode="drag",
+                    ),
+                ],
+                style={
+                    "width": "70%",
+                },
+            ),
+            html.Div(
+                children=[
+                    html.P("Current timestamp (ns)"),
+                    html.Div(
+                        id="slider-timestamp",
+                    ),
+                ],
+            ),
+            html.Div(
+                children=[
+                    html.P("Max error (pix)"),
+                    dcc.Input(
+                        id='max-reprojection-error-input',
+                        type='number',
+                        min=0, max=1000,
+                        value=2,
+                    )
+                ],
+            ),
+        ],
+        style={
+            'alignItems': 'top',
+            'display': 'flex',
+            'flexDirection': 'row',
+            'gap': '10px',
+            'margin': '10px',
+            'flex': '1', },
+    ),
 
     dcc.Tabs([
         dcc.Tab(
             children=[
-                # TODO(Jack): We should have one slider/play button at the top level, not in any specific tab or section
-                #  that drives all related animations.
-                html.Div(
-                    children=[
-                        # The animation plays by default therefore the button is initialized with the pause graphic
-                        html.Button(
-                            children="⏸ Pause",
-                            id="play-button",
-                            n_clicks=0,
-                            style={
-                                "width": "50px",
-                            },
-                        ),
-                        html.Div(
-                            children=[
-                                dcc.Slider(
-                                    id="frame-id-slider",
-                                    marks=None,
-                                    min=0, max=0, step=1, value=0,
-                                    tooltip={"placement": "top", "always_visible": True},
-                                    updatemode="drag",
-                                ),
-                            ],
-                            style={
-                                "width": "70%",
-                            },
-                        ),
-                        html.Div(
-                            children=[
-                                html.P("Current timestamp (ns)"),
-                                html.Div(
-                                    id="slider-timestamp",
-                                ),
-                            ],
-                        ),
-                        html.Div(
-                            children=[
-                                html.P("Max error (pix)"),
-                                dcc.Input(
-                                    id='max-reprojection-error-input',
-                                    type='number',
-                                    min=0, max=1000,
-                                    value=2,
-                                )
-                            ],
-                        ),
-                    ],
-                    style={
-                        'alignItems': 'top',
-                        'display': 'flex',
-                        'flexDirection': 'row',
-                        'gap': '10px',
-                        'margin': '10px',
-                        'flex': '1', },
-                ),
-
                 html.Div(
                     children=[
                         dcc.Graph(
@@ -413,44 +410,78 @@ def update_translation_graph(selected_sensor, pose_type, raw_data):
 app.clientside_callback(
     """
     function(frame_idx, sensor, processed_data, fig_store, rot_fig, trans_fig) {
-        console.log(rot_fig);
-        if (!sensor || !processed_data || !fig_store || !rot_fig || !trans_fig) {
-              console.log("One or more of the inputs is missing.");
-            return [fig_store.rotation, fig_store.translation];
+
+        // ---- INITIAL BOOTSTRAP ONLY ----
+        if (!rot_fig || !trans_fig) {
+            if (fig_store && fig_store.rotation && fig_store.translation) {
+                return [fig_store.rotation, fig_store.translation];
+            }
+    
+            const EMPTY_FIG = {
+                data: [],
+                layout: {
+                    xaxis: { visible: true },
+                    yaxis: { visible: true },
+                    shapes: []
+                }
+            };
+            return [EMPTY_FIG, EMPTY_FIG];
         }
-        
-        const timestamps = processed_data[1][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
-              console.log("Invalid timestamps or frame index out of bounds:", sensor);
-            return [fig_store.rotation, fig_store.translation];
+    
+        // ---- STEADY STATE FROM HERE ON ----
+        if (!sensor || !processed_data) {
+            return [rot_fig, trans_fig];
         }
-        
+    
+        if (!processed_data[1] || !processed_data[1][sensor]) {
+            return [rot_fig, trans_fig];
+        }
+    
+        const timestamps = processed_data[1][sensor];
+        if (!timestamps || timestamps.length <= frame_idx) {
+            return [rot_fig, trans_fig];
+        }
+    
         const timestamp_0_ns = BigInt(timestamps[0]);
         const timestamp_i_ns = BigInt(timestamps[frame_idx]);
-        // TODO(Jack): This is also called "human readable" time elsewhere, can we have a more consistent name?
         const local_time_s = Number(timestamp_i_ns - timestamp_0_ns) / 1e9;
-
-        const vline = {
-            type: "line",
-            x0: local_time_s,
-            x1: local_time_s,
-            y0: 0,
-            y1: 1,
-            xref: "x",
-            yref: "paper",
-            line: {
-                color: "red",
-                width: 2,
-                dash: "dash"
-            }
-        };
-        
-        rot_fig = JSON.parse(JSON.stringify(fig_store.rotation));
-        rot_fig.layout.shapes = [vline];
-        
-        trans_fig = JSON.parse(JSON.stringify(fig_store.translation));
-        trans_fig.layout.shapes = [vline];
-
+    
+        // ---- ROTATION ----
+        if (!rot_fig.layout) rot_fig.layout = {};
+        if (!rot_fig.layout.shapes || rot_fig.layout.shapes.length === 0) {
+            rot_fig.layout.shapes = [{
+                type: "line",
+                x0: local_time_s,
+                x1: local_time_s,
+                y0: 0,
+                y1: 1,
+                xref: "x",
+                yref: "paper",
+                line: { color: "red", width: 2, dash: "dash" }
+            }];
+        } else {
+            rot_fig.layout.shapes[0].x0 = local_time_s;
+            rot_fig.layout.shapes[0].x1 = local_time_s;
+        }
+    
+        // ---- TRANSLATION ----
+        if (!trans_fig.layout) trans_fig.layout = {};
+        if (!trans_fig.layout.shapes || trans_fig.layout.shapes.length === 0) {
+            trans_fig.layout.shapes = [{
+                type: "line",
+                x0: local_time_s,
+                x1: local_time_s,
+                y0: 0,
+                y1: 1,
+                xref: "x",
+                yref: "paper",
+                line: { color: "red", width: 2, dash: "dash" }
+            }];
+        } else {
+            trans_fig.layout.shapes[0].x0 = local_time_s;
+            trans_fig.layout.shapes[0].x1 = local_time_s;
+        }
+    
         return [rot_fig, trans_fig];
     }
     """,
