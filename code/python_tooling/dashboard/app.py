@@ -235,6 +235,7 @@ app.layout = html.Div([
     # use the processed data!
     dcc.Store(id='raw-data-store'),
     dcc.Store(id='processed-data-store'),
+    dcc.Store(id='translation-figure-store'),
 ])
 
 
@@ -367,9 +368,9 @@ def update_statistics(selected_sensor, data):
     ]
 
 
+# TODO(Jack): Rename to "pose" concept, not just translation
 @callback(
-    Output('rotation-graph', 'figure'),
-    Output('translation-graph', 'figure'),
+    Output("translation-figure-store", "data"),
     Input('sensor-dropdown', 'value'),
     Input('pose-type-selector', 'value'),
     State('raw-data-store', 'data'),
@@ -389,7 +390,10 @@ def update_translation_graph(selected_sensor, pose_type, raw_data):
     # to be a nothing burger.
     frames = raw_data[selected_sensor]['frames']
     if frames is None:
-        return {}, {}
+        return {
+            "rotation": {},
+            "translation": {},
+        }
 
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
@@ -400,7 +404,65 @@ def update_translation_graph(selected_sensor, pose_type, raw_data):
     translations = [d[3:] for d in poses]
     trans_fig = plot_pose_figure(timestamps_ns, translations, 'Translation', 'Meter (m)')
 
-    return rot_fig, trans_fig
+    return {
+        "rotation": rot_fig,
+        "translation": trans_fig,
+    }
+
+
+app.clientside_callback(
+    """
+    function(frame_idx, sensor, processed_data, fig_store, rot_fig, trans_fig) {
+        console.log(rot_fig);
+        if (!sensor || !processed_data || !fig_store || !rot_fig || !trans_fig) {
+              console.log("One or more of the inputs is missing.");
+            return [fig_store.rotation, fig_store.translation];
+        }
+        
+        const timestamps = processed_data[1][sensor]
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
+              console.log("Invalid timestamps or frame index out of bounds:", sensor);
+            return [fig_store.rotation, fig_store.translation];
+        }
+        
+        const timestamp_0_ns = BigInt(timestamps[0]);
+        const timestamp_i_ns = BigInt(timestamps[frame_idx]);
+        // TODO(Jack): This is also called "human readable" time elsewhere, can we have a more consistent name?
+        const local_time_s = Number(timestamp_i_ns - timestamp_0_ns) / 1e9;
+
+        const vline = {
+            type: "line",
+            x0: local_time_s,
+            x1: local_time_s,
+            y0: 0,
+            y1: 1,
+            xref: "x",
+            yref: "paper",
+            line: {
+                color: "red",
+                width: 2,
+                dash: "dash"
+            }
+        };
+        
+        rot_fig = JSON.parse(JSON.stringify(fig_store.rotation));
+        rot_fig.layout.shapes = [vline];
+        
+        trans_fig = JSON.parse(JSON.stringify(fig_store.translation));
+        trans_fig.layout.shapes = [vline];
+
+        return [rot_fig, trans_fig];
+    }
+    """,
+    Output("rotation-graph", "figure"),
+    Output("translation-graph", "figure"),
+    Input("frame-id-slider", "value"),
+    Input("sensor-dropdown", "value"),
+    State("processed-data-store", "data"),
+    State("translation-figure-store", "data"),
+    State("rotation-graph", "figure"),
+    State("translation-graph", "figure"),
+)
 
 
 @callback(
