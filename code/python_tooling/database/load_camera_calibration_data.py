@@ -2,6 +2,8 @@ from database.load_extracted_targets import add_extracted_targets_df_to_camera_c
     load_extracted_targets_df
 from database.load_camera_poses import add_camera_poses_df_to_camera_calibration_data, load_camera_poses_df
 from database.load_images import image_df_to_camera_calibration_data, load_images_df
+from database.load_reprojection_errors import add_reprojection_errors_df_to_camera_calibration_data, \
+    load_reprojection_errors_df
 
 
 def load_camera_calibration_data(db_path):
@@ -14,6 +16,9 @@ def load_camera_calibration_data(db_path):
     df = load_camera_poses_df(db_path)
     add_camera_poses_df_to_camera_calibration_data(df, data)
 
+    df = load_reprojection_errors_df(db_path)
+    add_reprojection_errors_df_to_camera_calibration_data(df, data)
+
     return data
 
 
@@ -24,7 +29,9 @@ def get_camera_calibration_data_statistics(data):
         frames_with_image = 0
         frames_with_extracted_target = 0
         frames_with_initial_pose = 0
+        frames_with_initial_reprojection_error = 0
         frames_with_optimized_pose = 0
+        frames_with_optimized_reprojection_error = 0
 
         for frame_id, frame_i in sensor_data.get('frames', {}).items():
             total_frames += 1
@@ -37,13 +44,20 @@ def get_camera_calibration_data_statistics(data):
                     frames_with_initial_pose += 1
                 if frame_i['poses'].get('optimized'):
                     frames_with_optimized_pose += 1
+            if frame_i.get('reprojection_errors'):
+                if frame_i['reprojection_errors'].get('initial'):
+                    frames_with_initial_reprojection_error += 1
+                if frame_i['reprojection_errors'].get('optimized'):
+                    frames_with_optimized_reprojection_error += 1
 
         statistics[sensor] = {
             'total_frames': total_frames,
             'frames_with_image': frames_with_image,
             'frames_with_extracted_target': frames_with_extracted_target,
             'frames_with_initial_pose': frames_with_initial_pose,
-            'frames_with_optimized_pose': frames_with_optimized_pose
+            'frames_with_initial_reprojection_error': frames_with_initial_reprojection_error,
+            'frames_with_optimized_pose': frames_with_optimized_pose,
+            'frames_with_optimized_reprojection_error': frames_with_optimized_reprojection_error
         }
 
     return statistics

@@ -7,6 +7,8 @@ from database.load_extracted_targets import load_extracted_targets_df, \
     add_extracted_targets_df_to_camera_calibration_data
 from database.load_camera_poses import add_camera_poses_df_to_camera_calibration_data
 from database.load_images import image_df_to_camera_calibration_data, load_images_df
+from database.load_reprojection_errors import add_reprojection_errors_df_to_camera_calibration_data, \
+    load_reprojection_errors_df
 
 
 class TestCameraCalibrationData(unittest.TestCase):
@@ -24,13 +26,15 @@ class TestCameraCalibrationData(unittest.TestCase):
         self.assertEqual(len(statistics.keys()), 2)
 
         cam0_statistics = statistics['/cam0/image_raw']
-        self.assertEqual(len(cam0_statistics.keys()), 5)
+        self.assertEqual(len(cam0_statistics.keys()), 7)
 
         self.assertEqual(cam0_statistics['total_frames'], 879)
         self.assertEqual(cam0_statistics['frames_with_image'], 0)
         self.assertEqual(cam0_statistics['frames_with_extracted_target'], 879)
         self.assertEqual(cam0_statistics['frames_with_initial_pose'], 0)
+        self.assertEqual(cam0_statistics['frames_with_initial_reprojection_error'], 0)
         self.assertEqual(cam0_statistics['frames_with_optimized_pose'], 0)
+        self.assertEqual(cam0_statistics['frames_with_optimized_reprojection_error'], 0)
 
     def test_image_df_to_camera_calibration_data(self):
         df = load_images_df(self.db_path)
@@ -97,6 +101,35 @@ class TestCameraCalibrationData(unittest.TestCase):
 
         # Foreign key constraint check, see comment in test_add_extracted_targets_df_to_camera_calibration_data.
         self.assertRaises(RuntimeError, add_camera_poses_df_to_camera_calibration_data, df, {})
+
+    def test_add_reprojection_errors_df_to_camera_calibration_data(self):
+        df = load_images_df(self.db_path)
+        data = image_df_to_camera_calibration_data(df)
+
+        # See comment above test_add_camera_poses_df_to_camera_calibration_data about why we hardcode the data in here.
+        reprojection_error_data = [
+            {'timestamp_ns': 1520528314314184960, 'sensor_name': '/cam0/image_raw', 'type': 'initial',
+             'data': [[0, 1], [2, 3], [4, 5]]
+             },
+            {'timestamp_ns': 1520528314314184960, 'sensor_name': '/cam0/image_raw', 'type': 'optimized',
+             'data': [[0, 11], [22, 33], [44, 55]]
+             },
+        ]
+
+        df = pd.DataFrame(reprojection_error_data)
+        add_reprojection_errors_df_to_camera_calibration_data(df, data)
+
+        # Check that no new frames got added by accident.
+        self.assertEqual(len(data['/cam0/image_raw']['frames']), 879)
+
+        # Check the artificially created poses.
+        reprojection_errors_i = data['/cam0/image_raw']['frames'][1520528314314184960]['reprojection_errors']
+        self.assertEqual(len(reprojection_errors_i.keys()), 2)
+        self.assertEqual(reprojection_errors_i['initial'], [[0, 1], [2, 3], [4, 5]])
+        self.assertEqual(reprojection_errors_i['optimized'], [[0, 11], [22, 33], [44, 55]])
+
+        # Foreign key constraint check, see comment in test_add_extracted_targets_df_to_camera_calibration_data.
+        self.assertRaises(RuntimeError, add_reprojection_errors_df_to_camera_calibration_data, df, {})
 
 
 if __name__ == '__main__':
