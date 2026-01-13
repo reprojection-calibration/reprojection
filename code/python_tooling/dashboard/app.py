@@ -422,6 +422,7 @@ def init_extracted_target_figures(sensor, data):
 
     # TODO(Jack): Confirm/test ALL axes properties (ranges, names, orders etc.) None of this has been checked! Even the
     #  coordinate conventions of the pixels and points needs to be checked!
+    # TODO(Jack): Eliminate copy and paste here in this method! We basically do the same thing twice.
     xy_fig = go.Figure()
     xy_fig.add_trace(
         go.Scatter(
@@ -429,6 +430,7 @@ def init_extracted_target_figures(sensor, data):
             y=[],
             mode="markers",
             marker=dict(size=6),
+            hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
         )
     )
     xy_fig.update_layout(
@@ -452,7 +454,7 @@ def init_extracted_target_figures(sensor, data):
             y=[],
             mode="markers",
             marker=dict(size=6),
-            name="Pixels",
+            hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
         )
     )
     pixel_fig.update_layout(
