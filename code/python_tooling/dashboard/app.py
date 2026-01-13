@@ -7,6 +7,7 @@ from plot_pose_figures import extract_timestamps_and_poses, plot_pose_figure
 
 from database.load_camera_calibration_data import get_camera_calibration_data_statistics, \
     get_indexable_timestamp_record, load_camera_calibration_data
+from database.types import PoseType
 
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
@@ -96,10 +97,10 @@ app.layout = html.Div([
                     dcc.RadioItems(
                         id="pose-type-selector",
                         options=[
-                            {"label": "Initial", "value": "initial"},
-                            {"label": "Optimized", "value": "optimized"},
+                            {"label": "Initial", "value": PoseType.Initial},
+                            {"label": "Optimized", "value": PoseType.Optimized},
                         ],
-                        value="initial",  # default selection
+                        value=PoseType.Initial,
                     )
                 ],
                 style={'align-items': 'top',
@@ -381,15 +382,23 @@ def update_statistics(selected_sensor, data):
     ]
 
 
+# TODO(Jack): Use the same axes markers here that we calculate for the sliding index!!!
 @callback(
     Output('rotation-graph', 'figure'),
     Output('translation-graph', 'figure'),
     Input('sensor-dropdown', 'value'),
+    Input('pose-type-selector', 'value'),
     State('raw-data-store', 'data'),
 )
-def update_translation_graph(selected_sensor, raw_data):
-    if not selected_sensor or not raw_data:
-        return {}, {}
+def update_translation_graph(selected_sensor, pose_type, raw_data):
+    # TODO(Jack): What is an effective way to actually use this mechanism? Having it at the start of every single
+    #  callback does not feel right somehow. But managing when each input or state is available is not trivial! For
+    #  example here the pose type always should have a default value, and technically the raw-data store should always
+    #  be populated before the sensor dropdown triggers (because the sensor dropdown depends on the raw data being
+    #  loaded). But what if any of those things change? And as this program scales these relationships will likely no
+    #  longer be trackable. Does that mean the best option is to actually raise PreventUpdate at every callback?
+    if selected_sensor is None or pose_type is None or raw_data is None:
+        raise PreventUpdate
 
     # TODO(Jack): Technically this is not nice. To access a key (frames) without checking that it exists. However this
     # is so fundamental to the data structure I think I can be forgiven for this. Remove this todo later if it turns out
@@ -398,14 +407,10 @@ def update_translation_graph(selected_sensor, raw_data):
     if frames is None:
         return {}, {}
 
-    # TODO WARN ERROR
-    # TODO TODO TODO
-    # TODO(Jack): Add optimized pose initialization! Or the option to choose between the two.
-    # TODO TODO TODO
     # TODO(Jack): Make sure we are not recalculating any timestamp related thing! One thing here that means it is maybe
     #  not required to use the indexed timestamps is that here we depend only on correspondence and not order to plot
     #  these figures.
-    timestamps, data = extract_timestamps_and_poses(frames, 'initial')
+    timestamps, data = extract_timestamps_and_poses(frames, pose_type)
 
     rotations = [d[:3] for d in data]
     rot_fig = plot_pose_figure(timestamps, rotations, 'Orientation', 'Axis Angle (rad)', x_name='rx', y_name='ry',
