@@ -194,21 +194,46 @@ def refresh_sensor_list(data):
     return sensor_names, sensor_names[0]
 
 
+# NOTE(Jack): We want the user to be able to understand intuitively the time relationships of all components. Therefore
+# instead of only displaying the frame index or stamp in nanoseconds we add "seconds from start" tick marks to the
+# slider.
+# TODO(Jack): Can we use one single function to calculate the marks for all figures? At time of writing I think it is
+#  just a coincidence that the pose figure markers match this every five second tempo. We should do this
+#  programmatically if it helps us drive uniformity of time representation across different plots.
 @app.callback(
     Output("frame-id-slider", "marks"),
     Input("sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def update_slider_ticks(selected_sensor, data):
+def calculate_slider_ticks(selected_sensor, data):
     _, indexable_timestamps = data
-
     timestamps_i = indexable_timestamps[selected_sensor]
 
-    marks = {
-        i: f"{int(round(sec / 5) * 5)}s"
-        for i, t in enumerate(timestamps_i)
-        if abs((sec := (t - timestamps_i[0]) / 1e9) % 5) < 0.05
-    }
+    t0 = timestamps_i[0]
+    seconds_list = [(t - t0) / 1e9 for t in timestamps_i]
+
+    max_time = seconds_list[-1]
+    # TODO(Jack): This line here hardcodes the function to generate marks with a spacing of 5s. For long datasets this
+    #  can get cramped! Figure a intelligent way to configure this. At time of writing the 5s interval matched the pose
+    #  pose figure interval, but this is not programmatically set!
+    target_times = range(0, int(max_time) + 1, 5)
+
+    marks = {}
+    for target in target_times:
+        closest_index = None
+        smallest_error = float("inf")
+
+        for i, seconds in enumerate(seconds_list):
+            error = abs(seconds - target)
+            if error < smallest_error:
+                smallest_error = error
+                closest_index = i
+
+        # WARN(Jack): This is not a critical warning, but note that in this function we are introducing some
+        # approximation error. Yes we are picking the closest index/timestamp to the target time, but it is not exactly
+        # the same time. I do not know where this might cause problems one day, but we should not forget this
+        # possibility!
+        marks[closest_index] = f"{target}s"
 
     return marks
 
