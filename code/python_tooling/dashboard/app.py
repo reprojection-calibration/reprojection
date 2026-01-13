@@ -152,17 +152,32 @@ app.layout = html.Div([
                                     id="frame-id-slider",
                                     marks=None,
                                     min=0, max=0, step=1, value=0,
-                                    tooltip={"placement": "bottom", "always_visible": True},
+                                    tooltip={"placement": "top", "always_visible": True},
                                     updatemode="drag",
                                 ),
                             ],
                             style={
-                                "width": "80%",
+                                "width": "70%",
                             },
                         ),
                         html.Div(
-                            id="slider-timestamp",
-
+                            children=[
+                                html.P("Current timestamp (ns)"),
+                                html.Div(
+                                    id="slider-timestamp",
+                                ),
+                            ],
+                        ),
+                        html.Div(
+                            children=[
+                                html.P("Max error (pix)"),
+                                dcc.Input(
+                                    id='max-reprojection-error-input',
+                                    type='number',
+                                    min=0, max=1000,
+                                    value=1,
+                                )
+                            ],
                         ),
                     ],
                     style={
@@ -180,14 +195,14 @@ app.layout = html.Div([
                             id="targets-xy-graph",
                             style={
                                 "width": "100%",
-                                "height": "80vh",
+                                "height": "60vh",
                             },
                         ),
                         dcc.Graph(
                             id="targets-pixels-graph",
                             style={
                                 "width": "100%",
-                                "height": "80vh",
+                                "height": "60vh",
                             },
                         ),
                     ],
@@ -312,7 +327,7 @@ app.clientside_callback(
         
         const timestamp_i = BigInt(timestamps[frame_idx])
 
-        return "t = " + timestamp_i.toString() + " (ns)";
+        return timestamp_i.toString();
     }
     """,
     Output("slider-timestamp", "children"),
@@ -499,7 +514,7 @@ def init_extracted_target_figures(sensor, data):
 
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, raw_data, processed_data,  xy_fig, pixel_fig) {
+    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data,  xy_fig, pixel_fig) {
         if (!sensor || !pose_type || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
               console.log("One or more of the inputs is missing.");
             return [xy_fig, pixel_fig];
@@ -562,11 +577,11 @@ app.clientside_callback(
         xy_fig.data[0].marker = {size: 12, 
                         color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
                         colorscale: "Bluered", 
-                        cmin: 0, cmax: 1};
+                        cmin: 0, cmax: cmax};
         pixel_fig.data[0].marker = {size: 6, 
                         color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
                         colorscale: "Bluered", 
-                        cmin: 0, cmax: 1};
+                        cmin: 0, cmax: cmax};
         
         return [xy_fig, pixel_fig];
     }
@@ -576,6 +591,7 @@ app.clientside_callback(
     Input("frame-id-slider", "value"),
     Input("sensor-dropdown", "value"),
     Input('pose-type-selector', 'value'),
+    Input('max-reprojection-error-input', 'value'),
     State("raw-data-store", "data"),
     State("processed-data-store", "data"),
     State("targets-xy-graph", "figure"),
