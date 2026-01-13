@@ -87,9 +87,7 @@ app.layout = html.Div([
             children=[
                 # TODO(Jack): We should have one slider/play button at the top level, not in any specific tab or section
                 #  that drives all related animations.
-                # TODO(Jack): Once the data is loaded and we know the real number of frames we should either display
-                #  some frame ids and or timestamps along the slider so the user can have some intuition of time and
-                #  scale.
+                html.Div(id="slider-timestamp", style={"marginTop": "4px"}),
                 dcc.Slider(
                     id="frame-id-slider",
                     marks=None,
@@ -195,6 +193,7 @@ def refresh_sensor_list(data):
 
     return sensor_names, sensor_names[0]
 
+
 @app.callback(
     Output("frame-id-slider", "marks"),
     Input("sensor-dropdown", "value"),
@@ -205,12 +204,38 @@ def update_slider_ticks(selected_sensor, data):
 
     timestamps_i = indexable_timestamps[selected_sensor]
 
-    marks={
+    marks = {
         i: f"{(timestamps_i[i] - timestamps_i[0]) / 1e9:.1f}s"
-        for i in range(0, len(timestamps_i), max(1, len(timestamps_i)//10))
+        for i in range(0, len(timestamps_i), max(1, len(timestamps_i) // 10))
     }
 
     return marks
+
+
+# TODO(Jack): We need to display the exact nanosecond timestamp of the current frame somewhere and somehow. If this is
+#  is the best way to do this I am not 100% sure just yet.
+app.clientside_callback(
+    """
+    function(frame_idx, data, sensor) {
+         if (!data || !sensor) {
+            return "";
+        }
+        
+        const timestamps = data[1][sensor]
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
+            return "";
+        }
+        
+        const timestamp_i = BigInt(timestamps[frame_idx])
+
+        return "t = " + timestamp_i.toString() + " ns";
+    }
+    """,
+    Output("slider-timestamp", "children"),
+    Input("frame-id-slider", "value"),
+    State("processed-data-store", "data"),
+    State("sensor-dropdown", "value"),
+)
 
 
 # Callback to update the loaded statuses
