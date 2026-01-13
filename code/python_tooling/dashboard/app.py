@@ -207,7 +207,7 @@ app.layout = html.Div([
     dcc.Interval(
         disabled=False,
         id="play-interval",
-        interval=50,
+        interval=100,
     ),
 
     # NOTE(Jack): What we want to prevent is that big chunks of data get sent to and from the browse more than they
