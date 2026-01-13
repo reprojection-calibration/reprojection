@@ -407,16 +407,17 @@ def update_translation_graph(selected_sensor, pose_type, raw_data):
     }
 
 
+# ERROR IT WILL NOT UPDATE WHEN WE SELECT FROM OPTIMIZED/INITIAL
 app.clientside_callback(
     """
-    function(frame_idx, sensor, processed_data, fig_store, rot_fig, trans_fig) {
-
-        // ---- INITIAL BOOTSTRAP ONLY ----
+    function(frame_idx, sensor, fig_store, processed_data, rot_fig, trans_fig) {
         if (!rot_fig || !trans_fig) {
             if (fig_store && fig_store.rotation && fig_store.translation) {
+                console.log("Initializing figures from store.");
                 return [fig_store.rotation, fig_store.translation];
             }
     
+            console.log("Got nothing in the store yet, will return empty figs.");
             const EMPTY_FIG = {
                 data: [],
                 layout: {
@@ -446,51 +447,31 @@ app.clientside_callback(
         const timestamp_i_ns = BigInt(timestamps[frame_idx]);
         const local_time_s = Number(timestamp_i_ns - timestamp_0_ns) / 1e9;
     
-        // ---- ROTATION ----
-        if (!rot_fig.layout) rot_fig.layout = {};
-        if (!rot_fig.layout.shapes || rot_fig.layout.shapes.length === 0) {
-            rot_fig.layout.shapes = [{
-                type: "line",
-                x0: local_time_s,
-                x1: local_time_s,
-                y0: 0,
-                y1: 1,
-                xref: "x",
-                yref: "paper",
-                line: { color: "red", width: 2, dash: "dash" }
-            }];
-        } else {
-            rot_fig.layout.shapes[0].x0 = local_time_s;
-            rot_fig.layout.shapes[0].x1 = local_time_s;
-        }
+        // NOTE(Jack): The "paper" coordinate system goes from 0 to 1 to cover the entire figure, so we set yref to 
+        // "paper" so that the y0=0 and y1=1 dimensions will draw a vertical line the entire figure height. 
+        patch = new dash_clientside.Patch;
+        const new_shape = {
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper', 
+            x0: local_time_s,
+            x1: local_time_s,
+            y0: 0,
+            y1: 1,
+            line: {color: 'red', width: 1},
+            fillcolor: 'rgba(255, 0, 0, 0.2)'
+        };
+        patch.assign(['layout', 'shapes'], [new_shape]);
     
-        // ---- TRANSLATION ----
-        if (!trans_fig.layout) trans_fig.layout = {};
-        if (!trans_fig.layout.shapes || trans_fig.layout.shapes.length === 0) {
-            trans_fig.layout.shapes = [{
-                type: "line",
-                x0: local_time_s,
-                x1: local_time_s,
-                y0: 0,
-                y1: 1,
-                xref: "x",
-                yref: "paper",
-                line: { color: "red", width: 2, dash: "dash" }
-            }];
-        } else {
-            trans_fig.layout.shapes[0].x0 = local_time_s;
-            trans_fig.layout.shapes[0].x1 = local_time_s;
-        }
-    
-        return [rot_fig, trans_fig];
+        return [patch.build(), patch.build()];
     }
     """,
     Output("rotation-graph", "figure"),
     Output("translation-graph", "figure"),
     Input("frame-id-slider", "value"),
     Input("sensor-dropdown", "value"),
+    Input("translation-figure-store", "data"),
     State("processed-data-store", "data"),
-    State("translation-figure-store", "data"),
     State("rotation-graph", "figure"),
     State("translation-graph", "figure"),
 )
@@ -609,19 +590,19 @@ app.clientside_callback(
     """
     function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data,  xy_fig, pixel_fig) {
         if (!sensor || !pose_type || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
-              console.log("One or more of the inputs is missing.");
+            console.log("One or more of the inputs is missing.");
             return [xy_fig, pixel_fig];
         }
         
         const timestamps = processed_data[1][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
-              console.log("Invalid timestamps or frame index out of bounds:", sensor);
+            console.log("Invalid timestamps or frame index out of bounds:", sensor);
             return [xy_fig, pixel_fig];
         }
         
         const timestamp_i = BigInt(timestamps[frame_idx])
         if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
-              console.log("Raw data structure is incomplete for sensor:", sensor);
+            console.log("Raw data structure is incomplete for sensor:", sensor);
             return [xy_fig, pixel_fig];
         }
         
