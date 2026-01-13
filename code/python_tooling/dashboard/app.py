@@ -42,9 +42,9 @@ app.layout = html.Div([
                                 n_clicks=0,
                             ),
                         ],
-                        style={'align-items': 'center',
+                        style={'alignItems': 'center',
                                'display': 'flex',
-                               'flex-direction': 'row',
+                               'flexDirection': 'row',
                                'gap': '10px',
                                'margin': '10px',
                                'flex': '1', },
@@ -60,18 +60,18 @@ app.layout = html.Div([
                                 style={'width': '300px'},
                             ),
                         ],
-                        style={'align-items': 'center',
+                        style={'alignItems': 'center',
                                'display': 'flex',
-                               'flex-direction': 'row',
+                               'flexDirection': 'row',
                                'gap': '10px',
                                'margin': '10px',
                                'flex': '1', },
                     ),
 
                 ],
-                style={'align-items': 'flex-start',
+                style={'alignItems': 'flex-start',
                        'display': 'flex',
-                       'flex-direction': 'column',
+                       'flexDirection': 'column',
                        'gap': '10px',
                        'margin': '10px',
                        'flex': '1', },
@@ -85,9 +85,9 @@ app.layout = html.Div([
                         ]
                     ),
                 ],
-                style={'align-items': 'top',
+                style={'alignItems': 'top',
                        'display': 'flex',
-                       'flex-direction': 'row',
+                       'flexDirection': 'row',
                        'gap': '10px',
                        'margin': '10px',
                        'flex': '1', },
@@ -103,17 +103,17 @@ app.layout = html.Div([
                         value=PoseType.Initial,
                     )
                 ],
-                style={'align-items': 'top',
+                style={'alignItems': 'top',
                        'display': 'flex',
-                       'flex-direction': 'row',
+                       'flexDirection': 'row',
                        'gap': '10px',
                        'margin': '10px',
                        'flex': '1', },
             ),
         ],
-        style={'align-items': 'top',
+        style={'alignItems': 'top',
                'display': 'flex',
-               'flex-direction': 'row',
+               'flexDirection': 'row',
                'gap': '10px',
                'margin': '10px', },
 
@@ -166,9 +166,9 @@ app.layout = html.Div([
                         ),
                     ],
                     style={
-                        'align-items': 'top',
+                        'alignItems': 'top',
                         'display': 'flex',
-                        'flex-direction': 'row',
+                        'flexDirection': 'row',
                         'gap': '10px',
                         'margin': '10px',
                         'flex': '1', },
@@ -371,7 +371,7 @@ def update_statistics(selected_sensor, data):
                     "",
                     style={
                         "width": "20px", "height": "20px", "backgroundColor": "green" if value != 0 else "red",
-                        "display": "inline-block", "margin-right": "10px"
+                        "display": "inline-block", "marginRight": "10px"
                     },
                 ),
                 html.Div(value, style={"width": "35px", "display": "inline-block"}),
@@ -533,8 +533,8 @@ def init_extracted_target_figures(sensor, data):
 
 app.clientside_callback(
     """
-    function(frame_idx, raw_data, processed_data, sensor, xy_fig, pixel_fig) {
-        if (!raw_data || !processed_data || !sensor || !xy_fig || !pixel_fig) {
+    function(frame_idx, sensor, raw_data, processed_data,  xy_fig, pixel_fig) {
+        if (!sensor || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
               console.log("One or more of the inputs is missing.");
             return [xy_fig, pixel_fig];
         }
@@ -608,9 +608,10 @@ app.clientside_callback(
     Output("targets-xy-graph", "figure"),
     Output("targets-pixels-graph", "figure"),
     Input("frame-id-slider", "value"),
+    Input("sensor-dropdown", "value"),
+    # Input('pose-type-selector', 'value'),
     State("raw-data-store", "data"),
     State("processed-data-store", "data"),
-    State("sensor-dropdown", "value"),
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),
 )
