@@ -146,14 +146,26 @@ app.layout = html.Div([
                     children=[
                         dcc.Graph(
                             id="targets-xy-graph",
-                            style={"width": "50%"}
+                            style={
+                                "width": "100%",
+                                "height": "80vh",
+                            },
                         ),
                         dcc.Graph(
                             id="targets-pixels-graph",
-                            style={"width": "50%"}
+                            style={
+                                "width": "100%",
+                                "height": "80vh",
+                            },
                         ),
                     ],
-                    style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
+                    style={
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "20px",
+                        "flex": "1",
+                        "width": "100%",
+                    },
                 ),
                 # The animation plays by default therefore the button is initialized with the pause graphic
                 html.Button(
@@ -430,25 +442,28 @@ def init_extracted_target_figures(sensor, data):
     # TODO(Jack): Confirm/test ALL axes properties (ranges, names, orders etc.) None of this has been checked! Even the
     #  coordinate conventions of the pixels and points needs to be checked!
     # TODO(Jack): Eliminate copy and paste here in this method! We basically do the same thing twice.
+    # TODO(Jack): We have now copy and pasted in several places that the marker size for xy_fig is 12 and for pixel_fig
+    #  is 6. This is a hack! We need to auto scale all dimensions and all marker sizes! Or at least make them more
+    #  generic.
     xy_fig = go.Figure()
     xy_fig.add_trace(
         go.Scatter(
             x=[],
             y=[],
             mode="markers",
-            marker=dict(size=6),
+            marker=dict(size=12),
             hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
         )
     )
     xy_fig.update_layout(
         title="Target Points (XY)",
         xaxis=dict(
-            range=[-1, 1],  # ERROR(Jack): Do not hardcode or use global
+            range=[-0.1, 0.76],  # ERROR(Jack): Do not hardcode or use global
             title=dict(text="x"),
             constrain="domain",
         ),
         yaxis=dict(
-            range=[-1, 1],  # ERROR(Jack): Do not hardcode or use global
+            range=[-0.1, 0.76],  # ERROR(Jack): Do not hardcode or use global
             title=dict(text="y"),
             scaleanchor="x",
         ),
@@ -533,7 +548,7 @@ app.clientside_callback(
         const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
         if (!reprojection_errors) {
             // If no reprojection errors are available then return to default marker configuration.
-            xy_fig.data[0].marker = {size: 6}
+            xy_fig.data[0].marker = {size: 12}
             pixel_fig.data[0].marker = {size: 6}
             
             return [xy_fig, pixel_fig];
@@ -548,12 +563,14 @@ app.clientside_callback(
             return [xy_fig, pixel_fig];
         }
         
-        const markers = {size: 6, 
+        xy_fig.data[0].marker = {size: 12, 
                         color: initial_reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
                         colorscale: "Bluered", 
                         cmin: 0, cmax: 1};
-        xy_fig.data[0].marker = markers
-        pixel_fig.data[0].marker = markers
+        pixel_fig.data[0].marker = {size: 6, 
+                        color: initial_reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
+                        colorscale: "Bluered", 
+                        cmin: 0, cmax: 1};
         
         return [xy_fig, pixel_fig];
     }
