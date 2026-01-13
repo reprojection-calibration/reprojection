@@ -31,7 +31,7 @@ struct DoubleSphere {
         T const d2{ceres::sqrt(r2 + wz * wz)};
 
         T const& alpha{intrinsics[5]};
-        T const z_star{(alpha * d2) + (1.0 - alpha) * (xi * d1 + z)};
+        T const z_star{(alpha * d2) + (1.0 - alpha) * wz};
         Eigen::Array<T, 3, 1> const P_star{x, y, z_star};
 
         return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
