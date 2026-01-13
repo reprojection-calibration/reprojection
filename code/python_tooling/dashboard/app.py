@@ -134,14 +134,45 @@ app.layout = html.Div([
             children=[
                 # TODO(Jack): We should have one slider/play button at the top level, not in any specific tab or section
                 #  that drives all related animations.
-                html.Div(id="slider-timestamp", style={"marginTop": "4px"}),
-                dcc.Slider(
-                    id="frame-id-slider",
-                    marks=None,
-                    min=0, max=0, step=1, value=0,
-                    tooltip={"placement": "bottom", "always_visible": True},
-                    updatemode="drag",
+                html.Div(
+                    children=[
+                        # The animation plays by default therefore the button is initialized with the pause graphic
+                        html.Button(
+                            children="⏸ Pause",
+                            id="play-button",
+                            n_clicks=0,
+                            style={
+                                "width": "50px",
+                            },
+                        ),
+                        html.Div(
+                            children=[
+                                dcc.Slider(
+                                    id="frame-id-slider",
+                                    marks=None,
+                                    min=0, max=0, step=1, value=0,
+                                    tooltip={"placement": "bottom", "always_visible": True},
+                                    updatemode="drag",
+                                ),
+                            ],
+                            style={
+                                "width": "80%",
+                            },
+                        ),
+                        html.Div(
+                            id="slider-timestamp",
+
+                        ),
+                    ],
+                    style={
+                        'align-items': 'top',
+                        'display': 'flex',
+                        'flex-direction': 'row',
+                        'gap': '10px',
+                        'margin': '10px',
+                        'flex': '1', },
                 ),
+
                 html.Div(
                     children=[
                         dcc.Graph(
@@ -166,12 +197,6 @@ app.layout = html.Div([
                         "flex": "1",
                         "width": "100%",
                     },
-                ),
-                # The animation plays by default therefore the button is initialized with the pause graphic
-                html.Button(
-                    children="⏸ Pause",
-                    id="play-button",
-                    n_clicks=0,
                 ),
             ],
             label='Feature Extraction',
@@ -316,7 +341,7 @@ app.clientside_callback(
         
         const timestamp_i = BigInt(timestamps[frame_idx])
 
-        return "t = " + timestamp_i.toString() + " ns";
+        return "t = " + timestamp_i.toString() + " (ns)";
     }
     """,
     Output("slider-timestamp", "children"),
