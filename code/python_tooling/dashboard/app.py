@@ -122,17 +122,6 @@ app.layout = html.Div([
     dcc.Tabs([
         dcc.Tab(
             children=[
-                dcc.Graph(
-                    id='rotation-graph',
-                ),
-                dcc.Graph(
-                    id='translation-graph',
-                ),
-            ],
-            label='Camera Poses',
-        ),
-        dcc.Tab(
-            children=[
                 # TODO(Jack): We should have one slider/play button at the top level, not in any specific tab or section
                 #  that drives all related animations.
                 html.Div(
@@ -175,7 +164,7 @@ app.layout = html.Div([
                                     id='max-reprojection-error-input',
                                     type='number',
                                     min=0, max=1000,
-                                    value=1,
+                                    value=2,
                                 )
                             ],
                         ),
@@ -216,6 +205,17 @@ app.layout = html.Div([
                 ),
             ],
             label='Feature Extraction',
+        ),
+        dcc.Tab(
+            children=[
+                dcc.Graph(
+                    id='rotation-graph',
+                ),
+                dcc.Graph(
+                    id='translation-graph',
+                ),
+            ],
+            label='Camera Poses',
         ),
     ]),
 
