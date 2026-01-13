@@ -533,8 +533,8 @@ def init_extracted_target_figures(sensor, data):
 
 app.clientside_callback(
     """
-    function(frame_idx, sensor, raw_data, processed_data,  xy_fig, pixel_fig) {
-        if (!sensor || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
+    function(frame_idx, sensor, pose_type, raw_data, processed_data,  xy_fig, pixel_fig) {
+        if (!sensor || !pose_type || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
               console.log("One or more of the inputs is missing.");
             return [xy_fig, pixel_fig];
         }
@@ -577,28 +577,28 @@ app.clientside_callback(
         // simply return the figures with the plain colored points and pixels.
         const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
         if (!reprojection_errors) {
-            // If no reprojection errors are available then return to default marker configuration.
+            // If no reprojection errors are available at all then return to default marker configuration.
             xy_fig.data[0].marker = {size: 12}
             pixel_fig.data[0].marker = {size: 6}
             
             return [xy_fig, pixel_fig];
         }
         
-        // TODO WARN ERROR
-        // TODO WARN ERROR
-        // TODO WARN ERROR
-        // TODO WARN ERROR HANDLE INTIIAL VS OPTIMIZED!!! For now we just hardcode initial.
-        const initial_reprojection_error = reprojection_errors['optimized']
-        if (!initial_reprojection_error) {
+        const reprojection_error = reprojection_errors[pose_type]
+        if (!reprojection_error) {
+            // If the requested reprojection error is not available then return to default marker configuration.
+            xy_fig.data[0].marker = {size: 12}
+            pixel_fig.data[0].marker = {size: 6}
+            
             return [xy_fig, pixel_fig];
         }
         
         xy_fig.data[0].marker = {size: 12, 
-                        color: initial_reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
+                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
                         colorscale: "Bluered", 
                         cmin: 0, cmax: 1};
         pixel_fig.data[0].marker = {size: 6, 
-                        color: initial_reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
+                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
                         colorscale: "Bluered", 
                         cmin: 0, cmax: 1};
         
@@ -609,7 +609,7 @@ app.clientside_callback(
     Output("targets-pixels-graph", "figure"),
     Input("frame-id-slider", "value"),
     Input("sensor-dropdown", "value"),
-    # Input('pose-type-selector', 'value'),
+    Input('pose-type-selector', 'value'),
     State("raw-data-store", "data"),
     State("processed-data-store", "data"),
     State("targets-xy-graph", "figure"),
