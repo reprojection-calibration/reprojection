@@ -86,12 +86,15 @@ def plot_pose_figure(timestamps_ns, data, title, yaxis_title, fig=None, legendgr
     _, tickvals_s, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
     fig.update_layout(
         title=title,
-        yaxis_title=yaxis_title,
         xaxis=dict(
             title="Time (s)",
             tickmode="array",
             tickvals=tickvals_s,
             ticktext=ticktext,
+        ),
+        yaxis=dict(
+            title=yaxis_title,
+            range=[-4, 4], # TODO TO NOT HARDCODE
         ),
     )
 
