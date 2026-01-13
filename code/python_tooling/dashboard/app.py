@@ -411,13 +411,22 @@ def update_translation_graph(selected_sensor, pose_type, raw_data):
 app.clientside_callback(
     """
     function(frame_idx, sensor, fig_store, processed_data, rot_fig, trans_fig) {
+        // DOCUMENT
+        const ctx = dash_clientside.callback_context;
+        const triggered = dash_clientside.callback_context.triggered.map(t => t.prop_id);
+        if (triggered.includes("translation-figure-store.data")) {
+            if (fig_store && fig_store.rotation && fig_store.translation) {
+                console.log("Store updated → refreshing figures");
+                return [fig_store.rotation, fig_store.translation];
+            }
+        }
+    
+        // DOCUMENT
         if (!rot_fig || !trans_fig) {
             if (fig_store && fig_store.rotation && fig_store.translation) {
-                console.log("Initializing figures from store.");
                 return [fig_store.rotation, fig_store.translation];
             }
     
-            console.log("Got nothing in the store yet, will return empty figs.");
             const EMPTY_FIG = {
                 data: [],
                 layout: {
@@ -458,9 +467,10 @@ app.clientside_callback(
             x1: local_time_s,
             y0: 0,
             y1: 1,
-            line: {color: 'red', width: 1},
-            fillcolor: 'rgba(255, 0, 0, 0.2)'
+            line: {color: 'black', width: 1},
         };
+        
+        // WARN(Jack): This might overwrite other pre-existing shapes that we add later!
         patch.assign(['layout', 'shapes'], [new_shape]);
     
         return [patch.build(), patch.build()];
