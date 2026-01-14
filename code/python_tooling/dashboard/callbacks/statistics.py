@@ -1,0 +1,33 @@
+from server import app
+
+from dash import html, Input, Output, State
+from dash.exceptions import PreventUpdate
+
+
+@app.callback(
+    Output("statistics-display", "children"),
+    Input("sensor-dropdown", "value"),
+    State("processed-data-store", "data"),
+)
+def update_statistics(selected_sensor, data):
+    if selected_sensor is None or data is None:
+        raise PreventUpdate
+
+    statistics, _ = data
+
+    return [
+        html.Div(
+            [
+                html.Div(
+                    "",
+                    style={
+                        "width": "20px", "height": "20px", "backgroundColor": "green" if value != 0 else "red",
+                        "display": "inline-block", "marginRight": "10px"
+                    },
+                ),
+                html.Div(value, style={"width": "35px", "display": "inline-block"}),
+                html.Div(key, style={"width": "200px", "display": "inline-block"}),
+            ],
+        )
+        for key, value in statistics[selected_sensor].items()
+    ]

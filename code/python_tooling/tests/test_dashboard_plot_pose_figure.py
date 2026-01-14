@@ -1,6 +1,6 @@
 import unittest
 
-from dashboard.plot_pose_figure import plot_pose_figure
+from dashboard.tools.plot_pose_figure import plot_pose_figure
 
 
 class TestDashboardPlotPoseFigure(unittest.TestCase):
