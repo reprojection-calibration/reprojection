@@ -39,6 +39,8 @@ struct Pinhole {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
+
+        // TODO(Jack): Protect against divide by zero.
         // Put into ideal/normalized/projected camera coordinate frame
         T const x_cam{x / z};
         T const y_cam{y / z};

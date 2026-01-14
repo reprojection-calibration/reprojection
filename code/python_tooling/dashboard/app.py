@@ -1,12 +1,15 @@
 import os
 from dash import callback, Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
+from dash.exceptions import PreventUpdate
 
-from plot_pose_figures import extract_timestamps_and_poses, plot_pose_figure
+from plot_pose_figures import calculate_ticks_from_timestamps, extract_timestamps_and_poses_sorted, plot_pose_figure
 
 from database.load_camera_calibration_data import get_camera_calibration_data_statistics, \
     get_indexable_timestamp_record, load_camera_calibration_data
+from database.types import PoseType
 
+# TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
 DB_DIR = '../../test_data/'
@@ -24,54 +27,203 @@ app.layout = html.Div([
         children=[
             html.Div(
                 children=[
-                    html.Label(
-                        children='Load',
+                    html.Div(
+                        children=[
+                            html.Label(
+                                children='Load',
+                            ),
+                            dcc.Dropdown(
+                                id='database-dropdown',
+                                placeholder='Select a database',
+                                style={'width': '300px'},
+                            ),
+                            html.Button(
+                                children='Refresh Database List',
+                                id='refresh-database-list-button',
+                                n_clicks=0,
+                            ),
+                        ],
+                        style={'alignItems': 'center',
+                               'display': 'flex',
+                               'flexDirection': 'row',
+                               'gap': '10px',
+                               'margin': '10px',
+                               'flex': '1', },
                     ),
-                    dcc.Dropdown(
-                        id='database-dropdown',
-                        placeholder='Select a database',
-                        style={'width': '50%'},
+                    html.Div(
+                        children=[
+                            html.Label(
+                                children='Select',
+                            ),
+                            dcc.Dropdown(
+                                id='sensor-dropdown',
+                                placeholder='Select a camera sensor',
+                                style={'width': '300px'},
+                            ),
+                        ],
+                        style={'alignItems': 'center',
+                               'display': 'flex',
+                               'flexDirection': 'row',
+                               'gap': '10px',
+                               'margin': '10px',
+                               'flex': '1', },
                     ),
-                    html.Button(
-                        children='Refresh Database List',
-                        id='refresh-database-list-button',
-                        n_clicks=0,
-                    ),
+
                 ],
-                style={'align-items': 'center',
+                style={'alignItems': 'flex-start',
                        'display': 'flex',
-                       'flex-direction': 'row',
+                       'flexDirection': 'column',
                        'gap': '10px',
-                       'margin': '10px', },
+                       'margin': '10px',
+                       'flex': '1', },
             ),
 
             html.Div(
                 children=[
-                    html.Label(
-                        children='Select',
-                    ),
-                    dcc.Dropdown(
-                        id='sensor-dropdown',
-                        placeholder='Select a camera sensor',
-                        style={'width': '50%'},
-                    ),
                     html.Div(
                         [
                             html.Div(id="statistics-display"),
                         ]
                     ),
                 ],
-                style={'align-items': 'top',
+                style={'alignItems': 'top',
                        'display': 'flex',
-                       'flex-direction': 'row',
+                       'flexDirection': 'row',
                        'gap': '10px',
-                       'margin': '10px', },
+                       'margin': '10px',
+                       'flex': '1', },
+            ),
+            html.Div(
+                children=[
+                    dcc.RadioItems(
+                        id="pose-type-selector",
+                        options=[
+                            {"label": "Initial", "value": PoseType.Initial},
+                            {"label": "Optimized", "value": PoseType.Optimized},
+                        ],
+                        value=PoseType.Initial,
+                    )
+                ],
+                style={'alignItems': 'top',
+                       'display': 'flex',
+                       'flexDirection': 'row',
+                       'gap': '10px',
+                       'margin': '10px',
+                       'flex': '1', },
             ),
         ],
+        style={'alignItems': 'top',
+               'display': 'flex',
+               'flexDirection': 'row',
+               'gap': '10px',
+               'margin': '10px', },
 
+    ),
+    html.Div(
+        children=[
+            # The animation plays by default therefore the button is initialized with the pause graphic
+            html.Button(
+                children="⏸ Pause",
+                id="play-button",
+                n_clicks=0,
+                style={
+                    "width": "50px",
+                },
+            ),
+            html.Div(
+                children=[
+                    dcc.Slider(
+                        id="frame-id-slider",
+                        marks=None,
+                        min=0, max=0, step=1, value=0,
+                        tooltip={"placement": "top", "always_visible": True},
+                        updatemode="drag",
+                    ),
+                ],
+                style={
+                    "width": "70%",
+                },
+            ),
+            html.Div(
+                children=[
+                    html.P("Current timestamp (ns)"),
+                    html.Div(
+                        id="slider-timestamp",
+                    ),
+                ],
+            ),
+        ],
+        style={
+            'alignItems': 'top',
+            'display': 'flex',
+            'flexDirection': 'row',
+            'gap': '10px',
+            'margin': '10px',
+            'flex': '1', },
     ),
 
     dcc.Tabs([
+        dcc.Tab(
+            children=[
+                html.Div(
+                    children=[
+                        html.Div(
+                            children=[
+                                html.Label(
+                                    children='Max reprojection error (pix)',
+                                ),
+                                dcc.Input(
+                                    id='max-reprojection-error-input',
+                                    type='number',
+                                    min=0, max=1000,
+                                    value=1,
+                                )
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "row",
+                                "gap": "20px",
+                                "flex": "1",
+                                "width": "100%",
+                            },
+                        ),
+                        html.Div(
+                            children=[
+                                dcc.Graph(
+                                    id="targets-xy-graph",
+                                    style={
+                                        "width": "100%",
+                                        "height": "60vh",
+                                    },
+                                ),
+                                dcc.Graph(
+                                    id="targets-pixels-graph",
+                                    style={
+                                        "width": "100%",
+                                        "height": "60vh",
+                                    },
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "row",
+                                "gap": "20px",
+                                "flex": "1",
+                                "width": "100%",
+                            },
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "20px",
+                        "flex": "1",
+                        "width": "100%",
+                    },
+                ),
+            ],
+            label='Feature Extraction',
+        ),
         dcc.Tab(
             children=[
                 dcc.Graph(
@@ -83,47 +235,13 @@ app.layout = html.Div([
             ],
             label='Camera Poses',
         ),
-        dcc.Tab(
-            children=[
-                # TODO(Jack): We should have one slider/play button at the top level, not in any specific tab or section
-                #  that drives all related animations.
-                html.Div(id="slider-timestamp", style={"marginTop": "4px"}),
-                dcc.Slider(
-                    id="frame-id-slider",
-                    marks=None,
-                    min=0, max=0, step=1, value=0,
-                    tooltip={"placement": "bottom", "always_visible": True},
-                    updatemode="drag",
-                ),
-                html.Div(
-                    children=[
-                        dcc.Graph(
-                            id="targets-xy-graph",
-                            style={"width": "50%"}
-                        ),
-                        dcc.Graph(
-                            id="targets-pixels-graph",
-                            style={"width": "50%"}
-                        ),
-                    ],
-                    style={'display': 'flex', 'gap': '10px', 'marginBottom': '20px'},
-                ),
-                # The animation plays by default therefore the button is initialized with the pause graphic
-                html.Button(
-                    children="⏸ Pause",
-                    id="play-button",
-                    n_clicks=0,
-                ),
-            ],
-            label='Feature Extraction',
-        ),
     ]),
 
     # Components without a visual representation are found here at the bottom (ex. Interval, Store etc.)
     dcc.Interval(
         disabled=False,
         id="play-interval",
-        interval=50,
+        interval=100,
     ),
 
     # NOTE(Jack): What we want to prevent is that big chunks of data get sent to and from the browse more than they
@@ -135,6 +253,7 @@ app.layout = html.Div([
     # use the processed data!
     dcc.Store(id='raw-data-store'),
     dcc.Store(id='processed-data-store'),
+    dcc.Store(id='translation-figure-store'),
 ])
 
 
@@ -194,48 +313,21 @@ def refresh_sensor_list(data):
     return sensor_names, sensor_names[0]
 
 
-# NOTE(Jack): We want the user to be able to understand intuitively the time relationships of all components. Therefore
-# instead of only displaying the frame index or stamp in nanoseconds we add "seconds from start" tick marks to the
-# slider.
-# TODO(Jack): Can we use one single function to calculate the marks for all figures? At time of writing I think it is
-#  just a coincidence that the pose figure markers match this every five second tempo. We should do this
-#  programmatically if it helps us drive uniformity of time representation across different plots.
 @app.callback(
     Output("frame-id-slider", "marks"),
     Input("sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def calculate_slider_ticks(selected_sensor, data):
-    _, indexable_timestamps = data
-    timestamps_i = indexable_timestamps[selected_sensor]
+def update_slider_marks(selected_sensor, data):
+    if selected_sensor is None or data is None:
+        raise PreventUpdate
 
-    t0 = timestamps_i[0]
-    seconds_list = [(t - t0) / 1e9 for t in timestamps_i]
+    _, timestamps_sorted = data
+    timestamps_ns = timestamps_sorted[selected_sensor]
 
-    max_time = seconds_list[-1]
-    # TODO(Jack): This line here hardcodes the function to generate marks with a spacing of 5s. For long datasets this
-    #  can get cramped! Figure a intelligent way to configure this. At time of writing the 5s interval matched the pose
-    #  pose figure interval, but this is not programmatically set!
-    target_times = range(0, int(max_time) + 1, 5)
+    tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
 
-    marks = {}
-    for target in target_times:
-        closest_index = None
-        smallest_error = float("inf")
-
-        for i, seconds in enumerate(seconds_list):
-            error = abs(seconds - target)
-            if error < smallest_error:
-                smallest_error = error
-                closest_index = i
-
-        # WARN(Jack): This is not a critical warning, but note that in this function we are introducing some
-        # approximation error. Yes we are picking the closest index/timestamp to the target time, but it is not exactly
-        # the same time. I do not know where this might cause problems one day, but we should not forget this
-        # possibility!
-        marks[closest_index] = f"{target}s"
-
-    return marks
+    return dict(zip(tickvals_idx, ticktext))
 
 
 # TODO(Jack): We need to display the exact nanosecond timestamp of the current frame somewhere and somehow. If this is
@@ -254,7 +346,7 @@ app.clientside_callback(
         
         const timestamp_i = BigInt(timestamps[frame_idx])
 
-        return "t = " + timestamp_i.toString() + " ns";
+        return timestamp_i.toString();
     }
     """,
     Output("slider-timestamp", "children"),
@@ -271,6 +363,9 @@ app.clientside_callback(
     State("processed-data-store", "data"),
 )
 def update_statistics(selected_sensor, data):
+    if selected_sensor is None or data is None:
+        raise PreventUpdate
+
     statistics, _ = data
 
     return [
@@ -280,7 +375,7 @@ def update_statistics(selected_sensor, data):
                     "",
                     style={
                         "width": "20px", "height": "20px", "backgroundColor": "green" if value != 0 else "red",
-                        "display": "inline-block", "margin-right": "10px"
+                        "display": "inline-block", "marginRight": "10px"
                     },
                 ),
                 html.Div(value, style={"width": "35px", "display": "inline-block"}),
@@ -291,40 +386,151 @@ def update_statistics(selected_sensor, data):
     ]
 
 
+# TODO(Jack): Rename to "pose" concept, not just translation
 @callback(
-    Output('rotation-graph', 'figure'),
-    Output('translation-graph', 'figure'),
+    Output("translation-figure-store", "data"),
     Input('sensor-dropdown', 'value'),
+    Input('pose-type-selector', 'value'),
     State('raw-data-store', 'data'),
 )
-def update_translation_graph(selected_sensor, raw_data):
-    if not selected_sensor or not raw_data:
-        return {}, {}
+def update_translation_graph(selected_sensor, pose_type, raw_data):
+    # TODO(Jack): What is an effective way to actually use this mechanism? Having it at the start of every single
+    #  callback does not feel right somehow. But managing when each input or state is available is not trivial! For
+    #  example here the pose type always should have a default value, and technically the raw-data store should always
+    #  be populated before the sensor dropdown triggers (because the sensor dropdown depends on the raw data being
+    #  loaded). But what if any of those things change? And as this program scales these relationships will likely no
+    #  longer be trackable. Does that mean the best option is to actually raise PreventUpdate at every callback?
+    if selected_sensor is None or pose_type is None or raw_data is None:
+        raise PreventUpdate
 
     # TODO(Jack): Technically this is not nice. To access a key (frames) without checking that it exists. However this
     # is so fundamental to the data structure I think I can be forgiven for this. Remove this todo later if it turns out
     # to be a nothing burger.
     frames = raw_data[selected_sensor]['frames']
     if frames is None:
-        return {}, {}
+        return {
+            "rotation": {},
+            "translation": {},
+        }
 
-    # TODO WARN ERROR
-    # TODO TODO TODO
-    # TODO(Jack): Add optimized pose initialization! Or the option to choose between the two.
-    # TODO TODO TODO
-    # TODO(Jack): Make sure we are not recalculating any timestamp related thing! One thing here that means it is maybe
-    #  not required to use the indexed timestamps is that here we depend only on correspondence and not order to plot
-    #  these figures.
-    timestamps, data = extract_timestamps_and_poses(frames, 'initial')
+    timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
-    rotations = [d[:3] for d in data]
-    rot_fig = plot_pose_figure(timestamps, rotations, 'Orientation', 'Axis Angle (rad)', x_name='rx', y_name='ry',
+    rotations = [d[:3] for d in poses]
+    rot_fig = plot_pose_figure(timestamps_ns, rotations, 'Orientation', 'Axis Angle (rad)', x_name='rx', y_name='ry',
                                z_name='rz')
 
-    translations = [d[3:] for d in data]
-    trans_fig = plot_pose_figure(timestamps, translations, 'Translation', 'Meter (m)')
+    translations = [d[3:] for d in poses]
+    trans_fig = plot_pose_figure(timestamps_ns, translations, 'Translation', 'Meter (m)')
 
-    return rot_fig, trans_fig
+    return {
+        "rotation": rot_fig,
+        "translation": trans_fig,
+    }
+
+
+# ERROR IT WILL NOT UPDATE WHEN WE SELECT FROM OPTIMIZED/INITIAL
+app.clientside_callback(
+    """
+    function(frame_idx, sensor, fig_store, processed_data, rot_fig, trans_fig) {
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        const ctx = dash_clientside.callback_context;
+        const triggered = dash_clientside.callback_context.triggered.map(t => t.prop_id);
+        if (triggered.includes("translation-figure-store.data")) {
+            if (fig_store && fig_store.rotation && fig_store.translation) {
+                console.log("Store updated → refreshing figures");
+                return [fig_store.rotation, fig_store.translation];
+            }
+        }
+    
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        if (!rot_fig || !trans_fig) {
+            if (fig_store && fig_store.rotation && fig_store.translation) {
+                return [fig_store.rotation, fig_store.translation];
+            }
+    
+            const EMPTY_FIG = {
+                data: [],
+                layout: {
+                    xaxis: { visible: true },
+                    yaxis: { visible: true },
+                    shapes: []
+                }
+            };
+            return [EMPTY_FIG, EMPTY_FIG];
+        }
+    
+        // ---- STEADY STATE FROM HERE ON ----
+        if (!sensor || !processed_data) {
+            return [rot_fig, trans_fig];
+        }
+    
+        if (!processed_data[1] || !processed_data[1][sensor]) {
+            return [rot_fig, trans_fig];
+        }
+    
+        const timestamps = processed_data[1][sensor];
+        if (!timestamps || timestamps.length <= frame_idx) {
+            return [rot_fig, trans_fig];
+        }
+    
+        const timestamp_0_ns = BigInt(timestamps[0]);
+        const timestamp_i_ns = BigInt(timestamps[frame_idx]);
+        const local_time_s = Number(timestamp_i_ns - timestamp_0_ns) / 1e9;
+    
+        // NOTE(Jack): The "paper" coordinate system goes from 0 to 1 to cover the entire figure, so we set yref to 
+        // "paper" so that the y0=0 and y1=1 dimensions will draw a vertical line the entire figure height. 
+        const new_shape = {
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper', 
+            x0: local_time_s,
+            x1: local_time_s,
+            y0: 0,
+            y1: 1,
+            line: {color: 'black', width: 1},
+        };
+        
+        const new_annotation = {
+            x: local_time_s,
+            y: 1,
+            xref: 'x',
+            yref: 'paper',
+            text: `${frame_idx}`,
+            showarrow: false,
+            yanchor: 'bottom',
+            xanchor: 'center',
+            font: {
+                color: 'white',
+                size: 12
+            },
+            bgcolor: 'rgba(10,10,10,0.7)',
+        };
+        
+        // WARN(Jack): This might overwrite other pre-existing shapes that we add later!
+        patch = new dash_clientside.Patch;
+        patch.assign(['layout', 'shapes'], [new_shape]);
+        patch.assign(['layout', 'annotations'], [new_annotation]);
+    
+        return [patch.build(), patch.build()];
+    }
+    """,
+    Output("rotation-graph", "figure"),
+    Output("translation-graph", "figure"),
+    Input("frame-id-slider", "value"),
+    Input("sensor-dropdown", "value"),
+    Input("translation-figure-store", "data"),
+    State("processed-data-store", "data"),
+    State("rotation-graph", "figure"),
+    State("translation-graph", "figure"),
+)
 
 
 @callback(
@@ -376,24 +582,29 @@ def init_extracted_target_figures(sensor, data):
 
     # TODO(Jack): Confirm/test ALL axes properties (ranges, names, orders etc.) None of this has been checked! Even the
     #  coordinate conventions of the pixels and points needs to be checked!
+    # TODO(Jack): Eliminate copy and paste here in this method! We basically do the same thing twice.
+    # TODO(Jack): We have now copy and pasted in several places that the marker size for xy_fig is 12 and for pixel_fig
+    #  is 6. This is a hack! We need to auto scale all dimensions and all marker sizes! Or at least make them more
+    #  generic.
     xy_fig = go.Figure()
     xy_fig.add_trace(
         go.Scatter(
             x=[],
             y=[],
             mode="markers",
-            marker=dict(size=6),
+            marker=dict(size=12),
+            hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
         )
     )
     xy_fig.update_layout(
         title="Target Points (XY)",
         xaxis=dict(
-            range=[-1, 1],  # ERROR(Jack): Do not hardcode or use global
+            range=[-0.1, 0.76],  # ERROR(Jack): Do not hardcode or use global
             title=dict(text="x"),
             constrain="domain",
         ),
         yaxis=dict(
-            range=[-1, 1],  # ERROR(Jack): Do not hardcode or use global
+            range=[-0.1, 0.76],  # ERROR(Jack): Do not hardcode or use global
             title=dict(text="y"),
             scaleanchor="x",
         ),
@@ -406,7 +617,7 @@ def init_extracted_target_figures(sensor, data):
             y=[],
             mode="markers",
             marker=dict(size=6),
-            name="Pixels",
+            hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
         )
     )
     pixel_fig.update_layout(
@@ -431,23 +642,25 @@ def init_extracted_target_figures(sensor, data):
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
 
+# TODO(Jack): Are we doing this right at all or should we be using a patch to hold the points and avoiding the json
+#  stringify thing?
 app.clientside_callback(
     """
-    function(frame_idx, raw_data, processed_data, sensor, xy_fig, pixel_fig) {
-        if (!raw_data || !processed_data || !sensor || !xy_fig || !pixel_fig) {
-              console.log("One or more of the inputs is missing.");
+    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data,  xy_fig, pixel_fig) {
+        if (!sensor || !pose_type || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
+            console.log("One or more of the inputs is missing.");
             return [xy_fig, pixel_fig];
         }
         
         const timestamps = processed_data[1][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
-              console.log("Invalid timestamps or frame index out of bounds:", sensor);
+            console.log("Invalid timestamps or frame index out of bounds:", sensor);
             return [xy_fig, pixel_fig];
         }
         
         const timestamp_i = BigInt(timestamps[frame_idx])
         if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
-              console.log("Raw data structure is incomplete for sensor:", sensor);
+            console.log("Raw data structure is incomplete for sensor:", sensor);
             return [xy_fig, pixel_fig];
         }
         
@@ -477,28 +690,32 @@ app.clientside_callback(
         // simply return the figures with the plain colored points and pixels.
         const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
         if (!reprojection_errors) {
-            // If no reprojection errors are available then return to default marker configuration.
-            xy_fig.data[0].marker = {size: 6}
+            // If no reprojection errors are available at all then return to default marker configuration.
+            xy_fig.data[0].marker = {size: 12}
             pixel_fig.data[0].marker = {size: 6}
             
             return [xy_fig, pixel_fig];
         }
         
-        // TODO WARN ERROR
-        // TODO WARN ERROR
-        // TODO WARN ERROR
-        // TODO WARN ERROR HANDLE INTIIAL VS OPTIMIZED!!! For now we just hardcode initial.
-        const initial_reprojection_error = reprojection_errors['optimized']
-        if (!initial_reprojection_error) {
+        const reprojection_error = reprojection_errors[pose_type]
+        if (!reprojection_error) {
+            // If the requested reprojection error is not available then return to default marker configuration.
+            xy_fig.data[0].marker = {size: 12}
+            pixel_fig.data[0].marker = {size: 6}
+            
             return [xy_fig, pixel_fig];
         }
         
-        const markers = {size: 6, 
-                        color: initial_reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
+        xy_fig.data[0].marker = {size: 12, 
+                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
                         colorscale: "Bluered", 
-                        cmin: 0, cmax: 1};
-        xy_fig.data[0].marker = markers
-        pixel_fig.data[0].marker = markers
+                        cmin: 0, cmax: cmax,
+                        showscale: true};
+        pixel_fig.data[0].marker = {size: 6, 
+                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
+                        colorscale: "Bluered", 
+                        cmin: 0, cmax: cmax,
+                        showscale: true};
         
         return [xy_fig, pixel_fig];
     }
@@ -506,9 +723,11 @@ app.clientside_callback(
     Output("targets-xy-graph", "figure"),
     Output("targets-pixels-graph", "figure"),
     Input("frame-id-slider", "value"),
+    Input("sensor-dropdown", "value"),
+    Input('pose-type-selector', 'value'),
+    Input('max-reprojection-error-input', 'value'),
     State("raw-data-store", "data"),
     State("processed-data-store", "data"),
-    State("sensor-dropdown", "value"),
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),
 )

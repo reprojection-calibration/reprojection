@@ -4,6 +4,7 @@ from database.load_camera_poses import add_camera_poses_df_to_camera_calibration
 from database.load_images import image_df_to_camera_calibration_data, load_images_df
 from database.load_reprojection_errors import add_reprojection_errors_df_to_camera_calibration_data, \
     load_reprojection_errors_df
+from database.types import PoseType
 
 
 def load_camera_calibration_data(db_path):
@@ -40,14 +41,14 @@ def get_camera_calibration_data_statistics(data):
             if frame_i.get('extracted_target'):
                 frames_with_extracted_target += 1
             if frame_i.get('poses'):
-                if frame_i['poses'].get('initial'):
+                if frame_i['poses'].get(PoseType.Initial):
                     frames_with_initial_pose += 1
-                if frame_i['poses'].get('optimized'):
+                if frame_i['poses'].get(PoseType.Optimized):
                     frames_with_optimized_pose += 1
             if frame_i.get('reprojection_errors'):
-                if frame_i['reprojection_errors'].get('initial'):
+                if frame_i['reprojection_errors'].get(PoseType.Initial):
                     frames_with_initial_reprojection_error += 1
-                if frame_i['reprojection_errors'].get('optimized'):
+                if frame_i['reprojection_errors'].get(PoseType.Optimized):
                     frames_with_optimized_reprojection_error += 1
 
         statistics[sensor] = {

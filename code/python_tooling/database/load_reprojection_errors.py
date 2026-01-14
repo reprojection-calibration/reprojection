@@ -71,6 +71,8 @@ def add_reprojection_errors_df_to_camera_calibration_data(df, data):
             raise RuntimeError(
                 f'Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary')
 
+        # TODO(Jack): Should we formalize the loading of the type here to check that it is part of the PoseType
+        #  enum?
         reprojection_error_type = row['type']
         reprojection_error = row['data']
 
