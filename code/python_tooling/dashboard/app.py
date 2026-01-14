@@ -1,25 +1,20 @@
-import os
-from dash import callback, Dash, dcc, html, Input, Output, State
+from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
 from dash.exceptions import PreventUpdate
 
-from plot_pose_figure import  plot_pose_figure
+from plot_pose_figure import plot_pose_figure
 from time_handling import calculate_ticks_from_timestamps, extract_timestamps_and_poses_sorted
 
-from database.load_camera_calibration_data import get_camera_calibration_data_statistics, \
-    get_indexable_timestamp_record, load_camera_calibration_data
+from server import app
+
 from database.types import PoseType
 
+import data_loading_callbacks
+
 # TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
-# TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
-#  trivial but can be done with some tk tools or other libraries
-DB_DIR = '../../test_data/'
+
 # TODO(Jack): Place meta data like this in config file or in database. For now we use globals...
 IMAGE_DIMENSIONS = (512, 512)
-
-# NOTE(Jack): If we do not specify the title and update behavior update here the browser tab will constantly and
-# annoyingly show "Updating..." constantly.
-app = Dash(title='Reprojection', update_title=None)
 
 app.layout = html.Div([
     html.H2('Reprojection - The future is calibrated.'),
@@ -258,62 +253,6 @@ app.layout = html.Div([
 ])
 
 
-@callback(
-    Output('database-dropdown', 'options'),
-    Output('database-dropdown', 'value'),
-    Input('refresh-database-list-button', 'n_clicks')
-)
-def refresh_database_list(_):
-    if not os.path.exists(DB_DIR):
-        return [], ''
-
-    database_names = sorted([f for f in os.listdir(DB_DIR) if f.endswith(".db3")])
-    if len(database_names) == 0:
-        return [], ''
-
-    return database_names, database_names[0]
-
-
-@callback(
-    Output('raw-data-store', 'data'),
-    Output('processed-data-store', 'data'),
-    Input('database-dropdown', 'value')
-)
-def load_database_to_store(db_file):
-    if not db_file:
-        return None
-
-    db_path = DB_DIR + db_file
-    if not os.path.isfile(db_path):
-        return None
-
-    raw_data = load_camera_calibration_data(db_path)
-    statistics = get_camera_calibration_data_statistics(raw_data)
-    indexable_timestamps = get_indexable_timestamp_record(raw_data)
-
-    # TODO(Jack): visualize the statistics in a data panel!
-    return raw_data, [statistics, indexable_timestamps]
-
-
-@callback(
-    Output('sensor-dropdown', 'options'),
-    Output('sensor-dropdown', 'value'),
-    Input('processed-data-store', 'data')
-)
-def refresh_sensor_list(data):
-    if not data:
-        return [], None
-
-    statistics, _ = data
-
-    # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({sensor_name for sensor_name in statistics.keys()}))
-    if len(sensor_names) == 0:
-        return [], ''
-
-    return sensor_names, sensor_names[0]
-
-
 @app.callback(
     Output("frame-id-slider", "marks"),
     Input("sensor-dropdown", "value"),
@@ -388,7 +327,7 @@ def update_statistics(selected_sensor, data):
 
 
 # TODO(Jack): Rename to "pose" concept, not just translation
-@callback(
+@app.callback(
     Output("translation-figure-store", "data"),
     Input('sensor-dropdown', 'value'),
     Input('pose-type-selector', 'value'),
@@ -534,7 +473,7 @@ app.clientside_callback(
 )
 
 
-@callback(
+@app.callback(
     Output("play-interval", "disabled"),
     Output("play-button", "children"),
     Input("play-button", "n_clicks"),
@@ -551,7 +490,7 @@ def toggle_play(n_clicks):
         return True, "▶ Play"
 
 
-@callback(
+@app.callback(
     Output("frame-id-slider", "value"),
     Input("play-interval", "n_intervals"),
     State("frame-id-slider", "value"),
@@ -569,7 +508,7 @@ def advance_slider(_, value, max_value):
 # TODO(Jack): Technically we only need the sensor name to get the frame-id-slider output, but this does not necessarily
 #  have anything to do with configuring the figures initially. It might make sense to move the frame id slider
 #  dependency to another place that is more related or independent than here.
-@callback(
+@app.callback(
     Output("targets-xy-graph", "figure", allow_duplicate=True),
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
     Output("frame-id-slider", "max"),
@@ -732,6 +671,3 @@ app.clientside_callback(
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),
 )
-
-if __name__ == '__main__':
-    app.run(debug=True)
