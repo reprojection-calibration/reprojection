@@ -17,6 +17,9 @@ def extract_timestamps_and_poses_sorted(frames, pose_type):
 
 
 def timestamps_to_elapsed_seconds(timestamps_ns):
+    if len(timestamps_ns) == 0:
+        return []
+
     t0 = timestamps_ns[0]
     timestamps_human_readable = [(t - t0) / 1e9 for t in timestamps_ns]
 
