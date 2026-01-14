@@ -1,7 +1,7 @@
 from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
-from server import app
 
+from dashboard.server import app
 from dashboard.tools.time_handling import calculate_ticks_from_timestamps
 
 

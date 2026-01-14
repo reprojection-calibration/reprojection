@@ -7,8 +7,8 @@ import callbacks.pose_graph
 import callbacks.slider
 import callbacks.statistics
 from dash import dcc, html
-from server import app
 
+from dashboard.server import app
 from database.types import PoseType
 
 # TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
