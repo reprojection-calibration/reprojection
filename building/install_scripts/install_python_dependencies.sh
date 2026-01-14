@@ -13,6 +13,7 @@ python3.12 -m venv "${VENV_DIR}"
 source "${VENV_DIR}/bin/activate"
 python3 -m pip install \
  build \
+ dash \
  numpy \
  pandas \
  plotly \
