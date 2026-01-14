@@ -92,67 +92,81 @@ def init_extracted_target_figures(sensor, data):
 #  stringify thing?
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data,  xy_fig, pixel_fig) {
-        if (!sensor || !pose_type || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
+    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data, xy_fig, pixel_fig) {
+        if (!sensor || !pose_type || !raw_data || !processed_data || !xy_fig || !pixel_fig) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        
+    
         const timestamps = processed_data[1][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        
+    
         const timestamp_i = BigInt(timestamps[frame_idx])
         if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        
+    
         const extracted_target = raw_data[sensor]['frames'][timestamp_i].extracted_target
         if (!extracted_target) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
-
+    
         const pts = extracted_target.points;
         const xy_patch = new dash_clientside.Patch();
         xy_patch.assign(['data', 0, 'x'], pts.map(p => p[0]));
         xy_patch.assign(['data', 0, 'y'], pts.map(p => p[1]));
-        
+    
         const pix = extracted_target.pixels;
         const pixel_patch = new dash_clientside.Patch();
         pixel_patch.assign(['data', 0, 'x'], pix.map(p => p[0]));
         pixel_patch.assign(['data', 0, 'y'], pix.map(p => p[1]));
-        
+    
         // If reprojection errors are available we will color the points and pixels according to them. If not available
         // simply return the figures with the plain colored points and pixels.
         const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
         if (!reprojection_errors) {
             // If no reprojection errors are available at all then return to default marker configuration.
-            xy_patch.assign(['data', 0, 'marker'], { size: 12 });
-            pixel_patch.assign(['data', 0, 'marker'], { size: 6 });
-            
+            xy_patch.assign(['data', 0, 'marker'], {
+                size: 12
+            });
+            pixel_patch.assign(['data', 0, 'marker'], {
+                size: 6
+            });
+    
             return [xy_patch.build(), pixel_patch.build()];
         }
-        
+    
         const reprojection_error = reprojection_errors[pose_type]
         if (!reprojection_error) {
             // If the sensor specific reprojection error is not available then return to default marker configuration.
-            xy_patch.assign(['data', 0, 'marker'], { size: 12 });
-            pixel_patch.assign(['data', 0, 'marker'], { size: 6 });
-            
+            xy_patch.assign(['data', 0, 'marker'], {
+                size: 12
+            });
+            pixel_patch.assign(['data', 0, 'marker'], {
+                size: 6
+            });
+    
             return [xy_patch.build(), pixel_patch.build()];
         }
-        
-        xy_patch.assign(['data', 0, 'marker'],  {size: 12, 
-                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
-                        colorscale: "Bluered", 
-                        cmin: 0, cmax: cmax,
-                        showscale: true});
-        pixel_patch.assign(['data', 0, 'marker'], {size: 6, 
-                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
-                        colorscale: "Bluered", 
-                        cmin: 0, cmax: cmax,
-                        showscale: true});
-        
+    
+        xy_patch.assign(['data', 0, 'marker'], {
+            size: 12,
+            color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
+            colorscale: "Bluered",
+            cmin: 0,
+            cmax: cmax,
+            showscale: true
+        });
+        pixel_patch.assign(['data', 0, 'marker'], {
+            size: 6,
+            color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
+            colorscale: "Bluered",
+            cmin: 0,
+            cmax: cmax,
+            showscale: true
+        });
+    
         return [xy_patch.build(), pixel_patch.build()];
     }
     """,

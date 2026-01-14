@@ -54,7 +54,7 @@ def update_pose_graph(selected_sensor, pose_type, raw_data):
 
 app.clientside_callback(
     """
-    function(frame_idx, sensor, processed_data, rot_fig, trans_fig) {        
+    function(frame_idx, sensor, processed_data, rot_fig, trans_fig) {
         if (!sensor || !processed_data || !rot_fig || !trans_fig) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
@@ -77,14 +77,17 @@ app.clientside_callback(
         const new_shape = {
             type: 'rect',
             xref: 'x',
-            yref: 'paper', 
+            yref: 'paper',
             x0: local_time_s,
             x1: local_time_s,
             y0: 0,
             y1: 1,
-            line: {color: 'black', width: 1},
+            line: {
+                color: 'black',
+                width: 1
+            },
         };
-        
+    
         const new_annotation = {
             x: local_time_s,
             y: 1,
@@ -100,7 +103,7 @@ app.clientside_callback(
             },
             bgcolor: 'rgba(10,10,10,0.7)',
         };
-        
+    
         // WARN(Jack): This might overwrite other pre-existing shapes that we add later!
         patch = new dash_clientside.Patch;
         patch.assign(['layout', 'shapes'], [new_shape]);

@@ -30,17 +30,17 @@ def update_slider_marks(selected_sensor, processed_data):
 app.clientside_callback(
     """
     function(frame_idx, data, sensor) {
-         if (!data || !sensor) {
+        if (!data || !sensor) {
             return "";
         }
-        
+    
         const timestamps = data[1][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
             return "";
         }
-        
+    
         const timestamp_i = BigInt(timestamps[frame_idx])
-
+    
         return timestamp_i.toString();
     }
     """,
