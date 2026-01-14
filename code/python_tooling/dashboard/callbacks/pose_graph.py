@@ -1,8 +1,9 @@
 from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
 from server import app
-from tools.plot_pose_figure import plot_pose_figure
-from tools.time_handling import extract_timestamps_and_poses_sorted
+
+from dashboard.tools.plot_pose_figure import plot_pose_figure
+from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 
 
 @app.callback(
