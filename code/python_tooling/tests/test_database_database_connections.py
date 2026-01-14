@@ -7,7 +7,7 @@ from database.load_images import load_images_df
 from database.load_reprojection_errors import load_reprojection_errors_df
 
 
-class TestDatabaseConnections(unittest.TestCase):
+class TestDatabaseDatabaseConnections(unittest.TestCase):
     # NOTE(Jack): This is a preemptive attempt to make it possible to execute the test locally or in the docker. Let's
     # see if this works or we just end up removing it later :)
     @classmethod
