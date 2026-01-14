@@ -29,14 +29,38 @@ class TestDashboardTimeHandling(unittest.TestCase):
 
     def test_timestamps_to_elapsed_seconds(self):
         timestamps_ns = []
-        timestamps_elapsed_s = timestamps_to_elapsed_seconds(timestamps_ns)
-        self.assertEqual(len(timestamps_elapsed_s), 0)
+        elapsed_time_s = timestamps_to_elapsed_seconds(timestamps_ns)
+        self.assertEqual(len(elapsed_time_s), 0)
 
         timestamps_ns = [0, 1e9, 2e9, 3e9]
-        timestamps_elapsed_s = timestamps_to_elapsed_seconds(timestamps_ns)
-        self.assertEqual(len(timestamps_elapsed_s), 4)
-        self.assertEqual(timestamps_elapsed_s, [0, 1, 2, 3])
+        elapsed_time_s = timestamps_to_elapsed_seconds(timestamps_ns)
+        self.assertEqual(len(elapsed_time_s), 4)
+        self.assertEqual(elapsed_time_s, [0, 1, 2, 3])
 
         timestamps_ns = [10e9, 20e9, 30e9, 35e9]
-        timestamps_elapsed_s = timestamps_to_elapsed_seconds(timestamps_ns)
-        self.assertEqual(timestamps_elapsed_s, [0, 10, 20, 25])
+        elapsed_time_s = timestamps_to_elapsed_seconds(timestamps_ns)
+        self.assertEqual(elapsed_time_s, [0, 10, 20, 25])
+
+    def test_calculate_ticks_from_timestamps(self):
+        timestamps_ns = []
+        tickvals_idx, tickvals_s, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
+        self.assertEqual(len(tickvals_idx), 0)
+        self.assertEqual(len(tickvals_s), 0)
+        self.assertEqual(len(ticktext), 0)
+
+        # NOTE(Jack): Due to the simplified nature of the input test data all three outputs look very similar, but for
+        # the general "real data" case that will not be! The tickvals_idx and tickvals_s will be on a completely
+        # different scale/magnitude depending on the data frequency.
+        timestamps_ns = [int(i * 1e9) for i in range(20)]
+        tickvals_idx, tickvals_s, ticktext = calculate_ticks_from_timestamps(timestamps_ns, step=5)
+        self.assertEqual(len(tickvals_idx), 4)
+        self.assertEqual(len(tickvals_s), 4)
+        self.assertEqual(len(ticktext), 4)
+        self.assertEqual(tickvals_idx, [0, 5, 10, 15])
+        self.assertEqual(tickvals_s, [0.0, 5.0, 10.0, 15.0])
+        self.assertEqual(ticktext, ['0s', '5s', '10s', '15s'])
+
+        tickvals_idx, tickvals_s, ticktext = calculate_ticks_from_timestamps(timestamps_ns, step=2)
+        self.assertEqual(len(tickvals_idx), 10)
+        self.assertEqual(len(tickvals_s), 10)
+        self.assertEqual(len(ticktext), 10)

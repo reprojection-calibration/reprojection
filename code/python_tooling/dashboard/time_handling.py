@@ -28,9 +28,12 @@ def timestamps_to_elapsed_seconds(timestamps_ns):
 
 
 def calculate_ticks_from_timestamps(timestamps_ns, step=5):
-    timestamps_s = timestamps_to_elapsed_seconds(timestamps_ns)
+    if len(timestamps_ns) == 0:
+        return [], [], []
 
-    max_time = timestamps_s[-1]
+    # WARN(Jack): The input to this function must be sorted from smallest to largest!
+    elapsed_time_s = timestamps_to_elapsed_seconds(timestamps_ns)
+    max_time = elapsed_time_s[-1]
     target_times = range(0, int(max_time) + 1, step)
 
     # NOTE(Jack): The idxs are consumed by the slider bar which is indexed in ticker/counter space  and the seconds
@@ -40,12 +43,14 @@ def calculate_ticks_from_timestamps(timestamps_ns, step=5):
     ticktext = []
     for target in target_times:
         closest_index = min(
-            range(len(timestamps_s)),
-            key=lambda i: abs(timestamps_s[i] - target)
+            range(len(elapsed_time_s)),
+            key=lambda i: abs(elapsed_time_s[i] - target)
         )
 
+        # WARN(Jack): Technically we are introducing an approximation here by using the "closest index". For high
+        # frequency data I do not think we will ever notice a problem, but we should be aware of this.
         tickvals_idx.append(closest_index)
-        tickvals_s.append(timestamps_s[closest_index])
+        tickvals_s.append(elapsed_time_s[closest_index])
         ticktext.append(f"{target}s")
 
     return tickvals_idx, tickvals_s, ticktext
