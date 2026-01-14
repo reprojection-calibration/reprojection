@@ -17,7 +17,6 @@ class TestDashboardTimeHandling(unittest.TestCase):
         timestamps, poses = extract_timestamps_and_poses_sorted(frames, PoseType.Initial)
         self.assertEqual(len(timestamps), 3)
         self.assertEqual(len(poses), 3)
-
         self.assertEqual(timestamps, [1, 2, 3])
         self.assertEqual(poses, [[0, 1, 2, 3, 4, 5, 6.1], [0, 1, 2, 3, 4, 5, 6.2], [0, 1, 2, 3, 4, 5, 6.3]])
 
@@ -25,7 +24,6 @@ class TestDashboardTimeHandling(unittest.TestCase):
         timestamps, poses = extract_timestamps_and_poses_sorted(frames, PoseType.Optimized)
         self.assertEqual(len(timestamps), 2)
         self.assertEqual(len(poses), 2)
-
         self.assertEqual(timestamps, [1, 3])
         self.assertEqual(poses, [[0, 1, 2, 3, 4, 5, -6.1], [0, 1, 2, 3, 4, 5, -6.3]])
 
