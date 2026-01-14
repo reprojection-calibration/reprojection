@@ -9,11 +9,11 @@ from dashboard.server import app
     Input("sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def update_statistics(selected_sensor, data):
-    if selected_sensor is None or data is None:
+def update_statistics(selected_sensor, processed_data):
+    if selected_sensor is None or processed_data is None:
         raise PreventUpdate
 
-    statistics, _ = data
+    statistics, _ = processed_data
 
     return [
         html.Div(

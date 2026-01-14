@@ -13,10 +13,10 @@ class TestDashboardCallbacksSlider(unittest.TestCase):
         self.assertEqual(output, {})
 
         # Happy path success
-        selected_sensor = "/cam0/image_raw"
-        timestamps_sorted = {selected_sensor: [int(i * 1e9) for i in range(20)]}
+        sensor = "/cam0/image_raw"
+        timestamps_sorted = {sensor: [int(i * 1e9) for i in range(20)]}
 
-        output = update_slider_marks(selected_sensor, [None, timestamps_sorted])
+        output = update_slider_marks(sensor, [None, timestamps_sorted])
         self.assertEqual(output, {0: "0s", 5: "5s", 10: "10s", 15: "15s"})
 
     def test_toggle_play(self):
