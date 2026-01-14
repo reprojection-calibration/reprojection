@@ -32,7 +32,9 @@ def init_extracted_target_figures(sensor, data):
             y=[],
             mode="markers",
             marker=dict(size=12),
-            hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
+            hovertemplate="x: %{x}<br>"
+            + "y: %{y}<br>"
+            + "error: %{marker.color:.3f}<extra></extra>",
         )
     )
     xy_fig.update_layout(
@@ -56,13 +58,18 @@ def init_extracted_target_figures(sensor, data):
             y=[],
             mode="markers",
             marker=dict(size=6),
-            hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
+            hovertemplate="x: %{x}<br>"
+            + "y: %{y}<br>"
+            + "error: %{marker.color:.3f}<extra></extra>",
         )
     )
     pixel_fig.update_layout(
         title="Extracted Pixel Features",
         xaxis=dict(
-            range=[0, IMAGE_DIMENSIONS[0]],  # ERROR(Jack): Do not hardcode or use global
+            range=[
+                0,
+                IMAGE_DIMENSIONS[0],
+            ],  # ERROR(Jack): Do not hardcode or use global
             title=dict(text="u"),
             constrain="domain",
         ),
@@ -76,7 +83,7 @@ def init_extracted_target_figures(sensor, data):
     # TODO(Jack): Why is this in this method??? See comment at top of function.
     # Get the number of frames to fill the max value of the slider
     statistics, _ = data
-    n_frames = statistics[sensor]['total_frames']
+    n_frames = statistics[sensor]["total_frames"]
 
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
@@ -163,8 +170,8 @@ app.clientside_callback(
     Output("targets-pixels-graph", "figure"),
     Input("frame-id-slider", "value"),
     Input("sensor-dropdown", "value"),
-    Input('pose-type-selector', 'value'),
-    Input('max-reprojection-error-input', 'value'),
+    Input("pose-type-selector", "value"),
+    Input("max-reprojection-error-input", "value"),
     State("raw-data-store", "data"),
     State("processed-data-store", "data"),
     State("targets-xy-graph", "figure"),

@@ -36,11 +36,9 @@ def load_reprojection_errors_df(db_path):
 
     try:
         with sqlite3.connect(db_path) as conn:
-            df = pd.read_sql(
-                load_sql('reprojection_error_select_all.sql'), conn
-            )
+            df = pd.read_sql(load_sql("reprojection_error_select_all.sql"), conn)
 
-            if 'data' not in df.columns:
+            if "data" not in df.columns:
                 raise KeyError("'data' column not found in query result")
 
             def safe_parse(blob):
@@ -50,9 +48,11 @@ def load_reprojection_errors_df(db_path):
                     print(f"Failed to parse blob: {e}")
                     return None
 
-            df['data'] = df['data'].apply(safe_parse)
+            df["data"] = df["data"].apply(safe_parse)
     except Exception as e:
-        print(f"Unexpected error in load_reprojection_errors_df(db_path={db_path}): {e}")
+        print(
+            f"Unexpected error in load_reprojection_errors_df(db_path={db_path}): {e}"
+        )
         return None
 
     return df
@@ -62,22 +62,27 @@ def load_reprojection_errors_df(db_path):
 #  eliminate code duplication?
 def add_reprojection_errors_df_to_camera_calibration_data(df, data):
     for index, row in df.iterrows():
-        sensor = row['sensor_name']
+        sensor = row["sensor_name"]
         if sensor not in data:
-            raise RuntimeError(f'Sensor {sensor} not present in camera calibration data dictionary', )
-
-        timestamp = row['timestamp_ns']
-        if timestamp not in data[sensor]['frames']:
             raise RuntimeError(
-                f'Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary')
+                f"Sensor {sensor} not present in camera calibration data dictionary",
+            )
+
+        timestamp = row["timestamp_ns"]
+        if timestamp not in data[sensor]["frames"]:
+            raise RuntimeError(
+                f"Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary"
+            )
 
         # TODO(Jack): Should we formalize the loading of the type here to check that it is part of the PoseType
         #  enum?
-        reprojection_error_type = row['type']
-        reprojection_error = row['data']
+        reprojection_error_type = row["type"]
+        reprojection_error = row["data"]
 
-        if 'reprojection_errors' not in data[sensor]['frames'][timestamp]:
-            data[sensor]['frames'][timestamp]['reprojection_errors'] = {}
-        data[sensor]['frames'][timestamp]['reprojection_errors'][reprojection_error_type] = reprojection_error
+        if "reprojection_errors" not in data[sensor]["frames"][timestamp]:
+            data[sensor]["frames"][timestamp]["reprojection_errors"] = {}
+        data[sensor]["frames"][timestamp]["reprojection_errors"][
+            reprojection_error_type
+        ] = reprojection_error
 
     return data

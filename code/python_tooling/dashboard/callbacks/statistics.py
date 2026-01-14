@@ -21,8 +21,11 @@ def update_statistics(selected_sensor, data):
                 html.Div(
                     "",
                     style={
-                        "width": "20px", "height": "20px", "backgroundColor": "green" if value != 0 else "red",
-                        "display": "inline-block", "marginRight": "10px"
+                        "width": "20px",
+                        "height": "20px",
+                        "backgroundColor": "green" if value != 0 else "red",
+                        "display": "inline-block",
+                        "marginRight": "10px",
                     },
                 ),
                 html.Div(value, style={"width": "35px", "display": "inline-block"}),
