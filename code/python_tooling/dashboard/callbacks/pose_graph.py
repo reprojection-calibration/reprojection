@@ -7,10 +7,12 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 
 
 @app.callback(
-    Output("pose-figure-store", "data"),
+    Output("rotation-graph", "figure", allow_duplicate=True),
+    Output("translation-graph", "figure", allow_duplicate=True),
     Input("sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
     State("raw-data-store", "data"),
+    prevent_initial_call=True,
 )
 def update_pose_graph(selected_sensor, pose_type, raw_data):
     # TODO(Jack): What is an effective way to actually use this mechanism? Having it at the start of every single
@@ -27,10 +29,7 @@ def update_pose_graph(selected_sensor, pose_type, raw_data):
     # to be a nothing burger.
     frames = raw_data[selected_sensor]["frames"]
     if frames is None:
-        return {
-            "rotation": {},
-            "translation": {},
-        }
+        raise PreventUpdate
 
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
@@ -50,63 +49,23 @@ def update_pose_graph(selected_sensor, pose_type, raw_data):
         timestamps_ns, translations, "Translation", "Meter (m)"
     )
 
-    return {
-        "rotation": rot_fig,
-        "translation": trans_fig,
-    }
+    return rot_fig, trans_fig
 
 
-# ERROR IT WILL NOT UPDATE WHEN WE SELECT FROM OPTIMIZED/INITIAL
 app.clientside_callback(
     """
-    function(frame_idx, sensor, fig_store, processed_data, rot_fig, trans_fig) {
-        // DOCUMENT
-        // DOCUMENT
-        // DOCUMENT
-        // DOCUMENT
-        // DOCUMENT
-        const ctx = dash_clientside.callback_context;
-        const triggered = dash_clientside.callback_context.triggered.map(t => t.prop_id);
-        if (triggered.includes("pose-figure-store.data")) {
-            if (fig_store && fig_store.rotation && fig_store.translation) {
-                console.log("Store updated → refreshing figures");
-                return [fig_store.rotation, fig_store.translation];
-            }
-        }
-    
-        // DOCUMENT
-        // DOCUMENT
-        // DOCUMENT
-        // DOCUMENT
-        // DOCUMENT
-        if (!rot_fig || !trans_fig) {
-            if (fig_store && fig_store.rotation && fig_store.translation) {
-                return [fig_store.rotation, fig_store.translation];
-            }
-    
-            const EMPTY_FIG = {
-                data: [],
-                layout: {
-                    xaxis: { visible: true },
-                    yaxis: { visible: true },
-                    shapes: []
-                }
-            };
-            return [EMPTY_FIG, EMPTY_FIG];
-        }
-    
-        // ---- STEADY STATE FROM HERE ON ----
-        if (!sensor || !processed_data) {
-            return [rot_fig, trans_fig];
+    function(frame_idx, sensor, processed_data, rot_fig, trans_fig) {        
+        if (!sensor || !processed_data || !rot_fig || !trans_fig) {
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
         if (!processed_data[1] || !processed_data[1][sensor]) {
-            return [rot_fig, trans_fig];
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
         const timestamps = processed_data[1][sensor];
         if (!timestamps || timestamps.length <= frame_idx) {
-            return [rot_fig, trans_fig];
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
         const timestamp_0_ns = BigInt(timestamps[0]);
@@ -154,7 +113,6 @@ app.clientside_callback(
     Output("translation-graph", "figure"),
     Input("frame-id-slider", "value"),
     Input("sensor-dropdown", "value"),
-    Input("pose-figure-store", "data"),
     State("processed-data-store", "data"),
     State("rotation-graph", "figure"),
     State("translation-graph", "figure"),
