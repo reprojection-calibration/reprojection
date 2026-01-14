@@ -75,6 +75,7 @@ jobs:
           tags: reprojection-code-coverage-assertion:latest
           target: code-coverage-assertion-stage
   python-tooling:
+    needs: code-checks-python
     runs-on: ubuntu-latest
     steps:
       # Objects stored with git-lfs need to be pulled, we follow the example at this link:
