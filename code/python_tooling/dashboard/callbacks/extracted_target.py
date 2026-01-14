@@ -94,25 +94,21 @@ app.clientside_callback(
     """
     function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data,  xy_fig, pixel_fig) {
         if (!sensor || !pose_type || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
-            console.log("One or more of the inputs is missing.");
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
         
         const timestamps = processed_data[1][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
-            console.log("Invalid timestamps or frame index out of bounds:", sensor);
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
         
         const timestamp_i = BigInt(timestamps[frame_idx])
         if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
-            console.log("Raw data structure is incomplete for sensor:", sensor);
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
         
         const extracted_target = raw_data[sensor]['frames'][timestamp_i].extracted_target
         if (!extracted_target) {
-            console.log("No extracted_target found at frame:", frame_idx, "for sensor:", sensor);
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
 
@@ -139,7 +135,7 @@ app.clientside_callback(
         
         const reprojection_error = reprojection_errors[pose_type]
         if (!reprojection_error) {
-            // If the requested reprojection error is not available then return to default marker configuration.
+            // If the sensor specific reprojection error is not available then return to default marker configuration.
             xy_patch.assign(['data', 0, 'marker'], { size: 12 });
             pixel_patch.assign(['data', 0, 'marker'], { size: 6 });
             
