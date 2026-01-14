@@ -151,17 +151,6 @@ app.layout = html.Div([
                     ),
                 ],
             ),
-            html.Div(
-                children=[
-                    html.P("Max error (pix)"),
-                    dcc.Input(
-                        id='max-reprojection-error-input',
-                        type='number',
-                        min=0, max=1000,
-                        value=2,
-                    )
-                ],
-            ),
         ],
         style={
             'alignItems': 'top',
@@ -177,24 +166,55 @@ app.layout = html.Div([
             children=[
                 html.Div(
                     children=[
-                        dcc.Graph(
-                            id="targets-xy-graph",
+                        html.Div(
+                            children=[
+                                html.Label(
+                                    children='Max reprojection error (pix)',
+                                ),
+                                dcc.Input(
+                                    id='max-reprojection-error-input',
+                                    type='number',
+                                    min=0, max=1000,
+                                    value=1,
+                                )
+                            ],
                             style={
+                                "display": "flex",
+                                "flexDirection": "row",
+                                "gap": "20px",
+                                "flex": "1",
                                 "width": "100%",
-                                "height": "60vh",
                             },
                         ),
-                        dcc.Graph(
-                            id="targets-pixels-graph",
+                        html.Div(
+                            children=[
+                                dcc.Graph(
+                                    id="targets-xy-graph",
+                                    style={
+                                        "width": "100%",
+                                        "height": "60vh",
+                                    },
+                                ),
+                                dcc.Graph(
+                                    id="targets-pixels-graph",
+                                    style={
+                                        "width": "100%",
+                                        "height": "60vh",
+                                    },
+                                ),
+                            ],
                             style={
+                                "display": "flex",
+                                "flexDirection": "row",
+                                "gap": "20px",
+                                "flex": "1",
                                 "width": "100%",
-                                "height": "60vh",
                             },
                         ),
                     ],
                     style={
                         "display": "flex",
-                        "flexDirection": "row",
+                        "flexDirection": "column",
                         "gap": "20px",
                         "flex": "1",
                         "width": "100%",
@@ -482,15 +502,15 @@ app.clientside_callback(
             y: 1,
             xref: 'x',
             yref: 'paper',
-            text: `ID: ${frame_idx}`,
+            text: `${frame_idx}`,
             showarrow: false,
             yanchor: 'bottom',
-            xanchor: 'left',
+            xanchor: 'center',
             font: {
-                color: 'black',
+                color: 'white',
                 size: 12
             },
-            bgcolor: 'rgba(255,255,255,0.7)',
+            bgcolor: 'rgba(10,10,10,0.7)',
         };
         
         // WARN(Jack): This might overwrite other pre-existing shapes that we add later!
@@ -621,6 +641,8 @@ def init_extracted_target_figures(sensor, data):
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
 
+# TODO(Jack): Are we doing this right at all or should we be using a patch to hold the points and avoiding the json
+#  stringify thing?
 app.clientside_callback(
     """
     function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data,  xy_fig, pixel_fig) {
@@ -686,11 +708,13 @@ app.clientside_callback(
         xy_fig.data[0].marker = {size: 12, 
                         color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
                         colorscale: "Bluered", 
-                        cmin: 0, cmax: cmax};
+                        cmin: 0, cmax: cmax,
+                        showscale: true};
         pixel_fig.data[0].marker = {size: 6, 
                         color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
                         colorscale: "Bluered", 
-                        cmin: 0, cmax: cmax};
+                        cmin: 0, cmax: cmax,
+                        showscale: true};
         
         return [xy_fig, pixel_fig];
     }
