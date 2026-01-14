@@ -3,7 +3,7 @@ import unittest
 from dashboard.tools.plot_pose_figure import plot_pose_figure
 
 
-class TestDashboardPlotPoseFigure(unittest.TestCase):
+class TestDashboardToolsPlotPoseFigure(unittest.TestCase):
     def test_plot_pose_figure(self):
         fig = plot_pose_figure([], [], "", "")
         self.assertEqual(fig, {})

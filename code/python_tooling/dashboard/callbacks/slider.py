@@ -10,13 +10,16 @@ from dashboard.tools.time_handling import calculate_ticks_from_timestamps
     Input("sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def update_slider_marks(selected_sensor, data):
-    if selected_sensor is None or data is None:
+def update_slider_marks(selected_sensor, processed_data):
+    if selected_sensor is None or processed_data is None:
         raise PreventUpdate
 
-    _, timestamps_sorted = data
-    timestamps_ns = timestamps_sorted[selected_sensor]
+    _, timestamps_sorted = processed_data
+    if selected_sensor not in timestamps_sorted:
+        # TODO(Jack): Should we more aggressively react to this error? This kind of logic error should really not be happening.
+        return {}
 
+    timestamps_ns = timestamps_sorted[selected_sensor]
     tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
 
     return dict(zip(tickvals_idx, ticktext))
@@ -27,17 +30,17 @@ def update_slider_marks(selected_sensor, data):
 app.clientside_callback(
     """
     function(frame_idx, data, sensor) {
-         if (!data || !sensor) {
+        if (!data || !sensor) {
             return "";
         }
-        
+    
         const timestamps = data[1][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
             return "";
         }
-        
+    
         const timestamp_i = BigInt(timestamps[frame_idx])
-
+    
         return timestamp_i.toString();
     }
     """,

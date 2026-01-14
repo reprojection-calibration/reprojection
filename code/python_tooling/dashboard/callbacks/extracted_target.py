@@ -88,82 +88,85 @@ def init_extracted_target_figures(sensor, data):
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
 
-# TODO(Jack): Are we doing this right at all or should we be using a patch to hold the points and avoiding the json
-#  stringify thing?
+# NOTE(Jack): Manually formatted periodically using https://beautifier.io/ - we should automate this process!
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data,  xy_fig, pixel_fig) {
-        if (!sensor || !pose_type || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
-            console.log("One or more of the inputs is missing.");
-            return [xy_fig, pixel_fig];
+    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data, xy_fig, pixel_fig) {
+        if (!sensor || !pose_type || !raw_data || !processed_data || !xy_fig || !pixel_fig) {
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        
+    
         const timestamps = processed_data[1][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
-            console.log("Invalid timestamps or frame index out of bounds:", sensor);
-            return [xy_fig, pixel_fig];
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        
+    
         const timestamp_i = BigInt(timestamps[frame_idx])
         if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
-            console.log("Raw data structure is incomplete for sensor:", sensor);
-            return [xy_fig, pixel_fig];
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        
+    
         const extracted_target = raw_data[sensor]['frames'][timestamp_i].extracted_target
         if (!extracted_target) {
-            console.log("No extracted_target found at frame:", frame_idx, "for sensor:", sensor);
-            return [xy_fig, pixel_fig];
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
-
-        // NOTE(Jack): Dash will only update the graph if it gets a new figure. If you only mutate the input figure then
-        // the reference/address/figure id is the same and dash will think you simply returned the same figure, and 
-        // not re-render it. Therefore we need to actually create a new figure so that Dash is forced to re-render it 
-        // with the new points we add below. Here we use these JSON helper functions to create a copy of the figure 
-        // which when returned will be recognized by Dash as a new figure which needs to be rendered. There are several 
-        // issues on github (ex. https://github.com/plotly/dash/issues/1040) with people confused by this. 
-        xy_fig = JSON.parse(JSON.stringify(xy_fig));
+    
         const pts = extracted_target.points;
-        xy_fig.data[0].x = pts.map(p => p[0]);
-        xy_fig.data[0].y = pts.map(p => p[1]);
-
-        pixel_fig = JSON.parse(JSON.stringify(pixel_fig));
+        const xy_patch = new dash_clientside.Patch();
+        xy_patch.assign(['data', 0, 'x'], pts.map(p => p[0]));
+        xy_patch.assign(['data', 0, 'y'], pts.map(p => p[1]));
+    
         const pix = extracted_target.pixels;
-        pixel_fig.data[0].x = pix.map(p => p[0]);
-        pixel_fig.data[0].y = pix.map(p => p[1]);
-        
+        const pixel_patch = new dash_clientside.Patch();
+        pixel_patch.assign(['data', 0, 'x'], pix.map(p => p[0]));
+        pixel_patch.assign(['data', 0, 'y'], pix.map(p => p[1]));
+    
         // If reprojection errors are available we will color the points and pixels according to them. If not available
         // simply return the figures with the plain colored points and pixels.
         const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
         if (!reprojection_errors) {
             // If no reprojection errors are available at all then return to default marker configuration.
-            xy_fig.data[0].marker = {size: 12}
-            pixel_fig.data[0].marker = {size: 6}
-            
-            return [xy_fig, pixel_fig];
+            xy_patch.assign(['data', 0, 'marker'], {
+                size: 12
+            });
+            pixel_patch.assign(['data', 0, 'marker'], {
+                size: 6
+            });
+    
+            return [xy_patch.build(), pixel_patch.build()];
         }
-        
+    
         const reprojection_error = reprojection_errors[pose_type]
         if (!reprojection_error) {
-            // If the requested reprojection error is not available then return to default marker configuration.
-            xy_fig.data[0].marker = {size: 12}
-            pixel_fig.data[0].marker = {size: 6}
-            
-            return [xy_fig, pixel_fig];
+            // If the sensor specific reprojection error is not available then return to default marker configuration.
+            xy_patch.assign(['data', 0, 'marker'], {
+                size: 12
+            });
+            pixel_patch.assign(['data', 0, 'marker'], {
+                size: 6
+            });
+    
+            return [xy_patch.build(), pixel_patch.build()];
         }
-        
-        xy_fig.data[0].marker = {size: 12, 
-                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
-                        colorscale: "Bluered", 
-                        cmin: 0, cmax: cmax,
-                        showscale: true};
-        pixel_fig.data[0].marker = {size: 6, 
-                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
-                        colorscale: "Bluered", 
-                        cmin: 0, cmax: cmax,
-                        showscale: true};
-        
-        return [xy_fig, pixel_fig];
+    
+        xy_patch.assign(['data', 0, 'marker'], {
+            size: 12,
+            color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
+            colorscale: "Bluered",
+            cmin: 0,
+            cmax: cmax,
+            showscale: true
+        });
+        pixel_patch.assign(['data', 0, 'marker'], {
+            size: 6,
+            color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
+            colorscale: "Bluered",
+            cmin: 0,
+            cmax: cmax,
+            showscale: true
+        });
+    
+        return [xy_patch.build(), pixel_patch.build()];
     }
     """,
     Output("targets-xy-graph", "figure"),
