@@ -1,8 +1,8 @@
 import unittest
 
-from dashboard.callbacks.slider import advance_slider, toggle_play, update_slider_marks
-
 from dash.exceptions import PreventUpdate
+
+from dashboard.callbacks.slider import advance_slider, toggle_play, update_slider_marks
 
 
 class TestDashboardCallbacksSlider(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestDashboardCallbacksSlider(unittest.TestCase):
         timestamps_sorted = {selected_sensor: [int(i * 1e9) for i in range(20)]}
 
         output = update_slider_marks(selected_sensor, [None, timestamps_sorted])
-        self.assertEqual(output, {0: '0s', 5: '5s', 10: '10s', 15: '15s'})
+        self.assertEqual(output, {0: "0s", 5: "5s", 10: "10s", 15: "15s"})
 
     def test_toggle_play(self):
         # The slider advances/plays by default which means the button needs to display the pause action.
