@@ -3,13 +3,12 @@ import plotly.graph_objects as go
 from time_handling import timestamps_to_elapsed_seconds, calculate_ticks_from_timestamps
 
 
-
 def plot_pose_figure(timestamps_ns, data, title, yaxis_title, fig=None, legendgroup=None, marker='circle', x_name='x',
-                     y_name='y', z_name='z'):
+                     y_name='y', z_name='z', ymin=-3.15, ymax=3.15):
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
         return {}
 
-    # TODO(Jack): Should we raise an exception here because this is a real error.
+    # TODO(Jack): Should we raise an exception here because this is a real error?
     # Expect either [rz, ry, rz] or [x, y, z] - at this time nothing else is valid!
     if len(data[0]) != 3:
         return {}
@@ -45,7 +44,7 @@ def plot_pose_figure(timestamps_ns, data, title, yaxis_title, fig=None, legendgr
         ),
         yaxis=dict(
             title=yaxis_title,
-            range=[-4, 4], # TODO TO NOT HARDCODE
+            range=[ymin, ymax],
         ),
     )
 
