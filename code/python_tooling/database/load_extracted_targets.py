@@ -1,10 +1,11 @@
-from generated.extracted_target_pb2 import ExtractedTargetProto
+import os
 import sqlite3
+
 import numpy as np
 import pandas as pd
-import os
 
 from database.sql_statement_loading import load_sql
+from generated.extracted_target_pb2 import ExtractedTargetProto
 
 
 def build_pixels(msg_data):
@@ -45,9 +46,11 @@ def parse_proto(blob):
     msg = ExtractedTargetProto()
     msg.ParseFromString(blob)
 
-    return {'pixels': build_pixels(msg.bundle).tolist(),
-            'points': build_points(msg.bundle).tolist(),
-            'indices': build_indices(msg).tolist()}
+    return {
+        "pixels": build_pixels(msg.bundle).tolist(),
+        "points": build_points(msg.bundle).tolist(),
+        "indices": build_indices(msg).tolist(),
+    }
 
 
 def load_extracted_targets_df(db_path):
@@ -57,11 +60,9 @@ def load_extracted_targets_df(db_path):
 
     try:
         with sqlite3.connect(db_path) as conn:
-            df = pd.read_sql(
-                load_sql('extracted_targets_select_all.sql'), conn
-            )
+            df = pd.read_sql(load_sql("extracted_targets_select_all.sql"), conn)
 
-            if 'data' not in df.columns:
+            if "data" not in df.columns:
                 raise KeyError("'data' column not found in query result")
 
             def safe_parse(blob):
@@ -71,7 +72,7 @@ def load_extracted_targets_df(db_path):
                     print(f"Failed to parse blob: {e}")
                     return None
 
-            df['data'] = df['data'].apply(safe_parse)
+            df["data"] = df["data"].apply(safe_parse)
     except Exception as e:
         print(f"Unexpected error in load_extracted_targets_df(db_path={db_path}): {e}")
         return None
@@ -86,18 +87,27 @@ def add_extracted_targets_df_to_camera_calibration_data(df, data):
         # target table CANNOT exist (under no circumstance!!!) unless it has a corresponding entry in the image table.
         # Therefore, if at this point we have a sensor or a timestamp that is not already in 'data' it means we have a
         # big problem.
-        sensor = row['sensor_name']
+        sensor = row["sensor_name"]
         if sensor not in data:
-            raise RuntimeError(f'Sensor {sensor} not present in camera calibration data dictionary', )
-
-        timestamp = row['timestamp_ns']
-        if timestamp not in data[sensor]['frames']:
             raise RuntimeError(
-                f'Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary')
+                f"Sensor {sensor} not present in camera calibration data dictionary",
+            )
+
+        timestamp = row["timestamp_ns"]
+        if timestamp not in data[sensor]["frames"]:
+            raise RuntimeError(
+                f"Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary"
+            )
 
         target = row["data"]
-        data[sensor]['frames'][timestamp].update({'extracted_target': {'pixels': target['pixels'],
-                                                                       'points': target['points'],
-                                                                       'indices': target['indices']}})
+        data[sensor]["frames"][timestamp].update(
+            {
+                "extracted_target": {
+                    "pixels": target["pixels"],
+                    "points": target["points"],
+                    "indices": target["indices"],
+                }
+            }
+        )
 
     return data

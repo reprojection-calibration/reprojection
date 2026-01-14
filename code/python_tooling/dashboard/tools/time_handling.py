@@ -4,14 +4,14 @@ def extract_timestamps_and_poses_sorted(frames, pose_type):
     for timestamp in sorted(frames):
         frame_i = frames[timestamp]
 
-        if 'poses' not in frame_i:
+        if "poses" not in frame_i:
             continue
 
-        if pose_type not in frame_i['poses']:
+        if pose_type not in frame_i["poses"]:
             continue
 
         timestamps.append(timestamp)
-        poses.append(frame_i['poses'][pose_type])
+        poses.append(frame_i["poses"][pose_type])
 
     return timestamps, poses
 
@@ -43,8 +43,7 @@ def calculate_ticks_from_timestamps(timestamps_ns, step=5):
     ticktext = []
     for target in target_times:
         closest_index = min(
-            range(len(elapsed_time_s)),
-            key=lambda i: abs(elapsed_time_s[i] - target)
+            range(len(elapsed_time_s)), key=lambda i: abs(elapsed_time_s[i] - target)
         )
 
         # WARN(Jack): Technically we are introducing an approximation here by using the "closest index". For high

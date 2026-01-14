@@ -1,9 +1,3 @@
-from server import app
-
-from dash import dcc, html
-
-from database.types import PoseType
-
 # NOTE(Jack): These might look unused but they need to be imported here so that the callbacks can be registered with the
 # Dash instance. Please see the answer here
 # https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
@@ -12,245 +6,263 @@ import callbacks.extracted_target
 import callbacks.pose_graph
 import callbacks.slider
 import callbacks.statistics
+from dash import dcc, html
+
+from dashboard.server import app
+from database.types import PoseType
 
 # TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
 
 
-app.layout = html.Div([
-    html.H2('Reprojection - The future is calibrated.'),
-
-    html.Div(
-        children=[
-            html.Div(
-                children=[
-                    html.Div(
-                        children=[
-                            html.Label(
-                                children='Load',
-                            ),
-                            dcc.Dropdown(
-                                id='database-dropdown',
-                                placeholder='Select a database',
-                                style={'width': '300px'},
-                            ),
-                            html.Button(
-                                children='Refresh Database List',
-                                id='refresh-database-list-button',
-                                n_clicks=0,
-                            ),
-                        ],
-                        style={'alignItems': 'center',
-                               'display': 'flex',
-                               'flexDirection': 'row',
-                               'gap': '10px',
-                               'margin': '10px',
-                               'flex': '1', },
-                    ),
-                    html.Div(
-                        children=[
-                            html.Label(
-                                children='Select',
-                            ),
-                            dcc.Dropdown(
-                                id='sensor-dropdown',
-                                placeholder='Select a camera sensor',
-                                style={'width': '300px'},
-                            ),
-                        ],
-                        style={'alignItems': 'center',
-                               'display': 'flex',
-                               'flexDirection': 'row',
-                               'gap': '10px',
-                               'margin': '10px',
-                               'flex': '1', },
-                    ),
-
-                ],
-                style={'alignItems': 'flex-start',
-                       'display': 'flex',
-                       'flexDirection': 'column',
-                       'gap': '10px',
-                       'margin': '10px',
-                       'flex': '1', },
-            ),
-
-            html.Div(
-                children=[
-                    html.Div(
-                        [
-                            html.Div(id="statistics-display"),
-                        ]
-                    ),
-                ],
-                style={'alignItems': 'top',
-                       'display': 'flex',
-                       'flexDirection': 'row',
-                       'gap': '10px',
-                       'margin': '10px',
-                       'flex': '1', },
-            ),
-            html.Div(
-                children=[
-                    html.Label(
-                        children='Pose Type',
-                    ),
-                    dcc.RadioItems(
-                        id="pose-type-selector",
-                        options=[
-                            {"label": "Initial", "value": PoseType.Initial},
-                            {"label": "Optimized", "value": PoseType.Optimized},
-                        ],
-                        value=PoseType.Initial,
-                    )
-                ],
-                style={'alignItems': 'top',
-                       'display': 'flex',
-                       'flexDirection': 'column',
-                       'gap': '10px',
-                       'margin': '10px',
-                       'flex': '1', },
-            ),
-        ],
-        style={'alignItems': 'top',
-               'display': 'flex',
-               'flexDirection': 'row',
-               'gap': '10px',
-               'margin': '10px', },
-
-    ),
-    html.Div(
-        children=[
-            # The animation plays by default therefore the button is initialized with the pause graphic
-            html.Button(
-                children="⏸ Pause",
-                id="play-button",
-                n_clicks=0,
-                style={
-                    "width": "50px",
-                },
-            ),
-            html.Div(
-                children=[
-                    dcc.Slider(
-                        id="frame-id-slider",
-                        marks=None,
-                        min=0, max=0, step=1, value=0,
-                        tooltip={"placement": "top", "always_visible": True},
-                        updatemode="drag",
-                    ),
-                ],
-                style={
-                    "width": "70%",
-                },
-            ),
-            html.Div(
-                children=[
-                    html.P("Current timestamp (ns)"),
-                    html.Div(
-                        id="slider-timestamp",
-                    ),
-                ],
-            ),
-        ],
-        style={
-            'alignItems': 'top',
-            'display': 'flex',
-            'flexDirection': 'row',
-            'gap': '10px',
-            'margin': '10px',
-            'flex': '1', },
-    ),
-
-    dcc.Tabs([
-        dcc.Tab(
+app.layout = html.Div(
+    [
+        html.H2("Reprojection - The future is calibrated."),
+        html.Div(
             children=[
                 html.Div(
                     children=[
                         html.Div(
                             children=[
                                 html.Label(
-                                    children='Max reprojection error (pix)',
+                                    children="Load",
                                 ),
-                                dcc.Input(
-                                    id='max-reprojection-error-input',
-                                    type='number',
-                                    min=0, max=1000,
-                                    value=1,
-                                )
+                                dcc.Dropdown(
+                                    id="database-dropdown",
+                                    placeholder="Select a database",
+                                    style={"width": "300px"},
+                                ),
+                                html.Button(
+                                    children="Refresh Database List",
+                                    id="refresh-database-list-button",
+                                    n_clicks=0,
+                                ),
                             ],
                             style={
+                                "alignItems": "center",
                                 "display": "flex",
                                 "flexDirection": "row",
-                                "gap": "20px",
+                                "gap": "10px",
+                                "margin": "10px",
                                 "flex": "1",
-                                "width": "100%",
                             },
                         ),
                         html.Div(
                             children=[
-                                dcc.Graph(
-                                    id="targets-xy-graph",
+                                html.Label(
+                                    children="Select",
+                                ),
+                                dcc.Dropdown(
+                                    id="sensor-dropdown",
+                                    placeholder="Select a camera sensor",
+                                    style={"width": "300px"},
+                                ),
+                            ],
+                            style={
+                                "alignItems": "center",
+                                "display": "flex",
+                                "flexDirection": "row",
+                                "gap": "10px",
+                                "margin": "10px",
+                                "flex": "1",
+                            },
+                        ),
+                    ],
+                    style={
+                        "alignItems": "flex-start",
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "10px",
+                        "margin": "10px",
+                        "flex": "1",
+                    },
+                ),
+                html.Div(
+                    children=[
+                        html.Div(
+                            [
+                                html.Div(id="statistics-display"),
+                            ]
+                        ),
+                    ],
+                    style={
+                        "alignItems": "top",
+                        "display": "flex",
+                        "flexDirection": "row",
+                        "gap": "10px",
+                        "margin": "10px",
+                        "flex": "1",
+                    },
+                ),
+                html.Div(
+                    children=[
+                        html.Label(
+                            children="Pose Type",
+                        ),
+                        dcc.RadioItems(
+                            id="pose-type-selector",
+                            options=[
+                                {"label": "Initial", "value": PoseType.Initial},
+                                {"label": "Optimized", "value": PoseType.Optimized},
+                            ],
+                            value=PoseType.Initial,
+                        ),
+                    ],
+                    style={
+                        "alignItems": "top",
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "10px",
+                        "margin": "10px",
+                        "flex": "1",
+                    },
+                ),
+            ],
+            style={
+                "alignItems": "top",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "10px",
+                "margin": "10px",
+            },
+        ),
+        html.Div(
+            children=[
+                # The animation plays by default therefore the button is initialized with the pause graphic
+                html.Button(
+                    children="⏸ Pause",
+                    id="play-button",
+                    n_clicks=0,
+                    style={
+                        "width": "50px",
+                    },
+                ),
+                html.Div(
+                    children=[
+                        dcc.Slider(
+                            id="frame-id-slider",
+                            marks=None,
+                            min=0,
+                            max=0,
+                            step=1,
+                            value=0,
+                            tooltip={"placement": "top", "always_visible": True},
+                            updatemode="drag",
+                        ),
+                    ],
+                    style={
+                        "width": "70%",
+                    },
+                ),
+                html.Div(
+                    children=[
+                        html.P("Current timestamp (ns)"),
+                        html.Div(
+                            id="slider-timestamp",
+                        ),
+                    ],
+                ),
+            ],
+            style={
+                "alignItems": "top",
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "10px",
+                "margin": "10px",
+                "flex": "1",
+            },
+        ),
+        dcc.Tabs(
+            [
+                dcc.Tab(
+                    children=[
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    children=[
+                                        html.Label(
+                                            children="Max reprojection error (pix)",
+                                        ),
+                                        dcc.Input(
+                                            id="max-reprojection-error-input",
+                                            type="number",
+                                            min=0,
+                                            max=1000,
+                                            value=1,
+                                        ),
+                                    ],
                                     style={
+                                        "display": "flex",
+                                        "flexDirection": "row",
+                                        "gap": "20px",
+                                        "flex": "1",
                                         "width": "100%",
-                                        "height": "60vh",
                                     },
                                 ),
-                                dcc.Graph(
-                                    id="targets-pixels-graph",
+                                html.Div(
+                                    children=[
+                                        dcc.Graph(
+                                            id="targets-xy-graph",
+                                            style={
+                                                "width": "100%",
+                                                "height": "60vh",
+                                            },
+                                        ),
+                                        dcc.Graph(
+                                            id="targets-pixels-graph",
+                                            style={
+                                                "width": "100%",
+                                                "height": "60vh",
+                                            },
+                                        ),
+                                    ],
                                     style={
+                                        "display": "flex",
+                                        "flexDirection": "row",
+                                        "gap": "20px",
+                                        "flex": "1",
                                         "width": "100%",
-                                        "height": "60vh",
                                     },
                                 ),
                             ],
                             style={
                                 "display": "flex",
-                                "flexDirection": "row",
+                                "flexDirection": "column",
                                 "gap": "20px",
                                 "flex": "1",
                                 "width": "100%",
                             },
                         ),
                     ],
-                    style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "gap": "20px",
-                        "flex": "1",
-                        "width": "100%",
-                    },
+                    label="Feature Extraction",
                 ),
-            ],
-            label='Feature Extraction',
+                dcc.Tab(
+                    children=[
+                        dcc.Graph(
+                            id="rotation-graph",
+                        ),
+                        dcc.Graph(
+                            id="translation-graph",
+                        ),
+                    ],
+                    label="Camera Poses",
+                ),
+            ]
         ),
-        dcc.Tab(
-            children=[
-                dcc.Graph(
-                    id='rotation-graph',
-                ),
-                dcc.Graph(
-                    id='translation-graph',
-                ),
-            ],
-            label='Camera Poses',
+        # Components without a visual representation are found here at the bottom (ex. Interval, Store etc.)
+        dcc.Interval(
+            disabled=False,
+            id="play-interval",
+            interval=100,
         ),
-    ]),
-
-    # Components without a visual representation are found here at the bottom (ex. Interval, Store etc.)
-    dcc.Interval(
-        disabled=False,
-        id="play-interval",
-        interval=100,
-    ),
-
-    # NOTE(Jack): What we want to prevent is that big chunks of data get sent to and from the browse more than they
-    # need to. As the calibration data might be 10, 30, or even 100mb it is important to make sure we only send that to
-    # the browser when we need to. Therefore, we designed these two data stores, one heavy one (raw-data-store) and one
-    # light one (processed-data-store). In the light one we should find all the metadata required to parameterize and
-    # build most of the dashboard (ex. timestamps, number of frames etc.) and the heavy one we find the entire dataset
-    # which we actually need to process to build our figures. Unless you absolutely need the raw data you should only
-    # use the processed data!
-    dcc.Store(id='raw-data-store'),
-    dcc.Store(id='processed-data-store'),
-    dcc.Store(id='pose-figure-store'),
-])
+        # NOTE(Jack): What we want to prevent is that big chunks of data get sent to and from the browse more than they
+        # need to. As the calibration data might be 10, 30, or even 100mb it is important to make sure we only send that to
+        # the browser when we need to. Therefore, we designed these two data stores, one heavy one (raw-data-store) and one
+        # light one (processed-data-store). In the light one we should find all the metadata required to parameterize and
+        # build most of the dashboard (ex. timestamps, number of frames etc.) and the heavy one we find the entire dataset
+        # which we actually need to process to build our figures. Unless you absolutely need the raw data you should only
+        # use the processed data!
+        dcc.Store(id="raw-data-store"),
+        dcc.Store(id="processed-data-store"),
+        dcc.Store(id="pose-figure-store"),
+    ]
+)

@@ -1,6 +1,7 @@
 import os
-import pandas as pd
 import sqlite3
+
+import pandas as pd
 
 from database.sql_statement_loading import load_sql
 
@@ -12,9 +13,7 @@ def load_images_df(db_path):
 
     try:
         with sqlite3.connect(db_path) as conn:
-            df = pd.read_sql(
-                load_sql('images_select_all.sql'), conn
-            )
+            df = pd.read_sql(load_sql("images_select_all.sql"), conn)
     except Exception as e:
         print(f"Unexpected error in load_images_df(db_path={db_path}): {e}")
         return None
@@ -28,12 +27,12 @@ def load_images_df(db_path):
 def image_df_to_camera_calibration_data(df):
     data = {}
     for index, row in df.iterrows():
-        sensor = row['sensor_name']
-        timestamp = row['timestamp_ns']
+        sensor = row["sensor_name"]
+        timestamp = row["timestamp_ns"]
 
         if sensor not in data:
-            data[sensor] = {'frames': {}}
+            data[sensor] = {"frames": {}}
 
-        data[sensor]['frames'][timestamp] = {'image': row['data']}
+        data[sensor]["frames"][timestamp] = {"image": row["data"]}
 
     return data

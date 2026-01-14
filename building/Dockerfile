@@ -37,6 +37,21 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
     /temporary/${CODE_CHECKS}
 
 
+# NOTE(Jack): Python venvs can be heavy, confusing, and hard to handle sometimes. As an expedient to get the python
+# code checks up and running with the minumum viable dependencies we simply inherit from a default python base image
+# and install what we need to get the code checks done. Unintentionally this caused problems with isort not being able
+# to disinguish between "first party" and "third party" packages. But we solve it, please see the note in
+# code_checks_python.sh for more details.
+FROM python:3.12-slim AS code-checks-python-stage
+
+RUN pip install black isort
+
+ARG CODE_CHECKS_PYTHON=building/scripts/code_checks_python.sh
+RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHECKS_PYTHON} \
+    --mount=type=bind,source=code/,target=/temporary/code \
+    /temporary/${CODE_CHECKS_PYTHON}
+
+
 FROM base-stage AS python-tooling-stage
 
 ENV VENV_DIR="~/.reprojection_venv"

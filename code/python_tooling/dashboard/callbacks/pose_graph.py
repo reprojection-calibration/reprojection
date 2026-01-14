@@ -1,17 +1,16 @@
-from server import app
-
 from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from tools.plot_pose_figure import plot_pose_figure
-from tools.time_handling import extract_timestamps_and_poses_sorted
+from dashboard.server import app
+from dashboard.tools.plot_pose_figure import plot_pose_figure
+from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 
 
 @app.callback(
     Output("pose-figure-store", "data"),
-    Input('sensor-dropdown', 'value'),
-    Input('pose-type-selector', 'value'),
-    State('raw-data-store', 'data'),
+    Input("sensor-dropdown", "value"),
+    Input("pose-type-selector", "value"),
+    State("raw-data-store", "data"),
 )
 def update_pose_graph(selected_sensor, pose_type, raw_data):
     # TODO(Jack): What is an effective way to actually use this mechanism? Having it at the start of every single
@@ -26,7 +25,7 @@ def update_pose_graph(selected_sensor, pose_type, raw_data):
     # TODO(Jack): Technically this is not nice. To access a key (frames) without checking that it exists. However this
     # is so fundamental to the data structure I think I can be forgiven for this. Remove this todo later if it turns out
     # to be a nothing burger.
-    frames = raw_data[selected_sensor]['frames']
+    frames = raw_data[selected_sensor]["frames"]
     if frames is None:
         return {
             "rotation": {},
@@ -36,11 +35,20 @@ def update_pose_graph(selected_sensor, pose_type, raw_data):
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
     rotations = [d[:3] for d in poses]
-    rot_fig = plot_pose_figure(timestamps_ns, rotations, 'Orientation', 'Axis Angle (rad)', x_name='rx', y_name='ry',
-                               z_name='rz')
+    rot_fig = plot_pose_figure(
+        timestamps_ns,
+        rotations,
+        "Orientation",
+        "Axis Angle (rad)",
+        x_name="rx",
+        y_name="ry",
+        z_name="rz",
+    )
 
     translations = [d[3:] for d in poses]
-    trans_fig = plot_pose_figure(timestamps_ns, translations, 'Translation', 'Meter (m)')
+    trans_fig = plot_pose_figure(
+        timestamps_ns, translations, "Translation", "Meter (m)"
+    )
 
     return {
         "rotation": rot_fig,
