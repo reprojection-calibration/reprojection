@@ -412,6 +412,10 @@ app.clientside_callback(
     """
     function(frame_idx, sensor, fig_store, processed_data, rot_fig, trans_fig) {
         // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
         const ctx = dash_clientside.callback_context;
         const triggered = dash_clientside.callback_context.triggered.map(t => t.prop_id);
         if (triggered.includes("translation-figure-store.data")) {
@@ -421,6 +425,10 @@ app.clientside_callback(
             }
         }
     
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
+        // DOCUMENT
         // DOCUMENT
         if (!rot_fig || !trans_fig) {
             if (fig_store && fig_store.rotation && fig_store.translation) {
@@ -458,7 +466,6 @@ app.clientside_callback(
     
         // NOTE(Jack): The "paper" coordinate system goes from 0 to 1 to cover the entire figure, so we set yref to 
         // "paper" so that the y0=0 and y1=1 dimensions will draw a vertical line the entire figure height. 
-        patch = new dash_clientside.Patch;
         const new_shape = {
             type: 'rect',
             xref: 'x',
@@ -470,8 +477,26 @@ app.clientside_callback(
             line: {color: 'black', width: 1},
         };
         
+        const new_annotation = {
+            x: local_time_s,
+            y: 1,
+            xref: 'x',
+            yref: 'paper',
+            text: `ID: ${frame_idx}`,
+            showarrow: false,
+            yanchor: 'bottom',
+            xanchor: 'left',
+            font: {
+                color: 'black',
+                size: 12
+            },
+            bgcolor: 'rgba(255,255,255,0.7)',
+        };
+        
         // WARN(Jack): This might overwrite other pre-existing shapes that we add later!
+        patch = new dash_clientside.Patch;
         patch.assign(['layout', 'shapes'], [new_shape]);
+        patch.assign(['layout', 'annotations'], [new_annotation]);
     
         return [patch.build(), patch.build()];
     }
