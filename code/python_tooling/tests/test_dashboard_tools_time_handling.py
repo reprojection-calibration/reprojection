@@ -8,7 +8,7 @@ from dashboard.tools.time_handling import (
 from database.types import PoseType
 
 
-class TestDashboardTimeHandling(unittest.TestCase):
+class TestDashboardToolsTimeHandling(unittest.TestCase):
     def test_extract_timestamps_and_poses_sorted(self):
         # Purposely out of order, and purposely have three initial poses but only two optimized poses.
         frames = {
