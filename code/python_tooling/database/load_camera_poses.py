@@ -23,7 +23,7 @@ def load_camera_poses_df(db_path):
 def add_camera_poses_df_to_camera_calibration_data(df, data):
     for index, row in df.iterrows():
         sensor = row["sensor_name"]
-        if sensor not in    data:
+        if sensor not in data:
             raise RuntimeError(
                 f"Sensor {sensor} not present in camera calibration data dictionary",
             )
