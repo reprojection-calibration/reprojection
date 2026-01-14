@@ -1,0 +1,172 @@
+from server import app, IMAGE_DIMENSIONS
+
+from dash import Input, Output, State
+import plotly.graph_objects as go
+
+
+# TODO(Jack): Technically we only need the sensor name to get the frame-id-slider output, but this does not necessarily
+#  have anything to do with configuring the figures initially. It might make sense to move the frame id slider
+#  dependency to another place that is more related or independent than here.
+@app.callback(
+    Output("targets-xy-graph", "figure", allow_duplicate=True),
+    Output("targets-pixels-graph", "figure", allow_duplicate=True),
+    Output("frame-id-slider", "max"),
+    Input("sensor-dropdown", "value"),
+    State("processed-data-store", "data"),
+    prevent_initial_call=True,
+)
+def init_extracted_target_figures(sensor, data):
+    if not sensor or not data:
+        return {}, {}, 0
+
+    # TODO(Jack): Confirm/test ALL axes properties (ranges, names, orders etc.) None of this has been checked! Even the
+    #  coordinate conventions of the pixels and points needs to be checked!
+    # TODO(Jack): Eliminate copy and paste here in this method! We basically do the same thing twice.
+    # TODO(Jack): We have now copy and pasted in several places that the marker size for xy_fig is 12 and for pixel_fig
+    #  is 6. This is a hack! We need to auto scale all dimensions and all marker sizes! Or at least make them more
+    #  generic.
+    xy_fig = go.Figure()
+    xy_fig.add_trace(
+        go.Scatter(
+            x=[],
+            y=[],
+            mode="markers",
+            marker=dict(size=12),
+            hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
+        )
+    )
+    xy_fig.update_layout(
+        title="Target Points (XY)",
+        xaxis=dict(
+            range=[-0.1, 0.76],  # ERROR(Jack): Do not hardcode or use global
+            title=dict(text="x"),
+            constrain="domain",
+        ),
+        yaxis=dict(
+            range=[-0.1, 0.76],  # ERROR(Jack): Do not hardcode or use global
+            title=dict(text="y"),
+            scaleanchor="x",
+        ),
+    )
+
+    pixel_fig = go.Figure()
+    pixel_fig.add_trace(
+        go.Scatter(
+            x=[],
+            y=[],
+            mode="markers",
+            marker=dict(size=6),
+            hovertemplate="x: %{x}<br>" + "y: %{y}<br>" + "error: %{marker.color:.3f}<extra></extra>"
+        )
+    )
+    pixel_fig.update_layout(
+        title="Extracted Pixel Features",
+        xaxis=dict(
+            range=[0, IMAGE_DIMENSIONS[0]],  # ERROR(Jack): Do not hardcode or use global
+            title=dict(text="u"),
+            constrain="domain",
+        ),
+        yaxis=dict(
+            range=[IMAGE_DIMENSIONS[1], 0],  # invert Y for image coords
+            title=dict(text="v"),
+            scaleanchor="x",
+        ),
+    )
+
+    # TODO(Jack): Why is this in this method??? See comment at top of function.
+    # Get the number of frames to fill the max value of the slider
+    statistics, _ = data
+    n_frames = statistics[sensor]['total_frames']
+
+    return xy_fig, pixel_fig, max(n_frames - 1, 0)
+
+
+# TODO(Jack): Are we doing this right at all or should we be using a patch to hold the points and avoiding the json
+#  stringify thing?
+app.clientside_callback(
+    """
+    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data,  xy_fig, pixel_fig) {
+        if (!sensor || !pose_type || !raw_data || !processed_data  || !xy_fig || !pixel_fig) {
+            console.log("One or more of the inputs is missing.");
+            return [xy_fig, pixel_fig];
+        }
+        
+        const timestamps = processed_data[1][sensor]
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx){
+            console.log("Invalid timestamps or frame index out of bounds:", sensor);
+            return [xy_fig, pixel_fig];
+        }
+        
+        const timestamp_i = BigInt(timestamps[frame_idx])
+        if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
+            console.log("Raw data structure is incomplete for sensor:", sensor);
+            return [xy_fig, pixel_fig];
+        }
+        
+        const extracted_target = raw_data[sensor]['frames'][timestamp_i].extracted_target
+        if (!extracted_target) {
+            console.log("No extracted_target found at frame:", frame_idx, "for sensor:", sensor);
+            return [xy_fig, pixel_fig];
+        }
+
+        // NOTE(Jack): Dash will only update the graph if it gets a new figure. If you only mutate the input figure then
+        // the reference/address/figure id is the same and dash will think you simply returned the same figure, and 
+        // not re-render it. Therefore we need to actually create a new figure so that Dash is forced to re-render it 
+        // with the new points we add below. Here we use these JSON helper functions to create a copy of the figure 
+        // which when returned will be recognized by Dash as a new figure which needs to be rendered. There are several 
+        // issues on github (ex. https://github.com/plotly/dash/issues/1040) with people confused by this. 
+        xy_fig = JSON.parse(JSON.stringify(xy_fig));
+        const pts = extracted_target.points;
+        xy_fig.data[0].x = pts.map(p => p[0]);
+        xy_fig.data[0].y = pts.map(p => p[1]);
+
+        pixel_fig = JSON.parse(JSON.stringify(pixel_fig));
+        const pix = extracted_target.pixels;
+        pixel_fig.data[0].x = pix.map(p => p[0]);
+        pixel_fig.data[0].y = pix.map(p => p[1]);
+        
+        // If reprojection errors are available we will color the points and pixels according to them. If not available
+        // simply return the figures with the plain colored points and pixels.
+        const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
+        if (!reprojection_errors) {
+            // If no reprojection errors are available at all then return to default marker configuration.
+            xy_fig.data[0].marker = {size: 12}
+            pixel_fig.data[0].marker = {size: 6}
+            
+            return [xy_fig, pixel_fig];
+        }
+        
+        const reprojection_error = reprojection_errors[pose_type]
+        if (!reprojection_error) {
+            // If the requested reprojection error is not available then return to default marker configuration.
+            xy_fig.data[0].marker = {size: 12}
+            pixel_fig.data[0].marker = {size: 6}
+            
+            return [xy_fig, pixel_fig];
+        }
+        
+        xy_fig.data[0].marker = {size: 12, 
+                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
+                        colorscale: "Bluered", 
+                        cmin: 0, cmax: cmax,
+                        showscale: true};
+        pixel_fig.data[0].marker = {size: 6, 
+                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
+                        colorscale: "Bluered", 
+                        cmin: 0, cmax: cmax,
+                        showscale: true};
+        
+        return [xy_fig, pixel_fig];
+    }
+    """,
+    Output("targets-xy-graph", "figure"),
+    Output("targets-pixels-graph", "figure"),
+    Input("frame-id-slider", "value"),
+    Input("sensor-dropdown", "value"),
+    Input('pose-type-selector', 'value'),
+    Input('max-reprojection-error-input', 'value'),
+    State("raw-data-store", "data"),
+    State("processed-data-store", "data"),
+    State("targets-xy-graph", "figure"),
+    State("targets-pixels-graph", "figure"),
+)
