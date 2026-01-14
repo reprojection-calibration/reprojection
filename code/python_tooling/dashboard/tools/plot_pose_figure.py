@@ -1,7 +1,9 @@
 import plotly.graph_objects as go
 
-from dashboard.tools.time_handling import (calculate_ticks_from_timestamps,
-                                           timestamps_to_elapsed_seconds)
+from dashboard.tools.time_handling import (
+    calculate_ticks_from_timestamps,
+    timestamps_to_elapsed_seconds,
+)
 
 
 # NOTE(Jack): Think about it this way. The moment that we have two separate arrays we cannot/should not ever sort them.
