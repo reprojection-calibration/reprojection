@@ -6,11 +6,11 @@ from database.types import PoseType
 
 # NOTE(Jack): These might look unused but they need to be imported here so that hte callbacks can be registered with the
 # Dash instance. Please see the answer here https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
-import data_loading_callbacks
-import slider_callbacks
-import callbacks_statistics
-import callbacks_pose_graph
+import callbacks_data_loading
 import callbacks_extracted_target
+import callbacks_pose_graph
+import callbacks_slider
+import callbacks_statistics
 
 # TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
 
