@@ -9,6 +9,7 @@ from database.load_camera_calibration_data import get_camera_calibration_data_st
     get_indexable_timestamp_record, load_camera_calibration_data
 from database.types import PoseType
 
+# TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
 # TODO(Jack): Do not hardcode this - giving a user the ability to interact with the file system in a gui is not so
 #  trivial but can be done with some tk tools or other libraries
 DB_DIR = '../../test_data/'
