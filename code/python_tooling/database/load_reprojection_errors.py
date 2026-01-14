@@ -1,10 +1,11 @@
-from generated.extracted_target_pb2 import ArrayX2dProto
+import os
 import sqlite3
+
 import numpy as np
 import pandas as pd
-import os
 
 from database.sql_statement_loading import load_sql
+from generated.extracted_target_pb2 import ArrayX2dProto
 
 
 # TODO(Jack): Due to undesirable dual definition of pixels with the extracted target and the array which stores the

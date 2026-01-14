@@ -1,7 +1,6 @@
-from server import app
-
-from dash import html, Input, Output, State
+from dash import Input, Output, State, html
 from dash.exceptions import PreventUpdate
+from server import app
 
 
 @app.callback(

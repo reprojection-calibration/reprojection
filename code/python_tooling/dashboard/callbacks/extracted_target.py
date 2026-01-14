@@ -1,7 +1,6 @@
-from server import app, IMAGE_DIMENSIONS
-
-from dash import Input, Output, State
 import plotly.graph_objects as go
+from dash import Input, Output, State
+from server import IMAGE_DIMENSIONS, app
 
 
 # TODO(Jack): Technically we only need the sensor name to get the frame-id-slider output, but this does not necessarily

@@ -1,13 +1,11 @@
-from server import app, DB_DIR
-
-from dash import Input, Output
 import os
 
+from dash import Input, Output
+from server import DB_DIR, app
+
 from database.load_camera_calibration_data import (
-    get_camera_calibration_data_statistics,
-    get_indexable_timestamp_record,
-    load_camera_calibration_data,
-)
+    get_camera_calibration_data_statistics, get_indexable_timestamp_record,
+    load_camera_calibration_data)
 
 
 @app.callback(

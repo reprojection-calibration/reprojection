@@ -38,7 +38,7 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
 
 FROM python:3.12-slim AS code-checks-python-stage
 
-RUN pip install black
+RUN pip install black isort
 
 ARG CODE_CHECKS_PYTHON=building/scripts/code_checks_python.sh
 RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHECKS_PYTHON} \
