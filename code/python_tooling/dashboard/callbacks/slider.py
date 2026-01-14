@@ -3,7 +3,7 @@ from server import app
 from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from time_handling import calculate_ticks_from_timestamps
+from tools.time_handling import calculate_ticks_from_timestamps
 
 
 @app.callback(

@@ -3,8 +3,8 @@ from server import app
 from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from plot_pose_figure import plot_pose_figure
-from time_handling import extract_timestamps_and_poses_sorted
+from tools.plot_pose_figure import plot_pose_figure
+from tools.time_handling import extract_timestamps_and_poses_sorted
 
 
 @app.callback(
