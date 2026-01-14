@@ -263,6 +263,5 @@ app.layout = html.Div(
         # use the processed data!
         dcc.Store(id="raw-data-store"),
         dcc.Store(id="processed-data-store"),
-        dcc.Store(id="pose-figure-store"),
     ]
 )
