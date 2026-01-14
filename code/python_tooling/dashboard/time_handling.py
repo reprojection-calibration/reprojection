@@ -20,6 +20,7 @@ def timestamps_to_elapsed_seconds(timestamps_ns):
     if len(timestamps_ns) == 0:
         return []
 
+    # WARN(Jack): The input to this function must be sorted from smallest to largest!
     t0 = timestamps_ns[0]
     timestamps_human_readable = [(t - t0) / 1e9 for t in timestamps_ns]
 

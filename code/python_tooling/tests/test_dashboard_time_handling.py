@@ -28,3 +28,17 @@ class TestDashboardTimeHandling(unittest.TestCase):
 
         self.assertEqual(timestamps, [1, 3])
         self.assertEqual(poses, [[0, 1, 2, 3, 4, 5, -6.1], [0, 1, 2, 3, 4, 5, -6.3]])
+
+    def test_timestamps_to_elapsed_seconds(self):
+        timestamps_ns = []
+        timestamps_elapsed_s = timestamps_to_elapsed_seconds(timestamps_ns)
+        self.assertEqual(len(timestamps_elapsed_s), 0)
+
+        timestamps_ns = [0, 1e9, 2e9, 3e9]
+        timestamps_elapsed_s = timestamps_to_elapsed_seconds(timestamps_ns)
+        self.assertEqual(len(timestamps_elapsed_s), 4)
+        self.assertEqual(timestamps_elapsed_s, [0, 1, 2, 3])
+
+        timestamps_ns = [10e9, 20e9, 30e9, 35e9]
+        timestamps_elapsed_s = timestamps_to_elapsed_seconds(timestamps_ns)
+        self.assertEqual(timestamps_elapsed_s, [0, 10, 20, 25])
