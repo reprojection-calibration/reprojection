@@ -33,8 +33,8 @@ def init_extracted_target_figures(sensor, data):
             mode="markers",
             marker=dict(size=12),
             hovertemplate="x: %{x}<br>"
-            + "y: %{y}<br>"
-            + "error: %{marker.color:.3f}<extra></extra>",
+                          + "y: %{y}<br>"
+                          + "error: %{marker.color:.3f}<extra></extra>",
         )
     )
     xy_fig.update_layout(
@@ -59,8 +59,8 @@ def init_extracted_target_figures(sensor, data):
             mode="markers",
             marker=dict(size=6),
             hovertemplate="x: %{x}<br>"
-            + "y: %{y}<br>"
-            + "error: %{marker.color:.3f}<extra></extra>",
+                          + "y: %{y}<br>"
+                          + "error: %{marker.color:.3f}<extra></extra>",
         )
     )
     pixel_fig.update_layout(
@@ -88,8 +88,7 @@ def init_extracted_target_figures(sensor, data):
     return xy_fig, pixel_fig, max(n_frames - 1, 0)
 
 
-# TODO(Jack): Are we doing this right at all or should we be using a patch to hold the points and avoiding the json
-#  stringify thing?
+# NOTE(Jack): Manually formatted periodically using https://beautifier.io/ - we should automate this process!
 app.clientside_callback(
     """
     function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data, xy_fig, pixel_fig) {
