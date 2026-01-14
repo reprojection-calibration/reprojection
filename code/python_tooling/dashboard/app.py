@@ -252,7 +252,7 @@ app.layout = html.Div(
         dcc.Interval(
             disabled=False,
             id="play-interval",
-            interval=100,
+            interval=50,
         ),
         # NOTE(Jack): What we want to prevent is that big chunks of data get sent to and from the browse more than they
         # need to. As the calibration data might be 10, 30, or even 100mb it is important to make sure we only send that to

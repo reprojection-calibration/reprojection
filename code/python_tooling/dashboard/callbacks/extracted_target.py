@@ -118,46 +118,15 @@ app.clientside_callback(
 
         const pts = extracted_target.points;
         const xy_patch = new dash_clientside.Patch();
-        xy_patch.data[0].x = pts.map(p => p[0]);
-        xy_patch.data[0].y = pts.map(p => p[1]);
+        xy_patch.assign(['data', 0, 'x'], pts.map(p => p[0]));
+        xy_patch.assign(['data', 0, 'y'], pts.map(p => p[1]));
         
         const pix = extracted_target.pixels;
         const pixel_patch = new dash_clientside.Patch();
-        pixel_patch.data[0].x = pix.map(p => p[0]);
-        pixel_patch.data[0].y = pix.map(p => p[1]);
+        pixel_patch.assign(['data', 0, 'x'], pix.map(p => p[0]));
+        pixel_patch.assign(['data', 0, 'y'], pix.map(p => p[1]));
         
-        // If reprojection errors are available we will color the points and pixels according to them. If not available
-        // simply return the figures with the plain colored points and pixels.
-        const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
-        if (!reprojection_errors) {
-            // If no reprojection errors are available at all then return to default marker configuration.
-            xy_patch.data[0].marker = { size: 12 };
-            pixel_patch.data[0].marker = { size: 6 };
-            
-            return [xy_patch, pixel_patch];
-        }
-        
-        const reprojection_error = reprojection_errors[pose_type]
-        if (!reprojection_error) {
-            // If the requested reprojection error is not available then return to default marker configuration.
-            xy_patch.data[0].marker = { size: 12 };
-            pixel_patch.data[0].marker = { size: 6 };
-            
-            return [xy_patch, pixel_patch];
-        }
-        
-        xy_patch.data[0].marker = {size: 12, 
-                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
-                        colorscale: "Bluered", 
-                        cmin: 0, cmax: cmax,
-                        showscale: true};
-        pixel_patch.data[0].marker = {size: 6, 
-                        color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])), 
-                        colorscale: "Bluered", 
-                        cmin: 0, cmax: cmax,
-                        showscale: true};
-        
-        return [xy_patch, pixel_patch];
+        return [xy_patch.build(), pixel_patch.build()];
     }
     """,
     Output("targets-xy-graph", "figure"),
