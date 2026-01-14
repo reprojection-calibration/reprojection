@@ -11,6 +11,7 @@ from database.types import PoseType
 
 import data_loading_callbacks
 import slider_callbacks
+import callbacks_statistics
 
 # TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
 
@@ -250,48 +251,18 @@ app.layout = html.Div([
     # use the processed data!
     dcc.Store(id='raw-data-store'),
     dcc.Store(id='processed-data-store'),
-    dcc.Store(id='translation-figure-store'),
+    dcc.Store(id='pose-figure-store'),
 ])
-
-
-# Callback to update the loaded statuses
-@app.callback(
-    Output("statistics-display", "children"),
-    Input("sensor-dropdown", "value"),
-    State("processed-data-store", "data"),
-)
-def update_statistics(selected_sensor, data):
-    if selected_sensor is None or data is None:
-        raise PreventUpdate
-
-    statistics, _ = data
-
-    return [
-        html.Div(
-            [
-                html.Div(
-                    "",
-                    style={
-                        "width": "20px", "height": "20px", "backgroundColor": "green" if value != 0 else "red",
-                        "display": "inline-block", "marginRight": "10px"
-                    },
-                ),
-                html.Div(value, style={"width": "35px", "display": "inline-block"}),
-                html.Div(key, style={"width": "200px", "display": "inline-block"}),
-            ],
-        )
-        for key, value in statistics[selected_sensor].items()
-    ]
 
 
 # TODO(Jack): Rename to "pose" concept, not just translation
 @app.callback(
-    Output("translation-figure-store", "data"),
+    Output("pose-figure-store", "data"),
     Input('sensor-dropdown', 'value'),
     Input('pose-type-selector', 'value'),
     State('raw-data-store', 'data'),
 )
-def update_translation_graph(selected_sensor, pose_type, raw_data):
+def update_pose_graph(selected_sensor, pose_type, raw_data):
     # TODO(Jack): What is an effective way to actually use this mechanism? Having it at the start of every single
     #  callback does not feel right somehow. But managing when each input or state is available is not trivial! For
     #  example here the pose type always should have a default value, and technically the raw-data store should always
@@ -337,7 +308,7 @@ app.clientside_callback(
         // DOCUMENT
         const ctx = dash_clientside.callback_context;
         const triggered = dash_clientside.callback_context.triggered.map(t => t.prop_id);
-        if (triggered.includes("translation-figure-store.data")) {
+        if (triggered.includes("pose-figure-store.data")) {
             if (fig_store && fig_store.rotation && fig_store.translation) {
                 console.log("Store updated → refreshing figures");
                 return [fig_store.rotation, fig_store.translation];
@@ -424,7 +395,7 @@ app.clientside_callback(
     Output("translation-graph", "figure"),
     Input("frame-id-slider", "value"),
     Input("sensor-dropdown", "value"),
-    Input("translation-figure-store", "data"),
+    Input("pose-figure-store", "data"),
     State("processed-data-store", "data"),
     State("rotation-graph", "figure"),
     State("translation-graph", "figure"),
