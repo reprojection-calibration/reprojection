@@ -3,7 +3,7 @@ from dash import callback, Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
 from dash.exceptions import PreventUpdate
 
-from plot_pose_figures import  plot_pose_figure
+from plot_pose_figure import  plot_pose_figure
 from time_handling import calculate_ticks_from_timestamps, extract_timestamps_and_poses_sorted
 
 from database.load_camera_calibration_data import get_camera_calibration_data_statistics, \

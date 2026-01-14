@@ -3,6 +3,10 @@ import plotly.graph_objects as go
 from time_handling import timestamps_to_elapsed_seconds, calculate_ticks_from_timestamps
 
 
+# NOTE(Jack): Think about it this way. The moment that we have two separate arrays we cannot/should not ever sort them.
+# They should already be sorted at the time when their correspondence was still programmatically enforced. To do the
+# sorting after they have been separated from each other would be crazy. That means this function requires the input
+# timestamps and data to already be sorted!
 def plot_pose_figure(timestamps_ns, data, title, yaxis_title, fig=None, legendgroup=None, marker='circle', x_name='x',
                      y_name='y', z_name='z', ymin=-3.15, ymax=3.15):
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
@@ -20,6 +24,8 @@ def plot_pose_figure(timestamps_ns, data, title, yaxis_title, fig=None, legendgr
     if fig is None:
         fig = go.Figure()
 
+    # TODO(Jack): When we get the data from the store the timestamps are strings, so we need to convert them to int
+    #  here. Should we deal with this programmatically and convert them to ints when they get loaded into the store?
     timestamps_ns = [int(t) for t in timestamps_ns]
     timestamps_s = timestamps_to_elapsed_seconds(timestamps_ns)
 
