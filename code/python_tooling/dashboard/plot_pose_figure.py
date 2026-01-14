@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 
-from time_handling import timestamps_to_elapsed_seconds, calculate_ticks_from_timestamps
+from dashboard.time_handling import timestamps_to_elapsed_seconds, calculate_ticks_from_timestamps
 
 
 # NOTE(Jack): Think about it this way. The moment that we have two separate arrays we cannot/should not ever sort them.
@@ -13,6 +13,7 @@ def plot_pose_figure(timestamps_ns, data, title, yaxis_title, fig=None, legendgr
         return {}
 
     # TODO(Jack): Should we raise an exception here because this is a real error?
+    # WARN(Jack): We only check the dimension of the first element which really makes this a half assed check...
     # Expect either [rz, ry, rz] or [x, y, z] - at this time nothing else is valid!
     if len(data[0]) != 3:
         return {}
