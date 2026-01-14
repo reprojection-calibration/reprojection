@@ -34,6 +34,19 @@ jobs:
           file: building/Dockerfile
           tags: reprojection-code-checks:latest
           target: code-checks-stage
+  code-checks-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: code-checks-python-stage
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha,scope=code-checks-python
+          cache-to: type=gha,mode=max,scope=code-checks-python
+          file: building/Dockerfile
+          tags: reprojection-code-checks-python:latest
+          target: code-checks-python-stage
   debug-build:
     needs: code-checks
     runs-on: ubuntu-latest
