@@ -15,4 +15,3 @@ python3 -m grpc_tools.protoc -I "${proto_directory}" --python_out="${package_dir
 
 python3 -m pip install --editable "${package_directory}"
 python3 -m unittest discover --start-directory "${package_directory}/tests" --verbose
-

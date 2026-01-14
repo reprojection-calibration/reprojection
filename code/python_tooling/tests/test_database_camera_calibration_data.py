@@ -11,7 +11,7 @@ from database.load_reprojection_errors import add_reprojection_errors_df_to_came
     load_reprojection_errors_df
 
 
-class TestCameraCalibrationData(unittest.TestCase):
+class TestDatabaseCameraCalibrationData(unittest.TestCase):
     # NOTE(Jack): This is a preemptive attempt to make it possible to execute the test locally or in the docker. Let's
     # see if this works or we just end up removing it later :)
     @classmethod
