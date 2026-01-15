@@ -10,7 +10,6 @@ from database.load_camera_calibration_data import (
 )
 
 
-# TODO(Jack): Add selected dir input!
 @app.callback(
     Output("database-dropdown", "options"),
     Output("database-dropdown", "value"),
