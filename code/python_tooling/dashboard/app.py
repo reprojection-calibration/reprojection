@@ -24,6 +24,31 @@ app.layout = html.Div(
                         html.Div(
                             children=[
                                 html.Label(
+                                    children="Directory",
+                                ),
+                                dcc.Input(
+                                    id="database-directory-input",
+                                    type="text",
+                                    value="../../test_data",
+                                    placeholder="/path/to/database/directory",
+                                    debounce=True,
+                                    persistence=True,
+                                    persistence_type="local",
+                                    style={"width": "300px"},
+                                ),
+                            ],
+                            style={
+                                "alignItems": "center",
+                                "display": "flex",
+                                "flexDirection": "row",
+                                "gap": "10px",
+                                "margin": "10px",
+                                "flex": "1",
+                            },
+                        ),
+                        html.Div(
+                            children=[
+                                html.Label(
                                     children="Load",
                                 ),
                                 dcc.Dropdown(

@@ -2,7 +2,7 @@ import os
 
 from dash import Input, Output
 
-from dashboard.server import DB_DIR, app
+from dashboard.server import app
 from database.load_camera_calibration_data import (
     get_camera_calibration_data_statistics,
     get_indexable_timestamp_record,
@@ -14,17 +14,29 @@ from database.load_camera_calibration_data import (
 @app.callback(
     Output("database-dropdown", "options"),
     Output("database-dropdown", "value"),
+    Input("database-directory-input", "value"),
     Input("refresh-database-list-button", "n_clicks"),
 )
-def refresh_database_list(_):
-    if not os.path.exists(DB_DIR):
+def refresh_database_list(db_dir, _):
+    if not os.path.exists(db_dir):
         return [], ""
 
-    database_names = sorted([f for f in os.listdir(DB_DIR) if f.endswith(".db3")])
-    if len(database_names) == 0:
-        return [], ""
+    options = []
+    for file_name in sorted(os.listdir(db_dir)):
+        if not file_name.endswith(".db3"):
+            continue
 
-    return database_names, database_names[0]
+        full_path = os.path.join(db_dir, file_name)
+
+        options.append({
+            "label": file_name,
+            "value": full_path,
+        })
+
+        if not options:
+            return [], ""
+
+    return options, options[0]["value"]
 
 
 # TODO(Jack): When we load a new database we should reset the slider to zero!
@@ -37,11 +49,10 @@ def load_database_to_store(db_file):
     if not db_file:
         return None, None
 
-    db_path = DB_DIR + db_file
-    if not os.path.isfile(db_path):
+    if not os.path.isfile(db_file):
         return None, None
 
-    raw_data = load_camera_calibration_data(db_path)
+    raw_data = load_camera_calibration_data(db_file)
     statistics = get_camera_calibration_data_statistics(raw_data)
     indexable_timestamps = get_indexable_timestamp_record(raw_data)
 
