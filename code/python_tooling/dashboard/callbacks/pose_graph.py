@@ -1,5 +1,5 @@
-from dash import Input, Output, State
 import plotly.graph_objects as go
+from dash import Input, Output, State
 
 from dashboard.server import app
 from dashboard.tools.plot_pose_figure import plot_pose_figure, timeseries_plot
@@ -16,7 +16,12 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
     prevent_initial_call=True,
 )
 def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
-    if sensor is None or pose_type is None or raw_data is None or processed_data is None:
+    if (
+        sensor is None
+        or pose_type is None
+        or raw_data is None
+        or processed_data is None
+    ):
         return {}, {}
 
     # NOTE(Jack): No matter what we have the timestamps of all the possible frames because of the camera table foreign
@@ -32,7 +37,7 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     if sensor not in raw_data:
         return {}, {}
 
-    if 'frames' not in raw_data[sensor]:
+    if "frames" not in raw_data[sensor]:
         raise RuntimeError(
             f"The 'frames' key is not present in the raw data store for sensor {sensor}. That should never happen.",
         )
@@ -40,7 +45,6 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     frames = raw_data[sensor]["frames"]
     if frames is None:
         return {}, {}
-
 
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
