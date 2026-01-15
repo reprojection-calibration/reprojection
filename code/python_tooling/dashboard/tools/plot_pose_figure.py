@@ -11,16 +11,16 @@ from dashboard.tools.time_handling import (
 # sorting after they have been separated from each other would be crazy. That means this function requires the input
 # timestamps and data to already be sorted!
 def plot_pose_figure(
-        timestamps_ns,
-        data,
-        title,
-        yaxis_title,
-        fig=None,
-        x_name="x",
-        y_name="y",
-        z_name="z",
-        ymin=-3.15,
-        ymax=3.15,
+    timestamps_ns,
+    data,
+    title,
+    yaxis_title,
+    fig=None,
+    x_name="x",
+    y_name="y",
+    z_name="z",
+    ymin=-3.15,
+    ymax=3.15,
 ):
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
         return {}
@@ -81,12 +81,15 @@ def plot_pose_figure(
 def timeseries_plot(timestamps_ns, step=5):
     _, tickvals_s, ticktext = calculate_ticks_from_timestamps(timestamps_ns, step)
 
+    fig = go.Figure()
+    if len(tickvals_s) == 0 or len(ticktext) == 0:
+        return fig
+
     # WARN(Jack): The way our calculate_ticks_from_timestamps() from timestamps method works (and needs to work I think)
     # means that it will have one less tick than it really needs to cover the entire data (this is because it wants to
     # also match frame idxs not just times). Therefore, when setting the range below we arbitrarily add one step to the
     # max value. If there was a more programmatic way to do this (i.e. inside calculate_ticks_from_timestamps()) then
     # we should consider doing that!
-    fig = go.Figure()
     fig.update_layout(
         xaxis=dict(
             title="Time (s)",

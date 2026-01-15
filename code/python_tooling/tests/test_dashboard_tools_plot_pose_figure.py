@@ -9,9 +9,7 @@ class TestDashboardToolsPlotPoseFigure(unittest.TestCase):
         self.assertEqual(fig, {})
 
         # Pose data row is not 1X3 - error!
-        fig = plot_pose_figure(
-            [0], [[1, 2]], "", ""
-        )
+        fig = plot_pose_figure([0], [[1, 2]], "", "")
         self.assertEqual(fig, {})
 
         timestamps_ns = [20e9, 21e9, 25e9, 26e9]  # Must be sorted already!
@@ -30,7 +28,6 @@ class TestDashboardToolsPlotPoseFigure(unittest.TestCase):
         # Figure properties we set from the outside
         self.assertEqual(fig["layout"]["title"]["text"], "awesome_main_title")
         self.assertEqual(fig["layout"]["yaxis"]["title"]["text"], "great_y_axis_title")
-
 
     def test_timeseries_plot(self):
         timestamps_ns = [20e9, 21e9, 25e9, 26e9]  # Must be sorted already!
