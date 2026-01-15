@@ -8,6 +8,7 @@ from database.load_camera_calibration_data import (
     get_indexable_timestamp_record,
     load_camera_calibration_data,
 )
+from dash.exceptions import PreventUpdate
 
 
 @app.callback(
@@ -34,31 +35,29 @@ def refresh_database_list(_):
 )
 def load_database_to_store(db_file):
     if not db_file:
-        return None
+        return None, None
 
     db_path = DB_DIR + db_file
     if not os.path.isfile(db_path):
-        return None
+        return None, None
 
     raw_data = load_camera_calibration_data(db_path)
     statistics = get_camera_calibration_data_statistics(raw_data)
     indexable_timestamps = get_indexable_timestamp_record(raw_data)
 
-    # TODO(Jack): visualize the statistics in a data panel!
     return raw_data, [statistics, indexable_timestamps]
 
 
-# TODO(Jack): is this really also a data loading callback? Seems well related but maybe not 100%
 @app.callback(
     Output("sensor-dropdown", "options"),
     Output("sensor-dropdown", "value"),
     Input("processed-data-store", "data"),
 )
-def refresh_sensor_list(data):
-    if not data:
-        return [], None
+def refresh_sensor_list(processed_data):
+    if not processed_data:
+        return [], ""
 
-    statistics, _ = data
+    statistics, _ = processed_data
 
     # We use a set here (e.g. the {} brackets) to enforce uniqueness
     sensor_names = sorted(list({sensor_name for sensor_name in statistics.keys()}))
