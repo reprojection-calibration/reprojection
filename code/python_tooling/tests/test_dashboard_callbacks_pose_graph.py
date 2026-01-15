@@ -1,8 +1,9 @@
 import unittest
 
+import plotly.graph_objects as go
+
 from dashboard.callbacks.pose_graph import init_pose_graph_figures
 from database.types import PoseType
-import plotly.graph_objects as go
 
 
 class TestDashboardCallbacksPoseGraph(unittest.TestCase):
@@ -73,7 +74,14 @@ class TestDashboardCallbacksPoseGraph(unittest.TestCase):
                     25e9: {"poses": {pose_type: [0, 1, 2, 3, 4, 5]}},
                     26e9: {
                         "poses": {
-                            pose_type: [0, 1, 2, 3, 4, 5,],
+                            pose_type: [
+                                0,
+                                1,
+                                2,
+                                3,
+                                4,
+                                5,
+                            ],
                         }
                     },
                 }
@@ -84,6 +92,6 @@ class TestDashboardCallbacksPoseGraph(unittest.TestCase):
             sensor, pose_type, raw_data, processed_data
         )
         self.assertIsInstance(rot_fig, go.Figure)
-        self.assertEqual(rot_fig['layout']['title']['text'], "Orientation")
+        self.assertEqual(rot_fig["layout"]["title"]["text"], "Orientation")
         self.assertIsInstance(trans_fig, go.Figure)
-        self.assertEqual(trans_fig['layout']['title']['text'], "Translation")
+        self.assertEqual(trans_fig["layout"]["title"]["text"], "Translation")
