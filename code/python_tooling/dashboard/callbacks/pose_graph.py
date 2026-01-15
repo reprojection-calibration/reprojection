@@ -17,10 +17,10 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 )
 def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     if (
-        sensor is None
-        or pose_type is None
-        or raw_data is None
-        or processed_data is None
+            sensor is None
+            or pose_type is None
+            or raw_data is None
+            or processed_data is None
     ):
         return {}, {}
 
@@ -44,9 +44,9 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
             f"The 'frames' key is not present in the raw data store for sensor {sensor}. That should never happen.",
         )
 
-    # TODO(Jack): Is this error check here meaningful or valid at all? Or needed? What are we actually preventing here?
     frames = raw_data[sensor]["frames"]
-    if frames is None:
+    if len(frames) == 0:
+        # Returns empty plots with properly labeled and ranged x-axis
         return fig, fig
 
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)

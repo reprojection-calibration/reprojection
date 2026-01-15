@@ -11,25 +11,24 @@ from dashboard.tools.time_handling import (
 # sorting after they have been separated from each other would be crazy. That means this function requires the input
 # timestamps and data to already be sorted!
 def plot_pose_figure(
-    timestamps_ns,
-    data,
-    title,
-    yaxis_title,
-    fig=None,
-    x_name="x",
-    y_name="y",
-    z_name="z",
-    ymin=-3.15,
-    ymax=3.15,
+        timestamps_ns,
+        data,
+        title,
+        yaxis_title,
+        fig=None,
+        x_name="x",
+        y_name="y",
+        z_name="z",
+        ymin=-3.15,
+        ymax=3.15,
 ):
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
-        return fig
+        return None
 
-    # TODO(Jack): Should we raise an exception here because this is a real error?
     # WARN(Jack): We only check the dimension of the first element which really makes this a half assed check...
     # Expect either [rz, ry, rz] or [x, y, z] - at this time nothing else is valid!
     if len(data[0]) != 3:
-        return fig
+        return None
 
     x = [d[0] for d in data]
     y = [d[1] for d in data]
