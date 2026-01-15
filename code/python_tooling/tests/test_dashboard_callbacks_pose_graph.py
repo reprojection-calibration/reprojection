@@ -54,18 +54,36 @@ class TestDashboardCallbacksPoseGraph(unittest.TestCase):
         self.assertEqual(len(trans_fig["data"]), 0)
         self.assertEqual(trans_fig["layout"]["xaxis"]["range"], (0.0, 10.0))
 
+        # Happy path - should just plot.
+        pose_type = PoseType.Initial
+        # TODO(Jack): We should have one central test data location where all tests just use that one piece of data.
         raw_data = {
             sensor: {
                 "frames": {
-                    20e9: [0, 0, 0, 0, 0, 0],
-                    21e9: [0, 0, 0, 0, 0, 0],
-                    25e9: [0, 0, 0, 0, 0, 0],
-                    26e9: [0, 0, 0, 0, 0, 0],
+                    20e9: {
+                        "poses": {
+                            pose_type: [0, 1, 2, 3, 4, 5],
+                        }
+                    },
+                    21e9: {
+                        "poses": {
+                            pose_type: [0, 1, 2, 3, 4, 5],
+                        }
+                    },
+                    25e9: {"poses": {pose_type: [0, 1, 2, 3, 4, 5]}},
+                    26e9: {
+                        "poses": {
+                            pose_type: [0, 1, 2, 3, 4, 5,],
+                        }
+                    },
                 }
             }
         }
         processed_data = [None, {sensor: [20e9, 21e9, 25e9, 26e9]}]
         rot_fig, trans_fig = init_pose_graph_figures(
-            sensor, PoseType.Initial, raw_data, processed_data
+            sensor, pose_type, raw_data, processed_data
         )
-        print(rot_fig)
+        self.assertIsInstance(rot_fig, go.Figure)
+        self.assertEqual(rot_fig['layout']['title']['text'], "Orientation")
+        self.assertIsInstance(trans_fig, go.Figure)
+        self.assertEqual(trans_fig['layout']['title']['text'], "Translation")
