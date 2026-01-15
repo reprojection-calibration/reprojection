@@ -1,8 +1,8 @@
+import plotly.graph_objects as go
 from dash import Input, Output, State
-from dash.exceptions import PreventUpdate
 
 from dashboard.server import app
-from dashboard.tools.plot_pose_figure import plot_pose_figure
+from dashboard.tools.plot_pose_figure import plot_pose_figure, timeseries_plot
 from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 
 
@@ -12,26 +12,44 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
     Input("sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
     State("raw-data-store", "data"),
+    State("processed-data-store", "data"),
     prevent_initial_call=True,
 )
-def update_pose_graph(selected_sensor, pose_type, raw_data):
-    # TODO(Jack): What is an effective way to actually use this mechanism? Having it at the start of every single
-    #  callback does not feel right somehow. But managing when each input or state is available is not trivial! For
-    #  example here the pose type always should have a default value, and technically the raw-data store should always
-    #  be populated before the sensor dropdown triggers (because the sensor dropdown depends on the raw data being
-    #  loaded). But what if any of those things change? And as this program scales these relationships will likely no
-    #  longer be trackable. Does that mean the best option is to actually raise PreventUpdate at every callback?
-    if selected_sensor is None or pose_type is None or raw_data is None:
-        raise PreventUpdate
+def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
+    if (
+        sensor is None
+        or pose_type is None
+        or raw_data is None
+        or processed_data is None
+    ):
+        return {}, {}
 
-    # TODO(Jack): Technically this is not nice. To access a key (frames) without checking that it exists. However this
-    # is so fundamental to the data structure I think I can be forgiven for this. Remove this todo later if it turns out
-    # to be a nothing burger.
-    frames = raw_data[selected_sensor]["frames"]
-    if frames is None:
-        raise PreventUpdate
+    # NOTE(Jack): No matter what, we have the timestamps of all the possible frames because of the camera table foreign
+    # key constraint. Even if we have no poses in the raw data we can still at least plot the properly sized and ranged
+    # x-axis for that sensor. This looks good because the figure is configured even when no data is available, and
+    # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
+    # first half, it will be obvious to the user because the axis has not autofitted to the shorter timespan.
+    _, indexable_timestamps = processed_data
+    if sensor not in indexable_timestamps:
+        return {}, {}
+    fig = timeseries_plot(indexable_timestamps[sensor])
 
+    if sensor not in raw_data:
+        raise RuntimeError(
+            f"The sensor {sensor} was present in processed_data.indexable_timestamps but not in raw_data. That should never happen.",
+        )
+
+    if "frames" not in raw_data[sensor]:
+        raise RuntimeError(
+            f"The 'frames' key is not present in the raw data store for sensor {sensor}. That should never happen.",
+        )
+
+    frames = raw_data[sensor]["frames"]
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
+
+    if len(poses) == 0:
+        # Returns empty plots with properly labeled and ranged x-axis
+        return fig, fig
 
     rotations = [d[:3] for d in poses]
     rot_fig = plot_pose_figure(
@@ -39,6 +57,7 @@ def update_pose_graph(selected_sensor, pose_type, raw_data):
         rotations,
         "Orientation",
         "Axis Angle (rad)",
+        fig=go.Figure(fig),  # Deep copy to prevent edit in place
         x_name="rx",
         y_name="ry",
         z_name="rz",
@@ -46,7 +65,7 @@ def update_pose_graph(selected_sensor, pose_type, raw_data):
 
     translations = [d[3:] for d in poses]
     trans_fig = plot_pose_figure(
-        timestamps_ns, translations, "Translation", "Meter (m)"
+        timestamps_ns, translations, "Translation", "Meter (m)", fig=go.Figure(fig)
     )
 
     return rot_fig, trans_fig

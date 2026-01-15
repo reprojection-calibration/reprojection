@@ -32,7 +32,13 @@ class TestDashboardCallbacksDataLoading(unittest.TestCase):
         list, default_value = refresh_database_list(db_dir, 0)
         # We only check the name of the file so we can ignore the absolute paths locally vs. in CI or if people add other
         # databases locally for debugging.
-        self.assertEqual(list[0]["label"], "dataset-calib-imu4_512_16.db3")
+        self.assertEqual(
+            list[0]["label"],
+            "dataset-calib-imu4_512_16.db3",
+            "Are you sure there is no other database file in {dir} that 'sorts' before the tested one?".format(
+                dir=db_dir
+            ),
+        )
         self.assertEqual(Path(default_value).name, "dataset-calib-imu4_512_16.db3")
 
     def test_load_database_to_store(self):
