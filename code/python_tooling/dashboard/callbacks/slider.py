@@ -1,28 +1,30 @@
 from dash import Input, Output, State
-from dash.exceptions import PreventUpdate
 
 from dashboard.server import app
 from dashboard.tools.time_handling import calculate_ticks_from_timestamps
 
 
+# ERROR(Jack):
 @app.callback(
     Output("frame-id-slider", "marks"),
+    Output("frame-id-slider", "max"),
     Input("sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def update_slider_marks(selected_sensor, processed_data):
-    if selected_sensor is None or processed_data is None:
-        raise PreventUpdate
+def update_slider_marks(sensor, processed_data):
+    if sensor is None or processed_data is None:
+        return {}, 0
 
-    _, timestamps_sorted = processed_data
-    if selected_sensor not in timestamps_sorted:
-        # TODO(Jack): Should we more aggressively react to this error? This kind of logic error should really not be happening.
-        return {}
+    statistics, timestamps_sorted = processed_data
+    if sensor not in statistics or sensor not in timestamps_sorted:
+        return {}, 0
 
-    timestamps_ns = timestamps_sorted[selected_sensor]
+    timestamps_ns = timestamps_sorted[sensor]
     tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
 
-    return dict(zip(tickvals_idx, ticktext))
+    n_frames = statistics[sensor]["total_frames"]
+
+    return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
 
 
 # TODO(Jack): We need to display the exact nanosecond timestamp of the current frame somewhere and somehow. If this is

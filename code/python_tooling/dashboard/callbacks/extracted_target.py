@@ -4,20 +4,15 @@ from dash import Input, Output, State
 from dashboard.server import IMAGE_DIMENSIONS, app
 
 
-# TODO(Jack): Technically we only need the sensor name to get the frame-id-slider output, but this does not necessarily
-#  have anything to do with configuring the figures initially. It might make sense to move the frame id slider
-#  dependency to another place that is more related or independent than here.
 @app.callback(
     Output("targets-xy-graph", "figure", allow_duplicate=True),
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
-    Output("frame-id-slider", "max"),
     Input("sensor-dropdown", "value"),
-    State("processed-data-store", "data"),
     prevent_initial_call=True,
 )
-def init_extracted_target_figures(sensor, data):
-    if not sensor or not data:
-        return {}, {}, 0
+def init_extracted_target_figures(sensor):
+    if not sensor:
+        return {}, {}
 
     # TODO(Jack): Confirm/test ALL axes properties (ranges, names, orders etc.) None of this has been checked! Even the
     #  coordinate conventions of the pixels and points needs to be checked!
@@ -80,12 +75,7 @@ def init_extracted_target_figures(sensor, data):
         ),
     )
 
-    # TODO(Jack): Why is this in this method??? See comment at top of function.
-    # Get the number of frames to fill the max value of the slider
-    statistics, _ = data
-    n_frames = statistics[sensor]["total_frames"]
-
-    return xy_fig, pixel_fig, max(n_frames - 1, 0)
+    return xy_fig, pixel_fig
 
 
 # NOTE(Jack): Manually formatted periodically using https://beautifier.io/ - we should automate this process!
