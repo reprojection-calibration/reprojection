@@ -14,17 +14,17 @@ class TestDashboardToolsTimeHandling(unittest.TestCase):
         frames = {
             1: {
                 "poses": {
-                    PoseType.Initial: [0, 1, 2, 3, 4, 5, 6.1],
-                    PoseType.Optimized: [0, 1, 2, 3, 4, 5, -6.1],
+                    PoseType.Initial: [0, 1, 2, 3, 4, 6.1],
+                    PoseType.Optimized: [0, 1, 2, 3, 4, -6.1],
                 }
             },
             3: {
                 "poses": {
-                    PoseType.Initial: [0, 1, 2, 3, 4, 5, 6.3],
-                    PoseType.Optimized: [0, 1, 2, 3, 4, 5, -6.3],
+                    PoseType.Initial: [0, 1, 2, 3, 4, 6.3],
+                    PoseType.Optimized: [0, 1, 2, 3, 4, -6.3],
                 }
             },
-            2: {"poses": {PoseType.Initial: [0, 1, 2, 3, 4, 5, 6.2]}},
+            2: {"poses": {PoseType.Initial: [0, 1, 2, 3, 4, 6.2]}},
         }
 
         # PoseType.Initial
@@ -36,7 +36,7 @@ class TestDashboardToolsTimeHandling(unittest.TestCase):
         self.assertEqual(timestamps, [1, 2, 3])
         self.assertEqual(
             poses,
-            [[0, 1, 2, 3, 4, 5, 6.1], [0, 1, 2, 3, 4, 5, 6.2], [0, 1, 2, 3, 4, 5, 6.3]],
+            [[0, 1, 2, 3, 4, 6.1], [0, 1, 2, 3, 4, 6.2], [0, 1, 2, 3, 4, 6.3]],
         )
 
         # PoseType.Optimized
@@ -46,7 +46,7 @@ class TestDashboardToolsTimeHandling(unittest.TestCase):
         self.assertEqual(len(timestamps), 2)
         self.assertEqual(len(poses), 2)
         self.assertEqual(timestamps, [1, 3])
-        self.assertEqual(poses, [[0, 1, 2, 3, 4, 5, -6.1], [0, 1, 2, 3, 4, 5, -6.3]])
+        self.assertEqual(poses, [[0, 1, 2, 3, 4, -6.1], [0, 1, 2, 3, 4, -6.3]])
 
     def test_timestamps_to_elapsed_seconds(self):
         timestamps_ns = []
