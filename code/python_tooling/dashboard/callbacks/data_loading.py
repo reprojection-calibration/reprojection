@@ -27,14 +27,15 @@ def refresh_database_list(db_dir, _):
             continue
 
         full_path = os.path.join(db_dir, file_name)
+        options.append(
+            {
+                "label": file_name,
+                "value": full_path,
+            }
+        )
 
-        options.append({
-            "label": file_name,
-            "value": full_path,
-        })
-
-        if not options:
-            return [], ""
+    if len(options) == 0:
+        return [], ""
 
     return options, options[0]["value"]
 
