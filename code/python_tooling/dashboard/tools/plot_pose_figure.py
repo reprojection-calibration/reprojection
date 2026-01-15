@@ -23,12 +23,12 @@ def plot_pose_figure(
         ymax=3.15,
 ):
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
-        return None
+        return {}
 
     # WARN(Jack): We only check the dimension of the first element which really makes this a half assed check...
     # Expect either [rz, ry, rz] or [x, y, z] - at this time nothing else is valid!
     if len(data[0]) != 3:
-        return None
+        return {}
 
     x = [d[0] for d in data]
     y = [d[1] for d in data]
@@ -75,9 +75,17 @@ def plot_pose_figure(
     return fig
 
 
+# WARN(Jack): Timestamps must be sorted! Can we programmatically assert this?
+# TODO(Jack): Naming! Timeseries plot is too generic! We are building a properly sized x-axis for all time series camera
+#  frame data.
 def timeseries_plot(timestamps_ns, step=5):
     _, tickvals_s, ticktext = calculate_ticks_from_timestamps(timestamps_ns, step)
 
+    # WARN(Jack): The way our calculate_ticks_from_timestamps() from timestamps method works (and needs to work I think)
+    # means that it will have one less tick than it really needs to cover the entire data (this is because it wants to
+    # also match frame idxs not just times). Therefore, when setting the range below we arbitrarily add one step to the
+    # max value. If there was a more programmatic way to do this (i.e. inside calculate_ticks_from_timestamps()) then
+    # we should consider doing that!
     fig = go.Figure()
     fig.update_layout(
         xaxis=dict(

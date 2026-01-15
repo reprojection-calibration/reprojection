@@ -1,6 +1,6 @@
 import unittest
 
-from dashboard.tools.plot_pose_figure import plot_pose_figure
+from dashboard.tools.plot_pose_figure import plot_pose_figure, timeseries_plot
 
 
 class TestDashboardToolsPlotPoseFigure(unittest.TestCase):
@@ -8,9 +8,10 @@ class TestDashboardToolsPlotPoseFigure(unittest.TestCase):
         fig = plot_pose_figure([], [], "", "")
         self.assertEqual(fig, {})
 
+        # Pose data row is not 1X3 - error!
         fig = plot_pose_figure(
             [0], [[1, 2]], "", ""
-        )  # Pose data row is not 1X3 - error!
+        )
         self.assertEqual(fig, {})
 
         timestamps_ns = [20e9, 21e9, 25e9, 26e9]  # Must be sorted already!
@@ -30,7 +31,11 @@ class TestDashboardToolsPlotPoseFigure(unittest.TestCase):
         self.assertEqual(fig["layout"]["title"]["text"], "awesome_main_title")
         self.assertEqual(fig["layout"]["yaxis"]["title"]["text"], "great_y_axis_title")
 
-        # Figure properties that are automatically set or calculated inside
+
+    def test_timeseries_plot(self):
+        timestamps_ns = [20e9, 21e9, 25e9, 26e9]  # Must be sorted already!
+        fig = timeseries_plot(timestamps_ns, 5)
+
         self.assertEqual(fig["layout"]["xaxis"]["tickmode"], "array")
         self.assertEqual(fig["layout"]["xaxis"]["ticktext"], ("0s", "5s"))
         self.assertEqual(fig["layout"]["xaxis"]["tickvals"], (0.0, 5.0))
