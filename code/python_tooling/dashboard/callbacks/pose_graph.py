@@ -14,22 +14,21 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
     State("raw-data-store", "data"),
     prevent_initial_call=True,
 )
-def update_pose_graph(selected_sensor, pose_type, raw_data):
-    # TODO(Jack): What is an effective way to actually use this mechanism? Having it at the start of every single
-    #  callback does not feel right somehow. But managing when each input or state is available is not trivial! For
-    #  example here the pose type always should have a default value, and technically the raw-data store should always
-    #  be populated before the sensor dropdown triggers (because the sensor dropdown depends on the raw data being
-    #  loaded). But what if any of those things change? And as this program scales these relationships will likely no
-    #  longer be trackable. Does that mean the best option is to actually raise PreventUpdate at every callback?
-    if selected_sensor is None or pose_type is None or raw_data is None:
-        raise PreventUpdate
+def update_pose_graph(sensor, pose_type, raw_data):
+    if sensor is None or pose_type is None or raw_data is None:
+        return {}, {}
 
-    # TODO(Jack): Technically this is not nice. To access a key (frames) without checking that it exists. However this
-    # is so fundamental to the data structure I think I can be forgiven for this. Remove this todo later if it turns out
-    # to be a nothing burger.
-    frames = raw_data[selected_sensor]["frames"]
+    if sensor not in raw_data:
+        return {}, {}
+
+    if 'frames' not in raw_data[sensor]:
+        raise RuntimeError(
+            f"The 'frames' key is not present in the raw data store for sensor {sensor}. That should never happen.",
+        )
+
+    frames = raw_data[sensor]["frames"]
     if frames is None:
-        raise PreventUpdate
+        return {}, {}
 
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
