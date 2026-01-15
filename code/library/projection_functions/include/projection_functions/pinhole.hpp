@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {
@@ -34,12 +36,17 @@ struct Pinhole {
     // and that applying the camera matrix K to p_cam gives us a pixel. Understanding this basic pattern is crucial for
     // understanding how other camera models are implemented as some variation of this basic process.
     template <typename T>
-    static Array2<T> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
+    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
 
+        if (z < 0) {
+            return std::nullopt;
+        }
+
         // TODO(Jack): Protect against divide by zero.
+        // TODO(Jack): Check valid fov (Tangram claims 120 degree max).
         // Put into ideal/normalized/projected camera coordinate frame
         T const x_cam{x / z};
         T const y_cam{y / z};
@@ -48,6 +55,7 @@ struct Pinhole {
         T const& fy{intrinsics[1]};
         T const& cx{intrinsics[2]};
         T const& cy{intrinsics[3]};
+
         // Put into image pixel space
         T const u{(fx * x_cam) + cx};
         T const v{(fy * y_cam) + cy};

@@ -8,6 +8,7 @@
 #include <optional>
 
 #include "types/algorithm_types.hpp"
+#include "types/eigen_types.hpp"
 
 namespace reprojection::feature_extraction {
 

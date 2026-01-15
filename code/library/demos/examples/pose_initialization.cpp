@@ -40,12 +40,15 @@ int main() {
     // Nonlinear optimization and save
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
 
-    // WARN(Jack): At this time we have unsettled coordinate frame connventions. Because of this we need to invert the
+    // WARN(Jack): At this time we have unsettled coordinate frame conventions. Because of this we need to invert the
     // poses here to match the initial poses. This is a well known problem!
     for (auto& frame_i : cam_data.frames) {
         frame_i.second.optimized_pose = geometry::Log(geometry::Exp(frame_i.second.optimized_pose).inverse());
     }
     AddPoseData(cam_data, database::PoseType::Optimized, db);
+
+    database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
+    database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
 
     std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 

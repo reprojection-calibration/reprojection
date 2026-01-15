@@ -16,10 +16,10 @@ TEST(EigenUtiltiesGrid, TestGenerateGridIndices) {
     EXPECT_TRUE(grid_indices.col(1).topRows(cols).isApprox(ArrayXi::LinSpaced(cols, 0, cols)));
 }
 
-TEST(EigenUtiltiesGrid, TestMaskIndices) {
-    Eigen::Array<int, 5, 1> const indices{1, 0, 1, 0, 1};
+TEST(EigenUtiltiesGrid, TestMaskToRowId) {
+    Array5b const indices{true, false, true, false, true};
 
-    ArrayXi const mask_indices{eigen_utilities::MaskIndices(indices)};
+    ArrayXi const mask_indices{eigen_utilities::MaskToRowId(indices)};
 
     EXPECT_EQ(mask_indices.rows(), 3);
     EXPECT_TRUE(mask_indices.isApprox(Eigen::Array<int, 3, 1>{0, 2, 4}));

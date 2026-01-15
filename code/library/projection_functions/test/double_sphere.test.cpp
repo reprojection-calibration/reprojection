@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
+#include "projection_functions/double_sphere.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -21,8 +22,9 @@ MatrixX2d const gt_pixels{{double_sphere_intrinsics[2], double_sphere_intrinsics
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
     auto const camera{projection_functions::DoubleSphereCamera(double_sphere_intrinsics)};
-    MatrixX2d const pixels(camera.Project(gt_points));
 
+    auto const [pixels, mask](camera.Project(gt_points));
+    ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
 
@@ -36,20 +38,31 @@ TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
                                    {pinhole_intrinsics[2], 480}};
 
     auto const camera{projection_functions::DoubleSphereCamera(pinhole_intrinsics)};
-    MatrixX2d const pixels(camera.Project(gt_points));
 
+    auto const [pixels, mask]{camera.Project(gt_points)};
+    ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(pinhole_pixels));
+}
+
+// TODO(Jack): This currently only tests the underlying pinhole projection masking (i.e. behind the camera is invalid).
+// Add the real double sphere validity checks from the paper!
+TEST(ProjectionFunctionsPinhole, TestDoubleSphereProjectMasking) {
+    auto pixel{projection_functions::DoubleSphere::Project(double_sphere_intrinsics, {0, 0, 10})};
+    EXPECT_TRUE(pixel.has_value());
+
+    pixel = projection_functions::DoubleSphere::Project(double_sphere_intrinsics, {0, 0, -10});
+    EXPECT_FALSE(pixel.has_value());
 }
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnproject) {
     auto const camera{projection_functions::DoubleSphereCamera(double_sphere_intrinsics)};
-    MatrixX3d const rays{camera.Unproject(gt_pixels)};
 
     // NOTE(Jack): This is where the difference to a model like the pinhole model becomes apparent! For the pinhole
     // model all unprojected rays have a z-value of 1, and are somehow normalized in that sense. Here on the other hand,
-    // for the double sphere model, all rays have a magnitude of one instead. Therefore instead of dividing the ground
-    // truth points by the z-depth like we did for pinhole unprojection, we here instead normalize each point into
+    // for the double sphere model, all rays have a magnitude of one instead. Therefore instead of multiplying the rays
+    // by the metric scale like we did for pinhole unprojection, we here instead normalize each point into
     // a ray with magnitude one.
+    MatrixX3d const rays{camera.Unproject(gt_pixels)};
     MatrixX3d normalized_gt_points{gt_points};
     normalized_gt_points.rowwise().normalize();
 

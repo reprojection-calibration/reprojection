@@ -15,7 +15,7 @@ struct UnifiedCameraModel {
     static int constexpr Size{5};
 
     template <typename T>
-    static Array2<T> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
+    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
         T const alpha{0};  // Set alpha to zero - make ds equivalent to ucm by collapsing the second sphere in ds
         Eigen::Array<T, 6, 1> const ds_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), intrinsics(3),
                                                   intrinsics(4), alpha);
