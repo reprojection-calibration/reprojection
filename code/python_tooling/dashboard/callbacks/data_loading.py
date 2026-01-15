@@ -67,13 +67,12 @@ def load_database_to_store(db_file):
     Input("processed-data-store", "data"),
 )
 def refresh_sensor_list(processed_data):
-    if not processed_data:
+    if processed_data is None:
         return [], ""
 
     statistics, _ = processed_data
+    sensor_names = sorted(statistics.keys())
 
-    # We use a set here (e.g. the {} brackets) to enforce uniqueness
-    sensor_names = sorted(list({sensor_name for sensor_name in statistics.keys()}))
     if len(sensor_names) == 0:
         return [], ""
 

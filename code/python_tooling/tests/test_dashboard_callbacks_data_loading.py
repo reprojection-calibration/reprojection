@@ -55,3 +55,17 @@ class TestDatabaseCameraCalibrationData(unittest.TestCase):
         statistics, indexable_timestamps = processed_data
         self.assertIn("/cam0/image_raw", statistics)
         self.assertIn("/cam0/image_raw", indexable_timestamps)
+
+    def test_refresh_sensor_list(self):
+        list, default_value = refresh_sensor_list(None)
+        self.assertEqual(list, [])
+        self.assertEqual(default_value, "")
+
+        list, default_value = refresh_sensor_list([{}, None])
+        self.assertEqual(list, [])
+        self.assertEqual(default_value, "")
+
+        statistics = {"/sensor_1": {}, "/sensor_2": {}}
+        list, default_value = refresh_sensor_list([statistics, None])
+        self.assertEqual(list, ["/sensor_1", "/sensor_2"])
+        self.assertEqual(default_value, "/sensor_1")
