@@ -47,10 +47,11 @@ def refresh_database_list(db_dir, _):
     Input("database-dropdown", "value"),
 )
 def load_database_to_store(db_file):
-    if not db_file:
+    if not db_file or not os.path.isfile(db_file):
         return None, None
 
-    if not os.path.isfile(db_file):
+    # We already check this when we load the db list, but it doesn't hurt to double-check :)
+    if not db_file.endswith(".db3"):
         return None, None
 
     raw_data = load_camera_calibration_data(db_file)

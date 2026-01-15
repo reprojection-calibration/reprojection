@@ -23,7 +23,7 @@ class TestDatabaseCameraCalibrationData(unittest.TestCase):
         self.assertEqual(list, [])
         self.assertEqual(default_value, "")
 
-        # Assumes that in the current testing directory there are no .db3 files! Pretty safe assumption I hope -_-
+        # Assumes that in the current testing directory there are no .db3 files! Pretty safe assumption I hope -_-.
         list, default_value = refresh_database_list("./", 0)
         self.assertEqual(list, [])
         self.assertEqual(default_value, "")
@@ -34,3 +34,24 @@ class TestDatabaseCameraCalibrationData(unittest.TestCase):
         # databases locally for debugging.
         self.assertEqual(list[0]["label"], "dataset-calib-imu4_512_16.db3")
         self.assertEqual(Path(default_value).name, "dataset-calib-imu4_512_16.db3")
+
+    def test_load_database_to_store(self):
+        raw_data, processed_data = load_database_to_store(None)
+        self.assertIsNone(raw_data)
+        self.assertIsNone(processed_data)
+
+        raw_data, processed_data = load_database_to_store("/does/not/exist.db3")
+        self.assertIsNone(raw_data)
+        self.assertIsNone(processed_data)
+
+        raw_data, processed_data = load_database_to_store("/not/a/database/file.txt")
+        self.assertIsNone(raw_data)
+        self.assertIsNone(processed_data)
+
+        raw_data, processed_data = load_database_to_store(self.db_path)
+        self.assertIn("/cam0/image_raw", raw_data)
+
+        # TODO(Jack): Better more meaningful name than indexable_timestamps!!!
+        statistics, indexable_timestamps = processed_data
+        self.assertIn("/cam0/image_raw", statistics)
+        self.assertIn("/cam0/image_raw", indexable_timestamps)
