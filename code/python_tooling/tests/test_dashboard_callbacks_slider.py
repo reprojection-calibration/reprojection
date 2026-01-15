@@ -2,22 +2,34 @@ import unittest
 
 from dash.exceptions import PreventUpdate
 
-from dashboard.callbacks.slider import advance_slider, toggle_play, update_slider_marks
+from dashboard.callbacks.slider import (
+    advance_slider,
+    toggle_play,
+    update_slider_properties,
+)
 
 
 class TestDashboardCallbacksSlider(unittest.TestCase):
-    def test_update_slider_marks(self):
-        self.assertRaises(PreventUpdate, update_slider_marks, None, None)
+    def test_update_slider_properties(self):
+        marks, max_value = update_slider_properties(None, None)
+        self.assertEqual(marks, {})
+        self.assertEqual(max_value, 0)
 
-        output = update_slider_marks("", [None, {}])
-        self.assertEqual(output, {})
+        marks, max_value = update_slider_properties("", [{}, {}])
+        self.assertEqual(marks, {})
+        self.assertEqual(max_value, 0)
 
         # Happy path success
         sensor = "/cam0/image_raw"
-        timestamps_sorted = {sensor: [int(i * 1e9) for i in range(20)]}
+        n_frames = 20
+        statistics = {sensor: {"total_frames": n_frames}}
+        timestamps_sorted = {sensor: [int(i * 1e9) for i in range(n_frames)]}
 
-        output = update_slider_marks(sensor, [None, timestamps_sorted])
-        self.assertEqual(output, {0: "0s", 5: "5s", 10: "10s", 15: "15s"})
+        marks, max_value = update_slider_properties(
+            sensor, [statistics, timestamps_sorted]
+        )
+        self.assertEqual(marks, {0: "0s", 5: "5s", 10: "10s", 15: "15s"})
+        self.assertEqual(max_value, 19)
 
     def test_toggle_play(self):
         # The slider advances/plays by default which means the button needs to display the pause action.
