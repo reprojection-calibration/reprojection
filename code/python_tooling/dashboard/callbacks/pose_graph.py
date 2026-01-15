@@ -45,11 +45,11 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
         )
 
     frames = raw_data[sensor]["frames"]
-    if len(frames) == 0:
+    timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
+
+    if len(poses) == 0:
         # Returns empty plots with properly labeled and ranged x-axis
         return fig, fig
-
-    timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
     rotations = [d[:3] for d in poses]
     rot_fig = plot_pose_figure(

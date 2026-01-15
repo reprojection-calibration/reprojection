@@ -41,7 +41,7 @@ class TestDashboardCallbacksPoseGraph(unittest.TestCase):
             [None, {sensor: []}],
         )
 
-        # If there is no data to plot we just get the timeseries initialized figures back.
+        # If there is no frames with pose data to plot we just get the timeseries initialized figures back.
         raw_data = {sensor: {"frames": {}}}
         processed_data = [None, {sensor: [20e9, 21e9, 25e9, 26e9]}]
         rot_fig, trans_fig = init_pose_graph_figures(
