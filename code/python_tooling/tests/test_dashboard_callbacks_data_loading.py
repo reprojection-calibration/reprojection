@@ -9,7 +9,7 @@ from dashboard.callbacks.data_loading import (
 )
 
 
-class TestDatabaseCameraCalibrationData(unittest.TestCase):
+class TestDashboardCallbacksDataLoading(unittest.TestCase):
     # NOTE(Jack): See note in TestDatabaseCameraCalibrationData
     @classmethod
     def setUpClass(self):
