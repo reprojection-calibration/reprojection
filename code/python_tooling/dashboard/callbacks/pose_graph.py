@@ -14,7 +14,7 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
     State("raw-data-store", "data"),
     prevent_initial_call=True,
 )
-def update_pose_graph(sensor, pose_type, raw_data):
+def init_pose_graph_figures(sensor, pose_type, raw_data):
     if sensor is None or pose_type is None or raw_data is None:
         return {}, {}
 

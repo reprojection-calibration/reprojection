@@ -1,7 +1,5 @@
 import unittest
 
-from dash.exceptions import PreventUpdate
-
 from dashboard.callbacks.slider import (
     advance_slider,
     toggle_play,
