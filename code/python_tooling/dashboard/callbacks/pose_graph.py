@@ -24,27 +24,30 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     ):
         return {}, {}
 
-    # NOTE(Jack): No matter what we have the timestamps of all the possible frames because of the camera table foreign
-    # key. This that even if we have no poses in the raw data we can still at least plot the properly sized and ranged
-    # x-axis for that sensor. This looks better because the figure looks configured even when no data is available, and
+    # NOTE(Jack): No matter what, we have the timestamps of all the possible frames because of the camera table foreign
+    # key constraint. Even if we have no poses in the raw data we can still at least plot the properly sized and ranged
+    # x-axis for that sensor. This looks good because the figure is configured even when no data is available, and
     # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
-    # first half, it will be obvious to the user because the axis has not autofitted to the shorter time span.
+    # first half, it will be obvious to the user because the axis has not autofitted to the shorter timespan.
     _, indexable_timestamps = processed_data
     if sensor not in indexable_timestamps:
         return {}, {}
     fig = timeseries_plot(indexable_timestamps[sensor])
 
     if sensor not in raw_data:
-        return {}, {}
+        raise RuntimeError(
+            f"The sensor {sensor} was present in processed_data.indexable_timestamps but not in raw_data. That should never happen.",
+        )
 
     if "frames" not in raw_data[sensor]:
         raise RuntimeError(
             f"The 'frames' key is not present in the raw data store for sensor {sensor}. That should never happen.",
         )
 
+    # TODO(Jack): Is this error check here meaningful or valid at all? Or needed? What are we actually preventing here?
     frames = raw_data[sensor]["frames"]
     if frames is None:
-        return {}, {}
+        return fig, fig
 
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
@@ -54,7 +57,7 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
         rotations,
         "Orientation",
         "Axis Angle (rad)",
-        fig=go.Figure(fig),
+        fig=go.Figure(fig),  # Deep copy to prevent edit in place
         x_name="rx",
         y_name="ry",
         z_name="rz",
