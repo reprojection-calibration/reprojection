@@ -1,8 +1,8 @@
 from dash import Input, Output, State
-from dash.exceptions import PreventUpdate
+import plotly.graph_objects as go
 
 from dashboard.server import app
-from dashboard.tools.plot_pose_figure import plot_pose_figure
+from dashboard.tools.plot_pose_figure import plot_pose_figure, timeseries_plot
 from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 
 
@@ -12,11 +12,22 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
     Input("sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
     State("raw-data-store", "data"),
+    State("processed-data-store", "data"),
     prevent_initial_call=True,
 )
-def init_pose_graph_figures(sensor, pose_type, raw_data):
-    if sensor is None or pose_type is None or raw_data is None:
+def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
+    if sensor is None or pose_type is None or raw_data is None or processed_data is None:
         return {}, {}
+
+    # NOTE(Jack): No matter what we have the timestamps of all the possible frames because of the camera table foreign
+    # key. This that even if we have no poses in the raw data we can still at least plot the properly sized and ranged
+    # x-axis for that sensor. This looks better because the figure looks configured even when no data is available, and
+    # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
+    # first half, it will be obvious to the user because the axis has not autofitted to the shorter time span.
+    _, indexable_timestamps = processed_data
+    if sensor not in indexable_timestamps:
+        return {}, {}
+    fig = timeseries_plot(indexable_timestamps[sensor])
 
     if sensor not in raw_data:
         return {}, {}
@@ -30,6 +41,7 @@ def init_pose_graph_figures(sensor, pose_type, raw_data):
     if frames is None:
         return {}, {}
 
+
     timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
 
     rotations = [d[:3] for d in poses]
@@ -38,6 +50,7 @@ def init_pose_graph_figures(sensor, pose_type, raw_data):
         rotations,
         "Orientation",
         "Axis Angle (rad)",
+        fig=go.Figure(fig),
         x_name="rx",
         y_name="ry",
         z_name="rz",
@@ -45,7 +58,7 @@ def init_pose_graph_figures(sensor, pose_type, raw_data):
 
     translations = [d[3:] for d in poses]
     trans_fig = plot_pose_figure(
-        timestamps_ns, translations, "Translation", "Meter (m)"
+        timestamps_ns, translations, "Translation", "Meter (m)", fig=go.Figure(fig)
     )
 
     return rot_fig, trans_fig
