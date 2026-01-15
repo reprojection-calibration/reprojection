@@ -8,9 +8,9 @@ from database.load_camera_calibration_data import (
     get_indexable_timestamp_record,
     load_camera_calibration_data,
 )
-from dash.exceptions import PreventUpdate
 
 
+# TODO(Jack): Add selected dir input!
 @app.callback(
     Output("database-dropdown", "options"),
     Output("database-dropdown", "value"),
