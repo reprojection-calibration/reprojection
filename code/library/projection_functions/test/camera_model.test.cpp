@@ -49,6 +49,7 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCameraProjectionMasking) {
 
     auto const camera{projection_functions::PinholeCamera(intrinsics)};
 
-    auto const [_, mask]{camera.Project(gt_points)};
+    auto const [pixels, mask]{camera.Project(gt_points)};
+    EXPECT_EQ(pixels.rows(), gt_points.rows());
     EXPECT_TRUE(mask.isApprox(gt_mask));
 }

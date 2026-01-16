@@ -25,16 +25,16 @@ ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_onl
 
 // There has to be a more eloquent way to do this... but it gets the job done :)
 ArrayXi MaskToRowId(ArrayXb const& mask) {
-    std::vector<int> indices;
-    indices.reserve(mask.rows());
+    std::vector<int> row_ids;
+    row_ids.reserve(mask.rows());
 
     for (Eigen::Index i{0}; i < mask.rows(); i++) {
         if (mask(i) == true) {
-            indices.push_back(i);
+            row_ids.push_back(i);
         }
     }
 
-    return ToEigen(indices);
+    return ToEigen(row_ids);
 }
 
 ArrayXi ToEigen(std::vector<int> const& vector) { return Eigen::Map<ArrayXi const>(vector.data(), std::size(vector)); }
