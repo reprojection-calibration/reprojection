@@ -17,8 +17,8 @@ using VectorXd = Eigen::VectorXd;
 using Matrix2d = Eigen::Matrix2d;
 template <typename T>
 using Matrix3 = Eigen::Matrix3<T>;
-using Matrix34d = Eigen::Matrix<double, 3, 4>;
 using Matrix3d = Matrix3<double>;
+using Matrix34d = Eigen::Matrix<double, 3, 4>;
 using Matrix42d = Eigen::Matrix<double, 4, 2>;
 using Matrix4d = Eigen::Matrix4d;
 using MatrixX2d = Eigen::MatrixX2d;

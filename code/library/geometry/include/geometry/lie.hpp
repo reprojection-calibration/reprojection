@@ -2,8 +2,6 @@
 
 #include <ceres/rotation.h>
 
-#include <vector>
-
 #include "types/eigen_types.hpp"
 
 namespace reprojection::geometry {
@@ -14,7 +12,7 @@ Vector6d Log(Isometry3d const& SE3);
 
 // NOTE(Jack): We use ceres here because the methods are autodiff compatible by default.
 template <typename T>
-Matrix3<T> Exp(Eigen::Vector3<T> const& so3) {
+Matrix3<T> Exp(Vector3<T> const& so3) {
     T R[9];
     ceres::AngleAxisToRotationMatrix(so3.data(), R);
 
@@ -24,8 +22,8 @@ Matrix3<T> Exp(Eigen::Vector3<T> const& so3) {
 }
 
 template <typename T>
-Eigen::Vector3<T> Log(Matrix3<T> const& SO3) {
-    Eigen::Vector3<T> so3;
+Vector3<T> Log(Matrix3<T> const& SO3) {
+    Vector3<T> so3;
     ceres::RotationMatrixToAngleAxis(SO3.data(), so3.data());
 
     return so3;
