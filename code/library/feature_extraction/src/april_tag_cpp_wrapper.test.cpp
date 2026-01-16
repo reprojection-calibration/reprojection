@@ -5,6 +5,7 @@
 #include "test_fixture_april_tag.hpp"
 #include "types/eigen_types.hpp"
 
+using namespace reprojection;
 using namespace reprojection::feature_extraction;
 
 TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilBoard) {
@@ -34,6 +35,6 @@ TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilTag) {
     EXPECT_TRUE(detection.c.isApproxToConstant(71));
 
     // The four corner pixels in the apriltag native order.
-    Eigen::Matrix<double, 4, 2> gt_pixels{{30, 112}, {112, 112}, {112, 30}, {30, 30}};
+    Matrix42d gt_pixels{{30, 112}, {112, 112}, {112, 30}, {30, 30}};
     EXPECT_TRUE(detection.p.isApprox(gt_pixels));
 }

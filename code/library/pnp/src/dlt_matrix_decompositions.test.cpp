@@ -40,7 +40,7 @@ TEST(PnpDltMatrixDecompositions, TestDecomposeMIntoRkNegativeDeterminant) {
 }
 
 TEST(PnpDltMatrixDecompositions, TestCalculateCameraCenter) {
-    Eigen::Matrix<double, 3, 4> P{{1, 0, 0, 100}, {0, 1, 0, 10}, {0, 0, 1, 1}};
+    Matrix34d const P{{1, 0, 0, 100}, {0, 1, 0, 10}, {0, 0, 1, 1}};
 
     Vector3d const camera_center{pnp::CalculateCameraCenter(P)};
 

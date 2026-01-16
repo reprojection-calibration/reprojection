@@ -33,10 +33,10 @@ class SplineCostFunction_T {
         // NOTE(Jack): We need to pass in the control points individually to satisfy ceres (see note above), but our
         // templated Evaluate() methods takes a eigen matrix. Therefore, we have to organize them using maps
         // into points and then  place them in the control points matrix.
-        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p0(control_point_0_ptr);
-        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p1(control_point_1_ptr);
-        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p2(control_point_2_ptr);
-        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p3(control_point_3_ptr);
+        Eigen::Map<const Vector3<T>> p0(control_point_0_ptr);
+        Eigen::Map<const Vector3<T>> p1(control_point_1_ptr);
+        Eigen::Map<const Vector3<T>> p2(control_point_2_ptr);
+        Eigen::Map<const Vector3<T>> p3(control_point_3_ptr);
 
         // TODO(Jack): Makes a copy! Can this be avoided? Technically, the underlying vector which the
         // control_point_*_ptr are passed in from should be continuous, and therefore we could just make a map taking

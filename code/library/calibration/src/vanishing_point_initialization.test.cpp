@@ -8,7 +8,7 @@
 using namespace reprojection;
 
 TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitialization) {
-    Eigen::Array<double, 6, 1> const intrinsics{600, 600, 360, 240, 0.1, 0.2};
+    Array6d const intrinsics{600, 600, 360, 240, 0.1, 0.2};
 
     // NOTE(Jack): Our strategy here is to use DoubleSphere::Project to project a row and column of points to pixels.
     // VanishingPointInitialization() then fits circles to each row, calculates their intersections and then from that

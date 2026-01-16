@@ -40,7 +40,7 @@ std::tuple<Matrix3d, Matrix3d> DecomposeMIntoKr(Matrix3d const& M) {
     return {K_star, R_star};
 }
 
-Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
+Vector3d CalculateCameraCenter(Matrix34d const& P) {
     double const x{P(Eigen::all, {1, 2, 3}).determinant()};
     double const y{-P(Eigen::all, {0, 2, 3}).determinant()};
     double const z{P(Eigen::all, {0, 1, 3}).determinant()};

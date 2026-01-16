@@ -12,13 +12,13 @@ namespace reprojection::calibration {
 // caught with the nxnx_nyny > 0.95 "non-radial" line check.
 std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point, MatrixX2d const& pixels) {
     MatrixX2d const pixels_c{pixels.rowwise() - principal_point.transpose()};
-    Eigen::MatrixX4d P(pixels.rows(), 4);
+    MatrixX4d P(pixels.rows(), 4);
     P.col(0) = pixels_c.col(0);
     P.col(1) = pixels_c.col(1);
     P.col(2).setConstant(0.5);
     P.col(3) = -pixels_c.rowwise().squaredNorm() / 2.0;
 
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd;
+    Eigen::JacobiSVD<MatrixXd> svd;
     svd.compute(P, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
     Eigen::Vector4d const C{svd.matrixV().col(3)};

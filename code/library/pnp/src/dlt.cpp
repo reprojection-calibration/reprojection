@@ -15,8 +15,8 @@ std::tuple<Isometry3d, Array4d> Dlt23(Bundle const& bundle) {
     auto const [normalized_points, tf_points]{NormalizeColumnWise(bundle.points)};
 
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA<4>(normalized_pixels, normalized_points)};
-    Eigen::Matrix<double, 3, 4> const P{SolveForH<4>(A)};
-    Eigen::Matrix<double, 3, 4> const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize
+    Matrix34d const P{SolveForH<4>(A)};
+    Matrix34d const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize
 
     // Extract camera parameters
     auto [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};

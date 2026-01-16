@@ -39,7 +39,7 @@ struct AprilTagDetection {
     int id{};
     Matrix3d H;
     Vector2d c;
-    Eigen::Matrix<double, 4, 2> p;
+    Matrix42d p;
 };
 
 struct AprilTagDetector {

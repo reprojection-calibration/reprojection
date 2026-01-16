@@ -12,7 +12,7 @@ namespace reprojection::pnp {
 // The math behind it for the Dlt23 case can be found in "Multiple View Geometry in computer vision", particularly be
 // noting that this function stacks Eq. 7.2 to form the A matrix.
 template <int N>
-Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& pixels,
+Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(MatrixX2d const& pixels,
                                                         Eigen::Matrix<double, Eigen::Dynamic, N - 1> const& points) {
     Eigen::Matrix<double, Eigen::Dynamic, 3 * N> A(2 * pixels.rows(), 3 * N);
     for (int const i : {0, 1, 2}) {
@@ -24,13 +24,13 @@ Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& 
         auto A_i{A.middleRows(i * 2, 2)};
 
         // Construct O^T, -w_i*X_i^T, y_i * X_i^T
-        A_i.template block<1, N>(0, 0) = Eigen::ArrayXXd::Zero(1, N);
+        A_i.template block<1, N>(0, 0) = ArrayXd::Zero(N, 1).transpose();
         A_i.template block<1, N>(0, N) *= -1.0;
         A_i.template block<1, N>(0, 2 * N) *= pixel_i(1);
 
         // Construct w_i*X_i^T, O^T, -x_i * X_i^T
         A_i.template block<1, N>(1, 0) *= 1.0;
-        A_i.template block<1, N>(1, N) = Eigen::ArrayXXd::Zero(1, N);
+        A_i.template block<1, N>(1, N) = ArrayXd::Zero(N, 1).transpose();
         A_i.template block<1, N>(1, 2 * N) *= -pixel_i(0);
     }
 
@@ -42,7 +42,7 @@ Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(Eigen::MatrixX2d const& 
 // think P is a homography therefore SolveForH is a name that covers both use cases.
 template <int N>
 Eigen::Matrix<double, 3, N> SolveForH(Eigen::Matrix<double, Eigen::Dynamic, 3 * N> const& A) {
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd;
+    Eigen::JacobiSVD<MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
     // TODO (Jack): There has to be a more expressive way to pack .col(3*N -1) into P and select the column using 3*N -1
