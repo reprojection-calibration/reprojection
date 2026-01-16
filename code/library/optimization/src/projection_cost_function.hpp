@@ -49,12 +49,18 @@ class ProjectionCostFunction_T {
         Eigen::Vector<T, 3> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
 
         Eigen::Map<Eigen::Array<T, T_Model::Size, 1> const> intrinsics(intrinsics_ptr);
-        Eigen::Vector<T, 2> const pixel{T_Model::template Project<T>(intrinsics, point_co)};
+        auto const pixel{T_Model::template Project<T>(intrinsics, point_co)};
 
-        residual[0] = T(pixel_[0]) - pixel[0];
-        residual[1] = T(pixel_[1]) - pixel[1];
+        if (pixel.has_value()) {
+            Array2<T> const& _pixel{pixel.value()};
 
-        return true;
+            residual[0] = T(pixel_[0]) - _pixel[0];
+            residual[1] = T(pixel_[1]) - _pixel[1];
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) {
