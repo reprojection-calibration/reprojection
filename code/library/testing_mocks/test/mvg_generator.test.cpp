@@ -7,7 +7,7 @@
 
 using namespace reprojection;
 
-TEST(TestingMocksMvgGenerator, TestGenerateNoError) {
+TEST(TestingMocksMvgGenerator, TestGenerateBatch) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
         false)};
