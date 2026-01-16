@@ -32,30 +32,18 @@ std::vector<Frame> MvgGenerator::GenerateBatch(int const num_frames) const {
 }  // LCOV_EXCL_LINE
 
 /**
- * \brief Static helper method that projects points in the world frame to pixels. Do NOT use outside the testing mocks
- * context!
+ * \brief Static helper method that projects points in the world frame. Do NOT use outside the testing mocks context!
  *
  * This method is intended only for use as part of the testing mocks test data generation class
  * (reprojection::testing_mocks::MvgGenerator) and should NOT be used by other consuming code. It was left as a public
  * method only so that it could be tested.
  */
-MatrixX2d MvgGenerator::Project(MatrixX3d const& points_w, std::unique_ptr<projection_functions::Camera> const& camera,
-                                Isometry3d const& tf_co_w) {
-    // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not
-    // match our expectations about matrix dimensions after the fact.
+std::tuple<MatrixX2d, ArrayXb> MvgGenerator::Project(MatrixX3d const& points_w,
+                                                     std::unique_ptr<projection_functions::Camera> const& camera,
+                                                     Isometry3d const& tf_co_w) {
     MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
 
-    // ERROR
-    // ERROR
-    // ERROR
-    // ERROR(Jack): Actually use mask to sort out valid pixels! Also how will we sort out the invalid points for the
-    // mvg? Of course we could design the trajectory so there is never a invalid point but that is fragile!
-    // ERROR
-    // ERROR
-    // ERROR
-    auto const [pixels, _]{camera->Project(points_homog_co.leftCols(3))};
-
-    return pixels;
+    return camera->Project(points_homog_co.leftCols(3));
 }
 
 // Input is fractional time of trajectory from [0,1)
@@ -83,11 +71,13 @@ Frame MvgGenerator::Generate(double const t) const {
     auto const pose_t{se3_spline_.Evaluate(spline_time)};
     assert(pose_t.has_value());  // See note above
 
-    MatrixX2d const pixels{Project(points_, camera_, geometry::Exp(pose_t.value()))};
+    auto const [pixels, mask]{Project(points_, camera_, geometry::Exp(pose_t.value()))};
+    ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
-    // WARN(Jack): This assumes that all points are always visible! With careful engineering for the default value
-    // of K this will be true, but that cannot be guaranteed for all K!!!
-    return {{pixels, points_}, geometry::Exp(pose_t.value())};
+    // TODO(Jack): With the introduction of the projection mask we are going to have this (indices, Eigen::all) logic
+    //  show up in a lot of places! Does it make sense to add a method for it? Maybe masking an entire extracted target
+    //  or something like that, but lets see which use cases we run across often before we decide what to do.
+    return {{pixels(valid_indices, Eigen::all), points_(valid_indices, Eigen::all)}, geometry::Exp(pose_t.value())};
 }
 
 MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {

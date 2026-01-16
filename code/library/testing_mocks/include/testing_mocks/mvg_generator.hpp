@@ -29,8 +29,9 @@ class MvgGenerator {
 
     std::vector<Frame> GenerateBatch(int const num_frames) const;
 
-    static MatrixX2d Project(MatrixX3d const& points_w, std::unique_ptr<projection_functions::Camera> const& camera,
-                             Isometry3d const& tf_co_w);
+    static std::tuple<MatrixX2d, ArrayXb> Project(MatrixX3d const& points_w,
+                                                  std::unique_ptr<projection_functions::Camera> const& camera,
+                                                  Isometry3d const& tf_co_w);
 
    private:
     // Input is fractional time of trajectory from [0,1)
