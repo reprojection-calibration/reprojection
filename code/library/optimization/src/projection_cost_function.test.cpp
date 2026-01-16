@@ -74,7 +74,7 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
     // Point on front of the camera that will project to the center of the image.
     Array3d const point{0, 0, 10};
     PinholeCostFunction const cost_function{pixel, point};
-    bool success{cost_function.operator()<double>(pinhole_intrinsics.data(), pose.data(), residual.data())};
+    bool success{cost_function(pinhole_intrinsics.data(), pose.data(), residual.data())};
     EXPECT_TRUE(success);
     EXPECT_FLOAT_EQ(residual[0], 0.0);
     EXPECT_FLOAT_EQ(residual[1], 0.0);
@@ -82,7 +82,7 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
     // Now a point behind the camera will return false because its invalid.
     Array3d const point_behind{0, 0, -10};
     PinholeCostFunction const cost_function_behind{pixel, point_behind};
-    success = cost_function_behind.operator()<double>(pinhole_intrinsics.data(), pose.data(), residual.data());
+    success = cost_function_behind(pinhole_intrinsics.data(), pose.data(), residual.data());
     EXPECT_FALSE(success);
 }
 
