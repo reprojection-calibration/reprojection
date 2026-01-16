@@ -19,7 +19,7 @@ struct PinholeRadtan4 {
      * "distorted" point in that same frame.
      */
     template <typename T>
-    static Eigen::Array<T, 2, 1> Distort(Eigen::Array<T, 4, 1> const& distortion, Eigen::Array<T, 2, 1> const& p_cam) {
+    static Array2<T> Distort(Eigen::Array<T, 4, 1> const& distortion, Array2<T> const& p_cam) {
         T const& x_cam{p_cam[0]};
         T const& y_cam{p_cam[1]};
         T const x_cam2{x_cam * x_cam};
@@ -39,17 +39,17 @@ struct PinholeRadtan4 {
     }
 
     template <typename T>
-    static Eigen::Array<T, 2, 1> Project(Eigen::Array<T, Size, 1> const& intrinsics,
-                                         Eigen::Array<T, 3, 1> const& P_co) {
+    static Array2<T> Project(Eigen::Array<T, Size, 1> const& intrinsics,
+                                          Array3<T> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
         T const x_cam{x / z};
         T const y_cam{y / z};
-        Eigen::Array<T, 2, 1> const p_cam{x_cam, y_cam};
+        Array2<T> const p_cam{x_cam, y_cam};
 
-        Eigen::Array<T, 2, 1> const distorted_p_cam{Distort<T>(intrinsics.bottomRows(4), p_cam)};
-        Eigen::Array<T, 3, 1> const P_star{distorted_p_cam[0], distorted_p_cam[1], T(1)};  // Set z=1
+        Array2<T> const distorted_p_cam{Distort<T>(intrinsics.bottomRows(4), p_cam)};
+        Array3<T> const P_star{distorted_p_cam[0], distorted_p_cam[1], T(1)};  // Set z=1
 
         // NOTE(Jack): Because we already did the ideal projective transform to the camera coordinate frame above when
         // we built p_cam, the pinhole projection below is actually only being used to convert the distorted point
@@ -80,8 +80,8 @@ struct PinholeRadtan4 {
         // WARN(Jack): This is not a cost function operator! Read the context above in the note.
         template <typename T>
         bool operator()(T const* const p_cam_ptr, T* const distorted_p_cam_ptr) const {
-            Eigen::Map<Eigen::Array<T, 2, 1> const> const p_cam(p_cam_ptr);
-            Eigen::Array<T, 2, 1> const distorted_p_cam{Distort<T>(distortion_.cast<T>(), p_cam)};
+            Eigen::Map<Array2<T> const> const p_cam(p_cam_ptr);
+            Array2<T> const distorted_p_cam{Distort<T>(distortion_.cast<T>(), p_cam)};
 
             distorted_p_cam_ptr[0] = distorted_p_cam[0];
             distorted_p_cam_ptr[1] = distorted_p_cam[1];

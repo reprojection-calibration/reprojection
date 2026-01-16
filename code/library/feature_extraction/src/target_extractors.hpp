@@ -9,8 +9,6 @@
 
 namespace reprojection::feature_extraction {
 
-using Matrix42d = Eigen::Matrix<double, 4, 2>;
-
 class CheckerboardExtractor : public TargetExtractor {
    public:
     explicit CheckerboardExtractor(cv::Size const& pattern_size, double const unit_dimension);

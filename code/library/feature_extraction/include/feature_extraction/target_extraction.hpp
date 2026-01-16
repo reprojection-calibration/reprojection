@@ -27,8 +27,8 @@ class TargetExtractor {
    protected:
     cv::Size pattern_size_;
     double unit_dimension_;
-    Eigen::ArrayX2i point_indices_;
-    Eigen::MatrixX3d points_;
+    ArrayX2i point_indices_;
+    MatrixX3d points_;
 };
 
 enum class TargetType { Checkerboard, CircleGrid, AprilGrid3 };

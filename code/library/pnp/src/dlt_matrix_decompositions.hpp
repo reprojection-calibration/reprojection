@@ -18,7 +18,7 @@ std::tuple<Matrix3d, Matrix3d> DecomposeMIntoKr(Matrix3d const& M);
 // NOTE(Jack): MVG section "6.2.4 Finding the camera center"
 // We automatically return the non-homogenous value, maybe there is a reason to return it as a homogeneous point but I
 // do not see it just yet.
-Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P);
+Vector3d CalculateCameraCenter(Matrix34d const& P);
 
 // NOTE(Jack): Reference https://docs.opencv.org/4.x/d9/dab/tutorial_homography.html - the material is taken from this
 // slide deck on web.archive.org
