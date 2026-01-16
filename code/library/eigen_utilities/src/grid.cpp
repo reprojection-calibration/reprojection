@@ -14,28 +14,27 @@ ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_onl
         // NOTE(Jack): Eigen does not provide direct way to apply the modulo operator, so we follow a method using a
         // unaryExpr() that we adopted from here
         // (https://stackoverflow.com/questions/35798698/eigen-matrix-library-coefficient-wise-modulo-operation)
-        ArrayXi const is_even{
-            ((grid_indices.rowwise().sum().unaryExpr([](int const x) { return x % 2; })) == 0).cast<int>()};
-        ArrayXi const mask{MaskIndices(is_even)};
+        ArrayXb const is_even_mask{((grid_indices.rowwise().sum().unaryExpr([](int const x) { return x % 2; })) == 0)};
+        ArrayXi const even_row_ids{MaskToRowId(is_even_mask)};
 
-        return grid_indices(mask, Eigen::all);
+        return grid_indices(even_row_ids, Eigen::all);
     }
 
     return grid_indices;
 }
 
 // There has to be a more eloquent way to do this... but it gets the job done :)
-ArrayXi MaskIndices(ArrayXi const& array) {
-    std::vector<int> mask;
-    mask.reserve(array.rows());
+ArrayXi MaskToRowId(ArrayXb const& mask) {
+    std::vector<int> row_ids;
+    row_ids.reserve(mask.rows());
 
-    for (Eigen::Index i{0}; i < array.rows(); i++) {
-        if (array(i) == 1) {
-            mask.push_back(i);
+    for (Eigen::Index i{0}; i < mask.rows(); i++) {
+        if (mask(i) == true) {
+            row_ids.push_back(i);
         }
     }
 
-    return ToEigen(mask);
+    return ToEigen(row_ids);
 }
 
 ArrayXi ToEigen(std::vector<int> const& vector) { return Eigen::Map<ArrayXi const>(vector.data(), std::size(vector)); }

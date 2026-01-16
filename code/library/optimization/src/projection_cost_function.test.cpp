@@ -56,25 +56,34 @@ TEST(OptimizationProjectionCostFunction, TestCreate) {
     delete cost_function;
 }
 
-// We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.
+// NOTE(Jack): The reason that we have these calls to .data(), but nowhere else, is because in this test we are
+// essentially manually simulating all the magic that Ceres will do behind the scenes for us, managing the memory
+// and passing arguments etc. during the optimization process. It is my hope and vision that these raw pointers etc.
+// can be limited to testing, and not actually filter into the rest of the code if handled smartly (ex. using
+// Eigen::Map and Eigen::Ref).
+//
+// We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) succesfully and has
+// residual zero and that a point behind the camera returns false.
 TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
-    // NOTE(Jack): The reason that we have these calls to .data(), but nowhere else, is because in this test we are
-    // essentially manually simulating all the magic that Ceres will do behind the scenes for us, managing the memory
-    // and passing arguments etc. during the optimization process. It is my hope and vision that these raw pointers etc.
-    // can be limited to testing, and not actually filter into the rest of the code if handled smartly (ex. using
-    // Eigen::Map and Eigen::Ref).
+    using PinholeCostFunction = optimization::ProjectionCostFunction_T<projection_functions::Pinhole>;
     Array4d const pinhole_intrinsics{600, 600, 360, 240};
     Array2d const pixel{pinhole_intrinsics[2], pinhole_intrinsics[3]};
-    Array3d const point{0, 0, 10};  // Point that will project to the center of the image
-
-    optimization::ProjectionCostFunction_T<projection_functions::Pinhole> const cost_function{pixel, point};
-
     Array6d const pose{0, 0, 0, 0, 0, 0};
     Array2d residual{-1, -1};
-    cost_function.operator()<double>(pinhole_intrinsics.data(), pose.data(), residual.data());
 
+    // Point on front of the camera that will project to the center of the image.
+    Array3d const point{0, 0, 10};
+    PinholeCostFunction const cost_function{pixel, point};
+    bool success{cost_function(pinhole_intrinsics.data(), pose.data(), residual.data())};
+    EXPECT_TRUE(success);
     EXPECT_FLOAT_EQ(residual[0], 0.0);
     EXPECT_FLOAT_EQ(residual[1], 0.0);
+
+    // Now a point behind the camera will return false because its invalid.
+    Array3d const point_behind{0, 0, -10};
+    PinholeCostFunction const cost_function_behind{pixel, point_behind};
+    success = cost_function_behind(pinhole_intrinsics.data(), pose.data(), residual.data());
+    EXPECT_FALSE(success);
 }
 
 // NOTE(Jack): We do not test cost_function->Evaluate() in the following test because allocating the memory of the input

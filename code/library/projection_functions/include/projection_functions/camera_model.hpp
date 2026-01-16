@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 #include "projection_functions/double_sphere.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
@@ -27,12 +29,7 @@ class Camera {
    public:
     virtual ~Camera() = default;
 
-    /**
-     * \brief Defines the camera projection interface.
-     *
-     * Consumes a set of points in the camera optical frame ("*_co) and returns a set of image space pixels.
-     */
-    virtual MatrixX2d Project(MatrixX3d const& points_co) const = 0;
+    virtual std::tuple<MatrixX2d, ArrayXb> Project(MatrixX3d const& points_co) const = 0;
 
     /**
      * \brief Defines the camera unprojection interface.
@@ -63,13 +60,19 @@ class Camera_T : public Camera {
    public:
     explicit Camera_T(Eigen::Array<double, T_Model::Size, 1> const& intrinsics) : intrinsics_{intrinsics} {}
 
-    MatrixX2d Project(MatrixX3d const& points_co) const override {
+    std::tuple<MatrixX2d, ArrayXb> Project(MatrixX3d const& points_co) const override {
         MatrixX2d pixels(points_co.rows(), 2);
+        ArrayXb valid_mask{ArrayXb::Zero(points_co.rows(), 1)};
         for (int i{0}; i < points_co.rows(); ++i) {
-            pixels.row(i) = T_Model::template Project<double>(intrinsics_, points_co.row(i));
+            std::optional<Array2d> const pixel{T_Model::template Project<double>(intrinsics_, points_co.row(i))};
+
+            if (pixel.has_value()) {
+                pixels.row(i) = pixel.value();
+                valid_mask(i) = true;
+            }
         }
 
-        return pixels;
+        return {pixels, valid_mask};
     }  // LCOV_EXCL_LINE
 
     MatrixX3d Unproject(MatrixX2d const& pixels) const override {

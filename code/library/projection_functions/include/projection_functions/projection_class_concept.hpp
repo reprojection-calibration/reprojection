@@ -1,3 +1,4 @@
+#include <optional>
 #include <type_traits>
 
 #include "types/eigen_types.hpp"
@@ -77,7 +78,7 @@ concept CanProject = requires(Eigen::Array<double, T::Size, 1> const& intrinsics
     { intrinsics } -> std::same_as<Eigen::Array<double, T::Size, 1> const&>;
     { p_co } -> std::same_as<Array3d const&>;
 
-    { T::template Project<double>(intrinsics, p_co) } -> std::same_as<Array2d>;
+    { T::template Project<double>(intrinsics, p_co) } -> std::same_as<std::optional<Array2d>>;
 };
 
 /**

@@ -39,7 +39,7 @@ struct PinholeRadtan4 {
     }
 
     template <typename T>
-    static Array2<T> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
+    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};

@@ -1,3 +1,5 @@
+#include "projection_functions/pinhole.hpp"
+
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
@@ -25,17 +27,29 @@ MatrixX2d const gt_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
 
 TEST(ProjectionFunctionsPinhole, TestPinholeProject) {
     auto const camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
-    MatrixX2d const pixels(camera.Project(gt_points));
+    auto const [pixels, mask](camera.Project(gt_points));
 
+    // NOTE(Jack): We assert that all pixels are valid because if this is not true that means a fundamental assumption
+    // is broken. The test data was engineered to meet this condition. In a real application you should mask our the
+    // pixels to catch invalid ones, but not here in the test case.
+    ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
+}
+
+TEST(ProjectionFunctionsPinhole, TestPinholeProjectMasking) {
+    // Point in front of camera - returns pixel.
+    auto pixel{projection_functions::Pinhole::Project(pinhole_intrinsics, {0, 0, 10})};
+    EXPECT_TRUE(pixel.has_value());
+
+    // Point behind camera - returns std::nullopt.
+    pixel = projection_functions::Pinhole::Project(pinhole_intrinsics, {0, 0, -10});
+    EXPECT_FALSE(pixel.has_value());
 }
 
 TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
     auto const camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
     MatrixX3d const rays{camera.Unproject(gt_pixels)};
 
-    // Normalize the 3D points so we can compare them directly to the rays
-    MatrixX3d const normalized_gt_points{gt_points.array() / 600};
-
-    EXPECT_TRUE(rays.isApprox(normalized_gt_points));
+    // Multiply rays by metric scale to put them back into world coordinates
+    EXPECT_TRUE((600 * rays).isApprox(gt_points));
 }

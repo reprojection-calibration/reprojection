@@ -45,7 +45,15 @@ MatrixX2d MvgGenerator::Project(MatrixX3d const& points_w, std::unique_ptr<proje
     // match our expectations about matrix dimensions after the fact.
     MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
 
-    MatrixX2d const pixels{camera->Project(points_homog_co.leftCols(3))};
+    // ERROR
+    // ERROR
+    // ERROR
+    // ERROR(Jack): Actually use mask to sort out valid pixels! Also how will we sort out the invalid points for the
+    // mvg? Of course we could design the trajectory so there is never a invalid point but that is fragile!
+    // ERROR
+    // ERROR
+    // ERROR
+    auto const [pixels, _]{camera->Project(points_homog_co.leftCols(3))};
 
     return pixels;
 }
