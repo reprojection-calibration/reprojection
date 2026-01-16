@@ -21,8 +21,9 @@ MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrin
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
     auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics)};
-    MatrixX2d const pixels(camera.Project(gt_points));
 
+    auto const [pixels, mask](camera.Project(gt_points));
+    ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
 
@@ -36,10 +37,13 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {
                                       {pinhole_intrinsics[2], 480}};
 
     auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_intrinsics)};
-    MatrixX2d const pixels(camera.Project(gt_points));
 
+    auto const [pixels, mask](camera.Project(gt_points));
+    ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pinhole_pixels));
 }
+
+// TODO(Jack): Test masking!
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestUnproject) {
     auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics)};

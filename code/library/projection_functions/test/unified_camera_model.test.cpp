@@ -21,8 +21,9 @@ MatrixX2d const gt_pixels{{intrinsics[2], intrinsics[3]},
 
 TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelProject) {
     auto const camera{projection_functions::UcmCamera(intrinsics)};
-    MatrixX2d const pixels(camera.Project(gt_points));
 
+    auto const [pixels, mask](camera.Project(gt_points));
+    ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
 
