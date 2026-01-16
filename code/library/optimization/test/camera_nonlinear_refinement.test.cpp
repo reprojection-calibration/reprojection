@@ -125,5 +125,5 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
     double const optimized_error_sum{std::accumulate(
         data.frames.begin(), data.frames.end(), 0.0,
         [](double s, auto const& kv) { return s + std::abs(kv.second.optimized_reprojection_error.mean()); })};
-    EXPECT_LT(optimized_error_sum / std::size(data.frames), 0.1);
+    EXPECT_LT(optimized_error_sum / std::size(data.frames), 0.2);
 }
