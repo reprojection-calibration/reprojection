@@ -34,8 +34,7 @@ struct Pinhole {
     // and that applying the camera matrix K to p_cam gives us a pixel. Understanding this basic pattern is crucial for
     // understanding how other camera models are implemented as some variation of this basic process.
     template <typename T>
-    static  Array2<T> Project(Eigen::Array<T, Size, 1> const& intrinsics,
-                                          Array3<T> const& P_co) {
+    static Array2<T> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -52,7 +51,7 @@ struct Pinhole {
         // Put into image pixel space
         T const u{(fx * x_cam) + cx};
         T const v{(fy * y_cam) + cy};
-         Array2<T> const pixel{u, v};
+        Array2<T> const pixel{u, v};
 
         return pixel;
     }
