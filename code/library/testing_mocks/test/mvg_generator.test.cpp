@@ -12,21 +12,45 @@ TEST(TestingMocksMvgGenerator, TestGenerateNoError) {
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
         false)};
 
-    EXPECT_NO_FATAL_FAILURE(generator.GenerateBatch(100));
+    // NOTE(Jack): All points for every frame project successfully. If not they should get masked out, but the
+    // test data is engineered such that none get masked out. But don't forget that there might be an implementation
+    // error because when we set the view point and sphere origin as {0,0,0} we get poses that do not make sense!
+    std::vector<Frame> const batch{generator.GenerateBatch(100)};
+    for (auto const& frame : batch) {
+        EXPECT_EQ(frame.bundle.pixels.rows(), 25);
+        EXPECT_EQ(frame.bundle.points.rows(), 25);
+    }
 }
 
 TEST(TestingMocksMvgGenerator, TestProject) {
     MatrixX3d const points_w{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
                              {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
+    MatrixX2d const gt_pixels{{360.00, 240.00}, {480.00, 360.00}, {240.00, 120.00},
+                              {480.00, 180.00}, {240.00, 300.00}, {402.857, 197.144}};
 
     auto const camera{
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240}))};
     Isometry3d const tf_co_w{Isometry3d::Identity()};
-    MatrixX2d const pixels{testing_mocks::MvgGenerator::Project(points_w, camera, tf_co_w)};
 
-    MatrixX2d const test_pixels{{360.00, 240.00}, {480.00, 360.00}, {240.00, 120.00},
-                                {480.00, 180.00}, {240.00, 300.00}, {402.857, 197.144}};
-    ASSERT_TRUE(pixels.isApprox(test_pixels, 1e-3));
+    auto const [pixels, mask]{testing_mocks::MvgGenerator::Project(points_w, camera, tf_co_w)};
+    ASSERT_TRUE(mask.all());
+    EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-3));
+}
+
+TEST(TestingMocksMvgGenerator, TestProjectMasking) {
+    // Given the tf_co_w transform set below, the last point here will be behind the camera and should be masked out!
+    MatrixX3d const points_w{{0.00, 0.00, 10.00},  //
+                             {1.00, 1.00, 10.00},
+                             {-1.00, -1.00, 5.00}};
+    Array3<bool> const gt_mask{true, true, false};
+
+    auto const camera{
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240}))};
+    Isometry3d tf_co_w{Isometry3d::Identity()};
+    tf_co_w.translation().z() = -6.0;
+
+    auto const [pixels, mask]{testing_mocks::MvgGenerator::Project(points_w, camera, tf_co_w)};
+    ASSERT_TRUE(mask.isApprox(gt_mask));
 }
 
 TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
