@@ -18,11 +18,23 @@ TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitialization) {
     MatrixX3d const horizontal_points{{-360, 100, 600}, {-240, 100, 600}, {-120, 100, 600}, {0, 100, 600},
                                       {120, 100, 600},  {240, 100, 600},  {320, 100, 600}};
     auto const camera{projection_functions::DoubleSphereCamera(intrinsics)};
-    MatrixX2d const horizontal_pixels(camera.Project(horizontal_points));
+    // ERROR
+    // ERROR
+    // ERROR
+    // ERROR
+    // ERROR
+    // ERROR(Jack): DO NOT IGNORE THE MASK
+    auto const [horizontal_pixels, _](camera.Project(horizontal_points));
 
     MatrixX3d const vertical_points{
         {100, -240, 600}, {100, -120, 600}, {100, 0, 600}, {100, 120, 600}, {100, 240, 600}};
-    MatrixX2d const vertical_pixels(camera.Project(vertical_points));
+    // ERROR
+    // ERROR
+    // ERROR
+    // ERROR
+    // ERROR
+    // ERROR(Jack): DO NOT IGNORE THE MASK
+    auto const [vertical_pixels, _1]{camera.Project(vertical_points)};
 
     auto const f{calibration::VanishingPointInitialization(horizontal_pixels, vertical_pixels)};
     ASSERT_TRUE(f.has_value());
