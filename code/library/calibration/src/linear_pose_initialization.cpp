@@ -31,7 +31,12 @@ void LinearPoseInitialization(InitializationDataView data_view) {
         // Project using a unit ideal pinhole camera to get pseudo undistorted pixels
         auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0})};
         // ERROR(Jack): We are not accounting for the fact of valid field of view!
-        MatrixX2d const pixels{pinhole_camera.Project(rays)};
+        // ERROR
+        // ERROR
+        // ERROR
+        // ERROR
+        // ERROR(Jack): We are not using the mask like we need to!!!!
+        auto const [pixels, _]{pinhole_camera.Project(rays)};
         Bundle const linearized_bundle{pixels, frame_i.extracted_target().bundle.points};
 
         auto const result{pnp::Pnp(linearized_bundle)};
