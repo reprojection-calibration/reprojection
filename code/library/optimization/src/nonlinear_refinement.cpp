@@ -29,7 +29,6 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
             double residual[2];
             bool const success{cost_function->Evaluate(parameter_blocks.data(), residual, nullptr)};
             if (not success) {
-                std::cout << "Failed cost function evaluation, not adding to problem!" << std::endl;
                 continue;
             }
 
