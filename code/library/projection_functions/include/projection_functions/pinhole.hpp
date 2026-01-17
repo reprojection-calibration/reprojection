@@ -63,7 +63,7 @@ struct Pinhole {
         T const u{(fx * x_cam) + cx};
         T const v{(fy * y_cam) + cy};
 
-        if (not bounds.InBounds(u, v)) {
+        if (not InBounds(bounds, u, v)) {
             return std::nullopt;
         }
 

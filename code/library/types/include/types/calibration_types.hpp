@@ -11,6 +11,16 @@
 
 namespace reprojection {
 
+struct ImageBounds {
+    ImageBounds(double const _min_width, double const _max_width, double const _min_height, double const _max_height)
+        : u_min{_min_width}, u_max{_max_width}, v_min{_min_height}, v_max{_max_height} {}
+
+    double u_min;
+    double u_max;
+    double v_min;
+    double v_max;
+};
+
 struct CameraSensorInfo {
     std::string sensor_name;
     CameraModel camera_model;
@@ -58,6 +68,7 @@ struct CameraCalibrationData {
         : sensor{_sensor}, initial_intrinsics{_initial_intrinsics} {}
 
     CameraSensorInfo sensor;
+
     ArrayXd initial_intrinsics;
     ArrayXd optimized_intrinsics;
 
