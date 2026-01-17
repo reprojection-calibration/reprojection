@@ -105,7 +105,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose).isApprox(gt_pose_i, 1e-6))
             << "Nonlinear refinement result:\n"
             << geometry::Exp(frame_i.optimized_pose).matrix() << "\nGround truth:\n"
-            << gt_pose_i.matrix();
+            << gt_pose_i.matrix() << "\nInitial value:\n"
+            << mvg_frames[timestamp_ns].pose.matrix();
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))
