@@ -23,6 +23,13 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
             ceres::CostFunction* const cost_function{
                 Create(data_view.camera_model(), data_view.image_bounds(), pixels_i.row(j), points_i.row(j))};
 
+            // TODO(Jack): This is essentially checking if the cost function will evaluate to false given the parameter
+            // initialization. Ceres does not allow (for good reason of course), that a residual block evaluates to
+            // false on the first iteration! For example when a point project to outside of the image bounds and returns
+            // false on iteration one, there is no chance at all that any optimizer could benefit from that or "save"
+            // that lost residual. There here we check that the evaluate function returns true, and do not add it to the
+            // problem at all if it returns false. This logic here should likely be its own separate tested function.
+            // This should be tested along with the residual calculation functions!
             std::vector<double const*> parameter_blocks;
             parameter_blocks.push_back(data_view.optimized_intrinsics().data());
             parameter_blocks.push_back(frame_i.optimized_pose().data());
@@ -39,6 +46,9 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
         residual_id_map[frame_i.timestamp_ns()] = residual_ids_i;
     }
 
+    // TODO(Jack): We need to record above which points get added and which not. We can then use this to establish a
+    // correspondence between the residuals calculated here and the extarcted target points above, and those that were
+    // skipped. We will need this information to visualize it properly!
     for (OptimizationFrameView frame_i : data_view) {
         frame_i.initial_reprojection_error() =
             EvaluateReprojectionResiduals(problem, residual_id_map.at(frame_i.timestamp_ns()));
