@@ -20,7 +20,7 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
         std::vector<ceres::ResidualBlockId> residual_ids_i;  // TODO(Jack): Naming?
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
             ceres::CostFunction* const cost_function{
-                Create(data_view.camera_model(),data_view.image_bounds(), pixels_i.row(j), points_i.row(j))};
+                Create(data_view.camera_model(), data_view.image_bounds(), pixels_i.row(j), points_i.row(j))};
 
             ceres::ResidualBlockId const id{problem.AddResidualBlock(
                 cost_function, nullptr, data_view.optimized_intrinsics().data(), frame_i.optimized_pose().data())};
@@ -48,10 +48,14 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
 
 ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
                                        std::vector<ceres::ResidualBlockId> const& residual_ids) {
-    // 2d pixel residual (du, dv)
-    ArrayX2d residuals{std::size(residual_ids), 2};
+    // WARN(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
+    // row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two column
+    // elements! That is the reason why we have to specifically specify RowMajor here!
+    Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals{std::size(residual_ids), 2};
     for (size_t i{0}; i < std::size(residual_ids); ++i) {
-        problem.EvaluateResidualBlock(residual_ids[i], false, nullptr, residuals.row(i).data(), nullptr);
+        bool const success{
+            problem.EvaluateResidualBlock(residual_ids[i], false, nullptr, residuals.row(i).data(), nullptr)};
+        std::cout << success << std::endl;
     }
 
     return residuals;
