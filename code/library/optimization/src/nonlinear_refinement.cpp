@@ -35,11 +35,12 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
         std::vector<ceres::ResidualBlockId> const residual_ids_i{residual_id_map[frame_i.timestamp_ns()]};
         auto const [error, mask]{EvaluateReprojectionResiduals(problem, residual_ids_i)};
         frame_i.initial_reprojection_error() = error;
+        std::cout<< mask.transpose() << std::endl;
 
-        ArrayXb const invalid_mask{mask.isZero()};  // DOES THIS ACTUALLY INVERT THE MASK?
-        ArrayXi const blocks_to_remove_idx(eigen_utilities::MaskToRowId(invalid_mask));
+        ArrayXi const blocks_to_remove_idx(eigen_utilities::AntiMaskToRowId(mask));
         for (int i{0}; i < blocks_to_remove_idx.rows(); ++i) {
-            problem.RemoveResidualBlock(residual_ids_i[i]);
+            std::cout << "Remove block with id: " << residual_ids_i[blocks_to_remove_idx[i]] << " reprojection error " << error.row(blocks_to_remove_idx[i]) << std::endl;
+            problem.RemoveResidualBlock(residual_ids_i[blocks_to_remove_idx[i]]);
         }
     }
 
