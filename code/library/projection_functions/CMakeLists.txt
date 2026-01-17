@@ -22,6 +22,7 @@ AddLibrary()
 set(TESTS
         test/camera_model.test.cpp
         test/double_sphere.test.cpp
+        test/image_bounds.test.cpp
         test/pinhole.test.cpp
         test/pinhole_radtan4.test.cpp
         test/unified_camera_model.test.cpp
