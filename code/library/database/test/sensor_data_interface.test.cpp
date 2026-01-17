@@ -29,7 +29,7 @@ TEST_F(TempFolder, TestAddPoseData) {
     std::string const record_path{database_path_ + "/record_ddd.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    CameraCalibrationData const data{{"/cam/retro/123", CameraModel::Pinhole},  //
+    CameraCalibrationData const data{{"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}},  //
                                      {},
                                      {},
                                      {{0, {{{}, {}}, Array6d::Zero(), {}, Array6d::Zero(), {}}}}};
@@ -53,7 +53,7 @@ TEST_F(TempFolder, TestAddReprojectionError) {
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
     CameraCalibrationData const data{
-        {"/cam/retro/123", CameraModel::Pinhole},  //
+        {"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}},  //
         {},
         {},
         {{0, {{{}, {}}, Array6d::Zero(), ArrayX2d::Zero(1, 2), Array6d::Zero(), ArrayX2d::Zero(1, 2)}}}};
@@ -111,7 +111,7 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     (void)database::AddImage(header, db);
     (void)AddExtractedTargetData({header, target}, db);
 
-    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole}};
+    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}}};
 
     database::GetExtractedTargetData(db, data);
     EXPECT_EQ(std::size(data.frames), 3);

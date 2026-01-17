@@ -10,9 +10,11 @@ namespace reprojection::calibration {
 // TODO ADD SANITY CHECKS?
 // TODO MAKE SURE THIS IS NOT ALREADY IMPLEMENTED SOMEHWERE
 // TODO(Jack): Add all other camera models and check the above listed TODO points.
-std::unique_ptr<projection_functions::Camera> InitializeCamera(CameraModel model, ArrayXd const& intrinsics) {
+std::unique_ptr<projection_functions::Camera> InitializeCamera(CameraModel const model, ImageBounds const& bounds,
+                                                               ArrayXd const& intrinsics) {
     if (model == CameraModel::DoubleSphere) {
-        return std::unique_ptr<projection_functions::Camera>(new projection_functions::DoubleSphereCamera(intrinsics));
+        return std::unique_ptr<projection_functions::Camera>(
+            new projection_functions::DoubleSphereCamera(intrinsics, bounds));
     } else {
         throw std::runtime_error("invalid camera model");  // LCOV_EXCL_LINE
     }
@@ -23,13 +25,14 @@ std::unique_ptr<projection_functions::Camera> InitializeCamera(CameraModel model
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
 void LinearPoseInitialization(InitializationDataView data_view) {
-    auto const camera{InitializeCamera(data_view.camera_model(), data_view.initial_intrinsics())};
+    auto const camera{
+        InitializeCamera(data_view.camera_model(), data_view.image_bounds(), data_view.initial_intrinsics())};
 
     for (InitializationFrameView frame_i : data_view) {
         MatrixX3d const rays{camera->Unproject(frame_i.extracted_target().bundle.pixels)};
 
         // Project using a unit ideal pinhole camera to get pseudo undistorted pixels
-        auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0})};
+        auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};
         // ERROR(Jack): We are not accounting for the fact of valid field of view!
         // ERROR
         // ERROR

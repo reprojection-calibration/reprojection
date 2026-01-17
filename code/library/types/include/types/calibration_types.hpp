@@ -24,6 +24,7 @@ struct ImageBounds {
 struct CameraSensorInfo {
     std::string sensor_name;
     CameraModel camera_model;
+    ImageBounds bounds;
 };
 
 struct CalibrationDataFrame {

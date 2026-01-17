@@ -14,16 +14,17 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     //  actually just make one camera and use that in both places? Right now we compromise by building both cameras from
     //  the same intrinsics.
     Array6d const double_sphere_intrinsics{600, 600, 360, 240, 0.1, 0.2};
+    ImageBounds const bounds{0, 720, 0, 480};
 
     // Generate fisheye test data so we can prove that the function correctly handles and undistorts non-pinhole input
     // data.
     testing_mocks::MvgGenerator const generator{
         testing_mocks::MvgGenerator(std::unique_ptr<projection_functions::Camera>(
-            new projection_functions::DoubleSphereCamera(double_sphere_intrinsics)))};
+            new projection_functions::DoubleSphereCamera(double_sphere_intrinsics, bounds)))};
     int const num_frames{20};
     std::vector<Frame> const mvg_frames{generator.GenerateBatch(num_frames)};
 
-    CameraCalibrationData data{{"", CameraModel::DoubleSphere}, double_sphere_intrinsics};
+    CameraCalibrationData data{{"", CameraModel::DoubleSphere, bounds}, double_sphere_intrinsics};
 
     // TODO(Jack): Refactor mvg generator to use new calibration types??? Or does that not make any sense? At least
     // provide an adaptor that converts frames into the data field of the dict because we have similar code like this in

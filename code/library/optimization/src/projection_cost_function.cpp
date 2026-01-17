@@ -1,15 +1,15 @@
 #include "projection_cost_function.hpp"
 
 #include "projection_functions/double_sphere.hpp"
-#include "types/calibration_types.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
+#include "types/calibration_types.hpp"
 
 namespace reprojection::optimization {
 
-ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point,
-                            ImageBounds const& bounds) {
+ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
+                            Vector3d const& point) {
     if (projection_type == CameraModel::DoubleSphere) {
         return ProjectionCostFunction_T<projection_functions::DoubleSphere>::Create(pixel, point, bounds);
     } else if (projection_type == CameraModel::Pinhole) {

@@ -20,7 +20,7 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
         std::vector<ceres::ResidualBlockId> residual_ids_i;  // TODO(Jack): Naming?
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
             ceres::CostFunction* const cost_function{
-                Create(data_view.camera_model(), pixels_i.row(j), points_i.row(j))};
+                Create(data_view.camera_model(),data_view.image_bounds(), pixels_i.row(j), points_i.row(j))};
 
             ceres::ResidualBlockId const id{problem.AddResidualBlock(
                 cost_function, nullptr, data_view.optimized_intrinsics().data(), frame_i.optimized_pose().data())};
