@@ -9,7 +9,7 @@
 namespace reprojection::optimization {
 
 ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point,
-                            projection_functions::ImageBounds const& bounds) {
+                            ImageBounds const& bounds) {
     if (projection_type == CameraModel::DoubleSphere) {
         return ProjectionCostFunction_T<projection_functions::DoubleSphere>::Create(pixel, point, bounds);
     } else if (projection_type == CameraModel::Pinhole) {

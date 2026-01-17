@@ -26,7 +26,8 @@ using ImageBounds = projection_functions::ImageBounds;
  * that if the pointer is not assigned to a ceres problem then you need to call delete yourself, otherwise the memory
  * will leak!
  */
-ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point);
+ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point,
+                            ImageBounds const& bounds);
 
 // NOTE(Jack): Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
 // WARN(Jack): As we move past simple mono camera calibration we might find out that it is not the best option and that
