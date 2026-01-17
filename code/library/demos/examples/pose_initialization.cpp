@@ -33,10 +33,6 @@ int main() {
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
     AddPoseData(cam_data, database::PoseType::Initial, db);
 
-    // Artificially restrict ourselves to the first couple hundred frames where we converge successfully.
-    auto it = cam_data.frames.upper_bound(1520528332714760192);
-    cam_data.frames.erase(it, cam_data.frames.end());
-
     // Nonlinear optimization and save
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
 
