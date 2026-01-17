@@ -13,14 +13,14 @@ Array6d const double_sphere_intrinsics{600, 600, 360, 240, 0.1, 0.2};
 ImageBounds const bounds{0, 720, 0, 480};
 MatrixX3d const gt_points{{0, 0, 600},  //
                           {-360, 0, 600},
-                          {360, 0, 600},
+                          {359.9, 0, 600},
                           {0, -240, 600},
-                          {0, 240, 600}};
+                          {0, 239.9, 600}};
 MatrixX2d const gt_pixels{{double_sphere_intrinsics[2], double_sphere_intrinsics[3]},
                           {46.087794035716172, double_sphere_intrinsics[3]},
-                          {673.91220596428388, double_sphere_intrinsics[3]},
-                          {double_sphere_intrinsics[2], 26.040025446950779},
-                          {double_sphere_intrinsics[2], 453.95997455304922}};
+                          {673.83161575882514, double_sphere_intrinsics[3]},
+                          {double_sphere_intrinsics[2], 26.040025446950807},
+                          {double_sphere_intrinsics[2], 453.87414877978961}};
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
     auto const camera{projection_functions::DoubleSphereCamera(double_sphere_intrinsics, bounds)};
@@ -33,11 +33,11 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
 TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
     // If xi and alpha are zero then double sphere should essentially just act as a pinhole camera.
     Array6d const pinhole_intrinsics{600, 600, 360, 240, 0, 0};
-    MatrixX2d const pinhole_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
-                                   {0, pinhole_intrinsics[3]},
-                                   {720, pinhole_intrinsics[3]},
-                                   {pinhole_intrinsics[2], 0},
-                                   {pinhole_intrinsics[2], 480}};
+    MatrixX2d const pinhole_pixels{{360, 240},  //
+                                   {0, 240},
+                                   {719.9, 240},
+                                   {360, 0},
+                                   {360, 479.9}};
 
     auto const camera{projection_functions::DoubleSphereCamera(pinhole_intrinsics, bounds)};
 

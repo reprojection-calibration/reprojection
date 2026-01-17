@@ -12,19 +12,20 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
     ImageBounds const bounds{0, 720, 0, 480};
     MatrixX3d const gt_points{{0, 0, 600},  //
                               {-360, 0, 600},
-                              {360, 0, 600},
+                              {359.9, 0, 600},
                               {0, -240, 600},
-                              {0, 240, 600}};
+                              {0, 239.9, 600}};
     MatrixX2d const gt_pixels{{360, 240},  //
                               {0, 240},
-                              {720, 240},
+                              {719.9, 240},
                               {360, 0},
-                              {360, 480}};
+                              {360, 479.9}};
 
     auto const camera{projection_functions::PinholeCamera(intrinsics, bounds)};
 
     auto const [pixels, mask]{camera.Project(gt_points)};
     ASSERT_TRUE(mask.all());
+    std::cout << pixels << std::endl;
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 
     // NOTE(Jack): Of course pinhole unprojection looses the scale, and we are just returned rays in space with z=1.

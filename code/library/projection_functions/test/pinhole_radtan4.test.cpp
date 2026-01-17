@@ -12,14 +12,14 @@ Array8d const pinhole_radtan4_intrinsics{600, 600, 360, 240, -0.1, 0.1, 0.001, 0
 ImageBounds const bounds{0, 720, 0, 480};
 MatrixX3d const gt_points{{0, 0, 600},  //
                           {-360, 0, 600},
-                          {360, 0, 600},
+                          {359.9, 0, 600},
                           {0, -240, 600},
-                          {0, 240, 600}};
+                          {0, 239.9, 600}};
 MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrinsics[3]},
                           {8.9424000000000206, 240.21600000000001},
-                          {712.35359999999991, 240.21600000000001},
+                          {712.25756064927782, 240.21588001666666},
                           {360.096, 3.5135999999999683},
-                          {360.096, 477.06240000000003}};
+                          {360.09592001666664, 476.96567911650004}};
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
     auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics, bounds)};
@@ -32,11 +32,11 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
 TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {
     // If [k1, k2, p1, p2] are zero then pinhole radtan4 should essentially just act as a pinhole camera.
     Array8d const pinhole_intrinsics{600, 600, 360, 240, 0, 0, 0, 0};
-    MatrixX2d const gt_pinhole_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
-                                      {0, pinhole_intrinsics[3]},
-                                      {720, pinhole_intrinsics[3]},
-                                      {pinhole_intrinsics[2], 0},
-                                      {pinhole_intrinsics[2], 480}};
+    MatrixX2d const gt_pinhole_pixels{{360, 240},  //
+                                      {0, 240},
+                                      {719.9, 240},
+                                      {360, 0},
+                                      {360, 479.9}};
 
     auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_intrinsics, bounds)};
 
