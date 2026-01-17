@@ -41,7 +41,7 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
 
     for (OptimizationFrameView frame_i : data_view) {
         frame_i.initial_reprojection_error() =
-            EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]);
+            EvaluateReprojectionResiduals(problem, residual_id_map.at(frame_i.timestamp_ns()));
     }
 
     // TODO(Jack): Law of useful return states that we should probably be returning the summary!
@@ -52,7 +52,7 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
 
     for (OptimizationFrameView frame_i : data_view) {
         frame_i.optimized_reprojection_error() =
-            EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]);
+            EvaluateReprojectionResiduals(problem, residual_id_map.at(frame_i.timestamp_ns()));
     }
 }
 
