@@ -1,5 +1,6 @@
 #include "optimization/nonlinear_refinement.hpp"
 
+#include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
 #include "projection_cost_function.hpp"
 
@@ -30,8 +31,16 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     }
 
     for (OptimizationFrameView frame_i : data_view) {
-        frame_i.initial_reprojection_error() =
-            EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]);
+        // TODO SHOULD WE ALSO MAKE THE MASK PART OF THE REPROJECTION ERROR ITSELF?
+        std::vector<ceres::ResidualBlockId> const residual_ids_i{residual_id_map[frame_i.timestamp_ns()]};
+        auto const [error, mask]{EvaluateReprojectionResiduals(problem, residual_ids_i)};
+        frame_i.initial_reprojection_error() = error;
+
+        ArrayXb const invalid_mask{mask.isZero()};  // DOES THIS ACTUALLY INVERT THE MASK?
+        ArrayXi const blocks_to_remove_idx(eigen_utilities::MaskToRowId(invalid_mask));
+        for (int i{0}; i < blocks_to_remove_idx.rows(); ++i) {
+            problem.RemoveResidualBlock(residual_ids_i[i]);
+        }
     }
 
     // TODO(Jack): Law of useful return states that we should probably be returning the summary!
@@ -41,25 +50,27 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     ceres::Solve(options, &problem, &summary);
 
     for (OptimizationFrameView frame_i : data_view) {
-        frame_i.optimized_reprojection_error() =
-            EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]);
+        // TODO SHOULD WE ALSO MAKE THE MASK PART OF THE REPROJECTION ERROR ITSELF?
+        auto const [error, _]{EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()])};
+        frame_i.optimized_reprojection_error() = error;
     }
 }
 
 // TODO(Jack): Test this function! We would have caught the rowmajor bug earlier!
-ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
-                                       std::vector<ceres::ResidualBlockId> const& residual_ids) {
+std::tuple<ArrayX2d, ArrayXb> EvaluateReprojectionResiduals(ceres::Problem const& problem,
+                                                            std::vector<ceres::ResidualBlockId> const& residual_ids) {
     // WARN(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
     // row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two column
     // elements! That is the reason why we have to specifically specify RowMajor here!
     Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals{std::size(residual_ids), 2};
+    ArrayXb valid_mask{ArrayXb::Zero(std::size(residual_ids), 1)};
     for (size_t i{0}; i < std::size(residual_ids); ++i) {
         bool const success{
             problem.EvaluateResidualBlock(residual_ids[i], false, nullptr, residuals.row(i).data(), nullptr)};
-        std::cout << success << std::endl;
+        valid_mask(i) = success;
     }
 
-    return residuals;
+    return {residuals, valid_mask};
 }  // LCOV_EXCL_LINE
 
 // TODO(Jack): Naming!
