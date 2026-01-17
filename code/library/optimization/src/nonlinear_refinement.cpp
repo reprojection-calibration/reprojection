@@ -46,6 +46,7 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     }
 }
 
+// TODO(Jack): Test this function! We would have caught the rowmajor bug earlier!
 ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
                                        std::vector<ceres::ResidualBlockId> const& residual_ids) {
     // WARN(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
