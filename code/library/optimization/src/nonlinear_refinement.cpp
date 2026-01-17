@@ -23,6 +23,16 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
             ceres::CostFunction* const cost_function{
                 Create(data_view.camera_model(), data_view.image_bounds(), pixels_i.row(j), points_i.row(j))};
 
+            std::vector<double const*> parameter_blocks;
+            parameter_blocks.push_back(data_view.optimized_intrinsics().data());
+            parameter_blocks.push_back(frame_i.optimized_pose().data());
+            double residual[2];
+            bool const success{cost_function->Evaluate(parameter_blocks.data(), residual, nullptr)};
+            if (not success) {
+                std::cout << "Failed cost function evaluation, not adding to problem!" << std::endl;
+                continue;
+            }
+
             ceres::ResidualBlockId const id{problem.AddResidualBlock(
                 cost_function, nullptr, data_view.optimized_intrinsics().data(), frame_i.optimized_pose().data())};
             residual_ids_i.push_back(id);
@@ -31,17 +41,8 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     }
 
     for (OptimizationFrameView frame_i : data_view) {
-        // TODO SHOULD WE ALSO MAKE THE MASK PART OF THE REPROJECTION ERROR ITSELF?
-        std::vector<ceres::ResidualBlockId> const residual_ids_i{residual_id_map[frame_i.timestamp_ns()]};
-        auto const [error, mask]{EvaluateReprojectionResiduals(problem, residual_ids_i)};
-        frame_i.initial_reprojection_error() = error;
-        std::cout<< mask.transpose() << std::endl;
-
-        ArrayXi const blocks_to_remove_idx(eigen_utilities::AntiMaskToRowId(mask));
-        for (int i{0}; i < blocks_to_remove_idx.rows(); ++i) {
-            std::cout << "Remove block with id: " << residual_ids_i[blocks_to_remove_idx[i]] << " reprojection error " << error.row(blocks_to_remove_idx[i]) << std::endl;
-            problem.RemoveResidualBlock(residual_ids_i[blocks_to_remove_idx[i]]);
-        }
+        frame_i.initial_reprojection_error() =
+            EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]);
     }
 
     // TODO(Jack): Law of useful return states that we should probably be returning the summary!
@@ -51,27 +52,23 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     ceres::Solve(options, &problem, &summary);
 
     for (OptimizationFrameView frame_i : data_view) {
-        // TODO SHOULD WE ALSO MAKE THE MASK PART OF THE REPROJECTION ERROR ITSELF?
-        auto const [error, _]{EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()])};
-        frame_i.optimized_reprojection_error() = error;
+        frame_i.optimized_reprojection_error() =
+            EvaluateReprojectionResiduals(problem, residual_id_map[frame_i.timestamp_ns()]);
     }
 }
 
 // TODO(Jack): Test this function! We would have caught the rowmajor bug earlier!
-std::tuple<ArrayX2d, ArrayXb> EvaluateReprojectionResiduals(ceres::Problem const& problem,
-                                                            std::vector<ceres::ResidualBlockId> const& residual_ids) {
+ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
+                                       std::vector<ceres::ResidualBlockId> const& residual_ids) {
     // WARN(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
     // row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two column
     // elements! That is the reason why we have to specifically specify RowMajor here!
     Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals{std::size(residual_ids), 2};
-    ArrayXb valid_mask{ArrayXb::Zero(std::size(residual_ids), 1)};
     for (size_t i{0}; i < std::size(residual_ids); ++i) {
-        bool const success{
-            problem.EvaluateResidualBlock(residual_ids[i], false, nullptr, residuals.row(i).data(), nullptr)};
-        valid_mask(i) = success;
+        problem.EvaluateResidualBlock(residual_ids[i], false, nullptr, residuals.row(i).data(), nullptr);
     }
 
-    return {residuals, valid_mask};
+    return residuals;
 }  // LCOV_EXCL_LINE
 
 // TODO(Jack): Naming!
