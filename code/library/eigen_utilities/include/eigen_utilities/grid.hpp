@@ -9,6 +9,7 @@ namespace reprojection::eigen_utilities {
 ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_only = false);
 
 ArrayXi MaskToRowId(ArrayXb const& mask);
+ArrayXi AntiMaskToRowId(ArrayXb const& mask);
 
 ArrayXi ToEigen(std::vector<int> const& vector);
 

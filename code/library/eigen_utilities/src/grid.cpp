@@ -37,6 +37,20 @@ ArrayXi MaskToRowId(ArrayXb const& mask) {
     return ToEigen(row_ids);
 }
 
+// HACK HACK HACK
+ArrayXi AntiMaskToRowId(ArrayXb const& mask) {
+    std::vector<int> row_ids;
+    row_ids.reserve(mask.rows());
+
+    for (Eigen::Index i{0}; i < mask.rows(); i++) {
+        if (mask(i) == false) {
+            row_ids.push_back(i);
+        }
+    }
+
+    return ToEigen(row_ids);
+}
+
 ArrayXi ToEigen(std::vector<int> const& vector) { return Eigen::Map<ArrayXi const>(vector.data(), std::size(vector)); }
 
 }  // namespace reprojection::eigen_utilities
