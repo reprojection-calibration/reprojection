@@ -1,7 +1,7 @@
 #include <optional>
 #include <type_traits>
 
-#include "projection_functions/image_bounds.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 // TODO(Jack): Update docs to reflect ImageBounds!!!

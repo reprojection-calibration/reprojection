@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
-#include "projection_functions/image_bounds.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -11,7 +11,7 @@ using namespace reprojection;
 // TODO(Jack): Add a test for all cameras on a single pixel NOT using the templated Eigen projection/unprojection.
 
 Array4d const pinhole_intrinsics{600, 600, 360, 240};
-projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
+ImageBounds const bounds{0, 720, 0, 480};
 MatrixX3d const gt_points{{0, 0, 600},  //
                           {-360, 0, 600},
                           {360, 0, 600},

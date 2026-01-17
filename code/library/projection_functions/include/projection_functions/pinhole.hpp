@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "projection_functions/image_bounds.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {

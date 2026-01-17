@@ -3,7 +3,7 @@
 #include <tuple>
 
 #include "projection_functions/double_sphere.hpp"
-#include "projection_functions/image_bounds.hpp"
+#include "types/calibration_types.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/projection_class_concept.hpp"

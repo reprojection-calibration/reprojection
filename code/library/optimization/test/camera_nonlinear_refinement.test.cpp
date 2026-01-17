@@ -12,7 +12,7 @@ using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
     Array4d const intrinsics{600, 600, 360, 240};
-    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
+    ImageBounds const bounds{{0, 720, 0, 480}};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)))};
 
@@ -66,7 +66,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 // and intrinsic back.
 TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
     Array4d const intrinsics{600, 600, 360, 240};
-    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
+    ImageBounds const bounds{{0, 720, 0, 480}};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
         std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)))};
 

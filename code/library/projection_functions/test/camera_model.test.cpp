@@ -2,13 +2,14 @@
 
 #include <gtest/gtest.h>
 
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
 TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
     Array4d const intrinsics{600, 600, 360, 240};
-    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
+    ImageBounds const bounds{0, 720, 0, 480};
     MatrixX3d const gt_points{{0, 0, 600},  //
                               {-360, 0, 600},
                               {360, 0, 600},
@@ -41,7 +42,7 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
 // TODO(Jack): Add and test unprojection masking!
 TEST(ProjectionFunctionsCameraModel, TestPinholeCameraProjectionMasking) {
     Array4d const intrinsics{600, 600, 360, 240};
-    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
+    ImageBounds const bounds{0, 720, 0, 480};
     MatrixX3d const gt_points{{0, 0, -600},  //
                               {0, 0, 600},
                               {0, 0, -600},

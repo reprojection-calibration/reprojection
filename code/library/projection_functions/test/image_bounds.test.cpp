@@ -2,22 +2,24 @@
 
 #include <gtest/gtest.h>
 
+#include "types/calibration_types.hpp"
+
 using namespace reprojection;
 
 TEST(ProjectionFunctionsImageBounds, TestImageBounds) {
-    projection_functions::ImageBounds const image_bounds{{-1, 1, -1, 1}};
+    ImageBounds const bounds{-1, 1, -1, 1};
 
-    EXPECT_TRUE(image_bounds.InBounds(0, 0));
-    EXPECT_TRUE(image_bounds.InBounds(0.99, 0.99));
-    EXPECT_TRUE(image_bounds.InBounds(-0.99, 0.99));
-    EXPECT_TRUE(image_bounds.InBounds(0.99, -0.99));
-    EXPECT_TRUE(image_bounds.InBounds(-0.99, -0.99));
+    EXPECT_TRUE(projection_functions::InBounds(bounds, 0, 0));
+    EXPECT_TRUE(projection_functions::InBounds(bounds, 0.99, 0.99));
+    EXPECT_TRUE(projection_functions::InBounds(bounds, -0.99, 0.99));
+    EXPECT_TRUE(projection_functions::InBounds(bounds, 0.99, -0.99));
+    EXPECT_TRUE(projection_functions::InBounds(bounds, -0.99, -0.99));
 
-    EXPECT_FALSE(image_bounds.InBounds(1.01, 1.01));
-    EXPECT_FALSE(image_bounds.InBounds(-1.01, 1.01));
-    EXPECT_FALSE(image_bounds.InBounds(1.01, -1.01));
-    EXPECT_FALSE(image_bounds.InBounds(-1.01, -1.01));
+    EXPECT_FALSE(projection_functions::InBounds(bounds, 1.01, 1.01));
+    EXPECT_FALSE(projection_functions::InBounds(bounds, -1.01, 1.01));
+    EXPECT_FALSE(projection_functions::InBounds(bounds, 1.01, -1.01));
+    EXPECT_FALSE(projection_functions::InBounds(bounds, -1.01, -1.01));
 
-    EXPECT_FALSE(image_bounds.InBounds(0.0, 1.01));
-    EXPECT_FALSE(image_bounds.InBounds(1.01, 0.0));
+    EXPECT_FALSE(projection_functions::InBounds(bounds, 0.0, 1.01));
+    EXPECT_FALSE(projection_functions::InBounds(bounds, 1.01, 0.0));
 }

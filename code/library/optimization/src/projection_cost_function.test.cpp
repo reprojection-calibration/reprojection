@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/double_sphere.hpp"
-#include "projection_functions/image_bounds.hpp"
+#include "types/calibration_types.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
@@ -69,7 +69,7 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
     using PinholeCostFunction = optimization::ProjectionCostFunction_T<projection_functions::Pinhole>;
     Array4d const pinhole_intrinsics{600, 600, 360, 240};
     Array2d const pixel{pinhole_intrinsics[2], pinhole_intrinsics[3]};
-    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
+    ImageBounds const bounds{{0, 720, 0, 480}};
     Array6d const pose{0, 0, 0, 0, 0, 0};
     Array2d residual{-1, -1};
 
@@ -95,7 +95,7 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
 TEST(OptimizationProjectionCostFunction, TestPinholeCreate_T) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
-    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
+    ImageBounds const bounds{{0, 720, 0, 480}};
     ceres::CostFunction const* const cost_function{
         optimization::ProjectionCostFunction_T<projection_functions::Pinhole>::Create(pixel, point, bounds)};
 

@@ -3,14 +3,12 @@
 #include <ceres/autodiff_cost_function.h>
 
 #include "ceres_geometry.hpp"
-#include "projection_functions/image_bounds.hpp"
 #include "projection_functions/projection_class_concept.hpp"
+#include "types/calibration_types.hpp"
 #include "types/camera_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::optimization {
-
-using ImageBounds = projection_functions::ImageBounds;
 
 /**
  * \brief Generates a camera model specific projection cost function for use in the optimization.
