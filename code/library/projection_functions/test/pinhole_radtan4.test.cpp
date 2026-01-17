@@ -3,11 +3,13 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
+#include "projection_functions/image_bounds.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
 Array8d const pinhole_radtan4_intrinsics{600, 600, 360, 240, -0.1, 0.1, 0.001, 0.001};
+projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
 MatrixX3d const gt_points{{0, 0, 600},  //
                           {-360, 0, 600},
                           {360, 0, 600},
@@ -20,7 +22,7 @@ MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrin
                           {360.096, 477.06240000000003}};
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
-    auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics)};
+    auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics, bounds)};
 
     auto const [pixels, mask](camera.Project(gt_points));
     ASSERT_TRUE(mask.all());
@@ -36,7 +38,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {
                                       {pinhole_intrinsics[2], 0},
                                       {pinhole_intrinsics[2], 480}};
 
-    auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_intrinsics)};
+    auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_intrinsics, bounds)};
 
     auto const [pixels, mask](camera.Project(gt_points));
     ASSERT_TRUE(mask.all());
@@ -46,7 +48,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {
 // TODO(Jack): Test masking!
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestUnproject) {
-    auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics)};
+    auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics, bounds)};
     MatrixX3d const rays(camera.Unproject(gt_pixels));
 
     // Normalize the 3D points so we can compare them directly to the rays

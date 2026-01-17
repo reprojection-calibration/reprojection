@@ -18,6 +18,6 @@ TEST(ProjectionFunctionsImageBounds, TestImageBounds) {
     EXPECT_FALSE(image_bounds.InBounds(1.01, -1.01));
     EXPECT_FALSE(image_bounds.InBounds(-1.01, -1.01));
 
-    EXPECT_FALSE(image_bounds.InBounds(0, 1.01));
-    EXPECT_FALSE(image_bounds.InBounds(1.01, 0));
+    EXPECT_FALSE(image_bounds.InBounds(0.0, 1.01));
+    EXPECT_FALSE(image_bounds.InBounds(1.01, 0.0));
 }

@@ -9,7 +9,8 @@ using namespace reprojection;
 
 TEST(TestingMocksMvgGenerator, TestGenerateBatch) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
+        std::unique_ptr<projection_functions::Camera>(
+            new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480})),
         false)};
 
     // NOTE(Jack): All points for every frame project successfully. If not they should get masked out, but the
@@ -28,8 +29,8 @@ TEST(TestingMocksMvgGenerator, TestProject) {
     MatrixX2d const gt_pixels{{360.00, 240.00}, {480.00, 360.00}, {240.00, 120.00},
                               {480.00, 180.00}, {240.00, 300.00}, {402.857, 197.144}};
 
-    auto const camera{
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240}))};
+    auto const camera{std::unique_ptr<projection_functions::Camera>(
+        new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480}))};
     Isometry3d const tf_co_w{Isometry3d::Identity()};
 
     auto const [pixels, mask]{testing_mocks::MvgGenerator::Project(points_w, camera, tf_co_w)};
@@ -44,8 +45,8 @@ TEST(TestingMocksMvgGenerator, TestProjectMasking) {
                              {-1.00, -1.00, 5.00}};
     Array3<bool> const gt_mask{true, true, false};
 
-    auto const camera{
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240}))};
+    auto const camera{std::unique_ptr<projection_functions::Camera>(
+        new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480}))};
     Isometry3d tf_co_w{Isometry3d::Identity()};
     tf_co_w.translation().z() = -6.0;
 

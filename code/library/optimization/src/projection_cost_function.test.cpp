@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/double_sphere.hpp"
+#include "projection_functions/image_bounds.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
@@ -68,12 +69,13 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
     using PinholeCostFunction = optimization::ProjectionCostFunction_T<projection_functions::Pinhole>;
     Array4d const pinhole_intrinsics{600, 600, 360, 240};
     Array2d const pixel{pinhole_intrinsics[2], pinhole_intrinsics[3]};
+    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
     Array6d const pose{0, 0, 0, 0, 0, 0};
     Array2d residual{-1, -1};
 
     // Point on front of the camera that will project to the center of the image.
     Array3d const point{0, 0, 10};
-    PinholeCostFunction const cost_function{pixel, point};
+    PinholeCostFunction const cost_function{pixel, point, bounds};
     bool success{cost_function(pinhole_intrinsics.data(), pose.data(), residual.data())};
     EXPECT_TRUE(success);
     EXPECT_FLOAT_EQ(residual[0], 0.0);
@@ -81,7 +83,7 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
 
     // Now a point behind the camera will return false because its invalid.
     Array3d const point_behind{0, 0, -10};
-    PinholeCostFunction const cost_function_behind{pixel, point_behind};
+    PinholeCostFunction const cost_function_behind{pixel, point_behind, bounds};
     success = cost_function_behind(pinhole_intrinsics.data(), pose.data(), residual.data());
     EXPECT_FALSE(success);
 }
@@ -93,8 +95,9 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
 TEST(OptimizationProjectionCostFunction, TestPinholeCreate_T) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
+    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
     ceres::CostFunction const* const cost_function{
-        optimization::ProjectionCostFunction_T<projection_functions::Pinhole>::Create(pixel, point)};
+        optimization::ProjectionCostFunction_T<projection_functions::Pinhole>::Create(pixel, point, bounds)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics

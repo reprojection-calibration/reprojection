@@ -12,8 +12,9 @@ using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
     Array4d const intrinsics{600, 600, 360, 240};
+    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)))};
 
     int const num_frames{20};
     std::vector<Frame> const mvg_frames{generator.GenerateBatch(num_frames)};
@@ -65,8 +66,9 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 // and intrinsic back.
 TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
     Array4d const intrinsics{600, 600, 360, 240};
+    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)))};
 
     auto mvg_frames{generator.GenerateBatch(20)};
     std::vector<Isometry3d> gt_poses;  // Store the poses from the frames because we are about to add noise to the frame

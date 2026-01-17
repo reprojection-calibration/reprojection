@@ -8,6 +8,7 @@ using namespace reprojection;
 
 TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
     Array4d const intrinsics{600, 600, 360, 240};
+    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
     MatrixX3d const gt_points{{0, 0, 600},  //
                               {-360, 0, 600},
                               {360, 0, 600},
@@ -19,7 +20,7 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
                               {360, 0},
                               {360, 480}};
 
-    auto const camera{projection_functions::PinholeCamera(intrinsics)};
+    auto const camera{projection_functions::PinholeCamera(intrinsics, bounds)};
 
     auto const [pixels, mask]{camera.Project(gt_points)};
     ASSERT_TRUE(mask.all());
@@ -40,6 +41,7 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
 // TODO(Jack): Add and test unprojection masking!
 TEST(ProjectionFunctionsCameraModel, TestPinholeCameraProjectionMasking) {
     Array4d const intrinsics{600, 600, 360, 240};
+    projection_functions::ImageBounds const bounds{{0, 720, 0, 480}};
     MatrixX3d const gt_points{{0, 0, -600},  //
                               {0, 0, 600},
                               {0, 0, -600},
@@ -47,7 +49,7 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCameraProjectionMasking) {
                               {0, 0, 600}};
     Array5b const gt_mask{false, true, false, false, true};
 
-    auto const camera{projection_functions::PinholeCamera(intrinsics)};
+    auto const camera{projection_functions::PinholeCamera(intrinsics, bounds)};
 
     auto const [pixels, mask]{camera.Project(gt_points)};
     EXPECT_EQ(pixels.rows(), gt_points.rows());

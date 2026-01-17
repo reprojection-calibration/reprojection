@@ -39,7 +39,8 @@ struct PinholeRadtan4 {
     }
 
     template <typename T>
-    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
+    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
+                                            Array3<T> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -56,7 +57,7 @@ struct PinholeRadtan4 {
         // masquerades as a 3D point, but it does not have nearly the amount of "freedom" at this point when compared to
         // the input P_co which was a real 3D point. It is constrained to the ideal/normalized camera frame. That is the
         // reason that I do not use a frame postfix like "_co" and instead just call it "_star".
-        return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
+        return Pinhole::Project<T>(intrinsics.topRows(4), bounds, P_star);
     }
 
     static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);

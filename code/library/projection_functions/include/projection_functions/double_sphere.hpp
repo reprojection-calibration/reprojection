@@ -15,7 +15,8 @@ struct DoubleSphere {
     static int constexpr Size{6};
 
     template <typename T>
-    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
+    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
+                                            Array3<T> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -33,7 +34,7 @@ struct DoubleSphere {
         T const z_star{(alpha * d2) + (1.0 - alpha) * wz};
         Array3<T> const P_star{x, y, z_star};
 
-        return Pinhole::Project<T>(intrinsics.topRows(4), P_star);
+        return Pinhole::Project<T>(intrinsics.topRows(4), bounds, P_star);
     }
 
     static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
