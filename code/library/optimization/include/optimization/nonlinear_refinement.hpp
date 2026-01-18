@@ -18,7 +18,7 @@ namespace reprojection::optimization {
 void CameraNonlinearRefinement(OptimizationDataView data_view);
 
 // TODO(Jack): This does not need to be part of the public interface as it is used internally only as part of
-//  CameraNonlinearRefinement, maybe we should also test this, but it is so simple.
+//  CameraNonlinearRefinement, maybe we should also test this, but it is so simple. - WE DEFINIETLY NEED TO TEST!
 ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
                                        std::vector<ceres::ResidualBlockId> const& residual_ids);
 

@@ -2,6 +2,8 @@
 
 #include <optional>
 
+#include "projection_functions/image_bounds.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {
@@ -36,7 +38,8 @@ struct Pinhole {
     // and that applying the camera matrix K to p_cam gives us a pixel. Understanding this basic pattern is crucial for
     // understanding how other camera models are implemented as some variation of this basic process.
     template <typename T>
-    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, Array3<T> const& P_co) {
+    static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
+                                            Array3<T> const& P_co) {
         T const& x{P_co[0]};
         T const& y{P_co[1]};
         T const& z{P_co[2]};
@@ -60,6 +63,11 @@ struct Pinhole {
         // Put into image pixel space
         T const u{(fx * x_cam) + cx};
         T const v{(fy * y_cam) + cy};
+
+        if (not InBounds(bounds, u, v)) {
+            return std::nullopt;
+        }
+
         Array2<T> const pixel{u, v};
 
         return pixel;

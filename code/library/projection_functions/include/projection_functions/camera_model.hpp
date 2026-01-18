@@ -7,6 +7,7 @@
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/projection_class_concept.hpp"
 #include "projection_functions/unified_camera_model.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {
@@ -58,13 +59,15 @@ template <typename T_Model>
     requires ProjectionClass<T_Model>
 class Camera_T : public Camera {
    public:
-    explicit Camera_T(Eigen::Array<double, T_Model::Size, 1> const& intrinsics) : intrinsics_{intrinsics} {}
+    Camera_T(Eigen::Array<double, T_Model::Size, 1> const& intrinsics, ImageBounds const& bounds)
+        : intrinsics_{intrinsics}, bounds_{bounds} {}
 
     std::tuple<MatrixX2d, ArrayXb> Project(MatrixX3d const& points_co) const override {
         MatrixX2d pixels(points_co.rows(), 2);
         ArrayXb valid_mask{ArrayXb::Zero(points_co.rows(), 1)};
         for (int i{0}; i < points_co.rows(); ++i) {
-            std::optional<Array2d> const pixel{T_Model::template Project<double>(intrinsics_, points_co.row(i))};
+            std::optional<Array2d> const pixel{
+                T_Model::template Project<double>(intrinsics_, bounds_, points_co.row(i))};
 
             if (pixel.has_value()) {
                 pixels.row(i) = pixel.value();
@@ -86,6 +89,7 @@ class Camera_T : public Camera {
 
    private:
     Eigen::Array<double, T_Model::Size, 1> intrinsics_;
+    ImageBounds bounds_;
 };
 
 using DoubleSphereCamera = Camera_T<DoubleSphere>;

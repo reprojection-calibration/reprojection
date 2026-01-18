@@ -4,6 +4,7 @@
 
 #include "ceres_geometry.hpp"
 #include "projection_functions/projection_class_concept.hpp"
+#include "types/calibration_types.hpp"
 #include "types/camera_types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -23,7 +24,8 @@ namespace reprojection::optimization {
  * that if the pointer is not assigned to a ceres problem then you need to call delete yourself, otherwise the memory
  * will leak!
  */
-ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point);
+ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
+                            Vector3d const& point);
 
 // NOTE(Jack): Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
 // WARN(Jack): As we move past simple mono camera calibration we might find out that it is not the best option and that
@@ -41,15 +43,16 @@ template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
 class ProjectionCostFunction_T {
    public:
-    ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point) : pixel_{pixel}, point_{point} {}
+    ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds)
+        : pixel_{pixel}, point_{point}, bounds_{bounds} {}
 
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const pose_ptr, T* const residual) const {
         Eigen::Map<Eigen::Vector<T, 6> const> pose(pose_ptr);
-        Eigen::Vector<T, 3> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
+        Vector3<T> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
 
         Eigen::Map<Eigen::Array<T, T_Model::Size, 1> const> intrinsics(intrinsics_ptr);
-        auto const pixel{T_Model::template Project<T>(intrinsics, point_co)};
+        auto const pixel{T_Model::template Project<T>(intrinsics, bounds_, point_co)};
 
         if (pixel.has_value()) {
             Array2<T> const& _pixel{pixel.value()};
@@ -63,13 +66,14 @@ class ProjectionCostFunction_T {
         }
     }
 
-    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point) {
+    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds) {
         return new ceres::AutoDiffCostFunction<ProjectionCostFunction_T, 2, T_Model::Size, 6>(
-            new ProjectionCostFunction_T(pixel, point));
+            new ProjectionCostFunction_T(pixel, point, bounds));
     }
 
     Vector2d pixel_;
     Vector3d point_;
+    ImageBounds bounds_;
 };
 
 }  // namespace  reprojection::optimization

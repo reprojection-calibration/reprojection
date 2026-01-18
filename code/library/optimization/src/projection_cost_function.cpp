@@ -4,18 +4,20 @@
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
+#include "types/calibration_types.hpp"
 
 namespace reprojection::optimization {
 
-ceres::CostFunction* Create(CameraModel const projection_type, Vector2d const& pixel, Vector3d const& point) {
+ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
+                            Vector3d const& point) {
     if (projection_type == CameraModel::DoubleSphere) {
-        return ProjectionCostFunction_T<projection_functions::DoubleSphere>::Create(pixel, point);
+        return ProjectionCostFunction_T<projection_functions::DoubleSphere>::Create(pixel, point, bounds);
     } else if (projection_type == CameraModel::Pinhole) {
-        return ProjectionCostFunction_T<projection_functions::Pinhole>::Create(pixel, point);
+        return ProjectionCostFunction_T<projection_functions::Pinhole>::Create(pixel, point, bounds);
     } else if (projection_type == CameraModel::PinholeRadtan4) {
-        return ProjectionCostFunction_T<projection_functions::PinholeRadtan4>::Create(pixel, point);
+        return ProjectionCostFunction_T<projection_functions::PinholeRadtan4>::Create(pixel, point, bounds);
     } else if (projection_type == CameraModel::UnifiedCameraModel) {
-        return ProjectionCostFunction_T<projection_functions::UnifiedCameraModel>::Create(pixel, point);
+        return ProjectionCostFunction_T<projection_functions::UnifiedCameraModel>::Create(pixel, point, bounds);
     } else {
         // NOTE(Jack): The only way we could cover this with a test is to have a member that is part of the CameraModel
         // enum that is not covered here in the conditional. That makes no sense. Therefore, we will supress the

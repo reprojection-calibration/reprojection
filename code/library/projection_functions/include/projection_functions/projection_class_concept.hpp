@@ -1,7 +1,10 @@
 #include <optional>
 #include <type_traits>
 
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
+
+// TODO(Jack): Update docs to reflect ImageBounds!!!
 
 namespace reprojection::projection_functions {
 
@@ -62,8 +65,8 @@ concept HasIntrinsicsSize = requires {
 // concept then I think it is no problem because we check HasIntrinsicSize size first, but if we use them individually
 // the topic might come up again.
 /**
- * \brief Concept that enforces a type has a `Project()` method that take an intrinsic array and 3D point and returns a
- * 2D point.
+ * \brief Concept that enforces a type has a `Project()` method that takes an intrinsic array, image dimension bounds,
+ * and 3D point and returns a 2D point.
  *
  * The project function, unlike the unproject function, is templated. This is because the function is used in the core
  * optimization where it needs to be able to handle ceres::Jet types to support using ceres::AutoDiffCostFunction. Maybe
@@ -71,15 +74,17 @@ concept HasIntrinsicsSize = requires {
  * there yet!
  */
 template <typename T>
-concept CanProject = requires(Eigen::Array<double, T::Size, 1> const& intrinsics, Array3d const& p_co) {
-    // NOTE(Jack): We need to manually check the requirement parameters because Eigen does not play nice with concepts
-    // (see https://stackoverflow.com/questions/79804552/c-concept-constraint-requirement-is-not-strict). It maybe has
-    // something to do with the eigen not being "SFINAE-friendly" (?).
-    { intrinsics } -> std::same_as<Eigen::Array<double, T::Size, 1> const&>;
-    { p_co } -> std::same_as<Array3d const&>;
+concept CanProject =
+    requires(Eigen::Array<double, T::Size, 1> const& intrinsics, ImageBounds const& bounds, Array3d const& p_co) {
+        // NOTE(Jack): We need to manually check the requirement parameters because Eigen does not play nice with
+        // concepts (see https://stackoverflow.com/questions/79804552/c-concept-constraint-requirement-is-not-strict).
+        // It maybe has something to do with the eigen not being "SFINAE-friendly" (?).
+        { intrinsics } -> std::same_as<Eigen::Array<double, T::Size, 1> const&>;
+        { bounds } -> std::same_as<ImageBounds const&>;
+        { p_co } -> std::same_as<Array3d const&>;
 
-    { T::template Project<double>(intrinsics, p_co) } -> std::same_as<std::optional<Array2d>>;
-};
+        { T::template Project<double>(intrinsics, bounds, p_co) } -> std::same_as<std::optional<Array2d>>;
+    };
 
 /**
  * \brief Concept that enforces a type has an `Unproject()` method that take an intrinsic array and 2D point and returns

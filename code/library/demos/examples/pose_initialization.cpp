@@ -21,7 +21,7 @@ int main() {
 
     std::string const sensor_name{"/cam0/image_raw"};
     CameraCalibrationData cam_data{
-        {sensor_name, CameraModel::DoubleSphere},
+        {sensor_name, CameraModel::DoubleSphere, {0, 512, 0, 512}},
         Array6d{156.82590211, 156.79756958, 254.99978685, 256.9744566, -0.17931409, 0.59133716},
         {},
         {}};
@@ -32,10 +32,6 @@ int main() {
     // Linear initialization and save
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
     AddPoseData(cam_data, database::PoseType::Initial, db);
-
-    // Artificially restrict ourselves to the first couple hundred frames where we converge successfully.
-    auto it = cam_data.frames.upper_bound(1520528332714760192);
-    cam_data.frames.erase(it, cam_data.frames.end());
 
     // Nonlinear optimization and save
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));

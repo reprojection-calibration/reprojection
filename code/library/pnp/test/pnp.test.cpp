@@ -10,7 +10,8 @@ using namespace reprojection;
 
 TEST(Pnp, TestPnp) {
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera({600, 600, 360, 240})),
+        std::unique_ptr<projection_functions::Camera>(
+            new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480})),
         false)};
 
     std::vector<Frame> const frames{generator.GenerateBatch(20)};
@@ -25,9 +26,10 @@ TEST(Pnp, TestPnp) {
 
 TEST(Pnp, TestPnpFlat) {
     Array4d const intrinsics{1, 1, 0, 0};  // Equivalent to K = I_3x3 Pixels must be in normalized image space for Dlt22
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)),
-        true)};  // Points must have Z=0 (flat = true)
+    testing_mocks::MvgGenerator const generator{
+        testing_mocks::MvgGenerator(std::unique_ptr<projection_functions::Camera>(
+                                        new projection_functions::PinholeCamera(intrinsics, {-1, 1, -1, 1})),
+                                    true)};  // Points must have Z=0 (flat = true)
 
     std::vector<Frame> const frames{generator.GenerateBatch(20)};
     for (auto const& frame : frames) {

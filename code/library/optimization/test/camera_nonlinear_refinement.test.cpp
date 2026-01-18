@@ -12,13 +12,14 @@ using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
     Array4d const intrinsics{600, 600, 360, 240};
+    ImageBounds const bounds{0, 720, 0, 480};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)))};
 
     int const num_frames{20};
     std::vector<Frame> const mvg_frames{generator.GenerateBatch(num_frames)};
 
-    CameraCalibrationData data{{"", CameraModel::Pinhole}, intrinsics};
+    CameraCalibrationData data{{"", CameraModel::Pinhole, bounds}, intrinsics};
 
     // TODO(Jack): Refactor mvg generator to use new calibration types??? Or does that not make any sense? At least
     // provide an adaptor that converts frames into the data field of the dict.
@@ -61,12 +62,13 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
         << intrinsics;
 }
 
-// Given a noisy initial pose butperfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
+// Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
 // and intrinsic back.
 TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
     Array4d const intrinsics{600, 600, 360, 240};
+    ImageBounds const bounds{0, 720, 0, 480};
     testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics)))};
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)))};
 
     auto mvg_frames{generator.GenerateBatch(20)};
     std::vector<Isometry3d> gt_poses;  // Store the poses from the frames because we are about to add noise to the frame
@@ -75,7 +77,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         mvg_frame_i.pose = testing_mocks::AddGaussianNoise(0.5, 0.5, mvg_frame_i.pose);
     }
 
-    CameraCalibrationData data{{"", CameraModel::Pinhole}, intrinsics};
+    CameraCalibrationData data{{"", CameraModel::Pinhole, bounds}, intrinsics};
 
     uint64_t pseudo_time{0};
     for (auto const& mvg_frame_i : mvg_frames) {
@@ -103,7 +105,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose).isApprox(gt_pose_i, 1e-6))
             << "Nonlinear refinement result:\n"
             << geometry::Exp(frame_i.optimized_pose).matrix() << "\nGround truth:\n"
-            << gt_pose_i.matrix();
+            << gt_pose_i.matrix() << "\nInitial value:\n"
+            << mvg_frames[timestamp_ns].pose.matrix();
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))

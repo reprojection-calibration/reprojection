@@ -50,6 +50,8 @@ class OptimizationDataView {
 
     CameraModel const& camera_model() const { return data_.sensor.camera_model; }
 
+    ImageBounds const& image_bounds() const { return data_.sensor.bounds; }
+
     ArrayXd const& initial_intrinsics() const { return data_.initial_intrinsics; }
 
     ArrayXd& optimized_intrinsics() { return data_.optimized_intrinsics; }

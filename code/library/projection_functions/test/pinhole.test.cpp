@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -10,23 +11,20 @@ using namespace reprojection;
 // TODO(Jack): Add a test for all cameras on a single pixel NOT using the templated Eigen projection/unprojection.
 
 Array4d const pinhole_intrinsics{600, 600, 360, 240};
+ImageBounds const bounds{0, 720, 0, 480};
 MatrixX3d const gt_points{{0, 0, 600},  //
                           {-360, 0, 600},
-                          {360, 0, 600},
+                          {359.9, 0, 600},
                           {0, -240, 600},
-                          {0, 240, 600}};
-// NOTE(Jack): I am not 100% sure if the pixels at x=720 should actually be part of the valid pixel group! These are
-// technically one out of bounds based on the discretization of the pixels in the image. Our camera model currently
-// does no bounds checking so this is not detected. If we add "valid pixel checking" these tests at the right and
-// bottom might change as they are invalid pixels by one pixel.
-MatrixX2d const gt_pixels{{pinhole_intrinsics[2], pinhole_intrinsics[3]},
-                          {0, pinhole_intrinsics[3]},
-                          {720, pinhole_intrinsics[3]},
-                          {pinhole_intrinsics[2], 0},
-                          {pinhole_intrinsics[2], 480}};
+                          {0, 239.9, 600}};
+MatrixX2d const gt_pixels{{360, 240},  //
+                          {0, 240},
+                          {719.9, 240},
+                          {360, 0},
+                          {360, 479.9}};
 
 TEST(ProjectionFunctionsPinhole, TestPinholeProject) {
-    auto const camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
+    auto const camera{projection_functions::PinholeCamera(pinhole_intrinsics, bounds)};
     auto const [pixels, mask](camera.Project(gt_points));
 
     // NOTE(Jack): We assert that all pixels are valid because if this is not true that means a fundamental assumption
@@ -38,16 +36,16 @@ TEST(ProjectionFunctionsPinhole, TestPinholeProject) {
 
 TEST(ProjectionFunctionsPinhole, TestPinholeProjectMasking) {
     // Point in front of camera - returns pixel.
-    auto pixel{projection_functions::Pinhole::Project(pinhole_intrinsics, {0, 0, 10})};
+    auto pixel{projection_functions::Pinhole::Project(pinhole_intrinsics, bounds, {0, 0, 10})};
     EXPECT_TRUE(pixel.has_value());
 
     // Point behind camera - returns std::nullopt.
-    pixel = projection_functions::Pinhole::Project(pinhole_intrinsics, {0, 0, -10});
+    pixel = projection_functions::Pinhole::Project(pinhole_intrinsics, bounds, {0, 0, -10});
     EXPECT_FALSE(pixel.has_value());
 }
 
 TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
-    auto const camera{projection_functions::PinholeCamera(pinhole_intrinsics)};
+    auto const camera{projection_functions::PinholeCamera(pinhole_intrinsics, bounds)};
     MatrixX3d const rays{camera.Unproject(gt_pixels)};
 
     // Multiply rays by metric scale to put them back into world coordinates
