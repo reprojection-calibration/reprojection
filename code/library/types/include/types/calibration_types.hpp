@@ -16,6 +16,8 @@ struct ImageBounds {
     ImageBounds(double const _min_width, double const _max_width, double const _min_height, double const _max_height)
         : u_min{_min_width}, u_max{_max_width}, v_min{_min_height}, v_max{_max_height} {}
 
+    ImageBounds() = default;
+
     double u_min;
     double u_max;
     double v_min;
@@ -57,6 +59,8 @@ struct CalibrationDataFrame {
 using CameraFrameSequence = std::map<std::uint64_t, CalibrationDataFrame>;
 
 struct CameraCalibrationData {
+    CameraCalibrationData() = default;
+
     CameraCalibrationData(CameraSensorInfo const& _sensor, ArrayXd const& _initial_intrinsics,
                           ArrayXd const& _optimized_intrinsics, CameraFrameSequence const& _frames)
         : sensor{_sensor},
@@ -71,6 +75,7 @@ struct CameraCalibrationData {
 
     CameraSensorInfo sensor;
 
+    // TODO(Jack): These should be optional!
     ArrayXd initial_intrinsics;
     ArrayXd optimized_intrinsics;
 
