@@ -46,7 +46,12 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     if (optimized_pose) {
         return geometry::Exp(optimized_pose.value());
     } else {
-        return PnpErrorCode::FailedRefinement;
+        // NOTE(Jack): I do not know if it is really possible to ever reach this condition because theoretically we
+        // should only get to CameraNonlinearRefinement if we have a good initial pose. Because we initialize the
+        // optimized pose with the initial pose in CameraNonlinearRefinement it almost guarantees that this condition
+        // will never be triggered. For now at least... We leave this conditional here because we need to check the
+        // optional anyway!
+        return PnpErrorCode::FailedRefinement;  // LCOV_EXCL_LINE
     }
 }
 
