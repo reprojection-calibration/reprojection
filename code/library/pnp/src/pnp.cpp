@@ -10,44 +10,37 @@
 
 namespace reprojection::pnp {
 
-// TODO(Jack): What is the canonical way to deal with the camera matrix? I want the pnp algo to know nothing about K if
-// possible, because the more we let information about the camera and camera models percolate through the code base, the
-// more combined everything will get. That being said, should we specifically pass the pixels here in image coordinates?
-// That seems to be the only reasonable coordinate system given how people interact with pixels. Then the next question
-// I have is should we normalize the points at the top level pnp function and then feed those both to the DLT and the
-// nonlinear refinement? Right now I do not understand what coordinate context to do the nonlinear refinement in.
-PnpResult Pnp(Bundle const& bundle) {
-    // TODO(Jack): Design this error out of existence by requiring that bundle have matching correspondence!
-    if (not(bundle.pixels.rows() == bundle.points.rows())) {
-        return PnpStatusCode::MismatchedCorrespondences;
-    }
-
+// WARN(Jack): When doing the Dlt22 you are restricted to being in unit image coordinates, therefore we hard code
+// the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction
+// and are instead required to pass in the bounds and the Dlt23 functions returns a K matrix in the scale of the
+// input pixels.
+PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     Isometry3d tf;
     Array4d pinhole_intrinsics;
     if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         tf = Dlt22(bundle);
-        pinhole_intrinsics = {1, 1, 0, 0};  // Equivalent to K = I_3x3
-    } else if (bundle.pixels.rows() > 6) {
+        pinhole_intrinsics = {1, 1, 0, 0};   // Equivalent to K = I_3x3
+        bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension boundss
+    } else if (bundle.pixels.rows() > 6 and bounds.has_value()) {
         std::tie(tf, pinhole_intrinsics) = Dlt23(bundle);
     } else {
-        return PnpStatusCode::NotEnoughPoints;
+        return PnpErrorCode::InvalidDlt;
     }
 
-    // TODO(Jack): Can we check directly the matrix if it has nans? Or do we need to do this conversion?
-    // TODO(Jack): Is there a more sound theoretical way to check and describe this failure?
-    // TODO(Jack): Is it possible that nans get introduced in the nonlinear step that comes next? If so then we should
-    // move this check to right before the return.
-    // TOOD(Jack): Add a test that triggers this condition!
+    // TODO(Jack): This is a heuristic slightly hacky looking way to check if the above DLT algorithm evaluation failed.
+    //  If we had a better theoretical algorithmic understanding of what causes these failures and how we can detect
+    //  them then we could improve this code here.
     Array6d const se3{geometry::Log(tf)};
     if (se3.hasNaN()) {
-        return PnpStatusCode::ContainsNans;
+        return PnpErrorCode::ContainsNan;
     }
 
+    // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
     CameraCalibrationData data{
-        {"", CameraModel::Pinhole, {0, 720, 0, 480}}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf)}}}};
+        {"", CameraModel::Pinhole, bounds.value()}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf)}}}};
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
-    // There is only one single frame here, therefore we can simply use std::cbegin to access the result.
+    // NOTE(Jack): There is only one single frame here, therefore we can simply use std::cbegin to access the result.
     return geometry::Exp(std::cbegin(data.frames)->second.optimized_pose);
 }
 
