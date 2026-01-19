@@ -4,6 +4,7 @@
 
 #include "geometry/lie.hpp"
 #include "optimization/nonlinear_refinement.hpp"
+#include "projection_cost_function.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
@@ -108,4 +109,39 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         << "Optimization result:\n"
         << data.optimized_intrinsics << "\noptimization input:\n"
         << intrinsics;
+}
+
+TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
+    Array4d const intrinsics{600, 600, 360, 240};
+    ImageBounds const bounds{0, 720, 0, 480};
+    // NOTE(Jack): The real ground truth value for both the valid pixels here is actually the center of the image! But
+    // because we want to see that the reprojection error is actually the correct value we make the "ground truth"
+    // pixels here actually have some error.
+    MatrixX2d const gt_pixels{{-1, -1},  //
+                              {350, 230},
+                              {-1, -1},
+                              {-1, -1},
+                              {365, 245}};
+    MatrixX3d const gt_points{{0, 0, -600},  //
+                              {0, 0, 600},
+                              {0, 0, -600},
+                              {0, 0, -600},
+                              {0, 0, 600}};
+    ArrayX2d const gt_residuals{{0, 0},  //
+                                {-10, -10},
+                                {0, 0},
+                                {0, 0},
+                                {5, 5}};
+    Array5b const gt_mask{false, true, false, false, true};
+
+    std::vector<std::unique_ptr<ceres::CostFunction>> cost_functions;
+    for (Eigen::Index j{0}; j < gt_pixels.rows(); ++j) {
+        cost_functions.emplace_back(
+            optimization::Create(CameraModel::Pinhole, bounds, gt_pixels.row(j), gt_points.row(j)));
+    }
+
+    auto const [residuals,
+                mask]{optimization::EvaluateReprojectionResiduals(cost_functions, intrinsics, {0, 0, 0, 0, 0, 0})};
+    EXPECT_TRUE(residuals.isApprox(gt_residuals));
+    EXPECT_TRUE(mask.isApprox(gt_mask));
 }

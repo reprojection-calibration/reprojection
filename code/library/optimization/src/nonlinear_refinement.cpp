@@ -57,8 +57,6 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     }
 }
 
-// TODO(Jack): Test this function! We would have caught the rowmajor bug earlier!
-// TODO(Jack): Also return mask so we can use this to filter out the bad cost functions!
 std::tuple<ArrayX2d, ArrayXb> EvaluateReprojectionResiduals(
     std::vector<std::unique_ptr<ceres::CostFunction>> const& cost_functions, ArrayXd const& intrinsics,
     Array6d const& pose) {
