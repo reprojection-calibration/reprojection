@@ -55,7 +55,7 @@ void LinearPoseInitialization(InitializationDataView data_view) {
             Vector6d const se3_i{geometry::Log(std::get<Isometry3d>(result).inverse())};  // INVERSE!!!
             frame_i.initial_pose() = se3_i;  // cppcheck-suppress unreadVariable
         } else {
-            frame_i.initial_pose() = std::nullopt;
+            frame_i.initial_pose() = std::nullopt;  // cppcheck-suppress unreadVariable
         }
     }
 }
