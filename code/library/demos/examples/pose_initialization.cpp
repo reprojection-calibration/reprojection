@@ -28,25 +28,22 @@ int main() {
 
     // Load targets
     database::GetExtractedTargetData(db, cam_data);
-
-    // Linear initialization and save
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
-    AddPoseData(cam_data, database::PoseType::Initial, db);
-
-    // Nonlinear optimization and save
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
+
+    std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
     // WARN(Jack): At this time we have unsettled coordinate frame conventions. Because of this we need to invert the
     // poses here to match the initial poses. This is a well known problem!
     for (auto& frame_i : cam_data.frames) {
         frame_i.second.optimized_pose = geometry::Log(geometry::Exp(frame_i.second.optimized_pose).inverse());
     }
-    AddPoseData(cam_data, database::PoseType::Optimized, db);
 
+    // Write everything to database
+    AddPoseData(cam_data, database::PoseType::Initial, db);
+    AddPoseData(cam_data, database::PoseType::Optimized, db);
     database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
     database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
-
-    std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }
