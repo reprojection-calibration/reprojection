@@ -18,9 +18,10 @@ namespace reprojection::optimization {
 void CameraNonlinearRefinement(OptimizationDataView data_view);
 
 // TODO(Jack): This does not need to be part of the public interface as it is used internally only as part of
-//  CameraNonlinearRefinement, maybe we should also test this, but it is so simple. - WE DEFINIETLY NEED TO TEST!
-ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
-                                       std::vector<ceres::ResidualBlockId> const& residual_ids);
+//  CameraNonlinearRefinement.
+std::tuple<ArrayX2d, ArrayXb> EvaluateReprojectionResiduals(
+    std::vector<std::unique_ptr<ceres::CostFunction>> const& cost_functions, ArrayXd const& intrinsics,
+    Array6d const& pose);
 
 // NOTE(Jack): At this time it is still not entirely clear if we need to solve this type of problem at all, however this
 // code serves as a learning base and step on the way to full pose spline optimization.

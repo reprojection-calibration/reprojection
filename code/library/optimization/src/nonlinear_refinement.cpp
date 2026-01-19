@@ -1,83 +1,79 @@
 #include "optimization/nonlinear_refinement.hpp"
 
 #include "eigen_utilities/grid.hpp"
-#include "geometry/lie.hpp"
 #include "projection_cost_function.hpp"
 
 namespace reprojection::optimization {
 
-// TODO(Jack): Should we have some assertions which force that the frames satisfy some basic properties like there is a
-// matching number of everything? Yes but maybe this is already to deep into the code to do that here.
 void CameraNonlinearRefinement(OptimizationDataView data_view) {
+    // TODO(Jack): When we construct the data view should this automatically happen? Or when we set the initial
+    // intrinsics? Same idea with the initial vs. optimized pose. But maybe it is better to be explicit here.
     data_view.optimized_intrinsics() = data_view.initial_intrinsics();
 
-    ceres::Problem problem;
-    std::map<uint64_t, std::vector<ceres::ResidualBlockId>> residual_id_map;  // TODO(Jack): Naming?
+    std::map<uint64_t, std::vector<std::unique_ptr<ceres::CostFunction>>> cost_functions;
     for (OptimizationFrameView frame_i : data_view) {
         MatrixX2d const& pixels_i{frame_i.extracted_target().bundle.pixels};
         MatrixX3d const& points_i{frame_i.extracted_target().bundle.points};
         frame_i.optimized_pose() = frame_i.initial_pose();
 
-        std::vector<ceres::ResidualBlockId> residual_ids_i;  // TODO(Jack): Naming?
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
-            ceres::CostFunction* const cost_function{
-                Create(data_view.camera_model(), data_view.image_bounds(), pixels_i.row(j), points_i.row(j))};
-
-            // TODO(Jack): This is essentially checking if the cost function will evaluate to false given the parameter
-            // initialization. Ceres does not allow (for good reason of course), that a residual block evaluates to
-            // false on the first iteration! For example when a point project to outside of the image bounds and returns
-            // false on iteration one, there is no chance at all that any optimizer could benefit from that or "save"
-            // that lost residual. There here we check that the evaluate function returns true, and do not add it to the
-            // problem at all if it returns false. This logic here should likely be its own separate tested function.
-            // This should be tested along with the residual calculation functions!
-            std::vector<double const*> parameter_blocks;
-            parameter_blocks.push_back(data_view.optimized_intrinsics().data());
-            parameter_blocks.push_back(frame_i.optimized_pose().data());
-            double residual[2];
-            bool const success{cost_function->Evaluate(parameter_blocks.data(), residual, nullptr)};
-            if (not success) {
-                continue;
-            }
-
-            ceres::ResidualBlockId const id{problem.AddResidualBlock(
-                cost_function, nullptr, data_view.optimized_intrinsics().data(), frame_i.optimized_pose().data())};
-            residual_ids_i.push_back(id);
+            cost_functions[frame_i.timestamp_ns()].emplace_back(
+                Create(data_view.camera_model(), data_view.image_bounds(), pixels_i.row(j), points_i.row(j)));
         }
-        residual_id_map[frame_i.timestamp_ns()] = residual_ids_i;
     }
 
-    // TODO(Jack): We need to record above which points get added and which not. We can then use this to establish a
-    // correspondence between the residuals calculated here and the extarcted target points above, and those that were
-    // skipped. We will need this information to visualize it properly!
+    ceres::Problem::Options problem_options;
+    problem_options.cost_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
+    ceres::Problem problem{problem_options};
     for (OptimizationFrameView frame_i : data_view) {
-        frame_i.initial_reprojection_error() =
-            EvaluateReprojectionResiduals(problem, residual_id_map.at(frame_i.timestamp_ns()));
+        auto const& cost_functions_i{cost_functions.at(frame_i.timestamp_ns())};
+
+        // TODO(Jack): Use the valid cost function mask to visualize only the valid pixels in the dashboard.
+        // Calculate initial reprojection error and get the valid cost function mask.
+        ArrayXb mask;
+        std::tie(frame_i.initial_reprojection_error(), mask) =
+            EvaluateReprojectionResiduals(cost_functions_i, data_view.initial_intrinsics(), frame_i.initial_pose());
+        ArrayXi const valid_ids{eigen_utilities::MaskToRowId(mask)};
+
+        // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
+        // that frame?
+        for (int i{0}; i < valid_ids.rows(); ++i) {
+            problem.AddResidualBlock(cost_functions_i[valid_ids(i)].get(), nullptr,
+                                     data_view.optimized_intrinsics().data(), frame_i.optimized_pose().data());
+        }
     }
 
-    // TODO(Jack): Law of useful return states that we should probably be returning the summary!
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
+    // Calculate optimized reprojection error.
     for (OptimizationFrameView frame_i : data_view) {
-        frame_i.optimized_reprojection_error() =
-            EvaluateReprojectionResiduals(problem, residual_id_map.at(frame_i.timestamp_ns()));
+        // TODO(Jack): What should we do with this mask here? Does it have meaning for us?
+        ArrayXb what_to_do;
+        std::tie(frame_i.optimized_reprojection_error(), what_to_do) = EvaluateReprojectionResiduals(
+            cost_functions.at(frame_i.timestamp_ns()), data_view.optimized_intrinsics(), frame_i.optimized_pose());
     }
 }
 
-// TODO(Jack): Test this function! We would have caught the rowmajor bug earlier!
-ArrayX2d EvaluateReprojectionResiduals(ceres::Problem const& problem,
-                                       std::vector<ceres::ResidualBlockId> const& residual_ids) {
-    // WARN(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
+std::tuple<ArrayX2d, ArrayXb> EvaluateReprojectionResiduals(
+    std::vector<std::unique_ptr<ceres::CostFunction>> const& cost_functions, ArrayXd const& intrinsics,
+    Array6d const& pose) {
+    std::vector<double const*> parameter_blocks;
+    parameter_blocks.push_back(intrinsics.data());
+    parameter_blocks.push_back(pose.data());
+
+    // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
     // row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two column
     // elements! That is the reason why we have to specifically specify RowMajor here!
-    Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals{std::size(residual_ids), 2};
-    for (size_t i{0}; i < std::size(residual_ids); ++i) {
-        problem.EvaluateResidualBlock(residual_ids[i], false, nullptr, residuals.row(i).data(), nullptr);
+    Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals{std::size(cost_functions), 2};
+    ArrayXb valid_mask{ArrayXb::Zero(std::size(cost_functions), 1)};
+    for (size_t i{0}; i < std::size(cost_functions); ++i) {
+        valid_mask(i) = cost_functions[i]->Evaluate(parameter_blocks.data(), residuals.row(i).data(), nullptr);
     }
 
-    return residuals;
+    return {residuals, valid_mask};
 }  // LCOV_EXCL_LINE
 
 // TODO(Jack): Naming!

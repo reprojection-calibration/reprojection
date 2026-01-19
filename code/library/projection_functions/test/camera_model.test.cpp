@@ -25,7 +25,6 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
 
     auto const [pixels, mask]{camera.Project(gt_points)};
     ASSERT_TRUE(mask.all());
-    std::cout << pixels << std::endl;
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 
     // NOTE(Jack): Of course pinhole unprojection looses the scale, and we are just returned rays in space with z=1.

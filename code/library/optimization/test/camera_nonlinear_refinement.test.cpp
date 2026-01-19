@@ -4,6 +4,7 @@
 
 #include "geometry/lie.hpp"
 #include "optimization/nonlinear_refinement.hpp"
+#include "projection_cost_function.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
@@ -44,16 +45,10 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
             << frame_i.optimized_pose.transpose() << "\nGround truth:\n"
             << se3_gt_pose_i.transpose();
 
-        // ERROR(Jack): The optimized_reprojection_error is higher than the initial value for some reason for one of the
-        // frames (usually the first)! There is some problem here, also with the noisy test below that some frames have
-        // a persistently high error even after optimization. For perfect data this should not happen! This is a serious
-        // error and we need to investigate. I never leave commented out code in version control, but this case is so
-        // critical I will do it here.
-        //
         // We are testing with perfect input data so the mean reprojection error before and after optimization is near
         // zero.
         EXPECT_NEAR(frame_i.initial_reprojection_error.mean(), 0.0, 1e-6);
-        // EXPECT_NEAR(frame_i.optimized_reprojection_error.mean(), 0.0, 1e-6);
+        EXPECT_NEAR(frame_i.optimized_reprojection_error.mean(), 0.0, 1e-6);
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))
@@ -90,8 +85,6 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
-        Isometry3d const gt_pose_i{gt_poses[timestamp_ns]};
-
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
         // happened that I will explain. This test using noisy poses had been working for months, no problems to report.
         // Comparing the Vector6d se3 poses directly worked perfectly and the optimization returned the ground truth
@@ -102,31 +95,53 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         // test to instead compare the 4x4 SE3 transformation  matrices. Now it passes again, essentially the same as
         // before, but now working in the matrix space. Why all of a sudden the optimized poses start flipping, I cannot
         // explain.
+        Isometry3d const gt_pose_i{gt_poses[timestamp_ns]};
         EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose).isApprox(gt_pose_i, 1e-6))
             << "Nonlinear refinement result:\n"
             << geometry::Exp(frame_i.optimized_pose).matrix() << "\nGround truth:\n"
             << gt_pose_i.matrix() << "\nInitial value:\n"
             << mvg_frames[timestamp_ns].pose.matrix();
+
+        EXPECT_LT(frame_i.optimized_reprojection_error.mean(), 1e-6);
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))
         << "Optimization result:\n"
         << data.optimized_intrinsics << "\noptimization input:\n"
         << intrinsics;
+}
 
-    // The following two tests are ugly! I would have simply liked to test in the loop above, for each frame one at a
-    // time, that the initial error is large and after optimization the error is small. However, because the artificial
-    // pose noise comes from a gaussian distribution there are some cases where even the error before optimization is
-    // small (because the gt pose is nearly the same as the perturbed pose). Therefore, we calculate the average values
-    // before and after and check that it is on average large before optimization and tiny after. Because it is a
-    // stochastic process we use greater than/less than and not equality tests.
-    double const initial_error_sum{std::accumulate(
-        data.frames.begin(), data.frames.end(), 0.0,
-        [](double s, auto const& kv) { return s + std::abs(kv.second.initial_reprojection_error.mean()); })};
-    EXPECT_GT(initial_error_sum / std::size(data.frames), 10);
+TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
+    Array4d const intrinsics{600, 600, 360, 240};
+    ImageBounds const bounds{0, 720, 0, 480};
+    // NOTE(Jack): The real ground truth value for both the valid pixels here is actually the center of the image! But
+    // because we want to see that the reprojection error is actually the correct value we make the "ground truth"
+    // pixels here actually have some error.
+    MatrixX2d const gt_pixels{{-1, -1},  //
+                              {350, 230},
+                              {-1, -1},
+                              {-1, -1},
+                              {365, 245}};
+    MatrixX3d const gt_points{{0, 0, -600},  //
+                              {0, 0, 600},
+                              {0, 0, -600},
+                              {0, 0, -600},
+                              {0, 0, 600}};
+    ArrayX2d const gt_residuals{{0, 0},  //
+                                {-10, -10},
+                                {0, 0},
+                                {0, 0},
+                                {5, 5}};
+    Array5b const gt_mask{false, true, false, false, true};
 
-    double const optimized_error_sum{std::accumulate(
-        data.frames.begin(), data.frames.end(), 0.0,
-        [](double s, auto const& kv) { return s + std::abs(kv.second.optimized_reprojection_error.mean()); })};
-    EXPECT_LT(optimized_error_sum / std::size(data.frames), 0.2);
+    std::vector<std::unique_ptr<ceres::CostFunction>> cost_functions;
+    for (Eigen::Index j{0}; j < gt_pixels.rows(); ++j) {
+        cost_functions.emplace_back(
+            optimization::Create(CameraModel::Pinhole, bounds, gt_pixels.row(j), gt_points.row(j)));
+    }
+
+    auto const [residuals,
+                mask]{optimization::EvaluateReprojectionResiduals(cost_functions, intrinsics, {0, 0, 0, 0, 0, 0})};
+    EXPECT_TRUE(residuals.isApprox(gt_residuals));
+    EXPECT_TRUE(mask.isApprox(gt_mask));
 }
