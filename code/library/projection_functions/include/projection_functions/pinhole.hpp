@@ -55,6 +55,7 @@ struct Pinhole {
         T const x_cam{x / z};
         T const y_cam{y / z};
 
+        // TODO(Jack): Refactor to only use one single focal length!
         T const& fx{intrinsics[0]};
         T const& fy{intrinsics[1]};
         T const& cx{intrinsics[2]};

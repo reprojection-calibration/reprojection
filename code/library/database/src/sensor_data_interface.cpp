@@ -26,9 +26,20 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
 
         Vector6d pose;
         if (type == PoseType::Initial) {
-            pose = frame_i.initial_pose;
+            // TODO(Jack) Should we actually have two pose tables so we can establish a foreign key constraint between
+            // initialized and optimized? Somehow the current code seems quite hacky how it has the same optional
+            // checking logic in both places
+            if (frame_i.initial_pose) {
+                pose = frame_i.initial_pose.value();
+            } else {
+                continue;  // LCOV_EXCL_LINE
+            }
         } else if (type == PoseType::Optimized) {
-            pose = frame_i.optimized_pose;
+            if (frame_i.optimized_pose) {
+                pose = frame_i.optimized_pose.value();
+            } else {
+                continue;  // LCOV_EXCL_LINE
+            }
         } else {
             throw std::runtime_error(
                 "AddPoseData() invalid PoseType selected, this is a library implementation error!");  // LCOV_EXCL_LINE
@@ -69,9 +80,20 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
         // TODO(Jack): Can we make this a reference somehow? There is no good reason to make a copy here.
         ArrayX2d reprojection_error;
         if (type == PoseType::Initial) {
-            reprojection_error = frame_i.initial_reprojection_error;
+            // TODO(Jack): See note above in AddPose about lack of strategy here and dupicated optional logic. I think
+            // two tables with a foreign key constraint could make the most sense. Can we have an equivalent foreign key
+            // like constraint within one table?
+            if (frame_i.initial_reprojection_error) {
+                reprojection_error = frame_i.initial_reprojection_error.value();
+            } else {
+                continue;  // LCOV_EXCL_LINE
+            }
         } else if (type == PoseType::Optimized) {
-            reprojection_error = frame_i.optimized_reprojection_error;
+            if (frame_i.optimized_reprojection_error) {
+                reprojection_error = frame_i.optimized_reprojection_error.value();
+            } else {
+                continue;  // LCOV_EXCL_LINE
+            }
         } else {
             throw std::runtime_error(
                 "AddReprojectionError() invalid PoseType selected, this is a library implementation error!");  // LCOV_EXCL_LINE
