@@ -13,7 +13,7 @@ TEST(Pnp, TestPnp) {
         std::unique_ptr<projection_functions::Camera>(
             new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480})),
         false)};
-    // TODO(Jack): Get this directly from the mvg generator
+    // TODO(Jack): Get this directly from the mvg generator!
     ImageBounds const bounds{0, 720, 0, 480};
 
     std::vector<Frame> const frames{generator.GenerateBatch(20)};
@@ -28,10 +28,10 @@ TEST(Pnp, TestPnp) {
 
 TEST(Pnp, TestPnpFlat) {
     Array4d const intrinsics{1, 1, 0, 0};  // Equivalent to K = I_3x3 Pixels must be in normalized image space for Dlt22
-    testing_mocks::MvgGenerator const generator{
-        testing_mocks::MvgGenerator(std::unique_ptr<projection_functions::Camera>(
-                                        new projection_functions::PinholeCamera(intrinsics, {-1, 1, -1, 1})),
-                                    true)};  // Points must have Z=0 (flat = true)
+    ImageBounds const bounds{-1, 1, -1, 1};
+    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
+        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)),
+        true)};
 
     std::vector<Frame> const frames{generator.GenerateBatch(20)};
     for (auto const& frame : frames) {
@@ -48,9 +48,31 @@ TEST(Pnp, TestNotEnoughPoints) {
     MatrixX3d const five_points(5, 3);
     pnp::PnpResult const pnp_result{pnp::Pnp({five_pixels, five_points})};
 
-    EXPECT_TRUE(std::holds_alternative<pnp::PnpErrorCode>(pnp_result));
-    pnp::PnpErrorCode const status{std::get<pnp::PnpErrorCode>(pnp_result)};
-    EXPECT_EQ(status, pnp::PnpErrorCode::InvalidDlt);
+    ASSERT_TRUE(std::holds_alternative<pnp::PnpErrorCode>(pnp_result));
+    pnp::PnpErrorCode const error_code{std::get<pnp::PnpErrorCode>(pnp_result)};
+    EXPECT_EQ(error_code, pnp::PnpErrorCode::InvalidDlt);
+}
+
+TEST(Pnp, TestForgetToPassBounds) {
+    MatrixX2d const pixels(10, 2);
+    MatrixX3d const points(10, 3);
+    pnp::PnpResult const pnp_result{pnp::Pnp({pixels, points})};
+
+    ASSERT_TRUE(std::holds_alternative<pnp::PnpErrorCode>(pnp_result));
+    pnp::PnpErrorCode const error_code{std::get<pnp::PnpErrorCode>(pnp_result)};
+    EXPECT_EQ(error_code, pnp::PnpErrorCode::InvalidDlt);
+}
+
+// WARN(Jack): I am not 100% sure this will always result in nan, but if you throw in total junk data it seems like to
+// DLT evaluation totally collapses.
+TEST(Pnp, TestNans) {
+    MatrixX2d const pixels(10, 2);
+    MatrixX3d const points(10, 3);
+    pnp::PnpResult const pnp_result{pnp::Pnp({pixels, points}, ImageBounds{-1, 1, -1, 1})};
+
+    ASSERT_TRUE(std::holds_alternative<pnp::PnpErrorCode>(pnp_result));
+    pnp::PnpErrorCode const error_code{std::get<pnp::PnpErrorCode>(pnp_result)};
+    EXPECT_EQ(error_code, pnp::PnpErrorCode::ContainsNan);
 }
 
 // TODO(Jack): Add a test to trigger the ContainsNan error code.
