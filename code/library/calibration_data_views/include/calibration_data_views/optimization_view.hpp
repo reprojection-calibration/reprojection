@@ -19,10 +19,6 @@ class OptimizationFrameView {
           optimized_pose_{optimized_pose},
           optimized_reprojection_error_{optimized_reprojection_error} {}
 
-    // NOTE(Jack): I am actually not thrilled here about adding the timestamp here because it is not actually used as
-    // data in the optimization itself. It is used to help track the correspondence of the residual ids (see the
-    // optimization function itself). If it is possible to easily achieve this same correspondence without using the
-    // timestamps then we can and I think we should remove the timestamp here.
     uint64_t const& timestamp_ns() const { return timestamp_ns_; }
 
     ExtractedTarget const& extracted_target() const { return extracted_target_; }
@@ -44,10 +40,10 @@ class OptimizationFrameView {
     std::optional<ArrayX2d>& optimized_reprojection_error_;
 };
 
-// TODO(Jack): Modify this so that it will only provide a view of frames that have an initial pose! This can help us
-// reduce a lot of optional madness in the consuming code.
 class OptimizationDataView {
    public:
+    // TODO(Jack): What is happening here in the constructor does not have so much to do with being a view as about
+    // intializing the data structure for optimization. Does this belong here or somewhere else?
     explicit OptimizationDataView(CameraCalibrationData& data) : data_{data} {
         data_.optimized_intrinsics = data_.initial_intrinsics;
 
@@ -68,8 +64,11 @@ class OptimizationDataView {
        public:
         using DataFrameIterator = CameraFrameSequence::iterator;
 
-        explicit Iterator(DataFrameIterator it, DataFrameIterator end) : it_{it}, end_{end} {}
+        explicit Iterator(DataFrameIterator it, DataFrameIterator end) : it_{it}, end_{end} { SkipInvalid(); }
 
+        // NOTE(Jack): We have an unprotected optional dereference here because we only consider frames with an initial
+        // pose as valid (see the SkipInvalid() method). If however we mess this implementation up somehow it might be
+        // that we get segfaults here due to invalid optional dereference.
         OptimizationFrameView operator*() const {
             return {it_->first,
                     it_->second.extracted_target,
@@ -86,11 +85,15 @@ class OptimizationDataView {
             return *this;
         }
 
-        bool operator!=(Iterator const& other) const { return it_ != other.it_; }
+        bool operator==(Iterator const& other) const { return it_ == other.it_; }
+
+        bool operator!=(Iterator const& other) const { return not(*this == other); }
 
        private:
         void SkipInvalid() {
-            while (not it_->second.initial_pose.has_value() and it_ != end_) {
+            // WARN(Jack): In the condition we need to check the end condition first otherwise we will get undefined
+            // behavior when dereferencing before checking if we are at the end.
+            while (it_ != end_ and not it_->second.initial_pose.has_value()) {
                 ++it_;
             }
         }
