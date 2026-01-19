@@ -5,6 +5,7 @@
 
 namespace reprojection::optimization {
 
+// TODO(Jack): Return report summary of optimization.
 void CameraNonlinearRefinement(OptimizationDataView data_view) {
     // TODO(Jack): When we construct the data view should this automatically happen? Or when we set the initial
     // intrinsics? Same idea with the initial vs. optimized pose. But maybe it is better to be explicit here.
