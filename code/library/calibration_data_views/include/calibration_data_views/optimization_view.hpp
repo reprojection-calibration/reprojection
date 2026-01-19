@@ -10,9 +10,8 @@ namespace reprojection {
 class OptimizationFrameView {
    public:
     OptimizationFrameView(uint64_t const& timestamp_ns, ExtractedTarget const& extracted_target,
-                          std::optional<Array6d> const& initial_pose,
-                          std::optional<ArrayX2d>& initial_reprojection_error, std::optional<Array6d>& optimized_pose,
-                          std::optional<ArrayX2d>& optimized_reprojection_error)
+                          Array6d const& initial_pose, std::optional<ArrayX2d>& initial_reprojection_error,
+                          std::optional<Array6d>& optimized_pose, std::optional<ArrayX2d>& optimized_reprojection_error)
         : timestamp_ns_{timestamp_ns},
           extracted_target_{extracted_target},
           initial_pose_{initial_pose},
@@ -28,7 +27,7 @@ class OptimizationFrameView {
 
     ExtractedTarget const& extracted_target() const { return extracted_target_; }
 
-    std::optional<Array6d> const& initial_pose() const { return initial_pose_; }
+    Array6d const& initial_pose() const { return initial_pose_; }
 
     std::optional<ArrayX2d>& initial_reprojection_error() { return initial_reprojection_error_; }
 
@@ -39,7 +38,7 @@ class OptimizationFrameView {
    private:
     uint64_t const& timestamp_ns_;
     ExtractedTarget const& extracted_target_;
-    std::optional<Array6d> const& initial_pose_;
+    Array6d const& initial_pose_;
     std::optional<ArrayX2d>& initial_reprojection_error_;
     std::optional<Array6d>& optimized_pose_;
     std::optional<ArrayX2d>& optimized_reprojection_error_;
@@ -69,12 +68,12 @@ class OptimizationDataView {
        public:
         using DataFrameIterator = CameraFrameSequence::iterator;
 
-        explicit Iterator(DataFrameIterator it) : it_{it} {}
+        explicit Iterator(DataFrameIterator it, DataFrameIterator end) : it_{it}, end_{end} {}
 
         OptimizationFrameView operator*() const {
             return {it_->first,
                     it_->second.extracted_target,
-                    it_->second.initial_pose,
+                    it_->second.initial_pose.value(),
                     it_->second.initial_reprojection_error,
                     it_->second.optimized_pose,
                     it_->second.optimized_reprojection_error};
@@ -82,18 +81,27 @@ class OptimizationDataView {
 
         Iterator& operator++() {
             ++it_;
+            SkipInvalid();
+
             return *this;
         }
 
         bool operator!=(Iterator const& other) const { return it_ != other.it_; }
 
        private:
+        void SkipInvalid() {
+            while (not it_->second.initial_pose.has_value() and it_ != end_) {
+                ++it_;
+            }
+        }
+
         DataFrameIterator it_;
+        DataFrameIterator end_;
     };
 
-    Iterator begin() { return Iterator{std::begin(data_.frames)}; }
+    Iterator begin() { return Iterator{std::begin(data_.frames), std::end(data_.frames)}; }
 
-    Iterator end() { return Iterator{std::end(data_.frames)}; }
+    Iterator end() { return Iterator{std::end(data_.frames), std::end(data_.frames)}; }
 
    private:
     CameraCalibrationData& data_;

@@ -5,25 +5,26 @@
 
 namespace reprojection::optimization {
 // TODO(Jack): Return report summary of optimization.
-// TODO(Jack): Only provide valid frames in the data_view! Maybe even provide them pre initialized? Then the init pose
+// TODO(Jack): Only provide valid frames in the data_view! Maybe even provide
+// them pre initialized? Then the init pose
 //  or optimized pose does not even need to be optional maybe!?
-// TODO(Jack): Is there not a better way to describe this chained relationship between the initial pose and the
-//  following things like optimized pose etc. Because if there is not initial pose there cannot be anything else!
-//  Technically if there is no intial pose that frame should not even be visible in the OptimizationDataView I
-//  think...
-// TODO(Jack): Use the valid cost function mask to visualize only the valid pixels in the dashboard.
+// TODO(Jack): Is there not a better way to describe this chained relationship
+// between the initial pose and the
+//  following things like optimized pose etc. Because if there is not initial
+//  pose there cannot be anything else! Technically if there is no intial pose
+//  that frame should not even be visible in the OptimizationDataView I think...
+// TODO(Jack): Use the valid cost function mask to visualize only the valid
+// pixels in the dashboard.
 //  Calculate initial reprojection error and get the valid cost function mask.
-// ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
-// that frame? Or what if in general we have a minimum required of points per frame threshold?
-// TODO(Jack): What should we do with the mask from the optimized reprojection error calculation? Does it have meaning
+// ERROR(Jack): What is a frame has too few valid pixels to actually constrain
+// the pose? Should we entirely skip that frame? Or what if in general we have a
+// minimum required of points per frame threshold?
+// TODO(Jack): What should we do with the mask from the optimized reprojection
+// error calculation? Does it have meaning
 //  for us?
 void CameraNonlinearRefinement(OptimizationDataView data_view) {
     std::map<uint64_t, std::vector<std::unique_ptr<ceres::CostFunction>>> cost_functions;
     for (OptimizationFrameView frame_i : data_view) {
-        if (not frame_i.optimized_pose()) {
-            continue;  // LCOV_EXCL_LINE
-        }
-
         MatrixX2d const& pixels_i{frame_i.extracted_target().bundle.pixels};
         MatrixX3d const& points_i{frame_i.extracted_target().bundle.points};
 
@@ -37,15 +38,11 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     problem_options.cost_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
     ceres::Problem problem{problem_options};
     for (OptimizationFrameView frame_i : data_view) {
-        if (not cost_functions.contains(frame_i.timestamp_ns())) {
-            continue;  // LCOV_EXCL_LINE
-        }
         auto const& cost_functions_i{cost_functions.at(frame_i.timestamp_ns())};
 
         ArrayXb mask;
-        std::tie(frame_i.initial_reprojection_error(), mask) = EvaluateReprojectionResiduals(
-            cost_functions_i, data_view.initial_intrinsics(), frame_i.initial_pose().value());
-
+        std::tie(frame_i.initial_reprojection_error(), mask) =
+            EvaluateReprojectionResiduals(cost_functions_i, data_view.initial_intrinsics(), frame_i.initial_pose());
         ArrayXi const valid_ids{eigen_utilities::MaskToRowId(mask)};
         for (int i{0}; i < valid_ids.rows(); ++i) {
             problem.AddResidualBlock(cost_functions_i[valid_ids(i)].get(), nullptr,
@@ -60,10 +57,6 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
 
     // Calculate optimized reprojection error.
     for (OptimizationFrameView frame_i : data_view) {
-        if (not frame_i.optimized_pose()) {
-            continue;  // LCOV_EXCL_LINE
-        }
-
         ArrayXb what_to_do;
         std::tie(frame_i.optimized_reprojection_error(), what_to_do) =
             EvaluateReprojectionResiduals(cost_functions.at(frame_i.timestamp_ns()), data_view.optimized_intrinsics(),
@@ -78,9 +71,11 @@ std::tuple<ArrayX2d, ArrayXb> EvaluateReprojectionResiduals(
     parameter_blocks.push_back(intrinsics.data());
     parameter_blocks.push_back(pose.data());
 
-    // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
-    // row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two column
-    // elements! That is the reason why we have to specifically specify RowMajor here!
+    // NOTE(Jack): Eigen is column major by default. Which means that if you
+    // just make a default array here and pass the row pointer blindly into the
+    // EvaluateResidualBlock function it will not fill out the row but actually
+    // two column elements! That is the reason why we have to specifically
+    // specify RowMajor here!
     Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals{std::size(cost_functions), 2};
     ArrayXb valid_mask{ArrayXb::Zero(std::size(cost_functions), 1)};
     for (size_t i{0}; i < std::size(cost_functions); ++i) {
