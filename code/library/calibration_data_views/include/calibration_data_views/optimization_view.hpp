@@ -10,7 +10,7 @@ namespace reprojection {
 class OptimizationFrameView {
    public:
     OptimizationFrameView(uint64_t const& timestamp_ns, ExtractedTarget const& extracted_target,
-                          Array6d const& initial_pose, ArrayX2d& initial_reprojection_error, Array6d& optimized_pose,
+                          std::optional<Array6d> const& initial_pose, ArrayX2d& initial_reprojection_error, Array6d& optimized_pose,
                           ArrayX2d& optimized_reprojection_error)
         : timestamp_ns_{timestamp_ns},
           extracted_target_{extracted_target},
@@ -27,7 +27,7 @@ class OptimizationFrameView {
 
     ExtractedTarget const& extracted_target() const { return extracted_target_; }
 
-    Array6d const& initial_pose() const { return initial_pose_; }
+    std::optional<Array6d> const& initial_pose() const { return initial_pose_; }
 
     ArrayX2d& initial_reprojection_error() { return initial_reprojection_error_; }
 
@@ -38,7 +38,7 @@ class OptimizationFrameView {
    private:
     uint64_t const& timestamp_ns_;
     ExtractedTarget const& extracted_target_;
-    Array6d const& initial_pose_;
+    std::optional<Array6d> const& initial_pose_;
     ArrayX2d& initial_reprojection_error_;
     Array6d& optimized_pose_;
     ArrayX2d& optimized_reprojection_error_;
@@ -62,15 +62,10 @@ class OptimizationDataView {
 
         explicit Iterator(DataFrameIterator it) : it_{it} {}
 
-        // HACK HACK HACK unprotected optional access
-        // ERROR
-        // ERROR
-        // ERROR
-        // ERROR
         OptimizationFrameView operator*() const {
             return {it_->first,
                     it_->second.extracted_target,
-                    it_->second.initial_pose.value(),
+                    it_->second.initial_pose,
                     it_->second.initial_reprojection_error,
                     it_->second.optimized_pose,
                     it_->second.optimized_reprojection_error};
