@@ -64,7 +64,7 @@ std::tuple<ArrayX2d, ArrayXb> EvaluateReprojectionResiduals(
     parameter_blocks.push_back(intrinsics.data());
     parameter_blocks.push_back(pose.data());
 
-    // WARN(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
+    // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass the
     // row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two column
     // elements! That is the reason why we have to specifically specify RowMajor here!
     Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals{std::size(cost_functions), 2};
