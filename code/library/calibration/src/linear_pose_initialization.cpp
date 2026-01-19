@@ -30,9 +30,6 @@ void LinearPoseInitialization(InitializationDataView data_view) {
         InitializeCamera(data_view.camera_model(), data_view.image_bounds(), data_view.initial_intrinsics())};
 
     for (InitializationFrameView frame_i : data_view) {
-        // ERROR(Jack): We are not accounting for the fact of valid field of view! But this is more a pinhole projection
-        // problem than an initialization problem :)
-        //
         // Project using a unit ideal pinhole camera to get pseudo undistorted pixels
         MatrixX3d const rays{camera->Unproject(frame_i.extracted_target().bundle.pixels)};
         auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};
@@ -44,10 +41,6 @@ void LinearPoseInitialization(InitializationDataView data_view) {
         Bundle const linearized_bundle{pixels(valid_indices, Eigen::all),
                                        frame_i.extracted_target().bundle.points(valid_indices, Eigen::all)};
 
-        // TODO(Jack): What is a principled way to handle errors and communicate that to the user? Right now the
-        //  returned set will just be missing values. This can also be valid, and I think as we are using sets the user
-        //  should already be aware of he fact that they must use the set key for correspondence and not simply the
-        //  position in the container.
         auto const result{pnp::Pnp(linearized_bundle)};
         if (std::holds_alternative<Isometry3d>(result)) {
             // ERROR(Jack): What is the proper place to do this inverse? Do we need this inverse at all really? When we
