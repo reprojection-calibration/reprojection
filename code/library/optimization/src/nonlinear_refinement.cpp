@@ -4,7 +4,6 @@
 #include "projection_cost_function.hpp"
 
 namespace reprojection::optimization {
-
 // TODO(Jack): Return report summary of optimization.
 // TODO(Jack): Only provide valid frames in the data_view! Maybe even provide them pre initialized? Then the init pose
 //  or optimized pose does not even need to be optional maybe!?
@@ -21,21 +20,18 @@ namespace reprojection::optimization {
 void CameraNonlinearRefinement(OptimizationDataView data_view) {
     std::map<uint64_t, std::vector<std::unique_ptr<ceres::CostFunction>>> cost_functions;
     for (OptimizationFrameView frame_i : data_view) {
-        if (frame_i.initial_pose()) {
-            frame_i.optimized_pose() = frame_i.initial_pose();
-        } else {
+        if (not frame_i.optimized_pose()) {
             continue;  // LCOV_EXCL_LINE
         }
 
         MatrixX2d const& pixels_i{frame_i.extracted_target().bundle.pixels};
         MatrixX3d const& points_i{frame_i.extracted_target().bundle.points};
+
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
             cost_functions[frame_i.timestamp_ns()].emplace_back(
                 Create(data_view.camera_model(), data_view.image_bounds(), pixels_i.row(j), points_i.row(j)));
         }
     }
-
-    data_view.optimized_intrinsics() = data_view.initial_intrinsics();
 
     ceres::Problem::Options problem_options;
     problem_options.cost_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;

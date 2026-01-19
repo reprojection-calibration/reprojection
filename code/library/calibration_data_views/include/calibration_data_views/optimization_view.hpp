@@ -49,7 +49,13 @@ class OptimizationFrameView {
 // reduce a lot of optional madness in the consuming code.
 class OptimizationDataView {
    public:
-    explicit OptimizationDataView(CameraCalibrationData& data) : data_{data} {}
+    explicit OptimizationDataView(CameraCalibrationData& data) : data_{data} {
+        data_.optimized_intrinsics = data_.initial_intrinsics;
+
+        for (auto& [_, frame_i] : data_.frames) {
+            frame_i.optimized_pose = frame_i.initial_pose;
+        }
+    }
 
     CameraModel const& camera_model() const { return data_.sensor.camera_model; }
 
