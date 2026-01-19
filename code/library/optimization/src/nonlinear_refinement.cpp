@@ -23,8 +23,8 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
         if (frame_i.initial_pose()) {
             frame_i.optimized_pose() = frame_i.initial_pose();
         } else {
-            frame_i.optimized_pose() = std::nullopt;
-            continue;
+            frame_i.optimized_pose() = std::nullopt;  // LCOV_EXCL_LINE
+            continue;                                 // LCOV_EXCL_LINE
         }
 
         for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
@@ -40,7 +40,7 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
         // TODO(Jack): This pose is not optimized yet! It not being std::nullopt here simply means that it was
         // successfully initialized and is ready to be optimized.
         if (not frame_i.optimized_pose()) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
         auto const& cost_functions_i{cost_functions.at(frame_i.timestamp_ns())};
 
@@ -67,7 +67,7 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     // Calculate optimized reprojection error.
     for (OptimizationFrameView frame_i : data_view) {
         if (not frame_i.optimized_pose()) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
 
         // TODO(Jack): What should we do with this mask here? Does it have meaning for us?

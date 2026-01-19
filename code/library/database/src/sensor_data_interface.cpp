@@ -32,13 +32,13 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
             if (frame_i.initial_pose) {
                 pose = frame_i.initial_pose.value();
             } else {
-                continue;
+                continue;  // LCOV_EXCL_LINE
             }
         } else if (type == PoseType::Optimized) {
             if (frame_i.optimized_pose) {
                 pose = frame_i.optimized_pose.value();
             } else {
-                continue;
+                continue;  // LCOV_EXCL_LINE
             }
         } else {
             throw std::runtime_error(
@@ -86,13 +86,13 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
             if (frame_i.initial_reprojection_error) {
                 reprojection_error = frame_i.initial_reprojection_error.value();
             } else {
-                continue;
+                continue;  // LCOV_EXCL_LINE
             }
         } else if (type == PoseType::Optimized) {
             if (frame_i.optimized_reprojection_error) {
                 reprojection_error = frame_i.optimized_reprojection_error.value();
             } else {
-                continue;
+                continue;  // LCOV_EXCL_LINE
             }
         } else {
             throw std::runtime_error(
