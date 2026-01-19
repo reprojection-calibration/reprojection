@@ -14,6 +14,7 @@ namespace reprojection::pnp {
 enum class PnpStatusCode {
     MismatchedCorrespondences,
     NotEnoughPoints,
+    ContainsNans,
 };
 
 // TODO(Jack): Is it bad to use a using declaration here in the public API section?

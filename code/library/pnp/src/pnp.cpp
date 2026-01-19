@@ -33,14 +33,19 @@ PnpResult Pnp(Bundle const& bundle) {
         return PnpStatusCode::NotEnoughPoints;
     }
 
+    // TODO(Jack): Can we check directly the matrix if it has nans? Or do we need to do this conversion?
+    // TODO(Jack): Is there a more sound theoretical way to check and describe this failure?
+    // TODO(Jack): Is it possible that nans get introduced in the nonlinear step that comes next? If so then we should
+    // move this check to right before the return.
+    // TOOD(Jack): Add a test that triggers this condition!
+    Array6d const se3{geometry::Log(tf)};
+    if (se3.hasNaN()) {
+        return PnpStatusCode::ContainsNans;
+    }
+
     CameraCalibrationData data{
         {"", CameraModel::Pinhole, {0, 720, 0, 480}}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf)}}}};
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
-
-    // TODO(Jack): How can we recognize failed pnp attempts? Are there some values that we can calculate in the the DLT
-    // and nonlinear optimization that will tell us if we are on the right track? For example ceres should actually
-    // provide a value direct that tells us if the optimization was successful or not. Lets wait until we have more
-    // experience with optimizations and their failures on real data.
 
     // There is only one single frame here, therefore we can simply use std::cbegin to access the result.
     return geometry::Exp(std::cbegin(data.frames)->second.optimized_pose);
