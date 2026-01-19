@@ -62,10 +62,15 @@ class OptimizationDataView {
 
         explicit Iterator(DataFrameIterator it) : it_{it} {}
 
+        // HACK HACK HACK unprotected optional access
+        // ERROR
+        // ERROR
+        // ERROR
+        // ERROR
         OptimizationFrameView operator*() const {
             return {it_->first,
                     it_->second.extracted_target,
-                    it_->second.initial_pose,
+                    it_->second.initial_pose.value(),
                     it_->second.initial_reprojection_error,
                     it_->second.optimized_pose,
                     it_->second.optimized_reprojection_error};

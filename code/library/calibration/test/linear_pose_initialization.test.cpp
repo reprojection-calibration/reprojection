@@ -46,9 +46,14 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
         Isometry3d const gt_pose_i{mvg_frames[frame_i.first].pose};
         Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i.inverse())};  // Note the inverse!
 
-        EXPECT_TRUE(frame_i.second.initial_pose.isApprox(se3_gt_pose_i, 1e-6))
+        // HACK HACK HACK unprotected optional access
+        // ERROR
+        // ERROR
+        // ERROR
+        // ERROR
+        EXPECT_TRUE(frame_i.second.initial_pose.value().isApprox(se3_gt_pose_i, 1e-6))
             << "Linear pose initialization result:\n"
-            << frame_i.second.initial_pose.transpose() << "\nGround truth:\n"
+            << frame_i.second.initial_pose.value().transpose() << "\nGround truth:\n"
             << se3_gt_pose_i.transpose();
     }
 }

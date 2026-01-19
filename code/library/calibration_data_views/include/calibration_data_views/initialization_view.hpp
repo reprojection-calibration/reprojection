@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "types/calibration_types.hpp"
 #include "types/camera_types.hpp"
 #include "types/eigen_types.hpp"
@@ -10,18 +12,16 @@ namespace reprojection {
 
 class InitializationFrameView {
    public:
-    InitializationFrameView(ExtractedTarget const& extracted_target, Array6d& initial_pose)
+    InitializationFrameView(ExtractedTarget const& extracted_target, std::optional<Array6d>& initial_pose)
         : extracted_target_{extracted_target}, initial_pose_{initial_pose} {}
 
-    // TODO(Jack): Does the const in the return here really do what I think/want it to do? That is to protect the
-    // extracted target from modification?
     ExtractedTarget const& extracted_target() const { return extracted_target_; }
 
-    Array6d& initial_pose() { return initial_pose_; }
+    std::optional<Array6d>& initial_pose() { return initial_pose_; }
 
    private:
     ExtractedTarget const& extracted_target_;
-    Array6d& initial_pose_;
+    std::optional<Array6d>& initial_pose_;
 };
 
 class InitializationDataView {

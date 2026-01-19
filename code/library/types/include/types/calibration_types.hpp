@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <string>
 
 #include "types/algorithm_types.hpp"
@@ -46,7 +47,7 @@ struct CalibrationDataFrame {
 
     ExtractedTarget extracted_target;
 
-    Array6d initial_pose;
+    std::optional<Array6d> initial_pose;
     ArrayX2d initial_reprojection_error;
 
     Array6d optimized_pose;

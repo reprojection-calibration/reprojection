@@ -26,7 +26,13 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
 
         Vector6d pose;
         if (type == PoseType::Initial) {
-            pose = frame_i.initial_pose;
+            // TODO IMPLEMENT A REAL STRATEGY HERE! Should we actually have two pose tables so we can establish a
+            // foreign key constraint between initialized and optimized?
+            if (frame_i.initial_pose.has_value()) {
+                pose = frame_i.initial_pose.value();
+            } else {
+                continue;
+            }
         } else if (type == PoseType::Optimized) {
             pose = frame_i.optimized_pose;
         } else {
