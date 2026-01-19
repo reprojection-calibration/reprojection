@@ -41,7 +41,6 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     }
 
     ceres::Solver::Options options;
-
     options.linear_solver_type = ceres::DENSE_SCHUR;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
