@@ -5,9 +5,9 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): Should we have some assertions which force that the frames satisfy some basic properties like there is a
-// matching number of everything? Yes but maybe this is already to deep into the code to do that here.
 void CameraNonlinearRefinement(OptimizationDataView data_view) {
+    // TODO(Jack): When we construct the data view should this automatically happen? Or when we set the initial
+    // intrinsics? Same idea with the initial vs. optimized pose. But maybe it is better to be explicit here.
     data_view.optimized_intrinsics() = data_view.initial_intrinsics();
 
     std::map<uint64_t, std::vector<std::unique_ptr<ceres::CostFunction>>> cost_functions;
@@ -22,18 +22,21 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
         }
     }
 
-    std::map<uint64_t, ArrayXb> masks;
-    for (OptimizationFrameView frame_i : data_view) {
-        std::tie(frame_i.initial_reprojection_error(), masks[frame_i.timestamp_ns()]) = EvaluateReprojectionResiduals(
-            cost_functions.at(frame_i.timestamp_ns()), data_view.initial_intrinsics(), frame_i.initial_pose());
-    }
-
     ceres::Problem::Options problem_options;
     problem_options.cost_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
     ceres::Problem problem{problem_options};
     for (OptimizationFrameView frame_i : data_view) {
         auto const& cost_functions_i{cost_functions.at(frame_i.timestamp_ns())};
-        ArrayXi const valid_ids{eigen_utilities::MaskToRowId(masks.at(frame_i.timestamp_ns()))};
+
+        // TODO(Jack): Use the valid cost function mask to visualize only the valid pixels in the dashboard.
+        // Calculate initial reprojection error and get the valid cost function mask.
+        ArrayXb mask;
+        std::tie(frame_i.initial_reprojection_error(), mask) =
+            EvaluateReprojectionResiduals(cost_functions_i, data_view.initial_intrinsics(), frame_i.initial_pose());
+        ArrayXi const valid_ids{eigen_utilities::MaskToRowId(mask)};
+
+        // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
+        // that frame?
         for (int i{0}; i < valid_ids.rows(); ++i) {
             problem.AddResidualBlock(cost_functions_i[valid_ids(i)].get(), nullptr,
                                      data_view.optimized_intrinsics().data(), frame_i.optimized_pose().data());
@@ -45,8 +48,10 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
+    // Calculate optimized reprojection error.
     for (OptimizationFrameView frame_i : data_view) {
-        ArrayXb what_to_do;  // WHAT DO WE DO WITH THIS? WHAT ABSTRACTION ARE WE MISSING?
+        // TODO(Jack): What should we do with this mask here? Does it have meaning for us?
+        ArrayXb what_to_do;
         std::tie(frame_i.optimized_reprojection_error(), what_to_do) = EvaluateReprojectionResiduals(
             cost_functions.at(frame_i.timestamp_ns()), data_view.optimized_intrinsics(), frame_i.optimized_pose());
     }
