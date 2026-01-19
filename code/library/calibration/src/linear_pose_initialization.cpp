@@ -30,12 +30,11 @@ void LinearPoseInitialization(InitializationDataView data_view) {
         InitializeCamera(data_view.camera_model(), data_view.image_bounds(), data_view.initial_intrinsics())};
 
     for (InitializationFrameView frame_i : data_view) {
-        MatrixX3d const rays{camera->Unproject(frame_i.extracted_target().bundle.pixels)};
-
         // ERROR(Jack): We are not accounting for the fact of valid field of view! But this is more a pinhole projection
         // problem than an initialization problem :)
         //
         // Project using a unit ideal pinhole camera to get pseudo undistorted pixels
+        MatrixX3d const rays{camera->Unproject(frame_i.extracted_target().bundle.pixels)};
         auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};
         auto const [pixels, mask]{pinhole_camera.Project(rays)};
 
