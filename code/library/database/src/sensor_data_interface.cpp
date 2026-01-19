@@ -34,6 +34,13 @@ void AddPoseData(CameraCalibrationData const& data, PoseType const type,
                 continue;
             }
         } else if (type == PoseType::Optimized) {
+            // HACK HACK
+            // HACK HACK       // HACK HACK       // HACK HACK
+            // HACK HACK
+            // HACK HACK
+            if (not frame_i.initial_pose.has_value()) {
+                continue;
+            }
             pose = frame_i.optimized_pose;
         } else {
             throw std::runtime_error(
