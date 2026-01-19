@@ -4,23 +4,19 @@
 #include "projection_cost_function.hpp"
 
 namespace reprojection::optimization {
+
 // TODO(Jack): Return report summary of optimization.
-// TODO(Jack): Only provide valid frames in the data_view! Maybe even provide
-// them pre initialized? Then the init pose
+// TODO(Jack): Only provide valid frames in the data_view! Maybe even provide them pre initialized? Then the init pose
 //  or optimized pose does not even need to be optional maybe!?
-// TODO(Jack): Is there not a better way to describe this chained relationship
-// between the initial pose and the
-//  following things like optimized pose etc. Because if there is not initial
-//  pose there cannot be anything else! Technically if there is no intial pose
-//  that frame should not even be visible in the OptimizationDataView I think...
-// TODO(Jack): Use the valid cost function mask to visualize only the valid
-// pixels in the dashboard.
+// TODO(Jack): Is there not a better way to describe this chained relationship between the initial pose and the
+//  following things like optimized pose etc. Because if there is not initial pose there cannot be anything else!
+//  Technically if there is no intial pose that frame should not even be visible in the OptimizationDataView I
+//  think...
+// TODO(Jack): Use the valid cost function mask to visualize only the valid pixels in the dashboard.
 //  Calculate initial reprojection error and get the valid cost function mask.
-// ERROR(Jack): What is a frame has too few valid pixels to actually constrain
-// the pose? Should we entirely skip that frame? Or what if in general we have a
-// minimum required of points per frame threshold?
-// TODO(Jack): What should we do with the mask from the optimized reprojection
-// error calculation? Does it have meaning
+// ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
+// that frame? Or what if in general we have a minimum required of points per frame threshold?
+// TODO(Jack): What should we do with the mask from the optimized reprojection error calculation? Does it have meaning
 //  for us?
 void CameraNonlinearRefinement(OptimizationDataView data_view) {
     std::map<uint64_t, std::vector<std::unique_ptr<ceres::CostFunction>>> cost_functions;
