@@ -1,5 +1,6 @@
 #include "calibration/linear_pose_initialization.hpp"
 
+#include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
 #include "pnp/pnp.hpp"
 #include "projection_functions/camera_model.hpp"
@@ -31,22 +32,24 @@ void LinearPoseInitialization(InitializationDataView data_view) {
     for (InitializationFrameView frame_i : data_view) {
         MatrixX3d const rays{camera->Unproject(frame_i.extracted_target().bundle.pixels)};
 
+        // ERROR(Jack): We are not accounting for the fact of valid field of view! But this is more a pinhole projection
+        // problem than an initialization problem :)
+        //
         // Project using a unit ideal pinhole camera to get pseudo undistorted pixels
         auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};
-        // ERROR(Jack): We are not accounting for the fact of valid field of view!
-        // ERROR
-        // ERROR
-        // ERROR
-        // ERROR
-        // ERROR(Jack): We are not using the mask like we need to!!!!
-        auto const [pixels, _]{pinhole_camera.Project(rays)};
-        Bundle const linearized_bundle{pixels, frame_i.extracted_target().bundle.points};
+        auto const [pixels, mask]{pinhole_camera.Project(rays)};
 
-        auto const result{pnp::Pnp(linearized_bundle)};
+        // TOOD(Jack): Now we have this similar masking logic here and in the mvg generator. Should we use a function
+        // instead?
+        ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
+        Bundle const linearized_bundle{pixels(valid_indices, Eigen::all),
+                                       frame_i.extracted_target().bundle.points(valid_indices, Eigen::all)};
+
         // TODO(Jack): What is a principled way to handle errors and communicate that to the user? Right now the
         //  returned set will just be missing values. This can also be valid, and I think as we are using sets the user
         //  should already be aware of he fact that they must use the set key for correspondence and not simply the
         //  position in the container.
+        auto const result{pnp::Pnp(linearized_bundle)};
         if (not std::holds_alternative<Isometry3d>(result)) {
             continue;  // LCOV_EXCL_LINE
         }

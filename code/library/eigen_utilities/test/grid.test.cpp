@@ -17,9 +17,9 @@ TEST(EigenUtiltiesGrid, TestGenerateGridIndices) {
 }
 
 TEST(EigenUtiltiesGrid, TestMaskToRowId) {
-    Array5b const indices{true, false, true, false, true};
+    Array5b const mask{true, false, true, false, true};
 
-    ArrayXi const mask_indices{eigen_utilities::MaskToRowId(indices)};
+    ArrayXi const mask_indices{eigen_utilities::MaskToRowId(mask)};
 
     EXPECT_EQ(mask_indices.rows(), 3);
     EXPECT_TRUE(mask_indices.isApprox(Eigen::Array<int, 3, 1>{0, 2, 4}));

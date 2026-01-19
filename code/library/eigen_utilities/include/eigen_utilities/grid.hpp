@@ -8,6 +8,7 @@ namespace reprojection::eigen_utilities {
 // asymmetric circle grid target.
 ArrayX2i GenerateGridIndices(int const rows, int const cols, bool const even_only = false);
 
+// TODO(Jack): I think this belongs somewhere that is more focused on masking than the grid.
 ArrayXi MaskToRowId(ArrayXb const& mask);
 
 ArrayXi ToEigen(std::vector<int> const& vector);
