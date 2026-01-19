@@ -14,11 +14,15 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     for (OptimizationFrameView frame_i : data_view) {
         MatrixX2d const& pixels_i{frame_i.extracted_target().bundle.pixels};
         MatrixX3d const& points_i{frame_i.extracted_target().bundle.points};
-        if (frame_i.initial_pose().has_value()) {
-            frame_i.optimized_pose() = frame_i.initial_pose().value();
+
+        // TODO(Jack): Is there not a better way to describe this chained relationship between the initial pose and the
+        // following things like optimized pose etc. Because if there is not initial pose there cannot be anything else!
+        // Technically if there is no intial pose that frame should not even be visible in the OptimizationDataView I
+        // think...
+        if (frame_i.initial_pose()) {
+            frame_i.optimized_pose() = frame_i.initial_pose();
         } else {
-            // TODO(Jack): Should frame_i.optimized_pose() also be std::optional and also be set to nullopt if this
-            // branch is triggered?
+            frame_i.optimized_pose() = std::nullopt;
             continue;
         }
 
@@ -32,26 +36,25 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
     problem_options.cost_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
     ceres::Problem problem{problem_options};
     for (OptimizationFrameView frame_i : data_view) {
-        // SOLVE THE {PROBLEM OF WHICH FRAME IS VALID OR NOT BETTER! HAVING THIS LOGIC THREE PLACES IN THIS FUNCTION IS
-        // INSANE
-        if (not frame_i.initial_pose().has_value()) {
+        // TODO(Jack): This pose is not optimized yet! It not being std::nullopt here simply means that it was
+        // successfully initialized and is ready to be optimized.
+        if (not frame_i.optimized_pose()) {
             continue;
         }
-
         auto const& cost_functions_i{cost_functions.at(frame_i.timestamp_ns())};
 
         // TODO(Jack): Use the valid cost function mask to visualize only the valid pixels in the dashboard.
         // Calculate initial reprojection error and get the valid cost function mask.
+        // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
+        // that frame? Or what if in general we have a minimum required of points per frame threshold?
         ArrayXb mask;
         std::tie(frame_i.initial_reprojection_error(), mask) = EvaluateReprojectionResiduals(
             cost_functions_i, data_view.initial_intrinsics(), frame_i.initial_pose().value());
-        ArrayXi const valid_ids{eigen_utilities::MaskToRowId(mask)};
 
-        // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
-        // that frame?
+        ArrayXi const valid_ids{eigen_utilities::MaskToRowId(mask)};
         for (int i{0}; i < valid_ids.rows(); ++i) {
             problem.AddResidualBlock(cost_functions_i[valid_ids(i)].get(), nullptr,
-                                     data_view.optimized_intrinsics().data(), frame_i.optimized_pose().data());
+                                     data_view.optimized_intrinsics().data(), frame_i.optimized_pose().value().data());
         }
     }
 
@@ -62,14 +65,15 @@ void CameraNonlinearRefinement(OptimizationDataView data_view) {
 
     // Calculate optimized reprojection error.
     for (OptimizationFrameView frame_i : data_view) {
-        if (not frame_i.initial_pose().has_value()) {
+        if (not frame_i.optimized_pose()) {
             continue;
         }
 
         // TODO(Jack): What should we do with this mask here? Does it have meaning for us?
         ArrayXb what_to_do;
-        std::tie(frame_i.optimized_reprojection_error(), what_to_do) = EvaluateReprojectionResiduals(
-            cost_functions.at(frame_i.timestamp_ns()), data_view.optimized_intrinsics(), frame_i.optimized_pose());
+        std::tie(frame_i.optimized_reprojection_error(), what_to_do) =
+            EvaluateReprojectionResiduals(cost_functions.at(frame_i.timestamp_ns()), data_view.optimized_intrinsics(),
+                                          frame_i.optimized_pose().value());
     }
 }
 

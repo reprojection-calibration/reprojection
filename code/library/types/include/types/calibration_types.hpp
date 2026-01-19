@@ -48,10 +48,10 @@ struct CalibrationDataFrame {
     ExtractedTarget extracted_target;
 
     std::optional<Array6d> initial_pose;
-    ArrayX2d initial_reprojection_error;
+    std::optional<ArrayX2d> initial_reprojection_error;
 
-    Array6d optimized_pose;
-    ArrayX2d optimized_reprojection_error;
+    std::optional<Array6d> optimized_pose;
+    std::optional<ArrayX2d> optimized_reprojection_error;
 };
 
 using CameraFrameSequence = std::map<std::uint64_t, CalibrationDataFrame>;

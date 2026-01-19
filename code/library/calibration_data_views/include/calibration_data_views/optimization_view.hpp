@@ -10,8 +10,9 @@ namespace reprojection {
 class OptimizationFrameView {
    public:
     OptimizationFrameView(uint64_t const& timestamp_ns, ExtractedTarget const& extracted_target,
-                          std::optional<Array6d> const& initial_pose, ArrayX2d& initial_reprojection_error, Array6d& optimized_pose,
-                          ArrayX2d& optimized_reprojection_error)
+                          std::optional<Array6d> const& initial_pose,
+                          std::optional<ArrayX2d>& initial_reprojection_error, std::optional<Array6d>& optimized_pose,
+                          std::optional<ArrayX2d>& optimized_reprojection_error)
         : timestamp_ns_{timestamp_ns},
           extracted_target_{extracted_target},
           initial_pose_{initial_pose},
@@ -29,21 +30,23 @@ class OptimizationFrameView {
 
     std::optional<Array6d> const& initial_pose() const { return initial_pose_; }
 
-    ArrayX2d& initial_reprojection_error() { return initial_reprojection_error_; }
+    std::optional<ArrayX2d>& initial_reprojection_error() { return initial_reprojection_error_; }
 
-    Array6d& optimized_pose() { return optimized_pose_; }
+    std::optional<Array6d>& optimized_pose() { return optimized_pose_; }
 
-    ArrayX2d& optimized_reprojection_error() { return optimized_reprojection_error_; }
+    std::optional<ArrayX2d>& optimized_reprojection_error() { return optimized_reprojection_error_; }
 
    private:
     uint64_t const& timestamp_ns_;
     ExtractedTarget const& extracted_target_;
     std::optional<Array6d> const& initial_pose_;
-    ArrayX2d& initial_reprojection_error_;
-    Array6d& optimized_pose_;
-    ArrayX2d& optimized_reprojection_error_;
+    std::optional<ArrayX2d>& initial_reprojection_error_;
+    std::optional<Array6d>& optimized_pose_;
+    std::optional<ArrayX2d>& optimized_reprojection_error_;
 };
 
+// TODO(Jack): Modify this so that it will only provide a view of frames that have an initial pose! This can help us
+// reduce a lot of optional madness in the consuming code.
 class OptimizationDataView {
    public:
     explicit OptimizationDataView(CameraCalibrationData& data) : data_{data} {}

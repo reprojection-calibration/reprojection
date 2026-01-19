@@ -40,15 +40,18 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
         Isometry3d const gt_pose_i{mvg_frames[timestamp_ns].pose};
         Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
 
-        EXPECT_TRUE(frame_i.optimized_pose.isApprox(se3_gt_pose_i, 1e-6))
+        ASSERT_TRUE(frame_i.optimized_pose);
+        EXPECT_TRUE(frame_i.optimized_pose.value().isApprox(se3_gt_pose_i, 1e-6))
             << "Nonlinear refinement result:\n"
-            << frame_i.optimized_pose.transpose() << "\nGround truth:\n"
+            << frame_i.optimized_pose.value().transpose() << "\nGround truth:\n"
             << se3_gt_pose_i.transpose();
 
         // We are testing with perfect input data so the mean reprojection error before and after optimization is near
         // zero.
-        EXPECT_NEAR(frame_i.initial_reprojection_error.mean(), 0.0, 1e-6);
-        EXPECT_NEAR(frame_i.optimized_reprojection_error.mean(), 0.0, 1e-6);
+        ASSERT_TRUE(frame_i.initial_reprojection_error);
+        EXPECT_NEAR(frame_i.initial_reprojection_error.value().mean(), 0.0, 1e-6);
+        ASSERT_TRUE(frame_i.optimized_reprojection_error);
+        EXPECT_NEAR(frame_i.optimized_reprojection_error.value().mean(), 0.0, 1e-6);
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))
@@ -96,13 +99,15 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         // before, but now working in the matrix space. Why all of a sudden the optimized poses start flipping, I cannot
         // explain.
         Isometry3d const gt_pose_i{gt_poses[timestamp_ns]};
-        EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose).isApprox(gt_pose_i, 1e-6))
+        ASSERT_TRUE(frame_i.optimized_pose);
+        EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose.value()).isApprox(gt_pose_i, 1e-6))
             << "Nonlinear refinement result:\n"
-            << geometry::Exp(frame_i.optimized_pose).matrix() << "\nGround truth:\n"
+            << geometry::Exp(frame_i.optimized_pose.value()).matrix() << "\nGround truth:\n"
             << gt_pose_i.matrix() << "\nInitial value:\n"
             << mvg_frames[timestamp_ns].pose.matrix();
 
-        EXPECT_LT(frame_i.optimized_reprojection_error.mean(), 1e-6);
+        ASSERT_TRUE(frame_i.optimized_reprojection_error);
+        EXPECT_LT(frame_i.optimized_reprojection_error.value().mean(), 1e-6);
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))

@@ -21,7 +21,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
         tf = Dlt22(bundle);
         pinhole_intrinsics = {1, 1, 0, 0};   // Equivalent to K = I_3x3
         bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension boundss
-    } else if (bundle.pixels.rows() > 6 and bounds.has_value()) {
+    } else if (bundle.pixels.rows() > 6 and bounds) {
         std::tie(tf, pinhole_intrinsics) = Dlt23(bundle);
     } else {
         return PnpErrorCode::InvalidDlt;
@@ -40,8 +40,14 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
         {"", CameraModel::Pinhole, bounds.value()}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf)}}}};
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
-    // NOTE(Jack): There is only one single frame here, therefore we can simply use std::cbegin to access the result.
-    return geometry::Exp(std::cbegin(data.frames)->second.optimized_pose);
+    // NOTE(Jack): There is only one single frame here in the CameraCalibrationData structure, therefore we can simply
+    // use std::cbegin to access the result. In the general case this is not meaningful or correct.
+    auto const optimized_pose{std::cbegin(data.frames)->second.optimized_pose};
+    if (optimized_pose) {
+        return geometry::Exp(optimized_pose.value());
+    } else {
+        return PnpErrorCode::FailedRefinement;
+    }
 }
 
 }  // namespace reprojection::pnp
