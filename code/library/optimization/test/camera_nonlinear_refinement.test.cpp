@@ -33,7 +33,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
         pseudo_time += 1;
     }
 
-    optimization::CameraNonlinearRefinement(OptimizationDataView(data));
+    optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
+    EXPECT_EQ(state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // WARN(Jack): We are abusing the pseudo timestamp from the frame map to index into a vector. Hack!
@@ -85,7 +86,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         pseudo_time += 1;
     }
 
-    optimization::CameraNonlinearRefinement(OptimizationDataView(data));
+    optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
+    EXPECT_EQ(state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
