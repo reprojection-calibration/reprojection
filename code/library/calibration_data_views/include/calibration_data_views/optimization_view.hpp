@@ -62,6 +62,13 @@ class OptimizationDataView {
 
     class Iterator {
        public:
+        // To understand iterator traits - https://en.cppreference.com/w/cpp/iterator/iterator_traits.html
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = OptimizationFrameView;
+        using difference_type = std::ptrdiff_t;
+        using pointer = void;
+        using reference = value_type;
+
         using DataFrameIterator = CameraFrameSequence::iterator;
 
         explicit Iterator(DataFrameIterator it, DataFrameIterator end) : it_{it}, end_{end} { SkipInvalid(); }
@@ -104,7 +111,13 @@ class OptimizationDataView {
 
     Iterator begin() { return Iterator{std::begin(data_.frames), std::end(data_.frames)}; }
 
+    Iterator cbegin() const { return Iterator{std::begin(data_.frames), std::end(data_.frames)}; }
+
     Iterator end() { return Iterator{std::end(data_.frames), std::end(data_.frames)}; }
+
+    Iterator cend() const { return Iterator{std::end(data_.frames), std::end(data_.frames)}; }
+
+    std::size_t valid_frame_count() const { return std::distance(cbegin(), cend()); }
 
    private:
     CameraCalibrationData& data_;
