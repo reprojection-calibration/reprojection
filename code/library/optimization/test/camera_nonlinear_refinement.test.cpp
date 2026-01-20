@@ -132,12 +132,13 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
                               {0, 0, -600},
                               {0, 0, -600},
                               {0, 0, 600}};
-    ArrayX2d const gt_residuals{{0, 0},  //
+    // If the pixel evaluation fails then the cost function will automatically fill out the residual value with 256,
+    // this is arbitrary and heuristic. See the note in the projection cost function implementation.
+    ArrayX2d const gt_residuals{{256, 256},  //
                                 {-10, -10},
-                                {0, 0},
-                                {0, 0},
+                                {256, 256},
+                                {256, 256},
                                 {5, 5}};
-    Array5b const gt_mask{false, true, false, false, true};
 
     std::vector<std::unique_ptr<ceres::CostFunction>> cost_functions;
     for (Eigen::Index j{0}; j < gt_pixels.rows(); ++j) {
@@ -145,8 +146,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
             optimization::Create(CameraModel::Pinhole, bounds, gt_pixels.row(j), gt_points.row(j)));
     }
 
-    auto const [residuals,
-                mask]{optimization::EvaluateReprojectionResiduals(cost_functions, intrinsics, {0, 0, 0, 0, 0, 0})};
+    ArrayX2d const residuals{
+        optimization::EvaluateReprojectionResiduals(cost_functions, intrinsics, {0, 0, 0, 0, 0, 0})};
     EXPECT_TRUE(residuals.isApprox(gt_residuals));
-    EXPECT_TRUE(mask.isApprox(gt_mask));
 }

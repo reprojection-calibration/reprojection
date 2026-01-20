@@ -94,12 +94,13 @@ class ProjectionCostFunction_T {
             // when the projection evaluation fails. This tells the optimizer that hey these are bad points and they do
             // not provide us any information for solving, but just because I have some bad points does not mean I need
             // to kill the entire problem evaluation.
+            //
             // NOTE(Jack): The value of the residual here should be larger than the expected final residual given a
             // successful optimization. For example for reprojection error I would expect that when it is successful the
             // error is under one pixel. So setting the residuals to 10 here clearly signals this is a failure
             // condition.
-            residual[0] = T(10);
-            residual[1] = T(10);
+            residual[0] = T(256);
+            residual[1] = T(256);
 
             return true;
         }
