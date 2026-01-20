@@ -44,7 +44,7 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     for (auto const& frame_i : data.frames) {
         // WARN(Jack): we are abusing the psuedo timestamp from the frame map to index into a vector. Hack!
         Isometry3d const gt_pose_i{mvg_frames[frame_i.first].pose};
-        Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i.inverse())};  // Note the inverse!
+        Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
 
         ASSERT_TRUE(frame_i.second.initial_pose.has_value());
         EXPECT_TRUE(frame_i.second.initial_pose.value().isApprox(se3_gt_pose_i, 1e-6))
