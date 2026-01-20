@@ -8,18 +8,16 @@
 using namespace reprojection;
 
 TEST(TestingMocksMvgGenerator, TestGenerateBatch) {
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(
-            new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480})),
-        false)};
+    testing_mocks::MvgGenerator const generator{
+        testing_mocks::MvgGenerator(CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false)};
 
     // NOTE(Jack): All points for every frame project successfully. If not they should get masked out, but the
     // test data is engineered such that none get masked out. But don't forget that there might be an implementation
     // error because when we set the view point and sphere origin as {0,0,0} we get poses that do not make sense!
-    std::vector<Frame> const batch{generator.GenerateBatch(100)};
-    for (auto const& frame : batch) {
-        EXPECT_EQ(frame.bundle.pixels.rows(), 25);
-        EXPECT_EQ(frame.bundle.points.rows(), 25);
+    CameraCalibrationData const batch{generator.GenerateBatch(100)};
+    for (auto const& [_, frame_i] : batch.frames) {
+        EXPECT_EQ(frame_i.extracted_target.bundle.pixels.rows(), 25);
+        EXPECT_EQ(frame_i.extracted_target.bundle.points.rows(), 25);
     }
 }
 

@@ -6,6 +6,7 @@ find_package(OpenCV REQUIRED) # Only required to save projection images
 
 set(SRC_FILES
         src/double_sphere.cpp
+        src/intialize_camera.cpp
         src/pinhole.cpp
         src/pinhole_radtan4.cpp
         src/unified_camera_model.cpp

@@ -8,15 +8,10 @@
 // consumers of the testing mocks! Could we maybe just make the spline a static variable?
 #include "spline/se3_spline.hpp"
 #include "types/algorithm_types.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::testing_mocks {
-
-// TODO(Jack): In general the strategy of how to testy given noisy data is at this time unclear! For the non-noisy
-// case we have exact answers, but for the noisy case we will have "random" answers that are part of a distribution.
-// At this time we still have not implemented predicting those distributions, therefore we have no formal way to
-// test using noisy data. For example I think if we know there is a specific pixel noise, then there will be a
-// specific error in the poses calculated. This is something we need to look at closely!
 
 // TODO(Jack): Why is this even a class if at almost all places we call GenerateBatch() and then are done with it?
 // I think this can probably be refactored into a single function call instead.
@@ -25,9 +20,10 @@ namespace reprojection::testing_mocks {
 // MVG = "multiple view geometry"
 class MvgGenerator {
    public:
-    explicit MvgGenerator(std::unique_ptr<projection_functions::Camera> const camera, bool const flat = true);
+    explicit MvgGenerator(CameraModel const camera_model, ArrayXd const& intrinsics, ImageBounds const& bounds,
+                          bool const flat = true);
 
-    std::vector<Frame> GenerateBatch(int const num_frames) const;
+    CameraCalibrationData GenerateBatch(int const num_frames) const;
 
     static std::tuple<MatrixX2d, ArrayXb> Project(MatrixX3d const& points_w,
                                                   std::unique_ptr<projection_functions::Camera> const& camera,
@@ -39,6 +35,9 @@ class MvgGenerator {
 
     static MatrixX3d BuildTargetPoints(bool const flat);
 
+    CameraModel camera_model_;
+    ArrayXd intrinsics_;
+    ImageBounds bounds_;
     std::unique_ptr<projection_functions::Camera> camera_;
     spline::Se3Spline se3_spline_;
     MatrixX3d points_;
