@@ -4,6 +4,7 @@
 #include "geometry/lie.hpp"
 #include "pnp/pnp.hpp"
 #include "projection_functions/camera_model.hpp"
+#include "projection_functions/intialize_camera.hpp"
 
 namespace reprojection::calibration {
 
@@ -12,8 +13,8 @@ namespace reprojection::calibration {
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
 void LinearPoseInitialization(InitializationDataView data_view) {
-    auto const camera{
-        InitializeCamera(data_view.camera_model(), data_view.image_bounds(), data_view.initial_intrinsics())};
+    auto const camera{projection_functions::InitializeCamera(data_view.camera_model(), data_view.initial_intrinsics(),
+                                                             data_view.image_bounds())};
 
     for (InitializationFrameView frame_i : data_view) {
         // Project using a unit ideal pinhole camera to get pseudo undistorted pixels
