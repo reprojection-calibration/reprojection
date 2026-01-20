@@ -12,34 +12,18 @@
 using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
-    Array4d const intrinsics{600, 600, 360, 240};
-    ImageBounds const bounds{0, 720, 0, 480};
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)))};
-
-    int const num_frames{20};
-    std::vector<Frame> const mvg_frames{generator.GenerateBatch(num_frames)};
-
-    CameraCalibrationData data{{"", CameraModel::Pinhole, bounds}, intrinsics};
-
-    // TODO(Jack): Refactor mvg generator to use new calibration types??? Or does that not make any sense? At least
-    // provide an adaptor that converts frames into the data field of the dict.
-    uint64_t pseudo_time{0};
-    for (auto const& mvg_frame_i : mvg_frames) {
-        // Unlike real extracted targets this target has 3D points (not 2D z=0 target points) and does not have indices.
-        data.frames[pseudo_time].extracted_target.bundle = mvg_frame_i.bundle;
-        data.frames[pseudo_time].initial_pose = geometry::Log(mvg_frame_i.pose);
-
-        pseudo_time += 1;
-    }
+    testing_mocks::MvgGenerator const generator{
+        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
+    CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
+    CameraCalibrationData data{gt_data};
 
     optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
     EXPECT_EQ(state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
-        // WARN(Jack): We are abusing the pseudo timestamp from the frame map to index into a vector. Hack!
-        Isometry3d const gt_pose_i{mvg_frames[timestamp_ns].pose};
-        Array6d const se3_gt_pose_i{geometry::Log(gt_pose_i)};
+        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
+        // definitely have filled out this value!
+        Array6d const se3_gt_pose_i{gt_data.frames.at(timestamp_ns).initial_pose.value()};
 
         ASSERT_TRUE(frame_i.optimized_pose);
         EXPECT_TRUE(frame_i.optimized_pose.value().isApprox(se3_gt_pose_i, 1e-6))
@@ -55,35 +39,24 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
         EXPECT_NEAR(frame_i.optimized_reprojection_error.value().mean(), 0.0, 1e-6);
     }
 
-    EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))
+    EXPECT_TRUE(data.optimized_intrinsics.isApprox(gt_data.initial_intrinsics, 1e-6))
         << "Optimization result:\n"
         << data.optimized_intrinsics << "\noptimization input:\n"
-        << intrinsics;
+        << gt_data.initial_intrinsics;
 }
 
 // Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
 // and intrinsic back.
 TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
-    Array4d const intrinsics{600, 600, 360, 240};
-    ImageBounds const bounds{0, 720, 0, 480};
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)))};
+    testing_mocks::MvgGenerator const generator{
+        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
+    CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
+    CameraCalibrationData data{gt_data};
 
-    auto mvg_frames{generator.GenerateBatch(20)};
-    std::vector<Isometry3d> gt_poses;  // Store the poses from the frames because we are about to add noise to the frame
-    for (auto& mvg_frame_i : mvg_frames) {
-        gt_poses.push_back(mvg_frame_i.pose);
-        mvg_frame_i.pose = testing_mocks::AddGaussianNoise(0.5, 0.5, mvg_frame_i.pose);
-    }
-
-    CameraCalibrationData data{{"", CameraModel::Pinhole, bounds}, intrinsics};
-
-    uint64_t pseudo_time{0};
-    for (auto const& mvg_frame_i : mvg_frames) {
-        data.frames[pseudo_time].extracted_target.bundle = mvg_frame_i.bundle;
-        data.frames[pseudo_time].initial_pose = geometry::Log(mvg_frame_i.pose);
-
-        pseudo_time += 1;
+    // Add gaussian noise to the initial poses
+    for (auto& [_, frame_i] : data.frames) {
+        Isometry3d const SE3_i{geometry::Exp(frame_i.initial_pose.value())};
+        frame_i.initial_pose = geometry::Log(testing_mocks::AddGaussianNoise(0.5, 0.5, SE3_i));
     }
 
     optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
@@ -100,22 +73,25 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         // test to instead compare the 4x4 SE3 transformation  matrices. Now it passes again, essentially the same as
         // before, but now working in the matrix space. Why all of a sudden the optimized poses start flipping, I cannot
         // explain.
-        Isometry3d const gt_pose_i{gt_poses[timestamp_ns]};
+        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
+        // definitely have filled out this value!
+        Isometry3d const gt_pose_i{geometry::Exp(gt_data.frames.at(timestamp_ns).initial_pose.value())};
+
         ASSERT_TRUE(frame_i.optimized_pose);
         EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose.value()).isApprox(gt_pose_i, 1e-3))
             << "Nonlinear refinement result:\n"
             << geometry::Exp(frame_i.optimized_pose.value()).matrix() << "\nGround truth:\n"
             << gt_pose_i.matrix() << "\nInitial value:\n"
-            << mvg_frames[timestamp_ns].pose.matrix();
+            << geometry::Exp(frame_i.initial_pose.value()).matrix();
 
         ASSERT_TRUE(frame_i.optimized_reprojection_error);
         EXPECT_LT(frame_i.optimized_reprojection_error.value().mean(), 1e-6);
     }
 
-    EXPECT_TRUE(data.optimized_intrinsics.isApprox(intrinsics, 1e-6))
+    EXPECT_TRUE(data.optimized_intrinsics.isApprox(gt_data.initial_intrinsics, 1e-6))
         << "Optimization result:\n"
         << data.optimized_intrinsics << "\noptimization input:\n"
-        << intrinsics;
+        << gt_data.initial_intrinsics;
 }
 
 TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {

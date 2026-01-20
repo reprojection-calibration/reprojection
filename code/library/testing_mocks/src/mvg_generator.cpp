@@ -5,13 +5,17 @@
 #include "geometry/lie.hpp"
 #include "noise_generation.hpp"
 #include "projection_functions/camera_model.hpp"
+#include "projection_functions/intialize_camera.hpp"
 #include "sphere_trajectory.hpp"
 #include "spline/se3_spline.hpp"
 
 namespace reprojection::testing_mocks {
-
-MvgGenerator::MvgGenerator(std::unique_ptr<projection_functions::Camera> camera, bool const flat)
-    : camera_{std::move(camera)},
+MvgGenerator::MvgGenerator(CameraModel const camera_model, ArrayXd const& intrinsics, ImageBounds const& bounds,
+                           bool const flat)
+    : camera_model_{camera_model},
+      intrinsics_{intrinsics},
+      bounds_{bounds},
+      camera_{projection_functions::InitializeCamera(camera_model_, intrinsics_, bounds_)},
       se3_spline_{constants::t0_ns, constants::delta_t_ns},
       points_{BuildTargetPoints(flat)} {
     std::vector<Isometry3d> const poses{SphereTrajectory(CameraTrajectory{{0, 0, 0}, 1.0, {0, 0, 5}})};
@@ -21,14 +25,15 @@ MvgGenerator::MvgGenerator(std::unique_ptr<projection_functions::Camera> camera,
     }
 }
 
-std::vector<Frame> MvgGenerator::GenerateBatch(int const num_frames) const {
-    std::vector<Frame> frames;
+CameraCalibrationData MvgGenerator::GenerateBatch(int const num_frames) const {
+    CameraCalibrationData data{{"", camera_model_, bounds_}, intrinsics_};
     for (int i{0}; i < num_frames; ++i) {
         Frame const frame_i{this->Generate(static_cast<double>(i) / num_frames)};
-        frames.push_back(frame_i);
+        data.frames[i].extracted_target.bundle = frame_i.bundle;
+        data.frames[i].initial_pose = geometry::Log(frame_i.pose);
     }
 
-    return frames;
+    return data;
 }  // LCOV_EXCL_LINE
 
 /**

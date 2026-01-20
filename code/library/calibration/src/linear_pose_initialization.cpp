@@ -4,30 +4,17 @@
 #include "geometry/lie.hpp"
 #include "pnp/pnp.hpp"
 #include "projection_functions/camera_model.hpp"
+#include "projection_functions/intialize_camera.hpp"
 
 namespace reprojection::calibration {
-
-// TODO MOVE TO FOLDER
-// TODO ADD SANITY CHECKS?
-// TODO MAKE SURE THIS IS NOT ALREADY IMPLEMENTED SOMEHWERE
-// TODO(Jack): Add all other camera models and check the above listed TODO points.
-std::unique_ptr<projection_functions::Camera> InitializeCamera(CameraModel const model, ImageBounds const& bounds,
-                                                               ArrayXd const& intrinsics) {
-    if (model == CameraModel::DoubleSphere) {
-        return std::unique_ptr<projection_functions::Camera>(
-            new projection_functions::DoubleSphereCamera(intrinsics, bounds));
-    } else {
-        throw std::runtime_error("invalid camera model");  // LCOV_EXCL_LINE
-    }
-}
 
 // Doxygen notes: only work because we have same camera center for the pinhole and ds/other camera model used. The goal
 // of the function is to unproject the pixels to 3d rays using a roughly initialized camera, then project these back to
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
 void LinearPoseInitialization(InitializationDataView data_view) {
-    auto const camera{
-        InitializeCamera(data_view.camera_model(), data_view.image_bounds(), data_view.initial_intrinsics())};
+    auto const camera{projection_functions::InitializeCamera(data_view.camera_model(), data_view.initial_intrinsics(),
+                                                             data_view.image_bounds())};
 
     for (InitializationFrameView frame_i : data_view) {
         // Project using a unit ideal pinhole camera to get pseudo undistorted pixels
