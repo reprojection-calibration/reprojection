@@ -14,9 +14,4 @@ struct ExtractedTarget {
     ArrayX2i indices;
 };
 
-struct Frame {
-    Bundle bundle;
-    Isometry3d pose;
-};
-
 }  // namespace reprojection

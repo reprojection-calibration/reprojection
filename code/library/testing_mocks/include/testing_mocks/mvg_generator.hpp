@@ -31,7 +31,7 @@ class MvgGenerator {
 
    private:
     // Input is fractional time of trajectory from [0,1)
-    Frame Generate(double const t) const;
+    std::tuple<Bundle, Isometry3d> Generate(double const t) const;
 
     static MatrixX3d BuildTargetPoints(bool const flat);
 

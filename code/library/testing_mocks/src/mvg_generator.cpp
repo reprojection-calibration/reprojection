@@ -28,9 +28,11 @@ MvgGenerator::MvgGenerator(CameraModel const camera_model, ArrayXd const& intrin
 CameraCalibrationData MvgGenerator::GenerateBatch(int const num_frames) const {
     CameraCalibrationData data{{"", camera_model_, bounds_}, intrinsics_};
     for (int i{0}; i < num_frames; ++i) {
-        Frame const frame_i{this->Generate(static_cast<double>(i) / num_frames)};
-        data.frames[i].extracted_target.bundle = frame_i.bundle;
-        data.frames[i].initial_pose = geometry::Log(frame_i.pose);
+        // TODO(Jack): What do we need the Frame type for? Is it widely used or has it been replaced by camera
+        // calibration data?
+        auto const [bundle, pose]{this->Generate(static_cast<double>(i) / num_frames)};
+        data.frames[i].extracted_target.bundle = bundle;
+        data.frames[i].initial_pose = geometry::Log(pose);
     }
 
     return data;
@@ -52,7 +54,7 @@ std::tuple<MatrixX2d, ArrayXb> MvgGenerator::Project(MatrixX3d const& points_w,
 }
 
 // Input is fractional time of trajectory from [0,1)
-Frame MvgGenerator::Generate(double const t) const {
+std::tuple<Bundle, Isometry3d> MvgGenerator::Generate(double const t) const {
     assert(0 <= t and t < 1);
 
     // NOTE(Jack): Look how the "spline_time" is calculated here using constants::num_poses. You see that the fractional
