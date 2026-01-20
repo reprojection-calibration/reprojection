@@ -14,7 +14,7 @@ namespace reprojection::optimization {
 //  for us?
 void CameraNonlinearRefinement(OptimizationDataView data_view) {
     std::map<uint64_t, std::vector<std::unique_ptr<ceres::CostFunction>>> cost_functions;
-    for (OptimizationFrameView frame_i : data_view) {
+    for (OptimizationFrameView const& frame_i : data_view) {
         MatrixX2d const& pixels_i{frame_i.extracted_target().bundle.pixels};
         MatrixX3d const& points_i{frame_i.extracted_target().bundle.points};
 

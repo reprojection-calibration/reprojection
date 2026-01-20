@@ -18,10 +18,10 @@ struct ImageBounds {
 
     ImageBounds() = default;
 
-    double u_min;
-    double u_max;
-    double v_min;
-    double v_max;
+    double u_min{};
+    double u_max{};
+    double v_min{};
+    double v_max{};
 };
 
 struct CameraSensorInfo {
@@ -73,7 +73,7 @@ struct CameraCalibrationData {
     CameraCalibrationData(CameraSensorInfo const& _sensor, ArrayXd const& _initial_intrinsics)
         : sensor{_sensor}, initial_intrinsics{_initial_intrinsics} {}
 
-    CameraSensorInfo sensor;
+    CameraSensorInfo sensor{};
 
     // TODO(Jack): These should be optional!
     ArrayXd initial_intrinsics;
