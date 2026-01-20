@@ -98,8 +98,8 @@ class OptimizationDataView {
 
        private:
         void SkipInvalid() {
-            // WARN(Jack): In the condition we need to check the end condition first otherwise we will get undefined
-            // behavior when dereferencing before checking if we are at the end.
+            // WARN(Jack): In this condition we need to check the end condition first otherwise we will get undefined
+            // behavior when dereferencing before checking if we are at the end!
             while (it_ != end_ and not it_->second.initial_pose.has_value()) {
                 ++it_;
             }
