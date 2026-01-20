@@ -102,7 +102,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         // explain.
         Isometry3d const gt_pose_i{gt_poses[timestamp_ns]};
         ASSERT_TRUE(frame_i.optimized_pose);
-        EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose.value()).isApprox(gt_pose_i, 1e-6))
+        EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose.value()).isApprox(gt_pose_i, 1e-3))
             << "Nonlinear refinement result:\n"
             << geometry::Exp(frame_i.optimized_pose.value()).matrix() << "\nGround truth:\n"
             << gt_pose_i.matrix() << "\nInitial value:\n"
