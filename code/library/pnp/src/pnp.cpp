@@ -37,7 +37,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
 
     // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
     CameraCalibrationData data{
-        {"", CameraModel::Pinhole, bounds.value()}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, geometry::Log(tf)}}}};
+        {"", CameraModel::Pinhole, bounds.value()}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, se3}}}};
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
     // NOTE(Jack): There is only one single frame here in the CameraCalibrationData structure, therefore we can simply
