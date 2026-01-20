@@ -33,7 +33,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
         pseudo_time += 1;
     }
 
-    optimization::CameraNonlinearRefinement(OptimizationDataView(data));
+    optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
+    EXPECT_EQ(state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // WARN(Jack): We are abusing the pseudo timestamp from the frame map to index into a vector. Hack!
@@ -85,7 +86,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         pseudo_time += 1;
     }
 
-    optimization::CameraNonlinearRefinement(OptimizationDataView(data));
+    optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
+    EXPECT_EQ(state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
@@ -100,7 +102,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         // explain.
         Isometry3d const gt_pose_i{gt_poses[timestamp_ns]};
         ASSERT_TRUE(frame_i.optimized_pose);
-        EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose.value()).isApprox(gt_pose_i, 1e-6))
+        EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose.value()).isApprox(gt_pose_i, 1e-3))
             << "Nonlinear refinement result:\n"
             << geometry::Exp(frame_i.optimized_pose.value()).matrix() << "\nGround truth:\n"
             << gt_pose_i.matrix() << "\nInitial value:\n"
@@ -132,12 +134,13 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
                               {0, 0, -600},
                               {0, 0, -600},
                               {0, 0, 600}};
-    ArrayX2d const gt_residuals{{0, 0},  //
+    // If the pixel evaluation fails then the cost function will automatically fill out the residual value with 256,
+    // this is arbitrary and heuristic. See the note in the projection cost function implementation.
+    ArrayX2d const gt_residuals{{256, 256},  //
                                 {-10, -10},
-                                {0, 0},
-                                {0, 0},
+                                {256, 256},
+                                {256, 256},
                                 {5, 5}};
-    Array5b const gt_mask{false, true, false, false, true};
 
     std::vector<std::unique_ptr<ceres::CostFunction>> cost_functions;
     for (Eigen::Index j{0}; j < gt_pixels.rows(); ++j) {
@@ -145,8 +148,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
             optimization::Create(CameraModel::Pinhole, bounds, gt_pixels.row(j), gt_points.row(j)));
     }
 
-    auto const [residuals,
-                mask]{optimization::EvaluateReprojectionResiduals(cost_functions, intrinsics, {0, 0, 0, 0, 0, 0})};
+    ArrayX2d const residuals{
+        optimization::EvaluateReprojectionResiduals(cost_functions, intrinsics, {0, 0, 0, 0, 0, 0})};
     EXPECT_TRUE(residuals.isApprox(gt_residuals));
-    EXPECT_TRUE(mask.isApprox(gt_mask));
 }

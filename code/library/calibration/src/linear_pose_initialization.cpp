@@ -43,10 +43,7 @@ void LinearPoseInitialization(InitializationDataView data_view) {
 
         auto const result{pnp::Pnp(linearized_bundle)};
         if (std::holds_alternative<Isometry3d>(result)) {
-            // ERROR(Jack): What is the proper place to do this inverse? Do we need this inverse at all really? When we
-            // have some consistency in our coordinate systems we can decide this.
-            Vector6d const se3_i{geometry::Log(std::get<Isometry3d>(result).inverse())};  // INVERSE!!!
-            frame_i.initial_pose() = se3_i;  // cppcheck-suppress unreadVariable
+            frame_i.initial_pose() = geometry::Log(std::get<Isometry3d>(result));  // cppcheck-suppress unreadVariable
         } else {
             frame_i.initial_pose() = std::nullopt;  // cppcheck-suppress unreadVariable // LCOV_EXCL_LINE
         }

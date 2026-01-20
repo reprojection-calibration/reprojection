@@ -82,11 +82,13 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
     EXPECT_FLOAT_EQ(residual[0], 0.0);
     EXPECT_FLOAT_EQ(residual[1], 0.0);
 
-    // Now a point behind the camera will return false because its invalid.
+    // A point behind the camera will return true but with a residual of 256 - see note in projection cost functions.
     Array3d const point_behind{0, 0, -10};
     PinholeCostFunction const cost_function_behind{pixel, point_behind, bounds};
     success = cost_function_behind(pinhole_intrinsics.data(), pose.data(), residual.data());
-    EXPECT_FALSE(success);
+    EXPECT_TRUE(success);
+    EXPECT_FLOAT_EQ(residual[0], 256);
+    EXPECT_FLOAT_EQ(residual[1], 256);
 }
 
 // NOTE(Jack): We do not test cost_function->Evaluate() in the following test because allocating the memory of the input

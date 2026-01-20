@@ -34,6 +34,7 @@ TEST(CalibrationDataViews, TestOptimizationView) {
 
     EXPECT_EQ(data_view.valid_frame_count(), 4);
 
+    // We use the timestamps as a proxy to check which frames the OptimizationView presents to us.
     std::vector<uint64_t> timestamps_ns;
     std::transform(data_view.cbegin(), data_view.cend(), std::back_inserter(timestamps_ns),
                    [](OptimizationFrameView const& frame) { return frame.timestamp_ns(); });

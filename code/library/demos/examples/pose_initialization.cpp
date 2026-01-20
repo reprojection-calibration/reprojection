@@ -31,14 +31,6 @@ int main() {
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
 
-    // WARN(Jack): At this time we have unsettled coordinate frame conventions. Because of this we need to invert the
-    // poses here to match the initial poses. This is a well known problem!
-    for (auto& [timestamp_ns, frame_i] : cam_data.frames) {
-        if (frame_i.optimized_pose) {
-            frame_i.optimized_pose = geometry::Log(geometry::Exp(frame_i.optimized_pose.value()).inverse());
-        }
-    }
-
     std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
     // Write everything to database
