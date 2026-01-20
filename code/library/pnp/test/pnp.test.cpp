@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "geometry/lie.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 
 using namespace reprojection;
@@ -9,37 +10,34 @@ using namespace reprojection;
 // TODO(Jack): Test all functions with noisy data!
 
 TEST(Pnp, TestPnp) {
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(
-            new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480})),
-        false)};
-    // TODO(Jack): Get this directly from the mvg generator!
     ImageBounds const bounds{0, 720, 0, 480};
+    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, Array4d{600, 600, 360, 240}, bounds, false};
+    CameraCalibrationData const data{generator.GenerateBatch(20)};
 
-    std::vector<Frame> const frames{generator.GenerateBatch(20)};
-    for (auto const& frame : frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle, bounds)};
+    for (auto const& [_, frame_i] : data.frames) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle, bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(frame.pose));
+        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
+        // definitely have filled out this value!
+        Array6d const pose_i{geometry::Log(std::get<Isometry3d>(pnp_result))};
+        EXPECT_TRUE(pose_i.isApprox(frame_i.initial_pose.value()));
     }
 }
 
 TEST(Pnp, TestPnpFlat) {
-    Array4d const intrinsics{1, 1, 0, 0};  // Equivalent to K = I_3x3 Pixels must be in normalized image space for Dlt22
     ImageBounds const bounds{-1, 1, -1, 1};
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)),
-        true)};
+    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, Array4d{1, 1, 0, 0}, bounds, true};
+    CameraCalibrationData const data{generator.GenerateBatch(20)};
 
-    std::vector<Frame> const frames{generator.GenerateBatch(20)};
-    for (auto const& frame : frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame.bundle)};
+    for (auto const& [_, frame_i] : data.frames) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle, bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        Isometry3d const pose_i{std::get<Isometry3d>(pnp_result)};
-        EXPECT_TRUE(pose_i.isApprox(frame.pose));
+        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
+        // definitely have filled out this value!
+        Array6d const pose_i{geometry::Log(std::get<Isometry3d>(pnp_result))};
+        EXPECT_TRUE(pose_i.isApprox(frame_i.initial_pose.value()));
     }
 }
 
@@ -74,5 +72,3 @@ TEST(Pnp, TestNans) {
     pnp::PnpErrorCode const error_code{std::get<pnp::PnpErrorCode>(pnp_result)};
     EXPECT_EQ(error_code, pnp::PnpErrorCode::ContainsNan);
 }
-
-// TODO(Jack): Add a test to trigger the ContainsNan error code.
