@@ -7,6 +7,8 @@
 #include "types/eigen_types.hpp"
 
 // TODO(Jack): It looks like there will be a lot of copy and pasted code between the views, eliminate this!
+// TODO(Jack): In the same way that an optimization frame view cannot exist without an initial pose, a initialization
+// frame cannot exist without extracted targets. Introduce the same pattern of "skip valid" here.
 
 namespace reprojection {
 
