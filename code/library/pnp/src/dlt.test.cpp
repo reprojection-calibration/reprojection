@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "geometry/lie.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 
 // TODO(Jack): I think we could add a test where we check more properties, like for example PC=0, etc. Even though these
@@ -10,39 +11,41 @@
 using namespace reprojection;
 
 TEST(PnpDlt, TestDlt23) {
-    Array4d const intrinsics{600, 600, 360, 240};
-    ImageBounds const bounds{0, 720, 0, 480};
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)),
-        false)};
+    testing_mocks::MvgGenerator const generator{
+        testing_mocks::MvgGenerator(CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false)};
+    CameraCalibrationData const data{generator.GenerateBatch(20)};
 
-    std::vector<Frame> const frames{generator.GenerateBatch(20)};
-    for (auto const& frame : frames) {
-        auto const [tf, K]{pnp::Dlt23(frame.bundle)};
+    for (auto const& [timestamp_ns, frame_i] : data.frames) {
+        auto const [tf, K]{pnp::Dlt23(frame_i.extracted_target.bundle)};
 
+        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
+        // definitely have filled out this value!
+        Isometry3d const gt_pose_i{geometry::Exp(data.frames.at(timestamp_ns).initial_pose.value())};
+
+        EXPECT_TRUE(tf.isApprox(gt_pose_i)) << "Result:\n"
+                                            << tf.matrix() << "\nexpected result:\n"
+                                            << gt_pose_i.matrix();
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
-        EXPECT_TRUE(tf.isApprox(frame.pose)) << "Result:\n"
-                                             << tf.matrix() << "\nexpected result:\n"
-                                             << frame.pose.matrix();
-
-        EXPECT_TRUE(K.isApprox(intrinsics));
+        EXPECT_TRUE(K.isApprox(data.initial_intrinsics));
     }
 }
 
 TEST(PnpDlt, TestDlt22) {
-    Array4d const intrinsics{1, 1, 0, 0};  // Equivalent to K = I_3x3 Pixels must be in normalized image space for Dlt22
-    ImageBounds const bounds{-1, 1, -1, 1};
-    testing_mocks::MvgGenerator const generator{testing_mocks::MvgGenerator(
-        std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(intrinsics, bounds)),
-        true)};  // Points must have Z=0 (flat = true)
+    // Points must have Z=0 (flat = true) for Dlt22
+    testing_mocks::MvgGenerator const generator{
+        testing_mocks::MvgGenerator(CameraModel::Pinhole, Array4d{1, 1, 0, 0}, {-1, 1, -1, 1}, true)};
+    CameraCalibrationData const data{generator.GenerateBatch(20)};
 
-    std::vector<Frame> const frames{generator.GenerateBatch(20)};
-    for (auto const& frame : frames) {
-        auto const tf{pnp::Dlt22(frame.bundle)};
+    for (auto const& [timestamp_ns, frame_i] : data.frames) {
+        auto const tf{pnp::Dlt22(frame_i.extracted_target.bundle)};
 
+        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
+        // definitely have filled out this value!
+        Isometry3d const gt_pose_i{geometry::Exp(data.frames.at(timestamp_ns).initial_pose.value())};
+
+        EXPECT_TRUE(tf.isApprox(gt_pose_i)) << "Result:\n"
+                                            << tf.matrix() << "\nexpected result:\n"
+                                            << gt_pose_i.matrix();
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
-        EXPECT_TRUE(tf.isApprox(frame.pose)) << "Result:\n"
-                                             << tf.matrix() << "\nexpected result:\n"
-                                             << frame.pose.matrix();
     }
 }
