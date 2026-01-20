@@ -42,6 +42,10 @@ TEST(ProjectionFunctionsPinhole, TestPinholeProjectMasking) {
     // Point behind camera - returns std::nullopt.
     pixel = projection_functions::Pinhole::Project(pinhole_intrinsics, bounds, {0, 0, -10});
     EXPECT_FALSE(pixel.has_value());
+
+    // Point that project to way outside the bounds - returns std::nullopt.
+    pixel = projection_functions::Pinhole::Project(pinhole_intrinsics, bounds, {100, 100, 10});
+    EXPECT_FALSE(pixel.has_value());
 }
 
 TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
