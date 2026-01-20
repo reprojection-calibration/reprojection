@@ -12,7 +12,7 @@ using namespace reprojection;
 
 TEST(PnpDlt, TestDlt23) {
     testing_mocks::MvgGenerator const generator{
-        testing_mocks::MvgGenerator(CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false)};
+        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
     CameraCalibrationData const data{generator.GenerateBatch(20)};
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
@@ -32,8 +32,7 @@ TEST(PnpDlt, TestDlt23) {
 
 TEST(PnpDlt, TestDlt22) {
     // Points must have Z=0 (flat = true) for Dlt22
-    testing_mocks::MvgGenerator const generator{
-        testing_mocks::MvgGenerator(CameraModel::Pinhole, Array4d{1, 1, 0, 0}, {-1, 1, -1, 1}, true)};
+    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, Array4d{1, 1, 0, 0}, {-1, 1, -1, 1}, true};
     CameraCalibrationData const data{generator.GenerateBatch(20)};
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {

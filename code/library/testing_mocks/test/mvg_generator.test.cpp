@@ -9,7 +9,7 @@ using namespace reprojection;
 
 TEST(TestingMocksMvgGenerator, TestGenerateBatch) {
     testing_mocks::MvgGenerator const generator{
-        testing_mocks::MvgGenerator(CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false)};
+        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
 
     // NOTE(Jack): All points for every frame project successfully. If not they should get masked out, but the
     // test data is engineered such that none get masked out. But don't forget that there might be an implementation

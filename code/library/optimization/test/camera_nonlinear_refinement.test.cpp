@@ -13,7 +13,7 @@ using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
     testing_mocks::MvgGenerator const generator{
-        testing_mocks::MvgGenerator(CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false)};
+        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
     CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
     CameraCalibrationData data{gt_data};
 
@@ -49,7 +49,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 // and intrinsic back.
 TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
     testing_mocks::MvgGenerator const generator{
-        testing_mocks::MvgGenerator(CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false)};
+        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
     CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
     CameraCalibrationData data{gt_data};
 
