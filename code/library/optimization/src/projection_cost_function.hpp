@@ -59,11 +59,9 @@ class ProjectionCostFunction_T {
 
             residual[0] = T(pixel_[0]) - _pixel[0];
             residual[1] = T(pixel_[1]) - _pixel[1];
-
-            return true;
         } else {
             // NOTE(Jack): TLDR is - instead of leaving the residual empty and returning false to signal cost
-            // function evaluation failure we fill it with a large constant value and return true.
+            // function evaluation failure we fill it with a large constant value and return true regardless.
             //
             // I could write an entire essay here, but let me try to keep it short and simple. I was under the belief
             // (and still am as of 20.01.2026) that when cost function evaluation fails we should return false. However,
@@ -101,9 +99,9 @@ class ProjectionCostFunction_T {
             // condition.
             residual[0] = T(256);
             residual[1] = T(256);
-
-            return true;
         }
+
+        return true;
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds) {
