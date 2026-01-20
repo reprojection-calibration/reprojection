@@ -62,7 +62,46 @@ class ProjectionCostFunction_T {
 
             return true;
         } else {
-            return false;
+            // NOTE(Jack): TLDR is - instead of leaving the residual empty and returning false to signal cost
+            // function evaluation failure we fill it with a large constant value and return true.
+            //
+            // I could write an entire essay here, but let me try to keep it short and simple. I was under the belief
+            // (and still am as of 20.01.2026) that when cost function evaluation fails we should return false. However,
+            // when you return false it has dramatic implications for solving. There are two primary cases, (1) when you
+            // assemble a problem and the cost function given the initial parameters returns false and (2) during
+            // optimization the cost function starts to return false due to the newly optimized parameter values.
+            //
+            // The first problem is an immediate dealbreaker and ceres will not even let you start to optimize that
+            // problem - which makes sense. If the solver cannot ever evaluate the cost function how is it supposed to
+            // know in which direction to take a step to start looking for the optimized parameters?
+            //
+            // The second problem manifests itself during the optimization itself after it has start. If during the
+            // optimization any single cost function evaluates to false, ceres screams and says "Treating it as a step
+            // with infinite cost" killing that iteration, and then in the next step reducing the trust region radius
+            // and looking for parameters in another direction.
+            //
+            // Ok, so now with this understanding you say: "well jack the first problem we need to prevent during
+            // problem construction of course, but the second problem the optimizer can solve itself." And maybe you are
+            // right, or maybe you can find the problem I could not, but the answer is not as obvious as you hope.
+            //
+            // I tried for a while to simply return false here and let the optimizer use that as a signal to discover
+            // which parts of the parameter space are bad for business. For whatever reason this did not work and the
+            // "Treating it as a step with infinite cost" was constantly printed during optimization and the end results
+            // as viewed in the dashboard were not satisfactory. You can see others discuss the idea here
+            // https://groups.google.com/g/ceres-solver/c/PPrZo0rxCno/m/kH98OIw6CgAJ?pli=1
+            //
+            // In the end the best solution I settled on was to set the residual to a constant arbitrary non-zero value
+            // when the projection evaluation fails. This tells the optimizer that hey these are bad points and they do
+            // not provide us any information for solving, but just because I have some bad points does not mean I need
+            // to kill the entire problem evaluation.
+            // NOTE(Jack): The value of the residual here should be larger than the expected final residual given a
+            // successful optimization. For example for reprojection error I would expect that when it is successful the
+            // error is under one pixel. So setting the residuals to 10 here clearly signals this is a failure
+            // condition.
+            residual[0] = T(10);
+            residual[1] = T(10);
+
+            return true;
         }
     }
 
