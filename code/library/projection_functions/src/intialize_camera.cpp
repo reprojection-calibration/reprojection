@@ -10,14 +10,14 @@ std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const&
     if (model == CameraModel::DoubleSphere) {
         if (not(intrinsics.rows() == DoubleSphere::Size)) {
             throw std::runtime_error(
-                "InitializeCamera() requested CameraModel::DoubleSphere but got intrinsics with length: " +
+                "InitializeCamera() requested CameraModel::DoubleSphere but got intrinsics with length: " +  // LCOV_EXCL_LINE
                 std::to_string(intrinsics.rows()));  // LCOV_EXCL_LINE
         }
         return std::unique_ptr<Camera>(new DoubleSphereCamera(intrinsics, bounds));
     } else if (model == CameraModel::Pinhole) {
         if (not(intrinsics.rows() == Pinhole::Size)) {
             throw std::runtime_error(
-                "InitializeCamera() requested CameraModel::Pinhole but got intrinsics with length: " +
+                "InitializeCamera() requested CameraModel::Pinhole but got intrinsics with length: " +  // LCOV_EXCL_LINE
                 std::to_string(intrinsics.rows()));  // LCOV_EXCL_LINE
         }
         return std::unique_ptr<Camera>(new PinholeCamera(intrinsics, bounds));
