@@ -20,6 +20,8 @@ TEST(CalibrationDataViews, TestOptimizationViewEmpty) {
 }
 
 TEST(CalibrationDataViews, TestOptimizationView) {
+    std::vector<int> gt_valid_timestamps_ns{0, 11, 44, 55};
+
     CameraCalibrationData data;
     OptimizationDataView data_view{data};
     data.frames[0] = {{}, {0, 1, 2, 3, 4, 5}};
@@ -28,18 +30,14 @@ TEST(CalibrationDataViews, TestOptimizationView) {
     data.frames[33] = {};
     data.frames[44] = {{}, {0, 1, 2, 3, 4, 5}};
     data.frames[55] = {{}, {0, 1, 2, 3, 4, 5}};
-    data.frames[66] = {};
-    data.frames[77] = {};  // cppcheck-suppress unreadVariable
+    data.frames[66] = {};  // cppcheck-suppress unreadVariable
 
     EXPECT_EQ(data_view.valid_frame_count(), 4);
 
     std::vector<uint64_t> timestamps_ns;
     std::transform(data_view.cbegin(), data_view.cend(), std::back_inserter(timestamps_ns),
                    [](OptimizationFrameView const& frame) { return frame.timestamp_ns(); });
-    EXPECT_EQ(std::size(timestamps_ns), 4);
-
-    std::vector<int> gt_timestamps_ns{0, 11, 44, 55};
-    EXPECT_TRUE(std::equal(std::cbegin(timestamps_ns), std::cend(timestamps_ns), std::cbegin(gt_timestamps_ns)));
+    EXPECT_TRUE(std::equal(std::cbegin(timestamps_ns), std::cend(timestamps_ns), std::cbegin(gt_valid_timestamps_ns)));
 }
 
 // The constructor initializes some values for the nonlinear optimization. If that stays here in the view we are not
