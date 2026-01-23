@@ -4,16 +4,18 @@
 
 #include "ceres_enums.hpp"
 
-namespace reprojection::config {}
+namespace reprojection::config {}  // namespace reprojection::config
 
 using namespace reprojection;
 
-TEST(ConfigEnumParsing, TestXXXX) {
-    ceres::MinimizerType result{config::ParseEnum("TRUST_REGION", config::MinimizerTypeMap)};
-    EXPECT_EQ(result, ceres::TRUST_REGION);
+// REMOVE HARDCODED MAPS!
 
-    result = config::ParseEnum("LINE_SEARCH", config::MinimizerTypeMap);
-    EXPECT_EQ(result, ceres::LINE_SEARCH);
+TEST(ConfigEnumParsing, TestYYYY) {
+    auto result = config::CeresEnumToString<ceres::LineSearchDirectionType, ceres::StringToLineSearchDirectionType>(
+        "STEEPEST_DESCENT");
+    EXPECT_EQ(result, ceres::STEEPEST_DESCENT);
 
-    EXPECT_THROW(config::ParseEnum("BAD_METHOD", config::MinimizerTypeMap), std::runtime_error);
+    result = config::CeresEnumToString<ceres::LineSearchDirectionType, ceres::StringToLineSearchDirectionType>(
+        "NONLINEAR_CONJUGATE_GRADIENT");
+    EXPECT_EQ(result, ceres::NONLINEAR_CONJUGATE_GRADIENT);
 }
