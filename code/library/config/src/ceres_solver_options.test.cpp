@@ -21,6 +21,7 @@ ceres::Solver::Options ParseSolverOptions(toml::table config) {
         return options;
     }
 
+    // TODO(Jack): Write a macro that automatically generates this code for the simple parameter case.
     // TODO(Jack): We need a better policy here! We should inform the user if the type is wrong, not just silently fail.
     if (auto const value{solver_cfg->get_as<std::string>("minimizer_type")}) {
         solver_cfg->erase("minimizer_type");
