@@ -7,6 +7,8 @@
 #include <string_view>
 #include <toml++/toml.hpp>
 
+#include "enum_parsing.hpp"
+
 namespace reprojection::config {
 
 ceres::Solver::Options ParseSolverOptions(toml::table const& config) {
@@ -14,9 +16,14 @@ ceres::Solver::Options ParseSolverOptions(toml::table const& config) {
     // value is not explicitly set, that its value is preserved as the default.
     ceres::Solver::Options options;
 
-    auto const* const solver_config{config["solver"].as_table()};
-    if (not solver_config) {
+    auto const* solver_cfg{config["solver"].as_table()};
+    if (not solver_cfg) {
         return options;
+    }
+
+    if (auto const value{solver_cfg->get_as<std::string>("minimizer_type")}) {
+        options.minimizer_type =
+            CeresEnumToString<ceres::MinimizerType, ceres::StringToMinimizerType>(value->as_string()->get());
     }
 
     return options;
@@ -27,14 +34,24 @@ using namespace reprojection;
 using namespace std::string_view_literals;
 
 TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsDefault) {
-    static constexpr std::string_view some_toml{R"(
-        [ceres]
-        [ceres.not_the_solver_config]
+    static constexpr std::string_view config_file{R"(
+        [not_the_solver_config]
     )"sv};
-    toml::table const config{toml::parse(some_toml)};
+    toml::table const config{toml::parse(config_file)};
 
     auto const solver_options{config::ParseSolverOptions(config)};
     std::string error_msg;
     EXPECT_TRUE(solver_options.IsValid(&error_msg));
     EXPECT_EQ(std::size(error_msg), 0);
+}
+
+TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMinimizerType) {
+    static constexpr std::string_view config_file{R"(
+        [solver]
+        minimizer_type = "LINE_SEARCH"
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    auto const solver_options{config::ParseSolverOptions(config)};
+    EXPECT_EQ(solver_options.minimizer_type, ceres::LINE_SEARCH);
 }
