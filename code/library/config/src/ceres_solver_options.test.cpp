@@ -1,8 +1,8 @@
-#include "config/ceres_solver_params.hpp"
-
 #include <gtest/gtest.h>
 
 #include <toml++/toml.hpp>
+
+#include "ceres_solver_options.hpp"
 
 namespace reprojection::config {}
 

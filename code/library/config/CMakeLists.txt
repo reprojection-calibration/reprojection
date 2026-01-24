@@ -5,7 +5,7 @@ find_package(Eigen3 REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
 set(SRC_FILES
-        src/ceres_solver_params.cpp
+        src/ceres_solver_options.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -16,7 +16,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/ceres_solver_options.test.cpp
         src/enum_parsing.test.cpp
-        test/ceres_solver_params.test.cpp
 )
 AddTests()

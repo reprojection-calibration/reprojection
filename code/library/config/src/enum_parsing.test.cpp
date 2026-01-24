@@ -1,8 +1,7 @@
 #include "enum_parsing.hpp"
 
+#include <ceres/types.h>
 #include <gtest/gtest.h>
-
-#include "ceres_enums.hpp"
 
 namespace reprojection::config {}  // namespace reprojection::config
 
