@@ -22,7 +22,7 @@ int main() {
     std::string const sensor_name{"/cam0/image_raw"};
     CameraCalibrationData cam_data{
         {sensor_name, CameraModel::DoubleSphere, {0, 512, 0, 512}},
-        Array6d{156.82590211, 156.79756958, 254.99978685, 256.9744566, -0.17931409, 0.59133716},
+        Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716},
         {},
         {}};
 
