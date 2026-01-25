@@ -126,6 +126,13 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
     CFG_GET_ENUM_AND_ERASE(trust_region_problem_dump_format_type, solver_cfg, options, ceres::DumpFormatType,
                            StringToDumpFormatTypeHandler);
 
+    // Finite differences options.
+    CFG_GET_AND_ERASE(check_gradients, solver_cfg, options, bool);
+    CFG_GET_AND_ERASE(gradient_check_relative_precision, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(gradient_check_numeric_derivative_relative_step_size, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(update_state_every_iteration, solver_cfg, options, bool);
+    // IGNORED - options.callbacks
+
     if (solver_cfg->size() != 0) {
         // TODO(Jack): Print the keys and values in the error message
         throw std::runtime_error("Unread keys found in table xxxx!!!!");
