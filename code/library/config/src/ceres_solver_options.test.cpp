@@ -61,6 +61,16 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
     }
 
     CFG_GET_AND_ERASE(solver_cfg, options, std::int64_t, max_lbfgs_rank);
+    CFG_GET_AND_ERASE(solver_cfg, options, bool, use_approximate_eigenvalue_bfgs_scaling);
+
+    if (auto const value{solver_cfg->get_as<std::string>("line_search_interpolation_type")}) {
+        options.line_search_interpolation_type =
+            CeresEnumToString<ceres::LineSearchInterpolationType, ceres::StringToLineSearchInterpolationType>(
+                value->as_string()->get());
+        solver_cfg->erase("line_search_interpolation_type");
+    }
+
+    // CFG_GET_AND_ERASE(solver_cfg, options,,);
 
     if (solver_cfg->size() != 0) {
         // TODO(Jack): Print the keys and values in the error message
@@ -87,17 +97,6 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsDefault) {
     EXPECT_EQ(std::size(error_msg), 0);
 }
 
-TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMinimizerType) {
-    static constexpr std::string_view config_file{R"(
-        [solver]
-        minimizer_type = "LINE_SEARCH"
-    )"sv};
-    toml::table const config{toml::parse(config_file)};
-
-    auto const solver_options{config::ParseSolverOptions(config)};
-    EXPECT_EQ(solver_options.minimizer_type, ceres::LINE_SEARCH);
-}
-
 // Given the wrong type this key/value will not be parsed and removed from the table, which means we will have a
 // leftover key at the end of parsing which is an error we throw on.
 TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMinimizerTypeWrongType) {
@@ -110,13 +109,28 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMinimizerTypeWrongType) {
     EXPECT_THROW(config::ParseSolverOptions(config), std::runtime_error);
 }
 
+TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsEnums) {
+    static constexpr std::string_view config_file{R"(
+        [solver]
+        minimizer_type = "LINE_SEARCH"
+        line_search_interpolation_type = "QUADRATIC"
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    auto const solver_options{config::ParseSolverOptions(config)};
+    EXPECT_EQ(solver_options.minimizer_type, ceres::LINE_SEARCH);
+    EXPECT_EQ(solver_options.line_search_interpolation_type, ceres::QUADRATIC);
+}
+
 TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMaxLbfgsRankInt) {
     static constexpr std::string_view config_file{R"(
         [solver]
         max_lbfgs_rank = 21
+        use_approximate_eigenvalue_bfgs_scaling = true
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
     auto const solver_options{config::ParseSolverOptions(config)};
     EXPECT_EQ(solver_options.max_lbfgs_rank, 21);
+    EXPECT_EQ(solver_options.use_approximate_eigenvalue_bfgs_scaling, true);
 }
