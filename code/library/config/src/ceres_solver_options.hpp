@@ -8,6 +8,10 @@ namespace reprojection::config {
 
 ceres::Solver::Options ParseSolverOptions(toml::table cfg);
 
+// NOTE(Jack): We use macros here because we need to interface directly with the ceres options struct. Using a macro
+// allows us to specify the name of the parameter only once in a single place, and then generates the entire reading
+// logic for each param. If there is a better way to do this I am open to suggestions.
+// NOTE(Jack): Explanation for the do-while logic
 // https://stackoverflow.com/questions/257418/do-while-0-what-is-it-good-for
 #define CFG_GET_AND_ERASE(name, cfg, options, type)    \
     do {                                               \
@@ -17,7 +21,6 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg);
         }                                              \
     } while (0)
 
-// TODO(Jack): We need a better policy here! We should inform the user if the type is wrong, not just silently fail.
 #define CFG_GET_ENUM_AND_ERASE(name, cfg, options, enum_type, string_to_enum)                         \
     do {                                                                                              \
         if (auto const value{(cfg)->get_as<std::string>(#name)}) {                                    \
