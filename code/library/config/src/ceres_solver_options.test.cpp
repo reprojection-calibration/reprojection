@@ -52,6 +52,8 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
     CFG_GET_ENUM_AND_ERASE(line_search_interpolation_type, solver_cfg, options, ceres::LineSearchInterpolationType,
                            ceres::StringToLineSearchInterpolationType);
     CFG_GET_AND_ERASE(min_line_search_step_size, solver_cfg, options, double);
+
+    // Line search parameters
     CFG_GET_AND_ERASE(line_search_sufficient_function_decrease, solver_cfg, options, double);
     CFG_GET_AND_ERASE(max_line_search_step_contraction, solver_cfg, options, double);
     CFG_GET_AND_ERASE(min_line_search_step_contraction, solver_cfg, options, double);
@@ -61,6 +63,68 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
     CFG_GET_AND_ERASE(max_line_search_step_expansion, solver_cfg, options, double);
     CFG_GET_ENUM_AND_ERASE(trust_region_strategy_type, solver_cfg, options, ceres::TrustRegionStrategyType,
                            ceres::StringToTrustRegionStrategyType);
+    CFG_GET_ENUM_AND_ERASE(dogleg_type, solver_cfg, options, ceres::DoglegType, ceres::StringToDoglegType);
+    CFG_GET_AND_ERASE(use_nonmonotonic_steps, solver_cfg, options, bool);
+    CFG_GET_AND_ERASE(max_consecutive_nonmonotonic_steps, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(max_num_iterations, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(max_solver_time_in_seconds, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(num_threads, solver_cfg, options, std::int64_t);
+
+    // Trust region minimizer settings.
+    CFG_GET_AND_ERASE(initial_trust_region_radius, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(max_trust_region_radius, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(min_trust_region_radius, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(min_relative_decrease, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(min_lm_diagonal, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(max_lm_diagonal, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(max_num_consecutive_invalid_steps, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(function_tolerance, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(gradient_tolerance, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(parameter_tolerance, solver_cfg, options, double);
+
+    // Linear least squares solver options
+    CFG_GET_ENUM_AND_ERASE(linear_solver_type, solver_cfg, options, ceres::LinearSolverType,
+                           ceres::StringToLinearSolverType);
+    CFG_GET_ENUM_AND_ERASE(preconditioner_type, solver_cfg, options, ceres::PreconditionerType,
+                           ceres::StringToPreconditionerType);
+    CFG_GET_ENUM_AND_ERASE(visibility_clustering_type, solver_cfg, options, ceres::VisibilityClusteringType,
+                           ceres::StringToVisibilityClusteringType);
+    // IGNORED - options.residual_blocks_for_subset_preconditioner
+    CFG_GET_ENUM_AND_ERASE(dense_linear_algebra_library_type, solver_cfg, options, ceres::DenseLinearAlgebraLibraryType,
+                           ceres::StringToDenseLinearAlgebraLibraryType);
+    CFG_GET_ENUM_AND_ERASE(sparse_linear_algebra_library_type, solver_cfg, options,
+                           ceres::SparseLinearAlgebraLibraryType, ceres::StringToSparseLinearAlgebraLibraryType);
+    CFG_GET_ENUM_AND_ERASE(linear_solver_ordering_type, solver_cfg, options, ceres::LinearSolverOrderingType,
+                           ceres::StringToLinearSolverOrderingType);
+    // IGNORED - options.linear_solver_ordering
+    CFG_GET_AND_ERASE(use_explicit_schur_complement, solver_cfg, options, bool);
+    CFG_GET_AND_ERASE(dynamic_sparsity, solver_cfg, options, bool);
+    CFG_GET_AND_ERASE(use_mixed_precision_solves, solver_cfg, options, bool);
+    CFG_GET_AND_ERASE(max_num_refinement_iterations, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(min_linear_solver_iterations, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(max_linear_solver_iterations, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(max_num_spse_iterations, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(use_spse_initialization, solver_cfg, options, bool);
+    CFG_GET_AND_ERASE(spse_tolerance, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(eta, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(jacobi_scaling, solver_cfg, options, bool);
+    CFG_GET_AND_ERASE(use_inner_iterations, solver_cfg, options, bool);
+    // IGNORED - options.inner_iteration_ordering
+    CFG_GET_AND_ERASE(inner_iteration_tolerance, solver_cfg, options, double);
+
+    // Logging settings.
+    CFG_GET_ENUM_AND_ERASE(logging_type, solver_cfg, options, ceres::LoggingType, ceres::StringtoLoggingType);
+    CFG_GET_AND_ERASE(minimizer_progress_to_stdout, solver_cfg, options, bool);
+    // IGNORED - options.trust_region_minimizer_iterations_to_dump
+    CFG_GET_AND_ERASE(trust_region_problem_dump_directory, solver_cfg, options, std::string);
+    // NOTE(Jack): Ceres defines two overloaded versions of StringtoDumpFormatType. With our current implementation of
+    // CeresEnumToString we cannot disambiguate them. Therefore, here we need to explicitly wrap the version we want
+    // (the one that uses DumpFormatType not LoggingType), and pass that as the template argument.
+    auto constexpr StringToDumpFormatTypeHandler = [](std::string const& value, ceres::DumpFormatType* out) {
+        return ceres::StringtoDumpFormatType(value, out);
+    };
+    CFG_GET_ENUM_AND_ERASE(trust_region_problem_dump_format_type, solver_cfg, options, ceres::DumpFormatType,
+                           StringToDumpFormatTypeHandler);
 
     if (solver_cfg->size() != 0) {
         // TODO(Jack): Print the keys and values in the error message
@@ -104,21 +168,24 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsEnums) {
         [solver]
         minimizer_type = "LINE_SEARCH"
         line_search_interpolation_type = "QUADRATIC"
+        trust_region_problem_dump_format_type = "CONSOLE"
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
     auto const solver_options{config::ParseSolverOptions(config)};
     EXPECT_EQ(solver_options.minimizer_type, ceres::LINE_SEARCH);
     EXPECT_EQ(solver_options.line_search_interpolation_type, ceres::QUADRATIC);
+    EXPECT_EQ(solver_options.trust_region_problem_dump_format_type, ceres::CONSOLE);
 }
 
-// Test all the non-enum types we have - int, bool, double
+// Test all the non-enum types we have - int, bool, double, std::string
 TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMaxLbfgsRankInt) {
     static constexpr std::string_view config_file{R"(
         [solver]
         max_lbfgs_rank = 21
         use_approximate_eigenvalue_bfgs_scaling = true
         min_line_search_step_size = 1e-6
+        trust_region_problem_dump_directory = "/my/log/directory"
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
@@ -126,4 +193,5 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMaxLbfgsRankInt) {
     EXPECT_EQ(solver_options.max_lbfgs_rank, 21);
     EXPECT_EQ(solver_options.use_approximate_eigenvalue_bfgs_scaling, true);
     EXPECT_EQ(solver_options.min_line_search_step_size, 1e-6);
+    EXPECT_EQ(solver_options.trust_region_problem_dump_directory, "/my/log/directory");
 }
