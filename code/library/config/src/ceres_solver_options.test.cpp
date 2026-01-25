@@ -52,6 +52,15 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
     CFG_GET_ENUM_AND_ERASE(line_search_interpolation_type, solver_cfg, options, ceres::LineSearchInterpolationType,
                            ceres::StringToLineSearchInterpolationType);
     CFG_GET_AND_ERASE(min_line_search_step_size, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(line_search_sufficient_function_decrease, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(max_line_search_step_contraction, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(min_line_search_step_contraction, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(max_num_line_search_step_size_iterations, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(max_num_line_search_direction_restarts, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(line_search_sufficient_curvature_decrease, solver_cfg, options, double);
+    CFG_GET_AND_ERASE(max_line_search_step_expansion, solver_cfg, options, double);
+    CFG_GET_ENUM_AND_ERASE(trust_region_strategy_type, solver_cfg, options, ceres::TrustRegionStrategyType,
+                           ceres::StringToTrustRegionStrategyType);
 
     if (solver_cfg->size() != 0) {
         // TODO(Jack): Print the keys and values in the error message
