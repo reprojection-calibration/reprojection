@@ -12,7 +12,7 @@
 namespace reprojection::config {
 
 // https://stackoverflow.com/questions/257418/do-while-0-what-is-it-good-for
-#define CFG_GET_AND_ERASE(cfg, options, type, name)    \
+#define CFG_GET_AND_ERASE(name, cfg, options, type)    \
     do {                                               \
         if (auto const value{(cfg)->get(#name)}) {     \
             (options).name = value->as<type>()->get(); \
@@ -21,7 +21,7 @@ namespace reprojection::config {
     } while (0)
 
 // TODO(Jack): We need a better policy here! We should inform the user if the type is wrong, not just silently fail.
-#define CFG_GET_ENUM_AND_ERASE(cfg, options, name, enum_type, string_to_enum)                         \
+#define CFG_GET_ENUM_AND_ERASE(name, cfg, options, enum_type, string_to_enum)                         \
     do {                                                                                              \
         if (auto const value{(cfg)->get_as<std::string>(#name)}) {                                    \
             (options).name = CeresEnumToString<enum_type, string_to_enum>(value->as_string()->get()); \
@@ -41,17 +41,16 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
         return options;
     }
 
-    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, minimizer_type, ceres::MinimizerType, ceres::StringToMinimizerType);
-    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, line_search_direction_type, ceres::LineSearchDirectionType,
+    CFG_GET_ENUM_AND_ERASE(minimizer_type, solver_cfg, options, ceres::MinimizerType, ceres::StringToMinimizerType);
+    CFG_GET_ENUM_AND_ERASE(line_search_direction_type, solver_cfg, options, ceres::LineSearchDirectionType,
                            ceres::StringToLineSearchDirectionType);
-    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, line_search_type, ceres::LineSearchType, ceres::StringToLineSearchType);
-    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, nonlinear_conjugate_gradient_type,
+    CFG_GET_ENUM_AND_ERASE(line_search_type, solver_cfg, options, ceres::LineSearchType, ceres::StringToLineSearchType);
+    CFG_GET_ENUM_AND_ERASE(nonlinear_conjugate_gradient_type, solver_cfg, options,
                            ceres::NonlinearConjugateGradientType, ceres::StringToNonlinearConjugateGradientType);
-    CFG_GET_AND_ERASE(solver_cfg, options, std::int64_t, max_lbfgs_rank);
-    CFG_GET_AND_ERASE(solver_cfg, options, bool, use_approximate_eigenvalue_bfgs_scaling);
-    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, line_search_interpolation_type, ceres::LineSearchInterpolationType,
+    CFG_GET_AND_ERASE(max_lbfgs_rank, solver_cfg, options, std::int64_t);
+    CFG_GET_AND_ERASE(use_approximate_eigenvalue_bfgs_scaling, solver_cfg, options, bool);
+    CFG_GET_ENUM_AND_ERASE(line_search_interpolation_type, solver_cfg, options, ceres::LineSearchInterpolationType,
                            ceres::StringToLineSearchInterpolationType);
-
 
     if (solver_cfg->size() != 0) {
         // TODO(Jack): Print the keys and values in the error message
