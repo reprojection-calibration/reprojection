@@ -1,6 +1,6 @@
 #include "ceres_solver_options.hpp"
 
-#include "enum_parsing.hpp"
+#include "ceres_enum_parsing.hpp"
 
 namespace reprojection::config {
 

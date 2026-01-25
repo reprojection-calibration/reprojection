@@ -1,13 +1,9 @@
-#include "enum_parsing.hpp"
+#include "ceres_enum_parsing.hpp"
 
 #include <ceres/types.h>
 #include <gtest/gtest.h>
 
-namespace reprojection::config {}  // namespace reprojection::config
-
 using namespace reprojection;
-
-// REMOVE HARDCODED MAPS!
 
 TEST(ConfigEnumParsing, TestCeresEnumToString) {
     auto result = config::CeresEnumToString<ceres::LineSearchDirectionType, ceres::StringToLineSearchDirectionType>(

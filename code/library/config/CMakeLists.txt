@@ -17,6 +17,7 @@ AddLibrary()
 
 set(TESTS
         src/ceres_solver_options.test.cpp
-        src/enum_parsing.test.cpp
+        src/ceres_enum_parsing.test.cpp
+        test/load_configuration.test.cpp
 )
 AddTests()
