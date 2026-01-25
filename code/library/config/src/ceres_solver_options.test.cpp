@@ -29,6 +29,8 @@ namespace reprojection::config {
         }                                                                                             \
     } while (0)
 
+// NOTE(Jack): We ignore parameters which would require intimate knowledge of the solver which we do not have. For
+// example it is not possible to set the callback pointers from a configuration file obviously...
 ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
     // NOTE(Jack): The options struct is initialized with default values. That means that if in the following code a
     // value is not explicitly set, that its value is preserved as the default.
