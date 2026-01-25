@@ -20,6 +20,15 @@ namespace reprojection::config {
         }                                              \
     } while (0)
 
+// TODO(Jack): We need a better policy here! We should inform the user if the type is wrong, not just silently fail.
+#define CFG_GET_ENUM_AND_ERASE(cfg, options, name, enum_type, string_to_enum)                         \
+    do {                                                                                              \
+        if (auto const value{(cfg)->get_as<std::string>(#name)}) {                                    \
+            (options).name = CeresEnumToString<enum_type, string_to_enum>(value->as_string()->get()); \
+            (cfg)->erase(#name);                                                                      \
+        }                                                                                             \
+    } while (0)
+
 ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
     // NOTE(Jack): The options struct is initialized with default values. That means that if in the following code a
     // value is not explicitly set, that its value is preserved as the default.
@@ -32,45 +41,17 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
         return options;
     }
 
-    // TODO(Jack): Write a macro that automatically generates this code for the simple parameter case.
-    // TODO(Jack): We need a better policy here! We should inform the user if the type is wrong, not just silently fail.
-    if (auto const value{solver_cfg->get_as<std::string>("minimizer_type")}) {
-        options.minimizer_type =
-            CeresEnumToString<ceres::MinimizerType, ceres::StringToMinimizerType>(value->as_string()->get());
-        solver_cfg->erase("minimizer_type");
-    }
-
-    if (auto const value{solver_cfg->get_as<std::string>("line_search_direction_type")}) {
-        options.line_search_direction_type =
-            CeresEnumToString<ceres::LineSearchDirectionType, ceres::StringToLineSearchDirectionType>(
-                value->as_string()->get());
-        solver_cfg->erase("line_search_direction_type");
-    }
-
-    if (auto const value{solver_cfg->get_as<std::string>("line_search_type")}) {
-        options.line_search_type =
-            CeresEnumToString<ceres::LineSearchType, ceres::StringToLineSearchType>(value->as_string()->get());
-        solver_cfg->erase("line_search_type");
-    }
-
-    if (auto const value{solver_cfg->get_as<std::string>("nonlinear_conjugate_gradient_type")}) {
-        options.nonlinear_conjugate_gradient_type =
-            CeresEnumToString<ceres::NonlinearConjugateGradientType, ceres::StringToNonlinearConjugateGradientType>(
-                value->as_string()->get());
-        solver_cfg->erase("nonlinear_conjugate_gradient_type");
-    }
-
+    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, minimizer_type, ceres::MinimizerType, ceres::StringToMinimizerType);
+    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, line_search_direction_type, ceres::LineSearchDirectionType,
+                           ceres::StringToLineSearchDirectionType);
+    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, line_search_type, ceres::LineSearchType, ceres::StringToLineSearchType);
+    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, nonlinear_conjugate_gradient_type,
+                           ceres::NonlinearConjugateGradientType, ceres::StringToNonlinearConjugateGradientType);
     CFG_GET_AND_ERASE(solver_cfg, options, std::int64_t, max_lbfgs_rank);
     CFG_GET_AND_ERASE(solver_cfg, options, bool, use_approximate_eigenvalue_bfgs_scaling);
+    CFG_GET_ENUM_AND_ERASE(solver_cfg, options, line_search_interpolation_type, ceres::LineSearchInterpolationType,
+                           ceres::StringToLineSearchInterpolationType);
 
-    if (auto const value{solver_cfg->get_as<std::string>("line_search_interpolation_type")}) {
-        options.line_search_interpolation_type =
-            CeresEnumToString<ceres::LineSearchInterpolationType, ceres::StringToLineSearchInterpolationType>(
-                value->as_string()->get());
-        solver_cfg->erase("line_search_interpolation_type");
-    }
-
-    // CFG_GET_AND_ERASE(solver_cfg, options,,);
 
     if (solver_cfg->size() != 0) {
         // TODO(Jack): Print the keys and values in the error message
