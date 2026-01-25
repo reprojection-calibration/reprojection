@@ -51,6 +51,7 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg) {
     CFG_GET_AND_ERASE(use_approximate_eigenvalue_bfgs_scaling, solver_cfg, options, bool);
     CFG_GET_ENUM_AND_ERASE(line_search_interpolation_type, solver_cfg, options, ceres::LineSearchInterpolationType,
                            ceres::StringToLineSearchInterpolationType);
+    CFG_GET_AND_ERASE(min_line_search_step_size, solver_cfg, options, double);
 
     if (solver_cfg->size() != 0) {
         // TODO(Jack): Print the keys and values in the error message
@@ -102,15 +103,18 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsEnums) {
     EXPECT_EQ(solver_options.line_search_interpolation_type, ceres::QUADRATIC);
 }
 
+// Test all the non-enum types we have - int, bool, double
 TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMaxLbfgsRankInt) {
     static constexpr std::string_view config_file{R"(
         [solver]
         max_lbfgs_rank = 21
         use_approximate_eigenvalue_bfgs_scaling = true
+        min_line_search_step_size = 1e-6
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
     auto const solver_options{config::ParseSolverOptions(config)};
     EXPECT_EQ(solver_options.max_lbfgs_rank, 21);
     EXPECT_EQ(solver_options.use_approximate_eigenvalue_bfgs_scaling, true);
+    EXPECT_EQ(solver_options.min_line_search_step_size, 1e-6);
 }
