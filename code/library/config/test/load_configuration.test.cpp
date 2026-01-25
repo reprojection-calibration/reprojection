@@ -4,4 +4,4 @@
 
 using namespace reprojection;
 
-TEST(ConfigLoadConfiguration, TestXXX) {}
+TEST(ConfigLoadConfiguration, TestXXX) { EXPECT_EQ(1, 2); }

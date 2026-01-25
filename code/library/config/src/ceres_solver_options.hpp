@@ -15,17 +15,17 @@ ceres::Solver::Options ParseSolverOptions(toml::table cfg);
 // https://stackoverflow.com/questions/257418/do-while-0-what-is-it-good-for
 #define CFG_GET_AND_ERASE(name, cfg, options, type)    \
     do {                                               \
-        if (auto const value{(cfg)->get(#name)}) {     \
+        if (auto const value{(cfg).get(#name)}) {     \
             (options).name = value->as<type>()->get(); \
-            (cfg)->erase(#name);                       \
+            (cfg).erase(#name);                       \
         }                                              \
     } while (0)
 
 #define CFG_GET_ENUM_AND_ERASE(name, cfg, options, enum_type, string_to_enum)                         \
     do {                                                                                              \
-        if (auto const value{(cfg)->get_as<std::string>(#name)}) {                                    \
+        if (auto const value{(cfg).get_as<std::string>(#name)}) {                                    \
             (options).name = CeresEnumToString<enum_type, string_to_enum>(value->as_string()->get()); \
-            (cfg)->erase(#name);                                                                      \
+            (cfg).erase(#name);                                                                      \
         }                                                                                             \
     } while (0)
 

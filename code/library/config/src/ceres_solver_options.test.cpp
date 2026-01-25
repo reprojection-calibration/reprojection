@@ -8,24 +8,28 @@
 using namespace reprojection;
 using namespace std::string_view_literals;
 
-// Given a table without the [solver] heading we will just get back the default configuration from ceres
-TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsDefault) {
+TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsFaultyInput) {
+    // Config with a section header we dont expect
     static constexpr std::string_view config_file{R"(
         [not_the_solver_config]
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    auto const solver_options{config::ParseSolverOptions(config)};
-    std::string error_msg;
-    EXPECT_TRUE(solver_options.IsValid(&error_msg));
-    EXPECT_EQ(std::size(error_msg), 0);
+    EXPECT_THROW(config::ParseSolverOptions(config), std::runtime_error);
+
+    // Config with a key value pair we dont expect
+    static constexpr std::string_view config_file_1{R"(
+        some_random_parameter = 666
+    )"sv};
+    toml::table const config_1{toml::parse(config_file_1)};
+
+    EXPECT_THROW(config::ParseSolverOptions(config_1), std::runtime_error);
 }
 
 // Given the wrong type this key/value will not be parsed and removed from the table, which means we will have a
 // leftover key at the end of parsing which is an error we throw on.
 TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMinimizerTypeWrongType) {
     static constexpr std::string_view config_file{R"(
-        [solver]
         minimizer_type = 101.1
     )"sv};
     toml::table const config{toml::parse(config_file)};
@@ -35,7 +39,6 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMinimizerTypeWrongType) {
 
 TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsEnums) {
     static constexpr std::string_view config_file{R"(
-        [solver]
         minimizer_type = "LINE_SEARCH"
         line_search_interpolation_type = "QUADRATIC"
         trust_region_problem_dump_format_type = "CONSOLE"
@@ -51,7 +54,6 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsEnums) {
 // Test all the non-enum types we have - int, bool, double, std::string
 TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMaxLbfgsRankInt) {
     static constexpr std::string_view config_file{R"(
-        [solver]
         max_lbfgs_rank = 21
         use_approximate_eigenvalue_bfgs_scaling = true
         min_line_search_step_size = 1e-6

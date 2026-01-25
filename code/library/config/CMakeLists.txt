@@ -6,6 +6,7 @@ find_package(tomlplusplus REQUIRED)
 
 set(SRC_FILES
         src/ceres_solver_options.cpp
+        src/load_configuration.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
