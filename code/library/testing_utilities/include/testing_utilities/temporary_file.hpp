@@ -6,9 +6,9 @@ namespace reprojection::testing_utilities {
 
 class TemporaryFile {
    public:
-    TemporaryFile();
+    explicit TemporaryFile(std::string const& extension);
 
-    explicit TemporaryFile(std::string_view const& contents);
+    explicit TemporaryFile(std::string const& extension, std::string_view const& contents);
 
     ~TemporaryFile();
 

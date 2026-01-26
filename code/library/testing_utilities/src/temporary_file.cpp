@@ -5,12 +5,12 @@
 
 namespace reprojection::testing_utilities {
 
-TemporaryFile::TemporaryFile() {
+TemporaryFile::TemporaryFile(std::string const& extension) {
     std::string const random_name{std::tmpnam(nullptr)};
-    path_ = std::filesystem::temp_directory_path() / (random_name + ".toml");
+    path_ = std::filesystem::temp_directory_path() / (random_name + extension);
 }
 
-TemporaryFile::TemporaryFile(std::string_view const& contents) : TemporaryFile() {
+TemporaryFile::TemporaryFile(std::string const& extension, std::string_view const& contents) : TemporaryFile(extension) {
     std::ofstream out(path_);
     if (not out) {
         throw std::runtime_error("Failed to create temp file at path: " + path_.string());
