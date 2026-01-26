@@ -11,18 +11,6 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-// WARN PARTIALLY COPY AND PASTED from TempFolder!!!
-class TempFolderDummySql : public ::testing::Test {
-   protected:
-    // cppcheck-suppress unusedFunction
-    void SetUp() override { std::filesystem::create_directories(database_path_); }
-
-    // cppcheck-suppress unusedFunction
-    void TearDown() override { std::filesystem::remove_all(database_path_); }
-
-    std::string database_path_{"sandbox"};
-};
-
 // Test where we create a simple auto incremented table and add some values
 TEST(DatabaseSqlite3Helpers, TestExecute) {
     TemporaryFile const temp_file{".db3"};
