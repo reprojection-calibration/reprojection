@@ -11,10 +11,12 @@ using namespace reprojection;
 // TODO THIS BELONGS IN A COMMON TESTING PACKAGE! CAN WE ALSO USE THIS FOR THE DB TESTING?
 class TempFile {
    public:
-    TempFile(std::string_view const& contents) {
+    TempFile() {
         std::string const random_name{std::tmpnam(nullptr)};
         path_ = std::filesystem::temp_directory_path() / (random_name + ".toml");
+    }
 
+    explicit TempFile(std::string_view const& contents) : TempFile() {
         std::ofstream out(path_);
         if (not out) {
             throw std::runtime_error("Failed to create temp file at path: " + path_.string());
@@ -55,3 +57,5 @@ TEST(ConfigLoadConfiguration, TestLoadConfigurationDefaultSolverOptions) {
     EXPECT_EQ(config.minimizer_type, ceres::TRUST_REGION);
     EXPECT_EQ(config.min_line_search_step_size, 1e-9);
 }
+
+TEST(XXX, XXX) { TempFile const config_file; }
