@@ -1,3 +1,0 @@
-[solver]
-minimizer_type = "LINE_SEARCH"
-min_line_search_step_size = 1e-6
