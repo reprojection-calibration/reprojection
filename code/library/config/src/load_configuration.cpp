@@ -10,7 +10,7 @@ namespace reprojection::config {
 ceres::Solver::Options LoadConfiguration(std::string const& file) {
     toml::table const cfg{toml::parse_file(file)};
 
-    if (auto solver_node{cfg["solver"]}) {
+    if (auto const solver_node{cfg["solver"]}) {
         return ParseSolverOptions(*solver_node.as_table());
     } else {
         return ceres::Solver::Options{};
