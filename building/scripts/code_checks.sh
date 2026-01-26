@@ -10,6 +10,7 @@ cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr 
   -I /temporary/code/library/calibration/include \
   -I /temporary/code/library/calibration/src \
   -I /temporary/code/library/calibration_data_views/include \
+  -I /temporary/code/library/config/include \
   -I /temporary/code/library/database/include \
   -I /temporary/code/library/database/src \
   -I /temporary/code/library/demos/include \
@@ -25,4 +26,5 @@ cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr 
   -I /temporary/code/library/spline/include \
   -I /temporary/code/library/spline/src \
   -I /temporary/code/library/testing_mocks/include \
+  -I /temporary/code/library/testing_utilities/include \
   -I /temporary/code/library/types/include

@@ -10,10 +10,11 @@ TemporaryFile::TemporaryFile(std::string const& extension) {
     path_ = std::filesystem::temp_directory_path() / (random_name + extension);
 }
 
-TemporaryFile::TemporaryFile(std::string const& extension, std::string_view const& contents) : TemporaryFile(extension) {
+TemporaryFile::TemporaryFile(std::string const& extension, std::string_view const& contents)
+    : TemporaryFile(extension) {
     std::ofstream out(path_);
     if (not out) {
-        throw std::runtime_error("Failed to create temp file at path: " + path_.string());
+        throw std::runtime_error("Failed to create temp file at path: " + path_.string());  // LCOV_EXCL_LINE
     }
     out << contents;
 }
