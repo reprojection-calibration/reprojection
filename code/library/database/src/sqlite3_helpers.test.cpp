@@ -6,7 +6,10 @@
 #include <filesystem>
 #include <string>
 
+#include "testing_utilities/temporary_file.hpp"
+
 using namespace reprojection;
+using TemporaryFile = testing_utilities::TemporaryFile;
 
 // WARN PARTIALLY COPY AND PASTED from TempFolder!!!
 class TempFolderDummySql : public ::testing::Test {
@@ -21,10 +24,10 @@ class TempFolderDummySql : public ::testing::Test {
 };
 
 // Test where we create a simple auto incremented table and add some values
-TEST_F(TempFolderDummySql, TestExecute) {
-    std::string const record{database_path_ + "/record_lll.db3"};
+TEST(DatabaseSqlite3Helpers, TestExecute) {
+    TemporaryFile const temp_file{".db3"};
     sqlite3* db;
-    sqlite3_open(record.c_str(), &db);
+    sqlite3_open(temp_file.Path().c_str(), &db);
 
     std::string const data_table_sql_{
         "CREATE TABLE example_data_table ("
@@ -50,10 +53,10 @@ TEST_F(TempFolderDummySql, TestExecute) {
     sqlite3_close(db);
 }
 
-TEST_F(TempFolderDummySql, TestAddBlob) {
-    std::string const record{database_path_ + "/record_lll.db3"};
+TEST(DatabaseSqlite3Helpers, TestAddBlob) {
+    TemporaryFile const temp_file{".db3"};
     sqlite3* db;
-    sqlite3_open(record.c_str(), &db);
+    sqlite3_open(temp_file.Path().c_str(), &db);
 
     std::string const blob_table_sql_{
         "CREATE TABLE example_blob_table ("
@@ -91,7 +94,7 @@ TEST_F(TempFolderDummySql, TestAddBlob) {
     EXPECT_EQ(std::get<database::SqliteErrorCode>(result), database::SqliteErrorCode::FailedBinding);
 }
 
-TEST(TestSqlite3Helpers, TestBindErrors) {
+TEST(DatabaseSqlite3Helpers, TestBindErrors) {
     EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, ""), std::runtime_error);
     EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, static_cast<int64_t>(123)), std::runtime_error);
     EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, 1.23), std::runtime_error);
