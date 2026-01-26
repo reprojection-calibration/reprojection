@@ -57,5 +57,3 @@ TEST(ConfigLoadConfiguration, TestLoadConfigurationDefaultSolverOptions) {
     EXPECT_EQ(config.minimizer_type, ceres::TRUST_REGION);
     EXPECT_EQ(config.min_line_search_step_size, 1e-9);
 }
-
-TEST(XXX, XXX) { TempFile const config_file; }
