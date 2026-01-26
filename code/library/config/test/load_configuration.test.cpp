@@ -2,17 +2,18 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdio>  // FOR TEMPNAME
 #include <filesystem>
 #include <fstream>
 
 using namespace reprojection;
 
-// TODO THIS BELONGS IN A COMMON TESTING PACKAGE!
+// TODO THIS BELONGS IN A COMMON TESTING PACKAGE! CAN WE ALSO USE THIS FOR THE DB TESTING?
 class TempFile {
    public:
     TempFile(std::string_view const& contents) {
-        // ERROR NAME IS NOT RANDOM WE WILL GET CONFLICTS!
-        path_ = std::filesystem::temp_directory_path() / "test_config_xxx.toml";
+        std::string const random_name{std::tmpnam(nullptr)};
+        path_ = std::filesystem::temp_directory_path() / (random_name + ".toml");
 
         std::ofstream out(path_);
         if (not out) {
@@ -42,14 +43,14 @@ TEST(ConfigLoadConfiguration, TestLoadConfiguration) {
     EXPECT_EQ(config.min_line_search_step_size, 1e-6);
 }
 
-TEST(ConfigLoadConfiguration, TestLoadConfigurationEmptyConfig) {
-    static constexpr std::string_view happy_path_config{R"(
+// There is no [solver] config to load, so we will instead get a default initialized ceres::Solver::Options back :)
+TEST(ConfigLoadConfiguration, TestLoadConfigurationDefaultSolverOptions) {
+    static constexpr std::string_view no_solver_parameters_config{R"(
         [some_other_config]
         blah = 1
     )"};
-    TempFile const config_file{happy_path_config};
+    TempFile const config_file{no_solver_parameters_config};
 
-    // There is no [solver] config to load, so we will instead get a default initialized ceres::Solver::Options back :)
     ceres::Solver::Options const config{config::LoadConfiguration(config_file.Path())};
     EXPECT_EQ(config.minimizer_type, ceres::TRUST_REGION);
     EXPECT_EQ(config.min_line_search_step_size, 1e-9);
