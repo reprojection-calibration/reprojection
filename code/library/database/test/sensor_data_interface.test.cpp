@@ -10,24 +10,15 @@
 #include "database/calibration_database.hpp"
 #include "database/image_interface.hpp"
 #include "sqlite3_helpers.hpp"
+#include "testing_utilities/temporary_file.hpp"
 #include "types/sensor_types.hpp"
 
 using namespace reprojection;
+using TemporaryFile = testing_utilities::TemporaryFile;
 
-// Test fixture used to facilitate isolated filesystem state. This is useful when testing database creation to prevent
-// artefacts from previous or parallel testing interfering with the system currently under test.
-class TempFolder : public ::testing::Test {
-   protected:
-    void SetUp() override { std::filesystem::create_directories(database_path_); }
-
-    void TearDown() override { std::filesystem::remove_all(database_path_); }
-
-    std::string database_path_{"sandbox"};
-};
-
-TEST_F(TempFolder, TestAddPoseData) {
-    std::string const record_path{database_path_ + "/record_ddd.db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+TEST(DatabaseSensorDataInterface, TestAddPoseData) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     CameraCalibrationData const data{{"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}},  //
                                      {},
@@ -43,14 +34,14 @@ TEST_F(TempFolder, TestAddPoseData) {
     // NOTE(Jack): We are dealing with a map for the frames so getting the elements key (the timestamp) looks a little
     // ugly :) Here we are counting on the fact that there is only one element in the map; only for testing acceptable.
     FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
-    (void)database::AddImage(header, db);
-    (void)AddExtractedTargetData({header, {}}, db);
+    database::AddImage(header, db);
+    AddExtractedTargetData({header, {}}, db);
     EXPECT_NO_THROW(database::AddPoseData(data, database::PoseType::Initial, db));
 }
 
-TEST_F(TempFolder, TestAddReprojectionError) {
-    std::string const record_path{database_path_ + "/record_ddd.db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     CameraCalibrationData const data{
         {"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}},  //
@@ -67,8 +58,8 @@ TEST_F(TempFolder, TestAddReprojectionError) {
     // NOTE(Jack): We are dealing with a map for the frames so getting the elements key (the timestamp) looks a little
     // ugly :) Here we are counting on the fact that there is only one element in the map; only for testing acceptable.
     FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
-    (void)database::AddImage(header, db);
-    (void)AddExtractedTargetData({header, {}}, db);
+    database::AddImage(header, db);
+    AddExtractedTargetData({header, {}}, db);
     database::AddPoseData(data, database::PoseType::Initial, db);
     database::AddPoseData(data, database::PoseType::Optimized, db);
 
@@ -76,9 +67,9 @@ TEST_F(TempFolder, TestAddReprojectionError) {
     EXPECT_NO_THROW(database::AddReprojectionError(data, database::PoseType::Optimized, db));
 }
 
-TEST_F(TempFolder, TestAddExtractedTargetData) {
-    std::string const record_path{database_path_ + "/record_qqq.db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+TEST(DatabaseSensorDataInterface, TestAddExtractedTargetData) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     ExtractedTarget const bundle{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
@@ -88,13 +79,13 @@ TEST_F(TempFolder, TestAddExtractedTargetData) {
     // Adding a target with no corresponding image database entry is invalid! Foreign key constraint :)
     EXPECT_THROW(AddExtractedTargetData({header, bundle}, db), std::runtime_error);
 
-    (void)database::AddImage(header, db);
+    database::AddImage(header, db);
     EXPECT_NO_THROW(AddExtractedTargetData({header, bundle}, db));
 }
 
-TEST_F(TempFolder, TestGetExtractedTargetData) {
-    std::string const record_path{database_path_ + "/record_qqq.db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
+TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     ExtractedTarget const target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
@@ -102,14 +93,14 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
 
     // Due to foreign key relationship we need add an image before we add the extracted target
     FrameHeader header{0, "/cam/retro/123"};
-    (void)database::AddImage(header, db);
-    (void)AddExtractedTargetData({header, target}, db);
+    database::AddImage(header, db);
+    AddExtractedTargetData({header, target}, db);
     header.timestamp_ns = 1;
-    (void)database::AddImage(header, db);
-    (void)AddExtractedTargetData({header, target}, db);
+    database::AddImage(header, db);
+    AddExtractedTargetData({header, target}, db);
     header.timestamp_ns = 2;
-    (void)database::AddImage(header, db);
-    (void)AddExtractedTargetData({header, target}, db);
+    database::AddImage(header, db);
+    AddExtractedTargetData({header, target}, db);
 
     CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}}};
 
@@ -127,7 +118,7 @@ TEST_F(TempFolder, TestGetExtractedTargetData) {
     }
 }
 
-TEST_F(TempFolder, TestFullImuAddGetCycle) {
+TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
     // TODO(Jack): Should we use this test data for all the IMU tests?
     std::map<std::string, std::set<ImuStamped>> const imu_data{
         {"/imu/polaris/123",
@@ -137,12 +128,13 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
         {"/imu/polaris/456",
          {{{1, "/imu/polaris/456"}, {0, 0, 0}, {-1, -1, -1}}, {{2, "/imu/polaris/456"}, {-2, -2, -2}, {-3, -3, -3}}}}};
 
-    std::string const record_path{database_path_ + "/record_aaa.db3"};
+    TemporaryFile const temp_file{".db3"};
     // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only
     // database instance in the same test.
     // TODO(Jack): Is it legal to open two connection to the samedatabase?
     {
-        auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};  // create and write
+        auto const db{
+            std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};  // create and write
         for (auto const& [sensor, measurements] : imu_data) {
             for (auto const& measurement_i : measurements) {
                 bool const success_i{database::AddImuData(measurement_i, db)};
@@ -152,7 +144,7 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
     }
     {
         auto const db{
-            std::make_shared<database::CalibrationDatabase const>(record_path, false, true)};  // const read only
+            std::make_shared<database::CalibrationDatabase const>(temp_file.Path(), false, true)};  // const read only
         for (auto const& [sensor, measurements] : imu_data) {
             auto const imu_i_data{database::GetImuData(db, sensor)};
             ASSERT_TRUE(imu_i_data.has_value());
@@ -161,9 +153,9 @@ TEST_F(TempFolder, TestFullImuAddGetCycle) {
     }
 }
 
-TEST_F(TempFolder, TestAddImuData) {
-    std::string const record_path{database_path_ + "/record_hhh.db3"};
-    auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true)};
+TEST(DatabaseSensorDataInterface, TestAddImuData) {
+    TemporaryFile const temp_file{".db3"};
+    auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true)};
 
     bool success{database::AddImuData({{0, "/imu/polaris/123"}, {}, {}}, db)};
     EXPECT_TRUE(success);
@@ -179,9 +171,9 @@ TEST_F(TempFolder, TestAddImuData) {
     EXPECT_THROW((void)database::AddImuData({{0, "/imu/polaris/456"}, {}, {}}, db), std::runtime_error);
 }
 
-TEST_F(TempFolder, TestGetImuData) {
-    std::string const record_path{database_path_ + "/record_aaa.db3"};
-    auto const db{std::make_shared<database::CalibrationDatabase>(record_path, true)};
+TEST(DatabaseSensorDataInterface, TestGetImuData) {
+    TemporaryFile const temp_file{".db3"};
+    auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true)};
 
     // Data from imu 123
     (void)database::AddImuData({{5, "/imu/polaris/123"}, {1, 2, 3}, {4, 5, 6}}, db);
