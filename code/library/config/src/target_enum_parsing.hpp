@@ -1,21 +1,13 @@
 #pragma once
 
-#include <stdexcept>
 #include <string>
+
+#include "types/target_types.hpp"
 
 namespace reprojection::config {
 
-TargetType StringToTargetTypeEnum(std::string const& enum_string) {
-    if (enum_string == "checkerboard") {
-        return TargetType::Checkerboard;
-    } else if (enum_string == "circle_grid") {
-        return TargetType::CircleGrid;
-    } else if (enum_string == "april_grid3") {
-        return TargetType::AprilGrid3;
-    } else {
-        throw std::runtime_error("The requested target type - " + target_type +
-                                 " - is not valid (see the TargetType enum).");
-    }
-}
+// TODO(Jack): Do we really need an entire set of files just for this one method? Maybe this can be grouped with other
+//  enum conversion code or even moved to the types package.
+TargetType StringToTargetTypeEnum(std::string const& enum_string);
 
 }  // namespace reprojection::config
