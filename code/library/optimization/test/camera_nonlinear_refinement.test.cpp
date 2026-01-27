@@ -6,14 +6,15 @@
 #include "optimization/nonlinear_refinement.hpp"
 #include "projection_cost_function.hpp"
 #include "testing_mocks/mvg_generator.hpp"
+#include "testing_utilities/constants.hpp"
 #include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
-    testing_mocks::MvgGenerator const generator{
-        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
+    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
+                                                testing_utilities::image_bounds, false};
     CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
     CameraCalibrationData data{gt_data};
 
@@ -48,8 +49,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 // Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
 // and intrinsic back.
 TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
-    testing_mocks::MvgGenerator const generator{
-        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
+    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
+                                                testing_utilities::image_bounds, false};
     CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
     CameraCalibrationData data{gt_data};
 
@@ -95,8 +96,6 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
 }
 
 TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
-    Array4d const intrinsics{600, 600, 360, 240};
-    ImageBounds const bounds{0, 720, 0, 480};
     // NOTE(Jack): The real ground truth value for both the valid pixels here is actually the center of the image! But
     // because we want to see that the reprojection error is actually the correct value we make the "ground truth"
     // pixels here actually have some error.
@@ -120,11 +119,11 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
 
     std::vector<std::unique_ptr<ceres::CostFunction>> cost_functions;
     for (Eigen::Index j{0}; j < gt_pixels.rows(); ++j) {
-        cost_functions.emplace_back(
-            optimization::Create(CameraModel::Pinhole, bounds, gt_pixels.row(j), gt_points.row(j)));
+        cost_functions.emplace_back(optimization::Create(CameraModel::Pinhole, testing_utilities::image_bounds,
+                                                         gt_pixels.row(j), gt_points.row(j)));
     }
 
-    ArrayX2d const residuals{
-        optimization::EvaluateReprojectionResiduals(cost_functions, intrinsics, {0, 0, 0, 0, 0, 0})};
+    ArrayX2d const residuals{optimization::EvaluateReprojectionResiduals(
+        cost_functions, testing_utilities::pinhole_intrinsics, {0, 0, 0, 0, 0, 0})};
     EXPECT_TRUE(residuals.isApprox(gt_residuals));
 }

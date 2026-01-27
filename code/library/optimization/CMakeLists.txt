@@ -16,6 +16,7 @@ set(LINK_LIBRARIES
         projection_functions
         spline
         testing_mocks
+        testing_utilities
         types
 )
 AddLibrary()
