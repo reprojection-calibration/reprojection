@@ -3,13 +3,14 @@
 #include <gtest/gtest.h>
 
 #include "geometry/lie.hpp"
+#include "testing_utilities/constants.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
 TEST(TestingMocksMvgGenerator, TestGenerateBatch) {
-    testing_mocks::MvgGenerator const generator{
-        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
+    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
+                                                testing_utilities::image_bounds, false};
 
     // NOTE(Jack): All points for every frame project successfully. If not they should get masked out, but the
     // test data is engineered such that none get masked out. But don't forget that there might be an implementation
@@ -27,8 +28,8 @@ TEST(TestingMocksMvgGenerator, TestProject) {
     MatrixX2d const gt_pixels{{360.00, 240.00}, {480.00, 360.00}, {240.00, 120.00},
                               {480.00, 180.00}, {240.00, 300.00}, {402.857, 197.144}};
 
-    auto const camera{std::unique_ptr<projection_functions::Camera>(
-        new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480}))};
+    auto const camera{std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(
+        testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds))};
     Isometry3d const tf_co_w{Isometry3d::Identity()};
 
     auto const [pixels, mask]{testing_mocks::MvgGenerator::Project(points_w, camera, tf_co_w)};
@@ -43,8 +44,8 @@ TEST(TestingMocksMvgGenerator, TestProjectMasking) {
                              {-1.00, -1.00, 5.00}};
     Array3<bool> const gt_mask{true, true, false};
 
-    auto const camera{std::unique_ptr<projection_functions::Camera>(
-        new projection_functions::PinholeCamera({600, 600, 360, 240}, {0, 720, 0, 480}))};
+    auto const camera{std::unique_ptr<projection_functions::Camera>(new projection_functions::PinholeCamera(
+        testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds))};
     Isometry3d tf_co_w{Isometry3d::Identity()};
     tf_co_w.translation().z() = -6.0;
 

@@ -5,13 +5,14 @@
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "testing_mocks/mvg_generator.hpp"
+#include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
 
 TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
-    testing_mocks::MvgGenerator const generator{
-        CameraModel::DoubleSphere, Array6d{600, 600, 360, 240, 0.1, 0.2}, {0, 720, 0, 480}};
+    testing_mocks::MvgGenerator const generator{CameraModel::DoubleSphere, Array6d{600, 600, 360, 240, 0.1, 0.2},
+                                                testing_utilities::image_bounds};
     CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
     CameraCalibrationData data{gt_data};
 

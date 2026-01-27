@@ -13,7 +13,9 @@
 namespace reprojection {
 
 struct ImageBounds {
-    ImageBounds(double const _min_width, double const _max_width, double const _min_height, double const _max_height)
+    // NOTE(Jack): We made this constexpr so that way it could be used in the testing_utilities
+    constexpr ImageBounds(double const _min_width, double const _max_width, double const _min_height,
+                          double const _max_height)
         : u_min{_min_width}, u_max{_max_width}, v_min{_min_height}, v_max{_max_height} {}
 
     ImageBounds() = default;

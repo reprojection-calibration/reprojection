@@ -3,13 +3,13 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
+#include "testing_utilities/constants.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
 TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitialization) {
     Array6d const intrinsics{600, 600, 360, 240, 0.1, 0.2};
-    ImageBounds const bounds{0, 720, 0, 480};
 
     // NOTE(Jack): Our strategy here is to use DoubleSphere::Project to project a row and column of points to pixels.
     // VanishingPointInitialization() then fits circles to each row, calculates their intersections and then from that
@@ -18,7 +18,7 @@ TEST(CalibrationFocalLengthInitialization, TestVanishingPointInitialization) {
     // not just a displacement along the radial axis and therefore a failed circle fitting.
     MatrixX3d const horizontal_points{{-360, 100, 600}, {-240, 100, 600}, {-120, 100, 600}, {0, 100, 600},
                                       {120, 100, 600},  {240, 100, 600},  {320, 100, 600}};
-    auto const camera{projection_functions::DoubleSphereCamera(intrinsics, bounds)};
+    auto const camera{projection_functions::DoubleSphereCamera(intrinsics, testing_utilities::image_bounds)};
     // ERROR
     // ERROR
     // ERROR

@@ -10,6 +10,7 @@
 #include "database/calibration_database.hpp"
 #include "database/image_interface.hpp"
 #include "sqlite3_helpers.hpp"
+#include "testing_utilities/constants.hpp"
 #include "testing_utilities/temporary_file.hpp"
 #include "types/sensor_types.hpp"
 
@@ -20,7 +21,7 @@ TEST(DatabaseSensorDataInterface, TestAddPoseData) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-    CameraCalibrationData const data{{"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}},  //
+    CameraCalibrationData const data{{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds},  //
                                      {},
                                      {},
                                      {{0, {{{}, {}}, Array6d::Zero(), {}, Array6d::Zero(), {}}}}};
@@ -44,7 +45,7 @@ TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     CameraCalibrationData const data{
-        {"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}},  //
+        {"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds},  //
         {},
         {},
         {{0, {{{}, {}}, Array6d::Zero(), ArrayX2d::Zero(1, 2), Array6d::Zero(), ArrayX2d::Zero(1, 2)}}}};
@@ -102,7 +103,7 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     database::AddImage(header, db);
     AddExtractedTargetData({header, target}, db);
 
-    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole, {0, 720, 0, 480}}};
+    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds}};
 
     database::GetExtractedTargetData(db, data);
     EXPECT_EQ(std::size(data.frames), 3);
@@ -131,7 +132,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
     TemporaryFile const temp_file{".db3"};
     // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only
     // database instance in the same test.
-    // TODO(Jack): Is it legal to open two connection to the samedatabase?
+    // TODO(Jack): Is it legal to open two connection to the same database?
     {
         auto const db{
             std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};  // create and write
