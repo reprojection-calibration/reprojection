@@ -13,6 +13,7 @@ set(LINK_LIBRARIES
         geometry
         projection_functions
         spline
+        testing_utilities
         types
 )
 AddLibrary()
