@@ -10,11 +10,6 @@
 using namespace reprojection;
 
 Array8d const pinhole_radtan4_intrinsics{600, 600, 360, 240, -0.1, 0.1, 0.001, 0.001};
-MatrixX3d const gt_points{{0, 0, 600},  //
-                          {-360, 0, 600},
-                          {359.9, 0, 600},
-                          {0, -240, 600},
-                          {0, 239.9, 600}};
 MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrinsics[3]},
                           {8.9424000000000206, 240.21600000000001},
                           {712.25756064927782, 240.21588001666666},
@@ -25,7 +20,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
     auto const camera{
         projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics, testing_utilities::image_bounds)};
 
-    auto const [pixels, mask](camera.Project(gt_points));
+    auto const [pixels, mask](camera.Project(testing_utilities::gt_points));
     ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
@@ -41,7 +36,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {
 
     auto const camera{projection_functions::PinholeRadtan4Camera(pinhole_intrinsics, testing_utilities::image_bounds)};
 
-    auto const [pixels, mask](camera.Project(gt_points));
+    auto const [pixels, mask](camera.Project(testing_utilities::gt_points));
     ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pinhole_pixels));
 }
@@ -53,10 +48,8 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestUnproject) {
         projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics, testing_utilities::image_bounds)};
     MatrixX3d const rays(camera.Unproject(gt_pixels));
 
-    // Normalize the 3D points so we can compare them directly to the rays
-    MatrixX3d const normalized_gt_points{gt_points.array() / 600};
-
-    EXPECT_TRUE(rays.isApprox(normalized_gt_points));
+    // Multiply rays by metric scale to put them back into world coordinates
+    EXPECT_TRUE((600 * rays).isApprox(testing_utilities::gt_points));
 }
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestJacobianUpdate) {

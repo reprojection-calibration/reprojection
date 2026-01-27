@@ -9,11 +9,6 @@
 using namespace reprojection;
 
 TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
-    MatrixX3d const gt_points{{0, 0, 600},  //
-                              {-360, 0, 600},
-                              {359.9, 0, 600},
-                              {0, -240, 600},
-                              {0, 239.9, 600}};
     MatrixX2d const gt_pixels{{360, 240},  //
                               {0, 240},
                               {719.9, 240},
@@ -23,7 +18,7 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
     auto const camera{
         projection_functions::PinholeCamera(testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds)};
 
-    auto const [pixels, mask]{camera.Project(gt_points)};
+    auto const [pixels, mask]{camera.Project(testing_utilities::gt_points)};
     ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 
@@ -34,11 +29,9 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
     // valid pixels. However, in this highly controlled and engineered test case we do not need to do that. All real
     // application should!
     MatrixX3d const rays{camera.Unproject(pixels)};
-    EXPECT_TRUE((600 * rays).isApprox(gt_points));
+    EXPECT_TRUE((600 * rays).isApprox(testing_utilities::gt_points));
 }
 
-// WARN(Jack): At time of writing the masking only handles points behind the camera! It does not handle if z=0 or the
-// general field of view limits. These are both additions which should be added to the pinhole projection mask.
 // TODO(Jack): Add and test unprojection masking!
 TEST(ProjectionFunctionsCameraModel, TestPinholeCameraProjectionMasking) {
     MatrixX3d const gt_points{{0, 0, -600},  //

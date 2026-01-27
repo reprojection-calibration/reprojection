@@ -11,11 +11,6 @@
 using namespace reprojection;
 
 Array6d const double_sphere_intrinsics{600, 600, 360, 240, 0.1, 0.2};
-MatrixX3d const gt_points{{0, 0, 600},  //
-                          {-360, 0, 600},
-                          {359.9, 0, 600},
-                          {0, -240, 600},
-                          {0, 239.9, 600}};
 MatrixX2d const gt_pixels{{double_sphere_intrinsics[2], double_sphere_intrinsics[3]},
                           {46.087794035716172, double_sphere_intrinsics[3]},
                           {673.83161575882514, double_sphere_intrinsics[3]},
@@ -26,7 +21,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
     auto const camera{
         projection_functions::DoubleSphereCamera(double_sphere_intrinsics, testing_utilities::image_bounds)};
 
-    auto const [pixels, mask](camera.Project(gt_points));
+    auto const [pixels, mask](camera.Project(testing_utilities::gt_points));
     ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
@@ -42,7 +37,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
 
     auto const camera{projection_functions::DoubleSphereCamera(pinhole_intrinsics, testing_utilities::image_bounds)};
 
-    auto const [pixels, mask]{camera.Project(gt_points)};
+    auto const [pixels, mask]{camera.Project(testing_utilities::gt_points)};
     ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(pinhole_pixels));
 }
@@ -69,7 +64,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnproject) {
     // by the metric scale like we did for pinhole unprojection, we here instead normalize each point into
     // a ray with magnitude one.
     MatrixX3d const rays{camera.Unproject(gt_pixels)};
-    MatrixX3d normalized_gt_points{gt_points};
+    MatrixX3d normalized_gt_points{testing_utilities::gt_points};
     normalized_gt_points.rowwise().normalize();
 
     EXPECT_TRUE(rays.isApprox(normalized_gt_points));
