@@ -73,6 +73,7 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         protobuf::libprotobuf
         SQLite::SQLite3
+        testing_utilities
         types
 )
 AddLibrary()
