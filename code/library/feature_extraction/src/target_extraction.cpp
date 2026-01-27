@@ -3,9 +3,20 @@
 #include <stdexcept>
 
 #include "target_extractors.hpp"
+#include "types/target_types.hpp"
 
 namespace reprojection::feature_extraction {
 
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
 TargetType ToEnum(std::string const& target_type) {
     if (target_type == "checkerboard") {
         return TargetType::Checkerboard;
@@ -19,6 +30,16 @@ TargetType ToEnum(std::string const& target_type) {
     }
 }
 
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
 std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_config) {
     if (not target_config["type"]) {
         // TODO(Jack): Does the yaml-cpp library provide us a better error handling mechanism?
