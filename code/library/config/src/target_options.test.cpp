@@ -41,8 +41,9 @@ bool ValidateTargetConfig(toml::table target_cfg) {
             // THIS IS SUPER MESSY LOGIC - I NEED TO PRACTICE MORE WITH TOMLPLUSPLUS
             target_cfg.get("circle_grid")->as_table()->erase("asymmetric");
 
+            // TODO UNIFY THIS POLICY OF WHAT TO DO WHEN WE GET KEYS WE DONT WANT
             if (not target_cfg["circle_grid"].as_table()->empty()) {
-                return false;
+                throw std::runtime_error("");
             }
             target_cfg.erase("circle_grid");
         }
@@ -67,13 +68,13 @@ using namespace reprojection;
 using namespace std::string_view_literals;
 
 std::vector<std::string_view> const good_configs{
-    // Minimum viable config - in this case unit_dimension should default to 1
+    // Minimum viable config - in this case unit_dimension should default to 1.
     R"(
         [target]
         pattern_size = [3,4]
         type = "circle_grid"
     )"sv,
-    // The three allowed keys for the top level target config
+    // The three allowed keys for the top level target config.
     R"(
         [target]
         pattern_size = [3,4]
@@ -102,43 +103,49 @@ TEST(ConfigTargetOptions, TestParseTargetOptionsGoodConfigs) {
     }
 }
 
-TEST(ConfigTargetOptions, TestParseTargetOptionsBadConfigs) {
-    // pattern_size is not length two - it should only contain the number of rows and columns, nothing more, nothing
-    // less.
-    static constexpr std::string_view config_file{R"(
+// These will return false
+std::vector<std::string_view> const bad_configs{
+    // Pattern size must have size==2.
+    R"(
         [target]
-        pattern_size = [3,4,5]
-        type = "april_grid3"
-    )"sv};
-    toml::table config{toml::parse(config_file)};
-    bool valid_target_config{config::ValidateTargetConfig(*config["target"].as_table())};
-    EXPECT_FALSE(valid_target_config);
-
-    // type is not string.
-    static constexpr std::string_view config_file_1{R"(
+        pattern_size = [3]
+        type = "circle_grid"
+    )"sv,
+    // TODO(Jack): Also check that it is one of the valid types without throwing?
+    // The type field must be a string.
+    R"(
         [target]
         pattern_size = [3,4]
         type = 123
-    )"sv};
-    config = toml::parse(config_file_1);
-    valid_target_config = config::ValidateTargetConfig(*config["target"].as_table());
-    EXPECT_FALSE(valid_target_config);
-
-    // unit_dimension is not float type.
-    static constexpr std::string_view config_file_2{R"(
+    )"sv,
+    // The unit_dimension field must be a float/double - cannot be a string type.
+    R"(
         [target]
         pattern_size = [3,4]
         type = "april_grid3"
         unit_dimension = "bad_type"
     )"sv};
-    config = toml::parse(config_file_2);
-    valid_target_config = config::ValidateTargetConfig(*config["target"].as_table());
-    EXPECT_FALSE(valid_target_config);
+
+TEST(ConfigTargetOptions, TestParseTargetOptionsBadConfigs) {
+    for (auto const& config : bad_configs) {
+        toml::table const toml{toml::parse(config)};
+
+        bool const valid_target_config{config::ValidateTargetConfig(*toml["target"].as_table())};
+        EXPECT_FALSE(valid_target_config);
+    }
 }
 
-// Because the selected target type is april_grid3, the [target.circle_grid] section should not be present.
-TEST(ConfigTargetOptions, TestParseTargetOptionsCircleGridMismatch) {
-    static constexpr std::string_view config_file{R"(
+// These configs will result in an error that throws, this might be a good or bad idea, not sure - but probably bad.
+std::vector<std::string_view> const invalid_configs{
+    // Unexpected keys are a failing error! This is a strict policy that might reduce usability and we might regret.
+    R"(
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
+        random_key = "why is this here?"
+    )"sv,
+    // The [target.circle_grid] is only allowed to be present when type = "circle_grid".
+    R"(
         [target]
         pattern_size = [3,4]
         type = "april_grid3"
@@ -146,8 +153,24 @@ TEST(ConfigTargetOptions, TestParseTargetOptionsCircleGridMismatch) {
 
         [target.circle_grid]
         asymmetric = true
-    )"sv};
-    toml::table const config{toml::parse(config_file)};
+    )"sv,
+    // Also invalid when an unexpected key is in the [target.circle_grid] section.
+    R"(
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
+        unit_dimension = 0.5
 
-    EXPECT_THROW(config::ValidateTargetConfig(*config["target"].as_table()), std::runtime_error);
+        [target.circle_grid]
+        asymmetric = true
+        random_key = "why is this here?"
+    )"sv};
+
+// Because the selected target type is april_grid3, the [target.circle_grid] section should not be present.
+TEST(ConfigTargetOptions, TestParseTargetOptionsInvalidConfigs) {
+    for (auto const& config : invalid_configs) {
+        toml::table const toml{toml::parse(config)};
+
+        EXPECT_THROW(config::ValidateTargetConfig(*toml["target"].as_table()), std::runtime_error);
+    }
 }
