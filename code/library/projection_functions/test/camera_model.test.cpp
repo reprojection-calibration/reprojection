@@ -2,14 +2,13 @@
 
 #include <gtest/gtest.h>
 
+#include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
 TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
-    Array4d const intrinsics{600, 600, 360, 240};
-    ImageBounds const bounds{0, 720, 0, 480};
     MatrixX3d const gt_points{{0, 0, 600},  //
                               {-360, 0, 600},
                               {359.9, 0, 600},
@@ -21,7 +20,8 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
                               {360, 0},
                               {360, 479.9}};
 
-    auto const camera{projection_functions::PinholeCamera(intrinsics, bounds)};
+    auto const camera{
+        projection_functions::PinholeCamera(testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds)};
 
     auto const [pixels, mask]{camera.Project(gt_points)};
     ASSERT_TRUE(mask.all());
@@ -41,8 +41,6 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
 // general field of view limits. These are both additions which should be added to the pinhole projection mask.
 // TODO(Jack): Add and test unprojection masking!
 TEST(ProjectionFunctionsCameraModel, TestPinholeCameraProjectionMasking) {
-    Array4d const intrinsics{600, 600, 360, 240};
-    ImageBounds const bounds{0, 720, 0, 480};
     MatrixX3d const gt_points{{0, 0, -600},  //
                               {0, 0, 600},
                               {0, 0, -600},
@@ -50,7 +48,8 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCameraProjectionMasking) {
                               {0, 0, 600}};
     Array5b const gt_mask{false, true, false, false, true};
 
-    auto const camera{projection_functions::PinholeCamera(intrinsics, bounds)};
+    auto const camera{
+        projection_functions::PinholeCamera(testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds)};
 
     auto const [pixels, mask]{camera.Project(gt_points)};
     EXPECT_EQ(pixels.rows(), gt_points.rows());

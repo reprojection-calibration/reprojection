@@ -16,6 +16,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         ${OpenCV_LIBS}
+        testing_utilities
         types
 )
 AddLibrary()
