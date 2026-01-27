@@ -22,6 +22,7 @@ set(TESTS
         src/ceres_solver_options.test.cpp
         src/ceres_enum_parsing.test.cpp
         src/target_enum_parsing.test.cpp
+        src/target_options.test.cpp
         test/load_configuration.test.cpp
 )
 AddTests()

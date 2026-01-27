@@ -10,6 +10,7 @@ namespace reprojection::config {
 ceres::Solver::Options LoadConfiguration(std::string const& file) {
     toml::table const cfg{toml::parse_file(file)};
 
+    // Sensible default is available here! Not the case for the target config!
     if (auto const solver_node{cfg["solver"]}) {
         return ParseSolverOptions(*solver_node.as_table());
     } else {
