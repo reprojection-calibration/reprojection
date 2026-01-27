@@ -5,6 +5,7 @@
 #include <Eigen/Geometry>
 
 #include "projection_functions/camera_model.hpp"
+#include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
 
@@ -29,8 +30,7 @@ std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3
     // length/gamma of 600
     Array2d const principal_point{360, 240};
     Array5d const intrinsics{600, 600, principal_point[0], principal_point[1], 1};
-    ImageBounds const bounds{0, 720, 0, 480};
-    auto const camera{projection_functions::UcmCamera(intrinsics, bounds)};
+    auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
     // ERROR
     // ERROR
     // ERROR
