@@ -1,7 +1,5 @@
 #pragma once
 
-#include "types/eigen_types.hpp"
-
 namespace reprojection {
 
 // ERROR(Jack): The intrinsic size information is currently coded in two separate places! Once here in the enum and one

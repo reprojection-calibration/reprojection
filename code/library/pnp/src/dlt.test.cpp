@@ -4,6 +4,7 @@
 
 #include "geometry/lie.hpp"
 #include "testing_mocks/mvg_generator.hpp"
+#include "testing_utilities/constants.hpp"
 
 // TODO(Jack): I think we could add a test where we check more properties, like for example PC=0, etc. Even though these
 // might already be checked in some sub-tests for specific test data, we should be able to do it for all executions.
@@ -11,8 +12,8 @@
 using namespace reprojection;
 
 TEST(PnpDlt, TestDlt23) {
-    testing_mocks::MvgGenerator const generator{
-        CameraModel::Pinhole, Array4d{600, 600, 360, 240}, {0, 720, 0, 480}, false};
+    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
+                                                testing_utilities::image_bounds, false};
     CameraCalibrationData const data{generator.GenerateBatch(20)};
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
@@ -32,7 +33,8 @@ TEST(PnpDlt, TestDlt23) {
 
 TEST(PnpDlt, TestDlt22) {
     // Points must have Z=0 (flat = true) for Dlt22
-    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, Array4d{1, 1, 0, 0}, {-1, 1, -1, 1}, true};
+    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::unit_pinhole_intrinsics,
+                                                testing_utilities::unit_image_bounds, true};
     CameraCalibrationData const data{generator.GenerateBatch(20)};
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
