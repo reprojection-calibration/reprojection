@@ -15,7 +15,7 @@ concept IsCeresConverter = requires(std::string value, T_Enum* type) {
 
 template <typename T_Enum, auto T_Parser>
     requires IsEnum<T_Enum> and IsCeresConverter<T_Enum, T_Parser>
-T_Enum CeresEnumToString(std::string const& enum_string) {
+T_Enum StringToCeresEnum(std::string const& enum_string) {
     T_Enum output;
     bool const parsed{T_Parser(enum_string, &output)};
 
