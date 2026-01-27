@@ -29,8 +29,8 @@ bool ValidateTargetConfig(toml::table target_cfg) {
         if (not node->as_floating_point()) {
             return false;
         }
+        target_cfg.erase("unit_dimension");
     }
-    target_cfg.erase("unit_dimension");
 
     // NOTE(Jack): At time of writing circle grid is the only target type which has additional options.
     if (StringToTargetTypeEnum(target_type) == TargetType::CircleGrid) {
@@ -40,13 +40,12 @@ bool ValidateTargetConfig(toml::table target_cfg) {
             }
             // THIS IS SUPER MESSY LOGIC - I NEED TO PRACTICE MORE WITH TOMLPLUSPLUS
             target_cfg.get("circle_grid")->as_table()->erase("asymmetric");
-        }
 
-        std::cout << target_cfg["circle_grid"] << std::endl;
-        if (not target_cfg["circle_grid"].as_table()->empty()) {
-            return false;
+            if (not target_cfg["circle_grid"].as_table()->empty()) {
+                return false;
+            }
+            target_cfg.erase("circle_grid");
         }
-        target_cfg.erase("circle_grid");
     }
 
     if (not target_cfg.empty()) {
@@ -67,17 +66,40 @@ bool ValidateTargetConfig(toml::table target_cfg) {
 using namespace reprojection;
 using namespace std::string_view_literals;
 
-TEST(ConfigTargetOptions, TestParseTargetOptionsHappyPath) {
-    static constexpr std::string_view config_file{R"(
+std::vector<std::string_view> const good_configs{
+    // Minimum viable config - in this case unit_dimension should default to 1
+    R"(
         [target]
         pattern_size = [3,4]
-        type = "april_grid3"
+        type = "circle_grid"
+    )"sv,
+    // The three allowed keys for the top level target config
+    R"(
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
         unit_dimension = 0.5
-    )"sv};
-    toml::table const config{toml::parse(config_file)};
+    )"sv,
+    // For circle grid targets only, an additional [target.circle_grid] section is allowed to specify the asymmetric
+    // property. At time of writing "asymmetric" is the only supported key, and it is only valid for circle grid
+    // targets.
+    R"(
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
+        unit_dimension = 0.5
 
-    bool const valid_target_config{config::ValidateTargetConfig(*config["target"].as_table())};
-    ASSERT_TRUE(valid_target_config);
+        [target.circle_grid]
+        asymmetric = true
+    )"sv};
+
+TEST(ConfigTargetOptions, TestParseTargetOptionsGoodConfigs) {
+    for (auto const& config : good_configs) {
+        toml::table const toml{toml::parse(config)};
+
+        bool const valid_target_config{config::ValidateTargetConfig(*toml["target"].as_table())};
+        EXPECT_TRUE(valid_target_config);
+    }
 }
 
 TEST(ConfigTargetOptions, TestParseTargetOptionsBadConfigs) {
@@ -112,22 +134,6 @@ TEST(ConfigTargetOptions, TestParseTargetOptionsBadConfigs) {
     config = toml::parse(config_file_2);
     valid_target_config = config::ValidateTargetConfig(*config["target"].as_table());
     EXPECT_FALSE(valid_target_config);
-}
-
-TEST(ConfigTargetOptions, TestParseTargetOptionsCircleGrid) {
-    static constexpr std::string_view config_file{R"(
-        [target]
-        pattern_size = [3,4]
-        type = "circle_grid"
-        unit_dimension = 0.5
-
-        [target.circle_grid]
-        asymmetric = true
-    )"sv};
-    toml::table const config{toml::parse(config_file)};
-
-    bool const valid_target_config{config::ValidateTargetConfig(*config["target"].as_table())};
-    EXPECT_TRUE(valid_target_config);
 }
 
 // Because the selected target type is april_grid3, the [target.circle_grid] section should not be present.
