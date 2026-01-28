@@ -33,7 +33,8 @@ std::vector<std::string_view> const good_configs{
 
         [target.circle_grid]
         asymmetric = true
-    )"sv};
+    )"sv,
+};
 
 TEST(ConfigTargetOptions, TestParseTargetOptionsGoodConfigs) {
     for (auto const& config : good_configs) {
@@ -44,7 +45,6 @@ TEST(ConfigTargetOptions, TestParseTargetOptionsGoodConfigs) {
     }
 }
 
-// These will return false
 std::vector<std::string_view> const bad_configs{
     // An extra random key is present.
     R"(
@@ -71,7 +71,8 @@ std::vector<std::string_view> const bad_configs{
         pattern_size = [3,4]
         type = "circle_grid"
         unit_dimension = "bad_type"
-    )"sv};
+    )"sv,
+};
 
 TEST(ConfigTargetOptions, TestParseTargetOptionsBadConfigs) {
     for (auto const& config : bad_configs) {
