@@ -9,9 +9,28 @@ enum class CameraModel {
     DoubleSphere = 6,  //
     Pinhole = 4,
     PinholeRadtan4 = 8,
-    UnifiedCameraModel = 5
+    UnifiedCameraModel = 5,
 };
 
-enum class TargetType { Checkerboard, CircleGrid, AprilGrid3 };
+enum class TargetType {
+    Checkerboard,
+    CircleGrid,
+    AprilGrid3,
+};
+
+enum class TomlParseError {
+    IncorrectType,
+    MissingKey,
+    UnknownKey,
+};
+
+enum class TomlType {
+    Array,
+    Boolean,
+    FloatingPoint,
+    Integer,
+    String,
+    Table,
+};
 
 }  // namespace reprojection

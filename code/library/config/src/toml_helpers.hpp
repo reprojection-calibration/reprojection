@@ -4,25 +4,12 @@
 #include <string>
 #include <toml++/toml.hpp>
 
+#include "types/enums.hpp"
+
 // TODO MOVE TO TYPES
 namespace reprojection {
 
-enum class TomlType {
-    Array,
-    Boolean,
-    FloatingPoint,
-    Integer,
-    String,
-    Table,
-};
-
 std::string ToString(TomlType const value);
-
-enum class TomlParseError {
-    IncorrectType,
-    MissingKey,
-    UnknownKey,
-};
 
 struct ParserErrorMsg {
     TomlParseError error;
