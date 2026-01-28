@@ -8,8 +8,8 @@ set(SRC_FILES
         src/ceres_solver_options.cpp
         src/enum_string_converters.cpp
         src/load_configuration.cpp
-        src/target_options.cpp
         src/toml_helpers.cpp
+        src/validate_target_config.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -25,6 +25,6 @@ set(TESTS
         src/enum_string_converters.test.cpp
         src/toml_helpers.test.cpp
         test/load_configuration.test.cpp
-        test/target_options.test.cpp
+        test/validate_target_config.test.cpp
 )
 AddTests()

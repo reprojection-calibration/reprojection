@@ -1,7 +1,6 @@
 #include "feature_extraction/target_extraction.hpp"
 
-#include "../../config/src/enum_string_converters.hpp"
-#include "config/target_options.hpp"
+#include "config/validate_target_config.hpp"
 #include "target_extractors.hpp"
 #include "types/enums.hpp"
 
@@ -32,6 +31,9 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target
         return std::make_unique<CheckerboardExtractor>(pattern_size, unit_dimension);
     } else if (type == TargetType::CircleGrid) {
         bool asymmetric{false};
+        // TODO(Jack): Something I do not like here is now that we have this key sequence hardcoded in two places. Once
+        //  in the config loading checking logic and once here. We should figure out how to have one central source of
+        //  truth that holds all possible user interactive config keys.
         if (auto const node{target_config.at_path("circle_grid.asymmetric")}) {
             asymmetric = node.as_boolean()->get();
         }
