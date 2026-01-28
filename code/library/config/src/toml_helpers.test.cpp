@@ -90,6 +90,5 @@ TEST(ConfigTomlHelpers, TestValidateTomlHappyPath) {
 
     // There will be no error message because it's a valid config.
     auto const error_msg{config::ValidateToml(config, required_keys)};
-    std::cout << error_msg.value().msg << std::endl;
     EXPECT_FALSE(error_msg.has_value());
 }
