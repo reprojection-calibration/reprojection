@@ -22,7 +22,6 @@ AddLibrary()
 
 set(TESTS
         src/ceres_solver_options.test.cpp
-        src/ceres_enum_parsing.test.cpp
         src/enum_string_converters.test.cpp
         src/target_options.test.cpp
         src/toml_helpers.test.cpp
