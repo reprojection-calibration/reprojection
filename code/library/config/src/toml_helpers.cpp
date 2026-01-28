@@ -17,7 +17,8 @@ std::string ToString(DataType const value) {
     } else if (value == DataType::Table) {
         return "table";
     } else {
-        throw std::runtime_error("DataType enum ToString function has not implemented this type yet!");
+        throw std::runtime_error(
+            "DataType enum ToString function has not implemented this type yet!");  // LCOV_EXCL_LINE
     }
 }
 
