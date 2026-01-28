@@ -8,8 +8,6 @@
 
 namespace reprojection::config {
 
-TargetType ToTargetType(std::string const& enum_string);
-
 std::string ToString(TomlType const value);
 
 // NOTE(Jack): Ceres enum string converting is a little more complicated :)

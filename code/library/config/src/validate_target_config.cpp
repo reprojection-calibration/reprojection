@@ -1,4 +1,4 @@
-#include "config/target_options.hpp"
+#include "config/validate_target_config.hpp"
 
 #include <toml++/toml.hpp>
 

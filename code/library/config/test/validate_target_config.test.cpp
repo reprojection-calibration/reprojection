@@ -1,4 +1,4 @@
-#include "config/target_options.hpp"
+#include "config/validate_target_config.hpp"
 
 #include <gtest/gtest.h>
 
@@ -36,7 +36,7 @@ std::vector<std::string_view> const good_configs{
     )"sv,
 };
 
-TEST(ConfigTargetOptions, TestParseTargetOptionsGoodConfigs) {
+TEST(ConfigValidateTargetConfig, TestValidateTargetConfigGoodConfigs) {
     for (auto const& config : good_configs) {
         toml::table const toml{toml::parse(config)};
 
@@ -75,13 +75,11 @@ std::vector<std::string_view> const bad_configs{
     )"sv,
 };
 
-TEST(ConfigTargetOptions, TestParseTargetOptionsBadConfigs) {
+TEST(ConfigValidateTargetConfig, TestValidateTargetConfigBadConfigs) {
     for (auto const& config : bad_configs) {
         toml::table const toml{toml::parse(config)};
 
         auto const error_msg{config::ValidateTargetConfig(*toml["target"].as_table())};
         EXPECT_TRUE(error_msg.has_value());
-
-        std::cout << error_msg.value().msg << std::endl;
     }
 }

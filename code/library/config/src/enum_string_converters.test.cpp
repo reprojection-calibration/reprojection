@@ -5,7 +5,7 @@
 
 using namespace reprojection;
 
-TEST(ConfigEnumParsing, TestCeresEnumToString) {
+TEST(ConfigEnumStringConverters, TestStringToCeresEnum) {
     auto result = config::StringToCeresEnum<ceres::LineSearchDirectionType, ceres::StringToLineSearchDirectionType>(
         "STEEPEST_DESCENT");
     EXPECT_EQ(result, ceres::STEEPEST_DESCENT);
