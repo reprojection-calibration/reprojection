@@ -18,19 +18,4 @@ enum class TargetType {
     AprilGrid3,
 };
 
-enum class TomlParseError {
-    IncorrectType,
-    MissingKey,
-    UnknownKey,
-};
-
-enum class TomlType {
-    Array,
-    Boolean,
-    FloatingPoint,
-    Integer,
-    String,
-    Table,
-};
-
 }  // namespace reprojection

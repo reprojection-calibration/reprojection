@@ -2,7 +2,6 @@
 
 #include <toml++/toml.hpp>
 
-#include "target_enum_parsing.hpp"
 #include "toml_helpers.hpp"
 
 namespace reprojection::config {

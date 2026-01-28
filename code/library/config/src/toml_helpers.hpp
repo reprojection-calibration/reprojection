@@ -4,24 +4,23 @@
 #include <string>
 #include <toml++/toml.hpp>
 
-#include "types/enums.hpp"
+#include "enums.hpp"
 
-// TODO MOVE TO TYPES
-namespace reprojection {
+namespace reprojection::config {
 
-std::string ToString(TomlType const value);
-
+// TODO(Jack): Is this file a good location for this?
 struct ParserErrorMsg {
     TomlParseError error;
     std::string msg;
 };
 
-}  // namespace reprojection
-
-namespace reprojection::config {
-
 std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
                                                    std::map<std::string, TomlType> const& required_keys);
+
+// TODO(Jack): Would it be useful or more informative to the user to have a version of this that only validates table
+//  headers?
+std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
+                                                   std::map<std::string, TomlType> const& possible_keys);
 
 // TEST!!!!
 // TEST!!!!
@@ -31,10 +30,5 @@ std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
 // NOTE(Jack): We need to iterate over the entire table to construct the full toml paths. Unfortunately there is no
 // reverse of the .at_path() function which we can just use.
 void GetTomlPaths(toml::table const& table, std::vector<std::string>& toml_paths, std::string_view prefix = "");
-
-// TODO(Jack): Would it be useful or more informative to the user to have a version of this that only validates table
-//  headers?
-std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
-                                                   std::map<std::string, TomlType> const& possible_keys);
 
 }  // namespace reprojection::config

@@ -1,28 +1,6 @@
 #include "toml_helpers.hpp"
 
-// TODO MOVE TO TYPES
-namespace reprojection {
-
-std::string ToString(TomlType const value) {
-    if (value == TomlType::Array) {
-        return "array";
-    } else if (value == TomlType::Boolean) {
-        return "boolean";
-    } else if (value == TomlType::FloatingPoint) {
-        return "floating_point";
-    } else if (value == TomlType::Integer) {
-        return "integer";
-    } else if (value == TomlType::String) {
-        return "string";
-    } else if (value == TomlType::Table) {
-        return "table";
-    } else {
-        throw std::runtime_error(
-            "TomlType enum ToString function has not implemented this type yet!");  // LCOV_EXCL_LINE
-    }
-}
-
-}  // namespace reprojection
+#include "enum_string_converters.hpp"
 
 namespace reprojection::config {
 
@@ -69,17 +47,6 @@ std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
     return std::nullopt;
 }
 
-void GetTomlPaths(toml::table const& table, std::vector<std::string>& toml_paths, std::string_view prefix) {
-    for (auto const& [key, node] : table) {
-        std::string const full_path{prefix.empty() ? std::string(key) : std::string(prefix) + "." + std::string(key)};
-        if (auto const sub{node.as_table()}) {
-            GetTomlPaths(*sub, toml_paths, full_path);
-        }
-
-        toml_paths.push_back(full_path);
-    }
-}
-
 std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
                                                    std::map<std::string, TomlType> const& possible_keys) {
     std::vector<std::string> full_path_keys;
@@ -99,6 +66,17 @@ std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
     }
 
     return std::nullopt;
+}
+
+void GetTomlPaths(toml::table const& table, std::vector<std::string>& toml_paths, std::string_view prefix) {
+    for (auto const& [key, node] : table) {
+        std::string const full_path{prefix.empty() ? std::string(key) : std::string(prefix) + "." + std::string(key)};
+        if (auto const sub{node.as_table()}) {
+            GetTomlPaths(*sub, toml_paths, full_path);
+        }
+
+        toml_paths.push_back(full_path);
+    }
 }
 
 }  // namespace reprojection::config

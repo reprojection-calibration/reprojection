@@ -5,6 +5,9 @@
 using namespace reprojection;
 using namespace std::string_view_literals;
 
+using TomlType = config::TomlType;
+using TomlParseError = config::TomlParseError;
+
 TEST(ConfigTomlHelpers, TestValidateRequiredKeysHappyPath) {
     static constexpr std::string_view config_file{R"(
         [target]
