@@ -16,23 +16,7 @@ enum class DataType {
     Table,
 };
 
-std::string ToString(DataType const value) {
-    if (value == DataType::Array) {
-        return "array";
-    } else if (value == DataType::Boolean) {
-        return "boolean";
-    } else if (value == DataType::FloatingPoint) {
-        return "floating_point";
-    } else if (value == DataType::Integer) {
-        return "integer";
-    } else if (value == DataType::String) {
-        return "string";
-    } else if (value == DataType::Table) {
-        return "table";
-    } else {
-        throw std::runtime_error("DataType enum ToString function has not implemented this type yet!");
-    }
-}
+std::string ToString(DataType const value);
 
 enum class ParseErrorType {
     IncorrectType,

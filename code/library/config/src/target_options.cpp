@@ -1,62 +1,41 @@
 #include "target_options.hpp"
 
-#include <string_view>
 #include <toml++/toml.hpp>
 
 #include "target_enum_parsing.hpp"
+#include "toml_helpers.hpp"
 
 namespace reprojection::config {
 
-bool ValidateTargetConfig(toml::table target_cfg) {
-    if (auto const node{target_cfg.get("pattern_size")}) {
-        if (node->as_array()->size() != 2) {
-            return false;
-        }
-    } else {
+bool ValidateTargetConfig(toml::table const& target_cfg) {
+    // TODO(Jack): Why does my use of .merge() below not allow this to be const? Makes no sense.
+    std::map<std::string, DataType> required_keys{
+        {"pattern_size", DataType::Array},
+        {"type", DataType::String},
+
+    };
+
+    auto validation_error{ValidateRequiredKeys(target_cfg, required_keys)};
+    if (validation_error) {
+        // TODO REFACTOR THE REAL ERROR
         return false;
     }
-    target_cfg.erase("pattern_size");
 
-    if (not target_cfg.get("type")->value<std::string>()) {
+    std::map<std::string, DataType> optional_keys{
+        {"circle_grid", DataType::Table},
+        {"circle_grid.asymmetric", DataType::Boolean},
+        {"unit_dimension", DataType::FloatingPoint},
+    };
+
+    // TODO(Jack): I wish there was a better way to merge the maps here and express the semantics of what is required,
+    //  what is optional, and how the combination of the two is what is possible.
+    optional_keys.merge(required_keys);
+    std::map<std::string, DataType> const possible_keys{optional_keys};
+
+    validation_error = ValidatePossibleKeys(target_cfg, possible_keys);
+    if (validation_error) {
+        // TODO REFACTOR THE REAL ERROR
         return false;
-    }
-    std::string const target_type{target_cfg["type"].as_string()->get()};
-    target_cfg.erase("type");
-
-    // NOTE(Jack): Not having a unit_dimension is acceptable. If it is not provided we should/will just assume a value
-    // of one. But if it is present it must be of float type.
-    if (auto const node{target_cfg.get("unit_dimension")}) {
-        if (not node->as_floating_point()) {
-            return false;
-        }
-        target_cfg.erase("unit_dimension");
-    }
-
-    // NOTE(Jack): At time of writing circle grid is the only target type which has additional options.
-    if (StringToTargetTypeEnum(target_type) == TargetType::CircleGrid) {
-        if (auto const node{target_cfg.at_path("circle_grid.asymmetric")}) {
-            if (not node.as_boolean()) {
-                return false;
-            }
-            // THIS IS SUPER MESSY LOGIC - I NEED TO PRACTICE MORE WITH TOMLPLUSPLUS
-            target_cfg.get("circle_grid")->as_table()->erase("asymmetric");
-
-            // TODO UNIFY THIS POLICY OF WHAT TO DO WHEN WE GET KEYS WE DONT WANT
-            if (not target_cfg["circle_grid"].as_table()->empty()) {
-                throw std::runtime_error("");
-            }
-            target_cfg.erase("circle_grid");
-        }
-    }
-
-    if (not target_cfg.empty()) {
-        std::ostringstream oss;
-        oss << "Unexpected parameters found in the configuration file, are you sure they are correct?\n";
-        for (const auto& [key, _] : target_cfg) {
-            oss << "  - " << key.str() << "\n";
-        }
-
-        throw std::runtime_error(oss.str());
     }
 
     return true;
