@@ -1,5 +1,3 @@
-#include <yaml-cpp/yaml.h>
-
 #include <iostream>
 
 #include "demos/image_source.hpp"
@@ -26,7 +24,7 @@ char* GetCommandOption(char** begin, char** end, const std::string& option) {
 int main(int argc, char* argv[]) {
     char const* const config_file{GetCommandOption(argv, argv + argc, "-c")};
     if (not config_file) {
-        std::cerr << "Target configuration yaml not provided! (-c <target_config_yaml>)" << std::endl;
+        std::cerr << "Target configuration TOML not provided! (-c <target_config_toml>)" << std::endl;
         return EXIT_FAILURE;
     }
 

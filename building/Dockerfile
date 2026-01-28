@@ -153,7 +153,7 @@ FROM release-build-stage AS feature-extraction-demo-stage
 COPY --from=release-build-stage /buildroot/build /buildroot/build
 
 # NOTE(Jack): This requires that the folder having the config is properly mounted as a volume in the run command
-ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary/code/demos/examples/target_config.yaml"]
+ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary/code/demos/examples/target_config.toml"]
 
 
 # NOT EXECUTED IN CI!!!
