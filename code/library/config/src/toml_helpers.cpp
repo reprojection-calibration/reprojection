@@ -2,6 +2,22 @@
 
 namespace reprojection::config {
 
+template <typename T>
+concept IsBoolean = std::is_same_v<T, bool>;
+
+// NOTE(Jack): We do not use the "requires" concept syntax here because the parameter pack expansion prevents us.
+template <IsBoolean... T>
+bool MutuallyExclusive(T... condition) {
+    return (static_cast<int>(condition) + ...) == 1;
+}
+
+bool TypeNodeMatch(DataType const type, toml::node_view<const toml::node> const& node) {
+    return MutuallyExclusive(
+        type == DataType::Array and node.is_array(), type == DataType::Boolean and node.is_boolean(),
+        type == DataType::FloatingPoint and node.is_floating_point(), type == DataType::Integer and node.is_integer(),
+        type == DataType::String and node.is_string(), type == DataType::Table and node.is_table());
+}
+
 // TODO(Jack): I thought about using a variant here to return a bool or the ParseError, but std::optional code that idea
 //  of positive return or value in a simpler package. Is there a reason that we do need something more complicted than
 //  optional?
@@ -15,11 +31,7 @@ std::optional<ParseError> ValidateRequiredKeys(toml::table const& table,
                                                std::map<std::string, DataType> const& required_keys) {
     for (auto const& [key, type] : required_keys) {
         if (auto const node{table.at_path(key)}) {
-            if ((type == DataType::Array and not node.is_array()) or
-                (type == DataType::FloatingPoint and not node.is_floating_point()) or
-                (type == DataType::Integer and not node.is_integer()) or
-                (type == DataType::String and not node.is_string()) or
-                (type == DataType::Table and not node.is_table())) {
+            if (not TypeNodeMatch(type, node)) {
                 return ParseError{ParseErrorType::IncorrectType,
                                   "Configuration key: " + key + " is not of expected type: " + ToString(type)};
             }
@@ -48,12 +60,16 @@ std::optional<ParseError> ValidatePossibleKeys(toml::table const& table,
     std::vector<std::string> full_path_keys;
     GetTomlPaths(table, full_path_keys);
 
-    // TODO CHECK TYPE LIKE WE DO IN THE REQUIRED FUNCTION!!!!
-    // TODO FILL OUT THE TYPE IN THE ERROR MESSAGE!!!!
     for (auto const& key : full_path_keys) {
         if (not possible_keys.contains(key)) {
-            return ParseError{ParseErrorType::UnknownKey,
-                              "Configuration contains an unexpected key: " + key + " of type BLAH"};
+            return ParseError{ParseErrorType::UnknownKey, "Configuration contains an unexpected key: " + key};
+        }
+
+        DataType const type{possible_keys.at(key)};
+        auto const node{table.at_path(key)};
+        if (not TypeNodeMatch(type, node)) {
+            return ParseError{ParseErrorType::IncorrectType,
+                              "Configuration key: " + key + " is not of expected type: " + ToString(type)};
         }
     }
 

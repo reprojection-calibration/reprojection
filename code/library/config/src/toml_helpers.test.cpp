@@ -106,6 +106,21 @@ TEST(ConfigTomlHelpers, TestValidatePossibleKeysUnknownKey) {
     auto const error_msg{config::ValidatePossibleKeys(config, possible_keys)};
     ASSERT_TRUE(error_msg.has_value());
     EXPECT_EQ(error_msg->error, ParseErrorType::UnknownKey);
-    EXPECT_EQ(error_msg->msg,
-              "Configuration contains an unexpected key: target.circle_grid.some_random_key of type BLAH");
+    EXPECT_EQ(error_msg->msg, "Configuration contains an unexpected key: target.circle_grid.some_random_key");
+}
+
+TEST(ConfigTomlHelpers, TestValidatePossibleKeysIncorrectType) {
+    static constexpr std::string_view config_file{R"(
+        [target.circle_grid]
+        asymmetric = 123
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    std::map<std::string, DataType> const possible_keys{{"target", DataType::Table},
+                                                        {"target.circle_grid", DataType::Table},
+                                                        {"target.circle_grid.asymmetric", DataType::Boolean}};
+    auto const error_msg{config::ValidatePossibleKeys(config, possible_keys)};
+    ASSERT_TRUE(error_msg.has_value());
+    EXPECT_EQ(error_msg->error, ParseErrorType::IncorrectType);
+    EXPECT_EQ(error_msg->msg, "Configuration key: target.circle_grid.asymmetric is not of expected type: boolean");
 }
