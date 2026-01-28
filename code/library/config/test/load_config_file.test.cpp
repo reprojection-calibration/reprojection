@@ -1,7 +1,6 @@
-#include "config/load_configuration.hpp"
-
 #include <gtest/gtest.h>
 
+#include "config/load_config_file.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;
@@ -15,7 +14,7 @@ TEST(ConfigLoadConfiguration, TestLoadConfiguration) {
     )"};
     TemporaryFile const config_file{".toml", happy_path_config};
 
-    ceres::Solver::Options const config{config::LoadConfiguration(config_file.Path())};
+    ceres::Solver::Options const config{config::LoadConfigFile(config_file.Path())};
     EXPECT_EQ(config.minimizer_type, ceres::LINE_SEARCH);
     EXPECT_EQ(config.min_line_search_step_size, 1e-6);
 }
@@ -31,7 +30,7 @@ TEST(ConfigLoadConfiguration, TestLoadConfigurationDefaultSolverOptions) {
     )"};
     TemporaryFile const config_file{".toml", no_solver_parameters_config};
 
-    ceres::Solver::Options const config{config::LoadConfiguration(config_file.Path())};
+    ceres::Solver::Options const config{config::LoadConfigFile(config_file.Path())};
     EXPECT_EQ(config.minimizer_type, ceres::TRUST_REGION);
     EXPECT_EQ(config.min_line_search_step_size, 1e-9);
 }
