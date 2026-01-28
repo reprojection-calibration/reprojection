@@ -6,18 +6,6 @@
 
 namespace reprojection::config {
 
-TargetType ToTargetType(std::string const& enum_string) {
-    if (enum_string == "checkerboard") {
-        return TargetType::Checkerboard;
-    } else if (enum_string == "circle_grid") {
-        return TargetType::CircleGrid;
-    } else if (enum_string == "april_grid3") {
-        return TargetType::AprilGrid3;
-    } else {
-        throw std::runtime_error("Unrecognized argument passed to ToTargetType(): " + enum_string);
-    }
-}
-
 std::string ToString(TomlType const value) {
     if (value == TomlType::Array) {
         return "array";

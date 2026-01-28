@@ -5,17 +5,6 @@
 
 using namespace reprojection;
 
-TEST(ConfigTargetEnumParsing, TestStringToTargetTypeEnum) {
-    TargetType type{config::ToTargetType("checkerboard")};
-    EXPECT_EQ(type, TargetType::Checkerboard);
-    type = config::ToTargetType("circle_grid");
-    EXPECT_EQ(type, TargetType::CircleGrid);
-    type = config::ToTargetType("april_grid3");
-    EXPECT_EQ(type, TargetType::AprilGrid3);
-
-    EXPECT_THROW(config::ToTargetType("nonexistent_target_type"), std::runtime_error);
-}
-
 TEST(ConfigEnumParsing, TestCeresEnumToString) {
     auto result = config::StringToCeresEnum<ceres::LineSearchDirectionType, ceres::StringToLineSearchDirectionType>(
         "STEEPEST_DESCENT");
