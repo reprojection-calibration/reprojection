@@ -31,7 +31,7 @@ TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCheckerboard) {
 TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCircleGrid) {
     static constexpr std::string_view config_file{R"(
     pattern_size = [3, 4]
-    type = "april_grid3"
+    type = "circle_grid"
     unit_dimension = 1.0
 
     [circle_grid]
