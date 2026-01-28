@@ -2,33 +2,93 @@
 
 #include <optional>
 #include <string>
+#include <toml++/toml.hpp>
 
 namespace reprojection {
 
-enum class DataType { Array, Double, Integer, String };
+enum class DataType { Array, FloatingPoint, Integer, String };
+
+std::string ToString(DataType const value) {
+    if (value == DataType::Array) {
+        return "array";
+    } else if (value == DataType::FloatingPoint) {
+        return "floating_point";
+    } else if (value == DataType::Integer) {
+        return "integer";
+    } else if (value == DataType::String) {
+        return "string";
+    } else {
+        throw std::runtime_error("DataType enum ToString function has not implemented this type yet!");
+    }
+}
 
 enum class ParseErrorType { UnknownKey, IncorrectType };
 
 struct ParseError {
     ParseErrorType error;
-    std::string_view msg;
+    std::string msg;
 };
 
 }  // namespace reprojection
 
 namespace reprojection::config {
 
-std::optional<ParseError> ValidateToml(toml::table const& table) {}
+// TODO(Jack): I thought about using a variant here to return a bool or the ParseError, but std::optional code that idea
+//  of positive return or value in a simpler package. Is there a reason that we do need something more complicted than
+//  optional?
+// WARN(Jack): If for example you forgot the quotes around "TRUST_REGION" this code will
+// actually throw an uncontrolled error about misinterpreting a boolean value (because it begins with T). This is not
+// conform with our approach below and we should redesign this code to prevent that. Maybe we need to check the string
+// values first?
+std::optional<ParseError> ValidateToml(toml::table const& table, std::map<std::string, DataType> const& required_keys) {
+    for (auto const& [key, type] : required_keys) {
+        if (auto const node{table.get(key)}) {
+            if (type == DataType::Array and not node->is_array()) {
+                return ParseError{ParseErrorType::IncorrectType,
+                                  "Table key: " + key + "is not of expected type: " + ToString(type)};
+            } else if (type == DataType::FloatingPoint and not node->is_floating_point()) {
+                return ParseError{ParseErrorType::IncorrectType,
+                                  "Table key: " + key + "is not of expected type: " + ToString(type)};
+            } else if (type == DataType::Integer and not node->is_integer()) {
+                return ParseError{ParseErrorType::IncorrectType,
+                                  "Table key: " + key + "is not of expected type: " + ToString(type)};
+            } else if (type == DataType::String and not node->is_string()) {
+                return ParseError{ParseErrorType::IncorrectType,
+                                  "Table key: " + key + "is not of expected type: " + ToString(type)};
+            }
+        } else {
+            return ParseError{ParseErrorType::UnknownKey,
+                              "Table does not contain required key: " + key + " of type: " + ToString(type)};
+        }
+    }
+
+    return std::nullopt;
+}
 
 }  // namespace reprojection::config
 
 using namespace reprojection;
+using namespace std::string_view_literals;
 
-TEST(ConfigTomlHelpers, Test) {
-    std::map<std::string, DataType> const required_keys{{"pattern_size", DataType::Array},
-                                                        {"unit_dimension", DataType::Double},
-                                                        {"num_threads", DataType::Integer},
-                                                        {"minimizer_type", DataType::String}};
+TEST(ConfigTomlHelpers, TestValidateTomlHappyPath) {
+    static constexpr std::string_view config_file{R"(
+        [target]
+        pattern_size = [3,4]
+        unit_dimension = 0.5
 
-    EXPECT_EQ(1, 2);
+        [solver]
+        num_threads = 1
+        minimizer_type = "TRUST_REGION"
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    std::map<std::string, DataType> const required_keys{{"target.pattern_size", DataType::Array},
+                                                        {"target.unit_dimension", DataType::FloatingPoint},
+                                                        {"solver.num_threads", DataType::Integer},
+                                                        {"solver.minimizer_type", DataType::String}};
+
+    // There will be no error message because it's a valid config.
+    auto const error_msg{config::ValidateToml(config, required_keys)};
+    std::cout << error_msg.value().msg << std::endl;
+    EXPECT_FALSE(error_msg.has_value());
 }
