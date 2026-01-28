@@ -6,7 +6,7 @@
 
 namespace reprojection::config {
 
-TargetType StringToTargetTypeEnum(std::string const& enum_string) {
+TargetType ToTargetType(std::string const& enum_string) {
     if (enum_string == "checkerboard") {
         return TargetType::Checkerboard;
     } else if (enum_string == "circle_grid") {

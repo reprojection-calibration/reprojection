@@ -8,7 +8,7 @@
 
 namespace reprojection::config {
 
-TargetType StringToTargetTypeEnum(std::string const& enum_string);
+TargetType ToTargetType(std::string const& enum_string);
 
 std::string ToString(TomlType const value);
 
