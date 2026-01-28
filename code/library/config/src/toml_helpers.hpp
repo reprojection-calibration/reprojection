@@ -9,6 +9,7 @@ namespace reprojection {
 
 enum class DataType {
     Array,
+    Boolean,
     FloatingPoint,
     Integer,
     String,
@@ -18,6 +19,8 @@ enum class DataType {
 std::string ToString(DataType const value) {
     if (value == DataType::Array) {
         return "array";
+    } else if (value == DataType::Boolean) {
+        return "boolean";
     } else if (value == DataType::FloatingPoint) {
         return "floating_point";
     } else if (value == DataType::Integer) {
@@ -33,6 +36,7 @@ std::string ToString(DataType const value) {
 
 enum class ParseErrorType {
     IncorrectType,
+    MissingKey,
     UnknownKey,
 };
 

@@ -24,7 +24,7 @@ std::optional<ParseError> ValidateRequiredKeys(toml::table const& table,
                                   "Configuration key: " + key + " is not of expected type: " + ToString(type)};
             }
         } else {
-            return ParseError{ParseErrorType::UnknownKey,
+            return ParseError{ParseErrorType::MissingKey,
                               "Configuration does not contain required key: " + key + " of type: " + ToString(type)};
         }
     }
