@@ -4,8 +4,13 @@
 
 namespace reprojection::config {
 
-// NOTE(Jack): We ignore parameters which would require intimate knowledge of the solver which we do not have. For
-// example it is not possible to set the callback pointers from a configuration file obviously...
+// TODO(Jack): Due to the sheer number of parameters and the requirement to work directly with the
+// ceres::Solver::Options object, we do not use our custom validation functions here. For all other handcrafted
+// calibration specific configs we can use the validation functions, but here it is too much.
+//
+// NOTE(Jack): We ignore parameters which would require intimate knowledge of the solver
+// which we do not have. For example it is not possible to set the callback pointers from a configuration file
+// obviously...
 ceres::Solver::Options ParseSolverOptions(toml::table solver_cfg) {
     // NOTE(Jack): The options struct is initialized with default values. That means that if in the following code a
     // value is not explicitly set, that its value is preserved as the default.
@@ -105,7 +110,7 @@ ceres::Solver::Options ParseSolverOptions(toml::table solver_cfg) {
 
     if (not solver_cfg.empty()) {
         std::ostringstream oss;
-        oss << "Unexpected parameters found in the configuration file, are you sure they are correct?\n";
+        oss << "Unexpected parameters found in the solver configuration, are you sure they are correct?\n";
         for (const auto& [key, _] : solver_cfg) {
             oss << "  - " << key.str() << "\n";
         }
