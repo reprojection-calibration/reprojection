@@ -40,8 +40,7 @@ int main(int argc, char* argv[]) {
     }
 
     toml::table const config{toml::parse_file(config_file)};
-    std::unique_ptr<feature_extraction::TargetExtractor> const extractor{
-        feature_extraction::CreateTargetExtractor(config)};
+    auto const extractor{feature_extraction::CreateTargetExtractor(*config["target"].as_table())};
 
     std::cout << "\n\tPress any key to close the window and end the demo.\n" << std::endl;
 

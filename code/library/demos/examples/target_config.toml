@@ -1,0 +1,8 @@
+[target]
+pattern_size = [3, 4]
+type = "april_grid3"
+unit_dimension = 1.0
+
+# This section is only relevant if target.type == "circle_grid"
+[target.circle_grid]
+asymmetric = false
