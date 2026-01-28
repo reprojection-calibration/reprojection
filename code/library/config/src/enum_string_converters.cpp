@@ -14,8 +14,7 @@ TargetType ToTargetType(std::string const& enum_string) {
     } else if (enum_string == "april_grid3") {
         return TargetType::AprilGrid3;
     } else {
-        throw std::runtime_error("The requested target type string - " + enum_string +
-                                 " - is not valid (see the TargetType enum).");
+        throw std::runtime_error("Unrecognized argument passed to ToTargetType(): " + enum_string);
     }
 }
 
@@ -33,8 +32,7 @@ std::string ToString(TomlType const value) {
     } else if (value == TomlType::Table) {
         return "table";
     } else {
-        throw std::runtime_error(
-            "TomlType enum ToString function has not implemented this type yet!");  // LCOV_EXCL_LINE
+        throw std::runtime_error("Unrecognized argument passed to ToString(TomlType)");  // LCOV_EXCL_LINE
     }
 }
 
