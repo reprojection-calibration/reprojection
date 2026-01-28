@@ -20,6 +20,9 @@ TEST(ConfigLoadConfiguration, TestLoadConfiguration) {
     EXPECT_EQ(config.min_line_search_step_size, 1e-6);
 }
 
+// TODO(Jack): This test is too specifically targeted at the solver config - that should not be the case for the general
+//  load configuration testing.
+//
 // There is no [solver] config to load, so we will instead get a default initialized ceres::Solver::Options back :)
 TEST(ConfigLoadConfiguration, TestLoadConfigurationDefaultSolverOptions) {
     static constexpr std::string_view no_solver_parameters_config{R"(

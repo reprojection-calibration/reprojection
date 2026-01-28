@@ -9,7 +9,13 @@ enum class CameraModel {
     DoubleSphere = 6,  //
     Pinhole = 4,
     PinholeRadtan4 = 8,
-    UnifiedCameraModel = 5
+    UnifiedCameraModel = 5,
+};
+
+enum class TargetType {
+    Checkerboard,
+    CircleGrid,
+    AprilGrid3,
 };
 
 }  // namespace reprojection

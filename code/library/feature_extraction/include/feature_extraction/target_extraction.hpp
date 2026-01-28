@@ -32,8 +32,16 @@ class TargetExtractor {
     MatrixX3d points_;
 };
 
-enum class TargetType { Checkerboard, CircleGrid, AprilGrid3 };
-
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
+// REMOVE
 std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_config);
 
 }  // namespace reprojection::feature_extraction

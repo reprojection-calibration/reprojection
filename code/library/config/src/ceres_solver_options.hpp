@@ -24,7 +24,7 @@ ceres::Solver::Options ParseSolverOptions(toml::table solver_cfg);
 #define CFG_GET_ENUM_AND_ERASE(name, cfg, options, enum_type, string_to_enum)                         \
     do {                                                                                              \
         if (auto const value{(cfg).get_as<std::string>(#name)}) {                                     \
-            (options).name = CeresEnumToString<enum_type, string_to_enum>(value->as_string()->get()); \
+            (options).name = StringToCeresEnum<enum_type, string_to_enum>(value->as_string()->get()); \
             (cfg).erase(#name);                                                                       \
         }                                                                                             \
     } while (0)

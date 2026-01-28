@@ -6,7 +6,10 @@ find_package(tomlplusplus REQUIRED)
 
 set(SRC_FILES
         src/ceres_solver_options.cpp
+        src/enum_string_converters.cpp
         src/load_configuration.cpp
+        src/target_options.cpp
+        src/toml_helpers.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -19,7 +22,9 @@ AddLibrary()
 
 set(TESTS
         src/ceres_solver_options.test.cpp
-        src/ceres_enum_parsing.test.cpp
+        src/enum_string_converters.test.cpp
+        src/target_options.test.cpp
+        src/toml_helpers.test.cpp
         test/load_configuration.test.cpp
 )
 AddTests()
