@@ -81,7 +81,5 @@ TEST(ConfigValidateTargetConfig, TestValidateTargetConfigBadConfigs) {
 
         auto const error_msg{config::ValidateTargetConfig(*toml["target"].as_table())};
         EXPECT_TRUE(error_msg.has_value());
-
-        std::cout << error_msg.value().msg << std::endl;
     }
 }

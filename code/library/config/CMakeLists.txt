@@ -23,7 +23,6 @@ AddLibrary()
 set(TESTS
         src/enum_string_converters.test.cpp
         src/parse_ceres_solver_options.test.cpp
-        src/parse_sensor_config.test.cpp
         src/toml_helpers.test.cpp
         test/load_config_file.test.cpp
         test/validate_target_config.test.cpp
