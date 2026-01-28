@@ -21,6 +21,7 @@ set(INCLUDE_DIRECTORIES
         ${OpenCV_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
+        config
         Eigen3::Eigen
         eigen_utilities
         tomlplusplus::tomlplusplus
