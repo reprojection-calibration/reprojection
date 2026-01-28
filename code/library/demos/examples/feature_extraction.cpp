@@ -41,9 +41,9 @@ int main(int argc, char* argv[]) {
         image_feed = std::make_unique<demos::VideoCapture>(0);
     }
 
-    YAML::Node const config{YAML::LoadFile(config_file)};
+    toml::table const config{toml::parse_file(config_file)};
     std::unique_ptr<feature_extraction::TargetExtractor> const extractor{
-        feature_extraction::CreateTargetExtractor(config["target"])};
+        feature_extraction::CreateTargetExtractor(config)};
 
     std::cout << "\n\tPress any key to close the window and end the demo.\n" << std::endl;
 

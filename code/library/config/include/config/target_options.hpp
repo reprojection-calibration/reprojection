@@ -3,7 +3,7 @@
 #include <optional>
 #include <toml++/toml.hpp>
 
-#include "toml_helpers.hpp"  // TODO REPLACE with types .hpp file after move
+#include "config/types.hpp"
 
 namespace reprojection::config {
 

@@ -23,8 +23,8 @@ AddLibrary()
 set(TESTS
         src/ceres_solver_options.test.cpp
         src/enum_string_converters.test.cpp
-        src/target_options.test.cpp
         src/toml_helpers.test.cpp
         test/load_configuration.test.cpp
+        test/target_options.test.cpp
 )
 AddTests()

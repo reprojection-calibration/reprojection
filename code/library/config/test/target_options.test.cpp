@@ -1,4 +1,4 @@
-#include "target_options.hpp"
+#include "config/target_options.hpp"
 
 #include <gtest/gtest.h>
 
@@ -40,6 +40,7 @@ TEST(ConfigTargetOptions, TestParseTargetOptionsGoodConfigs) {
     for (auto const& config : good_configs) {
         toml::table const toml{toml::parse(config)};
 
+        // TODO(Jack): Remove the top level table so we can just pass it in directly! Not needed complexity.
         auto const error_msg{config::ValidateTargetConfig(*toml["target"].as_table())};
         EXPECT_FALSE(error_msg.has_value());
     }
