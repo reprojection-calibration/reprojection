@@ -42,6 +42,8 @@ namespace reprojection::config {
 // actually throw an uncontrolled error about misinterpreting a boolean value (because it begins with T). This is not
 // conform with our approach below and we should redesign this code to prevent that. Maybe we need to check the string
 // values first?
+// NOTE(Jack): It is valid to have more keys, this function only checks that certain required keys are present. If there
+// are more that is no problem.
 std::optional<ParseError> ValidateToml(toml::table const& table, std::map<std::string, DataType> const& required_keys) {
     auto type_error = [](std::string const& key, DataType const type) {
         return ParseError{ParseErrorType::IncorrectType,
@@ -84,7 +86,6 @@ TEST(ConfigTomlHelpers, TestValidateTomlHappyPath) {
         [solver]
         num_threads = 1
         minimizer_type = "TRUST_REGION"
-
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
@@ -124,4 +125,18 @@ TEST(ConfigTomlHelpers, TestValidateTomlIncorrectType) {
 
     required_keys["config_key"] = DataType::Table;
     EXPECT_TRUE(config::ValidateToml(config, required_keys).has_value());
+}
+
+TEST(ConfigTomlHelpers, TestValidateTomlUnknownKey) {
+    static constexpr std::string_view config_file{R"(
+        config_key = [3,4]
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    std::map<std::string, DataType> const required_keys{{"config_key", DataType::Array},
+                                                        {"other_key", DataType::Integer}};
+    auto const error_msg{config::ValidateToml(config, required_keys)};
+    ASSERT_TRUE(error_msg.has_value());
+    EXPECT_EQ(error_msg->error, ParseErrorType::UnknownKey);
+    EXPECT_EQ(error_msg->msg, "Configuration does not contain required key: other_key of type: integer");
 }
