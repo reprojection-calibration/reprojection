@@ -96,7 +96,7 @@ TEST(ConfigTomlHelpers, TestValidateRequiredKeysIncorrectType) {
     EXPECT_TRUE(config::ValidateRequiredKeys(config, required_keys).has_value());
 }
 
-TEST(ConfigTomlHelpers, TestValidateRequiredKeysUnknownKey) {
+TEST(ConfigTomlHelpers, TestValidateRequiredKeysMissingKey) {
     static constexpr std::string_view config_file{R"(
         config_key = [3,4]
     )"sv};
@@ -110,7 +110,7 @@ TEST(ConfigTomlHelpers, TestValidateRequiredKeysUnknownKey) {
     EXPECT_EQ(error_msg->msg, "Configuration does not contain required key: other_key of type: integer");
 }
 
-TEST(ConfigTomlHelpers, TestValidatePossibleKeysHappyPath) {
+TEST(ConfigTomlHelpers, TestValidatePossibleKeysHappyPaths) {
     static constexpr std::string_view config_file{R"(
         [target.circle_grid]
         asymmetric = true
@@ -125,4 +125,28 @@ TEST(ConfigTomlHelpers, TestValidatePossibleKeysHappyPath) {
                                                         {"target.circle_grid", DataType::Table},
                                                         {"target.circle_grid.asymmetric", DataType::Boolean}};
     EXPECT_FALSE(config::ValidatePossibleKeys(config, possible_keys).has_value());
+
+    // The absence of a possible key is not an error, here we test this with a completely empty config file.
+    static constexpr std::string_view empty_config_file{R"()"sv};
+    toml::table const empty_config{toml::parse(empty_config_file)};
+
+    EXPECT_FALSE(config::ValidatePossibleKeys(empty_config, possible_keys).has_value());
+}
+
+TEST(ConfigTomlHelpers, TestValidatePossibleKeysUnknownKey) {
+    static constexpr std::string_view config_file{R"(
+        [target.circle_grid]
+        asymmetric = true
+        some_random_key = 666
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    std::map<std::string, DataType> const possible_keys{{"target", DataType::Table},
+                                                        {"target.circle_grid", DataType::Table},
+                                                        {"target.circle_grid.asymmetric", DataType::Boolean}};
+    auto const error_msg{config::ValidatePossibleKeys(config, possible_keys)};
+    ASSERT_TRUE(error_msg.has_value());
+    EXPECT_EQ(error_msg->error, ParseErrorType::UnknownKey);
+    EXPECT_EQ(error_msg->msg,
+              "Configuration contains an unexpected key: target.circle_grid.some_random_key of type BLAH");
 }
