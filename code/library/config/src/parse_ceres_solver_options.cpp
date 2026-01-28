@@ -1,5 +1,6 @@
-#include "enum_string_converters.hpp"
 #include "parse_ceres_solver_options.hpp"
+
+#include "enum_string_converters.hpp"
 
 namespace reprojection::config {
 
