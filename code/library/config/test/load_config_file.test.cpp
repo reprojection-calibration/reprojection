@@ -1,12 +1,13 @@
+#include "config/load_config_file.hpp"
+
 #include <gtest/gtest.h>
 
-#include "config/load_config_file.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(ConfigLoadConfiguration, TestLoadConfiguration) {
+TEST(ConfigLoadConfigFile, TestLoadConfigFile) {
     static constexpr std::string_view happy_path_config{R"(
         [solver]
         minimizer_type = "LINE_SEARCH"
@@ -23,7 +24,7 @@ TEST(ConfigLoadConfiguration, TestLoadConfiguration) {
 //  load configuration testing.
 //
 // There is no [solver] config to load, so we will instead get a default initialized ceres::Solver::Options back :)
-TEST(ConfigLoadConfiguration, TestLoadConfigurationDefaultSolverOptions) {
+TEST(ConfigLoadConfigFile, TestLoadConfigFileDefaultSolverOptions) {
     static constexpr std::string_view no_solver_parameters_config{R"(
         [some_other_config]
         blah = 1

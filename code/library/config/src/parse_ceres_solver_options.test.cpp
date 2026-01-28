@@ -1,15 +1,15 @@
+#include "parse_ceres_solver_options.hpp"
+
 #include <ceres/types.h>
 #include <gtest/gtest.h>
 
 #include <string_view>
 
-#include "parse_ceres_solver_options.hpp"
-
 using namespace reprojection;
 using namespace std::string_view_literals;
 
-TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsFaultyInput) {
-    // Config with a section header we dont expect
+TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsFaultyInput) {
+    // Config with a section header we don't expect
     static constexpr std::string_view config_file{R"(
         [not_the_solver_config]
     )"sv};
@@ -28,7 +28,7 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsFaultyInput) {
 
 // Given the wrong type this key/value will not be parsed and removed from the table, which means we will have a
 // leftover key at the end of parsing which is an error we throw on.
-TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMinimizerTypeWrongType) {
+TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsWrongType) {
     static constexpr std::string_view config_file{R"(
         minimizer_type = 101.1
     )"sv};
@@ -37,7 +37,7 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMinimizerTypeWrongType) {
     EXPECT_THROW(config::ParseCeresSolverOptions(config), std::runtime_error);
 }
 
-TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsEnums) {
+TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsEnums) {
     static constexpr std::string_view config_file{R"(
         minimizer_type = "LINE_SEARCH"
         line_search_interpolation_type = "QUADRATIC"
@@ -52,7 +52,7 @@ TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsEnums) {
 }
 
 // Test all the non-enum types we have - int, bool, double, std::string
-TEST(ConfigCeresSolverOptions, TestLoadSolverOptionsMaxLbfgsRankInt) {
+TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsMaxLbfgsRankInt) {
     static constexpr std::string_view config_file{R"(
         max_lbfgs_rank = 21
         use_approximate_eigenvalue_bfgs_scaling = true
