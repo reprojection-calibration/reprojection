@@ -8,6 +8,7 @@ set(SRC_FILES
         src/ceres_solver_options.cpp
         src/load_configuration.cpp
         src/target_enum_parsing.cpp
+        src/target_options.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -23,6 +24,7 @@ set(TESTS
         src/ceres_enum_parsing.test.cpp
         src/target_enum_parsing.test.cpp
         src/target_options.test.cpp
+        src/toml_helpers.test.cpp
         test/load_configuration.test.cpp
 )
 AddTests()
