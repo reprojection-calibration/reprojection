@@ -9,6 +9,7 @@ set(SRC_FILES
         src/load_configuration.cpp
         src/target_enum_parsing.cpp
         src/target_options.cpp
+        src/toml_helpers.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
