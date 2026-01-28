@@ -7,7 +7,7 @@ set(apriltag_INCLUDE_DIRS "${apriltag_INCLUDE_DIRS}/apriltag")
 
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(tomlplusplus REQUIRED)
 
 set(SRC_FILES
         src/april_tag_cpp_wrapper.cpp
@@ -19,15 +19,15 @@ set(SRC_FILES
 )
 set(INCLUDE_DIRECTORIES
         ${OpenCV_INCLUDE_DIRS}
-        ${YAML_CPP_INCLUDE_DIR}
 )
 set(LINK_LIBRARIES
+        config
         Eigen3::Eigen
         eigen_utilities
+        tomlplusplus::tomlplusplus
         types
         ${apriltag_LIBRARIES}
         ${OpenCV_LIBS}
-        ${YAML_CPP_LIBRARIES}
 )
 AddLibrary()
 

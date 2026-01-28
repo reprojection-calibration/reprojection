@@ -2,22 +2,9 @@
 
 #include <stdexcept>
 
-#include "enums.hpp"
+#include "config/enums.hpp"
 
 namespace reprojection::config {
-
-TargetType StringToTargetTypeEnum(std::string const& enum_string) {
-    if (enum_string == "checkerboard") {
-        return TargetType::Checkerboard;
-    } else if (enum_string == "circle_grid") {
-        return TargetType::CircleGrid;
-    } else if (enum_string == "april_grid3") {
-        return TargetType::AprilGrid3;
-    } else {
-        throw std::runtime_error("The requested target type string - " + enum_string +
-                                 " - is not valid (see the TargetType enum).");
-    }
-}
 
 std::string ToString(TomlType const value) {
     if (value == TomlType::Array) {
@@ -33,8 +20,7 @@ std::string ToString(TomlType const value) {
     } else if (value == TomlType::Table) {
         return "table";
     } else {
-        throw std::runtime_error(
-            "TomlType enum ToString function has not implemented this type yet!");  // LCOV_EXCL_LINE
+        throw std::runtime_error("Unrecognized argument passed to ToString(TomlType)");  // LCOV_EXCL_LINE
     }
 }
 

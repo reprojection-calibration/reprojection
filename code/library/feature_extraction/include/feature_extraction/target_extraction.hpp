@@ -1,11 +1,10 @@
 #pragma once
 
-#include <yaml-cpp/yaml.h>
-
 #include <Eigen/Dense>
 #include <memory>
 #include <opencv2/opencv.hpp>
 #include <optional>
+#include <toml++/toml.hpp>
 
 #include "types/algorithm_types.hpp"
 #include "types/eigen_types.hpp"
@@ -32,16 +31,6 @@ class TargetExtractor {
     MatrixX3d points_;
 };
 
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_config);
+std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target_config);
 
 }  // namespace reprojection::feature_extraction

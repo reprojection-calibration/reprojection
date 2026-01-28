@@ -2,7 +2,6 @@ set(LIBRARY_NAME "demos")
 
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(yaml-cpp REQUIRED)
 
 set(SRC_FILES
         src/image_source.cpp
@@ -22,7 +21,6 @@ set(LINK_LIBRARIES
         pnp
         projection_functions
         spline
-        ${YAML_CPP_LIBRARIES}
 )
 AddLibrary()
 

@@ -4,15 +4,10 @@
 #include <string>
 #include <toml++/toml.hpp>
 
-#include "enums.hpp"
+#include "config/enums.hpp"
+#include "config/types.hpp"
 
 namespace reprojection::config {
-
-// TODO(Jack): Is this file a good location for this?
-struct ParserErrorMsg {
-    TomlParseError error;
-    std::string msg;
-};
 
 std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
                                                    std::map<std::string, TomlType> const& required_keys);

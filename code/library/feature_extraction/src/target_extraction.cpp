@@ -1,73 +1,46 @@
 #include "feature_extraction/target_extraction.hpp"
 
-#include <stdexcept>
-
+#include "../../config/src/enum_string_converters.hpp"
+#include "config/target_options.hpp"
 #include "target_extractors.hpp"
 #include "types/enums.hpp"
 
 namespace reprojection::feature_extraction {
 
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-TargetType ToEnum(std::string const& target_type) {
-    if (target_type == "checkerboard") {
-        return TargetType::Checkerboard;
-    } else if (target_type == "circle_grid") {
-        return TargetType::CircleGrid;
-    } else if (target_type == "april_grid3") {
-        return TargetType::AprilGrid3;
-    } else {
-        throw std::runtime_error("The requested target type - " + target_type +
-                                 " - is not valid (see the TargetType enum).");
+// TODO(Jack): This is a slightly controversial decision to let the toml::table type escape outside of the config
+//  package. However we need to allow for some dynamic behaviour (ex. circle grid asymmetric parameter), and the table
+//  is a type which lets us easily do this, when compared to making structs with base classes etc.
+// TODO(Jack): Somewhere in the process we should check that pattern size is a length two array of ints. We access
+//  it here without checking and therefore risk scary failures.
+std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target_config) {
+    if (auto const error_msg{config::ValidateTargetConfig(target_config)}) {
+        throw std::runtime_error(error_msg->msg);
     }
-}
 
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-// REMOVE
-std::unique_ptr<TargetExtractor> CreateTargetExtractor(YAML::Node const& target_config) {
-    if (not target_config["type"]) {
-        // TODO(Jack): Does the yaml-cpp library provide us a better error handling mechanism?
-        throw std::runtime_error("The target type was not specified.");
-    }
-    TargetType const type{ToEnum(target_config["type"].as<std::string>())};
+    std::string type_str{target_config["type"].as_string()->get()};
+    TargetType const type{ToTargetType(type_str)};
+    cv::Size const pattern_size{static_cast<int>(target_config["pattern_size"].as_array()->at(1).as_integer()->get()),
+                                static_cast<int>(target_config["pattern_size"].as_array()->at(0).as_integer()->get())};
 
-    if (not(target_config["pattern_size"] and target_config["pattern_size"].IsSequence())) {
-        throw std::runtime_error("The target pattern_size was not specified.");
+    // NOTE(Jack) For optional parameters like unit_dimension we need to check if they are in the table first.
+    double unit_dimension{1.0};  // Sensible default
+    if (auto const node{target_config["unit_dimension"]}) {
+        unit_dimension = node.as_floating_point()->get();
     }
-    cv::Size const pattern_size{target_config["pattern_size"][1].as<int>(), target_config["pattern_size"][0].as<int>()};
-
-    if (not target_config["unit_dimension"]) {
-        throw std::runtime_error("The target unit_dimension was not specified.");
-    }
-    double const unit_dimension{target_config["unit_dimension"].as<double>()};
 
     if (type == TargetType::Checkerboard) {
         return std::make_unique<CheckerboardExtractor>(pattern_size, unit_dimension);
     } else if (type == TargetType::CircleGrid) {
-        if (not target_config["circle_grid_options"] or not target_config["circle_grid_options"]["asymmetric"]) {
-            throw std::runtime_error("The target cirle_grid_options.asymmetric was not specified.");
+        bool asymmetric{false};
+        if (auto const node{target_config.at_path("circle_grid.asymmetric")}) {
+            asymmetric = node.as_boolean()->get();
         }
-        bool const asymmetric{target_config["circle_grid_options"]["asymmetric"].as<bool>()};
-
         return std::make_unique<CircleGridExtractor>(pattern_size, unit_dimension, asymmetric);
-    } else {
+    } else if (type == TargetType::AprilGrid3) {
         return std::make_unique<AprilGrid3Extractor>(pattern_size, unit_dimension);
+    } else {
+        throw std::runtime_error("CreateTargetExtractor() invalid feature extractor type: " +  // LCOV_EXCL_LINE
+                                 type_str);                                                    // LCOV_EXCL_LINE
     }
 }
 
