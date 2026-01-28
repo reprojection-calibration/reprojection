@@ -7,7 +7,7 @@
 // TODO MOVE TO TYPES
 namespace reprojection {
 
-enum class DataType {
+enum class TomlType {
     Array,
     Boolean,
     FloatingPoint,
@@ -16,16 +16,16 @@ enum class DataType {
     Table,
 };
 
-std::string ToString(DataType const value);
+std::string ToString(TomlType const value);
 
-enum class ParseErrorType {
+enum class TomlParseError {
     IncorrectType,
     MissingKey,
     UnknownKey,
 };
 
-struct ParseError {
-    ParseErrorType error;
+struct ParserErrorMsg {
+    TomlParseError error;
     std::string msg;
 };
 
@@ -33,8 +33,8 @@ struct ParseError {
 
 namespace reprojection::config {
 
-std::optional<ParseError> ValidateRequiredKeys(toml::table const& table,
-                                               std::map<std::string, DataType> const& required_keys);
+std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
+                                                   std::map<std::string, TomlType> const& required_keys);
 
 // TEST!!!!
 // TEST!!!!
@@ -47,7 +47,7 @@ void GetTomlPaths(toml::table const& table, std::vector<std::string>& toml_paths
 
 // TODO(Jack): Would it be useful or more informative to the user to have a version of this that only validates table
 //  headers?
-std::optional<ParseError> ValidatePossibleKeys(toml::table const& table,
-                                               std::map<std::string, DataType> const& possible_keys);
+std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
+                                                   std::map<std::string, TomlType> const& possible_keys);
 
 }  // namespace reprojection::config

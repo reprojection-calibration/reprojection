@@ -7,6 +7,6 @@
 
 namespace reprojection::config {
 
-std::optional<ParseError> ValidateTargetConfig(toml::table const& target_cfg);
+std::optional<ParserErrorMsg> ValidateTargetConfig(toml::table const& target_cfg);
 
 }  // namespace reprojection::config

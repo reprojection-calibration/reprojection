@@ -3,22 +3,22 @@
 // TODO MOVE TO TYPES
 namespace reprojection {
 
-std::string ToString(DataType const value) {
-    if (value == DataType::Array) {
+std::string ToString(TomlType const value) {
+    if (value == TomlType::Array) {
         return "array";
-    } else if (value == DataType::Boolean) {
+    } else if (value == TomlType::Boolean) {
         return "boolean";
-    } else if (value == DataType::FloatingPoint) {
+    } else if (value == TomlType::FloatingPoint) {
         return "floating_point";
-    } else if (value == DataType::Integer) {
+    } else if (value == TomlType::Integer) {
         return "integer";
-    } else if (value == DataType::String) {
+    } else if (value == TomlType::String) {
         return "string";
-    } else if (value == DataType::Table) {
+    } else if (value == TomlType::Table) {
         return "table";
     } else {
         throw std::runtime_error(
-            "DataType enum ToString function has not implemented this type yet!");  // LCOV_EXCL_LINE
+            "TomlType enum ToString function has not implemented this type yet!");  // LCOV_EXCL_LINE
     }
 }
 
@@ -35,14 +35,15 @@ bool MutuallyExclusive(T... condition) {
     return (static_cast<int>(condition) + ...) == 1;
 }
 
-bool TypeNodeMatch(DataType const type, toml::node_view<const toml::node> const& node) {
+bool TypeNodeMatch(TomlType const type, toml::node_view<const toml::node> const& node) {
     return MutuallyExclusive(
-        type == DataType::Array and node.is_array(), type == DataType::Boolean and node.is_boolean(),
-        type == DataType::FloatingPoint and node.is_floating_point(), type == DataType::Integer and node.is_integer(),
-        type == DataType::String and node.is_string(), type == DataType::Table and node.is_table());
+        type == TomlType::Array and node.is_array(), type == TomlType::Boolean and node.is_boolean(),
+        type == TomlType::FloatingPoint and node.is_floating_point(), type == TomlType::Integer and node.is_integer(),
+        type == TomlType::String and node.is_string(), type == TomlType::Table and node.is_table());
 }
 
-// TODO(Jack): I thought about using a variant here to return a bool or the ParseError, but std::optional code that idea
+// TODO(Jack): I thought about using a variant here to return a bool or the ParserErrorMsg, but std::optional code that
+// idea
 //  of positive return or value in a simpler package. Is there a reason that we do need something more complicted than
 //  optional?
 // WARN(Jack): If for example you forgot the quotes around "TRUST_REGION" this code will
@@ -51,17 +52,17 @@ bool TypeNodeMatch(DataType const type, toml::node_view<const toml::node> const&
 // values first?
 // NOTE(Jack): It is valid to have more keys, this function only checks that certain required keys are present. If there
 // are more that is no problem.
-std::optional<ParseError> ValidateRequiredKeys(toml::table const& table,
-                                               std::map<std::string, DataType> const& required_keys) {
+std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
+                                                   std::map<std::string, TomlType> const& required_keys) {
     for (auto const& [key, type] : required_keys) {
         if (auto const node{table.at_path(key)}) {
             if (not TypeNodeMatch(type, node)) {
-                return ParseError{ParseErrorType::IncorrectType,
-                                  "Configuration key: " + key + " is not of expected type: " + ToString(type)};
+                return ParserErrorMsg{TomlParseError::IncorrectType,
+                                      "Configuration key: " + key + " is not of expected type: " + ToString(type)};
             }
         } else {
-            return ParseError{ParseErrorType::MissingKey,
-                              "Configuration does not contain required key: " + key + " of type: " + ToString(type)};
+            return ParserErrorMsg{TomlParseError::MissingKey, "Configuration does not contain required key: " + key +
+                                                                  " of type: " + ToString(type)};
         }
     }
 
@@ -79,21 +80,21 @@ void GetTomlPaths(toml::table const& table, std::vector<std::string>& toml_paths
     }
 }
 
-std::optional<ParseError> ValidatePossibleKeys(toml::table const& table,
-                                               std::map<std::string, DataType> const& possible_keys) {
+std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
+                                                   std::map<std::string, TomlType> const& possible_keys) {
     std::vector<std::string> full_path_keys;
     GetTomlPaths(table, full_path_keys);
 
     for (auto const& key : full_path_keys) {
         if (not possible_keys.contains(key)) {
-            return ParseError{ParseErrorType::UnknownKey, "Configuration contains an unexpected key: " + key};
+            return ParserErrorMsg{TomlParseError::UnknownKey, "Configuration contains an unexpected key: " + key};
         }
 
-        DataType const type{possible_keys.at(key)};
+        TomlType const type{possible_keys.at(key)};
         auto const node{table.at_path(key)};
         if (not TypeNodeMatch(type, node)) {
-            return ParseError{ParseErrorType::IncorrectType,
-                              "Configuration key: " + key + " is not of expected type: " + ToString(type)};
+            return ParserErrorMsg{TomlParseError::IncorrectType,
+                                  "Configuration key: " + key + " is not of expected type: " + ToString(type)};
         }
     }
 
