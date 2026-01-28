@@ -6,7 +6,7 @@
 
 namespace reprojection {
 
-enum class DataType { Array, FloatingPoint, Integer, String };
+enum class DataType { Array, FloatingPoint, Integer, String, Table };
 
 std::string ToString(DataType const value) {
     if (value == DataType::Array) {
@@ -17,6 +17,8 @@ std::string ToString(DataType const value) {
         return "integer";
     } else if (value == DataType::String) {
         return "string";
+    } else if (value == DataType::Table) {
+        return "table";
     } else {
         throw std::runtime_error("DataType enum ToString function has not implemented this type yet!");
     }
@@ -80,15 +82,20 @@ TEST(ConfigTomlHelpers, TestValidateTomlHappyPath) {
         [solver]
         num_threads = 1
         minimizer_type = "TRUST_REGION"
+
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    std::map<std::string, DataType> const required_keys{{"target.pattern_size", DataType::Array},
-                                                        {"target.unit_dimension", DataType::FloatingPoint},
-                                                        {"solver.num_threads", DataType::Integer},
-                                                        {"solver.minimizer_type", DataType::String}};
-
-    // There will be no error message because it's a valid config.
+    // Example use case #1 - check that a config has specific table sections.
+    std::map<std::string, DataType> const required_keys{{"target", DataType::Table}, {"solver", DataType::Table}};
     auto const error_msg{config::ValidateToml(config, required_keys)};
     EXPECT_FALSE(error_msg.has_value());
+
+    // Example use case #2 - check that a config has specific keys.
+    std::map<std::string, DataType> const required_keys_1{{"target.pattern_size", DataType::Array},
+                                                          {"target.unit_dimension", DataType::FloatingPoint},
+                                                          {"solver.num_threads", DataType::Integer},
+                                                          {"solver.minimizer_type", DataType::String}};
+    auto const error_msg_1{config::ValidateToml(config, required_keys_1)};
+    EXPECT_FALSE(error_msg_1.has_value());
 }
