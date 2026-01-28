@@ -45,7 +45,7 @@ namespace reprojection::config {
 std::optional<ParseError> ValidateToml(toml::table const& table, std::map<std::string, DataType> const& required_keys) {
     auto type_error = [](std::string const& key, DataType const type) {
         return ParseError{ParseErrorType::IncorrectType,
-                          "Table key: " + key + "is not of expected type: " + ToString(type)};
+                          "Configuration key: " + key + " is not of expected type: " + ToString(type)};
     };
 
     for (auto const& [key, type] : required_keys) {
@@ -58,10 +58,12 @@ std::optional<ParseError> ValidateToml(toml::table const& table, std::map<std::s
                 return type_error(key, type);
             } else if (type == DataType::String and not node.is_string()) {
                 return type_error(key, type);
+            } else if (type == DataType::Table and not node.is_table()) {
+                return type_error(key, type);
             }
         } else {
             return ParseError{ParseErrorType::UnknownKey,
-                              "Table does not contain required key: " + key + " of type: " + ToString(type)};
+                              "Configuration does not contain required key: " + key + " of type: " + ToString(type)};
         }
     }
 
