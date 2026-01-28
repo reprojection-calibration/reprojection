@@ -1,7 +1,7 @@
+#include "target_options.hpp"
+
 #include <string_view>
 #include <toml++/toml.hpp>
-
-#include "target_options.hpp"
 
 #include "target_enum_parsing.hpp"
 

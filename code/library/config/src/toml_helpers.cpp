@@ -11,7 +11,8 @@ namespace reprojection::config {
 // values first?
 // NOTE(Jack): It is valid to have more keys, this function only checks that certain required keys are present. If there
 // are more that is no problem.
-std::optional<ParseError> ValidateToml(toml::table const& table, std::map<std::string, DataType> const& required_keys) {
+std::optional<ParseError> ValidateRequiredKeys(toml::table const& table,
+                                               std::map<std::string, DataType> const& required_keys) {
     for (auto const& [key, type] : required_keys) {
         if (auto const node{table.at_path(key)}) {
             if ((type == DataType::Array and not node.is_array()) or

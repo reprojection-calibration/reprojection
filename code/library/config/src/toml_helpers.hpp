@@ -45,6 +45,7 @@ struct ParseError {
 
 namespace reprojection::config {
 
-std::optional<ParseError> ValidateToml(toml::table const& table, std::map<std::string, DataType> const& required_keys);
+std::optional<ParseError> ValidateRequiredKeys(toml::table const& table,
+                                               std::map<std::string, DataType> const& required_keys);
 
 }  // namespace reprojection::config
