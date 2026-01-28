@@ -39,7 +39,8 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target
     } else if (type == TargetType::AprilGrid3) {
         return std::make_unique<AprilGrid3Extractor>(pattern_size, unit_dimension);
     } else {
-        throw std::runtime_error("Invalid feature extractor type selected: " + type_str);
+        throw std::runtime_error("CreateTargetExtractor() invalid feature extractor type: " +
+                                 type_str);  // LCOV_EXCL_LINE
     }
 }
 

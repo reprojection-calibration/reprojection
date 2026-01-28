@@ -29,7 +29,7 @@ inline TargetType ToTargetType(std::string const& enum_string) {
     } else if (enum_string == "april_grid3") {
         return TargetType::AprilGrid3;
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToTargetType(): " + enum_string);
+        throw std::runtime_error("Unrecognized argument passed to ToTargetType(): " + enum_string);  // LCOV_EXCL_LINE
     }
 }
 
