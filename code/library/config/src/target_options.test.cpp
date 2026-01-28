@@ -40,8 +40,8 @@ TEST(ConfigTargetOptions, TestParseTargetOptionsGoodConfigs) {
     for (auto const& config : good_configs) {
         toml::table const toml{toml::parse(config)};
 
-        bool const valid_target_config{config::ValidateTargetConfig(*toml["target"].as_table())};
-        EXPECT_TRUE(valid_target_config);
+        auto const error_msg{config::ValidateTargetConfig(*toml["target"].as_table())};
+        EXPECT_FALSE(error_msg.has_value());
     }
 }
 
@@ -51,7 +51,7 @@ std::vector<std::string_view> const bad_configs{
         [target]
         pattern_size = [3,4]
         type = "circle_grid"
-        random_key = 123
+        random_key = "this key should not be here!"
     )"sv,
     // The pattern_size field must be an array.
     R"(
@@ -70,7 +70,7 @@ std::vector<std::string_view> const bad_configs{
         [target]
         pattern_size = [3,4]
         type = "circle_grid"
-        unit_dimension = "bad_type"
+        unit_dimension = "this is not a float"
     )"sv,
 };
 
@@ -78,7 +78,9 @@ TEST(ConfigTargetOptions, TestParseTargetOptionsBadConfigs) {
     for (auto const& config : bad_configs) {
         toml::table const toml{toml::parse(config)};
 
-        bool const valid_target_config{config::ValidateTargetConfig(*toml["target"].as_table())};
-        EXPECT_FALSE(valid_target_config);
+        auto const error_msg{config::ValidateTargetConfig(*toml["target"].as_table())};
+        EXPECT_TRUE(error_msg.has_value());
+
+        std::cout << error_msg.value().msg << std::endl;
     }
 }
