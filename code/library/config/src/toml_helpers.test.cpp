@@ -2,47 +2,6 @@
 
 #include <gtest/gtest.h>
 
-namespace reprojection::config {
-
-// TEST!!!!
-// TEST!!!!
-// TEST!!!!
-// TEST!!!!
-// TODO(Jack): Do this without recursion instead of editing toml_paths in place!
-// NOTE(Jack): We need to iterate over the entire table to construct the full toml paths. Unfortunately there is no
-// reverse of the .at_path() function which we can just use.
-void GetTomlPaths(toml::table const& table, std::vector<std::string>& toml_paths, std::string_view prefix = "") {
-    for (auto const& [key, node] : table) {
-        std::string const full_path{prefix.empty() ? std::string(key) : std::string(prefix) + "." + std::string(key)};
-        if (auto const* sub{node.as_table()}) {
-            GetTomlPaths(*sub, toml_paths, full_path);
-        }
-
-        toml_paths.push_back(full_path);
-    }
-}
-
-// TODO(Jack): Would it be useful or more informative to the user to have a version of this that only validates table
-//  headers?
-std::optional<ParseError> ValidatePossibleKeys(toml::table const& table,
-                                               std::map<std::string, DataType> const& possible_keys) {
-    std::vector<std::string> full_path_keys;
-    GetTomlPaths(table, full_path_keys);
-
-    for (auto const& key : full_path_keys) {
-        // TODO CHECK TYPE LIKE WE DO IN THE REQUIRED FUNCTION!!!!
-        if (not possible_keys.contains(key)) {
-            // TODO FILL OUT THE TYPE IN THE ERROR MESSAGE!!!!
-            return ParseError{ParseErrorType::UnknownKey,
-                              "Configuration contains an unexpected key: " + key + " of type BLAH"};
-        }
-    }
-
-    return std::nullopt;
-}
-
-}  // namespace reprojection::config
-
 using namespace reprojection;
 using namespace std::string_view_literals;
 
