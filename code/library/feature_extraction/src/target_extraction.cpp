@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 #include "target_extractors.hpp"
-#include "types/target_types.hpp"
+#include "types/enums.hpp"
 
 namespace reprojection::feature_extraction {
 

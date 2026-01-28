@@ -12,4 +12,6 @@ enum class CameraModel {
     UnifiedCameraModel = 5
 };
 
+enum class TargetType { Checkerboard, CircleGrid, AprilGrid3 };
+
 }  // namespace reprojection

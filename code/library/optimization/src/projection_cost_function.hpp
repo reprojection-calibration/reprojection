@@ -5,8 +5,8 @@
 #include "ceres_geometry.hpp"
 #include "projection_functions/projection_class_concept.hpp"
 #include "types/calibration_types.hpp"
-#include "types/camera_types.hpp"
 #include "types/eigen_types.hpp"
+#include "types/enums.hpp"
 
 namespace reprojection::optimization {
 

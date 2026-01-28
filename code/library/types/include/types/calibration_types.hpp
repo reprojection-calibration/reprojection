@@ -5,8 +5,8 @@
 #include <string>
 
 #include "types/algorithm_types.hpp"
-#include "types/camera_types.hpp"
 #include "types/eigen_types.hpp"
+#include "types/enums.hpp"
 
 // TODO(Jack): Make sure the names here to conflict logically with other types.
 

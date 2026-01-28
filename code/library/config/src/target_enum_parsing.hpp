@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "types/target_types.hpp"
+#include "types/enums.hpp"
 
 namespace reprojection::config {
 

@@ -3,8 +3,8 @@
 #include <optional>
 
 #include "types/calibration_types.hpp"
-#include "types/camera_types.hpp"
 #include "types/eigen_types.hpp"
+#include "types/enums.hpp"
 
 // TODO(Jack): It looks like there will be a lot of copy and pasted code between the views, eliminate this!
 // TODO(Jack): In the same way that an optimization frame view cannot exist without an initial pose, a initialization
