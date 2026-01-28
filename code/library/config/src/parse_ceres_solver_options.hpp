@@ -6,7 +6,7 @@
 
 namespace reprojection::config {
 
-ceres::Solver::Options ParseSolverOptions(toml::table solver_cfg);
+ceres::Solver::Options ParseCeresSolverOptions(toml::table solver_cfg);
 
 // NOTE(Jack): We use macros here because we need to interface directly with the ceres options struct. Using a macro
 // allows us to specify the name of the parameter only once in a single place, and then generates the entire reading

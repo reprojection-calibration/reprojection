@@ -1,7 +1,8 @@
+#include "config/load_config_file.hpp"
+
 #include <toml++/toml.hpp>
 
-#include "ceres_solver_options.hpp"
-#include "config/load_config_file.hpp"
+#include "parse_ceres_solver_options.hpp"
 
 namespace reprojection::config {
 
@@ -11,7 +12,7 @@ ceres::Solver::Options LoadConfigFile(std::string const& file) {
 
     // Sensible default is available here! Not the case for the target config!
     if (auto const solver_node{cfg["solver"]}) {
-        return ParseSolverOptions(*solver_node.as_table());
+        return ParseCeresSolverOptions(*solver_node.as_table());
     } else {
         return ceres::Solver::Options{};
     }

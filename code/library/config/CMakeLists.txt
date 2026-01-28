@@ -5,9 +5,9 @@ find_package(Eigen3 REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
 set(SRC_FILES
-        src/ceres_solver_options.cpp
         src/enum_string_converters.cpp
         src/load_config_file.cpp
+        src/parse_ceres_solver_options.cpp
         src/toml_helpers.cpp
         src/validate_target_config.cpp
 )
@@ -21,8 +21,8 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/ceres_solver_options.test.cpp
         src/enum_string_converters.test.cpp
+        src/parse_ceres_solver_options.test.cpp
         src/toml_helpers.test.cpp
         test/load_config_file.test.cpp
         test/validate_target_config.test.cpp
