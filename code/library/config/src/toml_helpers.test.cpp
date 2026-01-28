@@ -6,7 +6,13 @@
 
 namespace reprojection {
 
-enum class DataType { Array, FloatingPoint, Integer, String, Table };
+enum class DataType {
+    Array,
+    FloatingPoint,
+    Integer,
+    String,
+    Table,
+};
 
 std::string ToString(DataType const value) {
     if (value == DataType::Array) {
@@ -24,7 +30,10 @@ std::string ToString(DataType const value) {
     }
 }
 
-enum class ParseErrorType { UnknownKey, IncorrectType };
+enum class ParseErrorType {
+    IncorrectType,
+    UnknownKey,
+};
 
 struct ParseError {
     ParseErrorType error;
@@ -45,23 +54,15 @@ namespace reprojection::config {
 // NOTE(Jack): It is valid to have more keys, this function only checks that certain required keys are present. If there
 // are more that is no problem.
 std::optional<ParseError> ValidateToml(toml::table const& table, std::map<std::string, DataType> const& required_keys) {
-    auto type_error = [](std::string const& key, DataType const type) {
-        return ParseError{ParseErrorType::IncorrectType,
-                          "Configuration key: " + key + " is not of expected type: " + ToString(type)};
-    };
-
     for (auto const& [key, type] : required_keys) {
         if (auto const node{table.at_path(key)}) {
-            if (type == DataType::Array and not node.is_array()) {
-                return type_error(key, type);
-            } else if (type == DataType::FloatingPoint and not node.is_floating_point()) {
-                return type_error(key, type);
-            } else if (type == DataType::Integer and not node.is_integer()) {
-                return type_error(key, type);
-            } else if (type == DataType::String and not node.is_string()) {
-                return type_error(key, type);
-            } else if (type == DataType::Table and not node.is_table()) {
-                return type_error(key, type);
+            if ((type == DataType::Array and not node.is_array()) or
+                (type == DataType::FloatingPoint and not node.is_floating_point()) or
+                (type == DataType::Integer and not node.is_integer()) or
+                (type == DataType::String and not node.is_string()) or
+                (type == DataType::Table and not node.is_table())) {
+                return ParseError{ParseErrorType::IncorrectType,
+                                  "Configuration key: " + key + " is not of expected type: " + ToString(type)};
             }
         } else {
             return ParseError{ParseErrorType::UnknownKey,
