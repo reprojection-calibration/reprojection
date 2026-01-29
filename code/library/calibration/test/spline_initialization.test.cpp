@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "testing_utilities/constants.hpp"
@@ -14,7 +15,7 @@ TEST(CalibrationSplineInitialization, TestXxx) {
     testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
                                                 testing_utilities::image_bounds};
 
-    int const num_camera_poses{20};
+    int const num_camera_poses{100};
     CameraCalibrationData const data{generator.GenerateBatch(num_camera_poses)};
 
     uint64_t const delta_t_ns{static_cast<uint64_t>(1e8)};
@@ -29,9 +30,10 @@ TEST(CalibrationSplineInitialization, TestXxx) {
         se3_spline.AddControlPoint(geometry::Exp(frame_i.initial_pose.value()));
     }
 
-    // WARN UNDERSTAND/DOCUMENT THE - 3 * interpolation_density in the loop condition.
+    // WARN UNDERSTAND/DOCUMENT THE "minus 3*interpolation_density" in the loop condition.
     int const interpolation_density{10};
     int const num_interpolation_points{interpolation_density * num_camera_poses};
+    database::SplinePoses spline_poses;
     for (int i{0}; i < num_interpolation_points - 3 * interpolation_density; ++i) {
         // WARN(Jack): We ignore the starting time because we set t0_ns above to zero, if that changes later than set it
         // here too.
@@ -39,8 +41,13 @@ TEST(CalibrationSplineInitialization, TestXxx) {
             static_cast<uint64_t>(num_camera_poses * delta_t_ns * static_cast<double>(i) / num_interpolation_points)};
         Vector6d const pose_i{se3_spline.Evaluate(time_i_ns).value()};  // ERROR UNPROTECTED OPTIONAL ACCESS
 
-        std::cout << i << " " << time_i_ns << " " << pose_i.transpose() << std::endl;
+        spline_poses[time_i_ns] = pose_i;
     }
+
+    std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
+
+    database::AddSplinePoseData(spline_poses, database::PoseType::Initial, db);
 
     EXPECT_EQ(1, 2);
 }

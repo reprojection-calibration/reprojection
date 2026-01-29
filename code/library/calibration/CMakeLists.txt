@@ -10,6 +10,7 @@ set(SRC_FILES
 )
 set(LINK_LIBRARIES
         calibration_data_views
+        database # REMOVE
         Eigen3::Eigen
         eigen_utilities
         geometry

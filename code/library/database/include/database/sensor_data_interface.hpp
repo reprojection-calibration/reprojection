@@ -33,6 +33,13 @@ namespace reprojection::database {
 void AddCameraPoseData(CameraCalibrationData const& data, PoseType const type,
                        std::shared_ptr<CalibrationDatabase> const database);
 
+// TODO(Jack): We need to figure out an overarching strategy of how to unify the camera and spline types. For example
+//  both have initial and optimized poses! There has to be some commonality here we can take advantage of.
+using SplinePoses = std::map<std::uint64_t, Vector6d>;
+
+void AddSplinePoseData(SplinePoses const& data, PoseType const type,
+                       std::shared_ptr<CalibrationDatabase> const database);
+
 // NOTE(Jack): We are violating the rule of passing in more information into a function than is required by passing in
 // the entire CameraCalibrationData object. However here we pass it as a read only reference, unlike the calibration
 // optimization related uses which reads some data and mutates some data. For those cases we use the "view" construct to
