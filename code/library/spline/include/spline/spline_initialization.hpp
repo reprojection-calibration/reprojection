@@ -26,7 +26,7 @@ namespace reprojection::spline {
 
 struct CubicBSplineC3Init {
     // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at
-    // all, and it makse it impossible to use a map because the data is not contiguous in memory.
+    //  all, and it makes it impossible to use a map because the data is not contiguous in memory.
     // WARN(Jack): Expects time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
     static CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments);
 
@@ -60,7 +60,7 @@ struct CubicBSplineC3Init {
     using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
 
     // TODO(Jack): Is weights really the right term here? We are blockifying the entire B vector which combines both the
-    // basis matrix contribution and the time weighting.
+    //  basis matrix contribution and the time weighting.
     static ControlPointBlock BlockifyWeights(double const u_i);
 
     // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf

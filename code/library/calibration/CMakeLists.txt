@@ -26,5 +26,6 @@ set(TESTS
         src/parabola_line_initialization.test.cpp
         src/vanishing_point_initialization.test.cpp
         test/linear_pose_initialization.test.cpp
+        test/spline_initialization.test.cpp
 )
 AddTests()

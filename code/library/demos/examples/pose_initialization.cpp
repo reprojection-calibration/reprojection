@@ -26,7 +26,7 @@ int main() {
         {},
         {}};
 
-    // Load targets, intialize, and optimize
+    // Load targets, initialize, and optimize
     database::GetExtractedTargetData(db, cam_data);
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
