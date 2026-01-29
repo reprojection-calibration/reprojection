@@ -30,7 +30,7 @@ CameraCalibrationData MvgGenerator::GenerateBatch(int const num_frames) const {
     for (int i{0}; i < num_frames; ++i) {
         auto const [bundle, pose]{this->Generate(static_cast<double>(i) / num_frames)};
 
-        uint64_t const timestamp_ns{static_cast<uint64_t>(1e8) * i}; // Default to 0.1s spacing starting from zero
+        uint64_t const timestamp_ns{constants::t0_ns + constants::delta_t_ns * i};
         data.frames[timestamp_ns].extracted_target.bundle = bundle;
         data.frames[timestamp_ns].initial_pose = geometry::Log(pose);
     }
