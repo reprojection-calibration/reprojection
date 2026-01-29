@@ -28,8 +28,6 @@ MvgGenerator::MvgGenerator(CameraModel const camera_model, ArrayXd const& intrin
 CameraCalibrationData MvgGenerator::GenerateBatch(int const num_frames) const {
     CameraCalibrationData data{{"", camera_model_, bounds_}, intrinsics_};
     for (int i{0}; i < num_frames; ++i) {
-        // TODO(Jack): What do we need the Frame type for? Is it widely used or has it been replaced by camera
-        // calibration data?
         auto const [bundle, pose]{this->Generate(static_cast<double>(i) / num_frames)};
         data.frames[i].extracted_target.bundle = bundle;
         data.frames[i].initial_pose = geometry::Log(pose);
