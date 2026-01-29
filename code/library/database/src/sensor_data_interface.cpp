@@ -14,15 +14,23 @@
 
 namespace reprojection::database {
 
+void AddCameraPoseData(CameraCalibrationData const& data, PoseType const type,
+                       std::shared_ptr<CalibrationDatabase> const database) {
+    std::string_view const sql{sql_statements::camera_poses_insert};
+
+    AddPoseData(sql, data, type, database);
+}
+
 // NOTE(Jack): We supress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
 // trigger that is via a malformed sql statement, but that is hardcoded into this function (i.e.
 // sql_statements::camera_poses_insert) abd cannot and should not be changed!
-void AddPoseData(CameraCalibrationData const& data, PoseType const type,
+void AddPoseData(std::string_view const sql, CameraCalibrationData const& data, PoseType const type,
                  std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
-        SqlStatement const statement{database->db, sql_statements::camera_poses_insert};
+        // TODO(Jack): Make SqlStatement take a string view.
+        SqlStatement const statement{database->db, sql.data()};
 
         Vector6d pose;
         if (type == PoseType::Initial) {

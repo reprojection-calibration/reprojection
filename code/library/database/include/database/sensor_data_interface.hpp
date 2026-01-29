@@ -30,16 +30,17 @@
 
 namespace reprojection::database {
 
-[[nodiscard]] bool AddFrame(FrameHeader const& data, std::shared_ptr<CalibrationDatabase> const database);
+void AddCameraPoseData(CameraCalibrationData const& data, PoseType const type,
+                       std::shared_ptr<CalibrationDatabase> const database);
 
 // NOTE(Jack): We are violating the rule of passing in more information into a function than is required by passing in
 // the entire CameraCalibrationData object. However here we pass it as a read only reference, unlike the calibration
-// optimization related uses which read some data and mutate some data. For those cases we use the "view" construct to
-// slice the data and only expose the necesary parts. We could do that here too and make a AddPoseView, but that would
-// add a lot of boilerplate code and not really move us forward to the end goal, or protect us from henious abuses. It
+// optimization related uses which reads some data and mutates some data. For those cases we use the "view" construct to
+// slice the data and only expose the necessary parts. We could do that here too and make a AddPoseView, but that would
+// add a lot of boilerplate code and not really move us forward to the end goal, or protect us from heinous abuses. It
 // is already a const& so the only risk is that someone does too much with the extra non-pose data in this method. But
 // if someone does that in a method named AddPoseData, then I think we have bigger problems :)
-void AddPoseData(CameraCalibrationData const& data, PoseType const type,
+void AddPoseData(std::string_view const sql, CameraCalibrationData const& data, PoseType const type,
                  std::shared_ptr<CalibrationDatabase> const database);
 
 void AddReprojectionError(CameraCalibrationData const& data, PoseType const type,

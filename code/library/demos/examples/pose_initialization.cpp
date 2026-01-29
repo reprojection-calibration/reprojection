@@ -34,8 +34,8 @@ int main() {
     std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
     // Write everything to database
-    AddPoseData(cam_data, database::PoseType::Initial, db);
-    AddPoseData(cam_data, database::PoseType::Optimized, db);
+    AddCameraPoseData(cam_data, database::PoseType::Initial, db);
+    AddCameraPoseData(cam_data, database::PoseType::Optimized, db);
     database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
     database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
 
