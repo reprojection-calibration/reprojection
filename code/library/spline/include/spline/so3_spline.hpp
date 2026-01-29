@@ -54,21 +54,12 @@ struct So3Spline {
 
         for (int j{0}; j < constants::degree; ++j) {
             VectorKd const& weight0{weights[0]};
-
-            // WARN(Jack): In my first implementation of this I used delta_R_j for the rotation and inverse_delta_R_j
-            // for the velocity and acceleration. When I started to plot some interpolation results while investigating
-            // the testing mocks mvg sphere trajectory, I noticed that there were weird "saw tooth" artifacts in the
-            // plotted rotation (rx, ry, rz). It looked to me like a flipped sign somewhere, so I tried using
-            // inverse_delta_R_j for the rotation too and the saw tooth artifact went away. This was simply a
-            // heuristic fix and its accuracy cannot be proven until we take a look at the literature and confirm this
-            // is the way to do it! It might also be there is an upstream "sign" bug and the right place to fix it is
-            // not here. Time will tell :)
             Matrix3<T> const delta_R_j{geometry::Exp<T>(T(weight0[j + 1]) * delta_phis[j])};
-            Matrix3<T> const inverse_delta_R_j{delta_R_j.inverse()};
-
-            rotation = geometry::Log<T>(inverse_delta_R_j * geometry::Exp<T>(rotation));
+            rotation = geometry::Log<T>(delta_R_j.inverse() * geometry::Exp<T>(rotation));
 
             if constexpr (D == DerivativeOrder::First or D == DerivativeOrder::Second) {
+                Matrix3<T> const inverse_delta_R_j{delta_R_j.inverse()};
+
                 VectorKd const& weight1{weights[1]};
                 Vector3<T> const delta_v_j{T(weight1[j + 1]) * delta_phis[j]};
                 velocity = delta_v_j + (inverse_delta_R_j * velocity);
