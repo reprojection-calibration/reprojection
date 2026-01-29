@@ -18,7 +18,7 @@ MvgGenerator::MvgGenerator(CameraModel const camera_model, ArrayXd const& intrin
       camera_{projection_functions::InitializeCamera(camera_model_, intrinsics_, bounds_)},
       se3_spline_{constants::t0_ns, constants::delta_t_ns},
       points_{BuildTargetPoints(flat)} {
-    std::vector<Isometry3d> const poses{SphereTrajectory(CameraTrajectory{{0, 0, 0}, 1.0, {0, 0, 5}})};
+    std::vector<Isometry3d> const poses{SphereTrajectory({{0, 0, 0}, 1.0, {0, 0, 5}})};
 
     for (auto const& pose : poses) {
         se3_spline_.AddControlPoint(pose);
@@ -26,11 +26,13 @@ MvgGenerator::MvgGenerator(CameraModel const camera_model, ArrayXd const& intrin
 }
 
 CameraCalibrationData MvgGenerator::GenerateBatch(int const num_frames) const {
-    CameraCalibrationData data{{"", camera_model_, bounds_}, intrinsics_};
+    CameraCalibrationData data{{"mvg_test_data", camera_model_, bounds_}, intrinsics_};
     for (int i{0}; i < num_frames; ++i) {
         auto const [bundle, pose]{this->Generate(static_cast<double>(i) / num_frames)};
-        data.frames[i].extracted_target.bundle = bundle;
-        data.frames[i].initial_pose = geometry::Log(pose);
+
+        uint64_t const timestamp_ns{static_cast<uint64_t>(1e8) * i}; // Default to 0.1s spacing starting from zero
+        data.frames[timestamp_ns].extracted_target.bundle = bundle;
+        data.frames[timestamp_ns].initial_pose = geometry::Log(pose);
     }
 
     return data;
