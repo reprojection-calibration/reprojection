@@ -13,4 +13,3 @@ CREATE TABLE IF NOT EXISTS camera_poses
     FOREIGN KEY (timestamp_ns, sensor_name)
         REFERENCES extracted_targets (timestamp_ns, sensor_name)
 );
-

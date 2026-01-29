@@ -4,6 +4,8 @@
 #include "testing_mocks/mvg_generator.hpp"
 #include "testing_utilities/constants.hpp"
 
+// TODO(Jack): Is there a file with this exact same name in the spline package?
+
 namespace reprojection::calibration {}
 
 using namespace reprojection;
