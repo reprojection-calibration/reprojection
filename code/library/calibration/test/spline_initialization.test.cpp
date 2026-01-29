@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "database/image_interface.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
 #include "testing_mocks/mvg_generator.hpp"
@@ -15,10 +16,12 @@ TEST(CalibrationSplineInitialization, TestXxx) {
     testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
                                                 testing_utilities::image_bounds};
 
-    int const num_camera_poses{100};
+    // NOTE(Jack): This should be less than the number of camera poses in the mvg sphere trajectory to prevent over
+    // sampling which introduces artifacts.
+    int const num_camera_poses{500};
     CameraCalibrationData const data{generator.GenerateBatch(num_camera_poses)};
 
-    uint64_t const delta_t_ns{static_cast<uint64_t>(1e8)};
+    uint64_t const delta_t_ns{1000000};
     spline::Se3Spline se3_spline{0, delta_t_ns};
 
     // NOTE(Jack): We ignore the frame timestamp that comes from generate batch because we instead fix delta_t_ns above.
@@ -46,8 +49,16 @@ TEST(CalibrationSplineInitialization, TestXxx) {
 
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
-
     database::AddSplinePoseData(spline_poses, database::PoseType::Initial, db);
+
+    // HACK to add the image frames and extracted targets for the non-existent extracted features/image foreign keys
+    // relations
+    for (auto const& [timestamp_ns, _] : data.frames) {
+        FrameHeader const header_i{timestamp_ns, data.sensor.sensor_name};
+        database::AddImage(header_i, db);
+        database::AddExtractedTargetData({header_i, {}}, db);
+    }
+    database::AddCameraPoseData(data, database::PoseType::Initial, db);
 
     EXPECT_EQ(1, 2);
 }
