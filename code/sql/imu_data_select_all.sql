@@ -6,5 +6,4 @@ SELECT timestamp_ns,
        ay,
        az
 FROM imu_data
-WHERE sensor_name = ?
 ORDER BY timestamp_ns ASC;
