@@ -15,8 +15,15 @@ namespace reprojection::testing_mocks {
 // the camera construction itself. This should just be one struct...
 CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const camera_model, ArrayXd const& intrinsics,
                                       ImageBounds const& bounds, bool const flat) {
+    // NOTE(Jack): There are two things to consider in this method; (1) the underlying spline that builds the sphere
+    // trajectory and (2) the actual poses we sample from it. To prevent aliasing/sampling artifacts in the sampled
+    // poses we dynamically set num_control_points in the underlying spline to a multiple of num_frames. If we did not
+    // do this and num_control_points was less than num_frames we would see "saw tooth" like artifacts in the sampled
+    // frame poses. What value the multiple needs to be is not certain, but for a first try we heuristically found that
+    // 2*num_frames was sufficient to build a spline that we can sample num_frames from without artifacts.
+    int const num_control_points{2 * num_frames};
     spline::Se3Spline se3_spline{constants::t0_ns, constants::delta_t_ns};
-    for (auto const& pose : SphereTrajectory(constants::num_camera_poses, constants::trajectory)) {
+    for (auto const& pose : SphereTrajectory(num_control_points, constants::trajectory)) {
         se3_spline.AddControlPoint(pose);
     }
 
@@ -29,7 +36,7 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
         assert(0 <= elapsed_trajectory and elapsed_trajectory < 1);
 
         uint64_t const spline_time{constants::t0_ns +
-                                   static_cast<uint64_t>((constants::num_camera_poses - (spline::constants::degree)) *
+                                   static_cast<uint64_t>((num_control_points - spline::constants::degree) *
                                                          constants::delta_t_ns * elapsed_trajectory)};
 
         auto const pose_t{se3_spline.Evaluate(spline_time)};
