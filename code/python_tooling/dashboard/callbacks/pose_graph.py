@@ -78,7 +78,7 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     Input("sensor-dropdown", "value"),  # DOES NOT ACTUALLY DO ANYTHING!
     State("imu-data-store", "data"),
 )
-def init_pose_graph_figures(_, imu_raw_data):
+def init_imu_data_graph_figures(_, imu_raw_data):
     if imu_raw_data is None:
         return {}, {}
 
