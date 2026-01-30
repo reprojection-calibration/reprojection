@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from database.load_imu_data import load_imu_data_df, imu_data_df_to_imu_calibration_data
+from database.load_imu_data import imu_data_df_to_imu_calibration_data, load_imu_data_df
 
 
 class TestDatabaseImuCalibrationData(unittest.TestCase):
@@ -18,13 +18,19 @@ class TestDatabaseImuCalibrationData(unittest.TestCase):
         self.assertEqual(len(data.keys()), 1)
         # At this time it only contains the raw measurement data (imu_measurement) and nothing else
         self.assertEqual(len(data["/imu0"]), 1)
-
         self.assertEqual(len(data["/imu0"]["frames"]), 8770)
 
         # Check one random imu measurement
         self.assertListEqual(
             data["/imu0"]["frames"][1520528314236489759]["imu_measurement"],
-            [0.1360140701, 0.070485813, -0.1766831676, -0.4123734266, -0.4820176527, 10.2490537933]
+            [
+                0.1360140701,
+                0.070485813,
+                -0.1766831676,
+                -0.4123734266,
+                -0.4820176527,
+                10.2490537933,
+            ],
         )
 
 
