@@ -6,3 +6,21 @@ ColumnLimit: 120
 DerivePointerAlignment: false
 IndentWidth: 4
 PointerAlignment: Left
+
+SortIncludes: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<gtest/.*>'
+    Priority: 1
+  # C system headers (stdio.h, math.h, etc.)
+  - Regex: '^<[^>]+\.h>'
+    Priority: 2
+  # C++ system headers (vector, cmath, etc.)
+  - Regex: '^<[^>.]+>'
+    Priority: 3
+  # Project headers in different package
+  - Regex: '^".+/.+"'
+    Priority: 4
+  # Local project headers in same package
+  - Regex: '^"[^/"]+"'
+    Priority: 5
