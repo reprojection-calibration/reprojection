@@ -10,7 +10,7 @@
 
 namespace reprojection {
 
-// TODO NO LONGER USED?
+// TODO(Jack): Remove completely when we transition to not using sets anymore.
 // TODO(Jack): Add concept requirements
 // TODO(Jack): Where does this belong?
 template <typename T>

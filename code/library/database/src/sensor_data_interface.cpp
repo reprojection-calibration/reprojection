@@ -247,6 +247,7 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
 }
 
 // TODO(Jack): Update to void and throw interface and consistent error messages!
+// TODO(Jack): Remove use of set!
 std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                                std::string const& sensor_name) {
     SqlStatement const statement{database->db, sql_statements::imu_data_select};
