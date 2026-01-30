@@ -271,6 +271,17 @@ app.layout = html.Div(
                     ],
                     label="Camera Poses",
                 ),
+                dcc.Tab(
+                    children=[
+                        dcc.Graph(
+                            id="imu-angular-velocity-graph",
+                        ),
+                        dcc.Graph(
+                            id="imu-linear-acceleration-graph",
+                        ),
+                    ],
+                    label="Imu Data",
+                ),
             ]
         ),
         # Components without a visual representation are found here at the bottom (ex. Interval, Store etc.)
@@ -288,5 +299,7 @@ app.layout = html.Div(
         # use the processed data!
         dcc.Store(id="raw-data-store"),
         dcc.Store(id="processed-data-store"),
+        # TODO HACK AT INITIAL STAGE OF IMU DATA INTEGRATION!
+        dcc.Store(id="imu-data-store"),
     ]
 )

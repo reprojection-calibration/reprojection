@@ -9,6 +9,9 @@ from database.load_camera_calibration_data import (
     load_camera_calibration_data,
 )
 
+# TODO HACK AT INITIAL STAGE OF IMU DATA INTEGRATION!
+from database.load_imu_data import imu_data_df_to_imu_calibration_data, load_imu_data_df
+
 
 @app.callback(
     Output("database-dropdown", "options"),
@@ -43,6 +46,7 @@ def refresh_database_list(db_dir, _):
 @app.callback(
     Output("raw-data-store", "data"),
     Output("processed-data-store", "data"),
+    Output("imu-data-store", "data"),
     Input("database-dropdown", "value"),
 )
 def load_database_to_store(db_file):
@@ -57,7 +61,11 @@ def load_database_to_store(db_file):
     statistics = get_camera_calibration_data_statistics(raw_data)
     indexable_timestamps = get_indexable_timestamp_record(raw_data)
 
-    return raw_data, [statistics, indexable_timestamps]
+    # TODO HACK AT INITIAL STAGE OF IMU DATA INTEGRATION!
+    imu_df = load_imu_data_df(db_file)
+    imu_raw_data = imu_data_df_to_imu_calibration_data(imu_df)
+
+    return raw_data, [statistics, indexable_timestamps], imu_raw_data
 
 
 @app.callback(
