@@ -4,6 +4,7 @@ find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
         src/mvg_generator.cpp
+        src/mvg_helpers.cpp
         src/noise_generation.cpp
         src/sphere_trajectory.cpp
 )
@@ -19,6 +20,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/mvg_helpers.test.cpp
         src/noise_generation.test.cpp
         src/sphere_trajectory.test.cpp
         test/mvg_generator.test.cpp
