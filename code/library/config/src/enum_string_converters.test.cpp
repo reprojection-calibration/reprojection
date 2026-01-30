@@ -1,7 +1,8 @@
 #include "enum_string_converters.hpp"
 
-#include <ceres/types.h>
 #include <gtest/gtest.h>
+
+#include <ceres/types.h>
 
 using namespace reprojection;
 

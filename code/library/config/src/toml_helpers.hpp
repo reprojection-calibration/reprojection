@@ -2,10 +2,11 @@
 
 #include <optional>
 #include <string>
-#include <toml++/toml.hpp>
 
 #include "config/enums.hpp"
 #include "config/types.hpp"
+
+#include <toml++/toml.hpp>
 
 namespace reprojection::config {
 

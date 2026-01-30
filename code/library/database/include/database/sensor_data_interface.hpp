@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <opencv2/opencv.hpp>
 #include <optional>
 #include <set>
 #include <string>
@@ -10,6 +9,8 @@
 #include "database/database_data_types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/sensor_types.hpp"
+
+#include <opencv2/opencv.hpp>
 
 // TOP LEVEL DESIGN NOTE
 // We are at an in between point now (09.01.2026) where we have begun to migrate away from "stamped" data and individual

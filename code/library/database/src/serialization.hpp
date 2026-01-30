@@ -2,10 +2,11 @@
 
 #include <optional>
 
+#include "types/algorithm_types.hpp"
+
 // TODO(Jack): How can we point cppcheck to the generated protobuf cpp files?
 // cppcheck-suppress missingInclude
 #include "extracted_target.pb.h"
-#include "types/algorithm_types.hpp"
 
 namespace reprojection::database {
 

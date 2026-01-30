@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <string_view>
+
 #include <toml++/toml.hpp>
 
 using namespace reprojection;

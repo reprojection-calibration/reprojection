@@ -1,8 +1,9 @@
 #include "feature_extraction/target_extraction.hpp"
 
 #include "config/validate_target_config.hpp"
-#include "target_extractors.hpp"
 #include "types/enums.hpp"
+
+#include "target_extractors.hpp"
 
 namespace reprojection::feature_extraction {
 

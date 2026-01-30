@@ -5,9 +5,10 @@ extern "C" {
 }
 
 #include <functional>
-#include <opencv2/opencv.hpp>
 
 #include "types/eigen_types.hpp"
+
+#include <opencv2/opencv.hpp>
 
 // This is my attempt to RAII-ify the  C code from the apriltag repository. The main thing I try to fight here is
 // manually having to deallocate memory. For the detector and tag detections themselves that is relatively easy because

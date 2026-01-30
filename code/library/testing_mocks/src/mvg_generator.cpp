@@ -1,15 +1,16 @@
 #include "testing_mocks/mvg_generator.hpp"
 
 // TODO(Jack): Sort local includes into separate group
-#include "constants.hpp"
 #include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
-#include "mvg_helpers.hpp"
-#include "noise_generation.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "projection_functions/intialize_camera.hpp"
-#include "sphere_trajectory.hpp"
 #include "spline/se3_spline.hpp"
+
+#include "constants.hpp"
+#include "mvg_helpers.hpp"
+#include "noise_generation.hpp"
+#include "sphere_trajectory.hpp"
 
 namespace reprojection::testing_mocks {
 

@@ -4,15 +4,17 @@
 
 #include <filesystem>
 #include <map>
-#include <opencv2/opencv.hpp>
 #include <string>
 
 #include "database/calibration_database.hpp"
 #include "database/image_interface.hpp"
-#include "sqlite3_helpers.hpp"
 #include "testing_utilities/constants.hpp"
 #include "testing_utilities/temporary_file.hpp"
 #include "types/sensor_types.hpp"
+
+#include "sqlite3_helpers.hpp"
+
+#include <opencv2/opencv.hpp>
 
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;

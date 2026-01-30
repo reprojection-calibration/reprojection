@@ -2,8 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include "test_fixture_april_tag.hpp"
 #include "types/eigen_types.hpp"
+
+#include "test_fixture_april_tag.hpp"
 
 using namespace reprojection;
 using namespace reprojection::feature_extraction;

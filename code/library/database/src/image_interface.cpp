@@ -9,6 +9,7 @@
 
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
+
 #include "sqlite3_helpers.hpp"
 
 namespace reprojection::database {

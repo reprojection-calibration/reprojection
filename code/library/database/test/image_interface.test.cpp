@@ -3,11 +3,12 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
-#include <opencv2/opencv.hpp>
 #include <string>
 
 #include "database/calibration_database.hpp"
 #include "testing_utilities/temporary_file.hpp"
+
+#include <opencv2/opencv.hpp>
 
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;

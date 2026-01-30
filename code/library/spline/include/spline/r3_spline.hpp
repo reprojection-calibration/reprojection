@@ -7,6 +7,7 @@
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
+
 #include "utilities.hpp"
 
 namespace reprojection::spline {

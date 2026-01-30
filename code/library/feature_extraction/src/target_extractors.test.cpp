@@ -3,9 +3,10 @@
 #include <gtest/gtest.h>
 
 #include "eigen_utilities/grid.hpp"
+#include "types/eigen_types.hpp"
+
 #include "target_generators.hpp"
 #include "test_fixture_april_tag.hpp"
-#include "types/eigen_types.hpp"
 
 using namespace reprojection;
 using namespace reprojection::feature_extraction;

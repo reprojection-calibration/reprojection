@@ -1,9 +1,9 @@
 #pragma once
 
-#include <opencv2/opencv.hpp>
-
 #include "types/algorithm_types.hpp"
 #include "types/eigen_types.hpp"
+
+#include <opencv2/opencv.hpp>
 
 // NOTE(Jack): We use the word "sensor" to indicate the idea that at this point we are making the relationship between
 // data and a specific named data source and world timestamp concrete. These types should, in the best case, stay close

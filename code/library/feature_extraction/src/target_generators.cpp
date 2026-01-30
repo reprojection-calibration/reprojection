@@ -1,6 +1,7 @@
 #include "target_generators.hpp"
 
 #include "eigen_utilities/grid.hpp"
+
 #include "utilities.hpp"
 
 namespace reprojection::feature_extraction {
