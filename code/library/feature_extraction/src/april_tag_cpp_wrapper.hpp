@@ -5,6 +5,7 @@ extern "C" {
 }
 
 #include <functional>
+
 #include <opencv2/opencv.hpp>
 
 #include "types/eigen_types.hpp"

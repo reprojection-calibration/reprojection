@@ -1,6 +1,7 @@
 #include "optimization/camera_nonlinear_refinement.hpp"
 
 #include "eigen_utilities/grid.hpp"
+
 #include "projection_cost_function.hpp"
 
 namespace reprojection::optimization {

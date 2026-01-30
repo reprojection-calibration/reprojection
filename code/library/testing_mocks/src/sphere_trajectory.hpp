@@ -1,7 +1,8 @@
 #pragma once
 
-#include "types.hpp"
 #include "types/eigen_types.hpp"
+
+#include "types.hpp"
 
 namespace reprojection::testing_mocks {
 

@@ -2,9 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include "types/eigen_types.hpp"
+
 #include "april_tag_cpp_wrapper.hpp"
 #include "target_generators.hpp"
-#include "types/eigen_types.hpp"
 
 extern "C" {
 #include "generated_apriltag_code/tagCustom36h11.h"

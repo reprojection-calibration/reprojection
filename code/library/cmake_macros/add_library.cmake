@@ -13,7 +13,7 @@ macro(AddLibrary)
             ${LINK_LIBRARIES}
     )
 
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         target_compile_options(${LIBRARY_NAME} PRIVATE --coverage)
         target_link_options(${LIBRARY_NAME} PRIVATE --coverage)
     endif ()

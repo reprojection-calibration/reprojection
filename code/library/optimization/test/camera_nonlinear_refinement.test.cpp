@@ -5,11 +5,12 @@
 #include <numeric>
 
 #include "geometry/lie.hpp"
-#include "projection_cost_function.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
+
+#include "projection_cost_function.hpp"
 
 using namespace reprojection;
 

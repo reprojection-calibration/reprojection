@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "config/enums.hpp"
 
 namespace reprojection::config {

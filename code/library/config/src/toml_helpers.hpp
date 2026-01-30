@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+
 #include <toml++/toml.hpp>
 
 #include "config/enums.hpp"

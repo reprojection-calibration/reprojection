@@ -2,8 +2,9 @@
 
 #include <Eigen/Dense>
 #include <memory>
-#include <opencv2/opencv.hpp>
 #include <optional>
+
+#include <opencv2/opencv.hpp>
 #include <toml++/toml.hpp>
 
 #include "types/algorithm_types.hpp"

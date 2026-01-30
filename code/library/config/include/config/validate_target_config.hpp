@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+
 #include <toml++/toml.hpp>
 
 #include "config/types.hpp"

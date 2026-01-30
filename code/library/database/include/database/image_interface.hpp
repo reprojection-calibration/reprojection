@@ -1,9 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <opencv2/opencv.hpp>
 #include <optional>
 #include <string>
+
+#include <opencv2/opencv.hpp>
 
 #include "database/calibration_database.hpp"
 #include "database/sqlite_wrappers.hpp"

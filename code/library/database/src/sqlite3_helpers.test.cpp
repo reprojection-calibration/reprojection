@@ -1,6 +1,7 @@
 #include "sqlite3_helpers.hpp"
 
 #include <gtest/gtest.h>
+
 #include <sqlite3.h>
 
 #include <filesystem>

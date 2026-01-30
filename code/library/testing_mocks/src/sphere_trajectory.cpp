@@ -1,9 +1,10 @@
 #include "sphere_trajectory.hpp"
 
-#include "constants.hpp"
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "spline/se3_spline.hpp"
+
+#include "constants.hpp"
 
 namespace reprojection::testing_mocks {
 

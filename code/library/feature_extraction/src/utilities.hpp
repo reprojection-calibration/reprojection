@@ -1,7 +1,8 @@
 #pragma once
 
-#include <opencv2/opencv.hpp>
 #include <vector>
+
+#include <opencv2/opencv.hpp>
 
 #include "types/eigen_types.hpp"
 

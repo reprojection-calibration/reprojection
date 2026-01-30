@@ -3,8 +3,9 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
-#include <opencv2/opencv.hpp>
 #include <string>
+
+#include <opencv2/opencv.hpp>
 
 #include "database/calibration_database.hpp"
 #include "testing_utilities/temporary_file.hpp"

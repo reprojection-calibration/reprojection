@@ -1,10 +1,11 @@
 #pragma once
 
 #include <memory>
-#include <opencv2/opencv.hpp>
 #include <optional>
 #include <set>
 #include <string>
+
+#include <opencv2/opencv.hpp>
 
 #include "database/calibration_database.hpp"
 #include "database/database_data_types.hpp"

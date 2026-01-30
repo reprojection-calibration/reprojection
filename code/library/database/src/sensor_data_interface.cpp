@@ -9,6 +9,7 @@
 #include "database/sqlite_wrappers.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
+
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 

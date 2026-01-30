@@ -1,8 +1,9 @@
 #include "dlt.hpp"
 
+#include "eigen_utilities/camera.hpp"
+
 #include "dlt_matrix_decompositions.hpp"
 #include "dlt_solving.hpp"
-#include "eigen_utilities/camera.hpp"
 
 namespace reprojection::pnp {
 
