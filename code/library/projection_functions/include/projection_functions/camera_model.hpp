@@ -17,7 +17,7 @@ namespace reprojection::projection_functions {
  * code.
  *
  * We often need to project and unproject points/pixels for optimization adjacent tasks, for example generating test
- * data (testing_mocks::MvgGenerator::Project()). This base class allows the consuming code to be
+ * data (testing_mocks::MvgHelpers::Project()). This base class allows the consuming code to be
  * agnostic to the specific camera model (ex. pinhole, double sphere, etc.) that is used.
  *
  * In essence this class prevents templated code from spreading throughout the code base, and provides a simple generic

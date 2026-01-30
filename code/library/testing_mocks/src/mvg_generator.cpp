@@ -28,7 +28,7 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
     }
 
     auto const camera{projection_functions::InitializeCamera(camera_model, intrinsics, bounds)};
-    MatrixX3d const points{MvgGenerator::BuildTargetPoints(flat)};
+    MatrixX3d const points{MvgHelpers::BuildTargetPoints(flat)};
 
     CameraCalibrationData data{{"/mvg_test_data", camera_model, bounds}, intrinsics};
     for (int i{0}; i < num_frames; ++i) {
@@ -42,7 +42,7 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
         auto const pose_t{se3_spline.Evaluate(spline_time)};
         assert(pose_t.has_value());  // TODO(Jack): Refactor to throw here.
 
-        auto const [pixels, mask]{MvgGenerator::Project(points, camera, geometry::Exp(pose_t.value()))};
+        auto const [pixels, mask]{MvgHelpers::Project(points, camera, geometry::Exp(pose_t.value()))};
         ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
         uint64_t const timestamp_ns{constants::t0_ns + constants::delta_t_ns * i};
@@ -58,18 +58,18 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
  * \brief Static helper method that projects points in the world frame. Do NOT use outside the testing mocks context!
  *
  * This method is intended only for use as part of the testing mocks test data generation class
- * (reprojection::testing_mocks::MvgGenerator) and should NOT be used by other consuming code. It was left as a public
+ * (reprojection::testing_mocks::MvgHelpers) and should NOT be used by other consuming code. It was left as a public
  * method only so that it could be tested.
  */
-std::tuple<MatrixX2d, ArrayXb> MvgGenerator::Project(MatrixX3d const& points_w,
-                                                     std::unique_ptr<projection_functions::Camera> const& camera,
-                                                     Isometry3d const& tf_co_w) {
+std::tuple<MatrixX2d, ArrayXb> MvgHelpers::Project(MatrixX3d const& points_w,
+                                                   std::unique_ptr<projection_functions::Camera> const& camera,
+                                                   Isometry3d const& tf_co_w) {
     MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
 
     return camera->Project(points_homog_co.leftCols(3));
 }
 
-MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {
+MatrixX3d MvgHelpers::BuildTargetPoints(bool const flat) {
     int const size{5};  // Square target - rows == cols
     int const num_points{size * size};
 

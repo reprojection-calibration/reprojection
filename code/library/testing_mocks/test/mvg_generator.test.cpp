@@ -41,7 +41,7 @@ TEST(TestingMocksMvgGenerator, TestProject) {
         testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds))};
     Isometry3d const tf_co_w{Isometry3d::Identity()};
 
-    auto const [pixels, mask]{testing_mocks::MvgGenerator::Project(points_w, camera, tf_co_w)};
+    auto const [pixels, mask]{testing_mocks::MvgHelpers::Project(points_w, camera, tf_co_w)};
     ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-3));
 }
@@ -58,7 +58,7 @@ TEST(TestingMocksMvgGenerator, TestProjectMasking) {
     Isometry3d tf_co_w{Isometry3d::Identity()};
     tf_co_w.translation().z() = -6.0;
 
-    auto const [pixels, mask]{testing_mocks::MvgGenerator::Project(points_w, camera, tf_co_w)};
+    auto const [pixels, mask]{testing_mocks::MvgHelpers::Project(points_w, camera, tf_co_w)};
     ASSERT_TRUE(mask.isApprox(gt_mask));
 }
 

@@ -16,7 +16,7 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
 // TODO(Jack): Struct naming.
 //
 // MVG = "multiple view geometry"
-struct MvgGenerator {
+struct MvgHelpers {
     static std::tuple<MatrixX2d, ArrayXb> Project(MatrixX3d const& points_w,
                                                   std::unique_ptr<projection_functions::Camera> const& camera,
                                                   Isometry3d const& tf_co_w);
