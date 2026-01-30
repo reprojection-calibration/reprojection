@@ -225,12 +225,12 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.header.timestamp_ns));  // Warn cast!
         Sqlite3Tools::Bind(statement.stmt, 2, data.header.sensor_name);
-        Sqlite3Tools::Bind(statement.stmt, 3, data.angular_velocity[0]);
-        Sqlite3Tools::Bind(statement.stmt, 4, data.angular_velocity[1]);
-        Sqlite3Tools::Bind(statement.stmt, 5, data.angular_velocity[2]);
-        Sqlite3Tools::Bind(statement.stmt, 6, data.linear_acceleration[0]);
-        Sqlite3Tools::Bind(statement.stmt, 7, data.linear_acceleration[1]);
-        Sqlite3Tools::Bind(statement.stmt, 8, data.linear_acceleration[2]);
+        Sqlite3Tools::Bind(statement.stmt, 3, data.data.angular_velocity[0]);
+        Sqlite3Tools::Bind(statement.stmt, 4, data.data.angular_velocity[1]);
+        Sqlite3Tools::Bind(statement.stmt, 5, data.data.angular_velocity[2]);
+        Sqlite3Tools::Bind(statement.stmt, 6, data.data.linear_acceleration[0]);
+        Sqlite3Tools::Bind(statement.stmt, 7, data.data.linear_acceleration[1]);
+        Sqlite3Tools::Bind(statement.stmt, 8, data.data.linear_acceleration[2]);
     } catch (std::runtime_error const& e) {                            // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(ErrorMessage(        // LCOV_EXCL_LINE
             "AddImuData()", data.header.sensor_name,                   // LCOV_EXCL_LINE
@@ -281,7 +281,7 @@ std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDataba
         double const ay{sqlite3_column_double(statement.stmt, 5)};
         double const az{sqlite3_column_double(statement.stmt, 6)};
 
-        data.insert(ImuStamped{{timestamp_ns, sensor_name}, {omega_x, omega_y, omega_z}, {ax, ay, az}});
+        data.insert(ImuStamped{{timestamp_ns, sensor_name}, {{omega_x, omega_y, omega_z}, {ax, ay, az}}});
     }
 
     return data;
