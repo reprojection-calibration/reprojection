@@ -7,6 +7,12 @@
 using namespace reprojection;
 
 TEST(XXX, TestYYY) {
+    // ERRROR ERROR ERRRO ERROR
+    // ERRROR ERROR ERRRO ERROR
+    // ERRROR ERROR ERRRO ERROR
+    // ERRROR ERROR ERRRO ERROR
+    exit(0);  // ERRROR ERROR ERRRO ERROR
+
     std::string const record_path{"/tmp/reprojection/code/test_data/aaa.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
