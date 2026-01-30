@@ -16,17 +16,18 @@ void Se3Spline::AddControlPoint(Isometry3d const control_point) {
     so3_spline_.control_points.push_back(geometry::Log<double>(control_point.linear()));
 }
 
-std::optional<Vector6d> Se3Spline::Evaluate(std::uint64_t const t_ns) const {
+std::optional<Vector6d> Se3Spline::Evaluate(std::uint64_t const t_ns, DerivativeOrder const derivative) const {
     // TODO(Jack): This is in essence repeating logic that we already have implemented elsewhere, is there anything
-    // we can do to streamline this?
-    auto const position{EvaluateSpline<R3Spline>(t_ns, r3_spline_)};
-    auto const rotation{EvaluateSpline<So3Spline>(t_ns, so3_spline_)};
-    if (not(position.has_value() and rotation.has_value())) {
+    //  we can do to streamline this?
+    // TODO(Jack): Naming! so3_term and r3_term might not communicated clearly enough what these are here!
+    auto const r3_term{EvaluateSpline<R3Spline>(t_ns, r3_spline_, derivative)};
+    auto const so3_term{EvaluateSpline<So3Spline>(t_ns, so3_spline_, derivative)};
+    if (not(r3_term.has_value() and so3_term.has_value())) {
         return std::nullopt;
     }
 
     Vector6d result;
-    result << rotation.value(), position.value();
+    result << so3_term.value(), r3_term.value();
 
     return result;
 }

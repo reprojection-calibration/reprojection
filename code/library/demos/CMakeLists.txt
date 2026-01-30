@@ -20,7 +20,6 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         pnp
         projection_functions
-        spline
 )
 AddLibrary()
 

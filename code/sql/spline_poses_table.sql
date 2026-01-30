@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS camera_poses
+CREATE TABLE IF NOT EXISTS spline_poses
 (
     timestamp_ns INTEGER NOT NULL,
     sensor_name  TEXT    NOT NULL,
@@ -9,7 +9,5 @@ CREATE TABLE IF NOT EXISTS camera_poses
     x            REAL    NOT NULL,
     y            REAL    NOT NULL,
     z            REAL    NOT NULL,
-    PRIMARY KEY (timestamp_ns, sensor_name, type),
-    FOREIGN KEY (timestamp_ns, sensor_name)
-        REFERENCES extracted_targets (timestamp_ns, sensor_name)
+    PRIMARY KEY (timestamp_ns, sensor_name, type)
 );

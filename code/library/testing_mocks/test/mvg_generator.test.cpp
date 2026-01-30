@@ -8,18 +8,27 @@
 
 using namespace reprojection;
 
+// NOTE(Jack): All points for every frame project successfully. If not they should get masked out, but the
+// test data is engineered such that none get masked out which is why we can assert that .rows() = 25 for all
+// frames.
+// But don't forget that there might be an implementation error because when we set the view point and
+// sphere origin as {0,0,0} we get poses that do not make sense!
 TEST(TestingMocksMvgGenerator, TestGenerateBatch) {
-    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
-                                                testing_utilities::image_bounds, false};
+    CameraCalibrationData const batch{testing_mocks::GenerateMvgData(
+        100, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
 
-    // NOTE(Jack): All points for every frame project successfully. If not they should get masked out, but the
-    // test data is engineered such that none get masked out. But don't forget that there might be an implementation
-    // error because when we set the view point and sphere origin as {0,0,0} we get poses that do not make sense!
-    CameraCalibrationData const batch{generator.GenerateBatch(100)};
-    for (auto const& [_, frame_i] : batch.frames) {
+    uint64_t gt_timestamp_ns{0};
+    for (auto const& [timestamp_ns, frame_i] : batch.frames) {
         EXPECT_EQ(frame_i.extracted_target.bundle.pixels.rows(), 25);
         EXPECT_EQ(frame_i.extracted_target.bundle.points.rows(), 25);
+        EXPECT_EQ(timestamp_ns, gt_timestamp_ns);
+
+        gt_timestamp_ns += 1000000;
     }
+
+    // The actual last timestamps in batch.frames is 99000000 but the += to the ground truth value happens one more time
+    // after the last data is read which gives us this timestamp large by one time increment.
+    EXPECT_EQ(gt_timestamp_ns, 99000000 + 1000000);
 }
 
 TEST(TestingMocksMvgGenerator, TestProject) {

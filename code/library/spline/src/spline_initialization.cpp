@@ -17,7 +17,7 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
     auto const [A, b]{BuildAb(measurements, num_segments, spline.time_handler)};
 
     // TODO(Jack): Consider putting the loop and code to construct Q into a function. We are mixing levels of
-    // abstraction here and it is confusing.
+    //  abstraction here and it is confusing.
     // NOTE(Jack): At this time lambda here is hardcoded, it might make sense at some time in the future to parameterize
     // this, but currently I see no scenario where we can really expect the user to parameterize it, so we leave it
     // hardcoded for now.
@@ -138,6 +138,7 @@ CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BlockifyBlendingMatrix(
 
 MatrixXd DerivativeOperator(int const order) {
     MatrixXd D{MatrixXd::Zero(order, order)};
+    // TODO(Jack): Why is this hardcoded to DerivativeOrder::First here?
     D.diagonal(1) = PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
 
     return D;

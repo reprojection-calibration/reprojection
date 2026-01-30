@@ -42,9 +42,4 @@ struct ImageStamped {
     cv::Mat image;
 };
 
-struct PoseStamped {
-    FrameHeader header;
-    Vector6d pose;
-};
-
 }  // namespace reprojection

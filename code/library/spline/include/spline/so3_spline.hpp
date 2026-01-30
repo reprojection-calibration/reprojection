@@ -11,7 +11,7 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): Test explicitly and make part of SoSpline static class if not used elsehwere?
+// TODO(Jack): Test explicitly and make part of SoSpline static class if not used elsewhere?
 template <typename T>
 std::array<Vector3<T>, constants::degree> DeltaPhi(Matrix3K<T> const& control_points) {
     std::array<Vector3<T>, constants::degree> delta_phi;
@@ -29,8 +29,8 @@ struct So3Spline {
     // iteration, in a lot of copy and pasted code. The structure here is basically that the null evaluation goes from 0
     // to 10, the first derivative goes from 0 to 20, and the second derivative goes from 0 to 30. However, the
     // evaluation methods are so intertwined that you cannot simply compose and call the null and first derivative
-    // evaluations one after another to get the second derivative. They use intermediate results from eachother (see the
-    // loop below), this makes composition not possible without repeating lots of computation.
+    // evaluations one after another to get the second derivative. They use intermediate results from each-other (see
+    // the loop below), this makes composition not possible without repeating lots of computation.
     //
     // Our solution to this problem is to use "if constexpr" based on the DerivativeOrder template parameter D. This
     // allows us to generate all three version of the evaluate function from the same single source code. Please read

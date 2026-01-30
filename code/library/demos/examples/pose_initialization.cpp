@@ -5,7 +5,7 @@
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
-#include "optimization/nonlinear_refinement.hpp"
+#include "optimization/camera_nonlinear_refinement.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
@@ -26,7 +26,7 @@ int main() {
         {},
         {}};
 
-    // Load targets, intialize, and optimize
+    // Load targets, initialize, and optimize
     database::GetExtractedTargetData(db, cam_data);
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
@@ -34,8 +34,8 @@ int main() {
     std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
     // Write everything to database
-    AddPoseData(cam_data, database::PoseType::Initial, db);
-    AddPoseData(cam_data, database::PoseType::Optimized, db);
+    AddCameraPoseData(cam_data, database::PoseType::Initial, db);
+    AddCameraPoseData(cam_data, database::PoseType::Optimized, db);
     database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
     database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
 

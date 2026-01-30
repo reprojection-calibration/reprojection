@@ -16,7 +16,7 @@ namespace reprojection::spline {
 // should clear up this delineation.
 /**
  * \brief Provides bounds checked evaluation of a spline. Will return std::nullopt if the requested evaluation time t_ns
- * is not a valid time on the spline. Defaults to evaluating the spline value unless passed a non-Null derivative order.
+ * is not a valid time on the spline. Defaults to evaluating the spline value unless passed a higher derivative order.
  *
  * This function provides a uniform interface for consumers to evaluate R3 or so3 splines in NON-optimization related
  * applications. This is useful for places like visualization, test data generation, etc. If you need to work with

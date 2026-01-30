@@ -17,7 +17,7 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(DatabaseSensorDataInterface, TestAddPoseData) {
+TEST(DatabaseSensorDataInterface, TestAddCameraPoseData) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
@@ -27,8 +27,8 @@ TEST(DatabaseSensorDataInterface, TestAddPoseData) {
                                      {{0, {{{}, {}}, Array6d::Zero(), {}, Array6d::Zero(), {}}}}};
 
     // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
-    EXPECT_THROW(database::AddPoseData(data, database::PoseType::Initial, db), std::runtime_error);
-    EXPECT_THROW(database::AddPoseData(data, database::PoseType::Optimized, db), std::runtime_error);
+    EXPECT_THROW(database::AddCameraPoseData(data, database::PoseType::Initial, db), std::runtime_error);
+    EXPECT_THROW(database::AddCameraPoseData(data, database::PoseType::Optimized, db), std::runtime_error);
 
     // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
     // constraint) and now we can add the initial camera pose no problem :)
@@ -37,7 +37,17 @@ TEST(DatabaseSensorDataInterface, TestAddPoseData) {
     FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
     database::AddImage(header, db);
     AddExtractedTargetData({header, {}}, db);
-    EXPECT_NO_THROW(database::AddPoseData(data, database::PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddCameraPoseData(data, database::PoseType::Initial, db));
+}
+
+TEST(DatabaseSensorDataInterface, TestAddSplinePoseData) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+
+    database::SplinePoses const data{{0, Array6d::Zero()}};
+
+    EXPECT_NO_THROW(database::AddSplinePoseData(data, database::PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddSplinePoseData(data, database::PoseType::Optimized, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
@@ -61,8 +71,8 @@ TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
     FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
     database::AddImage(header, db);
     AddExtractedTargetData({header, {}}, db);
-    database::AddPoseData(data, database::PoseType::Initial, db);
-    database::AddPoseData(data, database::PoseType::Optimized, db);
+    database::AddCameraPoseData(data, database::PoseType::Initial, db);
+    database::AddCameraPoseData(data, database::PoseType::Optimized, db);
 
     EXPECT_NO_THROW(database::AddReprojectionError(data, database::PoseType::Initial, db));
     EXPECT_NO_THROW(database::AddReprojectionError(data, database::PoseType::Optimized, db));

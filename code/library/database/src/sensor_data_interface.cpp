@@ -14,15 +14,39 @@
 
 namespace reprojection::database {
 
+void AddCameraPoseData(CameraCalibrationData const& data, PoseType const type,
+                       std::shared_ptr<CalibrationDatabase> const database) {
+    std::string_view const sql{sql_statements::camera_poses_insert};
+
+    AddPoseData(sql, data, type, database);
+}
+
+// TODO(Jack): Current hacked interface before we know what the imu data  should really look like!
+void AddSplinePoseData(SplinePoses const& data, PoseType const type,
+                       std::shared_ptr<CalibrationDatabase> const database) {
+    std::string_view const sql{sql_statements::spline_poses_insert};
+
+    // TODO(Jack): For now we will simply convert SplinePoses to CameraCalibrationData. Once we know better the
+    //  requirements or have a better design concept we can remove this conversion code. This is a hack!
+    CameraCalibrationData hack_data;
+    hack_data.sensor.sensor_name = "/imu0";
+    for (auto const& [timestamp_ns, pose_i] : data) {
+        hack_data.frames[timestamp_ns].initial_pose = pose_i;
+    }
+
+    AddPoseData(sql, hack_data, type, database);
+}
+
 // NOTE(Jack): We supress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
 // trigger that is via a malformed sql statement, but that is hardcoded into this function (i.e.
 // sql_statements::camera_poses_insert) abd cannot and should not be changed!
-void AddPoseData(CameraCalibrationData const& data, PoseType const type,
+void AddPoseData(std::string_view const sql, CameraCalibrationData const& data, PoseType const type,
                  std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
-        SqlStatement const statement{database->db, sql_statements::camera_poses_insert};
+        // TODO(Jack): Make SqlStatement take a string view.
+        SqlStatement const statement{database->db, sql.data()};
 
         Vector6d pose;
         if (type == PoseType::Initial) {

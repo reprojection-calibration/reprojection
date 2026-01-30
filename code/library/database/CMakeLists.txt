@@ -26,6 +26,8 @@ set(SQL_FILES
         sql/imu_data_table.sql
         sql/reprojection_error_insert.sql
         sql/reprojection_error_table.sql
+        sql/spline_poses_insert.sql
+        sql/spline_poses_table.sql
 )
 
 foreach (sql ${SQL_FILES})
