@@ -16,7 +16,6 @@ set(LINK_LIBRARIES
         geometry
         optimization
         projection_functions
-        spline # needed because of testing_mocks dependency -_-
         testing_mocks
         testing_utilities
         types

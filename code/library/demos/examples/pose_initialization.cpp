@@ -5,7 +5,7 @@
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
-#include "optimization/nonlinear_refinement.hpp"
+#include "optimization/camera_nonlinear_refinement.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;

@@ -1,6 +1,7 @@
+#include "optimization/spline_nonlinear_refinement.hpp"
+
 #include <gtest/gtest.h>
 
-#include "optimization/nonlinear_refinement.hpp"
 #include "spline/r3_spline.hpp"
 #include "spline/so3_spline.hpp"
 #include "spline/spline_evaluation.hpp"
@@ -46,7 +47,7 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
     spline::CubicBSplineC3 spline_{t0_ns_, delta_t_ns_};
 
    private:
-    double static Squared(double const x) { return x * x; }
+    static double Squared(double const x) { return x * x; }
 };
 
 TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearRefinement) {

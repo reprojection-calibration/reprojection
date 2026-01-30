@@ -1,9 +1,10 @@
+#include "optimization/camera_nonlinear_refinement.hpp"
+
 #include <gtest/gtest.h>
 
 #include <numeric>
 
 #include "geometry/lie.hpp"
-#include "optimization/nonlinear_refinement.hpp"
 #include "projection_cost_function.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "testing_utilities/constants.hpp"

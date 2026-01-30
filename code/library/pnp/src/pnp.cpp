@@ -3,7 +3,7 @@
 #include "calibration_data_views/optimization_view.hpp"
 #include "dlt.hpp"
 #include "geometry/lie.hpp"
-#include "optimization/nonlinear_refinement.hpp"
+#include "optimization/camera_nonlinear_refinement.hpp"
 #include "plane_utilities.hpp"
 #include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"

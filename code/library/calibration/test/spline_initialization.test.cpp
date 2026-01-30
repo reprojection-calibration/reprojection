@@ -3,6 +3,7 @@
 #include "database/image_interface.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
+#include "spline/se3_spline.hpp"
 #include "testing_mocks/mvg_generator.hpp"
 #include "testing_utilities/constants.hpp"
 
@@ -15,7 +16,7 @@ using namespace reprojection;
 TEST(CalibrationSplineInitialization, TestXxx) {
     // NOTE(Jack): This should be less than the number of camera poses in the mvg sphere trajectory to prevent over
     // sampling which introduces artifacts.
-    int const num_camera_poses{500};
+    int const num_camera_poses{200};
     CameraCalibrationData const data{testing_mocks::GenerateMvgData(num_camera_poses, CameraModel::Pinhole,
                                                                     testing_utilities::pinhole_intrinsics,
                                                                     testing_utilities::image_bounds)};

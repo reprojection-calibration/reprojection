@@ -1,13 +1,8 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include "projection_functions/camera_model.hpp"
-// TODO(Jack): Remove the spline dependency from this file as it forces a dependency on the spline package for all
-// consumers of the testing mocks! Could we maybe just make the spline a static variable?
-#include "spline/se3_spline.hpp"
-#include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -17,7 +12,7 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
                                       ImageBounds const& bounds, bool const flat = true);
 
 // TODO(Jack): Refactor the class to explicitly generate targets, there is no reason to pretend it also needs to do
-// 3D random points.
+//  3D random points.
 // TODO(Jack): Struct naming.
 //
 // MVG = "multiple view geometry"
