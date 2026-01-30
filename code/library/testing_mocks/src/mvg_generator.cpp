@@ -47,34 +47,6 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
     return data;
 }
 
-MvgGenerator::MvgGenerator(CameraModel const camera_model, ArrayXd const& intrinsics, ImageBounds const& bounds,
-                           bool const flat)
-    : camera_model_{camera_model},
-      intrinsics_{intrinsics},
-      bounds_{bounds},
-      camera_{projection_functions::InitializeCamera(camera_model_, intrinsics_, bounds_)},
-      se3_spline_{constants::t0_ns, constants::delta_t_ns},
-      points_{BuildTargetPoints(flat)} {
-    std::vector<Isometry3d> const poses{SphereTrajectory(constants::num_camera_poses, constants::trajectory)};
-
-    for (auto const& pose : poses) {
-        se3_spline_.AddControlPoint(pose);
-    }
-}
-
-CameraCalibrationData MvgGenerator::GenerateBatch(int const num_frames) const {
-    CameraCalibrationData data{{"mvg_test_data", camera_model_, bounds_}, intrinsics_};
-    for (int i{0}; i < num_frames; ++i) {
-        auto const [bundle, pose]{this->Generate(static_cast<double>(i) / num_frames)};
-
-        uint64_t const timestamp_ns{constants::t0_ns + constants::delta_t_ns * i};
-        data.frames[timestamp_ns].extracted_target.bundle = bundle;
-        data.frames[timestamp_ns].initial_pose = geometry::Log(pose);
-    }
-
-    return data;
-}  // LCOV_EXCL_LINE
-
 /**
  * \brief Static helper method that projects points in the world frame. Do NOT use outside the testing mocks context!
  *
@@ -88,40 +60,6 @@ std::tuple<MatrixX2d, ArrayXb> MvgGenerator::Project(MatrixX3d const& points_w,
     MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
 
     return camera->Project(points_homog_co.leftCols(3));
-}
-
-// Input is fractional time of trajectory from [0,1)
-std::tuple<Bundle, Isometry3d> MvgGenerator::Generate(double const t) const {
-    assert(0 <= t and t < 1);
-
-    // NOTE(Jack): Look how the "spline_time" is calculated here using constants::num_camera_poses. You see that the
-    // fractional trajectory time t is converted back into a "metric" spline time in nanoseconds. However, because the
-    // spline requires points at each end for interpolation (one at the start three at the end), but our sphere
-    // trajectory does not include those points, we need to shorten the valid times/poses here by spline::constants::k
-    // - 1. That makes sure that the fractional spline time calculated from t always yields a valid pose, but that we
-    // will be missing one delta_t at the start and three delta_ts at the ends of the sphere trajectory. Why do we go
-    // through all this hassle here?
-    //
-    // (1) Because this test fixture should just work, and I do not want people to go through the trouble of checking if
-    // this Generate() function returns a valid value or not.
-    // (2) Because we can handle the problem here entirely in this one line of code. If we solved it another way for
-    // example extending the sphere trajectory to create points at the ends to facilitate the interpolation, or
-    // returning an optional value from Generate() to signal failure, we would need to change many places in the code
-    // base and therefore the hack that this really is would be harder to track.
-    uint64_t const spline_time{
-        constants::t0_ns +
-        static_cast<uint64_t>((constants::num_camera_poses - (spline::constants::degree)) * constants::delta_t_ns * t)};
-
-    auto const pose_t{se3_spline_.Evaluate(spline_time)};
-    assert(pose_t.has_value());  // See note above
-
-    auto const [pixels, mask]{Project(points_, camera_, geometry::Exp(pose_t.value()))};
-    ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
-
-    // TODO(Jack): With the introduction of the projection mask we are going to have this (indices, Eigen::all) logic
-    //  show up in a lot of places! Does it make sense to add a method for it? Maybe masking an entire extracted target
-    //  or something like that, but lets see which use cases we run across often before we decide what to do.
-    return {{pixels(valid_indices, Eigen::all), points_(valid_indices, Eigen::all)}, geometry::Exp(pose_t.value())};
 }
 
 MatrixX3d MvgGenerator::BuildTargetPoints(bool const flat) {

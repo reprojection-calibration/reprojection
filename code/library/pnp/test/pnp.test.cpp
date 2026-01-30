@@ -11,33 +11,32 @@ using namespace reprojection;
 // TODO(Jack): Test all functions with noisy data!
 
 TEST(Pnp, TestPnp) {
-    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
-                                                testing_utilities::image_bounds, false};
-    CameraCalibrationData const data{generator.GenerateBatch(20)};
+    CameraCalibrationData const data{testing_mocks::GenerateMvgData(
+        20, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
 
     for (auto const& [_, frame_i] : data.frames) {
         pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::image_bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
-        // definitely have filled out this value!
+        // definitely have filled out this value but still... unprotected optional access is bad!
         Array6d const pose_i{geometry::Log(std::get<Isometry3d>(pnp_result))};
         EXPECT_TRUE(pose_i.isApprox(frame_i.initial_pose.value()));
     }
 }
 
 TEST(Pnp, TestPnpFlat) {
-    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::unit_pinhole_intrinsics,
-                                                testing_utilities::unit_image_bounds, true};
-    CameraCalibrationData const data{generator.GenerateBatch(20)};
+    CameraCalibrationData const data{testing_mocks::GenerateMvgData(20, CameraModel::Pinhole,
+                                                                    testing_utilities::unit_pinhole_intrinsics,
+                                                                    testing_utilities::unit_image_bounds, true)};
 
     for (auto const& [_, frame_i] : data.frames) {
+        std::cout << _ << std::endl;
         pnp::PnpResult const pnp_result{
             pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::unit_image_bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
-        // definitely have filled out this value!
+        // WARN(Jack): See above about optional access.
         Array6d const pose_i{geometry::Log(std::get<Isometry3d>(pnp_result))};
         EXPECT_TRUE(pose_i.isApprox(frame_i.initial_pose.value()));
     }

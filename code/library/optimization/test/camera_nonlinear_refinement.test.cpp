@@ -13,9 +13,8 @@
 using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
-    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
-                                                testing_utilities::image_bounds, false};
-    CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
+    CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
+        20, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
     CameraCalibrationData data{gt_data};
 
     optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
@@ -49,9 +48,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 // Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
 // and intrinsic back.
 TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
-    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
-                                                testing_utilities::image_bounds, false};
-    CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
+    CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
+        20, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
     CameraCalibrationData data{gt_data};
 
     // Add gaussian noise to the initial poses

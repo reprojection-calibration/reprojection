@@ -11,9 +11,8 @@
 using namespace reprojection;
 
 TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
-    testing_mocks::MvgGenerator const generator{CameraModel::DoubleSphere, Array6d{600, 600, 360, 240, 0.1, 0.2},
-                                                testing_utilities::image_bounds};
-    CameraCalibrationData const gt_data{generator.GenerateBatch(20)};
+    CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
+        20, CameraModel::DoubleSphere, Array6d{600, 600, 360, 240, 0.1, 0.2}, testing_utilities::image_bounds)};
     CameraCalibrationData data{gt_data};
 
     // Reset the initial poses to null to make sure we do not confuse them for the output of LinearPoseInitialization.

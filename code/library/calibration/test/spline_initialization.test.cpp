@@ -13,13 +13,12 @@ namespace reprojection::calibration {}
 using namespace reprojection;
 
 TEST(CalibrationSplineInitialization, TestXxx) {
-    testing_mocks::MvgGenerator const generator{CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
-                                                testing_utilities::image_bounds};
-
     // NOTE(Jack): This should be less than the number of camera poses in the mvg sphere trajectory to prevent over
     // sampling which introduces artifacts.
     int const num_camera_poses{500};
-    CameraCalibrationData const data{generator.GenerateBatch(num_camera_poses)};
+    CameraCalibrationData const data{testing_mocks::GenerateMvgData(num_camera_poses, CameraModel::Pinhole,
+                                                                    testing_utilities::pinhole_intrinsics,
+                                                                    testing_utilities::image_bounds)};
 
     uint64_t const delta_t_ns{1000000};
     spline::Se3Spline se3_spline{0, delta_t_ns};
