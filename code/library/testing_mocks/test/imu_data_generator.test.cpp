@@ -17,32 +17,28 @@ struct ImuMeasurement {
 
 using ImuData = std::map<uint64_t, ImuMeasurement>;
 
-ImuData GenerateImuData(int const num_samples) {
+ImuData GenerateImuData(int const num_measurements) {
     // TODO is two times num_samples dense enough to prevent sampling artifacts?
-    int const num_control_points{2 * num_samples};
+    int const num_control_points{2 * num_measurements};
     spline::Se3Spline se3_spline{constants::t0_ns, constants::delta_t_ns};
     for (auto const& pose : SphereTrajectory(num_control_points, constants::trajectory)) {
         se3_spline.AddControlPoint(pose);
     }
 
     ImuData data;
-    for (int i{0}; i < num_samples; ++i) {
-        // TODO THIS KIND OF HACKY TRAJECTORY SAMPLING IS NOW HERE AND IN THE MVG GENERATOR - DO NOT DUPLICATE THIS!
-        double const elapsed_trajectory{static_cast<double>(i) / num_samples};
-        assert(0 <= elapsed_trajectory and elapsed_trajectory < 1);  // TODO(Jack): Refactor to throw here.
-
+    for (int i{0}; i < num_measurements; ++i) {
+        double const elapsed_trajectory{static_cast<double>(i) / num_measurements};
         uint64_t const spline_time{constants::t0_ns +
                                    static_cast<uint64_t>((num_control_points - spline::constants::degree) *
                                                          constants::delta_t_ns * elapsed_trajectory)};
 
         auto const velocity_t{se3_spline.Evaluate(spline_time, spline::DerivativeOrder::First)};
-        assert(velocity_t.has_value());  // TODO(Jack): Refactor to throw here.
         auto const acceleration_t{se3_spline.Evaluate(spline_time, spline::DerivativeOrder::Second)};
-        assert(acceleration_t.has_value());  // TODO(Jack): Refactor to throw here.
+        if (not(velocity_t.has_value() and acceleration_t.has_value())) {
+            throw std::runtime_error("GenerateImuData() failed se3_spline.Evaluate().");
+        }
 
-        // ERROR UNPROTECTED OPTIONAL ACCESS!
-        uint64_t const timestamp_ns{constants::t0_ns + constants::delta_t_ns * i};
-        data[timestamp_ns] = {velocity_t->bottomRows(3), acceleration_t->topRows(3)};
+        data[spline_time] = {velocity_t->bottomRows(3), acceleration_t->topRows(3)};
     }
 
     return data;
@@ -56,11 +52,11 @@ TEST(TestingMocksImuDataGenerator, TestGenerateImuData) {
     testing_mocks::ImuData const data{testing_mocks::GenerateImuData(100)};
 
     uint64_t gt_timestamp_ns{0};
-    for (auto const& [timestamp_ns, measurement] : data) {
-        EXPECT_EQ(timestamp_ns, gt_timestamp_ns);
+    for (auto const& [timestamp_ns, _] : data) {
+        // NOTE(Jack): We allow a one nanosecond tolerance to account for rounding/casting errors.
+        EXPECT_NEAR(timestamp_ns, gt_timestamp_ns, 1);
 
-        gt_timestamp_ns += 1000000;
+        gt_timestamp_ns += 1970000;
     }
-
-    EXPECT_EQ(gt_timestamp_ns, 99000000 + 1000000);
+    EXPECT_NEAR(gt_timestamp_ns, 195030000 + 1970000, 1);
 }

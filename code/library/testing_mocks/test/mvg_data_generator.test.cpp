@@ -21,14 +21,11 @@ TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
     for (auto const& [timestamp_ns, frame_i] : batch.frames) {
         EXPECT_EQ(frame_i.extracted_target.bundle.pixels.rows(), 25);
         EXPECT_EQ(frame_i.extracted_target.bundle.points.rows(), 25);
-        EXPECT_EQ(timestamp_ns, gt_timestamp_ns);
+        EXPECT_NEAR(timestamp_ns, gt_timestamp_ns, 1);
 
-        gt_timestamp_ns += 1000000;
+        gt_timestamp_ns += 1970000;
     }
-
-    // The actual last timestamps in batch.frames is 99000000 but the += to the ground truth value happens one more time
-    // after the last data is read which gives us this timestamp large by one time increment.
-    EXPECT_EQ(gt_timestamp_ns, 99000000 + 1000000);
+    EXPECT_NEAR(gt_timestamp_ns, 195030000 + 1970000, 1);
 }
 
 TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
