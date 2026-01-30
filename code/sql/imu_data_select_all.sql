@@ -1,4 +1,5 @@
 SELECT timestamp_ns,
+       sensor_name,
        omega_x,
        omega_y,
        omega_z,

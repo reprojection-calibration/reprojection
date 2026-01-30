@@ -43,7 +43,7 @@ class TestDatabaseDatabaseConnections(unittest.TestCase):
         self.assertIsNone(df)
 
         df = load_imu_data_df(self.db_path)
-        self.assertEqual(df.shape, (8770, 7))
+        self.assertEqual(df.shape, (8770, 8))
 
     def test_load_reprojection_errors_df(self):
         df = load_reprojection_errors_df("nonexistent.db3")
