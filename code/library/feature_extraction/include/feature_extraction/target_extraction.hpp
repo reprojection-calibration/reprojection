@@ -4,11 +4,11 @@
 #include <memory>
 #include <optional>
 
-#include "types/algorithm_types.hpp"
-#include "types/eigen_types.hpp"
-
 #include <opencv2/opencv.hpp>
 #include <toml++/toml.hpp>
+
+#include "types/algorithm_types.hpp"
+#include "types/eigen_types.hpp"
 
 namespace reprojection::feature_extraction {
 

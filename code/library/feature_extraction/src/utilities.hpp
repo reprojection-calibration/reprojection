@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "types/eigen_types.hpp"
-
 #include <opencv2/opencv.hpp>
+
+#include "types/eigen_types.hpp"
 
 namespace reprojection::feature_extraction {
 

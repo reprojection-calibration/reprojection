@@ -2,9 +2,9 @@
 
 #include <optional>
 
-#include "config/types.hpp"
-
 #include <toml++/toml.hpp>
+
+#include "config/types.hpp"
 
 namespace reprojection::config {
 

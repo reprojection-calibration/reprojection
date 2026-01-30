@@ -18,9 +18,12 @@ IncludeCategories:
   # C++ system headers (vector, cmath, etc.)
   - Regex: '^<[^>.]+>'
     Priority: 3
+  # C++ installed package headers (opencv2/opencv.hpp, toml++/toml.hpp, etc.)
+  - Regex: '^<[^>]+\.hpp>'
+    Priority: 4
   # Project headers in different package
   - Regex: '^".+/.+"'
-    Priority: 4
+    Priority: 5
   # Local project headers in same package
   - Regex: '^"[^/"]+"'
-    Priority: 5
+    Priority: 6

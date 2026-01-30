@@ -1,8 +1,8 @@
 #include "config/load_config_file.hpp"
 
-#include "parse_ceres_solver_options.hpp"
-
 #include <toml++/toml.hpp>
+
+#include "parse_ceres_solver_options.hpp"
 
 namespace reprojection::config {
 

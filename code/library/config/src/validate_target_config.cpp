@@ -1,8 +1,8 @@
 #include "config/validate_target_config.hpp"
 
-#include "toml_helpers.hpp"
-
 #include <toml++/toml.hpp>
+
+#include "toml_helpers.hpp"
 
 namespace reprojection::config {
 

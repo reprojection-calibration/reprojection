@@ -2,12 +2,12 @@
 
 #include <optional>
 
+#include <opencv2/opencv.hpp>
+
 #include "feature_extraction/target_extraction.hpp"
 #include "types/eigen_types.hpp"
 
 #include "april_tag_cpp_wrapper.hpp"
-
-#include <opencv2/opencv.hpp>
 
 namespace reprojection::feature_extraction {
 
