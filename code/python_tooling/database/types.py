@@ -5,3 +5,8 @@ from enum import Enum
 class PoseType(str, Enum):
     Initial = "initial"
     Optimized = "optimized"
+
+
+class SensorType(str, Enum):
+    Camera = "camera"
+    Imu = "imu"

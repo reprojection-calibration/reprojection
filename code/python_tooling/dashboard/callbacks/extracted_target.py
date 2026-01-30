@@ -165,7 +165,7 @@ app.clientside_callback(
     Input("sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
     Input("max-reprojection-error-input", "value"),
-    State("raw-data-store", "data"),
+    State("raw-camera-data-store", "data"),
     State("processed-data-store", "data"),
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),

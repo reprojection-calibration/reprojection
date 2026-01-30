@@ -44,9 +44,9 @@ def refresh_database_list(db_dir, _):
 
 # TODO(Jack): When we load a new database we should reset the slider to zero!
 @app.callback(
-    Output("raw-data-store", "data"),
+    Output("raw-camera-data-store", "data"),
+    Output("raw-imu-data-store", "data"),
     Output("processed-data-store", "data"),
-    Output("imu-data-store", "data"),
     Input("database-dropdown", "value"),
 )
 def load_database_to_store(db_file):
@@ -57,15 +57,16 @@ def load_database_to_store(db_file):
     if not db_file.endswith(".db3"):
         return None, None
 
-    raw_data = load_camera_calibration_data(db_file)
-    statistics = get_camera_calibration_data_statistics(raw_data)
-    indexable_timestamps = get_indexable_timestamp_record(raw_data)
+    raw_camera_data = load_camera_calibration_data(db_file)
+    # TODO ADD THE IMU STATISTICS AND TIMESTAMPS HERE TOO!
+    statistics = get_camera_calibration_data_statistics(raw_camera_data)
+    indexable_timestamps = get_indexable_timestamp_record(raw_camera_data)
 
     # TODO HACK AT INITIAL STAGE OF IMU DATA INTEGRATION!
     imu_df = load_imu_data_df(db_file)
-    imu_raw_data = imu_data_df_to_imu_calibration_data(imu_df)
+    raw_imu_data = imu_data_df_to_imu_calibration_data(imu_df)
 
-    return raw_data, [statistics, indexable_timestamps], imu_raw_data
+    return raw_camera_data, raw_imu_data, [statistics, indexable_timestamps],
 
 
 @app.callback(
