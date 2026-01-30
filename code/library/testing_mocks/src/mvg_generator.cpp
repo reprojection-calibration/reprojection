@@ -18,7 +18,7 @@ MvgGenerator::MvgGenerator(CameraModel const camera_model, ArrayXd const& intrin
       camera_{projection_functions::InitializeCamera(camera_model_, intrinsics_, bounds_)},
       se3_spline_{constants::t0_ns, constants::delta_t_ns},
       points_{BuildTargetPoints(flat)} {
-    std::vector<Isometry3d> const poses{SphereTrajectory(constants::num_camera_poses, {{0, 0, 0}, 1.0, {0, 0, 5}})};
+    std::vector<Isometry3d> const poses{SphereTrajectory(constants::num_camera_poses, constants::trajectory)};
 
     for (auto const& pose : poses) {
         se3_spline_.AddControlPoint(pose);
