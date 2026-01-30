@@ -1,4 +1,4 @@
-#include "testing_mocks/mvg_generator.hpp"
+#include "testing_mocks/mvg_data_generator.hpp"
 
 #include <gtest/gtest.h>
 
@@ -13,7 +13,7 @@ using namespace reprojection;
 // frames.
 // But don't forget that there might be an implementation error because when we set the view point and
 // sphere origin as {0,0,0} we get poses that do not make sense!
-TEST(TestingMocksMvgGenerator, TestGenerateBatch) {
+TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
     CameraCalibrationData const batch{testing_mocks::GenerateMvgData(
         100, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
 

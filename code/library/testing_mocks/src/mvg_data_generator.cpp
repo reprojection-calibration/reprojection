@@ -1,6 +1,5 @@
-#include "testing_mocks/mvg_generator.hpp"
+#include "testing_mocks/mvg_data_generator.hpp"
 
-// TODO(Jack): Sort local includes into separate group
 #include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
@@ -48,6 +47,8 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
         auto const [pixels, mask]{MvgHelpers::Project(points, camera, geometry::Exp(pose_t.value()))};
         ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
+        // TODO(Jack): Make sure there is nothing fishy going on with the times here. It would be nice to have the same
+        // times between the sphere trajectory spline and the output data here.
         uint64_t const timestamp_ns{constants::t0_ns + constants::delta_t_ns * i};
         data.frames[timestamp_ns].extracted_target.bundle =
             Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)};

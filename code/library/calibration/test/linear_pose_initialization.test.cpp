@@ -4,7 +4,7 @@
 
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
-#include "testing_mocks/mvg_generator.hpp"
+#include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
 
