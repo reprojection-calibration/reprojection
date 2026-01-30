@@ -55,7 +55,7 @@ struct So3Spline {
         for (int j{0}; j < constants::degree; ++j) {
             VectorKd const& weight0{weights[0]};
             Matrix3<T> const delta_R_j{geometry::Exp<T>(T(weight0[j + 1]) * delta_phis[j])};
-            rotation = geometry::Log<T>(delta_R_j.inverse() * geometry::Exp<T>(rotation));
+            rotation = geometry::Log<T>(delta_R_j * geometry::Exp<T>(rotation));
 
             if constexpr (D == DerivativeOrder::First or D == DerivativeOrder::Second) {
                 Matrix3<T> const inverse_delta_R_j{delta_R_j.inverse()};
