@@ -18,7 +18,7 @@ MvgGenerator::MvgGenerator(CameraModel const camera_model, ArrayXd const& intrin
       camera_{projection_functions::InitializeCamera(camera_model_, intrinsics_, bounds_)},
       se3_spline_{constants::t0_ns, constants::delta_t_ns},
       points_{BuildTargetPoints(flat)} {
-    std::vector<Isometry3d> const poses{SphereTrajectory({{0, 0, 0}, 1.0, {0, 0, 5}})};
+    std::vector<Isometry3d> const poses{SphereTrajectory(constants::num_camera_poses, {{0, 0, 0}, 1.0, {0, 0, 5}})};
 
     for (auto const& pose : poses) {
         se3_spline_.AddControlPoint(pose);
@@ -57,13 +57,13 @@ std::tuple<MatrixX2d, ArrayXb> MvgGenerator::Project(MatrixX3d const& points_w,
 std::tuple<Bundle, Isometry3d> MvgGenerator::Generate(double const t) const {
     assert(0 <= t and t < 1);
 
-    // NOTE(Jack): Look how the "spline_time" is calculated here using constants::num_poses. You see that the fractional
-    // trajectory time t is converted back into a "metric" spline time in nanoseconds. However, because the spline
-    // requires points at each end for interpolation (one at the start three at the end), but our sphere trajectory does
-    // not include those points, we need to shorten the valid times/poses here by spline::constants::k - 1. That makes
-    // sure that the fractional spline time calculated from t always yields a valid pose, but that we will be missing
-    // one delta_t at the start and three delta_ts at the ends of the sphere trajectory. Why do we go through all this
-    // hassle here?
+    // NOTE(Jack): Look how the "spline_time" is calculated here using constants::num_camera_poses. You see that the
+    // fractional trajectory time t is converted back into a "metric" spline time in nanoseconds. However, because the
+    // spline requires points at each end for interpolation (one at the start three at the end), but our sphere
+    // trajectory does not include those points, we need to shorten the valid times/poses here by spline::constants::k
+    // - 1. That makes sure that the fractional spline time calculated from t always yields a valid pose, but that we
+    // will be missing one delta_t at the start and three delta_ts at the ends of the sphere trajectory. Why do we go
+    // through all this hassle here?
     //
     // (1) Because this test fixture should just work, and I do not want people to go through the trouble of checking if
     // this Generate() function returns a valid value or not.
@@ -73,7 +73,7 @@ std::tuple<Bundle, Isometry3d> MvgGenerator::Generate(double const t) const {
     // base and therefore the hack that this really is would be harder to track.
     uint64_t const spline_time{
         constants::t0_ns +
-        static_cast<uint64_t>((constants::num_poses - (spline::constants::degree)) * constants::delta_t_ns * t)};
+        static_cast<uint64_t>((constants::num_camera_poses - (spline::constants::degree)) * constants::delta_t_ns * t)};
 
     auto const pose_t{se3_spline_.Evaluate(spline_time)};
     assert(pose_t.has_value());  // See note above

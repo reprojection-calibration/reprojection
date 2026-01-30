@@ -9,11 +9,12 @@ using namespace reprojection;
 // WARN(Jack): In this test we do not test that the direction the tfs are pointing at is correct! Only the positions of
 // them.
 TEST(TestingMocksSphereTrajectory, TestSphereTrajectory) {
+    int const num_camera_poses{100};
     double const sphere_radius{1.5};
     Vector3d const sphere_origin{1, 2, 3};
     testing_mocks::CameraTrajectory const config{{0, 0, 0}, sphere_radius, sphere_origin};
 
-    std::vector<Isometry3d> const tfs{testing_mocks::SphereTrajectory(config)};
+    std::vector<Isometry3d> const tfs{testing_mocks::SphereTrajectory(num_camera_poses, config)};
 
     double radius{0};
     Vector3d centroid{0, 0, 0};

@@ -5,7 +5,7 @@
 namespace reprojection::testing_mocks::constants {
 
 // Number of poses in the sphere trajectory to generate
-int const num_poses{1000};
+int const num_camera_poses{200};
 // Number of "loops" in the sphere trajectory to generate.
 int const num_loops{4};
 
