@@ -3,6 +3,7 @@ set(LIBRARY_NAME "testing_mocks")
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
+        src/imu_data_generator.cpp
         src/mvg_data_generator.cpp
         src/mvg_helpers.cpp
         src/noise_generation.cpp
