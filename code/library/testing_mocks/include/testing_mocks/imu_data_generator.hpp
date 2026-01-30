@@ -2,7 +2,6 @@
 
 #include <map>
 
-#include "types/eigen_types.hpp"
 #include "types/sensor_types.hpp"
 
 // TODO COMBINE BOTH DATA GENERATORS INTO ONE HEADER FILE?
