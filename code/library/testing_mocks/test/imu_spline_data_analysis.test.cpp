@@ -19,7 +19,7 @@ TEST(XXX, TestYYY) {
     testing_mocks::ImuData const data{testing_mocks::GenerateImuData(100)};
 
     for (auto const& [timestamp_ns, measurement_i] : data) {
-        bool const success_i{database::AddImuData({{timestamp_ns, "/test"}, measurement_i}, db)};
+        bool const success_i{database::AddImuData({{timestamp_ns, "/imu0"}, measurement_i}, db)};
         EXPECT_TRUE(success_i);
     }
 
