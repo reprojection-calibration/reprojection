@@ -12,7 +12,7 @@
 namespace reprojection::testing_mocks {
 
 // TODO(Jack): Have a common initialization framework for the camera parameters here and with CameraCalibrationData and
-// the camera construction itself. This should just be one struct...
+//  the camera construction itself. This should just be one struct...?
 CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const camera_model, ArrayXd const& intrinsics,
                                       ImageBounds const& bounds, bool const flat) {
     // NOTE(Jack): There are two things to consider in this method; (1) the underlying spline that builds the sphere
@@ -33,14 +33,14 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
     CameraCalibrationData data{{"/mvg_test_data", camera_model, bounds}, intrinsics};
     for (int i{0}; i < num_frames; ++i) {
         double const elapsed_trajectory{static_cast<double>(i) / num_frames};
-        assert(0 <= elapsed_trajectory and elapsed_trajectory < 1);
+        assert(0 <= elapsed_trajectory and elapsed_trajectory < 1);  // TODO(Jack): Refactor to throw here.
 
         uint64_t const spline_time{constants::t0_ns +
                                    static_cast<uint64_t>((num_control_points - spline::constants::degree) *
                                                          constants::delta_t_ns * elapsed_trajectory)};
 
         auto const pose_t{se3_spline.Evaluate(spline_time)};
-        assert(pose_t.has_value());  // TODO REFACTOR TO THROW HERE IF THIS IS NOT VALID!
+        assert(pose_t.has_value());  // TODO(Jack): Refactor to throw here.
 
         auto const [pixels, mask]{MvgGenerator::Project(points, camera, geometry::Exp(pose_t.value()))};
         ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};

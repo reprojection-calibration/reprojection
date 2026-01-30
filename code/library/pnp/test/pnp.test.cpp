@@ -31,7 +31,6 @@ TEST(Pnp, TestPnpFlat) {
                                                                     testing_utilities::unit_image_bounds, true)};
 
     for (auto const& [_, frame_i] : data.frames) {
-        std::cout << _ << std::endl;
         pnp::PnpResult const pnp_result{
             pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::unit_image_bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
