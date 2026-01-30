@@ -17,7 +17,7 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(DatabaseSensorDataInterface, TestAddPoseData) {
+TEST(DatabaseSensorDataInterface, TestAddCameraPoseData) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
@@ -38,6 +38,16 @@ TEST(DatabaseSensorDataInterface, TestAddPoseData) {
     database::AddImage(header, db);
     AddExtractedTargetData({header, {}}, db);
     EXPECT_NO_THROW(database::AddCameraPoseData(data, database::PoseType::Initial, db));
+}
+
+TEST(DatabaseSensorDataInterface, TestAddSplinePoseData) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+
+    database::SplinePoses const data{{0, Array6d::Zero()}};
+
+    EXPECT_NO_THROW(database::AddSplinePoseData(data, database::PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddSplinePoseData(data, database::PoseType::Optimized, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {

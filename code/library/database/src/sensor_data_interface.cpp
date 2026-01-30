@@ -21,7 +21,7 @@ void AddCameraPoseData(CameraCalibrationData const& data, PoseType const type,
     AddPoseData(sql, data, type, database);
 }
 
-// TODO(Jack): Test once we have a more official interface, not SplinePoses and the hack_data.
+// TODO(Jack): Current hacked interface before we know what the imu data  should really look like!
 void AddSplinePoseData(SplinePoses const& data, PoseType const type,
                        std::shared_ptr<CalibrationDatabase> const database) {
     std::string_view const sql{sql_statements::spline_poses_insert};
