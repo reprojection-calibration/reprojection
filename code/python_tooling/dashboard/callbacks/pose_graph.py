@@ -178,7 +178,7 @@ app.clientside_callback(
     """,
     Output("rotation-graph", "figure"),
     Output("translation-graph", "figure"),
-    Input("frame-id-slider", "value"),
+    Input("camera-frame-id-slider", "value"),
     Input("camera-sensor-dropdown", "value"),
     State("processed-data-store", "data"),
     State("rotation-graph", "figure"),

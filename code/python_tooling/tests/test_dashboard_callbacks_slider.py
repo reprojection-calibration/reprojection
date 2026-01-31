@@ -43,7 +43,7 @@ class TestDashboardCallbacksSlider(unittest.TestCase):
     def test_advance_slider(self):
         # Note that the Input("play-interval", "n_intervals") is only here to trigger this function! We do not use the
         # provided n_intervals (the first argument to this function) in any real way and instead use the
-        # State("frame-id-slider", "value") to track our frame idx.
+        # State("camera-frame-id-slider", "value") to track our frame idx.
         output = advance_slider(None, None, None)
         self.assertEqual(output, 0)
 

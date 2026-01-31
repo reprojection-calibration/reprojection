@@ -86,7 +86,7 @@ app.clientside_callback(
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        const timestamps = processed_data[1][sensor]
+        const timestamps = processed_data[1]["camera"][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
@@ -161,7 +161,7 @@ app.clientside_callback(
     """,
     Output("targets-xy-graph", "figure"),
     Output("targets-pixels-graph", "figure"),
-    Input("frame-id-slider", "value"),
+    Input("camera-frame-id-slider", "value"),
     Input("camera-sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
     Input("max-reprojection-error-input", "value"),

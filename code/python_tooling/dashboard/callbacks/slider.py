@@ -2,27 +2,31 @@ from dash import Input, Output, State
 
 from dashboard.server import app
 from dashboard.tools.time_handling import calculate_ticks_from_timestamps
+from database.types import SensorType
 
 
 # ERROR(Jack):
 @app.callback(
-    Output("frame-id-slider", "marks"),
-    Output("frame-id-slider", "max"),
+    Output("camera-frame-id-slider", "marks"),
+    Output("camera-frame-id-slider", "max"),
     Input("camera-sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def update_slider_properties(sensor, processed_data):
+def update_camera_slider_properties(sensor, processed_data):
     if sensor is None or processed_data is None:
         return {}, 0
 
     statistics, timestamps_sorted = processed_data
-    if sensor not in statistics or sensor not in timestamps_sorted:
+    camera_statistics = statistics[SensorType.Camera]
+    camera_timestamps_sorted = timestamps_sorted[SensorType.Camera]
+
+    if sensor not in camera_statistics or sensor not in camera_timestamps_sorted:
         return {}, 0
 
-    timestamps_ns = timestamps_sorted[sensor]
+    timestamps_ns = camera_timestamps_sorted[sensor]
     tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
 
-    n_frames = statistics[sensor]["total_frames"]
+    n_frames = camera_statistics[sensor]["total_frames"]
 
     return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
 
@@ -47,7 +51,7 @@ app.clientside_callback(
     }
     """,
     Output("slider-timestamp", "children"),
-    Input("frame-id-slider", "value"),
+    Input("camera-frame-id-slider", "value"),
     State("processed-data-store", "data"),
     State("camera-sensor-dropdown", "value"),
 )
@@ -71,10 +75,10 @@ def toggle_play(n_clicks):
 
 
 @app.callback(
-    Output("frame-id-slider", "value"),
+    Output("camera-frame-id-slider", "value"),
     Input("play-interval", "n_intervals"),
-    State("frame-id-slider", "value"),
-    State("frame-id-slider", "max"),
+    State("camera-frame-id-slider", "value"),
+    State("camera-frame-id-slider", "max"),
 )
 def advance_slider(_, value, max_value):
     if value is None:

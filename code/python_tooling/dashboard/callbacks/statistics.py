@@ -13,13 +13,14 @@ from database.types import SensorType
     Input("camera-sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def update_statistics(selected_camera_sensor, processed_data):
+def update_camera_statistics(selected_camera_sensor, processed_data):
     # TODO(Jack): Do not raise PreventUpdate! That is too extreme of an error handling strategy, just do a no update.
     if selected_camera_sensor is None or processed_data is None:
         raise PreventUpdate
 
     statistics, _ = processed_data
-    camera_statistics = statistics[SensorType.Camera]
+    camera_statistics = statistics[
+        SensorType.Camera]  # TODO WE NEED TO BE MORE PROTECTIVE HERE! What if there are no cameras?
 
     return [
         html.Div(

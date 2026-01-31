@@ -174,7 +174,7 @@ app.layout = html.Div(
                                         html.Div(
                                             children=[
                                                 dcc.Slider(
-                                                    id="frame-id-slider",
+                                                    id="camera-frame-id-slider",
                                                     marks=None,
                                                     min=0,
                                                     max=0,
