@@ -21,96 +21,22 @@ app.layout = html.Div(
             children=[
                 html.Div(
                     children=[
-                        html.Div(
-                            children=[
-                                html.Label(
-                                    children="Directory",
-                                ),
-                                dcc.Input(
-                                    id="database-directory-input",
-                                    type="text",
-                                    value="../../test_data",
-                                    placeholder="/path/to/database/directory",
-                                    debounce=True,
-                                    persistence=True,
-                                    persistence_type="local",
-                                    style={"width": "300px"},
-                                ),
-                            ],
-                            style={
-                                "alignItems": "center",
-                                "display": "flex",
-                                "flexDirection": "row",
-                                "gap": "10px",
-                                "margin": "10px",
-                                "flex": "1",
-                            },
+                        html.Label(
+                            children="Directory",
                         ),
-                        html.Div(
-                            children=[
-                                html.Label(
-                                    children="Load",
-                                ),
-                                dcc.Dropdown(
-                                    id="database-dropdown",
-                                    placeholder="Select a database",
-                                    style={"width": "300px"},
-                                ),
-                                html.Button(
-                                    children="Refresh Database List",
-                                    id="refresh-database-list-button",
-                                    n_clicks=0,
-                                ),
-                            ],
-                            style={
-                                "alignItems": "center",
-                                "display": "flex",
-                                "flexDirection": "row",
-                                "gap": "10px",
-                                "margin": "10px",
-                                "flex": "1",
-                            },
-                        ),
-                        html.Div(
-                            children=[
-                                html.Label(
-                                    children="Select",
-                                ),
-                                dcc.Dropdown(
-                                    id="sensor-dropdown",
-                                    placeholder="Select a camera sensor",
-                                    style={"width": "300px"},
-                                ),
-                            ],
-                            style={
-                                "alignItems": "center",
-                                "display": "flex",
-                                "flexDirection": "row",
-                                "gap": "10px",
-                                "margin": "10px",
-                                "flex": "1",
-                            },
+                        dcc.Input(
+                            id="database-directory-input",
+                            type="text",
+                            value="../../test_data",
+                            placeholder="/path/to/database/directory",
+                            debounce=True,
+                            persistence=True,
+                            persistence_type="local",
+                            style={"width": "300px"},
                         ),
                     ],
                     style={
-                        "alignItems": "flex-start",
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "gap": "10px",
-                        "margin": "10px",
-                        "flex": "1",
-                    },
-                ),
-                html.Div(
-                    children=[
-                        html.Div(
-                            [
-                                html.Div(id="statistics-display"),
-                            ]
-                        ),
-                    ],
-                    style={
-                        "alignItems": "top",
+                        "alignItems": "center",
                         "display": "flex",
                         "flexDirection": "row",
                         "gap": "10px",
@@ -121,21 +47,23 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.Label(
-                            children="Pose Type",
+                            children="Load",
                         ),
-                        dcc.RadioItems(
-                            id="pose-type-selector",
-                            options=[
-                                {"label": "Initial", "value": PoseType.Initial},
-                                {"label": "Optimized", "value": PoseType.Optimized},
-                            ],
-                            value=PoseType.Initial,
+                        dcc.Dropdown(
+                            id="database-dropdown",
+                            placeholder="Select a database",
+                            style={"width": "300px"},
+                        ),
+                        html.Button(
+                            children="Refresh Database List",
+                            id="refresh-database-list-button",
+                            n_clicks=0,
                         ),
                     ],
                     style={
-                        "alignItems": "top",
+                        "alignItems": "center",
                         "display": "flex",
-                        "flexDirection": "column",
+                        "flexDirection": "row",
                         "gap": "10px",
                         "margin": "10px",
                         "flex": "1",
@@ -143,65 +71,141 @@ app.layout = html.Div(
                 ),
             ],
             style={
-                "alignItems": "top",
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "10px",
-                "margin": "10px",
-            },
-        ),
-        html.Div(
-            children=[
-                # The animation plays by default therefore the button is initialized with the pause graphic
-                html.Button(
-                    children="⏸ Pause",
-                    id="play-button",
-                    n_clicks=0,
-                    style={
-                        "width": "50px",
-                    },
-                ),
-                html.Div(
-                    children=[
-                        dcc.Slider(
-                            id="frame-id-slider",
-                            marks=None,
-                            min=0,
-                            max=0,
-                            step=1,
-                            value=0,
-                            tooltip={"placement": "top", "always_visible": True},
-                            updatemode="drag",
-                        ),
-                    ],
-                    style={
-                        "width": "70%",
-                    },
-                ),
-                html.Div(
-                    children=[
-                        html.P("Current timestamp (ns)"),
-                        html.Div(
-                            id="slider-timestamp",
-                        ),
-                    ],
-                ),
-            ],
-            style={
-                "alignItems": "top",
+                "alignItems": "flex-start",
                 "display": "flex",
                 "flexDirection": "row",
                 "gap": "10px",
                 "margin": "10px",
                 "flex": "1",
             },
+
         ),
+
         dcc.Tabs(
             [
                 dcc.Tab(
                     children=[
                         html.Div(
                             children=[
+                                html.Div(
+                                    children=[
+                                        html.Div(
+                                            children=[
+                                                html.Label(
+                                                    children="Select",
+                                                ),
+                                                dcc.Dropdown(
+                                                    id="sensor-dropdown",
+                                                    placeholder="Select a camera sensor",
+                                                    style={"width": "300px"},
+                                                ),
+                                            ],
+                                            style={
+                                                "alignItems": "center",
+                                                "display": "flex",
+                                                "flexDirection": "row",
+                                                "gap": "10px",
+                                                "margin": "10px",
+                                                "flex": "1",
+                                            },
+
+                                        ),
+                                        html.Div(
+                                            children=[
+                                                html.Div(
+                                                    [
+                                                        html.Div(id="statistics-display"),
+                                                    ]
+                                                ),
+                                            ],
+                                            style={
+                                                "alignItems": "top",
+                                                "display": "flex",
+                                                "flexDirection": "row",
+                                                "gap": "10px",
+                                                "margin": "10px",
+                                                "flex": "1",
+                                            },
+                                        ),
+                                        html.Div(
+                                            children=[
+                                                html.Label(
+                                                    children="Pose Type",
+                                                ),
+                                                dcc.RadioItems(
+                                                    id="pose-type-selector",
+                                                    options=[
+                                                        {"label": "Initial", "value": PoseType.Initial},
+                                                        {"label": "Optimized", "value": PoseType.Optimized},
+                                                    ],
+                                                    value=PoseType.Initial,
+                                                ),
+                                            ],
+                                            style={
+                                                "alignItems": "top",
+                                                "display": "flex",
+                                                "flexDirection": "column",
+                                                "gap": "10px",
+                                                "margin": "10px",
+                                                "flex": "1",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "alignItems": "top",
+                                        "display": "flex",
+                                        "flexDirection": "row",
+                                        "gap": "10px",
+                                        "margin": "10px",
+                                    },
+                                ),
+
+                                html.Div(
+                                    children=[
+                                        # The animation plays by default therefore the button is initialized with the pause graphic
+                                        html.Button(
+                                            children="⏸ Pause",
+                                            id="play-button",
+                                            n_clicks=0,
+                                            style={
+                                                "width": "50px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            children=[
+                                                dcc.Slider(
+                                                    id="frame-id-slider",
+                                                    marks=None,
+                                                    min=0,
+                                                    max=0,
+                                                    step=1,
+                                                    value=0,
+                                                    tooltip={"placement": "top", "always_visible": True},
+                                                    updatemode="drag",
+                                                ),
+                                            ],
+                                            style={
+                                                "width": "70%",
+                                            },
+                                        ),
+                                        html.Div(
+                                            children=[
+                                                html.P("Current timestamp (ns)"),
+                                                html.Div(
+                                                    id="slider-timestamp",
+                                                ),
+                                            ],
+                                        ),
+                                    ],
+                                    style={
+                                        "alignItems": "top",
+                                        "display": "flex",
+                                        "flexDirection": "row",
+                                        "gap": "10px",
+                                        "margin": "10px",
+                                        "flex": "1",
+                                    },
+                                ),
                                 html.Div(
                                     children=[
                                         html.Label(
