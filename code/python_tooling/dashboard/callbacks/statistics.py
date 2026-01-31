@@ -7,7 +7,7 @@ from database.types import PoseType, SensorType
 # TODO(Jack): Is there any way to avoid copying this completely for the IMU case?
 
 
-def register_statistics_display_callback(display_id, sensor_dropdown_id, sensor_type):
+def register_statistics_display_update_callback(display_id, sensor_dropdown_id, sensor_type):
     @app.callback(
         Output(display_id, "children"),
         Input(sensor_dropdown_id, "value"),
@@ -42,9 +42,9 @@ def register_statistics_display_callback(display_id, sensor_dropdown_id, sensor_
         ]
 
 
-register_statistics_display_callback(
+register_statistics_display_update_callback(
     "camera-statistics-display", "camera-sensor-dropdown", SensorType.Camera
 )
-register_statistics_display_callback(
+register_statistics_display_update_callback(
     "imu-statistics-display", "imu-sensor-dropdown", SensorType.Imu
 )

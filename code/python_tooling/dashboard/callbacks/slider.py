@@ -5,31 +5,34 @@ from dashboard.tools.time_handling import calculate_ticks_from_timestamps
 from database.types import SensorType
 
 
-# ERROR(Jack):
-@app.callback(
-    Output("camera-frame-id-slider", "marks"),
-    Output("camera-frame-id-slider", "max"),
-    Input("camera-sensor-dropdown", "value"),
-    State("processed-data-store", "data"),
-)
-def update_camera_slider_properties(sensor, processed_data):
-    if sensor is None or processed_data is None:
-        return {}, 0
+def register_slider_properties_update_callback(slider_id, sensor_dropdown_id, sensor_type):
+    @app.callback(
+        Output(slider_id, "marks"),
+        Output(slider_id, "max"),
+        Input(sensor_dropdown_id, "value"),
+        State("processed-data-store", "data"),
+    )
+    def update_slider_properties(sensor, processed_data):
+        if sensor is None or processed_data is None:
+            return {}, 0
 
-    statistics, timestamps_sorted = processed_data
-    camera_statistics = statistics[SensorType.Camera]
-    camera_timestamps_sorted = timestamps_sorted[SensorType.Camera]
+        statistics, timestamps_sorted = processed_data
+        sensor_statistics = statistics[sensor_type]
+        sensor_timestamps_sorted = timestamps_sorted[sensor_type]
 
-    if sensor not in camera_statistics or sensor not in camera_timestamps_sorted:
-        return {}, 0
+        if sensor not in sensor_statistics or sensor not in sensor_timestamps_sorted:
+            return {}, 0
 
-    timestamps_ns = camera_timestamps_sorted[sensor]
-    tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
+        timestamps_ns = sensor_timestamps_sorted[sensor]
+        tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
 
-    n_frames = camera_statistics[sensor]["total_frames"]
+        n_frames = sensor_statistics[sensor]["total_frames"]
 
-    return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
+        return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
 
+
+register_slider_properties_update_callback("camera-frame-id-slider", "camera-sensor-dropdown", SensorType.Camera)
+register_slider_properties_update_callback("imu-frame-id-slider", "imu-sensor-dropdown", SensorType.Imu)
 
 # TODO(Jack): We need to display the exact nanosecond timestamp of the current frame somewhere and somehow. If this is
 #  is the best way to do this I am not 100% sure just yet.
@@ -57,7 +60,6 @@ app.clientside_callback(
 )
 
 
-# TODO(Jack): Make camera specific?
 @app.callback(
     Output("play-interval", "disabled"),
     Output("play-button", "children"),
@@ -75,16 +77,21 @@ def toggle_play(n_clicks):
         return True, "▶ Play"
 
 
-@app.callback(
-    Output("camera-frame-id-slider", "value"),
-    Input("play-interval", "n_intervals"),
-    State("camera-frame-id-slider", "value"),
-    State("camera-frame-id-slider", "max"),
-)
-def advance_slider(_, value, max_value):
-    if value is None:
-        return 0
-    if value >= max_value:
-        return 0  # loop playback
+# TODO(Jack): Why do we not use n_intervals directly? https://community.plotly.com/t/reset-n-intervals-in-dcc-interval/33078
+def register_slider_advance_callback(slider_id):
+    @app.callback(
+        Output(slider_id, "value"),
+        Input("play-interval", "n_intervals"),
+        State(slider_id, "value"),
+        State(slider_id, "max"),
+    )
+    def advance_slider(_, value, max_value):
+        if value is None:
+            return 0
+        if value >= max_value:
+            return 0  # loop playback
 
-    return value + 1
+        return value + 1
+
+register_slider_advance_callback("camera-frame-id-slider")
+register_slider_advance_callback("imu-frame-id-slider")
