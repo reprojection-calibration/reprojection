@@ -1,7 +1,6 @@
 import os
 
 from dash import Input, Output
-from database.types import SensorType
 
 from dashboard.server import app
 from database.load_camera_calibration_data import (
@@ -9,10 +8,11 @@ from database.load_camera_calibration_data import (
     get_indexable_timestamp_record,
     load_camera_calibration_data,
 )
-
-from database.load_imu_calibration_data import load_imu_calibration_data, get_imu_calibration_data_statistics
-
-from database.types import PoseType
+from database.load_imu_calibration_data import (
+    get_imu_calibration_data_statistics,
+    load_imu_calibration_data,
+)
+from database.types import PoseType, SensorType
 
 
 @app.callback(
@@ -64,15 +64,19 @@ def load_database_to_store(db_file):
 
     statistics = {
         SensorType.Camera: get_camera_calibration_data_statistics(raw_camera_data),
-        SensorType.Imu: get_imu_calibration_data_statistics(raw_imu_data)
+        SensorType.Imu: get_imu_calibration_data_statistics(raw_imu_data),
     }
 
     indexable_timestamps = {
         SensorType.Camera: get_indexable_timestamp_record(raw_camera_data),
-        SensorType.Imu: get_indexable_timestamp_record(raw_imu_data)
+        SensorType.Imu: get_indexable_timestamp_record(raw_imu_data),
     }
 
-    return raw_camera_data, raw_imu_data, [statistics, indexable_timestamps],
+    return (
+        raw_camera_data,
+        raw_imu_data,
+        [statistics, indexable_timestamps],
+    )
 
 
 def register_sensor_dropdown_callback(dropdown_id, sensor_type):

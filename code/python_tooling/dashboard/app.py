@@ -78,9 +78,7 @@ app.layout = html.Div(
                 "margin": "10px",
                 "flex": "1",
             },
-
         ),
-
         dcc.Tabs(
             [
                 dcc.Tab(
@@ -108,13 +106,14 @@ app.layout = html.Div(
                                                 "margin": "10px",
                                                 "flex": "1",
                                             },
-
                                         ),
                                         html.Div(
                                             children=[
                                                 html.Div(
                                                     [
-                                                        html.Div(id="camera-statistics-display"),
+                                                        html.Div(
+                                                            id="camera-statistics-display"
+                                                        ),
                                                     ]
                                                 ),
                                             ],
@@ -135,8 +134,14 @@ app.layout = html.Div(
                                                 dcc.RadioItems(
                                                     id="pose-type-selector",
                                                     options=[
-                                                        {"label": "Initial", "value": PoseType.Initial},
-                                                        {"label": "Optimized", "value": PoseType.Optimized},
+                                                        {
+                                                            "label": "Initial",
+                                                            "value": PoseType.Initial,
+                                                        },
+                                                        {
+                                                            "label": "Optimized",
+                                                            "value": PoseType.Optimized,
+                                                        },
                                                     ],
                                                     value=PoseType.Initial,
                                                 ),
@@ -159,7 +164,6 @@ app.layout = html.Div(
                                         "margin": "10px",
                                     },
                                 ),
-
                                 html.Div(
                                     children=[
                                         # The animation plays by default therefore the button is initialized with the pause graphic
@@ -180,7 +184,10 @@ app.layout = html.Div(
                                                     max=0,
                                                     step=1,
                                                     value=0,
-                                                    tooltip={"placement": "top", "always_visible": True},
+                                                    tooltip={
+                                                        "placement": "top",
+                                                        "always_visible": True,
+                                                    },
                                                     updatemode="drag",
                                                 ),
                                             ],
@@ -307,13 +314,14 @@ app.layout = html.Div(
                                                 "margin": "10px",
                                                 "flex": "1",
                                             },
-
                                         ),
                                         html.Div(
                                             children=[
                                                 html.Div(
                                                     [
-                                                        html.Div(id="imu-statistics-display"),
+                                                        html.Div(
+                                                            id="imu-statistics-display"
+                                                        ),
                                                     ]
                                                 ),
                                             ],
@@ -334,8 +342,14 @@ app.layout = html.Div(
                                                 dcc.RadioItems(
                                                     id="pose-type-selector",
                                                     options=[
-                                                        {"label": "Initial", "value": PoseType.Initial},
-                                                        {"label": "Optimized", "value": PoseType.Optimized},
+                                                        {
+                                                            "label": "Initial",
+                                                            "value": PoseType.Initial,
+                                                        },
+                                                        {
+                                                            "label": "Optimized",
+                                                            "value": PoseType.Optimized,
+                                                        },
                                                     ],
                                                     value=PoseType.Initial,
                                                 ),
@@ -358,7 +372,6 @@ app.layout = html.Div(
                                         "margin": "10px",
                                     },
                                 ),
-
                                 html.Div(
                                     children=[
                                         # The animation plays by default therefore the button is initialized with the pause graphic
@@ -379,7 +392,10 @@ app.layout = html.Div(
                                                     max=0,
                                                     step=1,
                                                     value=0,
-                                                    tooltip={"placement": "top", "always_visible": True},
+                                                    tooltip={
+                                                        "placement": "top",
+                                                        "always_visible": True,
+                                                    },
                                                     updatemode="drag",
                                                 ),
                                             ],

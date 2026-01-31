@@ -28,8 +28,8 @@ def init_extracted_target_figures(sensor):
             mode="markers",
             marker=dict(size=12),
             hovertemplate="x: %{x}<br>"
-                          + "y: %{y}<br>"
-                          + "error: %{marker.color:.3f}<extra></extra>",
+            + "y: %{y}<br>"
+            + "error: %{marker.color:.3f}<extra></extra>",
         )
     )
     xy_fig.update_layout(
@@ -54,8 +54,8 @@ def init_extracted_target_figures(sensor):
             mode="markers",
             marker=dict(size=6),
             hovertemplate="x: %{x}<br>"
-                          + "y: %{y}<br>"
-                          + "error: %{marker.color:.3f}<extra></extra>",
+            + "y: %{y}<br>"
+            + "error: %{marker.color:.3f}<extra></extra>",
         )
     )
     pixel_fig.update_layout(

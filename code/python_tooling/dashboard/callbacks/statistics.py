@@ -2,10 +2,7 @@ from dash import Input, Output, State, html
 from dash.exceptions import PreventUpdate
 
 from dashboard.server import app
-from database.types import PoseType
-
-from database.types import SensorType
-
+from database.types import PoseType, SensorType
 
 # TODO(Jack): Is there any way to avoid copying this completely for the IMU case?
 
@@ -45,5 +42,9 @@ def register_statistics_display_callback(display_id, sensor_dropdown_id, sensor_
         ]
 
 
-register_statistics_display_callback("camera-statistics-display", "camera-sensor-dropdown", SensorType.Camera)
-register_statistics_display_callback("imu-statistics-display", "imu-sensor-dropdown", SensorType.Imu)
+register_statistics_display_callback(
+    "camera-statistics-display", "camera-sensor-dropdown", SensorType.Camera
+)
+register_statistics_display_callback(
+    "imu-statistics-display", "imu-sensor-dropdown", SensorType.Imu
+)

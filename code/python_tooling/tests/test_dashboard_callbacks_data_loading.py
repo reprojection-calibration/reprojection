@@ -54,7 +54,9 @@ class TestDashboardCallbacksDataLoading(unittest.TestCase):
         self.assertIsNone(raw_data)
         self.assertIsNone(processed_data)
 
-        raw_camera_data, raw_imu_data, processed_data = load_database_to_store(self.db_path)
+        raw_camera_data, raw_imu_data, processed_data = load_database_to_store(
+            self.db_path
+        )
         self.assertIn("/cam0/image_raw", raw_camera_data)
         self.assertIn("/imu0", raw_imu_data)
 

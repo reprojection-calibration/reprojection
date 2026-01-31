@@ -4,7 +4,6 @@ from dash import Input, Output, State
 from dashboard.server import app
 from dashboard.tools.plot_pose_figure import plot_pose_figure, timeseries_plot
 from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
-
 from database.types import SensorType
 
 
@@ -19,10 +18,10 @@ from database.types import SensorType
 )
 def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     if (
-            sensor is None
-            or pose_type is None
-            or raw_data is None
-            or processed_data is None
+        sensor is None
+        or pose_type is None
+        or raw_data is None
+        or processed_data is None
     ):
         return {}, {}
 
