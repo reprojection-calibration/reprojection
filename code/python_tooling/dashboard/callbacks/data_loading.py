@@ -1,6 +1,7 @@
 import os
 
 from dash import Input, Output
+from database.types import SensorType
 
 from dashboard.server import app
 from database.load_camera_calibration_data import (
@@ -9,8 +10,7 @@ from database.load_camera_calibration_data import (
     load_camera_calibration_data,
 )
 
-# TODO HACK AT INITIAL STAGE OF IMU DATA INTEGRATION!
-from database.load_imu_data import imu_data_df_to_imu_calibration_data, load_imu_data_df
+from database.load_imu_calibration_data import load_imu_calibration_data, get_imu_calibration_data_statistics
 
 
 @app.callback(
@@ -58,13 +58,17 @@ def load_database_to_store(db_file):
         return None, None
 
     raw_camera_data = load_camera_calibration_data(db_file)
-    # TODO ADD THE IMU STATISTICS AND TIMESTAMPS HERE TOO!
-    statistics = get_camera_calibration_data_statistics(raw_camera_data)
-    indexable_timestamps = get_indexable_timestamp_record(raw_camera_data)
+    raw_imu_data = load_imu_calibration_data(db_file)
 
-    # TODO HACK AT INITIAL STAGE OF IMU DATA INTEGRATION!
-    imu_df = load_imu_data_df(db_file)
-    raw_imu_data = imu_data_df_to_imu_calibration_data(imu_df)
+    statistics = {
+        SensorType.Camera: get_camera_calibration_data_statistics(raw_camera_data),
+        SensorType.Imu: get_imu_calibration_data_statistics(raw_imu_data)
+    }
+
+    indexable_timestamps = {
+        SensorType.Camera: get_indexable_timestamp_record(raw_camera_data),
+        SensorType.Imu: get_indexable_timestamp_record(raw_imu_data)
+    }
 
     return raw_camera_data, raw_imu_data, [statistics, indexable_timestamps],
 
