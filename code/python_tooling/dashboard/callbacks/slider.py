@@ -8,7 +8,7 @@ from dashboard.tools.time_handling import calculate_ticks_from_timestamps
 @app.callback(
     Output("frame-id-slider", "marks"),
     Output("frame-id-slider", "max"),
-    Input("sensor-dropdown", "value"),
+    Input("camera-sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
 def update_slider_properties(sensor, processed_data):
@@ -49,7 +49,7 @@ app.clientside_callback(
     Output("slider-timestamp", "children"),
     Input("frame-id-slider", "value"),
     State("processed-data-store", "data"),
-    State("sensor-dropdown", "value"),
+    State("camera-sensor-dropdown", "value"),
 )
 
 

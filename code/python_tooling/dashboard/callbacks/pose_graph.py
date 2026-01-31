@@ -9,7 +9,7 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 @app.callback(
     Output("rotation-graph", "figure", allow_duplicate=True),
     Output("translation-graph", "figure", allow_duplicate=True),
-    Input("sensor-dropdown", "value"),
+    Input("camera-sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
     State("raw-camera-data-store", "data"),
     State("processed-data-store", "data"),
@@ -75,7 +75,7 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
 @app.callback(
     Output("imu-angular-velocity-graph", "figure"),
     Output("imu-linear-acceleration-graph", "figure"),
-    Input("sensor-dropdown", "value"),  # DOES NOT ACTUALLY DO ANYTHING!
+    Input("camera-sensor-dropdown", "value"),  # DOES NOT ACTUALLY DO ANYTHING!
     State("raw-imu-data-store", "data"),
 )
 def init_imu_data_graph_figures(_, imu_raw_data):
@@ -179,7 +179,7 @@ app.clientside_callback(
     Output("rotation-graph", "figure"),
     Output("translation-graph", "figure"),
     Input("frame-id-slider", "value"),
-    Input("sensor-dropdown", "value"),
+    Input("camera-sensor-dropdown", "value"),
     State("processed-data-store", "data"),
     State("rotation-graph", "figure"),
     State("translation-graph", "figure"),

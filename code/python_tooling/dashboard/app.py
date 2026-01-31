@@ -95,7 +95,7 @@ app.layout = html.Div(
                                                     children="Select",
                                                 ),
                                                 dcc.Dropdown(
-                                                    id="sensor-dropdown",
+                                                    id="camera-sensor-dropdown",
                                                     placeholder="Select a camera sensor",
                                                     style={"width": "300px"},
                                                 ),
@@ -114,7 +114,7 @@ app.layout = html.Div(
                                             children=[
                                                 html.Div(
                                                     [
-                                                        html.Div(id="statistics-display"),
+                                                        html.Div(id="camera-statistics-display"),
                                                     ]
                                                 ),
                                             ],

@@ -7,7 +7,7 @@ from dashboard.server import IMAGE_DIMENSIONS, app
 @app.callback(
     Output("targets-xy-graph", "figure", allow_duplicate=True),
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
-    Input("sensor-dropdown", "value"),
+    Input("camera-sensor-dropdown", "value"),
     prevent_initial_call=True,
 )
 def init_extracted_target_figures(sensor):
@@ -162,7 +162,7 @@ app.clientside_callback(
     Output("targets-xy-graph", "figure"),
     Output("targets-pixels-graph", "figure"),
     Input("frame-id-slider", "value"),
-    Input("sensor-dropdown", "value"),
+    Input("camera-sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
     Input("max-reprojection-error-input", "value"),
     State("raw-camera-data-store", "data"),

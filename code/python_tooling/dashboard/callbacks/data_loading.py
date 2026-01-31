@@ -12,6 +12,8 @@ from database.load_camera_calibration_data import (
 
 from database.load_imu_calibration_data import load_imu_calibration_data, get_imu_calibration_data_statistics
 
+from database.types import PoseType
+
 
 @app.callback(
     Output("database-dropdown", "options"),
@@ -73,19 +75,21 @@ def load_database_to_store(db_file):
     return raw_camera_data, raw_imu_data, [statistics, indexable_timestamps],
 
 
+# TODO(Jack): Is there any way to avoid copying this completely for the IMU case?
 @app.callback(
-    Output("sensor-dropdown", "options"),
-    Output("sensor-dropdown", "value"),
+    Output("camera-sensor-dropdown", "options"),
+    Output("camera-sensor-dropdown", "value"),
     Input("processed-data-store", "data"),
 )
-def refresh_sensor_list(processed_data):
+def refresh_camera_sensor_list(processed_data):
     if processed_data is None:
         return [], ""
 
     statistics, _ = processed_data
-    sensor_names = sorted(statistics.keys())
+    camera_statistics = statistics[SensorType.Camera]
+    camera_sensor_names = sorted(camera_statistics.keys())
 
-    if len(sensor_names) == 0:
+    if len(camera_sensor_names) == 0:
         return [], ""
 
-    return sensor_names, sensor_names[0]
+    return camera_sensor_names, camera_sensor_names[0]

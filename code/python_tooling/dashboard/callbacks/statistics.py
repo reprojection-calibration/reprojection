@@ -2,18 +2,24 @@ from dash import Input, Output, State, html
 from dash.exceptions import PreventUpdate
 
 from dashboard.server import app
+from database.types import PoseType
+
+from database.types import SensorType
 
 
+# TODO(Jack): Is there any way to avoid copying this completely for the IMU case?
 @app.callback(
-    Output("statistics-display", "children"),
-    Input("sensor-dropdown", "value"),
+    Output("camera-statistics-display", "children"),
+    Input("camera-sensor-dropdown", "value"),
     State("processed-data-store", "data"),
 )
-def update_statistics(selected_sensor, processed_data):
-    if selected_sensor is None or processed_data is None:
+def update_statistics(selected_camera_sensor, processed_data):
+    # TODO(Jack): Do not raise PreventUpdate! That is too extreme of an error handling strategy, just do a no update.
+    if selected_camera_sensor is None or processed_data is None:
         raise PreventUpdate
 
     statistics, _ = processed_data
+    camera_statistics = statistics[SensorType.Camera]
 
     return [
         html.Div(
@@ -32,5 +38,5 @@ def update_statistics(selected_sensor, processed_data):
                 html.Div(key, style={"width": "200px", "display": "inline-block"}),
             ],
         )
-        for key, value in statistics[selected_sensor].items()
+        for key, value in camera_statistics[selected_camera_sensor].items()
     ]
