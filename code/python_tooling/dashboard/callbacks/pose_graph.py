@@ -106,8 +106,8 @@ def register_r3_timeseries_plot_callback(
 
 
 register_r3_timeseries_plot_callback(
-    "rotation-graph",
-    "translation-graph",
+    "camera-orientation-graph",
+    "camera-translation-graph",
     "camera-sensor-dropdown",
     "raw-camera-data-store",
     SensorType.Camera,
@@ -175,11 +175,11 @@ app.clientside_callback(
         return [patch.build(), patch.build()];
     }
     """,
-    Output("rotation-graph", "figure"),
-    Output("translation-graph", "figure"),
+    Output("camera-orientation-graph", "figure"),
+    Output("camera-translation-graph", "figure"),
     Input("camera-frame-id-slider", "value"),
     Input("camera-sensor-dropdown", "value"),
     State("processed-data-store", "data"),
-    State("rotation-graph", "figure"),
-    State("translation-graph", "figure"),
+    State("camera-orientation-graph", "figure"),
+    State("camera-translation-graph", "figure"),
 )

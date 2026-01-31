@@ -262,10 +262,10 @@ app.layout = html.Div(
                                 html.Div(
                                     children=[
                                         dcc.Graph(
-                                            id="rotation-graph",
+                                            id="camera-orientation-graph",
                                         ),
                                         dcc.Graph(
-                                            id="translation-graph",
+                                            id="camera-translation-graph",
                                         ),
                                     ],
                                     style={
