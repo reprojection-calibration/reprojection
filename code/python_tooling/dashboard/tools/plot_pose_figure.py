@@ -11,16 +11,16 @@ from dashboard.tools.time_handling import (
 # sorting after they have been separated from each other would be crazy. That means this function requires the input
 # timestamps and data to already be sorted!
 def plot_pose_figure(
-    timestamps_ns,
-    data,
-    title,
-    yaxis_title,
-    fig=None,
-    x_name="x",
-    y_name="y",
-    z_name="z",
-    ymin=-3.15,
-    ymax=3.15,
+        timestamps_ns,
+        data,
+        title,
+        yaxis_title,
+        fig=None,
+        x_name="x",
+        y_name="y",
+        z_name="z",
+        ymin=-3.15,
+        ymax=3.15,
 ):
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
         return {}
@@ -42,26 +42,33 @@ def plot_pose_figure(
     timestamps_ns = [int(t) for t in timestamps_ns]
     timestamps_s = timestamps_to_elapsed_seconds(timestamps_ns)
 
-    fig.add_scatter(
-        x=timestamps_s,
-        y=x,
-        marker=dict(color="rgb(255, 0, 0)"),
-        mode="markers",
-        name=x_name,
+    # NOTE(Jack): We use go.Scattergl() because it is way way faster than a regular scatter plot with lots of points.
+    fig.add_trace(
+        go.Scattergl(
+            x=timestamps_s,
+            y=x,
+            marker=dict(color="rgb(255, 0, 0)"),
+            mode="markers",
+            name=x_name,
+        )
     )
-    fig.add_scatter(
-        x=timestamps_s,
-        y=y,
-        marker=dict(color="rgb(18, 174, 0)"),
-        mode="markers",
-        name=y_name,
+    fig.add_trace(
+        go.Scattergl(
+            x=timestamps_s,
+            y=y,
+            marker=dict(color="rgb(18, 174, 0)"),
+            mode="markers",
+            name=y_name,
+        )
     )
-    fig.add_scatter(
-        x=timestamps_s,
-        y=z,
-        marker=dict(color="rgb(0, 0, 255)"),
-        mode="markers",
-        name=z_name,
+    fig.add_trace(
+        go.Scattergl(
+            x=timestamps_s,
+            y=z,
+            marker=dict(color="rgb(0, 0, 255)"),
+            mode="markers",
+            name=z_name,
+        )
     )
 
     fig.update_layout(

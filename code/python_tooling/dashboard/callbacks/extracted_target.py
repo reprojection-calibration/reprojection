@@ -22,7 +22,7 @@ def init_extracted_target_figures(sensor):
     #  generic.
     xy_fig = go.Figure()
     xy_fig.add_trace(
-        go.Scatter(
+        go.Scattergl(
             x=[],
             y=[],
             mode="markers",
@@ -48,7 +48,7 @@ def init_extracted_target_figures(sensor):
 
     pixel_fig = go.Figure()
     pixel_fig.add_trace(
-        go.Scatter(
+        go.Scattergl(
             x=[],
             y=[],
             mode="markers",
