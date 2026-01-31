@@ -1,19 +1,21 @@
-def extract_timestamps_and_poses_sorted(frames, pose_type):
+def extract_timestamps_and_poses_sorted(frames, extract_fn):
     timestamps = []
-    poses = []
+    values = []
     for timestamp in sorted(frames):
         frame_i = frames[timestamp]
 
-        if "poses" not in frame_i:
+        try:
+            value_i = extract_fn(frame_i)
+        except KeyError:
             continue
 
-        if pose_type not in frame_i["poses"]:
+        if value_i is None:
             continue
 
         timestamps.append(timestamp)
-        poses.append(frame_i["poses"][pose_type])
+        values.append(value_i)
 
-    return timestamps, poses
+    return timestamps, values
 
 
 def timestamps_to_elapsed_seconds(timestamps_ns):
