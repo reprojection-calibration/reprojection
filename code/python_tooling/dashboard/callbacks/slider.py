@@ -40,7 +40,7 @@ app.clientside_callback(
             return "";
         }
     
-        const timestamps = data[1][sensor]
+        const timestamps = data[1]["camera"][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
             return "";
         }
@@ -50,13 +50,14 @@ app.clientside_callback(
         return timestamp_i.toString();
     }
     """,
-    Output("slider-timestamp", "children"),
+    Output("camera-slider-timestamp", "children"),
     Input("camera-frame-id-slider", "value"),
     State("processed-data-store", "data"),
     State("camera-sensor-dropdown", "value"),
 )
 
 
+# TODO(Jack): Make camera specific?
 @app.callback(
     Output("play-interval", "disabled"),
     Output("play-button", "children"),

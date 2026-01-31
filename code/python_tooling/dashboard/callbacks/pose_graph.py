@@ -5,6 +5,7 @@ from dashboard.server import app
 from dashboard.tools.plot_pose_figure import plot_pose_figure, timeseries_plot
 from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 
+from database.types import SensorType
 
 @app.callback(
     Output("rotation-graph", "figure", allow_duplicate=True),
@@ -30,13 +31,14 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
     # first half, it will be obvious to the user because the axis has not autofitted to the shorter timespan.
     _, indexable_timestamps = processed_data
-    if sensor not in indexable_timestamps:
+    camera_indexable_timestamps = indexable_timestamps[SensorType.Camera]
+    if sensor not in camera_indexable_timestamps:
         return {}, {}
-    fig = timeseries_plot(indexable_timestamps[sensor])
+    fig = timeseries_plot(camera_indexable_timestamps[sensor])
 
     if sensor not in raw_data:
         raise RuntimeError(
-            f"The sensor {sensor} was present in processed_data.indexable_timestamps but not in raw_data. That should never happen.",
+            f"The sensor {sensor} was present in processed_data.camera_indexable_timestamps but not in raw_data. That should never happen.",
         )
 
     if "frames" not in raw_data[sensor]:
@@ -123,11 +125,13 @@ app.clientside_callback(
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        if (!processed_data[1] || !processed_data[1][sensor]) {
+        // TODO(Jack): Do we need to protect against "camera" being available here, or can we take that for granted?
+        const camera_processed_data = processed_data[1]["camera"]
+        if (!camera_processed_data || !camera_processed_data[sensor]) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        const timestamps = processed_data[1][sensor];
+        const timestamps = camera_processed_data[sensor];
         if (!timestamps || timestamps.length <= frame_idx) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }

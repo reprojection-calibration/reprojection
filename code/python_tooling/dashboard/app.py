@@ -192,7 +192,7 @@ app.layout = html.Div(
                                             children=[
                                                 html.P("Current timestamp (ns)"),
                                                 html.Div(
-                                                    id="slider-timestamp",
+                                                    id="camera-slider-timestamp",
                                                 ),
                                             ],
                                         ),
