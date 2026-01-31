@@ -40,27 +40,50 @@ register_slider_properties_update_callback(
     "imu-frame-id-slider", "imu-sensor-dropdown", SensorType.Imu
 )
 
-app.clientside_callback(
-    """
-    function(frame_idx, data, sensor) {
-        if (!data || !sensor) {
+
+def make_slider_timestamps_clientside_callback(sensor_type):
+    return f"""
+    function(frame_idx, data, sensor) {{
+        if (!data || !sensor) {{
             return "";
-        }
-    
-        const timestamps = data[1]["camera"][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
+        }}
+
+        const timestamps = data[1]["{sensor_type.value}"][sensor];
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {{
             return "";
-        }
-    
-        const timestamp_i = BigInt(timestamps[frame_idx])
-    
+        }}
+
+        const timestamp_i = BigInt(timestamps[frame_idx]);
+        
         return timestamp_i.toString();
-    }
-    """,
-    Output("camera-slider-timestamp", "children"),
-    Input("camera-frame-id-slider", "value"),
-    State("processed-data-store", "data"),
-    State("camera-sensor-dropdown", "value"),
+    }}
+    """
+
+
+def register_slider_timestamps_clientside_callback(
+    timestamp_display_id, slider_id, sensor_dropdown_id, sensor_type
+):
+    app.clientside_callback(
+        make_slider_timestamps_clientside_callback(sensor_type),
+        Output(timestamp_display_id, "children"),
+        Input(slider_id, "value"),
+        State("processed-data-store", "data"),
+        State(sensor_dropdown_id, "value"),
+    )
+
+
+register_slider_timestamps_clientside_callback(
+    "camera-timestamp-display",
+    "camera-frame-id-slider",
+    "camera-sensor-dropdown",
+    SensorType.Camera,
+)
+
+register_slider_timestamps_clientside_callback(
+    "imu-timestamp-display",
+    "imu-frame-id-slider",
+    "imu-sensor-dropdown",
+    SensorType.Imu,
 )
 
 

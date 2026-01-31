@@ -199,7 +199,7 @@ app.layout = html.Div(
                                             children=[
                                                 html.P("Current timestamp (ns)"),
                                                 html.Div(
-                                                    id="camera-slider-timestamp",
+                                                    id="camera-timestamp-display",
                                                 ),
                                             ],
                                         ),
@@ -367,11 +367,9 @@ app.layout = html.Div(
                                         ),
                                         html.Div(
                                             children=[
-                                                html.P(
-                                                    "Current timestamp (ns) TODO XXXX"
-                                                ),
+                                                html.P("Current timestamp (ns)"),
                                                 html.Div(
-                                                    id="imu-slider-timestamp",
+                                                    id="imu-timestamp-display",
                                                 ),
                                             ],
                                         ),
