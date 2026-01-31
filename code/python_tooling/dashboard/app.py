@@ -69,6 +69,15 @@ app.layout = html.Div(
                         "flex": "1",
                     },
                 ),
+                # The animation plays by default therefore the button is initialized with the pause graphic
+                html.Button(
+                    children="⏸ Pause",
+                    id="play-button",
+                    n_clicks=0,
+                    style={
+                        "width": "50px",
+                    },
+                ),
             ],
             style={
                 "alignItems": "flex-start",
@@ -166,15 +175,6 @@ app.layout = html.Div(
                                 ),
                                 html.Div(
                                     children=[
-                                        # The animation plays by default therefore the button is initialized with the pause graphic
-                                        html.Button(
-                                            children="⏸ Pause",
-                                            id="play-button",
-                                            n_clicks=0,
-                                            style={
-                                                "width": "50px",
-                                            },
-                                        ),
                                         html.Div(
                                             children=[
                                                 dcc.Slider(
@@ -192,7 +192,7 @@ app.layout = html.Div(
                                                 ),
                                             ],
                                             style={
-                                                "width": "70%",
+                                                "width": "80%",
                                             },
                                         ),
                                         html.Div(
@@ -345,19 +345,10 @@ app.layout = html.Div(
                                 ),
                                 html.Div(
                                     children=[
-                                        # The animation plays by default therefore the button is initialized with the pause graphic
-                                        html.Button(
-                                            children="⏸ Pause",
-                                            id="play-button",
-                                            n_clicks=0,
-                                            style={
-                                                "width": "50px",
-                                            },
-                                        ),
                                         html.Div(
                                             children=[
                                                 dcc.Slider(
-                                                    id="camera-frame-id-slider",
+                                                    id="imu-frame-id-slider",
                                                     marks=None,
                                                     min=0,
                                                     max=0,
@@ -371,14 +362,14 @@ app.layout = html.Div(
                                                 ),
                                             ],
                                             style={
-                                                "width": "70%",
+                                                "width": "80%",
                                             },
                                         ),
                                         html.Div(
                                             children=[
                                                 html.P("Current timestamp (ns)"),
                                                 html.Div(
-                                                    id="camera-slider-timestamp",
+                                                    id="imu-slider-timestamp",
                                                 ),
                                             ],
                                         ),
