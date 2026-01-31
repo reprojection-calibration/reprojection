@@ -367,7 +367,9 @@ app.layout = html.Div(
                                         ),
                                         html.Div(
                                             children=[
-                                                html.P("Current timestamp (ns)"),
+                                                html.P(
+                                                    "Current timestamp (ns) TODO XXXX"
+                                                ),
                                                 html.Div(
                                                     id="imu-slider-timestamp",
                                                 ),
@@ -381,6 +383,23 @@ app.layout = html.Div(
                                         "gap": "10px",
                                         "margin": "10px",
                                         "flex": "1",
+                                    },
+                                ),
+                                html.Div(
+                                    children=[
+                                        dcc.Graph(
+                                            id="imu-angular-velocity-graph",
+                                        ),
+                                        dcc.Graph(
+                                            id="imu-linear-acceleration-graph",
+                                        ),
+                                    ],
+                                    style={
+                                        "display": "flex",
+                                        "flexDirection": "column",
+                                        "gap": "20px",
+                                        "flex": "1",
+                                        "width": "100%",
                                     },
                                 ),
                             ],

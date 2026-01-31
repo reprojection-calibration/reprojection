@@ -50,7 +50,7 @@ def register_r3_timeseries_plot_callback(
         # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
         # first half, it will be obvious to the user because the axis has not autofitted to the shorter timespan.
         _, indexable_timestamps = processed_data
-        indexable_timestamps = indexable_timestamps[SensorType.Camera]
+        indexable_timestamps = indexable_timestamps[sensor_type]
         if sensor not in indexable_timestamps:
             return {}, {}
         fig = timeseries_plot(indexable_timestamps[sensor])
@@ -121,6 +121,23 @@ register_r3_timeseries_plot_callback(
     camera_translation_config,
 )
 
+imu_angular_velocity_config = R3TimeseriesFigureConfig(
+    "Angular Velocty", "(rad/s)", "omega_x", "omega_y", "omega_z", -3.14, 3.14
+)
+imu_linear_acceleration_config = R3TimeseriesFigureConfig(
+    "Linear Acceleration", "(m/s2)", "ax", "ay", "az", -10, 10
+)
+
+register_r3_timeseries_plot_callback(
+    "imu-angular-velocity-graph",
+    "imu-linear-acceleration-graph",
+    "imu-sensor-dropdown",
+    "raw-imu-data-store",
+    SensorType.Imu,
+    imu_angular_velocity_config,
+    imu_linear_acceleration_config,
+)
+
 app.clientside_callback(
     """
     function(frame_idx, sensor, processed_data, rot_fig, trans_fig) {
@@ -128,7 +145,6 @@ app.clientside_callback(
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        // TODO(Jack): Do we need to protect against "camera" being available here, or can we take that for granted?
         const camera_processed_data = processed_data[1]["camera"]
         if (!camera_processed_data || !camera_processed_data[sensor]) {
             return [dash_clientside.no_update, dash_clientside.no_update];
