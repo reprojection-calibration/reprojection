@@ -96,3 +96,4 @@ def register_sensor_dropdown_callback(dropdown_id, sensor_type):
 
 
 register_sensor_dropdown_callback("camera-sensor-dropdown", SensorType.Camera)
+register_sensor_dropdown_callback("imu-sensor-dropdown", SensorType.Imu)

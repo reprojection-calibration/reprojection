@@ -415,7 +415,7 @@ app.layout = html.Div(
                             },
                         ),
                     ],
-                    label="Imu Data",
+                    label="Imu Calibration",
                 ),
             ]
         ),
