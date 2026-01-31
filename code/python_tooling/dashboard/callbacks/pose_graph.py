@@ -13,13 +13,13 @@ from database.types import SensorType
 
 # TODO IMU DATA DOES NOT HAVE POSE SELECTOR! Yet....
 def register_r3_timeseries_plot_callback(
-        fig1_id,
-        fig2_id,
-        sensor_dropdown_id,
-        raw_data_store_id,
-        sensor_type,
-        fig1_config,
-        fig2_config,
+    fig1_id,
+    fig2_id,
+    sensor_dropdown_id,
+    raw_data_store_id,
+    sensor_type,
+    fig1_config,
+    fig2_config,
 ):
     # NOTE(Jack): This is a function of pure convenience. It just so happens that we need to plot two sets of three values,
     # both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
@@ -37,10 +37,10 @@ def register_r3_timeseries_plot_callback(
     )
     def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
         if (
-                sensor is None
-                or (pose_type is None and sensor_type == SensorType.Camera)
-                or raw_data is None
-                or processed_data is None
+            sensor is None
+            or (pose_type is None and sensor_type == SensorType.Camera)
+            or raw_data is None
+            or processed_data is None
         ):
             return {}, {}
 
@@ -205,11 +205,11 @@ def make_r3_timeseries_annotation_clientside_callback(sensor_type):
 
 
 def register_r3_timeseries_annotation_clientside_callback(
-        fig1_id,
-        fig2_id,
-        slider_id,
-        sensor_dropdown_id,
-        sensor_type,
+    fig1_id,
+    fig2_id,
+    slider_id,
+    sensor_dropdown_id,
+    sensor_type,
 ):
     app.clientside_callback(
         make_r3_timeseries_annotation_clientside_callback(sensor_type),
