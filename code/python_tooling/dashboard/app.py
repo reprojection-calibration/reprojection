@@ -248,6 +248,23 @@ app.layout = html.Div(
                                         "width": "100%",
                                     },
                                 ),
+                                html.Div(
+                                    children=[
+                                        dcc.Graph(
+                                            id="rotation-graph",
+                                        ),
+                                        dcc.Graph(
+                                            id="translation-graph",
+                                        ),
+                                    ],
+                                    style={
+                                        "display": "flex",
+                                        "flexDirection": "column",
+                                        "gap": "20px",
+                                        "flex": "1",
+                                        "width": "100%",
+                                    },
+                                ),
                             ],
                             style={
                                 "display": "flex",
@@ -258,18 +275,7 @@ app.layout = html.Div(
                             },
                         ),
                     ],
-                    label="Feature Extraction",
-                ),
-                dcc.Tab(
-                    children=[
-                        dcc.Graph(
-                            id="rotation-graph",
-                        ),
-                        dcc.Graph(
-                            id="translation-graph",
-                        ),
-                    ],
-                    label="Camera Poses",
+                    label="Camera Calibration",
                 ),
                 dcc.Tab(
                     children=[
