@@ -13,7 +13,13 @@ from database.types import SensorType
 
 # TODO IMU DATA DOES NOT HAVE POSE SELECTOR! Yet....
 def register_r3_timeseries_plot_callback(
-    fig1_id, fig2_id, sensor_dropdown_id, raw_data_store_id, sensor_type
+    fig1_id,
+    fig2_id,
+    sensor_dropdown_id,
+    raw_data_store_id,
+    sensor_type,
+    fig1_config,
+    fig2_config,
 ):
     # NOTE(Jack): This is a function of pure convenience. It just so happens that we need to plot two sets of three values,
     # both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
@@ -73,37 +79,37 @@ def register_r3_timeseries_plot_callback(
             )
 
         frames = raw_data[sensor]["frames"]
-        timestamps_ns, poses = extract_timestamps_and_poses_sorted(
+        timestamps_ns, data = extract_timestamps_and_poses_sorted(
             frames, data_extractor
         )
 
-        if len(poses) == 0:
+        if len(data) == 0:
             # Returns empty plots with properly labeled and ranged x-axis
             return fig, fig
 
-        rotations = [d[:3] for d in poses]
-
-        rot_config = R3TimeseriesFigureConfig(
-            "Orientation", "Axis Angle (rad)", "rx", "ry", "rz", -3.14, 3.14
-        )
-        rot_fig = build_r3_timeseries_figure(
+        # TODO(Jack): We are hardcoding in the fact here that the underlying data is a nx6 list of lists
+        fig1_data = [d[:3] for d in data]
+        fig1 = build_r3_timeseries_figure(
             timestamps_ns,
-            rotations,
-            rot_config,
+            fig1_data,
+            fig1_config,
             fig=go.Figure(fig),  # Deep copy to prevent edit in place
         )
 
-        translations = [d[3:] for d in poses]
-
-        trans_config = R3TimeseriesFigureConfig(
-            "Translation", "Meter (m)", "x", "y", "z", -2, 2
-        )
-        trans_fig = build_r3_timeseries_figure(
-            timestamps_ns, translations, trans_config, fig=go.Figure(fig)
+        fig2_data = [d[3:] for d in data]
+        fig2 = build_r3_timeseries_figure(
+            timestamps_ns, fig2_data, fig2_config, fig=go.Figure(fig)
         )
 
-        return rot_fig, trans_fig
+        return fig1, fig2
 
+
+camera_orientation_config = R3TimeseriesFigureConfig(
+    "Orientation", "Axis Angle (rad)", "rx", "ry", "rz", -3.14, 3.14
+)
+camera_translation_config = R3TimeseriesFigureConfig(
+    "Translation", "Meter (m)", "x", "y", "z", -2, 2
+)
 
 register_r3_timeseries_plot_callback(
     "camera-orientation-graph",
@@ -111,6 +117,8 @@ register_r3_timeseries_plot_callback(
     "camera-sensor-dropdown",
     "raw-camera-data-store",
     SensorType.Camera,
+    camera_orientation_config,
+    camera_translation_config,
 )
 
 app.clientside_callback(
