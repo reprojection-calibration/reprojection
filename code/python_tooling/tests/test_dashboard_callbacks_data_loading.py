@@ -45,28 +45,41 @@ class TestDashboardCallbacksDataLoading(unittest.TestCase):
         self.assertEqual(Path(default_value).name, "dataset-calib-imu4_512_16.db3")
 
     def test_load_database_to_store(self):
-        raw_data, processed_data = load_database_to_store(None)
+        raw_data, processed_data, metadata = load_database_to_store(None)
         self.assertIsNone(raw_data)
         self.assertIsNone(processed_data)
+        self.assertIsNone(metadata)
 
-        raw_data, processed_data = load_database_to_store("/does/not/exist.db3")
-        self.assertIsNone(raw_data)
-        self.assertIsNone(processed_data)
-
-        raw_data, processed_data = load_database_to_store("/not/a/database/file.txt")
-        self.assertIsNone(raw_data)
-        self.assertIsNone(processed_data)
-
-        raw_camera_data, raw_imu_data, processed_data = load_database_to_store(
-            self.db_path
+        raw_data, processed_data, metadata = load_database_to_store(
+            "/does/not/exist.db3"
         )
+        self.assertIsNone(raw_data)
+        self.assertIsNone(processed_data)
+        self.assertIsNone(metadata)
+
+        raw_data, processed_data, metadata = load_database_to_store(
+            "/not/a/database/file.txt"
+        )
+        self.assertIsNone(raw_data)
+        self.assertIsNone(processed_data)
+        self.assertIsNone(metadata)
+
+        raw_camera_data, raw_imu_data, metadata = load_database_to_store(self.db_path)
         self.assertIn("/cam0/image_raw", raw_camera_data)
+        self.assertIn("/cam1/image_raw", raw_camera_data)
         self.assertIn("/imu0", raw_imu_data)
 
-        # TODO(Jack): Better more meaningful name than indexable_timestamps!!!
-        statistics, indexable_timestamps = processed_data
-        self.assertIn("/cam0/image_raw", statistics)
-        self.assertIn("/cam0/image_raw", indexable_timestamps)
+        statistics, timestamps = metadata
+        # Check statistics
+        self.assertIn(SensorType.Camera, statistics)
+        self.assertIn(SensorType.Imu, statistics)
+        self.assertIn("/cam0/image_raw", statistics[SensorType.Camera])
+        self.assertIn("/imu0", statistics[SensorType.Imu])
+        # Check timestamps
+        self.assertIn(SensorType.Camera, timestamps)
+        self.assertIn(SensorType.Imu, timestamps)
+        self.assertIn("/cam0/image_raw", timestamps[SensorType.Camera])
+        self.assertIn("/imu0", timestamps[SensorType.Imu])
 
     def test_get_sensor_names(self):
         sensor_names, default_value = get_sensor_names({}, SensorType.Camera)
