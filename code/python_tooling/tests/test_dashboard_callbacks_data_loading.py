@@ -3,11 +3,10 @@ import unittest
 from pathlib import Path
 
 from dashboard.callbacks.data_loading import (
+    get_sensor_names,
     load_database_to_store,
     refresh_database_list,
-    get_sensor_names,
 )
-
 from database.types import SensorType
 
 
@@ -21,21 +20,23 @@ class TestDashboardCallbacksDataLoading(unittest.TestCase):
 
     def test_refresh_database_list(self):
         # The value of n_clicks (here the second input equal to 0) is not used. It is only used as a callback trigger.
-        list, default_value = refresh_database_list("/does/not/exist", 0)
-        self.assertEqual(list, [])
+        database_files, default_value = refresh_database_list(
+            "/path/that/does/not/exist", None
+        )
+        self.assertEqual(database_files, [])
         self.assertEqual(default_value, "")
 
-        # Assumes that in the current testing directory there are no .db3 files! Pretty safe assumption I hope -_-.
-        list, default_value = refresh_database_list("./", 0)
-        self.assertEqual(list, [])
+        # Assumes that in the current testing directory there are no .db3 files! Pretty safe assumption I hope -_-,
+        database_files, default_value = refresh_database_list("./", None)
+        self.assertEqual(database_files, [])
         self.assertEqual(default_value, "")
 
         db_dir = Path(self.db_path).parent
-        list, default_value = refresh_database_list(db_dir, 0)
-        # We only check the name of the file so we can ignore the absolute paths locally vs. in CI or if people add other
-        # databases locally for debugging.
+        database_files, default_value = refresh_database_list(db_dir, None)
+        # We only check the names of the file so we do not have to deal with different absolute paths here locally and
+        # in CI
         self.assertEqual(
-            list[0]["label"],
+            database_files[0]["label"],
             "dataset-calib-imu4_512_16.db3",
             "Are you sure there is no other database file in {dir} that 'sorts' before the tested one?".format(
                 dir=db_dir
@@ -68,11 +69,11 @@ class TestDashboardCallbacksDataLoading(unittest.TestCase):
         self.assertIn("/cam0/image_raw", indexable_timestamps)
 
     def test_get_sensor_names(self):
-        list, default_value = get_sensor_names({}, SensorType.Camera)
-        self.assertEqual(list, [])
+        sensor_names, default_value = get_sensor_names({}, SensorType.Camera)
+        self.assertEqual(sensor_names, [])
         self.assertEqual(default_value, "")
 
         statistics = {SensorType.Camera: {"/sensor_1": {}, "/sensor_2": {}}}
-        list, default_value = get_sensor_names(statistics, SensorType.Camera)
-        self.assertEqual(list, ["/sensor_1", "/sensor_2"])
+        sensor_names, default_value = get_sensor_names(statistics, SensorType.Camera)
+        self.assertEqual(sensor_names, ["/sensor_1", "/sensor_2"])
         self.assertEqual(default_value, "/sensor_1")

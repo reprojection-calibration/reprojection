@@ -25,23 +25,23 @@ def refresh_database_list(db_dir, _):
     if not os.path.exists(db_dir):
         return [], ""
 
-    options = []
+    database_files = []
     for file_name in sorted(os.listdir(db_dir)):
         if not file_name.endswith(".db3"):
             continue
 
         full_path = os.path.join(db_dir, file_name)
-        options.append(
+        database_files.append(
             {
                 "label": file_name,
                 "value": full_path,
             }
         )
 
-    if len(options) == 0:
+    if len(database_files) == 0:
         return [], ""
 
-    return options, options[0]["value"]
+    return database_files, database_files[0]["value"]
 
 
 # TODO(Jack): When we load a new database we should reset the slider to zero!
@@ -53,11 +53,7 @@ def refresh_database_list(db_dir, _):
 )
 def load_database_to_store(db_file):
     if not db_file or not os.path.isfile(db_file):
-        return None, None
-
-    # We already check this when we load the db list, but it doesn't hurt to double-check :)
-    if not db_file.endswith(".db3"):
-        return None, None
+        return None, None, None
 
     raw_camera_data = load_camera_calibration_data(db_file)
     raw_imu_data = load_imu_calibration_data(db_file)
