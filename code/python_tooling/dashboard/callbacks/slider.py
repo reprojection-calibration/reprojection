@@ -5,7 +5,9 @@ from dashboard.tools.time_handling import calculate_ticks_from_timestamps
 from database.types import SensorType
 
 
-def register_slider_properties_update_callback(slider_id, sensor_dropdown_id, sensor_type):
+def register_slider_properties_update_callback(
+    slider_id, sensor_dropdown_id, sensor_type
+):
     @app.callback(
         Output(slider_id, "marks"),
         Output(slider_id, "max"),
@@ -31,8 +33,12 @@ def register_slider_properties_update_callback(slider_id, sensor_dropdown_id, se
         return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
 
 
-register_slider_properties_update_callback("camera-frame-id-slider", "camera-sensor-dropdown", SensorType.Camera)
-register_slider_properties_update_callback("imu-frame-id-slider", "imu-sensor-dropdown", SensorType.Imu)
+register_slider_properties_update_callback(
+    "camera-frame-id-slider", "camera-sensor-dropdown", SensorType.Camera
+)
+register_slider_properties_update_callback(
+    "imu-frame-id-slider", "imu-sensor-dropdown", SensorType.Imu
+)
 
 # TODO(Jack): We need to display the exact nanosecond timestamp of the current frame somewhere and somehow. If this is
 #  is the best way to do this I am not 100% sure just yet.
@@ -92,6 +98,7 @@ def register_slider_advance_callback(slider_id):
             return 0  # loop playback
 
         return value + 1
+
 
 register_slider_advance_callback("camera-frame-id-slider")
 register_slider_advance_callback("imu-frame-id-slider")

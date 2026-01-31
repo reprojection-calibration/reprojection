@@ -2,11 +2,18 @@ import plotly.graph_objects as go
 from dash import Input, Output, State
 
 from dashboard.server import app
-from dashboard.tools.plot_pose_figure import plot_pose_figure, timeseries_plot
+from dashboard.tools.plot_r3_timeseries import (
+    R3TimeseriesFigureConfig,
+    build_r3_timeseries_figure,
+    timeseries_plot,
+)
 from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 from database.types import SensorType
 
 
+# NOTE(Jack): This is a function of pure convenience. It just so happens that we need to plot two sets of three values,
+# both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
+# exist.
 @app.callback(
     Output("rotation-graph", "figure", allow_duplicate=True),
     Output("translation-graph", "figure", allow_duplicate=True),
@@ -54,20 +61,24 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
         return fig, fig
 
     rotations = [d[:3] for d in poses]
-    rot_fig = plot_pose_figure(
+
+    rot_config = R3TimeseriesFigureConfig(
+        "Orientation", "Axis Angle (rad)", "rx", "ry", "rz", -3.14, 3.14
+    )
+    rot_fig = build_r3_timeseries_figure(
         timestamps_ns,
         rotations,
-        "Orientation",
-        "Axis Angle (rad)",
+        rot_config,
         fig=go.Figure(fig),  # Deep copy to prevent edit in place
-        x_name="rx",
-        y_name="ry",
-        z_name="rz",
     )
 
     translations = [d[3:] for d in poses]
-    trans_fig = plot_pose_figure(
-        timestamps_ns, translations, "Translation", "Meter (m)", fig=go.Figure(fig)
+
+    trans_config = R3TimeseriesFigureConfig(
+        "Translation", "Meter (m)", "x", "y", "z", -2, 2
+    )
+    trans_fig = build_r3_timeseries_figure(
+        timestamps_ns, translations, trans_config, fig=go.Figure(fig)
     )
 
     return rot_fig, trans_fig

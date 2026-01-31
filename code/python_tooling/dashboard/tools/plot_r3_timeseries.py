@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import plotly.graph_objects as go
 
 from dashboard.tools.time_handling import (
@@ -6,21 +8,28 @@ from dashboard.tools.time_handling import (
 )
 
 
+@dataclass
+class R3TimeseriesFigureConfig:
+    """Class for keeping track of an item in inventory."""
+
+    title: str
+    yaxis_title: str
+    x_name: str
+    y_name: str
+    z_name: str
+    ymin: float
+    ymax: float
+
+
 # NOTE(Jack): Think about it this way. The moment that we have two separate arrays we cannot/should not ever sort them.
 # They should already be sorted at the time when their correspondence was still programmatically enforced. To do the
 # sorting after they have been separated from each other would be crazy. That means this function requires the input
 # timestamps and data to already be sorted!
-def plot_pose_figure(
+def build_r3_timeseries_figure(
     timestamps_ns,
     data,
-    title,
-    yaxis_title,
+    config: R3TimeseriesFigureConfig,
     fig=None,
-    x_name="x",
-    y_name="y",
-    z_name="z",
-    ymin=-3.15,
-    ymax=3.15,
 ):
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
         return {}
@@ -30,6 +39,7 @@ def plot_pose_figure(
     if len(data[0]) != 3:
         return {}
 
+    # TODO USE NUMPY!
     x = [d[0] for d in data]
     y = [d[1] for d in data]
     z = [d[2] for d in data]
@@ -49,7 +59,7 @@ def plot_pose_figure(
             y=x,
             marker=dict(color="rgb(255, 0, 0)"),
             mode="markers",
-            name=x_name,
+            name=config.x_name,
         )
     )
     fig.add_trace(
@@ -58,7 +68,7 @@ def plot_pose_figure(
             y=y,
             marker=dict(color="rgb(18, 174, 0)"),
             mode="markers",
-            name=y_name,
+            name=config.y_name,
         )
     )
     fig.add_trace(
@@ -67,15 +77,15 @@ def plot_pose_figure(
             y=z,
             marker=dict(color="rgb(0, 0, 255)"),
             mode="markers",
-            name=z_name,
+            name=config.z_name,
         )
     )
 
     fig.update_layout(
-        title=title,
+        title=config.title,
         yaxis=dict(
-            title=yaxis_title,
-            range=[ymin, ymax],
+            title=config.yaxis_title,
+            range=[config.ymin, config.ymax],
         ),
     )
 
