@@ -11,78 +11,107 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 from database.types import SensorType
 
 
-# NOTE(Jack): This is a function of pure convenience. It just so happens that we need to plot two sets of three values,
-# both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
-# exist.
-@app.callback(
-    Output("rotation-graph", "figure", allow_duplicate=True),
-    Output("translation-graph", "figure", allow_duplicate=True),
-    Input("camera-sensor-dropdown", "value"),
-    Input("pose-type-selector", "value"),
-    State("raw-camera-data-store", "data"),
-    State("processed-data-store", "data"),
-    prevent_initial_call=True,
+# TODO IMU DATA DOES NOT HAVE POSE SELECTOR! Yet....
+def register_r3_timeseries_plot_callback(
+    fig1_id, fig2_id, sensor_dropdown_id, raw_data_store_id, sensor_type
+):
+    # NOTE(Jack): This is a function of pure convenience. It just so happens that we need to plot two sets of three values,
+    # both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
+    # exist.
+    # TODO(Jack): The pose type selector is currently only used for the camera data case - maybe in future we repurpose
+    #  it to explicitly represent a state (i.e. optimized error or not) and then can use this for the imu data also.
+    @app.callback(
+        Output(fig1_id, "figure", allow_duplicate=True),
+        Output(fig2_id, "figure", allow_duplicate=True),
+        Input(sensor_dropdown_id, "value"),
+        Input("pose-type-selector", "value"),
+        State(raw_data_store_id, "data"),
+        State("processed-data-store", "data"),
+        prevent_initial_call=True,
+    )
+    def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
+        if (
+            sensor is None
+            or (pose_type is None and sensor_type == SensorType.Camera)
+            or raw_data is None
+            or processed_data is None
+        ):
+            return {}, {}
+
+        # NOTE(Jack): No matter what, we have the timestamps of all the possible frames because of the camera table foreign
+        # key constraint. Even if we have no poses in the raw data we can still at least plot the properly sized and ranged
+        # x-axis for that sensor. This looks good because the figure is configured even when no data is available, and
+        # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
+        # first half, it will be obvious to the user because the axis has not autofitted to the shorter timespan.
+        _, indexable_timestamps = processed_data
+        indexable_timestamps = indexable_timestamps[SensorType.Camera]
+        if sensor not in indexable_timestamps:
+            return {}, {}
+        fig = timeseries_plot(indexable_timestamps[sensor])
+
+        if sensor not in raw_data:
+            raise RuntimeError(
+                f"The sensor {sensor} was present in processed_data.indexable_timestamps but not in raw_data. That should never happen.",
+            )
+
+        if "frames" not in raw_data[sensor]:
+            raise RuntimeError(
+                f"The 'frames' key is not present in the raw data store for sensor {sensor}. That should never happen.",
+            )
+
+        # TODO(Jack): This is kind of a hack to handle extracting the data from the underlying raw data store. As long
+        #  the raw data is rows of length 6, then we can probably keep this convention. If it gets more complicated than
+        #  that (i.e. totally different storage ways), then we might need to think about more eloquent solutions.
+        data_extractor = None
+        if sensor_type == SensorType.Camera:
+            data_extractor = lambda f: f["poses"][pose_type]
+        elif sensor_type == SensorType.Imu:
+            data_extractor = lambda f: f["imu_measurement"]
+        else:
+            raise RuntimeError(
+                f"Invalid 'sensor_type' {sensor_type}. That should never happen.",
+            )
+
+        frames = raw_data[sensor]["frames"]
+        timestamps_ns, poses = extract_timestamps_and_poses_sorted(
+            frames, data_extractor
+        )
+
+        if len(poses) == 0:
+            # Returns empty plots with properly labeled and ranged x-axis
+            return fig, fig
+
+        rotations = [d[:3] for d in poses]
+
+        rot_config = R3TimeseriesFigureConfig(
+            "Orientation", "Axis Angle (rad)", "rx", "ry", "rz", -3.14, 3.14
+        )
+        rot_fig = build_r3_timeseries_figure(
+            timestamps_ns,
+            rotations,
+            rot_config,
+            fig=go.Figure(fig),  # Deep copy to prevent edit in place
+        )
+
+        translations = [d[3:] for d in poses]
+
+        trans_config = R3TimeseriesFigureConfig(
+            "Translation", "Meter (m)", "x", "y", "z", -2, 2
+        )
+        trans_fig = build_r3_timeseries_figure(
+            timestamps_ns, translations, trans_config, fig=go.Figure(fig)
+        )
+
+        return rot_fig, trans_fig
+
+
+register_r3_timeseries_plot_callback(
+    "rotation-graph",
+    "translation-graph",
+    "camera-sensor-dropdown",
+    "raw-camera-data-store",
+    SensorType.Camera,
 )
-def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
-    if (
-        sensor is None
-        or pose_type is None
-        or raw_data is None
-        or processed_data is None
-    ):
-        return {}, {}
-
-    # NOTE(Jack): No matter what, we have the timestamps of all the possible frames because of the camera table foreign
-    # key constraint. Even if we have no poses in the raw data we can still at least plot the properly sized and ranged
-    # x-axis for that sensor. This looks good because the figure is configured even when no data is available, and
-    # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
-    # first half, it will be obvious to the user because the axis has not autofitted to the shorter timespan.
-    _, indexable_timestamps = processed_data
-    indexable_timestamps = indexable_timestamps[SensorType.Camera]
-    if sensor not in indexable_timestamps:
-        return {}, {}
-    fig = timeseries_plot(indexable_timestamps[sensor])
-
-    if sensor not in raw_data:
-        raise RuntimeError(
-            f"The sensor {sensor} was present in processed_data.indexable_timestamps but not in raw_data. That should never happen.",
-        )
-
-    if "frames" not in raw_data[sensor]:
-        raise RuntimeError(
-            f"The 'frames' key is not present in the raw data store for sensor {sensor}. That should never happen.",
-        )
-
-    frames = raw_data[sensor]["frames"]
-    timestamps_ns, poses = extract_timestamps_and_poses_sorted(frames, pose_type)
-
-    if len(poses) == 0:
-        # Returns empty plots with properly labeled and ranged x-axis
-        return fig, fig
-
-    rotations = [d[:3] for d in poses]
-
-    rot_config = R3TimeseriesFigureConfig(
-        "Orientation", "Axis Angle (rad)", "rx", "ry", "rz", -3.14, 3.14
-    )
-    rot_fig = build_r3_timeseries_figure(
-        timestamps_ns,
-        rotations,
-        rot_config,
-        fig=go.Figure(fig),  # Deep copy to prevent edit in place
-    )
-
-    translations = [d[3:] for d in poses]
-
-    trans_config = R3TimeseriesFigureConfig(
-        "Translation", "Meter (m)", "x", "y", "z", -2, 2
-    )
-    trans_fig = build_r3_timeseries_figure(
-        timestamps_ns, translations, trans_config, fig=go.Figure(fig)
-    )
-
-    return rot_fig, trans_fig
-
 
 app.clientside_callback(
     """
