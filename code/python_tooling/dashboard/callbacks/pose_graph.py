@@ -138,22 +138,25 @@ register_r3_timeseries_plot_callback(
     imu_linear_acceleration_config,
 )
 
-app.clientside_callback(
-    """
-    function(frame_idx, sensor, processed_data, rot_fig, trans_fig) {
-        if (!sensor || !processed_data || !rot_fig || !trans_fig) {
+
+# NOTE(Jack): Unfortunately the only way to achieve the parameterization of the clientside callbacks is to generate the
+# code.
+def make_r3_timeseries_annotation_clientside_callback(sensor_type):
+    return f"""
+    function(frame_idx, sensor, processed_data, rot_fig, trans_fig) {{
+        if (!sensor || !processed_data || !rot_fig || !trans_fig) {{
             return [dash_clientside.no_update, dash_clientside.no_update];
-        }
+        }}
     
-        const camera_processed_data = processed_data[1]["camera"]
-        if (!camera_processed_data || !camera_processed_data[sensor]) {
+        const sensor_processed_data = processed_data[1]["{sensor_type.value}"]
+        if (!sensor_processed_data || !sensor_processed_data[sensor]) {{
             return [dash_clientside.no_update, dash_clientside.no_update];
-        }
+        }}
     
-        const timestamps = camera_processed_data[sensor];
-        if (!timestamps || timestamps.length <= frame_idx) {
+        const timestamps = sensor_processed_data[sensor];
+        if (!timestamps || timestamps.length <= frame_idx) {{
             return [dash_clientside.no_update, dash_clientside.no_update];
-        }
+        }}
     
         const timestamp_0_ns = BigInt(timestamps[0]);
         const timestamp_i_ns = BigInt(timestamps[frame_idx]);
@@ -161,7 +164,7 @@ app.clientside_callback(
     
         // NOTE(Jack): The "paper" coordinate system goes from 0 to 1 to cover the entire figure, so we set yref to 
         // "paper" so that the y0=0 and y1=1 dimensions will draw a vertical line the entire figure height. 
-        const new_shape = {
+        const new_shape = {{
             type: 'rect',
             xref: 'x',
             yref: 'paper',
@@ -169,27 +172,27 @@ app.clientside_callback(
             x1: local_time_s,
             y0: 0,
             y1: 1,
-            line: {
+            line: {{
                 color: 'black',
                 width: 1
-            },
-        };
+            }},
+        }};
     
-        const new_annotation = {
+        const new_annotation = {{
             x: local_time_s,
             y: 1,
             xref: 'x',
             yref: 'paper',
-            text: `${frame_idx}`,
+            text: `${{frame_idx}}`,
             showarrow: false,
             yanchor: 'bottom',
             xanchor: 'center',
-            font: {
+            font: {{
                 color: 'white',
                 size: 12
-            },
+            }},
             bgcolor: 'rgba(10,10,10,0.7)',
-        };
+        }};
     
         // WARN(Jack): This might overwrite other pre-existing shapes that we add later!
         patch = new dash_clientside.Patch;
@@ -197,13 +200,21 @@ app.clientside_callback(
         patch.assign(['layout', 'annotations'], [new_annotation]);
     
         return [patch.build(), patch.build()];
-    }
-    """,
-    Output("camera-orientation-graph", "figure"),
-    Output("camera-translation-graph", "figure"),
-    Input("camera-frame-id-slider", "value"),
-    Input("camera-sensor-dropdown", "value"),
-    State("processed-data-store", "data"),
-    State("camera-orientation-graph", "figure"),
-    State("camera-translation-graph", "figure"),
-)
+    }}
+    """
+
+
+def register_r3_timeseries_annotation_clientside_callback(sensor_type):
+    app.clientside_callback(
+        make_r3_timeseries_annotation_clientside_callback(sensor_type),
+        Output("camera-orientation-graph", "figure"),
+        Output("camera-translation-graph", "figure"),
+        Input("camera-frame-id-slider", "value"),
+        Input("camera-sensor-dropdown", "value"),
+        State("processed-data-store", "data"),
+        State("camera-orientation-graph", "figure"),
+        State("camera-translation-graph", "figure"),
+    )
+
+
+register_r3_timeseries_annotation_clientside_callback(SensorType.Camera)
