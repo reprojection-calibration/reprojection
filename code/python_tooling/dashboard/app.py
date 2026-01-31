@@ -281,13 +281,138 @@ app.layout = html.Div(
                     ],
                     label="Camera Calibration",
                 ),
+                # TODO(Jack): Almost the entire section of both tabs is copy and pasted!
                 dcc.Tab(
                     children=[
-                        dcc.Graph(
-                            id="imu-angular-velocity-graph",
-                        ),
-                        dcc.Graph(
-                            id="imu-linear-acceleration-graph",
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    children=[
+                                        html.Div(
+                                            children=[
+                                                html.Label(
+                                                    children="Select",
+                                                ),
+                                                dcc.Dropdown(
+                                                    id="imu-sensor-dropdown",
+                                                    placeholder="Select a imu sensor",
+                                                    style={"width": "300px"},
+                                                ),
+                                            ],
+                                            style={
+                                                "alignItems": "center",
+                                                "display": "flex",
+                                                "flexDirection": "row",
+                                                "gap": "10px",
+                                                "margin": "10px",
+                                                "flex": "1",
+                                            },
+
+                                        ),
+                                        html.Div(
+                                            children=[
+                                                html.Div(
+                                                    [
+                                                        html.Div(id="imu-statistics-display"),
+                                                    ]
+                                                ),
+                                            ],
+                                            style={
+                                                "alignItems": "top",
+                                                "display": "flex",
+                                                "flexDirection": "row",
+                                                "gap": "10px",
+                                                "margin": "10px",
+                                                "flex": "1",
+                                            },
+                                        ),
+                                        html.Div(
+                                            children=[
+                                                html.Label(
+                                                    children="Pose Type",
+                                                ),
+                                                dcc.RadioItems(
+                                                    id="pose-type-selector",
+                                                    options=[
+                                                        {"label": "Initial", "value": PoseType.Initial},
+                                                        {"label": "Optimized", "value": PoseType.Optimized},
+                                                    ],
+                                                    value=PoseType.Initial,
+                                                ),
+                                            ],
+                                            style={
+                                                "alignItems": "top",
+                                                "display": "flex",
+                                                "flexDirection": "column",
+                                                "gap": "10px",
+                                                "margin": "10px",
+                                                "flex": "1",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "alignItems": "top",
+                                        "display": "flex",
+                                        "flexDirection": "row",
+                                        "gap": "10px",
+                                        "margin": "10px",
+                                    },
+                                ),
+
+                                html.Div(
+                                    children=[
+                                        # The animation plays by default therefore the button is initialized with the pause graphic
+                                        html.Button(
+                                            children="⏸ Pause",
+                                            id="play-button",
+                                            n_clicks=0,
+                                            style={
+                                                "width": "50px",
+                                            },
+                                        ),
+                                        html.Div(
+                                            children=[
+                                                dcc.Slider(
+                                                    id="camera-frame-id-slider",
+                                                    marks=None,
+                                                    min=0,
+                                                    max=0,
+                                                    step=1,
+                                                    value=0,
+                                                    tooltip={"placement": "top", "always_visible": True},
+                                                    updatemode="drag",
+                                                ),
+                                            ],
+                                            style={
+                                                "width": "70%",
+                                            },
+                                        ),
+                                        html.Div(
+                                            children=[
+                                                html.P("Current timestamp (ns)"),
+                                                html.Div(
+                                                    id="camera-slider-timestamp",
+                                                ),
+                                            ],
+                                        ),
+                                    ],
+                                    style={
+                                        "alignItems": "top",
+                                        "display": "flex",
+                                        "flexDirection": "row",
+                                        "gap": "10px",
+                                        "margin": "10px",
+                                        "flex": "1",
+                                    },
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "20px",
+                                "flex": "1",
+                                "width": "100%",
+                            },
                         ),
                     ],
                     label="Imu Data",

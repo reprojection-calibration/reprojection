@@ -7,6 +7,7 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 
 from database.types import SensorType
 
+
 @app.callback(
     Output("rotation-graph", "figure", allow_duplicate=True),
     Output("translation-graph", "figure", allow_duplicate=True),
@@ -18,10 +19,10 @@ from database.types import SensorType
 )
 def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     if (
-        sensor is None
-        or pose_type is None
-        or raw_data is None
-        or processed_data is None
+            sensor is None
+            or pose_type is None
+            or raw_data is None
+            or processed_data is None
     ):
         return {}, {}
 
@@ -71,51 +72,6 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     )
 
     return rot_fig, trans_fig
-
-
-# TODO HACK AT INITIAL STAGE OF IMU DATA INTEGRATION!
-@app.callback(
-    Output("imu-angular-velocity-graph", "figure"),
-    Output("imu-linear-acceleration-graph", "figure"),
-    Input("camera-sensor-dropdown", "value"),  # DOES NOT ACTUALLY DO ANYTHING!
-    State("raw-imu-data-store", "data"),
-)
-def init_imu_data_graph_figures(_, imu_raw_data):
-    if imu_raw_data is None:
-        return {}, {}
-
-    frames = imu_raw_data["/imu0"]["frames"]
-    timestamps_ns = []
-    imu_measurements = []
-    for timestamp in sorted(frames):
-        frame_i = frames[timestamp]
-
-        timestamps_ns.append(timestamp)
-        imu_measurements.append(frame_i["imu_measurement"])
-
-    angular_velocity = [d[:3] for d in imu_measurements]
-    angular_velocity_fig = plot_pose_figure(
-        timestamps_ns,
-        angular_velocity,
-        "Angular Velocity",
-        "Omega (rad/s)",
-        x_name="omega_x",
-        y_name="omega_y",
-        z_name="omega_z",
-    )
-
-    linear_acceleration = [d[3:] for d in imu_measurements]
-    linear_acceleration_fig = plot_pose_figure(
-        timestamps_ns,
-        linear_acceleration,
-        "Linear Acceleration",
-        "Acceleration (m/s2)",
-        x_name="ax",
-        y_name="ay",
-        z_name="az",
-    )
-
-    return angular_velocity_fig, linear_acceleration_fig
 
 
 app.clientside_callback(
