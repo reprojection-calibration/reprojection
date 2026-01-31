@@ -31,14 +31,14 @@ def init_pose_graph_figures(sensor, pose_type, raw_data, processed_data):
     # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
     # first half, it will be obvious to the user because the axis has not autofitted to the shorter timespan.
     _, indexable_timestamps = processed_data
-    camera_indexable_timestamps = indexable_timestamps[SensorType.Camera]
-    if sensor not in camera_indexable_timestamps:
+    indexable_timestamps = indexable_timestamps[SensorType.Camera]
+    if sensor not in indexable_timestamps:
         return {}, {}
-    fig = timeseries_plot(camera_indexable_timestamps[sensor])
+    fig = timeseries_plot(indexable_timestamps[sensor])
 
     if sensor not in raw_data:
         raise RuntimeError(
-            f"The sensor {sensor} was present in processed_data.camera_indexable_timestamps but not in raw_data. That should never happen.",
+            f"The sensor {sensor} was present in processed_data.indexable_timestamps but not in raw_data. That should never happen.",
         )
 
     if "frames" not in raw_data[sensor]:
