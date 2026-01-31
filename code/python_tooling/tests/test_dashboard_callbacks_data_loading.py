@@ -5,8 +5,10 @@ from pathlib import Path
 from dashboard.callbacks.data_loading import (
     load_database_to_store,
     refresh_database_list,
-    refresh_sensor_list,
+    get_sensor_names,
 )
+
+from database.types import SensorType
 
 
 class TestDashboardCallbacksDataLoading(unittest.TestCase):
@@ -65,16 +67,12 @@ class TestDashboardCallbacksDataLoading(unittest.TestCase):
         self.assertIn("/cam0/image_raw", statistics)
         self.assertIn("/cam0/image_raw", indexable_timestamps)
 
-    def test_refresh_sensor_list(self):
-        list, default_value = refresh_sensor_list(None)
+    def test_get_sensor_names(self):
+        list, default_value = get_sensor_names({}, SensorType.Camera)
         self.assertEqual(list, [])
         self.assertEqual(default_value, "")
 
-        list, default_value = refresh_sensor_list([{}, None])
-        self.assertEqual(list, [])
-        self.assertEqual(default_value, "")
-
-        statistics = {"/sensor_1": {}, "/sensor_2": {}}
-        list, default_value = refresh_sensor_list([statistics, None])
+        statistics = {SensorType.Camera: {"/sensor_1": {}, "/sensor_2": {}}}
+        list, default_value = get_sensor_names(statistics, SensorType.Camera)
         self.assertEqual(list, ["/sensor_1", "/sensor_2"])
         self.assertEqual(default_value, "/sensor_1")

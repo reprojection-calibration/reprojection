@@ -79,25 +79,32 @@ def load_database_to_store(db_file):
     )
 
 
-def register_sensor_dropdown_callback(dropdown_id, sensor_type):
+def get_sensor_names(statistics, sensor_type):
+    if sensor_type not in statistics:
+        return [], ""
+
+    sensor_statistics = statistics[sensor_type]
+    sensor_names = sorted(sensor_statistics.keys())
+
+    if len(sensor_names) == 0:
+        return [], ""
+
+    return sensor_names, sensor_names[0]
+
+
+def register_sensor_list_refresh_calback(dropdown_id, sensor_type):
     @app.callback(
         Output(dropdown_id, "options"),
         Output(dropdown_id, "value"),
         Input("processed-data-store", "data"),
     )
-    def refresh_sensor_dropdown_list(processed_data):
+    def refresh_sensor_list(processed_data):
         if processed_data is None:
             return [], ""
-
         statistics, _ = processed_data
-        sensor_statistics = statistics[sensor_type]
-        sensor_names = sorted(sensor_statistics.keys())
 
-        if len(sensor_names) == 0:
-            return [], ""
-
-        return sensor_names, sensor_names[0]
+        return get_sensor_names(statistics, sensor_type)
 
 
-register_sensor_dropdown_callback("camera-sensor-dropdown", SensorType.Camera)
-register_sensor_dropdown_callback("imu-sensor-dropdown", SensorType.Imu)
+register_sensor_list_refresh_calback("camera-sensor-dropdown", SensorType.Camera)
+register_sensor_list_refresh_calback("imu-sensor-dropdown", SensorType.Imu)
