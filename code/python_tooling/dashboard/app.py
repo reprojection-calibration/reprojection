@@ -334,35 +334,6 @@ app.layout = html.Div(
                                                 "flex": "1",
                                             },
                                         ),
-                                        html.Div(
-                                            children=[
-                                                html.Label(
-                                                    children="Pose Type",
-                                                ),
-                                                dcc.RadioItems(
-                                                    id="pose-type-selector",
-                                                    options=[
-                                                        {
-                                                            "label": "Initial",
-                                                            "value": PoseType.Initial,
-                                                        },
-                                                        {
-                                                            "label": "Optimized",
-                                                            "value": PoseType.Optimized,
-                                                        },
-                                                    ],
-                                                    value=PoseType.Initial,
-                                                ),
-                                            ],
-                                            style={
-                                                "alignItems": "top",
-                                                "display": "flex",
-                                                "flexDirection": "column",
-                                                "gap": "10px",
-                                                "margin": "10px",
-                                                "flex": "1",
-                                            },
-                                        ),
                                     ],
                                     style={
                                         "alignItems": "top",
