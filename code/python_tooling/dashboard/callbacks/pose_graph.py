@@ -12,7 +12,7 @@ from database.types import SensorType
 
 
 # TODO IMU DATA DOES NOT HAVE POSE SELECTOR! Yet....
-def register_r3_timeseries_figure_builder_callback(
+def register_timeseries_figure_builder_callback(
     fig1_id,
     fig2_id,
     sensor_dropdown_id,
@@ -35,7 +35,7 @@ def register_r3_timeseries_figure_builder_callback(
         State("processed-data-store", "data"),
         prevent_initial_call=True,
     )
-    def build_r3_timeseries_figure(sensor, pose_type, raw_data, processed_data):
+    def build_timeseries_figure(sensor, pose_type, raw_data, processed_data):
         if (
             sensor is None
             or (pose_type is None and sensor_type == SensorType.Camera)
@@ -111,7 +111,7 @@ camera_translation_config = R3TimeseriesFigureConfig(
     "Translation", "Meter (m)", "x", "y", "z", -2, 2
 )
 
-register_r3_timeseries_figure_builder_callback(
+register_timeseries_figure_builder_callback(
     "camera-orientation-graph",
     "camera-translation-graph",
     "camera-sensor-dropdown",
@@ -128,7 +128,7 @@ imu_linear_acceleration_config = R3TimeseriesFigureConfig(
     "Linear Acceleration", "(m/s2)", "ax", "ay", "az", -10, 10
 )
 
-register_r3_timeseries_figure_builder_callback(
+register_timeseries_figure_builder_callback(
     "imu-angular-velocity-graph",
     "imu-linear-acceleration-graph",
     "imu-sensor-dropdown",
