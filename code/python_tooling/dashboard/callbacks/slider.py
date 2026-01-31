@@ -40,8 +40,6 @@ register_slider_properties_update_callback(
     "imu-frame-id-slider", "imu-sensor-dropdown", SensorType.Imu
 )
 
-# TODO(Jack): We need to display the exact nanosecond timestamp of the current frame somewhere and somehow. If this is
-#  is the best way to do this I am not 100% sure just yet.
 app.clientside_callback(
     """
     function(frame_idx, data, sensor) {

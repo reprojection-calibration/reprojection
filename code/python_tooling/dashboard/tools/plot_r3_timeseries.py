@@ -10,8 +10,6 @@ from dashboard.tools.time_handling import (
 
 @dataclass
 class R3TimeseriesFigureConfig:
-    """Class for keeping track of an item in inventory."""
-
     title: str
     yaxis_title: str
     x_name: str
