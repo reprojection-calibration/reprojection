@@ -2,14 +2,14 @@ import unittest
 
 from dashboard.tools.time_handling import (
     calculate_ticks_from_timestamps,
-    extract_timestamps_and_poses_sorted,
+    extract_timestamps_and_r6_data_sorted,
     timestamps_to_elapsed_seconds,
 )
 from database.types import PoseType
 
 
 class TestDashboardToolsTimeHandling(unittest.TestCase):
-    def test_extract_timestamps_and_poses_sorted(self):
+    def test_extract_timestamps_and_r6_data_sorted(self):
         # Purposely out of order, and purposely have three initial poses but only two optimized poses.
         frames = {
             1: {
@@ -29,7 +29,9 @@ class TestDashboardToolsTimeHandling(unittest.TestCase):
 
         # PoseType.Initial
         data_extractor = lambda f: f["poses"][PoseType.Initial]
-        timestamps, poses = extract_timestamps_and_poses_sorted(frames, data_extractor)
+        timestamps, poses = extract_timestamps_and_r6_data_sorted(
+            frames, data_extractor
+        )
         self.assertEqual(len(timestamps), 3)
         self.assertEqual(len(poses), 3)
         self.assertEqual(timestamps, [1, 2, 3])
@@ -40,7 +42,9 @@ class TestDashboardToolsTimeHandling(unittest.TestCase):
 
         # PoseType.Optimized
         data_extractor = lambda f: f["poses"][PoseType.Optimized]
-        timestamps, poses = extract_timestamps_and_poses_sorted(frames, data_extractor)
+        timestamps, poses = extract_timestamps_and_r6_data_sorted(
+            frames, data_extractor
+        )
         self.assertEqual(len(timestamps), 2)
         self.assertEqual(len(poses), 2)
         self.assertEqual(timestamps, [1, 3])

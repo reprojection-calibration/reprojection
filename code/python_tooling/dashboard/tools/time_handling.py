@@ -1,4 +1,4 @@
-def extract_timestamps_and_poses_sorted(frames, extract_fn):
+def extract_timestamps_and_r6_data_sorted(frames, extract_fn):
     timestamps = []
     values = []
     for timestamp in sorted(frames):

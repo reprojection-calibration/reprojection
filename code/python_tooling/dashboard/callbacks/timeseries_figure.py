@@ -7,10 +7,13 @@ from dashboard.tools.plot_r3_timeseries import (
     build_r3_timeseries_figure,
     timeseries_plot,
 )
-from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
+from dashboard.tools.time_handling import extract_timestamps_and_r6_data_sorted
 from database.types import SensorType
 
 
+# NOTE(Jack): This is a function of pure convenience. It just so happens that we need to plot two sets of three values,
+# both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
+# exist.
 def plot_two_common_r3_timeseries(
     all_timestamps_ns, frames, sensor_type, fig1_config, fig2_config, pose_type
 ):
@@ -27,26 +30,27 @@ def plot_two_common_r3_timeseries(
     # properly sized x-axes
     fig = timeseries_plot(all_timestamps_ns)
 
-    timestamps_ns, data = extract_timestamps_and_poses_sorted(
-        frames, data_extractor
-    )  # TODO - RENAME THIS TO r6 extraction
+    timestamps_ns, data = extract_timestamps_and_r6_data_sorted(frames, data_extractor)
     if len(data) == 0:
         return fig, fig
 
     # TODO(Jack): We are hardcoding in the fact here that the underlying data is a nx6 list of lists! Hacky.
     # TODO USE NUMPY!
+    # NOTE(Jack): We deep copy like go.Figure(fig) to create to independent figures to prevent editing in place.
     fig1_data = [d[:3] for d in data]
     fig1 = build_r3_timeseries_figure(
         timestamps_ns,
         fig1_data,
         fig1_config,
-        fig=go.Figure(fig),  # Deep copy to prevent edit in place
+        go.Figure(fig),
     )
-    print(fig1["data"])
 
     fig2_data = [d[3:] for d in data]
     fig2 = build_r3_timeseries_figure(
-        timestamps_ns, fig2_data, fig2_config, fig=go.Figure(fig)
+        timestamps_ns,
+        fig2_data,
+        fig2_config,
+        go.Figure(fig),
     )
 
     return fig1, fig2
@@ -62,9 +66,6 @@ def register_timeseries_figure_builder_callback(
     fig1_config,
     fig2_config,
 ):
-    # NOTE(Jack): This is a function of pure convenience. It just so happens that we need to plot two sets of three values,
-    # both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
-    # exist.
     # TODO(Jack): The pose type selector is currently only used for the camera data case - maybe in future we repurpose
     #  it to explicitly represent a state (i.e. optimized error or not) and then can use this for the imu data also.
     @app.callback(

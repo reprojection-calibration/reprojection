@@ -31,6 +31,7 @@ def build_r3_timeseries_figure(
     config: R3TimeseriesFigureConfig,
     fig=None,
 ):
+    # TODO IN THIS CASE RETURN  FIG? ALSO WE  DO NOT NEED TO CHECK LEN(TIMESTAMP_NS)
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
         return {}
 
