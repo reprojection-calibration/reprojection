@@ -37,7 +37,7 @@ def register_statistics_display_update_callback(
     @app.callback(
         Output(display_id, "children"),
         Input(sensor_dropdown_id, "value"),
-        State("processed-data-store", "data"),
+        State("metadata-store", "data"),
     )
     def update_sensor_statistics_display(sensor, metadata):
         # TODO(Jack): Is raise PreventUpdate the appropriate error handling strategy here?

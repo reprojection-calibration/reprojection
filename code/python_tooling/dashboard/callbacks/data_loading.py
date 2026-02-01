@@ -48,7 +48,7 @@ def refresh_database_list(db_dir, _):
 @app.callback(
     Output("raw-camera-data-store", "data"),
     Output("raw-imu-data-store", "data"),
-    Output("processed-data-store", "data"),
+    Output("metadata-store", "data"),
     Input("database-dropdown", "value"),
 )
 def load_database_to_store(db_file):
@@ -63,7 +63,7 @@ def load_database_to_store(db_file):
         SensorType.Imu: get_imu_calibration_data_statistics(raw_imu_data),
     }
 
-    indexable_timestamps = {
+    timestamps = {
         SensorType.Camera: get_indexable_timestamp_record(raw_camera_data),
         SensorType.Imu: get_indexable_timestamp_record(raw_imu_data),
     }
@@ -71,7 +71,7 @@ def load_database_to_store(db_file):
     return (
         raw_camera_data,
         raw_imu_data,
-        [statistics, indexable_timestamps],
+        [statistics, timestamps],
     )
 
 
@@ -92,7 +92,7 @@ def register_sensor_list_refresh_calback(dropdown_id, sensor_type):
     @app.callback(
         Output(dropdown_id, "options"),
         Output(dropdown_id, "value"),
-        Input("processed-data-store", "data"),
+        Input("metadata-store", "data"),
     )
     def refresh_sensor_list(processed_data):
         if processed_data is None:

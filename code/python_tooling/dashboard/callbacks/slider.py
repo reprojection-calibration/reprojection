@@ -22,7 +22,7 @@ def register_slider_properties_update_callback(
         Output(slider_id, "marks"),
         Output(slider_id, "max"),
         Input(sensor_dropdown_id, "value"),
-        State("processed-data-store", "data"),
+        State("metadata-store", "data"),
     )
     def update_slider_properties(sensor, metadata):
         if sensor is None or metadata is None:
@@ -72,7 +72,7 @@ def register_slider_timestamps_clientside_callback(
         make_slider_timestamps_clientside_callback(sensor_type),
         Output(timestamp_display_id, "children"),
         Input(slider_id, "value"),
-        State("processed-data-store", "data"),
+        State("metadata-store", "data"),
         State(sensor_dropdown_id, "value"),
     )
 

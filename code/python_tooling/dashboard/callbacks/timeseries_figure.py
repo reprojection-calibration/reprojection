@@ -78,7 +78,7 @@ def register_timeseries_figure_builder_callback(
         Input(sensor_dropdown_id, "value"),
         Input("pose-type-selector", "value"),
         State(raw_data_store_id, "data"),
-        State("processed-data-store", "data"),
+        State("metadata-store", "data"),
         prevent_initial_call=True,
     )
     def build_timeseries_figures(sensor, pose_type, raw_data, processed_data):
@@ -218,7 +218,7 @@ def register_r3_timeseries_annotation_clientside_callback(
         Output(fig2_id, "figure"),
         Input(slider_id, "value"),
         Input(sensor_dropdown_id, "value"),
-        State("processed-data-store", "data"),
+        State("metadata-store", "data"),
         State(fig1_id, "figure"),
         State(fig2_id, "figure"),
     )

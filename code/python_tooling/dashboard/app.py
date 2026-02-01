@@ -423,12 +423,12 @@ app.layout = html.Div(
         # NOTE(Jack): What we want to prevent is that big chunks of data get sent to and from the browse more than they
         # need to. As the calibration data might be 10, 30, or even 100mb it is important to make sure we only send that to
         # the browser when we need to. Therefore, we designed these two data stores, one heavy one (raw-camera-data-store) and one
-        # light one (processed-data-store). In the light one we should find all the metadata required to parameterize and
+        # light one (metadata-store). In the light one we should find all the metadata required to parameterize and
         # build most of the dashboard (ex. timestamps, number of frames etc.) and the heavy one we find the entire dataset
         # which we actually need to process to build our figures. Unless you absolutely need the raw data you should only
         # use the processed data!
         dcc.Store(id="raw-camera-data-store"),
         dcc.Store(id="raw-imu-data-store"),
-        dcc.Store(id="processed-data-store"),
+        dcc.Store(id="metadata-store"),
     ]
 )
