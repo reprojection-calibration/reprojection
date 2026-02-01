@@ -5,6 +5,16 @@ from dashboard.tools.time_handling import calculate_ticks_from_timestamps
 from database.types import SensorType
 
 
+def get_slider_properties(sensor, statistics, timestamps):
+    if sensor not in statistics or sensor not in timestamps:
+        return {}, 0
+
+    tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps[sensor])
+    n_frames = statistics[sensor]["total_frames"]
+
+    return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
+
+
 def register_slider_properties_update_callback(
     slider_id, sensor_dropdown_id, sensor_type
 ):
@@ -14,23 +24,16 @@ def register_slider_properties_update_callback(
         Input(sensor_dropdown_id, "value"),
         State("processed-data-store", "data"),
     )
-    def update_slider_properties(sensor, processed_data):
-        if sensor is None or processed_data is None:
+    def update_slider_properties(sensor, metadata):
+        if sensor is None or metadata is None:
             return {}, 0
+        statistics, timestamps = metadata
 
-        statistics, timestamps_sorted = processed_data
-        sensor_statistics = statistics[sensor_type]
-        sensor_timestamps_sorted = timestamps_sorted[sensor_type]
-
-        if sensor not in sensor_statistics or sensor not in sensor_timestamps_sorted:
-            return {}, 0
-
-        timestamps_ns = sensor_timestamps_sorted[sensor]
-        tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
-
-        n_frames = sensor_statistics[sensor]["total_frames"]
-
-        return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
+        return get_slider_properties(
+            sensor,
+            statistics[sensor_type],
+            timestamps[sensor_type],
+        )
 
 
 register_slider_properties_update_callback(
@@ -106,6 +109,13 @@ def toggle_play(n_clicks):
         return True, "▶ Play"
 
 
+def looping_increment(value, max_value):
+    if value >= max_value:
+        return 0
+
+    return value + 1
+
+
 # TODO(Jack): Why do we not use n_intervals directly? https://community.plotly.com/t/reset-n-intervals-in-dcc-interval/33078
 def register_slider_advance_callback(slider_id):
     @app.callback(
@@ -115,12 +125,10 @@ def register_slider_advance_callback(slider_id):
         State(slider_id, "max"),
     )
     def advance_slider(_, value, max_value):
-        if value is None:
+        if value is None or max_value is None:
             return 0
-        if value >= max_value:
-            return 0  # loop playback
 
-        return value + 1
+        return looping_increment(value, max_value)
 
 
 register_slider_advance_callback("camera-frame-id-slider")
