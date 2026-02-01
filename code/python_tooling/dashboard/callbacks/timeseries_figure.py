@@ -81,16 +81,16 @@ def register_timeseries_figure_builder_callback(
         State("metadata-store", "data"),
         prevent_initial_call=True,
     )
-    def build_timeseries_figures(sensor, pose_type, raw_data, processed_data):
+    def build_timeseries_figures(sensor, pose_type, raw_data, metadata):
         if (
             sensor is None
             or (pose_type is None and sensor_type == SensorType.Camera)
             or raw_data is None
-            or processed_data is None
+            or metadata is None
         ):
             return {}, {}
 
-        _, timestamps = processed_data
+        _, timestamps = metadata
         timestamps = timestamps[sensor_type]
         if sensor not in timestamps:
             return {}, {}
@@ -144,17 +144,17 @@ register_timeseries_figure_builder_callback(
 # code. All we want to do is specify the sensor type!
 def make_r3_timeseries_annotation_clientside_callback(sensor_type):
     return f"""
-    function(frame_idx, sensor, processed_data, rot_fig, trans_fig) {{
-        if (!sensor || !processed_data || !rot_fig || !trans_fig) {{
+    function(frame_idx, sensor, metadata, rot_fig, trans_fig) {{
+        if (!sensor || !metadata || !rot_fig || !trans_fig) {{
             return [dash_clientside.no_update, dash_clientside.no_update];
         }}
     
-        const sensor_processed_data = processed_data[1]["{sensor_type.value}"]
-        if (!sensor_processed_data || !sensor_processed_data[sensor]) {{
+        const sensor_metadata = metadata[1]["{sensor_type.value}"]
+        if (!sensor_metadata || !sensor_metadata[sensor]) {{
             return [dash_clientside.no_update, dash_clientside.no_update];
         }}
     
-        const timestamps = sensor_processed_data[sensor];
+        const timestamps = sensor_metadata[sensor];
         if (!timestamps || timestamps.length <= frame_idx) {{
             return [dash_clientside.no_update, dash_clientside.no_update];
         }}

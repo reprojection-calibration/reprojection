@@ -45,23 +45,23 @@ class TestDashboardCallbacksDataLoading(unittest.TestCase):
         self.assertEqual(Path(default_value).name, "dataset-calib-imu4_512_16.db3")
 
     def test_load_database_to_store(self):
-        raw_data, processed_data, metadata = load_database_to_store(None)
-        self.assertIsNone(raw_data)
-        self.assertIsNone(processed_data)
+        raw_camera_data, raw_imu_data, metadata = load_database_to_store(None)
+        self.assertIsNone(raw_camera_data)
+        self.assertIsNone(raw_imu_data)
         self.assertIsNone(metadata)
 
-        raw_data, processed_data, metadata = load_database_to_store(
+        raw_camera_data, raw_imu_data, metadata = load_database_to_store(
             "/does/not/exist.db3"
         )
-        self.assertIsNone(raw_data)
-        self.assertIsNone(processed_data)
+        self.assertIsNone(raw_camera_data)
+        self.assertIsNone(raw_imu_data)
         self.assertIsNone(metadata)
 
-        raw_data, processed_data, metadata = load_database_to_store(
+        raw_camera_data, raw_imu_data, metadata = load_database_to_store(
             "/not/a/database/file.txt"
         )
-        self.assertIsNone(raw_data)
-        self.assertIsNone(processed_data)
+        self.assertIsNone(raw_camera_data)
+        self.assertIsNone(raw_imu_data)
         self.assertIsNone(metadata)
 
         raw_camera_data, raw_imu_data, metadata = load_database_to_store(self.db_path)

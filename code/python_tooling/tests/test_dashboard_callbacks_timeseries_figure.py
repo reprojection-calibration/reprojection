@@ -27,7 +27,7 @@ class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
         # Data frames are empty but the raw timestamps are present - returns two empty but configured figures
         timestamps_ns = [20e8, 21e9, 22e9, 23e9, 24e9, 25e9]
         fig1, fig2 = plot_two_common_r3_timeseries(
-            timestamps_ns, [], SensorType.Imu, None, None, None
+            timestamps_ns, {}, SensorType.Imu, None, None, None
         )
         self.assertIsInstance(fig1, go.Figure)
         self.assertEqual(len(fig1["data"]), 0)
@@ -66,9 +66,9 @@ class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
         clientside_callback = make_r3_timeseries_annotation_clientside_callback(
             SensorType.Camera
         )
-        self.assertIn(f'processed_data[1]["camera"]', clientside_callback)
+        self.assertIn(f'metadata[1]["camera"]', clientside_callback)
 
         clientside_callback = make_r3_timeseries_annotation_clientside_callback(
             SensorType.Imu
         )
-        self.assertIn(f'processed_data[1]["imu"]', clientside_callback)
+        self.assertIn(f'metadata[1]["imu"]', clientside_callback)

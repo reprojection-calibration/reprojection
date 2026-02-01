@@ -94,10 +94,10 @@ def register_sensor_list_refresh_calback(dropdown_id, sensor_type):
         Output(dropdown_id, "value"),
         Input("metadata-store", "data"),
     )
-    def refresh_sensor_list(processed_data):
-        if processed_data is None:
+    def refresh_sensor_list(metadata):
+        if metadata is None:
             return [], ""
-        statistics, _ = processed_data
+        statistics, _ = metadata
 
         return get_sensor_names(statistics, sensor_type)
 

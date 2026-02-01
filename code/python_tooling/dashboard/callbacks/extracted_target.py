@@ -81,13 +81,13 @@ def init_extracted_target_figures(sensor):
 # NOTE(Jack): Manually formatted periodically using https://beautifier.io/ - we should automate this process!
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data, xy_fig, pixel_fig) {
-        if (!sensor || !pose_type || !raw_data || !processed_data || !xy_fig || !pixel_fig) {
+    function(frame_idx, sensor, pose_type, cmax, raw_data, metadata, xy_fig, pixel_fig) {
+        if (!sensor || !pose_type || !raw_data || !metadata || !xy_fig || !pixel_fig) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
         // TODO(Jack): Do we need to protect against "camera" being available here, or can we take that for granted?
-        const timestamps = processed_data[1]["camera"][sensor]
+        const timestamps = metadata[1]["camera"][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
