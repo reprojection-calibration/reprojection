@@ -2,12 +2,12 @@ import unittest
 
 from dash.exceptions import PreventUpdate
 
-from dashboard.callbacks.statistics import update_statistics
+from dashboard.callbacks.statistics import build_sensor_statistics_div
 
 
 class TestDashboardCallbacksStatistics(unittest.TestCase):
-    def test_update_statistics(self):
-        self.assertRaises(PreventUpdate, update_statistics, None, None)
+    def test_build_sensor_statistics_div(self):
+        self.assertRaises(PreventUpdate, build_sensor_statistics_div, "", {})
 
         sensor = "/cam0/image_raw"
         statistics = {
@@ -18,7 +18,7 @@ class TestDashboardCallbacksStatistics(unittest.TestCase):
                 "statistic_4": 102,
             }
         }
-        output = update_statistics(sensor, [statistics, None])
+        output = build_sensor_statistics_div(sensor, statistics)
 
         # Four statistics to display
         self.assertEqual(len(output), 4)

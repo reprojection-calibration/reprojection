@@ -4,7 +4,31 @@ from dash.exceptions import PreventUpdate
 from dashboard.server import app
 from database.types import PoseType, SensorType
 
-# TODO(Jack): Is there any way to avoid copying this completely for the IMU case?
+
+def build_sensor_statistics_div(sensor, statistics):
+    # TODO(Jack): Is raise PreventUpdate the appropriate error handling strategy here?
+    if sensor not in statistics:
+        raise PreventUpdate
+
+    return [
+        html.Div(
+            [
+                html.Div(
+                    "",
+                    style={
+                        "width": "20px",
+                        "height": "20px",
+                        "backgroundColor": "green" if value != 0 else "red",
+                        "display": "inline-block",
+                        "marginRight": "10px",
+                    },
+                ),
+                html.Div(value, style={"width": "35px", "display": "inline-block"}),
+                html.Div(key, style={"width": "200px", "display": "inline-block"}),
+            ],
+        )
+        for key, value in statistics[sensor].items()
+    ]
 
 
 def register_statistics_display_update_callback(
@@ -15,33 +39,13 @@ def register_statistics_display_update_callback(
         Input(sensor_dropdown_id, "value"),
         State("processed-data-store", "data"),
     )
-    def update_sensor_statistics_display(sensor, processed_data):
-        # TODO(Jack): Do not raise PreventUpdate! That is too extreme of an error handling strategy, just do a no update.
-        if sensor is None or processed_data is None:
+    def update_sensor_statistics_display(sensor, metadata):
+        # TODO(Jack): Is raise PreventUpdate the appropriate error handling strategy here?
+        if sensor is None or metadata is None:
             raise PreventUpdate
+        statistics, _ = metadata
 
-        statistics, _ = processed_data
-        sensor_statistics = statistics[sensor_type]
-
-        return [
-            html.Div(
-                [
-                    html.Div(
-                        "",
-                        style={
-                            "width": "20px",
-                            "height": "20px",
-                            "backgroundColor": "green" if value != 0 else "red",
-                            "display": "inline-block",
-                            "marginRight": "10px",
-                        },
-                    ),
-                    html.Div(value, style={"width": "35px", "display": "inline-block"}),
-                    html.Div(key, style={"width": "200px", "display": "inline-block"}),
-                ],
-            )
-            for key, value in sensor_statistics[sensor].items()
-        ]
+        return build_sensor_statistics_div(sensor, statistics[sensor_type])
 
 
 register_statistics_display_update_callback(
