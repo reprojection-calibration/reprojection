@@ -29,9 +29,7 @@ class TestDashboardToolsTimeHandling(unittest.TestCase):
 
         # PoseType.Initial
         data_extractor = lambda f: f["poses"][PoseType.Initial]
-        timestamps, poses = extract_timestamps_and_poses_sorted(
-            frames, data_extractor
-        )
+        timestamps, poses = extract_timestamps_and_poses_sorted(frames, data_extractor)
         self.assertEqual(len(timestamps), 3)
         self.assertEqual(len(poses), 3)
         self.assertEqual(timestamps, [1, 2, 3])
@@ -42,9 +40,7 @@ class TestDashboardToolsTimeHandling(unittest.TestCase):
 
         # PoseType.Optimized
         data_extractor = lambda f: f["poses"][PoseType.Optimized]
-        timestamps, poses = extract_timestamps_and_poses_sorted(
-            frames, data_extractor
-        )
+        timestamps, poses = extract_timestamps_and_poses_sorted(frames, data_extractor)
         self.assertEqual(len(timestamps), 2)
         self.assertEqual(len(poses), 2)
         self.assertEqual(timestamps, [1, 3])

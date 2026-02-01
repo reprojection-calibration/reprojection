@@ -11,6 +11,47 @@ from dashboard.tools.time_handling import extract_timestamps_and_poses_sorted
 from database.types import SensorType
 
 
+def plot_two_common_r3_timeseries(
+    all_timestamps_ns, frames, sensor_type, fig1_config, fig2_config, pose_type
+):
+    if sensor_type == SensorType.Camera:
+        data_extractor = lambda f: f["poses"][pose_type]
+    elif sensor_type == SensorType.Imu:
+        data_extractor = lambda f: f["imu_measurement"]
+    else:
+        raise RuntimeError(
+            f"Invalid 'sensor_type' {sensor_type}. That should never happen.",
+        )
+
+    # Build the plots using all timestamps so that even if there is no r3 data to plot below we can return figures with
+    # properly sized x-axes
+    fig = timeseries_plot(all_timestamps_ns)
+
+    timestamps_ns, data = extract_timestamps_and_poses_sorted(
+        frames, data_extractor
+    )  # TODO - RENAME THIS TO r6 extraction
+    if len(data) == 0:
+        return fig, fig
+
+    # TODO(Jack): We are hardcoding in the fact here that the underlying data is a nx6 list of lists! Hacky.
+    # TODO USE NUMPY!
+    fig1_data = [d[:3] for d in data]
+    fig1 = build_r3_timeseries_figure(
+        timestamps_ns,
+        fig1_data,
+        fig1_config,
+        fig=go.Figure(fig),  # Deep copy to prevent edit in place
+    )
+    print(fig1["data"])
+
+    fig2_data = [d[3:] for d in data]
+    fig2 = build_r3_timeseries_figure(
+        timestamps_ns, fig2_data, fig2_config, fig=go.Figure(fig)
+    )
+
+    return fig1, fig2
+
+
 # TODO IMU DATA DOES NOT HAVE POSE SELECTOR! Yet....
 def register_timeseries_figure_builder_callback(
     fig1_id,
@@ -35,7 +76,7 @@ def register_timeseries_figure_builder_callback(
         State("processed-data-store", "data"),
         prevent_initial_call=True,
     )
-    def build_timeseries_figure(sensor, pose_type, raw_data, processed_data):
+    def build_timeseries_figures(sensor, pose_type, raw_data, processed_data):
         if (
             sensor is None
             or (pose_type is None and sensor_type == SensorType.Camera)
@@ -44,64 +85,21 @@ def register_timeseries_figure_builder_callback(
         ):
             return {}, {}
 
-        # NOTE(Jack): No matter what, we have the timestamps of all the possible frames because of the camera table foreign
-        # key constraint. Even if we have no poses in the raw data we can still at least plot the properly sized and ranged
-        # x-axis for that sensor. This looks good because the figure is configured even when no data is available, and
-        # the x-axis range is fixed here, which means that if for example the optimized poses are only available for the
-        # first half, it will be obvious to the user because the axis has not autofitted to the shorter timespan.
-        _, indexable_timestamps = processed_data
-        indexable_timestamps = indexable_timestamps[sensor_type]
-        if sensor not in indexable_timestamps:
+        _, timestamps = processed_data
+        timestamps = timestamps[sensor_type]
+        if sensor not in timestamps:
             return {}, {}
-        fig = timeseries_plot(indexable_timestamps[sensor])
 
-        if sensor not in raw_data:
-            raise RuntimeError(
-                f"The sensor {sensor} was present in processed_data.indexable_timestamps but not in raw_data. That should never happen.",
-            )
-
-        if "frames" not in raw_data[sensor]:
-            raise RuntimeError(
-                f"The 'frames' key is not present in the raw data store for sensor {sensor}. That should never happen.",
-            )
-
-        # TODO(Jack): This is kind of a hack to handle extracting the data from the underlying raw data store. As long
-        #  the raw data is rows of length 6, then we can probably keep this convention. If it gets more complicated than
-        #  that (i.e. totally different storage ways), then we might need to think about more eloquent solutions.
-        data_extractor = None
-        if sensor_type == SensorType.Camera:
-            data_extractor = lambda f: f["poses"][pose_type]
-        elif sensor_type == SensorType.Imu:
-            data_extractor = lambda f: f["imu_measurement"]
-        else:
-            raise RuntimeError(
-                f"Invalid 'sensor_type' {sensor_type}. That should never happen.",
-            )
-
-        frames = raw_data[sensor]["frames"]
-        timestamps_ns, data = extract_timestamps_and_poses_sorted(
-            frames, data_extractor
-        )
-
-        if len(data) == 0:
-            # Returns empty plots with properly labeled and ranged x-axis
-            return fig, fig
-
-        # TODO(Jack): We are hardcoding in the fact here that the underlying data is a nx6 list of lists
-        fig1_data = [d[:3] for d in data]
-        fig1 = build_r3_timeseries_figure(
-            timestamps_ns,
-            fig1_data,
+        # NOTE(Jack): Because sensor was in timestamps, sensor MUST also be in raw_data.
+        # NOTE(Jack): # The initial condition assertion means that if sensor_type == Camera that pose_type MUST be set.
+        return plot_two_common_r3_timeseries(
+            timestamps[sensor],
+            raw_data[sensor]["frames"],
+            sensor_type,
             fig1_config,
-            fig=go.Figure(fig),  # Deep copy to prevent edit in place
+            fig2_config,
+            pose_type,
         )
-
-        fig2_data = [d[3:] for d in data]
-        fig2 = build_r3_timeseries_figure(
-            timestamps_ns, fig2_data, fig2_config, fig=go.Figure(fig)
-        )
-
-        return fig1, fig2
 
 
 camera_orientation_config = R3TimeseriesFigureConfig(
@@ -110,7 +108,6 @@ camera_orientation_config = R3TimeseriesFigureConfig(
 camera_translation_config = R3TimeseriesFigureConfig(
     "Translation", "Meter (m)", "x", "y", "z", -2, 2
 )
-
 register_timeseries_figure_builder_callback(
     "camera-orientation-graph",
     "camera-translation-graph",
@@ -127,7 +124,6 @@ imu_angular_velocity_config = R3TimeseriesFigureConfig(
 imu_linear_acceleration_config = R3TimeseriesFigureConfig(
     "Linear Acceleration", "(m/s2)", "ax", "ay", "az", -10, 10
 )
-
 register_timeseries_figure_builder_callback(
     "imu-angular-velocity-graph",
     "imu-linear-acceleration-graph",
@@ -140,7 +136,7 @@ register_timeseries_figure_builder_callback(
 
 
 # NOTE(Jack): Unfortunately the only way to achieve the parameterization of the clientside callbacks is to generate the
-# code.
+# code. All we want to do is specify the sensor type!
 def make_r3_timeseries_annotation_clientside_callback(sensor_type):
     return f"""
     function(frame_idx, sensor, processed_data, rot_fig, trans_fig) {{

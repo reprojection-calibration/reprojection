@@ -8,15 +8,17 @@ from dashboard.tools.time_handling import (
 )
 
 
+# TODO(Jack): We could pass part of this directly to the plot initializer so that we have more than just the x-axis
+#  initialized.
 @dataclass
 class R3TimeseriesFigureConfig:
-    title: str
-    yaxis_title: str
-    x_name: str
-    y_name: str
-    z_name: str
-    ymin: float
-    ymax: float
+    title: str = ""
+    yaxis_title: str = ""
+    x_name: str = "x"
+    y_name: str = "y"
+    z_name: str = "z"
+    ymin: float = "0"
+    ymax: float = "1"
 
 
 # NOTE(Jack): Think about it this way. The moment that we have two separate arrays we cannot/should not ever sort them.
