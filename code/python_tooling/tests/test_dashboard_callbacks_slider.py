@@ -6,8 +6,6 @@ from dashboard.callbacks.slider import (
     toggle_play,
 )
 
-# def get_slider_properties(sensor, statistics, timestamps):
-
 
 class TestDashboardCallbacksSlider(unittest.TestCase):
     def test_update_slider_properties(self):
