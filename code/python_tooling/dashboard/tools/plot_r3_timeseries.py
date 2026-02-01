@@ -26,10 +26,7 @@ class R3TimeseriesFigureConfig:
 # sorting after they have been separated from each other would be crazy. That means this function requires the input
 # timestamps and data to already be sorted!
 def build_r3_timeseries_figure(
-    timestamps_ns,
-    data,
-    config: R3TimeseriesFigureConfig,
-    fig=None,
+    timestamps_ns, data, config: R3TimeseriesFigureConfig, fig=None, t0_ns=None
 ):
     # TODO IN THIS CASE RETURN  FIG? ALSO WE  DO NOT NEED TO CHECK LEN(TIMESTAMP_NS)
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
@@ -52,12 +49,12 @@ def build_r3_timeseries_figure(
     # ERROR
     # ERROR
     # ERROR
-    # ERROR(Jack): This calculated the timestamps elapsed time soley based on the input data, but it should be
-    # calculated with respect to the raw data stamps! Or?
+    # ERROR(Jack): This calculated the timestamps elapsed time based on the input data, but it should be
+    # calculated with respect to the raw data stamps begin! Or?
     # TODO(Jack): When we get the data from the store the timestamps are strings, so we need to convert them to int
     #  here. Should we deal with this programmatically and convert them to ints when they get loaded into the store?
     timestamps_ns = [int(t) for t in timestamps_ns]
-    timestamps_s = timestamps_to_elapsed_seconds(timestamps_ns)
+    timestamps_s = timestamps_to_elapsed_seconds(timestamps_ns, t0_ns)
 
     # NOTE(Jack): We use go.Scattergl() because it is way way faster than a regular scatter plot with lots of points.
     fig.add_trace(

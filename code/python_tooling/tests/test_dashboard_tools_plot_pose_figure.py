@@ -6,13 +6,6 @@ from dashboard.tools.plot_r3_timeseries import (
     timeseries_plot,
 )
 
-# def build_r3_timeseries_figure(
-#        timestamps_ns,
-#        data,
-#        config: R3TimeseriesFigureConfig,
-#        fig=None,
-# ):
-
 
 class TestDashboardToolsPlotR3Timeseries(unittest.TestCase):
     def test_build_r3_timeseries_figure(self):

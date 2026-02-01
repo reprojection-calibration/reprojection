@@ -18,13 +18,23 @@ def extract_timestamps_and_r6_data_sorted(frames, extract_fn):
     return timestamps, values
 
 
-def timestamps_to_elapsed_seconds(timestamps_ns):
+def timestamps_to_elapsed_seconds(timestamps_ns, t0_ns=None):
     if len(timestamps_ns) == 0:
         return []
 
-    # WARN(Jack): The input to this function must be sorted from smallest to largest!
-    t0 = timestamps_ns[0]
-    timestamps_human_readable = [(t - t0) / 1e9 for t in timestamps_ns]
+    if timestamps_ns != sorted(timestamps_ns):
+        raise RuntimeError(
+            f"timestamps_ns was not sorted!.",
+        )
+
+    if t0_ns is None:
+        t0_ns = timestamps_ns[0]
+    elif t0_ns > timestamps_ns[0]:
+        raise RuntimeError(
+            f"t0_ns {t0_ns} was greater than timestamps_ns[0] {timestamps_ns[0]}.",
+        )
+
+    timestamps_human_readable = [(t - t0_ns) / 1e9 for t in timestamps_ns]
 
     return timestamps_human_readable
 

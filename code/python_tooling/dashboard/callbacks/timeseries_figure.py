@@ -15,7 +15,7 @@ from database.types import SensorType
 # both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
 # exist.
 def plot_two_common_r3_timeseries(
-    all_timestamps_ns, frames, sensor_type, fig1_config, fig2_config, pose_type
+    timestamps_ns, frames, sensor_type, fig1_config, fig2_config, pose_type
 ):
     if sensor_type == SensorType.Camera:
         data_extractor = lambda f: f["poses"][pose_type]
@@ -28,9 +28,11 @@ def plot_two_common_r3_timeseries(
 
     # Build the plots using all timestamps so that even if there is no r3 data to plot below we can return figures with
     # properly sized x-axes
-    fig = timeseries_plot(all_timestamps_ns)
+    fig = timeseries_plot(timestamps_ns)
 
-    timestamps_ns, data = extract_timestamps_and_r6_data_sorted(frames, data_extractor)
+    data_timestamps_ns, data = extract_timestamps_and_r6_data_sorted(
+        frames, data_extractor
+    )
     if len(data) == 0:
         return fig, fig
 
@@ -39,18 +41,20 @@ def plot_two_common_r3_timeseries(
     # NOTE(Jack): We deep copy like go.Figure(fig) to create to independent figures to prevent editing in place.
     fig1_data = [d[:3] for d in data]
     fig1 = build_r3_timeseries_figure(
-        timestamps_ns,
+        data_timestamps_ns,
         fig1_data,
         fig1_config,
         go.Figure(fig),
+        timestamps_ns[0],
     )
 
     fig2_data = [d[3:] for d in data]
     fig2 = build_r3_timeseries_figure(
-        timestamps_ns,
+        data_timestamps_ns,
         fig2_data,
         fig2_config,
         go.Figure(fig),
+        timestamps_ns[0],
     )
 
     return fig1, fig2
