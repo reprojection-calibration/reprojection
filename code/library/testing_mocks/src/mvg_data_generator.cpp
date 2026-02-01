@@ -42,7 +42,7 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
 
         auto const pose_t{se3_spline.Evaluate(spline_time)};
         if (not pose_t.has_value()) {
-            throw std::runtime_error("GenerateMvgData() failed se3_spline.Evaluate().");
+            throw std::runtime_error("GenerateMvgData() failed se3_spline.Evaluate().");  // LCOV_EXCL_LINE
         }
 
         auto const [pixels, mask]{MvgHelpers::Project(points, camera, geometry::Exp(pose_t.value()))};

@@ -25,7 +25,7 @@ ImuData GenerateImuData(int const num_measurements) {
         auto const velocity_t{se3_spline.Evaluate(spline_time, spline::DerivativeOrder::First)};
         auto const acceleration_t{se3_spline.Evaluate(spline_time, spline::DerivativeOrder::Second)};
         if (not(velocity_t.has_value() and acceleration_t.has_value())) {
-            throw std::runtime_error("GenerateImuData() failed se3_spline.Evaluate().");
+            throw std::runtime_error("GenerateImuData() failed se3_spline.Evaluate().");  // LCOV_EXCL_LINE
         }
 
         data[spline_time] = {velocity_t->topRows(3), acceleration_t->bottomRows(3)};
