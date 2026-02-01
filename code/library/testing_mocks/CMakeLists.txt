@@ -3,7 +3,8 @@ set(LIBRARY_NAME "testing_mocks")
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
-        src/mvg_generator.cpp
+        src/imu_data_generator.cpp
+        src/mvg_data_generator.cpp
         src/mvg_helpers.cpp
         src/noise_generation.cpp
         src/sphere_trajectory.cpp
@@ -23,6 +24,7 @@ set(TESTS
         src/mvg_helpers.test.cpp
         src/noise_generation.test.cpp
         src/sphere_trajectory.test.cpp
-        test/mvg_generator.test.cpp
+        test/imu_data_generator.test.cpp
+        test/mvg_data_generator.test.cpp
 )
 AddTests()

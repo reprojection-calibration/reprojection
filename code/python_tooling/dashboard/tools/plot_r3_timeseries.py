@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import plotly.graph_objects as go
 
 from dashboard.tools.time_handling import (
@@ -6,22 +8,27 @@ from dashboard.tools.time_handling import (
 )
 
 
+# TODO(Jack): We could pass part of this directly to the plot initializer so that we have more than just the x-axis
+#  initialized.
+@dataclass
+class R3TimeseriesFigureConfig:
+    title: str = ""
+    yaxis_title: str = ""
+    x_name: str = "x"
+    y_name: str = "y"
+    z_name: str = "z"
+    ymin: float = "0"
+    ymax: float = "1"
+
+
 # NOTE(Jack): Think about it this way. The moment that we have two separate arrays we cannot/should not ever sort them.
 # They should already be sorted at the time when their correspondence was still programmatically enforced. To do the
 # sorting after they have been separated from each other would be crazy. That means this function requires the input
 # timestamps and data to already be sorted!
-def plot_pose_figure(
-    timestamps_ns,
-    data,
-    title,
-    yaxis_title,
-    fig=None,
-    x_name="x",
-    y_name="y",
-    z_name="z",
-    ymin=-3.15,
-    ymax=3.15,
+def build_r3_timeseries_figure(
+    timestamps_ns, data, config: R3TimeseriesFigureConfig, fig=None, t0_ns=None
 ):
+    # TODO IN THIS CASE RETURN  FIG? ALSO WE  DO NOT NEED TO CHECK LEN(TIMESTAMP_NS)
     if len(timestamps_ns) != len(data) or len(timestamps_ns) == 0:
         return {}
 
@@ -30,6 +37,7 @@ def plot_pose_figure(
     if len(data[0]) != 3:
         return {}
 
+    # TODO USE NUMPY!
     x = [d[0] for d in data]
     y = [d[1] for d in data]
     z = [d[2] for d in data]
@@ -37,38 +45,51 @@ def plot_pose_figure(
     if fig is None:
         fig = go.Figure()
 
+    # ERROR
+    # ERROR
+    # ERROR
+    # ERROR
+    # ERROR(Jack): This calculated the timestamps elapsed time based on the input data, but it should be
+    # calculated with respect to the raw data stamps begin! Or?
     # TODO(Jack): When we get the data from the store the timestamps are strings, so we need to convert them to int
     #  here. Should we deal with this programmatically and convert them to ints when they get loaded into the store?
     timestamps_ns = [int(t) for t in timestamps_ns]
-    timestamps_s = timestamps_to_elapsed_seconds(timestamps_ns)
+    timestamps_s = timestamps_to_elapsed_seconds(timestamps_ns, t0_ns)
 
-    fig.add_scatter(
-        x=timestamps_s,
-        y=x,
-        marker=dict(color="rgb(255, 0, 0)"),
-        mode="markers",
-        name=x_name,
+    # NOTE(Jack): We use go.Scattergl() because it is way way faster than a regular scatter plot with lots of points.
+    fig.add_trace(
+        go.Scattergl(
+            x=timestamps_s,
+            y=x,
+            marker=dict(color="rgb(255, 0, 0)"),
+            mode="markers",
+            name=config.x_name,
+        )
     )
-    fig.add_scatter(
-        x=timestamps_s,
-        y=y,
-        marker=dict(color="rgb(18, 174, 0)"),
-        mode="markers",
-        name=y_name,
+    fig.add_trace(
+        go.Scattergl(
+            x=timestamps_s,
+            y=y,
+            marker=dict(color="rgb(18, 174, 0)"),
+            mode="markers",
+            name=config.y_name,
+        )
     )
-    fig.add_scatter(
-        x=timestamps_s,
-        y=z,
-        marker=dict(color="rgb(0, 0, 255)"),
-        mode="markers",
-        name=z_name,
+    fig.add_trace(
+        go.Scattergl(
+            x=timestamps_s,
+            y=z,
+            marker=dict(color="rgb(0, 0, 255)"),
+            mode="markers",
+            name=config.z_name,
+        )
     )
 
     fig.update_layout(
-        title=title,
+        title=config.title,
         yaxis=dict(
-            title=yaxis_title,
-            range=[ymin, ymax],
+            title=config.yaxis_title,
+            range=[config.ymin, config.ymax],
         ),
     )
 

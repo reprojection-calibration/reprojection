@@ -2,54 +2,93 @@ from dash import Input, Output, State
 
 from dashboard.server import app
 from dashboard.tools.time_handling import calculate_ticks_from_timestamps
+from database.types import SensorType
 
 
-# ERROR(Jack):
-@app.callback(
-    Output("frame-id-slider", "marks"),
-    Output("frame-id-slider", "max"),
-    Input("sensor-dropdown", "value"),
-    State("processed-data-store", "data"),
-)
-def update_slider_properties(sensor, processed_data):
-    if sensor is None or processed_data is None:
+def get_slider_properties(sensor, statistics, timestamps):
+    if sensor not in statistics or sensor not in timestamps:
         return {}, 0
 
-    statistics, timestamps_sorted = processed_data
-    if sensor not in statistics or sensor not in timestamps_sorted:
-        return {}, 0
-
-    timestamps_ns = timestamps_sorted[sensor]
-    tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_ns)
-
+    tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps[sensor])
     n_frames = statistics[sensor]["total_frames"]
 
     return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
 
 
-# TODO(Jack): We need to display the exact nanosecond timestamp of the current frame somewhere and somehow. If this is
-#  is the best way to do this I am not 100% sure just yet.
-app.clientside_callback(
-    """
-    function(frame_idx, data, sensor) {
-        if (!data || !sensor) {
+def register_slider_properties_update_callback(
+    slider_id, sensor_dropdown_id, sensor_type
+):
+    @app.callback(
+        Output(slider_id, "marks"),
+        Output(slider_id, "max"),
+        Input(sensor_dropdown_id, "value"),
+        State("metadata-store", "data"),
+    )
+    def update_slider_properties(sensor, metadata):
+        if sensor is None or metadata is None:
+            return {}, 0
+        statistics, timestamps = metadata
+
+        return get_slider_properties(
+            sensor,
+            statistics[sensor_type],
+            timestamps[sensor_type],
+        )
+
+
+register_slider_properties_update_callback(
+    "camera-frame-id-slider", "camera-sensor-dropdown", SensorType.Camera
+)
+register_slider_properties_update_callback(
+    "imu-frame-id-slider", "imu-sensor-dropdown", SensorType.Imu
+)
+
+
+# NOTE(Jack): Unfortunately the only way to achieve the parameterization of the clientside callbacks is to generate the
+# code.
+def make_slider_timestamps_clientside_callback(sensor_type):
+    return f"""
+    function(frame_idx, data, sensor) {{
+        if (!data || !sensor) {{
             return "";
-        }
-    
-        const timestamps = data[1][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
+        }}
+
+        const timestamps = data[1]["{sensor_type.value}"][sensor];
+        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {{
             return "";
-        }
-    
-        const timestamp_i = BigInt(timestamps[frame_idx])
-    
+        }}
+
+        const timestamp_i = BigInt(timestamps[frame_idx]);
+        
         return timestamp_i.toString();
-    }
-    """,
-    Output("slider-timestamp", "children"),
-    Input("frame-id-slider", "value"),
-    State("processed-data-store", "data"),
-    State("sensor-dropdown", "value"),
+    }}
+    """
+
+
+def register_slider_timestamps_clientside_callback(
+    timestamp_display_id, slider_id, sensor_dropdown_id, sensor_type
+):
+    app.clientside_callback(
+        make_slider_timestamps_clientside_callback(sensor_type),
+        Output(timestamp_display_id, "children"),
+        Input(slider_id, "value"),
+        State("metadata-store", "data"),
+        State(sensor_dropdown_id, "value"),
+    )
+
+
+register_slider_timestamps_clientside_callback(
+    "camera-timestamp-display",
+    "camera-frame-id-slider",
+    "camera-sensor-dropdown",
+    SensorType.Camera,
+)
+
+register_slider_timestamps_clientside_callback(
+    "imu-timestamp-display",
+    "imu-frame-id-slider",
+    "imu-sensor-dropdown",
+    SensorType.Imu,
 )
 
 
@@ -70,16 +109,27 @@ def toggle_play(n_clicks):
         return True, "▶ Play"
 
 
-@app.callback(
-    Output("frame-id-slider", "value"),
-    Input("play-interval", "n_intervals"),
-    State("frame-id-slider", "value"),
-    State("frame-id-slider", "max"),
-)
-def advance_slider(_, value, max_value):
-    if value is None:
-        return 0
+def looping_increment(value, max_value):
     if value >= max_value:
-        return 0  # loop playback
+        return 0
 
     return value + 1
+
+
+# TODO(Jack): Why do we not use n_intervals directly? https://community.plotly.com/t/reset-n-intervals-in-dcc-interval/33078
+def register_slider_advance_callback(slider_id):
+    @app.callback(
+        Output(slider_id, "value"),
+        Input("play-interval", "n_intervals"),
+        State(slider_id, "value"),
+        State(slider_id, "max"),
+    )
+    def advance_slider(_, value, max_value):
+        if value is None or max_value is None:
+            return 0
+
+        return looping_increment(value, max_value)
+
+
+register_slider_advance_callback("camera-frame-id-slider")
+register_slider_advance_callback("imu-frame-id-slider")

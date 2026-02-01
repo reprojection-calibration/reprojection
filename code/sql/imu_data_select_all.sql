@@ -1,4 +1,5 @@
 SELECT timestamp_ns,
+       sensor_name,
        omega_x,
        omega_y,
        omega_z,
@@ -6,5 +7,4 @@ SELECT timestamp_ns,
        ay,
        az
 FROM imu_data
-WHERE sensor_name = ?
 ORDER BY timestamp_ns ASC;

@@ -7,7 +7,7 @@ from dashboard.server import IMAGE_DIMENSIONS, app
 @app.callback(
     Output("targets-xy-graph", "figure", allow_duplicate=True),
     Output("targets-pixels-graph", "figure", allow_duplicate=True),
-    Input("sensor-dropdown", "value"),
+    Input("camera-sensor-dropdown", "value"),
     prevent_initial_call=True,
 )
 def init_extracted_target_figures(sensor):
@@ -22,7 +22,7 @@ def init_extracted_target_figures(sensor):
     #  generic.
     xy_fig = go.Figure()
     xy_fig.add_trace(
-        go.Scatter(
+        go.Scattergl(
             x=[],
             y=[],
             mode="markers",
@@ -48,7 +48,7 @@ def init_extracted_target_figures(sensor):
 
     pixel_fig = go.Figure()
     pixel_fig.add_trace(
-        go.Scatter(
+        go.Scattergl(
             x=[],
             y=[],
             mode="markers",
@@ -81,12 +81,13 @@ def init_extracted_target_figures(sensor):
 # NOTE(Jack): Manually formatted periodically using https://beautifier.io/ - we should automate this process!
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, cmax, raw_data, processed_data, xy_fig, pixel_fig) {
-        if (!sensor || !pose_type || !raw_data || !processed_data || !xy_fig || !pixel_fig) {
+    function(frame_idx, sensor, pose_type, cmax, raw_data, metadata, xy_fig, pixel_fig) {
+        if (!sensor || !pose_type || !raw_data || !metadata || !xy_fig || !pixel_fig) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        const timestamps = processed_data[1][sensor]
+        // TODO(Jack): Do we need to protect against "camera" being available here, or can we take that for granted?
+        const timestamps = metadata[1]["camera"][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
@@ -161,12 +162,12 @@ app.clientside_callback(
     """,
     Output("targets-xy-graph", "figure"),
     Output("targets-pixels-graph", "figure"),
-    Input("frame-id-slider", "value"),
-    Input("sensor-dropdown", "value"),
+    Input("camera-frame-id-slider", "value"),
+    Input("camera-sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
     Input("max-reprojection-error-input", "value"),
-    State("raw-data-store", "data"),
-    State("processed-data-store", "data"),
+    State("raw-camera-data-store", "data"),
+    State("metadata-store", "data"),
     State("targets-xy-graph", "figure"),
     State("targets-pixels-graph", "figure"),
 )

@@ -1,21 +1,33 @@
 import unittest
 
-from dashboard.tools.plot_pose_figure import plot_pose_figure, timeseries_plot
+from dashboard.tools.plot_r3_timeseries import (
+    R3TimeseriesFigureConfig,
+    build_r3_timeseries_figure,
+    timeseries_plot,
+)
 
 
-class TestDashboardToolsPlotPoseFigure(unittest.TestCase):
-    def test_plot_pose_figure(self):
-        fig = plot_pose_figure([], [], "", "")
+class TestDashboardToolsPlotR3Timeseries(unittest.TestCase):
+    def test_build_r3_timeseries_figure(self):
+        # Mismatching timestamp and data lengths
+        fig = build_r3_timeseries_figure([1], [1, 1], None)
         self.assertEqual(fig, {})
 
-        # Pose data row is not 1X3 - error!
-        fig = plot_pose_figure([0], [[1, 2]], "", "")
+        # No timestamps at all
+        fig = build_r3_timeseries_figure([], [], None)
+        self.assertEqual(fig, {})
+
+        # Data row is not 1X3 - error!
+        fig = build_r3_timeseries_figure([0], [[1, 2]], None)
         self.assertEqual(fig, {})
 
         timestamps_ns = [20e9, 21e9, 25e9, 26e9]  # Must be sorted already!
         data = [[0, 0, 0], [1, 1, 1], [2, 2, 2], [3, 3, 3]]
-        fig = plot_pose_figure(
-            timestamps_ns, data, "awesome_main_title", "great_y_axis_title"
+        config = R3TimeseriesFigureConfig("awesome_main_title", "great_y_axis_title")
+        fig = build_r3_timeseries_figure(
+            timestamps_ns,
+            data,
+            config,
         )
 
         # The three different scatters - one for each x, y, and z component

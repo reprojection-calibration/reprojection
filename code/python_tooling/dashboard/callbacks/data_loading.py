@@ -8,6 +8,11 @@ from database.load_camera_calibration_data import (
     get_indexable_timestamp_record,
     load_camera_calibration_data,
 )
+from database.load_imu_calibration_data import (
+    get_imu_calibration_data_statistics,
+    load_imu_calibration_data,
+)
+from database.types import PoseType, SensorType
 
 
 @app.callback(
@@ -20,59 +25,82 @@ def refresh_database_list(db_dir, _):
     if not os.path.exists(db_dir):
         return [], ""
 
-    options = []
+    database_files = []
     for file_name in sorted(os.listdir(db_dir)):
         if not file_name.endswith(".db3"):
             continue
 
         full_path = os.path.join(db_dir, file_name)
-        options.append(
+        database_files.append(
             {
                 "label": file_name,
                 "value": full_path,
             }
         )
 
-    if len(options) == 0:
+    if len(database_files) == 0:
         return [], ""
 
-    return options, options[0]["value"]
+    return database_files, database_files[0]["value"]
 
 
 # TODO(Jack): When we load a new database we should reset the slider to zero!
 @app.callback(
-    Output("raw-data-store", "data"),
-    Output("processed-data-store", "data"),
+    Output("raw-camera-data-store", "data"),
+    Output("raw-imu-data-store", "data"),
+    Output("metadata-store", "data"),
     Input("database-dropdown", "value"),
 )
 def load_database_to_store(db_file):
     if not db_file or not os.path.isfile(db_file):
-        return None, None
+        return None, None, None
 
-    # We already check this when we load the db list, but it doesn't hurt to double-check :)
-    if not db_file.endswith(".db3"):
-        return None, None
+    raw_camera_data = load_camera_calibration_data(db_file)
+    raw_imu_data = load_imu_calibration_data(db_file)
 
-    raw_data = load_camera_calibration_data(db_file)
-    statistics = get_camera_calibration_data_statistics(raw_data)
-    indexable_timestamps = get_indexable_timestamp_record(raw_data)
+    statistics = {
+        SensorType.Camera: get_camera_calibration_data_statistics(raw_camera_data),
+        SensorType.Imu: get_imu_calibration_data_statistics(raw_imu_data),
+    }
 
-    return raw_data, [statistics, indexable_timestamps]
+    timestamps = {
+        SensorType.Camera: get_indexable_timestamp_record(raw_camera_data),
+        SensorType.Imu: get_indexable_timestamp_record(raw_imu_data),
+    }
+
+    return (
+        raw_camera_data,
+        raw_imu_data,
+        [statistics, timestamps],
+    )
 
 
-@app.callback(
-    Output("sensor-dropdown", "options"),
-    Output("sensor-dropdown", "value"),
-    Input("processed-data-store", "data"),
-)
-def refresh_sensor_list(processed_data):
-    if processed_data is None:
+def get_sensor_names(statistics, sensor_type):
+    if sensor_type not in statistics:
         return [], ""
 
-    statistics, _ = processed_data
-    sensor_names = sorted(statistics.keys())
+    sensor_statistics = statistics[sensor_type]
+    sensor_names = sorted(sensor_statistics.keys())
 
     if len(sensor_names) == 0:
         return [], ""
 
     return sensor_names, sensor_names[0]
+
+
+def register_sensor_list_refresh_calback(dropdown_id, sensor_type):
+    @app.callback(
+        Output(dropdown_id, "options"),
+        Output(dropdown_id, "value"),
+        Input("metadata-store", "data"),
+    )
+    def refresh_sensor_list(metadata):
+        if metadata is None:
+            return [], ""
+        statistics, _ = metadata
+
+        return get_sensor_names(statistics, sensor_type)
+
+
+register_sensor_list_refresh_calback("camera-sensor-dropdown", SensorType.Camera)
+register_sensor_list_refresh_calback("imu-sensor-dropdown", SensorType.Imu)

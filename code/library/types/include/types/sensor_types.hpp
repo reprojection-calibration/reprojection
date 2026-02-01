@@ -10,6 +10,7 @@
 
 namespace reprojection {
 
+// TODO(Jack): Remove completely when we transition to not using sets anymore.
 // TODO(Jack): Add concept requirements
 // TODO(Jack): Where does this belong?
 template <typename T>
@@ -27,13 +28,14 @@ struct ExtractedTargetStamped {
     ExtractedTarget target;
 };
 
+struct ImuMeasurement {
+    Vector3d angular_velocity;
+    Vector3d linear_acceleration;
+};
+
 struct ImuStamped {
     FrameHeader header;
-    // TODO(Jack): In future should we refactor the angular_velocity and linear_acceleration into an Imu struct?
-    double angular_velocity[3];
-    double linear_acceleration[3];
-
-    bool operator<(ImuStamped const& other) const { return header.timestamp_ns < other.header.timestamp_ns; }
+    ImuMeasurement data;
 };
 
 struct ImageStamped {

@@ -1,6 +1,5 @@
-#include "testing_mocks/mvg_generator.hpp"
+#include "testing_mocks/mvg_data_generator.hpp"
 
-// TODO(Jack): Sort local includes into separate group
 #include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
@@ -14,6 +13,7 @@
 
 namespace reprojection::testing_mocks {
 
+// TODO(Jack): There is a lot of shared logic here and with the IMU data generation. Is the a reason to simplify it?
 // TODO(Jack): Have a common initialization framework for the camera parameters here and with CameraCalibrationData and
 //  the camera construction itself. This should just be one struct...?
 CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const camera_model, ArrayXd const& intrinsics,
@@ -36,22 +36,21 @@ CameraCalibrationData GenerateMvgData(int const num_frames, CameraModel const ca
     CameraCalibrationData data{{"/mvg_test_data", camera_model, bounds}, intrinsics};
     for (int i{0}; i < num_frames; ++i) {
         double const elapsed_trajectory{static_cast<double>(i) / num_frames};
-        assert(0 <= elapsed_trajectory and elapsed_trajectory < 1);  // TODO(Jack): Refactor to throw here.
-
         uint64_t const spline_time{constants::t0_ns +
                                    static_cast<uint64_t>((num_control_points - spline::constants::degree) *
                                                          constants::delta_t_ns * elapsed_trajectory)};
 
         auto const pose_t{se3_spline.Evaluate(spline_time)};
-        assert(pose_t.has_value());  // TODO(Jack): Refactor to throw here.
+        if (not pose_t.has_value()) {
+            throw std::runtime_error("GenerateMvgData() failed se3_spline.Evaluate().");  // LCOV_EXCL_LINE
+        }
 
         auto const [pixels, mask]{MvgHelpers::Project(points, camera, geometry::Exp(pose_t.value()))};
         ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
-        uint64_t const timestamp_ns{constants::t0_ns + constants::delta_t_ns * i};
-        data.frames[timestamp_ns].extracted_target.bundle =
+        data.frames[spline_time].extracted_target.bundle =
             Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)};
-        data.frames[timestamp_ns].initial_pose = pose_t.value();
+        data.frames[spline_time].initial_pose = pose_t.value();
     }
 
     return data;
