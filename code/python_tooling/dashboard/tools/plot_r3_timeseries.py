@@ -48,6 +48,12 @@ def build_r3_timeseries_figure(
     if fig is None:
         fig = go.Figure()
 
+    # ERROR
+    # ERROR
+    # ERROR
+    # ERROR
+    # ERROR(Jack): This calculated the timestamps elapsed time soley based on the input data, but it should be
+    # calculated with respect to the raw data stamps! Or?
     # TODO(Jack): When we get the data from the store the timestamps are strings, so we need to convert them to int
     #  here. Should we deal with this programmatically and convert them to ints when they get loaded into the store?
     timestamps_ns = [int(t) for t in timestamps_ns]
