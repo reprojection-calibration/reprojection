@@ -10,7 +10,6 @@ set(SRC_FILES
         src/sphere_trajectory.cpp
 )
 set(LINK_LIBRARIES
-        database # REMOVE!!!
         Eigen3::Eigen
         eigen_utilities
         geometry
@@ -26,7 +25,6 @@ set(TESTS
         src/noise_generation.test.cpp
         src/sphere_trajectory.test.cpp
         test/imu_data_generator.test.cpp
-        test/imu_spline_data_analysis.test.cpp
         test/mvg_data_generator.test.cpp
 )
 AddTests()
