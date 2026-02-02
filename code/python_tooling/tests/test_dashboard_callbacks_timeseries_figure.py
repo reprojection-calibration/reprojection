@@ -3,8 +3,8 @@ import unittest
 import plotly.graph_objects as go
 
 from dashboard.callbacks.r3_timeseries_figure import (
+    build_r6_timeseries_figures,
     make_r3_timeseries_annotation_clientside_callback,
-    plot_two_common_r3_timeseries,
 )
 from dashboard.tools.r3_timeseries_figure import (
     R3TimeseriesFigureConfig as DefaultConfig,
@@ -13,11 +13,11 @@ from database.types import PoseType, SensorType
 
 
 class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
-    def test_build_timeseries_figures(self):
+    def test_build_r6_timeseries_figures_callback(self):
         # Unknown sensor type causes throw:
         self.assertRaises(
             RuntimeError,
-            plot_two_common_r3_timeseries,
+            build_r6_timeseries_figures,
             None,
             None,
             "random_sensor",
@@ -28,7 +28,7 @@ class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
 
         # Data frames are empty but the raw timestamps are present - returns two empty but configured figures
         timestamps_ns = [20e8, 21e9, 22e9, 23e9, 24e9, 25e9]
-        fig1, fig2 = plot_two_common_r3_timeseries(
+        fig1, fig2 = build_r6_timeseries_figures(
             timestamps_ns, {}, SensorType.Imu, None, None, None
         )
         self.assertIsInstance(fig1, go.Figure)
@@ -43,7 +43,7 @@ class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
             23e9: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
             24e9: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
         }
-        fig1, fig2 = plot_two_common_r3_timeseries(
+        fig1, fig2 = build_r6_timeseries_figures(
             timestamps_ns,
             camera_frames,
             SensorType.Camera,

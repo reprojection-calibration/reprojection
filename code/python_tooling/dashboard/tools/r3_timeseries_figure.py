@@ -129,7 +129,7 @@ def timeseries_plot(timestamps_ns, step=5):
 # NOTE(Jack): This is a function of pure convenience. It just so happens that we need to plot two sets of three values,
 # both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
 # exist.
-def plot_two_common_r3_timeseries(
+def build_r6_timeseries_figures(
     timestamps_ns, frames, sensor_type, fig1_config, fig2_config, pose_type
 ):
     if sensor_type == SensorType.Camera:

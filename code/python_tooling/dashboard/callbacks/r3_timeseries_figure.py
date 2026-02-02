@@ -4,14 +4,14 @@ from dashboard.server import app
 from dashboard.tools.r3_timeseries_figure import (
     R3TimeseriesFigureConfig,
     build_r3_timeseries_figure,
-    plot_two_common_r3_timeseries,
+    build_r6_timeseries_figures,
     timeseries_plot,
 )
 from database.types import SensorType
 
 
 # TODO IMU DATA DOES NOT HAVE POSE SELECTOR! Yet....
-def register_timeseries_figure_builder_callback(
+def register_build_r6_timeseries_figures_callback(
     fig1_id,
     fig2_id,
     sensor_dropdown_id,
@@ -31,7 +31,7 @@ def register_timeseries_figure_builder_callback(
         State("metadata-store", "data"),
         prevent_initial_call=True,
     )
-    def build_timeseries_figures(sensor, pose_type, raw_data, metadata):
+    def build_r6_timeseries_figures_callback(sensor, pose_type, raw_data, metadata):
         if (
             sensor is None
             or (pose_type is None and sensor_type == SensorType.Camera)
@@ -47,7 +47,7 @@ def register_timeseries_figure_builder_callback(
 
         # NOTE(Jack): Because sensor was in timestamps, sensor MUST also be in raw_data.
         # NOTE(Jack): # The initial condition assertion means that if sensor_type == Camera that pose_type MUST be set.
-        return plot_two_common_r3_timeseries(
+        return build_r6_timeseries_figures(
             timestamps[sensor],
             raw_data[sensor]["frames"],
             sensor_type,
@@ -63,7 +63,7 @@ camera_orientation_config = R3TimeseriesFigureConfig(
 camera_translation_config = R3TimeseriesFigureConfig(
     "Translation", "Meter (m)", "x", "y", "z", -2, 2
 )
-register_timeseries_figure_builder_callback(
+register_build_r6_timeseries_figures_callback(
     "camera-orientation-graph",
     "camera-translation-graph",
     "camera-sensor-dropdown",
@@ -79,7 +79,7 @@ imu_angular_velocity_config = R3TimeseriesFigureConfig(
 imu_linear_acceleration_config = R3TimeseriesFigureConfig(
     "Linear Acceleration", "(m/s2)", "ax", "ay", "az", -10, 10
 )
-register_timeseries_figure_builder_callback(
+register_build_r6_timeseries_figures_callback(
     "imu-angular-velocity-graph",
     "imu-linear-acceleration-graph",
     "imu-sensor-dropdown",
