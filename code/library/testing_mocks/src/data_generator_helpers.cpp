@@ -9,7 +9,7 @@ namespace reprojection::testing_mocks {
 
 spline::Se3Spline TimedSphereTrajectorySpline(int const num_control_points, uint64_t const duration_ns) {
     uint64_t const delta_t_ns{duration_ns / num_control_points};
-    spline::Se3Spline se3_spline{0, delta_t_ns};
+    spline::Se3Spline se3_spline{0, delta_t_ns};  // Hardcoded to start at 0
 
     for (auto const& pose : SphereTrajectory(num_control_points, constants::trajectory)) {
         se3_spline.AddControlPoint(pose);

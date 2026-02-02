@@ -22,6 +22,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/data_generator_helpers.test.cpp
         src/mvg_helpers.test.cpp
         src/noise_generation.test.cpp
         src/sphere_trajectory.test.cpp
