@@ -2,11 +2,13 @@ import unittest
 
 import plotly.graph_objects as go
 
-from dashboard.callbacks.timeseries_figure import (
+from dashboard.callbacks.r3_timeseries_figure import (
     make_r3_timeseries_annotation_clientside_callback,
     plot_two_common_r3_timeseries,
 )
-from dashboard.tools.plot_r3_timeseries import R3TimeseriesFigureConfig as DefaultConfig
+from dashboard.tools.r3_timeseries_figure import (
+    R3TimeseriesFigureConfig as DefaultConfig,
+)
 from database.types import PoseType, SensorType
 
 

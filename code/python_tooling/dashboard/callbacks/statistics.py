@@ -1,34 +1,9 @@
-from dash import Input, Output, State, html
+from dash import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from dashboard.server import app
+from dashboard.tools.statistics import build_sensor_statistics_div
 from database.types import PoseType, SensorType
-
-
-def build_sensor_statistics_div(sensor, statistics):
-    # TODO(Jack): Is raise PreventUpdate the appropriate error handling strategy here?
-    if sensor not in statistics:
-        raise PreventUpdate
-
-    return [
-        html.Div(
-            [
-                html.Div(
-                    "",
-                    style={
-                        "width": "20px",
-                        "height": "20px",
-                        "backgroundColor": "green" if value != 0 else "red",
-                        "display": "inline-block",
-                        "marginRight": "10px",
-                    },
-                ),
-                html.Div(value, style={"width": "35px", "display": "inline-block"}),
-                html.Div(key, style={"width": "200px", "display": "inline-block"}),
-            ],
-        )
-        for key, value in statistics[sensor].items()
-    ]
 
 
 def register_statistics_display_update_callback(
