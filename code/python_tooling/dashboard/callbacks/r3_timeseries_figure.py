@@ -5,6 +5,7 @@ from dashboard.tools.r3_timeseries_figure import (
     R3TimeseriesFigureConfig,
     build_r3_timeseries_figure,
     build_r6_timeseries_figures,
+    make_timeseries_annotation_clientside_callback,
     timeseries_plot,
 )
 from database.types import SensorType
@@ -32,6 +33,7 @@ def register_build_r6_timeseries_figures_callback(
         prevent_initial_call=True,
     )
     def build_r6_timeseries_figures_callback(sensor, pose_type, raw_data, metadata):
+        # TODO(Jack): We should move these data quality checks into a testable method. These are nowhere tested.
         if (
             sensor is None
             or (pose_type is None and sensor_type == SensorType.Camera)
@@ -57,11 +59,24 @@ def register_build_r6_timeseries_figures_callback(
         )
 
 
+# Camera calibration pose figures
 camera_orientation_config = R3TimeseriesFigureConfig(
-    "Orientation", "Axis Angle (rad)", "rx", "ry", "rz", -3.14, 3.14
+    "Orientation",
+    "Axis Angle (rad)",
+    "rx",
+    "ry",
+    "rz",
+    -3.14,
+    3.14,
 )
 camera_translation_config = R3TimeseriesFigureConfig(
-    "Translation", "Meter (m)", "x", "y", "z", -2, 2
+    "Translation",
+    "Meter (m)",
+    "x",
+    "y",
+    "z",
+    -2,
+    2,
 )
 register_build_r6_timeseries_figures_callback(
     "camera-orientation-graph",
@@ -73,11 +88,24 @@ register_build_r6_timeseries_figures_callback(
     camera_translation_config,
 )
 
+# Imu calibration measurement figures
 imu_angular_velocity_config = R3TimeseriesFigureConfig(
-    "Angular Velocty", "(rad/s)", "omega_x", "omega_y", "omega_z", -3.14, 3.14
+    "Angular Velocty",
+    "(rad/s)",
+    "omega_x",
+    "omega_y",
+    "omega_z",
+    -3.14,
+    3.14,
 )
 imu_linear_acceleration_config = R3TimeseriesFigureConfig(
-    "Linear Acceleration", "(m/s2)", "ax", "ay", "az", -10, 10
+    "Linear Acceleration",
+    "(m/s2)",
+    "ax",
+    "ay",
+    "az",
+    -10,
+    10,
 )
 register_build_r6_timeseries_figures_callback(
     "imu-angular-velocity-graph",
@@ -90,72 +118,7 @@ register_build_r6_timeseries_figures_callback(
 )
 
 
-# NOTE(Jack): Unfortunately the only way to achieve the parameterization of the clientside callbacks is to generate the
-# code. All we want to do is specify the sensor type!
-def make_r3_timeseries_annotation_clientside_callback(sensor_type):
-    return f"""
-    function(frame_idx, sensor, metadata, rot_fig, trans_fig) {{
-        if (!sensor || !metadata || !rot_fig || !trans_fig) {{
-            return [dash_clientside.no_update, dash_clientside.no_update];
-        }}
-    
-        const sensor_metadata = metadata[1]["{sensor_type.value}"]
-        if (!sensor_metadata || !sensor_metadata[sensor]) {{
-            return [dash_clientside.no_update, dash_clientside.no_update];
-        }}
-    
-        const timestamps = sensor_metadata[sensor];
-        if (!timestamps || timestamps.length <= frame_idx) {{
-            return [dash_clientside.no_update, dash_clientside.no_update];
-        }}
-    
-        const timestamp_0_ns = BigInt(timestamps[0]);
-        const timestamp_i_ns = BigInt(timestamps[frame_idx]);
-        const local_time_s = Number(timestamp_i_ns - timestamp_0_ns) / 1e9;
-    
-        // NOTE(Jack): The "paper" coordinate system goes from 0 to 1 to cover the entire figure, so we set yref to 
-        // "paper" so that the y0=0 and y1=1 dimensions will draw a vertical line the entire figure height. 
-        const new_shape = {{
-            type: 'rect',
-            xref: 'x',
-            yref: 'paper',
-            x0: local_time_s,
-            x1: local_time_s,
-            y0: 0,
-            y1: 1,
-            line: {{
-                color: 'black',
-                width: 1
-            }},
-        }};
-    
-        const new_annotation = {{
-            x: local_time_s,
-            y: 1,
-            xref: 'x',
-            yref: 'paper',
-            text: `${{frame_idx}}`,
-            showarrow: false,
-            yanchor: 'bottom',
-            xanchor: 'center',
-            font: {{
-                color: 'white',
-                size: 12
-            }},
-            bgcolor: 'rgba(10,10,10,0.7)',
-        }};
-    
-        // WARN(Jack): This might overwrite other pre-existing shapes that we add later!
-        patch = new dash_clientside.Patch;
-        patch.assign(['layout', 'shapes'], [new_shape]);
-        patch.assign(['layout', 'annotations'], [new_annotation]);
-    
-        return [patch.build(), patch.build()];
-    }}
-    """
-
-
-def register_r3_timeseries_annotation_clientside_callback(
+def register_timeseries_annotation_clientside_callback(
     fig1_id,
     fig2_id,
     slider_id,
@@ -163,7 +126,7 @@ def register_r3_timeseries_annotation_clientside_callback(
     sensor_type,
 ):
     app.clientside_callback(
-        make_r3_timeseries_annotation_clientside_callback(sensor_type),
+        make_timeseries_annotation_clientside_callback(sensor_type),
         Output(fig1_id, "figure"),
         Output(fig2_id, "figure"),
         Input(slider_id, "value"),
@@ -174,7 +137,7 @@ def register_r3_timeseries_annotation_clientside_callback(
     )
 
 
-register_r3_timeseries_annotation_clientside_callback(
+register_timeseries_annotation_clientside_callback(
     "camera-orientation-graph",
     "camera-translation-graph",
     "camera-frame-id-slider",
@@ -182,7 +145,7 @@ register_r3_timeseries_annotation_clientside_callback(
     SensorType.Camera,
 )
 
-register_r3_timeseries_annotation_clientside_callback(
+register_timeseries_annotation_clientside_callback(
     "imu-angular-velocity-graph",
     "imu-linear-acceleration-graph",
     "imu-frame-id-slider",

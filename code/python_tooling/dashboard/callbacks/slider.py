@@ -4,7 +4,7 @@ from dashboard.server import app
 from dashboard.tools.slider import (
     get_slider_properties,
     looping_increment,
-    make_slider_timestamps_clientside_callback,
+    make_slider_timestamp_clientside_callback,
 )
 from database.types import SensorType
 
@@ -59,7 +59,7 @@ def register_slider_timestamps_clientside_callback(
     timestamp_display_id, slider_id, sensor_dropdown_id, sensor_type
 ):
     app.clientside_callback(
-        make_slider_timestamps_clientside_callback(sensor_type),
+        make_slider_timestamp_clientside_callback(sensor_type),
         Output(timestamp_display_id, "children"),
         Input(slider_id, "value"),
         State("metadata-store", "data"),

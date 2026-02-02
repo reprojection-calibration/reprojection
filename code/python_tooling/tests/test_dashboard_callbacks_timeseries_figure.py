@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 
 from dashboard.callbacks.r3_timeseries_figure import (
     build_r6_timeseries_figures,
-    make_r3_timeseries_annotation_clientside_callback,
+    make_timeseries_annotation_clientside_callback,
 )
 from dashboard.tools.r3_timeseries_figure import (
     R3TimeseriesFigureConfig as DefaultConfig,
@@ -64,13 +64,13 @@ class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
         self.assertEqual(len(fig2_traces), 3)
         self.assertTrue(all(len(t.x) == len(t.y) == 4 for t in fig2_traces))
 
-    def test_make_r3_timeseries_annotation_clientside_callback(self):
-        clientside_callback = make_r3_timeseries_annotation_clientside_callback(
+    def test_make_timeseries_annotation_clientside_callback(self):
+        clientside_callback = make_timeseries_annotation_clientside_callback(
             SensorType.Camera
         )
         self.assertIn(f'metadata[1]["camera"]', clientside_callback)
 
-        clientside_callback = make_r3_timeseries_annotation_clientside_callback(
+        clientside_callback = make_timeseries_annotation_clientside_callback(
             SensorType.Imu
         )
         self.assertIn(f'metadata[1]["imu"]', clientside_callback)

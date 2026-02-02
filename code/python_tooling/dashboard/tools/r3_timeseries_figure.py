@@ -47,12 +47,6 @@ def build_r3_timeseries_figure(
     if fig is None:
         fig = go.Figure()
 
-    # ERROR
-    # ERROR
-    # ERROR
-    # ERROR
-    # ERROR(Jack): This calculated the timestamps elapsed time based on the input data, but it should be
-    # calculated with respect to the raw data stamps begin! Or?
     # TODO(Jack): When we get the data from the store the timestamps are strings, so we need to convert them to int
     #  here. Should we deal with this programmatically and convert them to ints when they get loaded into the store?
     timestamps_ns = [int(t) for t in timestamps_ns]
@@ -173,3 +167,68 @@ def build_r6_timeseries_figures(
     )
 
     return fig1, fig2
+
+
+# NOTE(Jack): Unfortunately the only way to achieve the parameterization of the clientside callbacks is to generate the
+# code. All we want to do is specify the sensor type!
+def make_timeseries_annotation_clientside_callback(sensor_type):
+    return f"""
+    function(frame_idx, sensor, metadata, rot_fig, trans_fig) {{
+        if (!sensor || !metadata || !rot_fig || !trans_fig) {{
+            return [dash_clientside.no_update, dash_clientside.no_update];
+        }}
+    
+        const sensor_metadata = metadata[1]["{sensor_type.value}"]
+        if (!sensor_metadata || !sensor_metadata[sensor]) {{
+            return [dash_clientside.no_update, dash_clientside.no_update];
+        }}
+    
+        const timestamps = sensor_metadata[sensor];
+        if (!timestamps || timestamps.length <= frame_idx) {{
+            return [dash_clientside.no_update, dash_clientside.no_update];
+        }}
+    
+        const timestamp_0_ns = BigInt(timestamps[0]);
+        const timestamp_i_ns = BigInt(timestamps[frame_idx]);
+        const local_time_s = Number(timestamp_i_ns - timestamp_0_ns) / 1e9;
+    
+        // NOTE(Jack): The "paper" coordinate system goes from 0 to 1 to cover the entire figure, so we set yref to 
+        // "paper" so that the y0=0 and y1=1 dimensions will draw a vertical line the entire figure height. 
+        const new_shape = {{
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper',
+            x0: local_time_s,
+            x1: local_time_s,
+            y0: 0,
+            y1: 1,
+            line: {{
+                color: 'black',
+                width: 1
+            }},
+        }};
+    
+        const new_annotation = {{
+            x: local_time_s,
+            y: 1,
+            xref: 'x',
+            yref: 'paper',
+            text: `${{frame_idx}}`,
+            showarrow: false,
+            yanchor: 'bottom',
+            xanchor: 'center',
+            font: {{
+                color: 'white',
+                size: 12
+            }},
+            bgcolor: 'rgba(10,10,10,0.7)',
+        }};
+    
+        // WARN(Jack): This might overwrite other pre-existing shapes that we add later!
+        patch = new dash_clientside.Patch;
+        patch.assign(['layout', 'shapes'], [new_shape]);
+        patch.assign(['layout', 'annotations'], [new_annotation]);
+    
+        return [patch.build(), patch.build()];
+    }}
+    """

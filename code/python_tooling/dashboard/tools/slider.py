@@ -13,7 +13,7 @@ def get_slider_properties(sensor, statistics, timestamps):
 
 # NOTE(Jack): Unfortunately the only way to achieve the parameterization of the clientside callbacks is to generate the
 # code.
-def make_slider_timestamps_clientside_callback(sensor_type):
+def make_slider_timestamp_clientside_callback(sensor_type):
     return f"""
     function(frame_idx, data, sensor) {{
         if (!data || !sensor) {{
