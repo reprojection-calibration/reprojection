@@ -16,7 +16,7 @@ using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
     CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
-        20, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+        20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
     CameraCalibrationData data{gt_data};
 
     optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
@@ -51,7 +51,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 // and intrinsic back.
 TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
     CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
-        20, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+        20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
     CameraCalibrationData data{gt_data};
 
     // Add gaussian noise to the initial poses

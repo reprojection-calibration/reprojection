@@ -20,8 +20,8 @@ TEST(Xxxx, Yyyyy) {
 
     // Camera data
     CameraCalibrationData const camera_data{
-        testing_mocks::GenerateMvgData(100, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
-                                       testing_utilities::image_bounds, false, timespan_ns)};
+        testing_mocks::GenerateMvgData(100, timespan_ns, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
+                                       testing_utilities::image_bounds, false)};
     for (auto const& [timestamp_ns, frame_i] : camera_data.frames) {
         FrameHeader const header{timestamp_ns, camera_data.sensor.sensor_name};
         database::AddImage(header, db);

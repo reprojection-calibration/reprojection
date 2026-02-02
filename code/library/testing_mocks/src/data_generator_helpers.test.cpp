@@ -28,10 +28,7 @@ TEST(TestingMocksDataGeneratorHelpers, TestTimedSphereTrajectorySpline) {
 TEST(TestingMocksDataGeneratorHelpers, TestSampleTimes) {
     std::set<uint64_t> const times{testing_mocks::SampleTimes(100, 1000)};
 
-    for (auto const time: times) {
-        std::cout << time << std::endl;
-    }
-
+    EXPECT_EQ(std::size(times), 100);
     EXPECT_EQ(*std::cbegin(times), 0);
     EXPECT_EQ(*std::crbegin(times), 960);
 }
