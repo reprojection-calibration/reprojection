@@ -28,7 +28,7 @@ def image_df_to_camera_calibration_data(df):
     data = {}
     for index, row in df.iterrows():
         sensor = row["sensor_name"]
-        timestamp = row["timestamp_ns"]
+        timestamp = int(row["timestamp_ns"])
 
         if sensor not in data:
             data[sensor] = {"frames": {}}

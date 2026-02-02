@@ -3,10 +3,8 @@ from dash import Input, Output, State
 from dashboard.server import app
 from dashboard.tools.r3_timeseries_figure import (
     R3TimeseriesFigureConfig,
-    build_r3_timeseries_figure,
     build_r6_timeseries_figures,
     make_timeseries_annotation_clientside_callback,
-    timeseries_plot,
 )
 from database.types import SensorType
 

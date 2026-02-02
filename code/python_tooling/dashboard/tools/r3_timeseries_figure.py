@@ -47,9 +47,6 @@ def build_r3_timeseries_figure(
     if fig is None:
         fig = go.Figure()
 
-    # TODO(Jack): When we get the data from the store the timestamps are strings, so we need to convert them to int
-    #  here. Should we deal with this programmatically and convert them to ints when they get loaded into the store?
-    timestamps_ns = [int(t) for t in timestamps_ns]
     timestamps_s = timestamps_to_elapsed_seconds(timestamps_ns, t0_ns)
 
     # NOTE(Jack): We use go.Scattergl() because it is way way faster than a regular scatter plot with lots of points.

@@ -32,7 +32,7 @@ def imu_data_df_to_imu_calibration_data(df):
     data = {}
     for index, row in df.iterrows():
         sensor = row["sensor_name"]
-        timestamp = row["timestamp_ns"]
+        timestamp = int(row["timestamp_ns"])
         measurement = row.iloc[-6:].tolist()
 
         if sensor not in data:

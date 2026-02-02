@@ -1,4 +1,12 @@
 def extract_timestamps_and_r6_data_sorted(frames, extract_fn):
+    # ERROR(Jack): Discovering this caused me a lot of paint! Bottom line is, the json serialization of the dcc.Stores
+    # when they get loaded to the browser converts the frame keys from an int type to a string type -_-, this means
+    # that when we try to sort and extract the frame timestamps here, they are strings, and sort and compare according
+    # to string rules. One example of how this manifested itself was that for non-padded data, before applying this
+    # hack fix here, would sort a value like 100 -after- 1000. Of course, you won't notice this if all your sensor data
+    # is on proper unix time, but if your sensor starts counting from zero every time you will notice it right away :)
+    frames = {int(k): v for k, v in frames.items()}
+
     timestamps = []
     values = []
     for timestamp in sorted(frames):
@@ -12,13 +20,15 @@ def extract_timestamps_and_r6_data_sorted(frames, extract_fn):
         if value_i is None:
             continue
 
-        timestamps.append(timestamp)
+        # TODO(Jack): Why do I need a cast here? Is the timestamp key not already a int?
+        timestamps.append(int(timestamp))
         values.append(value_i)
 
     return timestamps, values
 
 
 def timestamps_to_elapsed_seconds(timestamps_ns, t0_ns=None):
+
     if len(timestamps_ns) == 0:
         return []
 
