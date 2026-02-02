@@ -94,5 +94,9 @@ def register_refresh_sensor_list_callback(dropdown_id, sensor_type):
 #       or hacking together similar code, I made this dependency explicit with the callback register_* pattern. This
 #       means for completely common functionality like the sensor list dropdown, or slider index bar, we can initialize
 #       them in the same exact manner by simply specifying the appropriate component IDs and SensorType.
+#   (2) Because the @app.callback decorated method is inside of the register_* function, we cannot test it directly
+#       from our unit test package. Therefore, for those callbacks where we need to use a register_* method we move the
+#       entire implementation into its own function in the tools package that is tested from there. And then the
+#       callback method itself just becomes a small wrapper around this external function.
 register_refresh_sensor_list_callback("camera-sensor-dropdown", SensorType.Camera)
 register_refresh_sensor_list_callback("imu-sensor-dropdown", SensorType.Imu)
