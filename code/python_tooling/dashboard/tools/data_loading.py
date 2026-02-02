@@ -3,6 +3,8 @@ def refresh_sensor_list(metadata, sensor_type):
         return [], ""
     statistics, _ = metadata
 
+    # TODO(Jack): Do we really need to check this in every single consuming function? I think we can count on the fact
+    #  that it is there.
     if sensor_type not in statistics:
         return [], ""
 

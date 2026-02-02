@@ -1,7 +1,14 @@
 from dashboard.tools.time_handling import calculate_ticks_from_timestamps
 
 
-def get_slider_properties(sensor, statistics, timestamps):
+def update_slider_properties(sensor, metadata, sensor_type):
+    if sensor is None or metadata is None:
+        return {}, 0
+    statistics, timestamps = metadata
+
+    statistics = statistics[sensor_type]
+    timestamps = timestamps[sensor_type]
+
     if sensor not in statistics or sensor not in timestamps:
         return {}, 0
 

@@ -2,9 +2,9 @@ from dash import Input, Output, State
 
 from dashboard.server import app
 from dashboard.tools.slider import (
-    get_slider_properties,
     looping_increment,
     make_slider_timestamp_clientside_callback,
+    update_slider_properties,
 )
 from database.types import SensorType
 
@@ -14,7 +14,7 @@ from database.types import SensorType
     Output("play-button", "children"),
     Input("play-button", "n_clicks"),
 )
-def toggle_play(n_clicks):
+def toggle_play_callback(n_clicks):
     # We play by default (n_clicks=0), which means that only when we have an odd number of clicks is "playing" false.
     playing = n_clicks % 2 == 0
 
@@ -26,7 +26,7 @@ def toggle_play(n_clicks):
         return True, "▶ Play"
 
 
-def register_slider_properties_update_callback(
+def register_update_slider_properties_callback(
     slider_id, sensor_dropdown_id, sensor_type
 ):
     @app.callback(
@@ -35,22 +35,14 @@ def register_slider_properties_update_callback(
         Input(sensor_dropdown_id, "value"),
         State("metadata-store", "data"),
     )
-    def update_slider_properties(sensor, metadata):
-        if sensor is None or metadata is None:
-            return {}, 0
-        statistics, timestamps = metadata
-
-        return get_slider_properties(
-            sensor,
-            statistics[sensor_type],
-            timestamps[sensor_type],
-        )
+    def update_slider_properties_callback(sensor, metadata, sensor_type):
+        return update_slider_properties(sensor, metadata, sensor_type)
 
 
-register_slider_properties_update_callback(
+register_update_slider_properties_callback(
     "camera-frame-id-slider", "camera-sensor-dropdown", SensorType.Camera
 )
-register_slider_properties_update_callback(
+register_update_slider_properties_callback(
     "imu-frame-id-slider", "imu-sensor-dropdown", SensorType.Imu
 )
 

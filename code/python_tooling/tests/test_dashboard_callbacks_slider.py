@@ -1,37 +1,46 @@
 import unittest
 
+from reference_data import FullData as FD
+from reference_data import InvalidData as ID
+from reference_data import SkeletonData as SD
+
 from dashboard.callbacks.slider import (
-    get_slider_properties,
-    looping_increment,
-    toggle_play,
+    toggle_play_callback,
 )
+from dashboard.tools.slider import (
+    looping_increment,
+    update_slider_properties,
+)
+from database.types import SensorType
 
 
-class TestDashboardCallbacksSlider(unittest.TestCase):
-    def test_update_slider_properties(self):
-        marks, max_value = get_slider_properties("", {}, {})
+class DashboardSlider(unittest.TestCase):
+    def test_update_slider_properties_invalid_data(self):
+        marks, max_value = update_slider_properties("", ID.metadata, SensorType.Camera)
         self.assertEqual(marks, {})
         self.assertEqual(max_value, 0)
 
-        # Happy path success
-        sensor = "/cam0/image_raw"
-        n_frames = 20
-        statistics = {sensor: {"total_frames": n_frames}}
-        timestamps = {sensor: [int(i * 1e9) for i in range(n_frames)]}
+    def test_update_slider_properties_skeleton_data(self):
+        marks, max_value = update_slider_properties("", SD.metadata, SensorType.Camera)
+        self.assertEqual(marks, {})
+        self.assertEqual(max_value, 0)
 
-        marks, max_value = get_slider_properties(sensor, statistics, timestamps)
-        self.assertEqual(marks, {0: "0s", 5: "5s", 10: "10s", 15: "15s"})
-        self.assertEqual(max_value, 19)
+    def test_update_slider_properties(self):
+        marks, max_value = update_slider_properties(
+            "/cam0/image_raw", FD.metadata, SensorType.Camera
+        )
+        self.assertEqual(marks, {0: "0s"})
+        self.assertEqual(max_value, 0)
 
-    def test_toggle_play(self):
+    def test_toggle_play_callback(self):
         # The slider advances/plays by default which means the button needs to display the pause action.
-        output = toggle_play(0)
+        output = toggle_play_callback(0)
         self.assertEqual(output, (False, "⏸ Pause"))
 
-        output = toggle_play(1)
+        output = toggle_play_callback(1)
         self.assertEqual(output, (True, "▶ Play"))
 
-        output = toggle_play(2)
+        output = toggle_play_callback(2)
         self.assertEqual(output, (False, "⏸ Pause"))
 
     def test_looping_increment(self):
