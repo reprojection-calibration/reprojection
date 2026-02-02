@@ -3,13 +3,14 @@ import os
 from dash import Input, Output
 
 from dashboard.server import app
+from dashboard.tools.data_loading import refresh_sensor_list
 from database.load_camera_calibration_data import (
-    get_camera_calibration_data_statistics,
-    get_indexable_timestamp_record,
+    calculate_camera_statistics,
+    get_reference_timestamps,
     load_camera_calibration_data,
 )
 from database.load_imu_calibration_data import (
-    get_imu_calibration_data_statistics,
+    calculate_imu_statistics,
     load_imu_calibration_data,
 )
 from database.types import PoseType, SensorType
@@ -21,7 +22,7 @@ from database.types import PoseType, SensorType
     Input("database-directory-input", "value"),
     Input("refresh-database-list-button", "n_clicks"),
 )
-def refresh_database_list(db_dir, _):
+def refresh_database_list_callback(db_dir, _):
     if not os.path.exists(db_dir):
         return [], ""
 
@@ -51,7 +52,7 @@ def refresh_database_list(db_dir, _):
     Output("metadata-store", "data"),
     Input("database-dropdown", "value"),
 )
-def load_database_to_store(db_file):
+def load_database_to_stores_callback(db_file):
     if not db_file or not os.path.isfile(db_file):
         return None, None, None
 
@@ -59,13 +60,13 @@ def load_database_to_store(db_file):
     raw_imu_data = load_imu_calibration_data(db_file)
 
     statistics = {
-        SensorType.Camera: get_camera_calibration_data_statistics(raw_camera_data),
-        SensorType.Imu: get_imu_calibration_data_statistics(raw_imu_data),
+        SensorType.Camera: calculate_camera_statistics(raw_camera_data),
+        SensorType.Imu: calculate_imu_statistics(raw_imu_data),
     }
 
     timestamps = {
-        SensorType.Camera: get_indexable_timestamp_record(raw_camera_data),
-        SensorType.Imu: get_indexable_timestamp_record(raw_imu_data),
+        SensorType.Camera: get_reference_timestamps(raw_camera_data),
+        SensorType.Imu: get_reference_timestamps(raw_imu_data),
     }
 
     return (
@@ -75,32 +76,27 @@ def load_database_to_store(db_file):
     )
 
 
-def get_sensor_names(statistics, sensor_type):
-    if sensor_type not in statistics:
-        return [], ""
-
-    sensor_statistics = statistics[sensor_type]
-    sensor_names = sorted(sensor_statistics.keys())
-
-    if len(sensor_names) == 0:
-        return [], ""
-
-    return sensor_names, sensor_names[0]
-
-
-def register_sensor_list_refresh_calback(dropdown_id, sensor_type):
+def register_refresh_sensor_list_callback(dropdown_id, sensor_type):
     @app.callback(
         Output(dropdown_id, "options"),
         Output(dropdown_id, "value"),
         Input("metadata-store", "data"),
     )
-    def refresh_sensor_list(metadata):
-        if metadata is None:
-            return [], ""
-        statistics, _ = metadata
-
-        return get_sensor_names(statistics, sensor_type)
+    def refresh_sensor_list_callback(metadata):
+        return refresh_sensor_list(metadata, sensor_type)
 
 
-register_sensor_list_refresh_calback("camera-sensor-dropdown", SensorType.Camera)
-register_sensor_list_refresh_calback("imu-sensor-dropdown", SensorType.Imu)
+# NOTE(Jack): This comment belongs somewhere more central! But... The current design has some design points which are
+# worth writing down. The most important points are:
+#
+#   (1) We the register_* pattern to prevent code duplication. When I added the IMU data visualization I found that I
+#       wanted many of the same things that I had for the camera calibration visualization. Instead of copy and pasting
+#       or hacking together similar code, I made this dependency explicit with the callback register_* pattern. This
+#       means for completely common functionality like the sensor list dropdown, or slider index bar, we can initialize
+#       them in the same exact manner by simply specifying the appropriate component IDs and SensorType.
+#   (2) Because the @app.callback decorated method is inside of the register_* function, we cannot test it directly
+#       from our unit test package. Therefore, for those callbacks where we need to use a register_* method we move the
+#       entire implementation into its own function in the tools package that is tested from there. And then the
+#       callback method itself just becomes a small wrapper around this external function.
+register_refresh_sensor_list_callback("camera-sensor-dropdown", SensorType.Camera)
+register_refresh_sensor_list_callback("imu-sensor-dropdown", SensorType.Imu)

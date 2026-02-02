@@ -10,7 +10,7 @@ from dashboard.server import IMAGE_DIMENSIONS, app
     Input("camera-sensor-dropdown", "value"),
     prevent_initial_call=True,
 )
-def init_extracted_target_figures(sensor):
+def build_extracted_target_figures_callback(sensor):
     if not sensor:
         return {}, {}
 

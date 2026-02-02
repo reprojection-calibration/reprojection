@@ -1,6 +1,6 @@
 import unittest
 
-from dashboard.tools.plot_r3_timeseries import (
+from dashboard.tools.r3_timeseries_figure import (
     R3TimeseriesFigureConfig,
     build_r3_timeseries_figure,
     timeseries_plot,

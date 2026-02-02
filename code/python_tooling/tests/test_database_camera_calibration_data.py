@@ -4,7 +4,7 @@ import unittest
 import pandas as pd
 
 from database.load_camera_calibration_data import (
-    get_camera_calibration_data_statistics,
+    calculate_camera_statistics,
     load_camera_calibration_data,
 )
 from database.load_camera_poses import add_camera_poses_df_to_camera_calibration_data
@@ -30,7 +30,7 @@ class TestDatabaseCameraCalibrationData(unittest.TestCase):
 
     def test_load_camera_calibration_data(self):
         data = load_camera_calibration_data(self.db_path)
-        statistics = get_camera_calibration_data_statistics(data)
+        statistics = calculate_camera_statistics(data)
 
         self.assertEqual(len(statistics.keys()), 2)
 
