@@ -9,6 +9,8 @@
 
 namespace reprojection::spline {
 
+// TODO(Jack): Why are most of these functions in the public interface?
+
 CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> const& measurements,
                                                     size_t const num_segments) {
     // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known
@@ -94,6 +96,8 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double
     return sparse_weights;
 }
 
+// NOTE(Jack): Lambda could also be called "stiffness", as it constrains the spline to have minimum energy and fit the
+// points stiffly. This is critical for cases where we want to interpolate more poses than we have initial data points.
 CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns,
                                                                     double const lambda) {
     MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
