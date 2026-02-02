@@ -124,7 +124,7 @@ def timeseries_plot(timestamps_ns, step=5):
 # both indexed by the same time. If this common coincidental requirement did not exist, then this function would not
 # exist.
 def build_r6_timeseries_figures(
-    timestamps_ns, frames, sensor_type, fig1_config, fig2_config, pose_type
+    reference_timestamps_ns, frames, sensor_type, fig1_config, fig2_config, pose_type
 ):
     if sensor_type == SensorType.Camera:
         data_extractor = lambda f: f["poses"][pose_type]
@@ -137,7 +137,7 @@ def build_r6_timeseries_figures(
 
     # Build the plots using all timestamps so that even if there is no r3 data to plot below we can return figures with
     # properly sized x-axes
-    fig = timeseries_plot(timestamps_ns)
+    fig = timeseries_plot(reference_timestamps_ns)
 
     data_timestamps_ns, data = extract_timestamps_and_r6_data_sorted(
         frames, data_extractor
@@ -154,7 +154,7 @@ def build_r6_timeseries_figures(
         fig1_data,
         fig1_config,
         go.Figure(fig),
-        timestamps_ns[0],
+        reference_timestamps_ns[0],
     )
 
     fig2_data = [d[3:] for d in data]
@@ -163,7 +163,7 @@ def build_r6_timeseries_figures(
         fig2_data,
         fig2_config,
         go.Figure(fig),
-        timestamps_ns[0],
+        reference_timestamps_ns[0],
     )
 
     return fig1, fig2

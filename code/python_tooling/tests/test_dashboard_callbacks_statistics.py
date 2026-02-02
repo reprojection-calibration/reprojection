@@ -1,9 +1,7 @@
 import unittest
 
 from dash.exceptions import PreventUpdate
-from reference_data import FullData as FD
-from reference_data import InvalidData as ID
-from reference_data import SkeletonData as SD
+from reference_data import full_data, invalid_data, skeleton_data
 
 from dashboard.callbacks.statistics import build_sensor_statistics_div
 from database.types import SensorType
@@ -12,33 +10,37 @@ from database.types import SensorType
 # TODO(Jack): Why are we still raising an error here with this method instead of just returning blank?
 class TestDashboardCallbacksStatistics(unittest.TestCase):
     def test_build_sensor_statistics_div_invalid_data(self):
+        test_data = invalid_data()
+
         self.assertRaises(
             PreventUpdate,
             build_sensor_statistics_div,
             "",
-            ID.metadata,
+            test_data.metadata,
             SensorType.Camera,
         )
 
     def test_build_sensor_statistics_div_skeleton_data(self):
+        test_data = skeleton_data()
+
         self.assertRaises(
             PreventUpdate,
             build_sensor_statistics_div,
             "",
-            SD.metadata,
+            test_data.metadata,
             SensorType.Camera,
         )
 
     def test_build_sensor_statistics_div(self):
         # We add another statistic so that we can test the two mains behaviors of the function.
-        test_data = FD()
+        test_data = full_data()
         test_data.statistics[SensorType.Camera]["/cam0/image_raw"]["statistic_1"] = 0
+
         output = build_sensor_statistics_div(
             "/cam0/image_raw",
             test_data.metadata,
             SensorType.Camera,
         )
-
         self.assertEqual(len(output), 2)
 
         def assert_statistic_row_element(div, color, value, label):

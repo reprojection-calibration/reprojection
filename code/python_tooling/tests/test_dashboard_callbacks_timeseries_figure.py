@@ -1,6 +1,7 @@
 import unittest
 
 import plotly.graph_objects as go
+from reference_data import full_data
 
 from dashboard.callbacks.r3_timeseries_figure import (
     build_r6_timeseries_figures,
@@ -13,39 +14,39 @@ from database.types import PoseType, SensorType
 
 
 class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
-    def test_build_r6_timeseries_figures_callback(self):
-        # Unknown sensor type causes throw:
-        self.assertRaises(
-            RuntimeError,
-            build_r6_timeseries_figures,
-            None,
-            None,
-            "random_sensor",
-            None,
-            None,
-            None,
+
+    def test_build_r6_timeseries_figures_full_data(self):
+        test_data = full_data()
+
+        fig1, fig2 = build_r6_timeseries_figures(
+            test_data.timestamps[SensorType.Camera]["/cam0/image_raw"],
+            test_data.raw_camera_data["/cam0/image_raw"]["frames"],
+            SensorType.Camera,
+            DefaultConfig(),
+            DefaultConfig(),
+            PoseType.Initial,
         )
 
-        # Data frames are empty but the raw timestamps are present - returns two empty but configured figures
-        timestamps_ns = [20e8, 21e9, 22e9, 23e9, 24e9, 25e9]
-        fig1, fig2 = build_r6_timeseries_figures(
-            timestamps_ns, {}, SensorType.Imu, None, None, None
-        )
         self.assertIsInstance(fig1, go.Figure)
         self.assertEqual(len(fig1["data"]), 0)
         self.assertIsInstance(fig2, go.Figure)
         self.assertEqual(len(fig2["data"]), 0)
 
-        # Plot four data points - results in two figures with three traces each containing four points :)
-        camera_frames = {
-            21e9: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
-            22e9: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
-            23e9: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
-            24e9: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
+    def test_build_r6_timeseries_figures(self):
+        # We add another statistic so that we can test the two mains behaviors of the function.
+        test_data = full_data()
+        test_data.timestamps[SensorType.Camera]["/cam0/image_raw"] = [0, 1, 2, 3]
+        test_data.raw_camera_data["/cam0/image_raw"]["frames"] = {
+            0: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
+            1: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
+            2: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
+            3: {"poses": {PoseType.Initial: [0, 0, 0, 0, 0, 0]}},
         }
+
+        # Plot four data points - results in two figures with three traces each containing four points :)
         fig1, fig2 = build_r6_timeseries_figures(
-            timestamps_ns,
-            camera_frames,
+            test_data.timestamps[SensorType.Camera]["/cam0/image_raw"],
+            test_data.raw_camera_data["/cam0/image_raw"]["frames"],
             SensorType.Camera,
             DefaultConfig(),
             DefaultConfig(),
