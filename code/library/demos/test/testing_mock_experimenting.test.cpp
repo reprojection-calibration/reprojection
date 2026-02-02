@@ -16,10 +16,12 @@ TEST(Xxxx, Yyyyy) {
     auto db{std::make_shared<database::CalibrationDatabase>("/tmp/reprojection/code/test_data/a_testing_mock.db3", true,
                                                             false)};
 
+    float const timespan_ns{20e9};
+
     // Camera data
     CameraCalibrationData const camera_data{
         testing_mocks::GenerateMvgData(100, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics,
-                                       testing_utilities::image_bounds, false, 20e9)};
+                                       testing_utilities::image_bounds, false, timespan_ns)};
     for (auto const& [timestamp_ns, frame_i] : camera_data.frames) {
         FrameHeader const header{timestamp_ns, camera_data.sensor.sensor_name};
         database::AddImage(header, db);
@@ -29,7 +31,7 @@ TEST(Xxxx, Yyyyy) {
 
     // Imu data
     // TODO MAKE THE IMU FUNCTION ACCEPT THE IMU DATA TYPE - FIRST INVENT THAT TYPE!
-    testing_mocks::ImuData const imu_data{testing_mocks::GenerateImuData(1000, 20e9)};
+    testing_mocks::ImuData const imu_data{testing_mocks::GenerateImuData(1000, timespan_ns)};
     for (auto const& [timestamp_ns, measurement_i] : imu_data) {
         ImuStamped const temp_i{{timestamp_ns, "/mvg_imu"}, measurement_i};
         (void)database::AddImuData(temp_i, db);
