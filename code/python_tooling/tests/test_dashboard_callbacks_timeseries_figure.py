@@ -1,7 +1,7 @@
 import unittest
 
 import plotly.graph_objects as go
-from reference_data import full_data
+from dashboard_reference_data import full_data
 
 from dashboard.callbacks.r3_timeseries_figure import (
     build_r6_timeseries_figures,
@@ -33,7 +33,7 @@ class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
         self.assertEqual(len(fig2["data"]), 0)
 
     def test_build_r6_timeseries_figures(self):
-        # We add another statistic so that we can test the two mains behaviors of the function.
+        # We add some pose data to check that the plotting works like we expect
         test_data = full_data()
         test_data.timestamps[SensorType.Camera]["/cam0/image_raw"] = [0, 1, 2, 3]
         test_data.raw_camera_data["/cam0/image_raw"]["frames"] = {
@@ -52,18 +52,20 @@ class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
             DefaultConfig(),
             PoseType.Initial,
         )
+
         # Fig1
         self.assertIsInstance(fig1, go.Figure)
         fig1_traces = fig1["data"]
         self.assertEqual(len(fig1_traces), 3)  # Three traces (x,y,z)
         self.assertTrue(
-            all(len(t.x) == len(t.y) == 4 for t in fig1_traces)
+            all(len(trace.x) == len(trace.y) == 4 for trace in fig1_traces)
         )  # Four data points plotted
+
         # Fig2
         self.assertIsInstance(fig2, go.Figure)
         fig2_traces = fig2["data"]
         self.assertEqual(len(fig2_traces), 3)
-        self.assertTrue(all(len(t.x) == len(t.y) == 4 for t in fig2_traces))
+        self.assertTrue(all(len(trace.x) == len(trace.y) == 4 for trace in fig2_traces))
 
     def test_make_timeseries_annotation_clientside_callback(self):
         clientside_callback = make_timeseries_annotation_clientside_callback(

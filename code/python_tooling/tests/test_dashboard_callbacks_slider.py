@@ -1,6 +1,6 @@
 import unittest
 
-from reference_data import full_data, invalid_data, skeleton_data
+from dashboard_reference_data import full_data, invalid_data, skeleton_data
 
 from dashboard.callbacks.slider import (
     toggle_play_callback,

@@ -1,7 +1,7 @@
 import unittest
 
 from dash.exceptions import PreventUpdate
-from reference_data import full_data, invalid_data, skeleton_data
+from dashboard_reference_data import full_data, invalid_data, skeleton_data
 
 from dashboard.callbacks.statistics import build_sensor_statistics_div
 from database.types import SensorType
