@@ -15,6 +15,6 @@ using ImuData = std::map<uint64_t, ImuMeasurement>;
 
 // TODO(Jack): I think this generates data in the body frame, i.e. as if it really came from the IMU, and not in some
 //  global coordinate frame, but that is something we need to confirm!
-ImuData GenerateImuData(int const num_measurements);
+ImuData GenerateImuData(int const num_measurements,  uint64_t const timespan_ns=0);
 
 }  // namespace reprojection::testing_mocks

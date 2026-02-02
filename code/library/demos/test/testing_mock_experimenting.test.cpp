@@ -18,7 +18,7 @@ TEST(Xxxx, Yyyyy) {
 
     // Camera data
     CameraCalibrationData const camera_data{testing_mocks::GenerateMvgData(
-        200, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+        100, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false,20e9)};
     for (auto const& [timestamp_ns, frame_i] : camera_data.frames) {
         FrameHeader const header{timestamp_ns, camera_data.sensor.sensor_name};
         database::AddImage(header, db);
@@ -28,7 +28,7 @@ TEST(Xxxx, Yyyyy) {
 
     // Imu data
     // TODO MAKE THE IMU FUNCTION ACCEPT THE IMU DATA TYPE - FIRST INVENT THAT TYPE!
-    testing_mocks::ImuData const imu_data{testing_mocks::GenerateImuData(1000)};
+    testing_mocks::ImuData const imu_data{testing_mocks::GenerateImuData(1000,20e9)};
     for (auto const& [timestamp_ns, measurement_i] : imu_data) {
         ImuStamped const temp_i{{timestamp_ns, "/mvg_imu"}, measurement_i};
         (void)database::AddImuData(temp_i, db);
