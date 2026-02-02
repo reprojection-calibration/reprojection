@@ -1,5 +1,4 @@
 import unittest
-from importlib import invalidate_caches
 
 from dashboard_reference_data import full_data, invalid_data, skeleton_data
 
