@@ -14,6 +14,8 @@ set(LINK_LIBRARIES
         eigen_utilities
         feature_extraction
         geometry
+        testing_mocks
+        testing_utilities
         types
         ${apriltag_LIBRARIES}
         optimization
@@ -25,6 +27,7 @@ AddLibrary()
 
 set(TESTS
         test/image_source.test.cpp
+        test/testing_mock_experimenting.test.cpp
 )
 AddTests()
 
