@@ -11,7 +11,7 @@ def load_imu_calibration_data(db_path):
 # TODO(Jack): At the current stage when we are not sure about foreign key relationships, the total_frames will always be
 #  the same as frames_with_imu_measurement - but maybe in the future when we add the interpolated poses the concept of
 #  total_frames will not even apply here at all?
-def get_imu_calibration_data_statistics(data):
+def calculate_imu_statistics(data):
     statistics = {}
     for sensor, sensor_data in data.items():
         total_frames = 0

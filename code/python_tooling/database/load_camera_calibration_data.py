@@ -30,7 +30,7 @@ def load_camera_calibration_data(db_path):
     return data
 
 
-def get_camera_calibration_data_statistics(data):
+def calculate_camera_statistics(data):
     statistics = {}
     for sensor, sensor_data in data.items():
         total_frames = 0

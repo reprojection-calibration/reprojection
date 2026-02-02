@@ -5,12 +5,12 @@ from dash import Input, Output
 from dashboard.server import app
 from dashboard.tools.data_loading import refresh_sensor_list
 from database.load_camera_calibration_data import (
-    get_camera_calibration_data_statistics,
+    calculate_camera_statistics,
     get_indexable_timestamp_record,
     load_camera_calibration_data,
 )
 from database.load_imu_calibration_data import (
-    get_imu_calibration_data_statistics,
+    calculate_imu_statistics,
     load_imu_calibration_data,
 )
 from database.types import PoseType, SensorType
@@ -60,8 +60,8 @@ def load_database_to_stores_callback(db_file):
     raw_imu_data = load_imu_calibration_data(db_file)
 
     statistics = {
-        SensorType.Camera: get_camera_calibration_data_statistics(raw_camera_data),
-        SensorType.Imu: get_imu_calibration_data_statistics(raw_imu_data),
+        SensorType.Camera: calculate_camera_statistics(raw_camera_data),
+        SensorType.Imu: calculate_imu_statistics(raw_imu_data),
     }
 
     timestamps = {
