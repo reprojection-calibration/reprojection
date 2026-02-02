@@ -71,15 +71,26 @@ def calculate_camera_statistics(data):
     return statistics
 
 
-# This has a really complicated name, probably because I have not yet found how to integrate it cleanly into the
-# dashboard. But let me quickly explain it. The motivation for this is that dash provides the dcc.Interval which we use
-# to get a slider which lets us animate our entire dashboard as a function of time. Our data is however stored and
-# mapped by timestamp, and using indexes blindly would not be scalable. Imagine what would happen when a frame has a
-# value for some times and not others. If we blindly use an index we might get the wrong value or access out of bounds.
-# Therefore, we have this function to simply provide us a sorted list of all the timestamps for each sensor. We can then
-# index into this from the dcc.Interval output, and use the retried timestamp to fetch the data we want. If the data
-# does not exist then we can handle that easily.
-def get_indexable_timestamp_record(data):
+# Our databases have foreign key constraints which we use to enforce that every single piece of data is associated with
+# a frame. For example for the camera data, the "images" table is defined as:
+#
+#   CREATE TABLE IF NOT EXISTS images (
+#       timestamp_ns INTEGER NOT NULL,
+#       sensor_name  TEXT    NOT NULL,
+#       data         BLOB    NULL,
+#   PRIMARY KEY (timestamp_ns, sensor_name));
+#
+# All subsequent tables in the camera calibration process that calculate data for a frame, here defined by the tuple
+# (timestamp_ns, sensor_name), have a foreign key relationship either directly or indirectly to this timestamp and
+# sensor name. The timestamps in the "images" table therefore define the entire set of possible timestamps which can
+# ever be found in the camera calibration database tables. In this sense this set of timestamps is the "reference."
+# Maybe there is a better name but for now this fits!
+#
+# So in this method here we are iterating over all the possible timestamps and putting them into a sorted list. This
+# is then what we use to drive things like the index slider bar, and set axis values for timeseries plots. Having this
+# consistency across an entire sensors data display is very nice because it makes it clear what the common timeframe is
+# and also when data is missing. Wonderful :)
+def get_reference_timestamps(data):
     timestamp_record = {}
     for sensor, sensor_data in data.items():
         timestamps = sorted(list(sensor_data["frames"].keys()))

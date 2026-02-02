@@ -6,7 +6,7 @@ from dashboard.server import app
 from dashboard.tools.data_loading import refresh_sensor_list
 from database.load_camera_calibration_data import (
     calculate_camera_statistics,
-    get_indexable_timestamp_record,
+    get_reference_timestamps,
     load_camera_calibration_data,
 )
 from database.load_imu_calibration_data import (
@@ -65,8 +65,8 @@ def load_database_to_stores_callback(db_file):
     }
 
     timestamps = {
-        SensorType.Camera: get_indexable_timestamp_record(raw_camera_data),
-        SensorType.Imu: get_indexable_timestamp_record(raw_imu_data),
+        SensorType.Camera: get_reference_timestamps(raw_camera_data),
+        SensorType.Imu: get_reference_timestamps(raw_imu_data),
     }
 
     return (
