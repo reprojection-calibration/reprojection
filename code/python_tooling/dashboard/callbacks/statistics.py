@@ -1,5 +1,4 @@
 from dash import Input, Output, State
-from dash.exceptions import PreventUpdate
 
 from dashboard.server import app
 from dashboard.tools.statistics import build_sensor_statistics_div
@@ -15,12 +14,7 @@ def register_statistics_display_update_callback(
         State("metadata-store", "data"),
     )
     def update_sensor_statistics_display(sensor, metadata):
-        # TODO(Jack): Is raise PreventUpdate the appropriate error handling strategy here?
-        if sensor is None or metadata is None:
-            raise PreventUpdate
-        statistics, _ = metadata
-
-        return build_sensor_statistics_div(sensor, statistics[sensor_type])
+        return build_sensor_statistics_div(sensor, metadata, sensor_type)
 
 
 register_statistics_display_update_callback(

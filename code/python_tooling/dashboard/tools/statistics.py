@@ -2,8 +2,13 @@ from dash import html
 from dash.exceptions import PreventUpdate
 
 
-def build_sensor_statistics_div(sensor, statistics):
-    # TODO(Jack): Is raise PreventUpdate the appropriate error handling strategy here?
+# TODO(Jack): Is raise PreventUpdate the appropriate error handling strategy here?
+def build_sensor_statistics_div(sensor, metadata, sensor_type):
+    if sensor is None or metadata is None:
+        raise PreventUpdate
+    statistics, _ = metadata
+
+    statistics = statistics[sensor_type]
     if sensor not in statistics:
         raise PreventUpdate
 

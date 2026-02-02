@@ -35,7 +35,7 @@ def register_update_slider_properties_callback(
         Input(sensor_dropdown_id, "value"),
         State("metadata-store", "data"),
     )
-    def update_slider_properties_callback(sensor, metadata, sensor_type):
+    def update_slider_properties_callback(sensor, metadata):
         return update_slider_properties(sensor, metadata, sensor_type)
 
 
