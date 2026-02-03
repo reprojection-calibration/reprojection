@@ -34,6 +34,16 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
         Q.block(i * N, i * N, num_coefficients, num_coefficients) += omega;
     }
 
+    // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
+    // slow as hell and took about 55 seconds on my laptop to initialize the rotation and translation. But then I used a
+    // sparse solver and it cut the time down to about 600ms. Therefore I think we are on the right track here using
+    // sparse logic.
+    // WARN(Jack): In the documentation for the .sparseView() method it says "This method is typically used when
+    // prototyping to convert a quickly assembled dense Matrix D to a SparseMatrix S". That sentence implies it should
+    // only be used for prototyping, but it solved my problem (initialization time cut from 55s to 600ms) so honestly I
+    // am asking myself why I should refactor the entire initialization code to be "sparse by default" and not use dense
+    // matrices like we do during the problem construction. Maybe it would be nice to transfer all the code directly to
+    // work on the sparse representation, but at this time I see not benefit.
     // TODO(Jack): Why can't Q be sparseView() also? Cause it is not const maybe?
     // TODO(Jack): Can we make A_n be a sparse matrix directly so we do not need to use the view later when we solve it?
     MatrixXd const A_n{A.sparseView().transpose() * A.sparseView() + Q};
