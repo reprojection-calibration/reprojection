@@ -12,7 +12,8 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): Why are most of these functions in the public interface?
+// TODO(Jack): Why are most of these functions that are only used inside of InitializeSpline part of the public
+//  interface?
 
 CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> const& measurements,
                                                     size_t const num_segments) {
@@ -63,7 +64,7 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
         throw std::runtime_error("Failed: solver.solve(b_n);");
     }
 
-    for (int i{0}; i < x.size(); i += 3) {
+    for (int i{0}; i < x.rows(); i += 3) {
         spline.control_points.push_back(x.segment<3>(i));
     }
 
