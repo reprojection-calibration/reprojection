@@ -1,7 +1,6 @@
 #include "sphere_trajectory.hpp"
 
 #include "geometry/lie.hpp"
-#include "spline/constants.hpp"
 #include "spline/se3_spline.hpp"
 
 #include "constants.hpp"
@@ -27,7 +26,7 @@ std::vector<Isometry3d> SphereTrajectory(int const num_poses, CameraTrajectory c
 }
 
 Vector3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position) {
-    Vector3d const delta{origin - camera_position};
+    Vector3d const delta{camera_position - origin};
     if (delta.norm() < 1e-8) {
         // The origin and camera_position are the same point
         return Vector3d::Zero();
@@ -42,7 +41,7 @@ Vector3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position) {
     Vector3d const cross_product{camera_forward_direction.cross(origin_direction)};
     double const cross_norm{cross_product.norm()};
 
-    // Edge case handlign when camera position and origin lie on the same vertical line (i.e. case when x and y
+    // Edge case handling when camera position and origin lie on the same vertical line (i.e. case when x and y
     // coordinates are the same for both).
     if (cross_norm < 1e-8) {
         if (dot > 0.9999999) {
