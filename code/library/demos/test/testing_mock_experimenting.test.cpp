@@ -35,7 +35,7 @@ std::tuple<CubicBSplineC3, CubicBSplineC3> InitSpline(CameraFrameSequence const&
     CubicBSplineC3 const rotation_spline{
         CubicBSplineC3Init::InitializeSpline(rotation_measurements, num_interpolation_points)};
     CubicBSplineC3 const translation_spline{
-        CubicBSplineC3Init::InitializeSpline(rotation_measurements, num_interpolation_points)};
+        CubicBSplineC3Init::InitializeSpline(translation_measurements, num_interpolation_points)};
 
     return {rotation_spline, translation_spline};
 }
@@ -45,28 +45,43 @@ std::tuple<CubicBSplineC3, CubicBSplineC3> InitSpline(CameraFrameSequence const&
 using namespace reprojection;
 
 TEST(Xxxx, Yyyyy) {
-    auto db{std::make_shared<database::CalibrationDatabase>("/tmp/reprojection/code/test_data/a_testing_mock.db3", true,
-                                                            false)};
     float const timespan_ns{20e9};
 
     // Camera data
     CameraCalibrationData const camera_data{testing_mocks::GenerateMvgData(100, timespan_ns, CameraModel::Pinhole,
                                                                            testing_utilities::pinhole_intrinsics,
                                                                            testing_utilities::image_bounds, false)};
+
+    auto const [rot_spline, trans_spline]{calibration::InitSpline(camera_data.frames, 2000)};
+
+    CameraCalibrationData  interpolated_spline;
+    interpolated_spline.sensor.sensor_name= "/interpolated_spline";
+    for (uint64_t i{0}; i< std::size(rot_spline.control_points); ++i) {
+        Vector6d pose_i;
+        pose_i.topRows(3) = rot_spline.control_points[i];
+        pose_i.bottomRows(3) = trans_spline.control_points[i];
+        interpolated_spline.frames[i].initial_pose =  pose_i;
+    }
+
+    auto db{std::make_shared<database::CalibrationDatabase>("/tmp/reprojection/code/test_data/a_testing_mock.db3", true,
+                                                        false)};
+
     for (auto const& [timestamp_ns, frame_i] : camera_data.frames) {
         FrameHeader const header{timestamp_ns, camera_data.sensor.sensor_name};
         database::AddImage(header, db);
-        database::AddExtractedTargetData({header, {}}, db);
+        AddExtractedTargetData({header, {}}, db);
     }
     database::AddCameraPoseData(camera_data, database::PoseType::Initial, db);
 
-    // Imu data
-    // TODO MAKE THE IMU FUNCTION ACCEPT THE IMU DATA TYPE - FIRST INVENT THAT TYPE!
-    testing_mocks::ImuData const imu_data{testing_mocks::GenerateImuData(1000, timespan_ns)};
-    for (auto const& [timestamp_ns, measurement_i] : imu_data) {
-        ImuStamped const temp_i{{timestamp_ns, "/mvg_imu"}, measurement_i};
-        (void)database::AddImuData(temp_i, db);
+    for (auto const& [timestamp_ns, frame_i] : interpolated_spline.frames) {
+        FrameHeader const header{timestamp_ns, interpolated_spline.sensor.sensor_name};
+        database::AddImage(header, db);
+        AddExtractedTargetData({header, {}}, db);
     }
+    database::AddCameraPoseData(interpolated_spline, database::PoseType::Initial, db);
+
+
+
 
     EXPECT_EQ(1, 2);
 }
