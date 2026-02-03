@@ -48,9 +48,9 @@ TEST(Xxxx, Yyyyy) {
     float const timespan_ns{20e9};
 
     // Camera data
-    CameraCalibrationData const camera_data{testing_mocks::GenerateMvgData(100, timespan_ns, CameraModel::Pinhole,
+    CameraCalibrationData const camera_data{testing_mocks::GenerateMvgData(200, timespan_ns, CameraModel::Pinhole,
                                                                            testing_utilities::pinhole_intrinsics,
-                                                                           testing_utilities::image_bounds, false)};
+                                                                           testing_utilities::image_bounds, true)};
 
     auto const [rot_spline, trans_spline]{calibration::InitSpline(camera_data.frames, 2000)};
 
@@ -69,7 +69,7 @@ TEST(Xxxx, Yyyyy) {
     for (auto const& [timestamp_ns, frame_i] : camera_data.frames) {
         FrameHeader const header{timestamp_ns, camera_data.sensor.sensor_name};
         database::AddImage(header, db);
-        AddExtractedTargetData({header, {}}, db);
+        AddExtractedTargetData({header, frame_i.extracted_target}, db);
     }
     database::AddCameraPoseData(camera_data, database::PoseType::Initial, db);
 
