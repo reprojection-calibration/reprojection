@@ -9,7 +9,7 @@ set(SRC_FILES
 set(LINK_LIBRARIES
         calibration
         calibration_data_views
-        database
+        database # REMOVE
         Eigen3::Eigen
         eigen_utilities
         feature_extraction
@@ -22,6 +22,7 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         pnp
         projection_functions
+        spline # REMOVE
 )
 AddLibrary()
 
