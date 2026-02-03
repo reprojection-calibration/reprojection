@@ -1,5 +1,8 @@
 #include "spline/spline_initialization.hpp"
 
+#include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
+
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
@@ -31,9 +34,24 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
         Q.block(i * N, i * N, num_coefficients, num_coefficients) += omega;
     }
 
-    MatrixXd const A_n{A.transpose() * A + Q};
-    MatrixXd const b_n{A.transpose() * b};
-    VectorXd const x{A_n.ldlt().solve(b_n)};
+    // TODO(Jack): Why can't Q be sparseView() also? Cause it is not const maybe?
+    // TODO(Jack): Can we make A_n be a sparse matrix directly so we do not need to use the view later when we solve it?
+    MatrixXd const A_n{A.sparseView().transpose() * A.sparseView() + Q};
+    MatrixXd const b_n{A.transpose().sparseView() * b};
+
+    // See the section "Sparse solver concept" in
+    // https://libeigen.gitlab.io/eigen/docs-nightly/group__TopicSparseSystems.html
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+    solver.compute(A_n.sparseView());
+    // TODO(Jack): We should refactor this entire init function to return optional!
+    if (solver.info() != Eigen::Success) {
+        throw std::runtime_error("Failed: solver.compute(A_n.sparseView());");
+    }
+
+    VectorXd const x{solver.solve(b_n)};
+    if (solver.info() != Eigen::Success) {
+        throw std::runtime_error("Failed: solver.solve(b_n);");
+    }
 
     for (int i{0}; i < x.size(); i += 3) {
         spline.control_points.push_back(x.segment<3>(i));
@@ -58,7 +76,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
         // therefore we need this hack here. What this hack does is ensure that at the very end of the spline, when
         // time_ns_i is at the end (corresponds to the last measurement), it does not start another time segment past
         // the end of the spline, but instead stays on the last valid segment at the very end (ex. u_i=0.99999). This is
-        // definitely a hack, but it works!
+        // definitely a hack, but it "works"!
         std::uint64_t time_ns_i{measurements[j].t_ns};
         if (j == std::size(measurements) - 1) {
             time_ns_i -= static_cast<std::uint64_t>(1 + 0.01 * time_handler.delta_t_ns_);
