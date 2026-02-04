@@ -16,7 +16,7 @@ spline::Se3Spline TimedSphereTrajectorySpline(int const num_control_points, uint
     }
 
     return se3_spline;
-}
+}  // LCOV_EXCL_LINE
 
 std::set<uint64_t> SampleTimes(int const num_samples, uint64_t const timespan_ns) {
     uint64_t const delta_t_ns{timespan_ns / num_samples};
@@ -31,6 +31,6 @@ std::set<uint64_t> SampleTimes(int const num_samples, uint64_t const timespan_ns
     }
 
     return sample_times;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::testing_mocks

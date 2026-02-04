@@ -56,12 +56,12 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
     solver.compute(A_n.sparseView());
     // TODO(Jack): We should refactor this entire init function to return optional!
     if (solver.info() != Eigen::Success) {
-        throw std::runtime_error("Failed: solver.compute(A_n.sparseView());");
+        throw std::runtime_error("Failed: solver.compute(A_n.sparseView());");  // LCOV_EXCL_LINE
     }
 
     VectorXd const x{solver.solve(b_n)};
     if (solver.info() != Eigen::Success) {
-        throw std::runtime_error("Failed: solver.solve(b_n);");
+        throw std::runtime_error("Failed: solver.solve(b_n);");  // LCOV_EXCL_LINE
     }
 
     for (int i{0}; i < x.rows(); i += 3) {
