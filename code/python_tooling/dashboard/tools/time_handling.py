@@ -1,5 +1,5 @@
 def extract_timestamps_and_r6_data_sorted(frames, extract_fn):
-    # ERROR(Jack): Discovering this caused me a lot of paint! Bottom line is, the json serialization of the dcc.Stores
+    # ERROR(Jack): Discovering this caused me a lot of pain! Bottom line is, the json serialization of the dcc.Stores
     # when they get loaded to the browser converts the frame keys from an int type to a string type -_-, this means
     # that when we try to sort and extract the frame timestamps here, they are strings, and sort and compare according
     # to string rules. One example of how this manifested itself was that for non-padded data, before applying this
@@ -20,8 +20,7 @@ def extract_timestamps_and_r6_data_sorted(frames, extract_fn):
         if value_i is None:
             continue
 
-        # TODO(Jack): Why do I need a cast here? Is the timestamp key not already a int?
-        timestamps.append(int(timestamp))
+        timestamps.append(timestamp)
         values.append(value_i)
 
     return timestamps, values
