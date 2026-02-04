@@ -13,7 +13,7 @@ using namespace reprojection;
 
 TEST(PnpDlt, TestDlt23) {
     CameraCalibrationData const data{testing_mocks::GenerateMvgData(
-        20, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+        20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         auto const [tf, K]{pnp::Dlt23(frame_i.extracted_target.bundle)};
@@ -32,7 +32,7 @@ TEST(PnpDlt, TestDlt23) {
 
 TEST(PnpDlt, TestDlt22) {
     // Points must have Z=0 (flat = true) for Dlt22
-    CameraCalibrationData const data{testing_mocks::GenerateMvgData(20, CameraModel::Pinhole,
+    CameraCalibrationData const data{testing_mocks::GenerateMvgData(20, 1e9, CameraModel::Pinhole,
                                                                     testing_utilities::unit_pinhole_intrinsics,
                                                                     testing_utilities::unit_image_bounds, true)};
 

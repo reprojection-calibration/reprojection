@@ -1,5 +1,8 @@
 #include "spline/spline_initialization.hpp"
 
+#include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
+
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
@@ -8,6 +11,9 @@
 #include "types/eigen_types.hpp"
 
 namespace reprojection::spline {
+
+// TODO(Jack): Why are most of these functions that are only used inside of InitializeSpline part of the public
+//  interface?
 
 CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> const& measurements,
                                                     size_t const num_segments) {
@@ -29,11 +35,36 @@ CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> c
         Q.block(i * N, i * N, num_coefficients, num_coefficients) += omega;
     }
 
-    MatrixXd const A_n{A.transpose() * A + Q};
-    MatrixXd const b_n{A.transpose() * b};
-    VectorXd const x{A_n.ldlt().solve(b_n)};
+    // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
+    // slow as hell and took about 55 seconds on my laptop to initialize the rotation and translation. But then I used a
+    // sparse solver and it cut the time down to about 600ms. Therefore I think we are on the right track here using
+    // sparse logic.
+    // WARN(Jack): In the documentation for the .sparseView() method it says "This method is typically used when
+    // prototyping to convert a quickly assembled dense Matrix D to a SparseMatrix S". That sentence implies it should
+    // only be used for prototyping, but it solved my problem (initialization time cut from 55s to 600ms) so honestly I
+    // am asking myself why I should refactor the entire initialization code to be "sparse by default" and not use dense
+    // matrices like we do during the problem construction. Maybe it would be nice to transfer all the code directly to
+    // work on the sparse representation, but at this time I see not benefit.
+    // TODO(Jack): Why can't Q be sparseView() also? Cause it is not const maybe?
+    // TODO(Jack): Can we make A_n be a sparse matrix directly so we do not need to use the view later when we solve it?
+    MatrixXd const A_n{A.sparseView().transpose() * A.sparseView() + Q};
+    MatrixXd const b_n{A.transpose().sparseView() * b};
 
-    for (int i{0}; i < x.size(); i += 3) {
+    // See the section "Sparse solver concept" in
+    // https://libeigen.gitlab.io/eigen/docs-nightly/group__TopicSparseSystems.html
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+    solver.compute(A_n.sparseView());
+    // TODO(Jack): We should refactor this entire init function to return optional!
+    if (solver.info() != Eigen::Success) {
+        throw std::runtime_error("Failed: solver.compute(A_n.sparseView());");  // LCOV_EXCL_LINE
+    }
+
+    VectorXd const x{solver.solve(b_n)};
+    if (solver.info() != Eigen::Success) {
+        throw std::runtime_error("Failed: solver.solve(b_n);");  // LCOV_EXCL_LINE
+    }
+
+    for (int i{0}; i < x.rows(); i += 3) {
         spline.control_points.push_back(x.segment<3>(i));
     }
 
@@ -56,7 +87,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measure
         // therefore we need this hack here. What this hack does is ensure that at the very end of the spline, when
         // time_ns_i is at the end (corresponds to the last measurement), it does not start another time segment past
         // the end of the spline, but instead stays on the last valid segment at the very end (ex. u_i=0.99999). This is
-        // definitely a hack, but it works!
+        // definitely a hack, but it "works"!
         std::uint64_t time_ns_i{measurements[j].t_ns};
         if (j == std::size(measurements) - 1) {
             time_ns_i -= static_cast<std::uint64_t>(1 + 0.01 * time_handler.delta_t_ns_);
@@ -94,6 +125,8 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double
     return sparse_weights;
 }
 
+// NOTE(Jack): Lambda could also be called "stiffness", as it constrains the spline to have minimum energy and fit the
+// points stiffly. This is critical for cases where we want to interpolate more poses than we have initial data points.
 CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns,
                                                                     double const lambda) {
     MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};

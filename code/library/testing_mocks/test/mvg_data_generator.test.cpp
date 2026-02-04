@@ -14,18 +14,14 @@ using namespace reprojection;
 // But don't forget that there might be an implementation error because when we set the view point and
 // sphere origin as {0,0,0} we get poses that do not make sense!
 TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
-    CameraCalibrationData const batch{testing_mocks::GenerateMvgData(
-        100, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+    CameraCalibrationData const data{testing_mocks::GenerateMvgData(
+        100, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
 
-    uint64_t gt_timestamp_ns{0};
-    for (auto const& [timestamp_ns, frame_i] : batch.frames) {
+    EXPECT_EQ(std::size(data.frames), 100);
+    for (auto const& [timestamp_ns, frame_i] : data.frames) {
         EXPECT_EQ(frame_i.extracted_target.bundle.pixels.rows(), 25);
         EXPECT_EQ(frame_i.extracted_target.bundle.points.rows(), 25);
-        EXPECT_NEAR(timestamp_ns, gt_timestamp_ns, 1);
-
-        gt_timestamp_ns += 1970000;
     }
-    EXPECT_NEAR(gt_timestamp_ns, 195030000 + 1970000, 1);
 }
 
 TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {

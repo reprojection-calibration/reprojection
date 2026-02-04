@@ -14,6 +14,8 @@ set(LINK_LIBRARIES
         eigen_utilities
         feature_extraction
         geometry
+        testing_mocks
+        testing_utilities
         types
         ${apriltag_LIBRARIES}
         optimization

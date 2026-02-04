@@ -69,7 +69,7 @@ def add_reprojection_errors_df_to_camera_calibration_data(df, data):
                 f"Sensor {sensor} not present in camera calibration data dictionary",
             )
 
-        timestamp = row["timestamp_ns"]
+        timestamp = int(row["timestamp_ns"])
         if timestamp not in data[sensor]["frames"]:
             raise RuntimeError(
                 f"Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary"

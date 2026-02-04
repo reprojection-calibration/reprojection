@@ -1,7 +1,6 @@
 #include "sphere_trajectory.hpp"
 
 #include "geometry/lie.hpp"
-#include "spline/constants.hpp"
 #include "spline/se3_spline.hpp"
 
 #include "constants.hpp"
@@ -26,8 +25,16 @@ std::vector<Isometry3d> SphereTrajectory(int const num_poses, CameraTrajectory c
     return tfs;
 }
 
+// See the code here for a possible implementation https://plotly.com/python/3d-camera-controls/
+// NOTE(Jack): I went down a long rabbit hole of trying to understand this method better. Basically the problem that
+// explains why we do not get any excitation in the roll (rz) is because we are hard coding this function to always look
+// parallel to the worlds z-direction. This does not reflect my original intention of having the camera (z-axis forward)
+// looking at one point during the entire trajectory. The bottom line is that if we want excitation of the roll
+// dimension using this kind of method we can either heuristically add some roll, or instead fix the direction of
+// gravity. If the direction of gravity is fixed then we can use some cross products to get an orthogonal rotation
+// matrix that points in the direction we want.
 Vector3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position) {
-    Vector3d const delta{origin - camera_position};
+    Vector3d const delta{camera_position - origin};
     if (delta.norm() < 1e-8) {
         // The origin and camera_position are the same point
         return Vector3d::Zero();
@@ -42,7 +49,7 @@ Vector3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position) {
     Vector3d const cross_product{camera_forward_direction.cross(origin_direction)};
     double const cross_norm{cross_product.norm()};
 
-    // Edge case handlign when camera position and origin lie on the same vertical line (i.e. case when x and y
+    // Edge case handling when camera position and origin lie on the same vertical line (i.e. case when x and y
     // coordinates are the same for both).
     if (cross_norm < 1e-8) {
         if (dot > 0.9999999) {

@@ -12,7 +12,7 @@ using namespace reprojection;
 
 TEST(Pnp, TestPnp) {
     CameraCalibrationData const data{testing_mocks::GenerateMvgData(
-        20, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+        20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
 
     for (auto const& [_, frame_i] : data.frames) {
         pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::image_bounds)};
@@ -26,7 +26,7 @@ TEST(Pnp, TestPnp) {
 }
 
 TEST(Pnp, TestPnpFlat) {
-    CameraCalibrationData const data{testing_mocks::GenerateMvgData(20, CameraModel::Pinhole,
+    CameraCalibrationData const data{testing_mocks::GenerateMvgData(20, 1e9, CameraModel::Pinhole,
                                                                     testing_utilities::unit_pinhole_intrinsics,
                                                                     testing_utilities::unit_image_bounds, true)};
 
