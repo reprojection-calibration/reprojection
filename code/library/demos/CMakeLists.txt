@@ -28,7 +28,6 @@ AddLibrary()
 
 set(TESTS
         test/image_source.test.cpp
-        test/testing_mock_experimenting.test.cpp
 )
 AddTests()
 
