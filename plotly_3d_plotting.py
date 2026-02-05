@@ -64,9 +64,7 @@ def gravity_aligned_pose(origin, position):
     tf[:3, 0] = forward_direction
     tf[:3, 1] = xxx_direction
     tf[:3, 2] = yyy_direction
-    print(tf)
-    tf[:3, :3] =  np.matmul(tf[:3, :3], canonical_camera_axes.T)
-    print(tf)
+    tf[:3, :3] =  np.matmul(tf[:3, :3], np.linalg.inv(canonical_camera_axes))
     tf[:3, 3] = position
 
     return tf
