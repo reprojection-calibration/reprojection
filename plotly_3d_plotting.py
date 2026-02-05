@@ -2,6 +2,14 @@ import plotly.graph_objects as go
 
 import numpy as np
 
+canonical_camera_axes = np.array(
+    [
+        [0, -1, 0],
+        [0, 0, -1],
+        [1, 0, 0],
+    ]
+)
+
 
 def transform_to_pose_axes(tf):
     position = np.array([tf[:3, 3]])
@@ -56,6 +64,9 @@ def gravity_aligned_pose(origin, position):
     tf[:3, 0] = forward_direction
     tf[:3, 1] = xxx_direction
     tf[:3, 2] = yyy_direction
+    print(tf)
+    tf[:3, :3] =  np.matmul(tf[:3, :3], canonical_camera_axes.T)
+    print(tf)
     tf[:3, 3] = position
 
     return tf
