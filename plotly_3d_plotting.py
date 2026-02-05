@@ -16,12 +16,13 @@ def transform_to_pose_axes(tf):
     return (x_line, "red"), (y_line, "green"), (z_line, "blue")
 
 
-def plot_pose_axes(pose_axes, fig=None):
+def plot_pose_axes(tf, fig=None):
+    pose_axes = transform_to_pose_axes(tf)
+
     if fig is None:
         fig = go.Figure()
 
     for axes, color in pose_axes:
-        print(color)
         fig.add_trace(
             go.Scatter3d(
                 x=axes[0, :],
@@ -35,14 +36,20 @@ def plot_pose_axes(pose_axes, fig=None):
     return fig
 
 
-tf = np.identity(4)
-tf[:3, 3] = [1, 1, 1]
-pose_axes = transform_to_pose_axes(tf)
+def gravity_aligned_pose(origin, position):
+    tf = np.identity(4);
 
-fig = plot_pose_axes(pose_axes)
+    return tf
 
+
+origin = np.array([0, 0, 0])
+position = np.array([1, 1, 1])
+tf = gravity_aligned_pose(origin, position)
+
+fig = plot_pose_axes(tf)
 fig.update_layout(
     scene=dict(
+        aspectmode="cube",
         xaxis_title="X",
         yaxis_title="Y",
         zaxis_title="Z",
