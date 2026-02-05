@@ -37,7 +37,29 @@ def plot_pose_axes(tf, fig=None):
 
 
 def gravity_aligned_pose(origin, position):
-    tf = np.identity(4);
+    tf = np.identity(4)
+
+    delta = position - origin
+
+    # TODO(Jack): Handle case where direction has not magnitude
+
+    forward_direction = delta / np.linalg.norm(delta)
+    gravity_direction = np.array([0, 0, -1])
+
+    xxx = np.cross(forward_direction, gravity_direction)
+
+    # TODO(Jack): Handle the case where the cross product here is zero!
+
+    xxx_direction = xxx / np.linalg.norm(xxx)
+    yyy = np.cross(forward_direction, xxx_direction)
+    yyy_direction = yyy / np.linalg.norm(
+        yyy
+    )  # I think we do not need to normalize here.
+
+    tf[:3, 0] = forward_direction
+    tf[:3, 1] = xxx_direction
+    tf[:3, 2] = yyy_direction
+    tf[:3, 3] = position
 
     return tf
 
