@@ -10,15 +10,11 @@ window.dataInputUtils = Object.assign({}, window.dataInputUtils, {
         }
 
         if (!Array.isArray(timestamps)) {
-            throw new Error(
-                `Expected "timestamps" for sensor "${sensor}" to be an array, but got type "${typeof timestamps}".`
-            );
+            throw new Error(`Expected "timestamps" for sensor "${sensor}" to be an array, but got type "${typeof timestamps}".`);
         }
 
-        if (frameIdx < 0 || frameIdx >= timestamps.length){
-            throw new Error(
-                `Invalid frame index ${frameIdx}. It must be between 0 and ${timestamps.length - 1}.`
-            );
+        if (frameIdx < 0 || frameIdx >= timestamps.length) {
+            throw new Error(`Invalid frame index ${frameIdx}. It must be between 0 and ${timestamps.length - 1}.`);
         }
 
         const timestamp_i = BigInt(timestamps[frameIdx]);
@@ -38,6 +34,5 @@ window.dataInputUtils = Object.assign({}, window.dataInputUtils, {
         }
 
         return rawData[sensorName]['frames'][timestamp]
-
     }
 });

@@ -103,22 +103,19 @@ app.clientside_callback(
             return dash_clientside.no_update;
         }
     
-        // ERROR(Jack): We need to protect against poses or pose_type not being available
-        const pose = frame['poses'][pose_type]
-        if (!pose) {
+        const pose = frame?.poses?.[pose_type];
+            if (!pose) {
             return dash_clientside.no_update;
         }
-    
         const [rx, ry, rz, x, y, z] = pose;
-
-
-        const theta = Math.sqrt(rx*rx + ry*ry + rz*rz);
 
         let R = [
             [1,0,0],
             [0,1,0],
             [0,0,1]
         ];
+        
+        const theta = Math.sqrt(rx*rx + ry*ry + rz*rz);
         if (theta > 1e-8) {
             const kx = rx/theta;
             const ky = ry/theta;
@@ -135,40 +132,17 @@ app.clientside_callback(
             ];
         }
 
-        const scale = 0.5;
+
         const origin = [x, y, z];
-        const x_axis = [
-            x + scale * R[0][0],
-            y + scale * R[1][0],
-            z + scale * R[2][0]
-        ];
-        const y_axis = [
-            x + scale * R[0][1],
-            y + scale * R[1][1],
-            z + scale * R[2][1]
-        ];
-        const z_axis = [
-            x + scale * R[0][2],
-            y + scale * R[1][2],
-            z + scale * R[2][2]
-        ];
+        const scale = 0.5;
+        const x_axis = window.tfUtils.buildAxisVector(origin, R, "x", scale);
+        const y_axis = window.tfUtils.buildAxisVector(origin, R, "y", scale);
+        const z_axis = window.tfUtils.buildAxisVector(origin, R, "z", scale);
         
-
-    
-        
-        const patch = new dash_clientside.Patch();
-
-        patch.assign(['data', 0, 'x'], [origin[0], x_axis[0]]);
-        patch.assign(['data', 0, 'y'], [origin[1], x_axis[1]]);
-        patch.assign(['data', 0, 'z'], [origin[2], x_axis[2]]);
-
-        patch.assign(['data', 1, 'x'], [origin[0], y_axis[0]]);
-        patch.assign(['data', 1, 'y'], [origin[1], y_axis[1]]);
-        patch.assign(['data', 1, 'z'], [origin[2], y_axis[2]]);
-
-        patch.assign(['data', 2, 'x'], [origin[0], z_axis[0]]);
-        patch.assign(['data', 2, 'y'], [origin[1], z_axis[1]]);
-        patch.assign(['data', 2, 'z'], [origin[2], z_axis[2]]);
+        patch = new dash_clientside.Patch();
+        window.tfUtils.addAxisVector(origin, x_axis, "x", patch);
+        window.tfUtils.addAxisVector(origin, y_axis, "y", patch);
+        window.tfUtils.addAxisVector(origin, z_axis, "z", patch);
 
         return patch.build();
     }

@@ -83,7 +83,7 @@ def build_extracted_target_figures_callback(sensor):
 app.clientside_callback(
     """
     function(frame_idx, sensor, pose_type, cmax, raw_data, metadata, xy_fig, pixel_fig) {
-        if (frame_idx == null || !sensor || !pose_type || !raw_data || !metadata || !xy_fig || !pixel_fig) {
+        if (frame_idx == null || !sensor || !pose_type || cmax == null || !raw_data || !metadata || !xy_fig || !pixel_fig) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
@@ -105,6 +105,7 @@ app.clientside_callback(
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
+        // NOTE(Jack): We just ignore the z-dimension and assume its zero. There might be a day where this is not a valid assumption!
         const pts = extracted_target.points;
         const xy_patch = new dash_clientside.Patch();
         xy_patch.assign(['data', 0, 'x'], pts.map(p => p[0]));
