@@ -262,23 +262,44 @@ app.layout = html.Div(
                                 ),
                                 html.Div(
                                     children=[
-                                        dcc.Graph(
-                                            id="camera-orientation-graph",
+                                        html.Div(
+                                            children=[
+                                                dcc.Graph(
+                                                    id="camera-orientation-graph",
+                                                    style={"flex": "1"},
+                                                ),
+                                                dcc.Graph(
+                                                    id="camera-translation-graph",
+                                                    style={"flex": "1"},
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "flexDirection": "column",
+                                                "gap": "20px",
+                                                "flex": "2",
+                                                "height": "100%",
+                                            },
                                         ),
-                                        dcc.Graph(
-                                            id="camera-translation-graph",
-                                        ),
-                                        # TODO(Jack): Place this next to the two timeseries figures
-                                        dcc.Graph(
-                                            id="camera-3d-pose-graph",
+                                        html.Div(
+                                            children=[
+                                                dcc.Graph(
+                                                    id="camera-3d-pose-graph",
+                                                    style={"height": "100%"},
+                                                ),
+                                            ],
+                                            style={
+                                                "flex": "1",
+                                                "height": "100%",
+                                            },
                                         ),
                                     ],
                                     style={
                                         "display": "flex",
-                                        "flexDirection": "column",
+                                        "flexDirection": "row",
                                         "gap": "20px",
-                                        "flex": "1",
                                         "width": "100%",
+                                        "alignItems": "center",
                                     },
                                 ),
                             ],
