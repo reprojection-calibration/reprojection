@@ -1,4 +1,4 @@
-from dash import Input, Output,  State
+from dash import Input, Output, State
 
 from dashboard.server import app
 import plotly.graph_objects as go
@@ -23,9 +23,12 @@ def build_3d_pose_graph_callback(sensor):
             x=[0, 1],
             y=[0, 0],
             z=[0, 0],
+            line=dict(
+                color="red",
+                width=6,
+            ),
             mode="lines",
             name="X axis",
-            line=dict(width=6)
         )
     )
 
@@ -35,9 +38,12 @@ def build_3d_pose_graph_callback(sensor):
             x=[0, 0],
             y=[0, 1],
             z=[0, 0],
+            line=dict(
+                color="green",
+                width=6,
+            ),
             mode="lines",
             name="Y axis",
-            line=dict(width=6)
         )
     )
 
@@ -47,9 +53,12 @@ def build_3d_pose_graph_callback(sensor):
             x=[0, 0],
             y=[0, 0],
             z=[0, 1],
+            line=dict(
+                color="blue",
+                width=6,
+            ),
             mode="lines",
             name="Z axis",
-            line=dict(width=6)
         )
     )
 
@@ -57,6 +66,9 @@ def build_3d_pose_graph_callback(sensor):
         title="3D Sensor Pose",
         scene=dict(
             aspectmode="cube",
+            xaxis=dict(range=[-1, 1], autorange=False),
+            yaxis=dict(range=[-1, 1], autorange=False),
+            zaxis=dict(range=[-1, 1], autorange=False),
         ),
         margin=dict(l=0, r=0, t=40, b=0),
     )
@@ -65,10 +77,11 @@ def build_3d_pose_graph_callback(sensor):
 
 
 # TODO(Jack): Do not hardcode const timestamps = metadata[1]["camera"][sensor]
+# TODO(Jack): Do we really require pose_fig_3d as input?
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, raw_data, metadata, 3d_pose_fig) {
-        if (!sensor || !pose_type || !raw_data || !metadata || !3d_pose_fig) {
+    function(frame_idx, sensor, pose_type, raw_data, metadata, pose_fig_3d) {
+        if (!sensor || !pose_type || !raw_data || !metadata || !pose_fig_3d) {
             return dash_clientside.no_update;
         }
     
@@ -89,9 +102,9 @@ app.clientside_callback(
             return dash_clientside.no_update;
         }
     
-        const {rx, ry, rz, x, y, z} = pose;
+        const [rx, ry, rz, x, y, z] = pose;
 
-        // Rodrigues rotation formula
+
         const theta = Math.sqrt(rx*rx + ry*ry + rz*rz);
 
         let R = [
@@ -99,7 +112,6 @@ app.clientside_callback(
             [0,1,0],
             [0,0,1]
         ];
-
         if (theta > 1e-8) {
             const kx = rx/theta;
             const ky = ry/theta;
@@ -116,43 +128,37 @@ app.clientside_callback(
             ];
         }
 
-        // Camera axes (scaled)
         const scale = 0.5;
-
         const origin = [x, y, z];
-
         const x_axis = [
             x + scale * R[0][0],
             y + scale * R[1][0],
             z + scale * R[2][0]
         ];
-
         const y_axis = [
             x + scale * R[0][1],
             y + scale * R[1][1],
             z + scale * R[2][1]
         ];
-
         const z_axis = [
             x + scale * R[0][2],
             y + scale * R[1][2],
             z + scale * R[2][2]
         ];
+        
+
     
         
-        const patch = new window.dash_clientside.Patch();
+        const patch = new dash_clientside.Patch();
 
-        // X axis trace (trace 0)
         patch.assign(['data', 0, 'x'], [origin[0], x_axis[0]]);
         patch.assign(['data', 0, 'y'], [origin[1], x_axis[1]]);
         patch.assign(['data', 0, 'z'], [origin[2], x_axis[2]]);
 
-        // Y axis trace (trace 1)
         patch.assign(['data', 1, 'x'], [origin[0], y_axis[0]]);
         patch.assign(['data', 1, 'y'], [origin[1], y_axis[1]]);
         patch.assign(['data', 1, 'z'], [origin[2], y_axis[2]]);
 
-        // Z axis trace (trace 2)
         patch.assign(['data', 2, 'x'], [origin[0], z_axis[0]]);
         patch.assign(['data', 2, 'y'], [origin[1], z_axis[1]]);
         patch.assign(['data', 2, 'z'], [origin[2], z_axis[2]]);

@@ -11,6 +11,7 @@ from dashboard.server import IMAGE_DIMENSIONS, app
     prevent_initial_call=True,
 )
 def build_extracted_target_figures_callback(sensor):
+    # TODO(Jack): The value of sensor is not actually used anywhere in this function, can we remove it entirely?
     if not sensor:
         return {}, {}
 

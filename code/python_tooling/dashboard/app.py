@@ -6,6 +6,7 @@ import callbacks.extracted_target
 import callbacks.r3_timeseries_figure
 import callbacks.slider
 import callbacks.statistics
+import callbacks.pose_plotting_3d
 from dash import dcc, html
 
 from dashboard.server import app
@@ -266,6 +267,10 @@ app.layout = html.Div(
                                         ),
                                         dcc.Graph(
                                             id="camera-translation-graph",
+                                        ),
+                                        # TODO(Jack): Place this next to the two timeseries figures
+                                        dcc.Graph(
+                                            id="camera-3d-pose-graph",
                                         ),
                                     ],
                                     style={
