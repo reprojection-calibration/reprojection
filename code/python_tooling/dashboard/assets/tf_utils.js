@@ -21,7 +21,28 @@ window.tfUtils = Object.assign({}, window.tfUtils, {
         patch.assign(['data', trace_id, 'x'], [origin[0], axis[0]]);
         patch.assign(['data', trace_id, 'y'], [origin[1], axis[1]]);
         patch.assign(['data', trace_id, 'z'], [origin[2], axis[2]]);
-    }
+    },
+
+    toRotationMatrix: function (axis_angle) {
+        const [rx, ry, rz] = axis_angle;
+
+        const theta = Math.sqrt(rx * rx + ry * ry + rz * rz);
+        if (theta < 1e-8) {
+            return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+        }
+
+        const kx = rx / theta;
+        const ky = ry / theta;
+        const kz = rz / theta;
+
+        const c = Math.cos(theta);
+        const s = Math.sin(theta);
+        const v = 1 - c;
+
+        R = [[kx * kx * v + c, kx * ky * v - kz * s, kx * kz * v + ky * s], [ky * kx * v + kz * s, ky * ky * v + c, ky * kz * v - kx * s], [kz * kx * v - ky * s, kz * ky * v + kx * s, kz * kz * v + c]];
+
+        return R
+    },
 });
 
 

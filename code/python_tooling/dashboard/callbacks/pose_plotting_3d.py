@@ -107,33 +107,10 @@ app.clientside_callback(
             if (!pose) {
             return dash_clientside.no_update;
         }
-        const [rx, ry, rz, x, y, z] = pose;
 
-        let R = [
-            [1,0,0],
-            [0,1,0],
-            [0,0,1]
-        ];
-        
-        const theta = Math.sqrt(rx*rx + ry*ry + rz*rz);
-        if (theta > 1e-8) {
-            const kx = rx/theta;
-            const ky = ry/theta;
-            const kz = rz/theta;
+        const R = window.tfUtils.toRotationMatrix(pose.slice(0,3));
 
-            const c = Math.cos(theta);
-            const s = Math.sin(theta);
-            const v = 1 - c;
-
-            R = [
-                [kx*kx*v + c,     kx*ky*v - kz*s, kx*kz*v + ky*s],
-                [ky*kx*v + kz*s,  ky*ky*v + c,    ky*kz*v - kx*s],
-                [kz*kx*v - ky*s,  kz*ky*v + kx*s, kz*kz*v + c]
-            ];
-        }
-
-
-        const origin = [x, y, z];
+        const origin = pose.slice(3,6)
         const scale = 0.5;
         const x_axis = window.tfUtils.buildAxisVector(origin, R, "x", scale);
         const y_axis = window.tfUtils.buildAxisVector(origin, R, "y", scale);
