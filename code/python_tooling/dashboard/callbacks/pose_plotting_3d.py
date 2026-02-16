@@ -89,19 +89,21 @@ app.clientside_callback(
             return dash_clientside.no_update;
         }
     
-        // TODO(Jack): Do we need to protect against "camera" being available here, or can we take that for granted?
         const timestamps = metadata[1]["camera"][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
             return dash_clientside.no_update;
         }
     
-        const timestamp_i = BigInt(timestamps[frame_idx])
-        if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
+        const result = window.dataInputUtils.getValidFrame(
+            raw_data, sensor, timestamps, frame_idx
+        );
+        if (!result) {
             return dash_clientside.no_update;
         }
+        const { frame, _ } = result;
     
         // ERROR(Jack): We need to protect against poses or pose_type not being available
-        const pose = raw_data[sensor]['frames'][timestamp_i]['poses'][pose_type]
+        const pose = frame['poses'][pose_type]
         if (!pose) {
             return dash_clientside.no_update;
         }
