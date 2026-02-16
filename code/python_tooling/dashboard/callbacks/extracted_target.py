@@ -83,22 +83,22 @@ def build_extracted_target_figures_callback(sensor):
 app.clientside_callback(
     """
     function(frame_idx, sensor, pose_type, cmax, raw_data, metadata, xy_fig, pixel_fig) {
-        if (!sensor || !pose_type || !raw_data || !metadata || !xy_fig || !pixel_fig) {
+        if (frame_idx == null || !sensor || !pose_type || !raw_data || !metadata || !xy_fig || !pixel_fig) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        const timestamps = window.dataInputUtils.getTimestamps(metadata, "camera", sensor);
-        if (!timestamps) {
-            return dash_clientside.no_update;
+        const timestamp_result = window.dataInputUtils.getTimestamps(metadata, "camera", sensor, frame_idx);
+        if (!timestamp_result) {
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
-    
-        const frame_result = window.dataInputUtils.getValidFrame(
-            raw_data, sensor, timestamps, frame_idx
+        const {_, timestamp_i} = timestamp_result;
+        
+        const frame = window.dataInputUtils.getValidFrame(
+            raw_data, sensor, timestamp_i
         );
-        if (!frame_result) {
-            return dash_clientside.no_update;
+        if (!frame) {
+            return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        const { frame, timestamp_i } = frame_result;
     
         const extracted_target = frame.extracted_target
         if (!extracted_target) {

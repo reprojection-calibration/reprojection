@@ -85,22 +85,23 @@ def build_3d_pose_graph_callback(sensor):
 app.clientside_callback(
     """
     function(frame_idx, sensor, pose_type, raw_data, metadata, pose_fig_3d) {
-        if (!sensor || !pose_type || !raw_data || !metadata || !pose_fig_3d) {
+        if (frame_idx == null || !sensor || !pose_type || !raw_data || !metadata || !pose_fig_3d) {
             return dash_clientside.no_update;
         }
     
-        const timestamps = window.dataInputUtils.getTimestamps(metadata, "camera", sensor);
-        if (!timestamps) {
+        // DO NOT HARDCODE CAMERA
+        const timestamp_result = window.dataInputUtils.getTimestamps(metadata, "camera", sensor, frame_idx);
+        if (!timestamp_result) {
             return dash_clientside.no_update;
         }
+        const {_, timestamp_i} = timestamp_result;
         
-        const frame_result = window.dataInputUtils.getValidFrame(
-            raw_data, sensor, timestamps, frame_idx
+        const frame = window.dataInputUtils.getValidFrame(
+            raw_data, sensor, timestamp_i
         );
-        if (!frame_result) {
+        if (!frame) {
             return dash_clientside.no_update;
         }
-        const { frame, _ } = frame_result;
     
         // ERROR(Jack): We need to protect against poses or pose_type not being available
         const pose = frame['poses'][pose_type]

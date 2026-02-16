@@ -171,7 +171,7 @@ def build_r6_timeseries_figures(
 def make_timeseries_annotation_clientside_callback(sensor_type):
     return f"""
     function(frame_idx, sensor, metadata, rot_fig, trans_fig) {{
-        if (!sensor || !metadata || !rot_fig || !trans_fig) {{
+        if (frame_idx == null || !sensor || !metadata || !rot_fig || !trans_fig) {{
             return [dash_clientside.no_update, dash_clientside.no_update];
         }}
     
