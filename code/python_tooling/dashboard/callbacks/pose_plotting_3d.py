@@ -10,11 +10,7 @@ from dashboard.server import app
     Input("camera-sensor-dropdown", "value"),
     prevent_initial_call=True,
 )
-def build_3d_pose_graph_callback(sensor):
-    if not sensor:
-        return {}
-
-    # NOTE(Jack): A number cannot be the first letter in a variable name
+def build_3d_pose_graph_callback(_):
     pose_graph_3d = go.Figure()
 
     # X axis trace (trace 0)
@@ -81,11 +77,10 @@ def build_3d_pose_graph_callback(sensor):
 
 
 # TODO(Jack): Do not hardcode const timestamps = metadata[1]["camera"][sensor]
-# TODO(Jack): Do we really require pose_fig_3d as input?
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, raw_data, metadata, pose_fig_3d) {
-        if (frame_idx == null || !sensor || !pose_type || !raw_data || !metadata || !pose_fig_3d) {
+    function(frame_idx, sensor, pose_type, raw_data, metadata) {
+        if (frame_idx == null || !sensor || !pose_type || !raw_data || !metadata) {
             return dash_clientside.no_update;
         }
     
@@ -130,5 +125,4 @@ app.clientside_callback(
     Input("pose-type-selector", "value"),
     State("raw-camera-data-store", "data"),
     State("metadata-store", "data"),
-    State("camera-3d-pose-graph", "figure"),
 )
