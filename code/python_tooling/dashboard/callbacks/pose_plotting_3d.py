@@ -16,11 +16,40 @@ def build_3d_pose_graph_callback(sensor):
 
     # NOTE(Jack): A number cannot be the first letter in a variable name
     pose_graph_3d = go.Figure()
+
+    # X axis trace (trace 0)
     pose_graph_3d.add_trace(
         go.Scatter3d(
-            x=[1],
-            y=[1],
-            z=[1],
+            x=[0, 1],
+            y=[0, 0],
+            z=[0, 0],
+            mode="lines",
+            name="X axis",
+            line=dict(width=6)
+        )
+    )
+
+    # Y axis trace (trace 1)
+    pose_graph_3d.add_trace(
+        go.Scatter3d(
+            x=[0, 0],
+            y=[0, 1],
+            z=[0, 0],
+            mode="lines",
+            name="Y axis",
+            line=dict(width=6)
+        )
+    )
+
+    # Z axis trace (trace 2)
+    pose_graph_3d.add_trace(
+        go.Scatter3d(
+            x=[0, 0],
+            y=[0, 0],
+            z=[0, 1],
+            mode="lines",
+            name="Z axis",
+            line=dict(width=6)
         )
     )
 
@@ -29,6 +58,7 @@ def build_3d_pose_graph_callback(sensor):
         scene=dict(
             aspectmode="cube",
         ),
+        margin=dict(l=0, r=0, t=40, b=0),
     )
 
     return pose_graph_3d
@@ -37,93 +67,104 @@ def build_3d_pose_graph_callback(sensor):
 # TODO(Jack): Do not hardcode const timestamps = metadata[1]["camera"][sensor]
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, cmax, raw_data, metadata, xy_fig, pixel_fig) {
-        if (!sensor || !pose_type || !raw_data || !metadata || !xy_fig || !pixel_fig) {
-            return [dash_clientside.no_update, dash_clientside.no_update];
+    function(frame_idx, sensor, pose_type, raw_data, metadata, 3d_pose_fig) {
+        if (!sensor || !pose_type || !raw_data || !metadata || !3d_pose_fig) {
+            return dash_clientside.no_update;
         }
     
         // TODO(Jack): Do we need to protect against "camera" being available here, or can we take that for granted?
         const timestamps = metadata[1]["camera"][sensor]
         if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
-            return [dash_clientside.no_update, dash_clientside.no_update];
+            return dash_clientside.no_update;
         }
     
         const timestamp_i = BigInt(timestamps[frame_idx])
         if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
-            return [dash_clientside.no_update, dash_clientside.no_update];
+            return dash_clientside.no_update;
         }
     
-        const extracted_target = raw_data[sensor]['frames']['poses'][pose_type]
-        if (!extracted_target) {
-            return [dash_clientside.no_update, dash_clientside.no_update];
+        // ERROR(Jack): We need to protect against poses or pose_type not being available
+        const pose = raw_data[sensor]['frames'][timestamp_i]['poses'][pose_type]
+        if (!pose) {
+            return dash_clientside.no_update;
         }
     
-        const pts = extracted_target.points;
-        const xy_patch = new dash_clientside.Patch();
-        xy_patch.assign(['data', 0, 'x'], pts.map(p => p[0]));
-        xy_patch.assign(['data', 0, 'y'], pts.map(p => p[1]));
-    
-        const pix = extracted_target.pixels;
-        const pixel_patch = new dash_clientside.Patch();
-        pixel_patch.assign(['data', 0, 'x'], pix.map(p => p[0]));
-        pixel_patch.assign(['data', 0, 'y'], pix.map(p => p[1]));
-    
-        // If reprojection errors are available we will color the points and pixels according to them. If not available
-        // simply return the figures with the plain colored points and pixels.
-        const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
-        if (!reprojection_errors) {
-            // If no reprojection errors are available at all then return to default marker configuration.
-            xy_patch.assign(['data', 0, 'marker'], {
-                size: 12
-            });
-            pixel_patch.assign(['data', 0, 'marker'], {
-                size: 6
-            });
-    
-            return [xy_patch.build(), pixel_patch.build()];
+        const {rx, ry, rz, x, y, z} = pose;
+
+        // Rodrigues rotation formula
+        const theta = Math.sqrt(rx*rx + ry*ry + rz*rz);
+
+        let R = [
+            [1,0,0],
+            [0,1,0],
+            [0,0,1]
+        ];
+
+        if (theta > 1e-8) {
+            const kx = rx/theta;
+            const ky = ry/theta;
+            const kz = rz/theta;
+
+            const c = Math.cos(theta);
+            const s = Math.sin(theta);
+            const v = 1 - c;
+
+            R = [
+                [kx*kx*v + c,     kx*ky*v - kz*s, kx*kz*v + ky*s],
+                [ky*kx*v + kz*s,  ky*ky*v + c,    ky*kz*v - kx*s],
+                [kz*kx*v - ky*s,  kz*ky*v + kx*s, kz*kz*v + c]
+            ];
         }
+
+        // Camera axes (scaled)
+        const scale = 0.5;
+
+        const origin = [x, y, z];
+
+        const x_axis = [
+            x + scale * R[0][0],
+            y + scale * R[1][0],
+            z + scale * R[2][0]
+        ];
+
+        const y_axis = [
+            x + scale * R[0][1],
+            y + scale * R[1][1],
+            z + scale * R[2][1]
+        ];
+
+        const z_axis = [
+            x + scale * R[0][2],
+            y + scale * R[1][2],
+            z + scale * R[2][2]
+        ];
     
-        const reprojection_error = reprojection_errors[pose_type]
-        if (!reprojection_error) {
-            // If the sensor specific reprojection error is not available then return to default marker configuration.
-            xy_patch.assign(['data', 0, 'marker'], {
-                size: 12
-            });
-            pixel_patch.assign(['data', 0, 'marker'], {
-                size: 6
-            });
-    
-            return [xy_patch.build(), pixel_patch.build()];
-        }
-    
-        xy_patch.assign(['data', 0, 'marker'], {
-            size: 12,
-            color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
-            colorscale: "Bluered",
-            cmin: 0,
-            cmax: cmax,
-            showscale: true
-        });
-        pixel_patch.assign(['data', 0, 'marker'], {
-            size: 6,
-            color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
-            colorscale: "Bluered",
-            cmin: 0,
-            cmax: cmax,
-            showscale: true
-        });
-    
-        return [xy_patch.build(), pixel_patch.build()];
+        
+        const patch = new window.dash_clientside.Patch();
+
+        // X axis trace (trace 0)
+        patch.assign(['data', 0, 'x'], [origin[0], x_axis[0]]);
+        patch.assign(['data', 0, 'y'], [origin[1], x_axis[1]]);
+        patch.assign(['data', 0, 'z'], [origin[2], x_axis[2]]);
+
+        // Y axis trace (trace 1)
+        patch.assign(['data', 1, 'x'], [origin[0], y_axis[0]]);
+        patch.assign(['data', 1, 'y'], [origin[1], y_axis[1]]);
+        patch.assign(['data', 1, 'z'], [origin[2], y_axis[2]]);
+
+        // Z axis trace (trace 2)
+        patch.assign(['data', 2, 'x'], [origin[0], z_axis[0]]);
+        patch.assign(['data', 2, 'y'], [origin[1], z_axis[1]]);
+        patch.assign(['data', 2, 'z'], [origin[2], z_axis[2]]);
+
+        return patch.build();
     }
     """,
-    Output("targets-xy-graph", "figure"),
-    Output("targets-pixels-graph", "figure"),
+    Output("camera-3d-pose-graph", "figure"),
     Input("camera-frame-id-slider", "value"),
     Input("camera-sensor-dropdown", "value"),
     Input("pose-type-selector", "value"),
-    Input("max-reprojection-error-input", "value"),
     State("raw-camera-data-store", "data"),
     State("metadata-store", "data"),
-    State("targets-xy-graph", "figure"),
-    State("targets-pixels-graph", "figure"),
+    State("camera-3d-pose-graph", "figure"),
 )
