@@ -1,7 +1,7 @@
+import plotly.graph_objects as go
 from dash import Input, Output, State
 
 from dashboard.server import app
-import plotly.graph_objects as go
 
 
 # TODO(Jack): Refactor to use register pattern
@@ -72,7 +72,7 @@ def build_3d_pose_graph_callback(sensor):
             camera=dict(
                 eye=dict(x=1, y=1, z=2),
                 up=dict(x=0, y=1, z=0),
-            )
+            ),
         ),
         margin=dict(l=0, r=0, t=40, b=0),
     )

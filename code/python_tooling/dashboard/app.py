@@ -3,10 +3,10 @@
 # https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
 import callbacks.data_loading
 import callbacks.extracted_target
+import callbacks.pose_plotting_3d
 import callbacks.r3_timeseries_figure
 import callbacks.slider
 import callbacks.statistics
-import callbacks.pose_plotting_3d
 from dash import dcc, html
 
 from dashboard.server import app
