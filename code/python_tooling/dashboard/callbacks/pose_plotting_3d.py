@@ -29,6 +29,7 @@ def build_3d_pose_graph_callback(_):
     add_trace("blue", pose_graph_3d)  # trace 2, z-axis
 
     pose_graph_3d.update_layout(
+        showlegend=False,
         title="3D Sensor Pose",
         scene=dict(
             aspectmode="cube",
