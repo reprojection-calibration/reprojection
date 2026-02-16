@@ -69,6 +69,10 @@ def build_3d_pose_graph_callback(sensor):
             xaxis=dict(range=[-1, 1], autorange=False),
             yaxis=dict(range=[-1, 1], autorange=False),
             zaxis=dict(range=[-1, 1], autorange=False),
+            camera=dict(
+                eye=dict(x=1, y=1, z=2),
+                up=dict(x=0, y=1, z=0),
+            )
         ),
         margin=dict(l=0, r=0, t=40, b=0),
     )
