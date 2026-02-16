@@ -87,18 +87,20 @@ app.clientside_callback(
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        // TODO(Jack): Do we need to protect against "camera" being available here, or can we take that for granted?
-        const timestamps = metadata[1]["camera"][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
-            return [dash_clientside.no_update, dash_clientside.no_update];
+        const timestamps = window.dataInputUtils.getTimestamps(metadata, "camera", sensor);
+        if (!timestamps) {
+            return dash_clientside.no_update;
         }
     
-        const timestamp_i = BigInt(timestamps[frame_idx])
-        if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
-            return [dash_clientside.no_update, dash_clientside.no_update];
+        const frame_result = window.dataInputUtils.getValidFrame(
+            raw_data, sensor, timestamps, frame_idx
+        );
+        if (!frame_result) {
+            return dash_clientside.no_update;
         }
+        const { frame, timestamp_i } = frame_result;
     
-        const extracted_target = raw_data[sensor]['frames'][timestamp_i].extracted_target
+        const extracted_target = frame.extracted_target
         if (!extracted_target) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
@@ -115,7 +117,7 @@ app.clientside_callback(
     
         // If reprojection errors are available we will color the points and pixels according to them. If not available
         // simply return the figures with the plain colored points and pixels.
-        const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
+        const reprojection_errors = frame['reprojection_errors']
         if (!reprojection_errors) {
             // If no reprojection errors are available at all then return to default marker configuration.
             xy_patch.assign(['data', 0, 'marker'], {

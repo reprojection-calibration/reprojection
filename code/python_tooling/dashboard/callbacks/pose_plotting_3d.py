@@ -89,18 +89,18 @@ app.clientside_callback(
             return dash_clientside.no_update;
         }
     
-        const timestamps = metadata[1]["camera"][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
+        const timestamps = window.dataInputUtils.getTimestamps(metadata, "camera", sensor);
+        if (!timestamps) {
             return dash_clientside.no_update;
         }
-    
-        const result = window.dataInputUtils.getValidFrame(
+        
+        const frame_result = window.dataInputUtils.getValidFrame(
             raw_data, sensor, timestamps, frame_idx
         );
-        if (!result) {
+        if (!frame_result) {
             return dash_clientside.no_update;
         }
-        const { frame, _ } = result;
+        const { frame, _ } = frame_result;
     
         // ERROR(Jack): We need to protect against poses or pose_type not being available
         const pose = frame['poses'][pose_type]
