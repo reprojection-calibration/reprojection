@@ -174,16 +174,12 @@ def make_timeseries_annotation_clientside_callback(sensor_type):
         if (frame_idx == null || !sensor || !metadata || !rot_fig || !trans_fig) {{
             return [dash_clientside.no_update, dash_clientside.no_update];
         }}
-    
-        const sensor_metadata = metadata[1]["{sensor_type.value}"]
-        if (!sensor_metadata || !sensor_metadata[sensor]) {{
-            return [dash_clientside.no_update, dash_clientside.no_update];
+        
+        const timestamp_result = window.dataInputUtils.getTimestamps(metadata, "{sensor_type.value}", sensor, frame_idx);
+        if (!timestamp_result) {{
+            return dash_clientside.no_update;
         }}
-    
-        const timestamps = sensor_metadata[sensor];
-        if (!timestamps || timestamps.length <= frame_idx) {{
-            return [dash_clientside.no_update, dash_clientside.no_update];
-        }}
+        const {{timestamps, timestamp_i}} = timestamp_result;
     
         const timestamp_0_ns = BigInt(timestamps[0]);
         const timestamp_i_ns = BigInt(timestamps[frame_idx]);
