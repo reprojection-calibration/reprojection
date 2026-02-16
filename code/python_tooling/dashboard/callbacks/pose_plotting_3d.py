@@ -11,66 +11,37 @@ from dashboard.server import app
     prevent_initial_call=True,
 )
 def build_3d_pose_graph_callback(_):
+
+    def add_trace(color, pose_graph_3d):
+        pose_graph_3d.add_trace(
+            go.Scatter3d(
+                line=dict(
+                    color=color,
+                    width=6,
+                ),
+                mode="lines",
+            )
+        )
+
     pose_graph_3d = go.Figure()
-
-    # X axis trace (trace 0)
-    pose_graph_3d.add_trace(
-        go.Scatter3d(
-            x=[0, 1],
-            y=[0, 0],
-            z=[0, 0],
-            line=dict(
-                color="red",
-                width=6,
-            ),
-            mode="lines",
-            name="X axis",
-        )
-    )
-
-    # Y axis trace (trace 1)
-    pose_graph_3d.add_trace(
-        go.Scatter3d(
-            x=[0, 0],
-            y=[0, 1],
-            z=[0, 0],
-            line=dict(
-                color="green",
-                width=6,
-            ),
-            mode="lines",
-            name="Y axis",
-        )
-    )
-
-    # Z axis trace (trace 2)
-    pose_graph_3d.add_trace(
-        go.Scatter3d(
-            x=[0, 0],
-            y=[0, 0],
-            z=[0, 1],
-            line=dict(
-                color="blue",
-                width=6,
-            ),
-            mode="lines",
-            name="Z axis",
-        )
-    )
+    add_trace("red", pose_graph_3d)  # trace 0, x-axis
+    add_trace("green", pose_graph_3d)  # trace 1, y-axis
+    add_trace("blue", pose_graph_3d)  # trace 2, z-axis
 
     pose_graph_3d.update_layout(
         title="3D Sensor Pose",
         scene=dict(
             aspectmode="cube",
+            # TODO(Jack): Do not hardcode these ranges! Should be set from calculated metadata? Same with view point.
             xaxis=dict(range=[-1, 1], autorange=False),
             yaxis=dict(range=[-1, 1], autorange=False),
             zaxis=dict(range=[-1, 1], autorange=False),
+            # View to be looking at the target from over and behind the camera - "down the barrel" view
             camera=dict(
                 eye=dict(x=1, y=1, z=2),
                 up=dict(x=0, y=1, z=0),
             ),
         ),
-        margin=dict(l=0, r=0, t=40, b=0),
     )
 
     return pose_graph_3d
