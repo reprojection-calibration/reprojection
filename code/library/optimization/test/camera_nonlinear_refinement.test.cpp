@@ -25,13 +25,15 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Array6d const se3_gt_pose_i{gt_data.frames.at(timestamp_ns).initial_pose.value()};
+        Isometry3d const gt_tf_w_co{geometry::Exp(gt_data.frames.at(timestamp_ns).initial_pose.value())};
+        Array6d const gt_aa_co_w{geometry::Log(gt_tf_w_co.inverse())};
 
-        ASSERT_TRUE(frame_i.optimized_pose);
-        EXPECT_TRUE(frame_i.optimized_pose.value().isApprox(se3_gt_pose_i, 1e-6))
-            << "Nonlinear refinement result:\n"
-            << frame_i.optimized_pose.value().transpose() << "\nGround truth:\n"
-            << se3_gt_pose_i.transpose();
+        ASSERT_TRUE(frame_i.optimized_pose.has_value());
+
+        Array6d const aa_co_w{frame_i.optimized_pose.value()};
+        EXPECT_TRUE(aa_co_w.isApprox(gt_aa_co_w, 1e-6)) << "Result:\n"
+                                                        << aa_co_w.transpose() << "\nexpected result:\n"
+                                                        << gt_aa_co_w.transpose();
 
         // We are testing with perfect input data so the mean reprojection error before and after optimization is near
         // zero.
