@@ -31,10 +31,30 @@ TEST(TestingMocksSphereTrajectory, TestSphereTrajectory) {
 
 TEST(TestingMocksSphereTrajectory, TestTrackPoint) {
     Vector3d const world_origin{0, 0, 0};
+    Vector3d const camera_position{0, 0, 2};
     Matrix3d const R{Matrix3d::Identity()};
-    Vector3d const forward{Vector3d::Zero()};
+    Vector3d const forward{Vector3d::UnitX()};
 
-    auto const [R_new, forward_new]{testing_mocks::TrackPoint(world_origin, world_origin, R, forward)};
-    EXPECT_TRUE(R_new.isApprox(Matrix3d::Identity()));
-    EXPECT_TRUE(forward_new.isApprox(Vector3d::Zero()));
+    auto [R_new, forward_new]{testing_mocks::TrackPoint(world_origin, camera_position, R, forward)};
+    EXPECT_TRUE(R_new.isApprox(Eigen::AngleAxisd(M_PI / 2, Vector3d::UnitY()).toRotationMatrix()));
+    EXPECT_TRUE(forward_new.isApprox(Vector3d{0, 0, -1}));
+}
+
+TEST(TestingMocksSphereTrajectory, TestTrackPointShortCiruits) {
+    Vector3d const world_origin{0, 0, 0};
+    Matrix3d const R{Matrix3d::Random()};  // Not a canonical rotation matrix! It's just random numbers.
+    Vector3d forward{Vector3d::Random()};
+
+    // World origin and camera are the same position - should short circuit and just return the previous rotation
+    // and forward direction vector.
+    auto [R_new, forward_new]{testing_mocks::TrackPoint(world_origin, world_origin, R, forward)};
+    EXPECT_TRUE(R_new.isApprox(R));
+    EXPECT_TRUE(forward_new.isApprox(forward));
+
+    // When the two forward directions are the same we should short circuit and just return the inputs.
+    Vector3d camera_position{2, 2, 2};
+    forward = world_origin - camera_position;
+    std::tie(R_new, forward_new) = testing_mocks::TrackPoint(world_origin, camera_position, R, forward);
+    EXPECT_TRUE(R_new.isApprox(R));
+    EXPECT_TRUE(forward_new.isApprox(forward));
 }

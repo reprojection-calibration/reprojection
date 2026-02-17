@@ -41,8 +41,11 @@ std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory con
 std::tuple<Matrix3d, Vector3d> TrackPoint(Vector3d const& origin, Vector3d const& camera_position,
                                           Matrix3d const& R_prev, Vector3d const& forward_prev) {
     Vector3d const forward{origin - camera_position};
-    Vector3d const axis{forward_prev.cross(forward)};
+    if (forward.norm() < 1e-8) {
+        return {R_prev, forward_prev};
+    }
 
+    Vector3d const axis{forward_prev.cross(forward)};
     double const sin_angle{axis.norm()};
     if (sin_angle < 1e-8) {
         return {R_prev, forward_prev};
