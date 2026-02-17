@@ -44,8 +44,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(gt_data.initial_intrinsics, 1e-6))
-        << "Optimization result:\n"
-        << data.optimized_intrinsics << "\noptimization input:\n"
+        << "Result:\n"
+        << data.optimized_intrinsics << "\nexpected result:\n"
         << gt_data.initial_intrinsics;
 }
 
@@ -92,8 +92,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(gt_data.initial_intrinsics, 1e-6))
-        << "Optimization result:\n"
-        << data.optimized_intrinsics << "\noptimization input:\n"
+        << "Result:\n"
+        << data.optimized_intrinsics << "\nexpected result:\n"
         << gt_data.initial_intrinsics;
 }
 
