@@ -35,9 +35,9 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 
         // We are testing with perfect input data so the mean reprojection error before and after optimization is near
         // zero.
-        ASSERT_TRUE(frame_i.initial_reprojection_error);
+        ASSERT_TRUE(frame_i.initial_reprojection_error.has_value());
         EXPECT_NEAR(frame_i.initial_reprojection_error.value().mean(), 0.0, 1e-6);
-        ASSERT_TRUE(frame_i.optimized_reprojection_error);
+        ASSERT_TRUE(frame_i.optimized_reprojection_error.has_value());
         EXPECT_NEAR(frame_i.optimized_reprojection_error.value().mean(), 0.0, 1e-6);
     }
 
@@ -85,7 +85,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
             << gt_pose_i.matrix() << "\nInitial value:\n"
             << geometry::Exp(frame_i.initial_pose.value()).matrix();
 
-        ASSERT_TRUE(frame_i.optimized_reprojection_error);
+        ASSERT_TRUE(frame_i.optimized_reprojection_error.has_value());
         EXPECT_LT(frame_i.optimized_reprojection_error.value().mean(), 1e-6);
     }
 
