@@ -21,7 +21,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         tf = Dlt22(bundle);
         pinhole_intrinsics = {1, 1, 0, 0};   // Equivalent to K = I_3x3
-        bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension boundss
+        bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension bounds
     } else if (bundle.pixels.rows() > 6 and bounds) {
         std::tie(tf, pinhole_intrinsics) = Dlt23(bundle);
     } else {
