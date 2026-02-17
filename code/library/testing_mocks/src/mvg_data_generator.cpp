@@ -41,7 +41,7 @@ CameraCalibrationData GenerateMvgData(int const num_samples, uint64_t const time
             throw std::runtime_error("GenerateMvgData() failed trajectory.Evaluate().");  // LCOV_EXCL_LINE
         }
 
-        auto const [pixels, mask]{MvgHelpers::Project(points, camera, geometry::Exp(pose_t.value()))};
+        auto const [pixels, mask]{MvgHelpers::Project(points, camera, geometry::Exp(pose_t.value()).inverse())};
         ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
         data.frames[time_i].extracted_target.bundle =
