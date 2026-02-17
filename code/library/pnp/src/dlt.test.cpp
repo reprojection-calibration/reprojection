@@ -15,12 +15,12 @@ TEST(PnpDlt, TestDlt23) {
     CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
         20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
 
-    for (auto const& [timestamp_ns, frame_i] : gt_data.frames) {
+    for (auto const& [_, frame_i] : gt_data.frames) {
         auto const [tf_co_w, K]{pnp::Dlt23(frame_i.extracted_target.bundle)};
 
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Isometry3d const gt_tf_w_co{geometry::Exp(gt_data.frames.at(timestamp_ns).initial_pose.value())};
+        Isometry3d const gt_tf_w_co{geometry::Exp(frame_i.initial_pose.value())};
         Isometry3d const gt_tf_co_w{gt_tf_w_co.inverse()};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
@@ -37,12 +37,12 @@ TEST(PnpDlt, TestDlt22) {
                                                                        testing_utilities::unit_pinhole_intrinsics,
                                                                        testing_utilities::unit_image_bounds, true)};
 
-    for (auto const& [timestamp_ns, frame_i] : gt_data.frames) {
+    for (auto const& [_, frame_i] : gt_data.frames) {
         auto const tf_co_w{pnp::Dlt22(frame_i.extracted_target.bundle)};
 
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Isometry3d const gt_tf_w_co{geometry::Exp(gt_data.frames.at(timestamp_ns).initial_pose.value())};
+        Isometry3d const gt_tf_w_co{geometry::Exp(frame_i.initial_pose.value())};
         Isometry3d const gt_tf_co_w{gt_tf_w_co.inverse()};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"

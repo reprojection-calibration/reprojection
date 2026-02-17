@@ -11,17 +11,20 @@ using namespace reprojection;
 // TODO(Jack): Test all functions with noisy data!
 
 TEST(Pnp, TestPnp) {
-    CameraCalibrationData const data{testing_mocks::GenerateMvgData(
+    CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
         20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
 
-    for (auto const& [_, frame_i] : data.frames) {
+    for (auto const& [_, frame_i] : gt_data.frames) {
         pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::image_bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
-        // definitely have filled out this value but still... unprotected optional access is bad!
-        Array6d const pose_i{geometry::Log(std::get<Isometry3d>(pnp_result))};
-        EXPECT_TRUE(pose_i.isApprox(frame_i.initial_pose.value()));
+        Isometry3d const gt_tf_w_co{geometry::Exp(frame_i.initial_pose.value())};
+        Isometry3d const gt_tf_co_w{gt_tf_w_co.inverse()};
+
+        Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
+        EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
+                                                  << tf_co_w.matrix() << "\nexpected result:\n"
+                                                  << gt_tf_co_w.matrix();
     }
 }
 
@@ -35,9 +38,13 @@ TEST(Pnp, TestPnpFlat) {
             pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::unit_image_bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        // WARN(Jack): See above about optional access.
-        Array6d const pose_i{geometry::Log(std::get<Isometry3d>(pnp_result))};
-        EXPECT_TRUE(pose_i.isApprox(frame_i.initial_pose.value()));
+        Isometry3d const gt_tf_w_co{geometry::Exp(frame_i.initial_pose.value())};
+        Isometry3d const gt_tf_co_w{gt_tf_w_co.inverse()};
+
+        Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
+        EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
+                                                  << tf_co_w.matrix() << "\nexpected result:\n"
+                                                  << gt_tf_co_w.matrix();
     }
 }
 

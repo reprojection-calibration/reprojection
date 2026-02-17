@@ -16,14 +16,14 @@ namespace reprojection::pnp {
 // and are instead required to pass in the bounds and the Dlt23 functions returns a K matrix in the scale of the
 // input pixels.
 PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
-    Isometry3d tf;
+    Isometry3d tf_co_w;
     Array4d pinhole_intrinsics;
     if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
-        tf = Dlt22(bundle);
+        tf_co_w = Dlt22(bundle);
         pinhole_intrinsics = {1, 1, 0, 0};   // Equivalent to K = I_3x3
         bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension bounds
     } else if (bundle.pixels.rows() > 6 and bounds) {
-        std::tie(tf, pinhole_intrinsics) = Dlt23(bundle);
+        std::tie(tf_co_w, pinhole_intrinsics) = Dlt23(bundle);
     } else {
         return PnpErrorCode::InvalidDlt;
     }
@@ -31,21 +31,21 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     // TODO(Jack): This is a heuristic slightly hacky looking way to check if the above DLT algorithm evaluation failed.
     //  If we had a better theoretical algorithmic understanding of what causes these failures and how we can detect
     //  them then we could improve this code here.
-    Array6d const se3{geometry::Log(tf)};
-    if (se3.hasNaN()) {
+    Array6d const aa_co_w{geometry::Log(tf_co_w)};
+    if (aa_co_w.hasNaN()) {
         return PnpErrorCode::ContainsNan;
     }
 
     // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
     CameraCalibrationData data{
-        {"", CameraModel::Pinhole, bounds.value()}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, se3}}}};
+        {"", CameraModel::Pinhole, bounds.value()}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, aa_co_w}}}};
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
     // NOTE(Jack): There is only one single frame here in the CameraCalibrationData structure, therefore we can simply
     // use std::cbegin to access the result. In the general case this is not meaningful or correct.
-    auto const optimized_pose{std::cbegin(data.frames)->second.optimized_pose};
-    if (optimized_pose) {
-        return geometry::Exp(optimized_pose.value());
+    auto const opt_tf_co_w{std::cbegin(data.frames)->second.optimized_pose};
+    if (opt_tf_co_w) {
+        return geometry::Exp(opt_tf_co_w.value());
     } else {
         // NOTE(Jack): I do not know if it is really possible to ever reach this condition because theoretically we
         // should only get to CameraNonlinearRefinement if we have a good initial pose. Because we initialize the
