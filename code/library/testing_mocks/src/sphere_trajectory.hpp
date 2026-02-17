@@ -15,10 +15,12 @@ namespace reprojection::testing_mocks {
 // 3D trajectory always facing a single point where the calibration board is.
 std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory const& config);
 
-// Calculates the rotation vector which makes a camera frame (z-axis forward) look at a point. This is used to help
-// generate trajectories where the camera is looking at one constant point. This can be used to simulate how a person
-// moves a camera while keeping it pointed at the target during the calibration process.
-Matrix3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position);
+// Calculates the rotation matrix which keeps the x-axis pointed at a specific point with a minimal rotation delta from
+// the previous orientation. This is used to help generate trajectories where the camera is looking at one constant
+// point. This can be used to simulate how a person moves a camera while keeping it pointed at the target during the
+// calibration process.
+std::tuple<Matrix3d, Vector3d> TrackPoint(Vector3d const& origin, Vector3d const& camera_position,
+                                          Matrix3d const& R_prev, Vector3d const& forward_prev);
 
 MatrixX3d SpherePoints(int const num_points, double const radius, Vector3d const origin);
 
