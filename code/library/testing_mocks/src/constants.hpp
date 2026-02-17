@@ -17,6 +17,6 @@ std::uint64_t const delta_t_ns{1000000};  // 1ms
 // WARN(Jack): This be getting a little hacky/globally, but hey it's at least const :) But the reason we need this is
 // because we need to have the same trajectory geometry for both the mvg_generator and imu_generator. If the best way to
 // enforce this is via constants here is not clear. But for now it is a solution.
-CameraTrajectory const trajectory{{0, 0, 0}, 0.4, {0, 0, 2}};
+CameraTrajectory const trajectory{{0, 0, 0}, 0.4, {0, 0, 2.5}};
 
 }  // namespace reprojection::testing_mocks::constants
