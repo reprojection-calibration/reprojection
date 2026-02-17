@@ -16,6 +16,9 @@ Matrix3d const canonical_camera_axes{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
 std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory const& config) {
     MatrixX3d const pose_origins{SpherePoints(num_poses, config.sphere_radius, config.sphere_origin)};
 
+    // TODO(Jack): We randomly chose these initial values. Do we require a principled way to do this? Are there any
+    //  limitations that this selection of initial values has? Will it also work for all sphere trajectory
+    //  paramaterizations?
     Matrix3d R_prev{Matrix3d::Identity()};
     Vector3d forward_prev{Vector3d::Identity()};
 
