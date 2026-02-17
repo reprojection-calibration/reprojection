@@ -45,22 +45,16 @@ Matrix3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position) {
     }
     Vector3d const forward_direction{forward.normalized()};
 
-    Vector3d gravity_direction{0, 0, -1};
-    if (std::abs(forward_direction.dot(gravity_direction)) > 0.999) {
-        gravity_direction = {0, 1, 0};
-    }
+    Vector3d const gravity_direction{0, 0, -1};
 
     // TODO(Jack): Handle the case where forward and gravity are in the same direction!
-    Vector3d const xxx{forward_direction.cross(gravity_direction)};
-    Vector3d const xxx_direction{xxx.normalized()};
-    Vector3d const yyy{forward_direction.cross(xxx_direction)};
-    Vector3d const yyy_direction{yyy.normalized()};
+    Vector3d const left{forward_direction.cross(gravity_direction).normalized()};
+    Vector3d const up{forward_direction.cross(left).normalized()};
 
-    // TODO NAMING
     Matrix3d R;
     R.col(0) = forward_direction;
-    R.col(1) = xxx_direction;
-    R.col(2) = yyy_direction;
+    R.col(1) = left;
+    R.col(2) = up;
 
     return R;
 }
