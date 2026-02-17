@@ -12,13 +12,13 @@ TEST(SplineSe3Spline, TestInvalidEvaluateConditions) {
     EXPECT_EQ(se3_spline.Evaluate(115), std::nullopt);
 
     for (int i{0}; i < spline::constants::order; ++i) {
-        se3_spline.AddControlPoint(Isometry3d::Identity());
+        se3_spline.AddControlPoint(Vector6d::Zero());
     }
 
     EXPECT_NE(se3_spline.Evaluate(100), std::nullopt);
     EXPECT_EQ(se3_spline.Evaluate(105), std::nullopt);
 
-    se3_spline.AddControlPoint(Isometry3d::Identity());
+    se3_spline.AddControlPoint(Vector6d::Zero());
     EXPECT_NE(se3_spline.Evaluate(105), std::nullopt);
 }
 
@@ -26,15 +26,15 @@ TEST(SplineSe3Spline, TestEvaluate) {
     uint64_t const delta_t_ns{5};
     spline::Se3Spline se3_spline{100, delta_t_ns};
 
-    Isometry3d control_point_i{Isometry3d::Identity()};
+    Vector6d control_point_i{Vector6d::Zero()};
     se3_spline.AddControlPoint(control_point_i);
 
     for (int i{1}; i < spline::constants::order; ++i) {
-        Isometry3d delta{Isometry3d::Identity()};
-        delta.rotate(geometry::Exp(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
-        delta.translation() = i * Vector3d::Ones();
+        Vector6d delta;
+        delta.topRows(3) = (static_cast<double>(i) / 10) * Vector3d::Ones();
+        delta.bottomRows(3) = i * Vector3d::Ones();
 
-        control_point_i = delta * control_point_i;
+        control_point_i = delta + control_point_i;
 
         se3_spline.AddControlPoint(control_point_i);
     }
