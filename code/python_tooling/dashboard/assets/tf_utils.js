@@ -50,5 +50,3 @@ window.tfUtils = Object.assign({}, window.tfUtils, {
         return R
     },
 });
-
-

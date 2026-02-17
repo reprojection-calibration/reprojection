@@ -25,6 +25,4 @@ window.extractedTargetUtils = Object.assign({}, window.extractedTargetUtils, {
 
         return patch;
     },
-
-
 });

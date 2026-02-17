@@ -60,8 +60,11 @@ app.clientside_callback(
         if (!timestamp_result) {
             return dash_clientside.no_update;
         }
-        const {_, timestamp_i} = timestamp_result;
-        
+        const {
+            _,
+            timestamp_i
+        } = timestamp_result;
+    
         const frame = window.dataInputUtils.getValidFrame(
             raw_data, sensor, timestamp_i
         );
@@ -70,23 +73,23 @@ app.clientside_callback(
         }
     
         const pose = frame?.poses?.[pose_type];
-            if (!pose) {
+        if (!pose) {
             return dash_clientside.no_update;
         }
-
-        const R = window.tfUtils.toRotationMatrix(pose.slice(0,3));
-
-        const origin = pose.slice(3,6)
+    
+        const R = window.tfUtils.toRotationMatrix(pose.slice(0, 3));
+    
+        const origin = pose.slice(3, 6)
         const scale = 0.5;
         const x_axis = window.tfUtils.buildAxisVector(origin, R, "x", scale);
         const y_axis = window.tfUtils.buildAxisVector(origin, R, "y", scale);
         const z_axis = window.tfUtils.buildAxisVector(origin, R, "z", scale);
-        
+    
         patch = new dash_clientside.Patch();
         window.tfUtils.addAxisVector(origin, x_axis, "x", patch);
         window.tfUtils.addAxisVector(origin, y_axis, "y", patch);
         window.tfUtils.addAxisVector(origin, z_axis, "z", patch);
-
+    
         return patch.build();
     }
     """,

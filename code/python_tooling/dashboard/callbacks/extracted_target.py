@@ -88,8 +88,11 @@ app.clientside_callback(
         if (!timestamp_result) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        const {_, timestamp_i} = timestamp_result;
-        
+        const {
+            _,
+            timestamp_i
+        } = timestamp_result;
+    
         const frame = window.dataInputUtils.getValidFrame(
             raw_data, sensor, timestamp_i
         );
@@ -101,18 +104,18 @@ app.clientside_callback(
         if (!extracted_target) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
-        
+    
         const reprojection_error = frame?.reprojection_errors?.[pose_type];
     
         // NOTE(Jack): We just ignore the z-dimension and assume its zero for the 3d target points. There might be a day 
         // where this is not a valid assumption (ex. non-flat multi-target configurations)!
         const pts = extracted_target.points.map(row => row.slice(0, 2));
-        const xy_patch =  window.extractedTargetUtils.buildExtractedTargetPatch(
+        const xy_patch = window.extractedTargetUtils.buildExtractedTargetPatch(
             pts, reprojection_error, cmax
         );
-        
+    
         const pix = extracted_target.pixels;
-        const pixel_patch =  window.extractedTargetUtils.buildExtractedTargetPatch(
+        const pixel_patch = window.extractedTargetUtils.buildExtractedTargetPatch(
             pix, reprojection_error, cmax
         );
     
