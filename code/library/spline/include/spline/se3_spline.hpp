@@ -15,7 +15,7 @@ class Se3Spline {
 
     // WARN(Jack): This assumes/has as a prerequisite that the control points come from evenly spaced points in time!
     // This is the delta_t_ns passed to the constructor.
-    void AddControlPoint(Isometry3d const control_point);
+    void AddControlPoint(Vector6d const& control_point);
 
     std::optional<Vector6d> Evaluate(std::uint64_t const t_ns,
                                      DerivativeOrder const derivative = DerivativeOrder::Null) const;

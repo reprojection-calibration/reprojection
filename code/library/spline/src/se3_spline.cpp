@@ -10,10 +10,9 @@ namespace reprojection::spline {
 Se3Spline::Se3Spline(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
     : so3_spline_{t0_ns, delta_t_ns}, r3_spline_{t0_ns, delta_t_ns} {}
 
-// TODO(Jack): Refactor this to take se3 vector directly?
-void Se3Spline::AddControlPoint(Isometry3d const control_point) {
-    r3_spline_.control_points.push_back(control_point.translation());
-    so3_spline_.control_points.push_back(geometry::Log<double>(control_point.linear()));
+void Se3Spline::AddControlPoint(Vector6d const& control_point) {
+    r3_spline_.control_points.push_back(control_point.bottomRows(3));
+    so3_spline_.control_points.push_back(control_point.topRows(3));
 }
 
 std::optional<Vector6d> Se3Spline::Evaluate(std::uint64_t const t_ns, DerivativeOrder const derivative) const {
