@@ -29,10 +29,11 @@ window.dataInputUtils = Object.assign({}, window.dataInputUtils, {
             return null;
         }
 
-        if (!rawData || !rawData[sensorName] || !rawData[sensorName]['frames'] || !rawData[sensorName]['frames'][timestamp]) {
+        const frame = rawData?.[sensorName]?.frames?.[timestamp];
+        if (!frame) {
             return null;
         }
 
-        return rawData[sensorName]['frames'][timestamp]
+        return frame
     }
 });

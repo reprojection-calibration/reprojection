@@ -1,9 +1,13 @@
+const AXIS_MAP = Object.freeze({
+    x: 0, y: 1, z: 2
+});
+
 window.tfUtils = Object.assign({}, window.tfUtils, {
+
     buildAxisVector: function (origin, R, axis_id, scale) {
         const [x, y, z] = origin;
 
-        const axisMap = {x: 0, y: 1, z: 2};
-        const col = axisMap[axis_id];
+        const col = AXIS_MAP[axis_id];
         if (col === undefined) {
             throw new Error(`Invalid axis_id "${axis_id}". Must be 'x', 'y', or 'z'.`);
         }
@@ -12,8 +16,7 @@ window.tfUtils = Object.assign({}, window.tfUtils, {
     },
 
     addAxisVector: function (origin, axis, axis_id, patch) {
-        const axisMap = {x: 0, y: 1, z: 2};
-        const trace_id = axisMap[axis_id];
+        const trace_id = AXIS_MAP[axis_id];
         if (trace_id === undefined) {
             throw new Error(`Invalid axis "${axis_id}". Must be 'x', 'y', or 'z'.`);
         }
@@ -39,7 +42,10 @@ window.tfUtils = Object.assign({}, window.tfUtils, {
         const s = Math.sin(theta);
         const v = 1 - c;
 
-        R = [[kx * kx * v + c, kx * ky * v - kz * s, kx * kz * v + ky * s], [ky * kx * v + kz * s, ky * ky * v + c, ky * kz * v - kx * s], [kz * kx * v - ky * s, kz * ky * v + kx * s, kz * kz * v + c]];
+        // Rodrigues' rotation formula matrix notation - https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
+        R = [[kx * kx * v + c, kx * ky * v - kz * s, kx * kz * v + ky * s], //
+            [ky * kx * v + kz * s, ky * ky * v + c, ky * kz * v - kx * s], //
+            [kz * kx * v - ky * s, kz * ky * v + kx * s, kz * kz * v + c]];
 
         return R
     },
