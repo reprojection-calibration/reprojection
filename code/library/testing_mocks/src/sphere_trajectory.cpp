@@ -22,19 +22,19 @@ std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory con
     Matrix3d R_prev{Matrix3d::Identity()};
     Vector3d forward_prev{Vector3d::Identity()};
 
-    std::vector<Vector6d> tfs;
+    std::vector<Vector6d> poses;
     for (int i{0}; i < pose_origins.rows(); ++i) {
         Vector3d const position_i{pose_origins.row(i)};
         std::tie(R_prev, forward_prev) = TrackPoint(config.world_origin, position_i, R_prev, forward_prev);
 
-        Isometry3d tf_i;
-        tf_i.linear() = R_prev * canonical_camera_axes.inverse();
-        tf_i.translation() = position_i;
+        Isometry3d tf_w_co;
+        tf_w_co.linear() = R_prev * canonical_camera_axes.inverse();
+        tf_w_co.translation() = position_i;
 
-        tfs.push_back(geometry::Log(tf_i));
+        poses.push_back(geometry::Log(tf_w_co));
     }
 
-    return tfs;
+    return poses;
 }
 
 // Calculates the shortest arc rotation between the two forward direction vectors - prevents jumps and discontinuities.
