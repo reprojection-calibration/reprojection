@@ -22,17 +22,16 @@ def update_slider_properties(sensor, metadata, sensor_type):
 # code.
 def make_slider_timestamp_clientside_callback(sensor_type):
     return f"""
-    function(frame_idx, data, sensor) {{
-        if (!data || !sensor) {{
+    function(frame_idx, metadata, sensor) {{
+        if (frame_idx == null || !metadata || !sensor) {{
             return "";
         }}
-
-        const timestamps = data[1]["{sensor_type.value}"][sensor];
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {{
+        
+        const timestamp_result = window.dataInputUtils.getTimestamps(metadata, "{sensor_type.value}", sensor, frame_idx);
+        if (!timestamp_result) {{
             return "";
         }}
-
-        const timestamp_i = BigInt(timestamps[frame_idx]);
+        const {{_, timestamp_i}} = timestamp_result;
         
         return timestamp_i.toString();
     }}

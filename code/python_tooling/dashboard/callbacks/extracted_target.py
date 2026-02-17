@@ -10,10 +10,7 @@ from dashboard.server import IMAGE_DIMENSIONS, app
     Input("camera-sensor-dropdown", "value"),
     prevent_initial_call=True,
 )
-def build_extracted_target_figures_callback(sensor):
-    if not sensor:
-        return {}, {}
-
+def build_extracted_target_figures_callback(_):
     # TODO(Jack): Confirm/test ALL axes properties (ranges, names, orders etc.) None of this has been checked! Even the
     #  coordinate conventions of the pixels and points needs to be checked!
     # TODO(Jack): Eliminate copy and paste here in this method! We basically do the same thing twice.
@@ -82,26 +79,29 @@ def build_extracted_target_figures_callback(sensor):
 app.clientside_callback(
     """
     function(frame_idx, sensor, pose_type, cmax, raw_data, metadata, xy_fig, pixel_fig) {
-        if (!sensor || !pose_type || !raw_data || !metadata || !xy_fig || !pixel_fig) {
+        if (frame_idx == null || !sensor || !pose_type || cmax == null || !raw_data || !metadata || !xy_fig || !pixel_fig) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        // TODO(Jack): Do we need to protect against "camera" being available here, or can we take that for granted?
-        const timestamps = metadata[1]["camera"][sensor]
-        if (!timestamps || timestamps.length == 0 || timestamps.length <= frame_idx) {
+        const timestamp_result = window.dataInputUtils.getTimestamps(metadata, "camera", sensor, frame_idx);
+        if (!timestamp_result) {
+            return [dash_clientside.no_update, dash_clientside.no_update];
+        }
+        const {_, timestamp_i} = timestamp_result;
+        
+        const frame = window.dataInputUtils.getValidFrame(
+            raw_data, sensor, timestamp_i
+        );
+        if (!frame) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
-        const timestamp_i = BigInt(timestamps[frame_idx])
-        if (!raw_data[sensor] || !raw_data[sensor]['frames'] || !raw_data[sensor]['frames'][timestamp_i]) {
-            return [dash_clientside.no_update, dash_clientside.no_update];
-        }
-    
-        const extracted_target = raw_data[sensor]['frames'][timestamp_i].extracted_target
+        const extracted_target = frame.extracted_target
         if (!extracted_target) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
     
+        // NOTE(Jack): We just ignore the z-dimension and assume its zero. There might be a day where this is not a valid assumption!
         const pts = extracted_target.points;
         const xy_patch = new dash_clientside.Patch();
         xy_patch.assign(['data', 0, 'x'], pts.map(p => p[0]));
@@ -114,7 +114,7 @@ app.clientside_callback(
     
         // If reprojection errors are available we will color the points and pixels according to them. If not available
         // simply return the figures with the plain colored points and pixels.
-        const reprojection_errors = raw_data[sensor]['frames'][timestamp_i]['reprojection_errors']
+        const reprojection_errors = frame['reprojection_errors']
         if (!reprojection_errors) {
             // If no reprojection errors are available at all then return to default marker configuration.
             xy_patch.assign(['data', 0, 'marker'], {

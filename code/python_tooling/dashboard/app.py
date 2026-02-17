@@ -3,6 +3,7 @@
 # https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
 import callbacks.data_loading
 import callbacks.extracted_target
+import callbacks.pose_plotting_3d
 import callbacks.r3_timeseries_figure
 import callbacks.slider
 import callbacks.statistics
@@ -261,19 +262,44 @@ app.layout = html.Div(
                                 ),
                                 html.Div(
                                     children=[
-                                        dcc.Graph(
-                                            id="camera-orientation-graph",
+                                        html.Div(
+                                            children=[
+                                                dcc.Graph(
+                                                    id="camera-orientation-graph",
+                                                    style={"flex": "1"},
+                                                ),
+                                                dcc.Graph(
+                                                    id="camera-translation-graph",
+                                                    style={"flex": "1"},
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "flexDirection": "column",
+                                                "gap": "20px",
+                                                "flex": "2",
+                                                "height": "100%",
+                                            },
                                         ),
-                                        dcc.Graph(
-                                            id="camera-translation-graph",
+                                        html.Div(
+                                            children=[
+                                                dcc.Graph(
+                                                    id="camera-3d-pose-graph",
+                                                    style={"height": "100%"},
+                                                ),
+                                            ],
+                                            style={
+                                                "flex": "1",
+                                                "height": "100%",
+                                            },
                                         ),
                                     ],
                                     style={
                                         "display": "flex",
-                                        "flexDirection": "column",
+                                        "flexDirection": "row",
                                         "gap": "20px",
-                                        "flex": "1",
                                         "width": "100%",
+                                        "alignItems": "center",
                                     },
                                 ),
                             ],

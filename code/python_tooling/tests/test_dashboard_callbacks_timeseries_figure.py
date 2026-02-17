@@ -67,13 +67,22 @@ class TestDashboardCallbacksTimeseriesFigure(unittest.TestCase):
         self.assertEqual(len(fig2_traces), 3)
         self.assertTrue(all(len(trace.x) == len(trace.y) == 4 for trace in fig2_traces))
 
+    # TODO(Jack): This test is pretty hacky because it is literally checking for the presence of a string in the
+    # generated code. Anytime we update a variable name of change the method name we will need to update this here too.
+    # But at this time I am not sure of a better way...
     def test_make_timeseries_annotation_clientside_callback(self):
         clientside_callback = make_timeseries_annotation_clientside_callback(
             SensorType.Camera
         )
-        self.assertIn(f'metadata[1]["camera"]', clientside_callback)
+        self.assertIn(
+            f'window.dataInputUtils.getTimestamps(metadata, "camera", sensor, frame_idx);',
+            clientside_callback,
+        )
 
         clientside_callback = make_timeseries_annotation_clientside_callback(
             SensorType.Imu
         )
-        self.assertIn(f'metadata[1]["imu"]', clientside_callback)
+        self.assertIn(
+            f'window.dataInputUtils.getTimestamps(metadata, "imu", sensor, frame_idx);',
+            clientside_callback,
+        )
