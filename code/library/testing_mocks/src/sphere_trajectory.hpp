@@ -13,12 +13,12 @@ namespace reprojection::testing_mocks {
 // Generates an "oriented" trajectory on a sphere. In this case oriented means that the +z-axis is pointed at/looking at
 // the world_origin as specified in the CameraTrajectory config. We do this to simulate a camera traveling around in a
 // 3D trajectory always facing a single point where the calibration board is.
-std::vector<Isometry3d> SphereTrajectory(int const num_poses, CameraTrajectory const& config);
+std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory const& config);
 
 // Calculates the rotation vector which makes a camera frame (z-axis forward) look at a point. This is used to help
 // generate trajectories where the camera is looking at one constant point. This can be used to simulate how a person
 // moves a camera while keeping it pointed at the target during the calibration process.
-Vector3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position);
+Matrix3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position);
 
 MatrixX3d SpherePoints(int const num_points, double const radius, Vector3d const origin);
 

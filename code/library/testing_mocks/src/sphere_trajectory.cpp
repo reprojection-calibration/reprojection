@@ -7,19 +7,23 @@
 
 namespace reprojection::testing_mocks {
 
-std::vector<Isometry3d> SphereTrajectory(int const num_poses, CameraTrajectory const& config) {
+// TODO DO NOT USE GLOBAL!
+Matrix3d const canonical_camera_axes{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
+
+// TODO(Jack): Make the distinction between what is a world frame and what is a camera pose.
+std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory const& config) {
     MatrixX3d const pose_origins{SpherePoints(num_poses, config.sphere_radius, config.sphere_origin)};
 
-    std::vector<Isometry3d> tfs;
+    std::vector<Vector6d> tfs;
     for (int i{0}; i < pose_origins.rows(); ++i) {
         Vector3d const position_i{pose_origins.row(i)};
-        Vector3d const camera_direction{TrackPoint(config.world_origin, position_i)};
+        Matrix3d const direction_i{TrackPoint(config.world_origin, position_i)};
 
         Isometry3d tf_i;
-        tf_i.linear() = geometry::Exp(camera_direction);
+        tf_i.linear() = direction_i * canonical_camera_axes.inverse();
         tf_i.translation() = position_i;
 
-        tfs.push_back(tf_i);
+        tfs.push_back(geometry::Log(tf_i));
     }
 
     return tfs;
@@ -33,38 +37,32 @@ std::vector<Isometry3d> SphereTrajectory(int const num_poses, CameraTrajectory c
 // dimension using this kind of method we can either heuristically add some roll, or instead fix the direction of
 // gravity. If the direction of gravity is fixed then we can use some cross products to get an orthogonal rotation
 // matrix that points in the direction we want.
-Vector3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position) {
-    Vector3d const delta{camera_position - origin};
-    if (delta.norm() < 1e-8) {
-        // The origin and camera_position are the same point
-        return Vector3d::Zero();
+Matrix3d TrackPoint(Vector3d const& origin, Vector3d const& camera_position) {
+    Vector3d const forward{origin - camera_position};
+    if (forward.norm() < 1e-8) {
+        // TODO(Jack): Is this properly handled when the origin and camera_position are the same?
+        return Matrix3d::Identity();
+    }
+    Vector3d const forward_direction{forward.normalized()};
+
+    Vector3d gravity_direction{0, 0, -1};
+    if (std::abs(forward_direction.dot(gravity_direction)) > 0.999) {
+        gravity_direction = {0, 1, 0};
     }
 
-    Vector3d const origin_direction{delta.normalized()};
-    Vector3d const camera_forward_direction{0, 0, 1};  // Camera standard z-axis forward
+    // TODO(Jack): Handle the case where forward and gravity are in the same direction!
+    Vector3d const xxx{forward_direction.cross(gravity_direction)};
+    Vector3d const xxx_direction{xxx.normalized()};
+    Vector3d const yyy{forward_direction.cross(xxx_direction)};
+    Vector3d const yyy_direction{yyy.normalized()};
 
-    double const dot{origin_direction.dot(camera_forward_direction)};
-    double const angle{std::acos(dot)};
+    // TODO NAMING
+    Matrix3d R;
+    R.col(0) = forward_direction;
+    R.col(1) = xxx_direction;
+    R.col(2) = yyy_direction;
 
-    Vector3d const cross_product{camera_forward_direction.cross(origin_direction)};
-    double const cross_norm{cross_product.norm()};
-
-    // Edge case handling when camera position and origin lie on the same vertical line (i.e. case when x and y
-    // coordinates are the same for both).
-    if (cross_norm < 1e-8) {
-        if (dot > 0.9999999) {
-            // Parallel case
-            return Vector3d::Zero();
-        } else {
-            // Anti-parallel case
-            return angle * Vector3d::UnitX();  // Could also use the y-axis
-        }
-    }
-
-    Vector3d const axis{cross_product / cross_norm};
-    Vector3d const tracking_direction{angle * axis};
-
-    return tracking_direction;
+    return R;
 }
 
 MatrixX3d SpherePoints(int const num_points, double const radius, Vector3d const origin) {
