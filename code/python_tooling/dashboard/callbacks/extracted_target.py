@@ -65,8 +65,9 @@ def build_extracted_target_figures_callback(_):
             title=dict(text="u"),
             constrain="domain",
         ),
+        # TODO(Jack): Is inverting the y really necessary here? Does that do what we want?
         yaxis=dict(
-            range=[IMAGE_DIMENSIONS[1], 0],  # invert Y for image coords
+            range=[IMAGE_DIMENSIONS[1], 0],
             title=dict(text="v"),
             scaleanchor="x",
         ),
@@ -100,62 +101,20 @@ app.clientside_callback(
         if (!extracted_target) {
             return [dash_clientside.no_update, dash_clientside.no_update];
         }
+        
+        const reprojection_error = frame?.reprojection_errors?.[pose_type];
     
-        // NOTE(Jack): We just ignore the z-dimension and assume its zero. There might be a day where this is not a valid assumption!
-        const pts = extracted_target.points;
-        const xy_patch = new dash_clientside.Patch();
-        xy_patch.assign(['data', 0, 'x'], pts.map(p => p[0]));
-        xy_patch.assign(['data', 0, 'y'], pts.map(p => p[1]));
-    
+        // NOTE(Jack): We just ignore the z-dimension and assume its zero for the 3d target points. There might be a day 
+        // where this is not a valid assumption (ex. non-flat multi-target configurations)!
+        const pts = extracted_target.points.map(row => row.slice(0, 2));
+        const xy_patch =  window.extractedTargetUtils.buildExtractedTargetPatch(
+            pts, reprojection_error, cmax
+        );
+        
         const pix = extracted_target.pixels;
-        const pixel_patch = new dash_clientside.Patch();
-        pixel_patch.assign(['data', 0, 'x'], pix.map(p => p[0]));
-        pixel_patch.assign(['data', 0, 'y'], pix.map(p => p[1]));
-    
-        // If reprojection errors are available we will color the points and pixels according to them. If not available
-        // simply return the figures with the plain colored points and pixels.
-        const reprojection_errors = frame['reprojection_errors']
-        if (!reprojection_errors) {
-            // If no reprojection errors are available at all then return to default marker configuration.
-            xy_patch.assign(['data', 0, 'marker'], {
-                size: 12
-            });
-            pixel_patch.assign(['data', 0, 'marker'], {
-                size: 6
-            });
-    
-            return [xy_patch.build(), pixel_patch.build()];
-        }
-    
-        const reprojection_error = reprojection_errors[pose_type]
-        if (!reprojection_error) {
-            // If the sensor specific reprojection error is not available then return to default marker configuration.
-            xy_patch.assign(['data', 0, 'marker'], {
-                size: 12
-            });
-            pixel_patch.assign(['data', 0, 'marker'], {
-                size: 6
-            });
-    
-            return [xy_patch.build(), pixel_patch.build()];
-        }
-    
-        xy_patch.assign(['data', 0, 'marker'], {
-            size: 12,
-            color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
-            colorscale: "Bluered",
-            cmin: 0,
-            cmax: cmax,
-            showscale: true
-        });
-        pixel_patch.assign(['data', 0, 'marker'], {
-            size: 6,
-            color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
-            colorscale: "Bluered",
-            cmin: 0,
-            cmax: cmax,
-            showscale: true
-        });
+        const pixel_patch =  window.extractedTargetUtils.buildExtractedTargetPatch(
+            pix, reprojection_error, cmax
+        );
     
         return [xy_patch.build(), pixel_patch.build()];
     }
