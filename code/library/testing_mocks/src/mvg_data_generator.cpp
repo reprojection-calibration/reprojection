@@ -36,17 +36,18 @@ CameraCalibrationData GenerateMvgData(int const num_samples, uint64_t const time
 
     CameraCalibrationData data{{"/mvg_test_data", camera_model, bounds}, intrinsics};
     for (auto const time_i : times) {
-        auto const pose_t{trajectory.Evaluate(time_i)};
-        if (not pose_t.has_value()) {
+        auto const aa_w_co{trajectory.Evaluate(time_i)};
+        if (not aa_w_co.has_value()) {
             throw std::runtime_error("GenerateMvgData() failed trajectory.Evaluate().");  // LCOV_EXCL_LINE
         }
 
-        auto const [pixels, mask]{MvgHelpers::Project(points, camera, geometry::Exp(pose_t.value()).inverse())};
+        Isometry3d const tf_co_w{geometry::Exp(aa_w_co.value()).inverse()};
+        auto const [pixels, mask]{MvgHelpers::Project(points, camera, tf_co_w)};
         ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
         data.frames[time_i].extracted_target.bundle =
             Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)};
-        data.frames[time_i].initial_pose = pose_t.value();
+        data.frames[time_i].initial_pose = aa_w_co.value();
     }
 
     return data;

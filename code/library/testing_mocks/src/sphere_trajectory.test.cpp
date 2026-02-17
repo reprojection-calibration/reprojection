@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "geometry/lie.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -14,16 +15,16 @@ TEST(TestingMocksSphereTrajectory, TestSphereTrajectory) {
     Vector3d const sphere_origin{1, 2, 3};
     testing_mocks::CameraTrajectory const config{{0, 0, 0}, sphere_radius, sphere_origin};
 
-    std::vector<Vector6d> const tfs{testing_mocks::SphereTrajectory(num_camera_poses, config)};
+    std::vector<Vector6d> const poses{testing_mocks::SphereTrajectory(num_camera_poses, config)};
 
     double radius{0};
     Vector3d centroid{0, 0, 0};
-    for (auto const& tf : tfs) {
-        radius += (tf.bottomRows(3) - sphere_origin).norm();
-        centroid += tf.bottomRows(3);
+    for (auto const& aa_w_co : poses) {
+        radius += (aa_w_co.bottomRows(3) - sphere_origin).norm();
+        centroid += aa_w_co.bottomRows(3);
     }
-    radius = radius / std::size(tfs);
-    centroid = centroid / std::size(tfs);
+    radius = radius / std::size(poses);
+    centroid = centroid / std::size(poses);
 
     EXPECT_FLOAT_EQ(radius, sphere_radius);
     EXPECT_TRUE(centroid.isApprox(sphere_origin));
