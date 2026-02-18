@@ -33,6 +33,18 @@ int main() {
 
     std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
+    // TODO(Jack): The moral of the story here is: all the algorithms use/store the tf_co_w transform. But we need the
+    //  tf_w_co to inuitive world frame visualizations. Therefore we invert the tfs here before we write them to the
+    //  database. This is clearly a HACK and we need a real strategy going foward.
+    for (auto& [_, frame_i] : cam_data.frames) {
+        if (frame_i.initial_pose.has_value()) {
+            frame_i.initial_pose = geometry::Log(geometry::Exp(frame_i.initial_pose.value()).inverse());
+        }
+        if (frame_i.optimized_pose.has_value()) {
+            frame_i.optimized_pose = geometry::Log(geometry::Exp(frame_i.optimized_pose.value()).inverse());
+        }
+    }
+
     // Write everything to database
     AddCameraPoseData(cam_data, database::PoseType::Initial, db);
     AddCameraPoseData(cam_data, database::PoseType::Optimized, db);
