@@ -16,8 +16,13 @@ using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
     CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
-        20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+        50, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
     CameraCalibrationData data{gt_data};
+
+    // HACK!!!! Why cannot we just store the proper initial value in the database to start?
+    for (auto& [_, frame_i] : data.frames) {
+        frame_i.initial_pose = geometry::Log(geometry::Exp(frame_i.initial_pose.value()).inverse());
+    }
 
     optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
     EXPECT_EQ(state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
@@ -30,6 +35,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 
         ASSERT_TRUE(frame_i.optimized_pose.has_value());
 
+        // HACK! The initial pose is aa_w_co but the optimized pose is aa_co_w, what is going on here?
         Array6d const aa_co_w{frame_i.optimized_pose.value()};
         EXPECT_TRUE(aa_co_w.isApprox(gt_aa_co_w, 1e-6)) << "Result:\n"
                                                         << aa_co_w.transpose() << "\nexpected result:\n"
