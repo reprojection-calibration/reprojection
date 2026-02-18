@@ -16,10 +16,7 @@ Matrix3d const canonical_camera_axes{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
 std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory const& config) {
     MatrixX3d const pose_origins{SpherePoints(num_poses, config.sphere_radius, config.sphere_origin)};
 
-    // TODO(Jack): We randomly chose these initial values. Do we require a principled way to do this? Are there any
-    //  limitations that this selection of initial values has? Will it also work for all sphere trajectory
-    //  paramaterizations?
-    Matrix3d R_prev{Matrix3d::Identity()};
+    Matrix3d R_prev{canonical_camera_axes.inverse()};
     Vector3d forward_prev{Vector3d::UnitX()};
 
     std::vector<Vector6d> poses;
@@ -28,10 +25,7 @@ std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory con
         std::tie(R_prev, forward_prev) = TrackPoint(config.world_origin, position_i, R_prev, forward_prev);
 
         Isometry3d tf_w_co;
-        // NOTE(Jack): All the above logic happened in a classic "forward x" coordinate frame (if that really means
-        // anything), but now here we apply the canonical camera axes to get the axes to be "forward z" like a camera
-        // has.
-        tf_w_co.linear() = R_prev * canonical_camera_axes.inverse();
+        tf_w_co.linear() = R_prev;
         tf_w_co.translation() = position_i;
 
         poses.push_back(geometry::Log(tf_w_co));
