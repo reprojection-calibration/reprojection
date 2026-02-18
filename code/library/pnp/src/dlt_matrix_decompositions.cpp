@@ -73,7 +73,7 @@ std::tuple<Matrix3d, Vector3d> DecomposeHIntoRt(Matrix3d const& H) {
     // WARN(Jack): This is a brute force method to get a "proper" rotation matrix - that being said it will probably
     // introduce an error. For a better solution we should "apply a polar decomposition, or orthogonalization of the
     // rotation matrix" for an optimal solution. https://www.continuummechanics.org/polardecomposition.html
-    Matrix3d const R_star{reprojection::geometry::Exp((reprojection::geometry::Log(R)))};
+    Matrix3d const R_star{geometry::Exp(geometry::Log(R))};
 
     return {R_star, H_star.col(2)};
 }

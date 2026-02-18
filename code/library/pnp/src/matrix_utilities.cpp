@@ -17,16 +17,16 @@ std::tuple<MatrixXd, MatrixXd> NormalizeColumnWise(MatrixXd const& matrix) {
     double const scale{std::sqrt(n) / mean_magnitude};
 
     // TODO(Jack): Where is the source or link for this code? If it exists please link it because this is hard to
-    // understand in the future.
-    MatrixXd Tf{MatrixXd::Identity(n + 1, n + 1)};
-    Tf.topRightCorner(n, 1) = -scale * center;
-    Tf.diagonal().topRows(n) *= scale;
+    //  understand in the future.
+    MatrixXd tf{MatrixXd::Identity(n + 1, n + 1)};
+    tf.topRightCorner(n, 1) = -scale * center;
+    tf.diagonal().topRows(n) *= scale;
 
     // TODO(Jack): Make a function that handles the transpose magic, or consider doing these in a different order. Just
     // be consistent regardless :)
-    MatrixXd const normalized_matrix{(Tf * (matrix.rowwise().homogeneous()).transpose()).transpose()};
+    MatrixXd const normalized_matrix{(tf * (matrix.rowwise().homogeneous()).transpose()).transpose()};
 
-    return {normalized_matrix.leftCols(n), Tf};
+    return {normalized_matrix.leftCols(n), tf};
 }
 
 Isometry3d ToIsometry3d(MatrixX3d const& R, Vector3d const& T) {
