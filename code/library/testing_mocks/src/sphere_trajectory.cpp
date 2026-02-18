@@ -1,7 +1,5 @@
 #include "sphere_trajectory.hpp"
 
-#include <iostream>
-
 #include "geometry/lie.hpp"
 #include "spline/se3_spline.hpp"
 
@@ -10,13 +8,14 @@
 namespace reprojection::testing_mocks {
 
 // TODO DO NOT USE GLOBAL!
-Matrix3d const canonical_camera_axes{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
 
 // TODO(Jack): Make the distinction between what is a world frame and what is a camera pose.
 std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory const& config) {
     MatrixX3d const pose_origins{SpherePoints(num_poses, config.sphere_radius, config.sphere_origin)};
 
-    Matrix3d R{canonical_camera_axes.inverse()};
+    // The canonical_camera_R here is the classic "z-forward, x-right, y-down" optical camera frame.
+    static Matrix3d const canonical_camera_R{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
+    Matrix3d R{canonical_camera_R.inverse()};
     Vector3d forward{Vector3d::UnitX()};
 
     std::vector<Vector6d> poses;
