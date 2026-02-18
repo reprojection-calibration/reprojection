@@ -7,14 +7,18 @@
 
 namespace reprojection::testing_mocks {
 
-// TODO DO NOT USE GLOBAL!
-
-// TODO(Jack): Make the distinction between what is a world frame and what is a camera pose.
+// NOTE(Jack): This method produces tf_w_co poses, but most applications want tf_co_w. I am not 100% sure that we cannot
+// just directly return tf_w_co here, but the unit test testing the sphere properties (i.e. zero mean, radius etc.) was
+// easier to write when the transform was tf_w_co because then we could subtract the center directly from it. My hope is
+// that when we dig into the IMU we will get a better idea of the right choice.
 std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory const& config) {
     MatrixX3d const pose_origins{SpherePoints(num_poses, config.sphere_radius, config.sphere_origin)};
 
     // The canonical_camera_R here is the classic "z-forward, x-right, y-down" optical camera frame.
     static Matrix3d const canonical_camera_R{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
+
+    // NOTE(Jack): These are the values which will be incrementally updated as we traverse the pose_origins by calling
+    // the TrackPoint method for each new position.
     Matrix3d R{canonical_camera_R.inverse()};
     Vector3d forward{Vector3d::UnitX()};
 
@@ -33,7 +37,6 @@ std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory con
     return poses;
 }
 
-// Calculates the shortest arc rotation between the two forward direction vectors - prevents jumps and discontinuities.
 std::tuple<Matrix3d, Vector3d> TrackPoint(Vector3d const& origin, Vector3d const& camera_position,
                                           Matrix3d const& R_prev, Vector3d const& forward_prev) {
     Vector3d const forward{origin - camera_position};

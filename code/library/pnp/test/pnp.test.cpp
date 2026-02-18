@@ -33,8 +33,7 @@ TEST(Pnp, TestPnpFlat) {
                                                                     testing_utilities::unit_image_bounds, true)};
 
     for (auto const& [_, frame_i] : data.frames) {
-        pnp::PnpResult const pnp_result{
-            pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::unit_image_bounds)};
+        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};

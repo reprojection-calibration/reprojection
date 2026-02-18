@@ -15,10 +15,14 @@ namespace reprojection::pnp {
 // the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction
 // and are instead required to pass in the bounds and the Dlt23 functions returns a K matrix in the scale of the
 // input pixels.
+// TODO(Jack): What is the physical meaning of the unit ImageBounds for the Dlt22 case, does this limit us to a 90
+//  degree FoV? Because only points that have x/z or y/z ratio greater than one are invalid. Is this really a physically
+//  meaningful and correct piece of logic? Or does it just happen to work, what if I chose to set the bounds as -2,+2
+//  instead?
 PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     Isometry3d tf_co_w;
     Array4d pinhole_intrinsics;
-    if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
+    if (IsPlane(bundle.points) and bundle.pixels.rows() > 4 and not bounds) {
         tf_co_w = Dlt22(bundle);
         pinhole_intrinsics = {1, 1, 0, 0};   // Equivalent to K = I_3x3
         bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension bounds
@@ -37,13 +41,14 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     }
 
     // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
+    // TODO(Jack): Building an entire CameraCalibrationData here just to optimize the one camera frame seems a little
+    //  like overkill, but using the common interface here and in the primary optimization is just cleaner.
+    // NOTE(Jack): We hardcode the one frame here to have a timestamps of 0 so we can access it below.
     CameraCalibrationData data{
         {"", CameraModel::Pinhole, bounds.value()}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, aa_co_w}}}};
     optimization::CameraNonlinearRefinement(OptimizationDataView(data));
 
-    // NOTE(Jack): There is only one single frame here in the CameraCalibrationData structure, therefore we can simply
-    // use std::cbegin to access the result. In the general case this is not meaningful or correct.
-    auto const opt_tf_co_w{std::cbegin(data.frames)->second.optimized_pose};
+    auto const opt_tf_co_w{data.frames.at(0).optimized_pose};
     if (opt_tf_co_w) {
         return geometry::Exp(opt_tf_co_w.value());
     } else {

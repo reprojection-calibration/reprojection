@@ -30,6 +30,10 @@ TEST(TestingMocksSphereTrajectory, TestSphereTrajectory) {
     EXPECT_TRUE(centroid.isApprox(sphere_origin));
 }
 
+// TODO(Jack): To be perfectly honest I am lacking a strong intuition of the math here, and am so tired of debugging it
+//  manually that I have no desire to engineer more testing here. Therefore I just check one kind of random set of input
+//  parameters here, but the test is (and methods in general) are not so easy to understand by inspection, which tells
+//  me that one day we can improve these!
 TEST(TestingMocksSphereTrajectory, TestTrackPoint) {
     Vector3d const world_origin{0, 0, 0};
     Vector3d const camera_position{0, 0, 2};
