@@ -20,7 +20,7 @@ std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory con
     //  limitations that this selection of initial values has? Will it also work for all sphere trajectory
     //  paramaterizations?
     Matrix3d R_prev{Matrix3d::Identity()};
-    Vector3d forward_prev{Vector3d::Identity()};
+    Vector3d forward_prev{Vector3d::UnitX()};
 
     std::vector<Vector6d> poses;
     for (int i{0}; i < pose_origins.rows(); ++i) {
