@@ -2,12 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include <numeric>
-
 #include "geometry/lie.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
-#include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
 
 #include "projection_cost_function.hpp"
@@ -16,7 +13,7 @@ using namespace reprojection;
 
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
     CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
-        20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+        50, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
     CameraCalibrationData data{gt_data};
 
     optimization::CeresState const state{optimization::CameraNonlinearRefinement(OptimizationDataView(data))};
@@ -25,25 +22,25 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Array6d const se3_gt_pose_i{gt_data.frames.at(timestamp_ns).initial_pose.value()};
+        Array6d const gt_aa_co_w{gt_data.frames.at(timestamp_ns).initial_pose.value()};
 
-        ASSERT_TRUE(frame_i.optimized_pose);
-        EXPECT_TRUE(frame_i.optimized_pose.value().isApprox(se3_gt_pose_i, 1e-6))
-            << "Nonlinear refinement result:\n"
-            << frame_i.optimized_pose.value().transpose() << "\nGround truth:\n"
-            << se3_gt_pose_i.transpose();
+        ASSERT_TRUE(frame_i.optimized_pose.has_value());
+        Array6d const aa_co_w{frame_i.optimized_pose.value()};
+        EXPECT_TRUE(aa_co_w.isApprox(gt_aa_co_w, 1e-6)) << "Result:\n"
+                                                        << aa_co_w.transpose() << "\nexpected result:\n"
+                                                        << gt_aa_co_w.transpose();
 
         // We are testing with perfect input data so the mean reprojection error before and after optimization is near
         // zero.
-        ASSERT_TRUE(frame_i.initial_reprojection_error);
+        ASSERT_TRUE(frame_i.initial_reprojection_error.has_value());
         EXPECT_NEAR(frame_i.initial_reprojection_error.value().mean(), 0.0, 1e-6);
-        ASSERT_TRUE(frame_i.optimized_reprojection_error);
+        ASSERT_TRUE(frame_i.optimized_reprojection_error.has_value());
         EXPECT_NEAR(frame_i.optimized_reprojection_error.value().mean(), 0.0, 1e-6);
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(gt_data.initial_intrinsics, 1e-6))
-        << "Optimization result:\n"
-        << data.optimized_intrinsics << "\noptimization input:\n"
+        << "Result:\n"
+        << data.optimized_intrinsics << "\nexpected result:\n"
         << gt_data.initial_intrinsics;
 }
 
@@ -76,22 +73,22 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         // explain.
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Isometry3d const gt_pose_i{geometry::Exp(gt_data.frames.at(timestamp_ns).initial_pose.value())};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_data.frames.at(timestamp_ns).initial_pose.value())};
 
-        ASSERT_TRUE(frame_i.optimized_pose);
-        EXPECT_TRUE(geometry::Exp(frame_i.optimized_pose.value()).isApprox(gt_pose_i, 1e-3))
-            << "Nonlinear refinement result:\n"
-            << geometry::Exp(frame_i.optimized_pose.value()).matrix() << "\nGround truth:\n"
-            << gt_pose_i.matrix() << "\nInitial value:\n"
-            << geometry::Exp(frame_i.initial_pose.value()).matrix();
+        ASSERT_TRUE(frame_i.optimized_pose.has_value());
+        Isometry3d const tf_co_w{geometry::Exp(frame_i.optimized_pose.value())};
 
-        ASSERT_TRUE(frame_i.optimized_reprojection_error);
+        EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w, 1e-6)) << "Result:\n"
+                                                        << tf_co_w.matrix() << "\nexpected result:\n"
+                                                        << gt_tf_co_w.matrix();
+
+        ASSERT_TRUE(frame_i.optimized_reprojection_error.has_value());
         EXPECT_LT(frame_i.optimized_reprojection_error.value().mean(), 1e-6);
     }
 
     EXPECT_TRUE(data.optimized_intrinsics.isApprox(gt_data.initial_intrinsics, 1e-6))
-        << "Optimization result:\n"
-        << data.optimized_intrinsics << "\noptimization input:\n"
+        << "Result:\n"
+        << data.optimized_intrinsics << "\nexpected result:\n"
         << gt_data.initial_intrinsics;
 }
 

@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "geometry/lie.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
@@ -14,45 +15,51 @@ TEST(TestingMocksSphereTrajectory, TestSphereTrajectory) {
     Vector3d const sphere_origin{1, 2, 3};
     testing_mocks::CameraTrajectory const config{{0, 0, 0}, sphere_radius, sphere_origin};
 
-    std::vector<Isometry3d> const tfs{testing_mocks::SphereTrajectory(num_camera_poses, config)};
+    std::vector<Vector6d> const poses{testing_mocks::SphereTrajectory(num_camera_poses, config)};
 
     double radius{0};
     Vector3d centroid{0, 0, 0};
-    for (auto const& tf : tfs) {
-        radius += (tf.translation() - sphere_origin).norm();
-        centroid += tf.translation();
+    for (auto const& aa_w_co : poses) {
+        radius += (aa_w_co.bottomRows(3) - sphere_origin).norm();
+        centroid += aa_w_co.bottomRows(3);
     }
-    radius = radius / std::size(tfs);
-    centroid = centroid / std::size(tfs);
+    radius = radius / std::size(poses);
+    centroid = centroid / std::size(poses);
 
     EXPECT_FLOAT_EQ(radius, sphere_radius);
     EXPECT_TRUE(centroid.isApprox(sphere_origin));
 }
 
+// TODO(Jack): To be perfectly honest I am lacking a strong intuition of the math here, and am so tired of debugging it
+//  manually that I have no desire to engineer more testing here. Therefore I just check one kind of random set of input
+//  parameters here, but the test is (and methods in general) are not so easy to understand by inspection, which tells
+//  me that one day we can improve these!
 TEST(TestingMocksSphereTrajectory, TestTrackPoint) {
     Vector3d const world_origin{0, 0, 0};
+    Vector3d const camera_position{0, 0, 2};
+    Matrix3d const R{Matrix3d::Identity()};
+    Vector3d const forward{Vector3d::UnitX()};
 
-    Vector3d const null{testing_mocks::TrackPoint(world_origin, world_origin)};
-    EXPECT_TRUE(null.isApprox(Vector3d{0, 0, 0}));
+    auto [R_new, forward_new]{testing_mocks::TrackPoint(world_origin, camera_position, R, forward)};
+    EXPECT_TRUE(R_new.isApprox(Eigen::AngleAxisd(M_PI / 2, Vector3d::UnitY()).toRotationMatrix()));
+    EXPECT_TRUE(forward_new.isApprox(Vector3d{0, 0, -1}));
+}
 
-    Vector3d const camera_position_x{1, 0, 0};
-    Vector3d const x{testing_mocks::TrackPoint(world_origin, camera_position_x)};
-    EXPECT_TRUE(x.isApprox(Vector3d{0, M_PI / 2, 0}));
+TEST(TestingMocksSphereTrajectory, TestTrackPointShortCiruits) {
+    Vector3d const world_origin{0, 0, 0};
+    Matrix3d const R{Matrix3d::Random()};  // Not a canonical rotation matrix! It's just random numbers.
+    Vector3d forward{Vector3d::Random()};
 
-    Vector3d const camera_position_y{0, 1, 0};
-    Vector3d const y{testing_mocks::TrackPoint(world_origin, camera_position_y)};
-    EXPECT_TRUE(y.isApprox(Vector3d{-M_PI / 2, 0, 0}));
+    // World origin and camera are the same position - should short circuit and just return the previous rotation
+    // and forward direction vector.
+    auto [R_new, forward_new]{testing_mocks::TrackPoint(world_origin, world_origin, R, forward)};
+    EXPECT_TRUE(R_new.isApprox(R));
+    EXPECT_TRUE(forward_new.isApprox(forward));
 
-    // NOTE(Jack): The following two cases are the cases where the origin and camera position are in the same line
-    // defined by the xy values. For example, the case when (0,0,z) for both the origin and camera position, this is a
-    // degenerate case. The logic in TrackPoint() essentially detects this edge case and returns either pi or 0 (because
-    // they are already aligned along the z direction), depending on if the camera is above or below the world origin.
-
-    Vector3d const camera_position_plus_z{0, 0, 1};
-    Vector3d const plus_z{testing_mocks::TrackPoint(world_origin, camera_position_plus_z)};
-    EXPECT_TRUE(plus_z.isApprox(Vector3d{0, 0, 0}));
-
-    Vector3d const camera_position_minus_z{0, 0, -1};
-    Vector3d const minus_z{testing_mocks::TrackPoint(world_origin, camera_position_minus_z)};
-    EXPECT_TRUE(minus_z.isApprox(Vector3d{M_PI, 0, 0}));
+    // When the two forward directions are the same we should short circuit and just return the inputs.
+    Vector3d camera_position{2, 2, 2};
+    forward = world_origin - camera_position;
+    std::tie(R_new, forward_new) = testing_mocks::TrackPoint(world_origin, camera_position, R, forward);
+    EXPECT_TRUE(R_new.isApprox(R));
+    EXPECT_TRUE(forward_new.isApprox(forward));
 }

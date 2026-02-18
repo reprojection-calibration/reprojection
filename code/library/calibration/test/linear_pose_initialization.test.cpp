@@ -25,12 +25,12 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Array6d const se3_gt_pose_i{gt_data.frames.at(timestamp_ns).initial_pose.value()};
+        Array6d const gt_aa_co_w{gt_data.frames.at(timestamp_ns).initial_pose.value()};
 
         ASSERT_TRUE(frame_i.initial_pose.has_value());
-        EXPECT_TRUE(frame_i.initial_pose.value().isApprox(se3_gt_pose_i, 1e-6))
+        EXPECT_TRUE(frame_i.initial_pose.value().isApprox(gt_aa_co_w, 1e-6))
             << "Linear pose initialization result:\n"
             << frame_i.initial_pose.value().transpose() << "\nGround truth:\n"
-            << se3_gt_pose_i.transpose();
+            << gt_aa_co_w.transpose();
     }
 }

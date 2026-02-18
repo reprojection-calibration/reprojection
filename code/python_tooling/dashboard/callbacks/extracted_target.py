@@ -11,6 +11,9 @@ from dashboard.server import IMAGE_DIMENSIONS, app
     prevent_initial_call=True,
 )
 def build_extracted_target_figures_callback(_):
+    if not _:
+        return {}, {}
+
     # TODO(Jack): Confirm/test ALL axes properties (ranges, names, orders etc.) None of this has been checked! Even the
     #  coordinate conventions of the pixels and points needs to be checked!
     # TODO(Jack): Eliminate copy and paste here in this method! We basically do the same thing twice.

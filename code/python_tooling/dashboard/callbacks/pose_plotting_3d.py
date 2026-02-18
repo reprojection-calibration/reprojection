@@ -11,6 +11,9 @@ from dashboard.server import app
     prevent_initial_call=True,
 )
 def build_3d_pose_graph_callback(_):
+    if not _:
+        return {}
+
     def add_trace(color, pose_graph_3d):
         pose_graph_3d.add_trace(
             go.Scatter3d(
@@ -27,6 +30,20 @@ def build_3d_pose_graph_callback(_):
     add_trace("green", pose_graph_3d)  # ditto
     add_trace("blue", pose_graph_3d)  # ditto
 
+    pose_graph_3d.add_trace(
+        go.Scatter3d(
+            x=[0],
+            y=[0],
+            z=[0],
+            mode="markers",
+            marker=dict(
+                size=6,
+                color="black",
+            ),
+            name="Origin",
+        )
+    )
+
     pose_graph_3d.update_layout(
         showlegend=False,
         title="3D Sensor Pose",
@@ -42,6 +59,7 @@ def build_3d_pose_graph_callback(_):
                 up=dict(x=0, y=1, z=0),
             ),
         ),
+        margin=dict(l=0, r=0, b=0, t=0),
     )
 
     return pose_graph_3d
