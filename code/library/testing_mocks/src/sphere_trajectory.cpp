@@ -28,6 +28,9 @@ std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory con
         std::tie(R_prev, forward_prev) = TrackPoint(config.world_origin, position_i, R_prev, forward_prev);
 
         Isometry3d tf_w_co;
+        // NOTE(Jack): All the above logic happened in a classic "forward x" coordinate frame (if that really means
+        // anything), but now here we apply the canonical camera axes to get the axes to be "forward z" like a camera
+        // has.
         tf_w_co.linear() = R_prev * canonical_camera_axes.inverse();
         tf_w_co.translation() = position_i;
 
