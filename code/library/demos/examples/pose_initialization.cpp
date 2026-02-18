@@ -34,8 +34,9 @@ int main() {
     std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
 
     // TODO(Jack): The moral of the story here is: all the algorithms use/store the tf_co_w transform. But we need the
-    //  tf_w_co to inuitive world frame visualizations. Therefore we invert the tfs here before we write them to the
-    //  database. This is clearly a HACK and we need a real strategy going foward.
+    //  tf_w_co for intuitive world frame visualizations and graphs in the dashboard. Therefore we invert the tfs here
+    //  before we write them to the database. This is clearly a HACK and we need a real strategy going forward. I guess
+    //  this should be centralized in the dashboard data loading logic?
     for (auto& [_, frame_i] : cam_data.frames) {
         if (frame_i.initial_pose.has_value()) {
             frame_i.initial_pose = geometry::Log(geometry::Exp(frame_i.initial_pose.value()).inverse());
