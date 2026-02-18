@@ -18,8 +18,7 @@ TEST(Pnp, TestPnp) {
         pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::image_bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        Isometry3d const gt_tf_w_co{geometry::Exp(frame_i.initial_pose.value())};
-        Isometry3d const gt_tf_co_w{gt_tf_w_co.inverse()};
+        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};
 
         Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
@@ -38,8 +37,7 @@ TEST(Pnp, TestPnpFlat) {
             pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::unit_image_bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        Isometry3d const gt_tf_w_co{geometry::Exp(frame_i.initial_pose.value())};
-        Isometry3d const gt_tf_co_w{gt_tf_w_co.inverse()};
+        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};
 
         Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"

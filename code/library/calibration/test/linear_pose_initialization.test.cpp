@@ -25,8 +25,7 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Isometry3d const gt_tf_w_co{geometry::Exp(gt_data.frames.at(timestamp_ns).initial_pose.value())};
-        Array6d const gt_aa_co_w{geometry::Log(gt_tf_w_co.inverse())};
+        Array6d const gt_aa_co_w{gt_data.frames.at(timestamp_ns).initial_pose.value()};
 
         ASSERT_TRUE(frame_i.initial_pose.has_value());
         EXPECT_TRUE(frame_i.initial_pose.value().isApprox(gt_aa_co_w, 1e-6))

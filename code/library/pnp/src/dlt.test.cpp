@@ -20,8 +20,7 @@ TEST(PnpDlt, TestDlt23) {
 
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Isometry3d const gt_tf_w_co{geometry::Exp(frame_i.initial_pose.value())};
-        Isometry3d const gt_tf_co_w{gt_tf_w_co.inverse()};
+        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
@@ -42,8 +41,7 @@ TEST(PnpDlt, TestDlt22) {
 
         // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
         // definitely have filled out this value!
-        Isometry3d const gt_tf_w_co{geometry::Exp(frame_i.initial_pose.value())};
-        Isometry3d const gt_tf_co_w{gt_tf_w_co.inverse()};
+        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"

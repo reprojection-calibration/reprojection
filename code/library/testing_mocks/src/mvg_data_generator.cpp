@@ -47,7 +47,7 @@ CameraCalibrationData GenerateMvgData(int const num_samples, uint64_t const time
 
         data.frames[time_i].extracted_target.bundle =
             Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)};
-        data.frames[time_i].initial_pose = aa_w_co.value();
+        data.frames[time_i].initial_pose = geometry::Log(tf_co_w);
     }
 
     return data;
