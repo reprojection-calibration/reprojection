@@ -28,7 +28,7 @@ CameraCalibrationData GenerateMvgData(int const num_samples, uint64_t const time
     // NOTE(Jack): Instead of building and using a spline here, I guess we could have all just used the poses from
     // SphereTrajectory() directly (?) But we follow this pattern here and in the imu data generator for consistencies'
     // sake. The more places we use the spline code the more robust it makes it!
-    spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(2 * num_samples, timespan_ns)};
+    spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
     std::set<uint64_t> const times{SampleTimes(num_samples, timespan_ns)};
 
     auto const camera{projection_functions::InitializeCamera(camera_model, intrinsics, bounds)};
