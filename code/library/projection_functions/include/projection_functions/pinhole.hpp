@@ -44,13 +44,11 @@ struct Pinhole {
         T const& y{P_co[1]};
         T const& z{P_co[2]};
 
-        if (z < 0) {
+        if (z <= 0) {
             return std::nullopt;
         }
 
-        // TODO(Jack): Protect against divide by zero.
         // TODO(Jack): Check valid fov (Tangram claims 120 degree max).
-        // TODO(Jack): Check inside image height and width!
         // Put into ideal/normalized/projected camera coordinate frame
         T const x_cam{x / z};
         T const y_cam{y / z};
