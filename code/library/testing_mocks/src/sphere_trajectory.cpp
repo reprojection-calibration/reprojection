@@ -16,16 +16,16 @@ Matrix3d const canonical_camera_axes{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
 std::vector<Vector6d> SphereTrajectory(int const num_poses, CameraTrajectory const& config) {
     MatrixX3d const pose_origins{SpherePoints(num_poses, config.sphere_radius, config.sphere_origin)};
 
-    Matrix3d R_prev{canonical_camera_axes.inverse()};
-    Vector3d forward_prev{Vector3d::UnitX()};
+    Matrix3d R{canonical_camera_axes.inverse()};
+    Vector3d forward{Vector3d::UnitX()};
 
     std::vector<Vector6d> poses;
     for (int i{0}; i < pose_origins.rows(); ++i) {
         Vector3d const position_i{pose_origins.row(i)};
-        std::tie(R_prev, forward_prev) = TrackPoint(config.world_origin, position_i, R_prev, forward_prev);
+        std::tie(R, forward) = TrackPoint(config.world_origin, position_i, R, forward);
 
         Isometry3d tf_w_co;
-        tf_w_co.linear() = R_prev;
+        tf_w_co.linear() = R;
         tf_w_co.translation() = position_i;
 
         poses.push_back(geometry::Log(tf_w_co));
