@@ -123,9 +123,9 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
 
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
     std::string_view sensor_name{"/imu/polaris/123"};
-    std::vector<ImuMeasurement> const data{{0, {}, {}},  //
-                                           {1, {}, {}},
-                                           {2, {}, {}}};
+    std::vector<ImuMeasurement> const data{{0, Vector3d::Zero(), Vector3d::Zero()},  //
+                                           {1, Vector3d::Zero(), Vector3d::Zero()},
+                                           {2, Vector3d::Zero(), Vector3d::Zero()}};
 
     // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only
     // database instance in the same test using the same file.
