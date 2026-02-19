@@ -68,8 +68,8 @@ def build_3d_pose_graph_callback(_):
 # TODO(Jack): Do not hardcode const timestamps = metadata[1]["camera"][sensor]
 app.clientside_callback(
     """
-    function(frame_idx, sensor, pose_type, raw_data, metadata) {
-        if (frame_idx == null || !sensor || !pose_type || !raw_data || !metadata) {
+    function(frame_idx, sensor, pose_type, raw_data, metadata, figure) {
+        if (frame_idx == null || !sensor || !pose_type || !raw_data || !metadata || !figure) {
             return dash_clientside.no_update;
         }
     
@@ -117,4 +117,5 @@ app.clientside_callback(
     Input("pose-type-selector", "value"),
     State("raw-camera-data-store", "data"),
     State("metadata-store", "data"),
+    State("camera-3d-pose-graph", "figure"),
 )
