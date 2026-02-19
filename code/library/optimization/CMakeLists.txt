@@ -9,7 +9,6 @@ set(SRC_FILES
         src/spline_nonlinear_refinement.cpp
 )
 set(LINK_LIBRARIES
-        calibration_data_views
         Ceres::ceres
         Eigen3::Eigen
         eigen_utilities

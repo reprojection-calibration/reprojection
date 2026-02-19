@@ -22,7 +22,8 @@
 namespace reprojection::database {
 
 // TODO(Jack): Should we make this instead accept OptimizationState directly and iterate over that?
-void AddImage(std::string const& sensor_name, uint64_t const timestamp_ns, std::shared_ptr<CalibrationDatabase> const database);
+void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
+              std::shared_ptr<CalibrationDatabase> const database);
 
 class ImageStreamer {
    public:

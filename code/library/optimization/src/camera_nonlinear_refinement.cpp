@@ -16,6 +16,12 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
+    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
+    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
+    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
+    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
+    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
+    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
     OptimizationState optimized_state{initial_state};
     for (auto const& [timestamp_ns, target] : data) {
         MatrixX2d const& pixels_i{target.bundle.pixels};

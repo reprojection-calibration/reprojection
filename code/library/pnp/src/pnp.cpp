@@ -1,6 +1,5 @@
 #include "pnp/pnp.hpp"
 
-#include "calibration_data_views/optimization_view.hpp"
 #include "geometry/lie.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "types/algorithm_types.hpp"

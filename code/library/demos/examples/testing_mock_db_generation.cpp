@@ -1,7 +1,6 @@
 #include <map>
 
 #include "calibration/linear_pose_initialization.hpp"
-#include "calibration_data_views/initialization_view.hpp"
 #include "database/calibration_database.hpp"
 #include "database/image_interface.hpp"
 #include "database/sensor_data_interface.hpp"

@@ -14,7 +14,7 @@
 
 namespace reprojection::database {
 
-void AddImage(std::string const& sensor_name, uint64_t const timestamp_ns,
+void AddImage( uint64_t const timestamp_ns,std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
     SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, timestamp_ns, sensor_name,
                                                             nullptr, -1, database->db)};

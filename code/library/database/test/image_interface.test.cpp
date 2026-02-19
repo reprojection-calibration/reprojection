@@ -13,19 +13,11 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(DatabaseImageInterface, TestAddImage) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
-
-    cv::Mat const image(10, 20, CV_8UC1);
-    EXPECT_NO_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db));
-}
-
 TEST(DatabaseImageInterface, TestAddImageHeaderOnly) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-    EXPECT_NO_THROW(database::AddImage(FrameHeader{0, "/cam/retro/123"}, db));
+    EXPECT_NO_THROW(database::AddImage(0, "/cam/retro/123", db));
 }
 
 TEST(DatabaseImageInterface, TestAddImageError) {
