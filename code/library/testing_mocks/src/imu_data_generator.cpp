@@ -6,8 +6,9 @@
 
 namespace reprojection::testing_mocks {
 
+// TODO(Jack): Can we instead return std::vector<ImuMeasurement> here? Or the CalibrationDataset with just the IMU
+// filled out or a subset of that struct?
 ImuData GenerateImuData(int const num_samples, uint64_t const timespan_ns) {
-    // TODO(Jack): Is two times num_samples really dense enough to prevent sampling artifacts?
     spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
     std::set<uint64_t> const times{SampleTimes(num_samples, timespan_ns)};
 
@@ -20,7 +21,9 @@ ImuData GenerateImuData(int const num_samples, uint64_t const timespan_ns) {
             throw std::runtime_error("GenerateImuData() failed trajectory.Evaluate().");  // LCOV_EXCL_LINE
         }
 
-        data[time_i] = {velocity_t->topRows(3), acceleration_t->bottomRows(3)};
+        // TODO(Jack): Kind of hacky that we store the measurement data which has timestamp in a timestamped map. See
+        // comment at tope of method.
+        data[time_i] = {time_i, velocity_t->topRows(3), acceleration_t->bottomRows(3)};
     }
 
     return data;
