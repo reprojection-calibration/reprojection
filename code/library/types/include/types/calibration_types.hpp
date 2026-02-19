@@ -1,12 +1,10 @@
 #pragma once
 
 #include <map>
-#include <optional>
 #include <string>
 
-#include "types/algorithm_types.hpp"
-#include "types/eigen_types.hpp"
 #include "types/enums.hpp"
+#include "types/sensor_types.hpp"
 
 // TODO(Jack): Make sure the names here to conflict logically with other types.
 
@@ -26,62 +24,39 @@ struct ImageBounds {
     double v_max{};
 };
 
-struct CameraSensorInfo {
+struct CameraInfo {
     std::string sensor_name;
     CameraModel camera_model;
     ImageBounds bounds;
 };
 
-struct CalibrationDataFrame {
-    CalibrationDataFrame() = default;
-
-    CalibrationDataFrame(ExtractedTarget const& _extracted_target, Array6d const& _initial_pose,
-                         ArrayX2d const& _initial_reprojection_error, Array6d const& _optimized_pose,
-                         ArrayX2d const& _optimized_reprojection_error)
-        : extracted_target{_extracted_target},
-          initial_pose{_initial_pose},
-          initial_reprojection_error{_initial_reprojection_error},
-          optimized_pose{_optimized_pose},
-          optimized_reprojection_error{_optimized_reprojection_error} {}
-
-    // NOTE(Jack): We need to initialize optimized_pose with zeros otherwise we get warnings (which are considered
-    // errors) about using/copying uninitialized memory (i.e. -Werror=maybe-uninitialized).
-    CalibrationDataFrame(ExtractedTarget const& _extracted_target, Array6d const& _initial_pose)
-        : extracted_target{_extracted_target}, initial_pose{_initial_pose}, optimized_pose{Array6d::Zero()} {}
-
-    ExtractedTarget extracted_target;
-
-    std::optional<Array6d> initial_pose;
-    std::optional<ArrayX2d> initial_reprojection_error;
-
-    std::optional<Array6d> optimized_pose;
-    std::optional<ArrayX2d> optimized_reprojection_error;
+struct ImuInfo {
+    std::string sensor_name;
+    // TODO(Jack): Add other non optimized parameterization like known calibration bias or noise properties?
 };
 
-using CameraFrameSequence = std::map<std::uint64_t, CalibrationDataFrame>;
+struct CalibrationDataset {
+    CameraInfo camera;
+    std::vector<CameraMeasurement> camera_frames;
+    ImuInfo imu;
+    std::vector<ImuMeasurement> imu_data;
+};
 
-struct CameraCalibrationData {
-    CameraCalibrationData() = default;
+// TODO(Jack): If there is no other foreseeable thing that will be added to the camera state, do we really need a
+//  struct? Same idea for FrameState below, but I assume we will have more values coming into FrameState later.
+// TODO(Jack): Do maybe the camera-imu extrinsic belong here? I think it makes more sense they would belong to an IMU
+//  centric state, but that might never be necessary because we never really optimize the IMU itself in any sense.
+struct CameraState {
+    ArrayXd intrinsics;
+};
 
-    CameraCalibrationData(CameraSensorInfo const& _sensor, ArrayXd const& _initial_intrinsics,
-                          ArrayXd const& _optimized_intrinsics, CameraFrameSequence const& _frames)
-        : sensor{_sensor},
-          initial_intrinsics{_initial_intrinsics},
-          optimized_intrinsics{_optimized_intrinsics},
-          frames{_frames} {}
+struct FrameState {
+    Array6d pose;
+};
 
-    explicit CameraCalibrationData(CameraSensorInfo const& _sensor) : sensor{_sensor} {}
-
-    CameraCalibrationData(CameraSensorInfo const& _sensor, ArrayXd const& _initial_intrinsics)
-        : sensor{_sensor}, initial_intrinsics{_initial_intrinsics} {}
-
-    CameraSensorInfo sensor{};
-
-    // TODO(Jack): These should be optional!
-    ArrayXd initial_intrinsics;
-    ArrayXd optimized_intrinsics;
-
-    CameraFrameSequence frames;
+struct OptimizationState {
+    CameraState camera_state;
+    std::map<uint64_t, FrameState> frames;
 };
 
 }  // namespace reprojection

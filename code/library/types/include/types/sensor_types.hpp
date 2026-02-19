@@ -10,37 +10,15 @@
 
 namespace reprojection {
 
-// TODO(Jack): Remove completely when we transition to not using sets anymore.
-// TODO(Jack): Add concept requirements
-// TODO(Jack): Where does this belong?
-template <typename T>
-bool operator<(T const& x, T const& y) {
-    return x.header.timestamp_ns < y.header.timestamp_ns;
-}
-
-struct FrameHeader {
+struct CameraMeasurement {
     uint64_t timestamp_ns;
-    std::string sensor_name;
-};
-
-struct ExtractedTargetStamped {
-    FrameHeader header;
     ExtractedTarget target;
 };
 
 struct ImuMeasurement {
+    uint64_t timestamp_ns;
     Vector3d angular_velocity;
     Vector3d linear_acceleration;
-};
-
-struct ImuStamped {
-    FrameHeader header;
-    ImuMeasurement data;
-};
-
-struct ImageStamped {
-    FrameHeader header;
-    cv::Mat image;
 };
 
 }  // namespace reprojection
