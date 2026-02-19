@@ -5,6 +5,7 @@ import pandas as pd
 
 from database.sql_statement_loading import load_sql
 from database.types import PoseType
+from database.geometry import InvertSe3
 
 
 def load_camera_poses_df(db_path):
@@ -42,10 +43,11 @@ def add_camera_poses_df_to_camera_calibration_data(df, data):
                 f"Pose type {pose_type} not valid.",
             )
 
-        pose = row.iloc[-6:].tolist()
+        pose_co_w = row.iloc[-6:].tolist()
+        pose_w_co = InvertSe3(pose_co_w)
 
         if "poses" not in data[sensor]["frames"][timestamp]:
             data[sensor]["frames"][timestamp]["poses"] = {}
-        data[sensor]["frames"][timestamp]["poses"][pose_type] = pose
+        data[sensor]["frames"][timestamp]["poses"][pose_type] = pose_w_co
 
     return data
