@@ -77,50 +77,48 @@ TEST(DatabaseSensorDataInterface, TestAddExtractedTargetData) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-    ExtractedTarget const bundle{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
-                                        MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
-                                 {{5, 6}, {2, 3}, {650, 600}}};
+    uint64_t const timestamp_ns{0};
+    std::string_view const sensor_name{"/cam/retro/123"};
 
-    FrameHeader const header{0, "/cam/retro/123"};
     // Adding a target with no corresponding image database entry is invalid! Foreign key constraint :)
-    EXPECT_THROW(AddExtractedTargetData({header, bundle}, db), std::runtime_error);
+    EXPECT_THROW(AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db), std::runtime_error);
 
-    database::AddImage(header, db);
-    EXPECT_NO_THROW(AddExtractedTargetData({header, bundle}, db));
+    database::AddImage(timestamp_ns, sensor_name, db);
+    EXPECT_NO_THROW(AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
+    uint64_t timestamp_ns{0};
+    std::string_view const sensor_name{"/cam/retro/123"};
     ExtractedTarget const target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
+    // Add three targets
     // Due to foreign key relationship we need add an image before we add the extracted target
-    FrameHeader header{0, "/cam/retro/123"};
-    database::AddImage(header, db);
-    AddExtractedTargetData({header, target}, db);
-    header.timestamp_ns = 1;
-    database::AddImage(header, db);
-    AddExtractedTargetData({header, target}, db);
-    header.timestamp_ns = 2;
-    database::AddImage(header, db);
-    AddExtractedTargetData({header, target}, db);
+    database::AddImage(timestamp_ns, sensor_name, db);
+    AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
+    timestamp_ns = 1;
+    database::AddImage(timestamp_ns, sensor_name, db);
+    AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
+    timestamp_ns = 2;
+    database::AddImage(timestamp_ns, sensor_name, db);
+    AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
 
-    CameraCalibrationData data{{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds}};
+    CameraMeasurements const loaded_data{database::GetExtractedTargetData(db, sensor_name)};
+    EXPECT_EQ(std::size(loaded_data), 3);
 
-    database::GetExtractedTargetData(db, data);
-    EXPECT_EQ(std::size(data.frames), 3);
+    int test_timestamp{0};
+    for (auto const& [timestamp_ns_i, target_i] : loaded_data) {
+        EXPECT_EQ(timestamp_ns_i, test_timestamp);
+        test_timestamp += 1;
 
-    int timestamp{0};
-    for (auto const& [timestamp_ns, frame_i] : data.frames) {
-        EXPECT_EQ(timestamp_ns, timestamp);
-        timestamp = timestamp + 1;
-
-        EXPECT_TRUE(frame_i.extracted_target.bundle.pixels.isApprox(target.bundle.pixels));
-        EXPECT_TRUE(frame_i.extracted_target.bundle.points.isApprox(target.bundle.points));
-        EXPECT_TRUE(frame_i.extracted_target.indices.isApprox(target.indices));
+        EXPECT_TRUE(target_i.bundle.pixels.isApprox(target.bundle.pixels));
+        EXPECT_TRUE(target_i.bundle.points.isApprox(target.bundle.points));
+        EXPECT_TRUE(target_i.indices.isApprox(target.indices));
     }
 }
 
