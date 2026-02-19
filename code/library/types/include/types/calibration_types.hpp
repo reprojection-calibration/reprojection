@@ -35,9 +35,12 @@ struct ImuInfo {
     // TODO(Jack): Add other non optimized parameterization like known calibration bias or noise properties?
 };
 
+// TODO(Jack): is it problematic to use a using declaration here?
+using CameraMeasurements = std::vector<CameraMeasurement>;
+
 struct CalibrationDataset {
     CameraInfo camera;
-    std::vector<CameraMeasurement> camera_frames;
+    CameraMeasurements camera_frames;
     ImuInfo imu;
     std::vector<ImuMeasurement> imu_data;
 };

@@ -15,7 +15,7 @@
 
 namespace reprojection::database {
 
-void AddCameraPoseData(CameraCalibrationData const& data, PoseType const type,
+void AddCameraPoseData(OptimizationState const& data, PoseType const type,
                        std::shared_ptr<CalibrationDatabase> const database) {
     std::string_view const sql{sql_statements::camera_poses_insert};
 
@@ -29,66 +29,44 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type,
 
     // TODO(Jack): For now we will simply convert SplinePoses to CameraCalibrationData. Once we know better the
     //  requirements or have a better design concept we can remove this conversion code. This is a hack!
-    CameraCalibrationData hack_data;
-    hack_data.sensor.sensor_name = "/imu0";
+    OptimizationState hack_data;
     for (auto const& [timestamp_ns, pose_i] : data) {
-        hack_data.frames[timestamp_ns].initial_pose = pose_i;
+        hack_data.frames[timestamp_ns].pose = pose_i;
     }
 
     AddPoseData(sql, hack_data, type, database);
 }
 
-// NOTE(Jack): We supress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
+// NOTE(Jack): We suppress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
 // trigger that is via a malformed sql statement, but that is hardcoded into this function (i.e.
 // sql_statements::camera_poses_insert) abd cannot and should not be changed!
-void AddPoseData(std::string_view const sql, CameraCalibrationData const& data, PoseType const type,
-                 std::shared_ptr<CalibrationDatabase> const database) {
+void AddPoseData(std::string_view const sql, OptimizationState const& data, PoseType const type,
+                 std::string_view sensor_name, std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
     for (auto const& [timestamp_ns, frame_i] : data.frames) {
         // TODO(Jack): Make SqlStatement take a string view.
         SqlStatement const statement{database->db, sql.data()};
 
-        Vector6d pose;
-        if (type == PoseType::Initial) {
-            // TODO(Jack) Should we actually have two pose tables so we can establish a foreign key constraint between
-            // initialized and optimized? Somehow the current code seems quite hacky how it has the same optional
-            // checking logic in both places
-            if (frame_i.initial_pose) {
-                pose = frame_i.initial_pose.value();
-            } else {
-                continue;  // LCOV_EXCL_LINE
-            }
-        } else if (type == PoseType::Optimized) {
-            if (frame_i.optimized_pose) {
-                pose = frame_i.optimized_pose.value();
-            } else {
-                continue;  // LCOV_EXCL_LINE
-            }
-        } else {
-            throw std::runtime_error(
-                "AddPoseData() invalid PoseType selected, this is a library implementation error!");  // LCOV_EXCL_LINE
-        }
-
         try {
             Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
-            Sqlite3Tools::Bind(statement.stmt, 2, data.sensor.sensor_name);
+            Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
             Sqlite3Tools::Bind(statement.stmt, 3, ToString(type));
-            Sqlite3Tools::Bind(statement.stmt, 4, pose[0]);
-            Sqlite3Tools::Bind(statement.stmt, 5, pose[1]);
-            Sqlite3Tools::Bind(statement.stmt, 6, pose[2]);
-            Sqlite3Tools::Bind(statement.stmt, 7, pose[3]);
-            Sqlite3Tools::Bind(statement.stmt, 8, pose[4]);
-            Sqlite3Tools::Bind(statement.stmt, 9, pose[5]);
-        } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
-            std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
-                ErrorMessage("AddPoseData()", data.sensor.sensor_name, timestamp_ns,  // LCOV_EXCL_LINE
-                             SqliteErrorCode::FailedBinding,                          // LCOV_EXCL_LINE
-                             std::string(sqlite3_errmsg(database->db)))));            // LCOV_EXCL_LINE
+            Sqlite3Tools::Bind(statement.stmt, 4, frame_i.pose[0]);
+            Sqlite3Tools::Bind(statement.stmt, 5, frame_i.pose[1]);
+            Sqlite3Tools::Bind(statement.stmt, 6, frame_i.pose[2]);
+            Sqlite3Tools::Bind(statement.stmt, 7, frame_i.pose[3]);
+            Sqlite3Tools::Bind(statement.stmt, 8, frame_i.pose[4]);
+            Sqlite3Tools::Bind(statement.stmt, 9, frame_i.pose[5]);
+        } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
+            std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
+                ErrorMessage("AddPoseData()", sensor_name, timestamp_ns,    // LCOV_EXCL_LINE
+                             SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
+                             std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            throw std::runtime_error(ErrorMessage("AddPoseData()", data.sensor.sensor_name, timestamp_ns,
+            throw std::runtime_error(ErrorMessage("AddPoseData()", sensor_name, timestamp_ns,
                                                   SqliteErrorCode::FailedStep,
                                                   std::string(sqlite3_errmsg(database->db))));
         }
@@ -97,47 +75,25 @@ void AddPoseData(std::string_view const sql, CameraCalibrationData const& data, 
 
 // NOTE(Jack): We supress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
-void AddReprojectionError(CameraCalibrationData const& data, PoseType const type,
+void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, PoseType const type, std::string_view sensor_name,
                           std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
-    for (auto const& [timestamp_ns, frame_i] : data.frames) {
-        // TODO(Jack): Can we make this a reference somehow? There is no good reason to make a copy here.
-        ArrayX2d reprojection_error;
-        if (type == PoseType::Initial) {
-            // TODO(Jack): See note above in AddPose about lack of strategy here and dupicated optional logic. I think
-            // two tables with a foreign key constraint could make the most sense. Can we have an equivalent foreign key
-            // like constraint within one table?
-            if (frame_i.initial_reprojection_error) {
-                reprojection_error = frame_i.initial_reprojection_error.value();
-            } else {
-                continue;  // LCOV_EXCL_LINE
-            }
-        } else if (type == PoseType::Optimized) {
-            if (frame_i.optimized_reprojection_error) {
-                reprojection_error = frame_i.optimized_reprojection_error.value();
-            } else {
-                continue;  // LCOV_EXCL_LINE
-            }
-        } else {
-            throw std::runtime_error(
-                "AddReprojectionError() invalid PoseType selected, this is a library implementation error!");  // LCOV_EXCL_LINE
-        }
-
-        protobuf_serialization::ArrayX2dProto const serialized{Serialize(reprojection_error)};
+    for (auto const& [timestamp_ns, error_i] : data) {
+        protobuf_serialization::ArrayX2dProto const serialized{Serialize(error_i)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
             throw std::runtime_error(
-                "AddReprojectionError() protobuf SerializeToString() failed for sensor: " +      // LCOV_EXCL_LINE
-                data.sensor.sensor_name + " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
+                "AddReprojectionError() protobuf SerializeToString() failed for sensor: " +       // LCOV_EXCL_LINE
+                std::string(sensor_name) + " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
         }
 
         SqliteResult const result{Sqlite3Tools::AddTimeNameTypeBlob(sql_statements::reprojection_error_insert,
-                                                                    timestamp_ns, type, data.sensor.sensor_name,
-                                                                    buffer.c_str(), std::size(buffer), database->db)};
+                                                                    timestamp_ns, type, sensor_name, buffer.c_str(),
+                                                                    std::size(buffer), database->db)};
 
         if (std::holds_alternative<SqliteErrorCode>(result)) {
-            throw std::runtime_error(ErrorMessage("AddReprojectionError()", data.sensor.sensor_name, timestamp_ns,
+            throw std::runtime_error(ErrorMessage("AddReprojectionError()", sensor_name, timestamp_ns,
                                                   std::get<SqliteErrorCode>(result),
                                                   std::string(sqlite3_errmsg(database->db))));
         }
@@ -145,23 +101,24 @@ void AddReprojectionError(CameraCalibrationData const& data, PoseType const type
 }
 
 // NOTE(Jack): See note above AddReprojectionError about suppressing the SerializeToString throw.
-void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
+void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
+                            std::shared_ptr<CalibrationDatabase> const database) {
     protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {
         throw std::runtime_error(
             "AddExtractedTargetData() protobuf SerializeToString() failed for sensor: " +  // LCOV_EXCL_LINE
-            data.header.sensor_name +                                                      // LCOV_EXCL_LINE
-            " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));              // LCOV_EXCL_LINE
+            std::string(sensor_name) +                                                     // LCOV_EXCL_LINE
+            " at timestamp_ns: " + std::to_string(data.timestamp_ns));                     // LCOV_EXCL_LINE
     }
 
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert,
-                                                            data.header.timestamp_ns, data.header.sensor_name,
-                                                            buffer.c_str(), std::size(buffer), database->db)};
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert, data.timestamp_ns,
+                                                            sensor_name, buffer.c_str(), std::size(buffer),
+                                                            database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage("AddReprojectionError()", data.header.sensor_name,
-                                              data.header.timestamp_ns, std::get<SqliteErrorCode>(result),
+        throw std::runtime_error(ErrorMessage("AddReprojectionError()", sensor_name, data.timestamp_ns,
+                                              std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
 }
@@ -169,16 +126,16 @@ void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
 // differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
-void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, CameraCalibrationData& data) {
+void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, data.sensor.sensor_name.c_str());
-    } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
-            ErrorMessage("GetExtractedTargetData()", data.sensor.sensor_name, 0,  // LCOV_EXCL_LINE
-                         SqliteErrorCode::FailedBinding,                          // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database->db)))));            // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name).c_str());
+    } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
+            ErrorMessage("GetExtractedTargetData()", sensor_name, 0,    // LCOV_EXCL_LINE
+                         SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     while (true) {
@@ -187,7 +144,7 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
             throw std::runtime_error(ErrorMessage(                                         // LCOV_EXCL_LINE
-                "GetExtractedTargetData()", data.sensor.sensor_name, 0,                    // LCOV_EXCL_LINE
+                "GetExtractedTargetData()", sensor_name, 0,                                // LCOV_EXCL_LINE
                 SqliteErrorCode::FailedStep, std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
         }
 
@@ -199,7 +156,7 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
         int const blob_size{sqlite3_column_bytes(statement.stmt, 1)};
         if (not blob or blob_size <= 0) {
             throw std::runtime_error("GetExtractedTargetData() blob reading failed for sensor: " +  // LCOV_EXCL_LINE
-                                     data.sensor.sensor_name +                                      // LCOV_EXCL_LINE
+                                     std::string(sensor_name) +                                     // LCOV_EXCL_LINE
                                      " at timestamp_ns: " + std::to_string(timestamp_ns));          // LCOV_EXCL_LINE
         }
 
@@ -210,7 +167,7 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
         auto const deserialized{Deserialize(serialized)};
         if (not deserialized.has_value()) {
             throw std::runtime_error("GetExtractedTargetData() Deserialize() failed for sensor: " +  // LCOV_EXCL_LINE
-                                     data.sensor.sensor_name +                                       // LCOV_EXCL_LINE
+                                     std::string(sensor_name) +                                      // LCOV_EXCL_LINE
                                      " at timestamp_ns: " + std::to_string(timestamp_ns));           // LCOV_EXCL_LINE
         }
 

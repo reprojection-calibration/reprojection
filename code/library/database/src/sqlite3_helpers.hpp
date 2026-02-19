@@ -37,7 +37,7 @@ using SqliteResult = std::variant<SqliteFlag, SqliteErrorCode>;
 struct Sqlite3Tools {
     using CallbackType = int (*)(void*, int, char**, char**);
 
-    [[nodiscard]] static bool Execute(std::string const& sql_statement, sqlite3* const db);
+    [[nodiscard]] static bool Execute(std::string_view sql_statement, sqlite3* const db);
 
     // TODO(Jack): Test!
     // TODO(Jack): My original intention was a AddBlob function where the blob itself was the only parameter, and the
@@ -50,21 +50,22 @@ struct Sqlite3Tools {
     // into a table that holds blobs indexed by timestamp and the sensor name. This is no strictly a problem, but the
     // fact that this method now takes six arguments tells you that maybe we are missing an abstraction :)
     [[nodiscard]] static SqliteResult AddTimeNameBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                      std::string const& sensor_name, void const* const blob_ptr,
+                                                      std::string_view sensor_name, void const* const blob_ptr,
                                                       int const blob_size, sqlite3* const db);
 
     [[nodiscard]] static SqliteResult AddTimeNameTypeBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                          PoseType const type, std::string const& sensor_name,
+                                                          PoseType const type, std::string_view sensor_name,
                                                           void const* const blob_ptr, int const blob_size,
                                                           sqlite3* const db);
 
     [[nodiscard]] static SqliteResult AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                              std::string const& sensor_name, void const* const blob_ptr,
+                                              std::string_view sensor_name, void const* const blob_ptr,
                                               int const blob_size, sqlite3* const db,
                                               std::optional<PoseType> const& type = std::nullopt);
 
-    static void Bind(sqlite3_stmt* const stmt, int const index, std::string const& value) {
-        if (sqlite3_bind_text(stmt, index, value.c_str(), -1, SQLITE_TRANSIENT) != static_cast<int>(SqliteFlag::Ok)) {
+    static void Bind(sqlite3_stmt* const stmt, int const index, std::string_view value) {
+        if (sqlite3_bind_text(stmt, index, std::string(value).c_str(), -1, SQLITE_TRANSIENT) !=
+            static_cast<int>(SqliteFlag::Ok)) {
             throw std::runtime_error("sqlite3_bind_text() failed");
         }
     }
@@ -89,7 +90,7 @@ struct Sqlite3Tools {
     }
 };
 
-std::string ErrorMessage(std::string const& function_name, std::string const& sensor_name, uint64_t const timestamp_ns,
+std::string ErrorMessage(std::string const& function_name, std::string_view sensor_name, uint64_t const timestamp_ns,
                          SqliteErrorCode const error_code, std::string const& db_error_message);
 
 }  // namespace reprojection::database

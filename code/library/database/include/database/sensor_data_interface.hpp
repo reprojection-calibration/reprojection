@@ -51,17 +51,19 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type,
 void AddPoseData(std::string_view const sql, OptimizationState const& data, PoseType const type,
                  std::shared_ptr<CalibrationDatabase> const database);
 
-void AddReprojectionError(CameraCalibrationData const& data, PoseType const type,
+void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, PoseType const type, std::string_view sensor_name,
                           std::shared_ptr<CalibrationDatabase> const database);
 
-void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
+// RENAME - remove the data suffix
+void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
+                            std::shared_ptr<CalibrationDatabase> const database);
 
 // See the note above AddPoseData. Here we are mutating the data, should we use a controlled view here?
-void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, CameraCalibrationData& data);
+void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name);
 
-[[nodiscard]] bool AddImuData(ImuStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
+[[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::shared_ptr<CalibrationDatabase> const database);
 
-std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
+std::optional<std::set<ImuMeasurement>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
                                                std::string const& sensor_name);
 
 }  // namespace reprojection::database

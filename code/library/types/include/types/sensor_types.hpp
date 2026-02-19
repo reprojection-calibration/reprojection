@@ -10,6 +10,11 @@
 
 namespace reprojection {
 
+struct CameraImage{
+    uint64_t timestamp_ns;
+    cv::Mat image;
+};
+
 struct CameraMeasurement {
     uint64_t timestamp_ns;
     ExtractedTarget target;
