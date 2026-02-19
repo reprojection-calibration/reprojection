@@ -32,14 +32,6 @@ int main() {
 
     calibration::LinearPoseInitialization(InitializationDataView(cam_data));
     optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
-    for (auto& [_, frame_i] : cam_data.frames) {
-        if (frame_i.initial_pose.has_value()) {
-            frame_i.initial_pose = geometry::Log(geometry::Exp(frame_i.initial_pose.value()).inverse());
-        }
-        if (frame_i.optimized_pose.has_value()) {
-            frame_i.optimized_pose = geometry::Log(geometry::Exp(frame_i.optimized_pose.value()).inverse());
-        }
-    }
 
     AddCameraPoseData(cam_data, database::PoseType::Initial, db);
     AddCameraPoseData(cam_data, database::PoseType::Optimized, db);
