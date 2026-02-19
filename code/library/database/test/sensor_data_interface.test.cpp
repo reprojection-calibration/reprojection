@@ -97,8 +97,7 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
-    // Add three targets
-    // Due to foreign key relationship we need add an image before we add the extracted target
+    // Add three targets - due to foreign key relationship we need add an image before we add the target
     database::AddImage(timestamp_ns, sensor_name, db);
     AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
     timestamp_ns = 1;
@@ -123,41 +122,29 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
 }
 
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
-    // TODO(Jack): Should we use this test data for all the IMU tests?
-    std::map<std::string, std::map<uint64_t, ImuMeasurement>> const imu_data{{"/imu/polaris/123",
-                                                                              {
-                                                                                  {0, {{0, 0, 0}, {1, 1, 1}}},
-                                                                                  {1, {{2, 2, 2}, {3, 3, 3}}},
-                                                                                  {3, {{4, 4, 4}, {5, 5, 5}}},
-                                                                              }},
-                                                                             {"/imu/polaris/456",
-                                                                              {
-                                                                                  {1, {{0, 0, 0}, {-1, -1, -1}}},
-                                                                                  {2, {{-2, -2, -2}, {-3, -3, -3}}},
-                                                                              }}};
+    std::string_view sensor_name{"/imu/polaris/123"};
+    std::vector<ImuMeasurement> const data{{0, Vector3d::Zero(), Vector3d::Zero()},  //
+                                           {1, Vector3d::Zero(), Vector3d::Zero()},
+                                           {2, Vector3d::Zero(), Vector3d::Zero()}};
 
-    TemporaryFile const temp_file{".db3"};
     // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only
-    // database instance in the same test.
-    // TODO(Jack): Is it legal to open two connection to the same database?
+    // database instance in the same test using the same file.
+    TemporaryFile const temp_file{".db3"};
     {
-        auto const db{
-            std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};  // create and write
-        for (auto const& [sensor, measurements] : imu_data) {
-            for (auto const& [timestamp_ns, measurement_i] : measurements) {
-                bool const success_i{database::AddImuData({{timestamp_ns, sensor}, measurement_i}, db)};
-                EXPECT_TRUE(success_i);
-            }
+        // Create and write
+        auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+
+        for (auto const& measurement_i : data) {
+            bool const success_i{database::AddImuData(measurement_i, sensor_name, db)};
+            EXPECT_TRUE(success_i);
         }
     }
     {
-        auto const db{
-            std::make_shared<database::CalibrationDatabase const>(temp_file.Path(), false, true)};  // const read only
-        for (auto const& [sensor, measurements] : imu_data) {
-            auto const imu_i_data{database::GetImuData(db, sensor)};
-            ASSERT_TRUE(imu_i_data.has_value());
-            EXPECT_EQ(std::size(imu_i_data.value()), std::size(measurements));
-        }
+        // Const read only
+        auto const db{std::make_shared<database::CalibrationDatabase const>(temp_file.Path(), false, true)};
+
+        auto const loaded_data{database::GetImuData(db, sensor_name)};
+        EXPECT_EQ(std::size(loaded_data), std::size(data));
     }
 }
 
