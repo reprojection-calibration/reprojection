@@ -126,7 +126,8 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
 // differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
-void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
+CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database,
+                                          std::string_view sensor_name) {
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
     try {
@@ -138,6 +139,7 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
                          std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
+    CameraMeasurements targets;
     while (true) {
         int const code{sqlite3_step(statement.stmt)};
         if (code == static_cast<int>(SqliteFlag::Done)) {
@@ -171,32 +173,35 @@ void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const dat
                                      " at timestamp_ns: " + std::to_string(timestamp_ns));           // LCOV_EXCL_LINE
         }
 
-        data.frames[timestamp_ns].extracted_target = deserialized.value();
+        targets.push_back({timestamp_ns, deserialized.value()});
     }
+
+    return targets;
 }
 
 // TODO(Jack): Update to void and throw interface and consistent error messages!
-[[nodiscard]] bool AddImuData(ImuStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
+[[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
+                              std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.header.timestamp_ns));  // Warn cast!
-        Sqlite3Tools::Bind(statement.stmt, 2, data.header.sensor_name);
-        Sqlite3Tools::Bind(statement.stmt, 3, data.data.angular_velocity[0]);
-        Sqlite3Tools::Bind(statement.stmt, 4, data.data.angular_velocity[1]);
-        Sqlite3Tools::Bind(statement.stmt, 5, data.data.angular_velocity[2]);
-        Sqlite3Tools::Bind(statement.stmt, 6, data.data.linear_acceleration[0]);
-        Sqlite3Tools::Bind(statement.stmt, 7, data.data.linear_acceleration[1]);
-        Sqlite3Tools::Bind(statement.stmt, 8, data.data.linear_acceleration[2]);
-    } catch (std::runtime_error const& e) {                            // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(ErrorMessage(        // LCOV_EXCL_LINE
-            "AddImuData()", data.header.sensor_name,                   // LCOV_EXCL_LINE
-            data.header.timestamp_ns, SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
-            std::string(sqlite3_errmsg(database->db)))));              // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
+        Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
+        Sqlite3Tools::Bind(statement.stmt, 3, data.angular_velocity[0]);
+        Sqlite3Tools::Bind(statement.stmt, 4, data.angular_velocity[1]);
+        Sqlite3Tools::Bind(statement.stmt, 5, data.angular_velocity[2]);
+        Sqlite3Tools::Bind(statement.stmt, 6, data.linear_acceleration[0]);
+        Sqlite3Tools::Bind(statement.stmt, 7, data.linear_acceleration[1]);
+        Sqlite3Tools::Bind(statement.stmt, 8, data.linear_acceleration[2]);
+    } catch (std::runtime_error const& e) {                      // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(ErrorMessage(  // LCOV_EXCL_LINE
+            "AddImuData()", sensor_name,                         // LCOV_EXCL_LINE
+            data.timestamp_ns, SqliteErrorCode::FailedBinding,   // LCOV_EXCL_LINE
+            std::string(sqlite3_errmsg(database->db)))));        // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        throw std::runtime_error(ErrorMessage("AddImuData()", data.header.sensor_name, data.header.timestamp_ns,
+        throw std::runtime_error(ErrorMessage("AddImuData()", sensor_name, data.timestamp_ns,
                                               SqliteErrorCode::FailedStep, std::string(sqlite3_errmsg(database->db))));
     }
 
