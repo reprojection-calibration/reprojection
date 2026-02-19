@@ -36,11 +36,13 @@ struct CubicBSplineC3Init {
     /**
      * \brief How many control points are required to evaluate the spline (=3 for cubic spline).
      */
-    static inline int const K{constants::order};
+    static int constexpr K{constants::order};
+
     /**
      * \brief The size of the state space (=3 for both R3 and so3, translation and rotation).
      */
-    static inline int const N{constants::states};
+    static int constexpr N{constants::states};
+
     /**
      * \brief Length of a vectorized control point block (=12 for a cubic b-spline with 3D state space).
      *
@@ -49,7 +51,8 @@ struct CubicBSplineC3Init {
      * points themselves as coefficients. And further in the code we refer to what we normally would call the spline
      * coefficients as "weights". This is a confusing aspect that should be addressed if it causes problems.
      */
-    static inline int const num_coefficients{K * N};
+    static int constexpr num_coefficients{K * N};
+
     /**
      * \brief A matrix used to hold the sparsified/diagonalized spline weights.
      *
@@ -57,6 +60,7 @@ struct CubicBSplineC3Init {
      * multiplied by a vectorized control points block (a vector with length=num_coefficients) to evaluate the spline.
      */
     using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
+
     using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
 
     // TODO(Jack): Is weights really the right term here? We are blockifying the entire B vector which combines both the
