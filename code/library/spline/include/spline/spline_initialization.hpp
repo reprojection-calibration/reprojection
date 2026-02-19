@@ -28,7 +28,7 @@ struct CubicBSplineC3Init {
     // TODO(Jack): Is it right to use the C3Measurement here? Technically we do not use the derivative information at
     //  all, and it makes it impossible to use a map because the data is not contiguous in memory.
     // WARN(Jack): Expects time sorted measurements! Time stamp must be non-decreasing, how can we enforce this?
-    static CubicBSplineC3 InitializeSpline(std::vector<C3Measurement> const& measurements, size_t const num_segments);
+    static CubicBSplineC3 Initialize(std::vector<C3Measurement> const& measurements, size_t const num_segments);
 
     static std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements,
                                                   size_t const num_segments, TimeHandler const& time_handler);

@@ -12,11 +12,11 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): Why are most of these functions that are only used inside of InitializeSpline part of the public
+// TODO(Jack): Why are most of these functions that are only used inside of Initialize part of the public
 //  interface?
 
-CubicBSplineC3 CubicBSplineC3Init::InitializeSpline(std::vector<C3Measurement> const& measurements,
-                                                    size_t const num_segments) {
+CubicBSplineC3 CubicBSplineC3Init::Initialize(std::vector<C3Measurement> const& measurements,
+                                              size_t const num_segments) {
     // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known
     // problem.
     CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
