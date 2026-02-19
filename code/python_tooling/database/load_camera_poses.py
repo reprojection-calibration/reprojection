@@ -3,9 +3,9 @@ import sqlite3
 
 import pandas as pd
 
+from database.geometry import InvertSe3
 from database.sql_statement_loading import load_sql
 from database.types import PoseType
-from database.geometry import InvertSe3
 
 
 def load_camera_poses_df(db_path):
