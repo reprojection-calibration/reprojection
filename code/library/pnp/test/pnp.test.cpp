@@ -15,11 +15,11 @@ TEST(Pnp, TestPnp) {
     auto const [targets, gt_frames]{
         testing_mocks::GenerateMvgData(sensor, {testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
 
-    for (auto const& [timestamp_ns, frame_i] : gt_frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(targets.at(timestamp_ns).target.bundle, sensor.bounds)};
+    for (auto const& [timestamp_ns, target_i] : targets) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle, sensor.bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.pose)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
@@ -33,11 +33,11 @@ TEST(Pnp, TestPnpFlat) {
     auto const [targets, gt_frames]{
         testing_mocks::GenerateMvgData(sensor, {testing_utilities::unit_pinhole_intrinsics}, 50, 1e9, true)};
 
-    for (auto const& [timestamp_ns, frame_i] : gt_frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(targets.at(timestamp_ns).target.bundle)};
+    for (auto const& [timestamp_ns, target_i] : targets) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.pose)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"

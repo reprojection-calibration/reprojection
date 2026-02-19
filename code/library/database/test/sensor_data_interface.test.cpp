@@ -186,7 +186,7 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
     EXPECT_EQ(std::size(imu_1_data), 3);
 
     // Check the values of the first element to make sure the callback lambda reading logic is correct
-    ImuMeasurement const sample{imu_1_data.at(5)};
+    ImuMeasurement const sample{imu_1_data[0]};
     EXPECT_EQ(sample.timestamp_ns, 5);
     EXPECT_EQ(sample.angular_velocity[0], 1);
     EXPECT_EQ(sample.angular_velocity[1], 2);

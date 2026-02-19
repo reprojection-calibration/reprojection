@@ -16,9 +16,9 @@ TEST(PnpDlt, TestDlt23) {
     CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9, false)};
 
-    for (auto const& [timestamp_ns, frame_i] : gt_frames) {
-        auto const [tf_co_w, K]{pnp::Dlt23(targets.at(timestamp_ns).target.bundle)};
-        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.pose)};
+    for (auto const& [timestamp_ns, target_i] : targets) {
+        auto const [tf_co_w, K]{pnp::Dlt23(target_i.bundle)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
@@ -34,9 +34,9 @@ TEST(PnpDlt, TestDlt22) {
     auto const [targets, gt_frames]{
         testing_mocks::GenerateMvgData(sensor, {testing_utilities::unit_pinhole_intrinsics}, 50, 1e9, true)};
 
-    for (auto const& [timestamp_ns, frame_i] : gt_frames) {
-        auto const tf_co_w{pnp::Dlt22(targets.at(timestamp_ns).target.bundle)};
-        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.pose)};
+    for (auto const& [timestamp_ns, target_i] : targets) {
+        auto const tf_co_w{pnp::Dlt22(target_i.bundle)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
