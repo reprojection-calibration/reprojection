@@ -19,29 +19,26 @@ int main() {
     std::string const record_path{"/tmp/reprojection/code/test_data/aa-testing-mock.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, true, false)};
 
-    CameraCalibrationData cam_data{testing_mocks::GenerateMvgData(
-        200, 10e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, true)};
-    for (auto& [timestamp_ns, frame_i] : cam_data.frames) {
-        frame_i.initial_pose = std::nullopt;
+    CameraInfo const sensor{"/mvg_test_data_camera", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
+    auto const [targets, _]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 200, 10e9, true)};
 
-        FrameHeader const header{timestamp_ns, cam_data.sensor.sensor_name};
-        database::AddImage(header, db);
-        database::AddExtractedTargetData({header, frame_i.extracted_target}, db);
+    for (auto& [timestamp_ns, target_i] : targets) {
+        database::AddImage(timestamp_ns, sensor.sensor_name, db);
+        database::AddExtractedTargetData({timestamp_ns, target_i}, sensor.sensor_name, db);
     }
 
-    calibration::LinearPoseInitialization(InitializationDataView(cam_data));
-    optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
+    OptimizationState const initial_state{calibration::LinearPoseInitialization(sensor, targets, gt_intrinsics)};
+    auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
 
-    AddCameraPoseData(cam_data, database::PoseType::Initial, db);
-    AddCameraPoseData(cam_data, database::PoseType::Optimized, db);
-    database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
-    database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
+    AddCameraPoseData(initial_state.frames, database::PoseType::Initial, sensor.sensor_name, db);
+    AddCameraPoseData(optimized_state.frames, database::PoseType::Optimized, sensor.sensor_name, db);
+    // database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
+    // database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
 
     testing_mocks::ImuData const data{testing_mocks::GenerateImuData(500, 10e9)};
-
     for (auto const& [timestamp_ns, frame_i] : data) {
-        FrameHeader const header{timestamp_ns, "/test_imu"};
-        (void)database::AddImuData(ImuStamped{header, frame_i}, db);
+        (void)database::AddImuData(frame_i, "/mvg_test_data_imu", db);
     }
 
     return EXIT_SUCCESS;
