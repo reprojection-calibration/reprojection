@@ -1,10 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
 
 #include "geometry/lie.hpp"
-#include "spline/spline_state.hpp"
 #include "spline/utilities.hpp"
 #include "types/eigen_types.hpp"
 
