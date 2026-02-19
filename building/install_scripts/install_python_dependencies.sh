@@ -17,6 +17,7 @@ python3 -m pip install \
  numpy \
  pandas \
  plotly \
+ scipy \
  setuptools
 
 # Protobuf deps

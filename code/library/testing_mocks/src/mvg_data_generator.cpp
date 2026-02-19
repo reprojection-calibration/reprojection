@@ -23,6 +23,10 @@ namespace reprojection::testing_mocks {
 // and num_control_points was less than num_samples we would see "saw tooth" like artifacts in the sampled frame poses.
 // What value the multiple needs to be is not certain, but for a first try we heuristically found that 2*num_samples was
 // sufficient to build a spline that we can sample num_samples from without artifacts.
+// NOTE(Jack): The "ground truth" pose is written out in the initial_pose field. For applications like dlt/pnp testing
+// this can be used from here directly. If you want to test initialization of the pose from the target directly than you
+// should overwrite the initial pose with std::nullopt to remove that data. Maybe if we had a better interface we could
+// select what we want created or not, but at this time that does not exist.
 CameraCalibrationData GenerateMvgData(int const num_samples, uint64_t const timespan_ns, CameraModel const camera_model,
                                       ArrayXd const& intrinsics, ImageBounds const& bounds, bool const flat) {
     // NOTE(Jack): Instead of building and using a spline here, I guess we could have all just used the poses from

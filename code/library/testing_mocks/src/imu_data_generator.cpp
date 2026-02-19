@@ -8,7 +8,7 @@ namespace reprojection::testing_mocks {
 
 ImuData GenerateImuData(int const num_samples, uint64_t const timespan_ns) {
     // TODO(Jack): Is two times num_samples really dense enough to prevent sampling artifacts?
-    spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(2 * num_samples, timespan_ns)};
+    spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
     std::set<uint64_t> const times{SampleTimes(num_samples, timespan_ns)};
 
     ImuData data;

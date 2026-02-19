@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from database.sql_statement_loading import load_sql
+from database.types import PoseType
 from generated.extracted_target_pb2 import ArrayX2dProto
 
 
@@ -75,9 +76,14 @@ def add_reprojection_errors_df_to_camera_calibration_data(df, data):
                 f"Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary"
             )
 
-        # TODO(Jack): Should we formalize the loading of the type here to check that it is part of the PoseType
-        #  enum?
+        # TODO(Jack): The naming here no longer makes sense! The enum PoseType is too specific, what we really want is
+        #  something which describes if a value is calculated before or after optimization
         reprojection_error_type = row["type"]
+        if reprojection_error_type not in PoseType:
+            raise RuntimeError(
+                f"Pose type {reprojection_error_type} not valid.",
+            )
+
         reprojection_error = row["data"]
 
         if "reprojection_errors" not in data[sensor]["frames"][timestamp]:
