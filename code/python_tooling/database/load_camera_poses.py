@@ -4,6 +4,7 @@ import sqlite3
 import pandas as pd
 
 from database.sql_statement_loading import load_sql
+from database.types import PoseType
 
 
 def load_camera_poses_df(db_path):
@@ -35,9 +36,12 @@ def add_camera_poses_df_to_camera_calibration_data(df, data):
                 f"Timestamp {timestamp} for sensor {sensor} not present in camera calibration data dictionary"
             )
 
-        # TODO(Jack): Should we formalize the loading of the pose type here to check that it is part of the PoseType
-        #  enum? See similar logic in add_reprojection_errors_df_to_camera_calibration_data().
         pose_type = row["type"]
+        if pose_type not in PoseType:
+            raise RuntimeError(
+                f"Pose type {pose_type} not valid.",
+            )
+
         pose = row.iloc[-6:].tolist()
 
         if "poses" not in data[sensor]["frames"][timestamp]:
