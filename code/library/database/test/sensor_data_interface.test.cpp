@@ -123,9 +123,9 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
 
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
     std::string_view sensor_name{"/imu/polaris/123"};
-    std::vector<ImuMeasurement> const data{{0, Vector3d::Zero(), Vector3d::Zero()},  //
-                                           {1, Vector3d::Zero(), Vector3d::Zero()},
-                                           {2, Vector3d::Zero(), Vector3d::Zero()}};
+    std::vector<ImuMeasurement> const data{{0, {}, {}},  //
+                                           {1, {}, {}},
+                                           {2, {}, {}}};
 
     // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only
     // database instance in the same test using the same file.
@@ -152,18 +152,20 @@ TEST(DatabaseSensorDataInterface, TestAddImuData) {
     TemporaryFile const temp_file{".db3"};
     auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true)};
 
-    bool success{database::AddImuData({{0, "/imu/polaris/123"}, {}}, db)};
+    std::string_view sensor_name_1{"/imu/polaris/123"};
+    bool success{database::AddImuData({0, {}, {}}, sensor_name_1, db)};
     EXPECT_TRUE(success);
-    success = database::AddImuData({{1, "/imu/polaris/123"}, {}}, db);
+    success = database::AddImuData({1, {}, {}}, sensor_name_1, db);
     EXPECT_TRUE(success);
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary
     // key (timestamp_ns, sensor_name) so it is not a duplicate
-    success = database::AddImuData({{0, "/imu/polaris/456"}, {}}, db);
+    std::string_view sensor_name_2{"/imu/polaris/456"};
+    success = database::AddImuData({0, {}, {}}, sensor_name_2, db);
     EXPECT_TRUE(success);
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
-    EXPECT_THROW((void)database::AddImuData({{0, "/imu/polaris/456"}, {}}, db), std::runtime_error);
+    EXPECT_THROW((void)database::AddImuData({0, {}, {}}, sensor_name_2, db), std::runtime_error);
 }
 
 TEST(DatabaseSensorDataInterface, TestGetImuData) {
@@ -171,33 +173,32 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
     auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true)};
 
     // Data from imu 123
-    (void)database::AddImuData({{5, "/imu/polaris/123"}, {{1, 2, 3}, {4, 5, 6}}}, db);
-    (void)database::AddImuData({{10, "/imu/polaris/123"}, {}}, db);
-    (void)database::AddImuData({{15, "/imu/polaris/123"}, {}}, db);
+    std::string_view sensor_name_1{"/imu/polaris/123"};
+    (void)database::AddImuData({5, {1, 2, 3}, {4, 5, 6}}, sensor_name_1, db);
+    (void)database::AddImuData({10, {}, {}}, sensor_name_1, db);
+    (void)database::AddImuData({15, {}, {}}, sensor_name_1, db);
     // Data from imu 456
-    (void)database::AddImuData({{10, "/imu/polaris/456"}, {}}, db);
-    (void)database::AddImuData({{20, "/imu/polaris/456"}, {}}, db);
+    std::string_view sensor_name_2{"/imu/polaris/456"};
+    (void)database::AddImuData({10, {}, {}}, sensor_name_2, db);
+    (void)database::AddImuData({20, {}, {}}, sensor_name_2, db);
 
-    auto const imu_123_data{database::GetImuData(db, "/imu/polaris/123")};
-    ASSERT_TRUE(imu_123_data.has_value());
-    EXPECT_EQ(std::size(imu_123_data.value()), 3);
+    auto const imu_1_data{database::GetImuData(db, sensor_name_1)};
+    EXPECT_EQ(std::size(imu_1_data), 3);
 
     // Check the values of the first element to make sure the callback lambda reading logic is correct
-    ImuStamped const sample{*std::cbegin(imu_123_data.value())};
-    EXPECT_EQ(sample.header.timestamp_ns, 5);
-    EXPECT_EQ(sample.data.angular_velocity[0], 1);
-    EXPECT_EQ(sample.data.angular_velocity[1], 2);
-    EXPECT_EQ(sample.data.angular_velocity[2], 3);
-    EXPECT_EQ(sample.data.linear_acceleration[0], 4);
-    EXPECT_EQ(sample.data.linear_acceleration[1], 5);
-    EXPECT_EQ(sample.data.linear_acceleration[2], 6);
+    ImuMeasurement const sample{imu_1_data.at(5)};
+    EXPECT_EQ(sample.timestamp_ns, 5);
+    EXPECT_EQ(sample.angular_velocity[0], 1);
+    EXPECT_EQ(sample.angular_velocity[1], 2);
+    EXPECT_EQ(sample.angular_velocity[2], 3);
+    EXPECT_EQ(sample.linear_acceleration[0], 4);
+    EXPECT_EQ(sample.linear_acceleration[1], 5);
+    EXPECT_EQ(sample.linear_acceleration[2], 6);
 
-    auto const imu_456_data{database::GetImuData(db, "/imu/polaris/456")};
-    ASSERT_TRUE(imu_456_data.has_value());
-    EXPECT_EQ(std::size(imu_456_data.value()), 2);
+    auto const imu_2_data{database::GetImuData(db, sensor_name_2)};
+    EXPECT_EQ(std::size(imu_2_data), 2);
 
     // If the sensor is not present we simply get an empty set back, this is not an error
-    auto const unknown_sensor{database::GetImuData(db, "/imu/polaris/unknown")};
-    ASSERT_TRUE(unknown_sensor.has_value());
-    EXPECT_EQ(std::size(unknown_sensor.value()), 0);
+    auto const unknown_sensor_data{database::GetImuData(db, "/imu/polaris/unknown")};
+    EXPECT_EQ(std::size(unknown_sensor_data), 0);
 }
