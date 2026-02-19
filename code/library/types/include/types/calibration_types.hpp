@@ -37,12 +37,13 @@ struct ImuInfo {
 
 // TODO(Jack): is it problematic to use a using declaration here?
 using CameraMeasurements = std::vector<CameraMeasurement>;
+using ImuMeasurements = std::vector<ImuMeasurement>;
 
 struct CalibrationDataset {
     CameraInfo camera;
     CameraMeasurements camera_frames;
     ImuInfo imu;
-    std::vector<ImuMeasurement> imu_data;
+    ImuMeasurements imu_data;
 };
 
 // TODO(Jack): If there is no other foreseeable thing that will be added to the camera state, do we really need a

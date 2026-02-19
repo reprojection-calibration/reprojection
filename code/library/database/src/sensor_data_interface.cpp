@@ -15,15 +15,15 @@
 
 namespace reprojection::database {
 
-void AddCameraPoseData(OptimizationState const& data, PoseType const type,
+void AddCameraPoseData(OptimizationState const& data, PoseType const type, std::string_view sensor_name,
                        std::shared_ptr<CalibrationDatabase> const database) {
     std::string_view const sql{sql_statements::camera_poses_insert};
 
-    AddPoseData(sql, data, type, database);
+    AddPoseData(sql, data, type, sensor_name, database);
 }
 
 // TODO(Jack): Current hacked interface before we know what the imu data  should really look like!
-void AddSplinePoseData(SplinePoses const& data, PoseType const type,
+void AddSplinePoseData(SplinePoses const& data, PoseType const type, std::string_view sensor_name,
                        std::shared_ptr<CalibrationDatabase> const database) {
     std::string_view const sql{sql_statements::spline_poses_insert};
 
@@ -34,7 +34,7 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type,
         hack_data.frames[timestamp_ns].pose = pose_i;
     }
 
-    AddPoseData(sql, hack_data, type, database);
+    AddPoseData(sql, hack_data, type, sensor_name, database);
 }
 
 // NOTE(Jack): We suppress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
@@ -210,29 +210,26 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
 
 // TODO(Jack): Update to void and throw interface and consistent error messages!
 // TODO(Jack): Remove use of set!
-std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
-                                               std::string const& sensor_name) {
+ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
     SqlStatement const statement{database->db, sql_statements::imu_data_select};
 
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, sensor_name.c_str());
-    } catch (std::runtime_error const& e) {                                                        // LCOV_EXCL_LINE
-        std::cerr << ErrorMessage("GetImuData()", sensor_name, 0, SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
-                                  std::string(sqlite3_errmsg(database->db)))                       // LCOV_EXCL_LINE
-                  << "\n";                                                                         // LCOV_EXCL_LINE
-        return std::nullopt;                                                                       // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name).c_str());
+    } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
+            ErrorMessage("GetImuData()", sensor_name, 0,                // LCOV_EXCL_LINE
+                         SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
-    std::set<ImuStamped> data;
+    ImuMeasurements data;
     while (true) {
         int const code{sqlite3_step(statement.stmt)};
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            std::cerr << ErrorMessage("GetImuData()", sensor_name, 0, SqliteErrorCode::FailedStep,  // LCOV_EXCL_LINE
-                                      std::string(sqlite3_errmsg(database->db)))                    // LCOV_EXCL_LINE
-                      << "\n";                                                                      // LCOV_EXCL_LINE
-            return std::nullopt;                                                                    // LCOV_EXCL_LINE
+            throw std::runtime_error(ErrorMessage("GetImuData()", sensor_name, 0, SqliteErrorCode::FailedStep,
+                                                  std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
         }
 
         // TODO(Jack): Should we be doing any error checking here while reading the columns?
@@ -244,7 +241,7 @@ std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDataba
         double const ay{sqlite3_column_double(statement.stmt, 5)};
         double const az{sqlite3_column_double(statement.stmt, 6)};
 
-        data.insert(ImuStamped{{timestamp_ns, sensor_name}, {{omega_x, omega_y, omega_z}, {ax, ay, az}}});
+        data.push_back(ImuMeasurement{timestamp_ns, {omega_x, omega_y, omega_z}, {ax, ay, az}});
     }
 
     return data;

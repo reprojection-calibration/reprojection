@@ -49,7 +49,7 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type,
 // is already a const& so the only risk is that someone does too much with the extra non-pose data in this method. But
 // if someone does that in a method named AddPoseData, then I think we have bigger problems :)
 void AddPoseData(std::string_view const sql, OptimizationState const& data, PoseType const type,
-                 std::shared_ptr<CalibrationDatabase> const database);
+                 std::string_view sensor_name, std::shared_ptr<CalibrationDatabase> const database);
 
 void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, PoseType const type, std::string_view sensor_name,
                           std::shared_ptr<CalibrationDatabase> const database);
@@ -65,7 +65,6 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
 [[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
                               std::shared_ptr<CalibrationDatabase> const database);
 
-std::optional<std::set<ImuMeasurement>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
-                                                   std::string const& sensor_name);
+ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name);
 
 }  // namespace reprojection::database
