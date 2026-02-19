@@ -31,7 +31,7 @@
 
 namespace reprojection::database {
 
-void AddCameraPoseData(CameraCalibrationData const& data, PoseType const type,
+void AddCameraPoseData(OptimizationState const& data, PoseType const type,
                        std::shared_ptr<CalibrationDatabase> const database);
 
 // TODO(Jack): We need to figure out an overarching strategy of how to unify the camera and spline types. For example
@@ -48,7 +48,7 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type,
 // add a lot of boilerplate code and not really move us forward to the end goal, or protect us from heinous abuses. It
 // is already a const& so the only risk is that someone does too much with the extra non-pose data in this method. But
 // if someone does that in a method named AddPoseData, then I think we have bigger problems :)
-void AddPoseData(std::string_view const sql, CameraCalibrationData const& data, PoseType const type,
+void AddPoseData(std::string_view const sql, OptimizationState const& data, PoseType const type,
                  std::shared_ptr<CalibrationDatabase> const database);
 
 void AddReprojectionError(CameraCalibrationData const& data, PoseType const type,
