@@ -43,6 +43,10 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
 }
 
 // TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
+// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
+// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
+// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
+// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
 ArrayX2d EvaluateReprojectionResiduals(std::vector<std::unique_ptr<ceres::CostFunction>> const& cost_functions,
                                        ArrayXd const& intrinsics, Array6d const& pose) {
     std::vector<double const*> parameter_blocks;

@@ -73,7 +73,7 @@ void AddPoseData(std::string_view const sql, Frames const& data, PoseType const 
     }
 }
 
-// NOTE(Jack): We supress the code coverage for the SerializeToString() because I do not know how to malform/change the
+// NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
 void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, PoseType const type, std::string_view sensor_name,
                           std::shared_ptr<CalibrationDatabase> const database) {
