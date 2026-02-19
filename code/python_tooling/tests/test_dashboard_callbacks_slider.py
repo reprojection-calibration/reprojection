@@ -2,13 +2,8 @@ import unittest
 
 from dashboard_reference_data import full_data, invalid_data, skeleton_data
 
-from dashboard.callbacks.slider import (
-    toggle_play_callback,
-)
-from dashboard.tools.slider import (
-    looping_increment,
-    update_slider_properties,
-)
+from dashboard.callbacks.slider import toggle_play_callback
+from dashboard.tools.slider import looping_increment, update_slider_properties
 from database.types import SensorType
 
 

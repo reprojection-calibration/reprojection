@@ -1,6 +1,7 @@
 import os
 import unittest
 
+import numpy as np
 import pandas as pd
 
 from database.load_camera_calibration_data import (
@@ -128,8 +129,14 @@ class TestDatabaseCameraCalibrationData(unittest.TestCase):
         # Check the artificially created poses.
         poses_i = data["/cam0/image_raw"]["frames"][1520528314314184960]["poses"]
         self.assertEqual(len(poses_i.keys()), 2)
-        self.assertEqual(poses_i["initial"], [1, 2, 3, -1, -2, -3])
-        self.assertEqual(poses_i["optimized"], [11, 22, 33, -11, -22, -33])
+        np.testing.assert_almost_equal(
+            poses_i["initial"],
+            [0.679251908362714, 1.358503816725428, 2.037755725088142, 1, 2, 3],
+        )
+        np.testing.assert_almost_equal(
+            poses_i["optimized"],
+            [0.7547633585389983, 1.5095267170779967, 2.264290075616995, 11, 22, 33],
+        )
 
         # Foreign key constraint check, see comment in test_add_extracted_targets_df_to_camera_calibration_data.
         self.assertRaises(

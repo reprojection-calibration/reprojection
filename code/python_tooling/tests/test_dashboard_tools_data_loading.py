@@ -2,9 +2,7 @@ import unittest
 
 from dashboard_reference_data import full_data, invalid_data, skeleton_data
 
-from dashboard.tools.data_loading import (
-    refresh_sensor_list,
-)
+from dashboard.tools.data_loading import refresh_sensor_list
 from database.types import SensorType
 
 
