@@ -15,7 +15,7 @@
 
 namespace reprojection::database {
 
-void AddCameraPoseData(OptimizationState const& data, PoseType const type, std::string_view sensor_name,
+void AddCameraPoseData(Frames const& data, PoseType const type, std::string_view sensor_name,
                        std::shared_ptr<CalibrationDatabase> const database) {
     std::string_view const sql{sql_statements::camera_poses_insert};
 
@@ -29,9 +29,9 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type, std::string
 
     // TODO(Jack): For now we will simply convert SplinePoses to CameraCalibrationData. Once we know better the
     //  requirements or have a better design concept we can remove this conversion code. This is a hack!
-    OptimizationState hack_data;
+    Frames hack_data;
     for (auto const& [timestamp_ns, pose_i] : data) {
-        hack_data.frames[timestamp_ns].pose = pose_i;
+        hack_data[timestamp_ns].pose = pose_i;
     }
 
     AddPoseData(sql, hack_data, type, sensor_name, database);
@@ -40,11 +40,11 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type, std::string
 // NOTE(Jack): We suppress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
 // trigger that is via a malformed sql statement, but that is hardcoded into this function (i.e.
 // sql_statements::camera_poses_insert) abd cannot and should not be changed!
-void AddPoseData(std::string_view const sql, OptimizationState const& data, PoseType const type,
-                 std::string_view sensor_name, std::shared_ptr<CalibrationDatabase> const database) {
+void AddPoseData(std::string_view const sql, Frames const& data, PoseType const type, std::string_view sensor_name,
+                 std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
-    for (auto const& [timestamp_ns, frame_i] : data.frames) {
+    for (auto const& [timestamp_ns, frame_i] : data) {
         // TODO(Jack): Make SqlStatement take a string view.
         SqlStatement const statement{database->db, sql.data()};
 

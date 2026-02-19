@@ -14,7 +14,27 @@
 
 namespace reprojection::database {
 
-void AddImage( uint64_t const timestamp_ns,std::string_view sensor_name,
+// Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
+void AddImage(CameraImage const& data, std::string_view sensor_name,
+              std::shared_ptr<CalibrationDatabase> const database) {
+    std::vector<uchar> buffer;
+    if (not cv::imencode(".png", data.image, buffer)) {
+        throw std::runtime_error(
+            "AddImage() cv::imencode() failed for sensor: " + std::string(sensor_name) +  // LCOV_EXCL_LINE
+            " at timestamp_ns: " + std::to_string(data.timestamp_ns));                    // LCOV_EXCL_LINE
+    }
+
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(
+        sql_statements::image_insert, data.timestamp_ns, sensor_name, buffer.data(), std::size(buffer), database->db)};
+
+    if (std::holds_alternative<SqliteErrorCode>(result)) {
+        throw std::runtime_error(ErrorMessage("AddImage()", sensor_name, data.timestamp_ns,
+                                              std::get<SqliteErrorCode>(result),
+                                              std::string(sqlite3_errmsg(database->db))));
+    }
+}
+
+void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
     SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, timestamp_ns, sensor_name,
                                                             nullptr, -1, database->db)};

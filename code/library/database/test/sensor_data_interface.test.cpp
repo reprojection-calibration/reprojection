@@ -23,23 +23,19 @@ TEST(DatabaseSensorDataInterface, TestAddCameraPoseData) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-    CameraCalibrationData const data{{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds},  //
-                                     {},
-                                     {},
-                                     {{0, {{{}, {}}, Array6d::Zero(), {}, Array6d::Zero(), {}}}}};
+    uint64_t const timestamp_ns{0};
+    Frames const data{{timestamp_ns, {Array6d{0, 0, 0, 0, 0, 0}}}};
+    std::string_view const sensor_name{"/cam/retro/123"};
 
     // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
-    EXPECT_THROW(database::AddCameraPoseData(data, database::PoseType::Initial, db), std::runtime_error);
-    EXPECT_THROW(database::AddCameraPoseData(data, database::PoseType::Optimized, db), std::runtime_error);
+    EXPECT_THROW(database::AddCameraPoseData(data, database::PoseType::Initial, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(database::AddCameraPoseData(data, database::PoseType::Optimized, sensor_name, db), std::runtime_error);
 
     // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
     // constraint) and now we can add the initial camera pose no problem :)
-    // NOTE(Jack): We are dealing with a map for the frames so getting the elements key (the timestamp) looks a little
-    // ugly :) Here we are counting on the fact that there is only one element in the map; only for testing acceptable.
-    FrameHeader const header{std::cbegin(data.frames)->first, data.sensor.sensor_name};
-    database::AddImage(header, db);
-    AddExtractedTargetData({header, {}}, db);
-    EXPECT_NO_THROW(database::AddCameraPoseData(data, database::PoseType::Initial, db));
+    database::AddImage(timestamp_ns, sensor_name, db);
+    AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db);
+    EXPECT_NO_THROW(database::AddCameraPoseData(data, database::PoseType::Initial, sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddSplinePoseData) {
@@ -47,9 +43,10 @@ TEST(DatabaseSensorDataInterface, TestAddSplinePoseData) {
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     database::SplinePoses const data{{0, Array6d::Zero()}};
+    std::string_view const sensor_name{"/cam/retro/123"};
 
-    EXPECT_NO_THROW(database::AddSplinePoseData(data, database::PoseType::Initial, db));
-    EXPECT_NO_THROW(database::AddSplinePoseData(data, database::PoseType::Optimized, db));
+    EXPECT_NO_THROW(database::AddSplinePoseData(data, database::PoseType::Initial, sensor_name, db));
+    EXPECT_NO_THROW(database::AddSplinePoseData(data, database::PoseType::Optimized, sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {

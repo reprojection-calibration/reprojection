@@ -30,7 +30,7 @@ namespace reprojection::testing_mocks {
 // this can be used from here directly. If you want to test initialization of the pose from the target directly than you
 // should overwrite the initial pose with std::nullopt to remove that data. Maybe if we had a better interface we could
 // select what we want created or not, but at this time that does not exist.
-std::tuple<CameraMeasurements, std::map<uint64_t, FrameState>> GenerateMvgData(CameraInfo const& sensor,
+std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor,
                                                                                CameraState const& intrinsics,
                                                                                int const num_samples,
                                                                                uint64_t const timespan_ns,
@@ -47,7 +47,7 @@ std::tuple<CameraMeasurements, std::map<uint64_t, FrameState>> GenerateMvgData(C
     MatrixX3d const points{MvgHelpers::BuildTargetPoints(flat)};
 
     CameraMeasurements measurements;
-    std::map<uint64_t, FrameState> state;
+    Frames state;
     for (auto const time_ns_i : times_ns) {
         auto const aa_w_co{trajectory.Evaluate(time_ns_i)};
         if (not aa_w_co.has_value()) {

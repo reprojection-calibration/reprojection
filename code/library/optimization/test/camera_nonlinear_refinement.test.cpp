@@ -15,14 +15,17 @@ using namespace reprojection;
 // because the optimization will likely not even execute once because the error is zero. For a real test look at the
 // next case where we add some noisy so it actually does some iterations.
 TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
+    // Generate the data
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 50, 1e9, false)};
 
+    // Solve
     OptimizationState const initial_state{gt_intrinsics, gt_frames};
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
+    // Assert
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         Array6d const gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
         Array6d const aa_co_w{frame_i.pose};

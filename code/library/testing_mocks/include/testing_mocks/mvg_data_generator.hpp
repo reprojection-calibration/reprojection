@@ -10,7 +10,7 @@ namespace reprojection::testing_mocks {
 //  not want to use the entire CalibrationDataset type because it includes the imu as well?
 //
 // MVG = "multiple view geometry"
-std::tuple<CameraMeasurements, std::map<uint64_t, FrameState>> GenerateMvgData(CameraInfo const& sensor,
+std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor,
                                                                                CameraState const& intrinsics,
                                                                                int const num_samples,
                                                                                uint64_t const timespan_ns,
