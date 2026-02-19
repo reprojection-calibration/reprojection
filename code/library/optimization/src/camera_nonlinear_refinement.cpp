@@ -1,7 +1,5 @@
 #include "optimization/camera_nonlinear_refinement.hpp"
 
-#include "eigen_utilities/grid.hpp"
-
 #include "projection_cost_function.hpp"
 
 namespace reprojection::optimization {
@@ -26,6 +24,7 @@ CameraMeasurement FindCorrespondent(uint64_t const timestamp_ns, CameraMeasureme
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
 std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo const& sensor,
+                                                                    // TODO make a map indexed by timestamp?
                                                                     CameraMeasurements const& data,
                                                                     OptimizationState const& initial_state) {
     // Create the ceres problem and configure it - one day the ceres state will be set from a config file!
