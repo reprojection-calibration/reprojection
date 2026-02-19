@@ -26,7 +26,6 @@ int main() {
     CameraMeasurements const targets{database::GetExtractedTargetData(db, sensor.sensor_name)};
     OptimizationState const initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
-
     std::cout << optimized_state.camera_state.intrinsics.transpose() << std::endl;
 
     // Write everything to database

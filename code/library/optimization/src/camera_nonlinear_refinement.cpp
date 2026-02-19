@@ -6,6 +6,22 @@
 
 namespace reprojection::optimization {
 
+// HACK
+// HACK
+// HACK
+// HACK
+// TODD FORMALIZE CORRESPONDENT LOGIC IN THE DATATYPES THEMESELVES _ THIS LOOKS LIKE A HACK!!!!
+CameraMeasurement FindCorrespondent(uint64_t const timestamp_ns, CameraMeasurements const& data) {
+    auto it = std::find_if(data.cbegin(), data.cend(),
+                           [timestamp_ns](const CameraMeasurement& dp) { return dp.timestamp_ns == timestamp_ns; });
+
+    if (it != data.end()) {
+        return *it;
+    } else {
+        throw std::runtime_error("");
+    }
+}
+
 // TODO(Jack): Confirm that OptimizationState initialization is a deep copy!
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
@@ -16,20 +32,15 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
-    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
-    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
-    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
-    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
-    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
-    // ERROR(Jack): Iterate over the initial state here so that if there are data for which there is no pose!!!
+    // NOTE(Jack): In this look we purposefully loop over the initial state frames and NOT the targets so that if the
+    // frame was not initialized it gets skipped here.
     OptimizationState optimized_state{initial_state};
-    for (auto const& [timestamp_ns, target] : data) {
-        MatrixX2d const& pixels_i{target.bundle.pixels};
-        MatrixX3d const& points_i{target.bundle.points};
+    for (auto const& [timestamp_ns, frame_i] : initial_state.frames) {
+        Bundle const& bundle_i{FindCorrespondent(timestamp_ns, data).target.bundle};
 
-        for (Eigen::Index j{0}; j < pixels_i.rows(); ++j) {
+        for (Eigen::Index j{0}; j < bundle_i.pixels.rows(); ++j) {
             ceres::CostFunction* const cost_function{
-                Create(sensor.camera_model, sensor.bounds, pixels_i.row(j), points_i.row(j))};
+                Create(sensor.camera_model, sensor.bounds, bundle_i.pixels.row(j), bundle_i.points.row(j))};
 
             problem.AddResidualBlock(cost_function, nullptr, optimized_state.camera_state.intrinsics.data(),
                                      optimized_state.frames.at(timestamp_ns).pose.data());
