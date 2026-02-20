@@ -59,9 +59,11 @@ TEST(DatabaseImageInterface, TestImageStreamer) {
     database::ImageStreamer streamer{db, "/cam/retro/123"};
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().timestamp_ns, 0);
-    EXPECT_EQ(frame_0.value().image.rows, 10);
-    EXPECT_EQ(frame_0.value().image.cols, 20);
+
+    auto const& [timestamp_ns, loaded_image]{frame_0.value()};
+    EXPECT_EQ(timestamp_ns, 0);
+    EXPECT_EQ(loaded_image.rows, 10);
+    EXPECT_EQ(loaded_image.cols, 20);
 
     EXPECT_TRUE(streamer.Next().has_value());  // Frame 2
     EXPECT_TRUE(streamer.Next().has_value());  // Frame 3, last frame
@@ -83,7 +85,7 @@ TEST(DatabaseImageInterface, TestImageStreamerStartTime) {
 
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().timestamp_ns, 2);  // First frame starts at 2ns now
+    EXPECT_EQ(frame_0.value().first, 2);  // First frame starts at 2ns now
 
     EXPECT_TRUE(streamer.Next().has_value());
     EXPECT_FALSE(streamer.Next().has_value());

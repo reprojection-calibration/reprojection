@@ -10,10 +10,10 @@
 
 namespace reprojection {
 
-struct CameraImage {
-    uint64_t timestamp_ns;
-    cv::Mat image;
-};
+template <typename T>
+using StampedData = std::pair<std::uint64_t, T>;
+
+using CameraImage = StampedData<cv::Mat>;
 
 struct CameraMeasurement {
     uint64_t timestamp_ns;
