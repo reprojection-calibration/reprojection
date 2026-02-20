@@ -16,7 +16,7 @@ CameraMeasurement FindCorrespondent(uint64_t const timestamp_ns, CameraMeasureme
     if (it != data.end()) {
         return *it;
     } else {
-        throw std::runtime_error("");
+        throw std::runtime_error("");  // LCOV_EXCL_LINE
     }
 }
 

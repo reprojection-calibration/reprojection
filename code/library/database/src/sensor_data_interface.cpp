@@ -228,7 +228,8 @@ ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const data
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            throw std::runtime_error(ErrorMessage("GetImuData()", sensor_name, 0, SqliteErrorCode::FailedStep,
+            throw std::runtime_error(ErrorMessage("GetImuData()", sensor_name, 0,               // LCOV_EXCL_LINE
+                                                  SqliteErrorCode::FailedStep,                  // LCOV_EXCL_LINE
                                                   std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
         }
 
