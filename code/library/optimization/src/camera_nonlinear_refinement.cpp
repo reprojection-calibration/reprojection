@@ -1,5 +1,7 @@
 #include "optimization/camera_nonlinear_refinement.hpp"
 
+#include <ranges>
+
 #include "projection_cost_function.hpp"
 
 namespace reprojection::optimization {
@@ -14,7 +16,7 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
     ceres::Problem problem{ceres_state.problem_options};
 
     OptimizationState optimized_state{initial_state};
-    for (auto const& [timestamp_ns, frame_i] : initial_state.frames) {
+    for (const auto& timestamp_ns : optimized_state.frames | std::views::keys) {
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
 
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
