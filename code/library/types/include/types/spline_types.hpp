@@ -15,10 +15,12 @@ struct Velocity {
     Vector3d velocity;
 };
 using VelocityMeasurement = StampedData<Velocity>;
+using VelocityMeasurements = StampedMap<VelocityMeasurement>;
 
 struct Acceleration {
     Vector3d acceleration;
 };
 using AccelerationMeasurement = StampedData<Acceleration>;
+using AccelerationMeasurements = StampedMap<AccelerationMeasurement>;
 
 }  // namespace reprojection
