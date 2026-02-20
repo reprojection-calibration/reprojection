@@ -13,20 +13,19 @@ namespace reprojection {
 template <typename T>
 using StampedData = std::pair<std::uint64_t, T>;
 
-using CameraImage = StampedData<cv::Mat>;
+// TODO(Jack): Use concept to check that the first type is the proper expected stamp type.
+template <typename T>
+using StampedMap = std::map<typename T::first_type, typename T::second_type>;
 
 struct CameraMeasurement {
     uint64_t timestamp_ns;
     ExtractedTarget target;
 };
-
-struct ImuMeasurement {
-    uint64_t timestamp_ns;
-    Vector3d angular_velocity;
-    Vector3d linear_acceleration;
-};
-
 using CameraMeasurements = std::vector<CameraMeasurement>;
-using ImuMeasurements = std::vector<ImuMeasurement>;
+
+using ImuMeasurement = StampedData<ImuData>;
+using ImuMeasurements = StampedMap<ImuMeasurement>;
+
+using CameraImage = StampedData<cv::Mat>;
 
 }  // namespace reprojection

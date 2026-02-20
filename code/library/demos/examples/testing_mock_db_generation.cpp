@@ -36,9 +36,9 @@ int main() {
     // database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
     // database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
 
-    testing_mocks::ImuData const data{testing_mocks::GenerateImuData(500, 10e9)};
-    for (auto const& [timestamp_ns, frame_i] : data) {
-        (void)database::AddImuData(frame_i, "/mvg_test_data_imu", db);
+    ImuMeasurements const data{testing_mocks::GenerateImuData(500, 10e9)};
+    for (auto const& sample_i : data) {
+        (void)database::AddImuData(sample_i, "/mvg_test_data_imu", db);
     }
 
     return EXIT_SUCCESS;

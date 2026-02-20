@@ -7,8 +7,8 @@
 using namespace reprojection;
 
 TEST(TestingMocksImuDataGenerator, TestGenerateImuData) {
-    testing_mocks::ImuData const data{testing_mocks::GenerateImuData(100, 1e8)};
+    ImuMeasurements const data{testing_mocks::GenerateImuData(100, 1e9)};
     EXPECT_EQ(std::size(data), 100);
 
-    // TODO(Jack): Should we also heurstically test some random measurements?
+    // TODO(Jack): Should we also heurstically test some random measurements? Or at least their timestamps?
 }
