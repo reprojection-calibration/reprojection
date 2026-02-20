@@ -58,6 +58,7 @@ set(SRC_FILES
         src/calibration_database.cpp
         src/image_interface.cpp
         src/sensor_data_interface_adders.cpp
+        src/sensor_data_interface_getters.cpp
         src/serialization.cpp
         src/sqlite3_helpers.cpp
         src/sqlite_wrappers.cpp
@@ -84,6 +85,7 @@ set(TESTS
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface_adders.test.cpp
+        test/sensor_data_interface_getters.test.cpp
         test/sqlite_wrappers.test.cpp
 )
 AddTests()

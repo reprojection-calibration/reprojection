@@ -1,9 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <optional>
-#include <set>
-#include <string>
 
 #include <opencv2/opencv.hpp>
 
@@ -16,6 +13,10 @@
 // TODO(Jack): Add not in docs that we cannot cover all error conditions in unit test so we suppress the errors
 
 namespace reprojection::database {
+
+// RENAME - remove the data suffix
+void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
+                            std::shared_ptr<CalibrationDatabase> const database);
 
 void AddCameraPoseData(Frames const& data, std::string_view sensor_name, PoseType const type,
                        std::shared_ptr<CalibrationDatabase> const database);
@@ -33,17 +34,7 @@ void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType cons
 void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, std::string_view sensor_name, PoseType const type,
                           std::shared_ptr<CalibrationDatabase> const database);
 
-// RENAME - remove the data suffix
-void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
-                            std::shared_ptr<CalibrationDatabase> const database);
-
-// See the note above AddPoseData. Here we are mutating the data, should we use a controlled view here?
-CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database,
-                                          std::string_view sensor_name);
-
 [[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
                               std::shared_ptr<CalibrationDatabase> const database);
-
-ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name);
 
 }  // namespace reprojection::database
