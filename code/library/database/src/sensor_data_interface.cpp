@@ -15,15 +15,15 @@
 
 namespace reprojection::database {
 
-void AddCameraPoseData(Frames const& data, PoseType const type, std::string_view sensor_name,
+void AddCameraPoseData(Frames const& data, std::string_view sensor_name, PoseType const type,
                        std::shared_ptr<CalibrationDatabase> const database) {
     std::string_view const sql{sql_statements::camera_poses_insert};
 
-    AddPoseData(sql, data, type, sensor_name, database);
+    AddPoseData(data, sensor_name, type, sql, database);
 }
 
 // TODO(Jack): Current hacked interface before we know what the imu data  should really look like!
-void AddSplinePoseData(SplinePoses const& data, PoseType const type, std::string_view sensor_name,
+void AddSplinePoseData(SplinePoses const& data, std::string_view sensor_name, PoseType const type,
                        std::shared_ptr<CalibrationDatabase> const database) {
     std::string_view const sql{sql_statements::spline_poses_insert};
 
@@ -34,13 +34,13 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type, std::string
         hack_data[timestamp_ns].pose = pose_i;
     }
 
-    AddPoseData(sql, hack_data, type, sensor_name, database);
+    AddPoseData(hack_data, sensor_name, type, sql, database);
 }
 
 // NOTE(Jack): We suppress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
 // trigger that is via a malformed sql statement, but that is hardcoded into this function (i.e.
 // sql_statements::camera_poses_insert) abd cannot and should not be changed!
-void AddPoseData(std::string_view const sql, Frames const& data, PoseType const type, std::string_view sensor_name,
+void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType const type, std::string_view sql,
                  std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
@@ -75,7 +75,7 @@ void AddPoseData(std::string_view const sql, Frames const& data, PoseType const 
 
 // NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
-void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, PoseType const type, std::string_view sensor_name,
+void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, std::string_view sensor_name, PoseType const type,
                           std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 

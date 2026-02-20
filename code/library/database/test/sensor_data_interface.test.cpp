@@ -29,14 +29,14 @@ TEST(DatabaseSensorDataInterface, TestAddCameraPoseData) {
     std::string const sensor_name{"/cam/retro/123"};
 
     // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
-    EXPECT_THROW(database::AddCameraPoseData(data, PoseType::Initial, sensor_name, db), std::runtime_error);
-    EXPECT_THROW(database::AddCameraPoseData(data, PoseType::Optimized, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(database::AddCameraPoseData(data, sensor_name, PoseType::Initial, db), std::runtime_error);
+    EXPECT_THROW(database::AddCameraPoseData(data, sensor_name, PoseType::Optimized, db), std::runtime_error);
 
     // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
     // constraint) and now we can add the initial camera pose no problem :)
     database::AddImage(timestamp_ns, sensor_name, db);
     AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db);
-    EXPECT_NO_THROW(database::AddCameraPoseData(data, PoseType::Initial, sensor_name, db));
+    EXPECT_NO_THROW(database::AddCameraPoseData(data, sensor_name, PoseType::Initial, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddSplinePoseData) {
@@ -46,8 +46,8 @@ TEST(DatabaseSensorDataInterface, TestAddSplinePoseData) {
     database::SplinePoses const data{{0, Array6d::Zero()}};
     std::string const sensor_name{"/cam/retro/123"};
 
-    EXPECT_NO_THROW(database::AddSplinePoseData(data, PoseType::Initial, sensor_name, db));
-    EXPECT_NO_THROW(database::AddSplinePoseData(data, PoseType::Optimized, sensor_name, db));
+    EXPECT_NO_THROW(database::AddSplinePoseData(data, sensor_name, PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddSplinePoseData(data, sensor_name, PoseType::Optimized, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
@@ -59,18 +59,18 @@ TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
     std::string const sensor_name{"/cam/retro/123"};
 
     // Fails foreign key constraint because there is no corresponding camera_poses table entry yet
-    EXPECT_THROW(database::AddReprojectionError(data, PoseType::Initial, sensor_name, db), std::runtime_error);
-    EXPECT_THROW(database::AddReprojectionError(data, PoseType::Optimized, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Initial, db), std::runtime_error);
+    EXPECT_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Optimized, db), std::runtime_error);
 
     database::AddImage(timestamp_ns, sensor_name, db);
     AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db);
 
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-    database::AddCameraPoseData(frames, PoseType::Initial, sensor_name, db);
-    database::AddCameraPoseData(frames, PoseType::Optimized, sensor_name, db);
+    database::AddCameraPoseData(frames, sensor_name, PoseType::Initial, db);
+    database::AddCameraPoseData(frames, sensor_name, PoseType::Optimized, db);
 
-    EXPECT_NO_THROW(database::AddReprojectionError(data, PoseType::Initial, sensor_name, db));
-    EXPECT_NO_THROW(database::AddReprojectionError(data, PoseType::Optimized, sensor_name, db));
+    EXPECT_NO_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Initial, db));
+    EXPECT_NO_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Optimized, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddExtractedTargetData) {
