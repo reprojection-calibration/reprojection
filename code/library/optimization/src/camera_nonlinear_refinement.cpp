@@ -11,12 +11,9 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
                                                                     // TODO make a map indexed by timestamp?
                                                                     CameraMeasurements const& data,
                                                                     OptimizationState const& initial_state) {
-    // Create the ceres problem and configure it - one day the ceres state will be set from a config file!
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
-    // NOTE(Jack): In this look we purposefully loop over the initial state frames and NOT the targets so that if the
-    // frame was not initialized it gets skipped here.
     OptimizationState optimized_state{initial_state};
     for (auto const& [timestamp_ns, frame_i] : initial_state.frames) {
         Bundle const& bundle_i{data.at(timestamp_ns).bundle};
@@ -30,7 +27,6 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
         }
     }
 
-    // Optimize!!!
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
     return {optimized_state, ceres_state};
