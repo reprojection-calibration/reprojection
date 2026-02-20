@@ -56,6 +56,6 @@ ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasure
     }
 
     return residuals;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace  reprojection::optimization
