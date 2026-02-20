@@ -9,7 +9,6 @@ set(SRC_FILES
         src/vanishing_point_initialization.cpp
 )
 set(LINK_LIBRARIES
-        calibration_data_views
         Eigen3::Eigen
         eigen_utilities
         geometry

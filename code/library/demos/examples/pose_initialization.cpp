@@ -1,7 +1,6 @@
 #include <map>
 
 #include "calibration/linear_pose_initialization.hpp"
-#include "calibration_data_views/initialization_view.hpp"
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface.hpp"
 #include "geometry/lie.hpp"
@@ -19,25 +18,23 @@ int main() {
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
-    std::string const sensor_name{"/cam0/image_raw"};
-    CameraCalibrationData cam_data{
-        {sensor_name, CameraModel::DoubleSphere, {0, 512, 0, 512}},
-        Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716},
-        {},
-        {}};
+    CameraInfo const sensor{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
+    CameraState const intrinsics{
+        Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
 
     // Load targets, initialize, and optimize
-    database::GetExtractedTargetData(db, cam_data);
-    calibration::LinearPoseInitialization(InitializationDataView(cam_data));
-    optimization::CameraNonlinearRefinement(OptimizationDataView(cam_data));
+    CameraMeasurements const targets{database::GetExtractedTargetData(db, sensor.sensor_name)};
 
-    std::cout << cam_data.optimized_intrinsics.transpose() << std::endl;
+    auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
+    auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
 
     // Write everything to database
-    AddCameraPoseData(cam_data, database::PoseType::Initial, db);
-    AddCameraPoseData(cam_data, database::PoseType::Optimized, db);
-    database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
-    database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
+    AddCameraPoseData(initial_state.frames, database::PoseType::Initial, sensor.sensor_name, db);
+    AddCameraPoseData(optimized_state.frames, database::PoseType::Optimized, sensor.sensor_name, db);
+    // database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
+    // database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
+
+    std::cout << optimized_state.camera_state.intrinsics.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }

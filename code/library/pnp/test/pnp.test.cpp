@@ -11,14 +11,15 @@ using namespace reprojection;
 // TODO(Jack): Test all functions with noisy data!
 
 TEST(Pnp, TestPnp) {
-    CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
-        20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    auto const [targets, gt_frames]{
+        testing_mocks::GenerateMvgData(sensor, {testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
 
-    for (auto const& [_, frame_i] : gt_data.frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle, testing_utilities::image_bounds)};
+    for (auto const& [timestamp_ns, target_i] : targets) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle, sensor.bounds)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
@@ -28,15 +29,15 @@ TEST(Pnp, TestPnp) {
 }
 
 TEST(Pnp, TestPnpFlat) {
-    CameraCalibrationData const data{testing_mocks::GenerateMvgData(20, 1e9, CameraModel::Pinhole,
-                                                                    testing_utilities::unit_pinhole_intrinsics,
-                                                                    testing_utilities::unit_image_bounds, true)};
+    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
+    auto const [targets, gt_frames]{
+        testing_mocks::GenerateMvgData(sensor, {testing_utilities::unit_pinhole_intrinsics}, 50, 1e9, true)};
 
-    for (auto const& [_, frame_i] : data.frames) {
-        pnp::PnpResult const pnp_result{pnp::Pnp(frame_i.extracted_target.bundle)};
+    for (auto const& [timestamp_ns, target_i] : targets) {
+        pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle)};
         EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
-        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"

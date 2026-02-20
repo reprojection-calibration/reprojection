@@ -15,31 +15,32 @@
 namespace reprojection::database {
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
-void AddImage(ImageStamped const& data, std::shared_ptr<CalibrationDatabase> const database) {
+void AddImage(CameraImage const& data, std::string_view sensor_name,
+              std::shared_ptr<CalibrationDatabase> const database) {
     std::vector<uchar> buffer;
     if (not cv::imencode(".png", data.image, buffer)) {
         throw std::runtime_error(
-            "AddImage() cv::imencode() failed for sensor: " + data.header.sensor_name +  // LCOV_EXCL_LINE
-            " at timestamp_ns: " + std::to_string(data.header.timestamp_ns));            // LCOV_EXCL_LINE
+            "AddImage() cv::imencode() failed for sensor: " + std::string(sensor_name) +  // LCOV_EXCL_LINE
+            " at timestamp_ns: " + std::to_string(data.timestamp_ns));                    // LCOV_EXCL_LINE
     }
 
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, data.header.timestamp_ns,
-                                                            data.header.sensor_name, buffer.data(), std::size(buffer),
-                                                            database->db)};
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(
+        sql_statements::image_insert, data.timestamp_ns, sensor_name, buffer.data(), std::size(buffer), database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage("AddImage()", data.header.sensor_name, data.header.timestamp_ns,
+        throw std::runtime_error(ErrorMessage("AddImage()", sensor_name, data.timestamp_ns,
                                               std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
 }
 
-void AddImage(FrameHeader const& header, std::shared_ptr<CalibrationDatabase> const database) {
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, header.timestamp_ns,
-                                                            header.sensor_name, nullptr, -1, database->db)};
+void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
+              std::shared_ptr<CalibrationDatabase> const database) {
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, timestamp_ns, sensor_name,
+                                                            nullptr, -1, database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage("AddImage()", header.sensor_name, header.timestamp_ns,
+        throw std::runtime_error(ErrorMessage("AddImage()", sensor_name, timestamp_ns,
                                               std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
@@ -59,7 +60,7 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
     }  // LCOV_EXCL_LINE
 }
 
-std::optional<ImageStamped> ImageStreamer::Next() {
+std::optional<CameraImage> ImageStreamer::Next() {
     int const code{sqlite3_step(statement_.stmt)};
     if (code == static_cast<int>(SqliteFlag::Done)) {
         return std::nullopt;
@@ -91,7 +92,7 @@ std::optional<ImageStamped> ImageStreamer::Next() {
         return std::nullopt;                                                                      // LCOV_EXCL_LINE
     }
 
-    return ImageStamped{{timestamp_ns, sensor_name_}, image};
+    return CameraImage{timestamp_ns, image};
 }
 
 };  // namespace reprojection::database

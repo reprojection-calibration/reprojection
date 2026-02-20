@@ -1,6 +1,5 @@
 #include "pnp/pnp.hpp"
 
-#include "calibration_data_views/optimization_view.hpp"
 #include "geometry/lie.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "types/algorithm_types.hpp"
@@ -22,7 +21,7 @@ namespace reprojection::pnp {
 PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     Isometry3d tf_co_w;
     Array4d pinhole_intrinsics;
-    if (IsPlane(bundle.points) and bundle.pixels.rows() > 4 and not bounds) {
+    if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         tf_co_w = Dlt22(bundle);
         pinhole_intrinsics = {1, 1, 0, 0};   // Equivalent to K = I_3x3
         bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension bounds
@@ -40,23 +39,19 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
         return PnpErrorCode::ContainsNan;
     }
 
-    // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
-    // TODO(Jack): Building an entire CameraCalibrationData here just to optimize the one camera frame seems a little
-    //  like overkill, but using the common interface here and in the primary optimization is just cleaner.
-    // NOTE(Jack): We hardcode the one frame here to have a timestamps of 0 so we can access it below.
-    CameraCalibrationData data{
-        {"", CameraModel::Pinhole, bounds.value()}, pinhole_intrinsics, {}, {{0, {{bundle, {}}, aa_co_w}}}};
-    optimization::CameraNonlinearRefinement(OptimizationDataView(data));
+    // Dummy value only for tracking and consistency of data access below
+    uint64_t const timestamp_ns{0};
 
-    auto const opt_tf_co_w{data.frames.at(0).optimized_pose};
-    if (opt_tf_co_w) {
-        return geometry::Exp(opt_tf_co_w.value());
+    // Format data into required format for the nonlinear optimization
+    CameraInfo const sensor{"", CameraModel::Pinhole, bounds.value()};
+    CameraMeasurements const target{{timestamp_ns, {bundle, {}}}};
+    OptimizationState const initial_state{{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
+
+    // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
+    auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, target, initial_state)};
+    if (diagnostics.solver_summary.termination_type == ceres::CONVERGENCE) {
+        return geometry::Exp(optimized_state.frames.at(timestamp_ns).pose);
     } else {
-        // NOTE(Jack): I do not know if it is really possible to ever reach this condition because theoretically we
-        // should only get to CameraNonlinearRefinement if we have a good initial pose. Because we initialize the
-        // optimized pose with the initial pose in CameraNonlinearRefinement it almost guarantees that this condition
-        // will never be triggered. For now at least... We leave this conditional here because we need to check the
-        // optional anyway!
         return PnpErrorCode::FailedRefinement;  // LCOV_EXCL_LINE
     }
 }

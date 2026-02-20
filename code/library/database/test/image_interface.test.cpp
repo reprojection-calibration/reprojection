@@ -18,14 +18,14 @@ TEST(DatabaseImageInterface, TestAddImage) {
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     cv::Mat const image(10, 20, CV_8UC1);
-    EXPECT_NO_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({0, image}, "/cam/retro/123", db));
 }
 
 TEST(DatabaseImageInterface, TestAddImageHeaderOnly) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-    EXPECT_NO_THROW(database::AddImage(FrameHeader{0, "/cam/retro/123"}, db));
+    EXPECT_NO_THROW(database::AddImage(0, "/cam/retro/123", db));
 }
 
 TEST(DatabaseImageInterface, TestAddImageError) {
@@ -36,7 +36,7 @@ TEST(DatabaseImageInterface, TestAddImageError) {
     db = std::make_shared<database::CalibrationDatabase>(temp_file.Path(), false, true);
 
     cv::Mat const image(10, 20, CV_8UC1);
-    EXPECT_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db), std::runtime_error);
+    EXPECT_THROW(database::AddImage({0, image}, "/cam/retro/123", db), std::runtime_error);
 }
 
 TEST(DatabaseImageInterface, TestAddImageHeaderOnlyError) {
@@ -44,7 +44,7 @@ TEST(DatabaseImageInterface, TestAddImageHeaderOnlyError) {
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
     db = std::make_shared<database::CalibrationDatabase>(temp_file.Path(), false, true);
 
-    EXPECT_THROW(database::AddImage(FrameHeader{0, "/cam/retro/123"}, db), std::runtime_error);
+    EXPECT_THROW(database::AddImage(0, "/cam/retro/123", db), std::runtime_error);
 }
 
 TEST(DatabaseImageInterface, TestImageStreamer) {
@@ -52,15 +52,14 @@ TEST(DatabaseImageInterface, TestImageStreamer) {
     cv::Mat const image(10, 20, CV_8UC1);
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-    EXPECT_NO_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db));
-    EXPECT_NO_THROW(database::AddImage({{2, "/cam/retro/123"}, image}, db));
-    EXPECT_NO_THROW(database::AddImage({{4, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({0, image}, "/cam/retro/123", db));
+    EXPECT_NO_THROW(database::AddImage({2, image}, "/cam/retro/123", db));
+    EXPECT_NO_THROW(database::AddImage({4, image}, "/cam/retro/123", db));
 
     database::ImageStreamer streamer{db, "/cam/retro/123"};
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().header.timestamp_ns, 0);
-    EXPECT_EQ(frame_0.value().header.sensor_name, "/cam/retro/123");
+    EXPECT_EQ(frame_0.value().timestamp_ns, 0);
     EXPECT_EQ(frame_0.value().image.rows, 10);
     EXPECT_EQ(frame_0.value().image.cols, 20);
 
@@ -76,15 +75,15 @@ TEST(DatabaseImageInterface, TestImageStreamerStartTime) {
     cv::Mat const image(10, 20, CV_8UC1);
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-    EXPECT_NO_THROW(database::AddImage({{0, "/cam/retro/123"}, image}, db));
-    EXPECT_NO_THROW(database::AddImage({{2, "/cam/retro/123"}, image}, db));
-    EXPECT_NO_THROW(database::AddImage({{4, "/cam/retro/123"}, image}, db));
+    EXPECT_NO_THROW(database::AddImage({0, image}, "/cam/retro/123", db));
+    EXPECT_NO_THROW(database::AddImage({2, image}, "/cam/retro/123", db));
+    EXPECT_NO_THROW(database::AddImage({4, image}, "/cam/retro/123", db));
 
     database::ImageStreamer streamer{db, "/cam/retro/123", 1};
 
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().header.timestamp_ns, 2);  // First frame starts at 2ns now
+    EXPECT_EQ(frame_0.value().timestamp_ns, 2);  // First frame starts at 2ns now
 
     EXPECT_TRUE(streamer.Next().has_value());
     EXPECT_FALSE(streamer.Next().has_value());

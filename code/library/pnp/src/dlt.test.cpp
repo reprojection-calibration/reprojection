@@ -12,36 +12,31 @@
 using namespace reprojection;
 
 TEST(PnpDlt, TestDlt23) {
-    CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
-        20, 1e9, CameraModel::Pinhole, testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds, false)};
+    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
+    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9, false)};
 
-    for (auto const& [_, frame_i] : gt_data.frames) {
-        auto const [tf_co_w, K]{pnp::Dlt23(frame_i.extracted_target.bundle)};
-
-        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
-        // definitely have filled out this value!
-        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};
+    for (auto const& [timestamp_ns, target_i] : targets) {
+        auto const [tf_co_w, K]{pnp::Dlt23(target_i.bundle)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
                                                   << gt_tf_co_w.matrix();
         EXPECT_FLOAT_EQ(tf_co_w.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
-        EXPECT_TRUE(K.isApprox(gt_data.initial_intrinsics));
+        EXPECT_TRUE(K.isApprox(intrinsics.intrinsics));
     }
 }
 
 TEST(PnpDlt, TestDlt22) {
     // Points must have Z=0 (flat = true) for Dlt22
-    CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(20, 1e9, CameraModel::Pinhole,
-                                                                       testing_utilities::unit_pinhole_intrinsics,
-                                                                       testing_utilities::unit_image_bounds, true)};
+    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
+    auto const [targets, gt_frames]{
+        testing_mocks::GenerateMvgData(sensor, {testing_utilities::unit_pinhole_intrinsics}, 50, 1e9, true)};
 
-    for (auto const& [_, frame_i] : gt_data.frames) {
-        auto const tf_co_w{pnp::Dlt22(frame_i.extracted_target.bundle)};
-
-        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
-        // definitely have filled out this value!
-        Isometry3d const gt_tf_co_w{geometry::Exp(frame_i.initial_pose.value())};
+    for (auto const& [timestamp_ns, target_i] : targets) {
+        auto const tf_co_w{pnp::Dlt22(target_i.bundle)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"

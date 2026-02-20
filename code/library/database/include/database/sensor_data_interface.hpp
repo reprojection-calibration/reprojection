@@ -31,14 +31,14 @@
 
 namespace reprojection::database {
 
-void AddCameraPoseData(CameraCalibrationData const& data, PoseType const type,
+void AddCameraPoseData(Frames const& data, PoseType const type, std::string_view sensor_name,
                        std::shared_ptr<CalibrationDatabase> const database);
 
 // TODO(Jack): We need to figure out an overarching strategy of how to unify the camera and spline types. For example
 //  both have initial and optimized poses! There has to be some commonality here we can take advantage of.
 using SplinePoses = std::map<std::uint64_t, Vector6d>;
 
-void AddSplinePoseData(SplinePoses const& data, PoseType const type,
+void AddSplinePoseData(SplinePoses const& data, PoseType const type, std::string_view sensor_name,
                        std::shared_ptr<CalibrationDatabase> const database);
 
 // NOTE(Jack): We are violating the rule of passing in more information into a function than is required by passing in
@@ -48,20 +48,23 @@ void AddSplinePoseData(SplinePoses const& data, PoseType const type,
 // add a lot of boilerplate code and not really move us forward to the end goal, or protect us from heinous abuses. It
 // is already a const& so the only risk is that someone does too much with the extra non-pose data in this method. But
 // if someone does that in a method named AddPoseData, then I think we have bigger problems :)
-void AddPoseData(std::string_view const sql, CameraCalibrationData const& data, PoseType const type,
+void AddPoseData(std::string_view const sql, Frames const& data, PoseType const type, std::string_view sensor_name,
                  std::shared_ptr<CalibrationDatabase> const database);
 
-void AddReprojectionError(CameraCalibrationData const& data, PoseType const type,
+void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, PoseType const type, std::string_view sensor_name,
                           std::shared_ptr<CalibrationDatabase> const database);
 
-void AddExtractedTargetData(ExtractedTargetStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
+// RENAME - remove the data suffix
+void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
+                            std::shared_ptr<CalibrationDatabase> const database);
 
 // See the note above AddPoseData. Here we are mutating the data, should we use a controlled view here?
-void GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, CameraCalibrationData& data);
+CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database,
+                                          std::string_view sensor_name);
 
-[[nodiscard]] bool AddImuData(ImuStamped const& data, std::shared_ptr<CalibrationDatabase> const database);
+[[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
+                              std::shared_ptr<CalibrationDatabase> const database);
 
-std::optional<std::set<ImuStamped>> GetImuData(std::shared_ptr<CalibrationDatabase const> const database,
-                                               std::string const& sensor_name);
+ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name);
 
 }  // namespace reprojection::database

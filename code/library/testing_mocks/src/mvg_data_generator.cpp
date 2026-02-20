@@ -12,6 +12,7 @@
 
 namespace reprojection::testing_mocks {
 
+// TODO(Jack): Use refactored types to pass to this function instead of all individual args!
 // TODO(Jack): Have a common initialization framework for the camera parameters here and with CameraCalibrationData and
 //  the camera construction itself. This should just be one struct...?
 // TODO(Jack): 99% of uses of this function do not care at all about the timespan_ns, does it make sense to give this a
@@ -27,20 +28,24 @@ namespace reprojection::testing_mocks {
 // this can be used from here directly. If you want to test initialization of the pose from the target directly than you
 // should overwrite the initial pose with std::nullopt to remove that data. Maybe if we had a better interface we could
 // select what we want created or not, but at this time that does not exist.
-CameraCalibrationData GenerateMvgData(int const num_samples, uint64_t const timespan_ns, CameraModel const camera_model,
-                                      ArrayXd const& intrinsics, ImageBounds const& bounds, bool const flat) {
+std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,
+                                                       int const num_samples, uint64_t const timespan_ns,
+                                                       bool const flat) {
     // NOTE(Jack): Instead of building and using a spline here, I guess we could have all just used the poses from
     // SphereTrajectory() directly (?) But we follow this pattern here and in the imu data generator for consistencies'
     // sake. The more places we use the spline code the more robust it makes it!
     spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
-    std::set<uint64_t> const times{SampleTimes(num_samples, timespan_ns)};
+    std::set<uint64_t> const times_ns{SampleTimes(num_samples, timespan_ns)};
 
-    auto const camera{projection_functions::InitializeCamera(camera_model, intrinsics, bounds)};
+    // TODO(Jack): Refactor to accept CameraInfo directly?
+    auto const camera{
+        projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
     MatrixX3d const points{MvgHelpers::BuildTargetPoints(flat)};
 
-    CameraCalibrationData data{{"/mvg_test_data", camera_model, bounds}, intrinsics};
-    for (auto const time_i : times) {
-        auto const aa_w_co{trajectory.Evaluate(time_i)};
+    CameraMeasurements targets;
+    Frames poses;
+    for (auto const time_ns_i : times_ns) {
+        auto const aa_w_co{trajectory.Evaluate(time_ns_i)};
         if (not aa_w_co.has_value()) {
             throw std::runtime_error("GenerateMvgData() failed trajectory.Evaluate().");  // LCOV_EXCL_LINE
         }
@@ -49,12 +54,15 @@ CameraCalibrationData GenerateMvgData(int const num_samples, uint64_t const time
         auto const [pixels, mask]{MvgHelpers::Project(points, camera, tf_co_w)};
         ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
-        data.frames[time_i].extracted_target.bundle =
-            Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)};
-        data.frames[time_i].initial_pose = geometry::Log(tf_co_w);
+        // WARN(Jack): We leave the indices here empty! If we one day need this then we need to fill this out too! Note
+        // that these are not the "valid indices" from above.
+        ExtractedTarget const target_i{Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)},
+                                       {}};
+        targets.push_back({time_ns_i, target_i});
+        poses[time_ns_i].pose = geometry::Log(tf_co_w);
     }
 
-    return data;
+    return {targets, poses};
 }
 
 Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_rotation, Isometry3d pose) {

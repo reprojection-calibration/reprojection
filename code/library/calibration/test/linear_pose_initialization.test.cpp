@@ -10,27 +10,22 @@
 
 using namespace reprojection;
 
-TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
-    CameraCalibrationData const gt_data{testing_mocks::GenerateMvgData(
-        20, 1e9, CameraModel::DoubleSphere, Array6d{600, 600, 360, 240, 0.1, 0.2}, testing_utilities::image_bounds)};
-    CameraCalibrationData data{gt_data};
+TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitializationDoubleSphere) {
+    // Setup test data
+    CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
+    CameraState const intrinsics{Array6d{600, 600, 360, 240, 0.1, 0.2}};
+    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
 
-    // Reset the initial poses to null to make sure we do not confuse them for the output of LinearPoseInitialization.
-    for (auto& [_, frame_i] : data.frames) {
-        frame_i.initial_pose = std::nullopt;
-    }
+    // Act
+    OptimizationState const linear_solution{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
 
-    calibration::LinearPoseInitialization(InitializationDataView(data));
+    // Assert
+    EXPECT_EQ(std::size(linear_solution.frames), 50);
+    for (auto const& [timestamp_ns, frame_i] : linear_solution.frames) {
+        Array6d gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
 
-    for (auto const& [timestamp_ns, frame_i] : data.frames) {
-        // WARN(Jack): Unprotected optional access! Do we need a better strategy here? The mvg test data should
-        // definitely have filled out this value!
-        Array6d const gt_aa_co_w{gt_data.frames.at(timestamp_ns).initial_pose.value()};
-
-        ASSERT_TRUE(frame_i.initial_pose.has_value());
-        EXPECT_TRUE(frame_i.initial_pose.value().isApprox(gt_aa_co_w, 1e-6))
-            << "Linear pose initialization result:\n"
-            << frame_i.initial_pose.value().transpose() << "\nGround truth:\n"
-            << gt_aa_co_w.transpose();
+        EXPECT_TRUE(frame_i.pose.isApprox(gt_aa_co_w, 1e-12)) << "Linear pose initialization result:\n"
+                                                              << frame_i.pose.transpose() << "\nGround truth:\n"
+                                                              << gt_aa_co_w.transpose();
     }
 }
