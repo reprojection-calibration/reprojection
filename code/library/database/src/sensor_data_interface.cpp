@@ -103,21 +103,23 @@ void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, PoseType con
 // NOTE(Jack): See note above AddReprojectionError about suppressing the SerializeToString throw.
 void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
                             std::shared_ptr<CalibrationDatabase> const database) {
-    protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
+    auto const& [timestamp_ns, target]{data};
+
+    protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {
         throw std::runtime_error(
             "AddExtractedTargetData() protobuf SerializeToString() failed for sensor: " +  // LCOV_EXCL_LINE
             std::string(sensor_name) +                                                     // LCOV_EXCL_LINE
-            " at timestamp_ns: " + std::to_string(data.timestamp_ns));                     // LCOV_EXCL_LINE
+            " at timestamp_ns: " + std::to_string(timestamp_ns));                          // LCOV_EXCL_LINE
     }
 
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert, data.timestamp_ns,
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert, timestamp_ns,
                                                             sensor_name, buffer.c_str(), std::size(buffer),
                                                             database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage("AddReprojectionError()", sensor_name, data.timestamp_ns,
+        throw std::runtime_error(ErrorMessage("AddReprojectionError()", sensor_name, timestamp_ns,
                                               std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
@@ -173,13 +175,13 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
                                      " at timestamp_ns: " + std::to_string(timestamp_ns));           // LCOV_EXCL_LINE
         }
 
-        targets.push_back({timestamp_ns, deserialized.value()});
+        targets.insert({timestamp_ns, deserialized.value()});
     }
 
     return targets;
 }
 
-// TODO(Jack): Update to void and throw interface and consistent error messages!
+// TODO(Jack): Remove bool return to make consistent with other methods
 [[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
                               std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::imu_data_insert};

@@ -58,7 +58,7 @@ std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor,
         // that these are not the "valid indices" from above.
         ExtractedTarget const target_i{Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)},
                                        {}};
-        targets.push_back({time_ns_i, target_i});
+        targets.insert({time_ns_i, target_i});
         poses[time_ns_i].pose = geometry::Log(tf_co_w);
     }
 
