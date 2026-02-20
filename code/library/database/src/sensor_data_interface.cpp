@@ -103,21 +103,23 @@ void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, PoseType con
 // NOTE(Jack): See note above AddReprojectionError about suppressing the SerializeToString throw.
 void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
                             std::shared_ptr<CalibrationDatabase> const database) {
-    protobuf_serialization::ExtractedTargetProto const serialized{Serialize(data.target)};
+    auto const& [timestamp_ns, target]{data};
+
+    protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
     std::string buffer;
     if (not serialized.SerializeToString(&buffer)) {
         throw std::runtime_error(
             "AddExtractedTargetData() protobuf SerializeToString() failed for sensor: " +  // LCOV_EXCL_LINE
             std::string(sensor_name) +                                                     // LCOV_EXCL_LINE
-            " at timestamp_ns: " + std::to_string(data.timestamp_ns));                     // LCOV_EXCL_LINE
+            " at timestamp_ns: " + std::to_string(timestamp_ns));                          // LCOV_EXCL_LINE
     }
 
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert, data.timestamp_ns,
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert, timestamp_ns,
                                                             sensor_name, buffer.c_str(), std::size(buffer),
                                                             database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage("AddReprojectionError()", sensor_name, data.timestamp_ns,
+        throw std::runtime_error(ErrorMessage("AddReprojectionError()", sensor_name, timestamp_ns,
                                               std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
@@ -173,36 +175,37 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
                                      " at timestamp_ns: " + std::to_string(timestamp_ns));           // LCOV_EXCL_LINE
         }
 
-        targets.push_back({timestamp_ns, deserialized.value()});
+        targets.insert({timestamp_ns, deserialized.value()});
     }
 
     return targets;
 }
 
-// TODO(Jack): Update to void and throw interface and consistent error messages!
+// TODO(Jack): Remove bool return to make consistent with other methods
 [[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
                               std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
+    auto const& [timestamp_ns, imu_data]{data};
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(data.timestamp_ns));  // Warn cast!
+        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
         Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
-        Sqlite3Tools::Bind(statement.stmt, 3, data.angular_velocity[0]);
-        Sqlite3Tools::Bind(statement.stmt, 4, data.angular_velocity[1]);
-        Sqlite3Tools::Bind(statement.stmt, 5, data.angular_velocity[2]);
-        Sqlite3Tools::Bind(statement.stmt, 6, data.linear_acceleration[0]);
-        Sqlite3Tools::Bind(statement.stmt, 7, data.linear_acceleration[1]);
-        Sqlite3Tools::Bind(statement.stmt, 8, data.linear_acceleration[2]);
+        Sqlite3Tools::Bind(statement.stmt, 3, imu_data.angular_velocity[0]);
+        Sqlite3Tools::Bind(statement.stmt, 4, imu_data.angular_velocity[1]);
+        Sqlite3Tools::Bind(statement.stmt, 5, imu_data.angular_velocity[2]);
+        Sqlite3Tools::Bind(statement.stmt, 6, imu_data.linear_acceleration[0]);
+        Sqlite3Tools::Bind(statement.stmt, 7, imu_data.linear_acceleration[1]);
+        Sqlite3Tools::Bind(statement.stmt, 8, imu_data.linear_acceleration[2]);
     } catch (std::runtime_error const& e) {                      // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(ErrorMessage(  // LCOV_EXCL_LINE
             "AddImuData()", sensor_name,                         // LCOV_EXCL_LINE
-            data.timestamp_ns, SqliteErrorCode::FailedBinding,   // LCOV_EXCL_LINE
+            timestamp_ns, SqliteErrorCode::FailedBinding,        // LCOV_EXCL_LINE
             std::string(sqlite3_errmsg(database->db)))));        // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        throw std::runtime_error(ErrorMessage("AddImuData()", sensor_name, data.timestamp_ns,
-                                              SqliteErrorCode::FailedStep, std::string(sqlite3_errmsg(database->db))));
+        throw std::runtime_error(ErrorMessage("AddImuData()", sensor_name, timestamp_ns, SqliteErrorCode::FailedStep,
+                                              std::string(sqlite3_errmsg(database->db))));
     }
 
     return true;
@@ -242,7 +245,7 @@ ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const data
         double const ay{sqlite3_column_double(statement.stmt, 5)};
         double const az{sqlite3_column_double(statement.stmt, 6)};
 
-        data.push_back(ImuMeasurement{timestamp_ns, {omega_x, omega_y, omega_z}, {ax, ay, az}});
+        data.insert(ImuMeasurement{timestamp_ns, {{omega_x, omega_y, omega_z}, {ax, ay, az}}});
     }
 
     return data;

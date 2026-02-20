@@ -14,4 +14,9 @@ struct ExtractedTarget {
     ArrayX2i indices;
 };
 
+struct ImuData {
+    Vector3d angular_velocity;
+    Vector3d linear_acceleration;
+};
+
 }  // namespace reprojection
