@@ -5,7 +5,7 @@
 #include "database/calibration_database.hpp"
 #include "database/database_data_types.hpp"
 #include "types/calibration_types.hpp"
-#include "types/sensor_types.hpp"
+#include "types/sensor_data_types.hpp"
 
 // TODO(Jack): Add note in docs that we are hardcoding one target only by not adding a target_id identifier
 // TODO(Jack): Add not in docs that we cannot cover all error conditions in unit test so we suppress the errors

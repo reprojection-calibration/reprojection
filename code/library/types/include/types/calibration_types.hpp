@@ -4,7 +4,7 @@
 #include <string>
 
 #include "types/enums.hpp"
-#include "types/sensor_types.hpp"
+#include "types/sensor_data_types.hpp"
 #include "types/stamped_templates.hpp"
 
 // TODO(Jack): Make sure the names here to conflict logically with other types.
@@ -52,6 +52,9 @@ struct OptimizationState {
     CameraState camera_state;
     Frames frames;
 };
+
+using ReprojectionError = StampedData<ArrayX2d>;
+using ReprojectionErrors = StampedMap<ReprojectionError>;
 
 struct ImuInfo {
     std::string sensor_name;

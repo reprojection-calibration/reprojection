@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "types/sensor_types.hpp"
+#include "types/sensor_data_types.hpp"
 
 namespace reprojection::testing_mocks {
 

@@ -13,7 +13,7 @@
 #include "database/sensor_data_interface_adders.hpp"
 #include "testing_utilities/constants.hpp"
 #include "testing_utilities/temporary_file.hpp"
-#include "types/sensor_types.hpp"
+#include "types/sensor_data_types.hpp"
 
 using namespace reprojection;
 using PoseType = database::PoseType;
