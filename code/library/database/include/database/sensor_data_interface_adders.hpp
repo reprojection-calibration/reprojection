@@ -7,7 +7,8 @@
 #include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
 
-// TODO(Jack): Add note in docs that we are hardcoding one target only by not adding a target_id identifier
+// TODO(Jack): Add note in docs that we are hardcoding one target only by not adding a target_id identifier. If we want
+//  multitarget setups things are gonna be more complicated all around.
 // TODO(Jack): Add not in docs that we cannot cover all error conditions in unit test so we suppress the errors
 
 namespace reprojection::database {
@@ -25,7 +26,7 @@ void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType cons
 void AddReprojectionError(ReprojectionErrors const& data, std::string_view sensor_name, PoseType const type,
                           std::shared_ptr<CalibrationDatabase> const database);
 
-[[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
-                              std::shared_ptr<CalibrationDatabase> const database);
+void AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
+                std::shared_ptr<CalibrationDatabase> const database);
 
 }  // namespace reprojection::database

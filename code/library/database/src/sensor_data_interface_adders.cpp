@@ -110,9 +110,8 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view senso
     }
 }
 
-// TODO(Jack): Remove bool return to make consistent with other methods
-[[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
-                              std::shared_ptr<CalibrationDatabase> const database) {
+void AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
+                std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
     auto const& [timestamp_ns, imu_data]{data};
@@ -136,8 +135,6 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view senso
         throw std::runtime_error(ErrorMessage("AddImuData()", sensor_name, timestamp_ns, SqliteErrorCode::FailedStep,
                                               std::string(sqlite3_errmsg(database->db))));
     }
-
-    return true;
 }
 
 }  // namespace reprojection::database
