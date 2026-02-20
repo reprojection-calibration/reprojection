@@ -14,7 +14,7 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitializationDoubleSphe
     // Setup test data
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{Array6d{600, 600, 360, 240, 0.1, 0.2}};
-    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9, false)};
+    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
 
     // Act
     OptimizationState const linear_solution{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
@@ -24,8 +24,8 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitializationDoubleSphe
     for (auto const& [timestamp_ns, frame_i] : linear_solution.frames) {
         Array6d gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
 
-        EXPECT_LT((frame_i.pose - gt_aa_co_w).matrix().norm(), 1e-12) << "Linear pose initialization result:\n"
-                                                                      << frame_i.pose.transpose() << "\nGround truth:\n"
-                                                                      << gt_aa_co_w.transpose();
+        EXPECT_TRUE(frame_i.pose.isApprox(gt_aa_co_w, 1e-12)) << "Linear pose initialization result:\n"
+                                                              << frame_i.pose.transpose() << "\nGround truth:\n"
+                                                              << gt_aa_co_w.transpose();
     }
 }

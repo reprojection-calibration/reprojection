@@ -44,6 +44,6 @@ OptimizationState LinearPoseInitialization(CameraInfo const& sensor, CameraMeasu
     linear_solution.camera_state = intrinsics;
 
     return linear_solution;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::calibration
