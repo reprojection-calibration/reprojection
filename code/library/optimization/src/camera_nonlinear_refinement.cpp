@@ -15,11 +15,11 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
 
     OptimizationState optimized_state{initial_state};
     for (auto const& [timestamp_ns, frame_i] : initial_state.frames) {
-        Bundle const& bundle_i{targets.at(timestamp_ns).bundle};
+        auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
 
-        for (Eigen::Index j{0}; j < bundle_i.pixels.rows(); ++j) {
+        for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
             ceres::CostFunction* const cost_function{
-                Create(sensor.camera_model, sensor.bounds, bundle_i.pixels.row(j), bundle_i.points.row(j))};
+                Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j))};
 
             problem.AddResidualBlock(cost_function, nullptr, optimized_state.camera_state.intrinsics.data(),
                                      optimized_state.frames.at(timestamp_ns).pose.data());
@@ -35,7 +35,7 @@ ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasure
                                          OptimizationState const& state) {
     ReprojectionErrors residuals;
     for (auto const& [timestamp_ns, frame_i] : state.frames) {
-        Bundle const& bundle_i{targets.at(timestamp_ns).bundle};
+        auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
 
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(state.camera_state.intrinsics.data());
@@ -44,10 +44,10 @@ ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasure
         // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass
         // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two
         // column elements! That is the reason why we have to specifically specify RowMajor here!
-        Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{bundle_i.pixels.rows(), 2};
-        for (Eigen::Index i{0}; i < bundle_i.pixels.rows(); ++i) {
+        Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
+        for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
             ceres::CostFunction const* const cost_function{
-                Create(sensor.camera_model, sensor.bounds, bundle_i.pixels.row(i), bundle_i.points.row(i))};
+                Create(sensor.camera_model, sensor.bounds, pixels.row(i), points.row(i))};
 
             cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(i).data(), nullptr);
         }
