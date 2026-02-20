@@ -8,7 +8,7 @@
 
 #include "database/calibration_database.hpp"
 #include "database/sqlite_wrappers.hpp"
-#include "types/sensor_types.hpp"
+#include "types/sensor_data_types.hpp"
 
 // NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
 // we will run into problems here with memory. Therefore, we create this streamer class which loads the images one by

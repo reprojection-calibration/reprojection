@@ -85,7 +85,7 @@ void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType cons
 
 // NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
-void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, std::string_view sensor_name, PoseType const type,
+void AddReprojectionError(ReprojectionErrors const& data, std::string_view sensor_name, PoseType const type,
                           std::shared_ptr<CalibrationDatabase> const database) {
     SqlTransaction const lock{(database->db)};
 
@@ -110,9 +110,8 @@ void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, std::string_
     }
 }
 
-// TODO(Jack): Remove bool return to make consistent with other methods
-[[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
-                              std::shared_ptr<CalibrationDatabase> const database) {
+void AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
+                std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
     auto const& [timestamp_ns, imu_data]{data};
@@ -136,8 +135,6 @@ void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, std::string_
         throw std::runtime_error(ErrorMessage("AddImuData()", sensor_name, timestamp_ns, SqliteErrorCode::FailedStep,
                                               std::string(sqlite3_errmsg(database->db))));
     }
-
-    return true;
 }
 
 }  // namespace reprojection::database

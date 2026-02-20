@@ -12,7 +12,7 @@
 #include "database/image_interface.hpp"
 #include "testing_utilities/constants.hpp"
 #include "testing_utilities/temporary_file.hpp"
-#include "types/sensor_types.hpp"
+#include "types/sensor_data_types.hpp"
 
 #include "sqlite3_helpers.hpp"
 
@@ -81,18 +81,15 @@ TEST(DatabaseSensorDataInterface, TestAddImuData) {
     auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true)};
 
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    bool success{database::AddImuData({0, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_1, db)};
-    EXPECT_TRUE(success);
-    success = database::AddImuData({1, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_1, db);
-    EXPECT_TRUE(success);
+    EXPECT_NO_THROW(database::AddImuData({0, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_1, db));
+    EXPECT_NO_THROW(database::AddImuData({1, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_1, db));
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary
     // key (timestamp_ns, sensor_name) so it is not a duplicate
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    success = database::AddImuData({0, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_2, db);
-    EXPECT_TRUE(success);
+    EXPECT_NO_THROW(database::AddImuData({0, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_2, db));
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
-    EXPECT_THROW((void)database::AddImuData({0, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_2, db),
+    EXPECT_THROW(database::AddImuData({0, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_2, db),
                  std::runtime_error);
 }
