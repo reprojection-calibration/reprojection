@@ -86,9 +86,9 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
 }
 
 TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
-    // NOTE(Jack): The real ground truth value for both the valid pixels here is actually the center of the image! But
-    // because we want to see that the reprojection error is actually the correct value we make the "ground truth"
-    // pixels here actually have some error.
+    // NOTE(Jack): The real ground truth value for both the valid pixels here is actually the center of the image (i.e.
+    // [360, 240])! But because we want to see that the reprojection error is actually the correct value we make the
+    // "ground truth" pixels here have some error.
     MatrixX2d const gt_pixels{{-1, -1},  //
                               {350, 230},
                               {-1, -1},
@@ -107,13 +107,15 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
                                 {256, 256},
                                 {5, 5}};
 
-    std::vector<std::unique_ptr<ceres::CostFunction>> cost_functions;
-    for (Eigen::Index j{0}; j < gt_pixels.rows(); ++j) {
-        cost_functions.emplace_back(optimization::Create(CameraModel::Pinhole, testing_utilities::image_bounds,
-                                                         gt_pixels.row(j), gt_points.row(j)));
-    }
+    uint64_t const timestamp_ns{0};  // Used to track the data frame in the maps
 
-    ArrayX2d const residuals{optimization::EvaluateReprojectionResiduals(
-        cost_functions, testing_utilities::pinhole_intrinsics, {0, 0, 0, 0, 0, 0})};
-    EXPECT_TRUE(residuals.isApprox(gt_residuals));
+    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
+    OptimizationState const state{{testing_utilities::pinhole_intrinsics}, {{timestamp_ns, {Array6d::Zero()}}}};
+
+    ReprojectionErrors const residuals{optimization::ReprojectionResiduals(sensor, targets, state)};
+    EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))
+        << "Result:\n"
+        << residuals.at(timestamp_ns).transpose() << "\nexpected result:\n"
+        << gt_residuals.transpose();
 }

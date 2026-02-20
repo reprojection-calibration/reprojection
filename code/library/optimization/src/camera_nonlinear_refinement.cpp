@@ -31,26 +31,31 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
     return {optimized_state, ceres_state};
 }
 
-// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
-// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
-// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
-// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
-// TODO CALCULATE THE REPROJECTION ERROR OUTSIDE OF THE MAIN OPTIMIZATiON FUNCTION!!!!!
-ArrayX2d EvaluateReprojectionResiduals(std::vector<std::unique_ptr<ceres::CostFunction>> const& cost_functions,
-                                       ArrayXd const& intrinsics, Array6d const& pose) {
-    std::vector<double const*> parameter_blocks;
-    parameter_blocks.push_back(intrinsics.data());
-    parameter_blocks.push_back(pose.data());
+ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
+                                         OptimizationState const& state) {
+    ReprojectionErrors residuals;
+    for (auto const& [timestamp_ns, frame_i] : state.frames) {
+        Bundle const& bundle_i{targets.at(timestamp_ns).bundle};
 
-    // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass
-    // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two
-    // column elements! That is the reason why we have to specifically specify RowMajor here!
-    Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals{std::size(cost_functions), 2};
-    for (size_t i{0}; i < std::size(cost_functions); ++i) {
-        cost_functions[i]->Evaluate(parameter_blocks.data(), residuals.row(i).data(), nullptr);
+        std::vector<double const*> parameter_blocks;
+        parameter_blocks.push_back(state.camera_state.intrinsics.data());
+        parameter_blocks.push_back(frame_i.pose.data());
+
+        // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass
+        // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two
+        // column elements! That is the reason why we have to specifically specify RowMajor here!
+        Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{bundle_i.pixels.rows(), 2};
+        for (Eigen::Index i{0}; i < bundle_i.pixels.rows(); ++i) {
+            ceres::CostFunction const* const cost_function{
+                Create(sensor.camera_model, sensor.bounds, bundle_i.pixels.row(i), bundle_i.points.row(i))};
+
+            cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(i).data(), nullptr);
+        }
+
+        residuals.insert({timestamp_ns, residuals_i});
     }
 
     return residuals;
-}  // LCOV_EXCL_LINE
+}
 
 }  // namespace  reprojection::optimization
