@@ -12,8 +12,10 @@ namespace reprojection::calibration {
 // of the function is to unproject the pixels to 3d rays using a roughly initialized camera, then project these back to
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
-OptimizationState LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements const& data, CameraState const& intrinsics) {
-    auto const camera{projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
+OptimizationState LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements const& data,
+                                           CameraState const& intrinsics) {
+    auto const camera{
+        projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
 
     OptimizationState linear_solution;
     for (auto const& [timestamp_ns, target_i] : data) {
@@ -28,9 +30,13 @@ OptimizationState LinearPoseInitialization(CameraInfo const& sensor, CameraMeasu
         Bundle const linearized_bundle{pixels(valid_indices, Eigen::all),
                                        target_i.bundle.points(valid_indices, Eigen::all)};
 
+        // NOTE(Jack): This is actually a logically critical point, because a frame only gets added to hte optimization
+        // state if pnp was successful. If it failed then the frame is not optimized and we need to make sure all our
+        // downstream logic handles this fact, that just because a target is there does not mean that a initial
+        // pose/frame needs to be there.
         auto const result{pnp::Pnp(linearized_bundle)};
         if (std::holds_alternative<Isometry3d>(result)) {
-            linear_solution.frames[timestamp_ns].pose = geometry::Log(std::get<Isometry3d>(result));  // cppcheck-suppress unreadVariable
+            linear_solution.frames[timestamp_ns].pose = geometry::Log(std::get<Isometry3d>(result));
         }
     }
 

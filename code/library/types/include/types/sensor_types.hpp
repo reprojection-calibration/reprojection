@@ -10,7 +10,7 @@
 
 namespace reprojection {
 
-struct CameraImage{
+struct CameraImage {
     uint64_t timestamp_ns;
     cv::Mat image;
 };

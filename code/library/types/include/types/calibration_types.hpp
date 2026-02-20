@@ -58,7 +58,6 @@ struct FrameState {
     Array6d pose;
 };
 
-
 using Frames = std::map<uint64_t, FrameState>;
 
 struct OptimizationState {

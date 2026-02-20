@@ -10,11 +10,9 @@ namespace reprojection::testing_mocks {
 //  not want to use the entire CalibrationDataset type because it includes the imu as well?
 //
 // MVG = "multiple view geometry"
-std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor,
-                                                                               CameraState const& intrinsics,
-                                                                               int const num_samples,
-                                                                               uint64_t const timespan_ns,
-                                                                               bool const flat = true);
+std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,
+                                                       int const num_samples, uint64_t const timespan_ns,
+                                                       bool const flat = true);
 
 // TODO(Jack): Find a better place for this function.
 Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_rotation, Isometry3d pose);

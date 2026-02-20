@@ -30,11 +30,9 @@ namespace reprojection::testing_mocks {
 // this can be used from here directly. If you want to test initialization of the pose from the target directly than you
 // should overwrite the initial pose with std::nullopt to remove that data. Maybe if we had a better interface we could
 // select what we want created or not, but at this time that does not exist.
-std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor,
-                                                                               CameraState const& intrinsics,
-                                                                               int const num_samples,
-                                                                               uint64_t const timespan_ns,
-                                                                               bool const flat) {
+std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,
+                                                       int const num_samples, uint64_t const timespan_ns,
+                                                       bool const flat) {
     // NOTE(Jack): Instead of building and using a spline here, I guess we could have all just used the poses from
     // SphereTrajectory() directly (?) But we follow this pattern here and in the imu data generator for consistencies'
     // sake. The more places we use the spline code the more robust it makes it!
