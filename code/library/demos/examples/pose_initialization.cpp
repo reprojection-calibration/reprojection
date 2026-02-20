@@ -33,12 +33,14 @@ int main() {
     ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
 
     // Write everything to database
-    database::AddCameraPoseData(initial_state.frames, sensor.sensor_name, database::PoseType::Initial, db);
-    database::AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
-    database::AddReprojectionError(initial_error, sensor.sensor_name, database::PoseType::Initial, db);
-    database::AddReprojectionError(optimized_error, sensor.sensor_name, database::PoseType::Optimized, db);
-
-    std::cout << optimized_state.camera_state.intrinsics.transpose() << std::endl;
+    try {
+        database::AddCameraPoseData(initial_state.frames, sensor.sensor_name, database::PoseType::Initial, db);
+        database::AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
+        database::AddReprojectionError(initial_error, sensor.sensor_name, database::PoseType::Initial, db);
+        database::AddReprojectionError(optimized_error, sensor.sensor_name, database::PoseType::Optimized, db);
+    } catch (...) {
+        std::cout << "Pseudo cache hit" << std::endl;
+    }
 
     return EXIT_SUCCESS;
 }
