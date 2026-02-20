@@ -29,13 +29,13 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
         for (size_t i{0}; i < 3 * delta_t_ns_; ++i) {
             std::uint64_t const t_i{t0_ns_ + i};
 
-            auto const position_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::Null)};
+            auto const position_i{EvaluateSpline<T_Model>(spline_, t_i, DerivativeOrder::Null)};
             measurements.push_back(C3Measurement{t_i, position_i.value(), DerivativeOrder::Null});
 
-            auto const velocity_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::First)};
+            auto const velocity_i{EvaluateSpline<T_Model>(spline_, t_i, DerivativeOrder::First)};
             measurements.push_back(C3Measurement{t_i, velocity_i.value(), DerivativeOrder::First});
 
-            auto const acceleration_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::Second)};
+            auto const acceleration_i{EvaluateSpline<T_Model>(spline_, t_i, DerivativeOrder::Second)};
             measurements.push_back(C3Measurement{t_i, acceleration_i.value(), DerivativeOrder::Second});
         }
 
