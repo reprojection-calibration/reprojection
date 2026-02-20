@@ -2,6 +2,7 @@
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
+#include "types/spline_types.hpp"
 
 // We are building a linear problem Ax=b,
 //      A: constructed from the spline basis matrices
@@ -25,8 +26,8 @@
 namespace reprojection::spline {
 
 struct CubicBSplineC3Init {
-    static std::tuple<MatrixXd, VectorXd> BuildAb(std::vector<C3Measurement> const& measurements,
-                                                  size_t const num_segments, TimeHandler const& time_handler);
+    static std::tuple<MatrixXd, VectorXd> BuildAb(PositionMeasurements const& positions, size_t const num_segments,
+                                                  TimeHandler const& time_handler);
 
     /**
      * \brief How many control points are required to evaluate the spline (=3 for cubic spline).

@@ -8,7 +8,6 @@
 
 using namespace reprojection;
 
-using C3Measurement = spline::C3Measurement;
 using CubicBSplineC3 = spline::CubicBSplineC3;
 using DerivativeOrder = spline::DerivativeOrder;
 
@@ -17,9 +16,9 @@ using DerivativeOrder = spline::DerivativeOrder;
 // implementation of CubicBSplineC3Init::BuildAb to understand this better. This is the reason why we get -2.0344...
 // instead if just -2 for example in the tests below.
 TEST(SplineSplineInitialization, TestInitializeSpline) {
-    std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
-                                                  {5100, {1, 1, 1}, DerivativeOrder::Null},
-                                                  {5200, {2, 2, 2}, DerivativeOrder::Null}};
+    PositionMeasurements const measurements{{5000, {{0, 0, 0}}},  //
+                                            {5100, {{1, 1, 1}}},
+                                            {5200, {{2, 2, 2}}}};
 
     // ERROR(Jack): The InitializeC3Spline is visible even if we do not preface it with the spline:: namespace. Is there
     // something wrong I am doing?

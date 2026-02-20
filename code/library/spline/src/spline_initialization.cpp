@@ -8,10 +8,13 @@ namespace reprojection::spline {
 
 using CoefficientBlock = CubicBSplineC3Init::CoefficientBlock;
 
-CubicBSplineC3 InitializeC3Spline(std::vector<C3Measurement> const& measurements, size_t const num_segments) {
+CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size_t const num_segments) {
     // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known
     // problem.
-    CubicBSplineC3 spline{measurements[0].t_ns, (measurements.back().t_ns - measurements.front().t_ns) / num_segments};
+    uint64_t const t0_ns{std::cbegin(measurements)->first};
+    uint64_t const tn_ns{std::crbegin(measurements)->first};
+    CubicBSplineC3 spline{t0_ns, (tn_ns - t0_ns) / num_segments};
+
     auto const [A, b]{CubicBSplineC3Init::BuildAb(measurements, num_segments, spline.time_handler)};
 
     // TODO(Jack): Consider putting the loop and code to construct Q into a function. We are mixing levels of

@@ -17,10 +17,4 @@ using VectorKd = Eigen::Vector<double, constants::order>;
 // For both the r3 and so3 spline we can evaluate either the position, velocity, or acceleration.
 enum class DerivativeOrder { Null = 0, First = 1, Second = 2 };
 
-struct C3Measurement {
-    std::uint64_t t_ns;
-    Vector3d r3;
-    DerivativeOrder type;
-};
-
 }  // namespace reprojection::spline
