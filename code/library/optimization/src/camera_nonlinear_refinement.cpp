@@ -8,15 +8,14 @@ namespace reprojection::optimization {
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
 std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo const& sensor,
-                                                                    // TODO make a map indexed by timestamp?
-                                                                    CameraMeasurements const& data,
+                                                                    CameraMeasurements const& targets,
                                                                     OptimizationState const& initial_state) {
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
     OptimizationState optimized_state{initial_state};
     for (auto const& [timestamp_ns, frame_i] : initial_state.frames) {
-        Bundle const& bundle_i{data.at(timestamp_ns).bundle};
+        Bundle const& bundle_i{targets.at(timestamp_ns).bundle};
 
         for (Eigen::Index j{0}; j < bundle_i.pixels.rows(); ++j) {
             ceres::CostFunction* const cost_function{
