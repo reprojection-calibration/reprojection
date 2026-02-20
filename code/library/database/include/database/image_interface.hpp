@@ -10,6 +10,10 @@
 #include "database/sqlite_wrappers.hpp"
 #include "types/sensor_types.hpp"
 
+// NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
+// we will run into problems here with memory. Therefore, we create this streamer class which loads the images one by
+// one from the database. We include the start_time parameter so that applications can skip loading images prior to that
+// timestamp (i.e. if the images before start_time were already processed).
 // NOTE(Jack): We put the image interface in its own file because the image streamer interface/concept is so different
 // from the other data interfaces that it deserves some separation. The basic idea is that we should not load all images
 // at once, but rather "stream" them one at a time. If we try to load all images at once we can easily blow up the

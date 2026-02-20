@@ -39,17 +39,6 @@ TEST(DatabaseSensorDataInterface, TestAddCameraPoseData) {
     EXPECT_NO_THROW(database::AddCameraPoseData(data, sensor_name, PoseType::Initial, db));
 }
 
-TEST(DatabaseSensorDataInterface, TestAddSplinePoseData) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
-
-    database::SplinePoses const data{{0, Array6d::Zero()}};
-    std::string const sensor_name{"/cam/retro/123"};
-
-    EXPECT_NO_THROW(database::AddSplinePoseData(data, sensor_name, PoseType::Initial, db));
-    EXPECT_NO_THROW(database::AddSplinePoseData(data, sensor_name, PoseType::Optimized, db));
-}
-
 TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};

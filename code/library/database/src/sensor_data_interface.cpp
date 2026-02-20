@@ -22,21 +22,6 @@ void AddCameraPoseData(Frames const& data, std::string_view sensor_name, PoseTyp
     AddPoseData(data, sensor_name, type, sql, database);
 }
 
-// TODO(Jack): Current hacked interface before we know what the imu data  should really look like!
-void AddSplinePoseData(SplinePoses const& data, std::string_view sensor_name, PoseType const type,
-                       std::shared_ptr<CalibrationDatabase> const database) {
-    std::string_view const sql{sql_statements::spline_poses_insert};
-
-    // TODO(Jack): For now we will simply convert SplinePoses to CameraCalibrationData. Once we know better the
-    //  requirements or have a better design concept we can remove this conversion code. This is a hack!
-    Frames hack_data;
-    for (auto const& [timestamp_ns, pose_i] : data) {
-        hack_data[timestamp_ns].pose = pose_i;
-    }
-
-    AddPoseData(hack_data, sensor_name, type, sql, database);
-}
-
 // NOTE(Jack): We suppress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
 // trigger that is via a malformed sql statement, but that is hardcoded into this function (i.e.
 // sql_statements::camera_poses_insert) abd cannot and should not be changed!

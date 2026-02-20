@@ -37,8 +37,6 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
         throw std::runtime_error("Attempted to open database at path - " + db_path + " - but was unsuccessful");
     }
 
-    // TODO(Jack): If we one day update the Execute() method to no longer return bool like we are doing elsewhere, than
-    //  we can remove these static casts.
     // WARN(Jack): Is there any circumstance under which the data table creation might fail, and casting to void here
     // instead of explicitly handling the status makes sense?
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::images_table, db));
@@ -46,7 +44,6 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::imu_data_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::camera_poses_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::reprojection_error_table, db));
-    static_cast<void>(Sqlite3Tools::Execute(sql_statements::spline_poses_table, db));
 
     // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For example a row
     // in initial_camera_poses can only possibly exist if there is a corresponding entry in extracted_targets. And that
