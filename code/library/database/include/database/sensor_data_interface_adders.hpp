@@ -22,7 +22,7 @@ void AddCameraPoseData(Frames const& data, std::string_view sensor_name, PoseTyp
 void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType const type, std::string_view sql,
                  std::shared_ptr<CalibrationDatabase> const database);
 
-void AddReprojectionError(std::map<uint64_t, ArrayX2d> const& data, std::string_view sensor_name, PoseType const type,
+void AddReprojectionError(ReprojectionErrors const& data, std::string_view sensor_name, PoseType const type,
                           std::shared_ptr<CalibrationDatabase> const database);
 
 [[nodiscard]] bool AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
