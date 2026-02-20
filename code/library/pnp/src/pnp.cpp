@@ -39,12 +39,15 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
         return PnpErrorCode::ContainsNan;
     }
 
-    // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
+    // Dummy value only for tracking and consistency of data access below
+    uint64_t const timestamp_ns{0};
+
+    // Format data into required format for the nonlinear optimization
     CameraInfo const sensor{"", CameraModel::Pinhole, bounds.value()};
-    uint64_t const timestamp_ns{0};  // Dummy value only for tracking and consistency of data access
     CameraMeasurements const target{{timestamp_ns, {bundle, {}}}};
     OptimizationState const initial_state{{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
 
+    // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, target, initial_state)};
     if (diagnostics.solver_summary.termination_type == ceres::CONVERGENCE) {
         return geometry::Exp(optimized_state.frames.at(timestamp_ns).pose);

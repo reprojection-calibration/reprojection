@@ -26,4 +26,7 @@ struct ImuMeasurement {
     Vector3d linear_acceleration;
 };
 
+using CameraMeasurements = std::vector<CameraMeasurement>;
+using ImuMeasurements = std::vector<ImuMeasurement>;
+
 }  // namespace reprojection

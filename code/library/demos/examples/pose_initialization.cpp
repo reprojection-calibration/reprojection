@@ -24,15 +24,17 @@ int main() {
 
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, sensor.sensor_name)};
-    OptimizationState const initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
+
+    auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
-    std::cout << optimized_state.camera_state.intrinsics.transpose() << std::endl;
 
     // Write everything to database
     AddCameraPoseData(initial_state.frames, database::PoseType::Initial, sensor.sensor_name, db);
     AddCameraPoseData(optimized_state.frames, database::PoseType::Optimized, sensor.sensor_name, db);
     // database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
     // database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
+
+    std::cout << optimized_state.camera_state.intrinsics.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }

@@ -26,7 +26,7 @@ TEST(DatabaseSensorDataInterface, TestAddCameraPoseData) {
 
     uint64_t const timestamp_ns{0};
     Frames const data{{timestamp_ns, {Array6d::Zero()}}};
-    std::string_view const sensor_name{"/cam/retro/123"};
+    std::string const sensor_name{"/cam/retro/123"};
 
     // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
     EXPECT_THROW(database::AddCameraPoseData(data, PoseType::Initial, sensor_name, db), std::runtime_error);
@@ -44,7 +44,7 @@ TEST(DatabaseSensorDataInterface, TestAddSplinePoseData) {
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     database::SplinePoses const data{{0, Array6d::Zero()}};
-    std::string_view const sensor_name{"/cam/retro/123"};
+    std::string const sensor_name{"/cam/retro/123"};
 
     EXPECT_NO_THROW(database::AddSplinePoseData(data, PoseType::Initial, sensor_name, db));
     EXPECT_NO_THROW(database::AddSplinePoseData(data, PoseType::Optimized, sensor_name, db));
@@ -56,7 +56,7 @@ TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
 
     uint64_t const timestamp_ns{0};
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
-    std::string_view const sensor_name{"/cam/retro/123"};
+    std::string const sensor_name{"/cam/retro/123"};
 
     // Fails foreign key constraint because there is no corresponding camera_poses table entry yet
     EXPECT_THROW(database::AddReprojectionError(data, PoseType::Initial, sensor_name, db), std::runtime_error);
@@ -78,7 +78,7 @@ TEST(DatabaseSensorDataInterface, TestAddExtractedTargetData) {
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     uint64_t const timestamp_ns{0};
-    std::string_view const sensor_name{"/cam/retro/123"};
+    std::string const sensor_name{"/cam/retro/123"};
 
     // Adding a target with no corresponding image database entry is invalid! Foreign key constraint :)
     EXPECT_THROW(AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db), std::runtime_error);
@@ -92,7 +92,7 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     uint64_t timestamp_ns{0};
-    std::string_view const sensor_name{"/cam/retro/123"};
+    std::string const sensor_name{"/cam/retro/123"};
     ExtractedTarget const target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
@@ -100,10 +100,10 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     // Add three targets - due to foreign key relationship we need add an image before we add the target
     database::AddImage(timestamp_ns, sensor_name, db);
     AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
-    timestamp_ns = 1;
+    timestamp_ns += 1;
     database::AddImage(timestamp_ns, sensor_name, db);
     AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
-    timestamp_ns = 2;
+    timestamp_ns += 1;
     database::AddImage(timestamp_ns, sensor_name, db);
     AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
 

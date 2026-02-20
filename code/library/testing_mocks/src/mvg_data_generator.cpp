@@ -1,7 +1,5 @@
 #include "testing_mocks/mvg_data_generator.hpp"
 
-#include <sys/stat.h>
-
 #include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
@@ -44,8 +42,8 @@ std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor,
         projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
     MatrixX3d const points{MvgHelpers::BuildTargetPoints(flat)};
 
-    CameraMeasurements measurements;
-    Frames state;
+    CameraMeasurements targets;
+    Frames poses;
     for (auto const time_ns_i : times_ns) {
         auto const aa_w_co{trajectory.Evaluate(time_ns_i)};
         if (not aa_w_co.has_value()) {
@@ -60,11 +58,11 @@ std::tuple<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor,
         // that these are not the "valid indices" from above.
         ExtractedTarget const target_i{Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)},
                                        {}};
-        measurements.push_back({time_ns_i, target_i});
-        state[time_ns_i].pose = geometry::Log(tf_co_w);
+        targets.push_back({time_ns_i, target_i});
+        poses[time_ns_i].pose = geometry::Log(tf_co_w);
     }
 
-    return {measurements, state};
+    return {targets, poses};
 }
 
 Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_rotation, Isometry3d pose) {

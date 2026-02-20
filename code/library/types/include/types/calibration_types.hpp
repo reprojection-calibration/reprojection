@@ -35,17 +35,6 @@ struct ImuInfo {
     // TODO(Jack): Add other non optimized parameterization like known calibration bias or noise properties?
 };
 
-// TODO(Jack): is it problematic to use a using declaration here?
-using CameraMeasurements = std::vector<CameraMeasurement>;
-using ImuMeasurements = std::vector<ImuMeasurement>;
-
-struct CalibrationDataset {
-    CameraInfo camera;
-    CameraMeasurements camera_frames;
-    ImuInfo imu;
-    ImuMeasurements imu_data;
-};
-
 // TODO(Jack): If there is no other foreseeable thing that will be added to the camera state, do we really need a
 //  struct? Same idea for FrameState below, but I assume we will have more values coming into FrameState later.
 // TODO(Jack): Do maybe the camera-imu extrinsic belong here? I think it makes more sense they would belong to an IMU

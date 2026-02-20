@@ -28,7 +28,7 @@ int main() {
         database::AddExtractedTargetData({timestamp_ns, target_i}, sensor.sensor_name, db);
     }
 
-    OptimizationState const initial_state{calibration::LinearPoseInitialization(sensor, targets, gt_intrinsics)};
+    auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, gt_intrinsics)};
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
 
     AddCameraPoseData(initial_state.frames, database::PoseType::Initial, sensor.sensor_name, db);

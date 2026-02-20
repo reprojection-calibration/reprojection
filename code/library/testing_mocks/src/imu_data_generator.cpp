@@ -6,8 +6,6 @@
 
 namespace reprojection::testing_mocks {
 
-// TODO(Jack): Can we instead return std::vector<ImuMeasurement> here? Or the CalibrationDataset with just the IMU
-// filled out or a subset of that struct?
 ImuData GenerateImuData(int const num_samples, uint64_t const timespan_ns) {
     spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
     std::set<uint64_t> const times{SampleTimes(num_samples, timespan_ns)};

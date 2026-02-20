@@ -16,7 +16,7 @@ using namespace reprojection;
 TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets,
-                _]{testing_mocks::GenerateMvgData(sensor, {testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
+                poses]{testing_mocks::GenerateMvgData(sensor, {testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
 
     EXPECT_EQ(std::size(targets), 50);
     for (auto const& [_, target_i] : targets) {
@@ -24,6 +24,7 @@ TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
         EXPECT_EQ(target_i.bundle.points.rows(), 25);
         EXPECT_EQ(target_i.indices.rows(), 0);
     }
+    EXPECT_EQ(std::size(poses), 50);
 }
 
 TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {
