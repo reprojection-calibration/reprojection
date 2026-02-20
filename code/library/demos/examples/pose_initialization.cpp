@@ -32,15 +32,17 @@ int main() {
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
     ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
 
-    // Write everything to database
+    // Write camera initialization to database
     try {
         database::AddCameraPoseData(initial_state.frames, sensor.sensor_name, database::PoseType::Initial, db);
         database::AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
         database::AddReprojectionError(initial_error, sensor.sensor_name, database::PoseType::Initial, db);
         database::AddReprojectionError(optimized_error, sensor.sensor_name, database::PoseType::Optimized, db);
     } catch (...) {
-        std::cout << "Pseudo cache hit" << std::endl;
+        std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
+
+
 
     return EXIT_SUCCESS;
 }
