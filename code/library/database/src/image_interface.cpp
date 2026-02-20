@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <string>
 
-#include "database/sensor_data_interface.hpp"
+#include "database/sensor_data_interface_adders.hpp"
 
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"

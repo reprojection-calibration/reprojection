@@ -2,7 +2,8 @@
 
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
-#include "database/sensor_data_interface.hpp"
+#include "database/sensor_data_interface_adders.hpp"
+#include "database/sensor_data_interface_getters.hpp"
 #include "geometry/lie.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "types/calibration_types.hpp"
@@ -29,8 +30,8 @@ int main() {
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
 
     // Write everything to database
-    AddCameraPoseData(initial_state.frames, database::PoseType::Initial, sensor.sensor_name, db);
-    AddCameraPoseData(optimized_state.frames, database::PoseType::Optimized, sensor.sensor_name, db);
+    AddCameraPoseData(initial_state.frames, sensor.sensor_name, database::PoseType::Initial, db);
+    AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
     // database::AddReprojectionError(cam_data, database::PoseType::Initial, db);
     // database::AddReprojectionError(cam_data, database::PoseType::Optimized, db);
 
