@@ -21,7 +21,7 @@ namespace reprojection::pnp {
 PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     Isometry3d tf_co_w;
     Array4d pinhole_intrinsics;
-    if (IsPlane(bundle.points) and bundle.pixels.rows() > 4 and not bounds) {
+    if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         tf_co_w = Dlt22(bundle);
         pinhole_intrinsics = {1, 1, 0, 0};   // Equivalent to K = I_3x3
         bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension bounds

@@ -21,7 +21,7 @@ OptimizationState LinearPoseInitialization(CameraInfo const& sensor, CameraMeasu
             projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
         MatrixX3d const rays{camera->Unproject(target_i.bundle.pixels)};
 
-        // Project the rays using a unit ideal pinhole camera to get undistorted pixels
+        // Project the rays using a unit ideal pinhole camera to get undistorted/linearized pixels
         auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};
         auto const [pixels, mask]{pinhole_camera.Project(rays)};
 
@@ -35,7 +35,7 @@ OptimizationState LinearPoseInitialization(CameraInfo const& sensor, CameraMeasu
         // was successful. If it failed then the frame is not optimized and we need to make sure all our downstream
         // logic handles this fact, that just because a target is there does not mean that an initial pose/frame needs
         // to be.
-        auto const result{pnp::Pnp(linearized_bundle)};
+        auto const result{pnp::Pnp(linearized_bundle, sensor.bounds)};
         if (std::holds_alternative<Isometry3d>(result)) {
             linear_solution.frames[timestamp_ns].pose = geometry::Log(std::get<Isometry3d>(result));
         }
