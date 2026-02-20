@@ -28,7 +28,7 @@ int main() {
         database::AddExtractedTargetData({timestamp_ns, target_i}, sensor.sensor_name, db);
     }
 
-    auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, {Array4d{550, 650, 320, 240}})};
+    auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, {Array4d{600, 600, 320, 240}})};
     ReprojectionErrors const initial_error{optimization::ReprojectionResiduals(sensor, targets, initial_state)};
 
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
@@ -41,7 +41,7 @@ int main() {
 
     ImuMeasurements const data{testing_mocks::GenerateImuData(500, 10e9)};
     for (auto const& sample_i : data) {
-        (void)database::AddImuData(sample_i, "/mvg_test_data_imu", db);
+        database::AddImuData(sample_i, "/mvg_test_data_imu", db);
     }
 
     return EXIT_SUCCESS;
