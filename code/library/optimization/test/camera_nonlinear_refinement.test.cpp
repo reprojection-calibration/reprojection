@@ -26,6 +26,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     // Assert
+    EXPECT_EQ(std::size(optimized_state.frames), 50);
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         Array6d const gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
         Array6d const aa_co_w{frame_i.pose};
@@ -58,6 +59,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
+    EXPECT_EQ(std::size(optimized_state.frames), 50);
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
         // happened that I will explain. This test using noisy poses had been working for months, no problems to report.
