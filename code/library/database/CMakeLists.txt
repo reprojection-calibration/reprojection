@@ -26,8 +26,6 @@ set(SQL_FILES
         sql/imu_data_table.sql
         sql/reprojection_error_insert.sql
         sql/reprojection_error_table.sql
-        sql/spline_poses_insert.sql
-        sql/spline_poses_table.sql
 )
 
 foreach (sql ${SQL_FILES})
@@ -59,7 +57,7 @@ add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 set(SRC_FILES
         src/calibration_database.cpp
         src/image_interface.cpp
-        src/sensor_data_interface.cpp
+        src/sensor_data_interface_adders.cpp
         src/serialization.cpp
         src/sqlite3_helpers.cpp
         src/sqlite_wrappers.cpp
@@ -85,7 +83,7 @@ set(TESTS
         src/sqlite3_helpers.test.cpp
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
-        test/sensor_data_interface.test.cpp
+        test/sensor_data_interface_adders.test.cpp
         test/sqlite_wrappers.test.cpp
 )
 AddTests()

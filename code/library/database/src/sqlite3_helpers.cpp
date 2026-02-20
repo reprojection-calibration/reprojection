@@ -3,7 +3,7 @@
 #include <iostream>
 
 // TODO(Jack): Is this not kind of a circular include?
-#include "database/sensor_data_interface.hpp"
+#include "database/sensor_data_interface_adders.hpp"
 #include "database/sqlite_wrappers.hpp"
 
 namespace reprojection::database {

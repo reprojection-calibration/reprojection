@@ -2,7 +2,7 @@
 
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
-#include "database/sensor_data_interface.hpp"
+#include "database/sensor_data_interface_adders.hpp"
 #include "geometry/lie.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "types/calibration_types.hpp"

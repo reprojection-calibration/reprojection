@@ -1,11 +1,10 @@
-#include "database/sensor_data_interface.hpp"
-
 #include <sqlite3.h>
 
 #include <filesystem>
 #include <memory>
 #include <string>
 
+#include "database/sensor_data_interface_adders.hpp"
 #include "database/sqlite_wrappers.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
@@ -196,8 +195,6 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
     return true;
 }
 
-// TODO(Jack): Update to void and throw interface and consistent error messages!
-// TODO(Jack): Remove use of set!
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
     SqlStatement const statement{database->db, sql_statements::imu_data_select};
 
