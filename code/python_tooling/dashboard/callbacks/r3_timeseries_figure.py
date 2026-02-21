@@ -73,8 +73,8 @@ camera_translation_config = R3TimeseriesFigureConfig(
     "x",
     "y",
     "z",
-    -2,
-    2,
+    -0,
+    1,
 )
 register_build_r6_timeseries_figures_callback(
     "camera-orientation-graph",
