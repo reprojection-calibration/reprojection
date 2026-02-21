@@ -68,13 +68,16 @@ int main() {
 
     // Get the rotational velocity and write it as imu data to the database
     ImuMeasurements imu_data;
-    for (auto const timestamp_ns : optimized_state.frames | std::views::keys) {
+    uint64_t const t0_ns{std::cbegin(optimized_state.frames)->first};
+    for (uint64_t timestamp_ns{t0_ns}; true; timestamp_ns += 5e6) {
         auto const omega_i{
             spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
 
         if (omega_i) {
             // HARDCODE SCALE MULTIPLY
             imu_data.insert({timestamp_ns, {1e9 * tf_co_imu.inverse() * omega_i.value(), Vector3d::Zero()}});
+        }else {
+            break;
         }
     }
 
