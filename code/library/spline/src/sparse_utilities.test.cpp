@@ -43,3 +43,10 @@ TEST(SplineSparseUtilities, TestDiagonalSparseMatrix) {
         EXPECT_TRUE(mat.isApprox(gt_mat)) << "Result:\n" << mat << "\nexpected result:\n" << gt_mat;
     }
 }
+
+TEST(SplineSparseUtilities, TestDiagonalSparseMatrixErrorCondition) {
+    Eigen::Matrix<double, 2, 3> const non_square_block{{1, 1, 1},  //
+                                                       {1, 1, 1}};
+
+    EXPECT_THROW(spline::DiagonalSparseMatrix(non_square_block, 0, 0), std::runtime_error);
+}
