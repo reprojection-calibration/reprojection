@@ -22,7 +22,7 @@ Matrix3d const tf_co_imu{{-0.9995250378696743, 0.029615343885863205, -0.00852232
                          {0.0075019185074052044, -0.03439736061393144, -0.9993800792498829},
                          {-0.02989013031643309, -0.998969345370175, 0.03415885127385616}};
 
-OptimizationState CombState(OptimizationState state) {
+OptimizationState AlignRotations(OptimizationState state) {
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
     for (auto& [timestamp_ns, frame_i] : state.frames) {
         Vector3d so3_i{frame_i.pose.topRows(3)};
@@ -55,7 +55,7 @@ int main() {
     auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
     ReprojectionErrors const initial_error{optimization::ReprojectionResiduals(sensor, targets, initial_state)};
 
-    auto const aligned_initial_state{CombState(initial_state)};
+    auto const aligned_initial_state{AlignRotations(initial_state)};
     auto [optimized_state,
           diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, aligned_initial_state)};
     ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
@@ -70,7 +70,7 @@ int main() {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-    auto const aligned_optimized_state{CombState(optimized_state)};
+    auto const aligned_optimized_state{AlignRotations(optimized_state)};
 
     PositionMeasurements orientations;
     for (auto const& [timestamp_ns, frame_i] : aligned_optimized_state.frames) {
