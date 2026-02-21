@@ -35,8 +35,20 @@ int main() {
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, sensor.sensor_name)};
 
-    auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
+    auto initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
     ReprojectionErrors const initial_error{optimization::ReprojectionResiduals(sensor, targets, initial_state)};
+
+    // COMB HACK!!!!
+    Vector3d so3_i_1{std::cbegin(initial_state.frames)->second.pose.topRows(3)};
+    for (auto& frame_i : initial_state.frames | std::views::values) {
+        Vector3d so3_i{frame_i.pose.topRows(3)};
+        if (so3_i_1.dot(so3_i) < 0) {
+            so3_i *= -1.0;
+        }
+        frame_i.pose.topRows(3) = so3_i;
+
+        so3_i_1 = so3_i;
+    }
 
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
     ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
@@ -51,17 +63,21 @@ int main() {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
+    // COMB HACK!!!!
     // Initialize so3 spline from the optimized_state.
     PositionMeasurements orientations;
-    Vector3d so3_i_1{std::cbegin(optimized_state.frames)->second.pose.topRows(3)};
+    // HACK MULTIPLY by -1!!!!
+    Vector3d so3_i_1xxxx{-std::cbegin(optimized_state.frames)->second.pose.topRows(3)};
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         Vector3d so3_i{frame_i.pose.topRows(3)};
-        if (so3_i_1.dot(so3_i) < 0) {
+        if (so3_i_1xxxx.dot(so3_i) < 0) {
             so3_i *= -1.0;
         }
         orientations.insert({timestamp_ns, {so3_i}});
 
-        so3_i_1 = so3_i;
+        std::cout << so3_i.transpose() << std::endl;
+
+        so3_i_1xxxx = so3_i;
     }
     spline::CubicBSplineC3 const so3_spline{
         spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
@@ -76,7 +92,7 @@ int main() {
         if (omega_i) {
             // HARDCODE SCALE MULTIPLY
             imu_data.insert({timestamp_ns, {1e9 * tf_co_imu.inverse() * omega_i.value(), Vector3d::Zero()}});
-        }else {
+        } else {
             break;
         }
     }
