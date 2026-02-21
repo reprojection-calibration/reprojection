@@ -56,8 +56,12 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
     static double Squared(double const x) { return x * x; }
 };
 
+using R3Spline = spline::R3Spline;
+using So3Spline = spline::So3Spline;
+using DerivativeOrder = spline::DerivativeOrder;
+
 TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearRefinement) {
-    auto const [positions, velocities, accelerations]{CalculateMeasurements<spline::R3Spline>()};
+    auto const [positions, velocities, accelerations]{CalculateMeasurements<R3Spline>()};
 
     // Make a copy and add noise so the optimization has to do some work :)
     spline::CubicBSplineC3 initialization{spline_};
@@ -68,20 +72,17 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
     optimization::CubicBSplineC3Refinement handler{initialization};
     for (auto const& [timestamp_ns, data] : positions) {
         // All simulated measurements come from valid time range
-        EXPECT_TRUE(
-            handler.AddConstraint<spline::R3Spline>(timestamp_ns, data.position, spline::DerivativeOrder::Null));
+        EXPECT_TRUE(handler.AddConstraint<R3Spline>(timestamp_ns, data.position, DerivativeOrder::Null));
     }
     for (auto const& [timestamp_ns, data] : velocities) {
-        EXPECT_TRUE(
-            handler.AddConstraint<spline::R3Spline>(timestamp_ns, data.velocity, spline::DerivativeOrder::First));
+        EXPECT_TRUE(handler.AddConstraint<R3Spline>(timestamp_ns, data.velocity, DerivativeOrder::First));
     }
     for (auto const& [timestamp_ns, data] : accelerations) {
-        EXPECT_TRUE(
-            handler.AddConstraint<spline::R3Spline>(timestamp_ns, data.acceleration, spline::DerivativeOrder::Second));
+        EXPECT_TRUE(handler.AddConstraint<R3Spline>(timestamp_ns, data.acceleration, DerivativeOrder::Second));
     }
 
     // Check that we reject a bad measurement point outside the spline domain (bad time)
-    EXPECT_FALSE(handler.AddConstraint<spline::R3Spline>(66666, {0, 0, 0}, spline::DerivativeOrder::Null));
+    EXPECT_FALSE(handler.AddConstraint<R3Spline>(66666, {0, 0, 0}, DerivativeOrder::Null));
 
     ceres::Solver::Summary const summary{handler.Solve()};
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
@@ -93,7 +94,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
 }
 
 TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinearRefinement) {
-    auto const [positions, velocities, accelerations]{CalculateMeasurements<spline::So3Spline>()};
+    auto const [positions, velocities, accelerations]{CalculateMeasurements<So3Spline>()};
 
     spline::CubicBSplineC3 initialization{spline_};
     for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
@@ -103,19 +104,16 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinear
     optimization::CubicBSplineC3Refinement handler{initialization};
     for (auto const& [timestamp_ns, data] : positions) {
         // All simulated measurements come from valid time range
-        EXPECT_TRUE(
-            handler.AddConstraint<spline::So3Spline>(timestamp_ns, data.position, spline::DerivativeOrder::Null));
+        EXPECT_TRUE(handler.AddConstraint<So3Spline>(timestamp_ns, data.position, DerivativeOrder::Null));
     }
     for (auto const& [timestamp_ns, data] : velocities) {
-        EXPECT_TRUE(
-            handler.AddConstraint<spline::So3Spline>(timestamp_ns, data.velocity, spline::DerivativeOrder::First));
+        EXPECT_TRUE(handler.AddConstraint<So3Spline>(timestamp_ns, data.velocity, DerivativeOrder::First));
     }
     for (auto const& [timestamp_ns, data] : accelerations) {
-        EXPECT_TRUE(
-            handler.AddConstraint<spline::So3Spline>(timestamp_ns, data.acceleration, spline::DerivativeOrder::Second));
+        EXPECT_TRUE(handler.AddConstraint<So3Spline>(timestamp_ns, data.acceleration, DerivativeOrder::Second));
     }
 
-    EXPECT_FALSE(handler.AddConstraint<spline::So3Spline>(66666, {0, 0, 0}, spline::DerivativeOrder::Null));
+    EXPECT_FALSE(handler.AddConstraint<So3Spline>(66666, {0, 0, 0}, DerivativeOrder::Null));
 
     ceres::Solver::Summary const summary{handler.Solve()};
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
