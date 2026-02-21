@@ -1,4 +1,5 @@
 #include <map>
+#include <ranges>
 
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
@@ -6,6 +7,8 @@
 #include "database/sensor_data_interface_getters.hpp"
 #include "geometry/lie.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
+#include "spline/so3_spline.hpp"
+#include "spline/spline_evaluation.hpp"
 #include "spline/spline_initialization.hpp"
 #include "types/calibration_types.hpp"
 #include "types/spline_types.hpp"
@@ -51,6 +54,20 @@ int main() {
     }
     spline::CubicBSplineC3 const so3_spline{
         spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
+
+    // Get the rotational velocity and write it as imu data to the database
+    ImuMeasurements imu_data;
+    for (auto const timestamp_ns : optimized_state.frames | std::views::keys) {
+        auto const omega_i{
+            spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
+
+        if (omega_i) {
+            // HARDCODE SCALE MULTIPLY
+            imu_data.insert({timestamp_ns, {1e9*omega_i.value(), Vector3d::Zero()}});
+        }
+    }
+
+    database::AddImuData(imu_data, "/interpolated", db);
 
     return EXIT_SUCCESS;
 }
