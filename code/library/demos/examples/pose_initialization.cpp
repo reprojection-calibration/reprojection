@@ -22,6 +22,23 @@ Matrix3d const tf_co_imu{{-0.9995250378696743, 0.029615343885863205, -0.00852232
                          {0.0075019185074052044, -0.03439736061393144, -0.9993800792498829},
                          {-0.02989013031643309, -0.998969345370175, 0.03415885127385616}};
 
+OptimizationState CombState(OptimizationState state) {
+    Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
+    for (auto& [timestamp_ns, frame_i] : state.frames) {
+        Vector3d so3_i{frame_i.pose.topRows(3)};
+        double const dp{so3_i_1.dot(so3_i)};
+
+        if (dp < 0) {
+            so3_i *= -1.0;
+        }
+        frame_i.pose.topRows(3) = so3_i;
+
+        so3_i_1 = so3_i;
+    }
+
+    return state;
+}
+
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
@@ -36,21 +53,10 @@ int main() {
     CameraMeasurements const targets{database::GetExtractedTargetData(db, sensor.sensor_name)};
 
     auto initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
+    initial_state = CombState(initial_state);
     ReprojectionErrors const initial_error{optimization::ReprojectionResiduals(sensor, targets, initial_state)};
 
-    // COMB HACK!!!!
-    Vector3d so3_i_1{std::cbegin(initial_state.frames)->second.pose.topRows(3)};
-    for (auto& frame_i : initial_state.frames | std::views::values) {
-        Vector3d so3_i{frame_i.pose.topRows(3)};
-        if (so3_i_1.dot(so3_i) < 0) {
-            so3_i *= -1.0;
-        }
-        frame_i.pose.topRows(3) = so3_i;
-
-        so3_i_1 = so3_i;
-    }
-
-    auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
+    auto [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
     ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
 
     // Write camera initialization to database
@@ -64,10 +70,9 @@ int main() {
     }
 
     // COMB HACK!!!!
-    // Initialize so3 spline from the optimized_state.
     PositionMeasurements orientations;
     // HACK MULTIPLY by -1 to flip the x axis!!!!!
-    so3_i_1 = std::cbegin(optimized_state.frames)->second.pose.topRows(3);
+    Vector3d so3_i_1 = -std::cbegin(optimized_state.frames)->second.pose.topRows(3);
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         Vector3d so3_i{frame_i.pose.topRows(3)};
         if (so3_i_1.dot(so3_i) < 0) {
