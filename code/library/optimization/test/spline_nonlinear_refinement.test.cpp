@@ -7,8 +7,14 @@
 #include "spline/spline_evaluation.hpp"
 #include "spline/spline_evaluation_concept.hpp"
 #include "types/eigen_types.hpp"
+#include "types/spline_types.hpp"
 
 using namespace reprojection;
+
+// TODO(Jack): In this file we see clearly the logical confusion of repeating the same logic three times for each type
+//  of measurement. However it might be that in the real optimization we only have two types, the rotation velocity and
+//  linear acceleration, therefore maybe we can actually remove this logic one day when we have tests that better
+//  reflect reality of what the IMU actually measures and how the se3 spline actually works.
 
 class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
    protected:
@@ -20,26 +26,26 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
 
     template <typename T_Model>
         requires spline::CanEvaluateCubicBSplineC3<T_Model>
-    std::vector<spline::C3Measurement> CalculateMeasurements() {
-        using namespace spline;
-        using C3Measurement = spline::C3Measurement;
+    std::tuple<PositionMeasurements, VelocityMeasurements, AccelerationMeasurements> CalculateMeasurements() {
+        PositionMeasurements positions;
+        VelocityMeasurements velocities;
+        AccelerationMeasurements accelerations;
 
-        std::vector<C3Measurement> measurements;
         // Given five control points we get three valid time segments of length delta_t_ns_
         for (size_t i{0}; i < 3 * delta_t_ns_; ++i) {
-            std::uint64_t const t_i{t0_ns_ + i};
+            std::uint64_t const timestamp_ns{t0_ns_ + i};
 
-            auto const position_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::Null)};
-            measurements.push_back(C3Measurement{t_i, position_i.value(), DerivativeOrder::Null});
+            auto const position_i{EvaluateSpline<T_Model>(spline_, timestamp_ns, spline::DerivativeOrder::Null)};
+            positions.insert({timestamp_ns, {position_i.value()}});
 
-            auto const velocity_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::First)};
-            measurements.push_back(C3Measurement{t_i, velocity_i.value(), DerivativeOrder::First});
+            auto const velocity_i{EvaluateSpline<T_Model>(spline_, timestamp_ns, spline::DerivativeOrder::First)};
+            velocities.insert({timestamp_ns, {velocity_i.value()}});
 
-            auto const acceleration_i{EvaluateSpline<T_Model>(t_i, spline_, DerivativeOrder::Second)};
-            measurements.push_back(C3Measurement{t_i, acceleration_i.value(), DerivativeOrder::Second});
+            auto const acceleration_i{EvaluateSpline<T_Model>(spline_, timestamp_ns, spline::DerivativeOrder::Second)};
+            accelerations.insert({timestamp_ns, {acceleration_i.value()}});
         }
 
-        return measurements;
+        return {positions, velocities, accelerations};
     }
 
     std::uint64_t t0_ns_{100};
@@ -50,8 +56,12 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
     static double Squared(double const x) { return x * x; }
 };
 
+using R3Spline = spline::R3Spline;
+using So3Spline = spline::So3Spline;
+using DerivativeOrder = spline::DerivativeOrder;
+
 TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearRefinement) {
-    auto const simulated_measurements{CalculateMeasurements<spline::R3Spline>()};
+    auto const [positions, velocities, accelerations]{CalculateMeasurements<R3Spline>()};
 
     // Make a copy and add noise so the optimization has to do some work :)
     spline::CubicBSplineC3 initialization{spline_};
@@ -60,14 +70,19 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
     }
 
     optimization::CubicBSplineC3Refinement handler{initialization};
-    for (auto const& measurement : simulated_measurements) {
-        bool const success{handler.AddConstraint<spline::R3Spline>(measurement)};
-        EXPECT_TRUE(success);  // All simulated measurements come from valid time range
+    for (auto const& [timestamp_ns, data] : positions) {
+        // All simulated measurements come from valid time range
+        EXPECT_TRUE(handler.AddConstraint<R3Spline>(timestamp_ns, data.position, DerivativeOrder::Null));
+    }
+    for (auto const& [timestamp_ns, data] : velocities) {
+        EXPECT_TRUE(handler.AddConstraint<R3Spline>(timestamp_ns, data.velocity, DerivativeOrder::First));
+    }
+    for (auto const& [timestamp_ns, data] : accelerations) {
+        EXPECT_TRUE(handler.AddConstraint<R3Spline>(timestamp_ns, data.acceleration, DerivativeOrder::Second));
     }
 
     // Check that we reject a bad measurement point outside the spline domain (bad time)
-    bool const success{handler.AddConstraint<spline::R3Spline>({66666, {0, 0, 0}, spline::DerivativeOrder::Null})};
-    EXPECT_FALSE(success);
+    EXPECT_FALSE(handler.AddConstraint<R3Spline>(66666, {0, 0, 0}, DerivativeOrder::Null));
 
     ceres::Solver::Summary const summary{handler.Solve()};
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
@@ -79,7 +94,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
 }
 
 TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinearRefinement) {
-    auto const simulated_measurements{CalculateMeasurements<spline::So3Spline>()};
+    auto const [positions, velocities, accelerations]{CalculateMeasurements<So3Spline>()};
 
     spline::CubicBSplineC3 initialization{spline_};
     for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
@@ -87,13 +102,18 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinear
     }
 
     optimization::CubicBSplineC3Refinement handler{initialization};
-    for (auto const& measurement : simulated_measurements) {
-        bool const success{handler.AddConstraint<spline::So3Spline>(measurement)};
-        EXPECT_TRUE(success);
+    for (auto const& [timestamp_ns, data] : positions) {
+        // All simulated measurements come from valid time range
+        EXPECT_TRUE(handler.AddConstraint<So3Spline>(timestamp_ns, data.position, DerivativeOrder::Null));
+    }
+    for (auto const& [timestamp_ns, data] : velocities) {
+        EXPECT_TRUE(handler.AddConstraint<So3Spline>(timestamp_ns, data.velocity, DerivativeOrder::First));
+    }
+    for (auto const& [timestamp_ns, data] : accelerations) {
+        EXPECT_TRUE(handler.AddConstraint<So3Spline>(timestamp_ns, data.acceleration, DerivativeOrder::Second));
     }
 
-    bool const success{handler.AddConstraint<spline::So3Spline>({66666, {0, 0, 0}, spline::DerivativeOrder::Null})};
-    EXPECT_FALSE(success);
+    EXPECT_FALSE(handler.AddConstraint<So3Spline>(66666, {0, 0, 0}, DerivativeOrder::Null));
 
     ceres::Solver::Summary const summary{handler.Solve()};
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);

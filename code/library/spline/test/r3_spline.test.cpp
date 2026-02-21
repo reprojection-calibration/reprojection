@@ -15,21 +15,21 @@ using namespace reprojection::spline;  // Use SOOO many times that we introduce 
 TEST(Spline_r3Spline, TestInvalidEvaluateConditions) {
     // Completely empty spline
     CubicBSplineC3 r3_spline{100, 5};
-    EXPECT_EQ(EvaluateSpline<R3Spline>(100, r3_spline), std::nullopt);
+    EXPECT_EQ(EvaluateSpline<R3Spline>(r3_spline, 100), std::nullopt);
 
     // Add four control_points which means we can ask for evaluations within the one valid time segment.
     for (int i{0}; i < constants::order; ++i) {
         r3_spline.control_points.push_back(Eigen::Vector3d::Zero());
     }
 
-    EXPECT_NE(EvaluateSpline<R3Spline>(100, r3_spline),
+    EXPECT_NE(EvaluateSpline<R3Spline>(r3_spline, 100),
               std::nullopt);  // Inside first time segment - valid
-    EXPECT_EQ(EvaluateSpline<R3Spline>(105, r3_spline),
+    EXPECT_EQ(EvaluateSpline<R3Spline>(r3_spline, 105),
               std::nullopt);  // Outside first time segment - invalid
 
     // Add one more control_point to see that we can now do a valid evaluation in a second time segment
     r3_spline.control_points.push_back(Eigen::Vector3d::Zero());
-    EXPECT_NE(EvaluateSpline<R3Spline>(105, r3_spline), std::nullopt);
+    EXPECT_NE(EvaluateSpline<R3Spline>(r3_spline, 105), std::nullopt);
 }
 
 TEST(Spline_r3Spline, TestEvaluate) {
@@ -40,23 +40,23 @@ TEST(Spline_r3Spline, TestEvaluate) {
     }
 
     // Position
-    auto const p_0{EvaluateSpline<R3Spline>(100, r3_spline)};
+    auto const p_0{EvaluateSpline<R3Spline>(r3_spline, 100)};
     ASSERT_TRUE(p_0.has_value());
     EXPECT_TRUE(p_0.value().isApproxToConstant(1));
 
     // Velocity
-    auto const v_0{EvaluateSpline<R3Spline>(100, r3_spline, DerivativeOrder::First)};
+    auto const v_0{EvaluateSpline<R3Spline>(r3_spline, 100, DerivativeOrder::First)};
     ASSERT_TRUE(v_0.has_value());
     EXPECT_TRUE(v_0.value().isApproxToConstant(0.2));  // 1m/5ns
 
     // Acceleration
-    auto const a_0{EvaluateSpline<R3Spline>(100, r3_spline, DerivativeOrder::Second)};
+    auto const a_0{EvaluateSpline<R3Spline>(r3_spline, 100, DerivativeOrder::Second)};
     ASSERT_TRUE(a_0.has_value());
     EXPECT_TRUE(a_0.value().isApproxToConstant(0));  // Straight line has no acceleration
 
     // Add one more element and test the first position in that second time segment
     r3_spline.control_points.push_back(4 * Vector3d::Ones());
-    auto const p_1{EvaluateSpline<R3Spline>(105, r3_spline)};
+    auto const p_1{EvaluateSpline<R3Spline>(r3_spline, 105)};
     ASSERT_TRUE(p_1.has_value());
     EXPECT_TRUE(p_1.value().isApproxToConstant(2));
 }

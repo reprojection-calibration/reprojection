@@ -1,5 +1,7 @@
 #include "cubic_spline_c3_init.hpp"
 
+#include <ranges>
+
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
@@ -9,40 +11,44 @@
 
 namespace reprojection::spline {
 
-std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(std::vector<C3Measurement> const& measurements,
+std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements const& positions,
                                                            size_t const num_segments, TimeHandler const& time_handler) {
     // NOTE(Jack): For both measurement_dim and control_point_dim we are talking about the "vectorized" dimensions.
     // This means how many values are there when we stack all the individual vectors (i.e. measurements or
     // control points) into one big vector to be used in the Ax=b problem. There x is the control points vector of
     // length control_point_dim and b is the measurement vector of length measurement_dim.
-    size_t const measurement_dim{std::size(measurements) * N};
+    size_t const measurement_dim{std::size(positions) * N};
     size_t const num_control_points{num_segments + constants::degree};
     size_t const control_point_dim{num_control_points * N};
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
-    for (size_t j{0}; j < std::size(measurements); ++j) {
-        // ERROR(Jack): At this time we have no principled strategy to deal with the end conditions of the spline,
-        // therefore we need this hack here. What this hack does is ensure that at the very end of the spline, when
-        // time_ns_i is at the end (corresponds to the last measurement), it does not start another time segment past
-        // the end of the spline, but instead stays on the last valid segment at the very end (ex. u_i=0.99999). This is
-        // definitely a hack, but it "works"!
-        std::uint64_t time_ns_i{measurements[j].t_ns};
-        if (j == std::size(measurements) - 1) {
-            time_ns_i -= static_cast<std::uint64_t>(1 + 0.01 * time_handler.delta_t_ns_);
+    size_t j{0};
+    for (auto timestamp_ns : positions | std::views::keys) {
+        // ERROR(Jack): HACK - At this time we have no principled strategy to deal with the end conditions of the
+        // spline, therefore we need this hack here. What this hack does is ensure that at the very end of the spline,
+        // when time_ns_i is at the end (corresponds to the last measurement), it does not start another time segment
+        // past the end of the spline, but instead stays on the last valid segment at the very end (ex. u_i=0.99999).
+        // This is definitely a hack, but it "works"!
+        if (j == std::size(positions) - 1) {
+            timestamp_ns -= static_cast<std::uint64_t>(1 + 0.01 * time_handler.delta_t_ns_);
         }
 
         // WARN(Jack): Unprotected optional access! Technically we should always been in a valid time segment because
         // the measurement times are always non-decreasing and define the limit of the valid times themselves. In
         // combination with the hack described above, we should not get problems here. However, in reality this shows
         // that maybe we are not describing or capturing the problem well. A better solution here is welcome!
-        auto const [u_i, i]{time_handler.SplinePosition(time_ns_i, num_control_points).value()};
-
+        auto const [u_i, i]{time_handler.SplinePosition(timestamp_ns, num_control_points).value()};
         A.block(j * N, i * N, N, num_coefficients) = BlockifyWeights(u_i);
+
+        j += 1;
     }
 
     VectorXd b{VectorXd{measurement_dim, 1}};
-    for (size_t i{0}; i < std::size(measurements); ++i) {
-        b.segment(i * N, N) = measurements[i].r3;
+    size_t i{0};
+    for (auto const& position_i : positions | std::views::values) {
+        b.segment(i * N, N) = position_i.position;
+
+        i += 1;
     }
 
     return {A, b};

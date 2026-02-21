@@ -13,8 +13,6 @@ set(LINK_LIBRARIES
         eigen_utilities
         feature_extraction
         geometry
-        testing_mocks
-        testing_utilities
         types
         ${apriltag_LIBRARIES}
         optimization
@@ -32,7 +30,6 @@ AddTests()
 set(EXAMPLES
         examples/feature_extraction.cpp
         examples/pose_initialization.cpp
-        examples/testing_mock_db_generation.cpp
 )
 foreach (EXAMPLE IN LISTS EXAMPLES)
     get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WLE)

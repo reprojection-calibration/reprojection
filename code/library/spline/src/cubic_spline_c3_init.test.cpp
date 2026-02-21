@@ -11,9 +11,9 @@ using namespace reprojection;
 using namespace reprojection::spline;
 
 TEST(SplineSplineInitialization, TestBuildAb) {
-    std::vector<C3Measurement> const measurements{{5000, {0, 0, 0}, DerivativeOrder::Null},  //
-                                                  {5100, {1, 1, 1}, DerivativeOrder::Null},
-                                                  {5200, {2, 2, 2}, DerivativeOrder::Null}};
+    PositionMeasurements const measurements{{5000, {{0, 0, 0}}},  //
+                                            {5100, {{1, 1, 1}}},
+                                            {5200, {{2, 2, 2}}}};
 
     int const num_segments{2};
     TimeHandler const time_handler{5000, 100, constants::order};

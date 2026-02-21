@@ -23,7 +23,7 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name).c_str());
+        Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name));
     } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
             ErrorMessage("GetExtractedTargetData()", sensor_name, 0,    // LCOV_EXCL_LINE
@@ -75,8 +75,8 @@ ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const data
     SqlStatement const statement{database->db, sql_statements::imu_data_select};
 
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name).c_str());
-    } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name));
+    } catch (...) {                                                     // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
             ErrorMessage("GetImuData()", sensor_name, 0,                // LCOV_EXCL_LINE
                          SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE

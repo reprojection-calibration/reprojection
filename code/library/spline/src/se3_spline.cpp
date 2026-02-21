@@ -16,12 +16,9 @@ void Se3Spline::AddControlPoint(Vector6d const& control_point) {
 }
 
 std::optional<Vector6d> Se3Spline::Evaluate(std::uint64_t const t_ns, DerivativeOrder const derivative) const {
-    // TODO(Jack): This is in essence repeating logic that we already have implemented elsewhere, is there anything
-    //  we can do to streamline this?
-    // TODO(Jack): Naming! so3_term and r3_term might not communicated clearly enough what these are here!
-    auto const r3_term{EvaluateSpline<R3Spline>(t_ns, r3_spline_, derivative)};
-    auto const so3_term{EvaluateSpline<So3Spline>(t_ns, so3_spline_, derivative)};
-    if (not(r3_term.has_value() and so3_term.has_value())) {
+    auto const so3_term{EvaluateSpline<So3Spline>(so3_spline_, t_ns, derivative)};
+    auto const r3_term{EvaluateSpline<R3Spline>(r3_spline_, t_ns, derivative)};
+    if (not(so3_term.has_value() and r3_term.has_value())) {
         return std::nullopt;
     }
 

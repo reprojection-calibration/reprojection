@@ -20,20 +20,21 @@ class CubicBSplineC3Refinement {
 
     // NOTE(Jack): We will keep this as no discard because I want to force the user to responsibly handle invalid
     // conditions when adding constraints. This is one distinction from the camera bundle adjustment case, that here we
-    // have an explicit condition that determines what is valid and what is not, which requires more fine grained
+    // have an explicit condition that determines what is valid and what is not, which requires more fine-grained
     // control from the user side.
     template <typename T_Model>
         requires spline::CanEvaluateCubicBSplineC3<T_Model>
-    [[nodiscard]] bool AddConstraint(spline::C3Measurement const& constraint) {
+    [[nodiscard]] bool AddConstraint(uint64_t const timestamp_ns, Vector3d const& constraint,
+                                     spline::DerivativeOrder const order) {
         auto const normalized_position{
-            spline_.time_handler.SplinePosition(constraint.t_ns, std::size(spline_.control_points))};
+            spline_.time_handler.SplinePosition(timestamp_ns, std::size(spline_.control_points))};
         if (not normalized_position.has_value()) {
             return false;
         }
         auto const [u_i, i]{normalized_position.value()};
 
         ceres::CostFunction* const cost_function{optimization::CreateSplineCostFunction_T<T_Model>(
-            constraint.type, constraint.r3, u_i, spline_.time_handler.delta_t_ns_)};
+            order, constraint, u_i, spline_.time_handler.delta_t_ns_)};
 
         problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
                                   spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),

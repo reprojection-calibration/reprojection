@@ -25,7 +25,7 @@ namespace reprojection::spline {
  */
 template <typename T_Model>
     requires CanEvaluateCubicBSplineC3<T_Model>
-std::optional<Vector3d> EvaluateSpline(std::uint64_t const t_ns, CubicBSplineC3 const& spline,
+std::optional<Vector3d> EvaluateSpline(CubicBSplineC3 const& spline, std::uint64_t const t_ns,
                                        DerivativeOrder const derivative = DerivativeOrder::Null) {
     auto const normalized_position{spline.time_handler.SplinePosition(t_ns, std::size(spline.control_points))};
     if (not normalized_position.has_value()) {
