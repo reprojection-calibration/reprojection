@@ -52,11 +52,12 @@ int main() {
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, sensor.sensor_name)};
 
-    auto initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
-    initial_state = CombState(initial_state);
+    auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
     ReprojectionErrors const initial_error{optimization::ReprojectionResiduals(sensor, targets, initial_state)};
 
-    auto [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
+    auto const aligned_initial_state{CombState(initial_state)};
+    auto [optimized_state,
+          diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, aligned_initial_state)};
     ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
 
     // Write camera initialization to database
@@ -69,25 +70,18 @@ int main() {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-    // COMB HACK!!!!
-    PositionMeasurements orientations;
-    // HACK MULTIPLY by -1 to flip the x axis!!!!!
-    Vector3d so3_i_1 = -std::cbegin(optimized_state.frames)->second.pose.topRows(3);
-    for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
-        Vector3d so3_i{frame_i.pose.topRows(3)};
-        if (so3_i_1.dot(so3_i) < 0) {
-            so3_i *= -1.0;
-        }
-        orientations.insert({timestamp_ns, {so3_i}});
+    auto const aligned_optimized_state{CombState(optimized_state)};
 
-        so3_i_1 = so3_i;
+    PositionMeasurements orientations;
+    for (auto const& [timestamp_ns, frame_i] : aligned_optimized_state.frames) {
+        orientations.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
     }
     spline::CubicBSplineC3 const so3_spline{
-        spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
+        spline::InitializeC3Spline(orientations, 20 * std::size(aligned_optimized_state.frames))};
 
     // Get the rotational velocity and write it as imu data to the database
     ImuMeasurements imu_data;
-    uint64_t const t0_ns{std::cbegin(optimized_state.frames)->first};
+    uint64_t const t0_ns{std::cbegin(aligned_optimized_state.frames)->first};
     for (uint64_t timestamp_ns{t0_ns}; true; timestamp_ns += 5e6) {
         auto const omega_i{
             spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
