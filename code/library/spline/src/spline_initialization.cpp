@@ -23,7 +23,7 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
     // hardcoded for now.
     // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
     // timestamps which results in very small values in the omega matrix otherwise.
-    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(spline.time_handler.delta_t_ns_, 1e7)};
+    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(spline.time_handler.delta_t_ns_, 1e8)};
     Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, CubicBSplineC3Init::N, num_segments)};
 
     // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
