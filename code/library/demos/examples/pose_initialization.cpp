@@ -66,8 +66,8 @@ int main() {
     // COMB HACK!!!!
     // Initialize so3 spline from the optimized_state.
     PositionMeasurements orientations;
-    // HACK MULTIPLY by -1!!!!
-    so3_i_1 = -std::cbegin(optimized_state.frames)->second.pose.topRows(3);
+    // HACK MULTIPLY by -1 to flip the x axis!!!!!
+    so3_i_1 = std::cbegin(optimized_state.frames)->second.pose.topRows(3);
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         Vector3d so3_i{frame_i.pose.topRows(3)};
         if (so3_i_1.dot(so3_i) < 0) {
