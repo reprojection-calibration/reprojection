@@ -55,7 +55,6 @@ void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType cons
     SqlTransaction const lock{(database->db)};
 
     for (auto const& [timestamp_ns, frame_i] : data) {
-        // TODO(Jack): Make SqlStatement take a string view.
         SqlStatement const statement{database->db, sql.data()};
 
         try {
@@ -110,30 +109,34 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view senso
     }
 }
 
-void AddImuData(ImuMeasurement const& data, std::string_view sensor_name,
+void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
                 std::shared_ptr<CalibrationDatabase> const database) {
-    SqlStatement const statement{database->db, sql_statements::imu_data_insert};
+    SqlTransaction const lock{(database->db)};
 
-    auto const& [timestamp_ns, imu_data]{data};
-    try {
-        Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
-        Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
-        Sqlite3Tools::Bind(statement.stmt, 3, imu_data.angular_velocity[0]);
-        Sqlite3Tools::Bind(statement.stmt, 4, imu_data.angular_velocity[1]);
-        Sqlite3Tools::Bind(statement.stmt, 5, imu_data.angular_velocity[2]);
-        Sqlite3Tools::Bind(statement.stmt, 6, imu_data.linear_acceleration[0]);
-        Sqlite3Tools::Bind(statement.stmt, 7, imu_data.linear_acceleration[1]);
-        Sqlite3Tools::Bind(statement.stmt, 8, imu_data.linear_acceleration[2]);
-    } catch (std::runtime_error const& e) {                      // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(ErrorMessage(  // LCOV_EXCL_LINE
-            "AddImuData()", sensor_name,                         // LCOV_EXCL_LINE
-            timestamp_ns, SqliteErrorCode::FailedBinding,        // LCOV_EXCL_LINE
-            std::string(sqlite3_errmsg(database->db)))));        // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
+    for (auto const& [timestamp_ns, frame_i] : data) {
+        SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
-    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        throw std::runtime_error(ErrorMessage("AddImuData()", sensor_name, timestamp_ns, SqliteErrorCode::FailedStep,
-                                              std::string(sqlite3_errmsg(database->db))));
+        try {
+            Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
+            Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
+            Sqlite3Tools::Bind(statement.stmt, 3, frame_i.angular_velocity[0]);
+            Sqlite3Tools::Bind(statement.stmt, 4, frame_i.angular_velocity[1]);
+            Sqlite3Tools::Bind(statement.stmt, 5, frame_i.angular_velocity[2]);
+            Sqlite3Tools::Bind(statement.stmt, 6, frame_i.linear_acceleration[0]);
+            Sqlite3Tools::Bind(statement.stmt, 7, frame_i.linear_acceleration[1]);
+            Sqlite3Tools::Bind(statement.stmt, 8, frame_i.linear_acceleration[2]);
+        } catch (std::runtime_error const& e) {                      // LCOV_EXCL_LINE
+            std::throw_with_nested(std::runtime_error(ErrorMessage(  // LCOV_EXCL_LINE
+                "AddImuData()", sensor_name,                         // LCOV_EXCL_LINE
+                timestamp_ns, SqliteErrorCode::FailedBinding,        // LCOV_EXCL_LINE
+                std::string(sqlite3_errmsg(database->db)))));        // LCOV_EXCL_LINE
+        }  // LCOV_EXCL_LINE
+
+        if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
+            throw std::runtime_error(ErrorMessage("AddImuData()", sensor_name, timestamp_ns,
+                                                  SqliteErrorCode::FailedStep,
+                                                  std::string(sqlite3_errmsg(database->db))));
+        }
     }
 }
 
