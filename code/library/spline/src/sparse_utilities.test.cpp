@@ -27,7 +27,11 @@ std::vector<std::tuple<int, int, MatrixXd>> test_cases{// Kitty-corner
                                                                                     {1, 1, 0, 0, 0},
                                                                                     {0, 0, 0, 0, 0},
                                                                                     {0, 0, 0, 1, 1},
-                                                                                    {0, 0, 0, 1, 1}}}};
+                                                                                    {0, 0, 0, 1, 1}}},
+                                                       // Empty - should it not actually return a 0x0 matrix?
+                                                       {0, 0,
+                                                        Matrix2d{{0, 0},  //
+                                                                 {0, 0}}}};
 
 TEST(SplineSparseUtilities, TestDiagonalSparseMatrix) {
     Matrix2d const block{{1, 1},  //
