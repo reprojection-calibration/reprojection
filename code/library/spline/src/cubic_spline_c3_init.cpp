@@ -22,8 +22,8 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements 
     size_t const control_point_dim{num_control_points * N};
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
-    size_t j{0};
-    for (auto timestamp_ns : positions | std::views::keys) {
+
+    for (size_t j{0}; auto timestamp_ns : positions | std::views::keys) {
         // ERROR(Jack): HACK - At this time we have no principled strategy to deal with the end conditions of the
         // spline, therefore we need this hack here. What this hack does is ensure that at the very end of the spline,
         // when time_ns_i is at the end (corresponds to the last measurement), it does not start another time segment
@@ -44,8 +44,8 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements 
     }
 
     VectorXd b{VectorXd{measurement_dim, 1}};
-    size_t i{0};
-    for (auto const& position_i : positions | std::views::values) {
+
+    for (size_t i{0}; auto const& position_i : positions | std::views::values) {
         b.segment(i * N, N) = position_i.position;
 
         i += 1;
