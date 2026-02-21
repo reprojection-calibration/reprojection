@@ -70,18 +70,16 @@ int main() {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-    auto const aligned_optimized_state{AlignRotations(optimized_state)};
-
     PositionMeasurements orientations;
-    for (auto const& [timestamp_ns, frame_i] : aligned_optimized_state.frames) {
+    for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         orientations.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
     }
     spline::CubicBSplineC3 const so3_spline{
-        spline::InitializeC3Spline(orientations, 20 * std::size(aligned_optimized_state.frames))};
+        spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
 
     // Get the rotational velocity and write it as imu data to the database
     ImuMeasurements imu_data;
-    uint64_t const t0_ns{std::cbegin(aligned_optimized_state.frames)->first};
+    uint64_t const t0_ns{std::cbegin(optimized_state.frames)->first};
     for (uint64_t timestamp_ns{t0_ns}; true; timestamp_ns += 5e6) {
         auto const omega_i{
             spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
