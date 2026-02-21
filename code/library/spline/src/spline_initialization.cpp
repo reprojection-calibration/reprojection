@@ -36,8 +36,8 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
     // am asking myself why I should refactor the entire initialization code to be "sparse by default" and not use dense
     // matrices like we do during the problem construction. Maybe it would be nice to transfer all the code directly to
     // work on the sparse representation, but at this time I see not benefit.
-    // TODO(Jack): Why can't Q be sparseView() also? Cause it is not const maybe?
-    // TODO(Jack): Can we make A_n be a sparse matrix directly so we do not need to use the view later when we solve it?
+    // TODO(Jack): We should actually build A as a sparse matrix so we can save space and avoid having all these manual
+    //  sparse constructions/sparse views.
     Eigen::SparseMatrix<double> const A_n{
         Eigen::SparseMatrix<double>(A.sparseView().transpose()) * Eigen::SparseMatrix<double>(A.sparseView()) + Q};
     MatrixXd const b_n{A.transpose().sparseView() * b};
