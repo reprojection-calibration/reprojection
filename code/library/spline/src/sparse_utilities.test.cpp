@@ -6,45 +6,36 @@
 
 using namespace reprojection;
 
+// {stride, count, ground truth matrix}
+std::vector<std::tuple<int, int, MatrixXd>> test_cases{// Kitty-corner
+                                                       {2, 2,
+                                                        Matrix4d{{1, 1, 0, 0},  //
+                                                                 {1, 1, 0, 0},
+                                                                 {0, 0, 1, 1},
+                                                                 {0, 0, 1, 1}}},
+                                                       // Total overlap - overlapped elements accumulate
+                                                       {0, 10, Matrix2d{{10, 10}, {10, 10}}},
+                                                       // Partial overlap
+                                                       {1, 3,
+                                                        Matrix4d{{1, 1, 0, 0},  //
+                                                                 {1, 2, 1, 0},
+                                                                 {0, 1, 2, 1},
+                                                                 {0, 0, 1, 1}}},
+                                                       // Disjoint
+                                                       {3, 2,
+                                                        Eigen::Matrix<double, 5, 5>{{1, 1, 0, 0, 0},  //
+                                                                                    {1, 1, 0, 0, 0},
+                                                                                    {0, 0, 0, 0, 0},
+                                                                                    {0, 0, 0, 1, 1},
+                                                                                    {0, 0, 0, 1, 1}}}};
+
 TEST(SplineSparseUtilities, TestDiagonalSparseMatrix) {
     Matrix2d const block{{1, 1},  //
                          {1, 1}};
 
-    auto const mat{spline::DiagonalSparseMatrix(block, 2, 2)};
+    for (auto const& [stride, count, gt_mat] : test_cases) {
+        auto const mat{spline::DiagonalSparseMatrix(block, stride, count)};
 
-    Matrix4d const gt_mat{{1, 1, 0, 0},  //
-                          {1, 1, 0, 0},
-                          {0, 0, 1, 1},
-                          {0, 0, 1, 1}};
-
-    EXPECT_TRUE(mat.isApprox(gt_mat, 1e-6)) << "Result:\n" << mat << "\nexpected result:\n" << gt_mat;
-}
-
-TEST(SplineSparseUtilities, TestDiagonalSparseMatrix2) {
-    Matrix2d const block{{1, 1},  //
-                         {1, 1}};
-
-    auto const mat{spline::DiagonalSparseMatrix(block, 1, 3)};
-
-    Matrix4d const gt_mat{{1, 1, 0, 0},  //
-                          {1, 2, 1, 0},
-                          {0, 1, 2, 1},
-                          {0, 0, 1, 1}};
-
-    EXPECT_TRUE(mat.isApprox(gt_mat, 1e-6)) << "Result:\n" << mat << "\nexpected result:\n" << gt_mat;
-}
-
-TEST(SplineSparseUtilities, TestDiagonalSparseMatrix3) {
-    Matrix2d const block{{1, 1},  //
-                         {1, 1}};
-
-    auto const mat{spline::DiagonalSparseMatrix(block, 3, 2)};
-
-    Eigen::Matrix<double, 5, 5> const gt_mat{{1, 1, 0, 0, 0},  //
-                                             {1, 1, 0, 0, 0},
-                                             {0, 0, 0, 0, 0},
-                                             {0, 0, 0, 1, 1},
-                                             {0, 0, 0, 1, 1}};
-
-    EXPECT_TRUE(mat.isApprox(gt_mat, 1e-6)) << "Result:\n" << mat << "\nexpected result:\n" << gt_mat;
+        EXPECT_TRUE(mat.isApprox(gt_mat)) << "Result:\n" << mat << "\nexpected result:\n" << gt_mat;
+    }
 }
