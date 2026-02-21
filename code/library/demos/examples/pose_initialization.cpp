@@ -42,7 +42,5 @@ int main() {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-
-
     return EXIT_SUCCESS;
 }
