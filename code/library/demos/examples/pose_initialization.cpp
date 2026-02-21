@@ -85,7 +85,7 @@ int main() {
             spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
 
         if (omega_i) {
-            // HARDCODE SCALE MULTIPLY
+            // HARDCODE SCALE MULTIPLY 1e9
             imu_data.insert({timestamp_ns, {1e9 * tf_co_imu.inverse() * omega_i.value(), Vector3d::Zero()}});
         } else {
             break;
