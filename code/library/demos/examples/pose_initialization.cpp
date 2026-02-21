@@ -6,7 +6,9 @@
 #include "database/sensor_data_interface_getters.hpp"
 #include "geometry/lie.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
+#include "spline/spline_initialization.hpp"
 #include "types/calibration_types.hpp"
+#include "types/spline_types.hpp"
 
 using namespace reprojection;
 
@@ -41,6 +43,14 @@ int main() {
     } catch (...) {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
+
+    // Initialize so3 spline from the optimized_state.
+    PositionMeasurements orientations;
+    for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
+        orientations.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
+    }
+    spline::CubicBSplineC3 const so3_spline{
+        spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
 
     return EXIT_SUCCESS;
 }
