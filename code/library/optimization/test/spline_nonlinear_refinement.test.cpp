@@ -12,9 +12,9 @@
 using namespace reprojection;
 
 // TODO(Jack): In this file we see clearly the logical confusion of repeating the same logic three times for each type
-//  of measurement. However it might be that in the real optimization we only have two types, the rotation velocity nad
+//  of measurement. However it might be that in the real optimization we only have two types, the rotation velocity and
 //  linear acceleration, therefore maybe we can actually remove this logic one day when we have tests that better
-//  reflect reality.
+//  reflect reality of what the IMU actually measures and how the se3 spline actually works.
 
 class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
    protected:
