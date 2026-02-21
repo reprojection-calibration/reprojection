@@ -67,17 +67,15 @@ int main() {
     // Initialize so3 spline from the optimized_state.
     PositionMeasurements orientations;
     // HACK MULTIPLY by -1!!!!
-    Vector3d so3_i_1xxxx{-std::cbegin(optimized_state.frames)->second.pose.topRows(3)};
+    so3_i_1 = -std::cbegin(optimized_state.frames)->second.pose.topRows(3);
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         Vector3d so3_i{frame_i.pose.topRows(3)};
-        if (so3_i_1xxxx.dot(so3_i) < 0) {
+        if (so3_i_1.dot(so3_i) < 0) {
             so3_i *= -1.0;
         }
         orientations.insert({timestamp_ns, {so3_i}});
 
-        std::cout << so3_i.transpose() << std::endl;
-
-        so3_i_1xxxx = so3_i;
+        so3_i_1 = so3_i;
     }
     spline::CubicBSplineC3 const so3_spline{
         spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
