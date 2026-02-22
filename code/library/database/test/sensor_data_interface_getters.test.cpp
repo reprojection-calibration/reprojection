@@ -66,9 +66,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
         // Create and write
         auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-        for (auto const& measurement_i : data) {
-            EXPECT_NO_THROW(database::AddImuData(measurement_i, sensor_name, db));
-        }
+        EXPECT_NO_THROW(database::AddImuData(data, sensor_name, db));
     }
     {
         // Const read only
@@ -85,13 +83,15 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
 
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    database::AddImuData({5, {{1, 2, 3}, {4, 5, 6}}}, sensor_name_1, db);
-    database::AddImuData({10, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_1, db);
-    database::AddImuData({15, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_1, db);
+    database::AddImuData({{5, {{1, 2, 3}, {4, 5, 6}}},  //
+                          {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                          {15, {Vector3d::Zero(), Vector3d::Zero()}}},
+                         sensor_name_1, db);
     // Data from imu 456
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    database::AddImuData({10, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_2, db);
-    database::AddImuData({20, {Vector3d::Zero(), Vector3d::Zero()}}, sensor_name_2, db);
+    database::AddImuData({{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
+                          {20, {Vector3d::Zero(), Vector3d::Zero()}}},
+                         sensor_name_2, db);
 
     auto const imu_1_data{database::GetImuData(db, sensor_name_1)};
     EXPECT_EQ(std::size(imu_1_data), 3);

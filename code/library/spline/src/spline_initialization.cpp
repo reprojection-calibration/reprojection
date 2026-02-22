@@ -3,6 +3,7 @@
 #include <Eigen/SparseCholesky>
 
 #include "cubic_spline_c3_init.hpp"
+#include "sparse_utilities.hpp"
 
 namespace reprojection::spline {
 
@@ -17,19 +18,13 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
 
     auto const [A, b]{CubicBSplineC3Init::BuildAb(measurements, num_segments, spline.time_handler)};
 
-    // TODO(Jack): Consider putting the loop and code to construct Q into a function. We are mixing levels of
-    //  abstraction here and it is confusing.
     // NOTE(Jack): At this time lambda here is hardcoded, it might make sense at some time in the future to parameterize
     // this, but currently I see no scenario where we can really expect the user to parameterize it, so we leave it
     // hardcoded for now.
     // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
     // timestamps which results in very small values in the omega matrix otherwise.
-    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(spline.time_handler.delta_t_ns_, 1e7)};
-    MatrixXd Q{MatrixXd::Zero(A.cols(), A.cols())};
-    for (size_t i{0}; i < num_segments; i++) {
-        Q.block(i * CubicBSplineC3Init::N, i * CubicBSplineC3Init::N, CubicBSplineC3Init::num_coefficients,
-                CubicBSplineC3Init::num_coefficients) += omega;
-    }
+    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(spline.time_handler.delta_t_ns_, 1e8)};
+    Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, CubicBSplineC3Init::N, num_segments)};
 
     // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
     // slow as hell and took about 55 seconds on my laptop to initialize the rotation and translation. But then I used a
@@ -41,15 +36,16 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
     // am asking myself why I should refactor the entire initialization code to be "sparse by default" and not use dense
     // matrices like we do during the problem construction. Maybe it would be nice to transfer all the code directly to
     // work on the sparse representation, but at this time I see not benefit.
-    // TODO(Jack): Why can't Q be sparseView() also? Cause it is not const maybe?
-    // TODO(Jack): Can we make A_n be a sparse matrix directly so we do not need to use the view later when we solve it?
-    MatrixXd const A_n{A.sparseView().transpose() * A.sparseView() + Q};
+    // TODO(Jack): We should actually build A as a sparse matrix so we can save space and avoid having all these manual
+    //  sparse constructions/sparse views.
+    Eigen::SparseMatrix<double> const A_n{
+        Eigen::SparseMatrix<double>(A.sparseView().transpose()) * Eigen::SparseMatrix<double>(A.sparseView()) + Q};
     MatrixXd const b_n{A.transpose().sparseView() * b};
 
     // See the section "Sparse solver concept" in
     // https://libeigen.gitlab.io/eigen/docs-nightly/group__TopicSparseSystems.html
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
-    solver.compute(A_n.sparseView());
+    solver.compute(A_n);
     // TODO(Jack): We should refactor this entire init function to return optional!
     if (solver.info() != Eigen::Success) {
         throw std::runtime_error("Failed: solver.compute(A_n.sparseView());");  // LCOV_EXCL_LINE
