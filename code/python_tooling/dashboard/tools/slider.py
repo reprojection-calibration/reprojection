@@ -15,7 +15,9 @@ def update_slider_properties(sensor, metadata, sensor_type):
     if sensor not in statistics or sensor not in timestamps:
         return {}, 0
 
-    tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps[sensor])
+    timestamps_int = [int(t) for t in timestamps[sensor]]
+
+    tickvals_idx, _, ticktext = calculate_ticks_from_timestamps(timestamps_int)
     n_frames = statistics[sensor]["total_frames"]
 
     return dict(zip(tickvals_idx, ticktext)), max(n_frames - 1, 0)
