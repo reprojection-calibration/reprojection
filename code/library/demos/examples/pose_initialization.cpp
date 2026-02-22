@@ -6,6 +6,7 @@
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
 #include "geometry/lie.hpp"
+#include "optimization/camera_imu_orientation_initialization.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "spline/so3_spline.hpp"
 #include "spline/spline_evaluation.hpp"
@@ -78,20 +79,24 @@ int main() {
         spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
 
     ImuMeasurements const measured_imu_data{database::GetImuData(db, "/imu0")};
+    VelocityMeasurements omega_imu;
+    for (auto const& [timestamp_ns, imu_data_i] : measured_imu_data) {
+        omega_imu.insert({timestamp_ns, {imu_data_i.angular_velocity}});
+    }
 
-    // Get the rotational velocity and write it as imu data to the database
-    ImuMeasurements imu_data;
+    VelocityMeasurements omega_co;
     for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
-        auto const omega_i{
+        auto const omega_co_i{
             spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
 
-        if (omega_i) {
+        if (omega_co_i) {
             // HARDCODE SCALE MULTIPLY 1e9
-            imu_data.insert({timestamp_ns, {1e9 * tf_co_imu.inverse() * omega_i.value(), Vector3d::Zero()}});
+            omega_co.insert({timestamp_ns, {1e9 * tf_co_imu.inverse() * omega_co_i.value()}});
         }
     }
 
-    database::AddImuData(imu_data, "/interpolated", db);
+    auto const [tf, diagnostics2]{optimization::InitializeCameraImuOrientation(omega_co, omega_imu)};
+    std::cout << tf << std::endl;
 
     return EXIT_SUCCESS;
 }

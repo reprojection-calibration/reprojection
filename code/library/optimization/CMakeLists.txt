@@ -4,6 +4,7 @@ find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
+        src/camera_imu_orientation_initialization.cpp
         src/camera_nonlinear_refinement.cpp
         src/projection_cost_function.cpp
         src/spline_nonlinear_refinement.cpp
