@@ -98,19 +98,11 @@ int main() {
         }
     }
 
-    auto const [tf, diagnostics2]{optimization::InitializeCameraImuOrientation(omega_co, omega_imu)};
+    auto const [tf_imu_co, diagnostics2]{optimization::InitializeCameraImuOrientation(omega_co, omega_imu)};
 
-    std::cout << tf << std::endl;
-    std::cout << diagnostics2.solver_summary.FullReport() << std::endl;
     ImuMeasurements imu_data;
-    for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
-        auto const omega_i{
-            spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
-
-        if (omega_i) {
-            // HARDCODE SCALE MULTIPLY 1e9
-            imu_data.insert({timestamp_ns, {1e9 * tf * omega_i.value(), Vector3d::Zero()}});
-        }
+    for (auto const& [timestamp_ns, omega_co_i] : omega_co) {
+        imu_data.insert({timestamp_ns, {tf_imu_co * omega_co_i.velocity, Vector3d::Zero()}});
     }
 
     database::AddImuData(imu_data, "/interpolated", db);
