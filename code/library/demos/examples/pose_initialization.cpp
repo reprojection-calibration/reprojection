@@ -23,6 +23,9 @@ Matrix3d const tf_co_imuxxx{{-0.9995250378696743, 0.029615343885863205, -0.00852
                             {0.0075019185074052044, -0.03439736061393144, -0.9993800792498829},
                             {-0.02989013031643309, -0.998969345370175, 0.03415885127385616}};
 
+// WARN(Jack): This is a hack that we need to do so that the spline initialization does not have any massive
+// discontinuties or sudden jumps. But there is some bigger problem here that we are missing and need to solve long
+// term.
 OptimizationState AlignRotations(OptimizationState state) {
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
     for (auto& [timestamp_ns, frame_i] : state.frames) {
