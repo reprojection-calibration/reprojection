@@ -27,7 +27,6 @@ def extract_timestamps_and_r6_data_sorted(frames, extract_fn):
 
 
 def timestamps_to_elapsed_seconds(timestamps_ns, t0_ns=None):
-
     if len(timestamps_ns) == 0:
         return []
 
