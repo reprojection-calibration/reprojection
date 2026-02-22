@@ -16,6 +16,9 @@ from database.types import PoseType
 
 def load_camera_calibration_data(db_path):
     df = load_images_df(db_path)
+    if df is None:
+        return None
+
     data = image_df_to_camera_calibration_data(df)
 
     df = load_extracted_targets_df(db_path)
@@ -31,6 +34,10 @@ def load_camera_calibration_data(db_path):
 
 
 def calculate_camera_statistics(data):
+    # TODO(Jack): Should this function be "protected" from the outside instead?
+    if data is None:
+        return None
+
     statistics = {}
     for sensor, sensor_data in data.items():
         total_frames = 0
@@ -91,6 +98,9 @@ def calculate_camera_statistics(data):
 # consistency across an entire sensors data display is very nice because it makes it clear what the common timeframe is
 # and also when data is missing. Wonderful :)
 def get_reference_timestamps(data):
+    if data is None:
+        return None
+
     timestamp_record = {}
     for sensor, sensor_data in data.items():
         timestamps = sorted(list(sensor_data["frames"].keys()))

@@ -9,7 +9,7 @@ def build_sensor_statistics_div(sensor, metadata, sensor_type):
     statistics, _ = metadata
 
     statistics = statistics[sensor_type]
-    if sensor not in statistics:
+    if statistics is None or sensor not in statistics:
         raise PreventUpdate
 
     return [

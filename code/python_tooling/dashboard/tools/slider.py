@@ -9,6 +9,9 @@ def update_slider_properties(sensor, metadata, sensor_type):
     statistics = statistics[sensor_type]
     timestamps = timestamps[sensor_type]
 
+    if statistics is None or timestamps is None:
+        return {}, 0
+
     if sensor not in statistics or sensor not in timestamps:
         return {}, 0
 
