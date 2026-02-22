@@ -77,18 +77,17 @@ int main() {
     spline::CubicBSplineC3 const so3_spline{
         spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
 
+    ImuMeasurements const measured_imu_data{database::GetImuData(db, "/imu0")};
+
     // Get the rotational velocity and write it as imu data to the database
     ImuMeasurements imu_data;
-    uint64_t const t0_ns{std::cbegin(optimized_state.frames)->first};
-    for (uint64_t timestamp_ns{t0_ns}; true; timestamp_ns += 5e6) {
+    for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
         auto const omega_i{
             spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
 
         if (omega_i) {
             // HARDCODE SCALE MULTIPLY 1e9
             imu_data.insert({timestamp_ns, {1e9 * tf_co_imu.inverse() * omega_i.value(), Vector3d::Zero()}});
-        } else {
-            break;
         }
     }
 
