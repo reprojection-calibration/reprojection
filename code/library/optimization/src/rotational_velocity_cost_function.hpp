@@ -7,6 +7,8 @@
 
 namespace reprojection::optimization {
 
+// TODO(Jack) Refactor to generic GyroscopeError error.
+
 // NOTE(Jack): The rotational velocities must come from two frames on a rigid body. If they are not on the same body
 // this optimization is not meaningful.
 class RotationalVelocityCostFunction {
