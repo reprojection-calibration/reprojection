@@ -25,7 +25,7 @@ class RotationalVelocityCostFunction {
 
         residual[0] = T(omega_a_[0]) - omega_a[0];
         residual[1] = T(omega_a_[1]) - omega_a[1];
-        residual[2] = T(omega_a_[1]) - omega_a[1];
+        residual[2] = T(omega_a_[2]) - omega_a[2];
 
         return true;
     }
