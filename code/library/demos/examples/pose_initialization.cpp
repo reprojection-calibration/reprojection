@@ -19,9 +19,9 @@ using namespace reprojection;
 // WARN(Jack): At this time this demo has no clear role in CI/CD or the active development. Please feel to remove this
 // as needed!
 
-Matrix3d const tf_co_imu{{-0.9995250378696743, 0.029615343885863205, -0.008522328211654736},
-                         {0.0075019185074052044, -0.03439736061393144, -0.9993800792498829},
-                         {-0.02989013031643309, -0.998969345370175, 0.03415885127385616}};
+Matrix3d const tf_co_imuxxx{{-0.9995250378696743, 0.029615343885863205, -0.008522328211654736},
+                            {0.0075019185074052044, -0.03439736061393144, -0.9993800792498829},
+                            {-0.02989013031643309, -0.998969345370175, 0.03415885127385616}};
 
 OptimizationState AlignRotations(OptimizationState state) {
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
@@ -91,12 +91,14 @@ int main() {
 
         if (omega_co_i) {
             // HARDCODE SCALE MULTIPLY 1e9
-            omega_co.insert({timestamp_ns, {1e9 * tf_co_imu.inverse() * omega_co_i.value()}});
+            omega_co.insert({timestamp_ns, {1e9 * omega_co_i.value()}});
         }
     }
 
     auto const [tf, diagnostics2]{optimization::InitializeCameraImuOrientation(omega_co, omega_imu)};
 
+    std::cout << tf << std::endl;
+    std::cout << diagnostics2.solver_summary.FullReport() << std::endl;
     ImuMeasurements imu_data;
     for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
         auto const omega_i{
