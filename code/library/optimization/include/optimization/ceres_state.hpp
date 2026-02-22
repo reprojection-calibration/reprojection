@@ -1,6 +1,7 @@
 #pragma once
 
-#include <ceres/types.h>
+#include <ceres/problem.h>
+#include <ceres/solver.h>
 
 namespace reprojection::optimization {
 
