@@ -7,6 +7,8 @@
 
 using namespace reprojection;
 
+// TODO(Jack): Use a non-symmetric matrix here so we can actually make sure there is no weird symmetric result hiding a
+//  real problem.
 TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
     Matrix3d const gt_R_co_imu{{-1, 0, 0},  //
                                {0, 0, -1},

@@ -6,7 +6,7 @@
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
 #include "geometry/lie.hpp"
-#include "optimization/camera_imu_orientation_initialization.hpp"
+#include "optimization/angular_velocity_alignment.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "spline/r3_spline.hpp"
 #include "spline/so3_spline.hpp"
@@ -103,7 +103,7 @@ int main() {
         omega_imu.insert({timestamp_ns, {imu_data_i.angular_velocity}});
     }
 
-    auto const [R_imu_co, diagnostics2]{optimization::InitializeCameraImuOrientation(omega_co, omega_imu)};
+    auto const [R_imu_co, diagnostics2]{optimization::AngularVelocityAlignment(omega_co, omega_imu)};
 
     ImuMeasurements imu_data;
     for (auto const& [timestamp_ns, omega_co_i] : omega_co) {
