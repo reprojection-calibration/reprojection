@@ -2,7 +2,7 @@
 
 #include <ranges>
 
-#include "optimization/camera_imu_orientation_initialization.hpp"
+#include "optimization/angular_velocity_alignment.hpp"
 #include "spline/so3_spline.hpp"
 #include "spline/spline_evaluation.hpp"
 #include "spline/spline_initialization.hpp"
@@ -22,16 +22,16 @@ using namespace spline;
 // TODO NAMING
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
     Frames const& camera_poses, ImuMeasurements const& imu_data) {
-    PositionMeasurements aa_co_w;
+    PositionMeasurements camera_orientations;
     for (auto const& [timestamp_ns, frame_i] : camera_poses) {
-        aa_co_w.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
+        camera_orientations.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
     }
     // TODO(Jack): Is 20 times the number of camera_poses high enough frequency? Do we need to parameterize this?
-    CubicBSplineC3 const so3_spline{InitializeC3Spline(aa_co_w, 20 * std::size(camera_poses))};
+    CubicBSplineC3 const camera_orientation_spline{
+        InitializeC3Spline(camera_orientations, 20 * std::size(camera_poses))};
 
-    // TODO(Jack): Do we need these diagnostics actually? How will the user use this?
-    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(so3_spline, imu_data)};
-    Vector3d const gravity_w{EstimateGravity(so3_spline, imu_data, R_imu_co)};
+    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation_spline, imu_data)};
+    Vector3d const gravity_w{EstimateGravity(camera_orientation_spline, imu_data, R_imu_co)};
 
     return {{R_imu_co, diagnostics}, gravity_w};
 }
@@ -41,7 +41,8 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
                                                            ImuMeasurements const& imu_data) {
     VelocityMeasurements omega_co;
     for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
-        if (auto const omega_co_i{EvaluateSpline<So3Spline>(camera_orientation_spline, timestamp_ns, DerivativeOrder::First)}) {
+        if (auto const omega_co_i{
+                EvaluateSpline<So3Spline>(camera_orientation_spline, timestamp_ns, DerivativeOrder::First)}) {
             // WARN(Jack): We are hard coding a scale multiplication here of 1e9 to bring it out of ns space and into
             // normal second space. Why we need this I am not 100% sure.
             omega_co.insert({timestamp_ns, {1e9 * omega_co_i.value()}});
@@ -53,7 +54,7 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
         omega_imu.insert({timestamp_ns, {imu_data_i.angular_velocity}});
     }
 
-    return optimization::InitializeCameraImuOrientation(omega_co, omega_imu);
+    return optimization::AngularVelocityAlignment(omega_co, omega_imu);
 }
 
 // TODO NAMING!!!!
@@ -69,7 +70,8 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMea
                          Matrix3d const& R_imu_co) {
     PositionMeasurements aa_co_w;
     for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
-        if (auto const orientation_i{EvaluateSpline<So3Spline>(camera_orientation_spline, timestamp_ns, DerivativeOrder::Null)}) {
+        if (auto const orientation_i{
+                EvaluateSpline<So3Spline>(camera_orientation_spline, timestamp_ns, DerivativeOrder::Null)}) {
             aa_co_w.insert({timestamp_ns, {orientation_i.value()}});
         }
     }
