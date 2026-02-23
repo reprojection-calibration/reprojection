@@ -1,5 +1,6 @@
 set(LIBRARY_NAME "types")
 
+find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 

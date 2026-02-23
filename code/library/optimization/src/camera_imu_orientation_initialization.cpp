@@ -3,7 +3,6 @@
 #include <ranges>
 
 #include "geometry/lie.hpp"
-#include "optimization/ceres_state.hpp"
 
 #include "rotational_velocity_cost_function.hpp"
 

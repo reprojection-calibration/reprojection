@@ -3,9 +3,9 @@
 #include <ceres/problem.h>
 #include <ceres/solver.h>
 
-namespace reprojection::optimization {
+namespace reprojection {
 
-// TODO(Jack): Does this actually belong in types?
+
 struct CeresState {
     CeresState(ceres::Ownership const ownership, ceres::LinearSolverType const linear_solver) {
         problem_options.cost_function_ownership = ownership;
@@ -17,4 +17,4 @@ struct CeresState {
     ceres::Solver::Summary solver_summary;
 };
 
-}  // namespace reprojection::optimization
+}  // namespace reprojection

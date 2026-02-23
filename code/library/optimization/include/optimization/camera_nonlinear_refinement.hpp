@@ -2,8 +2,8 @@
 
 #include <tuple>
 
-#include "optimization/ceres_state.hpp"
 #include "types/calibration_types.hpp"
+#include "types/ceres_types.hpp"
 
 namespace reprojection::optimization {
 

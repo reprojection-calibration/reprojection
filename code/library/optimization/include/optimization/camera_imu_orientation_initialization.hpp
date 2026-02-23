@@ -2,7 +2,7 @@
 
 #include <tuple>
 
-#include "optimization/ceres_state.hpp"
+#include "types/ceres_types.hpp"
 #include "types/eigen_types.hpp"
 #include "types/spline_types.hpp"
 
