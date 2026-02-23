@@ -85,10 +85,23 @@ Vector3d InitializeGravity(CubicBSplineC3 const& so3_spline, ImuMeasurements con
         i += 1;
     }
 
-    double constexpr g{9.80665};
+    // NOTE(Jack): This logic here is handling the case where there is no gravity in the acceleration data and
+    // protecting us against a division by zero. How can this happen?
+    //      1) The imu is in free fall -_-, very unlikely!
+    //      2) The imu has some filtering which optimizes and subtracts gravity - possible.
+    //      3) The imu test mock data does not have gravity added to the acceleration data :)
+    //
+    // TODO(Jack): What is the proper threshold to test here? Technically the acceleration vector should roughly have
+    //  length 9.8. But what is actually reasonable here is not clear to me. For now we say if the magnitude of the
+    //  vector is less than one, that gravity is not present. A long term strategy is needed here and should come as we
+    //  see more data.
     Vector3d const mean_a_w{a_w.colwise().mean()};
-
-    return g * mean_a_w.normalized();
+    if (mean_a_w.mean() < 1) {
+        return Vector3d::Zero();
+    } else {
+        double constexpr g{9.80665};
+        return g * mean_a_w.normalized();
+    }
 }
 
 }  // namespace reprojection::calibration
