@@ -120,7 +120,7 @@ int main() {
     PositionMeasurements orientations;
     for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
         auto const orientation_i{
-            spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
+            spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::Null)};
 
         if (orientation_i) {
             orientations.insert({timestamp_ns, {orientation_i.value()}});
@@ -130,11 +130,18 @@ int main() {
     ImuMeasurements imu_data_acceleration;
     for (auto const& [timestamp_ns, aa_co_w] : orientations) {
         Matrix3d const R_co_w{geometry::Exp(aa_co_w.position)};
-        Vector3d const a_w{R_co_w * R_imu_co.inverse() *
+        Vector3d const a_w{R_co_w.inverse() * R_imu_co.inverse() *
                            measured_imu_data.at(timestamp_ns).linear_acceleration};
 
         imu_data_acceleration.insert({timestamp_ns, {Vector3d::Zero(),a_w}});
     }
+
+    Vector3d avg_a_w{Vector3d::Zero()};
+    for (auto const& acc_i: imu_data_acceleration) {
+        avg_a_w += acc_i.second.linear_acceleration;
+    }
+
+    std::cout << avg_a_w.array() / std::size(imu_data_acceleration) << std::endl;
 
     try {
         database::AddImuData(imu_data_acceleration, "/interpolated_acceleration", db);
