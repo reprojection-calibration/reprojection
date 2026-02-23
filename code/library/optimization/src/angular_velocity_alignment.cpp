@@ -1,10 +1,10 @@
-#include "optimization/camera_imu_orientation_initialization.hpp"
+#include "optimization/angular_velocity_alignment.hpp"
 
 #include <ranges>
 
 #include "geometry/lie.hpp"
 
-#include "rotational_velocity_cost_function.hpp"
+#include "angular_velocity_cost_function.hpp"
 
 namespace reprojection::optimization {
 
@@ -15,14 +15,14 @@ namespace reprojection::optimization {
 // NOTE(Jack): This function makes the approximation that the centers of rotation (i.e. the camera and imu sensors) are
 // located at the same position. That is why only the rotation here is being optimized. It is an approximation so that
 // we can initialize the full extrinsic optimization later.
-std::tuple<Matrix3d, CeresState> InitializeCameraImuOrientation(VelocityMeasurements const& omega_co,
-                                                                VelocityMeasurements const& omega_imu) {
+std::tuple<Matrix3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_co,
+                                                          VelocityMeasurements const& omega_imu) {
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
     Array3d aa_co_imu{0, 0, 0};
     for (auto const timestamp_ns : omega_co | std::views::keys) {
-        ceres::CostFunction* const cost_function{RotationalVelocityCostFunction::Create(
+        ceres::CostFunction* const cost_function{AngularVelocityCostFunction::Create(
             omega_co.at(timestamp_ns).velocity, omega_imu.at(timestamp_ns).velocity)};
 
         problem.AddResidualBlock(cost_function, nullptr, aa_co_imu.data());

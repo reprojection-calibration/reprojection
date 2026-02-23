@@ -1,4 +1,4 @@
-#include "optimization/camera_imu_orientation_initialization.hpp"
+#include "optimization/angular_velocity_alignment.hpp"
 
 #include <gtest/gtest.h>
 
@@ -7,7 +7,7 @@
 
 using namespace reprojection;
 
-TEST(OptimizationCameraImuOrientationInitialization, TestCameraImuOrientationInitialization) {
+TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
     Matrix3d const gt_R_co_imu{{-1, 0, 0},  //
                                {0, 0, -1},
                                {0, -1, 0}};
@@ -22,7 +22,7 @@ TEST(OptimizationCameraImuOrientationInitialization, TestCameraImuOrientationIni
         omega_imu.insert({t, {omega_imu_i}});
     }
 
-    auto const [R_co_imu, diagnostics]{optimization::InitializeCameraImuOrientation(omega_co, omega_imu)};
+    auto const [R_co_imu, diagnostics]{optimization::AngularVelocityAlignment(omega_co, omega_imu)};
     EXPECT_TRUE(R_co_imu.isApprox(gt_R_co_imu, 1e-9)) << "Result:\n"
                                                       << R_co_imu << "\nexpected result:\n"
                                                       << gt_R_co_imu;
