@@ -136,12 +136,11 @@ int main() {
         imu_data_acceleration.insert({timestamp_ns, {Vector3d::Zero(),a_w}});
     }
 
+    // TODO(Jack): Normalize and multiply by G
     Vector3d avg_a_w{Vector3d::Zero()};
     for (auto const& acc_i: imu_data_acceleration) {
         avg_a_w += acc_i.second.linear_acceleration;
     }
-
-    std::cout << avg_a_w.array() / std::size(imu_data_acceleration) << std::endl;
 
     try {
         database::AddImuData(imu_data_acceleration, "/interpolated_acceleration", db);
