@@ -150,3 +150,6 @@ int main() {
 
     return EXIT_SUCCESS;
 }
+
+// TODO VISUALIZE the acceleartion with gravity subtracted
+// TODO visualize the measured omega vs the tfd camera omega
