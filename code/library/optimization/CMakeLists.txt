@@ -26,6 +26,7 @@ set(TESTS
         src/ceres_geometry.test.cpp
         src/projection_cost_function.test.cpp
         src/rotational_velocity_cost_function.test.cpp
+        test/camera_imu_orientation_initialization.test.cpp
         test/camera_nonlinear_refinement.test.cpp
         test/spline_cost_function.test.cpp
         test/spline_nonlinear_refinement.test.cpp

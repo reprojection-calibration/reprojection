@@ -9,10 +9,10 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): This function is dependent on the daa be synchronized - how can we assert or easily tell the user when
-//  there is a problem here? For now we will iterate over omega_co because this should only be as large as omega_imu but
-//  cannot be larger because it is sampled from the interpolated spline using the timestamps from the imu data.
-//  Therefore it might be smaller, but cannot include a timestamp which is not also in omega_imu.
+// TODO(Jack): This function is dependent on the data being synchronized - how can we assert or easily tell the user
+//  when there is a problem here? For now we will iterate over omega_co because this should only be as large as
+//  omega_imu but cannot be larger because it is sampled from the interpolated spline using the timestamps from the imu
+//  data. Therefore it might be smaller, but cannot include a timestamp which is not also in omega_imu.
 // NOTE(Jack): This function makes the approximation that the centers of rotation (i.e. the camera and imu sensors) are
 // located at the same position. That is why only the rotation here is being optimized. It is an approximation so that
 // we can initialize the full extrinsic optimization later.
