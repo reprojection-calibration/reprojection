@@ -58,14 +58,6 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
 }
 
 // TODO(Jack): Unit test
-// NOTE(Jack): This function is based on a simple assumption, and that is the sum of all accelerations induced by the
-// user during a calibration data collection will be zero. Essentially the user is making a bunch of symmetric
-// repetitive motions (ex. moving the sensor left-right, up-down etc.) and therefore the accelerations should also be
-// symmetric and cancel out when summed.
-//
-// Therefore, when we sum all the accelerations, the symmetric motion generated accelerations will disappear and only
-// gravity, which is asymmetric, will remain. Of course this might not work if the accelerometer has a large bias or the
-// user does not perform symmetric motions (ex. repeatedly moves quickly to the right and then slowly back to the left).
 Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMeasurements const& imu_data,
                          Matrix3d const& R_imu_co) {
     PositionMeasurements aa_co_w;
@@ -76,7 +68,6 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMea
         }
     }
 
-    // TODO THIS ASSUMES SAME POSITION! Just like the orientation init right?
     MatrixXd a_w(std::size(aa_co_w), 3);
     for (int i{0}; auto const& [timestamp_ns, aa_co_w_i] : aa_co_w) {
         Matrix3d const R_co_w{geometry::Exp(aa_co_w_i.position)};
@@ -94,14 +85,15 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMea
     //      3) The imu test mock data does not have gravity added to the acceleration data :)
     //
     // TODO(Jack): What is the proper threshold to test here? Technically the acceleration vector should roughly have
-    //  length 9.8. But what is actually reasonable here is not clear to me. For now we say if the magnitude of the
-    //  vector is less than five, that gravity is not present. A long term strategy is needed here and should come as we
-    //  see more data.
+    //  length 9.8. But what is actually reasonable here is not clear to me. A long term strategy is needed here and
+    //  should come as we see more data. My gut tells me that the actual threshold would be to say less than g. But that
+    //  might be too strict? Let's try it.
     Vector3d const mean_a_w{a_w.colwise().mean()};
-    if (mean_a_w.mean() < 5) {
+    double constexpr g{9.80665};
+    if (mean_a_w.norm() < g) {
+        std::cerr << "Setting gravity to zero, are you sure you expected that?" << std::endl;
         return Vector3d::Zero();
     } else {
-        double constexpr g{9.80665};
         return g * mean_a_w.normalized();
     }
 }
