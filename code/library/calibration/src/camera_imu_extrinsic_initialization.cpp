@@ -20,7 +20,7 @@ namespace reprojection::calibration {
 using namespace spline;
 
 // TODO NAMING
-std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> CameraImuExtrinsicInitialization(
+std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
     Frames const& camera_poses, ImuMeasurements const& imu_data) {
     PositionMeasurements aa_co_w;
     for (auto const& [timestamp_ns, frame_i] : camera_poses) {
@@ -30,18 +30,18 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> CameraImuExtrinsicInitial
     CubicBSplineC3 const so3_spline{InitializeC3Spline(aa_co_w, 20 * std::size(camera_poses))};
 
     // TODO(Jack): Do we need these diagnostics actually? How will the user use this?
-    auto const [R_imu_co, diagnostics]{InitializeCameraImuRotation(so3_spline, imu_data)};
-    Vector3d const gravity_w{InitializeGravity(so3_spline, imu_data, R_imu_co)};
+    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(so3_spline, imu_data)};
+    Vector3d const gravity_w{EstimateGravity(so3_spline, imu_data, R_imu_co)};
 
     return {{R_imu_co, diagnostics}, gravity_w};
 }
 
 // TODO NAMING
-std::tuple<Matrix3d, CeresState> InitializeCameraImuRotation(CubicBSplineC3 const& so3_spline,
-                                                             ImuMeasurements const& imu_data) {
+std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const& camera_orientation_spline,
+                                                           ImuMeasurements const& imu_data) {
     VelocityMeasurements omega_co;
     for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
-        if (auto const omega_co_i{EvaluateSpline<So3Spline>(so3_spline, timestamp_ns, DerivativeOrder::First)}) {
+        if (auto const omega_co_i{EvaluateSpline<So3Spline>(camera_orientation_spline, timestamp_ns, DerivativeOrder::First)}) {
             // WARN(Jack): We are hard coding a scale multiplication here of 1e9 to bring it out of ns space and into
             // normal second space. Why we need this I am not 100% sure.
             omega_co.insert({timestamp_ns, {1e9 * omega_co_i.value()}});
@@ -65,11 +65,11 @@ std::tuple<Matrix3d, CeresState> InitializeCameraImuRotation(CubicBSplineC3 cons
 // Therefore, when we sum all the accelerations, the symmetric motion generated accelerations will disappear and only
 // gravity, which is asymmetric, will remain. Of course this might not work if the accelerometer has a large bias or the
 // user does not perform symmetric motions (ex. repeatedly moves quickly to the right and then slowly back to the left).
-Vector3d InitializeGravity(CubicBSplineC3 const& so3_spline, ImuMeasurements const& imu_data,
-                           Matrix3d const& R_imu_co) {
+Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMeasurements const& imu_data,
+                         Matrix3d const& R_imu_co) {
     PositionMeasurements aa_co_w;
     for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
-        if (auto const orientation_i{EvaluateSpline<So3Spline>(so3_spline, timestamp_ns, DerivativeOrder::Null)}) {
+        if (auto const orientation_i{EvaluateSpline<So3Spline>(camera_orientation_spline, timestamp_ns, DerivativeOrder::Null)}) {
             aa_co_w.insert({timestamp_ns, {orientation_i.value()}});
         }
     }

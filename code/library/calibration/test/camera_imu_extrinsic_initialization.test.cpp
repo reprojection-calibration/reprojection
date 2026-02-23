@@ -21,7 +21,7 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
         testing_mocks::GenerateMvgData(sensor, {testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
     ImuMeasurements const imu_data{testing_mocks::GenerateImuData(1000, timespan_ns)};
 
-    auto const [rotation_result, gravity]{calibration::CameraImuExtrinsicInitialization(camera_frames, imu_data)};
+    auto const [rotation_result, gravity]{calibration::EstimateCameraImuRotationAndGravity(camera_frames, imu_data)};
     auto const [R_co_imu, diagnostics]{rotation_result};
 
     EXPECT_TRUE(R_co_imu.isApprox(Matrix3d::Identity()));

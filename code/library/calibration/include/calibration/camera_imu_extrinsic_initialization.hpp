@@ -7,15 +7,15 @@
 
 namespace reprojection::calibration {
 
-std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> CameraImuExtrinsicInitialization(
+std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
     Frames const& camera_poses, ImuMeasurements const& imu_data);
 
 // TODO(Jack): Unit test
-std::tuple<Matrix3d, CeresState> InitializeCameraImuRotation(spline::CubicBSplineC3 const& so3_spline,
-                                                             ImuMeasurements const& imu_data);
+std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC3 const& camera_orientation_spline,
+                                                           ImuMeasurements const& imu_data);
 
 // TODO(Jack): Unit test
-Vector3d InitializeGravity(spline::CubicBSplineC3 const& so3_spline, ImuMeasurements const& imu_data,
-                           Matrix3d const& R_imu_co);
+Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation_spline, ImuMeasurements const& imu_data,
+                         Matrix3d const& R_imu_co);
 
 }  // namespace reprojection::calibration
