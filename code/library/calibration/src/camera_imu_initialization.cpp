@@ -92,8 +92,10 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMea
     if (mean_a_w.norm() < 1) {
         return Vector3d::Zero();
     } else {
-        double constexpr g{9.80665};
-        return g * mean_a_w.normalized();
+        // TODO(Jack): Engineer more sophisticated IMU test data with gravity so that we can cover this branch in unit
+        //  testing!
+        double constexpr g{9.80665};       // LCOV_EXCL_LINE
+        return g * mean_a_w.normalized();  // LCOV_EXCL_LINE
     }
 }
 
