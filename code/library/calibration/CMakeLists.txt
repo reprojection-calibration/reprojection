@@ -4,6 +4,7 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED) # REMOVE when/if database is removed
 
 set(SRC_FILES
+        src/camera_imu_extrinsic_initialization.cpp
         src/parabola_line_initialization.cpp
         src/linear_pose_initialization.cpp
         src/vanishing_point_initialization.cpp
@@ -12,6 +13,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         geometry
+        optimization
         pnp
         projection_functions
         spline
