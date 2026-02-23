@@ -40,7 +40,7 @@ TEST(OptimizationProjectionCostFunction, TestRotationalVelocityCostFunction) {
     EXPECT_TRUE(success);
     EXPECT_FLOAT_EQ(residual[0], -1.1144632869444262);
     EXPECT_FLOAT_EQ(residual[1], -1.8009985010709824);
-    EXPECT_FLOAT_EQ(residual[2], -1.8009985010709824);
+    EXPECT_FLOAT_EQ(residual[2], -3.0845382119845914);
 }
 
 TEST(OptimizationRotationalVelocityCostFunction, TestRotationalVelocityCostFunctionCreate) {
