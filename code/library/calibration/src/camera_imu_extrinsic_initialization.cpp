@@ -19,7 +19,6 @@ namespace reprojection::calibration {
 
 using namespace spline;
 
-// TODO NAMING
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
     Frames const& camera_poses, ImuMeasurements const& imu_data) {
     PositionMeasurements camera_orientations;
@@ -36,7 +35,7 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
     return {{R_imu_co, diagnostics}, gravity_w};
 }
 
-// TODO NAMING
+// TODO(Jack): Unit test
 std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const& camera_orientation_spline,
                                                            ImuMeasurements const& imu_data) {
     VelocityMeasurements omega_co;
@@ -58,7 +57,7 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
     return optimization::AngularVelocityAlignment(omega_co, omega_imu);
 }
 
-// TODO NAMING!!!!
+// TODO(Jack): Unit test
 // NOTE(Jack): This function is based on a simple assumption, and that is the sum of all accelerations induced by the
 // user during a calibration data collection will be zero. Essentially the user is making a bunch of symmetric
 // repetitive motions (ex. moving the sensor left-right, up-down etc.) and therefore the accelerations should also be
@@ -96,10 +95,10 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMea
     //
     // TODO(Jack): What is the proper threshold to test here? Technically the acceleration vector should roughly have
     //  length 9.8. But what is actually reasonable here is not clear to me. For now we say if the magnitude of the
-    //  vector is less than one, that gravity is not present. A long term strategy is needed here and should come as we
+    //  vector is less than five, that gravity is not present. A long term strategy is needed here and should come as we
     //  see more data.
     Vector3d const mean_a_w{a_w.colwise().mean()};
-    if (mean_a_w.mean() < 1) {
+    if (mean_a_w.mean() < 5) {
         return Vector3d::Zero();
     } else {
         double constexpr g{9.80665};

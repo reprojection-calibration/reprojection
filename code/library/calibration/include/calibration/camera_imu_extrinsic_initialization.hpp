@@ -10,11 +10,25 @@ namespace reprojection::calibration {
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
     Frames const& camera_poses, ImuMeasurements const& imu_data);
 
-// TODO(Jack): Unit test
 std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC3 const& camera_orientation_spline,
                                                            ImuMeasurements const& imu_data);
 
-// TODO(Jack): Unit test
+/**
+ * \brief Estimate gravity in the camera's world frame using the "zero mean acceleration" assumption.
+ *
+ * Given a "normal" calibration sequence of roughly symmetric axis-exciting motions (i.e. up-down, twist clockwise then
+ * counterclockwise, etc.), focusing on a single stationary calibration target board, the net motion-induced
+ * acceleration will be zero.
+ *
+ * This function takes the entire set of imu linear acceleration data and transforms it into the camera's world frame
+ * using the camera_orientation_spline and R_imu_co, and then sums it up. The "zero mean acceleration" principle means
+ * that the acceleration that is "left over" after the summing is the contribution from gravity. Of course in real world
+ * data with noise and biases this will never be perfect, however, we can use this value to initialize the full
+ * camera-imu extrinsic calibration.
+ *
+ * Note that if there is no gravity present (ex. the imu prefilters out gravity) then a zero vector is returned. See the
+ * return statement to understand this condition better, and assess long term if this is the right strategy.
+ */
 Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation_spline, ImuMeasurements const& imu_data,
                          Matrix3d const& R_imu_co);
 
