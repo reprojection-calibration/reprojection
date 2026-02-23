@@ -26,6 +26,8 @@ using namespace reprojection;
 // use that to calculate the reprojection errors, but use aligned_initial_state to initialize the nonlinear
 // optimization. This means that what we are doing here and what we are visualizing in the database are starting to
 // diverge. Not nice!
+
+// cppcheck-suppress passedByValue
 OptimizationState AlignRotations(OptimizationState state) {
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
     for (auto& frame_i : state.frames | std::views::values) {
