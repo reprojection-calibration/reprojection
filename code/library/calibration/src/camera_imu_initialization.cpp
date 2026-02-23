@@ -87,13 +87,12 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMea
     // TODO(Jack): What is the proper threshold to test here? Technically the acceleration vector should roughly have
     //  length 9.8. But what is actually reasonable here is not clear to me. A long term strategy is needed here and
     //  should come as we see more data. My gut tells me that the actual threshold would be to say less than g. But that
-    //  might be too strict? Let's try it.
+    //  might be too strict?
     Vector3d const mean_a_w{a_w.colwise().mean()};
-    double constexpr g{9.80665};
-    if (mean_a_w.norm() < g) {
-        std::cerr << "Setting gravity to zero, are you sure you expected that?" << std::endl;
+    if (mean_a_w.norm() < 1) {
         return Vector3d::Zero();
     } else {
+        double constexpr g{9.80665};
         return g * mean_a_w.normalized();
     }
 }

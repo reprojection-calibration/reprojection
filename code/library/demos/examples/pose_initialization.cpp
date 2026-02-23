@@ -1,19 +1,12 @@
 #include <map>
 #include <ranges>
 
+#include "calibration/camera_imu_initialization.hpp"
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
-#include "geometry/lie.hpp"
-#include "optimization/angular_velocity_alignment.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
-#include "spline/r3_spline.hpp"
-#include "spline/so3_spline.hpp"
-#include "spline/spline_evaluation.hpp"
-#include "spline/spline_initialization.hpp"
-#include "types/calibration_types.hpp"
-#include "types/spline_types.hpp"
 
 using namespace reprojection;
 
@@ -27,7 +20,6 @@ using namespace reprojection;
 // use that to calculate the reprojection errors, but use aligned_initial_state to initialize the nonlinear
 // optimization. This means that what we are doing here and what we are visualizing in the database are starting to
 // diverge. Not nice!
-
 // cppcheck-suppress passedByValue
 OptimizationState AlignRotations(OptimizationState state) {
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
@@ -77,79 +69,14 @@ int main() {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-    ImuMeasurements const measured_imu_data{database::GetImuData(db, "/imu0")};
+    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
 
-    PositionMeasurements spline_init_positions;
-    for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
-        spline_init_positions.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
-    }
-    spline::CubicBSplineC3 const so3_spline{
-        spline::InitializeC3Spline(spline_init_positions, 20 * std::size(optimized_state.frames))};
+    auto const [orientation_init,
+                gravity_w]{calibration::EstimateCameraImuRotationAndGravity(optimized_state.frames, imu_data)};
+    auto const [R_imu_co, _]{orientation_init};
 
-    // Imu orientation stuff
-    VelocityMeasurements omega_co;
-    for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
-        auto const omega_co_i{
-            spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
-
-        if (omega_co_i) {
-            // HARDCODE SCALE MULTIPLY 1e9
-            omega_co.insert({timestamp_ns, {1e9 * omega_co_i.value()}});
-        }
-    }
-
-    VelocityMeasurements omega_imu;
-    for (auto const& [timestamp_ns, imu_data_i] : measured_imu_data) {
-        omega_imu.insert({timestamp_ns, {imu_data_i.angular_velocity}});
-    }
-
-    auto const [R_imu_co, diagnostics2]{optimization::AngularVelocityAlignment(omega_co, omega_imu)};
-
-    ImuMeasurements imu_data;
-    for (auto const& [timestamp_ns, omega_co_i] : omega_co) {
-        imu_data.insert({timestamp_ns, {R_imu_co * omega_co_i.velocity, Vector3d::Zero()}});
-    }
-
-    try {
-        database::AddImuData(imu_data, "/interpolated_omega", db);
-    } catch (...) {
-        std::cout << "\n\tPseudo cache hit\n" << std::endl;
-    }
-
-    // Imu gravity stuff
-    PositionMeasurements orientations;
-    for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
-        auto const orientation_i{
-            spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::Null)};
-
-        if (orientation_i) {
-            orientations.insert({timestamp_ns, {orientation_i.value()}});
-        }
-    }
-
-    ImuMeasurements imu_data_acceleration;
-    for (auto const& [timestamp_ns, aa_co_w] : orientations) {
-        Matrix3d const R_co_w{geometry::Exp(aa_co_w.position)};
-        Vector3d const a_w{R_co_w.inverse() * R_imu_co.inverse() *
-                           measured_imu_data.at(timestamp_ns).linear_acceleration};
-
-        imu_data_acceleration.insert({timestamp_ns, {Vector3d::Zero(),a_w}});
-    }
-
-    // TODO(Jack): Normalize and multiply by G
-    Vector3d avg_a_w{Vector3d::Zero()};
-    for (auto const& acc_i: imu_data_acceleration) {
-        avg_a_w += acc_i.second.linear_acceleration;
-    }
-
-    try {
-        database::AddImuData(imu_data_acceleration, "/interpolated_acceleration", db);
-    } catch (...) {
-        std::cout << "\n\tPseudo cache hit\n" << std::endl;
-    }
+    std::cout << R_imu_co << std::endl;
+    std::cout << gravity_w.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }
-
-// TODO VISUALIZE the acceleartion with gravity subtracted
-// TODO visualize the measured omega vs the tfd camera omega
