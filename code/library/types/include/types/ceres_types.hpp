@@ -5,7 +5,6 @@
 
 namespace reprojection {
 
-
 struct CeresState {
     CeresState(ceres::Ownership const ownership, ceres::LinearSolverType const linear_solver) {
         problem_options.cost_function_ownership = ownership;
