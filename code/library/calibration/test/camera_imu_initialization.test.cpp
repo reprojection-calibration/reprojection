@@ -1,7 +1,6 @@
-#include "calibration/camera_imu_extrinsic_initialization.hpp"
-
 #include <gtest/gtest.h>
 
+#include "calibration/camera_imu_initialization.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
