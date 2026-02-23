@@ -71,9 +71,9 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMea
     MatrixXd a_w(std::size(aa_co_w), 3);
     for (int i{0}; auto const& [timestamp_ns, aa_co_w_i] : aa_co_w) {
         Matrix3d const R_co_w{geometry::Exp(aa_co_w_i.position)};
-        Vector3d const a_w_i{R_co_w.inverse() * R_imu_co.inverse() * imu_data.at(timestamp_ns).linear_acceleration};
+        Vector3d const a_i_w{R_co_w.inverse() * R_imu_co.inverse() * imu_data.at(timestamp_ns).linear_acceleration};
 
-        a_w.row(i) = a_w_i;
+        a_w.row(i) = a_i_w;
 
         i += 1;
     }
