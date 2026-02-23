@@ -6,6 +6,7 @@
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
 #include "geometry/lie.hpp"
+#include "optimization/camera_imu_orientation_initialization.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "spline/so3_spline.hpp"
 #include "spline/spline_evaluation.hpp"
@@ -18,13 +19,18 @@ using namespace reprojection;
 // WARN(Jack): At this time this demo has no clear role in CI/CD or the active development. Please feel to remove this
 // as needed!
 
-Matrix3d const tf_co_imu{{-0.9995250378696743, 0.029615343885863205, -0.008522328211654736},
-                         {0.0075019185074052044, -0.03439736061393144, -0.9993800792498829},
-                         {-0.02989013031643309, -0.998969345370175, 0.03415885127385616}};
+// WARN(Jack): This is a hack that we need to do so that the spline initialization does not have any massive
+// discontinuties or sudden jumps. But there is some bigger problem here that we are missing and need to solve long
+// term.
+// WARN(Jack): Also note that we do not save aligned_initial_state to the database, we save plain old initial_state and
+// use that to calculate the reprojection errors, but use aligned_initial_state to initialize the nonlinear
+// optimization. This means that what we are doing here and what we are visualizing in the database are starting to
+// diverge. Not nice!
 
+// cppcheck-suppress passedByValue
 OptimizationState AlignRotations(OptimizationState state) {
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
-    for (auto& [timestamp_ns, frame_i] : state.frames) {
+    for (auto& frame_i : state.frames | std::views::values) {
         Vector3d so3_i{frame_i.pose.topRows(3)};
         double const dp{so3_i_1.dot(so3_i)};
 
@@ -77,19 +83,28 @@ int main() {
     spline::CubicBSplineC3 const so3_spline{
         spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
 
-    // Get the rotational velocity and write it as imu data to the database
-    ImuMeasurements imu_data;
-    uint64_t const t0_ns{std::cbegin(optimized_state.frames)->first};
-    for (uint64_t timestamp_ns{t0_ns}; true; timestamp_ns += 5e6) {
-        auto const omega_i{
+    ImuMeasurements const measured_imu_data{database::GetImuData(db, "/imu0")};
+    VelocityMeasurements omega_imu;
+    for (auto const& [timestamp_ns, imu_data_i] : measured_imu_data) {
+        omega_imu.insert({timestamp_ns, {imu_data_i.angular_velocity}});
+    }
+
+    VelocityMeasurements omega_co;
+    for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
+        auto const omega_co_i{
             spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
 
-        if (omega_i) {
+        if (omega_co_i) {
             // HARDCODE SCALE MULTIPLY 1e9
-            imu_data.insert({timestamp_ns, {1e9 * tf_co_imu.inverse() * omega_i.value(), Vector3d::Zero()}});
-        } else {
-            break;
+            omega_co.insert({timestamp_ns, {1e9 * omega_co_i.value()}});
         }
+    }
+
+    auto const [tf_imu_co, diagnostics2]{optimization::InitializeCameraImuOrientation(omega_co, omega_imu)};
+
+    ImuMeasurements imu_data;
+    for (auto const& [timestamp_ns, omega_co_i] : omega_co) {
+        imu_data.insert({timestamp_ns, {tf_imu_co * omega_co_i.velocity, Vector3d::Zero()}});
     }
 
     database::AddImuData(imu_data, "/interpolated", db);

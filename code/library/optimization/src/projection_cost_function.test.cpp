@@ -7,7 +7,6 @@
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
 #include "testing_utilities/constants.hpp"
-#include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
@@ -95,7 +94,7 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
 // pointers takes some thought, but cost_function->Evaluate() should be tested when there is interest and time! Note
 // that the logic required to allocate the required input parameters for the evaluate function is found in
 // projection_functions:: PinholeRadtan4::JacobianUpdate().
-TEST(OptimizationProjectionCostFunction, TestPinholeCreate_T) {
+TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_TCreate) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
     ceres::CostFunction const* const cost_function{

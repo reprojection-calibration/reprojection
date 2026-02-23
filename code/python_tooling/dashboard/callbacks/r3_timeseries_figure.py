@@ -45,10 +45,12 @@ def register_build_r6_timeseries_figures_callback(
         if sensor not in timestamps:
             return {}, {}
 
+        timestamps_int = [int(t) for t in timestamps[sensor]]
+
         # NOTE(Jack): Because sensor was in timestamps, sensor MUST also be in raw_data.
         # NOTE(Jack): # The initial condition assertion means that if sensor_type == Camera that pose_type MUST be set.
         return build_r6_timeseries_figures(
-            timestamps[sensor],
+            timestamps_int,
             raw_data[sensor]["frames"],
             sensor_type,
             fig1_config,

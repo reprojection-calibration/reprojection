@@ -4,6 +4,7 @@ find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
+        src/camera_imu_orientation_initialization.cpp
         src/camera_nonlinear_refinement.cpp
         src/projection_cost_function.cpp
         src/spline_nonlinear_refinement.cpp
@@ -24,6 +25,8 @@ AddLibrary()
 set(TESTS
         src/ceres_geometry.test.cpp
         src/projection_cost_function.test.cpp
+        src/rotational_velocity_cost_function.test.cpp
+        test/camera_imu_orientation_initialization.test.cpp
         test/camera_nonlinear_refinement.test.cpp
         test/spline_cost_function.test.cpp
         test/spline_nonlinear_refinement.test.cpp

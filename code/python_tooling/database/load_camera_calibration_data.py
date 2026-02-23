@@ -16,6 +16,9 @@ from database.types import PoseType
 
 def load_camera_calibration_data(db_path):
     df = load_images_df(db_path)
+    if df is None:
+        return None
+
     data = image_df_to_camera_calibration_data(df)
 
     df = load_extracted_targets_df(db_path)
@@ -31,6 +34,10 @@ def load_camera_calibration_data(db_path):
 
 
 def calculate_camera_statistics(data):
+    # TODO(Jack): Should this function be "protected" from the outside instead?
+    if data is None:
+        return None
+
     statistics = {}
     for sensor, sensor_data in data.items():
         total_frames = 0
@@ -91,10 +98,22 @@ def calculate_camera_statistics(data):
 # consistency across an entire sensors data display is very nice because it makes it clear what the common timeframe is
 # and also when data is missing. Wonderful :)
 def get_reference_timestamps(data):
+    if data is None:
+        return None
+
     timestamp_record = {}
     for sensor, sensor_data in data.items():
-        timestamps = sorted(list(sensor_data["frames"].keys()))
+        timestamps_int = sorted(list(sensor_data["frames"].keys()))
 
-        timestamp_record[sensor] = timestamps
+        # NOTE(Jack): This is another place where json serialization and types comes back and bites us! Here we are
+        # storing timestamps in a python list. When these get handled by dash and put into the metadata store, they are
+        # converted to string, because it does not have an int type. If this is not already an int type, we loose
+        # precision from the automatic dash casting, and therefore when we decode it for plotting, the timestamps no
+        # longer match. Therefore we store cast it here directly to a string, which is then handled easily by dash with
+        # no conversion or anything, and then on the consumption side if needed we convert the string back to an int in
+        # python which can handle long int with no problem.
+        timestamps_str = [str(t) for t in timestamps_int]
+
+        timestamp_record[sensor] = timestamps_str
 
     return timestamp_record

@@ -4,6 +4,9 @@ def refresh_sensor_list(metadata, sensor_type):
     statistics, _ = metadata
 
     statistics = statistics[sensor_type]
+    if statistics is None:
+        return [], ""
+
     sensor_names = sorted(statistics.keys())
 
     if len(sensor_names) == 0:
