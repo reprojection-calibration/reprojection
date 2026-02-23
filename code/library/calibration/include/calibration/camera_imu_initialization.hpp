@@ -15,12 +15,12 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
  *
  * Given the camera orientation spline we can differentiate it to get the camera's angular velocity (omega_co). Assuming
  * zero translation between the camera and IMU we can then use optimization::AngularVelocityAlignment() to estimate the
- * rotation matrix which aligns the camera's angular velocity to the IMU gyroscope angular velocity. Of course for any
- * real sensor pair there is translation and this will introduce an error, but for an initialization this method is
- * acceptable.
+ * rotation matrix which aligns the camera's angular velocity to the IMU gyroscope's angular velocity. Of course for any
+ * real sensor pair there is a non-zero translation and our approximation will introduce an error, but for an
+ * initialization this method is acceptable.
  *
- * Note that if not all axes of the camera-IMU have sufficient rotational velocity excitement then the returned solution
- * will be degenerate.
+ * Note that if not all axes of the camera-IMU motion have sufficient rotational velocity excitement then the returned
+ * solution will be degenerate.
  */
 std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC3 const& camera_orientation_spline,
                                                            ImuMeasurements const& imu_data);
