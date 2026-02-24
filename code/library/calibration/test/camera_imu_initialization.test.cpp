@@ -18,7 +18,7 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
     auto const [targets, camera_frames]{
-        testing_mocks::GenerateMvgData(sensor, {testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
+        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
     ImuMeasurements const imu_data{testing_mocks::GenerateImuData(1000, timespan_ns)};
 
     auto const [rotation_result, gravity]{calibration::EstimateCameraImuRotationAndGravity(camera_frames, imu_data)};

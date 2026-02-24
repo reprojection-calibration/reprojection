@@ -32,12 +32,19 @@ struct CameraInfo {
     ImageBounds bounds;
 };
 
-// TODO(Jack): If there is no other foreseeable thing that will be added to the camera state, do we really need a
-//  struct? Same idea for FrameState below, but I assume we will have more values coming into FrameState later.
-// TODO(Jack): Do maybe the camera-imu extrinsic belong here? I think it makes more sense they would belong to an IMU
-//  centric state, but that might never be necessary because we never really optimize the IMU itself in any sense.
+// TODO(Jack): Do the camera-imu extrinsic and gravity belong here? I think it makes more sense they would belong to an
+//  IMU centric state, but that might never be necessary because we never really optimize the IMU itself in any sense.
+//  But what I do not like is that even for cases where we just optimize a mono camera we will have the cam-imu
+//  extrinsic and gravity hanging around unused. A sign we are missing some abstraction. But for now we move forward
+//  until it causes us problems.
 struct CameraState {
+    CameraState() = default;
+
+    explicit CameraState(ArrayXd const& _intrinsics) : intrinsics{_intrinsics} {}
+
     ArrayXd intrinsics;
+    Array6d se3_co_imu;
+    Vector3d gravity;
 };
 
 // TODO(Jack): If it turns out we never add anything else to the frame state than we can just remove the struct and use
