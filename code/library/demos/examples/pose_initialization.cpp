@@ -6,6 +6,7 @@
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
+#include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 
 using namespace reprojection;
@@ -71,12 +72,7 @@ int main() {
 
     ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
 
-    auto const [orientation_init,
-                gravity_w]{calibration::EstimateCameraImuRotationAndGravity(optimized_state.frames, imu_data)};
-    auto const [R_imu_co, _]{orientation_init};
-
-    std::cout << R_imu_co << std::endl;
-    std::cout << gravity_w.transpose() << std::endl;
+    optimization::CameraImuNonlinearRefinement(sensor, targets, imu_data, optimized_state);
 
     return EXIT_SUCCESS;
 }
