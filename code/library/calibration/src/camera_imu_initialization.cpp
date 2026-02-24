@@ -10,35 +10,38 @@
 #include "spline/types.hpp"
 #include "types/spline_types.hpp"
 
-// TODO(Jack): At multiple places in this file we have to write loops to simply convert the data back and forth between
-//  compatible types for the spline and IMU types. Is there anyway that we can unify the representaitons to eliminate
-//  these conversion loops everywhere?
-// TODO(Jack): Pass VelocityMeasurements and PositionMeasurements directly instead of IMU data to the helpers.
-
 namespace reprojection::calibration {
 
 using namespace spline;
 
+// TODO(Jack): This function is unfortunately primarily a collection of data type conversion loops! Is there any way
+//  that we can restructure the data or functions to eliminate these loops?
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
     Frames const& camera_poses, ImuMeasurements const& imu_data) {
+    // Data type conversion loop...
     PositionMeasurements camera_orientations;
     for (auto const& [timestamp_ns, frame_i] : camera_poses) {
         camera_orientations.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
     }
+
     // TODO(Jack): Is 20 times the number of camera_poses high enough frequency? Do we need to parameterize this?
     CubicBSplineC3 const camera_orientation_spline{
         InitializeC3Spline(camera_orientations, 20 * std::size(camera_poses))};
 
-    VelocityMeasurements omega_imu;
+    // Data type conversion loop...
+    VelocityMeasurements imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
-        omega_imu.insert({timestamp_ns, {data_i.angular_velocity}});
+        imu_angular_velocity.insert({timestamp_ns, {data_i.angular_velocity}});
     }
-    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation_spline, omega_imu)};
 
+    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation_spline, imu_angular_velocity)};
+
+    // Data type conversion loop...
     AccelerationMeasurements imu_linear_acceleration;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
         imu_linear_acceleration.insert({timestamp_ns, {data_i.linear_acceleration}});
     }
+
     Vector3d const gravity_w{EstimateGravity(camera_orientation_spline, imu_linear_acceleration, R_imu_co)};
 
     return {{R_imu_co, diagnostics}, gravity_w};
@@ -65,7 +68,6 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
 Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationMeasurements const& imu_acceleration,
                          Matrix3d const& R_imu_co) {
     // Calculate the camera orientation required to transform each linear acceleration into the camera world frame.
-    // This assumes zero translation between camera and imu, of course not true but acceptable for small translations.
     PositionMeasurements so3_co_w;
     for (uint64_t const timestamp_ns : imu_acceleration | std::views::keys) {
         auto const so3_i_co_w{EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::Null)};
@@ -74,6 +76,8 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
         }
     }
 
+    // Transform the imu acceleration into the world frame and store it. This assumes zero translation between camera
+    // and imu, of course not true but is acceptable approximation for small translations.
     MatrixXd acceleration_w(std::size(so3_co_w), 3);
     for (int i{0}; auto const& [timestamp_ns, so3_i_co_w] : so3_co_w) {
         Matrix3d const R_w_co{geometry::Exp(so3_i_co_w.position).inverse()};
@@ -103,7 +107,8 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
         // TODO(Jack): Engineer more sophisticated IMU test data with gravity so that we can cover this branch in unit
         //  testing!
         // NOTE(Jack): By normalizing and then multiplying by 9.81 we are hacking this/stuffing this into a gravity
-        // looking vector that is not really 100% gravity.
+        // looking vector that is not really 100% gravity because it includes non-zero mean components like noise, bias,
+        // and any non-symmetric accelerations (ex. free fall).
         double constexpr g{9.80665};                 // LCOV_EXCL_LINE
         return g * net_acceleration_w.normalized();  // LCOV_EXCL_LINE
     }
