@@ -11,9 +11,9 @@ namespace reprojection::optimization {
 
 // NOTE(Jack): The rotational velocities must come from two frames on a rigid body. If they are not on the same body
 // this optimization is not meaningful.
-class RotationalVelocityCostFunction {
+class AngularVelocityCostFunction {
    public:
-    RotationalVelocityCostFunction(Vector3d const& omega_a, Vector3d const& omega_b)
+    AngularVelocityCostFunction(Vector3d const& omega_a, Vector3d const& omega_b)
         : omega_a_{omega_a}, omega_b_{omega_b} {}
 
     // TODO CHECK COORDINATE CONVENTIONS ARE CORRECT!
@@ -42,8 +42,8 @@ class RotationalVelocityCostFunction {
     }
 
     static ceres::CostFunction* Create(Vector3d const& omega_a, Vector3d const& omega_b) {
-        return new ceres::AutoDiffCostFunction<RotationalVelocityCostFunction, 3, 3>(
-            new RotationalVelocityCostFunction(omega_a, omega_b));
+        return new ceres::AutoDiffCostFunction<AngularVelocityCostFunction, 3, 3>(
+            new AngularVelocityCostFunction(omega_a, omega_b));
     }
 
     Vector3d omega_a_;

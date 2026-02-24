@@ -2,7 +2,6 @@
 
 #include <ceres/ceres.h>
 
-#include "optimization/ceres_state.hpp"
 #include "optimization/spline_cost_function.hpp"
 #include "spline/spline_evaluation_concept.hpp"
 #include "spline/spline_state.hpp"

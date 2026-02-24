@@ -1,18 +1,12 @@
 #include <map>
 #include <ranges>
 
+#include "calibration/camera_imu_initialization.hpp"
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
-#include "geometry/lie.hpp"
-#include "optimization/camera_imu_orientation_initialization.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
-#include "spline/so3_spline.hpp"
-#include "spline/spline_evaluation.hpp"
-#include "spline/spline_initialization.hpp"
-#include "types/calibration_types.hpp"
-#include "types/spline_types.hpp"
 
 using namespace reprojection;
 
@@ -20,13 +14,12 @@ using namespace reprojection;
 // as needed!
 
 // WARN(Jack): This is a hack that we need to do so that the spline initialization does not have any massive
-// discontinuties or sudden jumps. But there is some bigger problem here that we are missing and need to solve long
+// discontinuities or sudden jumps. But there is some bigger problem here that we are missing and need to solve long
 // term.
 // WARN(Jack): Also note that we do not save aligned_initial_state to the database, we save plain old initial_state and
 // use that to calculate the reprojection errors, but use aligned_initial_state to initialize the nonlinear
 // optimization. This means that what we are doing here and what we are visualizing in the database are starting to
 // diverge. Not nice!
-
 // cppcheck-suppress passedByValue
 OptimizationState AlignRotations(OptimizationState state) {
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
@@ -76,38 +69,14 @@ int main() {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-    PositionMeasurements orientations;
-    for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
-        orientations.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
-    }
-    spline::CubicBSplineC3 const so3_spline{
-        spline::InitializeC3Spline(orientations, 20 * std::size(optimized_state.frames))};
+    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
 
-    ImuMeasurements const measured_imu_data{database::GetImuData(db, "/imu0")};
-    VelocityMeasurements omega_imu;
-    for (auto const& [timestamp_ns, imu_data_i] : measured_imu_data) {
-        omega_imu.insert({timestamp_ns, {imu_data_i.angular_velocity}});
-    }
+    auto const [orientation_init,
+                gravity_w]{calibration::EstimateCameraImuRotationAndGravity(optimized_state.frames, imu_data)};
+    auto const [R_imu_co, _]{orientation_init};
 
-    VelocityMeasurements omega_co;
-    for (auto const timestamp_ns : measured_imu_data | std::views::keys) {
-        auto const omega_co_i{
-            spline::EvaluateSpline<spline::So3Spline>(so3_spline, timestamp_ns, spline::DerivativeOrder::First)};
-
-        if (omega_co_i) {
-            // HARDCODE SCALE MULTIPLY 1e9
-            omega_co.insert({timestamp_ns, {1e9 * omega_co_i.value()}});
-        }
-    }
-
-    auto const [tf_imu_co, diagnostics2]{optimization::InitializeCameraImuOrientation(omega_co, omega_imu)};
-
-    ImuMeasurements imu_data;
-    for (auto const& [timestamp_ns, omega_co_i] : omega_co) {
-        imu_data.insert({timestamp_ns, {tf_imu_co * omega_co_i.velocity, Vector3d::Zero()}});
-    }
-
-    database::AddImuData(imu_data, "/interpolated", db);
+    std::cout << R_imu_co << std::endl;
+    std::cout << gravity_w.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }
