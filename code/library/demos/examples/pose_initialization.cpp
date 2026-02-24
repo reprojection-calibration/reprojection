@@ -6,7 +6,6 @@
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
-#include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 
 using namespace reprojection;

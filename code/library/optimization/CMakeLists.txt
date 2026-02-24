@@ -5,7 +5,6 @@ find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
         src/angular_velocity_alignment.cpp
-        src/camera_imu_nonlinear_refinement.cpp
         src/camera_nonlinear_refinement.cpp
         src/projection_cost_function.cpp
         src/spline_nonlinear_refinement.cpp
