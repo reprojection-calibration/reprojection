@@ -40,10 +40,14 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC
  * data with noise and biases this will never be perfect, however, we can use this value to initialize the full
  * camera-imu extrinsic optimization.
  *
+ * Similar to the calibration::EstimateCameraImuRotation(), the transformation of the imu's linear acceleration to the
+ * camera's world frame, also requires the assumption of zero translation. As stated before this is not possible but the
+ * resulting error is acceptable for an initialization method. Assuming of course the translation is not too large :)
+ *
  * Note that if there is no gravity present (ex. the imu prefilters out gravity) then a zero vector is returned. See the
  * return statement to understand this condition better, and assess long term if this is the right strategy.
  */
-Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data,
-                         Matrix3d const& R_imu_co);
+Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation,
+                         AccelerationMeasurements const& acceleration_imu, Matrix3d const& R_imu_co);
 
 }  // namespace reprojection::calibration

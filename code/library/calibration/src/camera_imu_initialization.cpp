@@ -35,7 +35,11 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
     }
     auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation_spline, omega_imu)};
 
-    Vector3d const gravity_w{EstimateGravity(camera_orientation_spline, imu_data, R_imu_co)};
+    AccelerationMeasurements imu_linear_acceleration;
+    for (auto const& [timestamp_ns, data_i] : imu_data) {
+        imu_linear_acceleration.insert({timestamp_ns, {data_i.linear_acceleration}});
+    }
+    Vector3d const gravity_w{EstimateGravity(camera_orientation_spline, imu_linear_acceleration, R_imu_co)};
 
     return {{R_imu_co, diagnostics}, gravity_w};
 }
@@ -45,12 +49,12 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
                                                            VelocityMeasurements const& omega_imu) {
     VelocityMeasurements omega_co;
     for (uint64_t const timestamp_ns : omega_imu | std::views::keys) {
-        if (auto const omega_co_i{
-                EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::First)}) {
+        auto const omega_i_co{EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::First)};
+        if (omega_i_co.has_value()) {
             // WARN(Jack): We are hard coding a scale multiplication here of 1e9 to bring it out of ns space and into
             // normal second space. Why we need this I am not 100% sure. But if we do not have it then our spline
             // derivative data does not match the real world scale by exactly a factor of 1e-9 :)
-            omega_co.insert({timestamp_ns, {1e9 * omega_co_i.value()}});
+            omega_co.insert({timestamp_ns, {1e9 * omega_i_co.value()}});
         }
     }
 
@@ -58,22 +62,26 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
 }
 
 // TODO(Jack): Unit test
-Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data,
+Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationMeasurements const& imu_acceleration,
                          Matrix3d const& R_imu_co) {
-    PositionMeasurements aa_co_w;
-    for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
-        if (auto const orientation_i{
-                EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::Null)}) {
-            aa_co_w.insert({timestamp_ns, {orientation_i.value()}});
+    // Calculate the camera orientation required to transform each linear acceleration into the camera world frame.
+    // This assumes zero translation between camera and imu, of course not true but acceptable for small translations.
+    PositionMeasurements so3_co_w;
+    for (uint64_t const timestamp_ns : imu_acceleration | std::views::keys) {
+        auto const so3_i_co_w{EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::Null)};
+        if (so3_i_co_w.has_value()) {
+            so3_co_w.insert({timestamp_ns, {so3_i_co_w.value()}});
         }
     }
 
-    MatrixXd a_w(std::size(aa_co_w), 3);
-    for (int i{0}; auto const& [timestamp_ns, aa_co_w_i] : aa_co_w) {
-        Matrix3d const R_co_w{geometry::Exp(aa_co_w_i.position)};
-        Vector3d const a_i_w{R_co_w.inverse() * R_imu_co.inverse() * imu_data.at(timestamp_ns).linear_acceleration};
+    MatrixXd acceleration_w(std::size(so3_co_w), 3);
+    for (int i{0}; auto const& [timestamp_ns, so3_i_co_w] : so3_co_w) {
+        Matrix3d const R_w_co{geometry::Exp(so3_i_co_w.position).inverse()};
+        Matrix3d const R_co_imu{R_imu_co.inverse()};
+        Vector3d const& acceleration_i_imu{imu_acceleration.at(timestamp_ns).acceleration};
 
-        a_w.row(i) = a_i_w;
+        Vector3d const acceleration_i_w{R_w_co * R_co_imu * acceleration_i_imu};
+        acceleration_w.row(i) = acceleration_i_w;
 
         i += 1;
     }
@@ -88,14 +96,16 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, ImuMeasuremen
     //  length 9.8. But what is actually reasonable here is not clear to me. A long term strategy is needed here and
     //  should come as we see more data. My gut tells me that the actual threshold would be to say less than g. But that
     //  might be too strict?
-    Vector3d const mean_a_w{a_w.colwise().mean()};
-    if (mean_a_w.norm() < 1) {
+    Vector3d const net_acceleration_w{acceleration_w.colwise().mean()};
+    if (net_acceleration_w.norm() < 1) {
         return Vector3d::Zero();
     } else {
         // TODO(Jack): Engineer more sophisticated IMU test data with gravity so that we can cover this branch in unit
         //  testing!
-        double constexpr g{9.80665};       // LCOV_EXCL_LINE
-        return g * mean_a_w.normalized();  // LCOV_EXCL_LINE
+        // NOTE(Jack): By normalizing and then multiplying by 9.81 we are hacking this/stuffing this into a gravity
+        // looking vector that is not really 100% gravity.
+        double constexpr g{9.80665};                 // LCOV_EXCL_LINE
+        return g * net_acceleration_w.normalized();  // LCOV_EXCL_LINE
     }
 }
 
