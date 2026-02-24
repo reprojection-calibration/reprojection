@@ -16,7 +16,7 @@
 namespace reprojection::optimization {
 
 ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
-                            Vector3d const& point);
+                            Vector3d const& point, double const u_i, uint64_t const delta_t_ns);
 
 template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
@@ -43,11 +43,11 @@ class SplineProjectionCostFunction_T {
         Vector3<T> const position{spline::R3Spline::Evaluate<T, spline::DerivativeOrder::Null>(
             control_points.template block<3, 4>(3, 0), u_i_, delta_t_ns_)};
 
-        Array6<T> pose;
-        pose << orientation, position;
+        Array6<T> pose_on_spline;
+        pose_on_spline << orientation, position;
 
         return ProjectionCostFunction_T<T_Model>(pixel_, point_, bounds_)
-            .template operator()<T>(intrinsics_ptr, pose.data(), residual);
+            .template operator()<T>(intrinsics_ptr, pose_on_spline.data(), residual);
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds,
