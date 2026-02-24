@@ -2,10 +2,46 @@
 
 #include <gtest/gtest.h>
 
+#include "projection_functions/double_sphere.hpp"
 #include "projection_functions/pinhole.hpp"
+#include "projection_functions/pinhole_radtan4.hpp"
+#include "projection_functions/unified_camera_model.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
+
+TEST(OptimizationSplineProjectionCostFunction, TestCreate) {
+    Array2d const pixel{360, 240};
+    Array3d const point{0, 0, 600};
+    double const u_i{0};
+    uint64_t const delta_t_ns{1};
+
+    int const num_parameter_blocks{5};  // intrinsics and four control points
+
+    ceres::CostFunction* cost_function{optimization::Create(CameraModel::DoubleSphere, testing_utilities::image_bounds,
+                                                            pixel, point, u_i, delta_t_ns)};
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::DoubleSphere::Size);
+    delete cost_function;
+
+    cost_function =
+        optimization::Create(CameraModel::Pinhole, testing_utilities::image_bounds, pixel, point, u_i, delta_t_ns);
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::Pinhole::Size);
+    delete cost_function;
+
+    cost_function = optimization::Create(CameraModel::PinholeRadtan4, testing_utilities::image_bounds, pixel, point,
+                                         u_i, delta_t_ns);
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::PinholeRadtan4::Size);
+    delete cost_function;
+
+    cost_function = optimization::Create(CameraModel::UnifiedCameraModel, testing_utilities::image_bounds, pixel, point,
+                                         u_i, delta_t_ns);
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::UnifiedCameraModel::Size);
+    delete cost_function;
+}
 
 // Test with four of the same identity control points. This should give us an identity SE3 pose. Because the spline is
 // stationary as identity we arbitrarily choose u_i and delta_t_ns as it makes no difference here.
