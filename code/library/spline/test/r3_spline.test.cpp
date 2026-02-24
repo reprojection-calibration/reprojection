@@ -67,7 +67,9 @@ TEST(Spline_r3Spline, TestEvaluate) {
 // see that when u=0 we get back the point 2, and when u=0.99999 we get back the point 3. Values in between 0 and 1
 // and 3 and 4 cannot be estimated.
 TEST(Spline_r3Spline, TestTemplatedEvaluateOnLine) {
-    Matrix3Kd const P1{{0, 1, 2, 3}, {0, 1, 2, 3}, {0, 1, 2, 3}};
+    Matrix3Kd const P1{{0, 1, 2, 3},  //
+                       {0, 1, 2, 3},
+                       {0, 1, 2, 3}};
     std::uint64_t const delta_t_ns{5};  // No effect when DerivativeOrder::Null (5^0 = 1)
 
     Vector3d const position_1{R3Spline::Evaluate<double, DerivativeOrder::Null>(P1, 0, delta_t_ns)};
