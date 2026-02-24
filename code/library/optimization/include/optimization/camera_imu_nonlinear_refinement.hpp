@@ -8,8 +8,8 @@
 namespace reprojection::optimization {
 
 std::tuple<OptimizationState, CeresState> CameraImuNonlinearRefinement(CameraInfo const& sensor,
-                                                              CameraMeasurements const& targets,
-                                                              ImuMeasurements const& imu_data,
-                                                              OptimizationState const& initial_state);
+                                                                       CameraMeasurements const& targets,
+                                                                       ImuMeasurements const& imu_data,
+                                                                       OptimizationState const& initial_state);
 
 }  // namespace  reprojection::optimization
