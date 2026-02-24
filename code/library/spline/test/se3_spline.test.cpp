@@ -7,27 +7,26 @@
 
 using namespace reprojection;
 
-TEST(SplineSe3Spline, TestInvalidEvaluateConditions) {
-    spline::Se3Spline se3_spline{100, 5};
-    EXPECT_EQ(se3_spline.Evaluate(115), std::nullopt);
+// Read the comments in TEST(Spline_r3Spline, TestEvaluateValidity) for more context.
+TEST(SplineSe3Spline, TestEvaluateValidity) {
+    spline::Se3Spline const empty_spline{{100, 5}, {}};
+    EXPECT_FALSE(empty_spline.Evaluate(100));
 
-    for (int i{0}; i < spline::constants::order; ++i) {
-        se3_spline.AddControlPoint(Vector6d::Zero());
-    }
+    Matrix6Xd const four_control_points{Matrix6Xd::Zero(6, spline::constants::order)};
+    spline::Se3Spline const one_segment_spline{{100, 5}, four_control_points};
 
-    EXPECT_NE(se3_spline.Evaluate(100), std::nullopt);
-    EXPECT_EQ(se3_spline.Evaluate(105), std::nullopt);
+    EXPECT_TRUE(empty_spline.Evaluate(100));
+    EXPECT_FALSE(empty_spline.Evaluate(105));
 
-    se3_spline.AddControlPoint(Vector6d::Zero());
-    EXPECT_NE(se3_spline.Evaluate(105), std::nullopt);
+    Matrix6Xd const five_control_points{Matrix6Xd::Zero(6, spline::constants::order + 1)};
+    spline::Se3Spline const two_segment_spline{{100, 5}, four_control_points};
+    EXPECT_TRUE(two_segment_spline.Evaluate(105));
 }
 
 TEST(SplineSe3Spline, TestEvaluate) {
-    uint64_t const delta_t_ns{5};
-    spline::Se3Spline se3_spline{100, delta_t_ns};
-
+    std::vector<Vector6d> se3_control_points;
     Vector6d control_point_i{Vector6d::Zero()};
-    se3_spline.AddControlPoint(control_point_i);
+    se3_control_points.push_back(control_point_i);
 
     for (int i{1}; i < spline::constants::order; ++i) {
         Vector6d delta;
@@ -36,16 +35,19 @@ TEST(SplineSe3Spline, TestEvaluate) {
 
         control_point_i = delta + control_point_i;
 
-        se3_spline.AddControlPoint(control_point_i);
+        se3_control_points.push_back(control_point_i);
     }
 
+    uint64_t const delta_t_ns{5};
+    spline::Se3Spline const spline{{100, delta_t_ns}, se3_control_points};
+
     // Heuristic test as we have no theoretical testing strategy at this time.
-    for (int i{0}; i < static_cast<int>(delta_t_ns); ++i) {
-        auto const p_i{se3_spline.Evaluate(100 + i)};
+    for (uint64_t i{0}; i < delta_t_ns; ++i) {
+        auto const p_i{spline.Evaluate(100 + i)};
         ASSERT_TRUE(p_i.has_value());
     }
 
-    auto const p_0{se3_spline.Evaluate(100)};
+    auto const p_0{spline.Evaluate(100)};
     EXPECT_FLOAT_EQ(geometry::Exp(p_0.value()).matrix().diagonal().sum(),
                     3.9593055);  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
     // that we can detect changes to the implementation quickly (hopefully. )
