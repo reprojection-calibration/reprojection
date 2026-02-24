@@ -65,7 +65,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
 
     // Make a copy and add noise so the optimization has to do some work :)
     spline::CubicBSplineC3 initialization{spline_};
-    for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
+    for (size_t i{0}; i < initialization.Size(); ++i) {
         initialization.control_points[i].array() += 0.1 * i;
     }
 
@@ -88,7 +88,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     spline::CubicBSplineC3 const optimized_spline{handler.GetSpline()};
-    for (size_t i{0}; i < std::size(optimized_spline.control_points); ++i) {
+    for (size_t i{0}; i < optimized_spline.Size(); ++i) {
         EXPECT_TRUE(optimized_spline.control_points[i].isApprox(spline_.control_points[i], 1e-6));
     }
 }
@@ -97,7 +97,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinear
     auto const [positions, velocities, accelerations]{CalculateMeasurements<So3Spline>()};
 
     spline::CubicBSplineC3 initialization{spline_};
-    for (size_t i{0}; i < std::size(initialization.control_points); ++i) {
+    for (size_t i{0}; i < initialization.Size(); ++i) {
         initialization.control_points[i].array() += 0.1 * i;
     }
 
@@ -119,7 +119,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinear
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     spline::CubicBSplineC3 const optimized_spline{handler.GetSpline()};
-    for (size_t i{0}; i < std::size(optimized_spline.control_points); ++i) {
+    for (size_t i{0}; i < optimized_spline.Size(); ++i) {
         EXPECT_TRUE(optimized_spline.control_points[i].isApprox(spline_.control_points[i], 1e-1));
     }
 }

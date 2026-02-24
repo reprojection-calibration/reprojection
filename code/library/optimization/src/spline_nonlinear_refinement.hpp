@@ -26,8 +26,7 @@ class CubicBSplineC3Refinement {
         requires spline::CanEvaluateCubicBSplineC3<T_Model>
     [[nodiscard]] bool AddConstraint(uint64_t const timestamp_ns, Vector3d const& constraint,
                                      spline::DerivativeOrder const order) {
-        auto const normalized_position{
-            spline_.time_handler.SplinePosition(timestamp_ns, std::size(spline_.control_points))};
+        auto const normalized_position{spline_.time_handler.SplinePosition(timestamp_ns, spline_.Size())};
         if (not normalized_position.has_value()) {
             return false;
         }

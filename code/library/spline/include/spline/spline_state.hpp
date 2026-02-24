@@ -22,6 +22,11 @@ struct CubicBSplineC3 {
     CubicBSplineC3(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
         : time_handler{t0_ns, delta_t_ns, constants::order} {}
 
+    /**
+     * \brief The number of control points the spline contains.
+     */
+    size_t Size() const { return std::size(control_points); }
+
     TimeHandler time_handler;
     std::vector<Vector3d> control_points;
 };
