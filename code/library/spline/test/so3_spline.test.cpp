@@ -44,7 +44,7 @@ TEST(SplineSo3Spline, TestEvaluate) {
     CubicBSplineC3 const spline{BuildTestSpline()};
 
     // Check that all timestamps from 100 to 104 evaluate without error
-    for (int i{0}; i < static_cast<int>(spline.time_handler.delta_t_ns_); ++i) {
+    for (int i{0}; i < static_cast<int>(spline.time_handler_.delta_t_ns_); ++i) {
         auto const p_i{EvaluateSpline<So3Spline>(spline, 100 + i)};
         ASSERT_TRUE(p_i.has_value());
     }

@@ -23,8 +23,8 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
     // ERROR(Jack): The InitializeC3Spline is visible even if we do not preface it with the spline:: namespace. Is there
     // something wrong I am doing?
     CubicBSplineC3 const one_segment_spline{spline::InitializeC3Spline(measurements, 1)};
-    EXPECT_EQ(one_segment_spline.time_handler.t0_ns_, 5000);
-    EXPECT_EQ(one_segment_spline.time_handler.delta_t_ns_, 200);
+    EXPECT_EQ(one_segment_spline.time_handler_.t0_ns_, 5000);
+    EXPECT_EQ(one_segment_spline.time_handler_.delta_t_ns_, 200);
     EXPECT_EQ(one_segment_spline.Size(), 4);
     // NOTE(Jack): At this point this and below are canary in the coal mine tests, to make sure nothing changes as we
     // refactor. An unsolved problem is the time handling, and this is the reason why these values are not exact values
@@ -35,8 +35,8 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
         Vector3d{4.0556875027223356, 4.0556875027223356, 4.0556875027223356}));
 
     CubicBSplineC3 const two_segment_spline{spline::InitializeC3Spline(measurements, 2)};
-    EXPECT_EQ(two_segment_spline.time_handler.t0_ns_, 5000);
-    EXPECT_EQ(two_segment_spline.time_handler.delta_t_ns_, 100);
+    EXPECT_EQ(two_segment_spline.time_handler_.t0_ns_, 5000);
+    EXPECT_EQ(two_segment_spline.time_handler_.delta_t_ns_, 100);
     EXPECT_EQ(two_segment_spline.Size(), 5);
     // See note above on canary coal mine.
     EXPECT_TRUE(two_segment_spline.control_points[0].isApprox(

@@ -16,14 +16,13 @@ std::tuple<double, int> NormalizedSegmentTime(std::uint64_t const t0_ns, std::ui
 
 class TimeHandler {
    public:
-    TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns, int const k);
+    TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns);
 
     std::optional<std::pair<double, int>> SplinePosition(std::uint64_t const t_ns,
                                                          size_t const num_control_points) const;
 
     std::uint64_t t0_ns_;
     std::uint64_t delta_t_ns_;
-    int k_;
 };
 
 }  // namespace reprojection::spline

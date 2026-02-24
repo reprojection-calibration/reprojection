@@ -14,16 +14,16 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
     // problem.
     uint64_t const t0_ns{std::cbegin(measurements)->first};
     uint64_t const tn_ns{std::crbegin(measurements)->first};
-    CubicBSplineC3 spline{t0_ns, (tn_ns - t0_ns) / num_segments};
+    TimeHandler const time_handler{t0_ns, (tn_ns - t0_ns) / num_segments};
 
-    auto const [A, b]{CubicBSplineC3Init::BuildAb(measurements, num_segments, spline.time_handler)};
+    auto const [A, b]{CubicBSplineC3Init::BuildAb(measurements, num_segments, time_handler)};
 
     // NOTE(Jack): At this time lambda here is hardcoded, it might make sense at some time in the future to parameterize
     // this, but currently I see no scenario where we can really expect the user to parameterize it, so we leave it
     // hardcoded for now.
     // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
     // timestamps which results in very small values in the omega matrix otherwise.
-    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(spline.time_handler.delta_t_ns_, 1e8)};
+    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(time_handler.delta_t_ns_, 1e8)};
     Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, CubicBSplineC3Init::N, num_segments)};
 
     // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
@@ -56,11 +56,9 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
         throw std::runtime_error("Failed: solver.solve(b_n);");  // LCOV_EXCL_LINE
     }
 
-    for (int i{0}; i < x.rows(); i += 3) {
-        spline.control_points.push_back(x.segment<3>(i));
-    }
-
-    return spline;
+    // TODO(Jack): Is there a better way to calculate the number of control points here than x.rows()/3?
+    // TODO(Jack): Confirm this does a copy here!
+    return CubicBSplineC3{time_handler, Eigen::Map<Matrix3Xd const>(x.data(), 3, x.rows() / 3)};
 }
 
 }  // namespace reprojection::spline

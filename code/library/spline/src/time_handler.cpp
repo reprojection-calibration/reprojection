@@ -6,6 +6,8 @@
 #include <optional>
 #include <tuple>
 
+#include "spline/constants.hpp"
+
 namespace reprojection::spline {
 
 std::tuple<double, int> NormalizedSegmentTime(std::uint64_t const t0_ns, std::uint64_t const t_ns,
@@ -19,8 +21,8 @@ std::tuple<double, int> NormalizedSegmentTime(std::uint64_t const t0_ns, std::ui
     return {(s_t - i), static_cast<int>(i)};
 }
 
-TimeHandler::TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns, int const k)
-    : t0_ns_{t0_ns}, delta_t_ns_{delta_t_ns}, k_{k} {}
+TimeHandler::TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
+    : t0_ns_{t0_ns}, delta_t_ns_{delta_t_ns} {}
 
 std::optional<std::pair<double, int>> TimeHandler::SplinePosition(std::uint64_t const t_ns,
                                                                   size_t const num_control_points) const {
@@ -28,7 +30,7 @@ std::optional<std::pair<double, int>> TimeHandler::SplinePosition(std::uint64_t 
 
     // From reference [1] - "At time t in [t_i, t_i+1) the value of p(t) only depends on the control points p_i,
     // p_i+1, ..., p_i+k-1" - See the start of the second paragraph in section 4.2 Matrix Representation.
-    if (num_control_points < static_cast<size_t>(i + k_)) {
+    if (num_control_points < static_cast<size_t>(i + constants::order)) {
         return std::nullopt;
     }
 
