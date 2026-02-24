@@ -15,11 +15,11 @@ TEST(SplineSe3Spline, TestEvaluateValidity) {
     Matrix6Xd const four_control_points{Matrix6Xd::Zero(6, spline::constants::order)};
     spline::Se3Spline const one_segment_spline{{100, 5}, four_control_points};
 
-    EXPECT_TRUE(empty_spline.Evaluate(100));
-    EXPECT_FALSE(empty_spline.Evaluate(105));
+    EXPECT_TRUE(one_segment_spline.Evaluate(100));
+    EXPECT_FALSE(one_segment_spline.Evaluate(105));
 
     Matrix6Xd const five_control_points{Matrix6Xd::Zero(6, spline::constants::order + 1)};
-    spline::Se3Spline const two_segment_spline{{100, 5}, four_control_points};
+    spline::Se3Spline const two_segment_spline{{100, 5}, five_control_points};
     EXPECT_TRUE(two_segment_spline.Evaluate(105));
 }
 
