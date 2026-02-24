@@ -2,10 +2,11 @@
 
 #include <ceres/ceres.h>
 
-#include "optimization/spline_cost_function.hpp"
 #include "spline/spline_evaluation_concept.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
+
+#include "spline_cost_function.hpp"
 
 namespace reprojection::optimization {
 

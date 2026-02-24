@@ -1,4 +1,4 @@
-#include "optimization/spline_cost_function.hpp"
+#include "spline_cost_function.hpp"
 
 #include <gtest/gtest.h>
 

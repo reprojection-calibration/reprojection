@@ -1,4 +1,4 @@
-#include "optimization/spline_nonlinear_refinement.hpp"
+#include "spline_nonlinear_refinement.hpp"
 
 #include <gtest/gtest.h>
 
