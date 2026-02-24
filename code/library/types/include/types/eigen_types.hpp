@@ -20,7 +20,9 @@ template <typename T>
 using Array5 = Eigen::Array<T, 5, 1>;
 using Array5b = Array5<bool>;
 using Array5d = Array5<double>;
-using Array6d = Eigen::Array<double, 6, 1>;
+template <typename T>
+using Array6 = Eigen::Array<T, 6, 1>;
+using Array6d = Array6<double>;
 using Array8d = Eigen::Array<double, 8, 1>;
 template <typename T>
 using ArrayX = Eigen::Array<T, Eigen::Dynamic, 1>;
