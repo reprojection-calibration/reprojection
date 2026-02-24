@@ -29,19 +29,24 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
     CubicBSplineC3 const camera_orientation_spline{
         InitializeC3Spline(camera_orientations, 20 * std::size(camera_poses))};
 
-    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation_spline, imu_data)};
+    VelocityMeasurements omega_imu;
+    for (auto const& [timestamp_ns, data_i] : imu_data) {
+        omega_imu.insert({timestamp_ns, {data_i.angular_velocity}});
+    }
+    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation_spline, omega_imu)};
+
     Vector3d const gravity_w{EstimateGravity(camera_orientation_spline, imu_data, R_imu_co)};
 
     return {{R_imu_co, diagnostics}, gravity_w};
 }
 
 // TODO(Jack): Unit test
-std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const& camera_orientation_spline,
-                                                           ImuMeasurements const& imu_data) {
+std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const& camera_orientation,
+                                                           VelocityMeasurements const& omega_imu) {
     VelocityMeasurements omega_co;
-    for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
+    for (uint64_t const timestamp_ns : omega_imu | std::views::keys) {
         if (auto const omega_co_i{
-                EvaluateSpline<So3Spline>(camera_orientation_spline, timestamp_ns, DerivativeOrder::First)}) {
+                EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::First)}) {
             // WARN(Jack): We are hard coding a scale multiplication here of 1e9 to bring it out of ns space and into
             // normal second space. Why we need this I am not 100% sure. But if we do not have it then our spline
             // derivative data does not match the real world scale by exactly a factor of 1e-9 :)
@@ -49,21 +54,16 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
         }
     }
 
-    VelocityMeasurements omega_imu;
-    for (auto const& [timestamp_ns, data_i] : imu_data) {
-        omega_imu.insert({timestamp_ns, {data_i.angular_velocity}});
-    }
-
     return optimization::AngularVelocityAlignment(omega_co, omega_imu);
 }
 
 // TODO(Jack): Unit test
-Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation_spline, ImuMeasurements const& imu_data,
+Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data,
                          Matrix3d const& R_imu_co) {
     PositionMeasurements aa_co_w;
     for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
         if (auto const orientation_i{
-                EvaluateSpline<So3Spline>(camera_orientation_spline, timestamp_ns, DerivativeOrder::Null)}) {
+                EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::Null)}) {
             aa_co_w.insert({timestamp_ns, {orientation_i.value()}});
         }
     }

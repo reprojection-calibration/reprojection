@@ -4,6 +4,7 @@
 #include "types/calibration_types.hpp"
 #include "types/ceres_types.hpp"
 #include "types/eigen_types.hpp"
+#include "types/spline_types.hpp"
 
 namespace reprojection::calibration {
 
@@ -22,26 +23,27 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
  * Note that if not all axes of the camera-IMU motion have sufficient rotational velocity excitement then the returned
  * solution will be degenerate.
  */
-std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC3 const& camera_orientation_spline,
-                                                           ImuMeasurements const& imu_data);
+std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC3 const& camera_orientation,
+                                                           VelocityMeasurements const& omega_imu);
 
 /**
  * \brief Estimate gravity in the camera's world frame using the "zero mean acceleration" assumption.
  *
  * Given a "normal" calibration sequence of roughly symmetric axis-exciting motions (i.e. up-down, twist clockwise then
  * counterclockwise, etc.), focusing on a single stationary calibration target board, the net motion-induced
- * acceleration will be zero.
+ * acceleration is zero.
  *
  * This function takes the entire set of imu linear acceleration data and transforms it into the camera's world frame
- * using the camera_orientation_spline and R_imu_co, and then sums it up. The "zero mean acceleration" principle means
- * that the acceleration that is left over after the summing is the contribution from gravity. Of course in real world
+ * using the camera_orientation spline and R_imu_co. Once in the world from it sums up each component of the
+ * acceleration (x,y,z). The "zero mean acceleration" principle means that the acceleration that is left over after the
+ * summing is the contribution from gravity (i.e. the only asymmetric acceleration present). Of course in real world
  * data with noise and biases this will never be perfect, however, we can use this value to initialize the full
- * camera-imu extrinsic calibration.
+ * camera-imu extrinsic optimization.
  *
  * Note that if there is no gravity present (ex. the imu prefilters out gravity) then a zero vector is returned. See the
  * return statement to understand this condition better, and assess long term if this is the right strategy.
  */
-Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation_spline, ImuMeasurements const& imu_data,
+Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data,
                          Matrix3d const& R_imu_co);
 
 }  // namespace reprojection::calibration
