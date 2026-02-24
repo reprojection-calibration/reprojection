@@ -35,9 +35,11 @@ class CubicBSplineC3Refinement {
         ceres::CostFunction* const cost_function{optimization::CreateSplineCostFunction_T<T_Model>(
             order, constraint, u_i, spline_.time_handler_.delta_t_ns_)};
 
-        problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
-                                  spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),
-                                  spline_.control_points[i + 3].data());
+        problem_.AddResidualBlock(cost_function, nullptr,
+                                  spline_.MutableControlPoints().col(i).data(),  //
+                                  spline_.MutableControlPoints().col(i + 1).data(),
+                                  spline_.MutableControlPoints().col(i + 2).data(),
+                                  spline_.MutableControlPoints().col(i + 3).data());
 
         return true;
     }

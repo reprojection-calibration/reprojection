@@ -19,9 +19,12 @@ using namespace reprojection;
 class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
    protected:
     OptimizationSplineNonlinearRefinementFixture() {
+        std::vector<Vector3d> control_points;
         for (auto const& x : std::vector<double>{-2, -1, -0.5, 0.5, 1, 2}) {
-            spline_.control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
+            control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
         }
+
+        spline_ = spline::CubicBSplineC3({t0_ns_, delta_t_ns_}, control_points);
     }
 
     template <typename T_Model>
@@ -50,7 +53,7 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
 
     std::uint64_t t0_ns_{100};
     std::uint64_t delta_t_ns_{50};
-    spline::CubicBSplineC3 spline_{t0_ns_, delta_t_ns_};
+    spline::CubicBSplineC3 spline_;
 
    private:
     static double Squared(double const x) { return x * x; }
@@ -66,7 +69,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
     // Make a copy and add noise so the optimization has to do some work :)
     spline::CubicBSplineC3 initialization{spline_};
     for (size_t i{0}; i < initialization.Size(); ++i) {
-        initialization.control_points[i].array() += 0.1 * i;
+        initialization.MutableControlPoints().col(i).array() += 0.1 * i;
     }
 
     optimization::CubicBSplineC3Refinement handler{initialization};
@@ -89,7 +92,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
 
     spline::CubicBSplineC3 const optimized_spline{handler.GetSpline()};
     for (size_t i{0}; i < optimized_spline.Size(); ++i) {
-        EXPECT_TRUE(optimized_spline.control_points[i].isApprox(spline_.control_points[i], 1e-6));
+        EXPECT_TRUE(optimized_spline.ControlPoints().col(i).isApprox(spline_.ControlPoints().col(i), 1e-6));
     }
 }
 
@@ -98,7 +101,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinear
 
     spline::CubicBSplineC3 initialization{spline_};
     for (size_t i{0}; i < initialization.Size(); ++i) {
-        initialization.control_points[i].array() += 0.1 * i;
+        initialization.MutableControlPoints().col(i).array() += 0.1 * i;
     }
 
     optimization::CubicBSplineC3Refinement handler{initialization};
@@ -120,6 +123,6 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinear
 
     spline::CubicBSplineC3 const optimized_spline{handler.GetSpline()};
     for (size_t i{0}; i < optimized_spline.Size(); ++i) {
-        EXPECT_TRUE(optimized_spline.control_points[i].isApprox(spline_.control_points[i], 1e-1));
+        EXPECT_TRUE(optimized_spline.ControlPoints().col(i).isApprox(spline_.ControlPoints().col(i), 1e-1));
     }
 }

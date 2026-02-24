@@ -17,25 +17,28 @@ namespace reprojection::spline {
  * state of the spline consists of a time handler initialized at construction with the starting time and time increment
  * and the vector of control points.
  */
-
-// TODO(Jack): Reorder so that control points come first!
 struct CubicBSplineC3 {
-    CubicBSplineC3(TimeHandler const& time_handler,
-                   Eigen::Ref<Matrix3Xd const> const& control_points)
+    // TODO(Jack): Reorder so that control points come first!
+    CubicBSplineC3(TimeHandler const& time_handler, Eigen::Ref<Matrix3Xd const> const& control_points)
         : time_handler_{time_handler}, control_points_{control_points} {}
 
     // TODO(Jack): Confirm that the mapping actually creates a copy of the data!
     // TODO(Jack): Reorder so that control points come first!
     CubicBSplineC3(TimeHandler const& time_handler, std::vector<Vector3d> const& control_points)
-        : CubicBSplineC3(time_handler, Eigen::Map<Matrix3Xd const>(
-                                           control_points[0].data(), 3, std::size(control_points))) {}
+        : CubicBSplineC3(time_handler,
+                         Eigen::Map<Matrix3Xd const>(control_points[0].data(), 3, std::size(control_points))) {}
+
+    CubicBSplineC3() = default;
 
     Eigen::Ref<Matrix3Xd const> ControlPoints() const { return control_points_; }
+
+    // TODO(Jack): Does this kind of naming make sense?
+    Eigen::Ref<Matrix3Xd> MutableControlPoints() { return control_points_; }
 
     /**
      * \brief The number of control points the spline contains.
      */
-    Eigen::Index Size() const { return control_points_.cols(); }
+    size_t Size() const { return control_points_.cols(); }
 
     // TODO MAKE PRIVATE
     TimeHandler time_handler_;
