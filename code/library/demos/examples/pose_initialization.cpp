@@ -72,7 +72,12 @@ int main() {
 
     ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
 
-    optimization::CameraImuNonlinearRefinement(sensor, targets, imu_data, optimized_state);
+    auto const [orientation_init,
+                gravity_w]{calibration::EstimateCameraImuRotationAndGravity(optimized_state.frames, imu_data)};
+    auto const [R_imu_co, _]{orientation_init};
+
+    std::cout << R_imu_co << std::endl;
+    std::cout << gravity_w.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }
