@@ -24,7 +24,7 @@ TEST(Spline_r3Spline, TestEvaluateValidity) {
     EXPECT_FALSE(EvaluateSpline<R3Spline>(one_segment_spline, 105));  // Outside first time segment - invalid
 
     // Add one more control point than before to see that we can now do a valid evaluation in the second time segment
-    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, constants::order + 1>::Zero(),
+    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, constants::states, constants::order + 1>::Zero(),
                                             TimeHandler{100, 5}};
     EXPECT_TRUE(EvaluateSpline<R3Spline>(two_segment_spline, 105));
 }
@@ -52,9 +52,9 @@ TEST(Spline_r3Spline, TestEvaluate) {
     EXPECT_TRUE(a_0.value().isApproxToConstant(0));  // Straight line has no acceleration
 
     // Build a spline with one more control point and test the first position in the now valid second time segment.
-    Eigen::Matrix<double, 3, constants::order + 1> const five_control_points{{0, 1, 2, 3, 4},  //
-                                                                             {0, 1, 2, 3, 4},
-                                                                             {0, 1, 2, 3, 4}};
+    Eigen::Matrix<double, constants::states, constants::order + 1> const five_control_points{{0, 1, 2, 3, 4},  //
+                                                                                             {0, 1, 2, 3, 4},
+                                                                                             {0, 1, 2, 3, 4}};
     CubicBSplineC3 const two_segment_spline{five_control_points, TimeHandler{100, 5}};
     auto const p_1{EvaluateSpline<R3Spline>(two_segment_spline, 105)};
     ASSERT_TRUE(p_1.has_value());

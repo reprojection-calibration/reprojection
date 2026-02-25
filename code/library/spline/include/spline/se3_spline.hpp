@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <optional>
 
 #include "spline/spline_state.hpp"
@@ -11,7 +10,7 @@ namespace reprojection::spline {
 
 class Se3Spline {
    public:
-    Se3Spline(TimeHandler const& time_handler, Eigen::Ref<Matrix6Xd const> const& control_points);
+    Se3Spline(TimeHandler const& time_handler, Eigen::Ref<Matrix2NXd const> const& control_points);
 
     Se3Spline(TimeHandler const& time_handler, std::vector<Vector6d> const& control_points);
 

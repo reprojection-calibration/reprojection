@@ -6,20 +6,21 @@
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
+using namespace spline;
 
 // Read the comments in TEST(Spline_r3Spline, TestEvaluateValidity) for more context.
 TEST(SplineSe3Spline, TestEvaluateValidity) {
-    spline::Se3Spline const empty_spline{{100, 5}, {}};
+    Se3Spline const empty_spline{{100, 5}, {}};
     EXPECT_FALSE(empty_spline.Evaluate(100));
 
-    Matrix6Xd const four_control_points{Matrix6Xd::Zero(6, spline::constants::order)};
-    spline::Se3Spline const one_segment_spline{{100, 5}, four_control_points};
+    Matrix2NXd const four_control_points{Matrix2NXd::Zero(2 * constants::states, constants::order)};
+    Se3Spline const one_segment_spline{{100, 5}, four_control_points};
 
     EXPECT_TRUE(one_segment_spline.Evaluate(100));
     EXPECT_FALSE(one_segment_spline.Evaluate(105));
 
-    Matrix6Xd const five_control_points{Matrix6Xd::Zero(6, spline::constants::order + 1)};
-    spline::Se3Spline const two_segment_spline{{100, 5}, five_control_points};
+    Matrix2NXd const five_control_points{Matrix2NXd::Zero(2 * constants::states, constants::order + 1)};
+    Se3Spline const two_segment_spline{{100, 5}, five_control_points};
     EXPECT_TRUE(two_segment_spline.Evaluate(105));
 }
 
@@ -28,7 +29,7 @@ TEST(SplineSe3Spline, TestEvaluate) {
     Vector6d control_point_i{Vector6d::Zero()};
     se3_control_points.push_back(control_point_i);
 
-    for (int i{1}; i < spline::constants::order; ++i) {
+    for (int i{1}; i < constants::order; ++i) {
         Vector6d delta;
         delta.topRows(3) = (static_cast<double>(i) / 10) * Vector3d::Ones();
         delta.bottomRows(3) = i * Vector3d::Ones();
@@ -39,7 +40,7 @@ TEST(SplineSe3Spline, TestEvaluate) {
     }
 
     uint64_t const delta_t_ns{5};
-    spline::Se3Spline const spline{{100, delta_t_ns}, se3_control_points};
+    Se3Spline const spline{{100, delta_t_ns}, se3_control_points};
 
     // Heuristic test as we have no theoretical testing strategy at this time.
     for (uint64_t i{0}; i < delta_t_ns; ++i) {

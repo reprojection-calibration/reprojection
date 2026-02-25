@@ -5,6 +5,7 @@
 
 #include "spline/constants.hpp"
 #include "spline/time_handler.hpp"
+#include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::spline {
@@ -18,20 +19,21 @@ namespace reprojection::spline {
  * and the vector of control points.
  */
 struct CubicBSplineC3 {
-    CubicBSplineC3(Eigen::Ref<Matrix3Xd const> const& control_points, TimeHandler const& time_handler)
+    CubicBSplineC3(Eigen::Ref<MatrixNXd const> const& control_points, TimeHandler const& time_handler)
         : control_points_{control_points}, time_handler_{time_handler} {}
 
     // TODO(Jack): Confirm that the mapping actually creates a copy of the data!
     CubicBSplineC3(std::vector<Vector3d> const& control_points, TimeHandler const& time_handler)
-        : CubicBSplineC3(Eigen::Map<Matrix3Xd const>(control_points[0].data(), 3, std::size(control_points)),
-                         time_handler) {}
+        : CubicBSplineC3(
+              Eigen::Map<MatrixNXd const>(control_points[0].data(), constants::states, std::size(control_points)),
+              time_handler) {}
 
     CubicBSplineC3() = default;
 
-    Eigen::Ref<Matrix3Xd const> ControlPoints() const { return control_points_; }
+    Eigen::Ref<MatrixNXd const> ControlPoints() const { return control_points_; }
 
     // TODO(Jack): Does this kind of naming make sense?
-    Eigen::Ref<Matrix3Xd> MutableControlPoints() { return control_points_; }
+    Eigen::Ref<MatrixNXd> MutableControlPoints() { return control_points_; }
 
     std::optional<std::pair<double, int>> Position(std::uint64_t const t_ns) const {
         return time_handler_.SplinePosition(t_ns, this->Size());
@@ -47,7 +49,7 @@ struct CubicBSplineC3 {
     // TODO MAKE PRIVATE
 
    private:
-    Matrix3Xd control_points_;
+    MatrixNXd control_points_;
     TimeHandler time_handler_;
 };
 
