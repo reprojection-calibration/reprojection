@@ -10,19 +10,11 @@
 
 namespace reprojection::spline {
 
-std::tuple<double, int> NormalizedSegmentTime(std::uint64_t const t0_ns, std::uint64_t const t_ns,
-                                              std::uint64_t const delta_t_ns) {
-    assert(t0_ns <= t_ns);
-    assert(delta_t_ns > 0);
-
-    double const s_t{static_cast<double>(t_ns - t0_ns) / delta_t_ns};
-    double const i{std::floor(s_t)};
-
-    return {(s_t - i), static_cast<int>(i)};
-}
-
 TimeHandler::TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
     : t0_ns_{t0_ns}, delta_t_ns_{delta_t_ns} {}
+
+// TODO(Jack): Do we really need this? When do we need to actually construct an empty handler?
+TimeHandler::TimeHandler() : t0_ns_{}, delta_t_ns_{} {};
 
 std::optional<std::pair<double, int>> TimeHandler::SplinePosition(std::uint64_t const t_ns,
                                                                   size_t const num_control_points) const {
@@ -35,6 +27,17 @@ std::optional<std::pair<double, int>> TimeHandler::SplinePosition(std::uint64_t 
     }
 
     return std::pair{u_i, i};
+}
+
+std::pair<double, int> TimeHandler::NormalizedSegmentTime(std::uint64_t const t0_ns, std::uint64_t const t_ns,
+                                                          std::uint64_t const delta_t_ns) {
+    assert(t0_ns <= t_ns);
+    assert(delta_t_ns > 0);
+
+    double const s_t{static_cast<double>(t_ns - t0_ns) / delta_t_ns};
+    double const i{std::floor(s_t)};
+
+    return {(s_t - i), static_cast<int>(i)};
 }
 
 }  // namespace reprojection::spline
