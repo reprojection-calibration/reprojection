@@ -33,8 +33,7 @@ std::optional<Vector3d> EvaluateSpline(CubicBSplineC3 const& spline, std::uint64
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    // TODO(Jack): We should actually just keep this a map instead of copying it!
-    Matrix3Kd const P{Eigen::Map<const Matrix3Kd>(spline.ControlPoints().col(i).data(), 3, constants::order)};
+    Eigen::Map<Matrix3Kd const> const P{spline.ControlPoints().col(i).data(), 3, constants::order};
 
     if (derivative == DerivativeOrder::Null) {
         return T_Model::template Evaluate<double, DerivativeOrder::Null>(P, u_i, spline.DeltaTNs());
