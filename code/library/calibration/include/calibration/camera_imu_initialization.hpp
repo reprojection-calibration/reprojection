@@ -14,11 +14,9 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
 /**
  * \brief Estimate the approximate extrinsic rotation matrix between the IMU and camera optical frame (R_co_imu).
  *
- * Given the camera orientation spline we can differentiate it to get the camera's angular velocity (omega_co). Assuming
- * zero translation between the camera and IMU we can then use optimization::AngularVelocityAlignment() to estimate the
- * rotation matrix which aligns the camera's angular velocity to the IMU gyroscope's angular velocity. Of course for any
- * real sensor pair there is a non-zero translation and our approximation will introduce an error, but for an
- * initialization this method is acceptable.
+ * Given the camera orientation spline we can differentiate it to get the camera's angular velocity (omega_co). Because
+ * all points on a rigit body have the same angular velocity we can use optimization::AngularVelocityAlignment() to
+ * estimate the rotation matrix which aligns the camera's angular velocity to the IMU gyroscope's angular velocity.
  *
  * Note that if not all axes of the camera-IMU motion have sufficient rotational velocity excitement then the returned
  * solution will be degenerate.
@@ -40,9 +38,9 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC
  * data with noise and biases this will never be perfect, however, we can use this value to initialize the full
  * camera-imu extrinsic optimization.
  *
- * Similar to the calibration::EstimateCameraImuRotation(), the transformation of the imu's linear acceleration to the
- * camera's world frame, also requires the assumption of zero translation. As stated before this is not possible but the
- * resulting error is acceptable for an initialization method. Assuming of course the translation is not too large :)
+ * The transformation of the IMU's linear acceleration to the camera frame requires the assumption of zero translation.
+ * This is not possible because two sensors cannot be at the exact same location, but the resulting error is acceptable
+ * for an initialization method. Assuming of course the translation is not too large :)
  *
  * Note that if there is no gravity present (ex. the imu prefilters out gravity) then a zero vector is returned. See the
  * return statement to understand this condition better, and assess long term if this is the right strategy.

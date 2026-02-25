@@ -15,8 +15,8 @@ using namespace reprojection;
 // sphere origin as {0,0,0} we get poses that do not make sense!
 TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
-    auto const [targets,
-                poses]{testing_mocks::GenerateMvgData(sensor, {testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
+    auto const [targets, poses]{
+        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
 
     EXPECT_EQ(std::size(targets), 50);
     for (auto const& [_, target_i] : targets) {

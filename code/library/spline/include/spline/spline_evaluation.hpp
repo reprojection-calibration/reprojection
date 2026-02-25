@@ -27,20 +27,20 @@ template <typename T_Model>
     requires CanEvaluateCubicBSplineC3<T_Model>
 std::optional<Vector3d> EvaluateSpline(CubicBSplineC3 const& spline, std::uint64_t const t_ns,
                                        DerivativeOrder const derivative = DerivativeOrder::Null) {
-    auto const normalized_position{spline.time_handler.SplinePosition(t_ns, std::size(spline.control_points))};
+    auto const normalized_position{spline.Position(t_ns)};
     if (not normalized_position.has_value()) {
         return std::nullopt;
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    Matrix3Kd const P{Eigen::Map<const Matrix3Kd>(spline.control_points[i].data(), 3, constants::order)};
+    Eigen::Map<MatrixNKd const> const P{spline.ControlPoints().col(i).data(), constants::states, constants::order};
 
     if (derivative == DerivativeOrder::Null) {
-        return T_Model::template Evaluate<double, DerivativeOrder::Null>(P, u_i, spline.time_handler.delta_t_ns_);
+        return T_Model::template Evaluate<double, DerivativeOrder::Null>(P, u_i, spline.DeltaTNs());
     } else if (derivative == DerivativeOrder::First) {
-        return T_Model::template Evaluate<double, DerivativeOrder::First>(P, u_i, spline.time_handler.delta_t_ns_);
+        return T_Model::template Evaluate<double, DerivativeOrder::First>(P, u_i, spline.DeltaTNs());
     } else if (derivative == DerivativeOrder::Second) {
-        return T_Model::template Evaluate<double, DerivativeOrder::Second>(P, u_i, spline.time_handler.delta_t_ns_);
+        return T_Model::template Evaluate<double, DerivativeOrder::Second>(P, u_i, spline.DeltaTNs());
     } else {
         throw std::runtime_error("Requested unknown derivative order from EvaluateSpline()");  // LCOV_EXCL_LINE
     }

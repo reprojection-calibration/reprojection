@@ -2,10 +2,11 @@
 
 #include <ceres/ceres.h>
 
-#include "optimization/spline_cost_function.hpp"
 #include "spline/spline_evaluation_concept.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
+
+#include "spline_cost_function.hpp"
 
 namespace reprojection::optimization {
 
@@ -25,19 +26,20 @@ class CubicBSplineC3Refinement {
         requires spline::CanEvaluateCubicBSplineC3<T_Model>
     [[nodiscard]] bool AddConstraint(uint64_t const timestamp_ns, Vector3d const& constraint,
                                      spline::DerivativeOrder const order) {
-        auto const normalized_position{
-            spline_.time_handler.SplinePosition(timestamp_ns, std::size(spline_.control_points))};
+        auto const normalized_position{spline_.Position(timestamp_ns)};
         if (not normalized_position.has_value()) {
             return false;
         }
         auto const [u_i, i]{normalized_position.value()};
 
-        ceres::CostFunction* const cost_function{optimization::CreateSplineCostFunction_T<T_Model>(
-            order, constraint, u_i, spline_.time_handler.delta_t_ns_)};
+        ceres::CostFunction* const cost_function{
+            optimization::CreateSplineCostFunction_T<T_Model>(order, constraint, u_i, spline_.DeltaTNs())};
 
-        problem_.AddResidualBlock(cost_function, nullptr, spline_.control_points[i].data(),
-                                  spline_.control_points[i + 1].data(), spline_.control_points[i + 2].data(),
-                                  spline_.control_points[i + 3].data());
+        problem_.AddResidualBlock(cost_function, nullptr,
+                                  spline_.MutableControlPoints().col(i).data(),  //
+                                  spline_.MutableControlPoints().col(i + 1).data(),
+                                  spline_.MutableControlPoints().col(i + 2).data(),
+                                  spline_.MutableControlPoints().col(i + 3).data());
 
         return true;
     }

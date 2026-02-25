@@ -32,10 +32,6 @@ struct CameraInfo {
     ImageBounds bounds;
 };
 
-// TODO(Jack): If there is no other foreseeable thing that will be added to the camera state, do we really need a
-//  struct? Same idea for FrameState below, but I assume we will have more values coming into FrameState later.
-// TODO(Jack): Do maybe the camera-imu extrinsic belong here? I think it makes more sense they would belong to an IMU
-//  centric state, but that might never be necessary because we never really optimize the IMU itself in any sense.
 struct CameraState {
     ArrayXd intrinsics;
 };

@@ -10,41 +10,39 @@
 using namespace reprojection;
 using namespace reprojection::spline;  // Use SOOO many times that we introduce this namespace
 
-TEST(SplineSo3Spline, TestInvalidEvaluateConditions) {
-    CubicBSplineC3 so3_spline{100, 5};
-    EXPECT_EQ(EvaluateSpline<So3Spline>(so3_spline, 115), std::nullopt);
+// Read the comments in TEST(Spline_r3Spline, TestEvaluateValidity) for more context.
+TEST(SplineSo3Spline, TestEvaluateValidity) {
+    CubicBSplineC3 const empty_spline{{}, TimeHandler{}};
+    EXPECT_FALSE(EvaluateSpline<So3Spline>(empty_spline, 100));
 
-    for (int i{0}; i < constants::order; ++i) {
-        so3_spline.control_points.push_back(Vector3d::Zero());
-    }
+    CubicBSplineC3 const one_segment_spline{MatrixNKd::Zero(), TimeHandler{100, 5}};
 
-    EXPECT_NE(EvaluateSpline<So3Spline>(so3_spline, 100), std::nullopt);
-    EXPECT_EQ(EvaluateSpline<So3Spline>(so3_spline, 105), std::nullopt);
+    EXPECT_TRUE(EvaluateSpline<So3Spline>(one_segment_spline, 100));
+    EXPECT_FALSE(EvaluateSpline<So3Spline>(one_segment_spline, 105));
 
-    so3_spline.control_points.push_back(Vector3d::Zero());
-    EXPECT_NE(EvaluateSpline<So3Spline>(so3_spline, 105), std::nullopt);
+    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, constants::order + 1>::Zero(),
+                                            TimeHandler{100, 5}};
+    EXPECT_TRUE(EvaluateSpline<So3Spline>(two_segment_spline, 105));
 }
 
-CubicBSplineC3 BuildTestSpline() {
-    uint64_t const delta_t_ns{5};
-    CubicBSplineC3 so3_spline{100, delta_t_ns};
-
-    so3_spline.control_points.push_back(Vector3d::Zero());
+CubicBSplineC3 BuildSo3TestSpline() {
+    std::vector<Vector3d> so3_control_points;
+    so3_control_points.push_back(Vector3d::Zero());
     for (int i{1}; i < constants::order; ++i) {
         // TODO(Jack): Evaluate if we can do any of the math directly in tangent space
-        so3_spline.control_points.push_back(
-            geometry::Log<double>(geometry::Exp<double>(so3_spline.control_points.back()) *
+        so3_control_points.push_back(
+            geometry::Log<double>(geometry::Exp<double>(so3_control_points.back()) *
                                   geometry::Exp<double>(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
     }
 
-    return so3_spline;
+    return CubicBSplineC3{so3_control_points, TimeHandler{100, 5}};
 }
 
 TEST(SplineSo3Spline, TestEvaluate) {
-    CubicBSplineC3 const spline{BuildTestSpline()};
+    CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
-    // Check that all timestamps from 100 to 104 evaluate without error
-    for (int i{0}; i < static_cast<int>(spline.time_handler.delta_t_ns_); ++i) {
+    // Check that all timestamps from 100 to 104 evaluate without error - one time segment of length delta_t_ns
+    for (int i{0}; i < 5; ++i) {
         auto const p_i{EvaluateSpline<So3Spline>(spline, 100 + i)};
         ASSERT_TRUE(p_i.has_value());
     }
@@ -59,7 +57,7 @@ TEST(SplineSo3Spline, TestEvaluate) {
 }
 
 TEST(SplineSo3Spline, TestEvaluateVelocity) {
-    CubicBSplineC3 const spline{BuildTestSpline()};
+    CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
     // RANDOM HEURISTIC TESTS!
     Vector3d const v0{EvaluateSpline<So3Spline>(spline, 100, DerivativeOrder::First).value()};
@@ -70,7 +68,7 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
 }
 
 TEST(SplineSo3Spline, TestEvaluateAcceleration) {
-    CubicBSplineC3 const spline{BuildTestSpline()};
+    CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)
     Vector3d const a0{EvaluateSpline<So3Spline>(spline, 100, DerivativeOrder::Second).value()};
@@ -88,7 +86,7 @@ double Squared(double const x) { return x * x; }  // COPY PASTED
 // some symmetry/alignment in the velocity and acceleration values. Maybe if we have time we can design a test that
 // really is correct by inspection and not just heuristic.
 TEST(SplineSo3Spline, TestTemplatedEvaluateOnParabola) {
-    Matrix3Kd const P1{{-1, -0.5, 0.5, 1},
+    MatrixNKd const P1{{-1, -0.5, 0.5, 1},
                        {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
                        {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
     double const u_middle{0.5};

@@ -7,6 +7,7 @@ set(SRC_FILES
         src/cubic_spline_c3_init.cpp
         src/sparse_utilities.cpp
         src/spline_initialization.cpp
+        src/spline_state.cpp
         src/time_handler.cpp
         src/utilities.cpp
 )
@@ -24,6 +25,7 @@ set(TESTS
         test/se3_spline.test.cpp
         test/so3_spline.test.cpp
         test/spline_initialization.test.cpp
+        test/spline_state.test.cpp
         test/time_handler.test.cpp
         test/utilities.test.cpp
 )

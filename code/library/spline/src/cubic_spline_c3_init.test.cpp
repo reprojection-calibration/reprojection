@@ -16,7 +16,7 @@ TEST(SplineSplineInitialization, TestBuildAb) {
                                             {5200, {{2, 2, 2}}}};
 
     int const num_segments{2};
-    TimeHandler const time_handler{5000, 100, constants::order};
+    TimeHandler const time_handler{5000, 100};
 
     auto const [A, b]{CubicBSplineC3Init::BuildAb(measurements, num_segments, time_handler)};
     EXPECT_EQ(A.rows(), 9);

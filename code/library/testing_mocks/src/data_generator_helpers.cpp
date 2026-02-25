@@ -8,14 +8,12 @@
 namespace reprojection::testing_mocks {
 
 spline::Se3Spline TimedSphereTrajectorySpline(int const num_control_points, uint64_t const duration_ns) {
+    // WARN(Jack): Rounding error?
     uint64_t const delta_t_ns{duration_ns / num_control_points};
-    spline::Se3Spline se3_spline{0, delta_t_ns};  // Hardcoded to start at 0
 
-    for (auto const& pose : SphereTrajectory(num_control_points, constants::trajectory)) {
-        se3_spline.AddControlPoint(pose);
-    }
+    std::vector<Vector6d> const trajectory{SphereTrajectory(num_control_points, constants::trajectory)};
 
-    return se3_spline;
+    return spline::Se3Spline{spline::TimeHandler{0, delta_t_ns}, trajectory};  // Hardcoded to start at 0
 }  // LCOV_EXCL_LINE
 
 std::set<uint64_t> SampleTimes(int const num_samples, uint64_t const timespan_ns) {

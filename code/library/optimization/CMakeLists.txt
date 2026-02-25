@@ -26,9 +26,9 @@ set(TESTS
         src/angular_velocity_cost_function.test.cpp
         src/ceres_geometry.test.cpp
         src/projection_cost_function.test.cpp
+        src/spline_nonlinear_refinement.test.cpp
         test/angular_velocity_alignment.test.cpp
         test/camera_nonlinear_refinement.test.cpp
         test/spline_cost_function.test.cpp
-        test/spline_nonlinear_refinement.test.cpp
 )
 AddTests()

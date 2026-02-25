@@ -1,4 +1,4 @@
-#include "optimization/spline_cost_function.hpp"
+#include "spline_cost_function.hpp"
 
 #include <gtest/gtest.h>
 
@@ -27,7 +27,7 @@ class OptimizationSplineCostFunctionFixture : public ::testing::Test {
     std::uint64_t delta_t_ns_{1};
     // The P_ matrix can be used by the templated static evaluation functions directly and serves as the storage
     // container for the data referenced to by the ceres friendly parameter blocks initialized in the constructor.
-    spline::Matrix3Kd P_;
+    spline::MatrixNKd P_;
     std::vector<double const*> parameter_blocks_;
 
    private:

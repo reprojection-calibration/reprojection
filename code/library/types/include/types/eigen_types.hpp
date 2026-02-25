@@ -5,7 +5,7 @@
 
 namespace reprojection {
 
-// NOTE(Jack): Numbers come before letters in alphabetical order!
+// NOTE(Jack): Numbers come before letters in alphabetical order and Upper case letter come before lower case!
 
 template <typename T>
 using Array2 = Eigen::Array<T, 2, 1>;
@@ -20,7 +20,9 @@ template <typename T>
 using Array5 = Eigen::Array<T, 5, 1>;
 using Array5b = Array5<bool>;
 using Array5d = Array5<double>;
-using Array6d = Eigen::Array<double, 6, 1>;
+template <typename T>
+using Array6 = Eigen::Array<T, 6, 1>;
+using Array6d = Array6<double>;
 using Array8d = Eigen::Array<double, 8, 1>;
 template <typename T>
 using ArrayX = Eigen::Array<T, Eigen::Dynamic, 1>;
@@ -33,10 +35,12 @@ using ArrayX2i = Eigen::ArrayX2i;
 using Matrix2d = Eigen::Matrix2d;
 template <typename T>
 using Matrix3 = Eigen::Matrix3<T>;
+using Matrix3Xd = Eigen::Matrix3Xd;
 using Matrix3d = Matrix3<double>;
 using Matrix34d = Eigen::Matrix<double, 3, 4>;
 using Matrix42d = Eigen::Matrix<double, 4, 2>;
 using Matrix4d = Eigen::Matrix4d;
+using Matrix6Xd = Eigen::Matrix<double, 6, Eigen::Dynamic>;
 using MatrixX2d = Eigen::MatrixX2d;
 using MatrixX3d = Eigen::MatrixX3d;
 using MatrixX4d = Eigen::MatrixX4d;

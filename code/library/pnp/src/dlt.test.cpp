@@ -32,7 +32,7 @@ TEST(PnpDlt, TestDlt22) {
     // Points must have Z=0 (flat = true) for Dlt22
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
     auto const [targets, gt_frames]{
-        testing_mocks::GenerateMvgData(sensor, {testing_utilities::unit_pinhole_intrinsics}, 50, 1e9, true)};
+        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::unit_pinhole_intrinsics}, 50, 1e9, true)};
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         auto const tf_co_w{pnp::Dlt22(target_i.bundle)};

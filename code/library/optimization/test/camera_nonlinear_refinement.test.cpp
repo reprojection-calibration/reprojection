@@ -111,7 +111,8 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
 
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
-    OptimizationState const state{{testing_utilities::pinhole_intrinsics}, {{timestamp_ns, {Array6d::Zero()}}}};
+    OptimizationState const state{CameraState{testing_utilities::pinhole_intrinsics},
+                                  {{timestamp_ns, {Array6d::Zero()}}}};
 
     ReprojectionErrors const residuals{optimization::ReprojectionResiduals(sensor, targets, state)};
     EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))

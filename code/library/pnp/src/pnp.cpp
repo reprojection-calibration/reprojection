@@ -45,7 +45,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     // Format data into required format for the nonlinear optimization
     CameraInfo const sensor{"", CameraModel::Pinhole, bounds.value()};
     CameraMeasurements const target{{timestamp_ns, {bundle, {}}}};
-    OptimizationState const initial_state{{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
+    OptimizationState const initial_state{CameraState{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
 
     // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, target, initial_state)};
