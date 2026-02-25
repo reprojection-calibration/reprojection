@@ -21,7 +21,10 @@ struct CubicBSplineC3 {
 
     CubicBSplineC3(std::vector<Vector3d> const& control_points, TimeHandler const& time_handler);
 
+    explicit CubicBSplineC3(std::pair<MatrixNXd, TimeHandler> const& pair);
+
     CubicBSplineC3() = default;
+
 
     Eigen::Ref<MatrixNXd const> ControlPoints() const;
 

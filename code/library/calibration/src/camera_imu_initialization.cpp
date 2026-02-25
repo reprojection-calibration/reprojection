@@ -26,7 +26,7 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
 
     // TODO(Jack): Is 20 times the number of camera_poses high enough frequency? Do we need to parameterize this?
     CubicBSplineC3 const camera_orientation_spline{
-        InitializeC3Spline(camera_orientations, 20 * std::size(camera_poses))};
+        InitializeC3SplineState(camera_orientations, 20 * std::size(camera_poses))};
 
     // Data type conversion loop...
     VelocityMeasurements imu_angular_velocity;

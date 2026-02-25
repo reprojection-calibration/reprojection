@@ -29,7 +29,7 @@ class SplineProjectionCostFunction_T {
     bool operator()(T const* const intrinsics_ptr, T const* const control_point_0_ptr,
                     T const* const control_point_1_ptr, T const* const control_point_2_ptr,
                     T const* const control_point_3_ptr, T* const residual) const {
-        // Map control point pointers into a usable control point matrix block
+        // Map control point pointers into a usable control point matrix block.
         std::array<T const* const, spline::constants::order> ptrs{control_point_0_ptr, control_point_1_ptr,
                                                                   control_point_2_ptr, control_point_3_ptr};
         spline::Matrix2NK<T> control_points;
@@ -37,6 +37,7 @@ class SplineProjectionCostFunction_T {
             control_points.col(i) = Eigen::Map<Eigen::Vector<T, 6> const>(ptrs[i], 6, 1);
         }
 
+        // Calculate the se3 pose and then return the standard reprojection error.
         Array6<T> const pose{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
 
         return ProjectionCostFunction_T<T_Model>(pixel_, point_, bounds_)

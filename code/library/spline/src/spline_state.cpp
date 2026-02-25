@@ -12,6 +12,9 @@ CubicBSplineC3::CubicBSplineC3(std::vector<Vector3d> const& control_points, Time
           Eigen::Map<MatrixNXd const>(control_points[0].data(), constants::states, std::size(control_points)),
           time_handler) {}
 
+CubicBSplineC3::CubicBSplineC3(std::pair<MatrixNXd, TimeHandler> const& pair)
+    : CubicBSplineC3(pair.first, pair.second) {}
+
 Eigen::Ref<MatrixNXd const> CubicBSplineC3::ControlPoints() const { return control_points_; }
 
 Eigen::Ref<MatrixNXd> CubicBSplineC3::MutableControlPoints() { return control_points_; }
