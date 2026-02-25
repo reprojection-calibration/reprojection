@@ -9,6 +9,7 @@ set(SRC_FILES
         src/projection_cost_function.cpp
         src/spline_nonlinear_refinement.cpp
         src/spline_projection_cost_function.cpp
+        src/spline_reprojection_error.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
