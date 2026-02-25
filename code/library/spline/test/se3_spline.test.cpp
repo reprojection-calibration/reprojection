@@ -10,17 +10,17 @@ using namespace spline;
 
 // Read the comments in TEST(Spline_r3Spline, TestEvaluateValidity) for more context.
 TEST(SplineSe3Spline, TestEvaluateValidity) {
-    Se3Spline const empty_spline{{100, 5}, {}};
+    Se3Spline const empty_spline{{}, {100, 5}};
     EXPECT_FALSE(empty_spline.Evaluate(100));
 
     Matrix2NXd const four_control_points{Matrix2NXd::Zero(2 * constants::states, constants::order)};
-    Se3Spline const one_segment_spline{{100, 5}, four_control_points};
+    Se3Spline const one_segment_spline{four_control_points, {100, 5}};
 
     EXPECT_TRUE(one_segment_spline.Evaluate(100));
     EXPECT_FALSE(one_segment_spline.Evaluate(105));
 
     Matrix2NXd const five_control_points{Matrix2NXd::Zero(2 * constants::states, constants::order + 1)};
-    Se3Spline const two_segment_spline{{100, 5}, five_control_points};
+    Se3Spline const two_segment_spline{five_control_points, {100, 5}};
     EXPECT_TRUE(two_segment_spline.Evaluate(105));
 }
 
@@ -40,7 +40,7 @@ TEST(SplineSe3Spline, TestEvaluate) {
     }
 
     uint64_t const delta_t_ns{5};
-    Se3Spline const spline{{100, delta_t_ns}, se3_control_points};
+    Se3Spline const spline{se3_control_points, {100, delta_t_ns}};
 
     // Heuristic test as we have no theoretical testing strategy at this time.
     for (uint64_t i{0}; i < delta_t_ns; ++i) {

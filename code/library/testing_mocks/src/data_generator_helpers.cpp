@@ -13,7 +13,7 @@ spline::Se3Spline TimedSphereTrajectorySpline(int const num_control_points, uint
 
     std::vector<Vector6d> const trajectory{SphereTrajectory(num_control_points, constants::trajectory)};
 
-    return spline::Se3Spline{spline::TimeHandler{0, delta_t_ns}, trajectory};  // Hardcoded to start at 0
+    return spline::Se3Spline{trajectory, {0, delta_t_ns}};  // Hardcoded to start at 0
 }  // LCOV_EXCL_LINE
 
 std::set<uint64_t> SampleTimes(int const num_samples, uint64_t const timespan_ns) {
