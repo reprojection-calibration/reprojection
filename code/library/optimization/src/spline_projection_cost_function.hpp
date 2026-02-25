@@ -37,7 +37,7 @@ class SplineProjectionCostFunction_T {
             control_points.col(i) = Eigen::Map<Eigen::Vector<T, 6> const>(ptrs[i], 6, 1);
         }
 
-        Array6<T> const pose{spline::EvaluateSe3SplinePose<T>(control_points, u_i_, delta_t_ns_)};
+        Array6<T> const pose{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
 
         return ProjectionCostFunction_T<T_Model>(pixel_, point_, bounds_)
             .template operator()<T>(intrinsics_ptr, pose.data(), residual);

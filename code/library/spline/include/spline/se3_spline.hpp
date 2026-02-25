@@ -19,6 +19,25 @@ class Se3Spline {
     std::optional<Vector6d> Evaluate(std::uint64_t const t_ns,
                                      DerivativeOrder const derivative = DerivativeOrder::Null) const;
 
+    // TODO TEST!!!
+    // NOTE(Jack): We need a fully compile time determined (i.e. we hardcode DerivativeOrder::Null below) templated
+    // wrapper like this for use in the ceres spline pose optimization autodiff. If it turns out that we need other
+    // templated specializations of the full se3 evaluation than maybe we need to refactor this, but if it is just the
+    // pose then this is fine!
+    template <typename T>
+    static Array6<T> EvaluatePose(Matrix2NK<T> const& P, double const u_i, uint64_t const delta_t_ns) {
+        assert(0 <= u_i and u_i < 1);
+        assert(delta_t_ns > 0);
+
+        Array6<T> pose;
+        pose.template head<constants::states>() =
+            So3Spline::Evaluate<T, DerivativeOrder::Null>(P.template topRows<constants::states>(), u_i, delta_t_ns);
+        pose.template tail<constants::states>() =
+            R3Spline::Evaluate<T, DerivativeOrder::Null>(P.template bottomRows<constants::states>(), u_i, delta_t_ns);
+
+        return pose;
+    }
+
    private:
     // TODO(Jack): We have the time handler duplicated inside of these two splines. It would be nicer if somehow we
     //  could just store the control points in one big matrix (Matrix2NXd) and then one common time handler that is then
@@ -26,19 +45,5 @@ class Se3Spline {
     CubicBSplineC3 so3_spline_;
     CubicBSplineC3 r3_spline_;
 };
-
-// TODO TEST!!!
-template <typename T>
-Array6<T> EvaluateSe3SplinePose(Matrix2NK<T> const& P, double const u_i, uint64_t const delta_t_ns) {
-    assert(0 <= u_i and u_i < 1);  // Only present in debug build!
-
-    Array6<T> pose;
-    pose.template head<constants::states>() =
-        So3Spline::Evaluate<T, DerivativeOrder::Null>(P.template topRows<constants::states>(), u_i, delta_t_ns);
-    pose.template tail<constants::states>() =
-        R3Spline::Evaluate<T, DerivativeOrder::Null>(P.template bottomRows<constants::states>(), u_i, delta_t_ns);
-
-    return pose;
-}
 
 }  // namespace reprojection::spline

@@ -20,7 +20,7 @@ ImuMeasurements GenerateImuData(int const num_samples, uint64_t const timespan_n
         }
 
         // TODO(Jack): Kind of hacky that we store the measurement data which has timestamp in a timestamped map. See
-        // comment at tope of method.
+        //  comment at top of method.
         data.insert({time_i, {velocity_t->topRows(3), acceleration_t->bottomRows(3)}});
     }
 
