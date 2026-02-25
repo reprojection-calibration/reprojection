@@ -6,7 +6,7 @@
 namespace reprojection::optimization {
 
 // TODO NAMING AND LOCATION
-ReprojectionErrors SplineReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
+ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
                                            OptimizationState const& state);
 
 }  // namespace  reprojection::optimization

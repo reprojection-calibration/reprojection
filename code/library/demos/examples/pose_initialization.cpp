@@ -7,6 +7,7 @@
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
+#include "optimization/spline_reprojection_error.hpp"
 
 using namespace reprojection;
 
@@ -70,6 +71,9 @@ int main() {
     }
 
     ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
+
+    ReprojectionErrors const interpolated_spline_error{
+        optimization::SplineReprojectionResiduals(sensor, targets, optimized_state)};
 
     auto const [orientation_init,
                 gravity_w]{calibration::EstimateCameraImuRotationAndGravity(optimized_state.frames, imu_data)};

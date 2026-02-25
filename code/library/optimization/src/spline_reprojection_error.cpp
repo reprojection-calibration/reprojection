@@ -8,7 +8,7 @@
 
 namespace reprojection::optimization {
 
-ReprojectionErrors SplineReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
+ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
                                            OptimizationState const& state) {
     auto const [control_points, time_handler]{spline::InitializeSe3SplineState(state.frames)};
 
