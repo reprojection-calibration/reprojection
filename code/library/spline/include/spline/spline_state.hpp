@@ -18,15 +18,13 @@ namespace reprojection::spline {
  * and the vector of control points.
  */
 struct CubicBSplineC3 {
-    // TODO(Jack): Reorder so that control points come first!
-    CubicBSplineC3(TimeHandler const& time_handler, Eigen::Ref<Matrix3Xd const> const& control_points)
-        : time_handler_{time_handler}, control_points_{control_points} {}
+    CubicBSplineC3(Eigen::Ref<Matrix3Xd const> const& control_points, TimeHandler const& time_handler)
+        : control_points_{control_points}, time_handler_{time_handler} {}
 
     // TODO(Jack): Confirm that the mapping actually creates a copy of the data!
-    // TODO(Jack): Reorder so that control points come first!
-    CubicBSplineC3(TimeHandler const& time_handler, std::vector<Vector3d> const& control_points)
-        : CubicBSplineC3(time_handler,
-                         Eigen::Map<Matrix3Xd const>(control_points[0].data(), 3, std::size(control_points))) {}
+    CubicBSplineC3(std::vector<Vector3d> const& control_points, TimeHandler const& time_handler)
+        : CubicBSplineC3(Eigen::Map<Matrix3Xd const>(control_points[0].data(), 3, std::size(control_points)),
+                         time_handler) {}
 
     CubicBSplineC3() = default;
 
@@ -35,16 +33,22 @@ struct CubicBSplineC3 {
     // TODO(Jack): Does this kind of naming make sense?
     Eigen::Ref<Matrix3Xd> MutableControlPoints() { return control_points_; }
 
+    std::optional<std::pair<double, int>> Position(std::uint64_t const t_ns) const {
+        return time_handler_.SplinePosition(t_ns, this->Size());
+    }
+
+    std::uint64_t DeltaTNs() const { return time_handler_.delta_t_ns_; }
+
     /**
      * \brief The number of control points the spline contains.
      */
     size_t Size() const { return control_points_.cols(); }
 
     // TODO MAKE PRIVATE
-    TimeHandler time_handler_;
 
    private:
     Matrix3Xd control_points_;
+    TimeHandler time_handler_;
 };
 
 }  // namespace reprojection::spline

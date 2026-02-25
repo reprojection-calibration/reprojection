@@ -12,15 +12,16 @@ using namespace reprojection::spline;  // Use SOOO many times that we introduce 
 
 // Read the comments in TEST(Spline_r3Spline, TestEvaluateValidity) for more context.
 TEST(SplineSo3Spline, TestEvaluateValidity) {
-    CubicBSplineC3 const empty_spline{{100, 5}, {}};
+    CubicBSplineC3 const empty_spline{{}, TimeHandler{}};
     EXPECT_FALSE(EvaluateSpline<So3Spline>(empty_spline, 100));
 
-    CubicBSplineC3 const one_segment_spline{{100, 5}, Matrix3Kd::Zero()};
+    CubicBSplineC3 const one_segment_spline{Matrix3Kd::Zero(), TimeHandler{100, 5}};
 
     EXPECT_TRUE(EvaluateSpline<So3Spline>(one_segment_spline, 100));
     EXPECT_FALSE(EvaluateSpline<So3Spline>(one_segment_spline, 105));
 
-    CubicBSplineC3 const two_segment_spline{{100, 5}, Eigen::Matrix<double, 3, constants::order + 1>::Zero()};
+    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, constants::order + 1>::Zero(),
+                                            TimeHandler{100, 5}};
     EXPECT_TRUE(EvaluateSpline<So3Spline>(two_segment_spline, 105));
 }
 
@@ -34,14 +35,14 @@ CubicBSplineC3 BuildSo3TestSpline() {
                                   geometry::Exp<double>(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
     }
 
-    return CubicBSplineC3{{100, 5}, so3_control_points};
+    return CubicBSplineC3{so3_control_points, TimeHandler{100, 5}};
 }
 
 TEST(SplineSo3Spline, TestEvaluate) {
     CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
-    // Check that all timestamps from 100 to 104 evaluate without error
-    for (int i{0}; i < static_cast<int>(spline.time_handler_.delta_t_ns_); ++i) {
+    // Check that all timestamps from 100 to 104 evaluate without error - one time segment of length delta_t_ns
+    for (int i{0}; i < 5; ++i) {
         auto const p_i{EvaluateSpline<So3Spline>(spline, 100 + i)};
         ASSERT_TRUE(p_i.has_value());
     }

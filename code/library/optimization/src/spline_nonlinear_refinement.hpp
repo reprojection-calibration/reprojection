@@ -26,14 +26,14 @@ class CubicBSplineC3Refinement {
         requires spline::CanEvaluateCubicBSplineC3<T_Model>
     [[nodiscard]] bool AddConstraint(uint64_t const timestamp_ns, Vector3d const& constraint,
                                      spline::DerivativeOrder const order) {
-        auto const normalized_position{spline_.time_handler_.SplinePosition(timestamp_ns, spline_.Size())};
+        auto const normalized_position{spline_.Position(timestamp_ns)};
         if (not normalized_position.has_value()) {
             return false;
         }
         auto const [u_i, i]{normalized_position.value()};
 
         ceres::CostFunction* const cost_function{optimization::CreateSplineCostFunction_T<T_Model>(
-            order, constraint, u_i, spline_.time_handler_.delta_t_ns_)};
+            order, constraint, u_i, spline_.DeltaTNs())};
 
         problem_.AddResidualBlock(cost_function, nullptr,
                                   spline_.MutableControlPoints().col(i).data(),  //

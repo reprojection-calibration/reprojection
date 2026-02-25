@@ -8,7 +8,7 @@
 namespace reprojection::spline {
 
 Se3Spline::Se3Spline(TimeHandler const& time_handler, Eigen::Ref<Matrix6Xd const> const& control_points)
-    : so3_spline_{time_handler, control_points.topRows(3)}, r3_spline_{time_handler, control_points.bottomRows(3)} {}
+    : so3_spline_{control_points.topRows(3), time_handler}, r3_spline_{control_points.bottomRows(3), time_handler} {}
 
 Se3Spline::Se3Spline(TimeHandler const& time_handler, std::vector<Vector6d> const& control_points)
     : Se3Spline(time_handler, Eigen::Map<Matrix6Xd const>(control_points[0].data(), 6, std::size(control_points))) {}

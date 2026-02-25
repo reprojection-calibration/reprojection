@@ -14,17 +14,18 @@ using namespace reprojection::spline;  // Use SOOO many times that we introduce 
 
 TEST(Spline_r3Spline, TestEvaluateValidity) {
     // Completely empty spline
-    CubicBSplineC3 const empty_spline{{100, 5}, {}};
+    CubicBSplineC3 const empty_spline{{}, TimeHandler{}};
     EXPECT_FALSE(EvaluateSpline<R3Spline>(empty_spline, 100));
 
     // A spline with four control points (i.e. constants::order size) is the smallest possible one we can have.
-    CubicBSplineC3 const one_segment_spline{{100, 5}, Matrix3Kd::Zero()};
+    CubicBSplineC3 const one_segment_spline{Matrix3Kd::Zero(), TimeHandler{100, 5}};
 
     EXPECT_TRUE(EvaluateSpline<R3Spline>(one_segment_spline, 100));   // Inside first time segment - valid
     EXPECT_FALSE(EvaluateSpline<R3Spline>(one_segment_spline, 105));  // Outside first time segment - invalid
 
     // Add one more control point than before to see that we can now do a valid evaluation in the second time segment
-    CubicBSplineC3 const two_segment_spline{{100, 5}, Eigen::Matrix<double, 3, constants::order + 1>::Zero()};
+    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, constants::order + 1>::Zero(),
+                                            TimeHandler{100, 5}};
     EXPECT_TRUE(EvaluateSpline<R3Spline>(two_segment_spline, 105));
 }
 
@@ -33,7 +34,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
     Matrix3Kd const four_control_points{{0, 1, 2, 3},  //
                                         {0, 1, 2, 3},
                                         {0, 1, 2, 3}};
-    CubicBSplineC3 const one_segment_spline{{100, 5}, four_control_points};
+    CubicBSplineC3 const one_segment_spline{four_control_points, TimeHandler{100, 5}};
 
     // Position
     auto const p_0{EvaluateSpline<R3Spline>(one_segment_spline, 100)};
@@ -54,7 +55,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
     Eigen::Matrix<double, 3, constants::order + 1> const five_control_points{{0, 1, 2, 3, 4},  //
                                                                              {0, 1, 2, 3, 4},
                                                                              {0, 1, 2, 3, 4}};
-    CubicBSplineC3 const two_segment_spline{{100, 5}, five_control_points};
+    CubicBSplineC3 const two_segment_spline{five_control_points, TimeHandler{100, 5}};
     auto const p_1{EvaluateSpline<R3Spline>(two_segment_spline, 105)};
     ASSERT_TRUE(p_1.has_value());
     EXPECT_TRUE(p_1.value().isApproxToConstant(2));

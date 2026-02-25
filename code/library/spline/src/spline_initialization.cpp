@@ -14,7 +14,8 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
     // problem.
     uint64_t const t0_ns{std::cbegin(measurements)->first};
     uint64_t const tn_ns{std::crbegin(measurements)->first};
-    TimeHandler const time_handler{t0_ns, (tn_ns - t0_ns) / num_segments};
+    uint64_t const delta_t_ns{(tn_ns - t0_ns) / num_segments};
+    TimeHandler const time_handler{t0_ns, delta_t_ns};
 
     auto const [A, b]{CubicBSplineC3Init::BuildAb(measurements, num_segments, time_handler)};
 
@@ -23,7 +24,7 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
     // hardcoded for now.
     // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
     // timestamps which results in very small values in the omega matrix otherwise.
-    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(time_handler.delta_t_ns_, 1e8)};
+    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(delta_t_ns, 1e8)};
     Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, CubicBSplineC3Init::N, num_segments)};
 
     // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
@@ -58,7 +59,7 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
 
     // TODO(Jack): Is there a better way to calculate the number of control points here than x.rows()/3?
     // TODO(Jack): Confirm this does a copy here!
-    return CubicBSplineC3{time_handler, Eigen::Map<Matrix3Xd const>(x.data(), 3, x.rows() / 3)};
+    return CubicBSplineC3{Eigen::Map<Matrix3Xd const>(x.data(), 3, x.rows() / 3), time_handler};
 }
 
 }  // namespace reprojection::spline

@@ -24,7 +24,7 @@ class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
             control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
         }
 
-        spline_ = spline::CubicBSplineC3({t0_ns_, delta_t_ns_}, control_points);
+        spline_ = spline::CubicBSplineC3(control_points, spline::TimeHandler{t0_ns_, delta_t_ns_});
     }
 
     template <typename T_Model>

@@ -24,7 +24,6 @@ class TimeHandler {
     static std::pair<double, int> NormalizedSegmentTime(std::uint64_t const t0_ns, std::uint64_t const t_ns,
                                                         std::uint64_t const delta_t_ns);
 
-    // TODO(Jack): Make private?
     std::uint64_t t0_ns_;
     std::uint64_t delta_t_ns_;
 };
