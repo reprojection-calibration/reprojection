@@ -29,11 +29,12 @@ class Se3Spline {
         assert(0 <= u_i and u_i < 1);
         assert(delta_t_ns > 0);
 
+        constexpr DerivativeOrder null{DerivativeOrder::Null};  // Position evaluation order
+        constexpr int N{constants::states};
+
         Array6<T> pose;
-        pose.template head<constants::states>() =
-            So3Spline::Evaluate<T, DerivativeOrder::Null>(P.template topRows<constants::states>(), u_i, delta_t_ns);
-        pose.template tail<constants::states>() =
-            R3Spline::Evaluate<T, DerivativeOrder::Null>(P.template bottomRows<constants::states>(), u_i, delta_t_ns);
+        pose.template head<N>() = So3Spline::Evaluate<T, null>(P.template topRows<N>(), u_i, delta_t_ns);
+        pose.template tail<N>() = R3Spline::Evaluate<T, null>(P.template bottomRows<N>(), u_i, delta_t_ns);
 
         return pose;
     }
