@@ -11,6 +11,8 @@ namespace reprojection::spline {
 // NOTE(Jack): We need to provide these templated types so that we can also use them for the parts where we need
 // to handle ceres autodiff Jet types too.
 
+template <typename T>
+using Matrix2NK = Eigen::Matrix<T, 2*constants::states, constants::order>;
 // Matrix2NXd the full se3 state (size = 2 * constants::states) which is then split up into two MatrixNXd matrices as it
 // is passed to the separate rotation and translation splines.
 using Matrix2NXd = Eigen::Matrix<double, 2 * constants::states, Eigen::Dynamic>;
