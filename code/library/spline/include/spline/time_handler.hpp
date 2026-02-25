@@ -18,7 +18,7 @@ class TimeHandler {
    public:
     TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns);
 
-    TimeHandler() = default;
+    TimeHandler() : t0_ns_{}, delta_t_ns_{} {};
 
     std::optional<std::pair<double, int>> SplinePosition(std::uint64_t const t_ns,
                                                          size_t const num_control_points) const;
