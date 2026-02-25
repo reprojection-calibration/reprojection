@@ -18,7 +18,7 @@ TEST(Spline_r3Spline, TestEvaluateValidity) {
     EXPECT_FALSE(EvaluateSpline<R3Spline>(empty_spline, 100));
 
     // A spline with four control points (i.e. constants::order size) is the smallest possible one we can have.
-    CubicBSplineC3 const one_segment_spline{Matrix3Kd::Zero(), TimeHandler{100, 5}};
+    CubicBSplineC3 const one_segment_spline{MatrixNKd::Zero(), TimeHandler{100, 5}};
 
     EXPECT_TRUE(EvaluateSpline<R3Spline>(one_segment_spline, 100));   // Inside first time segment - valid
     EXPECT_FALSE(EvaluateSpline<R3Spline>(one_segment_spline, 105));  // Outside first time segment - invalid
@@ -31,7 +31,7 @@ TEST(Spline_r3Spline, TestEvaluateValidity) {
 
 TEST(Spline_r3Spline, TestEvaluate) {
     // Fill spline with four arbitrary control points which for a cubic b-spline gives us one valid time segment.
-    Matrix3Kd const four_control_points{{0, 1, 2, 3},  //
+    MatrixNKd const four_control_points{{0, 1, 2, 3},  //
                                         {0, 1, 2, 3},
                                         {0, 1, 2, 3}};
     CubicBSplineC3 const one_segment_spline{four_control_points, TimeHandler{100, 5}};
@@ -68,7 +68,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
 // see that when u=0 we get back the point 2, and when u=0.99999 we get back the point 3. Values in between 0 and 1
 // and 3 and 4 cannot be estimated.
 TEST(Spline_r3Spline, TestTemplatedEvaluateOnLine) {
-    Matrix3Kd const P1{{0, 1, 2, 3},  //
+    MatrixNKd const P1{{0, 1, 2, 3},  //
                        {0, 1, 2, 3},
                        {0, 1, 2, 3}};
     std::uint64_t const delta_t_ns{5};  // No effect when DerivativeOrder::Null (5^0 = 1)
@@ -83,7 +83,7 @@ TEST(Spline_r3Spline, TestTemplatedEvaluateOnLine) {
 
     // Shift the control points now to start at 1 and end at 4 manually by creating a new P, and see that the spline
     // now starts at 2 instead of 1.
-    spline::Matrix3Kd const P2{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}};
+    spline::MatrixNKd const P2{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}};
     Vector3d const position_3{R3Spline::Evaluate<double, DerivativeOrder::Null>(P2, 0, delta_t_ns)};
     EXPECT_TRUE(position_3.isApproxToConstant(2));
 }
@@ -101,7 +101,7 @@ double Squared(double const x) { return x * x; }  // COPY PASTED
 // note that the control points are generated like a parabola, but that does not necessarily mean the spline is a
 // parabola itself! Look at the nurbs calculator viewer to try to understand what is going on here!
 TEST(Spline_r3Spline, TestTemplatedEvaluateOnParabola) {
-    Matrix3Kd const P1{{-1, -0.5, 0.5, 1},
+    MatrixNKd const P1{{-1, -0.5, 0.5, 1},
                        {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
                        {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
     double const u_middle{0.5};  // Middle/center and therefore "bottom" of the "parabola" specified by control points P

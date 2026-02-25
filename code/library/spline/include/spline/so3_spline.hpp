@@ -12,7 +12,7 @@ namespace reprojection::spline {
 
 // TODO(Jack): Test explicitly and make part of SoSpline static class if not used elsewhere?
 template <typename T>
-std::array<Vector3<T>, constants::degree> DeltaPhi(Eigen::Ref<Matrix3K<T> const> const& control_points) {
+std::array<Vector3<T>, constants::degree> DeltaPhi(Eigen::Ref<MatrixNK<T> const> const& control_points) {
     std::array<Vector3<T>, constants::degree> delta_phi;
     for (int j{0}; j < constants::degree; ++j) {
         delta_phi[j] = geometry::Log<T>(geometry::Exp<T>(control_points.col(j)).inverse() *
@@ -35,7 +35,7 @@ struct So3Spline {
     // allows us to generate all three version of the evaluate function from the same single source code. Please read
     // online to see how "if constexpr" works, it is not the right place to explain it here.
     template <typename T, DerivativeOrder D>
-    static Vector3<T> Evaluate(Eigen::Ref<Matrix3K<T> const> const& P, double const u_i,
+    static Vector3<T> Evaluate(Eigen::Ref<MatrixNK<T> const> const& P, double const u_i,
                                std::uint64_t const delta_t_ns) {
         std::array<Vector3<T>, constants::degree> const delta_phis{DeltaPhi(P)};
 

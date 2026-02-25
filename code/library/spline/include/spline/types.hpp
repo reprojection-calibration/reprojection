@@ -8,9 +8,9 @@ namespace reprojection::spline {
 // NOTE(Jack): We need to provide these templated types so that we can also use them for the parts where we need to
 // handle ceres autodiff Jet types too.
 template <typename T>
-using Matrix3K = Eigen::Matrix<T, 3, constants::order>;
+using MatrixNK = Eigen::Matrix<T, constants::states, constants::order>;
 
-using Matrix3Kd = Matrix3K<double>;
+using MatrixNKd = MatrixNK<double>;
 using MatrixKd = Eigen::Matrix<double, constants::order, constants::order>;
 using VectorKd = Eigen::Vector<double, constants::order>;
 

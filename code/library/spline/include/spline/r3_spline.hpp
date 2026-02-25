@@ -35,7 +35,7 @@ struct R3Spline {
     // We pass the Eigen::Ref by const& itself due to information from this link:
     //      https://stackoverflow.com/questions/21132538/correct-usage-of-the-eigenref-class
     template <typename T, DerivativeOrder D>
-    static Vector3<T> Evaluate(Eigen::Ref<Matrix3K<T> const> const& P, double const u_i,
+    static Vector3<T> Evaluate(Eigen::Ref<MatrixNK<T> const> const& P, double const u_i,
                                std::uint64_t const delta_t_ns) {
         static int constexpr derivative_order{static_cast<int>(D)};
 

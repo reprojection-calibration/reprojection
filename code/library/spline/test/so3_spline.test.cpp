@@ -15,7 +15,7 @@ TEST(SplineSo3Spline, TestEvaluateValidity) {
     CubicBSplineC3 const empty_spline{{}, TimeHandler{}};
     EXPECT_FALSE(EvaluateSpline<So3Spline>(empty_spline, 100));
 
-    CubicBSplineC3 const one_segment_spline{Matrix3Kd::Zero(), TimeHandler{100, 5}};
+    CubicBSplineC3 const one_segment_spline{MatrixNKd::Zero(), TimeHandler{100, 5}};
 
     EXPECT_TRUE(EvaluateSpline<So3Spline>(one_segment_spline, 100));
     EXPECT_FALSE(EvaluateSpline<So3Spline>(one_segment_spline, 105));
@@ -86,7 +86,7 @@ double Squared(double const x) { return x * x; }  // COPY PASTED
 // some symmetry/alignment in the velocity and acceleration values. Maybe if we have time we can design a test that
 // really is correct by inspection and not just heuristic.
 TEST(SplineSo3Spline, TestTemplatedEvaluateOnParabola) {
-    Matrix3Kd const P1{{-1, -0.5, 0.5, 1},
+    MatrixNKd const P1{{-1, -0.5, 0.5, 1},
                        {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
                        {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
     double const u_middle{0.5};
