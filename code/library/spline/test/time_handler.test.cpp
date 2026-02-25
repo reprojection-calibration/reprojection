@@ -19,7 +19,7 @@ TEST(SplineTimeHandler, TestTimeHandlerSplinePosition) {
     spline::TimeHandler const time_handler{100, 5};
 
     // t_ns is less than t0_ns.
-    EXPECT_DEATH(time_handler.SplinePosition(0, 0), "");
+    EXPECT_FALSE(time_handler.SplinePosition(0, 0));
 
     // Anything with less than constants::order control points will fail.
     EXPECT_FALSE(time_handler.SplinePosition(100, 0));
