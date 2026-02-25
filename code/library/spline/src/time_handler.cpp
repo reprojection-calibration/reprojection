@@ -25,6 +25,11 @@ TimeHandler::TimeHandler() : TimeHandler(0, 1) {}
 
 std::optional<std::pair<double, int>> TimeHandler::SplinePosition(std::uint64_t const t_ns,
                                                                   size_t const num_control_points) const {
+    // TODO(Jack): Why did we never have this condition before and not have problems?
+    if (t_ns < t0_ns_) {
+        return std::nullopt;
+    }
+
     auto const [u_i, i]{NormalizedSegmentTime(t0_ns_, t_ns, delta_t_ns_)};
 
     // From reference [1] - "At time t in [t_i, t_i+1) the value of p(t) only depends on the control points p_i,
