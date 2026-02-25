@@ -21,7 +21,7 @@ TimeHandler::TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_
 }
 
 // TODO(Jack): Do we really need this? When do we need to actually construct an empty handler?
-TimeHandler::TimeHandler() : TimeHandler(0, 1) {};
+TimeHandler::TimeHandler() : TimeHandler(0, 1) {}
 
 std::optional<std::pair<double, int>> TimeHandler::SplinePosition(std::uint64_t const t_ns,
                                                                   size_t const num_control_points) const {
