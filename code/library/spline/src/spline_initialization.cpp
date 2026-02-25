@@ -58,7 +58,8 @@ CubicBSplineC3 InitializeC3Spline(PositionMeasurements const& measurements, size
     }
 
     // TODO(Jack): Is there a better way to calculate the number of control points here than x.rows()/3?
-    return CubicBSplineC3{Eigen::Map<MatrixNXd const>(x.data(), 3, x.rows() / 3), time_handler};
+    return CubicBSplineC3{Eigen::Map<MatrixNXd const>(x.data(), constants::states, x.rows() / constants::states),
+                          time_handler};
 }
 
 }  // namespace reprojection::spline
