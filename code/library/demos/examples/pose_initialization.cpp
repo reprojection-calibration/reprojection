@@ -8,6 +8,7 @@
 #include "database/sensor_data_interface_getters.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "optimization/spline_reprojection_error.hpp"
+#include "spline/spline_initialization.hpp"
 
 using namespace reprojection;
 
@@ -63,20 +64,21 @@ int main() {
     // Write camera initialization to database
     try {
         database::AddCameraPoseData(initial_state.frames, sensor.sensor_name, database::PoseType::Initial, db);
-        database::AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
         database::AddReprojectionError(initial_error, sensor.sensor_name, database::PoseType::Initial, db);
+        database::AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
         database::AddReprojectionError(optimized_error, sensor.sensor_name, database::PoseType::Optimized, db);
     } catch (...) {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
-
+    // TODO SPLINE TYPES!!!
+    auto const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{
-        optimization::SplineReprojectionResiduals(sensor, targets, optimized_state)};
+        optimization::SplineReprojectionResiduals(sensor, targets, optimized_state.camera_state, interpolated_spline)};
 
-    auto const [orientation_init,
-                gravity_w]{calibration::EstimateCameraImuRotationAndGravity(optimized_state.frames, imu_data)};
+    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
+    auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
+        {interpolated_spline.first.topRows(3), interpolated_spline.second}, imu_data)};
     auto const [R_imu_co, _]{orientation_init};
 
     std::cout << R_imu_co << std::endl;

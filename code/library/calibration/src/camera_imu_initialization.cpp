@@ -17,17 +17,7 @@ using namespace spline;
 // TODO(Jack): This function is unfortunately primarily a collection of data type conversion loops! Is there any way
 //  that we can restructure the data or functions to eliminate these loops?
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
-    Frames const& camera_poses, ImuMeasurements const& imu_data) {
-    // Data type conversion loop...
-    PositionMeasurements camera_orientations;
-    for (auto const& [timestamp_ns, frame_i] : camera_poses) {
-        camera_orientations.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
-    }
-
-    // TODO(Jack): Is 20 times the number of camera_poses high enough frequency? Do we need to parameterize this?
-    CubicBSplineC3 const camera_orientation_spline{
-        InitializeC3SplineState(camera_orientations, 20 * std::size(camera_poses))};
-
+    CubicBSplineC3 const& camera_orientation_spline, ImuMeasurements const& imu_data) {
     // Data type conversion loop...
     VelocityMeasurements imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {

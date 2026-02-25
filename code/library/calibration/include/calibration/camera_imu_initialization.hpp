@@ -9,7 +9,7 @@
 namespace reprojection::calibration {
 
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
-    Frames const& camera_poses, ImuMeasurements const& imu_data);
+    spline::CubicBSplineC3 const& camera_orientation_spline, ImuMeasurements const& imu_data);
 
 /**
  * \brief Estimate the approximate extrinsic rotation matrix between the IMU and camera optical frame (R_co_imu).

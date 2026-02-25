@@ -9,11 +9,15 @@
 namespace reprojection::optimization {
 
 ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                           OptimizationState const& state) {
-    auto const [control_points, time_handler]{spline::InitializeSe3SplineState(state.frames)};
+                                               CameraState const& camera_state,
+                                               std::pair<spline::Matrix2NXd, spline::TimeHandler> const& spline) {
+    auto const& [control_points, time_handler]{spline};
 
+    // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
+    //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
+    //  key constraint. Do we need new tables for this?
     ReprojectionErrors residuals;
-    for (auto const timestamp_ns : state.frames | std::views::keys) {
+    for (auto const timestamp_ns : targets | std::views::keys) {
         auto const normalized_position{time_handler.SplinePosition(timestamp_ns, control_points.cols())};
         if (not normalized_position.has_value()) {
             std::cout << "Skipping: " << timestamp_ns << std::endl;
@@ -22,7 +26,7 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
         auto const [u_i, i]{normalized_position.value()};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(state.camera_state.intrinsics.data());
+        parameter_blocks.push_back(camera_state.intrinsics.data());
         parameter_blocks.push_back(control_points.col(i).data());
         parameter_blocks.push_back(control_points.col(i + 1).data());
         parameter_blocks.push_back(control_points.col(i + 2).data());
