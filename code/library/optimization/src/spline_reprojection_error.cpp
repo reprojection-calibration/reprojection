@@ -13,7 +13,7 @@ ReprojectionErrors SplineReprojectionError(CameraInfo const& sensor, CameraMeasu
     auto const [control_points, time_handler]{spline::InitializeSe3SplineState(state.frames)};
 
     ReprojectionErrors residuals;
-    for (auto const timestamp_ns : targets | std::views::keys) {
+    for (auto const timestamp_ns : state.frames | std::views::keys) {
         auto const normalized_position{time_handler.SplinePosition(timestamp_ns, control_points.cols())};
         if (not normalized_position.has_value()) {
             std::cout << "Skipping: " << timestamp_ns << std::endl;
