@@ -4,17 +4,24 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
-#include <tuple>
 
 #include "spline/constants.hpp"
+
+// Prevent assertions from getting optimized out in the release build.
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+#include <cassert>
 
 namespace reprojection::spline {
 
 TimeHandler::TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
-    : t0_ns_{t0_ns}, delta_t_ns_{delta_t_ns} {}
+    : t0_ns_{t0_ns}, delta_t_ns_{delta_t_ns} {
+    assert(delta_t_ns > 0);
+}
 
 // TODO(Jack): Do we really need this? When do we need to actually construct an empty handler?
-TimeHandler::TimeHandler() : t0_ns_{}, delta_t_ns_{} {};
+TimeHandler::TimeHandler() : TimeHandler(0, 1) {};
 
 std::optional<std::pair<double, int>> TimeHandler::SplinePosition(std::uint64_t const t_ns,
                                                                   size_t const num_control_points) const {
