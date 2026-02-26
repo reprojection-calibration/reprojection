@@ -17,7 +17,7 @@ TEST(Pnp, TestPnp) {
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle, sensor.bounds)};
-        EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
+        ASSERT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
@@ -35,7 +35,7 @@ TEST(Pnp, TestPnpFlat) {
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle)};
-        EXPECT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
+        ASSERT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
 
         Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
