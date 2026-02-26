@@ -44,12 +44,18 @@ class Se3Spline {
 
     Eigen::Ref<Matrix2NXd const> ControlPoints() const { return control_points_; }
 
-    Eigen::Ref<MatrixNXd const> So3() const {
+    // WARN(Jack): We tried to return a Eigen::Ref here (and for the R3() method), but that does not play nicely with
+    // the block expression! It compiled and executed without segfaults or anything like that, but when we tried to get
+    // a map of the local control points in the Evaluate methods, it became clear that the underlying memory was the
+    // original row=6 se3 data and not the expected row=3 so3 subset of data. Maybe we need to learn more about how
+    // block operations work of the eigen matrix base class, but for now we simply just return a copy of the relevant
+    // parts, it is not worth our time to spend any more time looking at this until we prove its a problem.
+    MatrixNXd So3() const {
         constexpr int N{constants::states};
         return control_points_.topRows<N>();
     }
 
-    Eigen::Ref<MatrixNXd const> R3() const {
+    MatrixNXd R3() const {
         constexpr int N{constants::states};
         return control_points_.bottomRows<N>();
     }
