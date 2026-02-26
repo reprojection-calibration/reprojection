@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS reprojection_error
 (
-    step_name    TEXT    NOT NULL,
     timestamp_ns INTEGER NOT NULL,
     sensor_name  TEXT    NOT NULL,
+    step_name    TEXT    NOT NULL,
     data         BLOB    NOT NULL,
     PRIMARY KEY (step_name, timestamp_ns, sensor_name),
     FOREIGN KEY (step_name, timestamp_ns, sensor_name)

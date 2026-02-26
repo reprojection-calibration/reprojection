@@ -63,14 +63,12 @@ int main() {
     ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
 
     // Write camera initialization to database
-    try {
+
         database::AddPoseData(initial_state.frames, "linear_pose_initialization", sensor.sensor_name, db);
         database::AddReprojectionError(initial_error, "linear_pose_initialization", sensor.sensor_name, db);
         database::AddPoseData(optimized_state.frames, "nonlinear_refinement", sensor.sensor_name, db);
         database::AddReprojectionError(optimized_error, "nonlinear_refinement", sensor.sensor_name, db);
-    } catch (...) {
-        std::cout << "\n\tPseudo cache hit\n" << std::endl;
-    }
+
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{

@@ -66,13 +66,10 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
 // sql_statements::camera_poses_insert) abd cannot and should not be changed!
 void AddPoseData(Frames const& data, std::string_view step_name, std::string_view sensor_name,
                  std::shared_ptr<CalibrationDatabase> const database) {
-    AddCalibrationStep(step_name, database);
-
-    std::string_view sql{sql_statements::poses_insert};
     SqlTransaction const lock{(database->db)};
 
     for (auto const& [timestamp_ns, frame_i] : data) {
-        SqlStatement const statement{database->db, sql.data()};
+        SqlStatement const statement{database->db, sql_statements::poses_insert};
 
         try {
             Sqlite3Tools::Bind(statement.stmt, 1, step_name);
