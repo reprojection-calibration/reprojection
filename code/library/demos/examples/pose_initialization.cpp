@@ -25,15 +25,15 @@ using namespace reprojection;
 // diverge. Not nice!
 // cppcheck-suppress passedByValue
 OptimizationState AlignRotations(OptimizationState state) {
-    Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
+    Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.head<3>()};
     for (auto& frame_i : state.frames | std::views::values) {
-        Vector3d so3_i{frame_i.pose.topRows(3)};
+        Vector3d so3_i{frame_i.pose.head<3>()};
         double const dp{so3_i_1.dot(so3_i)};
 
         if (dp < 0) {
             so3_i *= -1.0;
         }
-        frame_i.pose.topRows(3) = so3_i;
+        frame_i.pose.head<3>() = so3_i;
 
         so3_i_1 = so3_i;
     }

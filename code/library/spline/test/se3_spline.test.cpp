@@ -32,8 +32,8 @@ TEST(SplineSe3Spline, TestEvaluate) {
 
     for (int i{1}; i < constants::order; ++i) {
         Vector6d delta;
-        delta.topRows(3) = (static_cast<double>(i) / 10) * Vector3d::Ones();
-        delta.bottomRows(3) = i * Vector3d::Ones();
+        delta.head<3>() = (static_cast<double>(i) / 10) * Vector3d::Ones();
+        delta.tail<3>() = i * Vector3d::Ones();
 
         control_point_i = delta + control_point_i;
 

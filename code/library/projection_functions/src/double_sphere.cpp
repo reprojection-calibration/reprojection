@@ -5,7 +5,7 @@
 namespace reprojection::projection_functions {
 
 Array3d DoubleSphere::Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel) {
-    Array3d const ray{Pinhole::Unproject(intrinsics.topRows(4), pixel)};
+    Array3d const ray{Pinhole::Unproject(intrinsics.head<4>(), pixel)};
 
     double const& mx{ray[0]};
     double const& my{ray[1]};

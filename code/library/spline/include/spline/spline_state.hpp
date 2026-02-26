@@ -30,10 +30,12 @@ struct CubicBSplineC3 {
 
     TimeHandler GetTimeHandler() const { return time_handler_; }
 
+    // TODO(Jack): Can remove?
     std::optional<std::pair<double, int>> Position(std::uint64_t const t_ns) const {
         return time_handler_.SplinePosition(t_ns, this->Size());
     }
 
+    // TODO(Jack): Can remove?
     std::uint64_t DeltaTNs() const { return time_handler_.delta_t_ns_; }
 
     size_t Size() const { return control_points_.cols(); }

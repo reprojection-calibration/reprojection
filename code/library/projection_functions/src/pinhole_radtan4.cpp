@@ -8,8 +8,8 @@
 namespace reprojection::projection_functions {
 
 Array3d PinholeRadtan4::Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel) {
-    Array3d const P_ray{Pinhole::Unproject(intrinsics.topRows(4), pixel)};
-    Vector2d const p_cam_0{P_ray.topRows(2)};
+    Array3d const P_ray{Pinhole::Unproject(intrinsics.head<4>(), pixel)};
+    Vector2d const p_cam_0{P_ray.head<2>()};
 
     // TODO(Jack): How many iterations do we really need here?
     // TODO(Jack): Check error and exit early if the error is small, will this save us time?
@@ -18,7 +18,7 @@ Array3d PinholeRadtan4::Unproject(Eigen::Array<double, Size, 1> const& intrinsic
     // will only exist for the i'th iteration and be overwritten next time.
     Vector2d distorted_p_cam_n{p_cam_0};
     for (int i{0}; i < 5; ++i) {
-        auto const [distorted_p_cam_i, J]{JacobianUpdate(intrinsics.bottomRows(4), distorted_p_cam_n)};
+        auto const [distorted_p_cam_i, J]{JacobianUpdate(intrinsics.tail<4>(), distorted_p_cam_n)};
 
         Vector2d const e{distorted_p_cam_i.matrix() - p_cam_0};
         Vector2d const du{(J.transpose() * J).inverse() * J.transpose() * e};
