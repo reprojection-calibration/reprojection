@@ -6,6 +6,7 @@
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
+using enum spline::DerivativeOrder;
 
 // To understand why 969 is the last valid timestamp take a look at the implementation of SampleTimes(). There you will
 // at least see the math, but for it properly to make sense, you need to dig into the core spline
@@ -15,13 +16,13 @@ TEST(TestingMocksDataGeneratorHelpers, TestTimedSphereTrajectorySpline) {
     // more than that you will see artifacts!
     auto const se3_spline{testing_mocks::TimedSphereTrajectorySpline(100, 1000)};
 
-    auto pose{se3_spline.Evaluate(0)};
+    auto pose{se3_spline.Evaluate(0, Null)};
     EXPECT_TRUE(pose.has_value());
 
-    pose = se3_spline.Evaluate(969);
+    pose = se3_spline.Evaluate(969, Null);
     EXPECT_TRUE(pose.has_value());
 
-    pose = se3_spline.Evaluate(970);
+    pose = se3_spline.Evaluate(970, Null);
     EXPECT_FALSE(pose.has_value());
 }
 

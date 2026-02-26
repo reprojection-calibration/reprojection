@@ -20,8 +20,7 @@ class Se3Spline {
     //  can get rid of these, here and for the C3 spline too.
     explicit Se3Spline(std::pair<Matrix2NXd, TimeHandler> const& pair);
 
-    std::optional<Vector6d> Evaluate(std::uint64_t const t_ns,
-                                     DerivativeOrder const derivative = DerivativeOrder::Null) const;
+    std::optional<Vector6d> Evaluate(std::uint64_t const t_ns, DerivativeOrder const derivative) const;
 
     // TODO TEST!!!
     // NOTE(Jack): We need a fully compile time determined (i.e. we hardcode DerivativeOrder::Null below) templated
