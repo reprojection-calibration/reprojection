@@ -1,6 +1,7 @@
+#include "optimization/camera_imu_nonlinear_refinement.hpp"
+
 #include <ranges>
 
-#include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "spline/spline_initialization.hpp"
 
 #include "spline_projection_cost_function.hpp"
@@ -17,7 +18,7 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
         auto const normalized_position{
             spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
         if (not normalized_position.has_value()) {
-            std::cout << "Skipping: " << timestamp_ns << std::endl;
+            std::cout << "Skipping timestamp: " << timestamp_ns << std::endl;
             continue;
         }
         auto const [u_i, i]{normalized_position.value()};

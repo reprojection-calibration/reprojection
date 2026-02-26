@@ -7,8 +7,6 @@
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
 
-#include "projection_cost_function.hpp"
-
 using namespace reprojection;
 
 // Test with perfect data - means inputs will be exact same as outputs. Technically this test might miss something
@@ -115,6 +113,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
                                   {{timestamp_ns, {Array6d::Zero()}}}};
 
     ReprojectionErrors const residuals{optimization::ReprojectionResiduals(sensor, targets, state)};
+    EXPECT_EQ(std::size(residuals), 1);
     EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))
         << "Result:\n"
         << residuals.at(timestamp_ns).transpose() << "\nexpected result:\n"
