@@ -17,35 +17,26 @@ namespace reprojection::spline {
  * conveniently for both Euclidean R3 splines and so3 rotations spline stored in the axis angle representation.
  */
 struct CubicBSplineC3 {
-    // TODO(Jack): Is this actually used in the wild anywhere in non-test code?
-    CubicBSplineC3(Eigen::Ref<MatrixNXd const> const& control_points, TimeHandler const& time_handler);
+    CubicBSplineC3(Eigen::Ref<MatrixNXd const> const& control_points, TimeHandler const& time_handler)
+        : control_points_{control_points}, time_handler_{time_handler} {}
 
-    explicit CubicBSplineC3(std::pair<MatrixNXd, TimeHandler> const& pair);
+    explicit CubicBSplineC3(std::pair<MatrixNXd, TimeHandler> const& pair) : CubicBSplineC3(pair.first, pair.second) {}
 
     CubicBSplineC3() = default;
 
-    Eigen::Ref<MatrixNXd const> ControlPoints() const;
+    Eigen::Ref<MatrixNXd const> ControlPoints() const { return control_points_; }
 
-    Eigen::Ref<MatrixNXd> MutableControlPoints();
+    Eigen::Ref<MatrixNXd> MutableControlPoints() { return control_points_; }
 
     TimeHandler GetTimeHandler() const { return time_handler_; }
 
-    // Still needed?
-    // Still needed?
-    // Still needed?
-    // Still needed?
-    std::optional<std::pair<double, int>> Position(std::uint64_t const t_ns) const;
+    std::optional<std::pair<double, int>> Position(std::uint64_t const t_ns) const {
+        return time_handler_.SplinePosition(t_ns, this->Size());
+    }
 
-    // Still needed?
-    // Still needed?
-    // Still needed?
-    // Still needed?
-    std::uint64_t DeltaTNs() const;
+    std::uint64_t DeltaTNs() const { return time_handler_.delta_t_ns_; }
 
-    /**
-     * \brief The number of control points the spline contains.
-     */
-    size_t Size() const;
+    size_t Size() const { return control_points_.cols(); }
 
    private:
     MatrixNXd control_points_;

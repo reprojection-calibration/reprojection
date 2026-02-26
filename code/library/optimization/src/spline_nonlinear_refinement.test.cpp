@@ -94,9 +94,7 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisyR3SplineNonlinearR
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     spline::CubicBSplineC3 const optimized_spline{handler.GetSpline()};
-    for (size_t i{0}; i < optimized_spline.Size(); ++i) {
-        EXPECT_TRUE(optimized_spline.ControlPoints().col(i).isApprox(spline_.ControlPoints().col(i), 1e-6));
-    }
+    EXPECT_TRUE(optimized_spline.ControlPoints().isApprox(spline_.ControlPoints(), 1e-6));
 }
 
 TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinearRefinement) {
@@ -125,7 +123,5 @@ TEST_F(OptimizationSplineNonlinearRefinementFixture, TestNoisySo3SplineNonlinear
     ASSERT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     spline::CubicBSplineC3 const optimized_spline{handler.GetSpline()};
-    for (size_t i{0}; i < optimized_spline.Size(); ++i) {
-        EXPECT_TRUE(optimized_spline.ControlPoints().col(i).isApprox(spline_.ControlPoints().col(i), 1e-1));
-    }
+    EXPECT_TRUE(optimized_spline.ControlPoints().isApprox(spline_.ControlPoints(), 1e-1));
 }
