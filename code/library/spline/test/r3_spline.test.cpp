@@ -15,7 +15,8 @@ using enum DerivativeOrder;
 
 TEST(Spline_r3Spline, TestEvaluateValidity) {
     // Completely empty spline
-    CubicBSplineC3 const empty_spline{{}, TimeHandler{}};
+    MatrixNXd const empty{};
+    CubicBSplineC3 const empty_spline{empty, TimeHandler{}};
     EXPECT_FALSE(EvaluateSpline<R3Spline>(empty_spline, 100, Null));
 
     // A spline with four control points (i.e. constants::order size) is the smallest possible one we can have.

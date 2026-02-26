@@ -20,9 +20,6 @@ struct CubicBSplineC3 {
     // TODO(Jack): Is this actually used in the wild anywhere in non-test code?
     CubicBSplineC3(Eigen::Ref<MatrixNXd const> const& control_points, TimeHandler const& time_handler);
 
-    // TODO(Jack): Is this actually used in the wild anywhere in non-test code?
-    CubicBSplineC3(std::vector<Vector3d> const& control_points, TimeHandler const& time_handler);
-
     explicit CubicBSplineC3(std::pair<MatrixNXd, TimeHandler> const& pair);
 
     CubicBSplineC3() = default;

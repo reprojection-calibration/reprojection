@@ -19,9 +19,12 @@ using namespace reprojection;
 class OptimizationSplineNonlinearRefinementFixture : public ::testing::Test {
    protected:
     OptimizationSplineNonlinearRefinementFixture() {
-        std::vector<Vector3d> control_points;
-        for (auto const& x : std::vector<double>{-2, -1, -0.5, 0.5, 1, 2}) {
-            control_points.push_back(Vector3d{x, Squared(x), Squared(x)});
+        std::vector<double> const x{-2, -1, -0.5, 0.5, 1, 2};
+
+        spline::MatrixNXd control_points{3, std::size(x)};
+        for (size_t i{0}; i < std::size(x); ++i) {
+            double const x_i{x[i]};
+            control_points.col(i) = Vector3d{x_i, Squared(x_i), Squared(x_i)};
         }
 
         spline_ = spline::CubicBSplineC3(control_points, spline::TimeHandler{t0_ns_, delta_t_ns_});

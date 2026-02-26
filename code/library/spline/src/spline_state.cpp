@@ -7,11 +7,6 @@ namespace reprojection::spline {
 CubicBSplineC3::CubicBSplineC3(Eigen::Ref<MatrixNXd const> const& control_points, TimeHandler const& time_handler)
     : control_points_{control_points}, time_handler_{time_handler} {}
 
-CubicBSplineC3::CubicBSplineC3(std::vector<Vector3d> const& control_points, TimeHandler const& time_handler)
-    : CubicBSplineC3(
-          Eigen::Map<MatrixNXd const>(control_points[0].data(), constants::states, std::size(control_points)),
-          time_handler) {}
-
 CubicBSplineC3::CubicBSplineC3(std::pair<MatrixNXd, TimeHandler> const& pair)
     : CubicBSplineC3(pair.first, pair.second) {}
 

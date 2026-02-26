@@ -13,7 +13,8 @@ using enum DerivativeOrder;
 
 // Read the comments in TEST(Spline_r3Spline, TestEvaluateValidity) for more context.
 TEST(SplineSo3Spline, TestEvaluateValidity) {
-    CubicBSplineC3 const empty_spline{{}, TimeHandler{}};
+    MatrixNXd const empty{};
+    CubicBSplineC3 const empty_spline{empty, TimeHandler{}};
     EXPECT_FALSE(EvaluateSpline<So3Spline>(empty_spline, 100, Null));
 
     CubicBSplineC3 const one_segment_spline{MatrixNKd::Zero(), TimeHandler{100, 5}};
@@ -27,13 +28,13 @@ TEST(SplineSo3Spline, TestEvaluateValidity) {
 }
 
 CubicBSplineC3 BuildSo3TestSpline() {
-    std::vector<Vector3d> so3_control_points;
-    so3_control_points.push_back(Vector3d::Zero());
+    MatrixNKd so3_control_points;
+    so3_control_points.col(0) = (Vector3d::Zero());
     for (int i{1}; i < constants::order; ++i) {
         // TODO(Jack): Evaluate if we can do any of the math directly in tangent space
-        so3_control_points.push_back(
-            geometry::Log<double>(geometry::Exp<double>(so3_control_points.back()) *
-                                  geometry::Exp<double>(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
+        so3_control_points.col(i) =
+            geometry::Log<double>(geometry::Exp<double>(so3_control_points.col(i - 1)) *
+                                  geometry::Exp<double>(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
     }
 
     return CubicBSplineC3{so3_control_points, TimeHandler{100, 5}};
