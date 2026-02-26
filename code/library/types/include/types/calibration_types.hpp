@@ -45,13 +45,6 @@ using Frame = StampedData<FrameState>;
 using Frames = StampedMap<Frame>;
 
 struct OptimizationState {
-    OptimizationState(CameraState const& _camera_state, Frames const& _frames)
-        : camera_state{_camera_state}, frames{_frames} {}
-
-    explicit OptimizationState(CameraState const& _camera_state) : camera_state{_camera_state} {}
-
-    OptimizationState() = default;
-
     CameraState camera_state;
     Frames frames;
 };
