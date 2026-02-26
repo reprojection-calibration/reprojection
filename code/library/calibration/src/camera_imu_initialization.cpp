@@ -12,37 +12,24 @@
 
 namespace reprojection::calibration {
 
+// TODO(Jack): If used anywhere else we shold move to a common file and implement like we normally do in dedicated
+//  header/cpp files.
+VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data);
+
+// TODO(Jack): If used anywhere else we shold move to a common file
+AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data);
+
 using namespace spline;
 
 // TODO(Jack): This function is unfortunately primarily a collection of data type conversion loops! Is there any way
 //  that we can restructure the data or functions to eliminate these loops?
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
-    Frames const& camera_poses, ImuMeasurements const& imu_data) {
-    // Data type conversion loop...
-    PositionMeasurements camera_orientations;
-    for (auto const& [timestamp_ns, frame_i] : camera_poses) {
-        camera_orientations.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
-    }
+    CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data) {
+    auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
+    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation, imu_angular_velocity)};
 
-    // TODO(Jack): Is 20 times the number of camera_poses high enough frequency? Do we need to parameterize this?
-    CubicBSplineC3 const camera_orientation_spline{
-        InitializeC3Spline(camera_orientations, 20 * std::size(camera_poses))};
-
-    // Data type conversion loop...
-    VelocityMeasurements imu_angular_velocity;
-    for (auto const& [timestamp_ns, data_i] : imu_data) {
-        imu_angular_velocity.insert({timestamp_ns, {data_i.angular_velocity}});
-    }
-
-    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation_spline, imu_angular_velocity)};
-
-    // Data type conversion loop...
-    AccelerationMeasurements imu_linear_acceleration;
-    for (auto const& [timestamp_ns, data_i] : imu_data) {
-        imu_linear_acceleration.insert({timestamp_ns, {data_i.linear_acceleration}});
-    }
-
-    Vector3d const gravity_w{EstimateGravity(camera_orientation_spline, imu_linear_acceleration, R_imu_co)};
+    auto const imu_linear_acceleration{ExtractLinearAcceleration(imu_data)};
+    Vector3d const gravity_w{EstimateGravity(camera_orientation, imu_linear_acceleration, R_imu_co)};
 
     return {{R_imu_co, diagnostics}, gravity_w};
 }
@@ -97,9 +84,9 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
     //      3) The imu test mock data does not have gravity added to the acceleration data :)
     //
     // TODO(Jack): What is the proper threshold to test here? Technically the acceleration vector should roughly have
-    //  length 9.8. But what is actually reasonable here is not clear to me. A long term strategy is needed here and
-    //  should come as we see more data. My gut tells me that the actual threshold would be to say less than g. But that
-    //  might be too strict?
+    //  length 9.8 because of the net-gravity being present. But what is actually reasonable here to identify data that
+    //  does not have gravity present is not clear to me. A long term strategy is needed here and should come as we see
+    //  more data. My gut tells me that the actual threshold would be to say less than g. But that might be too strict?
     Vector3d const net_acceleration_w{acceleration_w.colwise().mean()};
     if (net_acceleration_w.norm() < 1) {
         return Vector3d::Zero();
@@ -113,5 +100,25 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
         return g * net_acceleration_w.normalized();  // LCOV_EXCL_LINE
     }
 }
+
+// TODO(Jack): If used anywhere else we shold move to a common file
+VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
+    VelocityMeasurements imu_angular_velocity;
+    for (auto const& [timestamp_ns, data_i] : imu_data) {
+        imu_angular_velocity.insert({timestamp_ns, {data_i.angular_velocity}});
+    }
+
+    return imu_angular_velocity;
+}  // LCOV_EXCL_LINE
+
+// TODO(Jack): If used anywhere else we shold move to a common file
+AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data) {
+    AccelerationMeasurements imu_linear_acceleration;
+    for (auto const& [timestamp_ns, data_i] : imu_data) {
+        imu_linear_acceleration.insert({timestamp_ns, {data_i.linear_acceleration}});
+    }
+
+    return imu_linear_acceleration;
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::calibration

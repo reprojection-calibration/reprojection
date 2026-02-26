@@ -6,7 +6,10 @@
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
+#include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
+#include "spline/se3_spline.hpp"
+#include "spline/spline_initialization.hpp"
 
 using namespace reprojection;
 
@@ -22,15 +25,15 @@ using namespace reprojection;
 // diverge. Not nice!
 // cppcheck-suppress passedByValue
 OptimizationState AlignRotations(OptimizationState state) {
-    Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.topRows(3)};
+    Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.head<3>()};
     for (auto& frame_i : state.frames | std::views::values) {
-        Vector3d so3_i{frame_i.pose.topRows(3)};
+        Vector3d so3_i{frame_i.pose.head<3>()};
         double const dp{so3_i_1.dot(so3_i)};
 
         if (dp < 0) {
             so3_i *= -1.0;
         }
-        frame_i.pose.topRows(3) = so3_i;
+        frame_i.pose.head<3>() = so3_i;
 
         so3_i_1 = so3_i;
     }
@@ -62,17 +65,21 @@ int main() {
     // Write camera initialization to database
     try {
         database::AddCameraPoseData(initial_state.frames, sensor.sensor_name, database::PoseType::Initial, db);
-        database::AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
         database::AddReprojectionError(initial_error, sensor.sensor_name, database::PoseType::Initial, db);
+        database::AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
         database::AddReprojectionError(optimized_error, sensor.sensor_name, database::PoseType::Optimized, db);
     } catch (...) {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
+    ReprojectionErrors const interpolated_spline_error{
+        optimization::SplineReprojectionResiduals(sensor, targets, optimized_state.camera_state, interpolated_spline)};
+    (void)interpolated_spline_error;
 
-    auto const [orientation_init,
-                gravity_w]{calibration::EstimateCameraImuRotationAndGravity(optimized_state.frames, imu_data)};
+    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
+    auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
+        {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
     auto const [R_imu_co, _]{orientation_init};
 
     std::cout << R_imu_co << std::endl;

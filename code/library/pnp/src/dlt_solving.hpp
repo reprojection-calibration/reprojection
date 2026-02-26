@@ -48,9 +48,9 @@ Eigen::Matrix<double, 3, N> SolveForH(Eigen::Matrix<double, Eigen::Dynamic, 3 * 
     // TODO (Jack): There has to be a more expressive way to pack .col(3*N -1) into P and select the column using 3*N -1
     Eigen::Matrix<double, 3, N> H;
     auto const last_col{svd.matrixV().col(3 * N - 1)};  // Has to be a better name than last col...
-    H.row(0) = last_col.topRows(N);
+    H.row(0) = last_col.topRows<N>();
     H.row(1) = last_col.middleRows(N, N);
-    H.row(2) = last_col.bottomRows(N);
+    H.row(2) = last_col.bottomRows<N>();
 
     return H;
 }

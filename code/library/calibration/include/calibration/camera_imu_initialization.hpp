@@ -8,8 +8,13 @@
 
 namespace reprojection::calibration {
 
+// TODO(Jack): This point applies much more to the spline package, but it comes to the surface here. And that is that
+//  here the spline we are passing HAS to be a orientation spline, but that is not coded into the type system. Instead
+//  we have the generic CubicBSplineC3 type, and their is no structural guarantee or encouragement about what is
+//  actually inside of it. This is something which plagues the entire spline code, not a deal breaker, but an idea that
+//  smells to me.
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
-    Frames const& camera_poses, ImuMeasurements const& imu_data);
+    spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data);
 
 /**
  * \brief Estimate the approximate extrinsic rotation matrix between the IMU and camera optical frame (R_co_imu).

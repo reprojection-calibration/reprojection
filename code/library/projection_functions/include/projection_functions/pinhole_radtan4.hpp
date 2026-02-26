@@ -48,7 +48,7 @@ struct PinholeRadtan4 {
         T const y_cam{y / z};
         Array2<T> const p_cam{x_cam, y_cam};
 
-        Array2<T> const distorted_p_cam{Distort<T>(intrinsics.bottomRows(4), p_cam)};
+        Array2<T> const distorted_p_cam{Distort<T>(intrinsics.template tail<4>(), p_cam)};
         Array3<T> const P_star{distorted_p_cam[0], distorted_p_cam[1], T(1)};  // Set z=1
 
         // NOTE(Jack): Because we already did the ideal projective transform to the camera coordinate frame above when
@@ -57,7 +57,7 @@ struct PinholeRadtan4 {
         // masquerades as a 3D point, but it does not have nearly the amount of "freedom" at this point when compared to
         // the input P_co which was a real 3D point. It is constrained to the ideal/normalized camera frame. That is the
         // reason that I do not use a frame postfix like "_co" and instead just call it "_star".
-        return Pinhole::Project<T>(intrinsics.topRows(4), bounds, P_star);
+        return Pinhole::Project<T>(intrinsics.template head<4>(), bounds, P_star);
     }
 
     static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);

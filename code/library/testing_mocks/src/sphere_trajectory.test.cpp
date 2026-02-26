@@ -20,8 +20,8 @@ TEST(TestingMocksSphereTrajectory, TestSphereTrajectory) {
     double radius{0};
     Vector3d centroid{0, 0, 0};
     for (auto const& aa_w_co : poses) {
-        radius += (aa_w_co.bottomRows(3) - sphere_origin).norm();
-        centroid += aa_w_co.bottomRows(3);
+        radius += (aa_w_co.tail<3>() - sphere_origin).norm();
+        centroid += aa_w_co.tail<3>();
     }
     radius = radius / std::size(poses);
     centroid = centroid / std::size(poses);

@@ -23,7 +23,7 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
                                             {5100, {{1, 1, 1}}},
                                             {5200, {{2, 2, 2}}}};
 
-    CubicBSplineC3 const one_segment_spline{spline::InitializeC3Spline(measurements, 1)};
+    CubicBSplineC3 const one_segment_spline{spline::InitializeC3SplineState(measurements, 1)};
     EXPECT_EQ(one_segment_spline.DeltaTNs(), 200);
     EXPECT_EQ(one_segment_spline.Size(), 4);
     // NOTE(Jack): At this point this and below are canary in the coal mine tests, to make sure nothing changes as we
@@ -34,7 +34,7 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
     EXPECT_TRUE(one_segment_spline.ControlPoints().col(3).isApprox(
         Vector3d{4.0556875027223356, 4.0556875027223356, 4.0556875027223356}));
 
-    CubicBSplineC3 const two_segment_spline{spline::InitializeC3Spline(measurements, 2)};
+    CubicBSplineC3 const two_segment_spline{spline::InitializeC3SplineState(measurements, 2)};
     EXPECT_EQ(two_segment_spline.DeltaTNs(), 100);
     EXPECT_EQ(two_segment_spline.Size(), 5);
     // See note above on canary coal mine.

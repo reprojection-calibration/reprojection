@@ -34,7 +34,7 @@ struct DoubleSphere {
         T const z_star{(alpha * d2) + (1.0 - alpha) * wz};
         Array3<T> const P_star{x, y, z_star};
 
-        return Pinhole::Project<T>(intrinsics.topRows(4), bounds, P_star);
+        return Pinhole::Project<T>(intrinsics.template head<4>(), bounds, P_star);
     }
 
     static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);

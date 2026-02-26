@@ -8,31 +8,33 @@
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
-using namespace reprojection::spline;  // Use SOOO many times that we introduce this namespace
+using namespace reprojection::spline;
+using enum DerivativeOrder;
 
 // Read the comments in TEST(Spline_r3Spline, TestEvaluateValidity) for more context.
 TEST(SplineSo3Spline, TestEvaluateValidity) {
-    CubicBSplineC3 const empty_spline{{}, TimeHandler{}};
-    EXPECT_FALSE(EvaluateSpline<So3Spline>(empty_spline, 100));
+    MatrixNXd const empty{};
+    CubicBSplineC3 const empty_spline{empty, TimeHandler{}};
+    EXPECT_FALSE(EvaluateSpline<So3Spline>(empty_spline, 100, Null));
 
     CubicBSplineC3 const one_segment_spline{MatrixNKd::Zero(), TimeHandler{100, 5}};
 
-    EXPECT_TRUE(EvaluateSpline<So3Spline>(one_segment_spline, 100));
-    EXPECT_FALSE(EvaluateSpline<So3Spline>(one_segment_spline, 105));
+    EXPECT_TRUE(EvaluateSpline<So3Spline>(one_segment_spline, 100, Null));
+    EXPECT_FALSE(EvaluateSpline<So3Spline>(one_segment_spline, 105, Null));
 
     CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, constants::order + 1>::Zero(),
                                             TimeHandler{100, 5}};
-    EXPECT_TRUE(EvaluateSpline<So3Spline>(two_segment_spline, 105));
+    EXPECT_TRUE(EvaluateSpline<So3Spline>(two_segment_spline, 105, Null));
 }
 
 CubicBSplineC3 BuildSo3TestSpline() {
-    std::vector<Vector3d> so3_control_points;
-    so3_control_points.push_back(Vector3d::Zero());
+    MatrixNKd so3_control_points;
+    so3_control_points.col(0) = (Vector3d::Zero());
     for (int i{1}; i < constants::order; ++i) {
         // TODO(Jack): Evaluate if we can do any of the math directly in tangent space
-        so3_control_points.push_back(
-            geometry::Log<double>(geometry::Exp<double>(so3_control_points.back()) *
-                                  geometry::Exp<double>(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval())));
+        so3_control_points.col(i) =
+            geometry::Log<double>(geometry::Exp<double>(so3_control_points.col(i - 1)) *
+                                  geometry::Exp<double>(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
     }
 
     return CubicBSplineC3{so3_control_points, TimeHandler{100, 5}};
@@ -43,16 +45,16 @@ TEST(SplineSo3Spline, TestEvaluate) {
 
     // Check that all timestamps from 100 to 104 evaluate without error - one time segment of length delta_t_ns
     for (int i{0}; i < 5; ++i) {
-        auto const p_i{EvaluateSpline<So3Spline>(spline, 100 + i)};
+        auto const p_i{EvaluateSpline<So3Spline>(spline, 100 + i, Null)};
         ASSERT_TRUE(p_i.has_value());
     }
 
-    Vector3d const p0{EvaluateSpline<So3Spline>(spline, 100).value()};
+    Vector3d const p0{EvaluateSpline<So3Spline>(spline, 100, Null).value()};
     EXPECT_TRUE(p0.isApproxToConstant(
         0.11666666666666659));  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
                                 // that we can detect changes to the implementation quickly (hopefully. )
 
-    Vector3d const p4{EvaluateSpline<So3Spline>(spline, 104).value()};
+    Vector3d const p4{EvaluateSpline<So3Spline>(spline, 104, Null).value()};
     EXPECT_TRUE(p4.isApproxToConstant(0.26866666666666655));
 }
 
@@ -60,10 +62,10 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
     CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
     // RANDOM HEURISTIC TESTS!
-    Vector3d const v0{EvaluateSpline<So3Spline>(spline, 100, DerivativeOrder::First).value()};
+    Vector3d const v0{EvaluateSpline<So3Spline>(spline, 100, First).value()};
     EXPECT_TRUE(v0.isApproxToConstant(0.03));
 
-    Vector3d const v4{EvaluateSpline<So3Spline>(spline, 104, DerivativeOrder::First).value()};
+    Vector3d const v4{EvaluateSpline<So3Spline>(spline, 104, First).value()};
     EXPECT_TRUE(v4.isApproxToConstant(0.046));
 }
 
@@ -71,10 +73,10 @@ TEST(SplineSo3Spline, TestEvaluateAcceleration) {
     CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)
-    Vector3d const a0{EvaluateSpline<So3Spline>(spline, 100, DerivativeOrder::Second).value()};
+    Vector3d const a0{EvaluateSpline<So3Spline>(spline, 100, Second).value()};
     EXPECT_TRUE(a0.isApproxToConstant(0.004));
 
-    Vector3d const a4{EvaluateSpline<So3Spline>(spline, 104, DerivativeOrder::Second).value()};
+    Vector3d const a4{EvaluateSpline<So3Spline>(spline, 104, Second).value()};
     EXPECT_TRUE(a4.isApproxToConstant(0.004));
 }
 
@@ -92,12 +94,12 @@ TEST(SplineSo3Spline, TestTemplatedEvaluateOnParabola) {
     double const u_middle{0.5};
     std::uint64_t const delta_t_ns{1};
 
-    Vector3d const position{So3Spline::Evaluate<double, DerivativeOrder::Null>(P1, u_middle, delta_t_ns)};
+    Vector3d const position{So3Spline::Evaluate<double, Null>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(position.isApprox(Vector3d{0.1460482362445171, 0.3755842237411095, 0.39702710822143839}));
 
-    Vector3d const velocity{So3Spline::Evaluate<double, DerivativeOrder::First>(P1, u_middle, delta_t_ns)};
+    Vector3d const velocity{So3Spline::Evaluate<double, First>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(velocity.isApprox(Vector3d{0.8563971186898035, -0.1204280865611993, 0.12722122556164611}));
 
-    Vector3d const acceleration{So3Spline::Evaluate<double, DerivativeOrder::Second>(P1, u_middle, delta_t_ns)};
+    Vector3d const acceleration{So3Spline::Evaluate<double, Second>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(acceleration.isApprox(Vector3d{0.0069974409407700944, 0.80095289350156396, 0.71108131312833733}));
 }
