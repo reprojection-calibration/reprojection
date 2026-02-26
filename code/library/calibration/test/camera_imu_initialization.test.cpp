@@ -3,6 +3,8 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
+#include "spline/se3_spline.hpp"
+#include "spline/spline_initialization.hpp"
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
@@ -17,11 +19,18 @@ using namespace reprojection;
 TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitialization) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
-    auto const [targets, camera_frames]{
+    auto const [_, camera_frames]{
         testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
     ImuMeasurements const imu_data{testing_mocks::GenerateImuData(1000, timespan_ns)};
 
-    auto const [rotation_result, gravity]{calibration::EstimateCameraImuRotationAndGravity(camera_frames, imu_data)};
+    // TODO(Jack): Honestly it would be nice if the data generator automatically provided us the underlying spline,
+    //  because needing to interpolate the frames here should be considered some complicated setup/precondition for the
+    //  test below. For now it can stand, and we are happy that the initialization method is getting stretched in
+    //  another place, but long term this might not be sustainable.
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames)};
+
+    auto const [rotation_result, gravity]{calibration::EstimateCameraImuRotationAndGravity(
+        {interpolated_spline.So3(), interpolated_spline.TimeHandler2()}, imu_data)};
     auto const [R_co_imu, diagnostics]{rotation_result};
 
     EXPECT_TRUE(R_co_imu.isApprox(Matrix3d::Identity()));

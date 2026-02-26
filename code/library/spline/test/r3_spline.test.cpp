@@ -8,25 +8,27 @@
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
-using namespace reprojection::spline;  // Use SOOO many times that we introduce this namespace
+using namespace reprojection::spline;
+using enum DerivativeOrder;
 
 // TODO(Jack): Are our units of time right? Or are we accidentally calculating everything in m/ns?
 
 TEST(Spline_r3Spline, TestEvaluateValidity) {
     // Completely empty spline
     CubicBSplineC3 const empty_spline{{}, TimeHandler{}};
-    EXPECT_FALSE(EvaluateSpline<R3Spline>(empty_spline, 100));
+    EXPECT_FALSE(EvaluateSpline<R3Spline>(empty_spline, 100, Null));
 
     // A spline with four control points (i.e. constants::order size) is the smallest possible one we can have.
     CubicBSplineC3 const one_segment_spline{MatrixNKd::Zero(), TimeHandler{100, 5}};
 
-    EXPECT_TRUE(EvaluateSpline<R3Spline>(one_segment_spline, 100));   // Inside first time segment - valid
-    EXPECT_FALSE(EvaluateSpline<R3Spline>(one_segment_spline, 105));  // Outside first time segment - invalid
+    EXPECT_TRUE(EvaluateSpline<R3Spline>(one_segment_spline, 100, Null));  // Inside first time segment - valid
+    EXPECT_FALSE(EvaluateSpline<R3Spline>(one_segment_spline, 105,
+                                          Null));  // Outside first time segment - invalid
 
     // Add one more control point than before to see that we can now do a valid evaluation in the second time segment
     CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, constants::states, constants::order + 1>::Zero(),
                                             TimeHandler{100, 5}};
-    EXPECT_TRUE(EvaluateSpline<R3Spline>(two_segment_spline, 105));
+    EXPECT_TRUE(EvaluateSpline<R3Spline>(two_segment_spline, 105, Null));
 }
 
 TEST(Spline_r3Spline, TestEvaluate) {
@@ -37,17 +39,17 @@ TEST(Spline_r3Spline, TestEvaluate) {
     CubicBSplineC3 const one_segment_spline{four_control_points, TimeHandler{100, 5}};
 
     // Position
-    auto const p_0{EvaluateSpline<R3Spline>(one_segment_spline, 100)};
+    auto const p_0{EvaluateSpline<R3Spline>(one_segment_spline, 100, Null)};
     ASSERT_TRUE(p_0.has_value());
     EXPECT_TRUE(p_0.value().isApproxToConstant(1));
 
     // Velocity
-    auto const v_0{EvaluateSpline<R3Spline>(one_segment_spline, 100, DerivativeOrder::First)};
+    auto const v_0{EvaluateSpline<R3Spline>(one_segment_spline, 100, First)};
     ASSERT_TRUE(v_0.has_value());
     EXPECT_TRUE(v_0.value().isApproxToConstant(0.2));  // 1m/5ns
 
     // Acceleration
-    auto const a_0{EvaluateSpline<R3Spline>(one_segment_spline, 100, DerivativeOrder::Second)};
+    auto const a_0{EvaluateSpline<R3Spline>(one_segment_spline, 100, Second)};
     ASSERT_TRUE(a_0.has_value());
     EXPECT_TRUE(a_0.value().isApproxToConstant(0));  // Straight line has no acceleration
 
@@ -56,7 +58,7 @@ TEST(Spline_r3Spline, TestEvaluate) {
                                                                                              {0, 1, 2, 3, 4},
                                                                                              {0, 1, 2, 3, 4}};
     CubicBSplineC3 const two_segment_spline{five_control_points, TimeHandler{100, 5}};
-    auto const p_1{EvaluateSpline<R3Spline>(two_segment_spline, 105)};
+    auto const p_1{EvaluateSpline<R3Spline>(two_segment_spline, 105, Null)};
     ASSERT_TRUE(p_1.has_value());
     EXPECT_TRUE(p_1.value().isApproxToConstant(2));
 }
@@ -71,20 +73,20 @@ TEST(Spline_r3Spline, TestTemplatedEvaluateOnLine) {
     MatrixNKd const P1{{0, 1, 2, 3},  //
                        {0, 1, 2, 3},
                        {0, 1, 2, 3}};
-    std::uint64_t const delta_t_ns{5};  // No effect when DerivativeOrder::Null (5^0 = 1)
+    std::uint64_t const delta_t_ns{5};  // No effect when derivative order is Null (5^0 = 1)
 
-    Vector3d const position_1{R3Spline::Evaluate<double, DerivativeOrder::Null>(P1, 0, delta_t_ns)};
+    Vector3d const position_1{R3Spline::Evaluate<double, Null>(P1, 0, delta_t_ns)};
     EXPECT_TRUE(position_1.isApproxToConstant(1));
 
     // NOTE(Jack): The spline time u include [0,1), therefore we have to set u_i=0.999999 something, instead of
     // just 1.
-    Vector3d const position_2{R3Spline::Evaluate<double, DerivativeOrder::Null>(P1, 0.999999, delta_t_ns)};
+    Vector3d const position_2{R3Spline::Evaluate<double, Null>(P1, 0.999999, delta_t_ns)};
     EXPECT_TRUE(position_2.isApproxToConstant(2, 1e-6));
 
     // Shift the control points now to start at 1 and end at 4 manually by creating a new P, and see that the spline
     // now starts at 2 instead of 1.
     spline::MatrixNKd const P2{{1, 2, 3, 4}, {1, 2, 3, 4}, {1, 2, 3, 4}};
-    Vector3d const position_3{R3Spline::Evaluate<double, DerivativeOrder::Null>(P2, 0, delta_t_ns)};
+    Vector3d const position_3{R3Spline::Evaluate<double, Null>(P2, 0, delta_t_ns)};
     EXPECT_TRUE(position_3.isApproxToConstant(2));
 }
 
@@ -107,13 +109,13 @@ TEST(Spline_r3Spline, TestTemplatedEvaluateOnParabola) {
     double const u_middle{0.5};  // Middle/center and therefore "bottom" of the "parabola" specified by control points P
     std::uint64_t const delta_t_ns{1};  // Setting to 1 avoids time dependent distortion to the velocity/acceleration
 
-    Vector3d const position{R3Spline::Evaluate<double, DerivativeOrder::Null>(P1, u_middle, delta_t_ns)};
+    Vector3d const position{R3Spline::Evaluate<double, Null>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(position.isApprox(Vector3d{
         0, 0.28125, 0.28125}));  // Aligned and centered on the x-axis, value taken from nurbs calculator linked above.
 
-    Vector3d const velocity{R3Spline::Evaluate<double, DerivativeOrder::First>(P1, u_middle, delta_t_ns)};
+    Vector3d const velocity{R3Spline::Evaluate<double, First>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(velocity.isApprox(Vector3d{0.875, 0, 0}));  // Only x-axis motion at base of aligned parabola
 
-    Vector3d const acceleration{R3Spline::Evaluate<double, DerivativeOrder::Second>(P1, u_middle, delta_t_ns)};
+    Vector3d const acceleration{R3Spline::Evaluate<double, Second>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(acceleration.isApprox(Vector3d{0, 0.75, 0.75}));  // TODO(Jack): Explain why this makes sense!
 }

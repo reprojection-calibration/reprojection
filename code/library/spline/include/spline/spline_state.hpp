@@ -21,17 +21,31 @@ struct CubicBSplineC3 {
 
     CubicBSplineC3(std::vector<Vector3d> const& control_points, TimeHandler const& time_handler);
 
+    // TODO REMOVE IF INITIALIZATION LOGIC CHANGES AGAIN!
     explicit CubicBSplineC3(std::pair<MatrixNXd, TimeHandler> const& pair);
 
     CubicBSplineC3() = default;
-
 
     Eigen::Ref<MatrixNXd const> ControlPoints() const;
 
     Eigen::Ref<MatrixNXd> MutableControlPoints();
 
+    // NAMING!!!!
+    // NAMING!!!!
+    // NAMING!!!!
+    // NAMING!!!!
+    TimeHandler TimeHandler2() const { return time_handler_; }
+
+    // Still needed?
+    // Still needed?
+    // Still needed?
+    // Still needed?
     std::optional<std::pair<double, int>> Position(std::uint64_t const t_ns) const;
 
+    // Still needed?
+    // Still needed?
+    // Still needed?
+    // Still needed?
     std::uint64_t DeltaTNs() const;
 
     /**
