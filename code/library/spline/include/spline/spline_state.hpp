@@ -23,7 +23,6 @@ struct CubicBSplineC3 {
     // TODO(Jack): Is this actually used in the wild anywhere in non-test code?
     CubicBSplineC3(std::vector<Vector3d> const& control_points, TimeHandler const& time_handler);
 
-    // TODO REMOVE IF INITIALIZATION LOGIC CHANGES AGAIN!
     explicit CubicBSplineC3(std::pair<MatrixNXd, TimeHandler> const& pair);
 
     CubicBSplineC3() = default;

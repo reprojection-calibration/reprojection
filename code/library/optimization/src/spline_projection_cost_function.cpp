@@ -10,6 +10,9 @@ namespace reprojection::optimization {
 
 using namespace projection_functions;
 
+// TODO(Jack): This function is very very similar to the one for the plain old non-spline projection cost function. Are
+//  we missing the concept that would let us just do this once?
+// WARN(Jack): This is an overloaded function, this error will not help the user identify which Create() failed!
 ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
                             Vector3d const& point, double const u_i, uint64_t const delta_t_ns) {
     if (projection_type == CameraModel::DoubleSphere) {
@@ -21,10 +24,6 @@ ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const
     } else if (projection_type == CameraModel::UnifiedCameraModel) {
         return SplineProjectionCostFunction_T<UnifiedCameraModel>::Create(pixel, point, bounds, u_i, delta_t_ns);
     } else {
-        // NOTE(Jack): The only way we could cover this with a test is to have a member that is part of the CameraModel
-        // enum that is not covered here in the conditional. That makes no sense. Therefore, we will supress the
-        // code coverage requirement for this line branch of the statement. Furthermore, this is more of an error case
-        // rather than an algorithm edge case, therefore not having this covered is not so dangerous.
         throw std::runtime_error(
             "The requested camera model is not supported by the reprojection::optimization::Create() function.");  // LCOV_EXCL_LINE
     }
