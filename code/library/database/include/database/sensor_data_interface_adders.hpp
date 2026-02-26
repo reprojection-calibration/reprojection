@@ -22,7 +22,7 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
 void AddPoseData(Frames const& data, std::string_view step_name, std::string_view sensor_name,
                  std::shared_ptr<CalibrationDatabase> const database);
 
-void AddReprojectionError(ReprojectionErrors const& data, std::string_view sensor_name, PoseType const type,
+void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_name, std::string_view sensor_name,
                           std::shared_ptr<CalibrationDatabase> const database);
 
 void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,

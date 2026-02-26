@@ -65,9 +65,9 @@ int main() {
     // Write camera initialization to database
     try {
         database::AddPoseData(initial_state.frames, "linear_pose_initialization", sensor.sensor_name, db);
-        database::AddReprojectionError(initial_error, sensor.sensor_name, database::PoseType::Initial, db);
+        database::AddReprojectionError(initial_error, "linear_pose_initialization", sensor.sensor_name, db);
         database::AddPoseData(optimized_state.frames, "nonlinear_refinement", sensor.sensor_name, db);
-        database::AddReprojectionError(optimized_error, sensor.sensor_name, database::PoseType::Optimized, db);
+        database::AddReprojectionError(optimized_error, "nonlinear_refinement", sensor.sensor_name, db);
     } catch (...) {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }

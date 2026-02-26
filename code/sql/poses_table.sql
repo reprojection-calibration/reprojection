@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS poses
 (
-    step_name    TEXT NOT NULL,
+    step_name    TEXT    NOT NULL,
     timestamp_ns INTEGER NOT NULL,
     sensor_name  TEXT    NOT NULL,
     rx           REAL    NOT NULL,

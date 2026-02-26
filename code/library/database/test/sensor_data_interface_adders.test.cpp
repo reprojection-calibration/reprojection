@@ -59,8 +59,9 @@ TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
     std::string const sensor_name{"/cam/retro/123"};
 
     // Fails foreign key constraint because there is no corresponding camera_poses table entry yet
-    EXPECT_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Initial, db), std::runtime_error);
-    EXPECT_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Optimized, db), std::runtime_error);
+    EXPECT_THROW(database::AddReprojectionError(data, "linear_pose_initialization", sensor_name, db),
+                 std::runtime_error);
+    EXPECT_THROW(database::AddReprojectionError(data, "nonlinear_refinement", sensor_name, db), std::runtime_error);
 
     database::AddImage(timestamp_ns, sensor_name, db);
     AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db);
@@ -69,8 +70,8 @@ TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
     database::AddPoseData(frames, "linear_pose_initialization", sensor_name, db);
     database::AddPoseData(frames, "nonlinear_refinement", sensor_name, db);
 
-    EXPECT_NO_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Initial, db));
-    EXPECT_NO_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Optimized, db));
+    EXPECT_NO_THROW(database::AddReprojectionError(data, "linear_pose_initialization", sensor_name, db));
+    EXPECT_NO_THROW(database::AddReprojectionError(data, "nonlinear_refinement", sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddImuData) {

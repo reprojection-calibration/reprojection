@@ -42,25 +42,26 @@ std::string ToString(SqliteErrorCode const enumerator) {
     return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db);
 }
 
-[[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameTypeBlob(std::string const& sql_statement,
-                                                             uint64_t const timestamp_ns, PoseType const type,
+// TODO(Jack): Convert step_name to be an enum!
+[[nodiscard]] SqliteResult Sqlite3Tools::AddStepTimeNameBlob(std::string const& sql_statement,
+                                                             std::string_view step_name, uint64_t const timestamp_ns,
                                                              std::string_view sensor_name, void const* const blob_ptr,
                                                              int const blob_size, sqlite3* const db) {
-    return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db, type);
+    return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db, step_name);
 }
 
 [[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
                                                  std::string_view sensor_name, void const* const blob_ptr,
                                                  int const blob_size, sqlite3* const db,
-                                                 std::optional<PoseType> const& type) {
+                                                 std::optional<std::string_view> const& step_name) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     try {
         Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
         Bind(statement.stmt, 2, std::string(sensor_name).c_str());
 
-        if (type.has_value()) {
-            Bind(statement.stmt, 3, ToString(type.value()));
+        if (step_name.has_value()) {
+            Bind(statement.stmt, 3, step_name.value());
             BindBlob(statement.stmt, 4, blob_ptr, blob_size);
         } else {
             BindBlob(statement.stmt, 3, blob_ptr, blob_size);
