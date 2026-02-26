@@ -16,7 +16,7 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
     ReprojectionErrors residuals;
     for (auto const timestamp_ns : targets | std::views::keys) {
         auto const normalized_position{
-            spline.TimeHandler2().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
+            spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
         if (not normalized_position.has_value()) {
             std::cout << "Skipping: " << timestamp_ns << std::endl;
             continue;
@@ -35,7 +35,7 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
             ceres::CostFunction const* const cost_function{Create(sensor.camera_model, sensor.bounds, pixels.row(j),
                                                                   points.row(j), u_i,
-                                                                  spline.TimeHandler2().delta_t_ns_)};
+                                                                  spline.GetTimeHandler().delta_t_ns_)};
 
             cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(j).data(), nullptr);
         }

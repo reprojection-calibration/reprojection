@@ -30,7 +30,7 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames)};
 
     auto const [rotation_result, gravity]{calibration::EstimateCameraImuRotationAndGravity(
-        {interpolated_spline.So3(), interpolated_spline.TimeHandler2()}, imu_data)};
+        {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
     auto const [R_co_imu, diagnostics]{rotation_result};
 
     EXPECT_TRUE(R_co_imu.isApprox(Matrix3d::Identity()));

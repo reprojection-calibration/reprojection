@@ -9,7 +9,6 @@ namespace reprojection::spline {
 
 using CoefficientBlock = CubicBSplineC3Init::CoefficientBlock;
 
-// TODO REFACTOR TO RETURN CONTROL POINTS AND TIME HANDLER SEPARETLY
 std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
                                                           size_t const num_segments) {
     // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known

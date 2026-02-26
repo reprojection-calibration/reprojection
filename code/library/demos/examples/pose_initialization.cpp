@@ -79,7 +79,7 @@ int main() {
 
     ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
     auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
-        {interpolated_spline.So3(), interpolated_spline.TimeHandler2()}, imu_data)};
+        {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
     auto const [R_imu_co, _]{orientation_init};
 
     std::cout << R_imu_co << std::endl;
