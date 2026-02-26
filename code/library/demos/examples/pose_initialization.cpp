@@ -70,8 +70,8 @@ int main() {
         database::AddCalibrationStep("nonlinear_refinement", db);
         database::AddPoseData(optimized_state.frames, "nonlinear_refinement", sensor.sensor_name, db);
         database::AddReprojectionError(optimized_error, "nonlinear_refinement", sensor.sensor_name, db);
-    } catch (...) {
-        std::cout << "\n\tPseudo cache hit\n" << std::endl;
+    } catch (std::exception const& e) {
+        std::cout << "Caught " << e.what() << std::endl;
     }
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
