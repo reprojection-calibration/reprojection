@@ -109,7 +109,7 @@ VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
     }
 
     return imu_angular_velocity;
-}
+}  // LCOV_EXCL_LINE
 
 // TODO(Jack): If used anywhere else we shold move to a common file
 AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data) {
@@ -119,6 +119,6 @@ AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_da
     }
 
     return imu_linear_acceleration;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::calibration

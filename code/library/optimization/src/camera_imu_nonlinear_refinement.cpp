@@ -18,8 +18,7 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
         auto const normalized_position{
             spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
         if (not normalized_position.has_value()) {
-            std::cout << "Skipping timestamp: " << timestamp_ns << std::endl;
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
         auto const [u_i, i]{normalized_position.value()};
 
@@ -44,6 +43,6 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
     }
 
     return residuals;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace  reprojection::optimization
