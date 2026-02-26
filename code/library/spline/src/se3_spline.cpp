@@ -24,7 +24,8 @@ std::optional<Vector6d> Se3Spline::Evaluate(std::uint64_t const t_ns, Derivative
     }
 
     Vector6d result;
-    result << so3_term.value(), r3_term.value();
+    result.head<3>() = so3_term.value();
+    result.tail<3>() = r3_term.value();
 
     return result;
 }

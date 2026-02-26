@@ -6,8 +6,8 @@
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
+#include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
-#include "optimization/spline_reprojection_error.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
 
@@ -72,7 +72,6 @@ int main() {
         std::cout << "\n\tPseudo cache hit\n" << std::endl;
     }
 
-    // TODO SPLINE TYPES!!!
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{
         optimization::SplineReprojectionResiduals(sensor, targets, optimized_state.camera_state, interpolated_spline)};

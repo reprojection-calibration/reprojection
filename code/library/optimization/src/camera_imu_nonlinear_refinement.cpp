@@ -1,7 +1,6 @@
-#include "optimization/spline_reprojection_error.hpp"
-
 #include <ranges>
 
+#include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "spline/spline_initialization.hpp"
 
 #include "spline_projection_cost_function.hpp"
