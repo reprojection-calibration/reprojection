@@ -28,11 +28,7 @@ struct CubicBSplineC3 {
 
     Eigen::Ref<MatrixNXd> MutableControlPoints();
 
-    // NAMING!!!!
-    // NAMING!!!!
-    // NAMING!!!!
-    // NAMING!!!!
-    TimeHandler TimeHandler2() const { return time_handler_; }
+    TimeHandler GetTimeHandler() const { return time_handler_; }
 
     // Still needed?
     // Still needed?

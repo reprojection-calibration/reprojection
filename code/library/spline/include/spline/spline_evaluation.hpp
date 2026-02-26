@@ -56,7 +56,7 @@ template <typename T_Model>
     requires CanEvaluateCubicBSplineC3<T_Model>
 std::optional<Vector3d> EvaluateSpline(CubicBSplineC3 const& spline, std::uint64_t const t_ns,
                                        DerivativeOrder const derivative) {
-    return EvaluateSpline<T_Model>(spline.ControlPoints(), spline.TimeHandler2(), t_ns, derivative);
+    return EvaluateSpline<T_Model>(spline.ControlPoints(), spline.GetTimeHandler(), t_ns, derivative);
 }
 
 }  // namespace reprojection::spline
