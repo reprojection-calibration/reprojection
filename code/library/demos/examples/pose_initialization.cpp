@@ -75,6 +75,7 @@ int main() {
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{
         optimization::SplineReprojectionResiduals(sensor, targets, optimized_state.camera_state, interpolated_spline)};
+    (void)interpolated_spline_error;
 
     ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
     auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
