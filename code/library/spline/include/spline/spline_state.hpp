@@ -17,8 +17,10 @@ namespace reprojection::spline {
  * conveniently for both Euclidean R3 splines and so3 rotations spline stored in the axis angle representation.
  */
 struct CubicBSplineC3 {
+    // TODO(Jack): Is this actually used in the wild anywhere in non-test code?
     CubicBSplineC3(Eigen::Ref<MatrixNXd const> const& control_points, TimeHandler const& time_handler);
 
+    // TODO(Jack): Is this actually used in the wild anywhere in non-test code?
     CubicBSplineC3(std::vector<Vector3d> const& control_points, TimeHandler const& time_handler);
 
     // TODO REMOVE IF INITIALIZATION LOGIC CHANGES AGAIN!
