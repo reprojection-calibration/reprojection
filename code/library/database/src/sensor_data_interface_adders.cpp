@@ -15,6 +15,27 @@
 
 namespace reprojection::database {
 
+void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database) {
+    std::string_view sql{sql_statements::calibration_steps_insert};
+    SqlStatement const statement{database->db, sql.data()};
+
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, step_name);
+    } catch (std::runtime_error const& e) {
+        // TODO(Jack): Clearly the ErrorMessage() has outlived its useful scope because we have to pass in dummy values
+        //  here and below.
+        std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
+            ErrorMessage("AddCalibrationStep()", "N/A", 0,              // LCOV_EXCL_LINE
+                         SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
+
+    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
+        throw std::runtime_error(ErrorMessage("AddCalibrationStep()", "N/A", 0, SqliteErrorCode::FailedStep,
+                                              std::string(sqlite3_errmsg(database->db))));
+    }
+}
+
 // NOTE(Jack): See note in AddReprojectionError about suppressing the SerializeToString throw.
 void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
                             std::shared_ptr<CalibrationDatabase> const database) {
@@ -40,27 +61,23 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
     }
 }
 
-void AddCameraPoseData(Frames const& data, std::string_view sensor_name, PoseType const type,
-                       std::shared_ptr<CalibrationDatabase> const database) {
-    std::string_view const sql{sql_statements::camera_poses_insert};
-
-    AddPoseData(data, sensor_name, type, sql, database);
-}
-
 // NOTE(Jack): We suppress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
 // trigger that is via a malformed sql statement, but that is hardcoded into this function (i.e.
 // sql_statements::camera_poses_insert) abd cannot and should not be changed!
-void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType const type, std::string_view sql,
+void AddPoseData(Frames const& data, std::string_view step_name, std::string_view sensor_name,
                  std::shared_ptr<CalibrationDatabase> const database) {
+    AddCalibrationStep(step_name, database);
+
+    std::string_view sql{sql_statements::poses_insert};
     SqlTransaction const lock{(database->db)};
 
     for (auto const& [timestamp_ns, frame_i] : data) {
         SqlStatement const statement{database->db, sql.data()};
 
         try {
-            Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
-            Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
-            Sqlite3Tools::Bind(statement.stmt, 3, ToString(type));
+            Sqlite3Tools::Bind(statement.stmt, 1, step_name);
+            Sqlite3Tools::Bind(statement.stmt, 2, static_cast<int64_t>(timestamp_ns));  // Warn cast!
+            Sqlite3Tools::Bind(statement.stmt, 3, sensor_name);
             Sqlite3Tools::Bind(statement.stmt, 4, frame_i.pose[0]);
             Sqlite3Tools::Bind(statement.stmt, 5, frame_i.pose[1]);
             Sqlite3Tools::Bind(statement.stmt, 6, frame_i.pose[2]);

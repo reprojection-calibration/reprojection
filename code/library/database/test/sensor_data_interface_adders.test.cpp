@@ -34,7 +34,7 @@ TEST(DatabaseSensorDataInterface, TestAddExtractedTargetData) {
     EXPECT_NO_THROW(AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db));
 }
 
-TEST(DatabaseSensorDataInterface, TestAddCameraPoseData) {
+TEST(DatabaseSensorDataInterface, TestAddPoseData) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
@@ -42,15 +42,12 @@ TEST(DatabaseSensorDataInterface, TestAddCameraPoseData) {
     Frames const data{{timestamp_ns, {Array6d::Zero()}}};
     std::string const sensor_name{"/cam/retro/123"};
 
-    // Fails foreign key constraint because there is no corresponding extracted_targets table entry yet
-    EXPECT_THROW(database::AddCameraPoseData(data, sensor_name, PoseType::Initial, db), std::runtime_error);
-    EXPECT_THROW(database::AddCameraPoseData(data, sensor_name, PoseType::Optimized, db), std::runtime_error);
+    // Throws because it fails the "CHECK()" constraint in the calibration_steps table.
+    EXPECT_THROW(database::AddPoseData(data, "invalid_step", sensor_name, db), std::runtime_error);
 
-    // Now we add an image and extracted target with matching sensor name and timestamp (i.e. the foreign key
-    // constraint) and now we can add the initial camera pose no problem :)
-    database::AddImage(timestamp_ns, sensor_name, db);
-    AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db);
-    EXPECT_NO_THROW(database::AddCameraPoseData(data, sensor_name, PoseType::Initial, db));
+    // TODO(Jack): We need to create an enum for these step names! Or something to make this less error prone.
+    EXPECT_NO_THROW(database::AddPoseData(data, "linear_pose_initialization", sensor_name, db));
+    EXPECT_NO_THROW(database::AddPoseData(data, "nonlinear_refinement", sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
@@ -69,8 +66,8 @@ TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
     AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db);
 
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-    database::AddCameraPoseData(frames, sensor_name, PoseType::Initial, db);
-    database::AddCameraPoseData(frames, sensor_name, PoseType::Optimized, db);
+    database::AddPoseData(frames, "linear_pose_initialization", sensor_name, db);
+    database::AddPoseData(frames, "nonlinear_refinement", sensor_name, db);
 
     EXPECT_NO_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Initial, db));
     EXPECT_NO_THROW(database::AddReprojectionError(data, sensor_name, PoseType::Optimized, db));

@@ -13,14 +13,13 @@
 
 namespace reprojection::database {
 
+void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database);
+
 // RENAME - remove the data suffix
 void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
                             std::shared_ptr<CalibrationDatabase> const database);
 
-void AddCameraPoseData(Frames const& data, std::string_view sensor_name, PoseType const type,
-                       std::shared_ptr<CalibrationDatabase> const database);
-
-void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType const type, std::string_view sql,
+void AddPoseData(Frames const& data, std::string_view step_name, std::string_view sensor_name,
                  std::shared_ptr<CalibrationDatabase> const database);
 
 void AddReprojectionError(ReprojectionErrors const& data, std::string_view sensor_name, PoseType const type,

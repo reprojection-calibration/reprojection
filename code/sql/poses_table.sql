@@ -1,15 +1,14 @@
-CREATE TABLE IF NOT EXISTS camera_poses
+CREATE TABLE IF NOT EXISTS poses
 (
+    step_name    TEXT NOT NULL,
     timestamp_ns INTEGER NOT NULL,
     sensor_name  TEXT    NOT NULL,
-    type         TEXT    NOT NULL,
     rx           REAL    NOT NULL,
     ry           REAL    NOT NULL,
     rz           REAL    NOT NULL,
     x            REAL    NOT NULL,
     y            REAL    NOT NULL,
     z            REAL    NOT NULL,
-    PRIMARY KEY (timestamp_ns, sensor_name, type),
-    FOREIGN KEY (timestamp_ns, sensor_name)
-        REFERENCES extracted_targets (timestamp_ns, sensor_name)
+    PRIMARY KEY (step_name, timestamp_ns, sensor_name),
+    FOREIGN KEY (step_name) REFERENCES calibration_steps (step_name)
 );
