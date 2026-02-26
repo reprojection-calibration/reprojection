@@ -62,25 +62,28 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
     return {Eigen::Map<MatrixNXd const>(x.data(), constants::states, x.rows() / constants::states), time_handler};
 }
 
+// TODO(Jack): Is 20 times the number of frames high enough frequency? Do we need to parameterize this?
 std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames) {
     PositionMeasurements so3;
     PositionMeasurements r3;
     for (auto const& [timestamp_ns, frame_i] : frames) {
-        so3.insert({timestamp_ns, {frame_i.pose.topRows(3)}});
-        r3.insert({timestamp_ns, {frame_i.pose.bottomRows(3)}});
+        so3.insert({timestamp_ns, {frame_i.pose.topRows<constants::states>()}});
+        r3.insert({timestamp_ns, {frame_i.pose.bottomRows<constants::states>()}});
     }
 
-    // TODO(Jack): Is there a more principled way to work here than simply ignoring the second time handler from the r3
-    //  interpolation?
-    // TODO(Jack): Is 20 times the number of camera_poses high enough frequency? Do we need to parameterize this?
-    auto const [so3_control_points, time_handler]{InitializeC3SplineState(so3, 20 * std::size(frames))};
-    auto const [r3_control_points, _]{InitializeC3SplineState(r3, 20 * std::size(frames))};
+    size_t const num_segments{20 * std::size(frames)};
+    auto const [so3_control_points, time_handler_a]{InitializeC3SplineState(so3, num_segments)};
+    auto const [r3_control_points, time_handler_b]{InitializeC3SplineState(r3, num_segments)};
+
+    if (time_handler_a != time_handler_b) {
+        throw std::runtime_error("During se3 spline initialization we somehow got two different time handlers!");
+    }
 
     Matrix2NXd se3_control_points{2 * constants::states, so3_control_points.cols()};
-    se3_control_points.topRows(3) = so3_control_points;
-    se3_control_points.bottomRows(3) = r3_control_points;
+    se3_control_points.topRows<constants::states>() = so3_control_points;
+    se3_control_points.bottomRows<constants::states>() = r3_control_points;
 
-    return {se3_control_points, time_handler};
+    return {se3_control_points, time_handler_a};
 }
 
 }  // namespace reprojection::spline

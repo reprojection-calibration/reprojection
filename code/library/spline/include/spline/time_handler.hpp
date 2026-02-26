@@ -14,6 +14,13 @@ class TimeHandler {
 
     TimeHandler();
 
+    // NOTE(Jack): We do not really need this, but I am paranoid and there is one piece of the code which scares me, and
+    // that is the InitializeSe3SplineState() function. In that function we call the InitializeC3SplineState() function
+    // twice, which means we get two TimeHandler objects. Of course, they should be the same always, so we could
+    // theoretically just ignore one and return one as the time handler for the entire se3 spline. However, like I said,
+    // I am paranoid, so I need to assert that they are the same, therefore we need to add this comparison operator :)
+    bool operator==(TimeHandler const&) const = default;
+
     std::optional<std::pair<double, int>> SplinePosition(std::uint64_t const t_ns,
                                                          size_t const num_control_points) const;
 
