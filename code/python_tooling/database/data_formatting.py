@@ -1,13 +1,12 @@
 import os
 
+from database.geometry import InvertSe3
 from database.sql_table_loading import (
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
 )
 from database.types import SensorType
-
-
 
 
 def process_images_table(table):
@@ -36,13 +35,13 @@ def process_extracted_targets_table(table, data):
         sensor_name = row["sensor_name"]
         if sensor_name not in data:
             raise KeyError(
-                f"Error while loading extracted target for {sensor_name} - sensor does not already exist."
+                f"Error while loading data for {sensor_name} - sensor does not already exist."
             )
 
         timestamp_ns = int(row["timestamp_ns"])
         if timestamp_ns not in data[sensor_name]["measurements"]["images"]:
             raise KeyError(
-                f"Error while loading extracted target for {sensor_name} at time {timestamp_ns} - a corresponding image for the target was not found."
+                f"Error while loading data for {sensor_name} at time {timestamp_ns} - a corresponding image for the target was not found."
             )
 
         if "targets" not in data[sensor_name]["measurements"]:
@@ -54,6 +53,43 @@ def process_extracted_targets_table(table, data):
             "points": target["points"],
             "indices": target["indices"],
         }
+
+
+def process_poses_table(table, data):
+    if table is None:
+        return None
+
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            raise KeyError(
+                f"Error while loading data for {sensor_name} - sensor does not already exist."
+            )
+
+        if "poses" not in data[sensor_name]:
+            data[sensor_name]["poses"] = {}
+
+        step_name = row["step_name"]
+        if step_name not in data[sensor_name]["poses"]:
+            data[sensor_name]["poses"][step_name] = {}
+
+        timestamp_ns = int(row["timestamp_ns"])
+
+        # TODO(Jack): Make this something the user can configure in the frontend! Not here in the data loading.
+        # NOTE(Jack): This logic here plays a surprisingly critical role in the broader scheme of things, so I want to
+        # call attention to it. As mentioned elsewhere in the library, all the algorithms for camera calibration use
+        # tf_co_w, as this is the tf which takes the target points in the world coordinate frame and puts them in the
+        # camera optical frame. However, that transform is not suitable for world frame reference visualizations. In
+        # order to provide the user a view of the calibration process that they understand from their world referenced
+        # perspective we need to invert this tf to tf_w_co. That is what we are doing here.
+        #
+        # This means that the database holds the poses in a frame convention that the algorithm needs, but in order to
+        # visualize them they need to be processed as we do here.
+        pose_co_w = row.iloc[-6:].tolist()
+        pose_w_co = InvertSe3(pose_co_w)
+        data[sensor_name]["poses"][step_name][timestamp_ns] = pose_w_co
+
+    return data
 
 
 # NOTE(Jack): The imu data only consists of one length six array so we store it timestamped directly under the

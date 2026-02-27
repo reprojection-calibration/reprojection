@@ -1,12 +1,17 @@
 import os
+import sqlite3
+import tempfile
 import unittest
+import pandas as pd
 
 from database.data_formatting import (
     load_data,
     process_extracted_targets_table,
     process_images_table,
     process_imu_data_table,
+    process_poses_table,
 )
+from database.sql_statement_loading import load_sql
 from database.sql_table_loading import (
     load_extracted_targets_table,
     load_images_table,
@@ -15,6 +20,17 @@ from database.sql_table_loading import (
     load_reprojection_errors_table,
 )
 from database.types import SensorType
+
+
+# TODO(Jack): Copy and pasted, put into common package!
+def execute_sql(sql_statement, db_path):
+    conn = sqlite3.connect(db_path)
+
+    cursor = conn.cursor()
+    cursor.execute(sql_statement)
+    conn.commit()
+
+    conn.close()
 
 
 class TestDatabaseMeasurementDataFormatting(unittest.TestCase):
@@ -65,6 +81,27 @@ class TestDatabaseMeasurementDataFormatting(unittest.TestCase):
 
         check(data["/cam0/image_raw"])
         check(data["/cam1/image_raw"])
+
+    def test_process_poses_table(self):
+        data = process_poses_table(None, {})
+        self.assertIsNone(data)
+
+        pose_data = {"step_name": ["linear_pose_initialization", "linear_pose_initialization"],
+                     "sensor_name": ["/cam0/image_raw", "/cam0/image_raw"],
+                     "timestamp_ns": [0, 1], "rx": [0, 0], "ry": [0, 0], "rz": [0, 0], "x": [0, 0], "y": [0, 0],
+                     "z": [0, 0]}
+        table = pd.DataFrame(pose_data)
+
+        self.assertRaises(KeyError, process_poses_table, table, {})
+
+        images_table = load_images_table(self.db_path)
+        data = process_images_table(images_table)
+
+        process_poses_table(table, data)
+
+        self.assertTrue("poses" in data["/cam0/image_raw"])
+        self.assertTrue("linear_pose_initialization" in data["/cam0/image_raw"]["poses"])
+        self.assertEqual(len(data["/cam0/image_raw"]["poses"]["linear_pose_initialization"]), 2)
 
     def test_process_imu_data_table(self):
         data = process_imu_data_table(None)
