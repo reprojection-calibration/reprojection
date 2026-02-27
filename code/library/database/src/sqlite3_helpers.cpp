@@ -56,14 +56,16 @@ std::string ToString(SqliteErrorCode const enumerator) {
                                                  std::optional<std::string_view> const& step_name) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
+    // TODO(Jack): Do not change argument order here - if there is a step_name that needs to come first!
     try {
-        Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
-        Bind(statement.stmt, 2, std::string(sensor_name).c_str());
-
         if (step_name.has_value()) {
-            Bind(statement.stmt, 3, step_name.value());
+            Bind(statement.stmt, 1, step_name.value());
+            Bind(statement.stmt, 2, std::string(sensor_name).c_str());
+            Bind(statement.stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
             BindBlob(statement.stmt, 4, blob_ptr, blob_size);
         } else {
+            Bind(statement.stmt, 1, std::string(sensor_name).c_str());
+            Bind(statement.stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
             BindBlob(statement.stmt, 3, blob_ptr, blob_size);
         }
     } catch (std::runtime_error const& e) {
