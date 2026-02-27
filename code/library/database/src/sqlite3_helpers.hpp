@@ -8,8 +8,6 @@
 #include <string>
 #include <variant>
 
-#include "database/database_data_types.hpp"
-
 namespace reprojection::database {
 
 enum class SqliteFlag {

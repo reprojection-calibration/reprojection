@@ -17,7 +17,6 @@
 #include "sqlite3_helpers.hpp"
 
 using namespace reprojection;
-using PoseType = database::PoseType;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
 TEST(DatabaseSensorDataInterface, TestAddExtractedTargetData) {
