@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS imu_data
     ax           REAL    NOT NULL,
     ay           REAL    NOT NULL,
     az           REAL    NOT NULL,
-    PRIMARY KEY (timestamp_ns, sensor_name)
+    PRIMARY KEY (sensor_name, timestamp_ns)
 );
