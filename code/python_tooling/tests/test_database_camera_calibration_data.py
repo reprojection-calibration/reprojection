@@ -8,12 +8,12 @@ from database.load_camera_calibration_data import (
     calculate_camera_statistics,
     load_camera_calibration_data,
 )
-from database.load_camera_poses import add_camera_poses_df_to_camera_calibration_data
 from database.load_extracted_targets import (
     add_extracted_targets_df_to_camera_calibration_data,
     load_extracted_targets_df,
 )
 from database.load_images import image_df_to_camera_calibration_data, load_images_df
+from database.load_poses import add_camera_poses_df_to_camera_calibration_data
 from database.load_reprojection_errors import (
     add_reprojection_errors_df_to_camera_calibration_data,
     load_reprojection_errors_df,
@@ -92,7 +92,7 @@ class TestDatabaseCameraCalibrationData(unittest.TestCase):
         df = load_images_df(self.db_path)
         data = image_df_to_camera_calibration_data(df)
 
-        # We should use load_camera_poses_df() but as of time of writing there is no pose data in the test database.
+        # We should use load_poses_df() but as of time of writing there is no pose data in the test database.
         # Therefore, we manually create a pose dataframe. If at some later date pose data gets added to the database we
         # should refactor this to use that instead of hardcoding it here.
         pose_data = [

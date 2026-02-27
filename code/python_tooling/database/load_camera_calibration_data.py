@@ -1,12 +1,12 @@
-from database.load_camera_poses import (
-    add_camera_poses_df_to_camera_calibration_data,
-    load_camera_poses_df,
-)
 from database.load_extracted_targets import (
     add_extracted_targets_df_to_camera_calibration_data,
     load_extracted_targets_df,
 )
 from database.load_images import image_df_to_camera_calibration_data, load_images_df
+from database.load_poses import (
+    add_camera_poses_df_to_camera_calibration_data,
+    load_poses_df,
+)
 from database.load_reprojection_errors import (
     add_reprojection_errors_df_to_camera_calibration_data,
     load_reprojection_errors_df,
@@ -24,7 +24,7 @@ def load_camera_calibration_data(db_path):
     df = load_extracted_targets_df(db_path)
     add_extracted_targets_df_to_camera_calibration_data(df, data)
 
-    df = load_camera_poses_df(db_path)
+    df = load_poses_df(db_path)
     add_camera_poses_df_to_camera_calibration_data(df, data)
 
     df = load_reprojection_errors_df(db_path)
