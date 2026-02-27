@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from database.measurement_data_formatting import (
-    load_measurement_data,
+from database.data_formatting import (
+    load_data,
     process_extracted_targets_table,
     process_images_table,
     process_imu_data_table,
@@ -79,11 +79,11 @@ class TestDatabaseMeasurementDataFormatting(unittest.TestCase):
         self.assertTrue("measurements" in data["/imu0"])
         self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
 
-    def test_load_measurement_data(self):
-        data = load_measurement_data("nonexistent.db3")
+    def test_load_data(self):
+        data = load_data("nonexistent.db3")
         self.assertIsNone(data)
 
-        data = load_measurement_data(self.db_path)
+        data = load_data(self.db_path)
 
         self.assertEqual(len(data), 2)
         self.assertEqual(list(data.keys()), [SensorType.Camera, SensorType.Imu])

@@ -8,6 +8,8 @@ from database.sql_table_loading import (
 from database.types import SensorType
 
 
+
+
 def process_images_table(table):
     if table is None:
         return None
@@ -24,6 +26,8 @@ def process_images_table(table):
     return data
 
 
+# NOTE(Jack): Although technically the extracted targets are a calculated output of the calibration process frontend,
+# for the purpose of the calibration process we treat them as a measurement too.
 def process_extracted_targets_table(table, data):
     if table is None:
         return None
@@ -70,7 +74,7 @@ def process_imu_data_table(table):
     return data
 
 
-def load_measurement_data(db_path):
+def load_data(db_path):
     if not os.path.isfile(db_path):
         print(f"Database file does not exist: {db_path}")
         return None
