@@ -42,7 +42,7 @@ def load_extracted_targets_table(db_path):
 
             def safe_parse(blob):
                 try:
-                    return parse_array_x2d_proto(blob)
+                    return parse_extracted_target_proto(blob)
                 except Exception as e:
                     print(f"Failed to parse blob: {e}")
                     return None
