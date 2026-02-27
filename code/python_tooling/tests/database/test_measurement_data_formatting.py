@@ -4,6 +4,7 @@ import unittest
 from database.measurement_data_formatting import (
     process_extracted_targets_table,
     process_images_table,
+    process_imu_data_table,
 )
 from database.sql_table_loading import (
     load_extracted_targets_table,
@@ -62,3 +63,16 @@ class TestDatabaseMeasurementDataFormatting(unittest.TestCase):
 
         check(data["/cam0/image_raw"])
         check(data["/cam1/image_raw"])
+
+    def test_process_imu_data_table(self):
+        data = process_imu_data_table(None)
+        self.assertIsNone(data)
+
+        table = load_imu_data_table(self.db_path)
+        data = process_imu_data_table(table)
+
+        self.assertEqual(len(data), 1)
+        self.assertEqual(list(data.keys()), ["/imu0"])
+
+        self.assertTrue("measurements" in data["/imu0"])
+        self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
