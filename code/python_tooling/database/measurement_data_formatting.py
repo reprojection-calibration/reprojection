@@ -1,4 +1,10 @@
-from database.sql_table_loading import load_images_table, load_extracted_targets_table
+import os
+
+from database.sql_table_loading import (
+    load_extracted_targets_table,
+    load_images_table,
+    load_imu_data_table,
+)
 from database.types import SensorType
 
 
@@ -64,15 +70,23 @@ def process_imu_data_table(table):
     return data
 
 
-def load_measurements(db_path):
-    measurements = {SensorType.Camera: None, SensorType.Imu: None}
+def load_measurement_data(db_path):
+    if not os.path.isfile(db_path):
+        print(f"Database file does not exist: {db_path}")
+        return None
+
+    data = {SensorType.Camera: None, SensorType.Imu: None}
 
     table = load_images_table(db_path)
     if table is not None:
-        measurements[SensorType.Camera] = process_images_table(table)
+        data[SensorType.Camera] = process_images_table(table)
 
     table = load_extracted_targets_table(db_path)
     if table is not None:
-        load_extracted_targets_table(table, measurements[SensorType.Camera])
+        process_extracted_targets_table(table, data[SensorType.Camera])
 
-    return measurements
+    table = load_imu_data_table(db_path)
+    if table is not None:
+        data[SensorType.Imu] = process_imu_data_table(table)
+
+    return data
