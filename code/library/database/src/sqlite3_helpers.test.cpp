@@ -47,28 +47,29 @@ TEST(DatabaseSqlite3Helpers, TestAddBlob) {
     sqlite3* db;
     sqlite3_open(temp_file.Path().c_str(), &db);
 
-    std::string const blob_table_sql_{
+    std::string const blob_table_sql{
         "CREATE TABLE example_blob_table ("
         "timestamp_ns INTEGER NOT NULL, "
         "sensor_name TEXT NOT NULL, "
         "data BLOB NOT NULL "
         ");"};
-    bool const table_created{database::Sqlite3Tools::Execute(blob_table_sql_, db)};
+    bool const table_created{database::Sqlite3Tools::Execute(blob_table_sql, db)};
     ASSERT_TRUE(table_created);
 
-    std::string const add_blob_sql_{
+    std::string const add_blob_sql{
         "INSERT INTO example_blob_table (timestamp_ns, sensor_name, data) "
         "VALUES (?, ?, ?);"};
 
-    // Success
+    DataKey const key{"/cam/retro/123", 0};
     std::string const buffer{"the future is calibrated"};
-    auto result{
-        database::Sqlite3Tools::AddBlob(add_blob_sql_, 0, "/cam/retro/123", buffer.c_str(), std::size(buffer), db)};
+
+    // Success
+    auto result{database::Sqlite3Tools::AddBlob(add_blob_sql, key, buffer.c_str(), std::size(buffer), db)};
     ASSERT_TRUE(std::holds_alternative<database::SqliteFlag>(result));
     EXPECT_EQ(std::get<database::SqliteFlag>(result), database::SqliteFlag::Ok);
 
     // Failure case "failed step" - blob data itself is bad (i.e. nullptr)
-    result = database::Sqlite3Tools::AddBlob(add_blob_sql_, 0, "/cam/retro/123", nullptr, -1, db);
+    result = database::Sqlite3Tools::AddBlob(add_blob_sql, key, nullptr, -1, db);
     ASSERT_TRUE(std::holds_alternative<database::SqliteErrorCode>(result));
     EXPECT_EQ(std::get<database::SqliteErrorCode>(result), database::SqliteErrorCode::FailedStep);
 
@@ -77,8 +78,7 @@ TEST(DatabaseSqlite3Helpers, TestAddBlob) {
     std::string const malformed_add_blob_sql_{
         "INSERT INTO example_blob_table (timestamp_ns, sensor_name) "
         "VALUES (?, ?);"};
-    result = database::Sqlite3Tools::AddBlob(malformed_add_blob_sql_, 0, "/cam/retro/123", buffer.c_str(),
-                                             std::size(buffer), db);
+    result = database::Sqlite3Tools::AddBlob(malformed_add_blob_sql_, key, buffer.c_str(), std::size(buffer), db);
     ASSERT_TRUE(std::holds_alternative<database::SqliteErrorCode>(result));
     EXPECT_EQ(std::get<database::SqliteErrorCode>(result), database::SqliteErrorCode::FailedBinding);
 }

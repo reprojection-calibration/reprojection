@@ -49,9 +49,9 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
             " at timestamp_ns: " + std::to_string(timestamp_ns));                          // LCOV_EXCL_LINE
     }
 
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert, sensor_name,
-                                                            timestamp_ns, buffer.c_str(), std::size(buffer),
-                                                            database->db)};
+    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert,
+                                                    DataKey{sensor_name, timestamp_ns}, buffer.c_str(),
+                                                    std::size(buffer), database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error(ErrorMessage("AddReprojectionError()", "N/A", sensor_name, timestamp_ns,
@@ -112,9 +112,9 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
                 std::string(sensor_name) + " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
         }
 
-        SqliteResult const result{Sqlite3Tools::AddStepTimeNameBlob(sql_statements::reprojection_error_insert,
-                                                                    step_name, sensor_name, timestamp_ns,
-                                                                    buffer.c_str(), std::size(buffer), database->db)};
+        SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::reprojection_error_insert,
+                                                        DataKey{step_name, sensor_name, timestamp_ns}, buffer.c_str(),
+                                                        std::size(buffer), database->db)};
 
         if (std::holds_alternative<SqliteErrorCode>(result)) {
             // TODO(Jack): Should also add step_name?

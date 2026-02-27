@@ -3,7 +3,6 @@
 #include <iostream>
 
 // TODO(Jack): Is this not kind of a circular include?
-#include "database/sensor_data_interface_adders.hpp"
 #include "database/sqlite_wrappers.hpp"
 
 namespace reprojection::database {
@@ -36,36 +35,20 @@ std::string ToString(SqliteErrorCode const enumerator) {
     return true;
 }
 
-[[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameBlob(std::string const& sql_statement, std::string_view sensor_name,
-                                                         uint64_t const timestamp_ns, void const* const blob_ptr,
-                                                         int const blob_size, sqlite3* const db) {
-    return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db);
-}
-
-// TODO(Jack): Convert step_name to be an enum!
-[[nodiscard]] SqliteResult Sqlite3Tools::AddStepTimeNameBlob(std::string const& sql_statement,
-                                                             std::string_view step_name, std::string_view sensor_name,
-                                                             uint64_t const timestamp_ns, void const* const blob_ptr,
-                                                             int const blob_size, sqlite3* const db) {
-    return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db, step_name);
-}
-
-[[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                 std::string_view sensor_name, void const* const blob_ptr,
-                                                 int const blob_size, sqlite3* const db,
-                                                 std::optional<std::string_view> const& step_name) {
+[[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, DataKey const& key,
+                                                 void const* const blob_ptr, int const blob_size, sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     // TODO(Jack): Do not change argument order here - if there is a step_name that needs to come first!
     try {
-        if (step_name.has_value()) {
-            Bind(statement.stmt, 1, step_name.value());
-            Bind(statement.stmt, 2, std::string(sensor_name).c_str());
-            Bind(statement.stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        if (key.step_name.has_value()) {
+            Bind(statement.stmt, 1, key.step_name.value());
+            Bind(statement.stmt, 2, std::string(key.sensor_name).c_str());
+            Bind(statement.stmt, 3, static_cast<int64_t>(key.timestamp_ns));  // Possible dangerous cast!
             BindBlob(statement.stmt, 4, blob_ptr, blob_size);
         } else {
-            Bind(statement.stmt, 1, std::string(sensor_name).c_str());
-            Bind(statement.stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+            Bind(statement.stmt, 1, std::string(key.sensor_name).c_str());
+            Bind(statement.stmt, 2, static_cast<int64_t>(key.timestamp_ns));  // Possible dangerous cast!
             BindBlob(statement.stmt, 3, blob_ptr, blob_size);
         }
     } catch (std::runtime_error const& e) {
