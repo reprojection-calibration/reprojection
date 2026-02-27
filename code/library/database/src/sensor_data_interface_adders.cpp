@@ -16,8 +16,7 @@
 namespace reprojection::database {
 
 void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database) {
-    std::string_view sql{sql_statements::calibration_steps_insert};
-    SqlStatement const statement{database->db, sql.data()};
+    SqlStatement const statement{database->db, sql_statements::calibration_steps_insert};
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, step_name);
@@ -50,8 +49,8 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
             " at timestamp_ns: " + std::to_string(timestamp_ns));                          // LCOV_EXCL_LINE
     }
 
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert, timestamp_ns,
-                                                            sensor_name, buffer.c_str(), std::size(buffer),
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::extracted_target_insert, sensor_name,
+                                                            timestamp_ns, buffer.c_str(), std::size(buffer),
                                                             database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
@@ -71,10 +70,11 @@ void AddPoseData(Frames const& data, std::string_view step_name, std::string_vie
     for (auto const& [timestamp_ns, frame_i] : data) {
         SqlStatement const statement{database->db, sql_statements::poses_insert};
 
+        // TODO(Jack): Refactor everywhere order to be step_name, sensor_name, timestamp
         try {
             Sqlite3Tools::Bind(statement.stmt, 1, step_name);
-            Sqlite3Tools::Bind(statement.stmt, 2, static_cast<int64_t>(timestamp_ns));  // Warn cast!
-            Sqlite3Tools::Bind(statement.stmt, 3, sensor_name);
+            Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
+            Sqlite3Tools::Bind(statement.stmt, 3, static_cast<int64_t>(timestamp_ns));  // Warn cast!
             Sqlite3Tools::Bind(statement.stmt, 4, frame_i.pose[0]);
             Sqlite3Tools::Bind(statement.stmt, 5, frame_i.pose[1]);
             Sqlite3Tools::Bind(statement.stmt, 6, frame_i.pose[2]);
@@ -113,7 +113,7 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
         }
 
         SqliteResult const result{Sqlite3Tools::AddStepTimeNameBlob(sql_statements::reprojection_error_insert,
-                                                                    step_name, timestamp_ns, sensor_name,
+                                                                    step_name, sensor_name, timestamp_ns,
                                                                     buffer.c_str(), std::size(buffer), database->db)};
 
         if (std::holds_alternative<SqliteErrorCode>(result)) {

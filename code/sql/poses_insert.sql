@@ -1,6 +1,6 @@
 INSERT INTO poses (step_name,
-                   timestamp_ns,
                    sensor_name,
+                   timestamp_ns,
                    rx,
                    ry,
                    rz,
