@@ -65,14 +65,14 @@ std::string ToString(SqliteErrorCode const enumerator) {
 // TODO(Jack): This function is a monster! We need to really think about a better solution here.
 std::string ErrorMessage(std::string const& function_name, SqliteErrorCode const error_code,
                          std::string const& db_error_message) {
-    return function_name + " operation failed with -\n\t error_code: " + ToString(error_code) +
+    return function_name + " function failed with -\n\terror_code: " + ToString(error_code) +
            "\n\tdb_error_message: " + db_error_message;
 }
 
 std::string ErrorMessage(DataKey const& key, std::string const& function_name, SqliteErrorCode const error_code,
                          std::string const& db_error_message) {
-    return "At data key -\n\tstep:" + (key.step_name.has_value() ? key.step_name.value() : "N/A\n\t") +
-           "sensor_name: " + key.sensor_name + "\n\ttimestamp_ns: " + std::to_string(key.timestamp_ns) + "\n" +
+    return "At data key -\n\tstep: " + (key.step_name.has_value() ? key.step_name.value() : "N/A") +
+           "\n\tsensor_name: " + key.sensor_name + "\n\ttimestamp_ns: " + std::to_string(key.timestamp_ns) + "\n" +
            ErrorMessage(function_name, error_code, db_error_message);
 }
 
