@@ -3,6 +3,7 @@ import sqlite3
 import tempfile
 import unittest
 
+from database.sql_statement_loading import load_sql
 from database.sql_table_loading import (
     load_extracted_targets_table,
     load_images_table,
@@ -10,8 +11,6 @@ from database.sql_table_loading import (
     load_poses_table,
     load_reprojection_errors_table,
 )
-
-from database.sql_statement_loading import load_sql
 
 
 def execute_sql(sql_statement, db_path):

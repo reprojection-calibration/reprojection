@@ -8,6 +8,9 @@ from database.sql_statement_loading import load_sql
 
 
 # TODO(Jack): Make generic loading function for the basic case and use that to eliminate copy and paste!
+# WARN(Jack): We not actually decode the image data here in this function. if we one data get to the point where we do
+# want to visualize images in the dashboard then we need to look again here. For now we just assume all the image data
+# is null.
 def load_images_table(db_path):
     if not os.path.isfile(db_path):
         print(f"Database file does not exist: {db_path}")
