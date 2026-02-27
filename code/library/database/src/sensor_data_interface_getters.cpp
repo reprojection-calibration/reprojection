@@ -22,13 +22,14 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
                                           std::string_view sensor_name) {
     SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
 
+    DataKey const key{sensor_name, 0};
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name));
-    } catch (std::runtime_error const& e) {                                  // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                           // LCOV_EXCL_LINE
-            ErrorMessage("GetExtractedTargetData()", "N/A", sensor_name, 0,  // LCOV_EXCL_LINE
-                         SqliteErrorCode::FailedBinding,                     // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database->db)))));       // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement.stmt, 1, key.sensor_name);
+    } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
+            ErrorMessage(key, "GetExtractedTargetData()",               // LCOV_EXCL_LINE
+                         SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     CameraMeasurements targets;
@@ -37,9 +38,9 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            throw std::runtime_error(ErrorMessage(                                         // LCOV_EXCL_LINE
-                "GetExtractedTargetData()", "N/A", sensor_name, 0,                         // LCOV_EXCL_LINE
-                SqliteErrorCode::FailedStep, std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
+            throw std::runtime_error(ErrorMessage(key, "GetExtractedTargetData()",              // LCOV_EXCL_LINE
+                                                  SqliteErrorCode::FailedStep,                  // LCOV_EXCL_LINE
+                                                  std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
         }
 
         // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or
@@ -50,7 +51,7 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
         int const blob_size{sqlite3_column_bytes(statement.stmt, 1)};
         if (not blob or blob_size <= 0) {
             throw std::runtime_error("GetExtractedTargetData() blob reading failed for sensor: " +  // LCOV_EXCL_LINE
-                                     std::string(sensor_name) +                                     // LCOV_EXCL_LINE
+                                     key.sensor_name +                                              // LCOV_EXCL_LINE
                                      " at timestamp_ns: " + std::to_string(timestamp_ns));          // LCOV_EXCL_LINE
         }
 
@@ -61,7 +62,7 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
         auto const deserialized{Deserialize(serialized)};
         if (not deserialized.has_value()) {
             throw std::runtime_error("GetExtractedTargetData() Deserialize() failed for sensor: " +  // LCOV_EXCL_LINE
-                                     std::string(sensor_name) +                                      // LCOV_EXCL_LINE
+                                     key.sensor_name +                                               // LCOV_EXCL_LINE
                                      " at timestamp_ns: " + std::to_string(timestamp_ns));           // LCOV_EXCL_LINE
         }
 
@@ -74,13 +75,13 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
     SqlStatement const statement{database->db, sql_statements::imu_data_select};
 
+    DataKey const key{sensor_name, 0};
     try {
-        Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name));
-    } catch (...) {                                                     // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
-            ErrorMessage("GetImuData()", "N/A", sensor_name, 0,         // LCOV_EXCL_LINE
-                         SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement.stmt, 1, key.sensor_name);
+    } catch (...) {                                                            // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                             // LCOV_EXCL_LINE
+            ErrorMessage(key, "GetImuData()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));         // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     ImuMeasurements data;
@@ -89,9 +90,8 @@ ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const data
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            throw std::runtime_error(ErrorMessage("GetImuData()", "N/A", sensor_name, 0,        // LCOV_EXCL_LINE
-                                                  SqliteErrorCode::FailedStep,                  // LCOV_EXCL_LINE
-                                                  std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
+            throw std::runtime_error(ErrorMessage(key, "GetImuData()", SqliteErrorCode::FailedStep,  // LCOV_EXCL_LINE
+                                                  std::string(sqlite3_errmsg(database->db))));       // LCOV_EXCL_LINE
         }
 
         // TODO(Jack): Should we be doing any error checking here while reading the columns?

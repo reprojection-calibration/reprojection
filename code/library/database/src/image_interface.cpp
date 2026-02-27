@@ -26,24 +26,23 @@ void AddImage(CameraImage const& data, std::string_view sensor_name,
             " at timestamp_ns: " + std::to_string(timestamp_ns));                         // LCOV_EXCL_LINE
     }
 
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, DataKey{sensor_name, timestamp_ns},
-                                                    buffer.data(), std::size(buffer), database->db)};
+    DataKey const key{sensor_name, timestamp_ns};
+    SqliteResult const result{
+        Sqlite3Tools::AddBlob(sql_statements::image_insert, key, buffer.data(), std::size(buffer), database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage("AddImage()", "N/A", sensor_name, timestamp_ns,
-                                              std::get<SqliteErrorCode>(result),
+        throw std::runtime_error(ErrorMessage(key, "AddImage()", std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
 }
 
 void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, DataKey{sensor_name, timestamp_ns},
-                                                    nullptr, -1, database->db)};
+    DataKey const key{sensor_name, timestamp_ns};
+    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, key, nullptr, -1, database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage("AddImage()", "N/A", sensor_name, timestamp_ns,
-                                              std::get<SqliteErrorCode>(result),
+        throw std::runtime_error(ErrorMessage(key, "AddImage()", std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
 }
@@ -53,12 +52,12 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
     : database_{database}, statement_{database_->db, sql_statements::images_select}, sensor_name_{sensor_name} {
     try {
         Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name);
-        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));  // Warn cast!
-    } catch (std::runtime_error const& e) {                                        // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                                 // LCOV_EXCL_LINE
-            ErrorMessage("ImageStreamer::ImageStreamer()", "N/A", sensor_name_,    // LCOV_EXCL_LINE
-                         start_time, SqliteErrorCode::FailedBinding,               // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database_->db)))));            // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));              // Warn cast!
+    } catch (std::runtime_error const& e) {                                                    // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                                             // LCOV_EXCL_LINE
+            ErrorMessage(DataKey{sensor_name_, start_time}, "ImageStreamer::ImageStreamer()",  // LCOV_EXCL_LINE
+                         SqliteErrorCode::FailedBinding,                                       // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database_->db)))));                        // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 }
 
@@ -67,11 +66,11 @@ std::optional<CameraImage> ImageStreamer::Next() {
     if (code == static_cast<int>(SqliteFlag::Done)) {
         return std::nullopt;
     } else if (code != static_cast<int>(SqliteFlag::Row)) {
-        std::cerr << ErrorMessage("ImageStreamer::Next()", "N/A", sensor_name_, 0,  // LCOV_EXCL_LINE
-                                  SqliteErrorCode::FailedStep,                      // LCOV_EXCL_LINE
-                                  std::string(sqlite3_errmsg(database_->db)))       // LCOV_EXCL_LINE
-                  << "\n";                                                          // LCOV_EXCL_LINE
-        return std::nullopt;                                                        // LCOV_EXCL_LINE
+        std::cerr << ErrorMessage(DataKey{sensor_name_, 0}, "ImageStreamer::Next()",  // LCOV_EXCL_LINE
+                                  SqliteErrorCode::FailedStep,                        // LCOV_EXCL_LINE
+                                  std::string(sqlite3_errmsg(database_->db)))         // LCOV_EXCL_LINE
+                  << "\n";                                                            // LCOV_EXCL_LINE
+        return std::nullopt;                                                          // LCOV_EXCL_LINE
     }
 
     uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(statement_.stmt, 0)))};
