@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS imu_data
 (
-    timestamp_ns INTEGER NOT NULL,
     sensor_name  TEXT    NOT NULL,
+    timestamp_ns INTEGER NOT NULL,
     omega_x      REAL    NOT NULL,
     omega_y      REAL    NOT NULL,
     omega_z      REAL    NOT NULL,

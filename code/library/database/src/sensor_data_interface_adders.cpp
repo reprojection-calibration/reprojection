@@ -133,8 +133,8 @@ void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
         SqlStatement const statement{database->db, sql_statements::imu_data_insert};
 
         try {
-            Sqlite3Tools::Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Warn cast!
-            Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
+            Sqlite3Tools::Bind(statement.stmt, 1, sensor_name);
+            Sqlite3Tools::Bind(statement.stmt, 2, static_cast<int64_t>(timestamp_ns));  // Warn cast!
             Sqlite3Tools::Bind(statement.stmt, 3, frame_i.angular_velocity[0]);
             Sqlite3Tools::Bind(statement.stmt, 4, frame_i.angular_velocity[1]);
             Sqlite3Tools::Bind(statement.stmt, 5, frame_i.angular_velocity[2]);

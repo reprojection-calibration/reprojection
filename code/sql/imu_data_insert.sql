@@ -1,5 +1,5 @@
-INSERT INTO imu_data (timestamp_ns,
-                      sensor_name,
+INSERT INTO imu_data (sensor_name,
+                      timestamp_ns,
                       omega_x,
                       omega_y,
                       omega_z,
