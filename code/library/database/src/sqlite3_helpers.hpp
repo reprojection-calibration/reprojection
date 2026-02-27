@@ -49,12 +49,12 @@ struct Sqlite3Tools {
     //  eliminated and generic component of the function and it now means that this method can only be used for
     //  inserting into a table that holds blobs indexed by timestamp and the sensor name. This is no strictly a problem,
     //  but the fact that this method now takes six arguments tells you that maybe we are missing an abstraction :)
-    [[nodiscard]] static SqliteResult AddTimeNameBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                      std::string_view sensor_name, void const* const blob_ptr,
+    [[nodiscard]] static SqliteResult AddTimeNameBlob(std::string const& sql_statement, std::string_view sensor_name,
+                                                      uint64_t const timestamp_ns, void const* const blob_ptr,
                                                       int const blob_size, sqlite3* const db);
 
     [[nodiscard]] static SqliteResult AddStepTimeNameBlob(std::string const& sql_statement, std::string_view step_name,
-                                                          uint64_t const timestamp_ns, std::string_view sensor_name,
+                                                          std::string_view sensor_name, uint64_t const timestamp_ns,
                                                           void const* const blob_ptr, int const blob_size,
                                                           sqlite3* const db);
 

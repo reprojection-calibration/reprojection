@@ -36,16 +36,16 @@ std::string ToString(SqliteErrorCode const enumerator) {
     return true;
 }
 
-[[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                         std::string_view sensor_name, void const* const blob_ptr,
+[[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameBlob(std::string const& sql_statement, std::string_view sensor_name,
+                                                         uint64_t const timestamp_ns, void const* const blob_ptr,
                                                          int const blob_size, sqlite3* const db) {
     return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db);
 }
 
 // TODO(Jack): Convert step_name to be an enum!
 [[nodiscard]] SqliteResult Sqlite3Tools::AddStepTimeNameBlob(std::string const& sql_statement,
-                                                             std::string_view step_name, uint64_t const timestamp_ns,
-                                                             std::string_view sensor_name, void const* const blob_ptr,
+                                                             std::string_view step_name, std::string_view sensor_name,
+                                                             uint64_t const timestamp_ns, void const* const blob_ptr,
                                                              int const blob_size, sqlite3* const db) {
     return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db, step_name);
 }

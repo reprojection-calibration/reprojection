@@ -26,7 +26,7 @@ void AddImage(CameraImage const& data, std::string_view sensor_name,
             " at timestamp_ns: " + std::to_string(timestamp_ns));                         // LCOV_EXCL_LINE
     }
 
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, timestamp_ns, sensor_name,
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, sensor_name, timestamp_ns,
                                                             buffer.data(), std::size(buffer), database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
@@ -38,7 +38,7 @@ void AddImage(CameraImage const& data, std::string_view sensor_name,
 
 void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
-    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, timestamp_ns, sensor_name,
+    SqliteResult const result{Sqlite3Tools::AddTimeNameBlob(sql_statements::image_insert, sensor_name, timestamp_ns,
                                                             nullptr, -1, database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
