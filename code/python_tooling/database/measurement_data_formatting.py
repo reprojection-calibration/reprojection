@@ -10,7 +10,7 @@ def process_images_table(table):
     for index, row in table.iterrows():
         sensor_name = row["sensor_name"]
         if sensor_name not in data:
-            data[sensor_name] = {"measurements": {"images":{}}}
+            data[sensor_name] = {"measurements": {"images": {}}}
 
         timestamp_ns = int(row["timestamp_ns"])
         data[sensor_name]["measurements"]["images"][timestamp_ns] = row["data"]
