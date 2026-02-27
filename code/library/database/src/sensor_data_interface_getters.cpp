@@ -24,11 +24,11 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name));
-    } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
-            ErrorMessage("GetExtractedTargetData()", sensor_name, 0,    // LCOV_EXCL_LINE
-                         SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
+    } catch (std::runtime_error const& e) {                                  // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                           // LCOV_EXCL_LINE
+            ErrorMessage("GetExtractedTargetData()", "N/A", sensor_name, 0,  // LCOV_EXCL_LINE
+                         SqliteErrorCode::FailedBinding,                     // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));       // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     CameraMeasurements targets;
@@ -38,7 +38,7 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
             throw std::runtime_error(ErrorMessage(                                         // LCOV_EXCL_LINE
-                "GetExtractedTargetData()", sensor_name, 0,                                // LCOV_EXCL_LINE
+                "GetExtractedTargetData()", "N/A", sensor_name, 0,                         // LCOV_EXCL_LINE
                 SqliteErrorCode::FailedStep, std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
         }
 
@@ -78,7 +78,7 @@ ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const data
         Sqlite3Tools::Bind(statement.stmt, 1, std::string(sensor_name));
     } catch (...) {                                                     // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
-            ErrorMessage("GetImuData()", sensor_name, 0,                // LCOV_EXCL_LINE
+            ErrorMessage("GetImuData()", "N/A", sensor_name, 0,         // LCOV_EXCL_LINE
                          SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
                          std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
@@ -89,7 +89,7 @@ ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const data
         if (code == static_cast<int>(SqliteFlag::Done)) {
             break;
         } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            throw std::runtime_error(ErrorMessage("GetImuData()", sensor_name, 0,               // LCOV_EXCL_LINE
+            throw std::runtime_error(ErrorMessage("GetImuData()", "N/A", sensor_name, 0,        // LCOV_EXCL_LINE
                                                   SqliteErrorCode::FailedStep,                  // LCOV_EXCL_LINE
                                                   std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
         }

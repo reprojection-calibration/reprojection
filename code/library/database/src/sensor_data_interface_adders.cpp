@@ -24,13 +24,13 @@ void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationD
         // TODO(Jack): Clearly the ErrorMessage() has outlived its useful scope because we have to pass in dummy values
         //  here and below.
         std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
-            ErrorMessage("AddCalibrationStep()", "N/A", 0,              // LCOV_EXCL_LINE
+            ErrorMessage("AddCalibrationStep()", "N/A", "N/A", 0,       // LCOV_EXCL_LINE
                          SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
                          std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
     if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        throw std::runtime_error(ErrorMessage("AddCalibrationStep()", "N/A", 0, SqliteErrorCode::FailedStep,
+        throw std::runtime_error(ErrorMessage("AddCalibrationStep()", "N/A", "N/A", 0, SqliteErrorCode::FailedStep,
                                               std::string(sqlite3_errmsg(database->db))));
     }
 }
@@ -54,7 +54,7 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
                                                             database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage("AddReprojectionError()", sensor_name, timestamp_ns,
+        throw std::runtime_error(ErrorMessage("AddReprojectionError()", "N/A", sensor_name, timestamp_ns,
                                               std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
@@ -81,15 +81,15 @@ void AddPoseData(Frames const& data, std::string_view step_name, std::string_vie
             Sqlite3Tools::Bind(statement.stmt, 7, frame_i.pose[3]);
             Sqlite3Tools::Bind(statement.stmt, 8, frame_i.pose[4]);
             Sqlite3Tools::Bind(statement.stmt, 9, frame_i.pose[5]);
-        } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
-            std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
-                ErrorMessage("AddPoseData()", sensor_name, timestamp_ns,    // LCOV_EXCL_LINE
-                             SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
-                             std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
+        } catch (std::runtime_error const& e) {                                      // LCOV_EXCL_LINE
+            std::throw_with_nested(std::runtime_error(                               // LCOV_EXCL_LINE
+                ErrorMessage("AddPoseData()", step_name, sensor_name, timestamp_ns,  // LCOV_EXCL_LINE
+                             SqliteErrorCode::FailedBinding,                         // LCOV_EXCL_LINE
+                             std::string(sqlite3_errmsg(database->db)))));           // LCOV_EXCL_LINE
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            throw std::runtime_error(ErrorMessage("AddPoseData()", sensor_name, timestamp_ns,
+            throw std::runtime_error(ErrorMessage("AddPoseData()", step_name, sensor_name, timestamp_ns,
                                                   SqliteErrorCode::FailedStep,
                                                   std::string(sqlite3_errmsg(database->db))));
         }
@@ -118,7 +118,7 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
 
         if (std::holds_alternative<SqliteErrorCode>(result)) {
             // TODO(Jack): Should also add step_name?
-            throw std::runtime_error(ErrorMessage("AddReprojectionError()", sensor_name, timestamp_ns,
+            throw std::runtime_error(ErrorMessage("AddReprojectionError()", step_name, sensor_name, timestamp_ns,
                                                   std::get<SqliteErrorCode>(result),
                                                   std::string(sqlite3_errmsg(database->db))));
         }
@@ -143,13 +143,13 @@ void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
             Sqlite3Tools::Bind(statement.stmt, 8, frame_i.linear_acceleration[2]);
         } catch (std::runtime_error const& e) {                      // LCOV_EXCL_LINE
             std::throw_with_nested(std::runtime_error(ErrorMessage(  // LCOV_EXCL_LINE
-                "AddImuData()", sensor_name,                         // LCOV_EXCL_LINE
+                "AddImuData()", "N/A", sensor_name,                  // LCOV_EXCL_LINE
                 timestamp_ns, SqliteErrorCode::FailedBinding,        // LCOV_EXCL_LINE
                 std::string(sqlite3_errmsg(database->db)))));        // LCOV_EXCL_LINE
         }  // LCOV_EXCL_LINE
 
         if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            throw std::runtime_error(ErrorMessage("AddImuData()", sensor_name, timestamp_ns,
+            throw std::runtime_error(ErrorMessage("AddImuData()", "N/A", sensor_name, timestamp_ns,
                                                   SqliteErrorCode::FailedStep,
                                                   std::string(sqlite3_errmsg(database->db))));
         }

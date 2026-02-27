@@ -79,12 +79,13 @@ std::string ToString(SqliteErrorCode const enumerator) {
     return SqliteFlag::Ok;
 }
 
-// TODO(Jack): Add step_name?
-std::string ErrorMessage(std::string const& function_name, std::string_view sensor_name, uint64_t const timestamp_ns,
-                         SqliteErrorCode const error_code, std::string const& db_error_message) {
-    return function_name + " failed at timestamp_ns: " + std::to_string(timestamp_ns) +
-           " for sensor: " + std::string(sensor_name) + " with: " + ToString(error_code) +
-           " and database error message: " + db_error_message;
+// TODO(Jack): This function is a monster! We need to really think about a better solution here.
+std::string ErrorMessage(std::string const& function_name, std::string_view step_name, std::string_view sensor_name,
+                         uint64_t const timestamp_ns, SqliteErrorCode const error_code,
+                         std::string const& db_error_message) {
+    return function_name + " failed during step: " + std::string(step_name) +
+           " at timestamp_ns: " + std::to_string(timestamp_ns) + " for sensor: " + std::string(sensor_name) +
+           " with: " + ToString(error_code) + " and database error message: " + db_error_message;
 }
 
 }  // namespace reprojection::database
