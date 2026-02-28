@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import unittest
 
 import pandas as pd
