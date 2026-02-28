@@ -35,15 +35,15 @@ class TestCalculateMetadata(unittest.TestCase):
         self.assertEqual(metadata, gt_metadata)
 
     def test_reference_timestamps(self):
-        metadata = reference_timestamps(None)
-        self.assertIsNone(metadata)
+        timestamps = reference_timestamps(None)
+        self.assertIsNone(timestamps)
 
         data = load_data(self.db_path)
-        metadata = reference_timestamps(data)
+        timestamps = reference_timestamps(data)
 
         # Check arbitrarily that its sorted and the first and last timestamp of one of the entries
         # TODO(Jack): Why does black format this so weird???
-        cam0_image_timestamps = metadata["/cam0/image_raw"]["measurements"]["images"]
+        cam0_image_timestamps = timestamps["/cam0/image_raw"]["measurements"]["images"]
         self.assertEqual(cam0_image_timestamps, sorted(cam0_image_timestamps))
         self.assertEqual(cam0_image_timestamps[0], "1520528314264184064")
         self.assertEqual(cam0_image_timestamps[-1], "1520528358165555968")

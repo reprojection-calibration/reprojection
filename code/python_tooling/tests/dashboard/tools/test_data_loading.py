@@ -2,8 +2,12 @@ import os
 import unittest
 from pathlib import Path
 
-from dashboard.tools.data_loading import refresh_database_list, refresh_sensor_list
-from database.calculate_metadata import count_data
+from dashboard.tools.data_loading import (
+    load_database,
+    refresh_database_list,
+    refresh_sensor_list,
+)
+from database.calculate_metadata import count_data, reference_timestamps
 from database.data_formatting import load_data
 from database.types import SensorType
 
@@ -36,6 +40,32 @@ class TestDataLoading(unittest.TestCase):
 
         db_paths = refresh_database_list("directory/that/does/not/exist/")
         self.assertEqual(db_paths, ([], ""))
+
+    def test_load_database(self):
+        raw_data, metadata, timestamps = load_database(self.db_path)
+
+        gt_metadata = {
+            "/cam0/image_raw": {
+                "type": SensorType.Camera,
+                "measurements": {"images": 879, "targets": 879},
+            },
+            "/cam1/image_raw": {
+                "type": SensorType.Camera,
+                "measurements": {"images": 879, "targets": 879},
+            },
+            "/imu0": {"type": SensorType.Imu, "measurements": 8770},
+        }
+
+        self.assertEqual(count_data(raw_data), gt_metadata)
+        self.assertEqual(metadata, gt_metadata)
+        self.assertEqual(timestamps, reference_timestamps(raw_data))
+
+    def test_load_database_adversarial(self):
+        result = load_database(None)
+        self.assertEqual(result, (None, None, None))
+
+        result = load_database("file/that/does/not/exist.db3")
+        self.assertEqual(result, (None, None, None))
 
     def test_refresh_sensor_list(self):
         data = load_data(self.db_path)

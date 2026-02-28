@@ -1,16 +1,19 @@
 import os
 
+from database.calculate_metadata import count_data, reference_timestamps
+from database.data_formatting import load_data
 
-def refresh_database_list(dir):
-    if dir is None or not os.path.exists(dir):
+
+def refresh_database_list(db_dir):
+    if db_dir is None or not os.path.exists(db_dir):
         return [], ""
 
     result = []
-    for file_name in sorted(os.listdir(dir)):
+    for file_name in sorted(os.listdir(db_dir)):
         if not file_name.endswith(".db3"):
             continue
 
-        full_path = os.path.join(dir, file_name)
+        full_path = os.path.join(db_dir, file_name)
         result.append(
             {
                 "label": file_name,
@@ -22,6 +25,14 @@ def refresh_database_list(dir):
         return [], ""
 
     return result, result[0]["value"] if result else ""
+
+
+def load_database(db_file):
+    raw_data = load_data(db_file)
+    metadata = count_data(raw_data)
+    timestamps = reference_timestamps(raw_data)
+
+    return raw_data, metadata, timestamps
 
 
 def refresh_sensor_list(metadata):
