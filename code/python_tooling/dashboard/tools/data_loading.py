@@ -3,9 +3,9 @@ def refresh_sensor_list(metadata):
         return [], ""
 
     result = []
-    for key, value in metadata.items():
+    for sensor_name, value in metadata.items():
         sensor_type = value.get("type")
 
-        result.append(f"{key} ({sensor_type.name})")
+        result.append(f"{sensor_name} ({sensor_type.name})")
 
     return result, result[0] if result else ""
