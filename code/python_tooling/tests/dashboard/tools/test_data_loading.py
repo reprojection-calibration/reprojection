@@ -24,3 +24,11 @@ class TestDataLoading(unittest.TestCase):
         gt_sensor_list = ['/cam0/image_raw (Camera)', '/cam1/image_raw (Camera)', '/imu0 (Imu)']
         self.assertEqual(sensor_list, gt_sensor_list)
         self.assertEqual(first_sensor, gt_sensor_list[0])
+
+    def test_refresh_sensor_list_adversarial(self):
+        metadata = refresh_sensor_list(None)
+        self.assertEqual(metadata, ([], ''))
+
+        metadata = refresh_sensor_list({})
+        self.assertEqual(metadata, ([], ''))
+

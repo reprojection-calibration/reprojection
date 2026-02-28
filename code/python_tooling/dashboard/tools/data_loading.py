@@ -8,4 +8,4 @@ def refresh_sensor_list(metadata):
 
         result.append(f"{key} ({sensor_type.name})")
 
-    return result, result[0]
+    return result, result[0] if result else ""
