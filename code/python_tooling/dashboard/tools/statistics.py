@@ -55,7 +55,6 @@ def build_sensor_statistics_html(sensor_name, metadata):
                             "marginBottom": "6px",
                         },
                     ),
-
                     html.Div(
                         str(value),
                         style={
@@ -64,7 +63,7 @@ def build_sensor_statistics_html(sensor_name, metadata):
                         },
                     ),
                     html.Div(
-                        key[-1] if len(key)>1 else "",
+                        key[-1] if len(key) > 1 else "",
                         style={
                             "fontSize": "12px",
                             "color": "#666",
