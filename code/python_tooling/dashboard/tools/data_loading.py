@@ -1,3 +1,29 @@
+import os
+
+
+def refresh_database_list(dir):
+    if dir is None or not os.path.exists(dir):
+        return [], ""
+
+    result = []
+    for file_name in sorted(os.listdir(dir)):
+        if not file_name.endswith(".db3"):
+            continue
+
+        full_path = os.path.join(dir, file_name)
+        result.append(
+            {
+                "label": file_name,
+                "value": full_path,
+            }
+        )
+
+    if len(result) == 0:
+        return [], ""
+
+    return result, result[0]["value"] if result else ""
+
+
 def refresh_sensor_list(metadata):
     if metadata is None:
         return [], ""
