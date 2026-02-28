@@ -1,10 +1,13 @@
 def traverse_timeseries_data(d, apply):
+    # Leaf is not a dict, just return it.
     if not isinstance(d, dict):
-        return None
+        return d
 
+    # Leaf is a timeseries leaf - call apply() method on it
     if d and all(isinstance(k, int) for k in d.keys()):
         return apply(d)
 
+    # Is a nested dict, continue recursion
     return {k: traverse_timeseries_data(v, apply) for k, v in d.items()}
 
 

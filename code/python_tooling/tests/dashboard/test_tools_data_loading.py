@@ -1,9 +1,10 @@
 import unittest
 
-from dashboard_reference_data import full_data, invalid_data, skeleton_data
-
 from dashboard.tools.data_loading import refresh_sensor_list
 from database.types import SensorType
+
+# TODO(Jack): Proper path?
+from tests.dashboard.reference_data import full_data, invalid_data, skeleton_data
 
 
 class TestDashboardToolsDataLoading(unittest.TestCase):

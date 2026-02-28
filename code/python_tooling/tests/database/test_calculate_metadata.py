@@ -23,11 +23,15 @@ class TestCalculateMetadata(unittest.TestCase):
         metadata = count_data(data)
 
         gt_metadata = {
-            SensorType.Camera: {
-                "/cam0/image_raw": {"measurements": {"images": 879, "targets": 879}},
-                "/cam1/image_raw": {"measurements": {"images": 879, "targets": 879}},
+            "/cam0/image_raw": {
+                "type": SensorType.Camera,
+                "measurements": {"images": 879, "targets": 879},
             },
-            SensorType.Imu: {"/imu0": {"measurements": 8770}},
+            "/cam1/image_raw": {
+                "type": SensorType.Camera,
+                "measurements": {"images": 879, "targets": 879},
+            },
+            "/imu0": {"type": SensorType.Imu, "measurements": 8770},
         }
 
         self.assertEqual(metadata, gt_metadata)
@@ -41,9 +45,7 @@ class TestCalculateMetadata(unittest.TestCase):
 
         # Check arbitrarily that its sorted and the first and last timestamp of one of the entries
         # TODO(Jack): Why does black format this so weird???
-        cam0_image_timestamps = metadata[SensorType.Camera]["/cam0/image_raw"][
-            "measurements"
-        ]["images"]
+        cam0_image_timestamps = metadata["/cam0/image_raw"]["measurements"]["images"]
         self.assertEqual(cam0_image_timestamps, sorted(cam0_image_timestamps))
         self.assertEqual(cam0_image_timestamps[0], "1520528314264184064")
         self.assertEqual(cam0_image_timestamps[-1], "1520528358165555968")

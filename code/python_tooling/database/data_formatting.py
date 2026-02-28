@@ -20,7 +20,10 @@ def process_images_table(table):
     for index, row in table.iterrows():
         sensor_name = row["sensor_name"]
         if sensor_name not in data:
-            data[sensor_name] = {"measurements": {"images": {}}}
+            data[sensor_name] = {
+                "type": SensorType.Camera,
+                "measurements": {"images": {}},
+            }
 
         timestamp_ns = int(row["timestamp_ns"])
         data[sensor_name]["measurements"]["images"][timestamp_ns] = row["data"]
@@ -145,7 +148,7 @@ def process_imu_data_table(table):
     for index, row in table.iterrows():
         sensor_name = row["sensor_name"]
         if sensor_name not in data:
-            data[sensor_name] = {"measurements": {}}
+            data[sensor_name] = {"type": SensorType.Imu, "measurements": {}}
 
         timestamp_ns = int(row["timestamp_ns"])
         data[sensor_name]["measurements"][timestamp_ns] = row.iloc[-6:].tolist()
@@ -158,18 +161,18 @@ def load_data(db_path):
         print(f"Database file does not exist: {db_path}")
         return None
 
-    data = {SensorType.Camera: None, SensorType.Imu: None}
+    data = {}
 
     table = load_images_table(db_path)
     if table is not None:
-        data[SensorType.Camera] = process_images_table(table)
+        data.update(process_images_table(table))
 
     table = load_extracted_targets_table(db_path)
     if table is not None:
-        process_extracted_targets_table(table, data[SensorType.Camera])
+        process_extracted_targets_table(table, data)
 
     table = load_imu_data_table(db_path)
     if table is not None:
-        data[SensorType.Imu] = process_imu_data_table(table)
+        data.update(process_imu_data_table(table))
 
     return data

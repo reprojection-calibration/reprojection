@@ -40,6 +40,9 @@ class TestDataFormatting(unittest.TestCase):
         self.assertEqual(list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw"])
 
         def check(data):
+            self.assertTrue("type" in data)
+            self.assertTrue(SensorType.Camera in data["type"])
+
             self.assertTrue("measurements" in data)
             self.assertTrue("images" in data["measurements"])
             self.assertEqual(len(data["measurements"]["images"]), 879)
@@ -164,6 +167,9 @@ class TestDataFormatting(unittest.TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(list(data.keys()), ["/imu0"])
 
+        self.assertTrue("type" in data["/imu0"])
+        self.assertTrue(SensorType.Imu in data["/imu0"]["type"])
+
         self.assertTrue("measurements" in data["/imu0"])
         self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
 
@@ -173,8 +179,7 @@ class TestDataFormatting(unittest.TestCase):
 
         data = load_data(self.db_path)
 
-        self.assertEqual(len(data), 2)
-        self.assertEqual(list(data.keys()), [SensorType.Camera, SensorType.Imu])
-
-        self.assertIsNotNone(data[SensorType.Camera])
-        self.assertIsNotNone(data[SensorType.Imu])
+        self.assertEqual(len(data), 3)
+        self.assertEqual(
+            list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw", "/imu0"]
+        )
