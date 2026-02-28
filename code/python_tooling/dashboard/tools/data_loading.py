@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 from database.calculate_metadata import count_data, reference_timestamps
 from database.data_formatting import load_data
@@ -42,7 +43,9 @@ def refresh_sensor_list(metadata):
     result = []
     for sensor_name, value in metadata.items():
         sensor_type = value.get("type")
+        if isinstance(sensor_name, Enum):
+            sensor_type = sensor_type.name
 
-        result.append(f"{sensor_name} ({sensor_type.name})")
+        result.append(f"{sensor_name} ({sensor_type})")
 
     return result, result[0] if result else ""

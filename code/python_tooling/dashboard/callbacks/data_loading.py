@@ -9,8 +9,8 @@ from dashboard.tools.data_loading import (
 
 
 @app.callback(
-    Output("database-dropdown", "options"),
-    Output("database-dropdown", "value"),
+    Output("database-selection-dropdown", "options"),
+    Output("database-selection-dropdown", "value"),
     Input("database-directory-input", "value"),
     Input("refresh-database-list-button", "n_clicks"),
 )
@@ -21,8 +21,8 @@ def refresh_database_list_callback(db_dir, _):
 @app.callback(
     Output("raw-data-store", "data"),
     Output("metadata-store", "data"),
-    Output("timestamps-store", "data"),
-    Input("database-dropdown", "value"),
+    Output("timestamp-store", "data"),
+    Input("database-selection-dropdown", "value"),
 )
 def load_database_callback(db_file):
     return load_database(db_file)
