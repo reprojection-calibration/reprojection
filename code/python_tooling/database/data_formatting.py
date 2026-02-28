@@ -55,6 +55,13 @@ def process_extracted_targets_table(table, data):
         }
 
 
+# NOTE(Jack): When we start the project we enforced the foreign key relationship that a pose could only exist if there
+# was a corresponding target. However once we got to spline calibration where the poses are interpolated, this
+# restriction had to be removed. Therefore the only "foreign key" like relationship we check here is that the sensor has
+# to exist.
+#
+# Of course, we could load the calibration_steps table and check that the poses step_name is valid, but for now we
+# ignore that.
 def process_poses_table(table, data):
     if table is None:
         return None
@@ -90,6 +97,39 @@ def process_poses_table(table, data):
         data[sensor_name]["poses"][step_name][timestamp_ns] = pose_w_co
 
     return data
+
+
+def process_reprojection_error_table(table, data):
+    if table is None:
+        return None
+
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            raise KeyError(
+                f"Error while loading data for {sensor_name} - sensor does not already exist."
+            )
+
+        # Enforce the foreign key relationship that in order for a reprojection error to exist we must already have a
+        # matching target and pose loaded. Technically this is already enforced in the database, so maybe we should not
+        # check it again here, but this is more for us to make sure we load the data properly.
+        timestamp_ns = int(row["timestamp_ns"])
+        step_name = row["step_name"]
+        if (
+            timestamp_ns not in data[sensor_name]["measurements"]["images"]
+            or timestamp_ns not in data[sensor_name]["poses"][step_name]
+        ):
+            raise KeyError(
+                f"Error while loading data for {sensor_name} in step {step_name} at time {timestamp_ns} - a corresponding target and/or pose was not found."
+            )
+
+        if "reprojection_error" not in data[sensor_name]:
+            data[sensor_name]["reprojection_error"] = {}
+
+        if step_name not in data[sensor_name]["reprojection_error"]:
+            data[sensor_name]["reprojection_error"][step_name] = {}
+
+        data[sensor_name]["reprojection_error"][step_name][timestamp_ns] = row["data"]
 
 
 # NOTE(Jack): The imu data only consists of one length six array so we store it timestamped directly under the

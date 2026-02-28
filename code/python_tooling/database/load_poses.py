@@ -28,8 +28,6 @@ def add_camera_poses_df_to_camera_calibration_data(df, data):
                 f"Pose type {pose_type} not valid.",
             )
 
-
-
         if "poses" not in data[sensor]["frames"][timestamp]:
             data[sensor]["frames"][timestamp]["poses"] = {}
         data[sensor]["frames"][timestamp]["poses"][pose_type] = pose_w_co
