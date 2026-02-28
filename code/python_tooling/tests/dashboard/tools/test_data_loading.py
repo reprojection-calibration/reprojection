@@ -80,7 +80,7 @@ class TestDataLoading(unittest.TestCase):
             },
             {
                 "label": "/cam1/image_raw (SensorType.Camera)",
-                "value": "/cam1/image_raw" ,
+                "value": "/cam1/image_raw",
             },
             {"label": "/imu0 (SensorType.Imu)", "value": "/imu0"},
         ]
