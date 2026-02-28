@@ -5,6 +5,8 @@ from database.sql_table_loading import (
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
+    load_poses_table,
+    load_reprojection_errors_table,
 )
 from database.types import SensorType
 
@@ -169,6 +171,14 @@ def load_data(db_path):
     table = load_extracted_targets_table(db_path)
     if table is not None:
         process_extracted_targets_table(table, data)
+
+    table = load_poses_table(db_path)
+    if table is not None:
+        process_poses_table(table, data)
+
+    table = load_reprojection_errors_table(db_path)
+    if table is not None:
+        process_reprojection_error_table(table, data)
 
     table = load_imu_data_table(db_path)
     if table is not None:
