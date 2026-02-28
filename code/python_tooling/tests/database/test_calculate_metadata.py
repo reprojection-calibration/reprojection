@@ -40,6 +40,7 @@ class TestDatabaseCalculateMetadata(unittest.TestCase):
         metadata = reference_timestamps(data)
 
         # Check arbitrarily that its sorted and the first and last timestamp of one of the entries
+        # TODO(Jack): Why does black format this so weird???
         cam0_image_timestamps = metadata[SensorType.Camera]["/cam0/image_raw"][
             "measurements"
         ]["images"]
