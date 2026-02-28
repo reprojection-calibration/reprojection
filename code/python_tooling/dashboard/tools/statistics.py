@@ -26,20 +26,36 @@ def build_sensor_statistics_html(sensor_name, metadata):
     stat_cards = []
     for key, value in stats:
         is_ok = value != 0
+
         stat_cards.append(
             html.Div(
                 [
-                    # Status dot
                     html.Div(
+                        [
+                            html.Div(
+                                style={
+                                    "width": "10px",
+                                    "height": "10px",
+                                    "borderRadius": "50%",
+                                    "backgroundColor": "green" if is_ok else "red",
+                                    "marginRight": "6px",
+                                }
+                            ),
+                            html.Div(
+                                key[0],
+                                style={
+                                    "fontSize": "13px",
+                                    "fontWeight": "500",
+                                },
+                            ),
+                        ],
                         style={
-                            "width": "10px",
-                            "height": "10px",
-                            "borderRadius": "50%",
-                            "backgroundColor": "green" if is_ok else "red",
-                            "marginBottom": "5px",
-                        }
+                            "display": "flex",
+                            "alignItems": "center",
+                            "marginBottom": "6px",
+                        },
                     ),
-                    # Value
+
                     html.Div(
                         str(value),
                         style={
@@ -47,9 +63,8 @@ def build_sensor_statistics_html(sensor_name, metadata):
                             "fontWeight": "bold",
                         },
                     ),
-                    # Label
                     html.Div(
-                        key,
+                        key[-1] if len(key)>1 else "",
                         style={
                             "fontSize": "12px",
                             "color": "#666",
@@ -57,7 +72,7 @@ def build_sensor_statistics_html(sensor_name, metadata):
                     ),
                 ],
                 style={
-                    "minWidth": "120px",
+                    "minWidth": "140px",
                     "padding": "10px",
                     "backgroundColor": "white",
                     "border": "1px solid #ddd",
