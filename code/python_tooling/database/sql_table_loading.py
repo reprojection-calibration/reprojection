@@ -13,7 +13,6 @@ from database.sql_statement_loading import load_sql
 # is null.
 def load_images_table(db_path):
     if not os.path.isfile(db_path):
-        print(f"Database file does not exist: {db_path}")
         return None
 
     try:
@@ -30,7 +29,6 @@ def load_images_table(db_path):
 #  difference is that the extracted targets do not have the "type" identifier in their table.
 def load_extracted_targets_table(db_path):
     if not os.path.isfile(db_path):
-        print(f"Database file does not exist: {db_path}")
         return None
 
     try:
@@ -57,7 +55,6 @@ def load_extracted_targets_table(db_path):
 
 def load_poses_table(db_path):
     if not os.path.isfile(db_path):
-        print(f"Database file does not exist: {db_path}")
         return None
 
     try:
@@ -72,7 +69,6 @@ def load_poses_table(db_path):
 
 def load_reprojection_errors_table(db_path):
     if not os.path.isfile(db_path):
-        print(f"Database file does not exist: {db_path}")
         return None
 
     try:
@@ -99,7 +95,6 @@ def load_reprojection_errors_table(db_path):
 
 def load_imu_data_table(db_path):
     if not os.path.isfile(db_path):
-        print(f"Database file does not exist: {db_path}")
         return None
 
     try:

@@ -158,7 +158,6 @@ def process_imu_data_table(table):
 
 def load_data(db_path):
     if db_path is None or not os.path.isfile(db_path):
-        print(f"Database file does not exist: {db_path}")
         return None
 
     data = {}
