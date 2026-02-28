@@ -8,6 +8,9 @@ from database.sql_table_loading import (
 )
 from database.types import SensorType
 
+# TODO(Jack): Does it not make more sense to store the dictionary time keys as strings to prevent any problems with
+#  dash/json serialization?
+
 
 def process_images_table(table):
     if table is None:
