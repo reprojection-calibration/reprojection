@@ -74,12 +74,18 @@ class TestDataLoading(unittest.TestCase):
         sensor_list, first_sensor = refresh_sensor_list(metadata)
 
         gt_sensor_list = [
-            "/cam0/image_raw (SensorType.Camera)",
-            "/cam1/image_raw (SensorType.Camera)",
-            "/imu0 (SensorType.Imu)",
+            {
+                "label": "/cam0/image_raw (SensorType.Camera)",
+                "value": "/cam0/image_raw",
+            },
+            {
+                "label": "/cam1/image_raw (SensorType.Camera)",
+                "value": "/cam1/image_raw" ,
+            },
+            {"label": "/imu0 (SensorType.Imu)", "value": "/imu0"},
         ]
         self.assertEqual(sensor_list, gt_sensor_list)
-        self.assertEqual(first_sensor, gt_sensor_list[0])
+        self.assertEqual(first_sensor, gt_sensor_list[0]["value"])
 
     def test_refresh_sensor_list_adversarial(self):
         sensor_data = refresh_sensor_list(None)

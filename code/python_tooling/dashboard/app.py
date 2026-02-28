@@ -67,6 +67,17 @@ app.layout = html.Div(
                     ],
                     style={"flex": "2", "minWidth": "200px"},
                 ),
+                html.Div(
+                    id="sensor-statistics-container",
+                    style={
+                        "marginTop": "15px",
+                        "paddingTop": "10px",
+                        "borderTop": "1px solid #ddd",
+                        "display": "flex",
+                        "flexWrap": "wrap",
+                        "gap": "20px",
+                    },
+                ),
             ],
             style={
                 "display": "flex",
