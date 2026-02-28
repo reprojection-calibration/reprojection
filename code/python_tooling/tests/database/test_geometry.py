@@ -5,7 +5,7 @@ import numpy as np
 from database.geometry import InvertSe3
 
 
-class TestDatabaseGeometry(unittest.TestCase):
+class TestGeometry(unittest.TestCase):
     def test_invert_se3(self):
         se3 = np.array([0, 0, 0, 0, 0, 0])
         se3_inv = InvertSe3(se3)

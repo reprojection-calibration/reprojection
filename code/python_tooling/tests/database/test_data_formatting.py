@@ -22,7 +22,7 @@ from database.sql_table_loading import (
 from database.types import SensorType
 
 
-class TestDatabaseMeasurementDataFormatting(unittest.TestCase):
+class TestDataFormatting(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.db_path = os.getenv(

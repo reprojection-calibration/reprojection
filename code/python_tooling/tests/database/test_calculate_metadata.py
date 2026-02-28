@@ -8,7 +8,7 @@ from database.data_formatting import (
 from database.types import SensorType
 
 
-class TestDatabaseCalculateMetadata(unittest.TestCase):
+class TestCalculateMetadata(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.db_path = os.getenv(
