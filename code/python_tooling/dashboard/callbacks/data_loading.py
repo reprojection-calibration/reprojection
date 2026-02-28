@@ -1,8 +1,7 @@
-from dash import Input, Output, State
+from dash import Input, Output
 
 from dashboard.server import app
 from dashboard.tools.data_loading import (
-    build_sensor_statistics_html,
     load_database,
     refresh_database_list,
     refresh_sensor_list,
@@ -38,10 +37,4 @@ def refresh_sensor_list_callback(metadata):
     return refresh_sensor_list(metadata)
 
 
-@app.callback(
-    Output("sensor-statistics-container", "children"),
-    Input("sensor-selection-dropdown", "value"),
-    State("metadata-store", "data"),
-)
-def update_sensor_statistics(sensor_name, metadata):
-    return build_sensor_statistics_html(sensor_name, metadata)
+

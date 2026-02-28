@@ -1,33 +1,72 @@
 from dash import html
-from dash.exceptions import PreventUpdate
+
+def extract_leaf_statistics(data, parent_keys=None):
+    if parent_keys is None:
+        parent_keys = []
+
+    statistics = []
+
+    for key, value in data.items():
+        current_path = parent_keys + [str(key)]
+
+        if isinstance(value, dict):
+            statistics.extend(
+                extract_leaf_statistics(value, current_path)
+            )
+        else:
+            label = " > ".join(current_path)
+            statistics.append((label, value))
+
+    return statistics
+
+def build_sensor_statistics_html(sensor_name, metadata):
+    if sensor_name is None or metadata is None or sensor_name not in metadata:
+        return []
 
 
-# TODO(Jack): Is raise PreventUpdate the appropriate error handling strategy here?
-def build_sensor_statistics_div(sensor, metadata, sensor_type):
-    if sensor is None or metadata is None:
-        raise PreventUpdate
-    statistics, _ = metadata
-
-    statistics = statistics[sensor_type]
-    if statistics is None or sensor not in statistics:
-        raise PreventUpdate
-
-    return [
-        html.Div(
-            [
-                html.Div(
-                    "",
-                    style={
-                        "width": "20px",
-                        "height": "20px",
-                        "backgroundColor": "green" if value != 0 else "red",
-                        "display": "inline-block",
-                        "marginRight": "10px",
-                    },
-                ),
-                html.Div(value, style={"width": "35px", "display": "inline-block"}),
-                html.Div(key, style={"width": "200px", "display": "inline-block"}),
-            ],
+    stats = extract_leaf_statistics(metadata[sensor_name])
+    stat_cards = []
+    for key, value in stats:
+        is_ok = value != 0
+        stat_cards.append(
+            html.Div(
+                [
+                    # Status dot
+                    html.Div(
+                        style={
+                            "width": "10px",
+                            "height": "10px",
+                            "borderRadius": "50%",
+                            "backgroundColor": "green" if is_ok else "red",
+                            "marginBottom": "5px",
+                        }
+                    ),
+                    # Value
+                    html.Div(
+                        str(value),
+                        style={
+                            "fontSize": "18px",
+                            "fontWeight": "bold",
+                        },
+                    ),
+                    # Label
+                    html.Div(
+                        key,
+                        style={
+                            "fontSize": "12px",
+                            "color": "#666",
+                        },
+                    ),
+                ],
+                style={
+                    "minWidth": "120px",
+                    "padding": "10px",
+                    "backgroundColor": "white",
+                    "border": "1px solid #ddd",
+                    "borderRadius": "6px",
+                    "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+                },
+            )
         )
-        for key, value in statistics[sensor].items()
-    ]
+
+    return stat_cards

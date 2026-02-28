@@ -3,7 +3,7 @@ def traverse_timeseries_data(d, apply):
     if not isinstance(d, dict):
         return d
 
-    # Leaf is a timeseries leaf - call apply() method on it
+    # Leaf is a timeseries leaf (contains all int - assumes those are timestamp_ns) - call apply() method on it
     if d and all(isinstance(k, int) for k in d.keys()):
         return apply(d)
 
