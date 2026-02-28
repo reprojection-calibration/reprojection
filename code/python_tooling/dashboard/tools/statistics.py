@@ -1,6 +1,7 @@
 from dash import html
 
-def extract_leaf_statistics(data, parent_keys=None):
+
+def extract_labeled_metadata(data, parent_keys=None):
     if parent_keys is None:
         parent_keys = []
 
@@ -10,21 +11,18 @@ def extract_leaf_statistics(data, parent_keys=None):
         current_path = parent_keys + [str(key)]
 
         if isinstance(value, dict):
-            statistics.extend(
-                extract_leaf_statistics(value, current_path)
-            )
+            statistics.extend(extract_labeled_metadata(value, current_path))
         else:
-            label = " > ".join(current_path)
-            statistics.append((label, value))
+            statistics.append((current_path, value))
 
     return statistics
+
 
 def build_sensor_statistics_html(sensor_name, metadata):
     if sensor_name is None or metadata is None or sensor_name not in metadata:
         return []
 
-
-    stats = extract_leaf_statistics(metadata[sensor_name])
+    stats = extract_labeled_metadata(metadata[sensor_name])
     stat_cards = []
     for key, value in stats:
         is_ok = value != 0

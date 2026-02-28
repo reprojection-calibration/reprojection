@@ -1,7 +1,7 @@
 from dash import Input, Output, State
 
 from dashboard.server import app
-from dashboard.tools.statistics import     build_sensor_statistics_html
+from dashboard.tools.statistics import build_sensor_statistics_html
 
 
 @app.callback(

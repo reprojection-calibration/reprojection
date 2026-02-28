@@ -35,6 +35,3 @@ def load_database_callback(db_file):
 )
 def refresh_sensor_list_callback(metadata):
     return refresh_sensor_list(metadata)
-
-
-

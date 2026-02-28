@@ -56,5 +56,3 @@ def refresh_sensor_list(metadata):
         )
 
     return result, result[0]["value"] if result else ""
-
-
