@@ -2,9 +2,7 @@ import os
 import unittest
 
 from database.calculate_metadata import count_data, reference_timestamps
-from database.data_formatting import (
-    load_data,
-)
+from database.data_formatting import load_data
 from database.types import SensorType
 
 

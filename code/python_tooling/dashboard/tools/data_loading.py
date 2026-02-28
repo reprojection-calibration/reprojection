@@ -1,15 +1,11 @@
-def refresh_sensor_list(metadata, sensor_type):
+def refresh_sensor_list(metadata):
     if metadata is None:
         return [], ""
-    statistics, _ = metadata
 
-    statistics = statistics[sensor_type]
-    if statistics is None:
-        return [], ""
+    result = []
+    for key, value in metadata.items():
+        sensor_type = value.get("type")
 
-    sensor_names = sorted(statistics.keys())
+        result.append(f"{key} ({sensor_type.name})")
 
-    if len(sensor_names) == 0:
-        return [], ""
-
-    return sensor_names, sensor_names[0]
+    return result, result[0]
