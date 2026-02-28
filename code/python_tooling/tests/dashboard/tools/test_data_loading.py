@@ -28,7 +28,7 @@ class TestDataLoading(unittest.TestCase):
                 for item in database_list
             )
         )
-        self.assertTrue(os.path.exists(first_database))
+        self.assertTrue(os.path.isfile(first_database))
 
     def test_refresh_database_list_adversarial(self):
         db_paths = refresh_database_list(None)
