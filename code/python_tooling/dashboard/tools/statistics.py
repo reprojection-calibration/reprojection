@@ -18,6 +18,7 @@ def extract_labeled_metadata(data, parent_keys=None):
     return statistics
 
 
+# TODO(Jack): Test?!
 def build_sensor_statistics_html(sensor_name, metadata):
     if sensor_name is None or metadata is None or sensor_name not in metadata:
         return []

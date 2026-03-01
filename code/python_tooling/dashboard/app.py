@@ -2,6 +2,7 @@
 # Dash instance. Please see the answer here
 # https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
 import callbacks.data_loading
+import callbacks.dynamic_layout
 import callbacks.statistics
 from dash import dcc, html
 
@@ -98,6 +99,8 @@ app.layout = html.Div(
                 "backgroundColor": "#f9f9f9",
             },
         ),
+        # Dynamic content container
+        html.Div(id="sensor-content-container"),
         # Non-visual components
         dcc.Interval(
             disabled=False,
