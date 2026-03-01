@@ -30,7 +30,7 @@ class SubplotConfig:
 @dataclass
 class FigureConfig:
     title: str
-    subplots: tuple[SubplotConfig, ...]
+    subplots: tuple
     direction: Literal["rows", "cols"]
     shared_xaxes: bool
 
@@ -47,13 +47,33 @@ def build_figure_layout(config):
     n_rows = n_subplots if is_rows else 1
     n_cols = 1 if is_rows else n_subplots
 
-    fig = make_subplots(rows=n_rows, cols=n_cols, shared_xaxes=config.shared_xaxes)
+    # TODO(Jack): Do we need to set these here or can we add them later when we iterate over the subplots like we do
+    #  for the axis properties?
+    subplot_titles = [sp.title for sp in config.subplots]
+    fig = make_subplots(
+        rows=n_rows,
+        cols=n_cols,
+        subplot_titles=subplot_titles,
+        shared_xaxes=config.shared_xaxes,
+    )
+    fig.update_layout(
+        title_text=config.title,
+    )
 
-    # NOTE(Jack): We need to add a blank trace otherwise only one of the plots will display.
-    for i in range(len(config.subplots)):
+    for i, subplot_config in enumerate(config.subplots):
         i_row = i + 1 if is_rows else 1
         i_col = 1 if is_rows else i + 1
 
+        # TODO(Jack): Can we remove the x-axis title when the axis is shared? I.e. for timeseries plotting when the
+        #  times are the same?
+        fig.update_xaxes(
+            title_text=subplot_config.x_axis.full_title, row=i_row, col=i_col
+        )
+        fig.update_yaxes(
+            title_text=subplot_config.y_axis.full_title, row=i_row, col=i_col
+        )
+
+        # NOTE(Jack): We need to add a blank trace otherwise only one of the plots will display.
         fig.add_trace(go.Scatter(x=[], y=[]), row=i_row, col=i_col)
 
     return fig

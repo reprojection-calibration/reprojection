@@ -1,8 +1,37 @@
 from dash import dcc, html
 
-from dashboard.tools.timeseries_plotting import FigureConfig, build_figure_layout
+from dashboard.tools.timeseries_plotting import (
+    FigureConfig,
+    SubplotConfig,
+    build_figure_layout,
+    AxisConfig,
+)
 
-TARGET_VISUALIZATION = FigureConfig("", ((), ()), "cols", False)
+TARGET_VISUALIZATION = FigureConfig(
+    "Feature Extraction",
+    (
+        SubplotConfig("Target", AxisConfig("x", "m"), AxisConfig("y", "m")),
+        SubplotConfig(
+            "Extracted Features", AxisConfig("u", "pix"), AxisConfig("v", "pix")
+        ),
+    ),
+    "cols",
+    False,
+)
+
+POSE_VISUALIZATION = FigureConfig(
+    "Camera Poses",
+    (
+        SubplotConfig(
+            "Orientation", AxisConfig("Time", "s"), AxisConfig("Axis Angle", "rad")
+        ),
+        SubplotConfig(
+            "Translation", AxisConfig("Time", "s"), AxisConfig("Position", "m")
+        ),
+    ),
+    "rows",
+    True,
+)
 
 
 def camera_layout(sensor_name, raw_data):
@@ -10,15 +39,37 @@ def camera_layout(sensor_name, raw_data):
         [
             html.H3("Camera Layout"),
             dcc.Graph(
-                id="targets-figure", figure=build_figure_layout(TARGET_VISUALIZATION)
+                id="camera-targets-figure",
+                figure=build_figure_layout(TARGET_VISUALIZATION),
+            ),
+            dcc.Graph(
+                id="camera-poses-figure", figure=build_figure_layout(POSE_VISUALIZATION)
             ),
         ]
     )
+
+
+IMU_DATA_VISUALIZATION = FigureConfig(
+    "Imu Data",
+    (
+        SubplotConfig(
+            "Angular Velocity", AxisConfig("Time", "s"), AxisConfig("omega", "rad/s")
+        ),
+        SubplotConfig(
+            "Linear Acceleration", AxisConfig("Time", "s"), AxisConfig("a", "m/s^2")
+        ),
+    ),
+    "rows",
+    True,
+)
 
 
 def imu_layout():
     return html.Div(
         [
             html.H3("IMU Layout"),
+            dcc.Graph(
+                id="imu-data-figure", figure=build_figure_layout(IMU_DATA_VISUALIZATION)
+            ),
         ]
     )
