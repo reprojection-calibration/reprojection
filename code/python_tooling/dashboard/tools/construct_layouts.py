@@ -42,13 +42,13 @@ def camera_layout(sensor_name):
             html.H3("Camera Layout"),
             dcc.Graph(
                 id={
-                    "type": "targets",
-                    "sensor": sensor_name,
+                    "type": "extracted_targets",
+                    "sensor_name": sensor_name,
                 },
                 figure=build_figure_layout(TARGET_VISUALIZATION),
             ),
             dcc.Graph(
-                id={"type": "pose", "sensor": sensor_name},
+                id={"type": "pose", "sensor_name": sensor_name},
                 figure=build_figure_layout(POSE_VISUALIZATION),
             ),
         ]
@@ -77,7 +77,7 @@ def imu_layout(sensor_name):
             dcc.Graph(
                 id={
                     "type": "imu_data",
-                    "sensor": sensor_name,
+                    "sensor_name": sensor_name,
                 },
                 figure=build_figure_layout(IMU_DATA_VISUALIZATION),
             ),
