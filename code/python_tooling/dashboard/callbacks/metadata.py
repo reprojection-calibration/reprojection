@@ -1,7 +1,7 @@
 from dash import Input, Output, State
 
 from dashboard.server import app
-from dashboard.tools.statistics import build_sensor_statistics_html
+from dashboard.tools.metadata import build_sensor_metadata_layout
 
 
 @app.callback(
@@ -9,5 +9,5 @@ from dashboard.tools.statistics import build_sensor_statistics_html
     Input("sensor-selection-dropdown", "value"),
     State("metadata-store", "data"),
 )
-def update_sensor_statistics(sensor_name, metadata):
-    return build_sensor_statistics_html(sensor_name, metadata)
+def update_sensor_metadata(sensor_name, metadata):
+    return build_sensor_metadata_layout(sensor_name, metadata)

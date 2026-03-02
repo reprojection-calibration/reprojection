@@ -4,7 +4,7 @@
 import callbacks.data_loading
 import callbacks.dynamic_figures
 import callbacks.dynamic_layout
-import callbacks.statistics
+import callbacks.metadata
 from dash import dcc, html
 
 from dashboard.server import app
@@ -100,8 +100,10 @@ app.layout = html.Div(
                 "backgroundColor": "#f9f9f9",
             },
         ),
+
         # Dynamic content container
         html.Div(id="sensor-content-container"),
+
         # Non-visual components
         dcc.Interval(
             disabled=False,

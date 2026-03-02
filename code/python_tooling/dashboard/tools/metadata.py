@@ -1,4 +1,4 @@
-from dash import html
+from dash import dcc, html
 
 
 def extract_labeled_metadata(data, parent_keys=None):
@@ -19,11 +19,9 @@ def extract_labeled_metadata(data, parent_keys=None):
 
 
 # TODO(Jack): Test?!
-def build_sensor_statistics_html(sensor_name, metadata):
-    if sensor_name is None or metadata is None or sensor_name not in metadata:
-        return []
+def build_sensor_statistics_html(sensor_metadata):
+    stats = extract_labeled_metadata(sensor_metadata)
 
-    stats = extract_labeled_metadata(metadata[sensor_name])
     stat_cards = []
     for key, value in stats:
         is_ok = value != 0
@@ -83,3 +81,30 @@ def build_sensor_statistics_html(sensor_name, metadata):
         )
 
     return stat_cards
+
+
+def build_step_selector(sensor_metadata):
+    step_names = list(
+        {
+            key
+            for x in sensor_metadata
+            if x != "type" and x != "measurements"
+            for key in sensor_metadata[x]
+        }
+    )
+
+    return dcc.RadioItems(
+        id="step-selector",
+        options=step_names,
+        value=step_names[0] if step_names else "",
+    )
+
+
+def build_sensor_metadata_layout(sensor_name, metadata):
+    if sensor_name is None or metadata is None or sensor_name not in metadata:
+        return []
+
+    stat_cards = build_sensor_statistics_html(metadata[sensor_name])
+    step_selector = build_step_selector(metadata[sensor_name])
+
+    return stat_cards + [step_selector]
