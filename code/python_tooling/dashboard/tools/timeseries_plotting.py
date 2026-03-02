@@ -76,6 +76,6 @@ def build_figure_layout(config):
 
         for i in range(subplot_config.n_traces):
             # TODO(Jack): Make webgl scatter trace?
-            fig.add_trace(go.Scatter(x=[], y=[], mode="markers"), row=i_row, col=i_col)
+            fig.add_trace(go.Scattergl(x=[], y=[], mode="markers"), row=i_row, col=i_col)
 
     return fig

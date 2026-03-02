@@ -14,7 +14,7 @@ def timeseries_6d_to_patch(data):
         patch["data"][id]["y"] = data[:, id]
 
     patch = Patch()
-    for i in range(5):
+    for i in range(6):
         add_trace(timestamps, array, i, patch)
 
     return patch

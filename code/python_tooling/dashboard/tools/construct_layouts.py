@@ -70,12 +70,16 @@ IMU_DATA_VISUALIZATION = FigureConfig(
 )
 
 
-def imu_layout():
+def imu_layout(sensor_name):
     return html.Div(
         [
             html.H3("IMU Layout"),
             dcc.Graph(
-                id="imu-data-figure", figure=build_figure_layout(IMU_DATA_VISUALIZATION)
+                id={
+                    "type": "imu_data",
+                    "sensor": sensor_name,
+                },
+                figure=build_figure_layout(IMU_DATA_VISUALIZATION),
             ),
         ]
     )

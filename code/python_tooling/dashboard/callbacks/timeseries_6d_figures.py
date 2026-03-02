@@ -25,3 +25,20 @@ def update_pose_figure(composite_id, step_name, raw_data):
         return no_update
 
     return timeseries_6d_to_patch(pose_data)
+
+@app.callback(
+    Output({"type": "imu_data", "sensor": MATCH}, "figure"),
+    Input({"type": "imu_data", "sensor": MATCH}, "id"),
+    State("raw-data-store", "data"),
+)
+def update_imu_data_figure(composite_id, raw_data):
+    if composite_id is None or raw_data is None:
+        return no_update
+
+    sensor_name = composite_id["sensor"]
+    try:
+        pose_data = raw_data[sensor_name]["measurements"]
+    except (KeyError, TypeError):
+        return no_update
+
+    return timeseries_6d_to_patch(pose_data)

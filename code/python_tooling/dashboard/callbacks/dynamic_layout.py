@@ -22,6 +22,6 @@ def render_sensor_panel(sensor_name, raw_data):
     if sensor_type == SensorType.Camera:
         return camera_layout(sensor_name)
     elif sensor_type == SensorType.Imu:
-        return imu_layout()
+        return imu_layout(sensor_name)
     else:
         return html.P(f"Unknown sensor type selected: {sensor_type}.")
