@@ -27,6 +27,29 @@ app.clientside_callback(
         patch.assign(['data', 0, 'y'], points.map(p => p[1]));
         patch.assign(['data', 1, 'x'], pixels.map(p => p[0]));
         patch.assign(['data', 1, 'y'], pixels.map(p => p[1]));
+        
+        const reprojection_errors = raw_data?.[sensor_name]?.reprojection_error?.[step_name];
+        if(reprojection_errors){
+            const reprojection_error = reprojection_errors[key]
+
+            patch.assign(['data', 0, 'marker'], {
+                size: 12,
+                color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
+                colorscale: "Bluered",
+                cmin: 0,
+                cmax: 1,
+            });
+            patch.assign(['data', 1, 'marker'], {
+                size: 12,
+                color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
+                colorscale: "Bluered",
+                cmin: 0,
+                cmax: 1,
+            });
+            
+            patch.assign(['data', 0, 'hovertemplate'], "x: %{x}<br>y: %{y}<br>error: %{marker.color:.3f}<extra></extra>");
+            patch.assign(['data', 1, 'hovertemplate'], "x: %{x}<br>y: %{y}<br>error: %{marker.color:.3f}<extra></extra>");
+        }
     
         return patch.build();
     }
