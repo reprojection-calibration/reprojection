@@ -6,19 +6,16 @@ from dash import Input, Output, State, MATCH
 app.clientside_callback(
     """
     function(composite_id, step_name, raw_data) {
-        console.log("Callback triggered");
         if (!composite_id || !step_name || !raw_data) {
             return dash_clientside.no_update;
         }
         
         const sensor_name = composite_id["sensor_name"];
-        console.log(sensor_name);
-        
-        const targets = raw_data?.[sensor_name]?.measurements?.targets?.[step_name];
+        const targets = raw_data?.[sensor_name]?.measurements?.targets;
         if(!targets){
             return dash_clientside.no_update;
         }
-        console.log("got target");
+
         const key = Object.keys(targets)[0];
         const target = targets[key];
         
