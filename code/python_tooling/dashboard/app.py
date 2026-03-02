@@ -5,6 +5,7 @@ import callbacks.data_loading
 import callbacks.metadata
 import callbacks.populate_sensor_panel
 import callbacks.timeseries_6d_figures
+import callbacks.extracted_targets
 from dash import dcc, html
 
 from dashboard.server import app
