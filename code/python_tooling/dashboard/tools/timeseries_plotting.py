@@ -23,6 +23,7 @@ class SubplotConfig:
     title: str
     x_axis: AxisConfig
     y_axis: AxisConfig
+    n_traces: int
 
 
 # NOTE(Jack): This configuration and the code below is only meant to construct one dimensional figure sets. Either in an
@@ -73,7 +74,8 @@ def build_figure_layout(config):
             title_text=subplot_config.y_axis.full_title, row=i_row, col=i_col
         )
 
-        # NOTE(Jack): We need to add a blank trace otherwise only one of the plots will display.
-        fig.add_trace(go.Scatter(x=[], y=[]), row=i_row, col=i_col)
+        for i in range(subplot_config.n_traces):
+            # TODO(Jack): Make webgl scatter trace?
+            fig.add_trace(go.Scatter(x=[], y=[], mode="markers"), row=i_row, col=i_col)
 
     return fig

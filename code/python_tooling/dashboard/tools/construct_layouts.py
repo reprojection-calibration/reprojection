@@ -1,18 +1,18 @@
 from dash import dcc, html
 
 from dashboard.tools.timeseries_plotting import (
+    AxisConfig,
     FigureConfig,
     SubplotConfig,
     build_figure_layout,
-    AxisConfig,
 )
 
 TARGET_VISUALIZATION = FigureConfig(
     "Feature Extraction",
     (
-        SubplotConfig("Target", AxisConfig("x", "m"), AxisConfig("y", "m")),
+        SubplotConfig("Target", AxisConfig("x", "m"), AxisConfig("y", "m"), 1),
         SubplotConfig(
-            "Extracted Features", AxisConfig("u", "pix"), AxisConfig("v", "pix")
+            "Extracted Features", AxisConfig("u", "pix"), AxisConfig("v", "pix"), 1
         ),
     ),
     "cols",
@@ -23,10 +23,10 @@ POSE_VISUALIZATION = FigureConfig(
     "Camera Poses",
     (
         SubplotConfig(
-            "Orientation", AxisConfig("Time", "s"), AxisConfig("Axis Angle", "rad")
+            "Orientation", AxisConfig("Time", "s"), AxisConfig("Axis Angle", "rad"), 3
         ),
         SubplotConfig(
-            "Translation", AxisConfig("Time", "s"), AxisConfig("Position", "m")
+            "Translation", AxisConfig("Time", "s"), AxisConfig("Position", "m"), 3
         ),
     ),
     "rows",
@@ -34,16 +34,23 @@ POSE_VISUALIZATION = FigureConfig(
 )
 
 
-def camera_layout(sensor_name, raw_data):
+# NOTE(Jack): We use pattern matching callbacks to facilitate the dynamic layout -
+#       https://dash.plotly.com/pattern-matching-callbacks
+def camera_layout(sensor_name):
     return html.Div(
         [
             html.H3("Camera Layout"),
             dcc.Graph(
-                id="camera-targets-figure",
+                id={
+                    "type": "camera-figure",
+                    "sensor": sensor_name,
+                    "subtype": "targets",
+                },
                 figure=build_figure_layout(TARGET_VISUALIZATION),
             ),
             dcc.Graph(
-                id="camera-poses-figure", figure=build_figure_layout(POSE_VISUALIZATION)
+                id={"type": "camera-figure", "sensor": sensor_name, "subtype": "poses"},
+                figure=build_figure_layout(POSE_VISUALIZATION),
             ),
         ]
     )
@@ -53,10 +60,10 @@ IMU_DATA_VISUALIZATION = FigureConfig(
     "Imu Data",
     (
         SubplotConfig(
-            "Angular Velocity", AxisConfig("Time", "s"), AxisConfig("omega", "rad/s")
+            "Angular Velocity", AxisConfig("Time", "s"), AxisConfig("omega", "rad/s"), 3
         ),
         SubplotConfig(
-            "Linear Acceleration", AxisConfig("Time", "s"), AxisConfig("a", "m/s^2")
+            "Linear Acceleration", AxisConfig("Time", "s"), AxisConfig("a", "m/s^2"), 3
         ),
     ),
     "rows",

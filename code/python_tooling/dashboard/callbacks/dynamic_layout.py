@@ -6,6 +6,7 @@ from database.types import SensorType
 
 
 # TODO(Jack): At this time do we really need timestamps?
+# TODO(Jack): Refactor to get sensor type from metadata!
 @app.callback(
     Output("sensor-content-container", "children"),
     Input("sensor-selection-dropdown", "value"),
@@ -19,7 +20,7 @@ def render_sensor_panel(sensor_name, raw_data):
     sensor_type = raw_data[sensor_name]["type"]
 
     if sensor_type == SensorType.Camera:
-        return camera_layout(sensor_name, raw_data)
+        return camera_layout(sensor_name)
     elif sensor_type == SensorType.Imu:
         return imu_layout()
     else:
