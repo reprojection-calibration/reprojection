@@ -100,10 +100,8 @@ app.layout = html.Div(
                 "backgroundColor": "#f9f9f9",
             },
         ),
-
         # Dynamic content container
         html.Div(id="sensor-content-container"),
-
         # Non-visual components
         dcc.Interval(
             disabled=False,

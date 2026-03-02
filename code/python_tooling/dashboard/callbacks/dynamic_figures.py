@@ -11,8 +11,8 @@ from dashboard.server import app
 @app.callback(
     Output({"type": "camera-figure", "sensor": MATCH, "subtype": "poses"}, "figure"),
     Input({"type": "camera-figure", "sensor": MATCH, "subtype": "poses"}, "id"),
-    Input('step-selector', 'value'),
-    State("raw-data-store", "data")
+    Input("step-selector", "value"),
+    State("raw-data-store", "data"),
 )
 def update_camera_poses(composite_id, step_name, raw_data):
     if composite_id is None or step_name is None or raw_data is None:
