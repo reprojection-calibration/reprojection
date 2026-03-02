@@ -5,8 +5,8 @@ from dashboard.server import app
 # TODO(Jack): Do not hardcode counter ID!
 app.clientside_callback(
     """
-    function(composite_id, step_name, raw_data) {
-        if (!composite_id || !step_name || !raw_data) {
+    function(composite_id, frame_idx, step_name, raw_data) {
+        if (!composite_id || frame_idx == null || !raw_data) {
             return dash_clientside.no_update;
         }
         
@@ -16,7 +16,12 @@ app.clientside_callback(
             return dash_clientside.no_update;
         }
 
-        const key = Object.keys(targets)[0];
+        const keys = Object.keys(targets ?? {});
+        const key = keys[frame_idx];
+        if (!key) {
+            throw new Error(`Invalid frame_idx: ${frame_idx}`);
+        }
+        
         const target = targets[key];
         
         const points = target.points.map(row => row.slice(0, 2));
@@ -27,9 +32,11 @@ app.clientside_callback(
         patch.assign(['data', 0, 'y'], points.map(p => p[1]));
         patch.assign(['data', 1, 'x'], pixels.map(p => p[0]));
         patch.assign(['data', 1, 'y'], pixels.map(p => p[1]));
+        patch.assign(['data', 0, 'marker'], {size: 12, color: "darkgray"});
+        patch.assign(['data', 1, 'marker'], {size: 12, color: "darkgray"});
         
         const reprojection_errors = raw_data?.[sensor_name]?.reprojection_error?.[step_name];
-        if(reprojection_errors){
+        if(reprojection_errors && (key in reprojection_errors)){
             const reprojection_error = reprojection_errors[key]
 
             patch.assign(['data', 0, 'marker'], {
@@ -56,6 +63,7 @@ app.clientside_callback(
     """,
     Output({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
     Input({"type": "extracted_targets", "sensor_name": MATCH}, "id"),
+    Input({"type": "target_slider", "sensor_name": MATCH}, "value"),
     Input("step-selector", "value"),
     State("raw-data-store", "data"),
 )

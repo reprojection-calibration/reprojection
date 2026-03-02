@@ -18,7 +18,7 @@ def update_target_slider_properties(composite_id, metadata):
     except (KeyError, TypeError):
         return 0
 
-    return n_targets
+    return n_targets - 1
 
 
 @app.callback(
