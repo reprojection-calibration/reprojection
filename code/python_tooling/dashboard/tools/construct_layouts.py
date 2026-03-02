@@ -42,14 +42,13 @@ def camera_layout(sensor_name):
             html.H3("Camera Layout"),
             dcc.Graph(
                 id={
-                    "type": "camera-figure",
+                    "type": "targets",
                     "sensor": sensor_name,
-                    "subtype": "targets",
                 },
                 figure=build_figure_layout(TARGET_VISUALIZATION),
             ),
             dcc.Graph(
-                id={"type": "camera-figure", "sensor": sensor_name, "subtype": "poses"},
+                id={"type": "pose", "sensor": sensor_name},
                 figure=build_figure_layout(POSE_VISUALIZATION),
             ),
         ]
