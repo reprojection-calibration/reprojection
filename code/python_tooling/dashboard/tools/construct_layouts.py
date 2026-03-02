@@ -49,7 +49,7 @@ def camera_layout(sensor_name):
             ),
             dcc.Slider(
                 id={
-                    "type": "slider",
+                    "type": "target_slider",
                     "sensor_name": sensor_name,
                 },
                 min=0,

@@ -1,14 +1,14 @@
-from dash import MATCH, Input, Output, State, no_update
+from dash import MATCH, Input, Output, State
 
 from dashboard.server import app
 
 
 @app.callback(
-    Output({"type": "slider", "sensor_name": MATCH}, "max"),
-    Input({"type": "slider", "sensor_name": MATCH}, "id"),
+    Output({"type": "target_slider", "sensor_name": MATCH}, "max"),
+    Input({"type": "target_slider", "sensor_name": MATCH}, "id"),
     State("metadata-store", "data"),
 )
-def update_slider_properties_callback(composite_id, metadata):
+def update_target_slider_properties(composite_id, metadata):
     if composite_id is None or metadata is None:
         return 0
 
@@ -22,10 +22,10 @@ def update_slider_properties_callback(composite_id, metadata):
 
 
 @app.callback(
-    Output({"type": "slider", "sensor_name": MATCH}, "value"),
+    Output({"type": MATCH, "sensor_name": MATCH}, "value"),
     Input("play-interval", "n_intervals"),
-    State({"type": "slider", "sensor_name": MATCH}, "value"),
-    State({"type": "slider", "sensor_name": MATCH}, "max"),
+    State({"type": MATCH, "sensor_name": MATCH}, "value"),
+    State({"type": MATCH, "sensor_name": MATCH}, "max"),
 )
 def advance_slider(_, value, max_value):
     if value is None or max_value is None:
