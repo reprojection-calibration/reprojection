@@ -2,8 +2,8 @@
 # Dash instance. Please see the answer here
 # https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
 import callbacks.data_loading
-import callbacks.dynamic_layout
 import callbacks.metadata
+import callbacks.populate_sensor_panel
 import callbacks.timeseries_6d_figures
 from dash import dcc, html
 

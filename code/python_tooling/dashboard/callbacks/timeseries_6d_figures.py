@@ -26,6 +26,7 @@ def update_pose_figure(composite_id, step_name, raw_data):
 
     return timeseries_6d_to_patch(pose_data)
 
+
 @app.callback(
     Output({"type": "imu_data", "sensor": MATCH}, "figure"),
     Input({"type": "imu_data", "sensor": MATCH}, "id"),
