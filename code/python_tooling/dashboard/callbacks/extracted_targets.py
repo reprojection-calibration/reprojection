@@ -1,6 +1,6 @@
-from dashboard.server import app
+from dash import MATCH, Input, Output, State
 
-from dash import Input, Output, State, MATCH
+from dashboard.server import app
 
 # TODO(Jack): Do not hardcode counter ID!
 app.clientside_callback(
@@ -59,4 +59,3 @@ app.clientside_callback(
     Input("step-selector", "value"),
     State("raw-data-store", "data"),
 )
-

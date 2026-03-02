@@ -2,10 +2,11 @@
 # Dash instance. Please see the answer here
 # https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
 import callbacks.data_loading
+import callbacks.extracted_targets
 import callbacks.metadata
 import callbacks.populate_sensor_panel
+import callbacks.slider
 import callbacks.timeseries_6d_figures
-import callbacks.extracted_targets
 from dash import dcc, html
 
 from dashboard.server import app
@@ -101,7 +102,7 @@ app.layout = html.Div(
                 "backgroundColor": "#f9f9f9",
             },
         ),
-        # Dynamic content container
+        # Dynamic content container that holds all the sensor data visualizations
         html.Div(id="sensor-content-container"),
         # Non-visual components
         dcc.Interval(

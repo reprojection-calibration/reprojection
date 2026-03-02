@@ -47,6 +47,21 @@ def camera_layout(sensor_name):
                 },
                 figure=build_figure_layout(TARGET_VISUALIZATION),
             ),
+            dcc.Slider(
+                id={
+                    "type": "slider",
+                    "sensor_name": sensor_name,
+                },
+                min=0,
+                value=0,
+                step=1,
+                marks=None,
+                updatemode="drag",
+                tooltip={
+                    "placement": "top",
+                    "always_visible": True,
+                },
+            ),
             dcc.Graph(
                 id={"type": "pose", "sensor_name": sensor_name},
                 figure=build_figure_layout(POSE_VISUALIZATION),
