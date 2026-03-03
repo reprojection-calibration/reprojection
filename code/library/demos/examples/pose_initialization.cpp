@@ -82,5 +82,16 @@ int main() {
     database::AddPoseData(poses, "spline_initialization", sensor.sensor_name, db);
     database::AddReprojectionError(errors, "spline_initialization", sensor.sensor_name, db);
 
+    auto const [state, diagnostics2]{
+        optimization::SplineNonlinearRefinement(sensor, targets, optimized_state.camera_state, interpolated_spline)};
+
+    auto const [poses1, errors1]{
+        optimization::SplineReprojectionResiduals(sensor, targets, state.first, state.second)};
+
+
+    database::AddCalibrationStep("spline_nonlinear_refinement", db);
+    database::AddPoseData(poses1, "spline_nonlinear_refinement", sensor.sensor_name, db);
+    database::AddReprojectionError(errors1, "spline_nonlinear_refinement", sensor.sensor_name, db);
+
     return EXIT_SUCCESS;
 }
