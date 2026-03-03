@@ -1,6 +1,6 @@
 import unittest
 
-from dashboard.tools.statistics import extract_labeled_metadata
+from dashboard.tools.metadata import extract_labeled_metadata
 from database.calculate_metadata import count_data
 from database.data_formatting import load_data
 from database.types import SensorType
