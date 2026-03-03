@@ -2,7 +2,19 @@
 
 #include <gtest/gtest.h>
 
+#include "testing_utilities/constants.hpp"
+
 using namespace reprojection;
+
+TEST(CachingSerialize, CameraInfo) {
+    CameraInfo const data{"/cam/retro/123", CameraModel::DoubleSphere, testing_utilities::image_bounds};
+
+    std::string const result{caching::Serialize(data)};
+
+    std::string const gt_result{"/cam/retro/123|double_sphere|0.000,720.000,0.000,480.000|"};
+
+    EXPECT_EQ(result, gt_result);
+}
 
 TEST(CachingSerialize, CameraMeasurements) {
     ExtractedTarget const target{

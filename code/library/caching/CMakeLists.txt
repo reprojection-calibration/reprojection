@@ -13,6 +13,7 @@ set(INCLUDE_DIRECTORIES
 set(LINK_LIBRARIES
         ${OPENSSL_LIBRARIES}
         Eigen3::Eigen
+        testing_utilities
         types
 )
 AddLibrary()

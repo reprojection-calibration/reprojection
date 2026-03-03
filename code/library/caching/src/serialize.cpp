@@ -1,7 +1,20 @@
 
 #include "caching/serialize.hpp"
 
+#include "types/enums.hpp"
+
 namespace reprojection::caching {
+
+std::string Serialize(CameraInfo const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    oss << data.sensor_name << "|";
+    oss << ToString(data.camera_model) << "|";
+    oss << data.bounds.u_min << "," << data.bounds.u_max << "," << data.bounds.v_min << "," << data.bounds.v_max << "|";
+
+    return oss.str();
+}
 
 std::string Serialize(CameraMeasurements const& data) {
     std::ostringstream oss;
