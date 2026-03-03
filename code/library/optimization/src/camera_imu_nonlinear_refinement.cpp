@@ -8,11 +8,21 @@
 
 namespace reprojection::optimization {
 
-ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                               CameraState const& camera_state, spline::Se3Spline const& spline) {
-    // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
-    //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
-    //  key constraint. Do we need new tables for this?
+
+
+// TODO(Jack): Naming to reflect the fact that it also returns the poses!
+std::pair<Frames, ReprojectionErrors> SplineReprojectionResiduals(CameraInfo const& sensor,
+                                                                  CameraMeasurements const& targets,
+                                                                  CameraState const& camera_state,
+                                                                  spline::Se3Spline const& spline) {
+    Frames poses;
+    for (auto const timestamp_ns : targets | std::views::keys) {
+        auto const pose_i{spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
+        if (pose_i) {
+            poses[timestamp_ns].pose = pose_i.value();
+        }
+    }
+
     ReprojectionErrors residuals;
     for (auto const timestamp_ns : targets | std::views::keys) {
         auto const normalized_position{
@@ -42,7 +52,7 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
         residuals.insert({timestamp_ns, residuals_i});
     }
 
-    return residuals;
+    return {poses, residuals};
 }  // LCOV_EXCL_LINE
 
 }  // namespace  reprojection::optimization

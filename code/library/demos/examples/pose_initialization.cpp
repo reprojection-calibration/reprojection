@@ -58,8 +58,8 @@ int main() {
     ReprojectionErrors const initial_error{optimization::ReprojectionResiduals(sensor, targets, initial_state)};
 
     auto const aligned_initial_state{AlignRotations(initial_state)};
-    auto [optimized_state,
-          diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, aligned_initial_state)};
+    auto const [optimized_state,
+                diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, aligned_initial_state)};
     ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
 
     // Write camera initialization to database
@@ -75,17 +75,12 @@ int main() {
     }
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
-    ReprojectionErrors const interpolated_spline_error{
+    auto const [poses, errors]{
         optimization::SplineReprojectionResiduals(sensor, targets, optimized_state.camera_state, interpolated_spline)};
-    (void)interpolated_spline_error;
 
-    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
-    auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
-        {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
-    auto const [R_imu_co, _]{orientation_init};
-
-    std::cout << R_imu_co << std::endl;
-    std::cout << gravity_w.transpose() << std::endl;
+    database::AddCalibrationStep("spline_initialization", db);
+    database::AddPoseData(poses, "spline_initialization", sensor.sensor_name, db);
+    database::AddReprojectionError(errors, "spline_initialization", sensor.sensor_name, db);
 
     return EXIT_SUCCESS;
 }
