@@ -14,4 +14,4 @@ package_directory=/temporary/code/python_tooling
 python3 -m grpc_tools.protoc -I "${proto_directory}" --python_out="${package_directory}/generated" "${proto_directory}"/*.proto
 
 python3 -m pip install --editable "${package_directory}"
-python3 -m unittest discover --start-directory "${package_directory}/tests" --verbose
+python3 -m unittest discover --start-directory "${package_directory}" --verbose
