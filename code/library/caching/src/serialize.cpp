@@ -43,4 +43,19 @@ std::string Serialize(CameraMeasurements const& data) {
     return oss.str();
 }
 
+std::string Serialize(CameraState const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    for (int i{0}; i < data.intrinsics.size(); ++i) {
+        if (i > 0) {
+            oss << ',';
+        }
+        oss << data.intrinsics[i];
+    }
+    oss << "|";
+
+    return oss.str();
+}
+
 }  // namespace reprojection::caching
