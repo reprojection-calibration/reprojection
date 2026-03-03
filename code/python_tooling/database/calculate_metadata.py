@@ -18,6 +18,8 @@ def count_data(d):
     return traverse_timeseries_data(d, process)
 
 
+# TODO(Jack): We do not use this anywhere in the dashboard logic, but it is tested, and we might use it, so we will
+#  keep it...
 # NOTE(Jack): We store the reference timestamps as strings because otherwise dash, when it json serializes this data on
 # its way to the browse, will itself cast it to a string. During that process, because we have really large ints here we
 # loose some precision which makes correspondence impossible. Therefore, we preempt this mess by ourselves storing the

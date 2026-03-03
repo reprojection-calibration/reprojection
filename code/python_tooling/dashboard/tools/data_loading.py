@@ -1,9 +1,7 @@
 import os
 from enum import Enum
 
-from dash import html
-
-from database.calculate_metadata import count_data, reference_timestamps
+from database.calculate_metadata import count_data
 from database.data_formatting import load_data
 
 
@@ -33,9 +31,8 @@ def refresh_database_list(db_dir):
 def load_database(db_file):
     raw_data = load_data(db_file)
     metadata = count_data(raw_data)
-    timestamps = reference_timestamps(raw_data)
 
-    return raw_data, metadata, timestamps
+    return raw_data, metadata
 
 
 def refresh_sensor_list(metadata):

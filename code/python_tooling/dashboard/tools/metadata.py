@@ -84,13 +84,15 @@ def build_sensor_statistics_html(sensor_metadata):
 
 
 def build_step_selector(sensor_metadata):
-    step_names = list(
-        {
-            key
-            for x in sensor_metadata
-            if x != "type" and x != "measurements"
-            for key in sensor_metadata[x]
-        }
+    step_names = sorted(
+        list(
+            {
+                key
+                for x in sensor_metadata
+                if x != "type" and x != "measurements"
+                for key in sensor_metadata[x]
+            }
+        )
     )
 
     return dcc.RadioItems(

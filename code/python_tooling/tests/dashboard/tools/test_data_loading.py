@@ -42,7 +42,7 @@ class TestDataLoading(unittest.TestCase):
         self.assertEqual(db_paths, ([], ""))
 
     def test_load_database(self):
-        raw_data, metadata, timestamps = load_database(self.db_path)
+        raw_data, metadata = load_database(self.db_path)
 
         gt_metadata = {
             "/cam0/image_raw": {
@@ -58,14 +58,13 @@ class TestDataLoading(unittest.TestCase):
 
         self.assertEqual(count_data(raw_data), gt_metadata)
         self.assertEqual(metadata, gt_metadata)
-        self.assertEqual(timestamps, reference_timestamps(raw_data))
 
     def test_load_database_adversarial(self):
         result = load_database(None)
-        self.assertEqual(result, (None, None, None))
+        self.assertEqual(result, (None, None))
 
         result = load_database("file/that/does/not/exist.db3")
-        self.assertEqual(result, (None, None, None))
+        self.assertEqual(result, (None, None))
 
     def test_refresh_sensor_list(self):
         data = load_data(self.db_path)

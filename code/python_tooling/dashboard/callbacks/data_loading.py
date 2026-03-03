@@ -21,7 +21,6 @@ def refresh_database_list_callback(db_dir, _):
 @app.callback(
     Output("raw-data-store", "data"),
     Output("metadata-store", "data"),
-    Output("timestamp-store", "data"),
     Input("database-selection-dropdown", "value"),
 )
 def load_database_callback(db_file):

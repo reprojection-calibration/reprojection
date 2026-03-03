@@ -112,6 +112,5 @@ app.layout = html.Div(
         ),
         dcc.Store(id="raw-data-store"),
         dcc.Store(id="metadata-store"),
-        dcc.Store(id="timestamp-store"),
     ]
 )

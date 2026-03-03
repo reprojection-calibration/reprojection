@@ -20,9 +20,7 @@ void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationD
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, step_name);
-    } catch (std::runtime_error const& e) {
-        // TODO(Jack): Clearly the ErrorMessage() has outlived its useful scope because we have to pass in dummy values
-        //  here and below.
+    } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
             ErrorMessage("AddCalibrationStep()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
                          std::string(sqlite3_errmsg(database->db)))));            // LCOV_EXCL_LINE
@@ -113,7 +111,6 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
                                                         std::size(buffer), database->db)};
 
         if (std::holds_alternative<SqliteErrorCode>(result)) {
-            // TODO(Jack): Should also add step_name?
             throw std::runtime_error(ErrorMessage(key, "AddReprojectionError()", std::get<SqliteErrorCode>(result),
                                                   std::string(sqlite3_errmsg(database->db))));
         }

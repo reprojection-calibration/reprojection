@@ -39,7 +39,6 @@ std::string ToString(SqliteErrorCode const enumerator) {
                                                  void const* const blob_ptr, int const blob_size, sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
-    // TODO(Jack): Do not change argument order here - if there is a step_name that needs to come first!
     try {
         if (key.step_name.has_value()) {
             Bind(statement.stmt, 1, key.step_name.value());
