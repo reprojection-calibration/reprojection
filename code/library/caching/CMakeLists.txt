@@ -5,6 +5,7 @@ find_package(OpenSSL REQUIRED)
 
 set(SRC_FILES
         src/hashing.cpp
+        src/serialize.cpp
 )
 set(INCLUDE_DIRECTORIES
         ${OPENSSL_INCLUDE_DIRS}
@@ -18,5 +19,6 @@ AddLibrary()
 
 set(TESTS
         src/hashing.test.cpp
+        test/serialize.test.cpp
 )
 AddTests()
