@@ -1,4 +1,4 @@
-#include "caching/serialize.hpp"
+#include "serialize.hpp"
 
 #include <gtest/gtest.h>
 

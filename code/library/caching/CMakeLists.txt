@@ -4,6 +4,7 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 set(SRC_FILES
+        src/cache_keys.cpp
         src/hashing.cpp
         src/serialize.cpp
 )
@@ -20,6 +21,7 @@ AddLibrary()
 
 set(TESTS
         src/hashing.test.cpp
-        test/serialize.test.cpp
+        src/serialize.test.cpp
+        test/cache_keys.test.cpp
 )
 AddTests()
