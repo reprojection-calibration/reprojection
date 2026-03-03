@@ -40,7 +40,7 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
     // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known
     // problem.
     uint64_t const t0_ns{std::cbegin(measurements)->first};
-    uint64_t const tn_ns{std::crbegin(measurements)->first};
+    uint64_t const tn_ns{std::crbegin(measurements)->first};  // Reverse iterator ("rbegin")!
     uint64_t const delta_t_ns{(tn_ns - t0_ns) / num_segments};
     TimeHandler const time_handler{t0_ns, delta_t_ns};
 

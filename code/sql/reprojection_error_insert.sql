@@ -1,2 +1,2 @@
-INSERT INTO reprojection_error (timestamp_ns, sensor_name, type, data)
+INSERT INTO reprojection_error (step_name, sensor_name, timestamp_ns, data)
 VALUES (?, ?, ?, ?);

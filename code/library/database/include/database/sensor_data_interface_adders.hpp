@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "database/calibration_database.hpp"
-#include "database/database_data_types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
 
@@ -13,17 +12,16 @@
 
 namespace reprojection::database {
 
+void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database);
+
 // RENAME - remove the data suffix
 void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
                             std::shared_ptr<CalibrationDatabase> const database);
 
-void AddCameraPoseData(Frames const& data, std::string_view sensor_name, PoseType const type,
-                       std::shared_ptr<CalibrationDatabase> const database);
-
-void AddPoseData(Frames const& data, std::string_view sensor_name, PoseType const type, std::string_view sql,
+void AddPoseData(Frames const& data, std::string_view step_name, std::string_view sensor_name,
                  std::shared_ptr<CalibrationDatabase> const database);
 
-void AddReprojectionError(ReprojectionErrors const& data, std::string_view sensor_name, PoseType const type,
+void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_name, std::string_view sensor_name,
                           std::shared_ptr<CalibrationDatabase> const database);
 
 void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,

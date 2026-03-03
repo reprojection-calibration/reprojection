@@ -64,12 +64,14 @@ int main() {
 
     // Write camera initialization to database
     try {
-        database::AddCameraPoseData(initial_state.frames, sensor.sensor_name, database::PoseType::Initial, db);
-        database::AddReprojectionError(initial_error, sensor.sensor_name, database::PoseType::Initial, db);
-        database::AddCameraPoseData(optimized_state.frames, sensor.sensor_name, database::PoseType::Optimized, db);
-        database::AddReprojectionError(optimized_error, sensor.sensor_name, database::PoseType::Optimized, db);
-    } catch (...) {
-        std::cout << "\n\tPseudo cache hit\n" << std::endl;
+        database::AddCalibrationStep("linear_pose_initialization", db);
+        database::AddPoseData(initial_state.frames, "linear_pose_initialization", sensor.sensor_name, db);
+        database::AddReprojectionError(initial_error, "linear_pose_initialization", sensor.sensor_name, db);
+        database::AddCalibrationStep("nonlinear_refinement", db);
+        database::AddPoseData(optimized_state.frames, "nonlinear_refinement", sensor.sensor_name, db);
+        database::AddReprojectionError(optimized_error, "nonlinear_refinement", sensor.sensor_name, db);
+    } catch (std::exception const& e) {
+        std::cout << "Caught " << e.what() << std::endl;
     }
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};

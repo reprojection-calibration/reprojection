@@ -1,6 +1,6 @@
-SELECT timestamp_ns,
+SELECT step_name,
        sensor_name,
-       data,
-       type
+       timestamp_ns,
+       data
 FROM reprojection_error
 ORDER BY timestamp_ns ASC;

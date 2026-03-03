@@ -3,7 +3,6 @@
 #include <iostream>
 
 // TODO(Jack): Is this not kind of a circular include?
-#include "database/sensor_data_interface_adders.hpp"
 #include "database/sqlite_wrappers.hpp"
 
 namespace reprojection::database {
@@ -36,33 +35,19 @@ std::string ToString(SqliteErrorCode const enumerator) {
     return true;
 }
 
-[[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                         std::string_view sensor_name, void const* const blob_ptr,
-                                                         int const blob_size, sqlite3* const db) {
-    return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db);
-}
-
-[[nodiscard]] SqliteResult Sqlite3Tools::AddTimeNameTypeBlob(std::string const& sql_statement,
-                                                             uint64_t const timestamp_ns, PoseType const type,
-                                                             std::string_view sensor_name, void const* const blob_ptr,
-                                                             int const blob_size, sqlite3* const db) {
-    return AddBlob(sql_statement, timestamp_ns, sensor_name, blob_ptr, blob_size, db, type);
-}
-
-[[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                 std::string_view sensor_name, void const* const blob_ptr,
-                                                 int const blob_size, sqlite3* const db,
-                                                 std::optional<PoseType> const& type) {
+[[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, DataKey const& key,
+                                                 void const* const blob_ptr, int const blob_size, sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     try {
-        Bind(statement.stmt, 1, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
-        Bind(statement.stmt, 2, std::string(sensor_name).c_str());
-
-        if (type.has_value()) {
-            Bind(statement.stmt, 3, ToString(type.value()));
+        if (key.step_name.has_value()) {
+            Bind(statement.stmt, 1, key.step_name.value());
+            Bind(statement.stmt, 2, std::string(key.sensor_name).c_str());
+            Bind(statement.stmt, 3, static_cast<int64_t>(key.timestamp_ns));  // Possible dangerous cast!
             BindBlob(statement.stmt, 4, blob_ptr, blob_size);
         } else {
+            Bind(statement.stmt, 1, std::string(key.sensor_name).c_str());
+            Bind(statement.stmt, 2, static_cast<int64_t>(key.timestamp_ns));  // Possible dangerous cast!
             BindBlob(statement.stmt, 3, blob_ptr, blob_size);
         }
     } catch (std::runtime_error const& e) {
@@ -76,11 +61,18 @@ std::string ToString(SqliteErrorCode const enumerator) {
     return SqliteFlag::Ok;
 }
 
-std::string ErrorMessage(std::string const& function_name, std::string_view sensor_name, uint64_t const timestamp_ns,
-                         SqliteErrorCode const error_code, std::string const& db_error_message) {
-    return function_name + " failed at timestamp_ns: " + std::to_string(timestamp_ns) +
-           " for sensor: " + std::string(sensor_name) + " with: " + ToString(error_code) +
-           " and database error message: " + db_error_message;
+// TODO(Jack): This function is a monster! We need to really think about a better solution here.
+std::string ErrorMessage(std::string const& function_name, SqliteErrorCode const error_code,
+                         std::string const& db_error_message) {
+    return function_name + " function failed with -\n\terror_code: " + ToString(error_code) +
+           "\n\tdb_error_message: " + db_error_message;
+}
+
+std::string ErrorMessage(DataKey const& key, std::string const& function_name, SqliteErrorCode const error_code,
+                         std::string const& db_error_message) {
+    return "At data key -\n\tstep: " + (key.step_name.has_value() ? key.step_name.value() : "N/A") +
+           "\n\tsensor_name: " + key.sensor_name + "\n\ttimestamp_ns: " + std::to_string(key.timestamp_ns) + "\n" +
+           ErrorMessage(function_name, error_code, db_error_message);
 }
 
 }  // namespace reprojection::database

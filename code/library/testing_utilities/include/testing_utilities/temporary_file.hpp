@@ -4,6 +4,9 @@
 
 namespace reprojection::testing_utilities {
 
+// TODO(Jack): We primarily used this for testing the database code, but it turns out we might just be able to create a
+//  database in memory (https://stackoverflow.com/questions/304393/how-do-i-create-a-sqllite3-in-memory-database). If so
+//  we could maybe remove all this and simplify the database testing.
 class TemporaryFile {
    public:
     // NOTE(Jack): Technically the file extension does not physically matter. For example a file does not need to have a

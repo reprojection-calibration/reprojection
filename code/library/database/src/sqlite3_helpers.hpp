@@ -3,12 +3,11 @@
 #include <sqlite3.h>
 
 #include <cstdint>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-#include "database/database_data_types.hpp"
+#include "types.hpp"
 
 namespace reprojection::database {
 
@@ -41,27 +40,16 @@ struct Sqlite3Tools {
 
     // TODO(Jack): Test!
     // TODO(Jack): My original intention was a AddBlob function where the blob itself was the only parameter, and the
-    // rest of sql statement was formed dynamically before calling this function. That would allow us to use this add
-    // blob function for any table with any possible layout, because only the blob component was being added in this
-    // method. However when we started to put the sql definitions in .sql files we need to make the statements as
-    // generic as possible which meant using place holders (i.e. ? etc.). This means that in the AddBlob method we
-    // actually need to fill out the other attributes too, for example the timestamp_ns and sensor_name. This fact
-    // eliminated and generic component of the function and it now means that this method can only be used for inserting
-    // into a table that holds blobs indexed by timestamp and the sensor name. This is no strictly a problem, but the
-    // fact that this method now takes six arguments tells you that maybe we are missing an abstraction :)
-    [[nodiscard]] static SqliteResult AddTimeNameBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                      std::string_view sensor_name, void const* const blob_ptr,
-                                                      int const blob_size, sqlite3* const db);
-
-    [[nodiscard]] static SqliteResult AddTimeNameTypeBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                                          PoseType const type, std::string_view sensor_name,
-                                                          void const* const blob_ptr, int const blob_size,
-                                                          sqlite3* const db);
-
-    [[nodiscard]] static SqliteResult AddBlob(std::string const& sql_statement, uint64_t const timestamp_ns,
-                                              std::string_view sensor_name, void const* const blob_ptr,
-                                              int const blob_size, sqlite3* const db,
-                                              std::optional<PoseType> const& type = std::nullopt);
+    //  rest of sql statement was formed dynamically before calling this function. That would allow us to use this add
+    //  blob function for any table with any possible layout, because only the blob component was being added in this
+    //  method. However when we started to put the sql definitions in .sql files we need to make the statements as
+    //  generic as possible which meant using place holders (i.e. ? etc.). This means that in the AddBlob method we
+    //  actually need to fill out the other attributes too, for example the timestamp_ns and sensor_name. This fact
+    //  eliminated and generic component of the function and it now means that this method can only be used for
+    //  inserting into a table that holds blobs indexed by timestamp and the sensor name. This is no strictly a problem,
+    //  but the fact that this method now takes six arguments tells you that maybe we are missing an abstraction :)
+    [[nodiscard]] static SqliteResult AddBlob(std::string const& sql_statement, DataKey const& key,
+                                              void const* const blob_ptr, int const blob_size, sqlite3* const db);
 
     static void Bind(sqlite3_stmt* const stmt, int const index, std::string_view value) {
         if (sqlite3_bind_text(stmt, index, std::string(value).c_str(), -1, SQLITE_TRANSIENT) !=
@@ -90,7 +78,10 @@ struct Sqlite3Tools {
     }
 };
 
-std::string ErrorMessage(std::string const& function_name, std::string_view sensor_name, uint64_t const timestamp_ns,
-                         SqliteErrorCode const error_code, std::string const& db_error_message);
+std::string ErrorMessage(std::string const& function_name, SqliteErrorCode const error_code,
+                         std::string const& db_error_message);
+
+std::string ErrorMessage(DataKey const& key, std::string const& function_name, SqliteErrorCode const error_code,
+                         std::string const& db_error_message);
 
 }  // namespace reprojection::database

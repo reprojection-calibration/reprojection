@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS reprojection_error
 (
-    timestamp_ns INTEGER NOT NULL,
+    step_name    TEXT    NOT NULL,
     sensor_name  TEXT    NOT NULL,
-    type         TEXT    NOT NULL,
+    timestamp_ns INTEGER NOT NULL,
     data         BLOB    NOT NULL,
-    PRIMARY KEY (timestamp_ns, sensor_name, type),
-    FOREIGN KEY (timestamp_ns, sensor_name, type)
-        REFERENCES camera_poses (timestamp_ns, sensor_name, type)
+    PRIMARY KEY (step_name, sensor_name, timestamp_ns),
+    FOREIGN KEY (step_name, sensor_name, timestamp_ns)
+        REFERENCES poses (step_name, sensor_name, timestamp_ns)
 );

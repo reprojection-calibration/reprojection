@@ -16,7 +16,6 @@
 #include "types/sensor_data_types.hpp"
 
 using namespace reprojection;
-using PoseType = database::PoseType;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
 TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {

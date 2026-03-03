@@ -1,2 +1,2 @@
-INSERT INTO extracted_targets (timestamp_ns, sensor_name, data)
+INSERT INTO extracted_targets (sensor_name, timestamp_ns, data)
 VALUES (?, ?, ?);
