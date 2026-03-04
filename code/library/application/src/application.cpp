@@ -1,15 +1,17 @@
 #include "application/application.hpp"
 
 #include "caching/cache_keys.hpp"
+#include "calibration/linear_pose_initialization.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
+#include "optimization/camera_nonlinear_refinement.hpp"
 
 namespace reprojection::application {
 
 std::pair<CacheStatus, CameraState> FocalLengthInitialization(
     CameraMeasurements const& targets, CameraInfo const& camera_info,
     std::shared_ptr<database::CalibrationDatabase> const database) {
-    std::string const step_name{"focal_length_initialization"}; // TODO USE ENUM
+    std::string const step_name{"focal_length_initialization"};  // TODO USE ENUM
     std::string const cache_key{caching::CacheKey(camera_info, targets)};
     CacheStatus const status{CacheState(database, step_name, cache_key)};
 
@@ -33,6 +35,42 @@ std::pair<CacheStatus, CameraState> FocalLengthInitialization(
         auto const [_, camera_state]{result.value()};
 
         return {status, camera_state};
+    } else {
+        throw std::runtime_error("Library implementation error - unknown CacheStatus!!!!");
+    }
+}
+
+std::pair<CacheStatus, OptimizationState> LinearPoseInitialization(
+    CameraInfo const& camera_info, CameraMeasurements const& targets, CameraState const& camera_state,
+    std::shared_ptr<database::CalibrationDatabase> const database) {
+    std::string const step_name{"linear_pose_initialization"};
+    std::string const cache_key{caching::CacheKey(camera_info, targets, camera_state)};
+    CacheStatus const status{CacheState(database, step_name, cache_key)};
+
+    if (status == CacheStatus::StepNameMiss or status == CacheStatus::CacheKeyMiss) {
+        if (status == CacheStatus::StepNameMiss) {
+            database::AddCalibrationStep(step_name, cache_key, database);
+        } else {
+            std::cout << "cache key update - YOU STILL NEED TO IMPLEMENT THIS!!!" << std::endl;
+            exit(1);
+        }
+
+        auto const initial_state{calibration::LinearPoseInitialization(camera_info, targets, camera_state)};
+        ReprojectionErrors const initial_error{
+            optimization::ReprojectionResiduals(camera_info, targets, initial_state)};
+
+        database::AddPoseData(initial_state.frames, "linear_pose_initialization", camera_info.sensor_name, database);
+        database::AddReprojectionError(initial_error, "linear_pose_initialization", camera_info.sensor_name, database);
+
+        // ERROR WE JUST RETURN BLANK!
+        return {status, initial_state};
+    } else if (status == CacheStatus::CacheHit) {
+        // TODO(Jack): Theoretically we could also load the intrinsics, but as they are passed in via camera_state we
+        //  will just use those instead. Does that violate the principle of least suprise? I mean the
+        //  calibration::LinearPoseInitialization also just copies camera_state from the input.
+
+        // TODO LOAD POSES AND BUILD OPTIMIZAZTIONSTATE!!!
+        return {status, {}};
     } else {
         throw std::runtime_error("Library implementation error - unknown CacheStatus!!!!");
     }
