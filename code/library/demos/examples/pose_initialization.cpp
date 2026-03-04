@@ -4,12 +4,10 @@
 #include "application/application.hpp"
 #include "caching/cache_keys.hpp"
 #include "calibration/camera_imu_initialization.hpp"
-
 #include "database/calibration_database.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
 #include "optimization/camera_imu_nonlinear_refinement.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
 
@@ -70,26 +68,14 @@ int main() {
                 camera_state]{application::FocalLengthInitialization(camera_measurements, camera_info, db)};
     std::cout << "Focal length initialization status:\n\t" + ToString(cache_status_fli) << std::endl;
 
-    auto const [cache_status_lpi,
-            initial_state]{application::LinearPoseInitialization(camera_info, camera_measurements, camera_state, db)};
+    auto const [cache_status_lpi, initial_state]{
+        application::LinearPoseInitialization(camera_info, camera_measurements, camera_state, db)};
     std::cout << "Linear pose initialization status:\n\t" + ToString(cache_status_lpi) << std::endl;
 
-
-
     auto const aligned_initial_state{AlignRotations(initial_state)};
-    auto const [optimized_state, _]{
-        optimization::CameraNonlinearRefinement(camera_info, camera_measurements, aligned_initial_state)};
-    ReprojectionErrors const optimized_error{
-        optimization::ReprojectionResiduals(camera_info, camera_measurements, optimized_state)};
-
-    // Write camera initialization to database
-    try {
-        database::AddCalibrationStep("nonlinear_refinement", "", db);
-        database::AddPoseData(optimized_state.frames, "nonlinear_refinement", camera_info.sensor_name, db);
-        database::AddReprojectionError(optimized_error, "nonlinear_refinement", camera_info.sensor_name, db);
-    } catch (std::exception const& e) {
-        std::cout << "Caught " << e.what() << std::endl;
-    }
+    auto const [cache_status_cnr, optimized_state]{
+        application::CameraNonlinearRefinement(camera_info, camera_measurements, aligned_initial_state, db)};
+    std::cout << "Camera nonlinear refinement status:\n\t" + ToString(cache_status_cnr) << std::endl;
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     auto const [poses, errors]{optimization::SplineReprojectionResiduals(
@@ -99,8 +85,8 @@ int main() {
     database::AddPoseData(poses, "spline_initialization", camera_info.sensor_name, db);
     database::AddReprojectionError(errors, "spline_initialization", camera_info.sensor_name, db);
 
-    auto const [state, _1]{optimization::SplineNonlinearRefinement(
-        camera_info, camera_measurements, optimized_state.camera_state, interpolated_spline)};
+    auto const [state, _1]{optimization::SplineNonlinearRefinement(camera_info, camera_measurements,
+                                                                   optimized_state.camera_state, interpolated_spline)};
 
     auto const [poses1, errors1]{
         optimization::SplineReprojectionResiduals(camera_info, camera_measurements, state.first, state.second)};

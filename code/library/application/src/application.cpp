@@ -19,13 +19,11 @@ std::pair<CacheStatus, CameraState> FocalLengthInitialization(
     if (status == CacheStatus::StepNameMiss or status == CacheStatus::CacheKeyMiss) {
         std::cout << "calculate the focal length initialization! - YOU STILL NEED TO IMPLEMENT THIS!!!" << std::endl;
 
-
         if (status == CacheStatus::StepNameMiss) {
             database::AddCalibrationStep(step_name, cache_key, database);
         } else {
             std::cout << "cache key update - YOU STILL NEED TO IMPLEMENT THIS!!!" << std::endl;
         }
-
 
         // ERROR WE JUST RETURN BLANK!
         return {status, {}};
@@ -72,6 +70,45 @@ std::pair<CacheStatus, OptimizationState> LinearPoseInitialization(
         Frames const frames{database::GetPoses(database, step_name, camera_info.sensor_name)};
 
         return {status, {camera_state, frames}};
+    } else {
+        throw std::runtime_error("Library implementation error - unknown CacheStatus!!!!");
+    }
+}
+
+std::pair<CacheStatus, OptimizationState> CameraNonlinearRefinement(
+    CameraInfo const& camera_info, CameraMeasurements const& targets, OptimizationState const& optimization_state,
+    std::shared_ptr<database::CalibrationDatabase> const database) {
+    std::string const step_name{"nonlinear_refinement"};
+    std::string const cache_key{caching::CacheKey(camera_info, targets, optimization_state)};
+    CacheStatus const status{CacheState(database, step_name, cache_key)};
+
+    if (status == CacheStatus::StepNameMiss or status == CacheStatus::CacheKeyMiss) {
+        auto const [optimized_state,
+                    _]{optimization::CameraNonlinearRefinement(camera_info, targets, optimization_state)};
+        ReprojectionErrors const optimized_error{
+            optimization::ReprojectionResiduals(camera_info, targets, optimized_state)};
+
+        if (status == CacheStatus::StepNameMiss) {
+            database::AddCalibrationStep(step_name, cache_key, database);
+        } else {
+            std::cout << "cache key update - YOU STILL NEED TO IMPLEMENT THIS!!!" << std::endl;
+            exit(1);
+        }
+        database::AddPoseData(optimized_state.frames, step_name, camera_info.sensor_name, database);
+        database::AddReprojectionError(optimized_error, step_name, camera_info.sensor_name, database);
+        database::AddIntrinsics(camera_info, optimization_state.camera_state, step_name, database);
+
+        // ERROR WE JUST RETURN BLANK!
+        return {status, optimized_state};
+    } else if (status == CacheStatus::CacheHit) {
+        auto const loaded_intrinsics{database::GetIntrinsic(database, step_name, camera_info.sensor_name)};
+        if (not loaded_intrinsics) {
+            throw std::runtime_error("WE NEED  A REAL ERROR HANDLING STRATEGY");
+        }
+
+        Frames const frames{database::GetPoses(database, step_name, camera_info.sensor_name)};
+
+        return {status, {loaded_intrinsics->second, frames}};
     } else {
         throw std::runtime_error("Library implementation error - unknown CacheStatus!!!!");
     }
