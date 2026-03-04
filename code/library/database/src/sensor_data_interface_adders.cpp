@@ -16,11 +16,13 @@
 
 namespace reprojection::database {
 
-void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database) {
+// TODO(Jack): Refactor to a specific cache table that holds the cache keys specific for each sensor.
+void AddCalibrationStep(std::string_view step_name, std::string_view cache_key, std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::calibration_steps_insert};
 
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, step_name);
+        Sqlite3Tools::Bind(statement.stmt, 2, cache_key);
     } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
             ErrorMessage("AddCalibrationStep()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
@@ -57,18 +59,20 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
     }
 }
 
+// TODO TEST
 void AddIntrinsics(CameraInfo const& info, CameraState const& intrinsics, std::string_view step_name,
                    std::shared_ptr<CalibrationDatabase> const database) {
     SqlStatement const statement{database->db, sql_statements::intrinsics_insert};
 
     DataKey const key{step_name, info.sensor_name, 0};
+    std::string const intrinsic_toml{ToToml(info.camera_model, intrinsics.intrinsics)};
     try {
         Sqlite3Tools::Bind(statement.stmt, 1, key.step_name.value());
         Sqlite3Tools::Bind(statement.stmt, 2, key.sensor_name);
         Sqlite3Tools::Bind(statement.stmt, 3, reprojection::ToString(info.camera_model));
         Sqlite3Tools::Bind(statement.stmt, 4, info.bounds.u_max);
         Sqlite3Tools::Bind(statement.stmt, 5, info.bounds.v_max);
-        Sqlite3Tools::Bind(statement.stmt, 6, ToToml(info.camera_model, intrinsics.intrinsics));
+        Sqlite3Tools::Bind(statement.stmt, 6, intrinsic_toml);
     } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
             ErrorMessage(key, "AddIntrinsics()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
