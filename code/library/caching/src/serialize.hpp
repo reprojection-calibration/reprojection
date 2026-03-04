@@ -12,4 +12,6 @@ std::string Serialize(CameraMeasurements const& data);
 
 std::string Serialize(CameraState const& data);
 
+std::string Serialize(Frames const& data);
+
 }  // namespace reprojection::caching

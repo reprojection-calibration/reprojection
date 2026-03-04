@@ -58,4 +58,22 @@ std::string Serialize(CameraState const& data) {
     return oss.str();
 }
 
+std::string Serialize(Frames const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    for (auto const& [timestamp_ns, frame] : data) {
+        oss << timestamp_ns << "|";
+        for (int i{0}; i < frame.pose.rows(); ++i) {
+            if (i > 0) {
+                oss << ',';
+            }
+            oss << frame.pose.row(i);
+        }
+        oss << "|";
+    }
+
+    return oss.str();
+}
+
 }  // namespace reprojection::caching
