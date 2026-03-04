@@ -9,13 +9,14 @@ namespace reprojection::application {
 std::pair<CacheStatus, CameraState> FocalLengthInitialization(
     CameraMeasurements const& targets, CameraInfo const& camera_info,
     std::shared_ptr<database::CalibrationDatabase> const database) {
+    std::string const step_name{"focal_length_initialization"}; // TODO USE ENUM
     std::string const cache_key{caching::CacheKey(camera_info, targets)};
-    CacheStatus const status{CacheState(database, "focal_length_initialization", cache_key)};
+    CacheStatus const status{CacheState(database, step_name, cache_key)};
 
     // TODO(Jack): This logic of handling the step table cache key update should be generic for all cases!
     if (status == CacheStatus::StepNameMiss or status == CacheStatus::CacheKeyMiss) {
         if (status == CacheStatus::StepNameMiss) {
-            database::AddCalibrationStep("focal_length_initialization", cache_key, database);
+            database::AddCalibrationStep(step_name, cache_key, database);
         } else {
             std::cout << "cache key update - YOU STILL NEED TO IMPLEMENT THIS!!!" << std::endl;
         }
@@ -25,7 +26,7 @@ std::pair<CacheStatus, CameraState> FocalLengthInitialization(
         // ERROR WE JUST RETURN BLANK!
         return {status, {}};
     } else if (status == CacheStatus::CacheHit) {
-        auto const result{GetIntrinsic(database, "focal_length_initialization", camera_info.sensor_name)};
+        auto const result{GetIntrinsic(database, step_name, camera_info.sensor_name)};
         if (not result.has_value()) {
             throw std::runtime_error("We need a real error handling strategy here!");
         }

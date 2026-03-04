@@ -1,6 +1,7 @@
 #include <map>
 #include <ranges>
 
+#include "caching/cache_keys.hpp"
 #include "calibration/camera_imu_initialization.hpp"
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
@@ -64,10 +65,10 @@ int main() {
 
     // Write camera initialization to database
     try {
-        database::AddCalibrationStep("linear_pose_initialization", db);
+        database::AddCalibrationStep("linear_pose_initialization", "", db);
         database::AddPoseData(initial_state.frames, "linear_pose_initialization", sensor.sensor_name, db);
         database::AddReprojectionError(initial_error, "linear_pose_initialization", sensor.sensor_name, db);
-        database::AddCalibrationStep("nonlinear_refinement", db);
+        database::AddCalibrationStep("nonlinear_refinement", "", db);
         database::AddPoseData(optimized_state.frames, "nonlinear_refinement", sensor.sensor_name, db);
         database::AddReprojectionError(optimized_error, "nonlinear_refinement", sensor.sensor_name, db);
     } catch (std::exception const& e) {
@@ -78,18 +79,16 @@ int main() {
     auto const [poses, errors]{
         optimization::SplineReprojectionResiduals(sensor, targets, optimized_state.camera_state, interpolated_spline)};
 
-    database::AddCalibrationStep("spline_initialization", db);
+    database::AddCalibrationStep("spline_initialization", "", db);
     database::AddPoseData(poses, "spline_initialization", sensor.sensor_name, db);
     database::AddReprojectionError(errors, "spline_initialization", sensor.sensor_name, db);
 
     auto const [state, diagnostics2]{
         optimization::SplineNonlinearRefinement(sensor, targets, optimized_state.camera_state, interpolated_spline)};
 
-    auto const [poses1, errors1]{
-        optimization::SplineReprojectionResiduals(sensor, targets, state.first, state.second)};
+    auto const [poses1, errors1]{optimization::SplineReprojectionResiduals(sensor, targets, state.first, state.second)};
 
-
-    database::AddCalibrationStep("spline_nonlinear_refinement", db);
+    database::AddCalibrationStep("spline_nonlinear_refinement", "", db);
     database::AddPoseData(poses1, "spline_nonlinear_refinement", sensor.sensor_name, db);
     database::AddReprojectionError(errors1, "spline_nonlinear_refinement", sensor.sensor_name, db);
 
