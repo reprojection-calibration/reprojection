@@ -168,6 +168,3 @@ RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends 
 
 # TODO PUT IN PROPER INSTALL SCRIPT (also downloaded as part of python dep install)
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes libssl-dev; rm --force --recursive /var/lib/apt/lists/*
-
-# TODO PUT IN PROPER INSTALL SCRIPT (also downloaded as part of python dep install)
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes nlohmann-json3-dev; rm --force --recursive /var/lib/apt/lists/*

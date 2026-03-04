@@ -5,8 +5,8 @@
 
 namespace reprojection::database {
 
-std::string ToJson(CameraModel const type, ArrayXd const& intrinsics);
+std::string ToToml(CameraModel const type, ArrayXd const& intrinsics);
 
-ArrayXd FromJson(CameraModel const type, std::string const& json_str);
+ArrayXd FromToml(CameraModel const type, std::string const& json_str);
 
 }

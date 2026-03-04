@@ -68,7 +68,7 @@ void AddIntrinsics(CameraInfo const& info, CameraState const& intrinsics, std::s
         Sqlite3Tools::Bind(statement.stmt, 3, reprojection::ToString(info.camera_model));
         Sqlite3Tools::Bind(statement.stmt, 4, info.bounds.u_max);
         Sqlite3Tools::Bind(statement.stmt, 5, info.bounds.v_max);
-        Sqlite3Tools::Bind(statement.stmt, 6, ToJson(info.camera_model, intrinsics.intrinsics));
+        Sqlite3Tools::Bind(statement.stmt, 6, ToToml(info.camera_model, intrinsics.intrinsics));
     } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
         std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
             ErrorMessage(key, "AddIntrinsics()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
