@@ -1,5 +1,6 @@
 #include "json_converters.hpp"
 
+#include <nlohmann/json.hpp>
 #include <toml++/toml.hpp>
 
 namespace reprojection::database {
@@ -21,22 +22,20 @@ std::string ToJson(CameraModel const type, ArrayXd const& intrinsics) {
     return oss.str();
 }
 
-
 // WARN JUS TCOPY AND PASTED
 ArrayXd FromJson(CameraModel const type, std::string const& json_str) {
     if (type == CameraModel::DoubleSphere) {
-        auto tbl = toml::parse(json_str);  // toml++ can parse JSON
+        auto j = nlohmann::json::parse(json_str);
         ArrayXd intrinsics(6);
-        intrinsics[0] = tbl["fx"].value<double>().value();
-        intrinsics[1] = tbl["fy"].value<double>().value();
-        intrinsics[2] = tbl["cx"].value<double>().value();
-        intrinsics[3] = tbl["cy"].value<double>().value();
-        intrinsics[4] = tbl["xi"].value<double>().value();
-        intrinsics[5] = tbl["alpha"].value<double>().value();
+        intrinsics[0] = j["fx"].get<double>();
+        intrinsics[1] = j["fy"].get<double>();
+        intrinsics[2] = j["cx"].get<double>();
+        intrinsics[3] = j["cy"].get<double>();
+        intrinsics[4] = j["xi"].get<double>();
+        intrinsics[5] = j["alpha"].get<double>();
         return intrinsics;
     } else {
         throw std::runtime_error("Implement FromJson for other types!");
     }
 }
-
 }  // namespace reprojection::database

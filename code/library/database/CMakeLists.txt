@@ -2,6 +2,7 @@ set(LIBRARY_NAME "database")
 
 find_package(Ceres REQUIRED) # REMOVE
 find_package(Eigen3 REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(SQLite3 REQUIRED)
@@ -76,6 +77,7 @@ set(LINK_LIBRARIES
         Ceres::ceres # REMOVE
         database_proto
         Eigen3::Eigen
+        nlohmann_json::nlohmann_json
         ${OpenCV_LIBS}
         protobuf::libprotobuf
         SQLite::SQLite3
