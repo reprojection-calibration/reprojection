@@ -45,7 +45,7 @@ TEST(CachingCacheKeys, CameraNonlinearRefinement) {
     OptimizationState const optimization_state{camera_state, frames};
 
     std::string const result{caching::CacheKey(camera_info, camera_measurements, optimization_state)};
-    std::string const gt_result{"d82a4f009e0c90531726608bcd5c52c1952ada5d0f3de04eb625cb3a48f87da0"};
+    std::string const gt_result{"79854575d0287c0857f0dac672e9a9b43849b1867f04fe9bccc6518aece00740"};
 
     EXPECT_EQ(result, gt_result);
 }

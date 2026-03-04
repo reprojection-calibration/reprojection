@@ -15,15 +15,15 @@ std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& ca
 
 std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
                      CameraState const& camera_state) {
-    std::string const data{CacheKey(camera_info, camera_measurements) + Serialize(camera_state)};
+    std::string const data{Serialize(camera_info) + Serialize(camera_measurements) + Serialize(camera_state)};
 
     return Sha256(data);
 }
 
 std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
                      OptimizationState const& optimization_state) {
-    std::string const data{CacheKey(camera_info, camera_measurements, optimization_state.camera_state) +
-                           Serialize(optimization_state.frames)};
+    std::string const data{Serialize(camera_info) + Serialize(camera_measurements) +
+                           Serialize(optimization_state.camera_state) + Serialize(optimization_state.frames)};
 
     return Sha256(data);
 }
