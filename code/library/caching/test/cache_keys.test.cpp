@@ -34,7 +34,7 @@ TEST(CachingCacheKeys, LinearPoseInitialization) {
 }
 
 // TODO(Jack): We need some test fixtures! The testing boilerplate is getting out of hand!
-TEST(CachingCacheKeys, NonlinearCameraRefinement) {
+TEST(CachingCacheKeys, CameraNonlinearRefinement) {
     CameraInfo const camera_info{"/cam/retro/123", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     ExtractedTarget const target{
         Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}}, MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}}},
