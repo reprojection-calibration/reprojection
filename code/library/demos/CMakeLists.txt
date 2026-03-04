@@ -8,7 +8,9 @@ set(SRC_FILES
         src/image_source.cpp
 )
 set(LINK_LIBRARIES
+        application
         calibration
+        caching
         Ceres::ceres
         database
         Eigen3::Eigen
