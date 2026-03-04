@@ -6,11 +6,24 @@
 
 namespace reprojection::application {
 
+// TODO MOVE TO TYPES
 enum class CacheStatus {
     CacheHit,
     CacheKeyMiss,
     StepNameMiss,
 };
+
+inline std::string ToString(CacheStatus const cache_status) {
+    if (cache_status == CacheStatus::CacheHit) {
+        return "cache_hit";
+    } else if (cache_status == CacheStatus::CacheKeyMiss) {
+        return "cache_key_miss";
+    } else if (cache_status == CacheStatus::StepNameMiss) {
+        return "step_name_miss";
+    } else {
+        throw std::runtime_error("Library implementation error ToString(CacheStatus)");
+    }
+}
 
 std::pair<CacheStatus, CameraState> FocalLengthInitialization(
     CameraMeasurements const& targets, CameraInfo const& camera_info,
