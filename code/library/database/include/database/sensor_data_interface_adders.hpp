@@ -18,6 +18,9 @@ void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationD
 void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
                             std::shared_ptr<CalibrationDatabase> const database);
 
+void AddIntrinsics(CameraInfo const& info, CameraState const& intrinsics, std::string_view step_name,
+                   std::shared_ptr<CalibrationDatabase> const database);
+
 void AddPoseData(Frames const& data, std::string_view step_name, std::string_view sensor_name,
                  std::shared_ptr<CalibrationDatabase> const database);
 

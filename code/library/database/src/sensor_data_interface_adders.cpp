@@ -10,6 +10,7 @@
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 
+#include "json_converters.hpp"
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 
@@ -52,6 +53,30 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error(ErrorMessage(key, "AddReprojectionError()", std::get<SqliteErrorCode>(result),
+                                              std::string(sqlite3_errmsg(database->db))));
+    }
+}
+
+void AddIntrinsics(CameraInfo const& info, CameraState const& intrinsics, std::string_view step_name,
+                   std::shared_ptr<CalibrationDatabase> const database) {
+    SqlStatement const statement{database->db, sql_statements::intrinsics_insert};
+
+    DataKey const key{step_name, info.sensor_name, 0};
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, key.step_name.value());
+        Sqlite3Tools::Bind(statement.stmt, 2, key.sensor_name);
+        Sqlite3Tools::Bind(statement.stmt, 3, reprojection::ToString(info.camera_model));
+        Sqlite3Tools::Bind(statement.stmt, 4, info.bounds.u_max);
+        Sqlite3Tools::Bind(statement.stmt, 5, info.bounds.v_max);
+        Sqlite3Tools::Bind(statement.stmt, 6, ToJson(info.camera_model, intrinsics.intrinsics));
+    } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
+            ErrorMessage(key, "AddIntrinsics()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));            // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
+
+    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
+        throw std::runtime_error(ErrorMessage(key, "AddIntrinsics()", SqliteErrorCode::FailedStep,
                                               std::string(sqlite3_errmsg(database->db))));
     }
 }

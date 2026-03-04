@@ -24,6 +24,8 @@ set(SQL_FILES
         sql/imu_data_insert.sql
         sql/imu_data_select.sql
         sql/imu_data_table.sql
+        sql/intrinsics_insert.sql
+        sql/intrinsics_table.sql
         sql/poses_insert.sql
         sql/poses_table.sql
         sql/reprojection_error_insert.sql
@@ -59,6 +61,7 @@ add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 set(SRC_FILES
         src/calibration_database.cpp
         src/image_interface.cpp
+        src/json_converters.cpp
         src/sensor_data_interface_adders.cpp
         src/sensor_data_interface_getters.cpp
         src/serialization.cpp
@@ -82,6 +85,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/json_converters.test.cpp
         src/serialization.test.cpp
         src/sqlite3_helpers.test.cpp
         test/calibration_database.test.cpp

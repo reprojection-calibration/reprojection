@@ -43,6 +43,7 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::images_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::extracted_targets_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::imu_data_table, db));
+    static_cast<void>(Sqlite3Tools::Execute(sql_statements::intrinsics_table, db));
     static_cast<void>(Sqlite3Tools::Execute(sql_statements::poses_table, db));
     // TODO(Jack): Refactor reprojection error table to also use step_name and have foreign key constraint on targets
     //  and poses!
