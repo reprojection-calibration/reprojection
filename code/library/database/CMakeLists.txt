@@ -29,6 +29,7 @@ set(SQL_FILES
         sql/intrinsics_select.sql
         sql/intrinsics_table.sql
         sql/poses_insert.sql
+        sql/poses_select.sql
         sql/poses_table.sql
         sql/reprojection_error_insert.sql
         sql/reprojection_error_table.sql

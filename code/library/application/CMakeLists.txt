@@ -7,8 +7,10 @@ set(SRC_FILES
 )
 set(LINK_LIBRARIES
         caching
+        calibration
         database
         Eigen3::Eigen
+        optimization
         testing_utilities
         types
 )
