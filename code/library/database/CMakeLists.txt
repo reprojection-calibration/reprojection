@@ -61,12 +61,12 @@ add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 set(SRC_FILES
         src/calibration_database.cpp
         src/image_interface.cpp
-        src/json_converters.cpp
         src/sensor_data_interface_adders.cpp
         src/sensor_data_interface_getters.cpp
         src/serialization.cpp
         src/sqlite3_helpers.cpp
         src/sqlite_wrappers.cpp
+        src/toml_converters.cpp
 )
 set(INCLUDE_DIRECTORIES
         ${CMAKE_BINARY_DIR}/database # Generated sql header files are found here
@@ -85,9 +85,9 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/json_converters.test.cpp
         src/serialization.test.cpp
         src/sqlite3_helpers.test.cpp
+        src/toml_converters.test.cpp
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface_adders.test.cpp
