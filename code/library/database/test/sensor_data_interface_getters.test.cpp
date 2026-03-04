@@ -52,6 +52,43 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     }
 }
 
+TEST(DatabaseSensorDataInterface, GetCacheKey) {
+    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+
+    auto cache_key{database::GetCacheKey(db, "nonexistent_step")};
+    EXPECT_FALSE(cache_key.has_value());
+
+    std::string const step_name{"focal_length_initialization"};
+    std::string const fake_sha256{"123abc"};
+    database::AddCalibrationStep(step_name, fake_sha256, db);
+
+    cache_key = database::GetCacheKey(db, step_name);
+    ASSERT_TRUE(cache_key.has_value());
+    EXPECT_EQ(cache_key.value(), fake_sha256);
+}
+
+TEST(DatabaseSensorDataInterface, GetIntrinsic) {
+    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+
+    auto intrinsic{database::GetIntrinsic(db, "nonexistent_step", "nonexistent_sensor")};
+    EXPECT_FALSE(intrinsic.has_value());
+
+    std::string const step_name{"focal_length_initialization"};
+    database::AddCalibrationStep(step_name, "", db);
+
+    CameraInfo const gt_camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraState const gt_camera_state{testing_utilities::pinhole_intrinsics};
+    AddIntrinsics(gt_camera_info, gt_camera_state, step_name, db);
+
+    intrinsic = database::GetIntrinsic(db, step_name, gt_camera_info.sensor_name);
+    ASSERT_TRUE(intrinsic.has_value());
+
+    auto const [camera_info, camera_state]{intrinsic.value()};
+    EXPECT_EQ(camera_info.sensor_name, gt_camera_info.sensor_name);
+    EXPECT_EQ(camera_info.camera_model, gt_camera_info.camera_model);
+    EXPECT_TRUE(camera_state.intrinsics.isApprox(gt_camera_state.intrinsics));
+}
+
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
     std::string_view sensor_name{"/imu/polaris/123"};
     ImuMeasurements const data{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
