@@ -18,7 +18,7 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
+TEST(DatabaseSensorDataInterfaceGetters, TestGetExtractedTargetData) {
     TemporaryFile const temp_file{".db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
@@ -52,7 +52,7 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     }
 }
 
-TEST(DatabaseSensorDataInterface, GetCacheKey) {
+TEST(DatabaseSensorDataInterfaceGetters, GetCacheKey) {
     auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
 
     auto cache_key{database::GetCacheKey(db, "nonexistent_step")};
@@ -67,7 +67,7 @@ TEST(DatabaseSensorDataInterface, GetCacheKey) {
     EXPECT_EQ(cache_key.value(), fake_sha256);
 }
 
-TEST(DatabaseSensorDataInterface, GetIntrinsic) {
+TEST(DatabaseSensorDataInterfaceGetters, GetIntrinsic) {
     auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
 
     auto intrinsic{database::GetIntrinsic(db, "nonexistent_step", "nonexistent_sensor")};
@@ -89,7 +89,23 @@ TEST(DatabaseSensorDataInterface, GetIntrinsic) {
     EXPECT_TRUE(camera_state.intrinsics.isApprox(gt_camera_state.intrinsics));
 }
 
-TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
+TEST(DatabaseSensorDataInterfaceGetters, GetPoses) {
+    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+
+    uint64_t const timestamp_ns{0};
+    Frames const data{{timestamp_ns, {Array6d::Zero()}}};
+    std::string const sensor_name{"/cam/retro/123"};
+
+    std::string const step_name{"linear_pose_initialization"};
+    AddCalibrationStep(step_name, "", db);
+    database::AddPoseData(data, step_name, sensor_name, db);
+
+    Frames const result{database::GetPoses(db, step_name, sensor_name)};
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(data.at(timestamp_ns).pose));
+}
+
+TEST(DatabaseSensorDataInterfaceGetters, TestFullImuAddGetCycle) {
     std::string_view sensor_name{"/imu/polaris/123"};
     ImuMeasurements const data{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
                                {1, {Vector3d::Zero(), Vector3d::Zero()}},

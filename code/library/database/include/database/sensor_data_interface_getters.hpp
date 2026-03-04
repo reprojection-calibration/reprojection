@@ -19,6 +19,10 @@ std::optional<std::pair<CameraInfo, CameraState>> GetIntrinsic(
     std::shared_ptr<CalibrationDatabase const> const database, std::string_view step_name,
     std::string_view sensor_name);
 
+
+Frames GetPoses(std::shared_ptr<CalibrationDatabase const> const database, std::string_view step_name,
+                               std::string_view sensor_name);
+
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name);
 
 }  // namespace reprojection::database
