@@ -36,6 +36,20 @@ inline std::string ToString(CameraModel const camera_model) {
     }
 }
 
+inline CameraModel ToCameraModel(std::string_view camera_model_string) {
+    if (camera_model_string == "double_sphere") {
+        return CameraModel::DoubleSphere;
+    } else if (camera_model_string == "pinhole") {
+        return CameraModel::Pinhole;
+    } else if (camera_model_string == "pinhole_radtan4""pinhole_radtan4") {
+        return CameraModel::PinholeRadtan4;
+    } else if (camera_model_string == "unified_camera_model") {
+        return CameraModel::UnifiedCameraModel;
+    } else {
+        throw std::runtime_error("Unrecognized argument passed to ToCameraModel()");  // LCOV_EXCL_LINE
+    }
+}
+
 // TODO(Jack): Is this the right place to put functions like this? What about testing?
 inline TargetType ToTargetType(std::string const& enum_string) {
     if (enum_string == "checkerboard") {

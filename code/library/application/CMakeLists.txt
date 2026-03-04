@@ -6,7 +6,11 @@ set(SRC_FILES
         src/application.cpp
 )
 set(LINK_LIBRARIES
+        caching
+        database
         Eigen3::Eigen
+        testing_utilities
+        types
 )
 AddLibrary()
 

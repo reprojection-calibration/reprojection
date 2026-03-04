@@ -14,6 +14,7 @@ find_package(SQLite3 REQUIRED)
 # not be reflected in the generated header file.
 set(SQL_FILES
         sql/calibration_steps_insert.sql
+        sql/calibration_steps_select.sql
         sql/calibration_steps_table.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
@@ -25,6 +26,7 @@ set(SQL_FILES
         sql/imu_data_select.sql
         sql/imu_data_table.sql
         sql/intrinsics_insert.sql
+        sql/intrinsics_select.sql
         sql/intrinsics_table.sql
         sql/poses_insert.sql
         sql/poses_table.sql
