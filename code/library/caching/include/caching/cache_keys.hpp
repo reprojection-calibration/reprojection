@@ -5,6 +5,8 @@
 
 namespace reprojection::caching {
 
+std::string CacheKey(CameraInfo const& sensor, CameraMeasurements const& targets);
+
 std::string CacheKey(CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics);
 
 }  // namespace reprojection::caching
