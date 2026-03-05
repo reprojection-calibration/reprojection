@@ -16,6 +16,7 @@ set(SQL_FILES
         sql/calibration_steps_insert.sql
         sql/calibration_steps_select.sql
         sql/calibration_steps_table.sql
+        sql/calibration_steps_update.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
@@ -66,6 +67,7 @@ set(SRC_FILES
         src/image_interface.cpp
         src/sensor_data_interface_adders.cpp
         src/sensor_data_interface_getters.cpp
+        src/sensor_data_interface_updater.cpp
         src/serialization.cpp
         src/sqlite3_helpers.cpp
         src/sqlite_wrappers.cpp
@@ -95,6 +97,7 @@ set(TESTS
         test/image_interface.test.cpp
         test/sensor_data_interface_adders.test.cpp
         test/sensor_data_interface_getters.test.cpp
+        test/sensor_data_interface_updater.test.cpp
         test/sqlite_wrappers.test.cpp
 )
 AddTests()
