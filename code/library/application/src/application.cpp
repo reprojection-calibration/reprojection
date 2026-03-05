@@ -4,7 +4,9 @@
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/sensor_data_interface_adders.hpp"
 #include "database/sensor_data_interface_getters.hpp"
+#include "database/sensor_data_interface_updater.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
+
 
 namespace reprojection::application {
 
@@ -22,7 +24,7 @@ std::pair<CacheStatus, CameraState> FocalLengthInitialization(
         if (status == CacheStatus::StepNameMiss) {
             database::AddCalibrationStep(step_name, cache_key, database);
         } else {
-            std::cout << "cache key update - YOU STILL NEED TO IMPLEMENT THIS!!!" << std::endl;
+            database::UpdateCalibrationStep(step_name, cache_key, database);
         }
 
         // ERROR WE JUST RETURN BLANK!
@@ -40,6 +42,7 @@ std::pair<CacheStatus, CameraState> FocalLengthInitialization(
     }
 }
 
+// TEST!
 std::pair<CacheStatus, OptimizationState> LinearPoseInitialization(
     CameraInfo const& camera_info, CameraMeasurements const& targets, CameraState const& camera_state,
     std::shared_ptr<database::CalibrationDatabase> const database) {
@@ -55,8 +58,7 @@ std::pair<CacheStatus, OptimizationState> LinearPoseInitialization(
         if (status == CacheStatus::StepNameMiss) {
             database::AddCalibrationStep(step_name, cache_key, database);
         } else {
-            std::cout << "cache key update - YOU STILL NEED TO IMPLEMENT THIS!!!" << std::endl;
-            exit(1);
+            database::UpdateCalibrationStep(step_name, cache_key, database);
         }
         database::AddPoseData(initial_state.frames, "linear_pose_initialization", camera_info.sensor_name, database);
         database::AddReprojectionError(initial_error, "linear_pose_initialization", camera_info.sensor_name, database);
@@ -75,6 +77,7 @@ std::pair<CacheStatus, OptimizationState> LinearPoseInitialization(
     }
 }
 
+// TEST!!!
 std::pair<CacheStatus, OptimizationState> CameraNonlinearRefinement(
     CameraInfo const& camera_info, CameraMeasurements const& targets, OptimizationState const& optimization_state,
     std::shared_ptr<database::CalibrationDatabase> const database) {
@@ -91,14 +94,12 @@ std::pair<CacheStatus, OptimizationState> CameraNonlinearRefinement(
         if (status == CacheStatus::StepNameMiss) {
             database::AddCalibrationStep(step_name, cache_key, database);
         } else {
-            std::cout << "cache key update - YOU STILL NEED TO IMPLEMENT THIS!!!" << std::endl;
-            exit(1);
+            database::UpdateCalibrationStep(step_name, cache_key, database);
         }
         database::AddPoseData(optimized_state.frames, step_name, camera_info.sensor_name, database);
         database::AddReprojectionError(optimized_error, step_name, camera_info.sensor_name, database);
         database::AddIntrinsics(camera_info, optimization_state.camera_state, step_name, database);
 
-        // ERROR WE JUST RETURN BLANK!
         return {status, optimized_state};
     } else if (status == CacheStatus::CacheHit) {
         auto const loaded_intrinsics{database::GetIntrinsic(database, step_name, camera_info.sensor_name)};
