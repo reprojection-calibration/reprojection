@@ -21,56 +21,33 @@ namespace reprojection::database {
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
 CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database,
                                           std::string_view sensor_name) {
-    SqlStatement const statement{database->db, sql_statements::extracted_targets_select};
+    CameraMeasurements data;
 
-    DataKey const key{sensor_name, 0};
-    try {
-        Sqlite3Tools::Bind(statement.stmt, 1, key.sensor_name);
-    } catch (std::runtime_error const& e) {                             // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                      // LCOV_EXCL_LINE
-            ErrorMessage(key, "GetExtractedTargetData()",               // LCOV_EXCL_LINE
-                         SqliteErrorCode::FailedBinding,                // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database->db)))));  // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
+    ExecuteQuery(
+        database->db, sql_statements::extracted_targets_select,
+        [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
 
-    CameraMeasurements targets;
-    while (true) {
-        int const code{sqlite3_step(statement.stmt)};
-        if (code == static_cast<int>(SqliteFlag::Done)) {
-            break;
-        } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            throw std::runtime_error(ErrorMessage(key, "GetExtractedTargetData()",              // LCOV_EXCL_LINE
-                                                  SqliteErrorCode::FailedStep,                  // LCOV_EXCL_LINE
-                                                  std::string(sqlite3_errmsg(database->db))));  // LCOV_EXCL_LINE
-        }
+            uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt, 1))};
+            int const blob_size{sqlite3_column_bytes(stmt, 1)};
+            if (not blob or blob_size <= 0) {
+                throw std::runtime_error("TODO ERROR HANDLING");
+            }
 
-        // TODO(Jack): Should we be more defensive here and first check that column text is not returning a nullptr or
-        // other bad output? Also happens like this in the image streamer and possibly other places.
-        uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(statement.stmt, 0)))};
+            std::vector<uchar> const buffer(blob, blob + blob_size);
+            protobuf_serialization::ExtractedTargetProto serialized;
+            serialized.ParseFromArray(buffer.data(), buffer.size());
 
-        uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(statement.stmt, 1))};
-        int const blob_size{sqlite3_column_bytes(statement.stmt, 1)};
-        if (not blob or blob_size <= 0) {
-            throw std::runtime_error("GetExtractedTargetData() blob reading failed for sensor: " +  // LCOV_EXCL_LINE
-                                     key.sensor_name +                                              // LCOV_EXCL_LINE
-                                     " at timestamp_ns: " + std::to_string(timestamp_ns));          // LCOV_EXCL_LINE
-        }
+            auto const deserialized{Deserialize(serialized)};
+            if (not deserialized.has_value()) {
+                throw std::runtime_error("TODO ERROR HANDLING");
+            }
 
-        std::vector<uchar> const buffer(blob, blob + blob_size);
-        protobuf_serialization::ExtractedTargetProto serialized;
-        serialized.ParseFromArray(buffer.data(), buffer.size());
+            data.insert({timestamp_ns, deserialized.value()});
+        });
 
-        auto const deserialized{Deserialize(serialized)};
-        if (not deserialized.has_value()) {
-            throw std::runtime_error("GetExtractedTargetData() Deserialize() failed for sensor: " +  // LCOV_EXCL_LINE
-                                     key.sensor_name +                                               // LCOV_EXCL_LINE
-                                     " at timestamp_ns: " + std::to_string(timestamp_ns));           // LCOV_EXCL_LINE
-        }
-
-        targets.insert({timestamp_ns, deserialized.value()});
-    }
-
-    return targets;
+    return data;
 }
 
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
