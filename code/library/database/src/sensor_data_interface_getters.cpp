@@ -29,18 +29,18 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
         [&data](sqlite3_stmt* const stmt) {
             uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
 
-            uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(stmt, 1))};
+            auto const* const blob_ptr{sqlite3_column_blob(stmt, 1)};
             int const blob_size{sqlite3_column_bytes(stmt, 1)};
-            if (not blob or blob_size <= 0) {
+            if (not blob_ptr || blob_size <= 0) {
                 throw std::runtime_error("TODO ERROR HANDLING");
             }
+            std::span<std::byte const> blob{static_cast<std::byte const*>(blob_ptr), static_cast<size_t>(blob_size)};
 
-            std::vector<uchar> const buffer(blob, blob + blob_size);
             protobuf_serialization::ExtractedTargetProto serialized;
-            serialized.ParseFromArray(buffer.data(), buffer.size());
+            serialized.ParseFromArray(std::data(blob), static_cast<int>(std::size(blob)));
 
             auto const deserialized{Deserialize(serialized)};
-            if (not deserialized.has_value()) {
+            if (not deserialized) {
                 throw std::runtime_error("TODO ERROR HANDLING");
             }
 
