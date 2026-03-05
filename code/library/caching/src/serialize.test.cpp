@@ -33,7 +33,7 @@ TEST(CachingSerialize, CameraState) {
     CameraState const camera_state{testing_utilities::pinhole_intrinsics};
 
     std::string const result{caching::Serialize(camera_state)};
-    std::string const gt_result{"600.000,600.000,360.000,240.000|"};
+    std::string const gt_result{"600.000;600.000;360.000;240.000;|"};
 
     EXPECT_EQ(result, gt_result);
 }
@@ -42,7 +42,7 @@ TEST(CachingSerialize, Frames) {
     Frames const frames{{0, {Array6d::Ones()}}, {1, {2*Array6d::Ones()}}};
 
     std::string const result{caching::Serialize(frames)};
-    std::string const gt_result{"0|1.000,1.000,1.000,1.000,1.000,1.000|1|2.000,2.000,2.000,2.000,2.000,2.000|"};
+    std::string const gt_result{"0|1.000;1.000;1.000;1.000;1.000;1.000;|1|2.000;2.000;2.000;2.000;2.000;2.000;|"};
 
     EXPECT_EQ(result, gt_result);
 }

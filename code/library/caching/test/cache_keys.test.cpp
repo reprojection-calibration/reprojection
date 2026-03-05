@@ -28,7 +28,7 @@ TEST(CachingCacheKeys, LinearPoseInitialization) {
     CameraState const camera_state{testing_utilities::pinhole_intrinsics};
 
     std::string const result{caching::CacheKey(camera_info, camera_measurements, camera_state)};
-    std::string const gt_result{"34ffa0d68b2fc52ce58413bb6b75796af57eac23d5a893d5f94c6aa64de6ae16"};
+    std::string const gt_result{"a1f9e0653a6eb00e3ea0d1eb94287563799524ad3938388569560a832f8ffcf2"};
 
     EXPECT_EQ(result, gt_result);
 }
@@ -45,7 +45,7 @@ TEST(CachingCacheKeys, CameraNonlinearRefinement) {
     OptimizationState const optimization_state{camera_state, frames};
 
     std::string const result{caching::CacheKey(camera_info, camera_measurements, optimization_state)};
-    std::string const gt_result{"79854575d0287c0857f0dac672e9a9b43849b1867f04fe9bccc6518aece00740"};
+    std::string const gt_result{"e41c8d6411b5fbcac3b5e1b7ed66c33959cd13b20a9e48a6b86eeca5cf86530a"};
 
     EXPECT_EQ(result, gt_result);
 }
