@@ -11,7 +11,7 @@ std::string Sha256(std::string_view input) {
     unsigned int hash_length{0};
 
     if (EVP_Digest(std::data(input), std::size(input), std::data(hash), &hash_length, EVP_sha256(), nullptr) != 1) {
-        throw std::runtime_error("EVP_Digest failed");
+        throw std::runtime_error("EVP_Digest failed");  // LCOV_EXCL_LINE
     }
 
     std::string result;
@@ -21,6 +21,6 @@ std::string Sha256(std::string_view input) {
     }
 
     return result;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::caching
