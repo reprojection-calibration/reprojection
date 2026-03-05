@@ -5,8 +5,10 @@
 
 class SqliteTestFixture : public ::testing::Test {
    protected:
+    // cppcheck-suppress unusedFunction
     void SetUp() override { ASSERT_EQ(sqlite3_open(":memory:", &db), SQLITE_OK); }
 
+    // cppcheck-suppress unusedFunction
     void TearDown() override { sqlite3_close(db); }
 
     void CreateExampleTable() const {
@@ -19,8 +21,6 @@ class SqliteTestFixture : public ::testing::Test {
     }
 
     void InsertRecordIds() const {
-
-
         reprojection::database::BatchInsert(
             insert_sql, example_record_ids,
             [](sqlite3_stmt* const stmt, auto const& data_i) {
