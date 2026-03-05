@@ -18,7 +18,7 @@
 namespace reprojection::database {
 
 void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database) {
-    auto const binder{[&](sqlite3_stmt* stmt) { Sqlite3Tools::Bind(stmt, 1, step_name); }};
+    auto const binder{[step_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, step_name); }};
 
     ExecuteStatement(sql_statements::calibration_steps_insert, binder, database->db);
 }
@@ -110,7 +110,7 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
 
 void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
                 std::shared_ptr<CalibrationDatabase> const database) {
-    auto const binder{[&](sqlite3_stmt* stmt, auto const& data_i) {
+    auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
         Sqlite3Tools::Bind(stmt, 1, sensor_name);

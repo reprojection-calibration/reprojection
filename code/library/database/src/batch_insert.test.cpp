@@ -29,7 +29,7 @@ TEST(DatabaseBatchInsert, TestBatchInsert) {
 
     EXPECT_NO_THROW(database::BatchInsert(
         insert_sql, example_record_ids,
-        [&](sqlite3_stmt* stmt, auto const& data_i) { database::Sqlite3Tools::Bind(stmt, 1, data_i); }, db));
+        [](sqlite3_stmt* const stmt, auto const& data_i) { database::Sqlite3Tools::Bind(stmt, 1, data_i); }, db));
 
     sqlite3_close(db);
 }
