@@ -23,31 +23,7 @@ void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationD
     ExecuteStatement(sql_statements::calibration_steps_insert, binder, database->db);
 }
 
-// NOTE(Jack): See note in AddReprojectionError about suppressing the SerializeToString throw.
 void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
-                            std::shared_ptr<CalibrationDatabase> const database) {
-    auto const& [timestamp_ns, target]{data};
-
-    protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
-    std::string buffer;
-    if (not serialized.SerializeToString(&buffer)) {
-        throw std::runtime_error(
-            "AddExtractedTargetData() protobuf SerializeToString() failed for sensor: " +  // LCOV_EXCL_LINE
-            std::string(sensor_name) +                                                     // LCOV_EXCL_LINE
-            " at timestamp_ns: " + std::to_string(timestamp_ns));                          // LCOV_EXCL_LINE
-    }
-
-    DataKey const key{sensor_name, timestamp_ns};
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, key,
-                                                    std::as_bytes(std::span{buffer}), database->db)};
-
-    if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage(key, "AddReprojectionError()", std::get<SqliteErrorCode>(result),
-                                              std::string(sqlite3_errmsg(database->db))));
-    }
-}
-
-void AddExtractedTargetData222(CameraMeasurement const& data, std::string_view sensor_name,
                                std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
         auto const& [timestamp_ns, target]{data};

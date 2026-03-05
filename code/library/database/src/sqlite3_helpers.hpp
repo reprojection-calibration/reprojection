@@ -67,8 +67,11 @@ struct Sqlite3Tools {
         }
     }
 
-    static void BindBlob(sqlite3_stmt* const stmt, int const index, std::span<std::byte const> blob) {
-        if (sqlite3_bind_blob(stmt, index, std::data(blob), std::size(blob), SQLITE_STATIC) !=
+    // NOTE(Jack): We use SQLITE_TRANSIENT here because the serialized buffers in the lambdas disappear when the lambda
+    // is finished. Therefore, we want sql to make its own copy of the buffer when we call bind (i.e. SQLITE_TRANSIENT),
+    // so that way the external lifetime management can be disregarded.
+    static void BindBlob(sqlite3_stmt* const stmt, int const index, std::span<std::byte const> const& blob) {
+        if (sqlite3_bind_blob(stmt, index, std::data(blob), std::size(blob), SQLITE_TRANSIENT) !=
             static_cast<int>(SqliteFlag::Ok)) {
             throw std::runtime_error("sqlite3_bind_blob() failed");
         }
