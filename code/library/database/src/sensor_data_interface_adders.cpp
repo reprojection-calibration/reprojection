@@ -66,27 +66,22 @@ void AddPoseData(Frames const& data, std::string_view step_name, std::string_vie
 // eigen array input to trigger this.
 void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_name, std::string_view sensor_name,
                           std::shared_ptr<CalibrationDatabase> const database) {
-    SqlTransaction const lock{(database->db)};
+    auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, frame] = data_i;
 
-    for (auto const& [timestamp_ns, error_i] : data) {
-        protobuf_serialization::ArrayX2dProto const serialized{Serialize(error_i)};
+        protobuf_serialization::ArrayX2dProto const serialized{Serialize(frame)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
-            // TODO(Jack): Should also add step_name?
-            throw std::runtime_error(
-                "AddReprojectionError() protobuf SerializeToString() failed for sensor: " +       // LCOV_EXCL_LINE
-                std::string(sensor_name) + " at timestamp_ns: " + std::to_string(timestamp_ns));  // LCOV_EXCL_LINE
+            throw std::runtime_error("TODO ERROR CONTENT");
         }
 
-        DataKey const key{step_name, sensor_name, timestamp_ns};
-        SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::reprojection_error_insert, key,
-                                                        std::as_bytes(std::span{buffer}), database->db)};
+        Sqlite3Tools::Bind(stmt, 1, std::string(step_name));
+        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer}));
+    }};
 
-        if (std::holds_alternative<SqliteErrorCode>(result)) {
-            throw std::runtime_error(ErrorMessage(key, "AddReprojectionError()", std::get<SqliteErrorCode>(result),
-                                                  std::string(sqlite3_errmsg(database->db))));
-        }
-    }
+    BatchInsert(sql_statements::reprojection_error_insert, data, binder, database->db);
 }
 
 void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
