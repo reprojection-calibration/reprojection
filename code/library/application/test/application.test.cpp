@@ -25,7 +25,7 @@ TEST(ApplicationApplication, TestFocalLengthInitialization) {
 
     auto const [cache_status,
                 camera_state]{application::FocalLengthInitialization(camera_measurements, camera_info, db)};
-    EXPECT_EQ(cache_status, application::CacheStatus::CacheHit);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
     EXPECT_TRUE(camera_state.intrinsics.isApprox(gt_camera_state.intrinsics));
 }
 
@@ -36,13 +36,23 @@ TEST(ApplicationApplication, TestFocalLengthInitializationCacheMisses) {
     {
         auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
         auto const [cache_status, _]{application::FocalLengthInitialization(camera_measurements, camera_info, db)};
-        EXPECT_EQ(cache_status, application::CacheStatus::StepNameMiss);
+        EXPECT_EQ(cache_status, CacheStatus::StepNameMiss);
     }
     {
         auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
         database::AddCalibrationStep("focal_length_initialization", "nonexistent_cache_key", db);
 
         auto const [cache_status, _]{application::FocalLengthInitialization(camera_measurements, camera_info, db)};
-        EXPECT_EQ(cache_status, application::CacheStatus::CacheKeyMiss);
+        EXPECT_EQ(cache_status, CacheStatus::CacheKeyMiss);
     }
+}
+
+TEST(ApplicationApplication, TestCacheState) {
+    auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+
+    EXPECT_EQ(application::CacheState(db, "", ""), CacheStatus::StepNameMiss);
+
+    database::AddCalibrationStep("linear_pose_initialization", "some_cache_key", db);
+    EXPECT_EQ(application::CacheState(db, "linear_pose_initialization", ""), CacheStatus::CacheKeyMiss);
+    EXPECT_EQ(application::CacheState(db, "linear_pose_initialization", "some_cache_key"), CacheStatus::CacheHit);
 }

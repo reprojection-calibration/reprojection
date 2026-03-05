@@ -117,12 +117,12 @@ std::pair<CacheStatus, OptimizationState> CameraNonlinearRefinement(
 // TODO(Jack): Test!
 // TODO(Jack): Better name than 'db_cache_key'?
 CacheStatus CacheState(std::shared_ptr<database::CalibrationDatabase const> const database, std::string_view step_name,
-                       std::string_view cache_key) {
-    auto const db_cache_key{database::GetCacheKey(database, step_name)};
+                       std::string_view key) {
+    auto const cache_key{database::GetCacheKey(database, step_name)};
 
-    if (not db_cache_key) {
+    if (not cache_key) {
         return CacheStatus::StepNameMiss;
-    } else if (db_cache_key.value() == cache_key) {
+    } else if (cache_key.value() == key) {
         return CacheStatus::CacheHit;
     } else {
         return CacheStatus::CacheKeyMiss;
