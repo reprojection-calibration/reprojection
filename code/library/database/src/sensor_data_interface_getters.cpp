@@ -10,6 +10,7 @@
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 
+#include "query_runner.hpp"
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 
@@ -73,39 +74,26 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
 }
 
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
-    SqlStatement const statement{database->db, sql_statements::imu_data_select};
-
-    DataKey const key{sensor_name, 0};
-    try {
-        Sqlite3Tools::Bind(statement.stmt, 1, key.sensor_name);
-    } catch (...) {                                                            // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                             // LCOV_EXCL_LINE
-            ErrorMessage(key, "GetImuData()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database->db)))));         // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
-
     ImuMeasurements data;
-    while (true) {
-        int const code{sqlite3_step(statement.stmt)};
-        if (code == static_cast<int>(SqliteFlag::Done)) {
-            break;
-        } else if (code != static_cast<int>(SqliteFlag::Row)) {
-            throw std::runtime_error(ErrorMessage(key, "GetImuData()", SqliteErrorCode::FailedStep,  // LCOV_EXCL_LINE
-                                                  std::string(sqlite3_errmsg(database->db))));       // LCOV_EXCL_LINE
-        }
 
-        // TODO(Jack): Should we be doing any error checking here while reading the columns?
-        uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(statement.stmt, 0))};  // Warn cast!
-        double const omega_x{sqlite3_column_double(statement.stmt, 1)};
-        double const omega_y{sqlite3_column_double(statement.stmt, 2)};
-        double const omega_z{sqlite3_column_double(statement.stmt, 3)};
-        double const ax{sqlite3_column_double(statement.stmt, 4)};
-        double const ay{sqlite3_column_double(statement.stmt, 5)};
-        double const az{sqlite3_column_double(statement.stmt, 6)};
+    ExecuteQuery(
+        database->db, sql_statements::imu_data_select,
+        [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
 
-        data.insert(ImuMeasurement{timestamp_ns, {{omega_x, omega_y, omega_z}, {ax, ay, az}}});
-    }
+            double const omega_x{sqlite3_column_double(stmt, 1)};
+            double const omega_y{sqlite3_column_double(stmt, 2)};
+            double const omega_z{sqlite3_column_double(stmt, 3)};
+
+            double const ax{sqlite3_column_double(stmt, 4)};
+            double const ay{sqlite3_column_double(stmt, 5)};
+            double const az{sqlite3_column_double(stmt, 6)};
+
+            data.insert(ImuMeasurement{timestamp_ns, {{omega_x, omega_y, omega_z}, {ax, ay, az}}});
+        });
 
     return data;
 }
+
 };  // namespace reprojection::database
