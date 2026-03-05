@@ -83,6 +83,7 @@ AddLibrary()
 
 set(TESTS
         src/serialization.test.cpp
+        src/statement_executor.test.cpp
         src/sqlite3_helpers.test.cpp
         test/calibration_database.test.cpp
         test/image_interface.test.cpp

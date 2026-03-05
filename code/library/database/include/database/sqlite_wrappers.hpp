@@ -2,6 +2,8 @@
 
 #include <sqlite3.h>
 
+// TODO(Jack): Why are these in the public headers?
+
 namespace reprojection::database {
 
 struct SqlStatement {
