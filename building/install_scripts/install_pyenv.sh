@@ -11,7 +11,6 @@ apt-get install --no-install-recommends --yes \
     libffi-dev \
     libncursesw5-dev \
     libreadline-dev \
-    libssl-dev \
     libxmlsec1-dev \
     libxml2-dev \
     tk-dev
