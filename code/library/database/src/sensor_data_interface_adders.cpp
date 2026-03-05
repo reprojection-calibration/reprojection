@@ -12,24 +12,14 @@
 
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
+#include "statement_executor.hpp"
 
 namespace reprojection::database {
 
 void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database) {
-    SqlStatement const statement{database->db, sql_statements::calibration_steps_insert};
+    auto const binder{[&](sqlite3_stmt* stmt) { Sqlite3Tools::Bind(stmt, 1, step_name); }};
 
-    try {
-        Sqlite3Tools::Bind(statement.stmt, 1, step_name);
-    } catch (std::runtime_error const& e) {                                       // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                                // LCOV_EXCL_LINE
-            ErrorMessage("AddCalibrationStep()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database->db)))));            // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
-
-    if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-        throw std::runtime_error(ErrorMessage("AddCalibrationStep()", SqliteErrorCode::FailedStep,
-                                              std::string(sqlite3_errmsg(database->db))));
-    }
+    ExecuteStatement(sql_statements::calibration_steps_insert, binder, database->db);
 }
 
 // NOTE(Jack): See note in AddReprojectionError about suppressing the SerializeToString throw.
