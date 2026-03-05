@@ -86,10 +86,10 @@ set(TESTS
         src/serialization.test.cpp
         src/statement_executor.test.cpp
         src/sqlite3_helpers.test.cpp
+        src/sqlite_wrappers.test.cpp
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface_adders.test.cpp
         test/sensor_data_interface_getters.test.cpp
-        test/sqlite_wrappers.test.cpp
 )
 AddTests()

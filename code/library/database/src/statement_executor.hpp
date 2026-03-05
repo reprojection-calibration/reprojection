@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string_view>
 
-#include "database/sqlite_wrappers.hpp"
+#include "sqlite_wrappers.hpp"
 
 namespace reprojection::database {
 

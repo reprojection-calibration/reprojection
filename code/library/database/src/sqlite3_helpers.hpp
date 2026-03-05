@@ -5,7 +5,6 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <variant>
 #include <vector>
 
 #include "enums.hpp"
@@ -44,6 +43,7 @@ struct Sqlite3Tools {
         }
     }
 
+    // TEST!
     static bool StepRow(sqlite3_stmt* const stmt) {
         int const code{sqlite3_step(stmt)};
 
@@ -56,8 +56,9 @@ struct Sqlite3Tools {
         }
     }
 
-    // TODO(Jack): Span is non-owning, therefore I think there is a real risk that in the long term we run into some
-    //  segfaults when people use this code.
+    // TEST!
+    // WARN(Jack): Span is non-owning, therefore I think there is a real risk that in the long term we run into some
+    // segfaults when people use this code.
     static std::span<const std::byte> SqliteBlob(sqlite3_stmt* const stmt, int const col) {
         auto const* const ptr{sqlite3_column_blob(stmt, col)};
         int const size{sqlite3_column_bytes(stmt, col)};

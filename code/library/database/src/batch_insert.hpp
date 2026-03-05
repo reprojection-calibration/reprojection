@@ -4,8 +4,7 @@
 
 #include <string_view>
 
-#include "database/sqlite_wrappers.hpp"
-
+#include "sqlite_wrappers.hpp"
 #include "statement_executor.hpp"
 
 namespace reprojection::database {

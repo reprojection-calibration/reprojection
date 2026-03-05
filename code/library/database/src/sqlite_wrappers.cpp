@@ -1,4 +1,4 @@
-#include "database/sqlite_wrappers.hpp"
+#include "sqlite_wrappers.hpp"
 
 #include <stdexcept>
 
