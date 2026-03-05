@@ -11,40 +11,37 @@
 #include "generated/sql.hpp"
 
 #include "sqlite3_helpers.hpp"
+#include "statement_executor.hpp"
 
 namespace reprojection::database {
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
 void AddImage(CameraImage const& data, std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
-    auto const& [timestamp_ns, image]{data};
+    auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
+        auto const& [timestamp_ns, image]{data};
 
-    std::vector<uchar> buffer;
-    if (not cv::imencode(".png", data.second, buffer)) {
-        throw std::runtime_error(
-            "AddImage() cv::imencode() failed for sensor: " + std::string(sensor_name) +  // LCOV_EXCL_LINE
-            " at timestamp_ns: " + std::to_string(timestamp_ns));                         // LCOV_EXCL_LINE
-    }
+        std::vector<uchar> buffer;
+        if (not cv::imencode(".png", data.second, buffer)) {
+            throw std::runtime_error("TODO ERROR MESSAGE");
+        }
 
-    DataKey const key{sensor_name, timestamp_ns};
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, key, buffer, database->db)};
+        Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer}));
+    }};
 
-    if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage(key, "AddImage()", std::get<SqliteErrorCode>(result),
-                                              std::string(sqlite3_errmsg(database->db))));
-    }
+    ExecuteStatement(sql_statements::image_insert, binder, database->db);
 }
 
 void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
-    DataKey const key{sensor_name, timestamp_ns};
-    // TODO ERROR DO NOT HARDCODE EMPTY
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, key, std::vector<u_char>{}, database->db)};
+    auto const binder{[timestamp_ns, sensor_name](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+    }};
 
-    if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage(key, "AddImage()", std::get<SqliteErrorCode>(result),
-                                              std::string(sqlite3_errmsg(database->db))));
-    }
+    ExecuteStatement(sql_statements::image_insert, binder, database->db);
 }
 
 ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
