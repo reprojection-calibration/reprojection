@@ -16,86 +16,71 @@
 
 #include "sqlite3_helpers.hpp"
 
+// TODO(Jack): We need to create an enum for these step names! Or something to make this less error prone.
+
 using namespace reprojection;
-using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(DatabaseSensorDataInterface, TestAddExtractedTargetData) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+class SensorDatabaseFixture : public ::testing::Test {
+   protected:
+    void SetUp() override { db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false); }
 
-    uint64_t const timestamp_ns{0};
-    std::string const sensor_name{"/cam/retro/123"};
+    void AddImage() const { database::AddImage(timestamp_ns, sensor_name, db); }
 
-    // Adding a target with no corresponding image database entry is invalid! Foreign key constraint :)
+    void AddTarget() const { AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db); }
+
+    void AddStep(std::string const& step) const { AddCalibrationStep(step, db); }
+
+    void AddPose(std::string const& step) const {
+        Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
+        AddPoseData(frames, step, sensor_name, db);
+    }
+
+    std::shared_ptr<database::CalibrationDatabase> db;
+    uint64_t timestamp_ns{0};
+    std::string sensor_name{"/cam/retro/123"};
+};
+
+TEST_F(SensorDatabaseFixture, AddExtractedTargetData) {
     EXPECT_THROW(AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db), std::runtime_error);
 
-    database::AddImage(timestamp_ns, sensor_name, db);
+    AddImage();
+
     EXPECT_NO_THROW(AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db));
 }
 
-TEST(DatabaseSensorDataInterface, TestAddCalibrationStep) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
-
-    // Throws because it fails the "CHECK()" constraint in the calibration_steps table.
+TEST_F(SensorDatabaseFixture, AddCalibrationStep) {
     EXPECT_THROW(database::AddCalibrationStep("invalid_step", db), std::runtime_error);
 
-    EXPECT_NO_THROW(AddCalibrationStep("linear_pose_initialization", db));
-    EXPECT_NO_THROW(AddCalibrationStep("nonlinear_refinement", db));
+    EXPECT_NO_THROW(AddStep("linear_pose_initialization"));
+    EXPECT_NO_THROW(AddStep("nonlinear_refinement"));
 }
 
-TEST(DatabaseSensorDataInterface, TestAddPoseData) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
-
-    uint64_t const timestamp_ns{0};
-    Frames const data{{timestamp_ns, {Array6d::Zero()}}};
-    std::string const sensor_name{"/cam/retro/123"};
-
+TEST_F(SensorDatabaseFixture, TestAddPoseData) {
     // Throws because the calibration step linear_pose_initialization has not been added to the database yet.
-    EXPECT_THROW(database::AddPoseData(data, "linear_pose_initialization", sensor_name, db), std::runtime_error);
+    EXPECT_THROW(AddPose("linear_pose_initialization"), std::runtime_error);
 
-    // Add the calibration steps for two common stages.
-    AddCalibrationStep("linear_pose_initialization", db);
-    AddCalibrationStep("nonlinear_refinement", db);
+    AddStep("linear_pose_initialization");
 
-    // Throws because this is not a valid foreign key in the steps table.
-    EXPECT_THROW(database::AddPoseData(data, "invalid_step", sensor_name, db), std::runtime_error);
-
-    // TODO(Jack): We need to create an enum for these step names! Or something to make this less error prone.
-    EXPECT_NO_THROW(database::AddPoseData(data, "linear_pose_initialization", sensor_name, db));
-    EXPECT_NO_THROW(database::AddPoseData(data, "nonlinear_refinement", sensor_name, db));
+    EXPECT_NO_THROW(AddPose("linear_pose_initialization"));
 }
 
-TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
-
-    uint64_t const timestamp_ns{0};
+TEST_F(SensorDatabaseFixture, TestAddReprojectionError) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
-    std::string const sensor_name{"/cam/retro/123"};
 
     // Fails foreign key constraint because there is no corresponding poses table entry yet
     EXPECT_THROW(database::AddReprojectionError(data, "linear_pose_initialization", sensor_name, db),
                  std::runtime_error);
-    EXPECT_THROW(database::AddReprojectionError(data, "nonlinear_refinement", sensor_name, db), std::runtime_error);
 
-    database::AddImage(timestamp_ns, sensor_name, db);
-    AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db);
-
+    AddImage();
+    AddTarget();
     AddCalibrationStep("linear_pose_initialization", db);
-    AddCalibrationStep("nonlinear_refinement", db);
-
-    Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-    database::AddPoseData(frames, "linear_pose_initialization", sensor_name, db);
-    database::AddPoseData(frames, "nonlinear_refinement", sensor_name, db);
+    AddPose("linear_pose_initialization");
 
     EXPECT_NO_THROW(database::AddReprojectionError(data, "linear_pose_initialization", sensor_name, db));
-    EXPECT_NO_THROW(database::AddReprojectionError(data, "nonlinear_refinement", sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddImuData) {
-    TemporaryFile const temp_file{".db3"};
+    testing_utilities::TemporaryFile const temp_file{".db3"};
     auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true)};
 
     std::string_view sensor_name_1{"/imu/polaris/123"};
