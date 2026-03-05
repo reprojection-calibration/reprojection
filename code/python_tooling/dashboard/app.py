@@ -100,6 +100,9 @@ app.layout = html.Div(
                 "padding": "15px",
                 "borderBottom": "1px solid #ddd",
                 "backgroundColor": "#f9f9f9",
+                "position": "sticky",
+                "top": "0",
+                "zIndex": 1000,
             },
         ),
         # Dynamic content container that holds all the sensor data visualizations

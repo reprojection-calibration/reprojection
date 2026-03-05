@@ -38,10 +38,10 @@ TEST(DatabaseSensorDataInterface, TestAddCalibrationStep) {
     auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
     // Throws because it fails the "CHECK()" constraint in the calibration_steps table.
-    EXPECT_THROW(database::AddCalibrationStep("invalid_step", db), std::runtime_error);
+    EXPECT_THROW(database::AddCalibrationStep("invalid_step", "", db), std::runtime_error);
 
-    EXPECT_NO_THROW(AddCalibrationStep("linear_pose_initialization", db));
-    EXPECT_NO_THROW(AddCalibrationStep("nonlinear_refinement", db));
+    EXPECT_NO_THROW(AddCalibrationStep("linear_pose_initialization", "", db));
+    EXPECT_NO_THROW(AddCalibrationStep("nonlinear_refinement", "", db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddPoseData) {
@@ -56,8 +56,8 @@ TEST(DatabaseSensorDataInterface, TestAddPoseData) {
     EXPECT_THROW(database::AddPoseData(data, "linear_pose_initialization", sensor_name, db), std::runtime_error);
 
     // Add the calibration steps for two common stages.
-    AddCalibrationStep("linear_pose_initialization", db);
-    AddCalibrationStep("nonlinear_refinement", db);
+    AddCalibrationStep("linear_pose_initialization", "", db);
+    AddCalibrationStep("nonlinear_refinement", "", db);
 
     // Throws because this is not a valid foreign key in the steps table.
     EXPECT_THROW(database::AddPoseData(data, "invalid_step", sensor_name, db), std::runtime_error);
@@ -83,8 +83,8 @@ TEST(DatabaseSensorDataInterface, TestAddReprojectionError) {
     database::AddImage(timestamp_ns, sensor_name, db);
     AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db);
 
-    AddCalibrationStep("linear_pose_initialization", db);
-    AddCalibrationStep("nonlinear_refinement", db);
+    AddCalibrationStep("linear_pose_initialization", "", db);
+    AddCalibrationStep("nonlinear_refinement", "", db);
 
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     database::AddPoseData(frames, "linear_pose_initialization", sensor_name, db);

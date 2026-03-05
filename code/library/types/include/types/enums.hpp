@@ -21,6 +21,43 @@ enum class TargetType {
     AprilGrid3,
 };
 
+enum class CacheStatus {
+    CacheHit,
+    CacheKeyMiss,
+    StepNameMiss,
+};
+
+// TODO(Jack): Is this the right place to put functions like this? What about testing?
+inline std::string ToString(CameraModel const camera_model) {
+    if (camera_model == CameraModel::DoubleSphere) {
+        return "double_sphere";
+    } else if (camera_model == CameraModel::Pinhole) {
+        return "pinhole";
+    } else if (camera_model == CameraModel::PinholeRadtan4) {
+        return "pinhole_radtan4";
+    } else if (camera_model == CameraModel::UnifiedCameraModel) {
+        return "unified_camera_model";
+    } else {
+        throw std::runtime_error("Unrecognized argument passed to ToString(CameraModel)");  // LCOV_EXCL_LINE
+    }
+}
+
+inline CameraModel ToCameraModel(std::string_view camera_model_string) {
+    if (camera_model_string == "double_sphere") {
+        return CameraModel::DoubleSphere;
+    } else if (camera_model_string == "pinhole") {
+        return CameraModel::Pinhole;
+    } else if (camera_model_string ==
+               "pinhole_radtan4"
+               "pinhole_radtan4") {
+        return CameraModel::PinholeRadtan4;
+    } else if (camera_model_string == "unified_camera_model") {
+        return CameraModel::UnifiedCameraModel;
+    } else {
+        throw std::runtime_error("Unrecognized argument passed to ToCameraModel()");  // LCOV_EXCL_LINE
+    }
+}
+
 // TODO(Jack): Is this the right place to put functions like this? What about testing?
 inline TargetType ToTargetType(std::string const& enum_string) {
     if (enum_string == "checkerboard") {
@@ -31,6 +68,18 @@ inline TargetType ToTargetType(std::string const& enum_string) {
         return TargetType::AprilGrid3;
     } else {
         throw std::runtime_error("Unrecognized argument passed to ToTargetType(): " + enum_string);  // LCOV_EXCL_LINE
+    }
+}
+
+inline std::string ToString(CacheStatus const cache_status) {
+    if (cache_status == CacheStatus::CacheHit) {
+        return "cache_hit";
+    } else if (cache_status == CacheStatus::CacheKeyMiss) {
+        return "cache_key_miss";
+    } else if (cache_status == CacheStatus::StepNameMiss) {
+        return "step_name_miss";
+    } else {
+        throw std::runtime_error("Library implementation error ToString(CacheStatus)");
     }
 }
 

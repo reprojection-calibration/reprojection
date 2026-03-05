@@ -14,7 +14,9 @@ find_package(SQLite3 REQUIRED)
 # not be reflected in the generated header file.
 set(SQL_FILES
         sql/calibration_steps_insert.sql
+        sql/calibration_steps_select.sql
         sql/calibration_steps_table.sql
+        sql/calibration_steps_update.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
@@ -24,7 +26,11 @@ set(SQL_FILES
         sql/imu_data_insert.sql
         sql/imu_data_select.sql
         sql/imu_data_table.sql
+        sql/intrinsics_insert.sql
+        sql/intrinsics_select.sql
+        sql/intrinsics_table.sql
         sql/poses_insert.sql
+        sql/poses_select.sql
         sql/poses_table.sql
         sql/reprojection_error_insert.sql
         sql/reprojection_error_table.sql
@@ -61,9 +67,11 @@ set(SRC_FILES
         src/image_interface.cpp
         src/sensor_data_interface_adders.cpp
         src/sensor_data_interface_getters.cpp
+        src/sensor_data_interface_updater.cpp
         src/serialization.cpp
         src/sqlite3_helpers.cpp
         src/sqlite_wrappers.cpp
+        src/toml_converters.cpp
 )
 set(INCLUDE_DIRECTORIES
         ${CMAKE_BINARY_DIR}/database # Generated sql header files are found here
@@ -84,10 +92,12 @@ AddLibrary()
 set(TESTS
         src/serialization.test.cpp
         src/sqlite3_helpers.test.cpp
+        src/toml_converters.test.cpp
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface_adders.test.cpp
         test/sensor_data_interface_getters.test.cpp
+        test/sensor_data_interface_updater.test.cpp
         test/sqlite_wrappers.test.cpp
 )
 AddTests()

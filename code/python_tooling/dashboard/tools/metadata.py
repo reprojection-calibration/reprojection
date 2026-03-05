@@ -99,6 +99,9 @@ def build_step_selector(sensor_metadata):
         id="step-selector",
         options=step_names,
         value=step_names[0] if step_names else "",
+        style={
+            "whiteSpace": "nowrap"
+        }
     )
 
 

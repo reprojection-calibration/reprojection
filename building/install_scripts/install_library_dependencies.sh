@@ -8,6 +8,7 @@ apt-get install --no-install-recommends --yes \
     libopencv-dev \
     libprotobuf-dev \
     libsqlite3-dev \
+    libssl-dev \
     protobuf-compiler
 
 # Required for ceres-solver source build

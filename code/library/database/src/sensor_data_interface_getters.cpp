@@ -12,6 +12,7 @@
 
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
+#include "toml_converters.hpp"
 
 namespace reprojection::database {
 
@@ -70,6 +71,98 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
     }
 
     return targets;
+}
+
+// TODO(Jack): Long term we should put the cache keys in their own table, but for now they are directly in the
+// calibration_steps table.
+std::optional<std::string> GetCacheKey(std::shared_ptr<CalibrationDatabase const> const database,
+                                       std::string_view step_name) {
+    SqlStatement const statement{database->db, sql_statements::calibration_steps_select};
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, step_name);
+    } catch (...) {                                                        // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                         // LCOV_EXCL_LINE
+            ErrorMessage("GetCacheKey()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));     // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
+
+    int const code{sqlite3_step(statement.stmt)};
+    if (code != static_cast<int>(SqliteFlag::Row)) {
+        return std::nullopt;
+    }
+
+    std::string const cache_key{reinterpret_cast<const char*>(sqlite3_column_text(statement.stmt, 0))};
+
+    return cache_key;
+}
+
+std::optional<std::pair<CameraInfo, CameraState>> GetIntrinsic(
+    std::shared_ptr<CalibrationDatabase const> const database, std::string_view step_name,
+    std::string_view sensor_name) {
+    SqlStatement const statement{database->db, sql_statements::intrinsics_select};
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, step_name);
+        Sqlite3Tools::Bind(statement.stmt, 2, sensor_name);
+    } catch (...) {                                                         // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                          // LCOV_EXCL_LINE
+            ErrorMessage("GetIntrinsic()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));      // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
+
+    int const code{sqlite3_step(statement.stmt)};
+    if (code != static_cast<int>(SqliteFlag::Row)) {
+        return std::nullopt;
+    }
+
+    std::string const camera_model{reinterpret_cast<const char*>(sqlite3_column_text(statement.stmt, 0))};
+    double const width{sqlite3_column_double(statement.stmt, 1)};
+    double const height{sqlite3_column_double(statement.stmt, 2)};
+    std::string const intrinsics_toml{reinterpret_cast<const char*>(sqlite3_column_text(statement.stmt, 3))};
+
+    CameraInfo const camera_info{std::string(sensor_name), ToCameraModel(camera_model),
+                                 ImageBounds{0, width, 0, height}};
+    CameraState const camera_state{{FromToml(camera_info.camera_model, intrinsics_toml)}};
+
+    return std::pair{camera_info, camera_state};
+}
+
+Frames GetPoses(std::shared_ptr<CalibrationDatabase const> const database, std::string_view step_name,
+                               std::string_view sensor_name) {
+    SqlStatement const statement{database->db, sql_statements::poses_select};
+
+    DataKey const key{step_name, sensor_name, 0};
+    try {
+        Sqlite3Tools::Bind(statement.stmt, 1, key.step_name.value());
+        Sqlite3Tools::Bind(statement.stmt, 2, key.sensor_name);
+    } catch (...) {                                                          // LCOV_EXCL_LINE
+        std::throw_with_nested(std::runtime_error(                           // LCOV_EXCL_LINE
+            ErrorMessage(key, "GetPoses()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
+                         std::string(sqlite3_errmsg(database->db)))));       // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
+
+    Frames data;
+    while (true) {
+        int const code{sqlite3_step(statement.stmt)};
+        if (code == static_cast<int>(SqliteFlag::Done)) {
+            break;
+        } else if (code != static_cast<int>(SqliteFlag::Row)) {
+            throw std::runtime_error(ErrorMessage(key, "GetPoses()", SqliteErrorCode::FailedStep,  // LCOV_EXCL_LINE
+                                                  std::string(sqlite3_errmsg(database->db))));     // LCOV_EXCL_LINE
+        }
+
+        // TODO(Jack): Should we be doing any error checking here while reading the columns?
+        uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(statement.stmt, 0))};  // Warn cast!
+        double const rx{sqlite3_column_double(statement.stmt, 1)};
+        double const ry{sqlite3_column_double(statement.stmt, 2)};
+        double const rz{sqlite3_column_double(statement.stmt, 3)};
+        double const x{sqlite3_column_double(statement.stmt, 4)};
+        double const y{sqlite3_column_double(statement.stmt, 5)};
+        double const z{sqlite3_column_double(statement.stmt, 6)};
+
+        data.insert(Frame{timestamp_ns, {{rx, ry, rz, x, y, z}}});
+    }
+
+    return data;
 }
 
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
