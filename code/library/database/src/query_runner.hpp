@@ -8,6 +8,8 @@
 
 #include "database/sqlite_wrappers.hpp"
 
+#include "sqlite3_helpers.hpp"
+
 namespace reprojection::database {
 
 template <typename Binder, typename RowFunc>
@@ -25,15 +27,7 @@ void ExecuteQuery(sqlite3* const db, std::string_view sql, Binder&& binder, RowF
         std::throw_with_nested(std::runtime_error("TODO ERROR MESSAGE METHOD"));
     }
 
-    while (true) {
-        int const code{sqlite3_step(statement.stmt)};
-
-        if (code == SQLITE_DONE) {
-            break;
-        } else if (code != SQLITE_ROW) {
-            throw std::runtime_error("TODO ERROR MESSAGE METHOD");
-        }
-
+    while (Sqlite3Tools::StepRow(statement.stmt)) {
         on_row(statement.stmt);
     }
 }

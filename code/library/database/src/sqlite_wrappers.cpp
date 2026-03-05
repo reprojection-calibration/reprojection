@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "sqlite3_helpers.hpp"
+#include "statement_executor.hpp"
 
 namespace reprojection::database {
 
@@ -14,12 +15,8 @@ SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
 
 SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 
-SqlTransaction::SqlTransaction(sqlite3* const db) : db_{db} {
-    if (not Sqlite3Tools::Execute("BEGIN TRANSACTION", db_)) {
-        throw std::runtime_error(sqlite3_errmsg(db));
-    }
-}
+SqlTransaction::SqlTransaction(sqlite3* const db) : db_{db} { ExecuteStatement("BEGIN TRANSACTION", db_); }
 
-SqlTransaction::~SqlTransaction() { static_cast<void>(Sqlite3Tools::Execute("END TRANSACTION", db_)); }
+SqlTransaction::~SqlTransaction() { ExecuteStatement("END TRANSACTION", db_); }
 
 }  // namespace reprojection::database

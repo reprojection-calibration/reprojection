@@ -62,7 +62,6 @@ set(SRC_FILES
         src/sensor_data_interface_adders.cpp
         src/sensor_data_interface_getters.cpp
         src/serialization.cpp
-        src/sqlite3_helpers.cpp
         src/sqlite_wrappers.cpp
 )
 set(INCLUDE_DIRECTORIES
