@@ -10,6 +10,7 @@
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 
+#include "batch_insert.hpp"
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 #include "statement_executor.hpp"
@@ -109,32 +110,22 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
 
 void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
                 std::shared_ptr<CalibrationDatabase> const database) {
-    SqlTransaction const lock{(database->db)};
+    auto const binder{[&](sqlite3_stmt* stmt, auto const& data_i) {
+        auto const& [timestamp_ns, frame] = data_i;
 
-    for (auto const& [timestamp_ns, frame_i] : data) {
-        SqlStatement const statement{database->db, sql_statements::imu_data_insert};
+        Sqlite3Tools::Bind(stmt, 1, sensor_name);
+        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));
 
-        DataKey const key{sensor_name, timestamp_ns};
-        try {
-            Sqlite3Tools::Bind(statement.stmt, 1, key.sensor_name);
-            Sqlite3Tools::Bind(statement.stmt, 2, static_cast<int64_t>(key.timestamp_ns));  // Warn cast!
-            Sqlite3Tools::Bind(statement.stmt, 3, frame_i.angular_velocity[0]);
-            Sqlite3Tools::Bind(statement.stmt, 4, frame_i.angular_velocity[1]);
-            Sqlite3Tools::Bind(statement.stmt, 5, frame_i.angular_velocity[2]);
-            Sqlite3Tools::Bind(statement.stmt, 6, frame_i.linear_acceleration[0]);
-            Sqlite3Tools::Bind(statement.stmt, 7, frame_i.linear_acceleration[1]);
-            Sqlite3Tools::Bind(statement.stmt, 8, frame_i.linear_acceleration[2]);
-        } catch (std::runtime_error const& e) {                       // LCOV_EXCL_LINE
-            std::throw_with_nested(std::runtime_error(ErrorMessage(   // LCOV_EXCL_LINE
-                key, "AddImuData()", SqliteErrorCode::FailedBinding,  // LCOV_EXCL_LINE
-                std::string(sqlite3_errmsg(database->db)))));         // LCOV_EXCL_LINE
-        }  // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(stmt, 3, frame.angular_velocity[0]);
+        Sqlite3Tools::Bind(stmt, 4, frame.angular_velocity[1]);
+        Sqlite3Tools::Bind(stmt, 5, frame.angular_velocity[2]);
 
-        if (sqlite3_step(statement.stmt) != static_cast<int>(SqliteFlag::Done)) {
-            throw std::runtime_error(ErrorMessage(key, "AddImuData()", SqliteErrorCode::FailedStep,
-                                                  std::string(sqlite3_errmsg(database->db))));
-        }
-    }
+        Sqlite3Tools::Bind(stmt, 6, frame.linear_acceleration[0]);
+        Sqlite3Tools::Bind(stmt, 7, frame.linear_acceleration[1]);
+        Sqlite3Tools::Bind(stmt, 8, frame.linear_acceleration[2]);
+    }};
+
+    BatchInsert(sql_statements::imu_data_insert, data, binder, database->db);
 }
 
 }  // namespace reprojection::database
