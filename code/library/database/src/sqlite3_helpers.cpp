@@ -3,6 +3,8 @@
 #include <iostream>
 
 // TODO(Jack): Is this not kind of a circular include?
+#include <vector>
+
 #include "database/sqlite_wrappers.hpp"
 
 namespace reprojection::database {
@@ -36,7 +38,12 @@ std::string ToString(SqliteErrorCode const enumerator) {
 }
 
 [[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, DataKey const& key,
-                                                 void const* const blob_ptr, int const blob_size, sqlite3* const db) {
+                                                 std::vector<u_char> blob, sqlite3* const db) {
+    return AddBlob(sql_statement, key, std::as_bytes(std::span{blob}), db);
+}
+
+[[nodiscard]] SqliteResult Sqlite3Tools::AddBlob(std::string const& sql_statement, DataKey const& key,
+                                                 std::span<std::byte const> blob, sqlite3* const db) {
     SqlStatement const statement{db, sql_statement.c_str()};
 
     try {
@@ -44,11 +51,11 @@ std::string ToString(SqliteErrorCode const enumerator) {
             Bind(statement.stmt, 1, key.step_name.value());
             Bind(statement.stmt, 2, std::string(key.sensor_name).c_str());
             Bind(statement.stmt, 3, static_cast<int64_t>(key.timestamp_ns));  // Possible dangerous cast!
-            BindBlob(statement.stmt, 4, blob_ptr, blob_size);
+            BindBlob(statement.stmt, 4, blob);
         } else {
             Bind(statement.stmt, 1, std::string(key.sensor_name).c_str());
             Bind(statement.stmt, 2, static_cast<int64_t>(key.timestamp_ns));  // Possible dangerous cast!
-            BindBlob(statement.stmt, 3, blob_ptr, blob_size);
+            BindBlob(statement.stmt, 3, blob);
         }
     } catch (std::runtime_error const& e) {
         return SqliteErrorCode::FailedBinding;

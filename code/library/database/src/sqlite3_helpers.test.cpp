@@ -64,12 +64,13 @@ TEST(DatabaseSqlite3Helpers, TestAddBlob) {
     std::string const buffer{"the future is calibrated"};
 
     // Success
-    auto result{database::Sqlite3Tools::AddBlob(add_blob_sql, key, buffer.c_str(), std::size(buffer), db)};
+    auto result{database::Sqlite3Tools::AddBlob(add_blob_sql, key, std::as_bytes(std::span{buffer}), db)};
     ASSERT_TRUE(std::holds_alternative<database::SqliteFlag>(result));
     EXPECT_EQ(std::get<database::SqliteFlag>(result), database::SqliteFlag::Ok);
 
     // Failure case "failed step" - blob data itself is bad (i.e. nullptr)
-    result = database::Sqlite3Tools::AddBlob(add_blob_sql, key, nullptr, -1, db);
+    // ERRRO UPDATE NULLPTR CASE
+    result = database::Sqlite3Tools::AddBlob(add_blob_sql, key, std::vector<u_char>{}, db);
     ASSERT_TRUE(std::holds_alternative<database::SqliteErrorCode>(result));
     EXPECT_EQ(std::get<database::SqliteErrorCode>(result), database::SqliteErrorCode::FailedStep);
 
@@ -78,7 +79,7 @@ TEST(DatabaseSqlite3Helpers, TestAddBlob) {
     std::string const malformed_add_blob_sql_{
         "INSERT INTO example_blob_table (timestamp_ns, sensor_name) "
         "VALUES (?, ?);"};
-    result = database::Sqlite3Tools::AddBlob(malformed_add_blob_sql_, key, buffer.c_str(), std::size(buffer), db);
+    result = database::Sqlite3Tools::AddBlob(malformed_add_blob_sql_, key, std::as_bytes(std::span{buffer}), db);
     ASSERT_TRUE(std::holds_alternative<database::SqliteErrorCode>(result));
     EXPECT_EQ(std::get<database::SqliteErrorCode>(result), database::SqliteErrorCode::FailedBinding);
 }
@@ -87,5 +88,5 @@ TEST(DatabaseSqlite3Helpers, TestBindErrors) {
     EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, ""), std::runtime_error);
     EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, static_cast<int64_t>(123)), std::runtime_error);
     EXPECT_THROW(database::Sqlite3Tools::Bind(nullptr, 1, 1.23), std::runtime_error);
-    EXPECT_THROW(database::Sqlite3Tools::BindBlob(nullptr, 1, nullptr, -1), std::runtime_error);
+    EXPECT_THROW(database::Sqlite3Tools::BindBlob(nullptr, 1,  {}), std::runtime_error);
 }

@@ -2,9 +2,11 @@
 
 #include <sqlite3.h>
 
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <variant>
+#include <vector>
 
 #include "enums.hpp"
 #include "types.hpp"
@@ -40,7 +42,10 @@ struct Sqlite3Tools {
     //  inserting into a table that holds blobs indexed by timestamp and the sensor name. This is no strictly a problem,
     //  but the fact that this method now takes six arguments tells you that maybe we are missing an abstraction :)
     [[nodiscard]] static SqliteResult AddBlob(std::string const& sql_statement, DataKey const& key,
-                                              void const* const blob_ptr, int const blob_size, sqlite3* const db);
+                                              std::span<std::byte const> blob, sqlite3* const db);
+
+    [[nodiscard]] static SqliteResult AddBlob(std::string const& sql_statement, DataKey const& key,
+                                              std::vector<u_char> blob, sqlite3* const db);
 
     static void Bind(sqlite3_stmt* const stmt, int const index, std::string_view value) {
         if (sqlite3_bind_text(stmt, index, std::string(value).c_str(), -1, SQLITE_TRANSIENT) !=
@@ -62,8 +67,9 @@ struct Sqlite3Tools {
         }
     }
 
-    static void BindBlob(sqlite3_stmt* const stmt, int const index, void const* const blob_ptr, int const blob_size) {
-        if (sqlite3_bind_blob(stmt, index, blob_ptr, blob_size, SQLITE_STATIC) != static_cast<int>(SqliteFlag::Ok)) {
+    static void BindBlob(sqlite3_stmt* const stmt, int const index, std::span<std::byte const> blob) {
+        if (sqlite3_bind_blob(stmt, index, std::data(blob), std::size(blob), SQLITE_STATIC) !=
+            static_cast<int>(SqliteFlag::Ok)) {
             throw std::runtime_error("sqlite3_bind_blob() failed");
         }
     }

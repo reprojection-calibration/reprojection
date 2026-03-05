@@ -27,8 +27,7 @@ void AddImage(CameraImage const& data, std::string_view sensor_name,
     }
 
     DataKey const key{sensor_name, timestamp_ns};
-    SqliteResult const result{
-        Sqlite3Tools::AddBlob(sql_statements::image_insert, key, buffer.data(), std::size(buffer), database->db)};
+    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, key, buffer, database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error(ErrorMessage(key, "AddImage()", std::get<SqliteErrorCode>(result),
@@ -39,7 +38,8 @@ void AddImage(CameraImage const& data, std::string_view sensor_name,
 void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
     DataKey const key{sensor_name, timestamp_ns};
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, key, nullptr, -1, database->db)};
+    // TODO ERROR DO NOT HARDCODE EMPTY
+    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, key, std::vector<u_char>{}, database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error(ErrorMessage(key, "AddImage()", std::get<SqliteErrorCode>(result),

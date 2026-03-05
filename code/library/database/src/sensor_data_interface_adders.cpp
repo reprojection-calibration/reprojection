@@ -38,13 +38,32 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
     }
 
     DataKey const key{sensor_name, timestamp_ns};
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, key, buffer.c_str(),
-                                                    std::size(buffer), database->db)};
+    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::extracted_target_insert, key,
+                                                    std::as_bytes(std::span{buffer}), database->db)};
 
     if (std::holds_alternative<SqliteErrorCode>(result)) {
         throw std::runtime_error(ErrorMessage(key, "AddReprojectionError()", std::get<SqliteErrorCode>(result),
                                               std::string(sqlite3_errmsg(database->db))));
     }
+}
+
+void AddExtractedTargetData222(CameraMeasurement const& data, std::string_view sensor_name,
+                               std::shared_ptr<CalibrationDatabase> const database) {
+    auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
+        auto const& [timestamp_ns, target]{data};
+
+        protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
+        std::string buffer;
+        if (not serialized.SerializeToString(&buffer)) {
+            throw std::runtime_error("TODO ERROR MESSAGE HANDLING");
+        }
+
+        Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer}));
+    }};
+
+    ExecuteStatement(sql_statements::extracted_target_insert, binder, database->db);
 }
 
 // NOTE(Jack): We suppress the code coverage for SqliteErrorCode::FailedBinding because the only way I know how to
@@ -98,8 +117,8 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
         }
 
         DataKey const key{step_name, sensor_name, timestamp_ns};
-        SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::reprojection_error_insert, key, buffer.c_str(),
-                                                        std::size(buffer), database->db)};
+        SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::reprojection_error_insert, key,
+                                                        std::as_bytes(std::span{buffer}), database->db)};
 
         if (std::holds_alternative<SqliteErrorCode>(result)) {
             throw std::runtime_error(ErrorMessage(key, "AddReprojectionError()", std::get<SqliteErrorCode>(result),
