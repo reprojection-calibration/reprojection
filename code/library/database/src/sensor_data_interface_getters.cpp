@@ -6,7 +6,6 @@
 #include <memory>
 #include <string>
 
-#include "sqlite_wrappers.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 
@@ -26,7 +25,7 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
     ExecuteQuery(
         database->db, sql_statements::extracted_targets_select,
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
-        [&data](sqlite3_stmt* const stmt) {
+        [&data, sensor_name](sqlite3_stmt* const stmt) {
             uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
 
             auto const blob{Sqlite3Tools::SqliteBlob(stmt, 1)};
@@ -35,7 +34,7 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
 
             auto const deserialized{Deserialize(serialized)};
             if (not deserialized) {
-                throw std::runtime_error("TODO ERROR HANDLING");
+                throw std::runtime_error("Deserialize(ExtractedTargetProto) failed for " + std::string(sensor_name));
             }
 
             data.insert({timestamp_ns, deserialized.value()});

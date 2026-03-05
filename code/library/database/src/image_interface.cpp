@@ -23,7 +23,7 @@ void AddImage(CameraImage const& data, std::string_view sensor_name,
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", data.second, buffer)) {
-            throw std::runtime_error("TODO ERROR MESSAGE");
+            throw std::runtime_error("cv::imencode() failed for " + std::string(sensor_name));
         }
 
         Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
@@ -50,8 +50,8 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
     try {
         Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name);
         Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));  // Warn cast!
-    } catch (std::runtime_error const& e) {                                        // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error("TODO ERROR MESSAGE"));          // LCOV_EXCL_LINE
+    } catch (...) {                                                                // LCOV_EXCL_LINE
+        throw SqliteException(database->db, "");                                   // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 }
 

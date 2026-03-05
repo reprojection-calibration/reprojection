@@ -2,8 +2,6 @@
 
 #include <sqlite3.h>
 
-#include <exception>
-#include <stdexcept>
 #include <string_view>
 
 #include "sqlite3_helpers.hpp"
@@ -23,7 +21,7 @@ void ExecuteQuery(sqlite3* const db, std::string_view sql, Binder&& binder, RowF
             binder(statement.stmt);
         }
     } catch (...) {
-        std::throw_with_nested(std::runtime_error("TODO ERROR MESSAGE METHOD"));
+        throw SqliteException(db, sql);
     }
 
     while (Sqlite3Tools::StepRow(statement.stmt)) {

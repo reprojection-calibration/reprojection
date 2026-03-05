@@ -24,7 +24,7 @@ TEST(DatabaseStatementExecutors, TestExecute) {
 
     // Test with binding lambda.
     std::string const insert_sql{
-        "INSERT INTO example_data_table (record_id)"
+        "INSERT INTO example_data_table (record_id) "
         "VALUES (?);"};
     int64_t const example_record_id{0};
     EXPECT_NO_THROW(database::ExecuteStatement(

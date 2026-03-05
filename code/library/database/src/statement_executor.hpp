@@ -2,10 +2,9 @@
 
 #include <sqlite3.h>
 
-#include <exception>
-#include <stdexcept>
 #include <string_view>
 
+#include "sqlite3_helpers.hpp"
 #include "sqlite_wrappers.hpp"
 
 namespace reprojection::database {
@@ -17,11 +16,11 @@ void ExecuteStatement(std::string_view sql, Binder&& binder, sqlite3* db) {
     try {
         binder(statement.stmt);
     } catch (...) {
-        std::throw_with_nested(std::runtime_error("TODO ERROR MESSAGE METHOD"));
+        throw SqliteException(db, sql);
     }
 
     if (sqlite3_step(statement.stmt) != SQLITE_DONE) {
-        throw std::runtime_error("TODO ERROR MESSAGE METHOD");
+        throw SqliteException(db, sql);
     }
 }
 

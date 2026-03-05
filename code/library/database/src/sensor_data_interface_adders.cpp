@@ -31,7 +31,7 @@ void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sens
         protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
-            throw std::runtime_error("TODO ERROR MESSAGE HANDLING");
+            throw std::runtime_error("ExtractedTargetProto.SerializeToString() failed for " + std::string(sensor_name));
         }
 
         Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
@@ -72,7 +72,7 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
         protobuf_serialization::ArrayX2dProto const serialized{Serialize(frame)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
-            throw std::runtime_error("TODO ERROR CONTENT");
+            throw std::runtime_error("ArrayX2dProto.SerializeToString() failed for " + std::string(sensor_name));
         }
 
         Sqlite3Tools::Bind(stmt, 1, std::string(step_name));
