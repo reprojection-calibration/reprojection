@@ -63,7 +63,7 @@ struct Sqlite3Tools {
         auto const* const ptr{sqlite3_column_blob(stmt, col)};
         int const size{sqlite3_column_bytes(stmt, col)};
 
-        if (!ptr || size <= 0) {
+        if (not ptr || size <= 0) {
             return {};
         }
 
