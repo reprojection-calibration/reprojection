@@ -15,6 +15,21 @@ enum class CameraModel {
     UnifiedCameraModel = 5,
 };
 
+// TODO(Jack): Is this the right place to put functions like this? What about testing?
+inline std::string ToString(CameraModel const camera_model) {
+    if (camera_model == CameraModel::DoubleSphere) {
+        return "double_sphere";
+    } else if (camera_model == CameraModel::Pinhole) {
+        return "pinhole";
+    } else if (camera_model == CameraModel::PinholeRadtan4) {
+        return "pinhole_radtan4";
+    } else if (camera_model == CameraModel::UnifiedCameraModel) {
+        return "unified_camera_model";
+    } else {
+        throw std::runtime_error("Unrecognized argument passed to ToString(CameraModel)");  // LCOV_EXCL_LINE
+    }
+}
+
 enum class TargetType {
     Checkerboard,
     CircleGrid,
