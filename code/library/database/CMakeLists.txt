@@ -82,6 +82,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/batch_insert.test.cpp
         src/serialization.test.cpp
         src/statement_executor.test.cpp
         src/sqlite3_helpers.test.cpp
