@@ -2,23 +2,14 @@
 
 #include <sqlite3.h>
 
-#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
+#include "enums.hpp"
 #include "types.hpp"
 
 namespace reprojection::database {
-
-enum class SqliteFlag {
-    Done = SQLITE_DONE,
-    Ok = SQLITE_OK,
-    OpenReadOnly = SQLITE_OPEN_READONLY,
-    OpenReadWrite = SQLITE_OPEN_READWRITE,
-    OpenCreate = SQLITE_OPEN_CREATE,
-    Row = SQLITE_ROW
-};
 
 // TODO(Jack): Is there anyway that we can use official sqlite error codes like the Sqlite flags above? See note above
 // SqliteResult.
