@@ -60,7 +60,7 @@ void AddPoseData(Frames const& data, std::string_view step_name, std::string_vie
         Sqlite3Tools::Bind(stmt, 9, frame.pose[5]);
     }};
 
-    BatchInsert(sql_statements::poses_insert, data, binder, database->db);
+    BatchExecuteStatement(sql_statements::poses_insert, data, binder, database->db);
 }
 
 // NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
@@ -83,7 +83,7 @@ void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_
         Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer}));
     }};
 
-    BatchInsert(sql_statements::reprojection_error_insert, data, binder, database->db);
+    BatchExecuteStatement(sql_statements::reprojection_error_insert, data, binder, database->db);
 }
 
 void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
@@ -103,7 +103,7 @@ void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
         Sqlite3Tools::Bind(stmt, 8, frame.linear_acceleration[2]);
     }};
 
-    BatchInsert(sql_statements::imu_data_insert, data, binder, database->db);
+    BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, database->db);
 }
 
 }  // namespace reprojection::database

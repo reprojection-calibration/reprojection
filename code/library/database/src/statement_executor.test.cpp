@@ -27,3 +27,9 @@ TEST_F(SqliteTestFixture, TestExecute) {
             insert_sql, [](sqlite3_stmt* const stmt) { database::Sqlite3Tools::Bind(stmt, 2, example_record_id); }, db),
         std::runtime_error);
 }
+
+TEST_F(SqliteTestFixture, TestBatchExecuteStatement) {
+    CreateExampleTable();
+
+    EXPECT_NO_THROW(InsertRecordIds());
+}

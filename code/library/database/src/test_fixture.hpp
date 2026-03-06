@@ -21,7 +21,7 @@ class SqliteTestFixture : public ::testing::Test {
     }
 
     void InsertRecordIds() const {
-        reprojection::database::BatchInsert(
+        reprojection::database::BatchExecuteStatement(
             insert_sql, example_record_ids,
             [](sqlite3_stmt* const stmt, auto const& data_i) {
                 reprojection::database::Sqlite3Tools::Bind(stmt, 1, data_i);
