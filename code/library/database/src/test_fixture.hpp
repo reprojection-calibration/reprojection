@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "batch_insert.hpp"
 #include "statement_executor.hpp"
 
 class SqliteTestFixture : public ::testing::Test {

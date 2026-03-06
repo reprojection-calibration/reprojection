@@ -4,7 +4,6 @@
 
 #include <string>
 
-#include "batch_insert.hpp"
 #include "test_fixture.hpp"
 
 using namespace reprojection;

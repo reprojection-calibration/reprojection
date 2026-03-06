@@ -9,6 +9,7 @@
 
 namespace reprojection::database {
 
+// TODO(Jack): Add override without a binder if we use that case not just in testing.
 template <typename Binder, typename RowFunc>
 void ExecuteQuery(sqlite3* const db, std::string_view sql, Binder&& binder, RowFunc&& on_row) {
     SqlStatement statement{db, std::string(sql).c_str()};

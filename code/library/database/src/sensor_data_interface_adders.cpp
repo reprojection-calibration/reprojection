@@ -6,11 +6,9 @@
 #include <memory>
 #include <string>
 
-#include "sqlite_wrappers.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 
-#include "batch_insert.hpp"
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 #include "statement_executor.hpp"
@@ -23,6 +21,7 @@ void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationD
     ExecuteStatement(sql_statements::calibration_steps_insert, binder, database->db);
 }
 
+// TODO(Jack): Make batch insert.
 void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
                             std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
