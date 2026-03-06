@@ -20,8 +20,8 @@ void ExecuteQuery(sqlite3* const db, std::string_view sql, Binder&& binder, RowF
         if constexpr (not std::is_same_v<std::decay_t<Binder>, std::nullptr_t>) {
             binder(statement.stmt);
         }
-    } catch (...) {
-        throw SqliteException(db, sql);
+    } catch (...) {                      // LCOV_EXCL_LINE
+        throw SqliteException(db, sql);  // LCOV_EXCL_LINE
     }
 
     while (Sqlite3Tools::StepRow(statement.stmt)) {

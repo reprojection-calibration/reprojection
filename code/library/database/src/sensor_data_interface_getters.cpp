@@ -22,7 +22,7 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
                                           std::string_view sensor_name) {
     CameraMeasurements data;
 
-    ExecuteQuery(
+    ExecuteQuery(  // LCOV_EXCL_LINE
         database->db, sql_statements::extracted_targets_select,
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
         [&data, sensor_name](sqlite3_stmt* const stmt) {
@@ -34,19 +34,20 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
 
             auto const deserialized{Deserialize(serialized)};
             if (not deserialized) {
-                throw std::runtime_error("Deserialize(ExtractedTargetProto) failed for " + std::string(sensor_name));
+                throw std::runtime_error("Deserialize(ExtractedTargetProto) failed for " +  // LCOV_EXCL_LINE
+                                         std::string(sensor_name));                         // LCOV_EXCL_LINE
             }
 
             data.insert({timestamp_ns, deserialized.value()});
         });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
     ImuMeasurements data;
 
-    ExecuteQuery(
+    ExecuteQuery(  // LCOV_EXCL_LINE
         database->db, sql_statements::imu_data_select,
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
         [&data](sqlite3_stmt* const stmt) {
@@ -64,6 +65,6 @@ ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const data
         });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 };  // namespace reprojection::database

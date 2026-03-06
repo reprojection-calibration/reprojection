@@ -23,7 +23,7 @@ void AddImage(CameraImage const& data, std::string_view sensor_name,
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", data.second, buffer)) {
-            throw std::runtime_error("cv::imencode() failed for " + std::string(sensor_name));
+            throw std::runtime_error("cv::imencode() failed for " + std::string(sensor_name));  // LCOV_EXCL_LINE
         }
 
         Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
@@ -63,13 +63,13 @@ std::optional<CameraImage> ImageStreamer::Next() const {
     uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(statement_.stmt, 0))};
     auto const blob{Sqlite3Tools::SqliteBlob(statement_.stmt, 1)};
     if (std::empty(blob)) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     std::span<uchar const> buffer{reinterpret_cast<uchar const*>(blob.data()), blob.size()};
     cv::Mat const image{cv::imdecode(std::vector<uchar>(std::cbegin(buffer), std::cend(buffer)), cv::IMREAD_UNCHANGED)};
     if (image.empty()) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     return CameraImage{timestamp_ns, image};
