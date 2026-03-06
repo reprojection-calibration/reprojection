@@ -11,40 +11,37 @@
 #include "generated/sql.hpp"
 
 #include "sqlite3_helpers.hpp"
+#include "statement_executor.hpp"
 
 namespace reprojection::database {
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
 void AddImage(CameraImage const& data, std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
-    auto const& [timestamp_ns, image]{data};
+    auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
+        auto const& [timestamp_ns, image]{data};
 
-    std::vector<uchar> buffer;
-    if (not cv::imencode(".png", data.second, buffer)) {
-        throw std::runtime_error(
-            "AddImage() cv::imencode() failed for sensor: " + std::string(sensor_name) +  // LCOV_EXCL_LINE
-            " at timestamp_ns: " + std::to_string(timestamp_ns));                         // LCOV_EXCL_LINE
-    }
+        std::vector<uchar> buffer;
+        if (not cv::imencode(".png", data.second, buffer)) {
+            throw std::runtime_error("cv::imencode() failed for " + std::string(sensor_name));  // LCOV_EXCL_LINE
+        }
 
-    DataKey const key{sensor_name, timestamp_ns};
-    SqliteResult const result{
-        Sqlite3Tools::AddBlob(sql_statements::image_insert, key, buffer.data(), std::size(buffer), database->db)};
+        Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer}));
+    }};
 
-    if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage(key, "AddImage()", std::get<SqliteErrorCode>(result),
-                                              std::string(sqlite3_errmsg(database->db))));
-    }
+    ExecuteStatement(sql_statements::image_insert, binder, database->db);
 }
 
 void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
               std::shared_ptr<CalibrationDatabase> const database) {
-    DataKey const key{sensor_name, timestamp_ns};
-    SqliteResult const result{Sqlite3Tools::AddBlob(sql_statements::image_insert, key, nullptr, -1, database->db)};
+    auto const binder{[timestamp_ns, sensor_name](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+    }};
 
-    if (std::holds_alternative<SqliteErrorCode>(result)) {
-        throw std::runtime_error(ErrorMessage(key, "AddImage()", std::get<SqliteErrorCode>(result),
-                                              std::string(sqlite3_errmsg(database->db))));
-    }
+    ExecuteStatement(sql_statements::image_insert, binder, database->db);
 }
 
 ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
@@ -52,45 +49,27 @@ ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const da
     : database_{database}, statement_{database_->db, sql_statements::images_select}, sensor_name_{sensor_name} {
     try {
         Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name);
-        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));              // Warn cast!
-    } catch (std::runtime_error const& e) {                                                    // LCOV_EXCL_LINE
-        std::throw_with_nested(std::runtime_error(                                             // LCOV_EXCL_LINE
-            ErrorMessage(DataKey{sensor_name_, start_time}, "ImageStreamer::ImageStreamer()",  // LCOV_EXCL_LINE
-                         SqliteErrorCode::FailedBinding,                                       // LCOV_EXCL_LINE
-                         std::string(sqlite3_errmsg(database_->db)))));                        // LCOV_EXCL_LINE
+        Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));  // Warn cast!
+    } catch (...) {                                                                // LCOV_EXCL_LINE
+        throw SqliteException(database->db, "");                                   // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 }
 
-std::optional<CameraImage> ImageStreamer::Next() {
-    int const code{sqlite3_step(statement_.stmt)};
-    if (code == static_cast<int>(SqliteFlag::Done)) {
+std::optional<CameraImage> ImageStreamer::Next() const {
+    if (not Sqlite3Tools::StepRow(statement_.stmt)) {
         return std::nullopt;
-    } else if (code != static_cast<int>(SqliteFlag::Row)) {
-        std::cerr << ErrorMessage(DataKey{sensor_name_, 0}, "ImageStreamer::Next()",  // LCOV_EXCL_LINE
-                                  SqliteErrorCode::FailedStep,                        // LCOV_EXCL_LINE
-                                  std::string(sqlite3_errmsg(database_->db)))         // LCOV_EXCL_LINE
-                  << "\n";                                                            // LCOV_EXCL_LINE
-        return std::nullopt;                                                          // LCOV_EXCL_LINE
     }
 
-    uint64_t const timestamp_ns{std::stoull(reinterpret_cast<const char*>(sqlite3_column_text(statement_.stmt, 0)))};
-
-    uchar const* const blob{static_cast<uchar const*>(sqlite3_column_blob(statement_.stmt, 1))};
-    int const blob_size{sqlite3_column_bytes(statement_.stmt, 1)};
-    if (not blob or blob_size <= 0) {
-        std::cerr << "ImageStreamer::Next() blob reading failed for sensor: " + sensor_name_ +  // LCOV_EXCL_LINE
-                         " at timestamp_ns: " + std::to_string(timestamp_ns)                    // LCOV_EXCL_LINE
-                  << "\n";                                                                      // LCOV_EXCL_LINE
-        return std::nullopt;                                                                    // LCOV_EXCL_LINE
+    uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(statement_.stmt, 0))};
+    auto const blob{Sqlite3Tools::SqliteBlob(statement_.stmt, 1)};
+    if (std::empty(blob)) {
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
-    std::vector<uchar> const buffer(blob, blob + blob_size);
-    cv::Mat const image{cv::imdecode(buffer, cv::IMREAD_UNCHANGED)};
+    std::span<uchar const> buffer{reinterpret_cast<uchar const*>(blob.data()), blob.size()};
+    cv::Mat const image{cv::imdecode(std::vector<uchar>(std::cbegin(buffer), std::cend(buffer)), cv::IMREAD_UNCHANGED)};
     if (image.empty()) {
-        std::cerr << "ImageStreamer::Next() cv::imdecode() failed for sensor: " + sensor_name_ +  // LCOV_EXCL_LINE
-                         " at timestamp_ns: " + std::to_string(timestamp_ns)                      // LCOV_EXCL_LINE
-                  << "\n";                                                                        // LCOV_EXCL_LINE
-        return std::nullopt;                                                                      // LCOV_EXCL_LINE
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     return CameraImage{timestamp_ns, image};

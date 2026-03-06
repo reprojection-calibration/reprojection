@@ -15,6 +15,8 @@
 #include "testing_utilities/temporary_file.hpp"
 #include "types/sensor_data_types.hpp"
 
+// TODO(Jack): Refactor to use test fixture!
+
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 

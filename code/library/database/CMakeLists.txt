@@ -62,7 +62,6 @@ set(SRC_FILES
         src/sensor_data_interface_adders.cpp
         src/sensor_data_interface_getters.cpp
         src/serialization.cpp
-        src/sqlite3_helpers.cpp
         src/sqlite_wrappers.cpp
 )
 set(INCLUDE_DIRECTORIES
@@ -82,12 +81,14 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/query_runner.test.cpp
         src/serialization.test.cpp
+        src/statement_executor.test.cpp
         src/sqlite3_helpers.test.cpp
+        src/sqlite_wrappers.test.cpp
         test/calibration_database.test.cpp
         test/image_interface.test.cpp
         test/sensor_data_interface_adders.test.cpp
         test/sensor_data_interface_getters.test.cpp
-        test/sqlite_wrappers.test.cpp
 )
 AddTests()

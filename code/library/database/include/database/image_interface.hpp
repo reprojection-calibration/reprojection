@@ -7,8 +7,9 @@
 #include <opencv2/opencv.hpp>
 
 #include "database/calibration_database.hpp"
-#include "database/sqlite_wrappers.hpp"
 #include "types/sensor_data_types.hpp"
+
+#include "sqlite_wrappers.hpp"
 
 // NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
 // we will run into problems here with memory. Therefore, we create this streamer class which loads the images one by
@@ -37,7 +38,7 @@ class ImageStreamer {
     ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
                   uint64_t const start_time = 0);
 
-    std::optional<CameraImage> Next();
+    std::optional<CameraImage> Next() const;
 
    private:
     std::shared_ptr<CalibrationDatabase const> database_;
