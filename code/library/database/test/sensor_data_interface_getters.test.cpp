@@ -54,6 +54,25 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     }
 }
 
+TEST(DatabaseSensorDataInterface, TestReadCacheKey) {
+    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+
+    auto cache_key{database::ReadCacheKey(db, CalibrationStep::Lpi, "/cam/retro/123")};
+    EXPECT_FALSE(cache_key.has_value());
+
+    WriteToDb(CalibrationStep::Lpi, "/cam/retro/123", "1", db);
+
+    cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, "/cam/retro/123");
+    ASSERT_TRUE(cache_key.has_value());
+    EXPECT_EQ(cache_key.value(), "1");
+
+    WriteToDb(CalibrationStep::Lpi, "/cam/retro/123", "2", db);
+
+    cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, "/cam/retro/123");
+    ASSERT_TRUE(cache_key.has_value());
+    EXPECT_EQ(cache_key.value(), "2");
+}
+
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
     std::string_view sensor_name{"/imu/polaris/123"};
     ImuMeasurements const data{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //

@@ -44,6 +44,27 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
     return data;
 }  // LCOV_EXCL_LINE
 
+std::optional<std::string> ReadCacheKey(std::shared_ptr<CalibrationDatabase const> const database,
+                                        CalibrationStep const step_name, std::string_view sensor_name) {
+    std::optional<std::string> cache_key;
+
+    ExecuteQuery(
+        database->db, sql_statements::calibration_steps_select,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&cache_key](sqlite3_stmt* const stmt) {
+            if (const unsigned char* text = sqlite3_column_text(stmt, 0)) {
+                cache_key = std::string(reinterpret_cast<char const*>(text));
+            } else {
+                cache_key = std::nullopt;
+            }
+        });
+
+    return cache_key;
+}
+
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
     ImuMeasurements data;
 
