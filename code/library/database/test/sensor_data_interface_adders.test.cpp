@@ -26,7 +26,7 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddTarget() const { WriteToDb(sensor_name, CameraMeasurement{timestamp_ns, {}}, db); }
 
-    void AddStep(CalibrationStep const step_name) const { WriteToDb(step_name, db); }
+    void AddStep(CalibrationStep const step_name) const { WriteToDb(step_name, sensor_name, "", db); }
 
     void AddPose(CalibrationStep const step_name) const {
         Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
@@ -70,7 +70,7 @@ TEST_F(SensorDatabaseFixture, TestAddReprojectionError) {
 
     AddImage();
     AddTarget();
-    WriteToDb(CalibrationStep::Lpi, db);
+    AddStep(CalibrationStep::Lpi);
     AddPose(CalibrationStep::Lpi);
 
     EXPECT_NO_THROW(database::WriteToDb(CalibrationStep::Lpi, sensor_name, data, db));

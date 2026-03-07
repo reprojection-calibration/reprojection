@@ -64,10 +64,10 @@ int main() {
 
     // Write camera initialization to database
     try {
-        database::WriteToDb(CalibrationStep::Lpi, db);
+        database::WriteToDb(CalibrationStep::Lpi, sensor.sensor_name, "", db);
         database::WriteToDb(CalibrationStep::Lpi, sensor.sensor_name, initial_state.frames, db);
         database::WriteToDb(CalibrationStep::Lpi, sensor.sensor_name, initial_error, db);
-        database::WriteToDb(CalibrationStep::Cnlr, db);
+        database::WriteToDb(CalibrationStep::Cnlr, sensor.sensor_name, "", db);
         database::WriteToDb(CalibrationStep::Cnlr, sensor.sensor_name, optimized_state.frames, db);
         database::WriteToDb(CalibrationStep::Cnlr, sensor.sensor_name, optimized_error, db);
     } catch (std::exception const& e) {
