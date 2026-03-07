@@ -32,13 +32,13 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
 
     // Add three targets - due to foreign key relationship we need add an image before we add the target
     database::AddImage(timestamp_ns, sensor_name, db);
-    AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
+    WriteToDb({timestamp_ns, target}, sensor_name, db);
     timestamp_ns += 1;
     database::AddImage(timestamp_ns, sensor_name, db);
-    AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
+    WriteToDb({timestamp_ns, target}, sensor_name, db);
     timestamp_ns += 1;
     database::AddImage(timestamp_ns, sensor_name, db);
-    AddExtractedTargetData({timestamp_ns, target}, sensor_name, db);
+    WriteToDb({timestamp_ns, target}, sensor_name, db);
 
     CameraMeasurements const loaded_data{database::GetExtractedTargetData(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), 3);
@@ -67,7 +67,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
         // Create and write
         auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
 
-        EXPECT_NO_THROW(database::AddImuData(data, sensor_name, db));
+        EXPECT_NO_THROW(database::WriteToDb(data, sensor_name, db));
     }
     {
         // Const read only
@@ -84,13 +84,13 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
 
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    database::AddImuData({{5, {{1, 2, 3}, {4, 5, 6}}},  //
+    database::WriteToDb({{5, {{1, 2, 3}, {4, 5, 6}}},  //
                           {10, {Vector3d::Zero(), Vector3d::Zero()}},
                           {15, {Vector3d::Zero(), Vector3d::Zero()}}},
                          sensor_name_1, db);
     // Data from imu 456
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    database::AddImuData({{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
+    database::WriteToDb({{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
                           {20, {Vector3d::Zero(), Vector3d::Zero()}}},
                          sensor_name_2, db);
 

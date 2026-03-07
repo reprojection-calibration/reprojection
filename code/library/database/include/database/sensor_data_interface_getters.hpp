@@ -7,8 +7,7 @@
 
 namespace reprojection::database {
 
-CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database,
-                                          std::string_view sensor_name);
+CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name);
 
 ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name);
 

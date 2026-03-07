@@ -12,19 +12,19 @@
 
 namespace reprojection::database {
 
-void AddCalibrationStep(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database);
+void WriteToDb(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database);
 
 // RENAME - remove the data suffix
-void AddExtractedTargetData(CameraMeasurement const& data, std::string_view sensor_name,
-                            std::shared_ptr<CalibrationDatabase> const database);
+void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name,
+               std::shared_ptr<CalibrationDatabase> const database);
 
-void AddPoseData(Frames const& data, std::string_view step_name, std::string_view sensor_name,
-                 std::shared_ptr<CalibrationDatabase> const database);
+void WriteToDb(Frames const& data, std::string_view step_name, std::string_view sensor_name,
+               std::shared_ptr<CalibrationDatabase> const database);
 
-void AddReprojectionError(ReprojectionErrors const& data, std::string_view step_name, std::string_view sensor_name,
-                          std::shared_ptr<CalibrationDatabase> const database);
+void WriteToDb(ReprojectionErrors const& data, std::string_view step_name, std::string_view sensor_name,
+               std::shared_ptr<CalibrationDatabase> const database);
 
-void AddImuData(ImuMeasurements const& data, std::string_view sensor_name,
-                std::shared_ptr<CalibrationDatabase> const database);
+void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name,
+               std::shared_ptr<CalibrationDatabase> const database);
 
 }  // namespace reprojection::database

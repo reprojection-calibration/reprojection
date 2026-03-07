@@ -26,13 +26,13 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddImage() const { database::AddImage(timestamp_ns, sensor_name, db); }
 
-    void AddTarget() const { AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db); }
+    void AddTarget() const { WriteToDb(CameraMeasurement{timestamp_ns, {}}, sensor_name, db); }
 
-    void AddStep(std::string const& step) const { AddCalibrationStep(step, db); }
+    void AddStep(std::string const& step) const { WriteToDb(step, db); }
 
     void AddPose(std::string const& step) const {
         Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-        AddPoseData(frames, step, sensor_name, db);
+        WriteToDb(frames, step, sensor_name, db);
     }
 
     std::shared_ptr<database::CalibrationDatabase> db;
@@ -41,15 +41,15 @@ class SensorDatabaseFixture : public ::testing::Test {
 };
 
 TEST_F(SensorDatabaseFixture, AddExtractedTargetData) {
-    EXPECT_THROW(AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(WriteToDb(CameraMeasurement{timestamp_ns, {}}, sensor_name, db), std::runtime_error);
 
     AddImage();
 
-    EXPECT_NO_THROW(AddExtractedTargetData({timestamp_ns, {}}, sensor_name, db));
+    EXPECT_NO_THROW(WriteToDb(CameraMeasurement{timestamp_ns, {}}, sensor_name, db));
 }
 
 TEST_F(SensorDatabaseFixture, AddCalibrationStep) {
-    EXPECT_THROW(database::AddCalibrationStep("invalid_step", db), std::runtime_error);
+    EXPECT_THROW(database::WriteToDb("invalid_step", db), std::runtime_error);
 
     EXPECT_NO_THROW(AddStep("linear_pose_initialization"));
     EXPECT_NO_THROW(AddStep("nonlinear_refinement"));
@@ -68,15 +68,14 @@ TEST_F(SensorDatabaseFixture, TestAddReprojectionError) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
     // Fails foreign key constraint because there is no corresponding poses table entry yet
-    EXPECT_THROW(database::AddReprojectionError(data, "linear_pose_initialization", sensor_name, db),
-                 std::runtime_error);
+    EXPECT_THROW(database::WriteToDb(data, "linear_pose_initialization", sensor_name, db), std::runtime_error);
 
     AddImage();
     AddTarget();
-    AddCalibrationStep("linear_pose_initialization", db);
+    WriteToDb("linear_pose_initialization", db);
     AddPose("linear_pose_initialization");
 
-    EXPECT_NO_THROW(database::AddReprojectionError(data, "linear_pose_initialization", sensor_name, db));
+    EXPECT_NO_THROW(database::WriteToDb(data, "linear_pose_initialization", sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddImuData) {
@@ -84,16 +83,16 @@ TEST(DatabaseSensorDataInterface, TestAddImuData) {
     auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true)};
 
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    EXPECT_NO_THROW(database::AddImuData({{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                                          {1, {Vector3d::Zero(), Vector3d::Zero()}}},
-                                         sensor_name_1, db));
+    EXPECT_NO_THROW(database::WriteToDb({{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
+                                         {1, {Vector3d::Zero(), Vector3d::Zero()}}},
+                                        sensor_name_1, db));
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary
     // key (timestamp_ns, sensor_name) so it is not a duplicate
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    EXPECT_NO_THROW(database::AddImuData({{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db));
+    EXPECT_NO_THROW(database::WriteToDb({{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db));
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
-    EXPECT_THROW(database::AddImuData({{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
+    EXPECT_THROW(database::WriteToDb({{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
                  std::runtime_error);
 }
