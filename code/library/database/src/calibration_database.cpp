@@ -39,6 +39,7 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     }
 
     ExecuteStatement(sql_statements::calibration_steps_table, db);
+    ExecuteStatement(sql_statements::camera_info_table, db);
     ExecuteStatement(sql_statements::images_table, db);
     ExecuteStatement(sql_statements::extracted_targets_table, db);
     ExecuteStatement(sql_statements::imu_data_table, db);
