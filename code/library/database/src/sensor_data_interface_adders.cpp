@@ -23,7 +23,7 @@ void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, st
         Sqlite3Tools::Bind(stmt, 3, cache_key);
     }};
 
-    ExecuteStatement(sql_statements::calibration_steps_insert, binder, database->db);
+    ExecuteStatement(sql_statements::calibration_steps_upsert, binder, database->db);
 }
 
 // TODO(Jack): Make batch insert.

@@ -26,7 +26,9 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddTarget() const { WriteToDb(sensor_name, CameraMeasurement{timestamp_ns, {}}, db); }
 
-    void AddStep(CalibrationStep const step_name) const { WriteToDb(step_name, sensor_name, "", db); }
+    void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
+        WriteToDb(step_name, sensor_name, cache_key, db);
+    }
 
     void AddPose(CalibrationStep const step_name) const {
         Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
@@ -51,6 +53,12 @@ TEST_F(SensorDatabaseFixture, AddCalibrationStep) {
     EXPECT_NO_THROW(AddStep(CalibrationStep::Cnlr));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Sint));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Snlr));
+}
+
+TEST_F(SensorDatabaseFixture, AddCalibrationStepUpsert) {
+    EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "1"));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "2"));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "3"));
 }
 
 TEST_F(SensorDatabaseFixture, TestAddPoseData) {

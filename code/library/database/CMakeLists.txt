@@ -13,8 +13,8 @@ find_package(SQLite3 REQUIRED)
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
-        sql/calibration_steps_insert.sql
         sql/calibration_steps_table.sql
+        sql/calibration_steps_upsert.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
