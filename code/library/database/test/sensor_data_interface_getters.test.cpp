@@ -9,8 +9,8 @@
 #include <opencv2/opencv.hpp>
 
 #include "database/calibration_database.hpp"
+#include "database/database_write.hpp"
 #include "database/image_interface.hpp"
-#include "database/sensor_data_interface_adders.hpp"
 #include "testing_utilities/constants.hpp"
 #include "testing_utilities/temporary_file.hpp"
 #include "types/sensor_data_types.hpp"
