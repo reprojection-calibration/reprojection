@@ -65,11 +65,11 @@ int main() {
     // Write camera initialization to database
     try {
         database::WriteToDb("linear_pose_initialization", db);
-        database::WriteToDb(initial_state.frames, "linear_pose_initialization", sensor.sensor_name, db);
-        database::WriteToDb(initial_error, "linear_pose_initialization", sensor.sensor_name, db);
+        database::WriteToDb("linear_pose_initialization", sensor.sensor_name, initial_state.frames, db);
+        database::WriteToDb("linear_pose_initialization", sensor.sensor_name, initial_error, db);
         database::WriteToDb("nonlinear_refinement", db);
-        database::WriteToDb(optimized_state.frames, "nonlinear_refinement", sensor.sensor_name, db);
-        database::WriteToDb(optimized_error, "nonlinear_refinement", sensor.sensor_name, db);
+        database::WriteToDb("nonlinear_refinement", sensor.sensor_name, optimized_state.frames, db);
+        database::WriteToDb("nonlinear_refinement", sensor.sensor_name, optimized_error, db);
     } catch (std::exception const& e) {
         std::cout << "Caught " << e.what() << std::endl;
     }

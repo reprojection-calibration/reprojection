@@ -15,15 +15,15 @@
 
 namespace reprojection::database {
 
-void WriteToDb(std::string_view step_name,  std::shared_ptr<CalibrationDatabase> const database) {
+void WriteToDb(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[step_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, step_name); }};
 
     ExecuteStatement(sql_statements::calibration_steps_insert, binder, database->db);
 }
 
 // TODO(Jack): Make batch insert.
-void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name,
-                std::shared_ptr<CalibrationDatabase> const database) {
+void WriteToDb(std::string_view sensor_name, CameraMeasurement const& data,
+               std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
         auto const& [timestamp_ns, target]{data};
 
@@ -42,8 +42,8 @@ void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name,
     ExecuteStatement(sql_statements::extracted_target_insert, binder, database->db);
 }
 
-void WriteToDb(Frames const& data, std::string_view step_name, std::string_view sensor_name,
-                std::shared_ptr<CalibrationDatabase> const database) {
+void WriteToDb(std::string_view step_name, std::string_view sensor_name, Frames const& data,
+               std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
@@ -64,8 +64,8 @@ void WriteToDb(Frames const& data, std::string_view step_name, std::string_view 
 
 // NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
-void WriteToDb(ReprojectionErrors const& data, std::string_view step_name, std::string_view sensor_name,
-                std::shared_ptr<CalibrationDatabase> const database) {
+void WriteToDb(std::string_view step_name, std::string_view sensor_name, ReprojectionErrors const& data,
+               std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
@@ -85,7 +85,8 @@ void WriteToDb(ReprojectionErrors const& data, std::string_view step_name, std::
     BatchExecuteStatement(sql_statements::reprojection_error_insert, data, binder, database->db);
 }
 
-void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name,  std::shared_ptr<CalibrationDatabase> const database) {
+void WriteToDb(std::string_view sensor_name, ImuMeasurements const& data,
+               std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
