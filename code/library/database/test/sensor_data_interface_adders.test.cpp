@@ -16,8 +16,6 @@
 
 #include "sqlite3_helpers.hpp"
 
-// TODO(Jack): We need to create an enum for these step names! Or something to make this less error prone.
-
 using namespace reprojection;
 
 class SensorDatabaseFixture : public ::testing::Test {
@@ -28,11 +26,11 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddTarget() const { WriteToDb(sensor_name, CameraMeasurement{timestamp_ns, {}}, db); }
 
-    void AddStep(std::string const& step) const { WriteToDb(step, db); }
+    void AddStep(CalibrationStep const step_name) const { WriteToDb(step_name, db); }
 
-    void AddPose(std::string const& step) const {
+    void AddPose(CalibrationStep const step_name) const {
         Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-        WriteToDb(step, sensor_name, frames, db);
+        WriteToDb(step_name, sensor_name, frames, db);
     }
 
     std::shared_ptr<database::CalibrationDatabase> db;
@@ -49,33 +47,33 @@ TEST_F(SensorDatabaseFixture, AddExtractedTargetData) {
 }
 
 TEST_F(SensorDatabaseFixture, AddCalibrationStep) {
-    EXPECT_THROW(database::WriteToDb("invalid_step", db), std::runtime_error);
-
-    EXPECT_NO_THROW(AddStep("linear_pose_initialization"));
-    EXPECT_NO_THROW(AddStep("nonlinear_refinement"));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::Cnlr));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::Sint));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::Snlr));
 }
 
 TEST_F(SensorDatabaseFixture, TestAddPoseData) {
     // Throws because the calibration step linear_pose_initialization has not been added to the database yet.
-    EXPECT_THROW(AddPose("linear_pose_initialization"), std::runtime_error);
+    EXPECT_THROW(AddPose(CalibrationStep::Lpi), std::runtime_error);
 
-    AddStep("linear_pose_initialization");
+    AddStep(CalibrationStep::Lpi);
 
-    EXPECT_NO_THROW(AddPose("linear_pose_initialization"));
+    EXPECT_NO_THROW(AddPose(CalibrationStep::Lpi));
 }
 
 TEST_F(SensorDatabaseFixture, TestAddReprojectionError) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
     // Fails foreign key constraint because there is no corresponding poses table entry yet
-    EXPECT_THROW(database::WriteToDb("linear_pose_initialization", sensor_name, data, db), std::runtime_error);
+    EXPECT_THROW(database::WriteToDb(CalibrationStep::Lpi, sensor_name, data, db), std::runtime_error);
 
     AddImage();
     AddTarget();
-    WriteToDb("linear_pose_initialization", db);
-    AddPose("linear_pose_initialization");
+    WriteToDb(CalibrationStep::Lpi, db);
+    AddPose(CalibrationStep::Lpi);
 
-    EXPECT_NO_THROW(database::WriteToDb("linear_pose_initialization", sensor_name, data, db));
+    EXPECT_NO_THROW(database::WriteToDb(CalibrationStep::Lpi, sensor_name, data, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestAddImuData) {

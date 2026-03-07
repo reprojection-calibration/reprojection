@@ -12,16 +12,16 @@
 
 namespace reprojection::database {
 
-void WriteToDb(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database);
+void WriteToDb(CalibrationStep step_name, std::shared_ptr<CalibrationDatabase> const database);
 
 // RENAME - remove the data suffix
 void WriteToDb(std::string_view sensor_name, CameraMeasurement const& data,
                std::shared_ptr<CalibrationDatabase> const database);
 
-void WriteToDb(std::string_view step_name, std::string_view sensor_name, Frames const& data,
+void WriteToDb(CalibrationStep step_name, std::string_view sensor_name, Frames const& data,
                std::shared_ptr<CalibrationDatabase> const database);
 
-void WriteToDb(std::string_view step_name, std::string_view sensor_name, ReprojectionErrors const& data,
+void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, ReprojectionErrors const& data,
                std::shared_ptr<CalibrationDatabase> const database);
 
 void WriteToDb(std::string_view sensor_name, ImuMeasurements const& data,

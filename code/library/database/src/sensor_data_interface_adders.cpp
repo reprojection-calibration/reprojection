@@ -15,8 +15,8 @@
 
 namespace reprojection::database {
 
-void WriteToDb(std::string_view step_name, std::shared_ptr<CalibrationDatabase> const database) {
-    auto const binder{[step_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, step_name); }};
+void WriteToDb(CalibrationStep const step_name, std::shared_ptr<CalibrationDatabase> const database) {
+    auto const binder{[step_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, ToString(step_name)); }};
 
     ExecuteStatement(sql_statements::calibration_steps_insert, binder, database->db);
 }
@@ -42,12 +42,12 @@ void WriteToDb(std::string_view sensor_name, CameraMeasurement const& data,
     ExecuteStatement(sql_statements::extracted_target_insert, binder, database->db);
 }
 
-void WriteToDb(std::string_view step_name, std::string_view sensor_name, Frames const& data,
+void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, Frames const& data,
                std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
-        Sqlite3Tools::Bind(stmt, 1, step_name);
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
         Sqlite3Tools::Bind(stmt, 2, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Warn cast!
 
@@ -64,7 +64,7 @@ void WriteToDb(std::string_view step_name, std::string_view sensor_name, Frames 
 
 // NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
-void WriteToDb(std::string_view step_name, std::string_view sensor_name, ReprojectionErrors const& data,
+void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, ReprojectionErrors const& data,
                std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
@@ -76,7 +76,7 @@ void WriteToDb(std::string_view step_name, std::string_view sensor_name, Reproje
                                      std::string(sensor_name));                         // LCOV_EXCL_LINE
         }
 
-        Sqlite3Tools::Bind(stmt, 1, std::string(step_name));
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
         Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
         Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
         Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer}));
