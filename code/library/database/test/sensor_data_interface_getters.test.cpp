@@ -12,17 +12,30 @@
 #include "testing_utilities/constants.hpp"
 #include "types/sensor_data_types.hpp"
 
-// TODO(Jack): Refactor to use test fixture!
-
 using namespace reprojection;
 
-TEST(DatabaseSensorDataInterface, TestReadCameraInfo) {
-    // TODO(Jack): Use test fixture!
-    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+class CameraReadFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
 
-    std::string const sensor_name{"/cam/retro/123"};
-    database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+        database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+    }
 
+    void AddTarget(uint64_t const timestamp_ns) const {
+        // Due to foreign key relationship we need add an image before we add the target
+        database::AddImage(timestamp_ns, sensor_name, db);
+        database::WriteToDb(sensor_name, {timestamp_ns, target}, db);
+    }
+
+    std::shared_ptr<database::CalibrationDatabase> db;
+    std::string sensor_name{"/cam/retro/123"};
+    ExtractedTarget target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
+                                  MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
+                           {{5, 6}, {2, 3}, {650, 600}}};
+};
+
+TEST_F(CameraReadFixture, TestReadCameraInfo) {
     auto camera_info{database::ReadCameraInfo(db, "/nonexistent/camera")};
     EXPECT_FALSE(camera_info.has_value());
 
@@ -36,27 +49,10 @@ TEST(DatabaseSensorDataInterface, TestReadCameraInfo) {
     EXPECT_EQ(camera_info->bounds.v_max, testing_utilities::image_bounds.v_max);
 }
 
-TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
-    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
-
-    uint64_t timestamp_ns{0};
-    std::string const sensor_name{"/cam/retro/123"};
-    ExtractedTarget const target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
-                                        MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
-                                 {{5, 6}, {2, 3}, {650, 600}}};
-
-    // TODO(Jack): Use test fixture!
-    // Add three targets - due to foreign key relationship we need add an image before we add the target
-    database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
-
-    database::AddImage(timestamp_ns, sensor_name, db);
-    WriteToDb(sensor_name, {timestamp_ns, target}, db);
-    timestamp_ns += 1;
-    database::AddImage(timestamp_ns, sensor_name, db);
-    WriteToDb(sensor_name, {timestamp_ns, target}, db);
-    timestamp_ns += 1;
-    database::AddImage(timestamp_ns, sensor_name, db);
-    WriteToDb(sensor_name, {timestamp_ns, target}, db);
+TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
+    AddTarget(0);
+    AddTarget(1);
+    AddTarget(2);
 
     CameraMeasurements const loaded_data{database::GetExtractedTargetData(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), 3);
@@ -72,12 +68,7 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     }
 }
 
-TEST(DatabaseSensorDataInterface, TestReadCacheKey) {
-    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
-
-    std::string const sensor_name{"/cam/retro/123"};
-    database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
-
+TEST_F(CameraReadFixture, TestReadCacheKey) {
     auto cache_key{database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name)};
     EXPECT_FALSE(cache_key.has_value());
 
