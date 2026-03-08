@@ -19,6 +19,8 @@ set(SQL_FILES
         sql/camera_info_insert.sql
         sql/camera_info_select.sql
         sql/camera_info_table.sql
+        sql/camera_intrinsics_insert.sql
+        sql/camera_intrinsics_table.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
@@ -67,6 +69,7 @@ set(SRC_FILES
         src/image_interface.cpp
         src/serialization.cpp
         src/sqlite_wrappers.cpp
+        src/toml_converters.cpp
 )
 set(INCLUDE_DIRECTORIES
         ${CMAKE_BINARY_DIR}/database # Generated sql header files are found here
@@ -90,6 +93,7 @@ set(TESTS
         src/statement_executor.test.cpp
         src/sqlite3_helpers.test.cpp
         src/sqlite_wrappers.test.cpp
+        src/toml_converters.test.cpp
         test/calibration_database.test.cpp
         test/database_read.test.cpp
         test/database_write.test.cpp

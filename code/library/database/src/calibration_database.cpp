@@ -43,9 +43,10 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
         ExecuteStatement(sql_statements::camera_info_table, db);
         ExecuteStatement(sql_statements::images_table, db);
         ExecuteStatement(sql_statements::extracted_targets_table, db);
-        ExecuteStatement(sql_statements::imu_data_table, db);
+        ExecuteStatement(sql_statements::camera_intrinsics_table, db);
         ExecuteStatement(sql_statements::poses_table, db);
         ExecuteStatement(sql_statements::reprojection_error_table, db);
+        ExecuteStatement(sql_statements::imu_data_table, db);
 
         // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For example a
         // row in initial_camera_poses can only possibly exist if there is a corresponding entry in extracted_targets.

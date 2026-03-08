@@ -12,6 +12,7 @@
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 #include "statement_executor.hpp"
+#include "toml_converters.hpp"
 
 namespace reprojection::database {
 
@@ -55,6 +56,18 @@ void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name, DbPt
     }};
 
     ExecuteStatement(sql_statements::extracted_target_insert, binder, db->db);
+}
+
+void WriteToDb(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
+               std::string_view sensor_name, DbPtr const db) {
+    auto const binder{[&data, camera_model, step_name, sensor_name](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 3, ToString(camera_model));
+        Sqlite3Tools::Bind(stmt, 4, ToToml(camera_model, data.intrinsics));
+    }};
+
+    ExecuteStatement(sql_statements::camera_intrinsics_insert, binder, db->db);
 }
 
 void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, DbPtr const db) {

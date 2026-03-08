@@ -46,7 +46,7 @@ class SensorDatabaseFixture : public ::testing::Test {
 
 TEST_F(SensorDatabaseFixture, WriteCameraInfo) {
     EXPECT_NO_THROW(AddCamera());
-    EXPECT_THROW(AddCamera(), std::runtime_error); // Duplicate entry not allowed!
+    EXPECT_THROW(AddCamera(), std::runtime_error);  // Duplicate entry not allowed!
 }
 
 TEST_F(SensorDatabaseFixture, AddExtractedTargetData) {
@@ -73,6 +73,18 @@ TEST_F(SensorDatabaseFixture, AddCalibrationStepUpsert) {
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "1"));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "2"));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "3"));
+}
+
+TEST_F(SensorDatabaseFixture, TestAddCameraIntrinsic) {
+    EXPECT_THROW(database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
+                                     CalibrationStep::Lpi, sensor_name, db),
+                 std::runtime_error);
+
+    AddCamera();
+    AddStep(CalibrationStep::Lpi);
+
+    EXPECT_NO_THROW(database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
+                                        CalibrationStep::Lpi, sensor_name, db));
 }
 
 TEST_F(SensorDatabaseFixture, TestAddPoseData) {
