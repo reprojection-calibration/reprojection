@@ -38,21 +38,24 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
         throw std::runtime_error("Attempted to open database at path - " + db_path + " - but was unsuccessful");
     }
 
-    ExecuteStatement(sql_statements::calibration_steps_table, db);
-    ExecuteStatement(sql_statements::camera_info_table, db);
-    ExecuteStatement(sql_statements::images_table, db);
-    ExecuteStatement(sql_statements::extracted_targets_table, db);
-    ExecuteStatement(sql_statements::imu_data_table, db);
-    ExecuteStatement(sql_statements::poses_table, db);
-    ExecuteStatement(sql_statements::reprojection_error_table, db);
+    if (not read_only) {
+        ExecuteStatement(sql_statements::calibration_steps_table, db);
+        ExecuteStatement(sql_statements::camera_info_table, db);
+        ExecuteStatement(sql_statements::images_table, db);
+        ExecuteStatement(sql_statements::extracted_targets_table, db);
+        ExecuteStatement(sql_statements::imu_data_table, db);
+        ExecuteStatement(sql_statements::poses_table, db);
+        ExecuteStatement(sql_statements::reprojection_error_table, db);
 
-    // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For example a row
-    // in initial_camera_poses can only possibly exist if there is a corresponding entry in extracted_targets. And that
-    // row in the extracted_targets table can only possibly exist if there is a corresponding entry in the images table.
-    //
-    // That being said sqlite has the foreign key option off by default (https://sqlite.org/foreignkeys.html) so we need
-    // to manually turn it on here.
-    ExecuteStatement("PRAGMA foreign_keys = ON;", db);
+        // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For example a
+        // row in initial_camera_poses can only possibly exist if there is a corresponding entry in extracted_targets.
+        // And that row in the extracted_targets table can only possibly exist if there is a corresponding entry in the
+        // images table.
+        //
+        // That being said sqlite has the foreign key option off by default (https://sqlite.org/foreignkeys.html) so we
+        // need to manually turn it on here.
+        ExecuteStatement("PRAGMA foreign_keys = ON;", db);
+    }
 }
 
 CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db); }

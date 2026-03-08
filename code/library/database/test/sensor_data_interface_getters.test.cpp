@@ -74,26 +74,17 @@ TEST(DatabaseSensorDataInterface, TestReadCacheKey) {
 }
 
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
+    auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+
     std::string_view sensor_name{"/imu/polaris/123"};
     ImuMeasurements const data{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
                                {1, {Vector3d::Zero(), Vector3d::Zero()}},
                                {2, {Vector3d::Zero(), Vector3d::Zero()}}};
 
-    // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only
-    // database instance in the same test using the same file.
-    {
-        // Create and write
-        auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+    EXPECT_NO_THROW(database::WriteToDb(sensor_name, data, db));
 
-        EXPECT_NO_THROW(database::WriteToDb(sensor_name, data, db));
-    }
-    {
-        // Const read only
-        auto const db{std::make_shared<database::CalibrationDatabase const>(":memory:", false, true)};
-
-        auto const loaded_data{database::GetImuData(db, sensor_name)};
-        EXPECT_EQ(std::size(loaded_data), std::size(data));
-    }
+    auto const loaded_data{database::GetImuData(db, sensor_name)};
+    EXPECT_EQ(std::size(loaded_data), std::size(data));
 }
 
 TEST(DatabaseSensorDataInterface, TestGetImuData) {
