@@ -1,5 +1,3 @@
-#include "database/sensor_data_interface_getters.hpp"
-
 #include <gtest/gtest.h>
 
 #include <filesystem>
@@ -7,6 +5,7 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
+#include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "database/image_interface.hpp"
 #include "testing_utilities/constants.hpp"

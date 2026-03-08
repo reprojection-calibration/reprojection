@@ -1,10 +1,10 @@
-#include "database/sensor_data_interface_getters.hpp"
-
 #include <sqlite3.h>
 
 #include <filesystem>
 #include <memory>
 #include <string>
+
+#include "database/database_read.hpp"
 
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"

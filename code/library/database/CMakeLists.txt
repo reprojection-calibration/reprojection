@@ -62,9 +62,9 @@ add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 
 set(SRC_FILES
         src/calibration_database.cpp
+        src/database_read.cpp
         src/database_write.cpp
         src/image_interface.cpp
-        src/sensor_data_interface_getters.cpp
         src/serialization.cpp
         src/sqlite_wrappers.cpp
 )
@@ -91,8 +91,8 @@ set(TESTS
         src/sqlite3_helpers.test.cpp
         src/sqlite_wrappers.test.cpp
         test/calibration_database.test.cpp
+        test/database_read.test.cpp
         test/database_write.test.cpp
         test/image_interface.test.cpp
-        test/sensor_data_interface_getters.test.cpp
 )
 AddTests()
