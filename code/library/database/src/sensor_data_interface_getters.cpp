@@ -15,11 +15,40 @@
 
 namespace reprojection::database {
 
+// TODO(Jack): Write helper to convert a text column to a string, we copy paste this logic in several places, same for
+//  the timestamp int field.
+// NOTE(Jack): We hardcode the minumum image values to zero here, I think that is not a problem, but lets not forget
+// that we do it here.
+std::optional<CameraInfo> ReadCameraInfo(DbConstPtr const database, std::string_view sensor_name) {
+    std::optional<CameraInfo> camera_info;
+
+    ExecuteQuery(
+        database->db, sql_statements::camera_info_select,
+        [sensor_name](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, sensor_name);
+        },
+        [&camera_info](sqlite3_stmt* const stmt) {
+            CameraInfo result;
+            result.camera_model = ToCameraModel(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
+            result.bounds.v_max = sqlite3_column_int(stmt, 1);
+            result.bounds.v_min = 0;
+            result.bounds.u_max = sqlite3_column_int(stmt, 2);
+            result.bounds.u_min = 0;
+
+            camera_info = result;
+        });
+
+    if (camera_info.has_value()) {
+        camera_info->sensor_name = sensor_name;
+    }
+
+    return camera_info;
+}
+
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
 // differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
-CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase const> const database,
-                                          std::string_view sensor_name) {
+CameraMeasurements GetExtractedTargetData(DbConstPtr const database, std::string_view sensor_name) {
     CameraMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -44,8 +73,8 @@ CameraMeasurements GetExtractedTargetData(std::shared_ptr<CalibrationDatabase co
     return data;
 }  // LCOV_EXCL_LINE
 
-std::optional<std::string> ReadCacheKey(std::shared_ptr<CalibrationDatabase const> const database,
-                                        CalibrationStep const step_name, std::string_view sensor_name) {
+std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationStep const step_name,
+                                        std::string_view sensor_name) {
     std::optional<std::string> cache_key;
 
     ExecuteQuery(
@@ -65,7 +94,7 @@ std::optional<std::string> ReadCacheKey(std::shared_ptr<CalibrationDatabase cons
     return cache_key;
 }
 
-ImuMeasurements GetImuData(std::shared_ptr<CalibrationDatabase const> const database, std::string_view sensor_name) {
+ImuMeasurements GetImuData(DbConstPtr const database, std::string_view sensor_name) {
     ImuMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE

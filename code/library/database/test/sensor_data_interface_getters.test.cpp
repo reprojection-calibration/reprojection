@@ -16,6 +16,26 @@
 
 using namespace reprojection;
 
+TEST(DatabaseSensorDataInterface, TestReadCameraInfo) {
+    // TODO(Jack): Use test fixture!
+    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+
+    std::string const sensor_name{"/cam/retro/123"};
+    database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+
+    auto camera_info{database::ReadCameraInfo(db, "/nonexistent/camera")};
+    EXPECT_FALSE(camera_info.has_value());
+
+    camera_info = database::ReadCameraInfo(db, sensor_name);
+    ASSERT_TRUE(camera_info.has_value());
+    EXPECT_EQ(camera_info->sensor_name, sensor_name);
+    EXPECT_EQ(camera_info->camera_model, CameraModel::Pinhole);
+    EXPECT_EQ(camera_info->bounds.u_min, testing_utilities::image_bounds.u_min);
+    EXPECT_EQ(camera_info->bounds.u_max, testing_utilities::image_bounds.u_max);
+    EXPECT_EQ(camera_info->bounds.v_min, testing_utilities::image_bounds.v_min);
+    EXPECT_EQ(camera_info->bounds.v_max, testing_utilities::image_bounds.v_max);
+}
+
 TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
     auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
 
@@ -25,6 +45,7 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
                                         MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
+    // TODO(Jack): Use test fixture!
     // Add three targets - due to foreign key relationship we need add an image before we add the target
     database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
 

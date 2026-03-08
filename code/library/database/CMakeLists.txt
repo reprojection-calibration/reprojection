@@ -16,8 +16,9 @@ set(SQL_FILES
         sql/calibration_steps_select.sql
         sql/calibration_steps_table.sql
         sql/calibration_steps_upsert.sql
-        sql/camera_info_table.sql
         sql/camera_info_insert.sql
+        sql/camera_info_select.sql
+        sql/camera_info_table.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
