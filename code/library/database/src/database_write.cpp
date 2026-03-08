@@ -15,6 +15,18 @@
 
 namespace reprojection::database {
 
+void WriteToDb(CameraInfo const& camera_info, std::shared_ptr<CalibrationDatabase> const database) {
+    auto const binder{[camera_info](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, camera_info.sensor_name);
+        Sqlite3Tools::Bind(stmt, 2, ToString(camera_info.camera_model));
+        // TODO(Jack): Confirm these correspond to the proper intended directions!
+        Sqlite3Tools::Bind(stmt, 3, camera_info.bounds.u_max);
+        Sqlite3Tools::Bind(stmt, 4, camera_info.bounds.v_max);
+    }};
+
+    ExecuteStatement(sql_statements::camera_info_insert, binder, database->db);
+}
+
 void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, std::string_view cache_key,
                std::shared_ptr<CalibrationDatabase> const database) {
     auto const binder{[step_name, sensor_name, cache_key](sqlite3_stmt* const stmt) {

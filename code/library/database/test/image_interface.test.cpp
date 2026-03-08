@@ -8,55 +8,39 @@
 #include <opencv2/opencv.hpp>
 
 #include "database/calibration_database.hpp"
-#include "testing_utilities/temporary_file.hpp"
+#include "database/database_write.hpp"
+#include "testing_utilities/constants.hpp"
+#include "types/enums.hpp"
+
+// TODO MAKE SURE TABLE IN TEST_DATA DB GET UPDATE WITH THE NEW MEASUREMENT FOREIGN CONSTRAINT TABLES!!!
 
 using namespace reprojection;
-using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(DatabaseImageInterface, TestAddImage) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+class ImageInterfaceFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
 
-    cv::Mat const image(10, 20, CV_8UC1);
-    EXPECT_NO_THROW(database::AddImage({0, image}, "/cam/retro/123", db));
-}
+        database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+    }
 
-TEST(DatabaseImageInterface, TestAddImageHeaderOnly) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+    void AddImage(int const timestamp_ns) const { database::AddImage({timestamp_ns, image}, sensor_name, db); }
 
-    EXPECT_NO_THROW(database::AddImage(0, "/cam/retro/123", db));
-}
+    std::shared_ptr<database::CalibrationDatabase> db;
+    std::string sensor_name{"/cam/retro/123"};
+    cv::Mat image{cv::Mat(10, 20, CV_8UC1)};
+};
 
-TEST(DatabaseImageInterface, TestAddImageError) {
-    // Here we make a database and then close it, and then open another database that is read only and cannot have an
-    // image written to it.
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
-    db = std::make_shared<database::CalibrationDatabase>(temp_file.Path(), false, true);
+TEST_F(ImageInterfaceFixture, TestAddImage) { EXPECT_NO_THROW(AddImage(0)); }
 
-    cv::Mat const image(10, 20, CV_8UC1);
-    EXPECT_THROW(database::AddImage({0, image}, "/cam/retro/123", db), std::runtime_error);
-}
+TEST_F(ImageInterfaceFixture, TestAddImageHeaderOnly) { EXPECT_NO_THROW(database::AddImage(0, sensor_name, db)); }
 
-TEST(DatabaseImageInterface, TestAddImageHeaderOnlyError) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
-    db = std::make_shared<database::CalibrationDatabase>(temp_file.Path(), false, true);
+TEST_F(ImageInterfaceFixture, TestImageStreamer) {
+    AddImage(0);
+    AddImage(2);
+    AddImage(4);
 
-    EXPECT_THROW(database::AddImage(0, "/cam/retro/123", db), std::runtime_error);
-}
-
-TEST(DatabaseImageInterface, TestImageStreamer) {
-    TemporaryFile const temp_file{".db3"};
-    cv::Mat const image(10, 20, CV_8UC1);
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
-
-    EXPECT_NO_THROW(database::AddImage({0, image}, "/cam/retro/123", db));
-    EXPECT_NO_THROW(database::AddImage({2, image}, "/cam/retro/123", db));
-    EXPECT_NO_THROW(database::AddImage({4, image}, "/cam/retro/123", db));
-
-    database::ImageStreamer streamer{db, "/cam/retro/123"};
+    database::ImageStreamer streamer{db, sensor_name};
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());
 
@@ -72,16 +56,12 @@ TEST(DatabaseImageInterface, TestImageStreamer) {
 
 // This simulates the case where we have already processed the images up to a certain time and only want to load the
 // images after that point.
-TEST(DatabaseImageInterface, TestImageStreamerStartTime) {
-    TemporaryFile const temp_file{".db3"};
-    cv::Mat const image(10, 20, CV_8UC1);
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+TEST_F(ImageInterfaceFixture, TestImageStreamerStartTime) {
+    AddImage(0);
+    AddImage(2);
+    AddImage(4);
 
-    EXPECT_NO_THROW(database::AddImage({0, image}, "/cam/retro/123", db));
-    EXPECT_NO_THROW(database::AddImage({2, image}, "/cam/retro/123", db));
-    EXPECT_NO_THROW(database::AddImage({4, image}, "/cam/retro/123", db));
-
-    database::ImageStreamer streamer{db, "/cam/retro/123", 1};
+    database::ImageStreamer streamer{db, sensor_name, 1};
 
     auto const frame_0{streamer.Next()};
     ASSERT_TRUE(frame_0.has_value());

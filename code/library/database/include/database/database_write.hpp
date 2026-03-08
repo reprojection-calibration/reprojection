@@ -12,6 +12,8 @@
 
 namespace reprojection::database {
 
+void WriteToDb(CameraInfo const& camera_info, std::shared_ptr<CalibrationDatabase> const database);
+
 // NOTE(Jack): The calibration step has "upsert" semantics (https://sqlite.org/lang_upsert.html) because we need to
 // update the cache_key when the steps update on reruns.
 void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, std::string_view cache_key,

@@ -6,23 +6,18 @@
 #include <map>
 #include <string>
 
-#include <opencv2/opencv.hpp>
-
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
 #include "database/image_interface.hpp"
 #include "testing_utilities/constants.hpp"
-#include "testing_utilities/temporary_file.hpp"
 #include "types/sensor_data_types.hpp"
 
 // TODO(Jack): Refactor to use test fixture!
 
 using namespace reprojection;
-using TemporaryFile = testing_utilities::TemporaryFile;
 
 TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
 
     uint64_t timestamp_ns{0};
     std::string const sensor_name{"/cam/retro/123"};
@@ -31,6 +26,8 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
                                  {{5, 6}, {2, 3}, {650, 600}}};
 
     // Add three targets - due to foreign key relationship we need add an image before we add the target
+    database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+
     database::AddImage(timestamp_ns, sensor_name, db);
     WriteToDb(sensor_name, {timestamp_ns, target}, db);
     timestamp_ns += 1;
@@ -57,18 +54,21 @@ TEST(DatabaseSensorDataInterface, TestGetExtractedTargetData) {
 TEST(DatabaseSensorDataInterface, TestReadCacheKey) {
     auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
 
-    auto cache_key{database::ReadCacheKey(db, CalibrationStep::Lpi, "/cam/retro/123")};
+    std::string const sensor_name{"/cam/retro/123"};
+    database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+
+    auto cache_key{database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name)};
     EXPECT_FALSE(cache_key.has_value());
 
-    WriteToDb(CalibrationStep::Lpi, "/cam/retro/123", "1", db);
+    WriteToDb(CalibrationStep::Lpi, sensor_name, "1", db);
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, "/cam/retro/123");
+    cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "1");
 
-    WriteToDb(CalibrationStep::Lpi, "/cam/retro/123", "2", db);
+    WriteToDb(CalibrationStep::Lpi, sensor_name, "2", db);
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, "/cam/retro/123");
+    cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "2");
 }
@@ -81,16 +81,15 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
 
     // NOTE(Jack): We use the local scopes here so that we can have a create/read/write and a const read only
     // database instance in the same test using the same file.
-    TemporaryFile const temp_file{".db3"};
     {
         // Create and write
-        auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true, false)};
+        auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
 
         EXPECT_NO_THROW(database::WriteToDb(sensor_name, data, db));
     }
     {
         // Const read only
-        auto const db{std::make_shared<database::CalibrationDatabase const>(temp_file.Path(), false, true)};
+        auto const db{std::make_shared<database::CalibrationDatabase const>(":memory:", false, true)};
 
         auto const loaded_data{database::GetImuData(db, sensor_name)};
         EXPECT_EQ(std::size(loaded_data), std::size(data));
@@ -98,8 +97,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
 }
 
 TEST(DatabaseSensorDataInterface, TestGetImuData) {
-    TemporaryFile const temp_file{".db3"};
-    auto const db{std::make_shared<database::CalibrationDatabase>(temp_file.Path(), true)};
+    auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true)};
 
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};
