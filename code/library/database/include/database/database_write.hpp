@@ -18,16 +18,18 @@ void WriteToDb(CameraInfo const& camera_info, DbPtr const database);
 
 // NOTE(Jack): The calibration step has "upsert" semantics (https://sqlite.org/lang_upsert.html) because we need to
 // update the cache_key when the steps update on reruns.
-void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, std::string_view cache_key,
-               DbPtr const database);
+void WriteToDb(CalibrationStep const step_name, std::string_view cache_key, std::string_view sensor_name,
+               DbPtr const db);
 
-void WriteToDb(std::string_view sensor_name, CameraMeasurement const& data, DbPtr const database);
+void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name, DbPtr const db);
 
-void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, Frames const& data, DbPtr const database);
+void WriteToDb(CameraState const& data, CalibrationStep const step_name, std::string_view sensor_name, DbPtr const db);
 
-void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, ReprojectionErrors const& data,
-               DbPtr const database);
+void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, DbPtr const db);
 
-void WriteToDb(std::string_view sensor_name, ImuMeasurements const& data, DbPtr const database);
+void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               DbPtr const db);
+
+void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, DbPtr const db);
 
 }  // namespace reprojection::database

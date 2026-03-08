@@ -64,12 +64,12 @@ int main() {
 
     // Write camera initialization to database
     try {
-        database::WriteToDb(CalibrationStep::Lpi, sensor.sensor_name, "", db);
-        database::WriteToDb(CalibrationStep::Lpi, sensor.sensor_name, initial_state.frames, db);
-        database::WriteToDb(CalibrationStep::Lpi, sensor.sensor_name, initial_error, db);
-        database::WriteToDb(CalibrationStep::Cnlr, sensor.sensor_name, "", db);
-        database::WriteToDb(CalibrationStep::Cnlr, sensor.sensor_name, optimized_state.frames, db);
-        database::WriteToDb(CalibrationStep::Cnlr, sensor.sensor_name, optimized_error, db);
+        database::WriteToDb(CalibrationStep::Lpi, "", sensor.sensor_name, db);
+        database::WriteToDb(initial_state.frames, CalibrationStep::Lpi, sensor.sensor_name, db);
+        database::WriteToDb(initial_error, CalibrationStep::Lpi, sensor.sensor_name, db);
+        database::WriteToDb(CalibrationStep::Cnlr, "", sensor.sensor_name, db);
+        database::WriteToDb(optimized_state.frames, CalibrationStep::Cnlr, sensor.sensor_name, db);
+        database::WriteToDb(optimized_error, CalibrationStep::Cnlr, sensor.sensor_name, db);
     } catch (std::exception const& e) {
         std::cout << "Caught " << e.what() << std::endl;
     }

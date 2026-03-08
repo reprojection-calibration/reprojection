@@ -1,3 +1,5 @@
+#include "database/database_read.hpp"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
@@ -5,7 +7,6 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
-#include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "database/image_interface.hpp"
 #include "testing_utilities/constants.hpp"
@@ -24,7 +25,7 @@ class CameraReadFixture : public ::testing::Test {
     void AddTarget(uint64_t const timestamp_ns) const {
         // Due to foreign key relationship we need add an image before we add the target
         database::AddImage(timestamp_ns, sensor_name, db);
-        database::WriteToDb(sensor_name, {timestamp_ns, target}, db);
+        database::WriteToDb({timestamp_ns, target}, sensor_name, db);
     }
 
     std::shared_ptr<database::CalibrationDatabase> db;
@@ -71,13 +72,13 @@ TEST_F(CameraReadFixture, TestReadCacheKey) {
     auto cache_key{database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name)};
     EXPECT_FALSE(cache_key.has_value());
 
-    WriteToDb(CalibrationStep::Lpi, sensor_name, "1", db);
+    WriteToDb(CalibrationStep::Lpi,  "1", sensor_name, db);
 
     cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "1");
 
-    WriteToDb(CalibrationStep::Lpi, sensor_name, "2", db);
+    WriteToDb(CalibrationStep::Lpi,"2", sensor_name,  db);
 
     cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
@@ -92,7 +93,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
                                {1, {Vector3d::Zero(), Vector3d::Zero()}},
                                {2, {Vector3d::Zero(), Vector3d::Zero()}}};
 
-    EXPECT_NO_THROW(database::WriteToDb(sensor_name, data, db));
+    EXPECT_NO_THROW(database::WriteToDb(data, sensor_name, db));
 
     auto const loaded_data{database::GetImuData(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), std::size(data));
@@ -103,17 +104,15 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
 
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    database::WriteToDb(sensor_name_1,
-                        {{5, {{1, 2, 3}, {4, 5, 6}}},  //
+    database::WriteToDb({{5, {{1, 2, 3}, {4, 5, 6}}},  //
                          {10, {Vector3d::Zero(), Vector3d::Zero()}},
                          {15, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        db);
+                        sensor_name_1, db);
     // Data from imu 456
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    database::WriteToDb(sensor_name_2,
-                        {{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
+    database::WriteToDb({{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
                          {20, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        db);
+                        sensor_name_2, db);
 
     auto const imu_1_data{database::GetImuData(db, sensor_name_1)};
     EXPECT_EQ(std::size(imu_1_data), 3);

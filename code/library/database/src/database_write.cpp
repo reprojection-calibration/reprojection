@@ -26,19 +26,19 @@ void WriteToDb(CameraInfo const& camera_info, DbPtr const database) {
     ExecuteStatement(sql_statements::camera_info_insert, binder, database->db);
 }
 
-void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, std::string_view cache_key,
-               DbPtr const database) {
+void WriteToDb(CalibrationStep const step_name, std::string_view cache_key, std::string_view sensor_name,
+               DbPtr const db) {
     auto const binder{[step_name, sensor_name, cache_key](sqlite3_stmt* const stmt) {
         Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
         Sqlite3Tools::Bind(stmt, 2, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, cache_key);
     }};
 
-    ExecuteStatement(sql_statements::calibration_steps_upsert, binder, database->db);
+    ExecuteStatement(sql_statements::calibration_steps_upsert, binder, db->db);
 }
 
 // TODO(Jack): Make batch insert.
-void WriteToDb(std::string_view sensor_name, CameraMeasurement const& data, DbPtr const database) {
+void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name, DbPtr const db) {
     auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
         auto const& [timestamp_ns, target]{data};
 
@@ -54,11 +54,10 @@ void WriteToDb(std::string_view sensor_name, CameraMeasurement const& data, DbPt
         Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer}));
     }};
 
-    ExecuteStatement(sql_statements::extracted_target_insert, binder, database->db);
+    ExecuteStatement(sql_statements::extracted_target_insert, binder, db->db);
 }
 
-void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, Frames const& data,
-               DbPtr const database) {
+void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, DbPtr const db) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
@@ -74,13 +73,13 @@ void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, Fr
         Sqlite3Tools::Bind(stmt, 9, frame.pose[5]);
     }};
 
-    BatchExecuteStatement(sql_statements::poses_insert, data, binder, database->db);
+    BatchExecuteStatement(sql_statements::poses_insert, data, binder, db->db);
 }
 
 // NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
-void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, ReprojectionErrors const& data,
-               DbPtr const database) {
+void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               DbPtr const db) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
@@ -97,10 +96,10 @@ void WriteToDb(CalibrationStep const step_name, std::string_view sensor_name, Re
         Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer}));
     }};
 
-    BatchExecuteStatement(sql_statements::reprojection_error_insert, data, binder, database->db);
+    BatchExecuteStatement(sql_statements::reprojection_error_insert, data, binder, db->db);
 }
 
-void WriteToDb(std::string_view sensor_name, ImuMeasurements const& data, DbPtr const database) {
+void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, DbPtr const db) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
@@ -116,7 +115,7 @@ void WriteToDb(std::string_view sensor_name, ImuMeasurements const& data, DbPtr 
         Sqlite3Tools::Bind(stmt, 8, frame.linear_acceleration[2]);
     }};
 
-    BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, database->db);
+    BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, db->db);
 }
 
 }  // namespace reprojection::database
