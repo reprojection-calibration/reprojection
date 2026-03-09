@@ -21,6 +21,8 @@ std::optional<ArrayXd> ReadCameraState(DbConstPtr const database, CalibrationSte
 std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationStep const step_name,
                                         std::string_view sensor_name);
 
+Frames ReadPoses(DbConstPtr const database, CalibrationStep const step_name, std::string_view sensor_name);
+
 ImuMeasurements GetImuData(DbConstPtr const database, std::string_view sensor_name);
 
 }  // namespace reprojection::database

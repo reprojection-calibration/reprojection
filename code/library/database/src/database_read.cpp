@@ -108,6 +108,32 @@ std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationSt
     return cache_key;
 }  // LCOV_EXCL_LINE
 
+Frames ReadPoses(DbConstPtr const database, CalibrationStep const step_name, std::string_view sensor_name) {
+    Frames data;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        database->db, sql_statements::poses_select,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+
+            double const rx{sqlite3_column_double(stmt, 1)};
+            double const ry{sqlite3_column_double(stmt, 2)};
+            double const rz{sqlite3_column_double(stmt, 3)};
+
+            double const x{sqlite3_column_double(stmt, 4)};
+            double const y{sqlite3_column_double(stmt, 5)};
+            double const z{sqlite3_column_double(stmt, 6)};
+
+            data.insert(Frame{timestamp_ns, Array6d{rx, ry, rz, x, y, z}});
+        });
+
+    return data;
+}
+
 ImuMeasurements GetImuData(DbConstPtr const database, std::string_view sensor_name) {
     ImuMeasurements data;
 

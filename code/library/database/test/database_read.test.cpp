@@ -99,6 +99,22 @@ TEST_F(CameraReadFixture, TestReadCacheKey) {
     EXPECT_EQ(cache_key.value(), "2");
 }
 
+TEST_F(CameraReadFixture, TestReadPoses) {
+    auto const step{CalibrationStep::Lpi};
+    uint64_t const timestamp_ns{0};
+
+    Frames result{ReadPoses(db, step, sensor_name)};
+    EXPECT_EQ(std::size(result), 0);
+
+    database::WriteToDb(step, "", sensor_name, db);
+    Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
+    WriteToDb(frames, step, sensor_name, db);
+
+    result = ReadPoses(db, step, sensor_name);
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(frames.at(timestamp_ns).pose));
+}
+
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
     auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
 
