@@ -10,6 +10,7 @@ using namespace reprojection;
 
 class StepsFixture : public ::testing::Test {
    protected:
+    // cppcheck-suppress unusedFunction
     void SetUp() override {
         db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
         database::WriteToDb(camera_info, db);
@@ -18,7 +19,6 @@ class StepsFixture : public ::testing::Test {
     std::shared_ptr<database::CalibrationDatabase> db;
     CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
-    CameraMeasurements targets;
 };
 
 TEST_F(StepsFixture, TestLpiStep) {
