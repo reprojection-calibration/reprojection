@@ -37,6 +37,8 @@ enum class CameraModel {
 inline std::string ToString(CameraModel const camera_model) {
     if (camera_model == CameraModel::Pinhole) {
         return "pinhole";
+    } else if (camera_model == CameraModel::DoubleSphere) {
+        return "double_sphere";
     } else {
         throw std::runtime_error("Unrecognized argument passed to ToString(CameraModel)");  // LCOV_EXCL_LINE
     }

@@ -3,7 +3,6 @@ set(LIBRARY_NAME "application")
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
-        src/application.cpp
         src/steps.cpp
 )
 
@@ -20,7 +19,6 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        src/step_runner.test.cpp
-        test/application.test.cpp
+        test/step_runner.test.cpp
 )
 AddTests()

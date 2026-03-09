@@ -1,8 +1,10 @@
 #include <map>
 #include <ranges>
 
+#include "../../application/include/application/step_runner.hpp"
+#include "application/step_runner.hpp"
+#include "application/steps.hpp"
 #include "calibration/camera_imu_initialization.hpp"
-#include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
@@ -50,15 +52,16 @@ int main() {
     CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
     CameraState const camera_state{
         Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
+    //database::WriteToDb(camera_info, db);
 
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
 
-    Frames const initial_poses{calibration::LinearPoseInitialization(camera_info, targets, camera_state)};
-    OptimizationState const initial_state{camera_state, initial_poses};
-    ReprojectionErrors const initial_error{optimization::ReprojectionResiduals(camera_info, targets, initial_state)};
+    application::LinearPoseInitializationStep const step{camera_info, targets, camera_state};
+    auto const [initial_poses, cache_status]{application::RunStep<Frames>(step, db)};
+    std::cout << "Lpi : " << ToString(cache_status)<<std::endl;
 
-    auto const aligned_initial_state{AlignRotations(initial_state)};
+    auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
     auto [optimized_state,
           diagnostics]{optimization::CameraNonlinearRefinement(camera_info, targets, aligned_initial_state)};
     ReprojectionErrors const optimized_error{
@@ -66,9 +69,6 @@ int main() {
 
     // Write camera initialization to database
     try {
-        database::WriteToDb(CalibrationStep::Lpi, "", camera_info.sensor_name, db);
-        database::WriteToDb(initial_state.frames, CalibrationStep::Lpi, camera_info.sensor_name, db);
-        database::WriteToDb(initial_error, CalibrationStep::Lpi, camera_info.sensor_name, db);
         database::WriteToDb(CalibrationStep::Cnlr, "", camera_info.sensor_name, db);
         database::WriteToDb(optimized_state.frames, CalibrationStep::Cnlr, camera_info.sensor_name, db);
         database::WriteToDb(optimized_error, CalibrationStep::Cnlr, camera_info.sensor_name, db);

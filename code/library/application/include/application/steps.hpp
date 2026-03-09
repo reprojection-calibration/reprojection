@@ -5,6 +5,7 @@
 
 namespace reprojection::application {
 
+// TODO(Jack): Make private one day when the application is whole
 struct LinearPoseInitializationStep {
     LinearPoseInitializationStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets,
                                  CameraState const& _camera_state);
