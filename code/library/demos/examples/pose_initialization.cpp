@@ -52,14 +52,14 @@ int main() {
     CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
     CameraState const camera_state{
         Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
-    //database::WriteToDb(camera_info, db);
+    database::WriteToDb(camera_info, db);
 
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
 
     application::LinearPoseInitializationStep const step{camera_info, targets, camera_state};
-    auto const [initial_poses, cache_status]{application::RunStep<Frames>(step, db)};
-    std::cout << "Lpi : " << ToString(cache_status)<<std::endl;
+    auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(step, db)};
+    std::cout << "Lpi : " << ToString(lpi_cache_status) << std::endl;
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
     auto [optimized_state,
