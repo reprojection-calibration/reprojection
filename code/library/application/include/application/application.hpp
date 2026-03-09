@@ -5,12 +5,7 @@
 
 namespace reprojection::caching {
 
-std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements);
 
-std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
-                     CameraState const& camera_state);
 
-std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
-                     OptimizationState const& optimization_state);
 
 }  // namespace reprojection::caching
