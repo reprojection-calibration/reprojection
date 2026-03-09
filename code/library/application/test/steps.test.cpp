@@ -51,3 +51,20 @@ TEST_F(StepsFixture, TestLpiStep) {
     poses = database::ReadPoses(db, step.step_type, camera_info.sensor_name);
     EXPECT_EQ(std::size(poses), 40);
 }
+
+TEST_F(StepsFixture, TestCnlrStep) {
+    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+    application::CnlrStep const step{camera_info, targets, {camera_state, gt_poses}};
+
+    auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
+    EXPECT_EQ(std::size(result.frames), 50);
+    EXPECT_EQ(cache_status, application::CacheStatus::CacheMiss);
+
+    auto poses{database::ReadPoses(db, step.step_type, camera_info.sensor_name)};
+    EXPECT_EQ(std::size(poses), 50);
+
+    // On rerun with the same inputs it will be a cache hit
+    std::tie(result, cache_status) = RunStep<OptimizationState>(step, db);
+    EXPECT_EQ(std::size(result.frames), 50);
+    EXPECT_EQ(cache_status, application::CacheStatus::CacheHit);
+}
