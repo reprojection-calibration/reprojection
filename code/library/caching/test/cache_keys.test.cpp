@@ -1,7 +1,6 @@
-#include "caching/cache_keys.hpp"
-
 #include <gtest/gtest.h>
 
+#include "caching/application.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
