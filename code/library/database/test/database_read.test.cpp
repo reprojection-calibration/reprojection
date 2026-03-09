@@ -107,11 +107,11 @@ TEST_F(CameraReadFixture, TestReadPoses) {
     EXPECT_EQ(std::size(result), 0);
 
     database::WriteToDb(step, "", sensor_name, db);
-    Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
+    Frames const frames{{timestamp_ns, {Array6d::Zero()}}, {timestamp_ns + 1, {Array6d::Zero()}}};
     WriteToDb(frames, step, sensor_name, db);
 
     result = ReadPoses(db, step, sensor_name);
-    EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(std::size(result), 2);
     EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(frames.at(timestamp_ns).pose));
 }
 
