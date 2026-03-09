@@ -46,8 +46,8 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
     if (camera_model == "pinhole") {
         return CameraModel::Pinhole;
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToCameraModel(): " +
-                                 std::string(camera_model));  // LCOV_EXCL_LINE
+        throw std::runtime_error("Unrecognized argument passed to ToCameraModel(): " +  // LCOV_EXCL_LINE
+                                 std::string(camera_model));                            // LCOV_EXCL_LINE
     }
 }
 

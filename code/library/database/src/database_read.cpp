@@ -23,7 +23,7 @@ namespace reprojection::database {
 std::optional<CameraInfo> ReadCameraInfo(DbConstPtr const database, std::string_view sensor_name) {
     std::optional<CameraInfo> camera_info;
 
-    ExecuteQuery(
+    ExecuteQuery(  // LCOV_EXCL_LINE
         database->db, sql_statements::camera_info_select,
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
         [&camera_info](sqlite3_stmt* const stmt) {
@@ -42,7 +42,7 @@ std::optional<CameraInfo> ReadCameraInfo(DbConstPtr const database, std::string_
     }
 
     return camera_info;
-}
+}  // LCOV_EXCL_LINE
 
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
 // differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
@@ -76,9 +76,9 @@ std::optional<ArrayXd> ReadCameraState(DbConstPtr const database, CalibrationSte
                                        std::string_view sensor_name, CameraModel const camera_model) {
     std::optional<ArrayXd> intrinsics;
 
-    ExecuteQuery(
+    ExecuteQuery(  // LCOV_EXCL_LINE
         database->db, sql_statements::camera_intrinsics_select,
-        [step_name, sensor_name, camera_model](sqlite3_stmt* const stmt) {
+        [step_name, sensor_name, camera_model](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
             Sqlite3Tools::Bind(stmt, 3, ToString(camera_model));
@@ -89,15 +89,15 @@ std::optional<ArrayXd> ReadCameraState(DbConstPtr const database, CalibrationSte
         });
 
     return intrinsics;
-}
+}  // LCOV_EXCL_LINE
 
 std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationStep const step_name,
                                         std::string_view sensor_name) {
     std::optional<std::string> cache_key;
 
-    ExecuteQuery(
+    ExecuteQuery(  // LCOV_EXCL_LINE
         database->db, sql_statements::calibration_steps_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
@@ -106,7 +106,7 @@ std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationSt
         });
 
     return cache_key;
-}
+}  // LCOV_EXCL_LINE
 
 ImuMeasurements GetImuData(DbConstPtr const database, std::string_view sensor_name) {
     ImuMeasurements data;

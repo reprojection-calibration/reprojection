@@ -14,7 +14,7 @@ std::string ToToml(CameraModel const type, ArrayXd const& intrinsics) {
     } else if (type == CameraModel::Pinhole) {
         tbl = toml::table{{"fx", intrinsics[0]}, {"fy", intrinsics[1]}, {"cx", intrinsics[2]}, {"cy", intrinsics[3]}};
     } else {
-        throw std::runtime_error("Implement ToToml(CameraModel) for other camera models!");
+        throw std::runtime_error("Implement ToToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE
     }
 
     std::ostringstream oss;
@@ -42,7 +42,7 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         intrinsics[3] = tbl["cy"].value<double>().value();
         return intrinsics;
     } else {
-        throw std::runtime_error("Implement FromToml(CameraModel) for other camera models!");
+        throw std::runtime_error("Implement FromToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE
     }
 }
 
