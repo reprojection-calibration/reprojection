@@ -71,14 +71,13 @@ TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
 TEST_F(CameraReadFixture, TestReadCameraState) {
     auto const step{CalibrationStep::Lpi};
 
-    auto intrinsics{database::ReadCameraState(db,step, "", CameraModel::Pinhole)};
+    auto intrinsics{database::ReadCameraState(db, step, "", CameraModel::Pinhole)};
     EXPECT_FALSE(intrinsics.has_value());
 
     database::WriteToDb(CalibrationStep::Lpi, "", sensor_name, db);
-    database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,step,
-                        sensor_name, db);
+    database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole, step, sensor_name, db);
 
-    intrinsics = database::ReadCameraState(db,step, sensor_name, CameraModel::Pinhole);
+    intrinsics = database::ReadCameraState(db, step, sensor_name, CameraModel::Pinhole);
     ASSERT_TRUE(intrinsics.has_value());
     EXPECT_TRUE(intrinsics->isApprox(testing_utilities::pinhole_intrinsics));
 }
