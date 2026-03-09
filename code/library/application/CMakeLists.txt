@@ -20,5 +20,6 @@ AddLibrary()
 
 set(TESTS
         test/step_runner.test.cpp
+        test/steps.test.cpp
 )
 AddTests()
