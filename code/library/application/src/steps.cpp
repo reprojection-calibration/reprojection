@@ -1,6 +1,4 @@
-
-
-#include "../include/application/steps.hpp"
+#include "application/steps.hpp"
 
 #include "caching/cache_keys.hpp"
 #include "calibration/linear_pose_initialization.hpp"
