@@ -52,29 +52,21 @@ int main() {
     CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
     CameraState const camera_state{
         Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
-    database::WriteToDb(camera_info, db);
+    //database::WriteToDb(camera_info, db);
 
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
 
-    application::LinearPoseInitializationStep const step{camera_info, targets, camera_state};
-    auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(step, db)};
+    application::LinearPoseInitializationStep const lpi_step{camera_info, targets, camera_state};
+    auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
     std::cout << "Lpi : " << ToString(lpi_cache_status) << std::endl;
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
-    auto [optimized_state,
-          diagnostics]{optimization::CameraNonlinearRefinement(camera_info, targets, aligned_initial_state)};
-    ReprojectionErrors const optimized_error{
-        optimization::ReprojectionResiduals(camera_info, targets, optimized_state)};
 
-    // Write camera initialization to database
-    try {
-        database::WriteToDb(CalibrationStep::Cnlr, "", camera_info.sensor_name, db);
-        database::WriteToDb(optimized_state.frames, CalibrationStep::Cnlr, camera_info.sensor_name, db);
-        database::WriteToDb(optimized_error, CalibrationStep::Cnlr, camera_info.sensor_name, db);
-    } catch (std::exception const& e) {
-        std::cout << "Caught " << e.what() << std::endl;
-    }
+    application::CameraNonlinearRefinementStep const cnlr_step{camera_info, targets, aligned_initial_state};
+    auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
+    std::cout << "Cnlr : " << ToString(cnlr_cache_status) << std::endl;
+
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{optimization::SplineReprojectionResiduals(

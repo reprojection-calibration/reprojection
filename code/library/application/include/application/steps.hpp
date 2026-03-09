@@ -27,4 +27,25 @@ struct LinearPoseInitializationStep {
     void Save(Frames const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
 };
 
+struct CameraNonlinearRefinementStep {
+    CameraNonlinearRefinementStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets,
+                                  OptimizationState const& _initial_state);
+
+    CameraInfo camera_info;
+    CameraMeasurements targets;
+    OptimizationState initial_state;
+
+    CalibrationStep step_type{CalibrationStep::Cnlr};
+
+    std::string SensorName() const { return camera_info.sensor_name; }
+
+    std::string CacheKey() const;
+
+    OptimizationState Compute() const;
+
+    OptimizationState Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+
+    void Save(OptimizationState const& optimized_state, std::shared_ptr<database::CalibrationDatabase> const db) const;
+};
+
 }  // namespace reprojection::application
