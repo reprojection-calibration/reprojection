@@ -32,9 +32,20 @@ CacheStatus Xxx(std::optional<std::string> const& loaded_key, std::string_view k
     }
 }
 
-// TODO(Jack): Make private one day when the application is whole
-// TODO ADD CONCEPTS!
 template <typename Result, typename Step>
+concept CalibrationStepObject =
+    requires(Result const result, Step const step, std::shared_ptr<database::CalibrationDatabase> db) {
+        { step.step_type } -> std::convertible_to<CalibrationStep>;
+        { step.SensorName() } -> std::same_as<std::string>;
+        { step.CacheKey() } -> std::same_as<std::string>;
+        { step.Compute() } -> std::same_as<Result>;
+        { step.Load(db) } -> std::same_as<Result>;
+        { step.Save(result, db) };
+    };
+
+// TODO(Jack): Make private one day when the application is whole
+template <typename Result, typename Step>
+    requires CalibrationStepObject<Result, Step>
 std::pair<Result, CacheStatus> RunStep(Step const& step, std::shared_ptr<database::CalibrationDatabase> const db) {
     auto const loaded_key{database::ReadCacheKey(db, step.step_type, step.SensorName())};
     std::string const new_key{step.CacheKey()};
