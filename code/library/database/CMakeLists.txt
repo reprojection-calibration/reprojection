@@ -13,8 +13,15 @@ find_package(SQLite3 REQUIRED)
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
-        sql/calibration_steps_insert.sql
+        sql/calibration_steps_select.sql
         sql/calibration_steps_table.sql
+        sql/calibration_steps_upsert.sql
+        sql/camera_info_insert.sql
+        sql/camera_info_select.sql
+        sql/camera_info_table.sql
+        sql/camera_intrinsics_insert.sql
+        sql/camera_intrinsics_select.sql
+        sql/camera_intrinsics_table.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
@@ -58,11 +65,12 @@ add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 
 set(SRC_FILES
         src/calibration_database.cpp
+        src/database_read.cpp
+        src/database_write.cpp
         src/image_interface.cpp
-        src/sensor_data_interface_adders.cpp
-        src/sensor_data_interface_getters.cpp
         src/serialization.cpp
         src/sqlite_wrappers.cpp
+        src/toml_converters.cpp
 )
 set(INCLUDE_DIRECTORIES
         ${CMAKE_BINARY_DIR}/database # Generated sql header files are found here
@@ -86,9 +94,10 @@ set(TESTS
         src/statement_executor.test.cpp
         src/sqlite3_helpers.test.cpp
         src/sqlite_wrappers.test.cpp
+        src/toml_converters.test.cpp
         test/calibration_database.test.cpp
+        test/database_read.test.cpp
+        test/database_write.test.cpp
         test/image_interface.test.cpp
-        test/sensor_data_interface_adders.test.cpp
-        test/sensor_data_interface_getters.test.cpp
 )
 AddTests()

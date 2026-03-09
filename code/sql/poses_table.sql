@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS poses
     y            REAL    NOT NULL,
     z            REAL    NOT NULL,
     PRIMARY KEY (step_name, sensor_name, timestamp_ns),
-    FOREIGN KEY (step_name) REFERENCES calibration_steps (step_name)
+    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, sensor_name)
 );

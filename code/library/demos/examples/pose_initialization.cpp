@@ -4,8 +4,8 @@
 #include "calibration/camera_imu_initialization.hpp"
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
-#include "database/sensor_data_interface_adders.hpp"
-#include "database/sensor_data_interface_getters.hpp"
+#include "database/database_read.hpp"
+#include "database/database_write.hpp"
 #include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 #include "spline/se3_spline.hpp"
@@ -64,12 +64,12 @@ int main() {
 
     // Write camera initialization to database
     try {
-        database::AddCalibrationStep("linear_pose_initialization", db);
-        database::AddPoseData(initial_state.frames, "linear_pose_initialization", sensor.sensor_name, db);
-        database::AddReprojectionError(initial_error, "linear_pose_initialization", sensor.sensor_name, db);
-        database::AddCalibrationStep("nonlinear_refinement", db);
-        database::AddPoseData(optimized_state.frames, "nonlinear_refinement", sensor.sensor_name, db);
-        database::AddReprojectionError(optimized_error, "nonlinear_refinement", sensor.sensor_name, db);
+        database::WriteToDb(CalibrationStep::Lpi, "", sensor.sensor_name, db);
+        database::WriteToDb(initial_state.frames, CalibrationStep::Lpi, sensor.sensor_name, db);
+        database::WriteToDb(initial_error, CalibrationStep::Lpi, sensor.sensor_name, db);
+        database::WriteToDb(CalibrationStep::Cnlr, "", sensor.sensor_name, db);
+        database::WriteToDb(optimized_state.frames, CalibrationStep::Cnlr, sensor.sensor_name, db);
+        database::WriteToDb(optimized_error, CalibrationStep::Cnlr, sensor.sensor_name, db);
     } catch (std::exception const& e) {
         std::cout << "Caught " << e.what() << std::endl;
     }
