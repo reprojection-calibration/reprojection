@@ -52,7 +52,10 @@ int main() {
     CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
     CameraState const camera_state{
         Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
-    //database::WriteToDb(camera_info, db);
+    try {
+        database::WriteToDb(camera_info, db);
+    } catch (...) {
+    }
 
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
@@ -66,7 +69,6 @@ int main() {
     application::CameraNonlinearRefinementStep const cnlr_step{camera_info, targets, aligned_initial_state};
     auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
     std::cout << "Cnlr : " << ToString(cnlr_cache_status) << std::endl;
-
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{optimization::SplineReprojectionResiduals(
