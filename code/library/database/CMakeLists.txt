@@ -20,6 +20,7 @@ set(SQL_FILES
         sql/camera_info_select.sql
         sql/camera_info_table.sql
         sql/camera_intrinsics_insert.sql
+        sql/camera_intrinsics_select.sql
         sql/camera_intrinsics_table.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql

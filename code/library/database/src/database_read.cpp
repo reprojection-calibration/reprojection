@@ -1,10 +1,10 @@
+#include "database/database_read.hpp"
+
 #include <sqlite3.h>
 
 #include <filesystem>
 #include <memory>
 #include <string>
-
-#include "database/database_read.hpp"
 
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
@@ -12,6 +12,7 @@
 #include "query_runner.hpp"
 #include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
+#include "toml_converters.hpp"
 
 namespace reprojection::database {
 
@@ -24,9 +25,7 @@ std::optional<CameraInfo> ReadCameraInfo(DbConstPtr const database, std::string_
 
     ExecuteQuery(
         database->db, sql_statements::camera_info_select,
-        [sensor_name](sqlite3_stmt* const stmt) {
-            Sqlite3Tools::Bind(stmt, 1, sensor_name);
-        },
+        [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
         [&camera_info](sqlite3_stmt* const stmt) {
             CameraInfo result;
             result.camera_model = ToCameraModel(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
@@ -73,6 +72,25 @@ CameraMeasurements GetExtractedTargetData(DbConstPtr const database, std::string
     return data;
 }  // LCOV_EXCL_LINE
 
+std::optional<ArrayXd> ReadCameraState(DbConstPtr const database, CalibrationStep const step_name,
+                                       std::string_view sensor_name, CameraModel const camera_model) {
+    std::optional<ArrayXd> intrinsics;
+
+    ExecuteQuery(
+        database->db, sql_statements::camera_intrinsics_select,
+        [step_name, sensor_name, camera_model](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+            Sqlite3Tools::Bind(stmt, 3, ToString(camera_model));
+        },
+        [&intrinsics, camera_model](sqlite3_stmt* const stmt) {
+            intrinsics =
+                FromToml(camera_model, std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0))));
+        });
+
+    return intrinsics;
+}
+
 std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationStep const step_name,
                                         std::string_view sensor_name) {
     std::optional<std::string> cache_key;
@@ -84,11 +102,7 @@ std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationSt
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
         [&cache_key](sqlite3_stmt* const stmt) {
-            if (const unsigned char* text = sqlite3_column_text(stmt, 0)) {
-                cache_key = std::string(reinterpret_cast<char const*>(text));
-            } else {
-                cache_key = std::nullopt;
-            }
+            cache_key = std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
         });
 
     return cache_key;

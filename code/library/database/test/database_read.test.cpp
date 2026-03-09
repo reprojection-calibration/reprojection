@@ -68,17 +68,32 @@ TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
     }
 }
 
+TEST_F(CameraReadFixture, TestReadCameraState) {
+    auto const step{CalibrationStep::Lpi};
+
+    auto intrinsics{database::ReadCameraState(db,step, "", CameraModel::Pinhole)};
+    EXPECT_FALSE(intrinsics.has_value());
+
+    database::WriteToDb(CalibrationStep::Lpi, "", sensor_name, db);
+    database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,step,
+                        sensor_name, db);
+
+    intrinsics = database::ReadCameraState(db,step, sensor_name, CameraModel::Pinhole);
+    ASSERT_TRUE(intrinsics.has_value());
+    EXPECT_TRUE(intrinsics->isApprox(testing_utilities::pinhole_intrinsics));
+}
+
 TEST_F(CameraReadFixture, TestReadCacheKey) {
     auto cache_key{database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name)};
     EXPECT_FALSE(cache_key.has_value());
 
-    WriteToDb(CalibrationStep::Lpi,  "1", sensor_name, db);
+    WriteToDb(CalibrationStep::Lpi, "1", sensor_name, db);
 
     cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "1");
 
-    WriteToDb(CalibrationStep::Lpi,"2", sensor_name,  db);
+    WriteToDb(CalibrationStep::Lpi, "2", sensor_name, db);
 
     cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name);
     ASSERT_TRUE(cache_key.has_value());

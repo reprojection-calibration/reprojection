@@ -15,6 +15,9 @@ std::optional<CameraInfo> ReadCameraInfo(DbConstPtr const database, std::string_
 
 CameraMeasurements GetExtractedTargetData(DbConstPtr const database, std::string_view sensor_name);
 
+std::optional<ArrayXd> ReadCameraState(DbConstPtr const database, CalibrationStep const step_name,
+                                       std::string_view sensor_name, CameraModel const camera_model);
+
 std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationStep const step_name,
                                         std::string_view sensor_name);
 
