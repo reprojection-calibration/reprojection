@@ -6,9 +6,8 @@
 namespace reprojection::application {
 
 // TODO(Jack): Make private one day when the application is whole
-struct LinearPoseInitializationStep {
-    LinearPoseInitializationStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets,
-                                 CameraState const& _camera_state);
+struct LpiStep {
+    LpiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets, CameraState const& _camera_state);
 
     CameraInfo camera_info;
     CameraMeasurements targets;
@@ -27,9 +26,9 @@ struct LinearPoseInitializationStep {
     void Save(Frames const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
 };
 
-struct CameraNonlinearRefinementStep {
-    CameraNonlinearRefinementStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets,
-                                  OptimizationState const& _initial_state);
+struct CnlrStep {
+    CnlrStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets,
+             OptimizationState const& _initial_state);
 
     CameraInfo camera_info;
     CameraMeasurements targets;

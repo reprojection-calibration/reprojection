@@ -60,13 +60,13 @@ int main() {
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
 
-    application::LinearPoseInitializationStep const lpi_step{camera_info, targets, camera_state};
+    application::LpiStep const lpi_step{camera_info, targets, camera_state};
     auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
     std::cout << "Lpi : " << ToString(lpi_cache_status) << std::endl;
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
 
-    application::CameraNonlinearRefinementStep const cnlr_step{camera_info, targets, aligned_initial_state};
+    application::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
     auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
     std::cout << "Cnlr : " << ToString(cnlr_cache_status) << std::endl;
 

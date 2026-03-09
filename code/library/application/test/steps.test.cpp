@@ -23,7 +23,7 @@ class StepsFixture : public ::testing::Test {
 
 TEST_F(StepsFixture, TestLpiStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    application::LinearPoseInitializationStep const step{camera_info, targets, camera_state};
+    application::LpiStep const step{camera_info, targets, camera_state};
 
     auto [frames, cache_status]{RunStep<Frames>(step, db)};
     EXPECT_EQ(std::size(frames), 50);
@@ -42,7 +42,7 @@ TEST_F(StepsFixture, TestLpiStep) {
     // Make a new different set of targets to trigger a cache miss and data removal (i.e. sql cascade operation) and
     // replacement with a new set of poses.
     std::tie(targets, gt_poses) = testing_mocks::GenerateMvgData(camera_info, camera_state, 40, 1e9);
-    application::LinearPoseInitializationStep const step_2{camera_info, targets, camera_state};
+    application::LpiStep const step_2{camera_info, targets, camera_state};
 
     std::tie(frames, cache_status) = RunStep<Frames>(step_2, db);
     EXPECT_EQ(std::size(frames), 40);
