@@ -43,7 +43,8 @@ OptimizationState CnlrStep::Load(std::shared_ptr<database::CalibrationDatabase c
     Frames const poses{database::ReadPoses(db, step_type, SensorName())};
     auto const intrinsics{database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
 
-    // TODO(Jack): Is this the appropriate error handling? What actual invariants do we have/want here?
+    // TODO(Jack): Is this the appropriate error handling? What actual invariants do we have/want here? What if there
+    //  are zero poses, is that ok?
     if (not intrinsics.has_value()) {
         throw std::runtime_error("Invalid OptimizationState in CameraNonlinearRefinementStep::Load()");
     }
@@ -53,8 +54,8 @@ OptimizationState CnlrStep::Load(std::shared_ptr<database::CalibrationDatabase c
 
 void CnlrStep::Save(OptimizationState const& optimized_state,
                     std::shared_ptr<database::CalibrationDatabase> const db) const {
-    database::WriteToDb(optimized_state.frames, step_type, SensorName(), db);
     database::WriteToDb(optimized_state.camera_state, camera_info.camera_model, step_type, SensorName(), db);
+    database::WriteToDb(optimized_state.frames, step_type, SensorName(), db);
 
     ReprojectionErrors const error{optimization::ReprojectionResiduals(camera_info, targets, optimized_state)};
     database::WriteToDb(error, step_type, SensorName(), db);
