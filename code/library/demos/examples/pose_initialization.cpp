@@ -1,15 +1,11 @@
 #include <map>
 #include <ranges>
 
-#include "../../application/include/application/step_runner.hpp"
 #include "application/step_runner.hpp"
 #include "application/steps.hpp"
 #include "calibration/camera_imu_initialization.hpp"
 #include "database/calibration_database.hpp"
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "optimization/camera_imu_nonlinear_refinement.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
 
