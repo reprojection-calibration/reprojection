@@ -55,7 +55,7 @@ TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
     EXPECT_TRUE((600 * rays).isApprox(testing_utilities::gt_points));
     EXPECT_TRUE(mask.all());
 
-    // Now test with some bad pixels to see the out of bounds pixels get filtered out
+    // Now test with some bad pixels to see the out-of-bounds pixels get filtered out
     MatrixX2d const some_bad_pixels{{360, 240},  //
                                     {-1, 240},
                                     {719.9, 240},
@@ -64,6 +64,5 @@ TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
 
     std::tie(rays, mask) = camera.Unproject(some_bad_pixels);
     Eigen::Array<bool, 5, 1> const gt_mask{true, false, true, false, true};
-    std::cout << mask << std::endl;
     EXPECT_TRUE(mask.isApprox(gt_mask));
 }

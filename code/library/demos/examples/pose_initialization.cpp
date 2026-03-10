@@ -48,8 +48,8 @@ int main() {
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
     CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
-    // CameraState const camera_state{
-    //     Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
+    CameraState const camera_state{
+        Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
     try {
         database::WriteToDb(camera_info, db);
     } catch (...) {
@@ -57,23 +57,6 @@ int main() {
 
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
-
-    double gamma_sum{0};
-    int count{0};
-    for (auto const& target : targets) {
-        // DO NOT HARDCODE principle point
-        auto const result{calibration::InitializeFocalLengthParabolaLine(target.second, Vector2d{256, 256})};
-        for (auto const gamma : result) {
-            gamma_sum += gamma;
-            count += 1;
-        }
-    }
-    double const gamma{gamma_sum / count};
-
-    Array6d const inited_intriniscs{projection_functions::DoubleSphere::Initialize(gamma, 512, 512)};
-    std::cout << inited_intriniscs.transpose() << std::endl;
-
-    CameraState const camera_state{inited_intriniscs};
 
     application::LpiStep const lpi_step{camera_info, targets, camera_state};
     auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
@@ -84,8 +67,6 @@ int main() {
     application::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
     auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
     std::cout << "Cnlr : " << ToString(cnlr_cache_status) << std::endl;
-
-    std::cout << optimized_state.camera_state.intrinsics.transpose() << std::endl;
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{optimization::SplineReprojectionResiduals(
