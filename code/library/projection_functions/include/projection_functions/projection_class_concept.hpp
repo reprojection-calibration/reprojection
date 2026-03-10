@@ -93,12 +93,13 @@ concept CanProject =
  * a 3D point.
  */
 template <typename T>
-concept CanUnproject = requires(Eigen::Array<double, T::Size, 1> const& intrinsics, Array2d const& pixel) {
-    { intrinsics } -> std::same_as<Eigen::Array<double, T::Size, 1> const&>;
-    { pixel } -> std::same_as<Array2d const&>;
+concept CanUnproject =
+    requires(Eigen::Array<double, T::Size, 1> const& intrinsics, ImageBounds const& bounds, Array2d const& pixel) {
+        { intrinsics } -> std::same_as<Eigen::Array<double, T::Size, 1> const&>;
+        { pixel } -> std::same_as<Array2d const&>;
 
-    { T::Unproject(intrinsics, pixel) } -> std::same_as<Array3d>;
-};
+        { T::Unproject(intrinsics, bounds, pixel) } -> std::same_as<std::optional<Array3d>>;
+    };
 
 /**
  * \brief Defines what we call the "projection class" interface, which are static classes that implement our camera

@@ -11,6 +11,11 @@ namespace reprojection::calibration {
 // this becomes a problem in the initialization! My experience so far shows that all error conditions are actually
 // caught with the nxnx_nyny > 0.95 "non-radial" line check.
 std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point, MatrixX2d const& pixels) {
+    if (pixels.rows() < 4) {
+        // If the P matrix is not at least 4 rows (i.e. P is a 4x4 matrix) then we cannot get a SVD solution below
+        return std::nullopt;  // LCOV_EXCL_LINE
+    }
+
     MatrixX2d const pixels_c{pixels.rowwise() - principal_point.transpose()};
     MatrixX4d P(pixels.rows(), 4);
     P.col(0) = pixels_c.col(0);
@@ -30,8 +35,13 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
     double const& c4{C(3)};                       // b = nz / gamma --> c4
     double const t{c1 * c1 + c2 * c2 + c3 * c4};  // a * b = gamma * nz * nz / gamma = nz * nz --> c3 * c4
 
-    // WARN(Jack): In the reference paper there is a check here to make sure that t is positive! See note above. If it
-    // turns out we do get negative t here then the square root might cause problems...
+    // NOTE(Jack): I do not know how to manufacture test data to test this condition, but it is observed in the real
+    // world, and it is found in the reference paper. Negative value here is not allowed because we need to square root
+    // it below.
+    if (t <= 0) {
+        return std::nullopt;  // LCOV_EXCL_LINE
+    }
+
     double const d{1.0 / std::sqrt(t)};
     double const nx{d * c1};
     double const ny{d * c2};
@@ -39,9 +49,10 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
 
     // NOTE(Jack): This seems to be a pretty aggressive threshold. In some cases a line within 100 pixels of the origin
     // can be classified as "radial", that feels like too much. Testing with real data over time will tell if this
-    // matters or not.
+    // matters or not - but please note that in the paper they check sqrt(nxnx_nyny), but here we check nznz directly
+    // because they are directly related and also we actually have to protect against sqrt zero below.
     double const nznz{1 - nxnx_nyny};  // Using the constraint 1 = x^2 + y^2 + z^2 for line normal N
-    if (nznz < 0.05) {
+    if (nznz <= 0.0 || std::sqrt(nznz) < 1e-1) {
         // Too close to image center (i.e. line is "radial" which is a singularity case)
         return std::nullopt;
     }

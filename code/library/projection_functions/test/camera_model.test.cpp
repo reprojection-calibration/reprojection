@@ -19,8 +19,8 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
         projection_functions::PinholeCamera(testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds)};
 
     auto const [pixels, mask]{camera.Project(testing_utilities::gt_points)};
-    ASSERT_TRUE(mask.all());
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
+    EXPECT_TRUE(mask.all());
 
     // NOTE(Jack): Of course pinhole unprojection looses the scale, and we are just returned rays in space with z=1.
     // Luckily for the test case we know the scale (600) and can therefore transform the rays into points and compare
@@ -28,8 +28,9 @@ TEST(ProjectionFunctionsCameraModel, TestPinholeCamera) {
     // WARN(Jack): In most real applications we would want to mask the returned pixels to make sure we only unproject
     // valid pixels. However, in this highly controlled and engineered test case we do not need to do that. All real
     // application should!
-    MatrixX3d const rays{camera.Unproject(pixels)};
+    auto const [rays, mask_unproject]{camera.Unproject(pixels)};
     EXPECT_TRUE((600 * rays).isApprox(testing_utilities::gt_points));
+    EXPECT_TRUE(mask_unproject.all());
 }
 
 // TODO(Jack): Add and test unprojection masking!

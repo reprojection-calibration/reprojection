@@ -42,14 +42,14 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {
 }
 
 // TODO(Jack): Test masking!
-
 TEST(ProjectionFunctionsPinholeRadtan4, TestUnproject) {
     auto const camera{
         projection_functions::PinholeRadtan4Camera(pinhole_radtan4_intrinsics, testing_utilities::image_bounds)};
-    MatrixX3d const rays(camera.Unproject(gt_pixels));
+    auto const [rays, mask]{camera.Unproject(gt_pixels)};
 
     // Multiply rays by metric scale to put them back into world coordinates
     EXPECT_TRUE((600 * rays).isApprox(testing_utilities::gt_points));
+    EXPECT_TRUE(mask.all());
 }
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestJacobianUpdate) {

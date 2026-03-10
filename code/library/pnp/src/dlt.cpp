@@ -20,7 +20,7 @@ std::tuple<Isometry3d, Array4d> Dlt23(Bundle const& bundle) {
     Matrix34d const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize
 
     // Extract camera parameters
-    auto [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
+    auto const [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
     Vector3d const t{CalculateCameraCenter(P_star)};
 
     return {ToIsometry3d(R, -R * t), eigen_utilities::FromK(K)};

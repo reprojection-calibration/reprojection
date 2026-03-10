@@ -7,9 +7,14 @@
 
 namespace reprojection::projection_functions {
 
-Array3d PinholeRadtan4::Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel) {
-    Array3d const P_ray{Pinhole::Unproject(intrinsics.head<4>(), pixel)};
-    Vector2d const p_cam_0{P_ray.head<2>()};
+std::optional<Array3d> PinholeRadtan4::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
+                                                 ImageBounds const& bounds, Array2d const& pixel) {
+    auto const P_ray{Pinhole::Unproject(intrinsics.head<4>(), bounds, pixel)};
+    if (not P_ray) {
+        return std::nullopt;  // LCOV_EXCL_LINE
+    }
+
+    Vector2d const p_cam_0{P_ray.value().head<2>()};
 
     // TODO(Jack): How many iterations do we really need here?
     // TODO(Jack): Check error and exit early if the error is small, will this save us time?
@@ -25,7 +30,7 @@ Array3d PinholeRadtan4::Unproject(Eigen::Array<double, Size, 1> const& intrinsic
         distorted_p_cam_n -= du;
     }
 
-    return {distorted_p_cam_n[0], distorted_p_cam_n[1], 1.0};
+    return Array3d{distorted_p_cam_n[0], distorted_p_cam_n[1], 1.0};
 }
 
 std::tuple<Array2d, Matrix2d> PinholeRadtan4::JacobianUpdate(Array4d const& distortion, Array2d const& p_cam) {

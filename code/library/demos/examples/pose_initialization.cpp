@@ -4,8 +4,10 @@
 #include "application/step_runner.hpp"
 #include "application/steps.hpp"
 #include "calibration/camera_imu_initialization.hpp"
+#include "calibration/focal_length_initialization.hpp"
 #include "database/calibration_database.hpp"
 #include "optimization/camera_imu_nonlinear_refinement.hpp"
+#include "projection_functions/double_sphere.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
 

@@ -16,6 +16,8 @@ inline Array4d const pinhole_intrinsics{600, 600, 360, 240};
 
 inline Array4d const unit_pinhole_intrinsics{1, 1, 0, 0};
 
+inline Array6d const double_sphere_intrinsics{600, 600, 360, 240, 0.1, 0.2};
+
 // NOTE(Jack): At time of writing these are only used in the projection_functions module, so maybe they belong there in
 // that smaller scope rather than here at the global level. But for now we do it like this.
 inline MatrixX3d const gt_points{{0, 0, 600},  //

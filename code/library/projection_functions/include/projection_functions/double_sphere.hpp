@@ -14,6 +14,12 @@ namespace reprojection::projection_functions {
 struct DoubleSphere {
     static int constexpr Size{6};
 
+    // TODO(Jack): The choice of initial xi and alpha is, at time of writing, totally arbitrary!
+    // TODO(Jack): Add to projection concept!
+    static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
+        return {0.5 * gamma, 0.5 * gamma, 0.5 * width, 0.5 * height, 0, 0.5};
+    }
+
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
@@ -27,17 +33,19 @@ struct DoubleSphere {
         T const d1{ceres::sqrt(r2 + z * z)};
 
         T const& xi{intrinsics[4]};
+        T const& alpha{intrinsics[5]};
+
         T const wz{xi * d1 + z};  // wz = "weighted z"
         T const d2{ceres::sqrt(r2 + wz * wz)};
 
-        T const& alpha{intrinsics[5]};
         T const z_star{(alpha * d2) + (1.0 - alpha) * wz};
         Array3<T> const P_star{x, y, z_star};
 
         return Pinhole::Project<T>(intrinsics.template head<4>(), bounds, P_star);
     }
 
-    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
+    static std::optional<Array3d> Unproject(Eigen::Array<double, Size, 1> const& intrinsics, ImageBounds const& bounds,
+                                            Array2d const& pixel);
 };
 
 }  // namespace reprojection::projection_functions
