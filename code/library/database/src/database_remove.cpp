@@ -1,5 +1,4 @@
-
-#include <memory>
+#include "database/database_remove.hpp"
 
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
@@ -12,9 +11,6 @@
 
 namespace reprojection::database {
 
-using DbPtr = std::shared_ptr<CalibrationDatabase>;
-
-// TODO TEST!
 void RemoveFromDb(CalibrationStep const step, std::string_view sensor_name, DbPtr const db) {
     auto const binder{[step, sensor_name](sqlite3_stmt* const stmt) {
         Sqlite3Tools::Bind(stmt, 1, ToString(step));

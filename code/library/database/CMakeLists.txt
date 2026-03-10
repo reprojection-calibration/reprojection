@@ -100,6 +100,7 @@ set(TESTS
         src/toml_converters.test.cpp
         test/calibration_database.test.cpp
         test/database_read.test.cpp
+        test/database_remove.test.cpp
         test/database_write.test.cpp
         test/image_interface.test.cpp
 )

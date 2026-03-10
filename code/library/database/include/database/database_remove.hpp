@@ -4,7 +4,6 @@
 
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
-#include "types/sensor_data_types.hpp"
 
 namespace reprojection::database {
 
