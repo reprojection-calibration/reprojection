@@ -9,16 +9,21 @@
 using namespace reprojection;
 
 TEST(CalibrationFocalLengthInitialization, TestParabolaLine) {
-
     ArrayX2i const indices{eigen_utilities::GenerateGridIndices(6, 7)};
+    Eigen::ArrayXXd target_points(indices.rows(), 3);
+    target_points << indices.cast<double>(), Eigen::ArrayXd::Constant(indices.rows(), 15);
 
-    Eigen::ArrayXXd result(indices.rows(), 3);
-    result << indices.cast<double>(), Eigen::ArrayXd::Constant(indices.rows(), 0);
+    Array5d const intrinsics{600, 600, 360, 240, 1};
+    auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
 
-    std::cout << result<<std::endl;
+    auto const [pixels, mask]{camera.Project(target_points)};
+    ASSERT_TRUE(mask.all());
 
-    //auto const camera{
-    //    projection_functions::PinholeCamera(testing_utilities::double_sphere_intrinsics, testing_utilities::image_bounds)};
+    ExtractedTarget const target{{pixels, target_points}, indices};
+    auto const result{calibration::InitializeFocalLengthParabolaLine(target, intrinsics.segment(2, 2))};
 
-
+    EXPECT_EQ(std::size(result), 9);
+    for (auto const& f_i : result) {
+        EXPECT_FLOAT_EQ(f_i, 600);
+    }
 }
