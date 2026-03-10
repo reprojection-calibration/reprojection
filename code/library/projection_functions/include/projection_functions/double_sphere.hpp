@@ -14,6 +14,10 @@ namespace reprojection::projection_functions {
 struct DoubleSphere {
     static int constexpr Size{6};
 
+    static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
+        return {0.5 * gamma, 0.5 * gamma, 0.5 * width, 0.5 * height, 0, 0.5};
+    }
+
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
