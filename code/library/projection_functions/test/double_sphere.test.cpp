@@ -9,16 +9,15 @@
 
 using namespace reprojection;
 
-Array6d const double_sphere_intrinsics{testing_utilities::double_sphere_intrinsics};
-MatrixX2d const gt_pixels{{double_sphere_intrinsics[2], double_sphere_intrinsics[3]},
-                          {46.087794035716172, double_sphere_intrinsics[3]},
-                          {673.83161575882514, double_sphere_intrinsics[3]},
-                          {double_sphere_intrinsics[2], 26.040025446950807},
-                          {double_sphere_intrinsics[2], 453.87414877978961}};
+Array6d const ds_intrinsics{testing_utilities::double_sphere_intrinsics};
+MatrixX2d const gt_pixels{{ds_intrinsics[2], ds_intrinsics[3]},
+                          {46.087794035716172, ds_intrinsics[3]},
+                          {673.83161575882514, ds_intrinsics[3]},
+                          {ds_intrinsics[2], 26.040025446950807},
+                          {ds_intrinsics[2], 453.87414877978961}};
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
-    auto const camera{
-        projection_functions::DoubleSphereCamera(double_sphere_intrinsics, testing_utilities::image_bounds)};
+    auto const camera{projection_functions::DoubleSphereCamera(ds_intrinsics, testing_utilities::image_bounds)};
 
     auto const [pixels, mask](camera.Project(testing_utilities::gt_points));
     ASSERT_TRUE(mask.all());
@@ -44,18 +43,15 @@ TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
 // TODO(Jack): This currently only tests the underlying pinhole projection masking (i.e. behind the camera is invalid).
 // Add the real double sphere validity checks from the paper!
 TEST(ProjectionFunctionsPinhole, TestDoubleSphereProjectMasking) {
-    auto pixel{projection_functions::DoubleSphere::Project(double_sphere_intrinsics, testing_utilities::image_bounds,
-                                                           {0, 0, 10})};
+    auto pixel{projection_functions::DoubleSphere::Project(ds_intrinsics, testing_utilities::image_bounds, {0, 0, 10})};
     EXPECT_TRUE(pixel.has_value());
 
-    pixel = projection_functions::DoubleSphere::Project(double_sphere_intrinsics, testing_utilities::image_bounds,
-                                                        {0, 0, -10});
+    pixel = projection_functions::DoubleSphere::Project(ds_intrinsics, testing_utilities::image_bounds, {0, 0, -10});
     EXPECT_FALSE(pixel.has_value());
 }
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnproject) {
-    auto const camera{
-        projection_functions::DoubleSphereCamera(double_sphere_intrinsics, testing_utilities::image_bounds)};
+    auto const camera{projection_functions::DoubleSphereCamera(ds_intrinsics, testing_utilities::image_bounds)};
 
     // NOTE(Jack): This is where the difference to a model like the pinhole model becomes apparent! For the pinhole
     // model all unprojected rays have a z-value of 1, and are somehow normalized in that sense. Here on the other hand,
@@ -68,4 +64,11 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnproject) {
 
     EXPECT_TRUE(rays.isApprox(normalized_gt_points));
     EXPECT_TRUE(mask.all());
+}
+
+TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereIntialize) {
+    Array6d const result{projection_functions::DoubleSphere::Initialize(1200, 480, 720)};
+    Array6d const gt_result{600, 600, 360, 240, 0, 0.5};
+
+    EXPECT_TRUE(result.isApprox(gt_result));
 }
