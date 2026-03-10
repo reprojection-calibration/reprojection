@@ -22,7 +22,7 @@ TEST(CalibrationFocalLengthInitialization, TestParabolaLine) {
     ExtractedTarget const target{{pixels, target_points}, indices};
     auto const result{calibration::InitializeFocalLengthParabolaLine(target, intrinsics.segment(2, 2))};
 
-add     EXPECT_EQ(std::size(result), 9);  // Arbitrary number of successful initializations
+    EXPECT_EQ(std::size(result), 9);  // Arbitrary number of successful initializations
     for (auto const& f_i : result) {
         EXPECT_FLOAT_EQ(f_i, 600);
     }
