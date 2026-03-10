@@ -16,6 +16,12 @@ std::optional<Array3d> DoubleSphere::Unproject(Eigen::Array<double, Size, 1> con
     double const r2{mx * mx + my * my};
 
     double const& alpha{intrinsics[5]};
+
+    bool const valid{alpha <= 0.5 ? true : r2 < 1.0 / (2 * alpha - 1)};
+    if (not valid) {
+        return std::nullopt;
+    }
+
     double const mz{(1 - alpha * alpha * r2) / (alpha * std::sqrt(1 - (2 * alpha - 1.0) * r2) + 1 - alpha)};  // Eqn. 50
 
     double const& xi{intrinsics[4]};
