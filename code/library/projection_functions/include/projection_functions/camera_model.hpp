@@ -38,7 +38,7 @@ class Camera {
      * Consumes a set of image space pixels and returns a set of 3D rays in the camera optical frame. Does NOT return
      * the original 3D points (that would require depth information).
      */
-    virtual MatrixX3d Unproject(MatrixX2d const& pixels) const = 0;
+    virtual std::pair<MatrixX3d, ArrayXb> Unproject(MatrixX2d const& pixels) const = 0;
 };
 
 /**
@@ -78,13 +78,19 @@ class Camera_T : public Camera {
         return {pixels, valid_mask};
     }  // LCOV_EXCL_LINE
 
-    MatrixX3d Unproject(MatrixX2d const& pixels) const override {
+    std::pair<MatrixX3d, ArrayXb> Unproject(MatrixX2d const& pixels) const override {
         MatrixX3d rays_co(pixels.rows(), 3);
+        ArrayXb valid_mask{ArrayXb::Zero(pixels.rows(), 1)};
         for (int i{0}; i < pixels.rows(); ++i) {
-            rays_co.row(i) = T_Model::Unproject(intrinsics_, pixels.row(i));
+            std::optional<Array3d> const ray{T_Model::Unproject(intrinsics_, bounds_, pixels.row(i))};
+
+            if (ray.has_value()) {
+                rays_co.row(i) = ray.value();
+                valid_mask(i) = true;
+            }
         }
 
-        return rays_co;
+        return {rays_co, valid_mask};
     }  // LCOV_EXCL_LINE
 
    private:

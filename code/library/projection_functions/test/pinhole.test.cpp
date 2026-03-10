@@ -49,8 +49,21 @@ TEST(ProjectionFunctionsPinhole, TestPinholeProjectMasking) {
 TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
     auto const camera{
         projection_functions::PinholeCamera(testing_utilities::pinhole_intrinsics, testing_utilities::image_bounds)};
-    MatrixX3d const rays{camera.Unproject(gt_pixels)};
+    auto [rays, mask]{camera.Unproject(gt_pixels)};
 
     // Multiply rays by metric scale to put them back into world coordinates
     EXPECT_TRUE((600 * rays).isApprox(testing_utilities::gt_points));
+    EXPECT_TRUE(mask.all());
+
+    // Now test with some bad pixels to see the out of bounds pixels get filtered out
+    MatrixX2d const some_bad_pixels{{360, 240},  //
+                                    {-1, 240},
+                                    {719.9, 240},
+                                    {360, 1000},
+                                    {360, 479.9}};
+
+    std::tie(rays, mask) = camera.Unproject(some_bad_pixels);
+    Eigen::Array<bool, 5, 1> const gt_mask{true, false, true, false, true};
+    std::cout << mask << std::endl;
+    EXPECT_TRUE(mask.isApprox(gt_mask));
 }

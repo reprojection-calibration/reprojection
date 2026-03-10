@@ -17,9 +17,10 @@ Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements con
     Frames linear_solution;
     for (auto const& [timestamp_ns, target_i] : targets) {
         // Unproject to rays (pseudo 3D - no depth information) using the camera model provided by the user.
+        // TODO(Jack): Use the mask to filter out bad pixels!
         auto const camera{
             projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
-        MatrixX3d const rays{camera->Unproject(target_i.bundle.pixels)};
+        auto const [rays, _]{camera->Unproject(target_i.bundle.pixels)};
 
         // Project the rays using a unit ideal pinhole camera to get undistorted/linearized pixels
         auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};

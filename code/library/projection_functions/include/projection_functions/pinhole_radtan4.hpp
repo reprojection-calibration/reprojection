@@ -60,7 +60,8 @@ struct PinholeRadtan4 {
         return Pinhole::Project<T>(intrinsics.template head<4>(), bounds, P_star);
     }
 
-    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
+    static std::optional<Array3d> Unproject(Eigen::Array<double, Size, 1> const& intrinsics, ImageBounds const& bounds,
+                                            Array2d const& pixel);
 
     static std::tuple<Array2d, Matrix2d> JacobianUpdate(Array4d const& distortion, Array2d const& p_cam);
 

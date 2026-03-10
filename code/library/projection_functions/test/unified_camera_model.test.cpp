@@ -24,13 +24,15 @@ TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelProject) {
     EXPECT_TRUE(pixels.isApprox(gt_pixels));
 }
 
+// TODO(Jack): Add a test for invalid unprojection
 TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelUnproject) {
     auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
-    MatrixX3d const rays{camera.Unproject(gt_pixels)};
+    auto const [rays, mask]{camera.Unproject(gt_pixels)};
 
     // See note in double sphere test TestDoubleSphereUnproject about this normalization
     MatrixX3d normalized_gt_points{testing_utilities::gt_points};
     normalized_gt_points.rowwise().normalize();
 
     EXPECT_TRUE(rays.isApprox(normalized_gt_points));
+    EXPECT_TRUE(mask.all());
 }

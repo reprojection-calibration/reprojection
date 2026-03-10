@@ -4,11 +4,15 @@
 
 namespace reprojection::projection_functions {
 
-Array3d DoubleSphere::Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel) {
-    Array3d const ray{Pinhole::Unproject(intrinsics.head<4>(), pixel)};
+std::optional<Array3d> DoubleSphere::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
+                                               ImageBounds const& bounds, Array2d const& pixel) {
+    auto const ray{Pinhole::Unproject(intrinsics.head<4>(), bounds, pixel)};
+    if (not ray) {
+        return std::nullopt;
+    }
 
-    double const& mx{ray[0]};
-    double const& my{ray[1]};
+    double const& mx{ray.value()[0]};
+    double const& my{ray.value()[1]};
     double const r2{mx * mx + my * my};
 
     double const& alpha{intrinsics[5]};

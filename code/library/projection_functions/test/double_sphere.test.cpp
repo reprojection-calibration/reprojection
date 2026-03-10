@@ -62,9 +62,10 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnproject) {
     // for the double sphere model, all rays have a magnitude of one instead. Therefore instead of multiplying the rays
     // by the metric scale like we did for pinhole unprojection, we here instead normalize each point into
     // a ray with magnitude one.
-    MatrixX3d const rays{camera.Unproject(gt_pixels)};
+    auto const [rays, mask]{camera.Unproject(gt_pixels)};
     MatrixX3d normalized_gt_points{testing_utilities::gt_points};
     normalized_gt_points.rowwise().normalize();
 
     EXPECT_TRUE(rays.isApprox(normalized_gt_points));
+    EXPECT_TRUE(mask.all());
 }

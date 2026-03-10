@@ -24,7 +24,8 @@ struct UnifiedCameraModel {
         return DoubleSphere::Project<T>(ds_intrinsics, bounds, P_co);
     }
 
-    static Array3d Unproject(Eigen::Array<double, Size, 1> const& intrinsics, Array2d const& pixel);
+    static std::optional<Array3d> Unproject(Eigen::Array<double, Size, 1> const& intrinsics, ImageBounds const& bounds,
+                                            Array2d const& pixel);
 };
 
 }  // namespace reprojection::projection_functions
