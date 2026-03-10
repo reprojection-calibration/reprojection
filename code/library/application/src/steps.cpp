@@ -46,7 +46,8 @@ OptimizationState CnlrStep::Load(std::shared_ptr<database::CalibrationDatabase c
     // TODO(Jack): Is this the appropriate error handling? What actual invariants do we have/want here? What if there
     //  are zero poses, is that ok?
     if (not intrinsics.has_value()) {
-        throw std::runtime_error("Invalid OptimizationState in CameraNonlinearRefinementStep::Load()");
+        throw std::runtime_error(                                                   // LCOV_EXCL_LINE
+            "Invalid OptimizationState in CameraNonlinearRefinementStep::Load()");  // LCOV_EXCL_LINE
     }
 
     return {CameraState{intrinsics.value()}, poses};
