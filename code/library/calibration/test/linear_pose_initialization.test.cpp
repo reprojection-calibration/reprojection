@@ -13,7 +13,7 @@ using namespace reprojection;
 TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitializationDoubleSphere) {
     // Setup test data
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
-    CameraState const intrinsics{Array6d{600, 600, 360, 240, 0.1, 0.2}};
+    CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
 
     // Act

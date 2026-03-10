@@ -3,14 +3,13 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
-#include "projection_functions/double_sphere.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
-Array6d const double_sphere_intrinsics{600, 600, 360, 240, 0.1, 0.2};
+Array6d const double_sphere_intrinsics{testing_utilities::double_sphere_intrinsics};
 MatrixX2d const gt_pixels{{double_sphere_intrinsics[2], double_sphere_intrinsics[3]},
                           {46.087794035716172, double_sphere_intrinsics[3]},
                           {673.83161575882514, double_sphere_intrinsics[3]},
