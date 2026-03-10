@@ -11,7 +11,6 @@
 #include "database/calibration_database.hpp"
 #include "database/image_interface.hpp"
 #include "testing_utilities/constants.hpp"
-#include "testing_utilities/temporary_file.hpp"
 #include "types/sensor_data_types.hpp"
 
 #include "sqlite3_helpers.hpp"

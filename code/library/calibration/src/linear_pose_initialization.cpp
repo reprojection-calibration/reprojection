@@ -12,9 +12,9 @@ namespace reprojection::calibration {
 // of the function is to unproject the pixels to 3d rays using a roughly initialized camera, then project these back to
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
-OptimizationState LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                           CameraState const& intrinsics) {
-    OptimizationState linear_solution;
+Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets,
+                                CameraState const& intrinsics) {
+    Frames linear_solution;
     for (auto const& [timestamp_ns, target_i] : targets) {
         // Unproject to rays (pseudo 3D - no depth information) using the camera model provided by the user.
         auto const camera{
@@ -37,11 +37,9 @@ OptimizationState LinearPoseInitialization(CameraInfo const& sensor, CameraMeasu
         // to be.
         auto const result{pnp::Pnp(linearized_bundle, sensor.bounds)};
         if (std::holds_alternative<Isometry3d>(result)) {
-            linear_solution.frames[timestamp_ns].pose = geometry::Log(std::get<Isometry3d>(result));
+            linear_solution[timestamp_ns].pose = geometry::Log(std::get<Isometry3d>(result));
         }
     }
-
-    linear_solution.camera_state = intrinsics;
 
     return linear_solution;
 }  // LCOV_EXCL_LINE

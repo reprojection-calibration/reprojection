@@ -17,11 +17,11 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitializationDoubleSphe
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
 
     // Act
-    OptimizationState const linear_solution{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
+    Frames const linear_solution{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
 
     // Assert
-    EXPECT_EQ(std::size(linear_solution.frames), 50);
-    for (auto const& [timestamp_ns, frame_i] : linear_solution.frames) {
+    EXPECT_EQ(std::size(linear_solution), 50);
+    for (auto const& [timestamp_ns, frame_i] : linear_solution) {
         Array6d gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
 
         EXPECT_TRUE(frame_i.pose.isApprox(gt_aa_co_w, 1e-12)) << "Linear pose initialization result:\n"

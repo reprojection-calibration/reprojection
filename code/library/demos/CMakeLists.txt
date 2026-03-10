@@ -8,6 +8,7 @@ set(SRC_FILES
         src/image_source.cpp
 )
 set(LINK_LIBRARIES
+        application
         calibration
         Ceres::ceres
         database

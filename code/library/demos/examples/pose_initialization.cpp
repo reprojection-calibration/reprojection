@@ -1,13 +1,11 @@
 #include <map>
 #include <ranges>
 
+#include "application/step_runner.hpp"
+#include "application/steps.hpp"
 #include "calibration/camera_imu_initialization.hpp"
-#include "calibration/linear_pose_initialization.hpp"
 #include "database/calibration_database.hpp"
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "optimization/camera_imu_nonlinear_refinement.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
 
@@ -47,36 +45,30 @@ int main() {
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
-    CameraInfo const sensor{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
-    CameraState const intrinsics{
+    CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
+    CameraState const camera_state{
         Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
-
-    // Load targets, initialize, and optimize
-    CameraMeasurements const targets{database::GetExtractedTargetData(db, sensor.sensor_name)};
-
-    auto const initial_state{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
-    ReprojectionErrors const initial_error{optimization::ReprojectionResiduals(sensor, targets, initial_state)};
-
-    auto const aligned_initial_state{AlignRotations(initial_state)};
-    auto [optimized_state,
-          diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, aligned_initial_state)};
-    ReprojectionErrors const optimized_error{optimization::ReprojectionResiduals(sensor, targets, optimized_state)};
-
-    // Write camera initialization to database
     try {
-        database::WriteToDb(CalibrationStep::Lpi, "", sensor.sensor_name, db);
-        database::WriteToDb(initial_state.frames, CalibrationStep::Lpi, sensor.sensor_name, db);
-        database::WriteToDb(initial_error, CalibrationStep::Lpi, sensor.sensor_name, db);
-        database::WriteToDb(CalibrationStep::Cnlr, "", sensor.sensor_name, db);
-        database::WriteToDb(optimized_state.frames, CalibrationStep::Cnlr, sensor.sensor_name, db);
-        database::WriteToDb(optimized_error, CalibrationStep::Cnlr, sensor.sensor_name, db);
-    } catch (std::exception const& e) {
-        std::cout << "Caught " << e.what() << std::endl;
+        database::WriteToDb(camera_info, db);
+    } catch (...) {
     }
 
+    // Load targets, initialize, and optimize
+    CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
+
+    application::LpiStep const lpi_step{camera_info, targets, camera_state};
+    auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
+    std::cout << "Lpi : " << ToString(lpi_cache_status) << std::endl;
+
+    auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
+
+    application::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
+    auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
+    std::cout << "Cnlr : " << ToString(cnlr_cache_status) << std::endl;
+
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
-    ReprojectionErrors const interpolated_spline_error{
-        optimization::SplineReprojectionResiduals(sensor, targets, optimized_state.camera_state, interpolated_spline)};
+    ReprojectionErrors const interpolated_spline_error{optimization::SplineReprojectionResiduals(
+        camera_info, targets, optimized_state.camera_state, interpolated_spline)};
     (void)interpolated_spline_error;
 
     ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};

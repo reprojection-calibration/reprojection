@@ -7,4 +7,5 @@ CREATE TABLE IF NOT EXISTS reprojection_error
     PRIMARY KEY (step_name, sensor_name, timestamp_ns),
     FOREIGN KEY (step_name, sensor_name, timestamp_ns)
         REFERENCES poses (step_name, sensor_name, timestamp_ns)
+        ON DELETE CASCADE
 );

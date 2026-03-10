@@ -13,6 +13,7 @@ find_package(SQLite3 REQUIRED)
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
+        sql/calibration_steps_delete.sql
         sql/calibration_steps_select.sql
         sql/calibration_steps_table.sql
         sql/calibration_steps_upsert.sql
@@ -32,6 +33,7 @@ set(SQL_FILES
         sql/imu_data_select.sql
         sql/imu_data_table.sql
         sql/poses_insert.sql
+        sql/poses_select.sql
         sql/poses_table.sql
         sql/reprojection_error_insert.sql
         sql/reprojection_error_table.sql
@@ -66,6 +68,7 @@ add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 set(SRC_FILES
         src/calibration_database.cpp
         src/database_read.cpp
+        src/database_remove.cpp
         src/database_write.cpp
         src/image_interface.cpp
         src/serialization.cpp
@@ -97,6 +100,7 @@ set(TESTS
         src/toml_converters.test.cpp
         test/calibration_database.test.cpp
         test/database_read.test.cpp
+        test/database_remove.test.cpp
         test/database_write.test.cpp
         test/image_interface.test.cpp
 )
