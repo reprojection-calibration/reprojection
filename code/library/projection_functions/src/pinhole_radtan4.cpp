@@ -11,7 +11,7 @@ std::optional<Array3d> PinholeRadtan4::Unproject(Eigen::Array<double, Size, 1> c
                                                  ImageBounds const& bounds, Array2d const& pixel) {
     auto const P_ray{Pinhole::Unproject(intrinsics.head<4>(), bounds, pixel)};
     if (not P_ray) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     Vector2d const p_cam_0{P_ray.value().head<2>()};

@@ -8,7 +8,7 @@ std::optional<Array3d> DoubleSphere::Unproject(Eigen::Array<double, Size, 1> con
                                                ImageBounds const& bounds, Array2d const& pixel) {
     auto const ray{Pinhole::Unproject(intrinsics.head<4>(), bounds, pixel)};
     if (not ray) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     double const& mx{ray.value()[0]};

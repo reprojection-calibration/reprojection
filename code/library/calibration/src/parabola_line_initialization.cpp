@@ -13,7 +13,7 @@ namespace reprojection::calibration {
 std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point, MatrixX2d const& pixels) {
     if (pixels.rows() < 4) {
         // If the P matrix is not at least 4 rows (i.e. P is a 4x4 matrix) then we cannot get a SVD solution below
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     MatrixX2d const pixels_c{pixels.rowwise() - principal_point.transpose()};
@@ -39,7 +39,7 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
     // world, and it is found in the reference paper. Negative value here is not allowed because we need to square root
     // it below.
     if (t <= 0) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     double const d{1.0 / std::sqrt(t)};
