@@ -5,6 +5,11 @@
 
 namespace reprojection {
 
+// NOTE(Jack): We turn off code coverage for all the conversions functions because it just does not bring us much here
+// If this becomes a problem we can add unit tests for the conversion functions as needed.
+
+// LCOV_EXCL_START
+
 // TODO(Jack): It is honestly not so nice that we need to specify the steps here and once again in the sql database, and
 //  maybe once again in the python tooling. Is there any way for us to centrally store this with that repetition>
 enum class CalibrationStep { Lpi, Cnlr, Sint, Snlr };
@@ -19,7 +24,7 @@ inline std::string ToString(CalibrationStep const step_name) {
     } else if (step_name == CalibrationStep::Snlr) {
         return "spline_nonlinear_refinement";
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToString(CalibrationStep)");  // LCOV_EXCL_LINE
+        throw std::runtime_error("Unrecognized argument passed to ToString(CalibrationStep)");
     }
 }
 
@@ -40,7 +45,7 @@ inline std::string ToString(CameraModel const camera_model) {
     } else if (camera_model == CameraModel::DoubleSphere) {
         return "double_sphere";
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToString(CameraModel)");  // LCOV_EXCL_LINE
+        throw std::runtime_error("Unrecognized argument passed to ToString(CameraModel)");
     }
 }
 
@@ -48,8 +53,7 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
     if (camera_model == "pinhole") {
         return CameraModel::Pinhole;
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToCameraModel(): " +  // LCOV_EXCL_LINE
-                                 std::string(camera_model));                            // LCOV_EXCL_LINE
+        throw std::runtime_error("Unrecognized argument passed to ToCameraModel(): " + std::string(camera_model));
     }
 }
 
@@ -68,7 +72,7 @@ inline TargetType ToTargetType(std::string const& enum_string) {
     } else if (enum_string == "april_grid3") {
         return TargetType::AprilGrid3;
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToTargetType(): " + enum_string);  // LCOV_EXCL_LINE
+        throw std::runtime_error("Unrecognized argument passed to ToTargetType(): " + enum_string);
     }
 }
 
