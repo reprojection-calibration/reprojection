@@ -6,29 +6,11 @@
 
 namespace reprojection::application {
 
-// TODO MOVE TO TYPES
-enum class CacheStatus {
-    CacheHit,
-    CacheMiss,
-};
-
-// TODO MOVE TO TYPES
-std::string ToString(CacheStatus const status) {
-    if (status == CacheStatus::CacheHit) {
-        return "cache_hit";
-    } else if (status == CacheStatus::CacheMiss) {
-        return "cache_miss";
-    } else {
-        throw std::runtime_error{"Library implementation error ToString(CacheStatus)"};
-    }
-}
-
-// TODO NAMING!
-CacheStatus Xxx(std::optional<std::string> const& loaded_key, std::string_view key) {
+inline bool CacheHit(std::optional<std::string> const& loaded_key, std::string_view key) {
     if (loaded_key.has_value() and loaded_key.value() == key) {
-        return CacheStatus::CacheHit;
+        return true;
     } else {
-        return CacheStatus::CacheMiss;
+        return false;
     }
 }
 
@@ -50,8 +32,7 @@ std::pair<Result, CacheStatus> RunStep(Step const& step, std::shared_ptr<databas
     auto const loaded_key{database::ReadCacheKey(db, step.step_type, step.SensorName())};
     std::string const new_key{step.CacheKey()};
 
-    CacheStatus const status{Xxx(loaded_key, new_key)};
-    if (status == CacheStatus::CacheHit) {
+    if (CacheHit(loaded_key, new_key)) {
         return {step.Load(db), CacheStatus::CacheHit};
     } else {
         // Remove the calibration step - the "on cascade" relationships mean that this should remove all data from all

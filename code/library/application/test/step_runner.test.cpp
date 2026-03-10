@@ -37,10 +37,10 @@ TEST(ApplicationStepRunner, TestStepRunnerWithDummyStep) {
 
     auto [data, cache_status]{application::RunStep<int>(step, db)};
     EXPECT_EQ(data, 1);  // Result from DummyStep.Compute()
-    EXPECT_EQ(cache_status, application::CacheStatus::CacheMiss);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(data, cache_status) = application::RunStep<int>(step, db);
     EXPECT_EQ(data, 2);  // Result from DummyStep.Load()
-    EXPECT_EQ(cache_status, application::CacheStatus::CacheHit);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }

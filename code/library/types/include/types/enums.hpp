@@ -72,4 +72,21 @@ inline TargetType ToTargetType(std::string const& enum_string) {
     }
 }
 
+enum class CacheStatus {
+    CacheHit,
+    CacheMiss,
+};
+
+// LCOV_EXCL_START
+inline std::string ToString(CacheStatus const status) {
+    if (status == CacheStatus::CacheHit) {
+        return "cache_hit";
+    } else if (status == CacheStatus::CacheMiss) {
+        return "cache_miss";
+    } else {
+        throw std::runtime_error{"Library implementation error ToString(CacheStatus)"};
+    }
+}
+// LCOV_EXCL_STOP
+
 }  // namespace reprojection

@@ -5,7 +5,7 @@
 
 namespace reprojection::application {
 
-// TODO(Jack): Make private one day when the application is whole
+// TODO(Jack): Make private package source files one day when the application is whole.
 struct LpiStep {
     LpiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets, CameraState const& _camera_state);
 

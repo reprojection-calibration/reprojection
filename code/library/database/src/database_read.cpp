@@ -113,7 +113,7 @@ Frames ReadPoses(DbConstPtr const database, CalibrationStep const step_name, std
 
     ExecuteQuery(  // LCOV_EXCL_LINE
         database->db, sql_statements::poses_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
@@ -132,7 +132,7 @@ Frames ReadPoses(DbConstPtr const database, CalibrationStep const step_name, std
         });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 ImuMeasurements GetImuData(DbConstPtr const database, std::string_view sensor_name) {
     ImuMeasurements data;

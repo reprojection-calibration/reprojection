@@ -27,7 +27,7 @@ TEST_F(StepsFixture, TestLpiStep) {
 
     auto [frames, cache_status]{RunStep<Frames>(step, db)};
     EXPECT_EQ(std::size(frames), 50);
-    EXPECT_EQ(cache_status, application::CacheStatus::CacheMiss);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // Check that the proper amount of poses got written to the database.
     // TODO(Jack): We should also check that the reprojection errors got written!
@@ -37,7 +37,7 @@ TEST_F(StepsFixture, TestLpiStep) {
     // On rerun with the same inputs it will be a cache hit
     std::tie(frames, cache_status) = RunStep<Frames>(step, db);
     EXPECT_EQ(std::size(frames), 50);
-    EXPECT_EQ(cache_status, application::CacheStatus::CacheHit);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 
     // Make a new different set of targets to trigger a cache miss and data removal (i.e. sql cascade operation) and
     // replacement with a new set of poses.
@@ -46,7 +46,7 @@ TEST_F(StepsFixture, TestLpiStep) {
 
     std::tie(frames, cache_status) = RunStep<Frames>(step_2, db);
     EXPECT_EQ(std::size(frames), 40);
-    EXPECT_EQ(cache_status, application::CacheStatus::CacheMiss);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     poses = database::ReadPoses(db, step.step_type, camera_info.sensor_name);
     EXPECT_EQ(std::size(poses), 40);
@@ -58,7 +58,7 @@ TEST_F(StepsFixture, TestCnlrStep) {
 
     auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
     EXPECT_EQ(std::size(result.frames), 50);
-    EXPECT_EQ(cache_status, application::CacheStatus::CacheMiss);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     auto poses{database::ReadPoses(db, step.step_type, camera_info.sensor_name)};
     EXPECT_EQ(std::size(poses), 50);
@@ -66,5 +66,5 @@ TEST_F(StepsFixture, TestCnlrStep) {
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<OptimizationState>(step, db);
     EXPECT_EQ(std::size(result.frames), 50);
-    EXPECT_EQ(cache_status, application::CacheStatus::CacheHit);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
