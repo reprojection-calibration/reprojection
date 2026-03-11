@@ -76,6 +76,11 @@ inline TargetType ToTargetType(std::string const& enum_string) {
     }
 }
 
+enum class InitializationType {
+    ParabolaLine,
+    VanishingPoint,
+};
+
 enum class CacheStatus {
     CacheHit,
     CacheMiss,

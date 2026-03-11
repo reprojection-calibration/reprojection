@@ -14,6 +14,8 @@ namespace reprojection::projection_functions {
 struct DoubleSphere {
     static int constexpr Size{6};
 
+    static InitializationType constexpr InitType{InitializationType::ParabolaLine};
+
     // TODO(Jack): The choice of initial xi and alpha is, at time of writing, totally arbitrary!
     // TODO(Jack): Add to projection concept!
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
