@@ -3,7 +3,7 @@
 namespace reprojection::projection_functions {
 
 // TODO(Jack): A continuation of my theory that UCM and DS are practically the same exact same! Could be wrong... see
-// the ucm projection function for more context.
+//  the ucm projection function for more context.
 std::optional<Array3d> UnifiedCameraModel::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
                                                      ImageBounds const& bounds, Array2d const& pixel) {
     double const alpha{0};

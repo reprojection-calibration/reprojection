@@ -4,6 +4,8 @@
 #include "types/eigen_types.hpp"
 
 // TODO(Jack): Double check that our assumption here about being able to represent the ucm with the ds is correct!
+// TODO(Jack): Do the double sphere valid functions also cover the UCM? For example UCM sets ds alpha to zero, which
+//  means the unprojection condition will never trigger. Is that ok?
 
 namespace reprojection::projection_functions {
 
