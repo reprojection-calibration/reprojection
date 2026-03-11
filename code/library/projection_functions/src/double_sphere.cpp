@@ -17,6 +17,7 @@ std::optional<Array3d> DoubleSphere::Unproject(Eigen::Array<double, Size, 1> con
 
     double const& alpha{intrinsics[5]};
 
+    // (Eqn. 51)
     bool const valid{alpha <= 0.5 ? true : r2 < 1.0 / (2 * alpha - 1)};
     if (not valid) {
         return std::nullopt;

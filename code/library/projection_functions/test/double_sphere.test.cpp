@@ -66,6 +66,21 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnproject) {
     EXPECT_TRUE(mask.all());
 }
 
+TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnprojectInvalid) {
+    // NOTE(Jack): We have to pick alpha>0.5 because that is where the validity check actually first triggers. We pick
+    // an alpha equal to one so that we can actually trigger the invalid unprojection condition given the unit dimension
+    // camera intrinsics.
+    auto const camera{
+        projection_functions::DoubleSphereCamera(Array6d{1, 1, 0, 0, 0, 1}, testing_utilities::unit_image_bounds)};
+
+    MatrixX2d const pixels{{0, 0}, {0.99, 0.99}, {-0.99, -0.99}};
+
+    auto const [rays, mask]{camera.Unproject(pixels)};
+    Eigen::Array<bool, 3, 1> const gt_mask{true, false, false};
+
+    EXPECT_TRUE(mask.isApprox(gt_mask));
+}
+
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereIntialize) {
     Array6d const result{projection_functions::DoubleSphere::Initialize(1200, 480, 720)};
     Array6d const gt_result{600, 600, 360, 240, 0, 0.5};
