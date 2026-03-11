@@ -27,3 +27,27 @@ TEST(CalibrationFocalLengthInitialization, TestParabolaLine) {
         EXPECT_FLOAT_EQ(f_i, 600);
     }
 }
+
+TEST(CalibrationFocalLengthInitialization, TestInitializeIntrinsics) {
+    ArrayX2i const indices{eigen_utilities::GenerateGridIndices(6, 7)};
+    Eigen::ArrayXXd target_points(indices.rows(), 3);
+    target_points << indices.cast<double>(), Eigen::ArrayXd::Constant(indices.rows(), 15);
+
+    // NOTE(Jack): At time of writing we only have initialization logic for ds model therefore we use it here.
+    Array6d const intrinsics{testing_utilities::double_sphere_intrinsics};
+    auto const camera{projection_functions::DoubleSphereCamera(intrinsics, testing_utilities::image_bounds)};
+
+    auto const [pixels, mask]{camera.Project(target_points)};
+    ASSERT_TRUE(mask.all());
+
+    ExtractedTarget const target{{pixels, target_points}, indices};
+
+    auto const result{calibration::InitializeFocalLengthParabolaLine(target, intrinsics.segment(2, 2))};
+
+    auto const gammas{calibration::InitializeIntrinsics<projection_functions::DoubleSphere>(
+        {{0, target}}, testing_utilities::image_bounds.v_max, testing_utilities::image_bounds.u_max)};
+
+    for (auto const g : gammas) {
+        std::cout << g << std::endl;
+    }
+}
