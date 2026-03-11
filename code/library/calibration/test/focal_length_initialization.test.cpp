@@ -42,12 +42,9 @@ TEST(CalibrationFocalLengthInitialization, TestInitializeIntrinsics) {
 
     ExtractedTarget const target{{pixels, target_points}, indices};
 
-    auto const result{calibration::InitializeFocalLengthParabolaLine(target, intrinsics.segment(2, 2))};
-
-    auto const gammas{calibration::InitializeIntrinsics<projection_functions::DoubleSphere>(
+    auto const gamma{calibration::InitializeIntrinsics<projection_functions::DoubleSphere>(
         {{0, target}}, testing_utilities::image_bounds.v_max, testing_utilities::image_bounds.u_max)};
 
-    for (auto const g : gammas) {
-        std::cout << g << std::endl;
-    }
+    ASSERT_TRUE(gamma.has_value());
+    EXPECT_FLOAT_EQ(*gamma, 1037.1425);
 }
