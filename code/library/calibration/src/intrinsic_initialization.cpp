@@ -1,5 +1,4 @@
-#include "calibration/focal_length_initialization.hpp"
-
+#include "calibration/intrinsic_initialization.hpp"
 #include "calibration/linear_pose_initialization.hpp"
 #include "projection_functions/intialize_camera.hpp"
 
@@ -10,7 +9,7 @@ namespace reprojection::calibration {
 
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets) {
-    auto const [runner, initialization]{RuntimeInitializationDispatch(CameraModel::DoubleSphere, height, width)};
+    auto const [runner, initialization]{SelectInitializationStrategy(CameraModel::DoubleSphere, height, width)};
 
     double min_error{std::numeric_limits<double>::max()};
     ArrayXd intrinsics;
@@ -36,14 +35,14 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
     return intrinsics;
 }
 
-std::pair<GammaRunner, FocalLengthInit> RuntimeInitializationDispatch(CameraModel const camera_model,
+std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrategy(CameraModel const camera_model,
                                                                       double const height, double const width) {
     // TOOD ADD VANISHING POINT IN INITIALIZATION!
-    GammaRunner runner;
+    CandidateGenerator runner;
     if (camera_model == CameraModel::DoubleSphere or camera_model == CameraModel::UnifiedCameraModel) {
         runner = [height, width](ExtractedTarget const& target) {
             // TODO DO NOT USE VECTOR 2d here! Just pass cx and cy
-            return InitializeFocalLengthParabolaLine(target, height / 2, width / 2);
+            return EstimateCandidatesParabolaLine(target, height / 2, width / 2);
         };
 
     } else {
@@ -51,7 +50,7 @@ std::pair<GammaRunner, FocalLengthInit> RuntimeInitializationDispatch(CameraMode
                                  ToString(camera_model));
     }
 
-    FocalLengthInit initializer;
+    IntrinsicsInitializer initializer;
     if (camera_model == CameraModel::DoubleSphere) {
         initializer = projection_functions::DoubleSphere::Initialize;
     } else {
@@ -63,7 +62,7 @@ std::pair<GammaRunner, FocalLengthInit> RuntimeInitializationDispatch(CameraMode
 }
 
 // TODO(Jack): Is it really a focal length or a "gamma"?
-std::vector<double> InitializeFocalLengthParabolaLine(ExtractedTarget const& target, double const cx, double const cy) {
+std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target, double const cx, double const cy) {
     auto const [rows, cols]{SortIntoRowsAndCols(target)};
 
     std::vector<double> focal_lengths;

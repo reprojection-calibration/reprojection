@@ -16,11 +16,12 @@ namespace reprojection::calibration {
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
     spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data);
 
+// TODO THIS CAN BE PUT IN A PRIVATE HEADER!?
 /**
  * \brief Estimate the approximate extrinsic rotation matrix between the IMU and camera optical frame (R_co_imu).
  *
  * Given the camera orientation spline we can differentiate it to get the camera's angular velocity (omega_co). Because
- * all points on a rigit body have the same angular velocity we can use optimization::AngularVelocityAlignment() to
+ * all points on a rigid body have the same angular velocity we can use optimization::AngularVelocityAlignment() to
  * estimate the rotation matrix which aligns the camera's angular velocity to the IMU gyroscope's angular velocity.
  *
  * Note that if not all axes of the camera-IMU motion have sufficient rotational velocity excitement then the returned
@@ -29,6 +30,7 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
 std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC3 const& camera_orientation,
                                                            VelocityMeasurements const& omega_imu);
 
+// TODO THIS CAN BE PUT IN A PRIVATE HEADER!?
 /**
  * \brief Estimate gravity in the camera's world frame using the "zero mean acceleration" assumption.
  *

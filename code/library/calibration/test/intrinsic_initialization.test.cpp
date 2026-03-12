@@ -1,7 +1,6 @@
-#include "calibration/focal_length_initialization.hpp"
-
 #include <gtest/gtest.h>
 
+#include "calibration/intrinsic_initialization.hpp"
 #include "eigen_utilities/grid.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "testing_utilities/constants.hpp"
@@ -36,7 +35,7 @@ TEST_F(FocalLengthInitFixture, TestRuntimeInitializationDispatch) {
     //  double sphere here because it is at this time the only projection class with an Initialization() method? Then we
     //  might be able to check the values exactly like in TestInitializeFocalLengthParabolaLine
     auto const [runner,
-                initialization]{calibration::RuntimeInitializationDispatch(CameraModel::DoubleSphere, height, width)};
+                initialization]{calibration::SelectInitializationStrategy(CameraModel::DoubleSphere, height, width)};
 
     std::vector<double> const gammas{runner(target)};
     EXPECT_EQ(std::size(gammas), 5);  // Simple heuristic to check we get any result from the runner.
@@ -49,7 +48,7 @@ TEST_F(FocalLengthInitFixture, TestRuntimeInitializationDispatch) {
 // NOTE(Jack): We use the UCM camera model for testing because the parabola line math is exact when xi=1, which explains
 // why we get exactly f=600 below.
 TEST_F(FocalLengthInitFixture, TestInitializeFocalLengthParabolaLine) {
-    auto const result{calibration::InitializeFocalLengthParabolaLine(target, width / 2, height / 2)};
+    auto const result{calibration::EstimateCandidatesParabolaLine(target, width / 2, height / 2)};
 
     EXPECT_EQ(std::size(result), 9);  // Arbitrary number of successful initializations
     for (auto const& f_i : result) {

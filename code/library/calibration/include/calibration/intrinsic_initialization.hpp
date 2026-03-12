@@ -14,14 +14,15 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 
 // TODO THIS CAN BE PUT IN A PRIVATE HEADER!?
 // TODO NAMING!!!!
-using GammaRunner = std::function<std::vector<double>(ExtractedTarget const&)>;
-using FocalLengthInit = std::function<ArrayXd(double, double, double)>;
+using CandidateGenerator = std::function<std::vector<double>(ExtractedTarget const&)>;
+using IntrinsicsInitializer = std::function<ArrayXd(double, double, double)>;
 
 // TODO THIS CAN BE PUT IN A PRIVATE HEADER!?
-std::pair<GammaRunner, FocalLengthInit> RuntimeInitializationDispatch(CameraModel const camera_model,
-                                                                      double const height, double const width);
+std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrategy(CameraModel const camera_model,
+                                                                                  double const height,
+                                                                                  double const width);
 
 // TODO THIS CAN BE PUT IN A PRIVATE HEADER!?
-std::vector<double> InitializeFocalLengthParabolaLine(ExtractedTarget const& target, double const cx, double const cy);
+std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target, double const cx, double const cy);
 
 }  // namespace reprojection::calibration

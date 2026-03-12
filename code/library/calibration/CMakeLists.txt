@@ -6,7 +6,7 @@ find_package(OpenCV REQUIRED) # REMOVE when/if database is removed
 
 set(SRC_FILES
         src/camera_imu_initialization.cpp
-        src/focal_length_initialization.cpp
+        src/intrinsic_initialization.cpp
         src/parabola_line_initialization.cpp
         src/utilities.cpp
         src/linear_pose_initialization.cpp
@@ -32,7 +32,7 @@ set(TESTS
         src/utilities.test.cpp
         src/vanishing_point_initialization.test.cpp
         test/camera_imu_initialization.test.cpp
-        test/focal_length_initialization.test.cpp
+        test/intrinsic_initialization.test.cpp
         test/linear_pose_initialization.test.cpp
 )
 AddTests()
