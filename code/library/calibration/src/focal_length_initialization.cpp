@@ -1,9 +1,40 @@
 #include "calibration/focal_length_initialization.hpp"
 
+#include "calibration/linear_pose_initialization.hpp"
+#include "projection_functions/intialize_camera.hpp"
+
 #include "parabola_line_initialization.hpp"
 #include "utilities.hpp"
 
 namespace reprojection::calibration {
+
+std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
+                                            CameraMeasurements const& targets) {
+    auto const [runner, initialization]{RuntimeInitializationDispatch(CameraModel::DoubleSphere, height, width)};
+
+    double min_error{std::numeric_limits<double>::max()};
+    ArrayXd intrinsics;
+    for (auto const& target : targets | std::views::values) {
+        std::vector<double> const gammas{runner(target)};
+
+        for (auto const gamma_i : gammas) {
+            ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
+            ImageBounds const image_bounds{0, width, 0, height};
+            auto const camera{projection_functions::InitializeCamera(camera_model, intrinsics_i, image_bounds)};
+
+            auto const result{EstimatePoseViaPinholePnP(camera, target.bundle, image_bounds)};
+            if (result.has_value()) {
+                auto const [_, final_cost]{*result};
+                if (final_cost < min_error) {
+                    min_error = final_cost;
+                    intrinsics = intrinsics_i;
+                }
+            }
+        }
+    }
+
+    return intrinsics;
+}
 
 std::pair<GammaRunner, FocalLengthInit> RuntimeInitializationDispatch(CameraModel const camera_model,
                                                                       double const height, double const width) {

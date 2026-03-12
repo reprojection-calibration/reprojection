@@ -17,14 +17,16 @@ TEST(Pnp, TestPnp) {
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle, sensor.bounds)};
-        ASSERT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
+        ASSERT_TRUE(std::holds_alternative<pnp::PoseWithCost>(pnp_result));
+
+        pnp::PoseWithCost const result{std::get<pnp::PoseWithCost>(pnp_result)};
+        auto const [tf_co_w, cost]{result};
 
         Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
-
-        Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
                                                   << gt_tf_co_w.matrix();
+        EXPECT_NEAR(cost, 0.0, 1e-15);
     }
 }
 
@@ -35,14 +37,16 @@ TEST(Pnp, TestPnpFlat) {
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle)};
-        ASSERT_TRUE(std::holds_alternative<Isometry3d>(pnp_result));
+        ASSERT_TRUE(std::holds_alternative<pnp::PoseWithCost>(pnp_result));
+
+        pnp::PoseWithCost const result{std::get<pnp::PoseWithCost>(pnp_result)};
+        auto const [tf_co_w, cost]{result};
 
         Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
-
-        Isometry3d const tf_co_w{std::get<Isometry3d>(pnp_result)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
                                                   << gt_tf_co_w.matrix();
+        EXPECT_NEAR(cost, 0.0, 1e-15);
     }
 }
 
