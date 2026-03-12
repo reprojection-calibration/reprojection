@@ -10,7 +10,7 @@
 namespace reprojection::calibration {
 
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
-                                           CameraMeasurements const& targets);
+                                            CameraMeasurements const& targets);
 
 // TODO THIS CAN BE PUT IN A PRIVATE HEADER!?
 // TODO NAMING!!!!
