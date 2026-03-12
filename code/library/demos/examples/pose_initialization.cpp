@@ -1,8 +1,8 @@
 #include <map>
 #include <ranges>
 
-#include "../../calibration/src/camera_imu_initialization.hpp"
-#include "../../calibration/src/intrinsic_initialization.hpp"
+#include "calibration/src/camera_imu_initialization.hpp"
+#include "calibration/src/intrinsic_initialization.hpp"
 #include "application/step_runner.hpp"
 #include "application/steps.hpp"
 #include "database/calibration_database.hpp"
