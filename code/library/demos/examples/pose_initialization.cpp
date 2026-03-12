@@ -58,7 +58,7 @@ int main() {
 
     application::IiStep const ii_step{camera_info, targets};
     auto const [camera_state, ii_cache_status]{application::RunStep<CameraState>(ii_step, db)};
-    std::cout << "Ii : " << ToString(ii_cache_status) << std::endl;
+    std::cout << "Ii : " << ToString(ii_cache_status) << " " << camera_state.intrinsics.transpose() << std::endl;
 
     application::LpiStep const lpi_step{camera_info, targets, camera_state};
     auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
@@ -68,7 +68,8 @@ int main() {
 
     application::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
     auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
-    std::cout << "Cnlr : " << ToString(cnlr_cache_status) << std::endl;
+    std::cout << "Cnlr : " << ToString(cnlr_cache_status) << " " << optimized_state.camera_state.intrinsics.transpose()
+              << std::endl;
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{optimization::SplineReprojectionResiduals(

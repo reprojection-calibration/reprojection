@@ -8,6 +8,9 @@
 
 namespace reprojection::calibration {
 
+using Camera = projection_functions::Camera;
+using PinholeCamera = projection_functions::PinholeCamera;
+
 // TODO USE THE UNPROJECTION MASKING HERE! I THOUGHT WE ALREADY USED THIS HERE! It needs to be combined with the
 // projection mask.
 
@@ -34,25 +37,25 @@ Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements con
     return linear_solution;
 }  // LCOV_EXCL_LINE
 
-std::optional<std::pair<FrameState, double>> EstimatePoseViaPinholePnP(
-    std::unique_ptr<projection_functions::Camera> const& camera, Bundle const& bundle, ImageBounds const& bounds) {
+std::optional<std::pair<FrameState, double>> EstimatePoseViaPinholePnP(std::unique_ptr<Camera> const& camera,
+                                                                       Bundle const& bundle,
+                                                                       ImageBounds const& bounds) {
     // Unproject to rays (pseudo 3D - no depth information) using the camera model provided by the user.
-    // TODO(Jack): Use the mask to filter out bad pixels!
-    auto const [rays, _]{camera->Unproject(bundle.pixels)};
+    auto const [rays, mask_unproject]{camera->Unproject(bundle.pixels)};
 
     // Project the rays using a unit ideal pinhole camera to get undistorted/linearized pixels
-    auto const pinhole_camera{projection_functions::PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};
-    auto const [pixels, mask]{pinhole_camera.Project(rays)};
+    auto const pinhole_camera{PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};
+    auto const [pixels, mask_project]{pinhole_camera.Project(rays)};
 
-    // TOOD(Jack): Now we have this similar masking logic here and in the mvg generator. Should we use a function
-    // instead?
+    // Combine the masks and make a new bundle from only the valid reprojected points.
+    ArrayXb const mask{mask_unproject * mask_project};
     ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
     Bundle const linearized_bundle{pixels(valid_indices, Eigen::all), bundle.points(valid_indices, Eigen::all)};
 
     auto const result{pnp::Pnp(linearized_bundle, bounds)};
-
-    if (std::holds_alternative<Isometry3d>(result)) {
-        return std::pair<FrameState, double>{geometry::Log(std::get<Isometry3d>(result)), 666};
+    if (std::holds_alternative<pnp::PoseWithCost>(result)) {
+        auto const [tf_co_w, cost]{std::get<pnp::PoseWithCost>(result)};
+        return std::pair<FrameState, double>{geometry::Log(tf_co_w), cost};
     } else {
         return std::nullopt;
     }
