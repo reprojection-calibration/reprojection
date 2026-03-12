@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS calibration_steps
 (
-    step_name   TEXT CHECK ( step_name IN ('linear_pose_initialization',
+    step_name   TEXT CHECK ( step_name IN ('intrinsic_initialization',
+                                           'linear_pose_initialization',
                                            'camera_nonlinear_refinement',
                                            'spline_interpolation',
                                            'spline_nonlinear_refinement')),

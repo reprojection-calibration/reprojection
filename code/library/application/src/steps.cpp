@@ -1,12 +1,45 @@
 #include "application/steps.hpp"
 
 #include "caching/cache_keys.hpp"
+#include "calibration/focal_length_initialization.hpp"
 #include "calibration/linear_pose_initialization.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 
 namespace reprojection::application {
+
+IiStep::IiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets)
+    : camera_info{_camera_info}, targets{_targets} {}
+
+std::string IiStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
+
+CameraState IiStep::Compute() const {
+    // TODO(Jack): Confirm v and u are height and width in the correct order!
+    auto const intrinsics{calibration::InitializeIntrinsics(camera_info.camera_model, camera_info.bounds.v_max,
+                                                            camera_info.bounds.u_max, targets)};
+
+    if (not intrinsics.has_value()) {
+        throw std::runtime_error("We have no error handling strategy for failed IiStep::Compute()");
+    }
+
+    return CameraState{*intrinsics};
+}
+
+CameraState IiStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
+    auto const loaded_intrinsics{
+        database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
+
+    if (not loaded_intrinsics.has_value()) {
+        throw std::runtime_error("We have no error handling strategy for failed IiStep::Load()");
+    }
+
+    return CameraState{*loaded_intrinsics};
+}
+
+void IiStep::Save(CameraState const& intrinsics, std::shared_ptr<database::CalibrationDatabase> const db) const {
+    database::WriteToDb(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
+}
 
 LpiStep::LpiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets, CameraState const& _camera_state)
     : camera_info{_camera_info}, targets{_targets}, camera_state{_camera_state} {}

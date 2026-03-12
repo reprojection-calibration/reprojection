@@ -48,8 +48,6 @@ int main() {
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
     CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
-    CameraState const camera_state{
-        Array6d{156.82590211, 156.79756958, 250.99978685, 250.9744566, -0.17931409, 0.59133716}};
     try {
         database::WriteToDb(camera_info, db);
     } catch (...) {
@@ -57,6 +55,10 @@ int main() {
 
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
+
+    application::IiStep const ii_step{camera_info, targets};
+    auto const [camera_state, ii_cache_status]{application::RunStep<CameraState>(ii_step, db)};
+    std::cout << "Ii : " << ToString(ii_cache_status) << std::endl;
 
     application::LpiStep const lpi_step{camera_info, targets, camera_state};
     auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
