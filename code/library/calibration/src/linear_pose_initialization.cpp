@@ -1,41 +1,14 @@
-#include "calibration/linear_pose_initialization.hpp"
+#include "linear_pose_initialization.hpp"
 
 #include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
 #include "pnp/pnp.hpp"
 #include "projection_functions/camera_model.hpp"
-#include "projection_functions/intialize_camera.hpp"
 
 namespace reprojection::calibration {
 
 using Camera = projection_functions::Camera;
 using PinholeCamera = projection_functions::PinholeCamera;
-
-// TODO USE THE UNPROJECTION MASKING HERE! I THOUGHT WE ALREADY USED THIS HERE! It needs to be combined with the
-// projection mask.
-
-// Doxygen notes: only work because we have same camera center for the pinhole and ds/other camera model used. The goal
-// of the function is to unproject the pixels to 3d rays using a roughly initialized camera, then project these back to
-// pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
-// an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
-// TODO(Jack): This name is misleading because the process is not actually strictly linear!
-Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                CameraState const& intrinsics) {
-    auto const camera{
-        projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
-
-    Frames linear_solution;
-    for (auto const& [timestamp_ns, target_i] : targets) {
-        auto const result{EstimatePoseViaPinholePnP(camera, target_i.bundle, sensor.bounds)};
-
-        if (result.has_value()) {
-            auto const [pose, _]{*result};
-            linear_solution[timestamp_ns] = pose;
-        }
-    }
-
-    return linear_solution;
-}  // LCOV_EXCL_LINE
 
 std::optional<std::pair<FrameState, double>> EstimatePoseViaPinholePnP(std::unique_ptr<Camera> const& camera,
                                                                        Bundle const& bundle,

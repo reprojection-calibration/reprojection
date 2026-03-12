@@ -1,8 +1,7 @@
 #include "application/steps.hpp"
 
 #include "caching/cache_keys.hpp"
-#include "calibration/intrinsic_initialization.hpp"
-#include "calibration/linear_pose_initialization.hpp"
+#include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"

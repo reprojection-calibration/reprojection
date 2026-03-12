@@ -1,6 +1,7 @@
+#include "intrinsic_initialization.hpp"
+
 #include <gtest/gtest.h>
 
-#include "calibration/intrinsic_initialization.hpp"
 #include "eigen_utilities/grid.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "testing_utilities/constants.hpp"

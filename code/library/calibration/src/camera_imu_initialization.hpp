@@ -1,22 +1,13 @@
 #pragma once
 
 #include "spline/spline_state.hpp"
-#include "types/calibration_types.hpp"
 #include "types/ceres_types.hpp"
 #include "types/eigen_types.hpp"
+#include "types/sensor_data_types.hpp"
 #include "types/spline_types.hpp"
 
 namespace reprojection::calibration {
 
-// TODO(Jack): This point applies much more to the spline package, but it comes to the surface here. And that is that
-//  here the spline we are passing HAS to be a orientation spline, but that is not coded into the type system. Instead
-//  we have the generic CubicBSplineC3 type, and their is no structural guarantee or encouragement about what is
-//  actually inside of it. This is something which plagues the entire spline code, not a deal breaker, but an idea that
-//  smells to me.
-std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
-    spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data);
-
-// TODO THIS CAN BE PUT IN A PRIVATE HEADER!?
 /**
  * \brief Estimate the approximate extrinsic rotation matrix between the IMU and camera optical frame (R_co_imu).
  *
@@ -30,7 +21,6 @@ std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotation
 std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC3 const& camera_orientation,
                                                            VelocityMeasurements const& omega_imu);
 
-// TODO THIS CAN BE PUT IN A PRIVATE HEADER!?
 /**
  * \brief Estimate gravity in the camera's world frame using the "zero mean acceleration" assumption.
  *
@@ -54,5 +44,9 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(spline::CubicBSplineC
  */
 Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation,
                          AccelerationMeasurements const& acceleration_imu, Matrix3d const& R_imu_co);
+
+VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data);
+
+AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data);
 
 }  // namespace reprojection::calibration

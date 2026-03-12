@@ -13,6 +13,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         optimization
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the linear_pose_init public header interface.
+        spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
         testing_mocks
         testing_utilities
         types
