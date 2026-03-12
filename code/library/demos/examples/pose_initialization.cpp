@@ -1,10 +1,9 @@
 #include <map>
 #include <ranges>
 
-#include "calibration/src/camera_imu_initialization.hpp"
-#include "calibration/src/intrinsic_initialization.hpp"
 #include "application/step_runner.hpp"
 #include "application/steps.hpp"
+#include "calibration/initialization_methods.hpp"
 #include "database/calibration_database.hpp"
 #include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "projection_functions/double_sphere.hpp"
