@@ -5,6 +5,7 @@
 #include "linear_pose_initialization.hpp"
 #include "parabola_line_initialization.hpp"
 #include "utilities.hpp"
+#include "vanishing_point_initialization.hpp"
 
 namespace reprojection::calibration {
 
@@ -17,18 +18,23 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
         runner = [height, width](ExtractedTarget const& target) {
             return EstimateCandidatesParabolaLine(target, height / 2, width / 2);
         };
-
+    } else if (camera_model == CameraModel::Pinhole) {
+        runner = [](ExtractedTarget const& target) { return EstimateCandidatesVanishingPoint(target); };
     } else {
-        throw std::runtime_error("InitializeIntrinsics() 'runner' logic not implemented for: " +
-                                 ToString(camera_model));
+        throw std::runtime_error(
+            "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'runner' logic not implemented for: " +
+            ToString(camera_model));
     }
 
     IntrinsicsInitializer initializer;
-    if (camera_model == CameraModel::DoubleSphere) {
+    if (camera_model == CameraModel::Pinhole) {
+        initializer = projection_functions::Pinhole::Initialize;
+    } else if (camera_model == CameraModel::DoubleSphere) {
         initializer = projection_functions::DoubleSphere::Initialize;
     } else {
-        throw std::runtime_error("InitializeIntrinsics() 'initializer' logic not implemented for: " +
-                                 ToString(camera_model));
+        throw std::runtime_error(
+            "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'initializer' logic not implemented for: " +
+            ToString(camera_model));
     }
 
     return {runner, initializer};
@@ -50,6 +56,22 @@ std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target
 
     collect(rows);
     collect(cols);
+
+    return gammas;
+}
+
+std::vector<double> EstimateCandidatesVanishingPoint(ExtractedTarget const& target) {
+    auto const [rows, cols]{SortIntoRowsAndCols(target)};
+
+    std::vector<double> gammas;
+    for (auto const& row : rows) {
+        for (auto const& col : cols) {
+            auto const gamma_i{VanishingPointInitialization(row.pixels, col.pixels)};
+            if (gamma_i.has_value()) {
+                gammas.push_back(gamma_i.value());
+            }
+        }
+    }
 
     return gammas;
 }

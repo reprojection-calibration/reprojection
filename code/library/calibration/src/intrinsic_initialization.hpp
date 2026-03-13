@@ -16,4 +16,6 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
 
 std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target, double const cx, double const cy);
 
+std::vector<double> EstimateCandidatesVanishingPoint(ExtractedTarget const& target);
+
 }  // namespace reprojection::calibration
