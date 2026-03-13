@@ -14,7 +14,7 @@ struct MvgHelpers {
 
     // TODO(Jack): Refactor the class to explicitly generate targets, there is no reason to pretend it also needs to do
     //  random points.
-    static MatrixX3d BuildTargetPoints(bool const flat);
+    static std::pair<MatrixX3d, ArrayX2i> BuildTargetPoints(bool const flat);
 };
 
 }  // namespace reprojection::testing_mocks

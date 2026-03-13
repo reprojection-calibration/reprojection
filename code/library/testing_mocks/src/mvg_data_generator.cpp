@@ -37,10 +37,9 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
     spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
     std::set<uint64_t> const times_ns{SampleTimes(num_samples, timespan_ns)};
 
-    // TODO(Jack): Refactor to accept CameraInfo directly?
     auto const camera{
         projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
-    MatrixX3d const points{MvgHelpers::BuildTargetPoints(flat)};
+    auto const [points, indices]{MvgHelpers::BuildTargetPoints(flat)};
 
     CameraMeasurements targets;
     Frames poses;
@@ -52,12 +51,10 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
 
         Isometry3d const tf_co_w{geometry::Exp(aa_w_co.value()).inverse()};
         auto const [pixels, mask]{MvgHelpers::Project(points, camera, tf_co_w)};
-        ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
+        ArrayXi const valid_row_ids{eigen_utilities::MaskToRowId(mask)};
 
-        // WARN(Jack): We leave the indices here empty! If we one day need this then we need to fill this out too! Note
-        // that these are not the "valid indices" from above.
-        ExtractedTarget const target_i{Bundle{pixels(valid_indices, Eigen::all), points(valid_indices, Eigen::all)},
-                                       {}};
+        ExtractedTarget const target_i{Bundle{pixels(valid_row_ids, Eigen::all), points(valid_row_ids, Eigen::all)},
+                                       indices(valid_row_ids, Eigen::all)};
         targets.insert({time_ns_i, target_i});
         poses[time_ns_i].pose = geometry::Log(tf_co_w);
     }
