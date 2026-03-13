@@ -21,9 +21,9 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
     } else if (camera_model == CameraModel::Pinhole) {
         runner = [](ExtractedTarget const& target) { return EstimateCandidatesVanishingPoint(target); };
     } else {
-        throw std::runtime_error(
-            "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'runner' logic not implemented for: " +
-            ToString(camera_model));
+        throw std::runtime_error(  // LCOV_EXCL_LINE
+            "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'runner' logic not implemented for: " +  // LCOV_EXCL_LINE
+            ToString(camera_model));  // LCOV_EXCL_LINE
     }
 
     IntrinsicsInitializer initializer;
@@ -32,9 +32,9 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
     } else if (camera_model == CameraModel::DoubleSphere) {
         initializer = projection_functions::DoubleSphere::Initialize;
     } else {
-        throw std::runtime_error(
-            "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'initializer' logic not implemented for: " +
-            ToString(camera_model));
+        throw std::runtime_error(  // LCOV_EXCL_LINE
+            "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'initializer' logic not implemented for: " +  // LCOV_EXCL_LINE
+            ToString(camera_model));  // LCOV_EXCL_LINE
     }
 
     return {runner, initializer};
