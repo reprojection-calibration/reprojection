@@ -40,6 +40,9 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
     return {runner, initializer};
 }
 
+// TODO(Jack): Roughly the same point as for EstimateCandidatesVanishingPoint(), do we really need rows AND cols? Or
+//  would just one of them suffice? If we get too many candidates then the reprojection error calculation might take a
+//  really long time.
 std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target, double const cx, double const cy) {
     auto const [rows, cols]{SortIntoRowsAndCols(target)};
 
@@ -63,6 +66,8 @@ std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target
 std::vector<double> EstimateCandidatesVanishingPoint(ExtractedTarget const& target) {
     auto const [rows, cols]{SortIntoRowsAndCols(target)};
 
+    // TODO(Jack): Do we really need to pair all rows with all columns? Or would it be enough to just take one row and
+    //  pair it with all columns? The current version means we will get a ton of options! More than we need probably.
     std::vector<double> gammas;
     for (auto const& row : rows) {
         for (auto const& col : cols) {

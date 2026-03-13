@@ -19,7 +19,7 @@ CameraState IiStep::Compute() const {
                                                             camera_info.bounds.u_max, targets)};
 
     if (not intrinsics.has_value()) {
-        throw std::runtime_error("We have no error handling strategy for failed IiStep::Compute()");
+        throw std::runtime_error("We have no error handling strategy for failed IiStep::Compute()");  // LCOV_EXCL_LINE
     }
 
     return CameraState{*intrinsics};
@@ -30,7 +30,7 @@ CameraState IiStep::Load(std::shared_ptr<database::CalibrationDatabase const> co
         database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
 
     if (not loaded_intrinsics.has_value()) {
-        throw std::runtime_error("We have no error handling strategy for failed IiStep::Load()");
+        throw std::runtime_error("We have no error handling strategy for failed IiStep::Load()");  // LCOV_EXCL_LINE
     }
 
     return CameraState{*loaded_intrinsics};

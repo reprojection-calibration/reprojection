@@ -19,6 +19,9 @@ std::tuple<MatrixX2d, ArrayXb> MvgHelpers::Project(MatrixX3d const& points_w,
     return camera->Project(points_homog_co.leftCols(3));
 }
 
+// WARN(Jack): The indices and points returned from here are not usable in the classic calibration sense (i.e. for focal
+// length initialization) if the target is not flat. But we preserve the flat bool to help test cases like 2d-3d pnp. If
+// we really need this long term I doubt it because we constrain ourselves to flat targets.
 std::pair<MatrixX3d, ArrayX2i> MvgHelpers::BuildTargetPoints(bool const flat) {
     int const size{5};  // Square target - rows == cols
     int const num_points{size * size};
