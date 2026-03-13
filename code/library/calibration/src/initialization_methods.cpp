@@ -12,7 +12,7 @@ namespace reprojection::calibration {
 
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets) {
-    auto const [runner, initialization]{SelectInitializationStrategy(CameraModel::DoubleSphere, height, width)};
+    auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
 
     double min_error{std::numeric_limits<double>::max()};
     ArrayXd intrinsics;
