@@ -21,6 +21,25 @@ class StepsFixture : public ::testing::Test {
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
 };
 
+TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
+    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
+    application::IiStep const step{camera_info, targets};
+
+    // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
+    // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
+    // strategy is unclear at this time.
+    Array4d const gt_result{209.335, 209.335, 360, 240};  // Heuristic!
+
+    auto [result, cache_status]{RunStep<CameraState>(step, db)};
+    EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    // On rerun with the same inputs it will be a cache hit
+    std::tie(result, cache_status) = RunStep<CameraState>(step, db);
+    EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
 TEST_F(StepsFixture, TestLpiStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
     application::LpiStep const step{camera_info, targets, camera_state};
