@@ -1,4 +1,4 @@
-#include "projection_functions/intialize_camera.hpp"
+#include "projection_functions/initialize_camera.hpp"
 
 #include "projection_functions/camera_model.hpp"
 #include "types/calibration_types.hpp"

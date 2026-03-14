@@ -2,7 +2,7 @@
 
 #include <ranges>
 
-#include "projection_functions/intialize_camera.hpp"
+#include "projection_functions/initialize_camera.hpp"
 
 #include "camera_imu_initialization.hpp"
 #include "intrinsic_initialization.hpp"

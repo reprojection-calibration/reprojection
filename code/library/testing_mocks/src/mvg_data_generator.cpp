@@ -3,7 +3,7 @@
 #include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
-#include "projection_functions/intialize_camera.hpp"
+#include "projection_functions/initialize_camera.hpp"
 #include "spline/se3_spline.hpp"
 
 #include "data_generator_helpers.hpp"
