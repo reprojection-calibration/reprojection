@@ -24,7 +24,7 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
         runner = [height, width](ExtractedTarget const& target) {
             return EstimateCandidatesParabolaLine(target, height / 2, width / 2);
         };
-    } else if (camera_model == CameraModel::Pinhole) {
+    } else if (camera_model == CameraModel::Pinhole or camera_model == CameraModel::PinholeRadtan4) {
         runner = [](ExtractedTarget const& target) { return EstimateCandidatesVanishingPoint(target); };
     } else {
         throw std::runtime_error(  // LCOV_EXCL_LINE
@@ -33,10 +33,14 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
     }
 
     IntrinsicsInitializer initializer;
-    if (camera_model == CameraModel::Pinhole) {
-        initializer = projection_functions::Pinhole::Initialize;
-    } else if (camera_model == CameraModel::DoubleSphere) {
+    if (camera_model == CameraModel::DoubleSphere) {
         initializer = projection_functions::DoubleSphere::Initialize;
+    } else if (camera_model == CameraModel::Pinhole) {
+        initializer = projection_functions::Pinhole::Initialize;
+    } else if (camera_model == CameraModel::PinholeRadtan4) {
+        initializer = projection_functions::PinholeRadtan4::Initialize;
+    } else if (camera_model == CameraModel::UnifiedCameraModel) {
+        initializer = projection_functions::UnifiedCameraModel::Initialize;
     } else {
         throw std::runtime_error(  // LCOV_EXCL_LINE
             "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'initializer' logic not implemented for: " +  // LCOV_EXCL_LINE

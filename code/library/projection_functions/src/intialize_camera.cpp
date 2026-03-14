@@ -21,6 +21,20 @@ std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const&
                 std::to_string(intrinsics.rows()));  // LCOV_EXCL_LINE
         }
         return std::unique_ptr<Camera>(new PinholeCamera(intrinsics, bounds));
+    } else if (model == CameraModel::PinholeRadtan4) {
+        if (not(intrinsics.rows() == PinholeRadtan4::Size)) {
+            throw std::runtime_error(
+                "InitializeCamera() requested CameraModel::PinholeRadtan4 but got intrinsics with length: " +  // LCOV_EXCL_LINE
+                std::to_string(intrinsics.rows()));  // LCOV_EXCL_LINE
+        }
+        return std::unique_ptr<Camera>(new PinholeRadtan4Camera(intrinsics, bounds));
+    } else if (model == CameraModel::UnifiedCameraModel) {
+        if (not(intrinsics.rows() == UnifiedCameraModel::Size)) {
+            throw std::runtime_error(
+                "InitializeCamera() requested CameraModel::UnifiedCameraModel but got intrinsics with length: " +  // LCOV_EXCL_LINE
+                std::to_string(intrinsics.rows()));  // LCOV_EXCL_LINE
+        }
+        return std::unique_ptr<Camera>(new UcmCamera(intrinsics, bounds));
     } else {
         throw std::runtime_error("invalid camera model");  // LCOV_EXCL_LINE
     }
