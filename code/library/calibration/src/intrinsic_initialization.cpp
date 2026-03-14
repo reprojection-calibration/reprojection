@@ -1,7 +1,5 @@
 #include "intrinsic_initialization.hpp"
 
-#include "projection_functions/intialize_camera.hpp"
-
 #include "linear_pose_initialization.hpp"
 #include "parabola_line_initialization.hpp"
 #include "utilities.hpp"
@@ -50,25 +48,20 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
     return {runner, initializer};
 }
 
-// TODO(Jack): Roughly the same point as for EstimateCandidatesVanishingPoint(), do we really need rows AND cols? Or
-//  would just one of them suffice? If we get too many candidates then the reprojection error calculation might take a
-//  really long time.
 std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target, double const cx, double const cy) {
-    auto const [rows, cols]{SortIntoRowsAndCols(target)};
+    auto const [_, cols]{SortIntoRowsAndCols(target)};
 
+    // NOTE(Jack): We could also iterate over the rows and get the row estimate, but then we roughly double the number
+    // of initializations we need to run. Therefore, we arbitrarily limit ourselves to the columns (could also have
+    // chosen the rows). If one day we find out that we actually need to check both the rows and columns than of course
+    // we can change this here.
     std::vector<double> gammas;
-
-    auto const estimate_gammas = [cx, cy, &gammas](std::vector<Bundle> const& bundles) {
-        for (auto const& bundle : bundles) {
-            auto const gamma_i{ParabolaLineInitialization({cx, cy}, bundle.pixels)};
-            if (gamma_i.has_value()) {
-                gammas.push_back(gamma_i.value());
-            }
+    for (const auto& [pixels, _] : cols) {
+        auto const gamma_i{ParabolaLineInitialization({cx, cy}, pixels)};
+        if (gamma_i.has_value()) {
+            gammas.push_back(*gamma_i);
         }
-    };
-
-    estimate_gammas(rows);
-    estimate_gammas(cols);
+    }
 
     return gammas;
 }
@@ -76,15 +69,19 @@ std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target
 std::vector<double> EstimateCandidatesVanishingPoint(ExtractedTarget const& target) {
     auto const [rows, cols]{SortIntoRowsAndCols(target)};
 
-    // TODO(Jack): Do we really need to pair all rows with all columns? Or would it be enough to just take one row and
-    //  pair it with all columns? The current version means we will get a ton of options! More than we need probably.
+    if (std::size(rows) == 0) {
+        return {};
+    }
+    Bundle const row_0{rows[0]};
+
+    // NOTE(Jack): We could have ran every row/col pair, but that means the number of options explodes with target
+    // size. Therefore, we arbitrarily match all cols against the first row. We can also match the first column against
+    // every row, it is an arbitrary choice, but limiting this here to a single other row speeds things up a lot!
     std::vector<double> gammas;
-    for (auto const& row : rows) {
-        for (auto const& col : cols) {
-            auto const gamma_i{VanishingPointInitialization(row.pixels, col.pixels)};
-            if (gamma_i.has_value()) {
-                gammas.push_back(gamma_i.value());
-            }
+    for (auto const& col : cols) {
+        auto const gamma_i{VanishingPointInitialization(row_0.pixels, col.pixels)};
+        if (gamma_i.has_value()) {
+            gammas.push_back(*gamma_i);
         }
     }
 
