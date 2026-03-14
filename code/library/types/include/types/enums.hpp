@@ -26,7 +26,8 @@ inline std::string ToString(CalibrationStep const step_name) {
     } else if (step_name == CalibrationStep::Snlr) {
         return "spline_nonlinear_refinement";
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToString(CalibrationStep)");
+        throw std::runtime_error(
+            "LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(CalibrationStep)");
     }
 }
 
@@ -51,7 +52,7 @@ inline std::string ToString(CameraModel const camera_model) {
     } else if (camera_model == CameraModel::UnifiedCameraModel) {
         return "unified_camera_model";
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToString(CameraModel)");
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR -Unrecognized argument passed to ToString(CameraModel)");
     }
 }
 
@@ -59,7 +60,8 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
     if (camera_model == "pinhole") {
         return CameraModel::Pinhole;
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToCameraModel(): " + std::string(camera_model));
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToCameraModel(): " +
+                                 std::string(camera_model));
     }
 }
 
@@ -78,7 +80,8 @@ inline TargetType ToTargetType(std::string const& enum_string) {
     } else if (enum_string == "april_grid3") {
         return TargetType::AprilGrid3;
     } else {
-        throw std::runtime_error("Unrecognized argument passed to ToTargetType(): " + enum_string);
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToTargetType(): " +
+                                 enum_string);
     }
 }
 
@@ -99,7 +102,7 @@ inline std::string ToString(CacheStatus const status) {
     } else if (status == CacheStatus::CacheMiss) {
         return "cache_miss";
     } else {
-        throw std::runtime_error{"Library implementation error ToString(CacheStatus)"};
+        throw std::runtime_error{"LIBRARY IMPLEMENTATION ERROR - ToString(CacheStatus)"};
     }
 }
 // LCOV_EXCL_STOP
