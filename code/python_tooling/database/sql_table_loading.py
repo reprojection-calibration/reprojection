@@ -7,7 +7,7 @@ from database.proto_parsing import parse_array_x2d_proto, parse_extracted_target
 from database.sql_statement_loading import load_sql
 
 
-def load_camera_info(db_path):
+def load_camera_info_table(db_path):
     if not os.path.isfile(db_path):
         return None
 

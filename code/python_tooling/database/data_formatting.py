@@ -2,6 +2,7 @@ import os
 
 from database.geometry import InvertSe3
 from database.sql_table_loading import (
+    load_camera_info_table,
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
@@ -23,7 +24,7 @@ def process_camera_info_table(table, data):
     for index, row in table.iterrows():
         sensor_name = row["sensor_name"]
         if "sensor_info" not in data[sensor_name]:
-            data[sensor_name] = {"sensor_info": {}}
+            data[sensor_name]["sensor_info"] = {}
 
         data[sensor_name]["sensor_info"]["camera_model"] = row["camera_model"]
         data[sensor_name]["sensor_info"]["height"] = row["height"]
@@ -185,6 +186,8 @@ def load_data(db_path):
     table = load_images_table(db_path)
     if table is not None:
         data.update(process_images_table(table))
+
+    # TODO(Jack): Add camera info loading!
 
     table = load_extracted_targets_table(db_path)
     if table is not None:
