@@ -36,3 +36,10 @@ TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelUnproject) {
     EXPECT_TRUE(rays.isApprox(normalized_gt_points));
     EXPECT_TRUE(mask.all());
 }
+
+TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelIntialize) {
+    Array5d const result{projection_functions::UnifiedCameraModel::Initialize(1200, 480, 720)};
+    Array5d const gt_result{1200, 1200, 360, 240, 1};
+
+    EXPECT_TRUE(result.isApprox(gt_result));
+}

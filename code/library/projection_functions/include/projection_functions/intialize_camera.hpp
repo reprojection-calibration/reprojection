@@ -12,8 +12,9 @@ template <typename T_Model>
     requires ProjectionClass<T_Model>
 std::unique_ptr<Camera> MakeCamera(Eigen::VectorXd const& intrinsics, ImageBounds const& bounds) {
     if (intrinsics.rows() != T_Model::Size) {
-        throw std::runtime_error("Intrinsic size mismatch - wanted " + std::to_string(T_Model::Size) + " but got " +
-                                 std::to_string(intrinsics.rows()));  // LCOV_EXCL_LINE
+        throw std::runtime_error("Intrinsic size mismatch - wanted " +          // LCOV_EXCL_LINE
+                                 std::to_string(T_Model::Size) + " but got " +  // LCOV_EXCL_LINE
+                                 std::to_string(intrinsics.rows()));            // LCOV_EXCL_LINE
     }
 
     using CameraType = Camera_T<T_Model>;

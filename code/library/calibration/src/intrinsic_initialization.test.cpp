@@ -34,20 +34,31 @@ class FocalLengthInitFixture : public ::testing::Test {
     double width{720};
 };
 
+// TODO(Jack): Add a helper function/lambda so we do not need to repeat the exact same test logic for each camera type?
 // Tested using the double sphere strategy logic but we could have tested it with any of them.
 TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
     // TODO(Jack): Should we just use ucm here to make it more consistent with the test fixture? Right now we only use
     //  double sphere here because it is at this time the only projection class with an Initialization() method? Then we
     //  might be able to check the values exactly like in TestInitializeFocalLengthParabolaLine
-    auto const [runner,
-                initialization]{calibration::SelectInitializationStrategy(CameraModel::DoubleSphere, height, width)};
+    auto [runner, initialization]{calibration::SelectInitializationStrategy(CameraModel::DoubleSphere, height, width)};
 
-    std::vector<double> const gammas{runner(target)};
-    EXPECT_EQ(std::size(gammas), 3);  // Simple heuristic to check we get any result from the runner.
+    std::vector<double> const ds_gammas{runner(target)};
+    EXPECT_EQ(std::size(ds_gammas), 3);  // Simple heuristic to check we get any result from the runner.
 
     Array6d const ds_intrinsics{initialization(600, height, width)};
     Array6d const gt_ds_intrinsics{300, 300, 360, 240, 0, 0.5};
     EXPECT_TRUE(ds_intrinsics.isApprox(gt_ds_intrinsics));
+
+    // Now we run the other methods too, mainly to get full test coverage, not because we need to.
+    std::tie(runner, initialization) =
+        calibration::SelectInitializationStrategy(CameraModel::PinholeRadtan4, height, width);
+    std::vector<double> const prt4_gammas{runner(target)};
+    EXPECT_EQ(std::size(prt4_gammas), 6);  // Simple heuristic to check we get any result from the runner.
+
+    std::tie(runner, initialization) =
+        calibration::SelectInitializationStrategy(CameraModel::UnifiedCameraModel, height, width);
+    std::vector<double> const ucm_gammas{runner(target)};
+    EXPECT_EQ(std::size(ucm_gammas), 3);  // Simple heuristic to check we get any result from the runner.
 }
 
 // NOTE(Jack): We use the UCM camera model for testing because the parabola line math is exact when xi=1, which explains
