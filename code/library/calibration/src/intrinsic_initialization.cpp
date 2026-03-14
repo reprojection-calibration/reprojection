@@ -9,10 +9,16 @@
 
 namespace reprojection::calibration {
 
+// NOTE(Jack): This method is where runtime configuration meets the compiler. What this means is that every time we add
+// new camera models we will also need to come and add them manually here. That is a sign that we are possibly doing
+// something wrong. We might be able to achieve the same result automatically (i.e. not needing to manually add another
+// condition for each camera model) if we intelligently used some templating/type trait/metaprogramming. I tried it once
+// and thought it added too much boilerplate. But if we find that as we add more camera models we have to edit several
+// of these "runtime-compile" time borders, then we might want to investigate a solution more closely. For now this gets
+// the job done!
 std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrategy(CameraModel const camera_model,
                                                                                   double const height,
                                                                                   double const width) {
-    // TOOD ADD VANISHING POINT IN INITIALIZATION!
     CandidateGenerator runner;
     if (camera_model == CameraModel::DoubleSphere or camera_model == CameraModel::UnifiedCameraModel) {
         runner = [height, width](ExtractedTarget const& target) {
@@ -48,7 +54,7 @@ std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target
 
     std::vector<double> gammas;
 
-    auto const collect = [cx, cy, &gammas](std::vector<Bundle> const& bundles) {
+    auto const estimate_gammas = [cx, cy, &gammas](std::vector<Bundle> const& bundles) {
         for (auto const& bundle : bundles) {
             auto const gamma_i{ParabolaLineInitialization({cx, cy}, bundle.pixels)};
             if (gamma_i.has_value()) {
@@ -57,8 +63,8 @@ std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target
         }
     };
 
-    collect(rows);
-    collect(cols);
+    estimate_gammas(rows);
+    estimate_gammas(cols);
 
     return gammas;
 }

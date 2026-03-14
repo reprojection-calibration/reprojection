@@ -11,9 +11,19 @@
 
 using namespace reprojection;
 
-// TODO(Jack): Add holistic focal length intialization test!
+TEST(CalibrationLinearPoseInitialization, TestInitializeIntrinsics) {
+    // TODO(Jack): Use a fixture!!!
+    CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
+    CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
+    auto const [targets, _]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
 
-TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitializationDoubleSphere) {
+    auto const result{
+        calibration::InitializeIntrinsics(sensor.camera_model, sensor.bounds.v_max, sensor.bounds.u_max, targets)};
+
+    ASSERT_TRUE(result.has_value());
+}
+
+TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     // Setup test data
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};

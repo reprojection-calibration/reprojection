@@ -10,11 +10,15 @@
 
 namespace reprojection::calibration {
 
+// TODO(Jack): This method is can eat up time because it runs pnp on every single intrinsic estimate. For example a
+//  single 6 by 7 target can give 42 gammas for each image, lets say you have 1000 images then that means we need to
+//  run pnp 42000 times... Clearly that is overkill! We should investigate a strategy here to stop searching once we
+//  have found a good enough result, or anything to reduce the number of evaluations we need to perform.
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
 
-    double min_error{std::numeric_limits<double>::max()};
+    double min_cost{std::numeric_limits<double>::max()};
     ArrayXd intrinsics;
     for (auto const& target : targets | std::views::values) {
         std::vector<double> const gammas{runner(target)};
@@ -27,8 +31,8 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
             auto const result{EstimatePoseViaPinholePnP(camera, target.bundle, image_bounds)};
             if (result.has_value()) {
                 auto const [_, final_cost]{*result};
-                if (final_cost < min_error) {
-                    min_error = final_cost;
+                if (final_cost < min_cost) {
+                    min_cost = final_cost;
                     intrinsics = intrinsics_i;
                 }
             }
