@@ -16,6 +16,11 @@ namespace reprojection::projection_functions {
 struct UnifiedCameraModel {
     static int constexpr Size{5};
 
+    // TODO(Jack): The UCM model is so similar to double sphere, then why is the initialization strategy so different?
+    static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
+        return {gamma, gamma, 0.5 * width, 0.5 * height, 1};
+    }
+
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
