@@ -46,7 +46,7 @@ int main() {
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
-    CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
+    CameraInfo const camera_info{"/cam0/image_raw", CameraModel::PinholeRadtan4, {0, 512, 0, 512}};
     try {
         database::WriteToDb(camera_info, db);
     } catch (...) {

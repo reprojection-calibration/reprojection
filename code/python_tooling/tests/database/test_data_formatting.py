@@ -5,6 +5,7 @@ import pandas as pd
 
 from database.data_formatting import (
     load_data,
+    process_camera_info_table,
     process_extracted_targets_table,
     process_images_table,
     process_imu_data_table,
@@ -28,6 +29,37 @@ class TestDataFormatting(unittest.TestCase):
         self.db_path = os.getenv(
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3"
         )
+
+    def test_process_camera_info_table(self):
+        data = process_camera_info_table(None, None)
+        self.assertIsNone(data)
+
+        camera_info = {
+            "sensor_name": "/cam0/image_raw",
+            "camera_model": "double_sphere",
+            "height": 512,
+            "width": 512,
+        }
+        table = pd.DataFrame([camera_info])
+
+        self.assertRaises(KeyError, process_camera_info_table, table, {})
+
+        # TODO(Jack): Refactor foreign key constraint to load camera_info metadat first!!! There should be no dependency
+        #  on the images here!
+        images_table = load_images_table(self.db_path)
+        data = process_images_table(images_table)
+
+        process_camera_info_table(table, data)
+
+        self.assertTrue("metadata" in data["/cam0/image_raw"])
+        metadata = data["/cam0/image_raw"]["metadata"]
+        self.assertTrue("camera_model" in metadata)
+        self.assertTrue("height" in metadata)
+        self.assertTrue("width" in metadata)
+
+        self.assertEqual(metadata["camera_model"], "double_sphere")
+        self.assertEqual(metadata["height"], 512)
+        self.assertEqual(metadata["width"], 512)
 
     def test_process_images_table(self):
         data = process_images_table(None)

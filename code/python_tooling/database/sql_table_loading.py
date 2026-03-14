@@ -7,6 +7,20 @@ from database.proto_parsing import parse_array_x2d_proto, parse_extracted_target
 from database.sql_statement_loading import load_sql
 
 
+def load_camera_info(db_path):
+    if not os.path.isfile(db_path):
+        return None
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            table = pd.read_sql(load_sql("camera_info_select_all.sql"), conn)
+    except Exception as e:
+        print(e)
+        return None
+
+    return table
+
+
 # TODO(Jack): Make generic loading function for the basic case and use that to eliminate copy and paste!
 # WARN(Jack): We not actually decode the image data here in this function. if we one data get to the point where we do
 # want to visualize images in the dashboard then we need to look again here. For now we just assume all the image data

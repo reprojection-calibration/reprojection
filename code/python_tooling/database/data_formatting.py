@@ -14,6 +14,24 @@ from database.types import SensorType
 #  dash/json serialization?
 
 
+# TODO(Jack): This is where the the foreign key relationships should start, not in load_images! Refactor it so that the
+#  data table creation starts here instead.
+def process_camera_info_table(table, data):
+    if table is None:
+        return None
+
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if "metadata" not in data[sensor_name]:
+            data[sensor_name] = {"metadata": {}}
+
+        data[sensor_name]["metadata"]["camera_model"] = row["camera_model"]
+        data[sensor_name]["metadata"]["height"] = row["height"]
+        data[sensor_name]["metadata"]["width"] = row["width"]
+
+    return data
+
+
 def process_images_table(table):
     if table is None:
         return None
