@@ -13,6 +13,15 @@ std::string ToToml(CameraModel const type, ArrayXd const& intrinsics) {
                           {"cy", intrinsics[3]}, {"xi", intrinsics[4]}, {"alpha", intrinsics[5]}};
     } else if (type == CameraModel::Pinhole) {
         tbl = toml::table{{"fx", intrinsics[0]}, {"fy", intrinsics[1]}, {"cx", intrinsics[2]}, {"cy", intrinsics[3]}};
+    } else if (type == CameraModel::PinholeRadtan4) {
+        tbl = toml::table{{"fx", intrinsics[0]}, {"fy", intrinsics[1]}, {"cx", intrinsics[2]}, {"cy", intrinsics[3]},
+                          {"k1", intrinsics[4]}, {"k2", intrinsics[5]}, {"p1", intrinsics[6]}, {"p2", intrinsics[7]}};
+    } else if (type == CameraModel::UnifiedCameraModel) {
+        tbl = toml::table{{"fx", intrinsics[0]},
+                          {"fy", intrinsics[1]},
+                          {"cx", intrinsics[2]},
+                          {"cy", intrinsics[3]},
+                          {"xi", intrinsics[4]}};
     } else {
         throw std::runtime_error("Implement ToToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE
     }

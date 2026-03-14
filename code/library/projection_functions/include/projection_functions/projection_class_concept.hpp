@@ -56,10 +56,11 @@ namespace reprojection::projection_functions {
  * \brief Concept that enforces a type has an integer member named `Size`.
  */
 template <typename T>
-concept HasIntrinsicsSize = requires {
-    T::Size;
-    std::is_integral_v<T>;  // WARN(Jack): There are many integral types (ex. char), this condition should be more
-                            // strict!
+concept HasIntrinsicsSize = requires { T::Size; } and std::same_as<decltype(T::Size), int const>;
+
+template <typename T>
+concept CanInitialize = requires(double const gamma, double const height, double const width) {
+    { T::Initialize(gamma, height, width) } -> std::same_as<Eigen::Array<double, T::Size, 1>>;
 };
 
 // TODO(Jack): Should we check HasIntrinsicSize before we do the requires section here? Because there we do T::Size
@@ -115,6 +116,6 @@ concept CanUnproject =
  * make it as clear as possible to future maintainers adding new projection classes, what is required of them.
  */
 template <typename T>
-concept ProjectionClass = HasIntrinsicsSize<T> and CanProject<T> and CanUnproject<T>;
+concept ProjectionClass = HasIntrinsicsSize<T> and CanInitialize<T> and CanProject<T> and CanUnproject<T>;
 
 }  // namespace reprojection::projection_functions

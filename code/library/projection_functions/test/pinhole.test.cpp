@@ -66,3 +66,10 @@ TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
     Eigen::Array<bool, 5, 1> const gt_mask{true, false, true, false, true};
     EXPECT_TRUE(mask.isApprox(gt_mask));
 }
+
+TEST(ProjectionFunctionsPinhole, TestPinholeIntialize) {
+    Array4d const result{projection_functions::Pinhole::Initialize(1200, 480, 720)};
+    Array4d const gt_result{1200, 1200, 360, 240};
+
+    EXPECT_TRUE(result.isApprox(gt_result));
+}

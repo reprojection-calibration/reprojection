@@ -28,7 +28,7 @@ TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
     // strategy is unclear at this time.
-    Array4d const gt_result{209.335, 209.335, 360, 240};  // Heuristic!
+    Array4d const gt_result{287.773, 287.773, 360, 240};  // Heuristic!
 
     auto [result, cache_status]{RunStep<CameraState>(step, db)};
     EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));

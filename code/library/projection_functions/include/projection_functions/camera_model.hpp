@@ -1,7 +1,5 @@
 #pragma once
 
-#include <tuple>
-
 #include "projection_functions/double_sphere.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"

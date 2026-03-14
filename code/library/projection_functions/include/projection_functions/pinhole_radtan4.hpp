@@ -14,6 +14,11 @@ namespace reprojection::projection_functions {
 struct PinholeRadtan4 {
     static int constexpr Size{8};
 
+    // TODO(Jack): Is there a more sophisticated way required to initialize the distortion components here?
+    static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
+        return {gamma, gamma, 0.5 * width, 0.5 * height, 0, 0, 0, 0};
+    }
+
     /**
      * \brief Applies four parameter radtan distortion to a 2D point in the ideal/normalized camera frame, producing a
      * "distorted" point in that same frame.

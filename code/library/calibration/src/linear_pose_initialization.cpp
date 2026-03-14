@@ -30,7 +30,7 @@ std::optional<std::pair<FrameState, double>> EstimatePoseViaPinholePnP(std::uniq
         auto const [tf_co_w, cost]{std::get<pnp::PoseWithCost>(result)};
         return std::pair<FrameState, double>{geometry::Log(tf_co_w), cost};
     } else {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 }
 

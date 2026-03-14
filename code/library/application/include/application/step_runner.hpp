@@ -33,18 +33,17 @@ std::pair<Result, CacheStatus> RunStep(Step const& step, std::shared_ptr<databas
 
     if (CacheHit(cached_key, new_key)) {
         return {step.Load(db), CacheStatus::CacheHit};
-    } else {
-        // There was no cache hit so we remove the current step (if it exists) which, assuming the "cascade on delete"
-        // logic is correct, will also remove all other data with a foreign key dependency on this step. Then we write
-        // the step new with the new cache key.
-        database::RemoveFromDb(step.step_type, step.SensorName(), db);
-        database::WriteToDb(step.step_type, new_key, step.SensorName(), db);
     }
 
-    // ERROR(Jack): What if the compute step fails, but we already wrote the new cache key into the step table. If we
-    // run the step again on the same database then it will think it was a cache hit even though the code did not
-    // actually finish executing.
     Result const result{step.Compute()};
+
+    // ERROR(Jack): The step is required to be in the db in order to write a result (foreign key constraint). But in
+    // this current setup it is possible that we write the step but then the .Save() step below fails, this will make
+    // the next run a cache hit (because the step is here), but there will be no data to load. Whe need a real solution
+    // for this!
+    database::RemoveFromDb(step.step_type, step.SensorName(), db);
+    database::WriteToDb(step.step_type, new_key, step.SensorName(), db);
+
     step.Save(result, db);
 
     return {result, CacheStatus::CacheMiss};
