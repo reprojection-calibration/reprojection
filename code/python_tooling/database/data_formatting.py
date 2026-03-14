@@ -22,12 +22,12 @@ def process_camera_info_table(table, data):
 
     for index, row in table.iterrows():
         sensor_name = row["sensor_name"]
-        if "metadata" not in data[sensor_name]:
-            data[sensor_name] = {"metadata": {}}
+        if "sensor_info" not in data[sensor_name]:
+            data[sensor_name] = {"sensor_info": {}}
 
-        data[sensor_name]["metadata"]["camera_model"] = row["camera_model"]
-        data[sensor_name]["metadata"]["height"] = row["height"]
-        data[sensor_name]["metadata"]["width"] = row["width"]
+        data[sensor_name]["sensor_info"]["camera_model"] = row["camera_model"]
+        data[sensor_name]["sensor_info"]["height"] = row["height"]
+        data[sensor_name]["sensor_info"]["width"] = row["width"]
 
     return data
 

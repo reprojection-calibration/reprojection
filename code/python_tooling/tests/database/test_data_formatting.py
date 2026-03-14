@@ -51,15 +51,16 @@ class TestDataFormatting(unittest.TestCase):
 
         process_camera_info_table(table, data)
 
-        self.assertTrue("metadata" in data["/cam0/image_raw"])
-        metadata = data["/cam0/image_raw"]["metadata"]
-        self.assertTrue("camera_model" in metadata)
-        self.assertTrue("height" in metadata)
-        self.assertTrue("width" in metadata)
+        self.assertTrue("sensor_info" in data["/cam0/image_raw"])
+        sensor_info = data["/cam0/image_raw"]["sensor_info"]
 
-        self.assertEqual(metadata["camera_model"], "double_sphere")
-        self.assertEqual(metadata["height"], 512)
-        self.assertEqual(metadata["width"], 512)
+        self.assertTrue("camera_model" in sensor_info)
+        self.assertTrue("height" in sensor_info)
+        self.assertTrue("width" in sensor_info)
+
+        self.assertEqual(sensor_info["camera_model"], "double_sphere")
+        self.assertEqual(sensor_info["height"], 512)
+        self.assertEqual(sensor_info["width"], 512)
 
     def test_process_images_table(self):
         data = process_images_table(None)
