@@ -70,7 +70,7 @@ std::vector<double> EstimateCandidatesVanishingPoint(ExtractedTarget const& targ
     auto const [rows, cols]{SortIntoRowsAndCols(target)};
 
     if (std::size(rows) == 0) {
-        return {};
+        return {};  // LCOV_EXCL_LINE
     }
     Bundle const row_0{rows[0]};
 
