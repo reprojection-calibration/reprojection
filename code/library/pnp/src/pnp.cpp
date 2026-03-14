@@ -50,7 +50,8 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
     auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, target, initial_state)};
     if (diagnostics.solver_summary.termination_type == ceres::CONVERGENCE) {
-        return geometry::Exp(optimized_state.frames.at(timestamp_ns).pose);
+        return PoseWithCost{geometry::Exp(optimized_state.frames.at(timestamp_ns).pose),
+                            diagnostics.solver_summary.final_cost};
     } else {
         return PnpErrorCode::FailedRefinement;  // LCOV_EXCL_LINE
     }

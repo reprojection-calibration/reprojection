@@ -18,7 +18,8 @@ enum class PnpErrorCode {
 };
 
 // TODO(Jack): Is it bad to use a using declaration here in the public API section?
-using PnpResult = std::variant<Isometry3d, PnpErrorCode>;
+using PoseWithCost = std::pair<Isometry3d, double>;
+using PnpResult = std::variant<PoseWithCost, PnpErrorCode>;
 
 PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds = std::nullopt);
 

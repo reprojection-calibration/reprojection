@@ -5,8 +5,8 @@
 namespace reprojection {
 
 struct Bundle {
-    Bundle operator()(ArrayXi const& indices) const {
-        return Bundle{pixels(indices, Eigen::all), points(indices, Eigen::all)};
+    Bundle operator()(ArrayXi const& valid_ids) const {
+        return Bundle{pixels(valid_ids, Eigen::all), points(valid_ids, Eigen::all)};
     }
 
     MatrixX2d pixels;

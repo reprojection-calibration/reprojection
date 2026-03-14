@@ -1,40 +1,19 @@
-#include "calibration/camera_imu_initialization.hpp"
+#include "camera_imu_initialization.hpp"
 
 #include <ranges>
 
 #include "optimization/angular_velocity_alignment.hpp"
 #include "spline/so3_spline.hpp"
 #include "spline/spline_evaluation.hpp"
-#include "spline/spline_initialization.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/spline_types.hpp"
 
 namespace reprojection::calibration {
 
-// TODO(Jack): If used anywhere else we shold move to a common file and implement like we normally do in dedicated
-//  header/cpp files.
-VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data);
-
-// TODO(Jack): If used anywhere else we shold move to a common file
-AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data);
-
 using namespace spline;
 
-// TODO(Jack): This function is unfortunately primarily a collection of data type conversion loops! Is there any way
-//  that we can restructure the data or functions to eliminate these loops?
-std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
-    CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data) {
-    auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
-    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation, imu_angular_velocity)};
-
-    auto const imu_linear_acceleration{ExtractLinearAcceleration(imu_data)};
-    Vector3d const gravity_w{EstimateGravity(camera_orientation, imu_linear_acceleration, R_imu_co)};
-
-    return {{R_imu_co, diagnostics}, gravity_w};
-}
-
-// TODO(Jack): Unit test
+// TODO(Jack): Unit test!
 std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const& camera_orientation,
                                                            VelocityMeasurements const& omega_imu) {
     VelocityMeasurements omega_co;
@@ -51,7 +30,7 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
     return optimization::AngularVelocityAlignment(omega_co, omega_imu);
 }
 
-// TODO(Jack): Unit test
+// TODO(Jack): Unit test!
 Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationMeasurements const& imu_acceleration,
                          Matrix3d const& R_imu_co) {
     // Calculate the camera orientation required to transform each linear acceleration into the camera world frame.
@@ -101,7 +80,6 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
     }
 }
 
-// TODO(Jack): If used anywhere else we shold move to a common file
 VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
     VelocityMeasurements imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
@@ -111,7 +89,6 @@ VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
     return imu_angular_velocity;
 }  // LCOV_EXCL_LINE
 
-// TODO(Jack): If used anywhere else we shold move to a common file
 AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data) {
     AccelerationMeasurements imu_linear_acceleration;
     for (auto const& [timestamp_ns, data_i] : imu_data) {

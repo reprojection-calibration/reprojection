@@ -22,7 +22,7 @@ TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
     for (auto const& [_, target_i] : targets) {
         EXPECT_EQ(target_i.bundle.pixels.rows(), 25);
         EXPECT_EQ(target_i.bundle.points.rows(), 25);
-        EXPECT_EQ(target_i.indices.rows(), 0);
+        EXPECT_EQ(target_i.indices.rows(), 25);
     }
     EXPECT_EQ(std::size(poses), 50);
 }

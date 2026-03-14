@@ -5,6 +5,25 @@
 
 namespace reprojection::application {
 
+struct IiStep {
+    IiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets);
+
+    CameraInfo camera_info;
+    CameraMeasurements targets;
+
+    CalibrationStep step_type{CalibrationStep::Ii};
+
+    std::string SensorName() const { return camera_info.sensor_name; }
+
+    std::string CacheKey() const;
+
+    CameraState Compute() const;
+
+    CameraState Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+
+    void Save(CameraState const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
+};
+
 // TODO(Jack): Make private package source files one day when the application is whole.
 struct LpiStep {
     LpiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets, CameraState const& _camera_state);
