@@ -22,6 +22,10 @@ RUN --mount=type=bind,source=${LIBRARY_DEPENDENCY_SOURCE_BUILDS},target=/tempora
     --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
     /temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS}
 
+ARG INSTALL_OPENCV=building/install_scripts/install_opencv.sh
+RUN --mount=type=bind,source=${INSTALL_OPENCV},target=/temporary/${INSTALL_OPENCV} \
+    /temporary/${INSTALL_OPENCV}
+
 
 FROM configuration-stage AS code-checks-stage
 
@@ -165,3 +169,12 @@ RUN --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOU
     /temporary/${CERES_SOURCE_BUILD} --cmake_build_type=Debug
 
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
+
+### BEGIN APPLICATIONS ###
+
+# ROS2 #
+
+FROM ros:jazzy-ros-core-noble AS ros2-application-stage
+
+
+
