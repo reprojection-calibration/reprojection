@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS configuration-stage
+FROM ubuntu:20.04 AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -126,13 +126,18 @@ RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY}
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${BUILD_LIBRARY} --cmake_build_type=Debug
 
+
+# TODO(Jack): At time of writing this does not work for ubuntu 20/22 due to lcov dependency errors! We tried to do a
+#  source build but it did not seem worth the time. Therefore we run code coverage only only on the ubuntu 24 build.
+FROM debug-build-stage AS code-coverage-stage
+
 ARG CODE_COVERAGE=building/scripts/code_coverage.sh
 RUN --mount=type=bind,source=${CODE_COVERAGE},target=/temporary/${CODE_COVERAGE} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_COVERAGE}
 
 
-FROM debug-build-stage AS code-coverage-assertion-stage
+FROM code-coverage-stage AS code-coverage-assertion-stage
 
 ARG CODE_COVERAGE_ASSERTION=building/scripts/code_coverage_assertion.sh
 RUN --mount=type=bind,source=${CODE_COVERAGE_ASSERTION},target=/temporary/${CODE_COVERAGE_ASSERTION} \
@@ -144,7 +149,7 @@ RUN --mount=type=bind,source=${CODE_COVERAGE_ASSERTION},target=/temporary/${CODE
 FROM nginx:1.29.2 AS code-coverage-report-stage
 
 # Open http://localhost:8080 to view the report
-COPY --from=debug-build-stage  /buildroot/coverage-report  /usr/share/nginx/html
+COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/html
 
 
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
