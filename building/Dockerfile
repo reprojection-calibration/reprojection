@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS configuration-stage
+FROM ubuntu:20.04 AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -188,3 +188,10 @@ ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary
 FROM base-stage AS development-stage
 
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
+
+
+FROM base-stage AS ros1-application-stage
+
+ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
+RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
+    /temporary/${INSTALL_ROS1}
