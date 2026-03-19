@@ -49,9 +49,9 @@ COPY --from=source-base-stage  /usr/local  /usr/local
 
 FROM configuration-stage AS code-checks-stage
 
-ARG INSTALL_CODE_CHECK_DEPENDENCIES=building/install_scripts/install_code_check_dependencies.sh
-RUN --mount=type=bind,source=${INSTALL_CODE_CHECK_DEPENDENCIES},target=/temporary/${INSTALL_CODE_CHECK_DEPENDENCIES} \
-    /temporary/${INSTALL_CODE_CHECK_DEPENDENCIES}
+ARG APT_INSTALL_CODE_CHECK_DEPS=building/install_scripts/apt_install_code_check_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_CODE_CHECK_DEPS},target=/temporary/${APT_INSTALL_CODE_CHECK_DEPS} \
+    /temporary/${APT_INSTALL_CODE_CHECK_DEPS}
 
 ARG CODE_CHECKS=building/scripts/code_checks.sh
 RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
@@ -85,9 +85,9 @@ RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV}
     /temporary/${INSTALL_PYENV}
 
 # TODO(Jack): Should these go into the base stage? Or is the python workflow unique enough?
-ARG INSTALL_PYTHON_DEPENDENCIES=building/install_scripts/install_python_dependencies.sh
-RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPENDENCIES},target=/temporary/${INSTALL_PYTHON_DEPENDENCIES} \
-    /temporary/${INSTALL_PYTHON_DEPENDENCIES}
+ARG INSTALL_PYTHON_DEPS=building/install_scripts/install_python_deps.sh
+RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPS},target=/temporary/${INSTALL_PYTHON_DEPS} \
+    /temporary/${INSTALL_PYTHON_DEPS}
 
 
 COPY code/python_tooling /temporary/code/python_tooling
