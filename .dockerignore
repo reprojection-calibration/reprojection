@@ -1,6 +1,11 @@
 # Cpp related stuff
 **/cmake-build-*
 
+# Ros related stuff
+**/build*
+**/install*
+**/log*
+
 # All ython related stuff
 __pycache__/
 *.egg-info/

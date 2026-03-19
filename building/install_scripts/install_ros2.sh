@@ -17,4 +17,4 @@ curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
 echo "deb [signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros2.list
 
 apt-get update
-apt-get install --yes ros-jazzy-ros-base
+apt-get install --yes python3-colcon-common-extensions ros-jazzy-ros-base
