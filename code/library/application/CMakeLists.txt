@@ -8,10 +8,10 @@ set(SRC_FILES
 )
 
 set(LINK_LIBRARIES
+        Eigen3::Eigen
         caching
         calibration
         database
-        Eigen3::Eigen
         optimization
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the linear_pose_init public header interface.
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
@@ -26,3 +26,35 @@ set(TESTS
         src/steps.test.cpp
 )
 AddTests()
+
+include(GNUInstallDirs)
+
+install(TARGETS application
+        caching
+        calibration
+        database
+        database_proto
+        eigen_utilities
+        geometry
+        optimization
+        pnp
+        projection_functions
+        spline
+        testing_mocks
+        testing_utilities
+        types
+        EXPORT applicationTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(EXPORT applicationTargets
+        FILE applicationTargets.cmake
+        NAMESPACE reprojection::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/application
+)

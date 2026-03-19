@@ -175,10 +175,13 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS release-build-stage
 
+
 ARG BUILD_LIBRARY=building/scripts/build_library.sh
 RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
     --mount=type=bind,source=code/,target=/temporary/code \
-    /temporary/${BUILD_LIBRARY} --cmake_build_type=Release
+    /temporary/${BUILD_LIBRARY} --cmake_build_type=Release; \
+    # TODO JACK WHERE TO PUT THIS INSTALL COMMAND? \
+    set -eoux pipefail; cmake --install /buildroot/build --prefix /opt/reprojection
 
 
 # NOT EXECUTED IN CI!!!
@@ -206,8 +209,12 @@ ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
 
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+
 FROM base-stage AS ros2-application-stage
 
 ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
+
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
