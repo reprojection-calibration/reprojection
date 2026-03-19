@@ -4,44 +4,41 @@ set -eoux pipefail
 
 source /temporary/building/install_scripts/source_install_utils.sh
 
+name=eigen
 clone_repo \
-    https://github.com/eigen-mirror/eigen.git \
+    https://github.com/eigen-mirror/${name}.git \
     3.4.0 \
-    /buildroot/eigen
-
+    /buildroot/${name}
 cmake_build_install \
-    /buildroot/eigen \
-    /buildroot/eigen-"${CMAKE_BUILD_TYPE}"
+    /buildroot/${name} \
+    /buildroot/${name}-"${CMAKE_BUILD_TYPE}"
 
+name=ceres-solver-2.2.0
 download_and_extract \
-    http://ceres-solver.org/ceres-solver-2.2.0.tar.gz \
+    http://ceres-solver.org/${name}.tar.gz \
     /buildroot
-
 cmake_build_install \
-    /buildroot/ceres-solver-2.2.0 \
+    /buildroot/${name} \
     /buildroot/ceres-"${CMAKE_BUILD_TYPE}" \
     -DBUILD_BENCHMARKS=OFF \
     -DBUILD_EXAMPLES=OFF \
     -DBUILD_TESTING=OFF
 
 
-# Install april tags from git repository
+name=apriltag
 clone_repo \
-    https://github.com/AprilRobotics/apriltag.git \
+    https://github.com/AprilRobotics/${name}.git \
     v3.4.5 \
-    /buildroot/apriltag
-
+    /buildroot/${name}
 cmake_build_install \
-    /buildroot/apriltag \
-    /buildroot/apriltag-"${CMAKE_BUILD_TYPE}"
+    /buildroot/${name} \
+    /buildroot/${name}-"${CMAKE_BUILD_TYPE}"
 
-
-# Install tomlplusplus from git repository
+name=tomlplusplus
 clone_repo \
-    https://github.com/marzer/tomlplusplus.git \
+    https://github.com/marzer/${name}.git \
     v3.4.0 \
-    /buildroot/tomlplusplus
-
+    /buildroot/${name}
 cmake_build_install \
-    /buildroot/tomlplusplus \
-    /buildroot/tomlplusplus-"${CMAKE_BUILD_TYPE}"
+    /buildroot/${name} \
+    /buildroot/${name}-"${CMAKE_BUILD_TYPE}"
