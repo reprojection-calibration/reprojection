@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS configuration-stage
+FROM ubuntu:20.04 AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -15,6 +15,10 @@ RUN --mount=type=bind,source=${APT_INSTALL_BASE_DEPS},target=/temporary/${APT_IN
 ARG APT_INSTALL_LIBRARY_DEPS=building/install_scripts/apt_install_library_deps.sh
 RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT_INSTALL_LIBRARY_DEPS} \
     /temporary/${APT_INSTALL_LIBRARY_DEPS}
+
+ARG DEBUG=building/install_scripts/debug.sh
+RUN --mount=type=bind,source=${DEBUG},target=/temporary/${DEBUG} \
+    /temporary/${DEBUG}
 
 
 FROM apt-base-stage AS source-base-stage
