@@ -175,12 +175,11 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS release-build-stage
 
-
+ # TODO JACK WHERE TO PUT THIS INSTALL COMMAND?
 ARG BUILD_LIBRARY=building/scripts/build_library.sh
 RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${BUILD_LIBRARY} --cmake_build_type=Release; \
-    # TODO JACK WHERE TO PUT THIS INSTALL COMMAND? \
     set -eoux pipefail; cmake --install /buildroot/build --prefix /opt/reprojection
 
 

@@ -2,9 +2,9 @@
 **/cmake-build-*
 
 # Ros related stuff
-**/build*
-**/install*
-**/log*
+**_ws//build*
+**_ws//install*
+**_ws//log*
 
 # All ython related stuff
 __pycache__/
