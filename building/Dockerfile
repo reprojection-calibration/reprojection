@@ -16,6 +16,7 @@ ARG APT_INSTALL_LIBRARY_DEPS=building/install_scripts/apt_install_library_deps.s
 RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT_INSTALL_LIBRARY_DEPS} \
     /temporary/${APT_INSTALL_LIBRARY_DEPS}
 
+# We want to use c++ 20 for all builds - therefore we use gcc13 (as it is the default on ubuntu 24) for ubuntu 20 and 22.
 ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
 RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
     /temporary/${APT_INSTALL_GCC13}
@@ -28,6 +29,7 @@ ARG SOURCE_INSTALL_LIBRARY_DEPS=building/install_scripts/source_install_library_
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_LIBRARY_DEPS},target=/temporary/${SOURCE_INSTALL_LIBRARY_DEPS} \
     /temporary/${SOURCE_INSTALL_LIBRARY_DEPS}
+
 
 FROM apt-base-stage AS base-stage
 

@@ -12,7 +12,6 @@ apt-get install --no-install-recommends --yes \
     protobuf-compiler
 
 # Required for ceres-solver source build
-apt-get update
 apt-get install --no-install-recommends --yes \
     libatlas-base-dev \
     libgflags-dev \

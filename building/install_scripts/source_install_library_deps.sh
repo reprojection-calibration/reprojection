@@ -4,6 +4,16 @@ set -eoux pipefail
 
 source /temporary/building/install_scripts/source_install_utils.sh
 
+
+name=apriltag
+clone_repo \
+    https://github.com/AprilRobotics/${name}.git \
+    v3.4.5 \
+    /buildroot/${name}
+cmake_build_install \
+    /buildroot/${name} \
+    /buildroot/${name}-"${CMAKE_BUILD_TYPE}"
+
 name=eigen
 clone_repo \
     https://github.com/eigen-mirror/${name}.git \
@@ -23,16 +33,6 @@ cmake_build_install \
     -DBUILD_BENCHMARKS=OFF \
     -DBUILD_EXAMPLES=OFF \
     -DBUILD_TESTING=OFF
-
-
-name=apriltag
-clone_repo \
-    https://github.com/AprilRobotics/${name}.git \
-    v3.4.5 \
-    /buildroot/${name}
-cmake_build_install \
-    /buildroot/${name} \
-    /buildroot/${name}-"${CMAKE_BUILD_TYPE}"
 
 name=tomlplusplus
 clone_repo \
