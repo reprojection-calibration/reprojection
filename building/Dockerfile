@@ -16,12 +16,23 @@ ARG APT_INSTALL_LIBRARY_DEPS=building/install_scripts/apt_install_library_deps.s
 RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT_INSTALL_LIBRARY_DEPS} \
     /temporary/${APT_INSTALL_LIBRARY_DEPS}
 
-# We want to use c++ 20 for all builds - therefore we use gcc13 (as it is the default on ubuntu 24) for ubuntu 20 and 22.
+# NOTE(Jack): We use c++ 20 in the library and we want to support source builds on ubuntu 20 (for ROS Noble) and on
+# ubuntu 24 (ROS 2 and all other development). The default gcc on ubuntu 24 is gcc13 (which supports full c++ 20 by
+# default) so we also install gcc13 and set it as the primary compiler on ubuntu 20 and 22.
+# WARN(Jack): Code coverage does not work ubuntu 20 and 22! There is some problem with gcov which can be fixed easily in
+# the apt_install_gcc13.sh script, but there is a more complicated problem that has to do with perl packages and other
+# non-trivial version issues. Because we will only run the the full build/debug/test/coverage pipeline on our ubuntu 24
+# development we ignore this for now. But if you try to run code coverage on another base image build, it will probably
+# not work!
 ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
 RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
     /temporary/${APT_INSTALL_GCC13}
 
 
+# NOTE(Jack): We introduce this source build base stage to guarantee that the artefacts from building are only brought
+# into the docker workflow via the /usr/local folder. All other build artefacts will be left behind in this stage.
+# WARN(Jack): If in future an apt package is installed here, this will not end up in base-stage because we only copy
+# /usr/local here!
 FROM apt-base-stage AS source-base-stage
 
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
@@ -127,8 +138,7 @@ RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY}
     /temporary/${BUILD_LIBRARY} --cmake_build_type=Debug
 
 
-# TODO(Jack): At time of writing this does not work for ubuntu 20/22 due to lcov dependency errors! We tried to do a
-#  source build but it did not seem worth the time. Therefore we run code coverage only only on the ubuntu 24 build.
+# WARN(Jack): Due to problems with installing gcc13 on ubuntu 20/22 the code coverage does not work. This is future work!
 FROM debug-build-stage AS code-coverage-stage
 
 ARG CODE_COVERAGE=building/scripts/code_coverage.sh

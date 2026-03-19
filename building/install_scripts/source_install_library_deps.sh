@@ -5,6 +5,7 @@ set -eoux pipefail
 source /temporary/building/install_scripts/source_install_utils.sh
 
 
+# TODO(Jack): Disable building opencv demo and examples
 name=apriltag
 clone_repo \
     https://github.com/AprilRobotics/${name}.git \
@@ -14,6 +15,9 @@ cmake_build_install \
     /buildroot/${name} \
     /buildroot/${name}-"${CMAKE_BUILD_TYPE}"
 
+# NOTE(Jack): The library requires eigen 3.4. On ubuntu 20 the default apt package version is eigen 3.3.7, therefore
+# we decide to compile from source here for all versions, which also means we need to compile ceres from source (are we
+# sure?)...
 name=eigen
 clone_repo \
     https://github.com/eigen-mirror/${name}.git \
