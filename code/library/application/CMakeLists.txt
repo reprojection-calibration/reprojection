@@ -3,6 +3,7 @@ set(LIBRARY_NAME "application")
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
+        src/reprojection_calibration.cpp
         src/steps.cpp
 )
 
@@ -21,7 +22,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        test/step_runner.test.cpp
-        test/steps.test.cpp
+        src/step_runner.test.cpp
+        src/steps.test.cpp
 )
 AddTests()

@@ -1,8 +1,8 @@
-#include "application/steps.hpp"
+#include "steps.hpp"
 
 #include <gtest/gtest.h>
 
-#include "application/step_runner.hpp"
+#include "step_runner.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 
