@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS configuration-stage
+FROM ubuntu:24.04 AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -195,3 +195,9 @@ FROM base-stage AS ros1-application-stage
 ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
+
+FROM base-stage AS ros2-application-stage
+
+ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
+RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
+    /temporary/${INSTALL_ROS2}
