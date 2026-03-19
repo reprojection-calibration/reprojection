@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS configuration-stage
+FROM ubuntu:22.04 AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -16,9 +16,9 @@ ARG APT_INSTALL_LIBRARY_DEPS=building/install_scripts/apt_install_library_deps.s
 RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT_INSTALL_LIBRARY_DEPS} \
     /temporary/${APT_INSTALL_LIBRARY_DEPS}
 
-ARG DEBUG=building/install_scripts/debug.sh
-RUN --mount=type=bind,source=${DEBUG},target=/temporary/${DEBUG} \
-    /temporary/${DEBUG}
+ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
+RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
+    /temporary/${APT_INSTALL_GCC13}
 
 
 FROM apt-base-stage AS source-base-stage

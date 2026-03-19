@@ -11,6 +11,7 @@ UBUNTU_VERSION=$(lsb_release -rs)
 
 if [[ "$UBUNTU_VERSION" == "20.04" ]] || [[ "$UBUNTU_VERSION" == "22.04" ]]; then
     apt-get install --no-install-recommends --yes \
+        gpg-agent \
         software-properties-common
     add-apt-repository ppa:ubuntu-toolchain-r/test
     apt-get update
