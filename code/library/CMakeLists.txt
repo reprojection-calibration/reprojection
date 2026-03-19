@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.16.3)
 project(
         reprojection
         VERSION 0.0.1
@@ -8,6 +8,7 @@ project(
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 
 # Helper macros to prevent insane copy and paste in all subdirectories

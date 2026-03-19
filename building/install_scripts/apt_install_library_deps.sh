@@ -4,7 +4,7 @@ set -eoux pipefail
 
 apt-get update
 apt-get install --no-install-recommends --yes \
-    libeigen3-dev \
+    libgtest-dev \
     libopencv-dev \
     libprotobuf-dev \
     libsqlite3-dev \
@@ -12,7 +12,6 @@ apt-get install --no-install-recommends --yes \
     protobuf-compiler
 
 # Required for ceres-solver source build
-apt-get update
 apt-get install --no-install-recommends --yes \
     libatlas-base-dev \
     libgflags-dev \

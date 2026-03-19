@@ -6,28 +6,52 @@ SHELL ["/bin/bash", "-c"]
 WORKDIR /buildroot
 
 
-FROM configuration-stage AS base-stage
+FROM configuration-stage AS apt-base-stage
 
-ARG INSTALL_BUILD_DEPENDENCIES=building/install_scripts/install_build_dependencies.sh
-RUN --mount=type=bind,source=${INSTALL_BUILD_DEPENDENCIES},target=/temporary/${INSTALL_BUILD_DEPENDENCIES} \
-    /temporary/${INSTALL_BUILD_DEPENDENCIES}
+ARG APT_INSTALL_BASE_DEPS=building/install_scripts/apt_install_base_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_BASE_DEPS},target=/temporary/${APT_INSTALL_BASE_DEPS} \
+    /temporary/${APT_INSTALL_BASE_DEPS}
 
-ARG INSTALL_LIBRARY_DEPENDENCIES=building/install_scripts/install_library_dependencies.sh
-RUN --mount=type=bind,source=${INSTALL_LIBRARY_DEPENDENCIES},target=/temporary/${INSTALL_LIBRARY_DEPENDENCIES} \
-    /temporary/${INSTALL_LIBRARY_DEPENDENCIES}
+ARG APT_INSTALL_LIBRARY_DEPS=building/install_scripts/apt_install_library_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT_INSTALL_LIBRARY_DEPS} \
+    /temporary/${APT_INSTALL_LIBRARY_DEPS}
 
-ARG LIBRARY_DEPENDENCY_SOURCE_BUILDS=building/install_scripts/library_dependency_source_builds.sh
-ARG CERES_SOURCE_BUILD=building/install_scripts/ceres_source_build.sh
-RUN --mount=type=bind,source=${LIBRARY_DEPENDENCY_SOURCE_BUILDS},target=/temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS} \
-    --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
-    /temporary/${LIBRARY_DEPENDENCY_SOURCE_BUILDS}
+# NOTE(Jack): We use c++ 20 in the library and we want to support source builds on ubuntu 20 (for ROS Noble) and on
+# ubuntu 24 (ROS 2 and all other development). The default gcc on ubuntu 24 is gcc13 (which supports full c++ 20 by
+# default) so we also install gcc13 and set it as the primary compiler on ubuntu 20 and 22.
+# WARN(Jack): Code coverage does not work ubuntu 20 and 22! There is some problem with gcov which can be fixed easily in
+# the apt_install_gcc13.sh script, but there is a more complicated problem that has to do with perl packages and other
+# non-trivial version issues. Because we will only run the the full build/debug/test/coverage pipeline on our ubuntu 24
+# development we ignore this for now. But if you try to run code coverage on another base image build, it will probably
+# not work!
+ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
+RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
+    /temporary/${APT_INSTALL_GCC13}
+
+
+# NOTE(Jack): We introduce this source build base stage to guarantee that the artefacts from building are only brought
+# into the docker workflow via the /usr/local folder. All other build artefacts will be left behind in this stage.
+# WARN(Jack): If in future an apt package is installed here, this will not end up in base-stage because we only copy
+# /usr/local here!
+FROM apt-base-stage AS source-base-stage
+
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+ARG SOURCE_INSTALL_LIBRARY_DEPS=building/install_scripts/source_install_library_deps.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${SOURCE_INSTALL_LIBRARY_DEPS},target=/temporary/${SOURCE_INSTALL_LIBRARY_DEPS} \
+    /temporary/${SOURCE_INSTALL_LIBRARY_DEPS}
+
+
+FROM apt-base-stage AS base-stage
+
+COPY --from=source-base-stage  /usr/local  /usr/local
 
 
 FROM configuration-stage AS code-checks-stage
 
-ARG INSTALL_CODE_CHECK_DEPENDENCIES=building/install_scripts/install_code_check_dependencies.sh
-RUN --mount=type=bind,source=${INSTALL_CODE_CHECK_DEPENDENCIES},target=/temporary/${INSTALL_CODE_CHECK_DEPENDENCIES} \
-    /temporary/${INSTALL_CODE_CHECK_DEPENDENCIES}
+ARG APT_INSTALL_CODE_CHECK_DEPS=building/install_scripts/apt_install_code_check_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_CODE_CHECK_DEPS},target=/temporary/${APT_INSTALL_CODE_CHECK_DEPS} \
+    /temporary/${APT_INSTALL_CODE_CHECK_DEPS}
 
 ARG CODE_CHECKS=building/scripts/code_checks.sh
 RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
@@ -61,9 +85,9 @@ RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV}
     /temporary/${INSTALL_PYENV}
 
 # TODO(Jack): Should these go into the base stage? Or is the python workflow unique enough?
-ARG INSTALL_PYTHON_DEPENDENCIES=building/install_scripts/install_python_dependencies.sh
-RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPENDENCIES},target=/temporary/${INSTALL_PYTHON_DEPENDENCIES} \
-    /temporary/${INSTALL_PYTHON_DEPENDENCIES}
+ARG INSTALL_PYTHON_DEPS=building/install_scripts/install_python_deps.sh
+RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPS},target=/temporary/${INSTALL_PYTHON_DEPS} \
+    /temporary/${INSTALL_PYTHON_DEPS}
 
 
 COPY code/python_tooling /temporary/code/python_tooling
@@ -113,13 +137,17 @@ RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY}
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${BUILD_LIBRARY} --cmake_build_type=Debug
 
+
+# WARN(Jack): Due to problems with installing gcc13 on ubuntu 20/22 the code coverage does not work. This is future work!
+FROM debug-build-stage AS code-coverage-stage
+
 ARG CODE_COVERAGE=building/scripts/code_coverage.sh
 RUN --mount=type=bind,source=${CODE_COVERAGE},target=/temporary/${CODE_COVERAGE} \
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_COVERAGE}
 
 
-FROM debug-build-stage AS code-coverage-assertion-stage
+FROM code-coverage-stage AS code-coverage-assertion-stage
 
 ARG CODE_COVERAGE_ASSERTION=building/scripts/code_coverage_assertion.sh
 RUN --mount=type=bind,source=${CODE_COVERAGE_ASSERTION},target=/temporary/${CODE_COVERAGE_ASSERTION} \
@@ -131,7 +159,7 @@ RUN --mount=type=bind,source=${CODE_COVERAGE_ASSERTION},target=/temporary/${CODE
 FROM nginx:1.29.2 AS code-coverage-report-stage
 
 # Open http://localhost:8080 to view the report
-COPY --from=debug-build-stage  /buildroot/coverage-report  /usr/share/nginx/html
+COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/html
 
 
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
@@ -158,10 +186,5 @@ ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary
 
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS development-stage
-
-# We only need the ceres debug build if we are developing locally want to step through the code with a debugger.
-ARG CERES_SOURCE_BUILD=building/install_scripts/ceres_source_build.sh
-RUN --mount=type=bind,source=${CERES_SOURCE_BUILD},target=/temporary/${CERES_SOURCE_BUILD} \
-    /temporary/${CERES_SOURCE_BUILD} --cmake_build_type=Debug
 
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*

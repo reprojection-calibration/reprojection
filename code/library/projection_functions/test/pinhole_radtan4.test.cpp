@@ -77,7 +77,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestDistortionFunctor) {
     EXPECT_FLOAT_EQ(distorted_p_cam[1], -0.099743999999999999);
 }
 
-TEST(ProjectionFunctionsPinhole, TestPinholeIntialize) {
+TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Intialize) {
     Array8d const result{projection_functions::PinholeRadtan4::Initialize(1200, 480, 720)};
     Array8d const gt_result{1200, 1200, 360, 240, 0, 0, 0, 0};
 
