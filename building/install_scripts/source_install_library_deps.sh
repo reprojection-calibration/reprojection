@@ -4,6 +4,15 @@ set -eoux pipefail
 
 source /temporary/building/install_scripts/source_install_utils.sh
 
+clone_repo \
+    https://github.com/eigen-mirror/eigen.git \
+    3.4.0 \
+    /buildroot/eigen
+
+cmake_build_install \
+    /buildroot/eigen \
+    /buildroot/eigen-"${CMAKE_BUILD_TYPE}"
+
 download_and_extract \
     http://ceres-solver.org/ceres-solver-2.2.0.tar.gz \
     /buildroot

@@ -6,7 +6,7 @@ SHELL ["/bin/bash", "-c"]
 WORKDIR /buildroot
 
 
-FROM configuration-stage AS base-stage
+FROM configuration-stage AS apt-base-stage
 
 ARG APT_INSTALL_BASE_DEPS=building/install_scripts/apt_install_base_deps.sh
 RUN --mount=type=bind,source=${APT_INSTALL_BASE_DEPS},target=/temporary/${APT_INSTALL_BASE_DEPS} \
@@ -16,11 +16,18 @@ ARG APT_INSTALL_LIBRARY_DEPS=building/install_scripts/apt_install_library_deps.s
 RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT_INSTALL_LIBRARY_DEPS} \
     /temporary/${APT_INSTALL_LIBRARY_DEPS}
 
+
+FROM apt-base-stage AS source-base-stage
+
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 ARG SOURCE_INSTALL_LIBRARY_DEPS=building/install_scripts/source_install_library_deps.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_LIBRARY_DEPS},target=/temporary/${SOURCE_INSTALL_LIBRARY_DEPS} \
     /temporary/${SOURCE_INSTALL_LIBRARY_DEPS}
+
+FROM apt-base-stage AS base-stage
+
+COPY --from=source-base-stage  /usr/local  /usr/local
 
 
 FROM configuration-stage AS code-checks-stage
@@ -160,5 +167,3 @@ ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary
 FROM base-stage AS development-stage
 
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
-
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes libgtest-dev; rm --force --recursive /var/lib/apt/lists/*
