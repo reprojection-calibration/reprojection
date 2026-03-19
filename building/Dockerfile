@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS configuration-stage
+FROM ubuntu:24.04 AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
 
