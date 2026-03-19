@@ -26,4 +26,5 @@ done
 cmake -B "${build_directory}" -DCMAKE_BUILD_TYPE="${cmake_build_type}"  -G Ninja -S /temporary/code/library
 cmake --build "${build_directory}"
 
+# WARN(Jack): The test are not discovered on the ubuntu 20 build! Open github issue!
 ctest --output-on-failure --progress --test-dir "${build_directory}"
