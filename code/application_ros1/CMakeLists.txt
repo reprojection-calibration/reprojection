@@ -33,9 +33,9 @@ target_include_directories(reprojection_test PRIVATE
         ${roscpp_INCLUDE_DIRS}
         ${std_msgs_INCLUDE_DIRS}
 )
-target_link_libraries(reprojection_test reprojection_lib GTest::Main
-        ${roscpp_LIBRARIES}
-        ${std_msgs_LIBRARIES}
+target_link_libraries(reprojection_test
+        reprojection_lib
+        GTest::Main
 )
 enable_testing()
 include(GoogleTest)
