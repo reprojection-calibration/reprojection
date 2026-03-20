@@ -4,7 +4,6 @@ project(reprojection)
 add_compile_options(-std=c++20)
 
 find_package(roscpp REQUIRED)
-
 find_package(std_msgs REQUIRED)
 
 # TODO ELIMINATE COPY AND PASTE!

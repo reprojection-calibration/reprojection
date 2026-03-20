@@ -24,7 +24,7 @@ for i in "$@"; do
 done
 
 # TODO(Jack): Make release build by default! Note that release builds cannot be built with code coverage enabled!
-cmake -B "${build_directory}" -DCMAKE_BUILD_TYPE="${cmake_build_type}"  -G Ninja -S /temporary/code/ros1_ws/src/reprojection -DCMAKE_PREFIX_PATH=/opt/ros/noetic
+cmake -B "${build_directory}" -DCMAKE_BUILD_TYPE="${cmake_build_type}"  -G Ninja -S /temporary/code/application_ros1 -DCMAKE_PREFIX_PATH=/opt/ros/noetic
 cmake --build "${build_directory}"
 
 
