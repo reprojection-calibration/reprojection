@@ -1,9 +1,5 @@
 set(LIBRARY_NAME "types")
 
-find_package(Ceres REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED)
-
 # Header only package, therefore "INTERFACE" and we do not use the default cmake macros that we use for all the others.
 add_library(${LIBRARY_NAME} INTERFACE)
 target_include_directories(${LIBRARY_NAME} INTERFACE

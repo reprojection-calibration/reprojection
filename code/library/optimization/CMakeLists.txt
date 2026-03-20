@@ -1,8 +1,5 @@
 set(LIBRARY_NAME "optimization")
 
-find_package(Ceres REQUIRED)
-find_package(Eigen3 REQUIRED)
-
 set(SRC_FILES
         src/angular_velocity_alignment.cpp
         src/camera_imu_nonlinear_refinement.cpp

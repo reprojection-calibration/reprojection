@@ -5,10 +5,6 @@ find_package(PkgConfig)
 pkg_search_module(apriltag REQUIRED apriltag)
 set(apriltag_INCLUDE_DIRS "${apriltag_INCLUDE_DIRS}/apriltag")
 
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED)
-find_package(tomlplusplus REQUIRED)
-
 set(SRC_FILES
         src/april_tag_cpp_wrapper.cpp
         src/generated_apriltag_code/tagCustom36h11.c

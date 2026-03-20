@@ -1,8 +1,5 @@
 set(LIBRARY_NAME "caching")
 
-find_package(Eigen3 REQUIRED)
-find_package(OpenSSL REQUIRED)
-
 set(SRC_FILES
         src/cache_keys.cpp
         src/hashing.cpp

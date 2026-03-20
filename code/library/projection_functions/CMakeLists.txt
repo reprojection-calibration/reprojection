@@ -1,9 +1,5 @@
 set(LIBRARY_NAME "projection_functions")
 
-find_package(Ceres REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED) # Only required to save projection images
-
 set(SRC_FILES
         src/double_sphere.cpp
         src/initialize_camera.cpp

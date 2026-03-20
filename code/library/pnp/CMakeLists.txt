@@ -1,7 +1,5 @@
 set(LIBRARY_NAME "pnp")
 
-find_package(Eigen3 REQUIRED)
-
 set(SRC_FILES
         src/dlt.cpp
         src/dlt_matrix_decompositions.cpp
