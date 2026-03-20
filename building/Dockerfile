@@ -141,7 +141,10 @@ FROM base-stage AS debug-build-stage
 
 ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
 RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
-    --mount=type=bind,source=code/,target=/temporary/code \
+    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
+    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Debug \
                                     --build_directory=/buildroot/build-library \
                                     --src_directory=/temporary/code/library
@@ -180,7 +183,10 @@ FROM base-stage AS release-build-stage
 
 ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
 RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
-    --mount=type=bind,source=code/,target=/temporary/code \
+    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
+    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
                                     --build_directory=/buildroot/build-library \
                                     --src_directory=/temporary/code/library

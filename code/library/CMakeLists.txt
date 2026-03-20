@@ -14,8 +14,8 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 # Helper macros to prevent insane copy and paste in all subdirectories
-include(cmake_macros/add_library.cmake)
-include(cmake_macros/add_tests.cmake)
+include(../cmake_macros/add_library.cmake)
+include(../cmake_macros/add_tests.cmake)
 
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
