@@ -25,15 +25,17 @@ target_link_libraries(reprojection_app
 # cmake-build-* folder instead. For now this solution works as a stop gap.
 find_package(GTest REQUIRED)
 
-add_executable(reprojection_test test/reprojection.test.cpp)
+if(CATKIN_ENABLE_TESTING)
+    catkin_add_gtest(reprojection_test test/reprojection.test.cpp)
+endif()
+
+# also allow pure CMake tests
+#add_executable(reprojection_test test/reprojection.test.cpp)
 target_include_directories(reprojection_test PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        ${catkin_INCLUDE_DIRS}
 )
-target_link_libraries(reprojection_test
-        GTest::Main
-        ${catkin_LIBRARIES}
-)
-
+target_link_libraries(reprojection_test GTest::Main ${catkin_LIBRARIES})
 gtest_discover_tests(reprojection_test)
 
 
