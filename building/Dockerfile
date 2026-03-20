@@ -238,6 +238,11 @@ ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
 
+# TODO(Jack): Use a proper packaging instead of copying over the entire build directory. This pollutes this stage with
+# build artefacts it should never know about!
+COPY --from=release-build-stage /buildroot/build-library-Release /buildroot/build-library-Release
+RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    cmake --install /buildroot/build-library-Release
 
 FROM ros2-base-stage AS ros2-application-stage
 
