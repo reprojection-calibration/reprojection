@@ -10,7 +10,7 @@ macro(AddLibrary)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
             ${INCLUDE_DIRECTORIES}
     )
-    target_link_libraries(${LIBRARY_NAME} PUBLIC
+    target_link_libraries(${LIBRARY_NAME} PRIVATE
             ${LINK_LIBRARIES}
     )
 
