@@ -243,6 +243,7 @@ FROM ros2-base-stage AS ros2-application-stage
 
 ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
 RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
     source /opt/ros/jazzy/setup.bash; \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
