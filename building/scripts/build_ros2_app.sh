@@ -24,7 +24,8 @@ for i in "$@"; do
 done
 
 # NOTE(Jack): We have to source the ros setup script here because rclcpp depends on some ament cmake functionality that
-# is delivered by ros.
+# is delivered by ros... This is not required for ros 1 because they do not have this dependency, smart.
+# shellcheck disable=SC1091
 source /opt/ros/jazzy/setup.bash
 
 # TODO(Jack): Make release build by default! Note that release builds cannot be built with code coverage enabled!

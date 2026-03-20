@@ -4,7 +4,7 @@ set -eoux pipefail
 
 find /temporary/building -iname '*.sh' -print0 | xargs --null shellcheck
 
-for dir in /temporary/code/library /temporary/code/ros2_ws/src; do
+for dir in /temporary/code/library /temporary/code/application_ros1 /temporary/code/application_ros2; do
     find "${dir}" \( -iname '*.cpp' -o -iname '*.hpp' -o -iname '*.c' -o -iname '*.h' \) -print0 | xargs --null clang-format --dry-run --Werror
 done
 
@@ -34,5 +34,8 @@ cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr 
   -I /temporary/code/library/testing_utilities/include \
   -I /temporary/code/library/types/include
 
-cppcheck /temporary/code/ros2_ws/src --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
-  -I /temporary/code/ros2_ws/src/reprojection/include
+cppcheck /temporary/code/application_ros1 --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
+  -I /temporary/code/application_ros1/include
+
+  cppcheck /temporary/code/application_ros2 --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
+    -I /temporary/code/application_ros2/include
