@@ -222,6 +222,7 @@ FROM ros1-base-stage AS ros1-application-stage
 
 ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
 RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
                                     --build_directory=/buildroot/build-ros1-app \

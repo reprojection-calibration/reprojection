@@ -1,43 +1,50 @@
 cmake_minimum_required(VERSION 3.10)
 project(reprojection)
 
-add_compile_options(-std=c++20)
+include(../cmake_macros/add_library.cmake)
+include(../cmake_macros/add_tests.cmake)
 
 find_package(roscpp REQUIRED)
 find_package(std_msgs REQUIRED)
 
-# TODO ELIMINATE COPY AND PASTE!
-add_library(reprojection_lib src/reprojection.cpp)
-target_include_directories(reprojection_lib PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+set(LIBRARY_NAME ${PROJECT_NAME})
+set(SRC_FILES
+        src/reprojection.cpp
+)
+set(INCLUDE_DIRECTORIES
         ${roscpp_INCLUDE_DIRS}
         ${std_msgs_INCLUDE_DIRS}
 )
-
-add_executable(reprojection_app src/reprojection_app.cpp)
-target_include_directories(reprojection_app PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-        ${roscpp_INCLUDE_DIRS}
-        ${std_msgs_INCLUDE_DIRS}
-)
-target_link_libraries(reprojection_app
-        reprojection_lib
+set(LINK_LIBRARIES
         ${roscpp_LIBRARIES}
         ${std_msgs_LIBRARIES}
 )
+AddLibrary()
 
 find_package(GTest REQUIRED)
-add_executable(reprojection_test test/reprojection.test.cpp)
-target_include_directories(reprojection_test PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-        ${roscpp_INCLUDE_DIRS}
-        ${std_msgs_INCLUDE_DIRS}
-)
-target_link_libraries(reprojection_test
-        reprojection_lib
-        GTest::Main
-)
 enable_testing()
-include(GoogleTest)
-gtest_discover_tests(reprojection_test)
+
+
+set(TESTS
+        test/reprojection.test.cpp
+)
+AddTests()
+
+set(EXAMPLES
+        examples/reprojection_app.cpp
+)
+foreach (EXAMPLE IN LISTS EXAMPLES)
+    get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WLE)
+    set(EXAMPLE_NAME ${LIBRARY_NAME}.${EXAMPLE_NAME})
+
+    add_executable(${EXAMPLE_NAME} ${EXAMPLE})
+    target_include_directories(${EXAMPLE_NAME} PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
+            ${INCLUDE_DIRECTORIES}
+    )
+    target_link_libraries(${EXAMPLE_NAME}
+            ${LIBRARY_NAME}
+            ${LINK_LIBRARIES}
+    )
+endforeach ()
 
