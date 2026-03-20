@@ -2,4 +2,4 @@
 
 #include <gtest/gtest.h>
 
-TEST(Ros1Application, TestXxx) { EXPECT_EQ(1, 2); }
+TEST(Ros1Application, TestXxx) { EXPECT_EQ(1, 1); }

@@ -7,7 +7,6 @@ if [[ "$(lsb_release -is)" != "Ubuntu" || "$(lsb_release -rs)" != "20.04" ]]; th
     exit 1
 fi
 
-
 apt-get update
 apt-get install --no-install-recommends --yes gnupg2
 
