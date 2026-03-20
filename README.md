@@ -1,4 +1,4 @@
-## Development Environment 
+## Get the Repo
 
 Get the code:
     
@@ -8,6 +8,8 @@ Make sure to also pull the git lfs objects:
 
     cd reprojection
     git lfs pull
+
+TODO(Jack): Add instruction for any symbolic links that need to be made (ex. the sql folder to python tooling).
 
 ### Python Environment
 
