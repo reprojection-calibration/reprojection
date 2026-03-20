@@ -17,8 +17,6 @@ set(LINK_LIBRARIES
         testing_utilities
         types
 )
-
-set(NOT_INSTALLABLE TRUE)
 AddLibrary()
 
 set(TESTS
