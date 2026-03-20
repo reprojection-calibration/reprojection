@@ -146,8 +146,8 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Debug \
-                                    --build_directory=/buildroot/build-library \
-                                    --src_directory=/temporary/code/library
+                                    --build_dir=/buildroot/build-library \
+                                    --src_dir=/temporary/code/library
 
 
 
@@ -188,8 +188,8 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_directory=/buildroot/build-library \
-                                    --src_directory=/temporary/code/library
+                                    --build_dir=/buildroot/build-library \
+                                    --src_dir=/temporary/code/library
 
 # NOT EXECUTED IN CI!!!
 FROM release-build-stage AS feature-extraction-demo-stage
@@ -227,8 +227,8 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_directory=/buildroot/build-ros1-app \
-                                    --src_directory=/temporary/code/application_ros1 \
+                                    --build_dir=/buildroot/build-ros1-app \
+                                    --src_dir=/temporary/code/application_ros1 \
                                     --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
 
 
@@ -247,5 +247,5 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
     source /opt/ros/jazzy/setup.bash; \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_directory=/buildroot/build-ros2-app \
-                                    --src_directory=/temporary/code/application_ros2
+                                    --build_dir=/buildroot/build-ros2-app \
+                                    --src_dir=/temporary/code/application_ros2
