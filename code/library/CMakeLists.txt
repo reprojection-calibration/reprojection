@@ -45,3 +45,9 @@ add_subdirectory(calibration)
 add_subdirectory(feature_extraction)
 add_subdirectory(application)
 add_subdirectory(demos)
+
+install(EXPORT reprojectionTargets
+        FILE reprojectionTargets.cmake
+        NAMESPACE reprojection::
+        DESTINATION lib/cmake/reprojection
+)

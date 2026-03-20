@@ -14,6 +14,7 @@ set(LINK_LIBRARIES
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
         types
 )
+set(INSTALL_HEADERS ON)
 AddLibrary()
 
 set(TEST_LINK_LIBRARIES
