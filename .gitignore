@@ -1,8 +1,8 @@
 **/cmake-build-*/
 
-**/build*
-**/install*
-**/log*
+**_ws/build*
+**_ws/install*
+**_ws/log*
 
 __pycache__/
 *.egg-info/
