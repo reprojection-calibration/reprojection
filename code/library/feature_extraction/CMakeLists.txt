@@ -8,22 +8,22 @@ set(apriltag_INCLUDE_DIRS "${apriltag_INCLUDE_DIRS}/apriltag")
 set(SRC_FILES
         src/april_tag_cpp_wrapper.cpp
         src/generated_apriltag_code/tagCustom36h11.c
-        src/utilities.cpp
         src/target_extraction.cpp
         src/target_extractors.cpp
         src/target_generators.cpp
+        src/utilities.cpp
 )
 set(INCLUDE_DIRECTORIES
         ${OpenCV_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
-        config
+        ${OpenCV_LIBS}
+        ${apriltag_LIBRARIES}
         Eigen3::Eigen
+        config
         eigen_utilities
         tomlplusplus::tomlplusplus
         types
-        ${apriltag_LIBRARIES}
-        ${OpenCV_LIBS}
 )
 AddLibrary()
 
