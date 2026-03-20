@@ -54,3 +54,7 @@ install(EXPORT reprojectionTargets
         NAMESPACE reprojection::
         DESTINATION lib/cmake/reprojection
 )
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/reprojectionConfig.cmake
+        DESTINATION lib/cmake/reprojection
+)

@@ -7,6 +7,7 @@ include(../cmake_macros/add_tests.cmake)
 
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(reprojection REQUIRED)
 
 set(INCLUDE_DIRECTORIES
         ${rclcpp_INCLUDE_DIRS}
@@ -15,6 +16,7 @@ set(INCLUDE_DIRECTORIES
 set(LINK_LIBRARIES
         ${rclcpp_LIBRARIES}
         ${std_msgs_LIBRARIES}
+        reprojection::application
 )
 
 set(LIBRARY_NAME ${PROJECT_NAME})
