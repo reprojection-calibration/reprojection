@@ -1,7 +1,6 @@
 set(LIBRARY_NAME "application")
 
 set(SRC_FILES
-        src/reprojection_calibration.cpp
         src/steps.cpp
 )
 
@@ -22,7 +21,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        src/step_runner.test.cpp
-        src/steps.test.cpp
+        test/step_runner.test.cpp
+        test/steps.test.cpp
 )
 AddTests()
