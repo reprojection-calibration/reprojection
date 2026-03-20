@@ -8,7 +8,7 @@ endif ()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 
-add_executable(reprojection_app src/reprojection.cpp)
+add_executable(reprojection_app src/reprojection_app.cpp src/reprojection.cpp)
 target_include_directories(reprojection_app PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
