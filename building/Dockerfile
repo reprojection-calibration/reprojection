@@ -77,7 +77,7 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
     /temporary/${CODE_CHECKS_PYTHON}
 
 
-FROM base-stage AS python-tooling-stage
+FROM apt-base-stage AS python-tooling-stage
 
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
@@ -189,7 +189,8 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
                                     --build_dir=/buildroot/build-library \
-                                    --src_dir=/temporary/code/library
+                                    --src_dir=/temporary/code/library; \
+    cmake --install /buildroot/build-library-Release
 
 # NOT EXECUTED IN CI!!!
 FROM release-build-stage AS feature-extraction-demo-stage
@@ -208,7 +209,7 @@ FROM base-stage AS development-stage
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
 
 
-FROM base-stage AS ros1-base-stage
+FROM apt-base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
 
@@ -219,11 +220,10 @@ ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
 
-# TODO(Jack): Use a proper packaging instead of copying over the entire build directory. This pollutes this stage with
-# build artefacts it should never know about!
-COPY --from=release-build-stage /buildroot/build-library-Release /buildroot/build-library-Release
-RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    cmake --install /buildroot/build-library-Release
+# TODO(Jack): Use a proper packaging instead of copying over the usr/local directory! This stage should actually inherit
+# from the plain old base-stage and then apt install the calibration package. It is confusing that we bring in all
+# source build dependendcies (ex. tomlplusplus or aprilgrid) with this copy command here, along with the calibration lib.
+COPY --from=release-build-stage /usr/local /usr/local
 
 
 FROM ros1-base-stage AS ros1-application-stage
@@ -238,17 +238,14 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
                                     --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
 
 
-FROM base-stage AS ros2-base-stage
+FROM apt-base-stage AS ros2-base-stage
 
 ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
 
-# TODO(Jack): Use a proper packaging instead of copying over the entire build directory. This pollutes this stage with
-# build artefacts it should never know about!
-COPY --from=release-build-stage /buildroot/build-library-Release /buildroot/build-library-Release
-RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    cmake --install /buildroot/build-library-Release
+# TODO(Jack): See note in ros1 stage!
+COPY --from=release-build-stage /usr/local /usr/local
 
 FROM ros2-base-stage AS ros2-application-stage
 
