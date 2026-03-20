@@ -2,6 +2,8 @@
 
 set -eoux pipefail
 
+# NOTE(Jack): We should set te default values of the environmental variables here and in all places so that a user could
+# run all scripts from the project root directory and everything works like it does in the dockerized environment.
 DB_PATH=${DB_PATH:-code/test_data/dataset-calib-imu4_512_16.db3}
 PACKAGE_DIRECTORY=${PACKAGE_DIRECTORY:-code/python_tooling}
 PROTO_DIRECTORY=${PROTO_DIRECTORY:-code/proto}

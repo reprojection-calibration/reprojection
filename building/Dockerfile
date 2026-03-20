@@ -86,13 +86,12 @@ ARG APT_INSTALL_PYTHON_VENV_DEPS=building/install_scripts/apt_install_python_ven
 RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_VENV_DEPS},target=/temporary/${APT_INSTALL_PYTHON_VENV_DEPS} \
     /temporary/${APT_INSTALL_PYTHON_VENV_DEPS}
 
-ENV VENV_DIR="~/.reprojection_venv"
-
 ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
     /temporary/${BUILD_PYTHON_VENV}
 
-
+# Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
+# system or run without special permissions that docker cannot provide.
 COPY code/python_tooling /temporary/code/python_tooling
 
 # TODO(Jack): We want to have a single source of truth for the sql files. Therefore we symlinked the `code/sql` directory
