@@ -139,10 +139,13 @@ FROM base-stage AS debug-build-stage
 # there might already be a solution, but I took the shortcut and just added some LCOV_EXCL_LINE suppression statements
 # to get past the problem.
 
-ARG BUILD_LIBRARY=building/scripts/build_library.sh
-RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
+ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
+RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
     --mount=type=bind,source=code/,target=/temporary/code \
-    /temporary/${BUILD_LIBRARY} --cmake_build_type=Debug
+    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Debug \
+                                    --build_directory=/buildroot/build-library \
+                                    --src_directory=/temporary/code/library
+
 
 
 # WARN(Jack): Due to problems with installing gcc13 on ubuntu 20/22 the code coverage does not work. This is future work!
@@ -175,20 +178,22 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS release-build-stage
 
- # TODO JACK WHERE TO PUT THIS INSTALL COMMAND?
-ARG BUILD_LIBRARY=building/scripts/build_library.sh
-RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
+ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
+RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
     --mount=type=bind,source=code/,target=/temporary/code \
-    /temporary/${BUILD_LIBRARY} --cmake_build_type=Release;
+    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
+                                    --build_directory=/buildroot/build-library \
+                                    --src_directory=/temporary/code/library
 
 # NOT EXECUTED IN CI!!!
 FROM release-build-stage AS feature-extraction-demo-stage
 
 # TODO(Jack): We should actually use cmakes install capability instead of just copying over the entire build folder!
-COPY --from=release-build-stage /buildroot/build /buildroot/build
+COPY --from=release-build-stage /buildroot/build-library-Release /buildroot/build-library-Release
 
-# NOTE(Jack): This requires that the folder having the config is properly mounted as a volume in the run command
-ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary/code/library/demos/examples/target_config.toml"]
+# NOTE(Jack): This requires that the folder having the config is properly mounted as a volume in the run command. We
+# could also copy it in here into the stage but then we would need to rebuild everytime we want to change the config...
+ENTRYPOINT ["/buildroot/build-library-Release/demos/demos.feature_extraction", "-c", "/temporary/code/library/demos/examples/target_config.toml"]
 
 
 # NOT EXECUTED IN CI!!!
@@ -209,10 +214,13 @@ RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
 
 FROM ros1-base-stage AS ros1-application-stage
 
-ARG BUILD_ROS1_APP=building/scripts/build_ros1_app.sh
-RUN --mount=type=bind,source=${BUILD_ROS1_APP},target=/temporary/${BUILD_ROS1_APP} \
+ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
+RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
-    /temporary/${BUILD_ROS1_APP}
+    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
+                                    --build_directory=/buildroot/build-ros1-app \
+                                    --src_directory=/temporary/code/application_ros1 \
+                                    --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
 
 
 FROM base-stage AS ros2-base-stage
@@ -224,7 +232,10 @@ RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
 
 FROM ros2-base-stage AS ros2-application-stage
 
-ARG BUILD_ROS2_APP=building/scripts/build_ros2_app.sh
-RUN --mount=type=bind,source=${BUILD_ROS2_APP},target=/temporary/${BUILD_ROS2_APP} \
+ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
+RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
-    /temporary/${BUILD_ROS2_APP}
+    source /opt/ros/jazzy/setup.bash; \
+    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
+                                    --build_directory=/buildroot/build-ros2-app \
+                                    --src_directory=/temporary/code/application_ros2
