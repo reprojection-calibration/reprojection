@@ -211,3 +211,8 @@ FROM base-stage AS ros2-application-stage
 ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
+
+ARG BUILD_ROS2_APP=building/scripts/build_ros2_app.sh
+RUN --mount=type=bind,source=${BUILD_ROS2_APP},target=/temporary/${BUILD_ROS2_APP} \
+    --mount=type=bind,source=code/ros2_ws/src/,target=/temporary/code/ros2_ws/src \
+    /temporary/${BUILD_ROS2_APP}
