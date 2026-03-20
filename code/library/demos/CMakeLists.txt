@@ -1,9 +1,5 @@
 set(LIBRARY_NAME "demos")
 
-find_package(Ceres REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED)
-
 set(SRC_FILES
         src/image_source.cpp
 )

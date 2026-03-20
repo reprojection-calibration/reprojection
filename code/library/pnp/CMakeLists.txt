@@ -1,7 +1,5 @@
 set(LIBRARY_NAME "pnp")
 
-find_package(Eigen3 REQUIRED)
-
 set(SRC_FILES
         src/dlt.cpp
         src/dlt_matrix_decompositions.cpp
@@ -15,12 +13,14 @@ set(LINK_LIBRARIES
         geometry
         optimization
         projection_functions
-        testing_mocks
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_mocks
+        testing_utilities
+)
 set(TESTS
         src/dlt.test.cpp
         src/dlt_matrix_decompositions.test.cpp

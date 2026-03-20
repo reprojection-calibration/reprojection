@@ -1,7 +1,5 @@
 set(LIBRARY_NAME "eigen_utilities")
 
-find_package(Eigen3 REQUIRED)
-
 set(SRC_FILES
         src/camera.cpp
         src/grid.cpp

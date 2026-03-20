@@ -1,7 +1,5 @@
 set(LIBRARY_NAME "spline")
 
-find_package(Eigen3 REQUIRED)
-
 set(SRC_FILES
         src/se3_spline.cpp
         src/cubic_spline_c3_init.cpp

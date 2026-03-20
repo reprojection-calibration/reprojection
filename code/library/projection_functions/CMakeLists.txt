@@ -1,9 +1,5 @@
 set(LIBRARY_NAME "projection_functions")
 
-find_package(Ceres REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED) # Only required to save projection images
-
 set(SRC_FILES
         src/double_sphere.cpp
         src/initialize_camera.cpp
@@ -16,11 +12,13 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         ${OpenCV_LIBS}
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_utilities
+)
 set(TESTS
         test/camera_model.test.cpp
         test/double_sphere.test.cpp

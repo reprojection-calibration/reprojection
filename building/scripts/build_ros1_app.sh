@@ -1,8 +1,10 @@
 #!/bin/bash
 
-set -eoux pipefail
+set -eox pipefail
 
-build_directory=/buildroot/build
+# TODO(Jack): This script is almost exactly the same as the build_library.sh one!
+
+build_directory=/buildroot/build-ros1
 cmake_build_type=Debug
 
 # Adopted from https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
@@ -21,11 +23,10 @@ for i in "$@"; do
   esac
 done
 
-
 # TODO(Jack): Make release build by default! Note that release builds cannot be built with code coverage enabled!
-cmake -B "${build_directory}" -DCMAKE_BUILD_TYPE="${cmake_build_type}"  -G Ninja -S /temporary/code/library
+cmake -B "${build_directory}" -DCMAKE_BUILD_TYPE="${cmake_build_type}"  -G Ninja -S /temporary/code/application_ros1 -DCMAKE_PREFIX_PATH=/opt/ros/noetic
 cmake --build "${build_directory}"
 
-# TODO(Jack): The --test-dir option is not supported under cmake 3.20 - ubuntu 20 defaults to 3.16
+
 cd "${build_directory}"
 ctest --output-on-failure --progress

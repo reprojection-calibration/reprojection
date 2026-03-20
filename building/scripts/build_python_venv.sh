@@ -2,6 +2,8 @@
 
 set -eoux pipefail
 
+VENV_DIR=${VENV_DIR:-~/.reprojection_venv}
+
 # shellcheck disable=SC1090
 source ~/.bash_profile
 pyenv install 3.12

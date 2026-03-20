@@ -12,6 +12,7 @@ macro(AddTests)
                 GTest::gtest_main
                 ${LIBRARY_NAME}
                 ${LINK_LIBRARIES}
+                ${TEST_LINK_LIBRARIES}
         )
 
         if (CMAKE_BUILD_TYPE STREQUAL "Debug")

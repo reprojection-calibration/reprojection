@@ -1,7 +1,5 @@
 set(LIBRARY_NAME "testing_mocks")
 
-find_package(Eigen3 REQUIRED)
-
 set(SRC_FILES
         src/data_generator_helpers.cpp
         src/imu_data_generator.cpp
@@ -19,6 +17,8 @@ set(LINK_LIBRARIES
         testing_utilities
         types
 )
+
+set(NOT_INSTALLABLE TRUE)
 AddLibrary()
 
 set(TESTS

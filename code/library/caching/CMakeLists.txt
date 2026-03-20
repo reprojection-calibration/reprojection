@@ -1,8 +1,5 @@
 set(LIBRARY_NAME "caching")
 
-find_package(Eigen3 REQUIRED)
-find_package(OpenSSL REQUIRED)
-
 set(SRC_FILES
         src/cache_keys.cpp
         src/hashing.cpp
@@ -14,11 +11,13 @@ set(INCLUDE_DIRECTORIES
 set(LINK_LIBRARIES
         ${OPENSSL_LIBRARIES}
         Eigen3::Eigen
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_utilities
+)
 set(TESTS
         src/hashing.test.cpp
         src/serialize.test.cpp

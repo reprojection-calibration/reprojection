@@ -1,4 +1,5 @@
-FROM ubuntu:24.04 AS configuration-stage
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE} AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -78,22 +79,24 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
 
 FROM base-stage AS python-tooling-stage
 
-ENV VENV_DIR="~/.reprojection_venv"
-
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
     /temporary/${INSTALL_PYENV}
 
-# TODO(Jack): Should these go into the base stage? Or is the python workflow unique enough?
-ARG INSTALL_PYTHON_DEPS=building/install_scripts/install_python_deps.sh
-RUN --mount=type=bind,source=${INSTALL_PYTHON_DEPS},target=/temporary/${INSTALL_PYTHON_DEPS} \
-    /temporary/${INSTALL_PYTHON_DEPS}
+ARG APT_INSTALL_PYTHON_VENV_DEPS=building/install_scripts/apt_install_python_venv_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_VENV_DEPS},target=/temporary/${APT_INSTALL_PYTHON_VENV_DEPS} \
+    /temporary/${APT_INSTALL_PYTHON_VENV_DEPS}
 
+ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
+RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
+    /temporary/${BUILD_PYTHON_VENV}
 
+# Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
+# system or run without special permissions that docker cannot provide.
 COPY code/python_tooling /temporary/code/python_tooling
 
 # TODO(Jack): We want to have a single source of truth for the sql files. Therefore we symlinked the `code/sql` directory
-# to the `python_tooling/database/sql` directory. Unfortunately in the dockerized python testing workflow this does not
+# to the `code/python_tooling/database/sql` directory. Unfortunately in the dockerized python testing workflow this does not
 # work! Locally it works fine, but in the docker build we get the error "ModuleNotFoundError: No module named
 # 'database.sql'". To Test that this is the case I copied the sql files directly into the database package and then the
 # dockerized workflow worked no problem.
@@ -103,6 +106,10 @@ COPY code/python_tooling /temporary/code/python_tooling
 # here ephermally in the build process. But if there was just a way to make it work without this and simply with the the
 # symlinks, like it works for local testing, that would be great.
 COPY code/sql /temporary/code/python_tooling/database/sql
+
+ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.db3
+ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
+ARG PROTO_DIRECTORY=/temporary/code/proto
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
@@ -168,11 +175,11 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS release-build-stage
 
+ # TODO JACK WHERE TO PUT THIS INSTALL COMMAND?
 ARG BUILD_LIBRARY=building/scripts/build_library.sh
 RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
     --mount=type=bind,source=code/,target=/temporary/code \
-    /temporary/${BUILD_LIBRARY} --cmake_build_type=Release
-
+    /temporary/${BUILD_LIBRARY} --cmake_build_type=Release;
 
 # NOT EXECUTED IN CI!!!
 FROM release-build-stage AS feature-extraction-demo-stage
@@ -188,3 +195,36 @@ ENTRYPOINT ["/buildroot/build/demos/demos.feature_extraction", "-c", "/temporary
 FROM base-stage AS development-stage
 
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
+
+
+FROM base-stage AS ros1-base-stage
+
+# TODO(jack): We put a hard condition in botht he ROS1 and ROS2 install scripts that the ubuntu version is either 20.04
+# or 24.04 respectively. This is a kind of hack to prevent someone using a non-intended base image (ex. trying to
+# install ROS1 on ubuntu 24). If this is a real long term strategy is at this time not 100% clear!
+ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
+RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
+    /temporary/${INSTALL_ROS1}
+
+
+FROM ros1-base-stage AS ros1-application-stage
+
+ARG BUILD_ROS1_APP=building/scripts/build_ros1_app.sh
+RUN --mount=type=bind,source=${BUILD_ROS1_APP},target=/temporary/${BUILD_ROS1_APP} \
+    --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
+    /temporary/${BUILD_ROS1_APP}
+
+
+FROM base-stage AS ros2-base-stage
+
+ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
+RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
+    /temporary/${INSTALL_ROS2}
+
+
+FROM ros2-base-stage AS ros2-application-stage
+
+ARG BUILD_ROS2_APP=building/scripts/build_ros2_app.sh
+RUN --mount=type=bind,source=${BUILD_ROS2_APP},target=/temporary/${BUILD_ROS2_APP} \
+    --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
+    /temporary/${BUILD_ROS2_APP}
