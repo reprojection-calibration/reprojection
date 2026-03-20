@@ -3,7 +3,7 @@
 set -eoux pipefail
 
 cmake_build_type=Debug
-build_directory=""
+build_dir=""
 src_dir=""
 cmake_extra_args=()
 
