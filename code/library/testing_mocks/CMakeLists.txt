@@ -17,6 +17,7 @@ set(LINK_LIBRARIES
         testing_utilities
         types
 )
+set(INSTALL_SO OFF)
 AddLibrary()
 
 set(TESTS

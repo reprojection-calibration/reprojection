@@ -29,6 +29,9 @@ find_package(tomlplusplus REQUIRED)
 find_package(GTest REQUIRED)
 enable_testing()
 
+# Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+
 add_subdirectory(types)
 add_subdirectory(testing_utilities)
 add_subdirectory(config)
@@ -45,3 +48,13 @@ add_subdirectory(calibration)
 add_subdirectory(feature_extraction)
 add_subdirectory(application)
 add_subdirectory(demos)
+
+install(EXPORT reprojectionTargets
+        FILE reprojectionTargets.cmake
+        NAMESPACE reprojection::
+        DESTINATION lib/cmake/reprojection
+)
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/reprojectionConfig.cmake
+        DESTINATION lib/cmake/reprojection
+)

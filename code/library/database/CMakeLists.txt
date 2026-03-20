@@ -45,7 +45,6 @@ configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/sql.hpp.in
         ${CMAKE_CURRENT_BINARY_DIR}/generated/sql.hpp
         @ONLY
-
 )
 
 # Protobuf logic adopted from https://stackoverflow.com/questions/20824194/cmake-with-google-protocol-buffers
@@ -57,7 +56,6 @@ configure_file(
 protobuf_generate_cpp(proto_sources proto_headers
         "../../proto/extracted_target.proto"
 )
-add_library(database_proto SHARED ${proto_sources} ${proto_headers})
 
 set(SRC_FILES
         src/calibration_database.cpp
@@ -69,17 +67,20 @@ set(SRC_FILES
         src/sqlite_wrappers.cpp
         src/toml_converters.cpp
 )
+set(SRC_FILES
+        ${SRC_FILES}
+        ${proto_sources}
+        ${proto_headers}
+)
 set(INCLUDE_DIRECTORIES
         ${CMAKE_BINARY_DIR}/database # Generated sql header files are found here
         ${OpenCV_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
-        Ceres::ceres # REMOVE
-        database_proto
-        Eigen3::Eigen
         ${OpenCV_LIBS}
-        protobuf::libprotobuf
+        Eigen3::Eigen
         SQLite::SQLite3
+        protobuf::libprotobuf
         types
 )
 AddLibrary()

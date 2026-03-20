@@ -1,10 +1,9 @@
 set(LIBRARY_NAME "testing_utilities")
 
-
 set(SRC_FILES
         src/temporary_file.cpp
-
 )
+set(INSTALL_SO OFF)
 AddLibrary()
 
 set(TESTS

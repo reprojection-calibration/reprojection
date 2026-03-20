@@ -20,6 +20,7 @@ set(LINK_LIBRARIES
         projection_functions
         spline
 )
+set(INSTALL_SO OFF)
 AddLibrary()
 
 set(TESTS
