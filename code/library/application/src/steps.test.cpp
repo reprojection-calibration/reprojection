@@ -2,9 +2,10 @@
 
 #include <gtest/gtest.h>
 
-#include "step_runner.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
+
+#include "step_runner.hpp"
 
 using namespace reprojection;
 

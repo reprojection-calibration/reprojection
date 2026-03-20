@@ -32,7 +32,6 @@ OptimizationState AlignRotations(OptimizationState state) {
     return state;
 }
 
-
 bool CameraCalibration(std::string const& db_path) {
     auto db{std::make_shared<database::CalibrationDatabase>(db_path, false, false)};
 
@@ -60,9 +59,7 @@ bool CameraCalibration(std::string const& db_path) {
     std::cout << "Cnlr : " << ToString(cnlr_cache_status) << " " << optimized_state.camera_state.intrinsics.transpose()
               << std::endl;
 
-
     return true;
 }
 
-
-}
+}  // namespace reprojection::application
