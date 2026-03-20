@@ -18,12 +18,14 @@ set(LINK_LIBRARIES
         geometry
         projection_functions
         spline
-        testing_mocks
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_mocks
+        testing_utilities
+)
 set(TESTS
         src/angular_velocity_cost_function.test.cpp
         src/ceres_geometry.test.cpp

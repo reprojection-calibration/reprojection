@@ -1,11 +1,5 @@
 set(LIBRARY_NAME "database")
 
-find_package(Ceres REQUIRED) # REMOVE
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED)
-find_package(Protobuf REQUIRED)
-find_package(SQLite3 REQUIRED)
-
 # NOTE(Jack): Because we want one single source of truth for both the library and python tooling we store the sql files
 # under `code/sql`, outside of the cmake package. Therefore just like for the proto files below we need to backspace two
 # directories "../../${sql}" to get to the actual file. If this is a bad design to hardcode reference paths outisde of
@@ -86,11 +80,13 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         protobuf::libprotobuf
         SQLite::SQLite3
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_utilities
+)
 set(TESTS
         src/query_runner.test.cpp
         src/serialization.test.cpp

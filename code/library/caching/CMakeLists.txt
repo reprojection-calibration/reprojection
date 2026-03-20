@@ -14,11 +14,13 @@ set(INCLUDE_DIRECTORIES
 set(LINK_LIBRARIES
         ${OPENSSL_LIBRARIES}
         Eigen3::Eigen
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_utilities
+)
 set(TESTS
         src/hashing.test.cpp
         src/serialize.test.cpp

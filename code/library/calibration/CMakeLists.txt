@@ -1,9 +1,5 @@
 set(LIBRARY_NAME "calibration")
 
-find_package(Ceres REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED) # REMOVE when/if database is removed
-
 set(SRC_FILES
         src/camera_imu_initialization.cpp
         src/initialization_methods.cpp
@@ -22,12 +18,14 @@ set(LINK_LIBRARIES
         pnp
         projection_functions
         spline
-        testing_mocks
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_mocks
+        testing_utilities
+)
 set(TESTS
         src/intrinsic_initialization.test.cpp
         src/parabola_line_initialization.test.cpp

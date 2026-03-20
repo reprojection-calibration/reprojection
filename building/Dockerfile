@@ -179,9 +179,7 @@ FROM base-stage AS release-build-stage
 ARG BUILD_LIBRARY=building/scripts/build_library.sh
 RUN --mount=type=bind,source=${BUILD_LIBRARY},target=/temporary/${BUILD_LIBRARY} \
     --mount=type=bind,source=code/,target=/temporary/code \
-    /temporary/${BUILD_LIBRARY} --cmake_build_type=Release; \
-    set -eoux pipefail; cmake --install /buildroot/build --prefix /opt/reprojection
-
+    /temporary/${BUILD_LIBRARY} --cmake_build_type=Release;
 
 # NOT EXECUTED IN CI!!!
 FROM release-build-stage AS feature-extraction-demo-stage
@@ -208,12 +206,8 @@ ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
 
-COPY --from=release-build-stage /opt/reprojection /opt/reprojection
-
 FROM base-stage AS ros2-application-stage
 
 ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
-
-COPY --from=release-build-stage /opt/reprojection /opt/reprojection

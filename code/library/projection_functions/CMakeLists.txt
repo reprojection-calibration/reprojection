@@ -16,11 +16,13 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         ${OpenCV_LIBS}
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_utilities
+)
 set(TESTS
         test/camera_model.test.cpp
         test/double_sphere.test.cpp

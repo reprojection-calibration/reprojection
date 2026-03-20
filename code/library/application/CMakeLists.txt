@@ -1,7 +1,5 @@
 set(LIBRARY_NAME "application")
 
-find_package(Eigen3 REQUIRED)
-
 set(SRC_FILES
         src/reprojection_calibration.cpp
         src/steps.cpp
@@ -15,12 +13,14 @@ set(LINK_LIBRARIES
         optimization
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the linear_pose_init public header interface.
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
-        testing_mocks
-        testing_utilities
         types
 )
 AddLibrary()
 
+set(TEST_LINK_LIBRARIES
+        testing_mocks
+        testing_utilities
+)
 set(TESTS
         src/step_runner.test.cpp
         src/steps.test.cpp

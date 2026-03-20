@@ -17,6 +17,13 @@ endif()
 include(cmake_macros/add_library.cmake)
 include(cmake_macros/add_tests.cmake)
 
+find_package(Ceres REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(Protobuf REQUIRED)
+find_package(SQLite3 REQUIRED)
+find_package(tomlplusplus REQUIRED)
+
 find_package(GTest REQUIRED)
 enable_testing()
 
