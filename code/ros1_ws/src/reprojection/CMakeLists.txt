@@ -1,43 +1,38 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.10)
 project(reprojection)
 
 add_compile_options(-std=c++20)
 
-find_package(catkin REQUIRED COMPONENTS
-        roscpp
-        std_msgs
+# Find ROS dependencies manually
+find_package(roscpp REQUIRED)
+find_package(std_msgs REQUIRED)
+
+# Include directories for headers
+include_directories(
+        include
+        ${roscpp_INCLUDE_DIRS}
+        ${std_msgs_INCLUDE_DIRS}
 )
 
-catkin_package()
+# Build your library
+add_library(reprojection_lib src/reprojection.cpp)
 
-add_executable(reprojection_app src/reprojection_app.cpp src/reprojection.cpp)
-target_include_directories(reprojection_app PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        ${catkin_INCLUDE_DIRS}
-)
+# Build your executable
+add_executable(reprojection_app src/reprojection_app.cpp)
 target_link_libraries(reprojection_app
-        ${catkin_LIBRARIES}
+        reprojection_lib
+        ${roscpp_LIBRARIES}
+        ${std_msgs_LIBRARIES}
 )
 
-
-# NOTE(Jack): Ros would have us use catkin test stuff here, but I could not get this simply to work with the CLion
-# integration, I think because catkin wants to generate the tests in the workspace folders but we want to use the CLion
-# cmake-build-* folder instead. For now this solution works as a stop gap.
+# Build test using plain CMake + GTest
 find_package(GTest REQUIRED)
-
-if(CATKIN_ENABLE_TESTING)
-    catkin_add_gtest(reprojection_test test/reprojection.test.cpp)
-endif()
-
-# also allow pure CMake tests
-#add_executable(reprojection_test test/reprojection.test.cpp)
-target_include_directories(reprojection_test PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        ${catkin_INCLUDE_DIRS}
+add_executable(reprojection_test test/reprojection.test.cpp)
+target_link_libraries(reprojection_test reprojection_lib GTest::Main
+        ${roscpp_LIBRARIES}
+        ${std_msgs_LIBRARIES}
 )
-target_link_libraries(reprojection_test GTest::Main ${catkin_LIBRARIES})
+enable_testing()
+include(GoogleTest)
 gtest_discover_tests(reprojection_test)
-
-
-
 
