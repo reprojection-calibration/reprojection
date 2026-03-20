@@ -1,4 +1,5 @@
-FROM ubuntu:24.04 AS configuration-stage
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE} AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -204,6 +205,13 @@ FROM base-stage AS ros1-application-stage
 ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
+
+ENV ROS_HOME=/tmp/.ros
+
+ARG BUILD_ROS1_APP=building/scripts/build_ros1_app.sh
+RUN --mount=type=bind,source=${BUILD_ROS1_APP},target=/temporary/${BUILD_ROS1_APP} \
+    --mount=type=bind,source=code/ros1_ws/src/,target=/temporary/code/ros1_ws/src \
+    /temporary/${BUILD_ROS1_APP}
 
 FROM base-stage AS ros2-application-stage
 
