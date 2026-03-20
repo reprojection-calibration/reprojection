@@ -29,6 +29,9 @@ find_package(tomlplusplus REQUIRED)
 find_package(GTest REQUIRED)
 enable_testing()
 
+# Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+
 add_subdirectory(types)
 add_subdirectory(testing_utilities)
 add_subdirectory(config)
