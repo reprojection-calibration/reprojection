@@ -7,8 +7,6 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rosbag2_cpp REQUIRED)
-find_package(std_msgs REQUIRED)
 
 add_executable(reprojection_app src/reprojection.cpp)
 target_include_directories(reprojection_app PUBLIC
@@ -18,12 +16,5 @@ target_include_directories(reprojection_app PUBLIC
 ament_target_dependencies(reprojection_app
         rclcpp
 )
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  set(ament_cmake_copyright_FOUND TRUE)
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
 
 ament_package()
