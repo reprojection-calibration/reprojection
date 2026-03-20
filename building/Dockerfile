@@ -210,6 +210,8 @@ RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends 
 
 FROM base-stage AS ros1-base-stage
 
+ENV ROS_HOME=/tmp/.ros
+
 # TODO(jack): We put a hard condition in botht he ROS1 and ROS2 install scripts that the ubuntu version is either 20.04
 # or 24.04 respectively. This is a kind of hack to prevent someone using a non-intended base image (ex. trying to
 # install ROS1 on ubuntu 24). If this is a real long term strategy is at this time not 100% clear!
