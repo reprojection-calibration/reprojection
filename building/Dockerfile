@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ubuntu:20.04
+ARG BASE_IMAGE=ubuntu:24.04
 FROM ${BASE_IMAGE} AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -214,11 +214,13 @@ RUN --mount=type=bind,source=${BUILD_ROS1_APP},target=/temporary/${BUILD_ROS1_AP
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
     /temporary/${BUILD_ROS1_APP}
 
-FROM base-stage AS ros2-application-stage
+FROM base-stage AS ros2-base-stage
 
 ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
+
+FROM ros2-base-stage AS ros2-application-stage
 
 ARG BUILD_ROS2_APP=building/scripts/build_ros2_app.sh
 RUN --mount=type=bind,source=${BUILD_ROS2_APP},target=/temporary/${BUILD_ROS2_APP} \
