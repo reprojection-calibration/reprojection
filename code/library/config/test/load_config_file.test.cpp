@@ -7,6 +7,12 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
+static constexpr std::string_view minumum_config{R"(
+        [data]
+        minimizer_type = "LINE_SEARCH"
+        min_line_search_step_size = 1e-6
+    )"};
+
 TEST(ConfigLoadConfigFile, TestLoadConfigFile) {
     static constexpr std::string_view happy_path_config{R"(
         [solver]
