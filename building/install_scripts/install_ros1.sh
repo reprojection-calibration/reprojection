@@ -14,4 +14,4 @@ sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /
 curl https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 
 apt-get update
-apt-get install --yes ros-noetic-ros-base
+apt-get install --yes ros-noetic-cv-bridge ros-noetic-ros-base
