@@ -1,10 +1,10 @@
-#include "config/config_validation.hpp"
-
 #include <gtest/gtest.h>
 
 #include <string_view>
 
 #include <toml++/toml.hpp>
+
+#include "config/config_validation.hpp"
 
 using namespace reprojection;
 using namespace std::string_view_literals;
