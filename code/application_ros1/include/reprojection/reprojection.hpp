@@ -1,9 +1,14 @@
 #pragma once
 
-#include <cv_bridge/cv_bridge.h>
+
+#include <string>
+#include <tuple>
+#include "reprojection/bag_wrapper.hpp"
 
 namespace reprojection::ros1 {
 
-void Delete();
+std::tuple<std::string, std::string> DummyLoadConfig();
 
-}
+std::optional<std::string> CalculateCacheString(BagWrapper const& bag, std::string_view topic);
+
+}  // namespace reprojection::ros1
