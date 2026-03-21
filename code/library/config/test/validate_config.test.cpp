@@ -1,17 +1,9 @@
-#include "config/validate_config.hpp"
-
 #include <gtest/gtest.h>
 
+#include "config/config_validation.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
-namespace reprojection::config {
 
-std::optional<ParserErrorMsg> ValidateCalibrationConfig(toml::table const& cfg) {
-
-    return std::nullopt;
-}
-
-}  // namespace reprojection::config
 
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
@@ -32,5 +24,7 @@ static constexpr std::string_view minimum_config{R"(
 TEST(XXX, YYY) {
     toml::table const toml{toml::parse(minimum_config)};
 
-    config::ValidateCalibrationConfig(toml);
+   auto const result{ config::ValidateCalibrationConfig(toml)};
+
+    std::cout << result->msg << std::endl;
 }

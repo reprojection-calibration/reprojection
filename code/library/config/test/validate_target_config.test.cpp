@@ -1,4 +1,4 @@
-#include "config/validate_target_config.hpp"
+#include "config/config_validation.hpp"
 
 #include <gtest/gtest.h>
 

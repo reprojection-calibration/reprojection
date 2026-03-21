@@ -10,6 +10,14 @@
 
 namespace reprojection::config {
 
+// TEST!!!!
+// TEST!!!!
+// TEST!!!!
+// TEST!!!!
+std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config,
+                                             std::map<std::string, TomlType> const& required_keys,
+                                             std::map<std::string, TomlType> const& optional_keys);
+
 std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
                                                    std::map<std::string, TomlType> const& required_keys);
 

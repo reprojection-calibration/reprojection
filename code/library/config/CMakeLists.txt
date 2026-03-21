@@ -5,7 +5,7 @@ set(SRC_FILES
         src/load_config_file.cpp
         src/parse_ceres_solver_options.cpp
         src/toml_helpers.cpp
-        src/validate_target_config.cpp
+        src/config_validation.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres

@@ -20,10 +20,26 @@ bool TypeNodeMatch(TomlType const type, toml::node_view<const toml::node> const&
         type == TomlType::String and node.is_string(), type == TomlType::Table and node.is_table());
 }
 
+std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config,
+                                             std::map<std::string, TomlType> const& required_keys,
+                                             std::map<std::string, TomlType> const& optional_keys) {
+    if (auto const error_msg{ValidateRequiredKeys(config, required_keys)}) {
+        return error_msg;
+    }
+
+    std::map<std::string, TomlType> possible_keys{required_keys};
+    possible_keys.insert(optional_keys.begin(), optional_keys.end());
+
+    if (auto const error_msg{ValidatePossibleKeys(config, possible_keys)}) {
+        return error_msg;
+    }
+
+    return std::nullopt;
+}
+
 // TODO(Jack): I thought about using a variant here to return a bool or the ParserErrorMsg, but std::optional code that
-// idea
-//  of positive return or value in a simpler package. Is there a reason that we do need something more complicted than
-//  optional?
+//  idea of positive return or value in a simpler package. Is there a reason that we do need something more complicated
+//  than optional?
 // WARN(Jack): If for example you forgot the quotes around "TRUST_REGION" this code will
 // actually throw an uncontrolled error about misinterpreting a boolean value (because it begins with T). This is not
 // conform with our approach below and we should redesign this code to prevent that. Maybe we need to check the string
