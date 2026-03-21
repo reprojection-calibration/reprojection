@@ -3,6 +3,10 @@
 #include <sensor_msgs/CompressedImage.h>
 #include <sensor_msgs/Image.h>
 
+#include <filesystem>
+#include <random>
+#include <string>
+
 #include <opencv2/opencv.hpp>
 
 namespace reprojection::ros1 {
@@ -43,5 +47,26 @@ inline sensor_msgs::CompressedImage DummyCompressedImage() {
 
     return img_msg_comp;
 }
+
+class ScopedBagPath {
+   public:
+    ScopedBagPath() : path{GeneratePath()} {}
+
+    ~ScopedBagPath() { std::filesystem::remove(path); }
+
+    std::string path;
+
+   private:
+    static std::string GeneratePath() {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::uniform_int_distribution<uint64_t> dis;
+
+        std::filesystem::path const tmp{std::filesystem::temp_directory_path()};
+        std::string const filename{"rosbag_test_" + std::to_string(dis(gen)) + ".bag"};
+
+        return (tmp / filename).string();
+    }
+};
 
 }  // namespace reprojection::ros1
