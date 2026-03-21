@@ -24,6 +24,9 @@ std::optional<std::string> TopicCacheString(BagWrapper const& bag, std::string_v
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
+    // NOTE(Jack): Underlying our use of this function is the assumption that the bag name, topic name, number of
+    // messages, and the collection of all message timestamps is sufficient to uniquely identify a data stream. Sounds
+    // logical right? I think so.
     oss << std::filesystem::path(bag.bag.getFileName()).filename().c_str() << "|";
     oss << topic << "|";
     oss << std::to_string(view.size()) << "|";
