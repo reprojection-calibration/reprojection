@@ -28,6 +28,7 @@ set(LINK_LIBRARIES
 
 set(LIBRARY_NAME ${PROJECT_NAME})
 set(SRC_FILES
+        src/image_loading.cpp
         src/reprojection.cpp
 )
 AddLibrary()

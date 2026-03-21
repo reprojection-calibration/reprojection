@@ -7,7 +7,7 @@
 
 namespace reprojection::ros1 {
 
-std_msgs::Header DummyHeader() {
+inline std_msgs::Header DummyHeader() {
     std_msgs::Header header;
     header.stamp = ros::Time(1);
     header.frame_id = "camera";
@@ -15,7 +15,7 @@ std_msgs::Header DummyHeader() {
     return header;
 }
 
-sensor_msgs::Image DummyImage() {
+inline sensor_msgs::Image DummyImage() {
     sensor_msgs::Image img_msg;
     img_msg.header = DummyHeader();
 
@@ -25,13 +25,12 @@ sensor_msgs::Image DummyImage() {
     img_msg.encoding = "bgr8";
     img_msg.is_bigendian = false;
     img_msg.step = dummy.step;
-    img_msg.data.assign(dummy.data,
-                        dummy.data + dummy.total() * dummy.elemSize());
+    img_msg.data.assign(dummy.data, dummy.data + dummy.total() * dummy.elemSize());
 
     return img_msg;
 }
 
-sensor_msgs::CompressedImage DummyCompressedImage() {
+inline sensor_msgs::CompressedImage DummyCompressedImage() {
     sensor_msgs::CompressedImage img_msg_comp;
     img_msg_comp.header = DummyHeader();
 
