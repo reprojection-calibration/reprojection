@@ -67,6 +67,8 @@ TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
     result = ValidatePossibleKeys(config, possible_keys, true);
     EXPECT_FALSE(result.has_value());
 
+    // If we do not allow unknown keys then we will get an UnknownKey error when there are keys in the table not found
+    // in the set of possible keys. - this is the core idea.
     possible_keys = {};
 
     result = ValidatePossibleKeys(config, possible_keys, false);

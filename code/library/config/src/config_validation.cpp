@@ -8,7 +8,7 @@ namespace reprojection::config {
 
 std::optional<ParserErrorMsg> ValidateCalibrationConfig(toml::table const& calibration_cfg) {
     std::map<std::string, TomlType> const required_tables{
-            {"data", TomlType::Table}, {"sensor", TomlType::Table}, {"target", TomlType::Table}};
+        {"data", TomlType::Table}, {"sensor", TomlType::Table}, {"target", TomlType::Table}};
 
     if (auto const error_msg{ValidateConfigKeys(calibration_cfg, required_tables, {}, true)}) {
         return error_msg;
@@ -35,8 +35,9 @@ std::optional<ParserErrorMsg> ValidateDataConfig(toml::table const& data_cfg) {
     return ValidateConfigKeys(data_cfg, required_keys);
 }
 
-std::optional<ParserErrorMsg> ValidateSensorConfig(toml::table const& sensor_cfg){
-    std::map<std::string, TomlType> const required_keys{{"camera_name", TomlType::String}, {"camera_model", TomlType::String}};
+std::optional<ParserErrorMsg> ValidateSensorConfig(toml::table const& sensor_cfg) {
+    std::map<std::string, TomlType> const required_keys{{"camera_name", TomlType::String},
+                                                        {"camera_model", TomlType::String}};
 
     return ValidateConfigKeys(sensor_cfg, required_keys);
 }
