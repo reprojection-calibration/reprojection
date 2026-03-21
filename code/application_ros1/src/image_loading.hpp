@@ -1,7 +1,8 @@
 #pragma once
 
-#include <opencv2/core/mat.hpp>
 #include <rosbag/message_instance.h>
+
+#include <opencv2/core/mat.hpp>
 
 namespace reprojection::ros1 {
 

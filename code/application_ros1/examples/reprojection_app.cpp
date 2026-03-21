@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
         ros1::BagWrapper const bag{bag_file, rosbag::bagmode::Read};
 
         auto const cache_string{TopicCacheString(bag, image_topic)};
-        std::cout << cache_string.value() << std::endl; // UNPROTECTED ACCESS!!!
+        std::cout << cache_string.value() << std::endl;
     } catch (rosbag::BagException& e) {
         ROS_ERROR("Error reading bag: %s", e.what());
         return 1;
