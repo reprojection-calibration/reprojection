@@ -7,16 +7,6 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-static constexpr std::string_view minimum_config{R"(
-        [data]
-        file = "/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag"
-        camera_name = "/cam0/image_raw"
-
-        [target]
-        pattern_size = [3,4]
-        type = "circle_grid"
-    )"};
-
 TEST(ConfigLoadConfigFile, TestLoadConfigFile) {
     static constexpr std::string_view happy_path_config{R"(
         [solver]
