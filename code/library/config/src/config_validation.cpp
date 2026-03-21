@@ -10,7 +10,7 @@ std::optional<ParserErrorMsg> ValidateCalibrationConfig(toml::table const& calib
     std::map<std::string, TomlType> const required_tables{
             {"data", TomlType::Table}, {"sensor", TomlType::Table}, {"target", TomlType::Table}};
 
-    if (auto const error_msg{ValidateConfigKeys(calibration_cfg, required_tables)}) {
+    if (auto const error_msg{ValidateConfigKeys(calibration_cfg, required_tables, {}, true)}) {
         return error_msg;
     }
 
