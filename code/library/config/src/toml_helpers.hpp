@@ -21,8 +21,6 @@ std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table, Tom
                                                    bool const allow_unknown);
 
 // TODO(Jack): Do this without recursion instead of editing toml_paths in place! Is that even possible?
-// NOTE(Jack): We need to iterate over the entire table to construct the full toml paths. Unfortunately there is no
-// reverse of the .at_path() function which we can just use.
 void GetTomlPaths(toml::table const& table, std::vector<std::string>& toml_paths, std::string_view prefix = "");
 
 }  // namespace reprojection::config
