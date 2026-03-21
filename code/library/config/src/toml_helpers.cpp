@@ -22,17 +22,20 @@ bool TypeNodeMatch(TomlType const type, toml::node_view<const toml::node> const&
 
 std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config,
                                              std::map<std::string, TomlType> const& required_keys,
-                                             std::map<std::string, TomlType> const& optional_keys) {
+                                             std::optional<std::map<std::string, TomlType>> const& optional_keys) {
     if (auto const error_msg{ValidateRequiredKeys(config, required_keys)}) {
         return error_msg;
     }
 
-    std::map<std::string, TomlType> possible_keys{required_keys};
-    possible_keys.insert(optional_keys.begin(), optional_keys.end());
+    if (optional_keys.has_value()) {
+        std::map<std::string, TomlType> possible_keys{required_keys};
+        possible_keys.insert(optional_keys->begin(), optional_keys->end());
 
-    if (auto const error_msg{ValidatePossibleKeys(config, possible_keys)}) {
-        return error_msg;
+        if (auto const error_msg{ValidatePossibleKeys(config, possible_keys)}) {
+            return error_msg;
+        }
     }
+
 
     return std::nullopt;
 }
