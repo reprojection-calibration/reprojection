@@ -7,10 +7,14 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-static constexpr std::string_view minumum_config{R"(
+static constexpr std::string_view minimum_config{R"(
         [data]
-        minimizer_type = "LINE_SEARCH"
-        min_line_search_step_size = 1e-6
+        file = "/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag"
+        camera_name = "/cam0/image_raw"
+
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
     )"};
 
 TEST(ConfigLoadConfigFile, TestLoadConfigFile) {
