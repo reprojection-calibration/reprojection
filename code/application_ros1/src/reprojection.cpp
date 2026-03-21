@@ -1,4 +1,5 @@
 #include "reprojection/reprojection.hpp"
+
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 
@@ -14,8 +15,6 @@ std::optional<std::string> CalculateCacheString(BagWrapper const& bag, std::stri
     if (view.size() == 0) {
         return std::nullopt;
     }
-
-
 
     for (auto const& msg : view) {
         std::cout << msg.getTime() << std::endl;

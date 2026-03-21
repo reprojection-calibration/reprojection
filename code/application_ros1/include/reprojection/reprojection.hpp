@@ -1,8 +1,8 @@
 #pragma once
 
-
 #include <string>
 #include <tuple>
+
 #include "reprojection/bag_wrapper.hpp"
 
 namespace reprojection::ros1 {
