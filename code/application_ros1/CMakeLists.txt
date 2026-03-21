@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(reprojection)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# NOTE(Jack): We cannot enforce c++ 20 here because noetic and its boosts dependency are quite old and apparently not
+# compatible with our build environments gcc13.
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Werror -Wall -Wextra -Wpedantic -Wno-deprecated-enum-enum-conversion)
 endif ()
-
 
 include(../cmake_macros/add_examples.cmake)
 include(../cmake_macros/add_library.cmake)
