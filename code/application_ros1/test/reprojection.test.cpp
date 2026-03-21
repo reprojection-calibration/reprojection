@@ -27,8 +27,8 @@ TEST(Ros1Reprojection, TestTopicCacheString) {
     result = ros1::TopicCacheString(read_handle, "/raw_image_topic");
     ASSERT_TRUE(result.has_value());
 
-    std::string const filename{std::filesystem::path(temp_bag.path).filename().c_str()};
-    std::string const gt_result{filename + "|/raw_image_topic|1|1.000;|"};
+    std::string const filename{std::filesystem::path(temp_bag.path).filename()};
+    std::string const gt_result{filename + "|/raw_image_topic|1.000;|"};
     EXPECT_EQ(*result, gt_result);
 
     // Check that a topic not found in the bag returns std::nullopt.
