@@ -24,15 +24,13 @@ bool TypeNodeMatch(TomlType const type, toml::node_view<const toml::node> const&
                              type == TomlType::Table and node.is_table());
 }
 
-std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config,
-                                                 std::map<std::string, TomlType> const& required_keys,
-                                                 std::map<std::string, TomlType> const& optional_keys,
-                                                 bool const allow_unknown) {
+std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config, TomlKeys const& required_keys,
+                                                 TomlKeys const& optional_keys, bool const allow_unknown) {
     if (auto const error_msg{ValidateRequiredKeys(config, required_keys)}) {
         return error_msg;
     }
 
-    std::map<std::string, TomlType> possible_keys{required_keys};
+    TomlKeys possible_keys{required_keys};
     possible_keys.insert(optional_keys.begin(), optional_keys.end());
 
     if (auto const error_msg{ValidatePossibleKeys(config, possible_keys, allow_unknown)}) {
@@ -51,8 +49,7 @@ std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config,
 // values first?
 // NOTE(Jack): It is valid to have more keys, this function only checks that certain required keys are present. If there
 // are more that is no problem.
-std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
-                                                   std::map<std::string, TomlType> const& required_keys) {
+std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table, TomlKeys const& required_keys) {
     for (auto const& [key, type] : required_keys) {
         if (auto const node{table.at_path(key)}) {
             if (not TypeNodeMatch(type, node)) {
@@ -68,8 +65,7 @@ std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
     return std::nullopt;
 }
 
-std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
-                                                   std::map<std::string, TomlType> const& possible_keys,
+std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table, TomlKeys const& possible_keys,
                                                    bool const allow_unknown) {
     std::vector<std::string> full_path_keys;
     GetTomlPaths(table, full_path_keys);

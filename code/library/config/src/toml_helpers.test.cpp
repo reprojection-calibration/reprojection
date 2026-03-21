@@ -16,7 +16,7 @@ TEST(ConfigTomlHelpers, TestValidateConfigKeys) {
     toml::table const config{toml::parse(config_file)};
 
     // By default, we are strict and do not allow any unknown keys!
-    std::map<std::string, TomlType> const required_keys{{"table", TomlType::Table}};
+    config::TomlKeys const required_keys{{"table", TomlType::Table}};
     auto result{ValidateConfigKeys(config, required_keys)};
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->error, config::TomlParseError::UnknownKey);
@@ -26,7 +26,7 @@ TEST(ConfigTomlHelpers, TestValidateConfigKeys) {
     EXPECT_FALSE(result.has_value());
 
     // If we explicitly specify the key as an optional key it is also no problem :)
-    std::map<std::string, TomlType> const optional_keys{{"table.key1", TomlType::String}};
+    config::TomlKeys const optional_keys{{"table.key1", TomlType::String}};
     result = ValidateConfigKeys(config, required_keys, optional_keys);
     EXPECT_FALSE(result.has_value());
 }
@@ -38,7 +38,7 @@ TEST(ConfigTomlHelpers, TestValidateRequiredKeys) {
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    std::map<std::string, TomlType> required_keys{{"table", TomlType::Table}, {"table.key1", TomlType::String}};
+    config::TomlKeys required_keys{{"table", TomlType::Table}, {"table.key1", TomlType::String}};
     auto result{config::ValidateRequiredKeys(config, required_keys)};
     EXPECT_FALSE(result.has_value());
 
@@ -60,7 +60,7 @@ TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    std::map<std::string, TomlType> possible_keys{{"table", TomlType::Table}, {"table.key1", TomlType::String}};
+    config::TomlKeys possible_keys{{"table", TomlType::Table}, {"table.key1", TomlType::String}};
 
     auto result{ValidatePossibleKeys(config, possible_keys, false)};
     EXPECT_FALSE(result.has_value());
