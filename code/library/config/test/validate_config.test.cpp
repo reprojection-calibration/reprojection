@@ -28,37 +28,52 @@ TEST(ConfigValidateConfig, TestValidateCalibrationConfigHappyPath) {
 
 TEST(ConfigValidateConfig, TestValidateDataConfig) {
     static constexpr std::string_view good_config{R"(
-        [data]
         file = "/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag"
     )"};
     toml::table toml{toml::parse(good_config)};
-    auto result{config::ValidateDataConfig(*toml["data"].as_table())};
+    auto result{config::ValidateDataConfig(toml)};
     EXPECT_FALSE(result.has_value());
 
-    static constexpr std::string_view incorrect_type{R"(
-        [data]
-        file = 123
-    )"};
-    toml = toml::parse(incorrect_type);
-    result = config::ValidateDataConfig(*toml["data"].as_table());
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlParseError::IncorrectType);
-
     static constexpr std::string_view missing_key{R"(
-        [data]
     )"};
     toml = toml::parse(missing_key);
-    result = config::ValidateDataConfig(*toml["data"].as_table());
+    result = config::ValidateDataConfig(toml);
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->error, config::TomlParseError::MissingKey);
 
     static constexpr std::string_view unknown_key{R"(
-        [data]
         file = "/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag"
         unknown_key = 0
     )"};
     toml = toml::parse(unknown_key);
-    result = config::ValidateDataConfig(*toml["data"].as_table());
+    result = config::ValidateDataConfig(toml);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->error, config::TomlParseError::UnknownKey);
+}
+
+TEST(ConfigValidateConfig, TestValidateSensorConfig) {
+    static constexpr std::string_view good_config{R"(
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+    )"};
+    toml::table toml{toml::parse(good_config)};
+    auto result{config::ValidateSensorConfig(toml)};
+    EXPECT_FALSE(result.has_value());
+
+    static constexpr std::string_view missing_key{R"(
+    )"};
+    toml = toml::parse(missing_key);
+    result = config::ValidateSensorConfig(toml);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->error, config::TomlParseError::MissingKey);
+
+    static constexpr std::string_view unknown_key{R"(
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+        unknown_key = 0
+    )"};
+    toml = toml::parse(unknown_key);
+    result = config::ValidateSensorConfig(toml);
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->error, config::TomlParseError::UnknownKey);
 }
