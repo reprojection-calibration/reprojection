@@ -6,6 +6,8 @@
 
 namespace reprojection::config {
 
+// LCOV_EXCL_START
+
 std::string ToString(TomlType const value) {
     if (value == TomlType::Array) {
         return "array";
@@ -23,5 +25,6 @@ std::string ToString(TomlType const value) {
         throw std::runtime_error("Unrecognized argument passed to ToString(TomlType)");  // LCOV_EXCL_LINE
     }
 }
+// LCOV_EXCL_STOP
 
 }  // namespace reprojection::config
