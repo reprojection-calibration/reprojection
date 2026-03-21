@@ -1,6 +1,4 @@
 #include <ros/ros.h>
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
 
 #include "reprojection/bag_wrapper.hpp"
 #include "reprojection/reprojection.hpp"
@@ -14,11 +12,9 @@ int main(int argc, char** argv) {
         auto const [bag_file, image_topic]{ros1::DummyLoadConfig()};
         ros1::BagWrapper const bag{bag_file, rosbag::bagmode::Read};
 
-        rosbag::View view(bag.bag, rosbag::TopicQuery({image_topic}));
-        for (auto const& msg : view) {
-            std::cout << msg.getTime() << std::endl;
-            std::cout << view.size() << std::endl;
-        }
+        auto const cache_string{TopicCacheString(bag, image_topic)};
+
+        std::cout << cache_string.value() << std::endl; // UNPROTECTED ACCESS!!!
     } catch (rosbag::BagException& e) {
         ROS_ERROR("Error reading bag: %s", e.what());
         return 1;
