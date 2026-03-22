@@ -11,7 +11,7 @@ T ExtractValue(std::string_view key, toml::table& cfg) {
     }
 
     return value;
-}
+}  // LCOV_EXCL_LINE
 
 void ThrowIfUnexpectedKeys(toml::table const& cfg, std::string_view section) {
     if (cfg.empty()) {
