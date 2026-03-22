@@ -17,7 +17,6 @@ TEST(ConfigConfigParsing, TestParseDataConfig) {
         random_key = 123
     )"};
     toml = toml::parse(bad_config);
-
     EXPECT_THROW(config::ParseDataConfig(toml), std::runtime_error);
 }
 
@@ -36,7 +35,6 @@ TEST(ConfigConfigParsing, TestParseSensorConfig) {
         random_key = 123
     )"};
     toml = toml::parse(bad_config);
-
     EXPECT_THROW(config::ParseSensorConfig(toml), std::runtime_error);
 }
 

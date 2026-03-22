@@ -1,7 +1,7 @@
 #pragma once
 
-#include <variant>
 #include <string>
+#include <variant>
 
 #include <toml++/toml.hpp>
 
