@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "config")
 
 set(SRC_FILES
+        src/config_loading.cpp
         src/enum_string_converters.cpp
         src/load_config_file.cpp
         src/parse_ceres_solver_options.cpp
@@ -22,6 +23,7 @@ set(TESTS
         src/enum_string_converters.test.cpp
         src/parse_ceres_solver_options.test.cpp
         src/toml_helpers.test.cpp
+        test/config_loading.test.cpp
         test/load_config_file.test.cpp
         test/validate_config.test.cpp
         test/validate_target_config.test.cpp
