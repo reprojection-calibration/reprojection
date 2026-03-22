@@ -1,10 +1,15 @@
 #pragma once
 
-#include <toml++/toml.hpp>
 #include <ceres/solver.h>
+
+#include <toml++/toml.hpp>
+
+#include "types/enums.hpp"
 
 namespace reprojection::config {
 
-ceres::Solver::Options ParseCeresSolverOptions(toml::table solver_cfg);
+std::pair<std::string, CameraModel> ParseSensorConfig(toml::table solver_cfg);
+
+ceres::Solver::Options ParseSolverConfig(toml::table solver_cfg);
 
 }  // namespace reprojection::config
