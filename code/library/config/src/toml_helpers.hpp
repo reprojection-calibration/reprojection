@@ -10,21 +10,17 @@
 
 namespace reprojection::config {
 
-std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
-                                                   std::map<std::string, TomlType> const& required_keys);
+using TomlKeys = std::map<std::string, TomlType>;
 
-// TODO(Jack): Would it be useful or more informative to the user to have a version of this that only validates table
-//  headers?
-std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
-                                                   std::map<std::string, TomlType> const& possible_keys);
+std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config, TomlKeys const& required_keys,
+                                                 TomlKeys const& optional_keys = {}, bool const allow_unknown = false);
 
-// TEST!!!!
-// TEST!!!!
-// TEST!!!!
-// TEST!!!!
-// TODO(Jack): Do this without recursion instead of editing toml_paths in place!
-// NOTE(Jack): We need to iterate over the entire table to construct the full toml paths. Unfortunately there is no
-// reverse of the .at_path() function which we can just use.
+std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table, TomlKeys const& required_keys);
+
+std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table, TomlKeys const& possible_keys,
+                                                   bool const allow_unknown);
+
+// TODO(Jack): Do this without recursion instead of editing toml_paths in place! Is that even possible?
 void GetTomlPaths(toml::table const& table, std::vector<std::string>& toml_paths, std::string_view prefix = "");
 
 }  // namespace reprojection::config

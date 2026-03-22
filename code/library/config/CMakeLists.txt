@@ -5,7 +5,7 @@ set(SRC_FILES
         src/load_config_file.cpp
         src/parse_ceres_solver_options.cpp
         src/toml_helpers.cpp
-        src/validate_target_config.cpp
+        src/config_validation.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -23,6 +23,7 @@ set(TESTS
         src/parse_ceres_solver_options.test.cpp
         src/toml_helpers.test.cpp
         test/load_config_file.test.cpp
+        test/validate_config.test.cpp
         test/validate_target_config.test.cpp
 )
 AddTests()

@@ -1,5 +1,7 @@
 #include "toml_helpers.hpp"
 
+#include <iostream>
+
 #include "enum_string_converters.hpp"
 
 namespace reprojection::config {
@@ -14,24 +16,40 @@ bool MutuallyExclusive(T... condition) {
 }
 
 bool TypeNodeMatch(TomlType const type, toml::node_view<const toml::node> const& node) {
-    return MutuallyExclusive(
-        type == TomlType::Array and node.is_array(), type == TomlType::Boolean and node.is_boolean(),
-        type == TomlType::FloatingPoint and node.is_floating_point(), type == TomlType::Integer and node.is_integer(),
-        type == TomlType::String and node.is_string(), type == TomlType::Table and node.is_table());
+    return MutuallyExclusive(type == TomlType::Array and node.is_array(),                   //
+                             type == TomlType::Boolean and node.is_boolean(),               //
+                             type == TomlType::FloatingPoint and node.is_floating_point(),  //
+                             type == TomlType::Integer and node.is_integer(),               //
+                             type == TomlType::String and node.is_string(),                 //
+                             type == TomlType::Table and node.is_table());
+}
+
+std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config, TomlKeys const& required_keys,
+                                                 TomlKeys const& optional_keys, bool const allow_unknown) {
+    if (auto const error_msg{ValidateRequiredKeys(config, required_keys)}) {
+        return error_msg;
+    }
+
+    TomlKeys possible_keys{required_keys};
+    possible_keys.insert(optional_keys.begin(), optional_keys.end());
+
+    if (auto const error_msg{ValidatePossibleKeys(config, possible_keys, allow_unknown)}) {
+        return error_msg;
+    }
+
+    return std::nullopt;
 }
 
 // TODO(Jack): I thought about using a variant here to return a bool or the ParserErrorMsg, but std::optional code that
-// idea
-//  of positive return or value in a simpler package. Is there a reason that we do need something more complicted than
-//  optional?
+//  idea of positive return or value in a simpler package. Is there a reason that we do need something more complicated
+//  than optional?
 // WARN(Jack): If for example you forgot the quotes around "TRUST_REGION" this code will
 // actually throw an uncontrolled error about misinterpreting a boolean value (because it begins with T). This is not
 // conform with our approach below and we should redesign this code to prevent that. Maybe we need to check the string
 // values first?
 // NOTE(Jack): It is valid to have more keys, this function only checks that certain required keys are present. If there
 // are more that is no problem.
-std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
-                                                   std::map<std::string, TomlType> const& required_keys) {
+std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table, TomlKeys const& required_keys) {
     for (auto const& [key, type] : required_keys) {
         if (auto const node{table.at_path(key)}) {
             if (not TypeNodeMatch(type, node)) {
@@ -47,14 +65,20 @@ std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table,
     return std::nullopt;
 }
 
-std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table,
-                                                   std::map<std::string, TomlType> const& possible_keys) {
+std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table, TomlKeys const& possible_keys,
+                                                   bool const allow_unknown) {
     std::vector<std::string> full_path_keys;
     GetTomlPaths(table, full_path_keys);
 
     for (auto const& key : full_path_keys) {
         if (not possible_keys.contains(key)) {
-            return ParserErrorMsg{TomlParseError::UnknownKey, "Configuration contains an unexpected key: " + key};
+            if (not allow_unknown) {
+                return ParserErrorMsg{TomlParseError::UnknownKey, "Configuration contains an unexpected key: " + key};
+            } else {
+                // Consider the extra key as a silent error and continue processing. Unless you really know what you are
+                // trying to achieve, strict should almost always be true!
+                continue;
+            }
         }
 
         TomlType const type{possible_keys.at(key)};
