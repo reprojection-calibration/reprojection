@@ -19,7 +19,8 @@ TEST(ConfigConfigLoading, TestLoadConfigFile) {
 
     result = config::LoadConfigFile("bad.toml");
     ASSERT_TRUE(std::holds_alternative<std::string>(result));
-    EXPECT_EQ(std::get<std::string>(result), "File 'bad.toml' is not found. Are you sure the path is right?");
+    EXPECT_EQ(std::get<std::string>(result),
+              "Error parsing file 'bad.toml' - File could not be opened for reading on line (0)");
 
     static constexpr std::string_view bad_table_content{R"(
         [table]
