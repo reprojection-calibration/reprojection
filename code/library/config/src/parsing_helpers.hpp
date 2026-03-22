@@ -38,5 +38,4 @@ inline void ThrowIfUnexpectedKeys(toml::table const& cfg, std::string_view secti
     throw std::runtime_error(oss.str());
 }
 
-
 }  // namespace reprojection::config

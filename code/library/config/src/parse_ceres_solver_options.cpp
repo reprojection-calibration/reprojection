@@ -1,6 +1,7 @@
 #include "parse_ceres_solver_options.hpp"
 
 #include "enum_string_converters.hpp"
+#include "parsing_helpers.hpp"
 
 namespace reprojection::config {
 
@@ -108,15 +109,7 @@ ceres::Solver::Options ParseSolverConfig(toml::table solver_cfg) {
     CFG_GET_AND_ERASE(update_state_every_iteration, solver_cfg, options, bool);
     // IGNORED - options.callbacks
 
-    if (not solver_cfg.empty()) {
-        std::ostringstream oss;
-        oss << "Unexpected parameters found in the ceres solver configuration, are you sure they are correct?\n";
-        for (const auto& [key, _] : solver_cfg) {
-            oss << "  - " << key.str() << "\n";
-        }
-
-        throw std::runtime_error(oss.str());
-    }
+    ThrowIfUnexpectedKeys(solver_cfg, "solver");
 
     return options;
 }

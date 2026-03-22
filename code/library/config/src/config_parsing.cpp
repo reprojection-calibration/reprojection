@@ -1,4 +1,5 @@
 #include "config/config_parsing.hpp"
+
 #include "parsing_helpers.hpp"
 
 namespace reprojection::config {
