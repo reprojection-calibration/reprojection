@@ -16,7 +16,7 @@ TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsFaultyInput) {
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    EXPECT_THROW(config::ParseCeresSolverOptions(config), std::runtime_error);
+    EXPECT_THROW(config::ParseSolverConfig(config), std::runtime_error);
 
     // Config with a key value pair we dont expect
     static constexpr std::string_view config_file_1{R"(
@@ -24,7 +24,7 @@ TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsFaultyInput) {
     )"sv};
     toml::table const config_1{toml::parse(config_file_1)};
 
-    EXPECT_THROW(config::ParseCeresSolverOptions(config_1), std::runtime_error);
+    EXPECT_THROW(config::ParseSolverConfig(config_1), std::runtime_error);
 }
 
 // Given the wrong type this key/value will not be parsed and removed from the table, which means we will have a
@@ -35,7 +35,7 @@ TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsWrongType) {
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    EXPECT_THROW(config::ParseCeresSolverOptions(config), std::runtime_error);
+    EXPECT_THROW(config::ParseSolverConfig(config), std::runtime_error);
 }
 
 TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsEnums) {
@@ -46,7 +46,7 @@ TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsEnums) {
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    auto const solver_options{config::ParseCeresSolverOptions(config)};
+    auto const solver_options{config::ParseSolverConfig(config)};
     EXPECT_EQ(solver_options.minimizer_type, ceres::LINE_SEARCH);
     EXPECT_EQ(solver_options.line_search_interpolation_type, ceres::QUADRATIC);
     EXPECT_EQ(solver_options.trust_region_problem_dump_format_type, ceres::CONSOLE);
@@ -62,7 +62,7 @@ TEST(ConfigParseCeresSolverOptions, TestParseCeresSolverOptionsMaxLbfgsRankInt) 
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    auto const solver_options{config::ParseCeresSolverOptions(config)};
+    auto const solver_options{config::ParseSolverConfig(config)};
     EXPECT_EQ(solver_options.max_lbfgs_rank, 21);
     EXPECT_EQ(solver_options.use_approximate_eigenvalue_bfgs_scaling, true);
     EXPECT_EQ(solver_options.min_line_search_step_size, 1e-6);

@@ -57,7 +57,9 @@ inline std::string ToString(CameraModel const camera_model) {
 }
 
 inline CameraModel ToCameraModel(std::string_view camera_model) {
-    if (camera_model == "pinhole") {
+    if (camera_model == "double_sphere") {
+        return CameraModel::DoubleSphere;
+    } else if (camera_model == "pinhole") {
         return CameraModel::Pinhole;
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToCameraModel(): " +

@@ -4,9 +4,9 @@
 
 #include <toml++/toml.hpp>
 
-namespace reprojection::config {
+#include "config/config_parsing.hpp"
 
-ceres::Solver::Options ParseCeresSolverOptions(toml::table solver_cfg);
+namespace reprojection::config {
 
 // NOTE(Jack): We use macros here because we need to interface directly with the ceres options struct. Using a macro
 // allows us to specify the name of the parameter only once in a single place, and then generates the entire reading

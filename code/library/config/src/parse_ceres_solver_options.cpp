@@ -1,6 +1,7 @@
 #include "parse_ceres_solver_options.hpp"
 
 #include "enum_string_converters.hpp"
+#include "parsing_helpers.hpp"
 
 namespace reprojection::config {
 
@@ -11,7 +12,7 @@ namespace reprojection::config {
 // NOTE(Jack): We ignore parameters which would require intimate knowledge of the solver
 // which we do not have. For example it is not possible to set the callback pointers from a configuration file
 // obviously...
-ceres::Solver::Options ParseCeresSolverOptions(toml::table solver_cfg) {
+ceres::Solver::Options ParseSolverConfig(toml::table solver_cfg) {
     // NOTE(Jack): The options struct is initialized with default values. That means that if in the following code a
     // value is not explicitly set, that its value is preserved as the default.
     ceres::Solver::Options options;
@@ -108,15 +109,7 @@ ceres::Solver::Options ParseCeresSolverOptions(toml::table solver_cfg) {
     CFG_GET_AND_ERASE(update_state_every_iteration, solver_cfg, options, bool);
     // IGNORED - options.callbacks
 
-    if (not solver_cfg.empty()) {
-        std::ostringstream oss;
-        oss << "Unexpected parameters found in the solver configuration, are you sure they are correct?\n";
-        for (const auto& [key, _] : solver_cfg) {
-            oss << "  - " << key.str() << "\n";
-        }
-
-        throw std::runtime_error(oss.str());
-    }
+    ThrowIfUnexpectedKeys(solver_cfg, "solver");
 
     return options;
 }
