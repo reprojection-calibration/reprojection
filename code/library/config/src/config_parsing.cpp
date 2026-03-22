@@ -37,8 +37,8 @@ std::string ParseDataConfig(toml::table data_cfg) {
 }
 
 std::pair<std::string, CameraModel> ParseSensorConfig(toml::table sensor_cfg) {
-    std::string camera_name{ExtractValue<std::string>("camera_name", sensor_cfg)};
-    std::string camera_model{ExtractValue<std::string>("camera_model", sensor_cfg)};
+    std::string const camera_name{ExtractValue<std::string>("camera_name", sensor_cfg)};
+    std::string const camera_model{ExtractValue<std::string>("camera_model", sensor_cfg)};
 
     ThrowIfUnexpectedKeys(sensor_cfg, "sensor");
 
