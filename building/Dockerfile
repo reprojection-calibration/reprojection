@@ -240,6 +240,11 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
                                     --src_dir=/temporary/code/application_ros1 \
                                     --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
 
+ARG INTEGRATION_TEST=building/scripts/integration_test.sh
+RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    source /opt/ros/noetic/setup.bash; \
+    /temporary/${INTEGRATION_TEST}
+
 
 FROM apt-base-stage AS ros2-base-stage
 
