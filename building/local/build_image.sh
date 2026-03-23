@@ -28,8 +28,16 @@ image=reprojection
 script_folder="$(dirname "$(realpath -s "$0")")"
 tag=${image}:${target_stage}
 
+# TODO(Jack): This is not a long term solution - but at least it prevents us from having to edit the docker file
+# everytime we want to build the ROS1 stuff.
+base_image=ubuntu:24.04
+if [[ "$target_stage" == ros1-* ]]; then
+    base_image=ubuntu:20.04
+fi
+
 echo "Building image with tag '$tag' targeting stage '$target_stage'..."
 DOCKER_BUILDKIT=1 docker build \
+    --build-arg BASE_IMAGE="${base_image}" \
     --file "${script_folder}"/../Dockerfile \
     "${no_cache[@]}" \
     --tag "${tag}" \
