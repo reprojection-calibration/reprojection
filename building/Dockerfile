@@ -266,3 +266,9 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
                                     --build_dir=/buildroot/build-ros2-app \
                                     --src_dir=/temporary/code/application_ros2
+
+ARG INTEGRATION_TEST=building/scripts/integration_test.sh
+RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    source /opt/ros/jazzy/setup.bash; \
+    export APP="/buildroot/build-ros2-app-Release/reprojection.reprojection_app"; \
+    /temporary/${INTEGRATION_TEST}

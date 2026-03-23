@@ -17,11 +17,13 @@ test_command() {
     local exit_code=${?}
     set -e
 
-
+    echo "Command under test: ${cmd}"
     if [[ "${exit_code}" -ne "${expected_exit_code}" ]]; then
         echo "Exit code test:"
         echo "  Expected - ${expected_exit_code}"
         echo "  Actual - ${exit_code}"
+
+        echo "Failed"
         return 1
     fi
 
@@ -29,9 +31,12 @@ test_command() {
         echo "Terminal output test:"
         echo "  Expected - ${expected_output}"
         echo "  Actual - ${output}"
+
+        echo "Failed"
         return 1
     fi
 
+    echo "Passed"
     return 0
 }
 
