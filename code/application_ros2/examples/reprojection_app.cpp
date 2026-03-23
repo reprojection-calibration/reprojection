@@ -29,10 +29,5 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // UNIT TEST!!!!
-    //auto const result = ros2::SerializeBagTopic(*data_path, "/cam0/image_raw");
-
-    //std::cout << *result << "\n";
-
     return 0;
 }

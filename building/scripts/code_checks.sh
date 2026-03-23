@@ -40,4 +40,5 @@ cppcheck /temporary/code/application_ros1 --enable=all --error-exitcode=1 --inli
   -I /temporary/code/application_ros1/src
 
   cppcheck /temporary/code/application_ros2 --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
-    -I /temporary/code/application_ros2/include
+    -I /temporary/code/application_ros2/include \
+    -I /temporary/code/application_ros2/src
