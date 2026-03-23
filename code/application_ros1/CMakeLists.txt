@@ -17,12 +17,10 @@ find_package(rosbag REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 set(INCLUDE_DIRECTORIES
-        ${OpenCV_INCLUDE_DIRS}
         ${cv_bridge_INCLUDE_DIRS}
         ${std_msgs_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
-        ${OpenCV_LIBRARIES}
         ${cv_bridge_LIBRARIES}
         ${rosbag_LIBRARIES}
         ${std_msgs_LIBRARIES}
