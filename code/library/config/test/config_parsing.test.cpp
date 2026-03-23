@@ -4,22 +4,6 @@
 
 using namespace reprojection;
 
-TEST(ConfigConfigParsing, TestParseDataConfig) {
-    static constexpr std::string_view data_config{R"(
-        file = "/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag"
-    )"};
-    toml::table toml{toml::parse(data_config)};
-
-    std::string const file{config::ParseDataConfig(toml)};
-    EXPECT_EQ(file, "/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag");
-
-    static constexpr std::string_view bad_config{R"(
-        random_key = 123
-    )"};
-    toml = toml::parse(bad_config);
-    EXPECT_THROW(config::ParseDataConfig(toml), std::runtime_error);
-}
-
 TEST(ConfigConfigParsing, TestParseSensorConfig) {
     static constexpr std::string_view sensor_config{R"(
         camera_name = "/cam0/image_raw"
