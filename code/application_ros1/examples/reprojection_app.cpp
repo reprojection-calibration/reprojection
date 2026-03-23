@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 
-#include "reprojection/application/load_and_validate_config.hpp"
+#include <reprojection/application/load_and_validate_config.hpp>
+
 #include "reprojection/bag_wrapper.hpp"
 #include "reprojection/reprojection.hpp"
 

@@ -25,7 +25,7 @@ bool TypeNodeMatch(TomlType const type, toml::node_view<const toml::node> const&
 }
 
 std::optional<TomlErrorMsg> ValidateConfigKeys(toml::table const& config, TomlKeys const& required_keys,
-                                                 TomlKeys const& optional_keys, bool const allow_unknown) {
+                                               TomlKeys const& optional_keys, bool const allow_unknown) {
     if (auto const error_msg{ValidateRequiredKeys(config, required_keys)}) {
         return error_msg;
     }
@@ -54,11 +54,11 @@ std::optional<TomlErrorMsg> ValidateRequiredKeys(toml::table const& table, TomlK
         if (auto const node{table.at_path(key)}) {
             if (not TypeNodeMatch(type, node)) {
                 return TomlErrorMsg{TomlError::IncorrectType,
-                                      "Configuration key: " + key + " is not of expected type: " + ToString(type)};
+                                    "Configuration key: " + key + " is not of expected type: " + ToString(type)};
             }
         } else {
-            return TomlErrorMsg{TomlError::MissingKey, "Configuration does not contain required key: " + key +
-                                                                  " of type: " + ToString(type)};
+            return TomlErrorMsg{TomlError::MissingKey,
+                                "Configuration does not contain required key: " + key + " of type: " + ToString(type)};
         }
     }
 
@@ -66,7 +66,7 @@ std::optional<TomlErrorMsg> ValidateRequiredKeys(toml::table const& table, TomlK
 }
 
 std::optional<TomlErrorMsg> ValidatePossibleKeys(toml::table const& table, TomlKeys const& possible_keys,
-                                                   bool const allow_unknown) {
+                                                 bool const allow_unknown) {
     std::vector<std::string> full_path_keys;
     GetTomlPaths(table, full_path_keys);
 
@@ -85,7 +85,7 @@ std::optional<TomlErrorMsg> ValidatePossibleKeys(toml::table const& table, TomlK
         auto const node{table.at_path(key)};
         if (not TypeNodeMatch(type, node)) {
             return TomlErrorMsg{TomlError::IncorrectType,
-                                  "Configuration key: " + key + " is not of expected type: " + ToString(type)};
+                                "Configuration key: " + key + " is not of expected type: " + ToString(type)};
         }
     }
 

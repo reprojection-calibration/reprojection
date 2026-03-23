@@ -18,7 +18,7 @@ TEST(ConfigTomlHelpers, TestValidateConfigKeys) {
     config::TomlKeys const required_keys{{"table", TomlType::Table}};
     auto result{ValidateConfigKeys(config, required_keys)};
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error,TomlError::UnknownKey);
+    EXPECT_EQ(result->error, TomlError::UnknownKey);
 
     // If we explicitly allow unknown keys then it's no problem.
     result = ValidateConfigKeys(config, required_keys, {}, true);
@@ -72,7 +72,7 @@ TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
 
     result = ValidatePossibleKeys(config, possible_keys, false);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error,TomlError::UnknownKey);
+    EXPECT_EQ(result->error, TomlError::UnknownKey);
     result = ValidatePossibleKeys(config, possible_keys, true);
     EXPECT_FALSE(result.has_value());
 
@@ -87,10 +87,10 @@ TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
 
     result = ValidatePossibleKeys(config, possible_keys, false);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error,TomlError::IncorrectType);
+    EXPECT_EQ(result->error, TomlError::IncorrectType);
     result = ValidatePossibleKeys(config, possible_keys, true);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error,TomlError::IncorrectType);
+    EXPECT_EQ(result->error, TomlError::IncorrectType);
 }
 
 TEST(ConfigTomlHelpers, TestGetTomlPaths) {
