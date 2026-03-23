@@ -26,10 +26,5 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // auto const [bag_file, image_topic]{ros1::DummyLoadConfig()};
-    // ros1::BagWrapper const bag{bag_file, rosbag::bagmode::Read};
-
-    // auto const cache_string{TopicCacheString(bag, image_topic)};
-
     return 0;
 }
