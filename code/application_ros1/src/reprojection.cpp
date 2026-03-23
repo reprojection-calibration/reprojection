@@ -7,10 +7,6 @@
 
 namespace reprojection::ros1 {
 
-std::tuple<std::string, std::string> DummyLoadConfig() {
-    return {"/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag", "/cam0/image_raw"};
-}
-
 std::optional<std::string> TopicCacheString(BagWrapper const& bag, std::string_view topic) {
     if (bag.bag.getMode() != rosbag::BagMode::Read) {
         return std::nullopt;

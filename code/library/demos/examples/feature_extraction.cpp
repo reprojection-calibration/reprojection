@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "application/cli_utils.hpp"
 #include "demos/image_source.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "types/eigen_types.hpp"
@@ -11,18 +12,8 @@
 
 using namespace reprojection;
 
-// Adopted from https://stackoverflow.com/questions/865668/parsing-command-line-arguments-in-c
-char* GetCommandOption(char** begin, char** end, const std::string& option) {
-    char** itr = std::find(begin, end, option);
-    if (itr != end && ++itr != end) {
-        return *itr;
-    }
-
-    return 0;
-}
-
 int main(int argc, char* argv[]) {
-    char const* const config_file{GetCommandOption(argv, argv + argc, "-c")};
+    auto const config_file{application::GetCommandOption(argv, argv + argc, "-c")};
     if (not config_file) {
         std::cerr << "Target configuration TOML not provided! (-c <target_config_toml>)" << std::endl;
         return EXIT_FAILURE;
@@ -30,16 +21,16 @@ int main(int argc, char* argv[]) {
 
     // If no folder is provided then default to webcam demo.
     std::unique_ptr<demos::ImageSource> image_feed;
-    char const* const folder{GetCommandOption(argv, argv + argc, "-f")};
+    auto const folder{application::GetCommandOption(argv, argv + argc, "-f")};
     if (folder) {
-        image_feed = std::make_unique<demos::ImageFolder>(folder);
+        image_feed = std::make_unique<demos::ImageFolder>(*folder);
     } else {
         std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
         // TODO(Jack): Provide user option to select a different device
         image_feed = std::make_unique<demos::VideoCapture>(0);
     }
 
-    toml::table const config{toml::parse_file(config_file)};
+    toml::table const config{toml::parse_file(*config_file)};
     auto const extractor{feature_extraction::CreateTargetExtractor(*config["target"].as_table())};
 
     std::cout << "\n\tPress any key to close the window and end the demo.\n" << std::endl;

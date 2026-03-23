@@ -7,8 +7,6 @@
 
 namespace reprojection::ros1 {
 
-std::tuple<std::string, std::string> DummyLoadConfig();
-
 std::optional<std::string> TopicCacheString(BagWrapper const& bag, std::string_view topic);
 
 }  // namespace reprojection::ros1

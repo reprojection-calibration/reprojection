@@ -1,14 +1,28 @@
-#include <rclcpp/rclcpp.hpp>
+#include <iostream>
+
+#include <reprojection/application/cli_utils.hpp>
 #include <reprojection/application/load_and_validate_config.hpp>
 
 #include "reprojection/reprojection.hpp"
 
-int main(int argc, char** argv) {
-    rclcpp::init(argc, argv);
+using namespace reprojection;
 
-    reprojection::ros2::Delete();
-    std::cout << "We are here ROS2" << std::endl;
+int main(int argc, char* argv[]) {
+    auto const config_path{application::GetCommandOption(argv, argv + argc, "--config")};
+    if (not config_path) {
+        // TODO(Jack): What is a long term strategy to guarantee that these error messages stay consistent across all
+        //  applications?
+        std::cout << "Missing --config flag" << "\n";
 
-    rclcpp::shutdown();
+        return EXIT_FAILURE;
+    }
+
+    auto const config{application::LoadAndValidateConfig(*config_path)};
+    if (std::holds_alternative<TomlErrorMsg>(config)) {
+        std::cout << std::get<TomlErrorMsg>(config).msg << "\n";
+
+        return EXIT_FAILURE;
+    }
+
     return 0;
 }
