@@ -27,7 +27,7 @@ test_command() {
         return 1
     fi
 
-    if [[ "$output" != *"$expected_output"* ]]; then
+    if [[ "$output" != "$expected_output" ]]; then
         echo "Terminal output test:"
         echo "  Expected - ${expected_output}"
         echo "  Actual - ${output}"
