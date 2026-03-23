@@ -2,7 +2,12 @@
 
 #include <gtest/gtest.h>
 
+using namespace reprojection;
 
-TEST(XXX,YYYY) {
+TEST(ApplicationLoadAndValidateConfig, TestYYYY) {
+    //std::variant<toml::table, config::TomlErrorMsg>
+
+    auto const result{application::LoadAndValidateConfig("")};
+
     EXPECT_EQ(1,2);
 }
