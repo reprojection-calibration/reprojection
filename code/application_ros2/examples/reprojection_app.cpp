@@ -3,7 +3,6 @@
 #include <reprojection/application/cli_utils.hpp>
 #include <reprojection/application/load_and_validate_config.hpp>
 
-#include <rosbag2_cpp/reader.hpp>
 #include "reprojection/reprojection.hpp"
 
 using namespace reprojection;
@@ -30,8 +29,9 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    rosbag2_cpp::Reader reader;
-    reader.open(*data_path);
+    auto const result = ros2::SerializeBagTopic(*data_path, "/cam0/image_raw");
+
+    std::cout << *result << "\n";
 
     return 0;
 }
