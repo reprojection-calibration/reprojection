@@ -14,7 +14,3 @@ target_include_directories(${LIBRARY_NAME} INTERFACE
 target_compile_options(${LIBRARY_NAME} INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-enum-enum-conversion>
 )
-
-install(TARGETS ${LIBRARY_NAME}
-        EXPORT reprojectionTargets
-)
