@@ -8,10 +8,16 @@ include(../cmake_macros/add_tests.cmake)
 find_package(rclcpp REQUIRED)
 find_package(reprojection REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
+find_package(rosidl_typesupport_interface REQUIRED)
+find_package(type_description_interfaces REQUIRED)
 
 set(INCLUDE_DIRECTORIES
         ${rclcpp_INCLUDE_DIRS}
         ${rosbag2_cpp_INCLUDE_DIRS}
+        # TODO(Jack): We only need to add these because of a failure in the dockerized build. The CLion build was
+        # working fine! What is going on here?
+        ${rosidl_typesupport_interface_INCLUDE_DIRS}
+        ${type_description_interfaces_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
         ${rclcpp_LIBRARIES}
