@@ -14,7 +14,7 @@ set(LINK_LIBRARIES
         optimization
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the linear_pose_init public header interface.
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
-        types
+        types_internal
 )
 set(INSTALL_HEADERS ON)
 AddLibrary()

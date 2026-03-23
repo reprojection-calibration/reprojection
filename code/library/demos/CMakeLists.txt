@@ -12,7 +12,7 @@ set(LINK_LIBRARIES
         eigen_utilities
         feature_extraction
         geometry
-        types
+        types_internal
         ${apriltag_LIBRARIES}
         optimization
         ${OpenCV_LIBS}

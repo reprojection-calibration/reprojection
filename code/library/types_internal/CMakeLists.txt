@@ -1,4 +1,4 @@
-set(LIBRARY_NAME "types")
+set(LIBRARY_NAME "types_internal")
 
 # Header only package, therefore "INTERFACE" and we do not use the default cmake macros that we use for all the others.
 add_library(${LIBRARY_NAME} INTERFACE)

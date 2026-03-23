@@ -6,7 +6,7 @@ set(SRC_FILES
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen
-        types
+        types_internal
 )
 AddLibrary()
 
