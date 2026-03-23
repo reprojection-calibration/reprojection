@@ -243,6 +243,7 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
     source /opt/ros/noetic/setup.bash; \
+    export APP="/buildroot/build-ros1-app-Release/reprojection.reprojection_app"; \
     /temporary/${INTEGRATION_TEST}
 
 
