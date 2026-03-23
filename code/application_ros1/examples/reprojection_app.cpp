@@ -14,14 +14,14 @@ int main(int argc, char* argv[]) {
     if (not config_path) {
         // TODO(Jack): What is a long term strategy to guarantee that these error messages stay consistent across all
         //  applications?
-        std::cout << "\n\tMissing --config flag\n" << std::endl;
+        std::cout << "Missing --config flag" << "\n";
 
         return EXIT_FAILURE;
     }
 
     auto const config{application::LoadAndValidateConfig(*config_path)};
     if (std::holds_alternative<TomlErrorMsg>(config)) {
-        std::cout << "\n\t" + std::get<TomlErrorMsg>(config).msg + "\n" << std::endl;
+        std::cout << std::get<TomlErrorMsg>(config).msg << "\n";
 
         return EXIT_FAILURE;
     }
