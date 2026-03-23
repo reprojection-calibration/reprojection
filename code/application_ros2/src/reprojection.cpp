@@ -7,11 +7,6 @@
 
 namespace reprojection::ros2 {
 
-// TEST!!!!!
-// TEST!!!!!
-// TEST!!!!!
-// TEST!!!!!
-// TEST!!!!!
 std::optional<std::string> SerializeBagTopic(std::string_view bag_path, std::string_view topic) {
     rosbag2_cpp::Reader reader;
     reader.open(std::string(bag_path));

@@ -17,8 +17,6 @@ find_package(sensor_msgs REQUIRED)
 find_package(type_description_interfaces REQUIRED)
 
 set(INCLUDE_DIRECTORIES
-        ${cv_bridge_INCLUDE_DIRS}
-        ${rclcpp_INCLUDE_DIRS}
         ${rosbag2_cpp_INCLUDE_DIRS}
         ${rosidl_typesupport_interface_INCLUDE_DIRS}
         ${sensor_msgs_INCLUDE_DIRS}
