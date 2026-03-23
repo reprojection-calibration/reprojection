@@ -5,11 +5,17 @@ include(../cmake_macros/add_examples.cmake)
 include(../cmake_macros/add_library.cmake)
 include(../cmake_macros/add_tests.cmake)
 
+find_package(rclcpp REQUIRED)
 find_package(reprojection REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
 
 set(INCLUDE_DIRECTORIES
+        ${rclcpp_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
+        ${rclcpp_LIBRARIES}
+        ${rosbag2_cpp_LIBRARIES}
         reprojection::application
 )
 

@@ -3,6 +3,7 @@
 #include <reprojection/application/cli_utils.hpp>
 #include <reprojection/application/load_and_validate_config.hpp>
 
+#include <rosbag2_cpp/reader.hpp>
 #include "reprojection/reprojection.hpp"
 
 using namespace reprojection;
@@ -28,6 +29,9 @@ int main(int argc, char* argv[]) {
         std::cout << std::get<TomlErrorMsg>(config).msg << "\n";
         return EXIT_FAILURE;
     }
+
+    rosbag2_cpp::Reader reader;
+    reader.open(*data_path);
 
     return 0;
 }
