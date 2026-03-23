@@ -12,6 +12,7 @@ set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
         tomlplusplus::tomlplusplus
+        types
         types_internal
 )
 AddLibrary()

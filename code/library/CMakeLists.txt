@@ -31,6 +31,7 @@ enable_testing()
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 add_subdirectory(types_internal)
+add_subdirectory(types)
 add_subdirectory(testing_utilities)
 add_subdirectory(config)
 add_subdirectory(caching)

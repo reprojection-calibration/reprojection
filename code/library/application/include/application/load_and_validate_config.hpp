@@ -5,7 +5,7 @@
 
 #include <toml++/toml.hpp>
 
-#include "config/types.hpp"
+#include "types/config.hpp"
 
 // NOTE(Jack): We purposely chose the toml::table as the primary configuration interface for use with the applications.
 // The reason for this is that the toml++ library is pretty generic and can be installed anywhere without much effort.
@@ -19,6 +19,6 @@ namespace reprojection::application {
 
 namespace fs = std::filesystem;
 
-std::variant<toml::table, config::TomlErrorMsg> LoadAndValidateConfig(fs::path const& config_path);
+std::variant<toml::table, TomlErrorMsg> LoadAndValidateConfig(fs::path const& config_path);
 
 }  // namespace reprojection::application

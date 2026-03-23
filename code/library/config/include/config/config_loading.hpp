@@ -5,7 +5,7 @@
 
 #include <toml++/toml.hpp>
 
-#include "config/types.hpp"
+#include "types/config.hpp"
 
 namespace reprojection::config {
 

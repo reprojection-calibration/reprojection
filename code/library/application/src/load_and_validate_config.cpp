@@ -5,10 +5,10 @@
 
 namespace reprojection::application {
 
-std::variant<toml::table, config::TomlErrorMsg> LoadAndValidateConfig(fs::path const& config_path) {
+std::variant<toml::table, TomlErrorMsg> LoadAndValidateConfig(fs::path const& config_path) {
     auto const loaded_config{config::LoadConfigFile(config_path)};
-    if (std::holds_alternative<config::TomlErrorMsg>(loaded_config)) {
-        return std::get<config::TomlErrorMsg>(loaded_config);
+    if (std::holds_alternative<TomlErrorMsg>(loaded_config)) {
+        return std::get<TomlErrorMsg>(loaded_config);
     }
 
     if (auto const error_msg{config::ValidateCalibrationConfig(std::get<toml::table>(loaded_config))}) {

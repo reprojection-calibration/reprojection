@@ -39,7 +39,7 @@ TEST(ConfigValidateConfig, TestValidateDataConfig) {
     toml = toml::parse(missing_key);
     result = config::ValidateDataConfig(toml);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlError::MissingKey);
+    EXPECT_EQ(result->error, TomlError::MissingKey);
 
     static constexpr std::string_view unknown_key{R"(
         file = "/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag"
@@ -48,7 +48,7 @@ TEST(ConfigValidateConfig, TestValidateDataConfig) {
     toml = toml::parse(unknown_key);
     result = config::ValidateDataConfig(toml);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlError::UnknownKey);
+    EXPECT_EQ(result->error, TomlError::UnknownKey);
 }
 
 TEST(ConfigValidateConfig, TestValidateSensorConfig) {
@@ -65,7 +65,7 @@ TEST(ConfigValidateConfig, TestValidateSensorConfig) {
     toml = toml::parse(missing_key);
     result = config::ValidateSensorConfig(toml);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlError::MissingKey);
+    EXPECT_EQ(result->error, TomlError::MissingKey);
 
     static constexpr std::string_view unknown_key{R"(
         camera_name = "/cam0/image_raw"
@@ -75,5 +75,5 @@ TEST(ConfigValidateConfig, TestValidateSensorConfig) {
     toml = toml::parse(unknown_key);
     result = config::ValidateSensorConfig(toml);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlError::UnknownKey);
+    EXPECT_EQ(result->error, TomlError::UnknownKey);
 }
