@@ -25,6 +25,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        test/cli_utils.test.cpp
         test/load_and_validate_config.test.cpp
         test/step_runner.test.cpp
         test/steps.test.cpp
