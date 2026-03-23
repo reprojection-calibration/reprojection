@@ -8,6 +8,11 @@
 
 namespace reprojection::config {
 
+// TODO(Jack): There is a problem... That is, that we basically specify the same information twice, once in the config
+//  validation and once in the config parsing like what the types, key names, and whats required and optional. This will
+//  make our life very hard if the config gets more complicated! We need a long term strategy here where the information
+//  just needs to be specified in one place.
+
 // TODO(Jack): Should we use filesystem path for all paths?
 std::string ParseDataConfig(toml::table data_cfg);
 
