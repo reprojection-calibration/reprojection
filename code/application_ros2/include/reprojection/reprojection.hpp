@@ -1,7 +1,10 @@
 #pragma once
 
+#include <string>
+#include <tuple>
+
 namespace reprojection::ros2 {
 
-void Delete();
+std::tuple<std::string, std::string> DummyLoadConfig();
 
 }
