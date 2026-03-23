@@ -45,6 +45,5 @@ TEST(ApplicationLoadAndValidateConfig, TestBadValidate) {
     auto const result{application::LoadAndValidateConfig(config_file.Path())};
     ASSERT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
     EXPECT_EQ(std::get<TomlErrorMsg>(result).error, TomlError::MissingKey);
-    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg,
-              "Configuration does not contain required key: data of type: table");
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "Configuration does not contain required key: data of type: table");
 }

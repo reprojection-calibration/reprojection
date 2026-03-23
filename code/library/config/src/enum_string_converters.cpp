@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "config/enums.hpp"
+#include "enums.hpp"
 
 namespace reprojection::config {
 
