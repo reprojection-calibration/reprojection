@@ -33,7 +33,8 @@ TEST(ApplicationLoadAndValidateConfig, TestBadLoad) {
     auto const result{application::LoadAndValidateConfig("nonexistent.toml")};
     ASSERT_TRUE(std::holds_alternative<config::TomlErrorMsg>(result));
     EXPECT_EQ(std::get<config::TomlErrorMsg>(result).error, config::TomlError::FailedLoad);
-    EXPECT_EQ(std::get<config::TomlErrorMsg>(result).msg, "Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)");
+    EXPECT_EQ(std::get<config::TomlErrorMsg>(result).msg,
+              "Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)");
 }
 
 TEST(ApplicationLoadAndValidateConfig, TestBadValidate) {
@@ -44,5 +45,6 @@ TEST(ApplicationLoadAndValidateConfig, TestBadValidate) {
     auto const result{application::LoadAndValidateConfig(config_file.Path())};
     ASSERT_TRUE(std::holds_alternative<config::TomlErrorMsg>(result));
     EXPECT_EQ(std::get<config::TomlErrorMsg>(result).error, config::TomlError::MissingKey);
-    EXPECT_EQ(std::get<config::TomlErrorMsg>(result).msg, "Configuration does not contain required key: data of type: table");
+    EXPECT_EQ(std::get<config::TomlErrorMsg>(result).msg,
+              "Configuration does not contain required key: data of type: table");
 }
