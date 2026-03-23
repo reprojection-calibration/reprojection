@@ -10,12 +10,12 @@
 
 using namespace reprojection;
 
-TEST(Ros1Reprojection, TestTopicCacheString) {
+TEST(Ros1Reprojection, TestSerializeBagTopic) {
     ros1::ScopedBagPath const temp_bag;
 
     // Cannot get cache string from a write mode bag (rosbag::View needs a bag to be in read mode).
     ros1::BagWrapper write_handle(temp_bag.path, rosbag::bagmode::Write);
-    auto result{ros1::TopicCacheString(write_handle, "")};
+    auto result{ros1::SerializeBagTopic(write_handle, "")};
     EXPECT_FALSE(result.has_value());
 
     {
@@ -24,7 +24,7 @@ TEST(Ros1Reprojection, TestTopicCacheString) {
     }
 
     ros1::BagWrapper read_handle(temp_bag.path, rosbag::bagmode::Read);
-    result = ros1::TopicCacheString(read_handle, "/raw_image_topic");
+    result = ros1::SerializeBagTopic(read_handle, "/raw_image_topic");
     ASSERT_TRUE(result.has_value());
 
     std::string const filename{std::filesystem::path(temp_bag.path).filename()};
@@ -32,6 +32,6 @@ TEST(Ros1Reprojection, TestTopicCacheString) {
     EXPECT_EQ(*result, gt_result);
 
     // Check that a topic not found in the bag returns std::nullopt.
-    result = ros1::TopicCacheString(read_handle, "/nonexistent_topic");
+    result = ros1::SerializeBagTopic(read_handle, "/nonexistent_topic");
     EXPECT_FALSE(result.has_value());
 }

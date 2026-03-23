@@ -7,7 +7,7 @@
 
 namespace reprojection::ros1 {
 
-std::optional<std::string> TopicCacheString(BagWrapper const& bag, std::string_view topic) {
+std::optional<std::string> SerializeBagTopic(BagWrapper const& bag, std::string_view topic) {
     if (bag.bag.getMode() != rosbag::BagMode::Read) {
         return std::nullopt;
     }
