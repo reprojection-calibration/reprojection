@@ -81,7 +81,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         SQLite::SQLite3
         protobuf::libprotobuf
-        types
+        types_internal
 )
 AddLibrary()
 

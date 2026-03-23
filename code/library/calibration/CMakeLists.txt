@@ -18,7 +18,7 @@ set(LINK_LIBRARIES
         pnp
         projection_functions
         spline
-        types
+        types_internal
 )
 AddLibrary()
 

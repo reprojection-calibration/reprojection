@@ -12,7 +12,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         ${OpenCV_LIBS}
-        types
+        types_internal
 )
 AddLibrary()
 

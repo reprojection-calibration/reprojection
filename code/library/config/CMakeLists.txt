@@ -13,6 +13,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         tomlplusplus::tomlplusplus
         types
+        types_internal
 )
 AddLibrary()
 

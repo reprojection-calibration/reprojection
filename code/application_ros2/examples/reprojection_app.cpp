@@ -1,4 +1,5 @@
 #include <rclcpp/rclcpp.hpp>
+#include <reprojection/application/load_and_validate_config.hpp>
 
 #include "reprojection/reprojection.hpp"
 

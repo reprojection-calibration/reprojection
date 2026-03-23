@@ -24,6 +24,7 @@ set(LINK_LIBRARIES
         eigen_utilities
         tomlplusplus::tomlplusplus
         types
+        types_internal
 )
 AddLibrary()
 

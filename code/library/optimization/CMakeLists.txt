@@ -15,7 +15,7 @@ set(LINK_LIBRARIES
         geometry
         projection_functions
         spline
-        types
+        types_internal
 )
 AddLibrary()
 

@@ -5,8 +5,10 @@
 
 #include <toml++/toml.hpp>
 
+#include "types/config.hpp"
+
 namespace reprojection::config {
 
-std::variant<toml::table, std::string> LoadConfigFile(std::string const& file);
+std::variant<toml::table, TomlErrorMsg> LoadConfigFile(std::string const& file);
 
 }  // namespace reprojection::config

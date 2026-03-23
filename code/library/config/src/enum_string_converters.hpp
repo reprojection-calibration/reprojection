@@ -3,8 +3,9 @@
 #include <stdexcept>
 #include <string>
 
-#include "config/enums.hpp"
 #include "types/enums.hpp"
+
+#include "enums.hpp"
 
 namespace reprojection::config {
 

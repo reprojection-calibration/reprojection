@@ -15,7 +15,7 @@ set(LINK_LIBRARIES
         projection_functions
         spline
         testing_utilities
-        types
+        types_internal
 )
 set(INSTALL_SO OFF)
 AddLibrary()

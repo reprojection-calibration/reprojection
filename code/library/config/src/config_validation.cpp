@@ -6,7 +6,7 @@
 
 namespace reprojection::config {
 
-std::optional<ParserErrorMsg> ValidateCalibrationConfig(toml::table const& calibration_cfg) {
+std::optional<TomlErrorMsg> ValidateCalibrationConfig(toml::table const& calibration_cfg) {
     std::map<std::string, TomlType> const required_tables{
         {"data", TomlType::Table}, {"sensor", TomlType::Table}, {"target", TomlType::Table}};
     if (auto const error_msg{ValidateConfigKeys(calibration_cfg, required_tables, {}, true)}) {
@@ -26,20 +26,20 @@ std::optional<ParserErrorMsg> ValidateCalibrationConfig(toml::table const& calib
     return std::nullopt;
 }
 
-std::optional<ParserErrorMsg> ValidateDataConfig(toml::table const& data_cfg) {
+std::optional<TomlErrorMsg> ValidateDataConfig(toml::table const& data_cfg) {
     std::map<std::string, TomlType> const required_keys{{"file", TomlType::String}};
 
     return ValidateConfigKeys(data_cfg, required_keys);
 }
 
-std::optional<ParserErrorMsg> ValidateSensorConfig(toml::table const& sensor_cfg) {
+std::optional<TomlErrorMsg> ValidateSensorConfig(toml::table const& sensor_cfg) {
     std::map<std::string, TomlType> const required_keys{{"camera_name", TomlType::String},  // LCOV_EXCL_LINE
                                                         {"camera_model", TomlType::String}};
 
     return ValidateConfigKeys(sensor_cfg, required_keys);
 }
 
-std::optional<ParserErrorMsg> ValidateTargetConfig(toml::table const& target_cfg) {
+std::optional<TomlErrorMsg> ValidateTargetConfig(toml::table const& target_cfg) {
     std::map<std::string, TomlType> const required_keys{{"pattern_size", TomlType::Array}, {"type", TomlType::String}};
     std::map<std::string, TomlType> const optional_keys{
         {"circle_grid", TomlType::Table},               // LCOV_EXCL_LINE

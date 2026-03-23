@@ -181,6 +181,8 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS release-build-stage
 
+# TODO(Jack): Currently the installation just happens in a folder called "application", we need to fix this! It should
+# be in a folder like "/usr/include/reprojection/application/*.hpp" or something like that. Application is too generic!
 ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
 RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
