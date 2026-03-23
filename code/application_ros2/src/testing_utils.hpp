@@ -12,7 +12,8 @@
 
 namespace reprojection::ros2 {
 
-// TODO(Jack): All these dummy datatypes are passed almost identically from the ROS1 code. Is there a non intrusive strategy to reduce copy paste? Or do we even need these here?
+// TODO(Jack): All these dummy datatypes are passed almost identically from the ROS1 code, also the scoped path below.
+//  Is there a non intrusive strategy to reduce copy paste?
 inline std_msgs::msg::Header DummyHeader() {
     std_msgs::msg::Header header;
     header.stamp = rclcpp::Time(1);
@@ -50,13 +51,14 @@ inline sensor_msgs::msg::CompressedImage DummyCompressedImage() {
     return img_msg_comp;
 }
 
-// ERROR COPY AND PASTED DIRECTLY FROM THE ROS1 APP! Also we have a very similar logic in the "temp file" testing util
-// stuff in the library. We need a uniform handling of this topic. Maybe even install the testing utils...?
+// NOTE(Jack): For ROS2 the bag writer will actually create the bag inside a directory with its metdata file. Therefore,
+// we do not add a file type to the path below (i.e. no .db3 or .bag). That is also the reason we have to use
+// std::filesystem::remove_all, because it is non-empty directory, not just a file.
 class ScopedBagPath {
    public:
     ScopedBagPath() : path{GeneratePath()} {}
 
-    ~ScopedBagPath() { std::filesystem::remove(path); }
+    ~ScopedBagPath() { std::filesystem::remove_all(path); }
 
     std::string path;
 
@@ -67,7 +69,7 @@ class ScopedBagPath {
         static std::uniform_int_distribution<uint64_t> dis;
 
         std::filesystem::path const tmp{std::filesystem::temp_directory_path()};
-        std::string const filename{"rosbag_test_" + std::to_string(dis(gen)) + ".db3"};
+        std::string const filename{"rosbag_test_" + std::to_string(dis(gen))};
 
         return (tmp / filename).string();
     }

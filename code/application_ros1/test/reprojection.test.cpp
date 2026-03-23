@@ -26,7 +26,6 @@ TEST(Ros1Reprojection, TestSerializeBagTopic) {
     ros1::BagWrapper read_handle(temp_bag.path, rosbag::bagmode::Read);
     result = ros1::SerializeBagTopic(read_handle, "/raw_image_topic");
     ASSERT_TRUE(result.has_value());
-
     std::string const filename{std::filesystem::path(temp_bag.path).filename()};
     std::string const gt_result{filename + "|/raw_image_topic|1.000;|"};
     EXPECT_EQ(*result, gt_result);
