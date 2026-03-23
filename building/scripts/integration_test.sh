@@ -35,6 +35,8 @@ test_command() {
     return 0
 }
 
-
+# Running the program without the a config file path provided by the --config flag is an error.
 test_command "${APP}" 1 "Missing --config flag"
+
+# Running the program with a invalid config file (i.e. nonexistent, incomplete, invalid etc.) is an error.
 test_command "${APP} --config nonexistent.toml" 1 "Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)"
