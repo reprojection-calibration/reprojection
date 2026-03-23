@@ -13,14 +13,8 @@ namespace reprojection::ros2 {
 // TEST!!!!!
 // TEST!!!!!
 std::optional<std::string> SerializeBagTopic(std::string_view bag_path, std::string_view topic) {
-    rosbag2_storage::StorageOptions storage_options;
-    storage_options.uri = std::string(bag_path);
-    storage_options.storage_id = "mcap";
-
-    rosbag2_cpp::ConverterOptions const converter_options{"cdr", "cdr"};
-
     rosbag2_cpp::Reader reader;
-    reader.open(storage_options, converter_options);
+    reader.open(std::string(bag_path));
 
     rosbag2_storage::StorageFilter filter;
     filter.topics = {std::string(topic)};
