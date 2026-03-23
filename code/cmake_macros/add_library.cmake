@@ -4,7 +4,7 @@ macro(AddLibrary)
     )
     target_include_directories(${LIBRARY_NAME} PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-            $<INSTALL_INTERFACE:include>
+            $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
     )
     target_include_directories(${LIBRARY_NAME} PRIVATE
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
@@ -13,14 +13,6 @@ macro(AddLibrary)
     target_link_libraries(${LIBRARY_NAME} PRIVATE
             ${LINK_LIBRARIES}
     )
-
-    # Install shared libs default ON - The application functions we export will depend on basically all the shared libs
-    # we have. The one obvious exception here is any lib intended only for internal testing purposes (i.e.
-    # testing_mocks/testing_utilities). Therefore this is default on, and if we do not want the library install than we
-    # can call set(INSTALL_SO OFF) in its cmakelists.
-    if (NOT DEFINED INSTALL_SO)
-        set(INSTALL_SO ON)
-    endif()
 
     # Install headers default OFF - The entire library should only expose its functionality through the smallest
     # possible source code interface. At time of writing this is achieved by building all the functionality external
@@ -31,6 +23,20 @@ macro(AddLibrary)
         set(INSTALL_HEADERS OFF)
     endif()
 
+    # Install shared libs default ON - The application functions we export will depend on basically all the shared libs
+    # we have. The one obvious exception here is any lib intended only for internal testing purposes (i.e.
+    # testing_mocks/testing_utilities). Therefore this is default on, and if we do not want the library install than we
+    # can call set(INSTALL_SO OFF) in its cmakelists.
+    if (NOT DEFINED INSTALL_SO)
+        set(INSTALL_SO ON)
+    endif()
+
+    if (INSTALL_HEADERS)
+        install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+                DESTINATION include/${PROJECT_NAME}
+        )
+    endif()
+
     if (INSTALL_SO)
         install(TARGETS ${LIBRARY_NAME}
                 EXPORT reprojectionTargets
@@ -39,13 +45,6 @@ macro(AddLibrary)
                 RUNTIME DESTINATION bin
         )
     endif()
-
-    if (INSTALL_HEADERS)
-        install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-                DESTINATION include
-        )
-    endif()
-
 
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         target_compile_options(${LIBRARY_NAME} PRIVATE --coverage)

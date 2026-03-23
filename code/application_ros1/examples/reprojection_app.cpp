@@ -2,6 +2,7 @@
 
 #include "reprojection/bag_wrapper.hpp"
 #include "reprojection/reprojection.hpp"
+#include "reprojection/application/load_and_validate_config.hpp"
 
 using namespace reprojection;
 
