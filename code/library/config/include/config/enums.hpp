@@ -2,7 +2,8 @@
 
 namespace reprojection::config {
 
-enum class TomlParseError {
+enum class TomlError {
+    FailedLoad,
     IncorrectType,
     MissingKey,
     UnknownKey,

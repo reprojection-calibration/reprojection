@@ -6,8 +6,8 @@
 
 namespace reprojection::config {
 
-struct ParserErrorMsg {
-    TomlParseError error;
+struct TomlErrorMsg {
+    TomlError error;
     std::string msg;
 };
 

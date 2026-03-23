@@ -6,7 +6,7 @@ using namespace reprojection;
 using namespace std::string_view_literals;
 
 using TomlType = config::TomlType;
-using TomlParseError = config::TomlParseError;
+using TomlParseError = config::TomlError;
 
 TEST(ConfigTomlHelpers, TestValidateConfigKeys) {
     static constexpr std::string_view config_file{R"(
@@ -19,7 +19,7 @@ TEST(ConfigTomlHelpers, TestValidateConfigKeys) {
     config::TomlKeys const required_keys{{"table", TomlType::Table}};
     auto result{ValidateConfigKeys(config, required_keys)};
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlParseError::UnknownKey);
+    EXPECT_EQ(result->error, config::TomlError::UnknownKey);
 
     // If we explicitly allow unknown keys then it's no problem.
     result = ValidateConfigKeys(config, required_keys, {}, true);
@@ -73,7 +73,7 @@ TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
 
     result = ValidatePossibleKeys(config, possible_keys, false);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlParseError::UnknownKey);
+    EXPECT_EQ(result->error, config::TomlError::UnknownKey);
     result = ValidatePossibleKeys(config, possible_keys, true);
     EXPECT_FALSE(result.has_value());
 
@@ -88,10 +88,10 @@ TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
 
     result = ValidatePossibleKeys(config, possible_keys, false);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlParseError::IncorrectType);
+    EXPECT_EQ(result->error, config::TomlError::IncorrectType);
     result = ValidatePossibleKeys(config, possible_keys, true);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, config::TomlParseError::IncorrectType);
+    EXPECT_EQ(result->error, config::TomlError::IncorrectType);
 }
 
 TEST(ConfigTomlHelpers, TestGetTomlPaths) {

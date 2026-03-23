@@ -12,12 +12,12 @@ namespace reprojection::config {
 
 using TomlKeys = std::map<std::string, TomlType>;
 
-std::optional<ParserErrorMsg> ValidateConfigKeys(toml::table const& config, TomlKeys const& required_keys,
+std::optional<TomlErrorMsg> ValidateConfigKeys(toml::table const& config, TomlKeys const& required_keys,
                                                  TomlKeys const& optional_keys = {}, bool const allow_unknown = false);
 
-std::optional<ParserErrorMsg> ValidateRequiredKeys(toml::table const& table, TomlKeys const& required_keys);
+std::optional<TomlErrorMsg> ValidateRequiredKeys(toml::table const& table, TomlKeys const& required_keys);
 
-std::optional<ParserErrorMsg> ValidatePossibleKeys(toml::table const& table, TomlKeys const& possible_keys,
+std::optional<TomlErrorMsg> ValidatePossibleKeys(toml::table const& table, TomlKeys const& possible_keys,
                                                    bool const allow_unknown);
 
 // TODO(Jack): Do this without recursion instead of editing toml_paths in place! Is that even possible?
