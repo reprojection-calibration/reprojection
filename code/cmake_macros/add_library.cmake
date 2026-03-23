@@ -14,12 +14,19 @@ macro(AddLibrary)
             ${LINK_LIBRARIES}
     )
 
-    # Install shared libs default ON
+    # Install shared libs default ON - The application functions we export will depend on basically all the shared libs
+    # we have. The one obvious exception here is any lib intended only for internal testing purposes (i.e.
+    # testing_mocks/testing_utilities). Therefore this is default on, and if we do not want the library install than we
+    # can call set(INSTALL_SO OFF) in its cmakelists.
     if (NOT DEFINED INSTALL_SO)
         set(INSTALL_SO ON)
     endif()
 
-    # Install headers default OFF
+    # Install headers default OFF - The entire library should only expose its functionality through the smallest
+    # possible source code interface. At time of writing this is achieved by building all the functionality external
+    # users could need into the application library. Therefore we only export the headers for the application package.
+    # It would be that we also export headers for some types or other utility functions but that is it. If you want to
+    # install the headers for a library just set set(INSTALL_HEADERS ON) in its cmakelists.
     if (NOT DEFINED INSTALL_HEADERS)
         set(INSTALL_HEADERS OFF)
     endif()

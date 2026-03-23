@@ -8,6 +8,9 @@ macro(AddTests)
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
                 ${INCLUDE_DIRECTORIES}
         )
+        # NOTE(Jack): We do not want our shared libraries which we export polluted with dependencies that are only used
+        # during library unit testing. Therefore we define TEST_LINK_LIBRARIES and only link them against the test
+        # executables. This keeps the set of libraries and dependencies we need to export clean!
         target_link_libraries(${TEST_NAME} PRIVATE
                 GTest::gtest_main
                 ${LIBRARY_NAME}
