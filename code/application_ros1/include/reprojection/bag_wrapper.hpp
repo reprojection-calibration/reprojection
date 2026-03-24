@@ -30,7 +30,22 @@ struct SingleTopicBagReader {
         }
     }
 
+    // Rule of five requirement because we define a destructor.
+    SingleTopicBagReader(SingleTopicBagReader&&) = default;
+    SingleTopicBagReader& operator=(SingleTopicBagReader&&) = default;
+    SingleTopicBagReader(SingleTopicBagReader const&) = delete;
+    SingleTopicBagReader& operator=(SingleTopicBagReader const&) = delete;
+
+    ~SingleTopicBagReader() {
+        if (bag != nullptr) {
+            // TODO(Jack): Can this throw? Do we need to worry about that?
+            bag->close();
+        }
+    }
+
    private:
+    // TODO(Jack): To be perfectly honest I am not 100% sure here about the RAII semantics/rule of 0/3/5, but the code
+    //  works and does not segfault. When it does we can look closer :)
     SingleTopicBagReader(std::string _topic, std::unique_ptr<rosbag::Bag> _bag)
         : topic(std::move(_topic)),
           bag(std::move(_bag)),

@@ -100,13 +100,13 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: debug-build-stage
+      - name: test-data-download-stage
         uses: docker/build-push-action@v6
         with:
           cache-from: type=gha,scope=test-data-download
           cache-to: type=gha,mode=max,scope=test-data-download
           file: building/Dockerfile
-          tags: rtest-data-download:latest
+          tags: test-data-download:latest
           target: test-data-download-stage
   ros1-application-build:
     # NOTE(Jack): We do not actually need any artifact from the debug-build to run the ROS1 or ROS2 applications. But we

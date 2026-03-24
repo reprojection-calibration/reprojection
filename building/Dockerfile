@@ -220,11 +220,13 @@ RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_
     /temporary/${DOWNLOAD_TEST_DATA}
 
 
-# NOTE(Jack): We have (time of writing 24.03.26) a 10GB limit for docker cache in our github action (gha) pipeline. \
-# Therefore we should only store the exact minumum of whats needs to be cached in the gha docker cache. That is the
-# reason why we seperate the test data download from the processing of the test data into other formats (ex. converting
-# from ROS1 to ROS2) like we do here. It we cached the stage with other converted data formats we would automatically
-# double or triple the docker cache we consume.
+# NOTE(Jack): We seperate the test-data-download-stage and the test-data-stage to reduce the size of the docker cache we
+# consume in the github action CI pipeline. The internet download is the "expensive" process that actually needs to be
+# cached, the conversion/transformation of the raw dataset into other formats (ROS2 etc.) takes very little CPU time and can be
+# repeated everytime we run the pipeline if need be. This also has benefits locally because in the current structure
+# there is almost no way the test-data-download-stage's cache gets busted, which would forward us to redownload the data.
+# But if we want to add other conversion functions or change where the data is stored, we can do that any time in the
+# test-data-stage because CPU time is cheap. This is too long of an explanation now, but I hope it still makes sense!
 FROM ${BASE_IMAGE_PYTHON} AS test-data-stage
 
 COPY --from=test-data-download-stage /data /data
