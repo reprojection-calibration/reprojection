@@ -5,10 +5,6 @@ include(../cmake_macros/add_examples.cmake)
 include(../cmake_macros/add_library.cmake)
 include(../cmake_macros/add_tests.cmake)
 
-# TODO(Jack): We only need to add rosidl_typesupport_interface and type_description_interfaces because of a failure in
-# the dockerized build. The CLion build was working fine! What is going on here?
-
-# NOTE(Jack): For some reason
 find_package(cv_bridge REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(reprojection REQUIRED)
