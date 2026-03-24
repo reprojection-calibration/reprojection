@@ -248,7 +248,7 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
                                     --src_dir=/temporary/code/application_ros1 \
                                     --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
 
-COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \

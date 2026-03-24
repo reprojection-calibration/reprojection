@@ -58,8 +58,8 @@ test_command "${APP} --config nonexistent.toml --data nonexistent.data" \
     "Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)"
 
 test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data nonexistent.data" \
-    0 \
-    ""
+    1 \
+    "Error opening file: nonexistent.data"
 
 test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data /data/dataset-calib-imu4_512_16.bag" \
     0 \
