@@ -27,7 +27,7 @@ TEST(Ros2Application, TestImageLoading) {
     //  just query the type from the serialized message and then decode it. In ROS2 we need to first construct this
     //  topic to type mapping from the reader metadata, and then use the topic name which is available before
     //  deserialization, to decide how to deserialize it. There has to be a better way to do this...
-    std::unordered_map<std::string, std::string> topic_type_map;
+    std::map<std::string, std::string> topic_type_map;
     for (auto const& topic : reader.get_all_topics_and_types()) {
         topic_type_map[topic.name] = topic.type;
     }
@@ -37,7 +37,7 @@ TEST(Ros2Application, TestImageLoading) {
         auto const msg{reader.read_next()};
 
         cv::Mat img;
-        EXPECT_NO_THROW(img = ros2::ToCvMat(*msg, topic_type_map[msg->topic_name]));
+        EXPECT_NO_THROW(img = ros2::ToCvMat(*msg, topic_type_map.at(msg->topic_name)));
         EXPECT_EQ(img.rows, 1);
         EXPECT_EQ(img.cols, 1);
     }

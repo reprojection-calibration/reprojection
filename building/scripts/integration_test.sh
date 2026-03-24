@@ -40,11 +40,19 @@ test_command() {
     return 0
 }
 
-test_command "${APP} --config nonexistent.toml" 1 "Missing --data flag"
+test_command "${APP} --config nonexistent.toml" \
+    1 \
+    "Missing --data flag"
 
-test_command "${APP} --data nonexistent.data" 1 "Missing --config flag"
+test_command "${APP} --data nonexistent.data" \
+    1 \
+    "Missing --config flag"
 
 # Running the program with a invalid config file (i.e. nonexistent, incomplete, invalid etc.) is an error.
-test_command "${APP} --config nonexistent.toml --data nonexistent.data" 1 "Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)"
+test_command "${APP} --config nonexistent.toml --data nonexistent.data" \
+    1 \
+    "Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)"
 
-test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data nonexistent.data" 0 ""
+test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data nonexistent.data" \
+    0 \
+    ""
