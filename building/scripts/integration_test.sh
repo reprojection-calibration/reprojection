@@ -17,22 +17,25 @@ test_command() {
     local exit_code=${?}
     set -e
 
-    echo "Command under test: ${cmd}"
+    local failed=0
+
     if [[ "${exit_code}" -ne "${expected_exit_code}" ]]; then
         echo "Exit code test:"
         echo "  Expected - ${expected_exit_code}"
-        echo "  Actual - ${exit_code}"
-
+        echo "  Actual   - ${exit_code}"
         echo "Failed"
-        return 1
+        failed=1
     fi
 
-    if [[ "${output}" != "$expected_output" ]]; then
+    if [[ "${output}" != "${expected_output}" ]]; then
         echo "Terminal output test:"
         echo "  Expected - ${expected_output}"
-        echo "  Actual - ${output}"
-
+        echo "  Actual   - ${output}"
         echo "Failed"
+        failed=1
+    fi
+
+    if [[ ${failed} -ne 0 ]]; then
         return 1
     fi
 
@@ -54,5 +57,9 @@ test_command "${APP} --config nonexistent.toml --data nonexistent.data" \
     "Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)"
 
 test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data nonexistent.data" \
+    0 \
+    ""
+
+test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data TODODODOODODODOODOD.data" \
     0 \
     ""
