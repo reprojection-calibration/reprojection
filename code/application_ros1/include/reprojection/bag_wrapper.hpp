@@ -17,9 +17,12 @@ struct BagWrapper {
 };
 
 struct SingleTopicBagReader {
-    SingleTopicBagReader(std::string const& path, std::string const& topic)
-        : bag{BagWrapper(path, rosbag::bagmode::Read)}, view{rosbag::View(bag.bag, rosbag::TopicQuery({topic}))} {}
+    SingleTopicBagReader(std::string const& path, std::string const& _topic)
+        : topic{_topic},
+          bag{BagWrapper(path, rosbag::bagmode::Read)},
+          view{rosbag::View(bag.bag, rosbag::TopicQuery({topic}))} {}
 
+    std::string topic;
     BagWrapper bag;
     rosbag::View view;
 };
