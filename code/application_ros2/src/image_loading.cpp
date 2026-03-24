@@ -8,8 +8,8 @@
 
 namespace reprojection::ros2 {
 
-cv::Mat ToCvMat(rosbag2_storage::SerializedBagMessage const& msg, std::string_view type) {
-    rclcpp::SerializedMessage const serialized_msg(*msg.serialized_data);
+cv::Mat ToCvMat(rosbag2_storage::SerializedBagMessage const& bag_msg, std::string_view type) {
+    rclcpp::SerializedMessage const serialized_msg(*bag_msg.serialized_data);
 
     if (type == "sensor_msgs/msg/Image") {
         rclcpp::Serialization<sensor_msgs::msg::Image> serializer;
@@ -18,16 +18,18 @@ cv::Mat ToCvMat(rosbag2_storage::SerializedBagMessage const& msg, std::string_vi
         cv_bridge::CvImagePtr const cv_ptr{cv_bridge::toCvCopy(msg)};
 
         return cv_ptr->image;
-    } else if (type == "sensor_msgs/msg/CompressedImage") {
+    }
+
+    if (type == "sensor_msgs/msg/CompressedImage") {
         rclcpp::Serialization<sensor_msgs::msg::CompressedImage> serializer;
         sensor_msgs::msg::CompressedImage msg;
         serializer.deserialize_message(&serialized_msg, &msg);
         cv_bridge::CvImagePtr const cv_ptr{cv_bridge::toCvCopy(msg)};
 
         return cv_ptr->image;
-    } else {
-        throw std::runtime_error("Failure during ROS2 image deserialization given type: " + std::string(type));
     }
+
+    throw std::runtime_error("Failure during ROS2 image deserialization given type: " + std::string(type));
 }
 
 }  // namespace reprojection::ros2
