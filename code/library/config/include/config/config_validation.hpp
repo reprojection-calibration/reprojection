@@ -10,8 +10,6 @@ namespace reprojection::config {
 
 std::optional<TomlErrorMsg> ValidateCalibrationConfig(toml::table const& cfg);
 
-std::optional<TomlErrorMsg> ValidateDataConfig(toml::table const& data_cfg);
-
 std::optional<TomlErrorMsg> ValidateSensorConfig(toml::table const& sensor_cfg);
 
 // NOTE(Jack): This is in the public header section because feature_extraction::CreateTargetExtractor() consumes the

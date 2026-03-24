@@ -14,4 +14,4 @@ curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr
 echo "deb [signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros2.list
 
 apt-get update
-apt-get install --yes ros-jazzy-ros-base
+apt-get install --yes ros-jazzy-cv-bridge ros-jazzy-ros-base

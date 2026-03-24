@@ -7,15 +7,11 @@
 namespace reprojection::config {
 
 std::optional<TomlErrorMsg> ValidateCalibrationConfig(toml::table const& calibration_cfg) {
-    std::map<std::string, TomlType> const required_tables{
-        {"data", TomlType::Table}, {"sensor", TomlType::Table}, {"target", TomlType::Table}};
+    std::map<std::string, TomlType> const required_tables{{"sensor", TomlType::Table}, {"target", TomlType::Table}};
     if (auto const error_msg{ValidateConfigKeys(calibration_cfg, required_tables, {}, true)}) {
         return error_msg;  // LCOV_EXCL_LINE
     }
 
-    if (auto const error_msg{ValidateDataConfig(*calibration_cfg["data"].as_table())}) {
-        return error_msg;  // LCOV_EXCL_LINE
-    }
     if (auto const error_msg{ValidateSensorConfig(*calibration_cfg["sensor"].as_table())}) {
         return error_msg;  // LCOV_EXCL_LINE
     }
@@ -24,12 +20,6 @@ std::optional<TomlErrorMsg> ValidateCalibrationConfig(toml::table const& calibra
     }
 
     return std::nullopt;
-}
-
-std::optional<TomlErrorMsg> ValidateDataConfig(toml::table const& data_cfg) {
-    std::map<std::string, TomlType> const required_keys{{"file", TomlType::String}};
-
-    return ValidateConfigKeys(data_cfg, required_keys);
 }
 
 std::optional<TomlErrorMsg> ValidateSensorConfig(toml::table const& sensor_cfg) {

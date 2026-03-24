@@ -1,6 +1,3 @@
-[data]
-file = "/data/TUM-Visual-Inertial-Dataset/dataset-calib-imu4.bag"
-
 [sensor]
 camera_name = "/cam0/image_raw"
 camera_model = "double_sphere"

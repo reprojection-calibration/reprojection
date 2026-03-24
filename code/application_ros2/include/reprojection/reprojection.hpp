@@ -1,10 +1,12 @@
 #pragma once
 
+#include <optional>
 #include <string>
-#include <tuple>
+
+#include <rosbag2_cpp/reader.hpp>
 
 namespace reprojection::ros2 {
 
-std::tuple<std::string, std::string> DummyLoadConfig();
+std::optional<std::string> SerializeBagTopic(std::string_view bag, std::string_view topic);
 
-}
+}  // namespace reprojection::ros2
