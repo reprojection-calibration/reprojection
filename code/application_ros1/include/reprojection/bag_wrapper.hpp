@@ -1,6 +1,8 @@
 #pragma once
 
 #include <rosbag/bag.h>
+#include <rosbag/query.h>
+#include <rosbag/view.h>
 
 #include <string>
 
@@ -12,6 +14,14 @@ struct BagWrapper {
     ~BagWrapper() { bag.close(); }
 
     rosbag::Bag bag;
+};
+
+struct SingleTopicBagReader {
+    SingleTopicBagReader(std::string const& path, std::string const& topic)
+        : bag{BagWrapper(path, rosbag::bagmode::Read)}, view{rosbag::View(bag.bag, rosbag::TopicQuery({topic}))} {}
+
+    BagWrapper bag;
+    rosbag::View view;
 };
 
 }  // namespace reprojection::ros1
