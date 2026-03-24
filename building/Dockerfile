@@ -223,7 +223,7 @@ RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_
 # reason why we seperate the test data download from the processing of the test data into other formats (ex. converting
 # from ROS1 to ROS2) like we do here. It we cached the stage with other converted data formats we would automatically
 # double or triple the docker cache we consume.
-FROM configuration-stage AS test-data-stage
+FROM python:3.12-slim AS test-data-stage
 
 COPY --from=test-data-download-stage /data /data
 
