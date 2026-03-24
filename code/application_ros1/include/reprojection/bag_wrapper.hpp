@@ -21,7 +21,7 @@ struct SingleTopicBagReader {
 
     static std::variant<SingleTopicBagReader, BagError> Create(std::string const& path, std::string const& topic) {
         try {
-            auto bag = std::make_unique<rosbag::Bag>();
+            auto bag{std::make_unique<rosbag::Bag>()};
             bag->open(path, rosbag::bagmode::Read);
 
             return SingleTopicBagReader{topic, std::move(bag)};
@@ -31,9 +31,9 @@ struct SingleTopicBagReader {
     }
 
    private:
-    SingleTopicBagReader(std::string t, std::unique_ptr<rosbag::Bag> b)
-        : topic(std::move(t)),
-          bag(std::move(b)),
+    SingleTopicBagReader(std::string _topic, std::unique_ptr<rosbag::Bag> _bag)
+        : topic(std::move(_topic)),
+          bag(std::move(_bag)),
           view(std::make_unique<rosbag::View>(*bag, rosbag::TopicQuery({topic}))) {}
 };
 
