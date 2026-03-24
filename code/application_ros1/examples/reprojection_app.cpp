@@ -40,8 +40,5 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    auto const& reader{std::get<ros1::SingleTopicBagReader>(reader_result)};
-    auto const serialized_topic{ros1::SerializeBagTopic(reader)};
-
     return 0;
 }

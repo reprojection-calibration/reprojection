@@ -59,8 +59,8 @@ test_command "${APP} --config nonexistent.toml --data nonexistent.data" \
 
 test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data nonexistent.data" \
     1 \
-    "Error opening file: nonexistent.data"
+    "Error loading data: nonexistent.data"
 
-test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data /data/dataset-calib-imu4_512_16.bag" \
+test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data ${DATA}" \
     0 \
     ""

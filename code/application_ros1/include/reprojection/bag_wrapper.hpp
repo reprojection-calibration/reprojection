@@ -25,8 +25,8 @@ struct SingleTopicBagReader {
             bag->open(path, rosbag::bagmode::Read);
 
             return SingleTopicBagReader{topic, std::move(bag)};
-        } catch (std::exception const& e) {
-            return BagError{e.what()};
+        } catch (...) {
+            return BagError{"Error loading data: " + path};
         }
     }
 

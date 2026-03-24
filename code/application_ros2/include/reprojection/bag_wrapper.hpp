@@ -25,8 +25,8 @@ struct SingleTopicBagReader {
             reader->set_filter(rosbag2_storage::StorageFilter{{topic}});
 
             return SingleTopicBagReader{topic, std::move(reader)};
-        } catch (std::exception const& e) {
-            return BagError{e.what()};
+        } catch (...) {
+            return BagError{"Error loading data: " + path};
         }
     }
 

@@ -1,4 +1,6 @@
 ARG BASE_IMAGE=ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
+ARG BASE_IMAGE_PYTHON=python:3.12-slim@sha256:3d5ed973e45820f5ba5e46bd065bd88b3a504ff0724d85980dcd05eab361fcf4
+
 FROM ${BASE_IMAGE} AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -67,7 +69,7 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
 # and install what we need to get the code checks done. Unintentionally this caused problems with isort not being able
 # to disinguish between "first party" and "third party" packages. But we solve it, please see the note in
 # code_checks_python.sh for more details.
-FROM python:3.12-slim AS code-checks-python-stage
+FROM ${BASE_IMAGE_PYTHON} AS code-checks-python-stage
 
 RUN pip install black isort
 
@@ -223,7 +225,7 @@ RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_
 # reason why we seperate the test data download from the processing of the test data into other formats (ex. converting
 # from ROS1 to ROS2) like we do here. It we cached the stage with other converted data formats we would automatically
 # double or triple the docker cache we consume.
-FROM python:3.12-slim AS test-data-stage
+FROM ${BASE_IMAGE_PYTHON} AS test-data-stage
 
 COPY --from=test-data-download-stage /data /data
 
@@ -268,6 +270,7 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/noetic/setup.bash; \
     export APP="/buildroot/build-ros1-app-Release/reprojection.reprojection_app"; \
+    export DATA="/data/dataset-calib-imu4_512_16.bag"; \
     /temporary/${INTEGRATION_TEST}
 
 
@@ -298,4 +301,5 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/buildroot/build-ros2-app-Release/reprojection.reprojection_app"; \
+    export DATA="/data/dataset-calib-imu4_512_16/"; \
     /temporary/${INTEGRATION_TEST}
