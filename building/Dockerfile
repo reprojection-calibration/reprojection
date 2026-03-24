@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ubuntu:24.04
+ARG BASE_IMAGE=ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
 FROM ${BASE_IMAGE} AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -211,6 +211,14 @@ FROM base-stage AS development-stage
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
 
 
+FROM configuration-stage AS test-data-stage
+
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+ARG DOWNLOAD_TEST_DATA=building/install_scripts/download_test_data.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_TEST_DATA} \
+    /temporary/${DOWNLOAD_TEST_DATA}
+
 FROM apt-base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
@@ -239,6 +247,8 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
                                     --build_dir=/buildroot/build-ros1-app \
                                     --src_dir=/temporary/code/application_ros1 \
                                     --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
+
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \

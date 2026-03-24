@@ -17,6 +17,7 @@ test_command() {
     local exit_code=${?}
     set -e
 
+    echo "Command under test: ${cmd}"
     local failed=0
 
     if [[ "${exit_code}" -ne "${expected_exit_code}" ]]; then
@@ -60,6 +61,6 @@ test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --da
     0 \
     ""
 
-test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data TODODODOODODODOODOD.data" \
+test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data /data/dataset-calib-imu4_512_16.bag" \
     0 \
     ""
