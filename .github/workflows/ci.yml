@@ -95,8 +95,21 @@ jobs:
           file: building/Dockerfile
           tags: reprojection-python-tooling:latest
           target: python-tooling-stage
+  test-data-download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: debug-build-stage
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha,scope=test-data-download
+          cache-to: type=gha,mode=max,scope=test-data-download
+          file: building/Dockerfile
+          tags: rtest-data-download:latest
+          target: test-data-download-stage
   ros1-application-build:
-    needs: debug-build
+    needs: [test-data-download, debug-build]
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
@@ -112,7 +125,7 @@ jobs:
           tags: ros1-application-build:latest
           target: ros1-application-stage
   ros2-application-build:
-    needs: debug-build
+    needs: [test-data-download, debug-build]
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
