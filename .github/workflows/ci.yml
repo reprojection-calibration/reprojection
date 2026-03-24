@@ -109,6 +109,11 @@ jobs:
           tags: rtest-data-download:latest
           target: test-data-download-stage
   ros1-application-build:
+    # NOTE(Jack): We do not actually need any artifact from the debug-build to run the ROS1 or ROS2 applications. But we
+    # have this dependency on the debug build to save us from attempting to build the applications (which do a release
+    # build of the library) before we are sure the library is at least ok. If we did not do this, and built them in
+    # parallel instead, then in one gha run we could waste time on three failed library builds (one debug and two
+    # release).
     needs: [test-data-download, debug-build]
     runs-on: ubuntu-latest
     steps:
@@ -118,7 +123,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           build-args: |
-            "BASE_IMAGE=ubuntu:20.04"
+            "BASE_IMAGE=ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214"
           cache-from: type=gha,scope=ros1-application-build
           cache-to: type=gha,mode=max,scope=ros1-application-build
           file: building/Dockerfile
@@ -134,7 +139,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           build-args: |
-            "BASE_IMAGE=ubuntu:24.04"
+            "BASE_IMAGE=ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c"
           cache-from: type=gha,scope=ros2-application-build
           cache-to: type=gha,mode=max,scope=ros2-application-build
           file: building/Dockerfile
