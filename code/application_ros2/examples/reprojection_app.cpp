@@ -18,8 +18,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    auto const data_path{application::GetCommandOption(argv, argv + argc, "--data")};
-    if (not data_path) {
+    auto const bag_path{application::GetCommandOption(argv, argv + argc, "--data")};
+    if (not bag_path) {
         std::cout << "Missing --data flag" << "\n";
         return EXIT_FAILURE;
     }
@@ -36,7 +36,15 @@ int main(int argc, char* argv[]) {
     // NOTE(Jack): Because we validated the config already we do not need to worry about accessing the table directly.
     // TODO(Jack): Should we use the generic templated key access function found in the library?
     std::string const camera_topic{*config["sensor"]["camera_name"].value<std::string>()};
-    auto const serialized_topic{ros2::SerializeBagTopic(*data_path, camera_topic)};
+    
+    auto const reader_result{ros2::SingleTopicBagReader::Create(*bag_path, camera_topic)};
+    if (std::holds_alternative<ros2::BagError>(reader_result)) {
+        std::cerr << std::get<ros2::BagError>(reader_result).message << "\n";
+        return EXIT_FAILURE;
+    }
+
+    auto const& reader{std::get<ros2::SingleTopicBagReader>(reader_result)};
+    auto const serialized_topic{ros2::SerializeBagTopic(reader)};
 
     std::cout<< *serialized_topic<<std::endl;
 

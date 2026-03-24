@@ -23,8 +23,7 @@ TEST(Ros2Application, TestImageLoading) {
     reader.open(std::string(temp_bag.path));
 
     // TODO(Jack): Annoyingly the ROS2 bag API provides NO way to get the type of a message directly. In ROS1 you
-    // can
-    //  just query the type from the serialized message and then decode it. In ROS2 we need to first construct this
+    //  can just query the type from the serialized message and then decode it. In ROS2 we need to first construct this
     //  topic to type mapping from the reader metadata, and then use the topic name which is available before
     //  deserialization, to decide how to deserialize it. There has to be a better way to do this...
     std::map<std::string, std::string> topic_type_map;

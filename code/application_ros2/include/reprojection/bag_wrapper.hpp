@@ -1,0 +1,48 @@
+#pragma once
+
+#include <memory>
+#include <string>
+#include <variant>
+
+#include <rosbag2_cpp/reader.hpp>
+#include <rosbag2_storage/storage_options.hpp>
+
+namespace reprojection::ros2 {
+
+struct BagError {
+    std::string message;
+};
+
+struct SingleTopicBagReader {
+    std::string topic;
+    std::unique_ptr<rosbag2_cpp::Reader> reader;
+
+    static std::variant<SingleTopicBagReader, BagError> Create(std::string const& path, std::string const& topic) {
+        try {
+            auto reader{std::make_unique<rosbag2_cpp::Reader>()};
+
+            reader->open(path);
+            reader->set_filter(rosbag2_storage::StorageFilter{{topic}});
+
+            return SingleTopicBagReader{topic, std::move(reader)};
+        } catch (std::exception const& e) {
+            return BagError{e.what()};
+        }
+    }
+
+    std::shared_ptr<rosbag2_storage::SerializedBagMessage> Next() const {
+        while (reader->has_next()) {
+            auto const msg{reader->read_next()};
+
+            return msg;
+        }
+
+        return nullptr;
+    }
+
+   private:
+    SingleTopicBagReader(std::string _topic, std::unique_ptr<rosbag2_cpp::Reader> _reader)
+        : topic(std::move(_topic)), reader(std::move(_reader)) {}
+};
+
+}  // namespace reprojection::ros2

@@ -17,12 +17,16 @@ TEST(Ros2Application, TestSerializeBagTopic) {
         writer.write(ros2::DummyImage(), "/raw_image_topic", rclcpp::Time(1));
     }
 
-    auto result{ros2::SerializeBagTopic(temp_bag.path, "/raw_image_topic")};
+    auto const reader_result{ros2::SingleTopicBagReader::Create(temp_bag.path, "/raw_image_topic")};
+    ASSERT_TRUE(std::holds_alternative<ros2::SingleTopicBagReader>(reader_result));
+    auto const& reader{std::get<ros2::SingleTopicBagReader>(reader_result)};
+
+    auto result{ros2::SerializeBagTopic(reader)};
     ASSERT_TRUE(result.has_value());
     std::string const filename{std::filesystem::path(temp_bag.path).filename()};
-    std::string const gt_result{filename + "|/raw_image_topic|1;|"};
+    std::string const gt_result{filename + "_0.mcap|/raw_image_topic|1;|"};
     EXPECT_EQ(*result, gt_result);
 
-    result = ros2::SerializeBagTopic(temp_bag.path, "/nonexistent_topic");
+    result = ros2::SerializeBagTopic(reader);
     EXPECT_FALSE(result.has_value());
 }

@@ -7,21 +7,13 @@
 
 namespace reprojection::ros2 {
 
-std::optional<std::string> SerializeBagTopic(std::string_view bag_path, std::string_view topic) {
-    rosbag2_cpp::Reader reader;
-    reader.open(std::string(bag_path));
-
-    rosbag2_storage::StorageFilter filter;
-    filter.topics = {std::string(topic)};
-    reader.set_filter(filter);
-
+std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     std::ostringstream oss;
-    oss << std::filesystem::path(bag_path).filename().c_str() << "|";
-    oss << topic << "|";
+    oss << std::filesystem::path(data.reader->get_metadata().files[0].path).filename().c_str() << "|";
+    oss << data.topic << "|";
 
     int count{0};
-    while (reader.has_next()) {
-        auto const msg{reader.read_next()};
+    while (auto const msg{data.Next()}) {
         //  NOTE(Jack): This returns a long int representing the time in nanoseconds. In ROS 1 we just get a float.
         oss << msg->recv_timestamp << ";";
 
