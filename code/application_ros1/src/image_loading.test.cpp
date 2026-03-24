@@ -17,20 +17,23 @@ TEST(Ros1ImageLoading, TestRawAndCompressedToCvMat) {
     // by iterating a open bag via a rosbag::View. Therefore, in this test we need to write a bag and then process it to
     // get the test data in the required format.
     ros1::ScopedBagPath const temp_bag;
-    {
-        ros1::BagWrapper handle(temp_bag.path, rosbag::bagmode::Write);
-        handle.bag.write("/raw_image_topic", ros::Time(1), ros1::DummyImage());
-        handle.bag.write("/compressed_image_topic", ros::Time(1), ros1::DummyCompressedImage());
-    }
 
-    ros1::BagWrapper handle(temp_bag.path, rosbag::bagmode::Read);
-    rosbag::View view(handle.bag);
+    rosbag::Bag bag;
+    bag.open(temp_bag.path, rosbag::bagmode::Write);
+    bag.write("/raw_image_topic", ros::Time(1), ros1::DummyImage());
+    bag.write("/compressed_image_topic", ros::Time(1), ros1::DummyCompressedImage());
+    bag.close();
 
+    bag.open(temp_bag.path, rosbag::bagmode::Read);
+    rosbag::View view(bag);
     ASSERT_EQ(view.size(), 2);
+
     for (auto const& msg : view) {
         cv::Mat img;
         EXPECT_NO_THROW(img = ros1::ToCvMat(msg));
         EXPECT_EQ(img.rows, 1);
         EXPECT_EQ(img.cols, 1);
     }
+
+    bag.close();
 }
