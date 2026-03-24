@@ -13,7 +13,8 @@
 namespace reprojection::ros2 {
 
 // TODO(Jack): All these dummy datatypes are passed almost identically from the ROS1 code, also the scoped path below.
-//  Is there a non intrusive strategy to reduce copy paste?
+//  Is there a non intrusive strategy to reduce copy paste? Note that the time function call is different between ROS1
+//  and ROS2
 inline std_msgs::msg::Header DummyHeader() {
     std_msgs::msg::Header header;
     header.stamp = rclcpp::Time(1);

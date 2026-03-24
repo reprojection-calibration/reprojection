@@ -12,18 +12,16 @@ find_package(cv_bridge REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(reprojection REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
-find_package(rosidl_typesupport_interface REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(type_description_interfaces REQUIRED)
 
 set(INCLUDE_DIRECTORIES
         ${rosbag2_cpp_INCLUDE_DIRS}
-        ${rosidl_typesupport_interface_INCLUDE_DIRS}
         ${sensor_msgs_INCLUDE_DIRS}
         ${type_description_interfaces_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
-        ${cv_bridge_LIBRARIES}
+        cv_bridge::cv_bridge
         ${rclcpp_LIBRARIES}
         ${rosbag2_cpp_LIBRARIES}
         reprojection::application
@@ -31,6 +29,7 @@ set(LINK_LIBRARIES
 
 set(LIBRARY_NAME ${PROJECT_NAME})
 set(SRC_FILES
+        src/image_loading.cpp
         src/reprojection.cpp
 )
 AddLibrary()
@@ -38,6 +37,7 @@ AddLibrary()
 find_package(GTest REQUIRED)
 enable_testing()
 set(TESTS
+        src/image_loading.test.cpp
         test/reprojection.test.cpp
 )
 AddTests()

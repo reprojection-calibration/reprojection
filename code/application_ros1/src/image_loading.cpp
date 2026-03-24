@@ -6,6 +6,7 @@
 
 namespace reprojection::ros1 {
 
+// TODO RETURN DIRECTLY IN IF ELSE BLOCK!
 cv::Mat ToCvMat(rosbag::MessageInstance const& msg) {
     cv_bridge::CvImageConstPtr cv_ptr;
     if (msg.getDataType() == "sensor_msgs/Image") {
