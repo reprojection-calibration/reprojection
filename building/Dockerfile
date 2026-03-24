@@ -213,11 +213,14 @@ RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends 
 
 FROM configuration-stage AS test-data-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 ARG DOWNLOAD_TEST_DATA=building/install_scripts/download_test_data.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_TEST_DATA} \
+RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_TEST_DATA} \
     /temporary/${DOWNLOAD_TEST_DATA}
+
+ARG CONVERT_TEST_DATA=building/scripts/convert_test_data.sh
+RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TEST_DATA} \
+    /temporary/${CONVERT_TEST_DATA}
+
 
 FROM apt-base-stage AS ros1-base-stage
 
@@ -277,6 +280,8 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
     /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
                                     --build_dir=/buildroot/build-ros2-app \
                                     --src_dir=/temporary/code/application_ros2
+
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
