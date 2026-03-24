@@ -8,22 +8,20 @@ include(../cmake_macros/add_tests.cmake)
 # TODO(Jack): We only need to add rosidl_typesupport_interface and type_description_interfaces because of a failure in
 # the dockerized build. The CLion build was working fine! What is going on here?
 
+# NOTE(Jack): For some reason
 find_package(cv_bridge REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(reprojection REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(type_description_interfaces REQUIRED)
 
 set(INCLUDE_DIRECTORIES
-        ${rosbag2_cpp_INCLUDE_DIRS}
         ${sensor_msgs_INCLUDE_DIRS}
-        ${type_description_interfaces_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
         cv_bridge::cv_bridge
-        ${rclcpp_LIBRARIES}
-        ${rosbag2_cpp_LIBRARIES}
+        rclcpp::rclcpp
+        rosbag2_cpp::rosbag2_cpp
         reprojection::application
 )
 
