@@ -10,6 +10,7 @@ using namespace reprojection;
 
 // TODO(Jack): What is a long term strategy to guarantee that these error messages stay consistent across all
 //  applications?
+// TODO(Jack): Should we use the generic templated toml key access function found in the library?
 
 int main(int argc, char* argv[]) {
     auto const config_path{application::GetCommandOption(argv, argv + argc, "--config")};
@@ -31,7 +32,6 @@ int main(int argc, char* argv[]) {
     }
 
     toml::table const config{std::get<toml::table>(load_config_result)};
-    // TODO(Jack): Should we use the generic templated key access function found in the library?
     std::string const camera_topic{*config["sensor"]["camera_name"].value<std::string>()};
 
     // NOTE(Jack): We want to control the terminal output of our program entirely. But ROS loves to log so we need to
