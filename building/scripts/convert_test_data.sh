@@ -20,4 +20,4 @@ pip3 install --break-system-packages rosbags
 #  over the place! It would be nice if we designed the system such that they are only specified in one place.
 rosbags-convert \
     --src /data/dataset-calib-imu4_512_16.bag \
-    --dst /data/dataset-calib-imu4_512_16
+    --dst /data/dataset-calib-imu4_512_16/
