@@ -229,7 +229,7 @@ RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_
 # test-data-stage because CPU time is cheap. This is too long of an explanation now, but I hope it still makes sense!
 FROM ${BASE_IMAGE_PYTHON} AS test-data-stage
 
-COPY --from=test-data-download-stage /data /data
+COPY --from=test-data-download-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 
 ARG CONVERT_TEST_DATA=building/scripts/convert_test_data.sh
 RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TEST_DATA} \

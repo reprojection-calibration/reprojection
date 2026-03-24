@@ -95,6 +95,9 @@ jobs:
           file: building/Dockerfile
           tags: reprojection-python-tooling:latest
           target: python-tooling-stage
+  # NOTE(Jack): This might be fake news, but I make this its own cached stage to prevent it from getting cached twice,
+  # once in the ROS1 workflow and once in the ROS2 workflow. If someone who knows gha well can prove to me that is not
+  # a worry then we can remove this and just let the regular docker build/cache process handle this stage too!
   test-data-download:
     runs-on: ubuntu-latest
     steps:

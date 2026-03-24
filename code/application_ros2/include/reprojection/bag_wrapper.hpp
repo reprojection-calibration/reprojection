@@ -30,8 +30,10 @@ struct SingleTopicBagReader {
         }
     }
 
+    // TODO(Jack): Do we need to reset the reader after we run out? It seems like after we read through them all that
+    //  we should reset back to the start so the next processing step can iterate over them.
     std::shared_ptr<rosbag2_storage::SerializedBagMessage> Next() const {
-        while (reader->has_next()) {
+        if (reader->has_next()) {
             auto const msg{reader->read_next()};
 
             return msg;
