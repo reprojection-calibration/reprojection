@@ -12,23 +12,31 @@ namespace reprojection {
 
 // TODO(Jack): It is honestly not so nice that we need to specify the steps here and once again in the sql database, and
 //  maybe once again in the python tooling. Is there any way for us to centrally store this with that repetition>
-enum class CalibrationStep { Ii, Lpi, Cnlr, Sint, Snlr };
+enum class CalibrationStep {  Cnlr, FtEx, Ii, Lpi, Sint, Snlr };
 
 inline std::string ToString(CalibrationStep const step_name) {
+    if (step_name == CalibrationStep::Cnlr) {
+        return "camera_nonlinear_refinement";
+    }
+    if (step_name == CalibrationStep::FtEx) {
+        return "feature_extraction";
+    }
     if (step_name == CalibrationStep::Ii) {
         return "intrinsic_initialization";
-    } else if (step_name == CalibrationStep::Lpi) {
-        return "linear_pose_initialization";
-    } else if (step_name == CalibrationStep::Cnlr) {
-        return "camera_nonlinear_refinement";
-    } else if (step_name == CalibrationStep::Sint) {
-        return "spline_interpolation";
-    } else if (step_name == CalibrationStep::Snlr) {
-        return "spline_nonlinear_refinement";
-    } else {
-        throw std::runtime_error(
-            "LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(CalibrationStep)");
     }
+    if (step_name == CalibrationStep::Lpi) {
+        return "linear_pose_initialization";
+    }
+
+    if (step_name == CalibrationStep::Sint) {
+        return "spline_interpolation";
+    }
+    if (step_name == CalibrationStep::Snlr) {
+        return "spline_nonlinear_refinement";
+    }
+
+    throw std::runtime_error(
+        "LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(CalibrationStep)");
 }
 
 // ERROR(Jack): The intrinsic size information is currently coded in two separate places! Once here in the enum and one

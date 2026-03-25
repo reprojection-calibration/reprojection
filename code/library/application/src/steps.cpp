@@ -8,9 +8,6 @@
 
 namespace reprojection::application {
 
-IntrinsicInitializationStep::IntrinsicInitializationStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets)
-    : camera_info{_camera_info}, targets{_targets} {}
-
 std::string IntrinsicInitializationStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
 
 CameraState IntrinsicInitializationStep::Compute() const {
@@ -40,9 +37,6 @@ void IntrinsicInitializationStep::Save(CameraState const& intrinsics, std::share
     database::WriteToDb(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
 }
 
-LpiStep::LpiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets, CameraState const& _camera_state)
-    : camera_info{_camera_info}, targets{_targets}, camera_state{_camera_state} {}
-
 std::string LpiStep::CacheKey() const { return caching::CacheKey(camera_info, targets, camera_state); }
 
 Frames LpiStep::Compute() const { return calibration::LinearPoseInitialization(camera_info, targets, camera_state); }
@@ -58,10 +52,6 @@ void LpiStep::Save(Frames const& frames, std::shared_ptr<database::CalibrationDa
     ReprojectionErrors const error{optimization::ReprojectionResiduals(camera_info, targets, state)};
     database::WriteToDb(error, step_type, SensorName(), db);
 }
-
-CnlrStep::CnlrStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets,
-                   OptimizationState const& _initial_state)
-    : camera_info{_camera_info}, targets{_targets}, initial_state{_initial_state} {}
 
 std::string CnlrStep::CacheKey() const { return caching::CacheKey(camera_info, targets, initial_state); }
 

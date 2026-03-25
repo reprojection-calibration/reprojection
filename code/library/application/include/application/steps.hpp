@@ -1,13 +1,34 @@
 #pragma once
 
+#include <toml++/toml.hpp>
+
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 
 namespace reprojection::application {
 
-struct IntrinsicInitializationStep {
-    IntrinsicInitializationStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets);
+using ImageProvider = std::function<bool(cv::Mat&)>;
 
+struct FeatureExtractionStep {
+    ImageProvider images;
+    std::string sensor_name;
+    std::string cache_key;
+    toml::table config;
+
+    CalibrationStep step_type{CalibrationStep::FtEx};
+
+    std::string SensorName() const { return sensor_name; }
+
+    std::string CacheKey() const;
+
+    CameraState Compute() const;
+
+    CameraState Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+
+    void Save(CameraState const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
+};
+
+struct IntrinsicInitializationStep {
     CameraInfo camera_info;
     CameraMeasurements targets;
 
@@ -26,8 +47,6 @@ struct IntrinsicInitializationStep {
 
 // TODO(Jack): Make private package source files one day when the application is whole.
 struct LpiStep {
-    LpiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets, CameraState const& _camera_state);
-
     CameraInfo camera_info;
     CameraMeasurements targets;
     CameraState camera_state;
@@ -46,9 +65,6 @@ struct LpiStep {
 };
 
 struct CnlrStep {
-    CnlrStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets,
-             OptimizationState const& _initial_state);
-
     CameraInfo camera_info;
     CameraMeasurements targets;
     OptimizationState initial_state;
