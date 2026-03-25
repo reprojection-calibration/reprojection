@@ -3,10 +3,10 @@
 #include <optional>
 #include <string>
 
-#include <rosbag2_cpp/reader.hpp>
+#include "reprojection/bag_wrapper.hpp"
 
 namespace reprojection::ros2 {
 
-std::optional<std::string> SerializeBagTopic(std::string_view bag, std::string_view topic);
+std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data);
 
 }  // namespace reprojection::ros2

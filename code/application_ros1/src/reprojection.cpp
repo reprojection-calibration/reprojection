@@ -7,13 +7,8 @@
 
 namespace reprojection::ros1 {
 
-std::optional<std::string> SerializeBagTopic(BagWrapper const& bag, std::string_view topic) {
-    if (bag.bag.getMode() != rosbag::BagMode::Read) {
-        return std::nullopt;
-    }
-
-    rosbag::View view(bag.bag, rosbag::TopicQuery({std::string(topic)}));
-    if (view.size() == 0) {
+std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
+    if (data.view->size() == 0) {
         return std::nullopt;
     }
 
@@ -23,10 +18,10 @@ std::optional<std::string> SerializeBagTopic(BagWrapper const& bag, std::string_
     // NOTE(Jack): Underlying our use of this function is the assumption that the bag name, topic name, and the
     // collection of all message timestamps is sufficient to uniquely identify a data stream. Sounds logical right? I
     // think so.
-    oss << std::filesystem::path(bag.bag.getFileName()).filename().c_str() << "|";
-    oss << topic << "|";
+    oss << std::filesystem::path(data.bag->getFileName()).filename().c_str() << "|";
+    oss << data.topic << "|";
 
-    for (auto const& msg : view) {
+    for (auto const& msg : *data.view) {
         oss << msg.getTime().toSec() << ";";
     }
     oss << "|";

@@ -1,4 +1,6 @@
-ARG BASE_IMAGE=ubuntu:24.04
+ARG BASE_IMAGE=ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
+ARG BASE_IMAGE_PYTHON=python:3.12-slim@sha256:3d5ed973e45820f5ba5e46bd065bd88b3a504ff0724d85980dcd05eab361fcf4
+
 FROM ${BASE_IMAGE} AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -67,7 +69,7 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
 # and install what we need to get the code checks done. Unintentionally this caused problems with isort not being able
 # to disinguish between "first party" and "third party" packages. But we solve it, please see the note in
 # code_checks_python.sh for more details.
-FROM python:3.12-slim AS code-checks-python-stage
+FROM ${BASE_IMAGE_PYTHON} AS code-checks-python-stage
 
 RUN pip install black isort
 
@@ -211,6 +213,29 @@ FROM base-stage AS development-stage
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
 
 
+FROM configuration-stage AS test-data-download-stage
+
+ARG DOWNLOAD_TEST_DATA=building/install_scripts/download_test_data.sh
+RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_TEST_DATA} \
+    /temporary/${DOWNLOAD_TEST_DATA}
+
+
+# NOTE(Jack): We seperate the test-data-download-stage and the test-data-stage to reduce the size of the docker cache we
+# consume in the github action CI pipeline. The internet download is the "expensive" process that actually needs to be
+# cached, the conversion/transformation of the raw dataset into other formats (ROS2 etc.) takes very little CPU time and can be
+# repeated everytime we run the pipeline if need be. This also has benefits locally because in the current structure
+# there is almost no way the test-data-download-stage's cache gets busted, which would forward us to redownload the data.
+# But if we want to add other conversion functions or change where the data is stored, we can do that any time in the
+# test-data-stage because CPU time is cheap. This is too long of an explanation now, but I hope it still makes sense!
+FROM ${BASE_IMAGE_PYTHON} AS test-data-stage
+
+COPY --from=test-data-download-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
+
+ARG CONVERT_TEST_DATA=building/scripts/convert_test_data.sh
+RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TEST_DATA} \
+    /temporary/${CONVERT_TEST_DATA}
+
+
 FROM apt-base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
@@ -240,11 +265,14 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
                                     --src_dir=/temporary/code/application_ros1 \
                                     --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
 
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
+
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/noetic/setup.bash; \
     export APP="/buildroot/build-ros1-app-Release/reprojection.reprojection_app"; \
+    export DATA="/data/dataset-calib-imu4_512_16.bag"; \
     /temporary/${INTEGRATION_TEST}
 
 
@@ -268,9 +296,12 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
                                     --build_dir=/buildroot/build-ros2-app \
                                     --src_dir=/temporary/code/application_ros2
 
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
+
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/buildroot/build-ros2-app-Release/reprojection.reprojection_app"; \
+    export DATA="/data/dataset-calib-imu4_512_16/"; \
     /temporary/${INTEGRATION_TEST}

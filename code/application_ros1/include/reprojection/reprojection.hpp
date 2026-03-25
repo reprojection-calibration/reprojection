@@ -7,6 +7,6 @@
 
 namespace reprojection::ros1 {
 
-std::optional<std::string> SerializeBagTopic(BagWrapper const& bag, std::string_view topic);
+std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data);
 
 }  // namespace reprojection::ros1
