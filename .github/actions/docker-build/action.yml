@@ -1,5 +1,5 @@
-name: "Docker Build"
-description: "Reusable docker build gha action with GHA cache and optional build arguments"
+name: "Docker Build Composite Action"
+description: "Docker build with cache and optional build arguments."
 
 inputs:
   target:
