@@ -38,6 +38,7 @@ jobs:
           target: code-checks-python-stage
           scope: code-checks-python
   debug-build:
+    needs: code-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -47,10 +48,13 @@ jobs:
           scope: debug-build
   code-coverage-assertion:
     needs: debug-build
-    uses: ./.github/workflows/docker-build.yml
-    with:
-      target: code-coverage-assertion-stage
-      scope: code-coverage-assertion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/docker-build
+        with:
+          target: code-coverage-assertion-stage
+          scope: code-coverage-assertion
   python-tooling:
     needs: code-checks-python
     runs-on: ubuntu-latest
