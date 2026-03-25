@@ -22,12 +22,10 @@ on:
 # nothing else happens and we do not waste server time.
 jobs:
   code-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ./.github/actions/docker-build/action.yml
-        with:
-          target: code-checks-stage
-          scope: code-checks
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      target: code-checks-stage
+      scope: code-checks
   code-checks-python:
     runs-on: ubuntu-latest
     steps:
