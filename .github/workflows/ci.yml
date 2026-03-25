@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          scope: code-checks
+          cache_scope: code-checks
           target: code-checks-stage
   code-checks-python:
     runs-on: ubuntu-latest
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          scope: code-checks-python
+          cache_scope: code-checks-python
           target: code-checks-python-stage
   debug-build:
     needs: code-checks
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          scope: debug-build
+          cache_scope: debug-build
           target: debug-build-stage
   code-coverage-assertion:
     needs: debug-build
@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          scope: code-coverage-assertion
+          cache_scope: code-coverage-assertion
           target: code-coverage-assertion-stage
   python-tooling:
     needs: code-checks-python
@@ -68,7 +68,7 @@ jobs:
       - uses: ./.github/actions/docker-build
         with:
           context: .
-          scope: python-tooling
+          cache_scope: python-tooling
           target: python-tooling-stage
   test-data-download:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          scope: test-data-download
+          cache_scope: test-data-download
           target: test-data-download-stage
   applications:
     # NOTE(Jack): We do not actually need any artifact from the debug-build to run the ROS1 or ROS2 applications. But we
@@ -91,16 +91,16 @@ jobs:
       - uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
-          scope: ${{ matrix.applications.scope }}
+          cache_scope: ${{ matrix.applications.cache_scope }}
           target: ${{ matrix.applications.target }}
     strategy:
       matrix:
         applications:
           - base: ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
             name: ros1
-            scope: ros1-application
+            cache_scope: ros1-application
             target: ros1-application-stage
           - base: ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
             name: ros2
-            scope: ros2-application
+            cache_scope: ros2-application
             target: ros2-application-stage

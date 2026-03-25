@@ -4,13 +4,14 @@ description: "Docker build with cache and optional build arguments."
 inputs:
   build-args:
     required: false
+  cache_scope:
+    required: true
   context:
     required: false
   file:
     default: building/Dockerfile
     required: false
-  scope:
-    required: true
+
   target:
     required: true
 
@@ -21,8 +22,8 @@ runs:
     - uses: docker/build-push-action@v6
       with:
         build-args: ${{ inputs.build-args }}
-        cache-from: type=gha,scope=${{ inputs.scope }}
-        cache-to: type=gha,mode=max,scope=${{ inputs.scope }}
+        cache-from: type=gha,scope=${{ inputs.cache_scope }}
+        cache-to: type=gha,mode=max,scope=${{ inputs.cache_scope }}
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
         target: ${{ inputs.target }}
