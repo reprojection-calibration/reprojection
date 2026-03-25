@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -8,10 +7,12 @@
 
 namespace reprojection::application {
 
+namespace fs = std::filesystem;
+
 struct PathConfig {
-    std::filesystem::path config_path;
-    std::filesystem::path data_path;
-    std::filesystem::path workspace_dir;
+    fs::path config_path;
+    fs::path data_path;
+    fs::path workspace_dir;
 };
 
 struct CliErrorMsg {

@@ -1,5 +1,7 @@
 #include "application/cli_utils.hpp"
 
+#include <algorithm>
+
 namespace reprojection::application {
 
 std::variant<PathConfig, CliErrorMsg> ParseCommandLineInput(int const argc, char const* const argv[]) {
@@ -17,8 +19,7 @@ std::variant<PathConfig, CliErrorMsg> ParseCommandLineInput(int const argc, char
 
     // If a workspace directory is provided use it, otherwise just use the directory where the data is.
     auto const workspace_dir{GetCommandOption(argv, argv + argc, "--workspace")};
-    path_config.workspace_dir =
-        workspace_dir ? std::filesystem::path{*workspace_dir} : path_config.data_path.parent_path();
+    path_config.workspace_dir = workspace_dir ? fs::path{*workspace_dir} : path_config.data_path.parent_path();
 
     return path_config;
 }
