@@ -22,7 +22,8 @@ on:
 # nothing else happens and we do not waste server time.
 jobs:
   code-checks:
-    uses: ./.github/workflows/docker-build.yml
+    runs-on: ubuntu-latest
+    uses: ./.github/actions/docker-build
     with:
       target: code-checks-stage
       scope: code-checks
