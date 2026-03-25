@@ -10,10 +10,6 @@ on:
       scope:
         required: true
         type: string
-      context:
-        default: .
-        required: false
-        type: string
       file:
         default: building/Dockerfile
         required: false
@@ -32,6 +28,5 @@ jobs:
           build-args: ${{ inputs.build-args }}
           cache-from: type=gha,scope=${{ inputs.scope }}
           cache-to: type=gha,mode=max,scope=${{ inputs.scope }}
-          context: ${{ inputs.context }}
           file: ${{ inputs.file }}
           target: ${{ inputs.target }}
