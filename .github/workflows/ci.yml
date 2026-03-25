@@ -19,7 +19,7 @@ on:
 # debug build cache, but not actually push any cache, because there is nothing really to cache there.
 #
 # Also note that we use the "needs" tag to explicitly setup dependencies between stages so that if the code checks fail
-# nothing else happens and we do not waste server time.
+# nothing else happens and we do not waste server time
 jobs:
   code-checks:
     uses: ./.github/workflows/docker-build.yml
