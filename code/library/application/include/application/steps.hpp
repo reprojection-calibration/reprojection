@@ -7,10 +7,10 @@
 
 namespace reprojection::application {
 
-using ImageProvider = std::function<bool(cv::Mat&)>;
+using ImageProvider = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
 
 struct FeatureExtractionStep {
-    ImageProvider images;
+    ImageProvider image_source;
     std::string sensor_name;
     std::string cache_key;
     toml::table config;
@@ -21,11 +21,12 @@ struct FeatureExtractionStep {
 
     std::string CacheKey() const;
 
-    CameraState Compute() const;
+    CameraMeasurements Compute() const;
 
-    CameraState Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+    CameraMeasurements Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
 
-    void Save(CameraState const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
+    void Save(CameraMeasurements const& extracted_targets,
+              std::shared_ptr<database::CalibrationDatabase> const db) const;
 };
 
 struct IntrinsicInitializationStep {

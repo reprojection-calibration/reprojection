@@ -4,9 +4,44 @@
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "feature_extraction/target_extraction.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 
 namespace reprojection::application {
+
+// NOTE(Jack): The image input is unique because every data source is so different (ex. ROS1 bag vs. ROS2 bag) that the
+// caller is responsible for calculating a cache key which characterizes the image data. Sure we could serialize all the
+// image pixels inside of the step here, but that seems like overkill :) If one day we find out that we really can
+// calculate a unique signature here easily then we can remove that code from the applications. My assumption is that
+// serializing the image data is too much data because a single can be 20mb.
+std::string FeatureExtractionStep::CacheKey() const { return cache_key; }
+
+CameraMeasurements FeatureExtractionStep::Compute() const {
+    // TODO(Jack): Is it really apropirate to use a toml table here instead of a struct?
+    auto const extractor{feature_extraction::CreateTargetExtractor(*config["target"].as_table())};
+
+    CameraMeasurements extracted_targets;
+    while (auto const data{image_source()}) {
+        auto const& [timestamp_ns, image]{*data};
+        // TODO(Jack): Does the format of the image matter? gray or rgb etc?
+        std::optional<ExtractedTarget> const target{extractor->Extract(image)};
+        if (target.has_value()) {
+            extracted_targets.insert({timestamp_ns, target.value()});
+        }
+    }
+
+    return extracted_targets;
+}
+
+CameraMeasurements FeatureExtractionStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
+    return database::GetExtractedTargetData(db, sensor_name);
+}
+
+void FeatureExtractionStep::Save(CameraMeasurements const& extracted_targets,
+                                 std::shared_ptr<database::CalibrationDatabase> const db) const {
+    // TODO WRITE STEP CACHE KEY TABLE? Here and everywhere else?
+    database::WriteToDb(extracted_targets, sensor_name, db);
+}
 
 std::string IntrinsicInitializationStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
 
@@ -33,7 +68,8 @@ CameraState IntrinsicInitializationStep::Load(std::shared_ptr<database::Calibrat
     return CameraState{*loaded_intrinsics};
 }
 
-void IntrinsicInitializationStep::Save(CameraState const& intrinsics, std::shared_ptr<database::CalibrationDatabase> const db) const {
+void IntrinsicInitializationStep::Save(CameraState const& intrinsics,
+                                       std::shared_ptr<database::CalibrationDatabase> const db) const {
     database::WriteToDb(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
 }
 
