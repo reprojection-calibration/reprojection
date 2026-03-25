@@ -1,30 +1,37 @@
-name: "Docker Build (with cache)"
-description: "Reusable docker build step with GHA cache"
+name: "Docker Build"
+description: "Reusable docker build gha job with GHA cache and optional build arguments"
 
-inputs:
-  target:
-    required: true
-  scope:
-    required: true
-  context:
-    required: false
-    default: .
-  file:
-    required: false
-    default: building/Dockerfile
-  build-args:
-    required: false
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+      scope:
+        required: true
+        type: string
+      context:
+        default: .
+        required: false
+        type: string
+      file:
+        default: building/Dockerfile
+        required: false
+        type: string
+      build-args:
+        required: false
+        type: string
 
-runs:
-  using: "composite"
-  steps:
-    - uses: docker/setup-buildx-action@v3
-
-    - uses: docker/build-push-action@v6
-      with:
-        context: ${{ inputs.context }}
-        file: ${{ inputs.file }}
-        target: ${{ inputs.target }}
-        build-args: ${{ inputs.build-args }}
-        cache-from: type=gha,scope=${{ inputs.scope }}
-        cache-to: type=gha,mode=max,scope=${{ inputs.scope }}
+jobs:
+  reusable_docker_build_job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          build-args: ${{ inputs.build-args }}
+          cache-from: type=gha,scope=${{ inputs.scope }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.scope }}
+          context: ${{ inputs.context }}
+          file: ${{ inputs.file }}
+          target: ${{ inputs.target }}
