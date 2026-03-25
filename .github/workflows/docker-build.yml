@@ -19,7 +19,7 @@ on:
         type: string
 
 jobs:
-  reusable_docker_build_job:
+  docker_build:
     runs-on: ubuntu-latest
     steps:
       - uses: docker/setup-buildx-action@v3
