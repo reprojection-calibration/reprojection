@@ -21,6 +21,8 @@ struct DbErrorMsg {
     std::string msg;
 };
 
+// TODO(Jack): We probably want to tell the user that the database was opened and/or if it was created new or we are
+//  using an old one etc.
 std::variant<DbPtr, DbErrorMsg> Open(fs::path const& workspace, fs::path const& data_source);
 
 }  // namespace reprojection::application

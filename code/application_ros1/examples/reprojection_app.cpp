@@ -10,19 +10,14 @@
 using namespace reprojection;
 
 int main(int argc, char* argv[]) {
-    auto const config_path{application::GetCommandOption(argv, argv + argc, "--config")};
-    if (not config_path) {
-        std::cout << "Missing --config flag" << "\n";
+    auto const paths_result{application::ParseCommandLineInput(argc, argv)};
+    if (std::holds_alternative<application::CliErrorMsg>(paths_result)) {
+        std::cout << std::get<application::CliErrorMsg>(paths_result).msg << "\n";
         return EXIT_FAILURE;
     }
+    auto const paths{std::get<application::PathConfig>(paths_result)};
 
-    auto const bag_path{application::GetCommandOption(argv, argv + argc, "--data")};
-    if (not bag_path) {
-        std::cout << "Missing --data flag" << "\n";
-        return EXIT_FAILURE;
-    }
-
-    auto const load_config_result{application::LoadAndValidateConfig(*config_path)};
+    auto const load_config_result{application::LoadAndValidateConfig(paths.config_path)};
     if (std::holds_alternative<TomlErrorMsg>(load_config_result)) {
         std::cout << std::get<TomlErrorMsg>(load_config_result).msg << "\n";
         return EXIT_FAILURE;
@@ -32,7 +27,7 @@ int main(int argc, char* argv[]) {
     // TODO(Jack): Should we use the generic templated key access function found in the library?
     std::string const camera_topic{*config["sensor"]["camera_name"].value<std::string>()};
 
-    auto const reader_result{ros1::SingleTopicBagReader::Create(*bag_path, camera_topic)};
+    auto const reader_result{ros1::SingleTopicBagReader::Create(paths.data_path, camera_topic)};
     if (std::holds_alternative<ros1::BagError>(reader_result)) {
         std::cerr << std::get<ros1::BagError>(reader_result).message << "\n";
         return EXIT_FAILURE;
