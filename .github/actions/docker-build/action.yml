@@ -1,6 +1,8 @@
 name: "Docker Build Composite Action"
 description: "Docker build with cache and optional build arguments."
 
+# TODO(Jack): Allow the user to to use multiple external cache scopes (if it becomes needed).
+
 inputs:
   build-args:
     required: false
