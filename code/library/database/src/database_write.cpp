@@ -39,9 +39,9 @@ void WriteToDb(CalibrationStep const step_name, std::string_view cache_key, std:
 }
 
 // TODO(Jack): Make batch insert.
-void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name, DbPtr const db) {
-    auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
-        auto const& [timestamp_ns, target]{data};
+void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, DbPtr const db) {
+    auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, target]{data_i};
 
         protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
         std::string buffer;
@@ -55,7 +55,7 @@ void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name, DbPt
         Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer}));
     }};
 
-    ExecuteStatement(sql_statements::extracted_target_insert, binder, db->db);
+    BatchExecuteStatement(sql_statements::extracted_target_insert, data, binder, db->db);
 }
 
 void WriteToDb(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
