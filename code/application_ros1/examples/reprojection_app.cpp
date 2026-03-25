@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <reprojection/application/cli_utils.hpp>
+#include <reprojection/application/database.hpp>
 #include <reprojection/application/load_and_validate_config.hpp>
 
 #include "reprojection/bag_wrapper.hpp"
@@ -29,7 +30,13 @@ int main(int argc, char* argv[]) {
 
     auto const reader_result{ros1::SingleTopicBagReader::Create(paths.data_path, camera_topic)};
     if (std::holds_alternative<ros1::BagError>(reader_result)) {
-        std::cerr << std::get<ros1::BagError>(reader_result).message << "\n";
+        std::cerr << std::get<ros1::BagError>(reader_result).msg << "\n";
+        return EXIT_FAILURE;
+    }
+
+    auto const db_result{application::Open(paths.workspace_dir, paths.data_path)};
+    if (std::holds_alternative<application::DbErrorMsg>(db_result)) {
+        std::cerr << std::get<application::DbErrorMsg>(db_result).msg << "\n";
         return EXIT_FAILURE;
     }
 

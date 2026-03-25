@@ -11,7 +11,7 @@
 namespace reprojection::ros1 {
 
 struct BagError {
-    std::string message;
+    std::string msg;
 };
 
 struct SingleTopicBagReader {
