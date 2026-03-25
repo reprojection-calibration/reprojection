@@ -213,7 +213,7 @@ FROM base-stage AS development-stage
 RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
 
 
-FROM configuration-stage AS test-data-download-stage
+FROM ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c AS test-data-download-stage
 
 ARG DOWNLOAD_TEST_DATA=building/install_scripts/download_test_data.sh
 RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_TEST_DATA} \
