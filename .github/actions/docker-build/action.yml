@@ -8,6 +8,8 @@ inputs:
     required: true
   context:
     required: false
+  external_cache_scope:
+    required: false
   file:
     default: building/Dockerfile
     required: false
@@ -22,7 +24,9 @@ runs:
     - uses: docker/build-push-action@v6
       with:
         build-args: ${{ inputs.build-args }}
-        cache-from: type=gha,scope=${{ inputs.cache_scope }}
+        cache-from: |
+          type=gha,scope=${{ inputs.cache_scope }}
+          type=gha,scope=${{ inputs.external_cache_scope }}
         cache-to: type=gha,mode=max,scope=${{ inputs.cache_scope }}
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}

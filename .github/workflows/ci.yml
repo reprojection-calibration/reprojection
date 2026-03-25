@@ -91,6 +91,7 @@ jobs:
       - uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
+          external_cache_scope: test-data-download
           cache_scope: ${{ matrix.applications.cache_scope }}
           target: ${{ matrix.applications.target }}
     strategy:
