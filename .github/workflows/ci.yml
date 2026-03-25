@@ -61,29 +61,13 @@ jobs:
           context: .
           scope: python-tooling
           target: python-tooling-stage
-  # NOTE(Jack): This might be fake news, but I make this its own cached stage to prevent it from getting cached twice,
-  # once in the ROS1 workflow and once in the ROS2 workflow. If someone who knows gha well can prove to me that is not
-  # a worry then we can remove this and just let the regular docker build/cache process handle this stage too!
-  test-data-download:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: test-data-download-stage
-        uses: docker/build-push-action@v6
-        with:
-          cache-from: type=gha,scope=test-data-download
-          cache-to: type=gha,mode=max,scope=test-data-download
-          file: building/Dockerfile
-          tags: test-data-download:latest
-          target: test-data-download-stage
   ros1-application-build:
     # NOTE(Jack): We do not actually need any artifact from the debug-build to run the ROS1 or ROS2 applications. But we
     # have this dependency on the debug build to save us from attempting to build the applications (which do a release
     # build of the library) before we are sure the library is at least ok. If we did not do this, and built them in
     # parallel instead, then in one gha run we could waste time on three failed library builds (one debug and two
     # release).
-    needs: [test-data-download, debug-build]
+    needs: debug-build
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
@@ -99,7 +83,7 @@ jobs:
           tags: ros1-application-build:latest
           target: ros1-application-stage
   ros2-application-build:
-    needs: [test-data-download, debug-build]
+    needs: debug-build
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
