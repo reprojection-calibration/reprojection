@@ -13,6 +13,7 @@
 
 namespace reprojection::database {
 
+// TODO(Jack): Refactor to eliminate throw semantics and replace with a variant factory.
 CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const create, bool const read_only) {
     if (create and read_only) {
         throw std::runtime_error(
