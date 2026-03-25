@@ -2,15 +2,17 @@ name: "Docker Build Composite Action"
 description: "Docker build with cache and optional build arguments."
 
 inputs:
-  target:
-    required: true
-  scope:
-    required: true
+  build-args:
+    required: false
+  context:
+    required: false
   file:
     default: building/Dockerfile
     required: false
-  build-args:
-    required: false
+  scope:
+    required: true
+  target:
+    required: true
 
 runs:
   using: "composite"
@@ -21,5 +23,6 @@ runs:
         build-args: ${{ inputs.build-args }}
         cache-from: type=gha,scope=${{ inputs.scope }}
         cache-to: type=gha,mode=max,scope=${{ inputs.scope }}
+        context: ${{ inputs.context }}
         file: ${{ inputs.file }}
         target: ${{ inputs.target }}
