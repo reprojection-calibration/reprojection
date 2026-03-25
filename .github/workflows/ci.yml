@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
+  push:
     branches: [ "main" ]
 
 # NOTE(Jack): We use the scope tags (https://docs.docker.com/build/cache/backends/gha/#scope) here to preserve the cache
@@ -27,16 +27,16 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          target: code-checks-stage
           scope: code-checks
+          target: code-checks-stage
   code-checks-python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          target: code-checks-python-stage
           scope: code-checks-python
+          target: code-checks-python-stage
   debug-build:
     needs: code-checks
     runs-on: ubuntu-latest
@@ -44,8 +44,8 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          target: debug-build-stage
           scope: debug-build
+          target: debug-build-stage
   code-coverage-assertion:
     needs: debug-build
     runs-on: ubuntu-latest
@@ -53,8 +53,8 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          target: code-coverage-assertion-stage
           scope: code-coverage-assertion
+          target: code-coverage-assertion-stage
   python-tooling:
     needs: code-checks-python
     runs-on: ubuntu-latest
@@ -70,7 +70,7 @@ jobs:
           context: .
           scope: python-tooling
           target: python-tooling-stage
-  application-matrix:
+  applications:
     # NOTE(Jack): We do not actually need any artifact from the debug-build to run the ROS1 or ROS2 applications. But we
     # have this dependency on the debug build to save us from attempting to build the applications (which do a release
     # build of the library) before we are sure the library is at least ok. If we did not do this, and built them in
@@ -78,17 +78,6 @@ jobs:
     # release).
     needs: debug-build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        applications:
-          - name: ros1
-            base: ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
-            scope: ros1-application
-            target: ros1-application-stage
-          - name: ros2
-            base: ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
-            scope: ros2-application
-            target: ros2-application-stage
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
@@ -96,3 +85,14 @@ jobs:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
           scope: ${{ matrix.applications.scope }}
           target: ${{ matrix.applications.target }}
+    strategy:
+      matrix:
+        applications:
+          - base: ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
+            name: ros1
+            scope: ros1-application
+            target: ros1-application-stage
+          - base: ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
+            name: ros2
+            scope: ros2-application
+            target: ros2-application-stage
