@@ -23,7 +23,7 @@ class StepsFixture : public ::testing::Test {
 
 TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
-    application::IiStep const step{camera_info, targets};
+    application::IntrinsicInitializationStep const step{camera_info, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization

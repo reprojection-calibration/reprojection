@@ -8,12 +8,12 @@
 
 namespace reprojection::application {
 
-IiStep::IiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets)
+IntrinsicInitializationStep::IntrinsicInitializationStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets)
     : camera_info{_camera_info}, targets{_targets} {}
 
-std::string IiStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
+std::string IntrinsicInitializationStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
 
-CameraState IiStep::Compute() const {
+CameraState IntrinsicInitializationStep::Compute() const {
     // TODO(Jack): Confirm v and u are height and width in the correct order!
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info.camera_model, camera_info.bounds.v_max,
                                                             camera_info.bounds.u_max, targets)};
@@ -25,7 +25,7 @@ CameraState IiStep::Compute() const {
     return CameraState{*intrinsics};
 }
 
-CameraState IiStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
+CameraState IntrinsicInitializationStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
     auto const loaded_intrinsics{
         database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
 
@@ -36,7 +36,7 @@ CameraState IiStep::Load(std::shared_ptr<database::CalibrationDatabase const> co
     return CameraState{*loaded_intrinsics};
 }
 
-void IiStep::Save(CameraState const& intrinsics, std::shared_ptr<database::CalibrationDatabase> const db) const {
+void IntrinsicInitializationStep::Save(CameraState const& intrinsics, std::shared_ptr<database::CalibrationDatabase> const db) const {
     database::WriteToDb(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
 }
 

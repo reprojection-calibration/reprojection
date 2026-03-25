@@ -55,7 +55,7 @@ int main() {
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
 
-    application::IiStep const ii_step{camera_info, targets};
+    application::IntrinsicInitializationStep const ii_step{camera_info, targets};
     auto const [camera_state, ii_cache_status]{application::RunStep<CameraState>(ii_step, db)};
     std::cout << "Ii : " << ToString(ii_cache_status) << " " << camera_state.intrinsics.transpose() << std::endl;
 

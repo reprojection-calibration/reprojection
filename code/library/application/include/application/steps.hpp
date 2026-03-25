@@ -5,8 +5,8 @@
 
 namespace reprojection::application {
 
-struct IiStep {
-    IiStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets);
+struct IntrinsicInitializationStep {
+    IntrinsicInitializationStep(CameraInfo const& _camera_info, CameraMeasurements const& _targets);
 
     CameraInfo camera_info;
     CameraMeasurements targets;
