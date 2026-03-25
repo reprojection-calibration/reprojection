@@ -19,7 +19,7 @@ on:
 # debug build cache, but not actually push any cache, because there is nothing really to cache there.
 #
 # Also note that we use the "needs" tag to explicitly setup dependencies between stages so that if the code checks fail
-# nothing else happens and we do not waste server time
+# nothing else happens and we do not waste server time.
 jobs:
   code-checks:
     uses: ./.github/workflows/docker-build.yml
@@ -32,23 +32,17 @@ jobs:
       target: code-checks-python-stage
       scope: code-checks-python
   debug-build:
+    needs: code-checks
     uses: ./.github/workflows/docker-build.yml
     with:
       target: debug-build-stage
       scope: debug-build
   code-coverage-assertion:
     needs: debug-build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: code-coverage-assertion-stage
-        uses: docker/build-push-action@v6
-        with:
-          cache-from: type=gha,scope=debug-build
-          file: building/Dockerfile
-          tags: reprojection-code-coverage-assertion:latest
-          target: code-coverage-assertion-stage
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      target: code-coverage-assertion-stage
+      scope: code-coverage-assertion
   python-tooling:
     needs: code-checks-python
     runs-on: ubuntu-latest
