@@ -17,7 +17,7 @@ namespace reprojection::application {
 std::string FeatureExtractionStep::CacheKey() const { return cache_key; }
 
 CameraMeasurements FeatureExtractionStep::Compute() const {
-    // TODO(Jack): Is it really apropirate to use a toml table here instead of a struct?
+    // TODO(Jack): Is it really appropriate to use a toml table here instead of a struct?
     auto const extractor{feature_extraction::CreateTargetExtractor(*config["target"].as_table())};
 
     CameraMeasurements extracted_targets;
@@ -34,12 +34,14 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
 }
 
 CameraMeasurements FeatureExtractionStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
+    // TODO ERROR HANDLING STRATEGY! What if the sensor name is not there or something like that?
     return database::GetExtractedTargetData(db, sensor_name);
 }
 
 void FeatureExtractionStep::Save(CameraMeasurements const& extracted_targets,
                                  std::shared_ptr<database::CalibrationDatabase> const db) const {
-    // TODO WRITE STEP CACHE KEY TABLE? Here and everywhere else?
+    // TODO WRITE STEP CACHE KEY TABLE? Here and everywhere else? We need to implement the newer foreign key
+    // relationships that are planned!
     database::WriteToDb(extracted_targets, sensor_name, db);
 }
 
