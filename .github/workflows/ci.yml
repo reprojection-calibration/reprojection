@@ -1,78 +1,48 @@
 name: CI
 
+# TODO(Jack): Currently the base stages are not available for reuse in one generic cached stage. We should be able to do
+# this for the ubuntu 24 build path using the external_cache_scope.
+
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  push:
+    branches: [ "main" ]
 
-# NOTE(Jack): We use the scope tags (https://docs.docker.com/build/cache/backends/gha/#scope) here to preserve the cache
-# for each step. Otherwise it will by default use the same scope for all jobs and only preserve the last cache item.
-# NOTE(Jack): My finding is that the critical step to effectively get docker caching is to set the scope in the
-# "cache-from" and "cache-to" instruction. If this is not done then the default "buildkit" scope is used on only the
-# last cached item is saved, which doesn't do us any good. Read the docs here
-# (https://docs.docker.com/build/cache/backends/gha/#scope) for the official explanation.
-#
-# Our strategy at time of writing (17.11.2025) is to have the code checks isolated in their own scope because they have
-# no dependency on the rest of the build. The debug build will push and pull from its own scope because there are a lot
-# of built and installed dependencies there which can be cached. And finally the code coverage stage will pull from the
-# debug build cache, but not actually push any cache, because there is nothing really to cache there.
-#
-# Also note that we use the "needs" tag to explicitly setup dependencies between stages so that if the code checks fail
-# nothing else happens and we do not waste server time.
 jobs:
   code-checks:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: code-checks-stage
-        uses: docker/build-push-action@v6
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/docker-build
         with:
-          cache-from: type=gha,scope=code-checks
-          cache-to: type=gha,mode=max,scope=code-checks
-          file: building/Dockerfile
-          tags: reprojection-code-checks:latest
+          cache_scope: code-checks
           target: code-checks-stage
   code-checks-python:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: code-checks-python-stage
-        uses: docker/build-push-action@v6
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/docker-build
         with:
-          cache-from: type=gha,scope=code-checks-python
-          cache-to: type=gha,mode=max,scope=code-checks-python
-          file: building/Dockerfile
-          tags: reprojection-code-checks-python:latest
+          cache_scope: code-checks-python
           target: code-checks-python-stage
   debug-build:
     needs: code-checks
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: debug-build-stage
-        uses: docker/build-push-action@v6
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/docker-build
         with:
-          cache-from: type=gha,scope=debug-build
-          cache-to: type=gha,mode=max,scope=debug-build
-          file: building/Dockerfile
-          tags: reprojection-debug-build:latest
+          cache_scope: debug-build
           target: debug-build-stage
   code-coverage-assertion:
     needs: debug-build
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: code-coverage-assertion-stage
-        uses: docker/build-push-action@v6
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/docker-build
         with:
-          cache-from: type=gha,scope=debug-build
-          file: building/Dockerfile
-          tags: reprojection-code-coverage-assertion:latest
+          cache_scope: code-coverage-assertion
           target: code-coverage-assertion-stage
   python-tooling:
     needs: code-checks-python
@@ -80,71 +50,47 @@ jobs:
     steps:
       # Objects stored with git-lfs need to be pulled, we follow the example at this link:
       # https://github.com/roim/docker-action-lfs/blob/main/.github/workflows/custom-context--working.yml
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           lfs: true
       - run: git lfs pull
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: python-tooling-stage
-        uses: docker/build-push-action@v6
+      - uses: ./.github/actions/docker-build
         with:
-          cache-from: type=gha,scope=python-tooling
-          cache-to: type=gha,mode=max,scope=python-tooling
           context: .
-          file: building/Dockerfile
-          tags: reprojection-python-tooling:latest
+          cache_scope: python-tooling
           target: python-tooling-stage
-  # NOTE(Jack): This might be fake news, but I make this its own cached stage to prevent it from getting cached twice,
-  # once in the ROS1 workflow and once in the ROS2 workflow. If someone who knows gha well can prove to me that is not
-  # a worry then we can remove this and just let the regular docker build/cache process handle this stage too!
   test-data-download:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: test-data-download-stage
-        uses: docker/build-push-action@v6
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/docker-build
         with:
-          cache-from: type=gha,scope=test-data-download
-          cache-to: type=gha,mode=max,scope=test-data-download
-          file: building/Dockerfile
-          tags: test-data-download:latest
+          cache_scope: test-data-download
           target: test-data-download-stage
-  ros1-application-build:
-    # NOTE(Jack): We do not actually need any artifact from the debug-build to run the ROS1 or ROS2 applications. But we
-    # have this dependency on the debug build to save us from attempting to build the applications (which do a release
-    # build of the library) before we are sure the library is at least ok. If we did not do this, and built them in
-    # parallel instead, then in one gha run we could waste time on three failed library builds (one debug and two
-    # release).
-    needs: [test-data-download, debug-build]
+  applications:
+    # NOTE(Jack): The applications actually do release builds of the library themselves, but to prevent the risk of us having
+    # multiple library builds failing for the same reason, we make the applications depend on a successful debug-build.
+    # NOTE(Jack): Network resource use is expensive so we make the applications depend on and cache from a common
+    # test-data-download stage. If we did not explicitly have the download step and cache from it each application would
+    # itself download and cache the data. Wasteful.
+    needs: [debug-build, test-data-download]
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: ros1-application-stage
-        uses: docker/build-push-action@v6
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/docker-build
         with:
-          build-args: |
-            "BASE_IMAGE=ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214"
-          cache-from: type=gha,scope=ros1-application-build
-          cache-to: type=gha,mode=max,scope=ros1-application-build
-          file: building/Dockerfile
-          tags: ros1-application-build:latest
-          target: ros1-application-stage
-  ros2-application-build:
-    needs: [test-data-download, debug-build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: ros2-application-stage
-        uses: docker/build-push-action@v6
-        with:
-          build-args: |
-            "BASE_IMAGE=ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c"
-          cache-from: type=gha,scope=ros2-application-build
-          cache-to: type=gha,mode=max,scope=ros2-application-build
-          file: building/Dockerfile
-          tags: ros2-application-build:latest
-          target: ros2-application-stage
+          build-args: BASE_IMAGE=${{ matrix.applications.base }}
+          external_cache_scope: test-data-download
+          cache_scope: ${{ matrix.applications.cache_scope }}
+          target: ${{ matrix.applications.target }}
+    strategy:
+      matrix:
+        applications:
+          - base: ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
+            name: ros1
+            cache_scope: ros1-application
+            target: ros1-application-stage
+          - base: ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
+            name: ros2
+            cache_scope: ros2-application
+            target: ros2-application-stage

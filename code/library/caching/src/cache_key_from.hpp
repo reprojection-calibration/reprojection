@@ -8,7 +8,7 @@
 namespace reprojection::caching {
 
 // NOTE(Jack): A helper function which calls the serialize method on every argument passed - this requires that every
-// argument passed here has to have a fitting Serialize() function defined for it!
+// argument passed here has to have a fitting Serialize() function defined for it.
 template <typename... Args>
 std::string CacheKeyFrom(Args const&... args) {
     std::string data;

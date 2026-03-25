@@ -1,0 +1,35 @@
+name: "Docker Build Composite Action"
+description: "Docker build with cache and optional build arguments."
+
+# TODO(Jack): Allow the user to to use multiple external cache scopes (if it becomes needed).
+
+inputs:
+  build-args:
+    required: false
+  cache_scope:
+    required: true
+  context:
+    required: false
+  external_cache_scope:
+    required: false
+  file:
+    default: building/Dockerfile
+    required: false
+
+  target:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/build-push-action@v6
+      with:
+        build-args: ${{ inputs.build-args }}
+        cache-from: |
+          type=gha,scope=${{ inputs.cache_scope }}
+          type=gha,scope=${{ inputs.external_cache_scope }}
+        cache-to: type=gha,mode=max,scope=${{ inputs.cache_scope }}
+        context: ${{ inputs.context }}
+        file: ${{ inputs.file }}
+        target: ${{ inputs.target }}
