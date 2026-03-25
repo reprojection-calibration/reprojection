@@ -6,7 +6,7 @@
 
 using namespace reprojection;
 
-TEST(OptimizationCeresXxx, TestTransformPointsTranslation) {
+TEST(OptimizationCeresGeometry, TestTransformPointsTranslation) {
     Vector6d const tf{0, 0, 0, 1, 2, 3};  // Translation only
     Vector3d const point{5, 10, 15};
 
@@ -17,7 +17,7 @@ TEST(OptimizationCeresXxx, TestTransformPointsTranslation) {
     EXPECT_FLOAT_EQ(transformed_point[2], 18.0);
 }
 
-TEST(OptimizationCeresXxx, TestTransformPointsRotation) {
+TEST(OptimizationCeresGeometry, TestTransformPointsRotation) {
     Vector6d const tf{0, 0, M_PI_2, 0, 0, 0};  // Rotation only
     Vector3d const point{5, 10, 15};
 
