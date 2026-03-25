@@ -70,13 +70,21 @@ jobs:
           context: .
           scope: python-tooling
           target: python-tooling-stage
+  test-data-download:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/docker-build
+        with:
+          scope: test-data-download
+          target: test-data-download-stage
   applications:
     # NOTE(Jack): We do not actually need any artifact from the debug-build to run the ROS1 or ROS2 applications. But we
     # have this dependency on the debug build to save us from attempting to build the applications (which do a release
     # build of the library) before we are sure the library is at least ok. If we did not do this, and built them in
     # parallel instead, then in one gha run we could waste time on three failed library builds (one debug and two
     # release).
-    needs: debug-build
+    needs: [debug-build, test-data-download]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
