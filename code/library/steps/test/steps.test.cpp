@@ -15,7 +15,6 @@ using namespace std::string_view_literals;
 
 class StepsFixture : public ::testing::Test {
    protected:
-    // cppcheck-suppress unusedFunction
     void SetUp() override {
         db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
         database::WriteToDb(camera_info, db);

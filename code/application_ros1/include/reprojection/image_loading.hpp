@@ -2,8 +2,9 @@
 
 #include <rosbag/message_instance.h>
 
-#include <opencv2/core/mat.hpp>
 #include <utility>
+
+#include <opencv2/core/mat.hpp>
 
 namespace reprojection::ros1 {
 

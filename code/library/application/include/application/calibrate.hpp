@@ -1,8 +1,9 @@
 #pragma once
 
-#include <toml++/toml.hpp>
 #include <functional>
+
 #include <opencv2/opencv.hpp>
+#include <toml++/toml.hpp>
 
 #include "application/calibration_database_forward_declaration.hpp"
 

@@ -13,6 +13,7 @@
 namespace reprojection::application {
 
 // TODO MOVE TO FILE
+// cppcheck-suppress passedByValue
 OptimizationState AlignRotations(OptimizationState state) {
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.head<3>()};
     for (auto& frame_i : state.frames | std::views::values) {

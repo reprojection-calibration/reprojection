@@ -7,8 +7,8 @@
 #include <reprojection/application/load_and_validate_config.hpp>
 
 #include "reprojection/bag_wrapper.hpp"
-#include "reprojection/reprojection.hpp"
 #include "reprojection/image_loading.hpp"
+#include "reprojection/reprojection.hpp"
 
 using namespace reprojection;
 
@@ -45,25 +45,22 @@ int main(int argc, char* argv[]) {
     auto const& bag_reader{std::get<ros1::SingleTopicBagReader>(reader_result)};
     auto const& db{std::get<application::DbPtr>(db_result)};
 
+    auto image_source{[itr = bag_reader.view->begin(),
+                       end = bag_reader.view->end()]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+        if (itr != end) {
+            auto const data_i{ros1::ToCvMat(*itr)};
+            itr = std::next(itr);
 
-    auto image_source{
-        [itr = bag_reader.view->begin(), end = bag_reader.view->end()]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
-            if (itr != end) {
-                auto const data_i{ros1::ToCvMat(*itr)};
-                itr = std::next(itr);
+            return data_i;
+        }
 
-                return data_i;
-            }
-
-            return std::nullopt;
-        }};
+        return std::nullopt;
+    }};
 
     // TODO CALCULATE REAL DATA SIGANTURE!!!!!!!!
-    //std::string const data_signature{ *ros1::SerializeBagTopic(bag_reader)}; // UNPROTECTED OPTIONAL ACCESS!!!!
+    // std::string const data_signature{ *ros1::SerializeBagTopic(bag_reader)}; // UNPROTECTED OPTIONAL ACCESS!!!!
 
     application::Calibrate(config, image_source, "ftex_key", db);
-
-
 
     return 0;
 }

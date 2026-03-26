@@ -65,7 +65,8 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         return intrinsics;
     }
 
-    throw std::runtime_error("Implement FromToml(CameraModel) for other camera models! " + ToString(type));  // LCOV_EXCL_LINE
+    throw std::runtime_error("Implement FromToml(CameraModel) for other camera models! " +
+                             ToString(type));  // LCOV_EXCL_LINE
 }
 
 }  // namespace reprojection::database

@@ -10,6 +10,7 @@ using namespace reprojection;
 
 class FocalLengthInitFixture : public ::testing::Test {
    protected:
+    // cppcheck-suppress unusedFunction
     void SetUp() override {
         Eigen::ArrayX3d target_points(indices.rows(), 3);
         target_points << indices.cast<double>(), Eigen::ArrayXd::Constant(indices.rows(), 15);

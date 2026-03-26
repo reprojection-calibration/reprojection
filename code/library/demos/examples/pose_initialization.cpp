@@ -15,7 +15,6 @@ using namespace std::string_view_literals;
 // use that to calculate the reprojection errors, but use aligned_initial_state to initialize the nonlinear
 // optimization. This means that what we are doing here and what we are visualizing in the database are starting to
 // diverge. Not nice!
-// cppcheck-suppress passedByValue
 
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we

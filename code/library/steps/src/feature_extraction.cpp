@@ -1,7 +1,6 @@
 #include "steps/feature_extraction.hpp"
 
 #include "caching/cache_keys.hpp"
-
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "feature_extraction/target_extraction.hpp"
