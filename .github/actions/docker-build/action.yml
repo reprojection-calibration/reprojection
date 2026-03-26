@@ -27,8 +27,8 @@ runs:
         build-args: ${{ inputs.build-args }}
         # NOTE(Jack: The external cache line here is very complicated! But its simple - if the external_cache_scope is
         # provided then it gets included in addition to cache_scope, if it's not then only the cache_scope is included.
-        # If we just left it blank then an empty cache-from variable would get passed to the build process which can
-        # cause problems!
+        # If we did not do the conditional logic then external_cache_scope would be an empty string and the cache-from
+        # scope would be set like '--cache-from type=gha,scope=' which smells to me!
         cache-from: |
           type=gha,scope=${{ inputs.cache_scope }}
           ${{ inputs.external_cache_scope && format('type=gha,scope={0}', inputs.external_cache_scope) || '' }}
