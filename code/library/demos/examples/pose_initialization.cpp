@@ -43,10 +43,7 @@ int main() {
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-   auto const cache_status{ application::Calibrate(config, {}, "ftex_key", db)};
-    for (auto const& [step, status]: cache_status) {
-        std::cout << ToString(step) << " " << ToString(status) << std::endl;
-    }
+    application::Calibrate(config, {}, "ftex_key", db);
 
     return EXIT_SUCCESS;
 }
