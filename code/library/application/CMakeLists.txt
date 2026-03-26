@@ -1,7 +1,7 @@
 set(LIBRARY_NAME "application")
 
 set(SRC_FILES
-     #   src/calibrate.cpp
+        src/calibrate.cpp
         src/cli_utils.cpp
         src/database.cpp
         src/load_and_validate_config.cpp

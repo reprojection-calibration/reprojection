@@ -3,6 +3,7 @@
 #include "database/database_write.hpp"
 
 using namespace reprojection;
+using namespace std::string_view_literals;
 
 // WARN(Jack): At this time this demo has no clear role in CI/CD or the active development. Please feel to remove this
 // as needed!
@@ -22,16 +23,27 @@ int main() {
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
+    // Artificially trigger a cache hit by writing a feature extraction key and camera info to the database - the
+    // features are already there.
     CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
     try {
         database::WriteToDb(camera_info, db);
+        database::WriteToDb(CalibrationStep::FtEx, "ftex_key", camera_info.sensor_name, db);
     } catch (...) {
     }
 
-    // Artificially trigger a cache hit by writing a feature extraction key to the database.
-    database::WriteToDb(CalibrationStep::FtEx, "ftex_key", camera_info.sensor_name, db);
+    static constexpr std::string_view config_file{R"(
+        [sensor]
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
 
-    // application::Calibrate({}, {}, "ftex_key", db);
+        [target]
+        pattern_size = [0,0]
+        type = "xxxx"
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    application::Calibrate(config, {}, "ftex_key", db);
 
     return EXIT_SUCCESS;
 }
