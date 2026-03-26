@@ -33,7 +33,7 @@ std::string ToToml(CameraModel const type, ArrayXd const& intrinsics) {
 
 ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
     if (type == CameraModel::DoubleSphere) {
-        auto tbl = toml::parse(toml_str);
+        auto const tbl{toml::parse(toml_str)};
         ArrayXd intrinsics(6);
         intrinsics[0] = tbl["fx"].value<double>().value();
         intrinsics[1] = tbl["fy"].value<double>().value();
@@ -42,17 +42,30 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         intrinsics[4] = tbl["xi"].value<double>().value();
         intrinsics[5] = tbl["alpha"].value<double>().value();
         return intrinsics;
-    } else if (type == CameraModel::Pinhole) {
-        auto tbl = toml::parse(toml_str);
+    }
+
+    if (type == CameraModel::Pinhole) {
+        auto const tbl{toml::parse(toml_str)};
         ArrayXd intrinsics(4);
         intrinsics[0] = tbl["fx"].value<double>().value();
         intrinsics[1] = tbl["fy"].value<double>().value();
         intrinsics[2] = tbl["cx"].value<double>().value();
         intrinsics[3] = tbl["cy"].value<double>().value();
         return intrinsics;
-    } else {
-        throw std::runtime_error("Implement FromToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE
     }
+
+    if (type == CameraModel::UnifiedCameraModel) {
+        auto const tbl{toml::parse(toml_str)};
+        ArrayXd intrinsics(5);
+        intrinsics[0] = tbl["fx"].value<double>().value();
+        intrinsics[1] = tbl["fy"].value<double>().value();
+        intrinsics[2] = tbl["cx"].value<double>().value();
+        intrinsics[3] = tbl["cy"].value<double>().value();
+        intrinsics[4] = tbl["xi"].value<double>().value();
+        return intrinsics;
+    }
+
+    throw std::runtime_error("Implement FromToml(CameraModel) for other camera models! " + ToString(type));  // LCOV_EXCL_LINE
 }
 
 }  // namespace reprojection::database
