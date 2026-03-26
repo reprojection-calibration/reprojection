@@ -25,8 +25,8 @@ class StepsFixture : public ::testing::Test {
 };
 
 TEST_F(StepsFixture, TestFeatureExtractionStep) {
-    std::vector<std::pair<uint64_t, cv::Mat>> const data{{0, cv::Mat::zeros(10, 10, CV_8UC1)},
-                                                         {1, cv::Mat::zeros(10, 10, CV_8UC1)}};
+    std::vector<std::pair<uint64_t, cv::Mat>> const data{{0, cv::Mat::zeros(10, 20, CV_8UC1)},
+                                                         {1, cv::Mat::zeros(10, 20, CV_8UC1)}};
     auto image_source{
         [itr = std::cbegin(data), end = std::cend(data)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
             if (itr != end) {
@@ -39,19 +39,37 @@ TEST_F(StepsFixture, TestFeatureExtractionStep) {
         }};
 
     static constexpr std::string_view config_file{R"(
+        [sensor]
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+
+        [target]
         pattern_size = [3,4]
-        type = "checkerboard"
+        type = "circle_grid"
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    application::FeatureExtractionStep const step{image_source, camera_info.sensor_name, "sha256-key", config};
+    application::FeatureExtractionStep const step{image_source, "sha256-key", *config["target"].as_table(),
+                                                  *config["sensor"].as_table()};
 
-    auto [result, cache_status]{RunStep<CameraMeasurements>(step, db)};
-    EXPECT_EQ(std::size(result), 0);
+    // TODO CLEAN UP THIS TYPE!!!!
+    auto [result, cache_status]{RunStep<application::FeatureExtractionStep::Result>(step, db)};
+    auto& [camera_info, extracted_targets]{result};
+    // TODO(Jack): Add helper method to check camera info
+    EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
+    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
+    EXPECT_EQ(camera_info.bounds.u_max, 20);
+    EXPECT_EQ(camera_info.bounds.v_max, 10);
+    EXPECT_EQ(std::size(extracted_targets), 0);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    std::tie(result, cache_status) = RunStep<CameraMeasurements>(step, db);
-    EXPECT_EQ(std::size(result), 0);
+    std::tie(result, cache_status) = RunStep<application::FeatureExtractionStep::Result>(step, db);
+    std::tie(camera_info, extracted_targets) = result;
+    EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
+    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
+    EXPECT_EQ(camera_info.bounds.u_max, 20);
+    EXPECT_EQ(camera_info.bounds.v_max, 10);
+    EXPECT_EQ(std::size(extracted_targets), 0);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 

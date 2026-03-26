@@ -15,6 +15,7 @@ namespace reprojection::application {
 struct FeatureExtractionStep {
     // TODO(Jack): Should we make a central definition of this?
     using ImageProvider = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
+    using Result = std::pair<CameraInfo, CameraMeasurements>;
 
     ImageProvider image_source;
     std::string cache_key;
@@ -24,16 +25,15 @@ struct FeatureExtractionStep {
 
     CalibrationStep step_type{CalibrationStep::FtEx};
 
-    std::string SensorName() const { return sensor_config["sensor_name"].as_string()->get(); }
+    std::string SensorName() const { return sensor_config["camera_name"].as_string()->get(); }
 
     std::string CacheKey() const;
 
-    CameraMeasurements Compute() const;
+    Result Compute() const;
 
-    CameraMeasurements Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+    Result Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
 
-    void Save(CameraMeasurements const& extracted_targets,
-              std::shared_ptr<database::CalibrationDatabase> const db) const;
+    void Save(Result const& result, std::shared_ptr<database::CalibrationDatabase> const db) const;
 };
 
 struct IntrinsicInitializationStep {
