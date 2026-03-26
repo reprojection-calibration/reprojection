@@ -8,6 +8,7 @@ set(SRC_FILES
 )
 
 set(LINK_LIBRARIES
+        ${OpenCV_LIBS}
         Eigen3::Eigen
         caching
         calibration

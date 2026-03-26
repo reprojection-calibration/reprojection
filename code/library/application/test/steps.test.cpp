@@ -2,11 +2,14 @@
 
 #include <gtest/gtest.h>
 
+#include <string_view>
+
 #include "application/step_runner.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
+using namespace std::string_view_literals;
 
 class StepsFixture : public ::testing::Test {
    protected:
@@ -20,6 +23,37 @@ class StepsFixture : public ::testing::Test {
     CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
 };
+
+TEST_F(StepsFixture, TestFeatureExtractionStep) {
+    std::vector<std::pair<uint64_t, cv::Mat>> const data{{0, cv::Mat::zeros(10, 10, CV_8UC1)},
+                                                         {1, cv::Mat::zeros(10, 10, CV_8UC1)}};
+    auto image_source{
+        [itr = std::cbegin(data), end = std::cend(data)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+            if (itr != end) {
+                auto const data_i{*itr};
+                itr = std::next(itr);
+                return data_i;
+            }
+
+            return std::nullopt;
+        }};
+
+    static constexpr std::string_view config_file{R"(
+        pattern_size = [3,4]
+        type = "checkerboard"
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    application::FeatureExtractionStep const step{image_source, camera_info.sensor_name, "sha256-key", config};
+
+    auto [result, cache_status]{RunStep<CameraMeasurements>(step, db)};
+    EXPECT_EQ(std::size(result), 0);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    std::tie(result, cache_status) = RunStep<CameraMeasurements>(step, db);
+    EXPECT_EQ(std::size(result), 0);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
 
 TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
