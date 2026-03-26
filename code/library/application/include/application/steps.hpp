@@ -17,13 +17,14 @@ struct FeatureExtractionStep {
     using ImageProvider = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
 
     ImageProvider image_source;
-    std::string sensor_name;
     std::string cache_key;
-    toml::table config;
+    // TODO THESE SHOULD ALREADY BE PARSED AND NOT STORED AS TABLES!
+    toml::table target_config;
+    toml::table sensor_config;
 
     CalibrationStep step_type{CalibrationStep::FtEx};
 
-    std::string SensorName() const { return sensor_name; }
+    std::string SensorName() const { return sensor_config["sensor_name"].as_string()->get(); }
 
     std::string CacheKey() const;
 

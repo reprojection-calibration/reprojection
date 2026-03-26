@@ -31,7 +31,7 @@ int main() {
     // Artificially trigger a cache hit by writing a feature extraction key to the database.
     database::WriteToDb(CalibrationStep::FtEx, "ftex_key", camera_info.sensor_name, db);
 
-    application::Calibrate({}, {}, "ftex_key", db);
+    // application::Calibrate({}, {}, "ftex_key", db);
 
     return EXIT_SUCCESS;
 }

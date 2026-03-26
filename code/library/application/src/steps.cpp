@@ -13,7 +13,7 @@ std::string FeatureExtractionStep::CacheKey() const { return cache_key; }
 
 CameraMeasurements FeatureExtractionStep::Compute() const {
     // TODO(Jack): Is it really appropriate to use a toml table here instead of a struct?
-    auto const extractor{feature_extraction::CreateTargetExtractor(config)};
+    auto const extractor{feature_extraction::CreateTargetExtractor(target_config)};
 
     CameraMeasurements extracted_targets;
     while (auto const data{image_source()}) {
@@ -29,12 +29,12 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
 }
 
 CameraMeasurements FeatureExtractionStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
-    return database::GetExtractedTargetData(db, sensor_name);
+    return database::GetExtractedTargetData(db, SensorName());
 }
 
 void FeatureExtractionStep::Save(CameraMeasurements const& extracted_targets,
                                  std::shared_ptr<database::CalibrationDatabase> const db) const {
-    database::WriteToDb(extracted_targets, sensor_name, db);
+    database::WriteToDb(extracted_targets, SensorName(), db);
 }
 
 std::string IntrinsicInitializationStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
