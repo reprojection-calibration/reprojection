@@ -28,10 +28,11 @@ runs:
         # NOTE(Jack: The external cache line here is very complicated! But its simple - if the external_cache_scope is
         # provided then it gets included in addition to cache_scope, if it's not then only the cache_scope is included.
         # If we did not do the conditional logic then external_cache_scope would be an empty string and the cache-from
-        # scope would be set like '--cache-from type=gha,scope=' which smells to me!
+        # in the docker build command would be set like '--cache-from type=gha,scope=' which smells to me! With the
+        # conditional logic the second cache-from flag will simply not be present.
         cache-from: |
           type=gha,scope=${{ inputs.cache_scope }}
-          type=gha,scope=${{ inputs.external_cache_scope }}
+          ${{ inputs.external_cache_scope && format('type=gha,scope={0}', inputs.external_cache_scope) || '' }}
         cache-to: type=gha,mode=max,scope=${{ inputs.cache_scope }}
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
