@@ -2,6 +2,7 @@ set(LIBRARY_NAME "steps")
 
 set(SRC_FILES
         src/feature_extraction.cpp
+        src/intrinisic_initialization.cpp # TODO FIX NAME!!!
         src/steps.cpp
 )
 

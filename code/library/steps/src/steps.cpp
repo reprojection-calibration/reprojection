@@ -8,36 +8,6 @@
 
 namespace reprojection::application {
 
-std::string IntrinsicInitializationStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
-
-CameraState IntrinsicInitializationStep::Compute() const {
-    // TODO(Jack): Confirm v and u are height and width in the correct order!
-    auto const intrinsics{calibration::InitializeIntrinsics(camera_info.camera_model, camera_info.bounds.v_max,
-                                                            camera_info.bounds.u_max, targets)};
-
-    if (not intrinsics.has_value()) {
-        throw std::runtime_error("We have no error handling strategy for failed IiStep::Compute()");  // LCOV_EXCL_LINE
-    }
-
-    return CameraState{*intrinsics};
-}
-
-CameraState IntrinsicInitializationStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
-    auto const loaded_intrinsics{
-        database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
-
-    if (not loaded_intrinsics.has_value()) {
-        throw std::runtime_error("We have no error handling strategy for failed IiStep::Load()");  // LCOV_EXCL_LINE
-    }
-
-    return CameraState{*loaded_intrinsics};
-}
-
-void IntrinsicInitializationStep::Save(CameraState const& intrinsics,
-                                       std::shared_ptr<database::CalibrationDatabase> const db) const {
-    database::WriteToDb(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
-}
-
 std::string LpiStep::CacheKey() const { return caching::CacheKey(camera_info, targets, camera_state); }
 
 Frames LpiStep::Compute() const { return calibration::LinearPoseInitialization(camera_info, targets, camera_state); }

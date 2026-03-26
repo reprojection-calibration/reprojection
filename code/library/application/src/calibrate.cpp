@@ -5,6 +5,7 @@
 
 #include "calibration/initialization_methods.hpp"
 #include "steps/feature_extraction.hpp"
+#include "steps/intrinsic_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/steps.hpp"
 
