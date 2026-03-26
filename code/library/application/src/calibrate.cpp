@@ -3,9 +3,10 @@
 
 #include <ranges>
 
-#include "steps/steps.hpp"
-#include "steps/step_runner.hpp"
 #include "calibration/initialization_methods.hpp"
+#include "steps/feature_extraction.hpp"
+#include "steps/step_runner.hpp"
+#include "steps/steps.hpp"
 
 namespace reprojection::application {
 

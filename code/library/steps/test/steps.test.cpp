@@ -4,6 +4,7 @@
 
 #include <string_view>
 
+#include "steps/feature_extraction.hpp"
 #include "steps/step_runner.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"

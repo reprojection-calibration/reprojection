@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "steps")
 
 set(SRC_FILES
+        src/feature_extraction.cpp
         src/steps.cpp
 )
 
