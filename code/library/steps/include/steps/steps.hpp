@@ -5,25 +5,6 @@
 
 namespace reprojection::application {
 
-// TODO(Jack): Make private package source files one day when the application is whole.
-struct LpiStep {
-    CameraInfo camera_info;
-    CameraMeasurements targets;
-    CameraState camera_state;
-
-    CalibrationStep step_type{CalibrationStep::Lpi};
-
-    std::string SensorName() const { return camera_info.sensor_name; }
-
-    std::string CacheKey() const;
-
-    Frames Compute() const;
-
-    Frames Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
-
-    void Save(Frames const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
-};
-
 struct CnlrStep {
     CameraInfo camera_info;
     CameraMeasurements targets;

@@ -3,6 +3,7 @@ set(LIBRARY_NAME "steps")
 set(SRC_FILES
         src/feature_extraction.cpp
         src/intrinisic_initialization.cpp # TODO FIX NAME!!!
+        src/linear_pose_initialization.cpp
         src/steps.cpp
 )
 
