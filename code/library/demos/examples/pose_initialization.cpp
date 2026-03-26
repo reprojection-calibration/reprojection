@@ -52,23 +52,29 @@ int main() {
     } catch (...) {
     }
 
-    // Load targets, initialize, and optimize
-    CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
+    // Artificially trigger a cache hit by writing a feature extraction key to the database.
+    database::WriteToDb(CalibrationStep::FtEx, "ftex_key", camera_info.sensor_name, db);
+
+    application::FeatureExtractionStep const ftex_step{{}, camera_info.sensor_name, "ftex_key", {}};
+    auto const [targets, ftex_cache_status]{application::RunStep<CameraMeasurements>(ftex_step, db)};
+    std::cout << "Feature extraction: " << ToString(ftex_cache_status) << " loaded target count " << std::size(targets)
+              << std::endl;
 
     application::IntrinsicInitializationStep const ii_step{camera_info, targets};
     auto const [camera_state, ii_cache_status]{application::RunStep<CameraState>(ii_step, db)};
-    std::cout << "Ii : " << ToString(ii_cache_status) << " " << camera_state.intrinsics.transpose() << std::endl;
+    std::cout << "Intrinsic initialization: " << ToString(ii_cache_status) << " " << camera_state.intrinsics.transpose()
+              << std::endl;
 
     application::LpiStep const lpi_step{camera_info, targets, camera_state};
     auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
-    std::cout << "Lpi : " << ToString(lpi_cache_status) << std::endl;
+    std::cout << "Linear pose initialization: " << ToString(lpi_cache_status) << std::endl;
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
 
     application::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
     auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
-    std::cout << "Cnlr : " << ToString(cnlr_cache_status) << " " << optimized_state.camera_state.intrinsics.transpose()
-              << std::endl;
+    std::cout << "Camera nonlinear refinement: " << ToString(cnlr_cache_status) << " "
+              << optimized_state.camera_state.intrinsics.transpose() << std::endl;
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
     ReprojectionErrors const interpolated_spline_error{optimization::SplineReprojectionResiduals(
