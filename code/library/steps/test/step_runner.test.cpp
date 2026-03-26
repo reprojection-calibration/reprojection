@@ -1,9 +1,8 @@
-#include "application/step_runner.hpp"
+#include "steps/step_runner.hpp"
 
 #include <gtest/gtest.h>
 
-#include "application/steps.hpp"
-#include "testing_mocks/mvg_data_generator.hpp"
+#include "steps/steps.hpp"
 
 using namespace reprojection;
 
