@@ -12,7 +12,7 @@ namespace reprojection {
 
 // TODO(Jack): It is honestly not so nice that we need to specify the steps here and once again in the sql database, and
 //  maybe once again in the python tooling. Is there any way for us to centrally store this with that repetition>
-enum class CalibrationStep {  Cnlr, FtEx, Ii, Lpi, Sint, Snlr };
+enum class CalibrationStep { Cnlr, FtEx, Ii, Lpi, Sint, Snlr };
 
 inline std::string ToString(CalibrationStep const step_name) {
     if (step_name == CalibrationStep::Cnlr) {
@@ -67,12 +67,22 @@ inline std::string ToString(CameraModel const camera_model) {
 inline CameraModel ToCameraModel(std::string_view camera_model) {
     if (camera_model == "double_sphere") {
         return CameraModel::DoubleSphere;
-    } else if (camera_model == "pinhole") {
-        return CameraModel::Pinhole;
-    } else {
-        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToCameraModel(): " +
-                                 std::string(camera_model));
     }
+
+    if (camera_model == "pinhole") {
+        return CameraModel::Pinhole;
+    }
+
+    if (camera_model == "pinhole_radtan4") {
+        return CameraModel::PinholeRadtan4;
+    }
+
+    if (camera_model == "unified_camera_model") {
+        return CameraModel::UnifiedCameraModel;
+    }
+
+    throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToCameraModel(): " +
+                             std::string(camera_model));
 }
 
 enum class TargetType {
