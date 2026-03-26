@@ -4,11 +4,11 @@
 #include <ranges>
 
 #include "calibration/initialization_methods.hpp"
+#include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
-#include "steps/steps.hpp"
 
 namespace reprojection::application {
 

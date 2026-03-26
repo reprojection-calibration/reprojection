@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "steps/steps.hpp"
+#include "steps/camera_nonlinear_refinement.hpp"
 
 using namespace reprojection;
 

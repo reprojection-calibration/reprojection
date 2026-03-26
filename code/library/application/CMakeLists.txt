@@ -5,7 +5,6 @@ set(SRC_FILES
         src/cli_utils.cpp
         src/database.cpp
         src/load_and_validate_config.cpp
-        ../steps/src/steps.cpp
 )
 
 set(LINK_LIBRARIES

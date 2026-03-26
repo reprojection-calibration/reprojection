@@ -1,10 +1,11 @@
 set(LIBRARY_NAME "steps")
 
 set(SRC_FILES
+        src/camera_nonlinear_refinement.cpp
         src/feature_extraction.cpp
-        src/intrinisic_initialization.cpp # TODO FIX NAME!!!
+        src/intrinisic_initialization.cpp # TODO FIX NAME SPELLING!!!
         src/linear_pose_initialization.cpp
-        src/steps.cpp
+
 )
 
 set(LINK_LIBRARIES

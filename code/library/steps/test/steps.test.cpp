@@ -1,9 +1,8 @@
-#include "steps/steps.hpp"
-
 #include <gtest/gtest.h>
 
 #include <string_view>
 
+#include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
