@@ -4,12 +4,7 @@
 #include <memory>
 #include <variant>
 
-// Forward declaration so we can hide the real db headers from the consuming applications.
-namespace reprojection::database {
-
-struct CalibrationDatabase;
-
-}
+#include "application/calibration_database_forward_declaration.hpp"
 
 namespace reprojection::application {
 
