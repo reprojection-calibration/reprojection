@@ -1,14 +1,6 @@
-#include <map>
-#include <ranges>
 
-#include "application/step_runner.hpp"
-#include "application/steps.hpp"
-#include "calibration/initialization_methods.hpp"
-#include "database/calibration_database.hpp"
-#include "optimization/camera_imu_nonlinear_refinement.hpp"
-#include "projection_functions/double_sphere.hpp"
-#include "spline/se3_spline.hpp"
-#include "spline/spline_initialization.hpp"
+#include "application/calibrate.hpp"
+#include "database/database_write.hpp"
 
 using namespace reprojection;
 
@@ -23,22 +15,6 @@ using namespace reprojection;
 // optimization. This means that what we are doing here and what we are visualizing in the database are starting to
 // diverge. Not nice!
 // cppcheck-suppress passedByValue
-OptimizationState AlignRotations(OptimizationState state) {
-    Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.head<3>()};
-    for (auto& frame_i : state.frames | std::views::values) {
-        Vector3d so3_i{frame_i.pose.head<3>()};
-        double const dp{so3_i_1.dot(so3_i)};
-
-        if (dp < 0) {
-            so3_i *= -1.0;
-        }
-        frame_i.pose.head<3>() = so3_i;
-
-        so3_i_1 = so3_i;
-    }
-
-    return state;
-}
 
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
@@ -55,39 +31,7 @@ int main() {
     // Artificially trigger a cache hit by writing a feature extraction key to the database.
     database::WriteToDb(CalibrationStep::FtEx, "ftex_key", camera_info.sensor_name, db);
 
-    application::FeatureExtractionStep const ftex_step{{}, camera_info.sensor_name, "ftex_key", {}};
-    auto const [targets, ftex_cache_status]{application::RunStep<CameraMeasurements>(ftex_step, db)};
-    std::cout << "Feature extraction: " << ToString(ftex_cache_status) << " loaded target count " << std::size(targets)
-              << std::endl;
-
-    application::IntrinsicInitializationStep const ii_step{camera_info, targets};
-    auto const [camera_state, ii_cache_status]{application::RunStep<CameraState>(ii_step, db)};
-    std::cout << "Intrinsic initialization: " << ToString(ii_cache_status) << " " << camera_state.intrinsics.transpose()
-              << std::endl;
-
-    application::LpiStep const lpi_step{camera_info, targets, camera_state};
-    auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
-    std::cout << "Linear pose initialization: " << ToString(lpi_cache_status) << std::endl;
-
-    auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
-
-    application::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
-    auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
-    std::cout << "Camera nonlinear refinement: " << ToString(cnlr_cache_status) << " "
-              << optimized_state.camera_state.intrinsics.transpose() << std::endl;
-
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
-    ReprojectionErrors const interpolated_spline_error{optimization::SplineReprojectionResiduals(
-        camera_info, targets, optimized_state.camera_state, interpolated_spline)};
-    (void)interpolated_spline_error;
-
-    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
-    auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
-        {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
-    auto const [R_imu_co, _]{orientation_init};
-
-    std::cout << R_imu_co << std::endl;
-    std::cout << gravity_w.transpose() << std::endl;
+    application::Calibrate({}, {}, "ftex_key", db);
 
     return EXIT_SUCCESS;
 }

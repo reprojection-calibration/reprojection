@@ -13,6 +13,7 @@ namespace reprojection::application {
 // calculate a unique signature here easily then we can remove that code from the applications. My assumption is that
 // serializing the image data is too much data because a single can be 20mb.
 struct FeatureExtractionStep {
+    // TODO(Jack): Should we make a central definition of this?
     using ImageProvider = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
 
     ImageProvider image_source;
