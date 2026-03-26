@@ -1,8 +1,5 @@
 #include "reprojection/reprojection.hpp"
 
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
-
 #include <filesystem>
 
 namespace reprojection::ros1 {

@@ -7,6 +7,9 @@
 
 namespace reprojection::ros2 {
 
+// NOTE(Jack): The entire points of the SerializeBagTopic function here and in the ROS1 app is for us to calculate a
+// unique signature of the image data WITHOUT having to deserialize the data! I think that would cost way too much CPU,
+// but I also never benchmarked it :)
 std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     std::ostringstream oss;
     oss << std::filesystem::path(data.reader->get_metadata().files[0].path).filename().c_str() << "|";
