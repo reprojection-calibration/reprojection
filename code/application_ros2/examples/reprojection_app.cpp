@@ -12,19 +12,12 @@ using namespace reprojection;
 // TODO(Jack): Should we use the generic templated toml key access function found in the library?
 
 int main(int argc, char* argv[]) {
-    auto const config_path{application::GetCommandOption(argv, argv + argc, "--config")};
-    if (not config_path) {
-        std::cout << "Missing --config flag" << "\n";
+    auto const paths{application::ParseCommandLineInput(argc, argv)};
+    if (not paths) {
         return EXIT_FAILURE;
     }
 
-    auto const bag_path{application::GetCommandOption(argv, argv + argc, "--data")};
-    if (not bag_path) {
-        std::cout << "Missing --data flag" << "\n";
-        return EXIT_FAILURE;
-    }
-
-    auto const load_config_result{application::LoadAndValidateConfig(*config_path)};
+    auto const load_config_result{application::LoadAndValidateConfig(paths->config_path)};
     if (std::holds_alternative<TomlErrorMsg>(load_config_result)) {
         std::cout << std::get<TomlErrorMsg>(load_config_result).msg << "\n";
         return EXIT_FAILURE;
@@ -38,7 +31,7 @@ int main(int argc, char* argv[]) {
     // like not being able to open a bag file. If I knew how to turn off the logging completely I would!
     rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_FATAL);
 
-    auto const reader_result{ros2::SingleTopicBagReader::Create(*bag_path, camera_topic)};
+    auto const reader_result{ros2::SingleTopicBagReader::Create(paths->data_path, camera_topic)};
     if (std::holds_alternative<ros2::BagError>(reader_result)) {
         std::cerr << std::get<ros2::BagError>(reader_result).message << "\n";
         return EXIT_FAILURE;

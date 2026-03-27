@@ -14,16 +14,21 @@ namespace reprojection::application {
 
 namespace fs = std::filesystem;
 
-// Adopted from https://stackoverflow.com/questions/865668/parsing-command-line-arguments-in-c
-inline std::optional<std::string> GetCommandOption(char const* const* const begin, char const* const* const end,
-                                                   std::string const& option) {
-    char const* const* itr{std::find(begin, end, option)};
-    if (itr != end and ++itr != end) {
-        return std::string(*itr);
-    }
+struct PathConfig {
+    fs::path config_path;
+    fs::path data_path;
+    fs::path workspace_dir;
+};
 
-    return std::nullopt;
-}
+struct CliErrorMsg {
+    std::string msg;
+};
+
+std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* const argv[]);
+
+// Adopted from https://stackoverflow.com/questions/865668/parsing-command-line-arguments-in-c
+std::optional<std::string> GetCommandOption(char const* const* const begin, char const* const* const end,
+                                            std::string const& option);
 
 std::variant<toml::table, TomlErrorMsg> LoadAndValidateConfig(fs::path const& config_path);
 

@@ -44,6 +44,9 @@ test_command() {
     return 0
 }
 
+# Strip all the other logging formatting and only log the main text payload.
+export SPDLOG_PATTERN="%v"
+
 test_command "${APP} --config nonexistent.toml" \
     1 \
     "Missing --data flag"

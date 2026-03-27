@@ -3,6 +3,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <Eigen/Core>
 #include <memory>
 
 namespace reprojection::logging {
@@ -11,7 +12,10 @@ inline std::shared_ptr<spdlog::logger> get(std::string const& name) {
     auto logger{spdlog::get(name)};
     if (not logger) {
         logger = spdlog::stdout_color_mt(name);
-        logger->set_pattern("[%H:%M:%S] [%n] [%l] %v");
+
+        char const* const log_pattern{std::getenv("SPDLOG_PATTERN")};
+        std::string const pattern{log_pattern ? log_pattern : "[%H:%M:%S] [%n] [%l] %v"};
+        logger->set_pattern(pattern);
     }
     return logger;
 }
