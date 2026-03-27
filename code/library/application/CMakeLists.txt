@@ -2,7 +2,6 @@ set(LIBRARY_NAME "application")
 
 set(SRC_FILES
         src/load_and_validate_config.cpp
-        src/steps.cpp
 )
 
 set(LINK_LIBRARIES
@@ -14,6 +13,7 @@ set(LINK_LIBRARIES
         optimization
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the linear_pose_init public header interface.
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
+        steps
         types
         types_internal
 )
@@ -27,7 +27,5 @@ set(TEST_LINK_LIBRARIES
 set(TESTS
         test/cli_utils.test.cpp
         test/load_and_validate_config.test.cpp
-        test/step_runner.test.cpp
-        test/steps.test.cpp
 )
 AddTests()

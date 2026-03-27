@@ -1,16 +1,20 @@
-#include "application/steps.hpp"
-
 #include <gtest/gtest.h>
 
-#include "application/step_runner.hpp"
+#include <string_view>
+
+#include "steps/camera_nonlinear_refinement.hpp"
+#include "steps/feature_extraction.hpp"
+#include "steps/intrinsic_initialization.hpp"
+#include "steps/linear_pose_initialization.hpp"
+#include "steps/step_runner.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
+using namespace std::string_view_literals;
 
 class StepsFixture : public ::testing::Test {
    protected:
-    // cppcheck-suppress unusedFunction
     void SetUp() override {
         db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
         database::WriteToDb(camera_info, db);
@@ -21,9 +25,58 @@ class StepsFixture : public ::testing::Test {
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
 };
 
+TEST_F(StepsFixture, TestFeatureExtractionStep) {
+    std::vector<std::pair<uint64_t, cv::Mat>> const data{{0, cv::Mat::zeros(10, 20, CV_8UC1)},
+                                                         {1, cv::Mat::zeros(10, 20, CV_8UC1)}};
+    auto image_source{
+        [itr = std::cbegin(data), end = std::cend(data)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+            if (itr != end) {
+                auto const data_i{*itr};
+                itr = std::next(itr);
+                return data_i;
+            }
+
+            return std::nullopt;
+        }};
+
+    static constexpr std::string_view config_file{R"(
+        [sensor]
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    application::FeatureExtractionStep const step{image_source, "sha256-key", *config["target"].as_table(),
+                                                  *config["sensor"].as_table()};
+
+    // TODO CLEAN UP THIS TYPE!!!!
+    auto [result, cache_status]{RunStep<application::FeatureExtractionStep::Result>(step, db)};
+    auto& [camera_info, extracted_targets]{result};
+    // TODO(Jack): Add helper method to check camera info
+    EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
+    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
+    EXPECT_EQ(camera_info.bounds.u_max, 20);
+    EXPECT_EQ(camera_info.bounds.v_max, 10);
+    EXPECT_EQ(std::size(extracted_targets), 0);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    std::tie(result, cache_status) = RunStep<application::FeatureExtractionStep::Result>(step, db);
+    std::tie(camera_info, extracted_targets) = result;
+    EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
+    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
+    EXPECT_EQ(camera_info.bounds.u_max, 20);
+    EXPECT_EQ(camera_info.bounds.v_max, 10);
+    EXPECT_EQ(std::size(extracted_targets), 0);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
 TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
-    application::IiStep const step{camera_info, targets};
+    application::IntrinsicInitializationStep const step{camera_info, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization

@@ -21,7 +21,7 @@ void WriteToDb(CameraInfo const& camera_info, DbPtr const database);
 void WriteToDb(CalibrationStep const step_name, std::string_view cache_key, std::string_view sensor_name,
                DbPtr const db);
 
-void WriteToDb(CameraMeasurement const& data, std::string_view sensor_name, DbPtr const db);
+void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, DbPtr const db);
 
 void WriteToDb(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
                std::string_view sensor_name, DbPtr const db);

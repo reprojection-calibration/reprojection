@@ -1,14 +1,16 @@
 #include <map>
 #include <ranges>
 
-#include "application/step_runner.hpp"
-#include "application/steps.hpp"
 #include "calibration/initialization_methods.hpp"
 #include "database/calibration_database.hpp"
 #include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "projection_functions/double_sphere.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
+#include "steps/camera_nonlinear_refinement.hpp"
+#include "steps/intrinsic_initialization.hpp"
+#include "steps/linear_pose_initialization.hpp"
+#include "steps/step_runner.hpp"
 
 using namespace reprojection;
 
@@ -55,7 +57,7 @@ int main() {
     // Load targets, initialize, and optimize
     CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
 
-    application::IiStep const ii_step{camera_info, targets};
+    application::IntrinsicInitializationStep const ii_step{camera_info, targets};
     auto const [camera_state, ii_cache_status]{application::RunStep<CameraState>(ii_step, db)};
     std::cout << "Ii : " << ToString(ii_cache_status) << " " << camera_state.intrinsics.transpose() << std::endl;
 

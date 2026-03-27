@@ -27,7 +27,7 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddImage() const { database::AddImage(timestamp_ns, sensor_name, db); }
 
-    void AddTarget() const { WriteToDb(CameraMeasurement{timestamp_ns, {}}, sensor_name, db); }
+    void AddTarget() const { WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db); }
 
     void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
         WriteToDb(step_name, cache_key, sensor_name, db);
@@ -49,12 +49,12 @@ TEST_F(SensorDatabaseFixture, WriteCameraInfo) {
 }
 
 TEST_F(SensorDatabaseFixture, AddExtractedTargetData) {
-    EXPECT_THROW(WriteToDb(CameraMeasurement{timestamp_ns, {}}, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
 
     AddCamera();
     AddImage();
 
-    EXPECT_NO_THROW(WriteToDb(CameraMeasurement{timestamp_ns, {}}, sensor_name, db));
+    EXPECT_NO_THROW(WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
 }
 
 TEST_F(SensorDatabaseFixture, AddCalibrationStep) {
@@ -115,16 +115,16 @@ TEST(DatabaseSensorDataInterface, TestAddImuData) {
     auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true)};
 
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    EXPECT_NO_THROW(database::WriteToDb({{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                                         {1, {Vector3d::Zero(), Vector3d::Zero()}}},
+    EXPECT_NO_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
+                                                        {1, {Vector3d::Zero(), Vector3d::Zero()}}},
                                         sensor_name_1, db));
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary
     // key (timestamp_ns, sensor_name) so it is not a duplicate
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    EXPECT_NO_THROW(database::WriteToDb({{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db));
+    EXPECT_NO_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db));
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
-    EXPECT_THROW(database::WriteToDb({{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
+    EXPECT_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
                  std::runtime_error);
 }
