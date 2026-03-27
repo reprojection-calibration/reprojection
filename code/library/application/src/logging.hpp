@@ -1,5 +1,6 @@
 #pragma once
 
+#include <spdlog/cfg/env.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -11,6 +12,8 @@ namespace reprojection::logging {
 inline std::shared_ptr<spdlog::logger> get(std::string const& name) {
     auto logger{spdlog::get(name)};
     if (not logger) {
+        spdlog::cfg::load_env_levels();
+
         logger = spdlog::stdout_color_mt(name);
 
         char const* const log_pattern{std::getenv("SPDLOG_PATTERN")};

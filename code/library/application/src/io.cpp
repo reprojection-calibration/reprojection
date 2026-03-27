@@ -32,6 +32,9 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
     auto const workspace_dir{GetCommandOption(argv, argv + argc, "--workspace")};
     path_config.workspace_dir = workspace_dir ? fs::path{*workspace_dir} : path_config.data_path.parent_path();
 
+    log->info("{{'config_path': '{}', 'data_path': '{}', 'workspace_dir': '{}'}}", path_config.config_path.string(),
+              path_config.data_path.string(), path_config.workspace_dir.string());
+
     return path_config;
 }
 

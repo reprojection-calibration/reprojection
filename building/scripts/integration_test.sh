@@ -44,6 +44,8 @@ test_command() {
     return 0
 }
 
+# Prevent all non error level messages from polluting the terminal output.
+export SPDLOG_LEVEL=error
 # Strip all the other logging formatting and only log the main text payload.
 export SPDLOG_PATTERN="%v"
 
