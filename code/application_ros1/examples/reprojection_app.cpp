@@ -57,10 +57,14 @@ int main(int argc, char* argv[]) {
         return std::nullopt;
     }};
 
-    // TODO CALCULATE REAL DATA SIGANTURE!!!!!!!!
-    std::string const data_signature{ *ros1::SerializeBagTopic(bag_reader)}; // UNPROTECTED OPTIONAL ACCESS!!!!
+    auto const data_signature{ros1::SerializeBagTopic(bag_reader)};
+    if (not data_signature) {
+        // TODO(Jack): Add for which sensor and data source!
+        std::cerr << "Failed data signature calculation\n";
+        return EXIT_FAILURE;
+    }
 
-    application::Calibrate(config, image_source, data_signature, db);
+    application::Calibrate(config, image_source, *data_signature, db);
 
     return 0;
 }
