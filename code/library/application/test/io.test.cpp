@@ -9,7 +9,7 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(ApplicationCliUtils, TestGetCommandOption) {
+TEST(ApplicationIO, TestGetCommandOption) {
     auto result{application::GetCommandOption(nullptr, nullptr, "")};
     EXPECT_FALSE(result.has_value());
 
@@ -34,7 +34,7 @@ TEST(ApplicationCliUtils, TestGetCommandOption) {
     EXPECT_FALSE(result.has_value());
 }
 
-TEST(ApplicationLoadAndValidateConfig, TestHappyPath) {
+TEST(ApplicationIO, TestHappyPath) {
     // TODO(Jack): This is now copy and pasted in three places, should we make one common def in the testing utils?
     static constexpr std::string_view minimum_config{R"(
         [sensor]
@@ -53,7 +53,7 @@ TEST(ApplicationLoadAndValidateConfig, TestHappyPath) {
     EXPECT_EQ(std::get<toml::table>(result), gt_result);
 }
 
-TEST(ApplicationLoadAndValidateConfig, TestBadLoad) {
+TEST(ApplicationIO, TestBadLoad) {
     auto const result{application::LoadAndValidateConfig("nonexistent.toml")};
     ASSERT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
     EXPECT_EQ(std::get<TomlErrorMsg>(result).error, TomlError::FailedLoad);
@@ -61,7 +61,7 @@ TEST(ApplicationLoadAndValidateConfig, TestBadLoad) {
               "Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)");
 }
 
-TEST(ApplicationLoadAndValidateConfig, TestBadValidate) {
+TEST(ApplicationIO, TestBadValidate) {
     static constexpr std::string_view empty_config{R"(
     )"};
     TemporaryFile const config_file{".toml", empty_config};
