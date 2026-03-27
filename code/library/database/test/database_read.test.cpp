@@ -25,7 +25,7 @@ class CameraReadFixture : public ::testing::Test {
     void AddTarget(uint64_t const timestamp_ns) const {
         // Due to foreign key relationship we need add an image before we add the target
         database::AddImage(timestamp_ns, sensor_name, db);
-        database::WriteToDb({timestamp_ns, target}, sensor_name, db);
+        database::WriteToDb({{timestamp_ns, target}}, sensor_name, db);
     }
 
     std::shared_ptr<database::CalibrationDatabase> db;
@@ -140,8 +140,8 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
                         sensor_name_1, db);
     // Data from imu 456
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    database::WriteToDb({{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                         {20, {Vector3d::Zero(), Vector3d::Zero()}}},
+    database::WriteToDb(ImuMeasurements{{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
+                                        {20, {Vector3d::Zero(), Vector3d::Zero()}}},
                         sensor_name_2, db);
 
     auto const imu_1_data{database::GetImuData(db, sensor_name_1)};

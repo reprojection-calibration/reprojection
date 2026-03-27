@@ -9,9 +9,9 @@ namespace reprojection::application {
 inline bool CacheHit(std::optional<std::string> const& loaded_key, std::string_view key) {
     if (loaded_key.has_value() and loaded_key.value() == key) {
         return true;
-    } else {
-        return false;
     }
+
+    return false;
 }
 
 template <typename Result, typename Step>

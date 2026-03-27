@@ -45,6 +45,7 @@ add_subdirectory(optimization)
 add_subdirectory(pnp)
 add_subdirectory(calibration)
 add_subdirectory(feature_extraction)
+add_subdirectory(steps)
 add_subdirectory(application)
 add_subdirectory(demos)
 
