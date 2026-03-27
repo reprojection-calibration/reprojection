@@ -80,7 +80,7 @@ TEST_F(ImageSourceFixture, TestCameraInfoStep) {
 
 TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
     steps::FeatureExtractionStep const step{camera_info.sensor_name, "sha256-key", image_source,
-                                                  *config["target"].as_table()};
+                                            *config["target"].as_table()};
 
     auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
     EXPECT_EQ(std::size(extracted_targets), 0);
