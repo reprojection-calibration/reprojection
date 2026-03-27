@@ -1,49 +1,14 @@
-#include <map>
+
 #include <ranges>
 
+#include <toml++/toml.hpp>
+
+#include "application/calibrate.hpp"
 #include "caching/cache_keys.hpp"
-#include "calibration/initialization_methods.hpp"
 #include "database/calibration_database.hpp"
-#include "optimization/camera_imu_nonlinear_refinement.hpp"
-#include "projection_functions/double_sphere.hpp"
-#include "spline/se3_spline.hpp"
-#include "spline/spline_initialization.hpp"
-#include "steps/camera_info.hpp"
-#include "steps/camera_nonlinear_refinement.hpp"
-#include "steps/feature_extraction.hpp"
-#include "steps/intrinsic_initialization.hpp"
-#include "steps/linear_pose_initialization.hpp"
-#include "steps/step_runner.hpp"
+#include "database/database_write.hpp"
 
 using namespace reprojection;
-
-// WARN(Jack): At this time this demo has no clear role in CI/CD or the active development. Please feel to remove this
-// as needed!
-
-// WARN(Jack): This is a hack that we need to do so that the spline initialization does not have any massive
-// discontinuities or sudden jumps. But there is some bigger problem here that we are missing and need to solve long
-// term.
-// WARN(Jack): Also note that we do not save aligned_initial_state to the database, we save plain old initial_state and
-// use that to calculate the reprojection errors, but use aligned_initial_state to initialize the nonlinear
-// optimization. This means that what we are doing here and what we are visualizing in the database are starting to
-// diverge. Not nice!
-// cppcheck-suppress passedByValue
-OptimizationState AlignRotations(OptimizationState state) {
-    Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.head<3>()};
-    for (auto& frame_i : state.frames | std::views::values) {
-        Vector3d so3_i{frame_i.pose.head<3>()};
-        double const dp{so3_i_1.dot(so3_i)};
-
-        if (dp < 0) {
-            so3_i *= -1.0;
-        }
-        frame_i.pose.head<3>() = so3_i;
-
-        so3_i_1 = so3_i;
-    }
-
-    return state;
-}
 
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
@@ -78,28 +43,7 @@ int main() {
     } catch (...) {
     }
 
-    steps::CameraInfoStep const ci_step{"", *config["sensor"].as_table(), {}};
-    auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(ci_step, db)};
-    std::cout << "Ci : " << ToString(ci_cache_status) << " " << camera_info.sensor_name << std::endl;
-
-    steps::FeatureExtractionStep const ftext_step{camera_info.sensor_name, "", {}, *config["target"].as_table()};
-    auto const [targets, ftext_cache_status]{steps::RunStep<CameraMeasurements>(ftext_step, db)};
-    std::cout << "Ftext : " << ToString(ftext_cache_status) << " " << std::size(targets) << std::endl;
-
-    steps::IntrinsicInitializationStep const ii_step{camera_info, targets};
-    auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};
-    std::cout << "Ii : " << ToString(ii_cache_status) << " " << camera_state.intrinsics.transpose() << std::endl;
-
-    steps::LpiStep const lpi_step{camera_info, targets, camera_state};
-    auto const [initial_poses, lpi_cache_status]{steps::RunStep<Frames>(lpi_step, db)};
-    std::cout << "Lpi : " << ToString(lpi_cache_status) << std::endl;
-
-    auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
-
-    steps::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
-    auto const [optimized_state, cnlr_cache_status]{steps::RunStep<OptimizationState>(cnlr_step, db)};
-    std::cout << "Cnlr : " << ToString(cnlr_cache_status) << " " << optimized_state.camera_state.intrinsics.transpose()
-              << std::endl;
+    application::Calibrate(config, {}, "", db);
 
     return EXIT_SUCCESS;
 }

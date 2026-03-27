@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "application")
 
 set(SRC_FILES
+        src/calibrate.cpp
         src/io.cpp
 )
 
