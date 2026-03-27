@@ -30,7 +30,8 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target
 
     if (type == TargetType::Checkerboard) {
         return std::make_unique<CheckerboardExtractor>(pattern_size, unit_dimension);
-    } else if (type == TargetType::CircleGrid) {
+    }
+    if (type == TargetType::CircleGrid) {
         bool asymmetric{false};
         // TODO(Jack): Something I do not like here is now that we have this key sequence hardcoded in two places. Once
         //  in the config loading checking logic and once here. We should figure out how to have one central source of
@@ -39,12 +40,13 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target
             asymmetric = node.as_boolean()->get();
         }
         return std::make_unique<CircleGridExtractor>(pattern_size, unit_dimension, asymmetric);
-    } else if (type == TargetType::AprilGrid3) {
-        return std::make_unique<AprilGrid3Extractor>(pattern_size, unit_dimension);
-    } else {
-        throw std::runtime_error("CreateTargetExtractor() invalid feature extractor type: " +  // LCOV_EXCL_LINE
-                                 type_str);                                                    // LCOV_EXCL_LINE
     }
+    if (type == TargetType::AprilGrid3) {
+        return std::make_unique<AprilGrid3Extractor>(pattern_size, unit_dimension);
+    }
+
+    throw std::runtime_error("CreateTargetExtractor() invalid feature extractor type: " +  // LCOV_EXCL_LINE
+                             type_str);                                                    // LCOV_EXCL_LINE
 }
 
 }  // namespace reprojection::feature_extraction
