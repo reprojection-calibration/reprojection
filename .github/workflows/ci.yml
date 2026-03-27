@@ -73,7 +73,7 @@ jobs:
     # NOTE(Jack): Network resource use is expensive so we make the applications depend on and cache from a common
     # test-data-download stage. If we did not explicitly have the download step and cache from it each application would
     # itself download and cache the data. Wasteful.
-    needs: [debug-build, test-data-download]
+    needs: [ debug-build, test-data-download ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
