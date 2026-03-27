@@ -22,6 +22,7 @@ find_package(OpenCV REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
 find_package(GTest REQUIRED)
