@@ -3,6 +3,7 @@ set(LIBRARY_NAME "application")
 set(SRC_FILES
         src/calibrate.cpp
         src/io.cpp
+        src/utils.cpp
 )
 
 set(LINK_LIBRARIES
@@ -26,6 +27,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        src/utils.test.cpp
         test/calibrate.test.cpp
         test/io.test.cpp
 )
