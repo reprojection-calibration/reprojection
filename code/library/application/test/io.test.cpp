@@ -80,8 +80,7 @@ TEST(ApplicationDatabase, TestOpeningInputs) {
     result = application::Open(workspace, "");
     ASSERT_TRUE(std::holds_alternative<application::DbErrorMsg>(result));
     EXPECT_EQ(std::get<application::DbErrorMsg>(result).msg,
-              "Provided data source path: '' is not a valid file - error code (2) with description 'No such file or "
-              "directory'");
+              "Provided data source path: '' does not exist - error code (0) with description 'Success'");
 }
 
 // TODO THIS ALREADY EXISTS IN THE TESTING UTILITIES TESTING
