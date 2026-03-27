@@ -43,6 +43,7 @@ jobs:
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: code-coverage-assertion
+          external_cache_scope: debug-build
           target: code-coverage-assertion-stage
   python-tooling:
     needs: code-checks-python
@@ -80,8 +81,8 @@ jobs:
       - uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
-          external_cache_scope: test-data-download
           cache_scope: ${{ matrix.applications.cache_scope }}
+          external_cache_scope: test-data-download
           target: ${{ matrix.applications.target }}
     strategy:
       matrix:
