@@ -26,6 +26,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        test/calibrate.test.cpp
         test/io.test.cpp
 )
 AddTests()
