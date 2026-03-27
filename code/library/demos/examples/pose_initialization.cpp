@@ -101,18 +101,5 @@ int main() {
     std::cout << "Cnlr : " << ToString(cnlr_cache_status) << " " << optimized_state.camera_state.intrinsics.transpose()
               << std::endl;
 
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(optimized_state.frames)};
-    ReprojectionErrors const interpolated_spline_error{optimization::SplineReprojectionResiduals(
-        camera_info, targets, optimized_state.camera_state, interpolated_spline)};
-    (void)interpolated_spline_error;
-
-    ImuMeasurements const imu_data{database::GetImuData(db, "/imu0")};
-    auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
-        {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
-    auto const [R_imu_co, _]{orientation_init};
-
-    std::cout << R_imu_co << std::endl;
-    std::cout << gravity_w.transpose() << std::endl;
-
     return EXIT_SUCCESS;
 }
