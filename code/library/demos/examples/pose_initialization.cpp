@@ -27,12 +27,22 @@ int main() {
         )"};
     toml::table const config{toml::parse(config_file)};
 
+    // NOTE(Jack): Because we do not have the images themselves checked into the test data, and only the extracted
+    // features, we need to "manufacture" cache hits for the camera info and feature extraction steps. This is
+    // essentially what we are doing here in the following block. The reason that we put it into a try catch block is to
+    // prevent the database throwing and killing the program when we run the program more than once without resetting
+    // the database.
     try {
         CameraInfo const camera_info{config["sensor"]["camera_name"].as_string()->get(),
                                      ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
                                      {0, 512, 0, 512}};
         database::WriteToDb(camera_info, db);
 
+        // NOTE(Jack): Normally the cache key for both camera info and feature extraction steps is the sum of both
+        // their respective configurations and the image_source_signature. As we have no image source in this example
+        // script we can ignore it and simply pass it as a blank string when we call application::Calibrate(). That is
+        // the reason why the step cache keys we create here are only created from their respective configuration
+        // tables.
         std::ostringstream oss1;
         oss1 << *config["sensor"].as_table();
         database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(oss1.str()), camera_info.sensor_name, db);
