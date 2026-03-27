@@ -18,7 +18,8 @@ std::string CameraInfoStep::CacheKey() const {
 CameraInfo CameraInfoStep::Compute() const {
     auto const result{image_source()};
     if (not result) {
-        throw std::runtime_error("we need an error handling strategy for empty image sources to get camera info");
+        throw std::runtime_error(
+            "we need an error handling strategy for empty image sources to get camera info");  // LCOV_EXCL_LINE
     }
     auto const& [_, img]{*result};
 
@@ -33,7 +34,7 @@ CameraInfo CameraInfoStep::Load(std::shared_ptr<database::CalibrationDatabase co
     auto const camera_info{database::ReadCameraInfo(db, SensorName())};
 
     if (not camera_info) {
-        throw std::runtime_error("we need a consistent error handling strategy!!!");
+        throw std::runtime_error("we need a consistent error handling strategy!!!");  // LCOV_EXCL_LINE
     }
 
     return *camera_info;

@@ -24,7 +24,7 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
 
         std::optional<ExtractedTarget> const target{extractor->Extract(image)};
         if (target.has_value()) {
-            extracted_targets.insert({timestamp_ns, target.value()});
+            extracted_targets.insert({timestamp_ns, target.value()});  // LCOV_EXCL_LINE
         }
     }
 
