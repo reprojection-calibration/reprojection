@@ -3,7 +3,7 @@
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 struct LpiStep {
     CameraInfo camera_info;
@@ -23,4 +23,4 @@ struct LpiStep {
     void Save(Frames const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
 };
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

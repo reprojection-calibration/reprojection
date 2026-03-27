@@ -1,10 +1,18 @@
 #pragma once
 
 #include <algorithm>
+#include <filesystem>
 #include <optional>
 #include <string>
+#include <variant>
+
+#include <toml++/toml.hpp>
+
+#include "types/config.hpp"
 
 namespace reprojection::application {
+
+namespace fs = std::filesystem;
 
 // Adopted from https://stackoverflow.com/questions/865668/parsing-command-line-arguments-in-c
 inline std::optional<std::string> GetCommandOption(char const* const* const begin, char const* const* const end,
@@ -16,5 +24,7 @@ inline std::optional<std::string> GetCommandOption(char const* const* const begi
 
     return std::nullopt;
 }
+
+std::variant<toml::table, TomlErrorMsg> LoadAndValidateConfig(fs::path const& config_path);
 
 }  // namespace reprojection::application

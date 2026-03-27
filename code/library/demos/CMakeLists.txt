@@ -9,6 +9,7 @@ set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
         application
+        caching
         calibration
         database
         eigen_utilities
@@ -19,6 +20,7 @@ set(LINK_LIBRARIES
         projection_functions
         spline
         steps
+        types
         types_internal
 )
 set(INSTALL_SO OFF)

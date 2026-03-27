@@ -28,18 +28,18 @@ struct DummyStep {
 };
 
 // TODO(Jack): How can we write a test to test the cascading delete and step replacement logic?
-TEST(ApplicationStepRunner, TestStepRunnerWithDummyStep) {
+TEST(stepsStepRunner, TestStepRunnerWithDummyStep) {
     auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
     database::WriteToDb(CameraInfo{"", CameraModel::Pinhole, {}}, db);
 
     DummyStep const step;
 
-    auto [data, cache_status]{application::RunStep<int>(step, db)};
+    auto [data, cache_status]{steps::RunStep<int>(step, db)};
     EXPECT_EQ(data, 1);  // Result from DummyStep.Compute()
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
-    std::tie(data, cache_status) = application::RunStep<int>(step, db);
+    std::tie(data, cache_status) = steps::RunStep<int>(step, db);
     EXPECT_EQ(data, 2);  // Result from DummyStep.Load()
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }

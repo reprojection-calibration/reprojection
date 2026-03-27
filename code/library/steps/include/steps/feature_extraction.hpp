@@ -6,7 +6,7 @@
 #include "types/calibration_types.hpp"
 #include "types/io.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 struct FeatureExtractionStep {
     std::string sensor_name;
@@ -29,4 +29,4 @@ struct FeatureExtractionStep {
               std::shared_ptr<database::CalibrationDatabase> const db) const;
 };
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

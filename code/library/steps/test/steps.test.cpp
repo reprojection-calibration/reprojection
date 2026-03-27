@@ -61,7 +61,7 @@ class ImageSourceFixture : public StepsFixture {
 };
 
 TEST_F(ImageSourceFixture, TestCameraInfoStep) {
-    application::CameraInfoStep const step{"sha256-key", *config["sensor"].as_table(), image_source};
+    steps::CameraInfoStep const step{"sha256-key", *config["sensor"].as_table(), image_source};
 
     auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
@@ -79,8 +79,8 @@ TEST_F(ImageSourceFixture, TestCameraInfoStep) {
 }
 
 TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
-    application::FeatureExtractionStep const step{camera_info.sensor_name, "sha256-key", image_source,
-                                                  *config["target"].as_table()};
+    steps::FeatureExtractionStep const step{camera_info.sensor_name, "sha256-key", image_source,
+                                            *config["target"].as_table()};
 
     auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
     EXPECT_EQ(std::size(extracted_targets), 0);
@@ -93,7 +93,7 @@ TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
 
 TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
-    application::IntrinsicInitializationStep const step{camera_info, targets};
+    steps::IntrinsicInitializationStep const step{camera_info, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
@@ -112,7 +112,7 @@ TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
 
 TEST_F(StepsFixture, TestLpiStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    application::LpiStep const step{camera_info, targets, camera_state};
+    steps::LpiStep const step{camera_info, targets, camera_state};
 
     auto [frames, cache_status]{RunStep<Frames>(step, db)};
     EXPECT_EQ(std::size(frames), 50);
@@ -131,7 +131,7 @@ TEST_F(StepsFixture, TestLpiStep) {
     // Make a new different set of targets to trigger a cache miss and data removal (i.e. sql cascade operation) and
     // replacement with a new set of poses.
     std::tie(targets, gt_poses) = testing_mocks::GenerateMvgData(camera_info, camera_state, 40, 1e9);
-    application::LpiStep const step_2{camera_info, targets, camera_state};
+    steps::LpiStep const step_2{camera_info, targets, camera_state};
 
     std::tie(frames, cache_status) = RunStep<Frames>(step_2, db);
     EXPECT_EQ(std::size(frames), 40);
@@ -143,7 +143,7 @@ TEST_F(StepsFixture, TestLpiStep) {
 
 TEST_F(StepsFixture, TestCnlrStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    application::CnlrStep const step{camera_info, targets, {camera_state, gt_poses}};
+    steps::CnlrStep const step{camera_info, targets, {camera_state, gt_poses}};
 
     auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
     EXPECT_EQ(std::size(result.frames), 50);

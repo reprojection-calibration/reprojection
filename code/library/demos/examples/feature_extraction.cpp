@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "application/cli_utils.hpp"
+#include "application/io.hpp"
 #include "demos/image_source.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "types/eigen_types.hpp"

@@ -4,7 +4,7 @@
 #include "database/database_remove.hpp"
 #include "database/database_write.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 inline bool CacheHit(std::optional<std::string> const& loaded_key, std::string_view key) {
     if (loaded_key.has_value() and loaded_key.value() == key) {
@@ -49,4 +49,4 @@ std::pair<Result, CacheStatus> RunStep(Step const& step, std::shared_ptr<databas
     return {result, CacheStatus::CacheMiss};
 }
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

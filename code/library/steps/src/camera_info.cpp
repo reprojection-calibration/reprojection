@@ -6,7 +6,7 @@
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 std::string CameraInfoStep::CacheKey() const {
     std::ostringstream oss;
@@ -45,4 +45,4 @@ void CameraInfoStep::Save(CameraInfo const& camera_info,
     database::WriteToDb(camera_info, db);
 }
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

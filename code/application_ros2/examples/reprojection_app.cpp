@@ -1,7 +1,6 @@
 #include <iostream>
 
-#include <reprojection/application/cli_utils.hpp>
-#include <reprojection/application/load_and_validate_config.hpp>
+#include <reprojection/application/io.hpp>
 #include <toml++/impl/table.hpp>
 
 #include "reprojection/reprojection.hpp"
