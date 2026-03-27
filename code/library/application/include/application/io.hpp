@@ -1,14 +1,10 @@
 #pragma once
 
-#include <algorithm>
 #include <filesystem>
 #include <optional>
 #include <string>
-#include <variant>
 
 #include <toml++/toml.hpp>
-
-#include "types/config.hpp"
 
 namespace reprojection::application {
 
@@ -18,10 +14,6 @@ struct PathConfig {
     fs::path config_path;
     fs::path data_path;
     fs::path workspace_dir;
-};
-
-struct CliErrorMsg {
-    std::string msg;
 };
 
 std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* const argv[]);
