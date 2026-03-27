@@ -7,7 +7,11 @@
 
 namespace reprojection::application {
 
-std::string FeatureExtractionStep::CacheKey() const { return cache_key; }
+// ERROR(Jack): The feature extraction here is in the unique place where it control two things, the extracted features
+// and the camera info. Right now we are only caching here on the input images, which means that as long as the images
+// did not change we will get a cache hit, but what happens if the camera info config change? Then nothing will happen,
+// this needs to be fixed!
+std::string FeatureExtractionStep::CacheKey() const { return caching::CacheKey(cache_key); }
 
 FeatureExtractionStep::Result FeatureExtractionStep::Compute() const {
     // TODO(Jack): Is it really appropriate to use a toml table here instead of a struct?

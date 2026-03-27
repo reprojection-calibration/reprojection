@@ -58,9 +58,9 @@ int main(int argc, char* argv[]) {
     }};
 
     // TODO CALCULATE REAL DATA SIGANTURE!!!!!!!!
-    // std::string const data_signature{ *ros1::SerializeBagTopic(bag_reader)}; // UNPROTECTED OPTIONAL ACCESS!!!!
+    std::string const data_signature{ *ros1::SerializeBagTopic(bag_reader)}; // UNPROTECTED OPTIONAL ACCESS!!!!
 
-    application::Calibrate(config, image_source, "ftex_key", db);
+    application::Calibrate(config, image_source, data_signature, db);
 
     return 0;
 }
