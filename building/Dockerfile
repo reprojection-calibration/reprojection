@@ -301,11 +301,16 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
                                     --build_dir=/buildroot/build-ros2-app \
                                     --src_dir=/temporary/code/application_ros2
 
-COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16.db3
+COPY code/test_data/minimum_config.toml /temporary/code/test_data/minimum_config.toml
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16/ /data/dataset-calib-imu4_512_16/
+
+ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} /temporary/code/test_data/dataset-calib-imu4_512_16.db3 8b08112a37af57b70ad5f8b1a06ca7c7d92ace2f694148c5c064e060404cb88a
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/buildroot/build-ros2-app-Release/reprojection.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \

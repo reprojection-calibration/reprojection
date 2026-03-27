@@ -35,8 +35,11 @@ TEST(Ros2Application, TestImageLoading) {
     while (reader.has_next()) {
         auto const msg{reader.read_next()};
 
-        cv::Mat img;
-        EXPECT_NO_THROW(img = ros2::ToCvMat(*msg, topic_type_map.at(msg->topic_name)));
+        std::pair<uint64_t, cv::Mat> result;
+        EXPECT_NO_THROW(result = ros2::ToCvMat(*msg, topic_type_map.at(msg->topic_name)));
+
+        auto const& [timestamp_ns, img]{result};
+        EXPECT_EQ(timestamp_ns, 1);
         EXPECT_EQ(img.rows, 1);
         EXPECT_EQ(img.cols, 1);
     }
