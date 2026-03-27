@@ -1,11 +1,11 @@
-#include "image_loading.hpp"
+#include "reprojection/image_loading.hpp"
 
 #include <gtest/gtest.h>
 
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writer.hpp>
 
-#include "testing_utils.hpp"
+#include "../src/testing_utils.hpp"
 
 using namespace reprojection;
 

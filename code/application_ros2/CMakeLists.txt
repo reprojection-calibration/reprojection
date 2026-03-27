@@ -31,7 +31,7 @@ AddLibrary()
 find_package(GTest REQUIRED)
 enable_testing()
 set(TESTS
-        src/image_loading.test.cpp
+        test/image_loading.test.cpp
         test/reprojection.test.cpp
 )
 AddTests()

@@ -1,8 +1,11 @@
 #include <iostream>
 
+#include <reprojection/application/calibrate.hpp>
 #include <reprojection/application/io.hpp>
 #include <toml++/toml.hpp>
 
+#include "reprojection/bag_wrapper.hpp"
+#include "reprojection/image_loading.hpp"
 #include "reprojection/reprojection.hpp"
 
 using namespace reprojection;
@@ -38,6 +41,36 @@ int main(int argc, char* argv[]) {
         std::cerr << std::get<ros2::BagError>(reader_result).message << "\n";
         return EXIT_FAILURE;
     }
+
+    auto const db_result{application::Open(paths.workspace_dir, paths.data_path)};
+    if (std::holds_alternative<application::DbErrorMsg>(db_result)) {
+        std::cerr << std::get<application::DbErrorMsg>(db_result).msg << "\n";
+        return EXIT_FAILURE;
+    }
+
+    auto const& bag_reader{std::get<ros2::SingleTopicBagReader>(reader_result)};
+    auto const& db{std::get<application::DbPtr>(db_result)};
+
+    // TODO(Jack): Can we put this into the image loading file? I am unsure about the lifetime semantics of the view and
+    //  how we pass these into the lambda.
+    auto image_source{[&bag_reader]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+        if (auto const msg{bag_reader.Next()}) {
+            auto const data_i{ros2::ToCvMat(*msg, bag_reader.topic_type)};
+
+            return data_i;
+        }
+
+        return std::nullopt;
+    }};
+
+    auto const data_signature{ros2::SerializeBagTopic(bag_reader)};
+    if (not data_signature) {
+        // TODO(Jack): Add for which sensor and data source!
+        std::cerr << "Failed data signature calculation\n";
+        return EXIT_FAILURE;
+    }
+
+    application::Calibrate(config, image_source, *data_signature, db);
 
     return 0;
 }
