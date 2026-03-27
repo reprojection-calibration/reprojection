@@ -10,6 +10,7 @@
 #include "steps/step_runner.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
+#include "types/io.hpp"
 
 using namespace reprojection;
 using namespace std::string_view_literals;
@@ -55,7 +56,7 @@ class ImageSourceFixture : public StepsFixture {
 
     std::vector<std::pair<uint64_t, cv::Mat>> data{{0, cv::Mat::zeros(10, 20, CV_8UC1)},
                                                    {1, cv::Mat::zeros(10, 20, CV_8UC1)}};
-    std::function<std::optional<std::pair<uint64_t, cv::Mat>>()> image_source;
+    ImageSource image_source;
     toml::table config;
 };
 
