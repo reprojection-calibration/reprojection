@@ -265,16 +265,21 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
                                     --src_dir=/temporary/code/application_ros1 \
                                     --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
 
+
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16.db3
+COPY code/test_data/minimum_config.toml /temporary/code/test_data/minimum_config.toml
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
+
+ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} /temporary/code/test_data/dataset-calib-imu4_512_16.db3 2c078231b5ce84b0420be5903d92ab1ec97c9732b79f1eb0a94b47fe632c386f
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/noetic/setup.bash; \
     export APP="/buildroot/build-ros1-app-Release/reprojection.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
     /temporary/${INTEGRATION_TEST}
-
 
 FROM apt-base-stage AS ros2-base-stage
 

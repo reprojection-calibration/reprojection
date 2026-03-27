@@ -61,6 +61,6 @@ test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --da
     1 \
     "Error loading data: nonexistent.data"
 
-test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data ${DATA}" \
+test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data ${DATA} --workspace /temporary/code/test_data/" \
     0 \
     ""
