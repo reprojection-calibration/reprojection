@@ -6,7 +6,7 @@
 #include "database/database_write.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"  // REQUIRED BECAUSE OF ReprojectionResiduals()
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 std::string LpiStep::CacheKey() const { return caching::CacheKey(camera_info, targets, camera_state); }
 
@@ -24,4 +24,4 @@ void LpiStep::Save(Frames const& frames, std::shared_ptr<database::CalibrationDa
     database::WriteToDb(error, step_type, SensorName(), db);
 }
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

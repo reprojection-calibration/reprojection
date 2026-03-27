@@ -1,13 +1,16 @@
 #include <map>
 #include <ranges>
 
+#include "caching/cache_keys.hpp"
 #include "calibration/initialization_methods.hpp"
 #include "database/calibration_database.hpp"
 #include "optimization/camera_imu_nonlinear_refinement.hpp"
 #include "projection_functions/double_sphere.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
+#include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
+#include "steps/feature_extraction.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
@@ -48,27 +51,53 @@ int main() {
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
-    CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
+    static constexpr std::string_view config_file{R"(
+            [sensor]
+            camera_name = "/cam0/image_raw"
+            camera_model = "double_sphere"
+
+            [target]
+            pattern_size = [3,4]
+            type = "circle_grid"
+        )"};
+    toml::table const config{toml::parse(config_file)};
+
     try {
+        CameraInfo const camera_info{config["sensor"]["camera_name"].as_string()->get(),
+                                     ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
+                                     {0, 512, 0, 512}};
         database::WriteToDb(camera_info, db);
+
+        std::ostringstream oss1;
+        oss1 << *config["sensor"].as_table();
+        database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(oss1.str()), camera_info.sensor_name, db);
+
+        std::ostringstream oss2;
+        oss2 << *config["target"].as_table();
+        database::WriteToDb(CalibrationStep::FtEx, caching::CacheKey(oss2.str()), camera_info.sensor_name, db);
     } catch (...) {
     }
 
-    // Load targets, initialize, and optimize
-    CameraMeasurements const targets{database::GetExtractedTargetData(db, camera_info.sensor_name)};
+    steps::CameraInfoStep const ci_step{"", *config["sensor"].as_table(), {}};
+    auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(ci_step, db)};
+    std::cout << "Ci : " << ToString(ci_cache_status) << " " << camera_info.sensor_name << std::endl;
 
-    application::IntrinsicInitializationStep const ii_step{camera_info, targets};
-    auto const [camera_state, ii_cache_status]{application::RunStep<CameraState>(ii_step, db)};
+    steps::FeatureExtractionStep const ftext_step{camera_info.sensor_name, "", {}, *config["target"].as_table()};
+    auto const [targets, ftext_cache_status]{steps::RunStep<CameraMeasurements>(ftext_step, db)};
+    std::cout << "Ftext : " << ToString(ftext_cache_status) << " " << std::size(targets) << std::endl;
+
+    steps::IntrinsicInitializationStep const ii_step{camera_info, targets};
+    auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};
     std::cout << "Ii : " << ToString(ii_cache_status) << " " << camera_state.intrinsics.transpose() << std::endl;
 
-    application::LpiStep const lpi_step{camera_info, targets, camera_state};
-    auto const [initial_poses, lpi_cache_status]{application::RunStep<Frames>(lpi_step, db)};
+    steps::LpiStep const lpi_step{camera_info, targets, camera_state};
+    auto const [initial_poses, lpi_cache_status]{steps::RunStep<Frames>(lpi_step, db)};
     std::cout << "Lpi : " << ToString(lpi_cache_status) << std::endl;
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
 
-    application::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
-    auto const [optimized_state, cnlr_cache_status]{application::RunStep<OptimizationState>(cnlr_step, db)};
+    steps::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
+    auto const [optimized_state, cnlr_cache_status]{steps::RunStep<OptimizationState>(cnlr_step, db)};
     std::cout << "Cnlr : " << ToString(cnlr_cache_status) << " " << optimized_state.camera_state.intrinsics.transpose()
               << std::endl;
 

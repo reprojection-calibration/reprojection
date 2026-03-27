@@ -5,7 +5,7 @@
 #include "database/database_write.hpp"
 #include "feature_extraction/target_extraction.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 std::string FeatureExtractionStep::CacheKey() const {
     std::ostringstream oss;
@@ -40,4 +40,4 @@ void FeatureExtractionStep::Save(CameraMeasurements const& extracted_targets,
     database::WriteToDb(extracted_targets, SensorName(), db);
 }
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

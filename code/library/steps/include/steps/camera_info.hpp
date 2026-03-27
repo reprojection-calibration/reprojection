@@ -6,7 +6,7 @@
 #include "types/calibration_types.hpp"
 #include "types/io.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 // NOTE(Jack): The CameraInfoStep and FeatureExtractionStep are unique because they need to iterate over the input
 // images. Because there are many possible data interfaces with different ways to iterate over them, we chose to use
@@ -41,4 +41,4 @@ struct CameraInfoStep {
     void Save(CameraInfo const& camera_info, std::shared_ptr<database::CalibrationDatabase> const db) const;
 };
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

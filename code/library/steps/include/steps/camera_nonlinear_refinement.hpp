@@ -3,7 +3,7 @@
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 struct CnlrStep {
     CameraInfo camera_info;
@@ -23,4 +23,4 @@ struct CnlrStep {
     void Save(OptimizationState const& optimized_state, std::shared_ptr<database::CalibrationDatabase> const db) const;
 };
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

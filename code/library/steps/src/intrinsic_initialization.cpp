@@ -6,7 +6,7 @@
 #include "database/database_write.hpp"
 #include "optimization/camera_nonlinear_refinement.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 std::string IntrinsicInitializationStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
 
@@ -38,4 +38,4 @@ void IntrinsicInitializationStep::Save(CameraState const& intrinsics,
     database::WriteToDb(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
 }
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps
