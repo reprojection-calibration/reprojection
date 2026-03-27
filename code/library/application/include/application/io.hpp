@@ -30,6 +30,6 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
 std::optional<std::string> GetCommandOption(char const* const* const begin, char const* const* const end,
                                             std::string const& option);
 
-std::variant<toml::table, TomlErrorMsg> LoadAndValidateConfig(fs::path const& config_path);
+std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path);
 
 }  // namespace reprojection::application

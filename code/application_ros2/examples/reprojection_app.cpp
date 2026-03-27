@@ -17,14 +17,13 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    auto const load_config_result{application::LoadAndValidateConfig(paths->config_path)};
-    if (std::holds_alternative<TomlErrorMsg>(load_config_result)) {
-        std::cout << std::get<TomlErrorMsg>(load_config_result).msg << "\n";
+    auto const config{application::LoadAndValidateConfig(paths->config_path)};
+    if (not config) {
         return EXIT_FAILURE;
     }
 
-    toml::table const config{std::get<toml::table>(load_config_result)};
-    std::string const camera_topic{*config["sensor"]["camera_name"].value<std::string>()};
+    toml::table const config_table{*config};
+    std::string const camera_topic{*config_table["sensor"]["camera_name"].value<std::string>()};
 
     // NOTE(Jack): We want to control the terminal output of our program entirely. But ROS loves to log so we need to
     // manually set the log level to the highest possible level in an effort to prevent ROS logging for normal errors

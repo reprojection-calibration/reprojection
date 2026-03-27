@@ -45,14 +45,19 @@ std::optional<std::string> GetCommandOption(char const* const* const begin, char
     return std::nullopt;
 }
 
-std::variant<toml::table, TomlErrorMsg> LoadAndValidateConfig(fs::path const& config_path) {
+std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path) {
     auto const loaded_config{config::LoadConfigFile(config_path)};
     if (std::holds_alternative<TomlErrorMsg>(loaded_config)) {
-        return std::get<TomlErrorMsg>(loaded_config);
+        auto const error_msg{std::get<TomlErrorMsg>(loaded_config)};
+        log->error(error_msg.msg);
+
+        return std::nullopt;
     }
 
     if (auto const error_msg{config::ValidateCalibrationConfig(std::get<toml::table>(loaded_config))}) {
-        return *error_msg;
+        log->error(error_msg->msg);
+
+        return std::nullopt;
     }
 
     return std::get<toml::table>(loaded_config);
