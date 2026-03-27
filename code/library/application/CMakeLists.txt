@@ -2,9 +2,7 @@ set(LIBRARY_NAME "application")
 
 set(SRC_FILES
         src/calibrate.cpp
-        src/cli_utils.cpp
-        src/database.cpp
-        src/load_and_validate_config.cpp
+        src/io.cpp
 )
 
 set(LINK_LIBRARIES
@@ -30,8 +28,6 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        test/cli_utils.test.cpp
-        test/database.test.cpp
-        test/load_and_validate_config.test.cpp
+        test/io.test.cpp
 )
 AddTests()

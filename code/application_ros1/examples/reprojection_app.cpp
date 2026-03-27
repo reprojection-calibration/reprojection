@@ -2,9 +2,7 @@
 #include <iostream>
 
 #include <reprojection/application/calibrate.hpp>
-#include <reprojection/application/cli_utils.hpp>
-#include <reprojection/application/database.hpp>
-#include <reprojection/application/load_and_validate_config.hpp>
+#include <reprojection/application/io.hpp>
 
 #include "reprojection/bag_wrapper.hpp"
 #include "reprojection/image_loading.hpp"
@@ -45,6 +43,8 @@ int main(int argc, char* argv[]) {
     auto const& bag_reader{std::get<ros1::SingleTopicBagReader>(reader_result)};
     auto const& db{std::get<application::DbPtr>(db_result)};
 
+    // TODO(Jack): Can we put this into the image loading file? I am unsure about the lifetime semantics of the view and
+    //  how we pass these into the lambda.
     auto image_source{[itr = bag_reader.view->begin(),
                        end = bag_reader.view->end()]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
         if (itr != end) {

@@ -4,21 +4,22 @@ set(SRC_FILES
         src/image_source.cpp
 )
 set(LINK_LIBRARIES
+        ${OpenCV_LIBS}
+        ${apriltag_LIBRARIES}
+        Ceres::ceres
+        Eigen3::Eigen
         application
         calibration
-        Ceres::ceres
         database
-        Eigen3::Eigen
         eigen_utilities
         feature_extraction
         geometry
-        types_internal
-        ${apriltag_LIBRARIES}
         optimization
-        ${OpenCV_LIBS}
         pnp
-        projection_functions
         spline
+        projection_functions
+        types
+        types_internal
 )
 set(INSTALL_SO OFF)
 AddLibrary()
