@@ -1,6 +1,7 @@
+#include "application/io.hpp"
+
 #include <algorithm>
 
-#include "application/io.hpp"
 #include "config/config_loading.hpp"
 #include "config/config_validation.hpp"
 #include "database/calibration_database.hpp"
@@ -47,12 +48,15 @@ std::variant<DbPtr, DbErrorMsg> Open(fs::path const& workspace, fs::path const& 
                           ") with description '" + code.message() + "'"};
     }
     if (std::error_code code; not fs::exists(data_source, code)) {
-        return DbErrorMsg{"Provided data source path: '" + data_source.string() +
-                          "' does not exist - error code (" + std::to_string(code.value()) +
-                          ") with description '" + code.message() + "'"};
+        return DbErrorMsg{"Provided data source path: '" + data_source.string() + "' does not exist - error code (" +
+                          std::to_string(code.value()) + ") with description '" + code.message() + "'"};
     }
 
-    fs::path const db_path{workspace / (data_source.stem().string() + ".db3")};
+    // Handle the case that the input data is a file (ex. ROS1 bag) or a folder (ex. ROS2 bag).
+    std::string const data_name{is_regular_file(data_source) ? data_source.stem().string()
+                                                             : data_source.parent_path().filename().string()};
+
+    fs::path const db_path{workspace / (data_name + ".db3")};
     if (fs::exists(db_path)) {
         return std::make_shared<database::CalibrationDatabase>(db_path, false, false);
     }
