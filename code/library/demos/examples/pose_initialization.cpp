@@ -22,14 +22,6 @@ int main() {
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
     auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
 
-    // Artificially trigger a cache hit by writing a feature extraction key and camera info to the database - the
-    // features are already there.
-    CameraInfo const camera_info{"/cam0/image_raw", CameraModel::DoubleSphere, {0, 512, 0, 512}};
-    try {
-        database::WriteToDb(camera_info, db);
-        database::WriteToDb(CalibrationStep::FtEx, "ftex_key", camera_info.sensor_name, db);
-    } catch (...) {
-    }
 
     static constexpr std::string_view config_file{R"(
         [sensor]
@@ -42,7 +34,7 @@ int main() {
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    application::Calibrate(config, {}, "ftex_key", db);
+    application::Calibrate(config, {}, "", db);
 
     return EXIT_SUCCESS;
 }
