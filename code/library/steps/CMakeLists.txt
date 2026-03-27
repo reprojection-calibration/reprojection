@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "steps")
 
 set(SRC_FILES
+        src/camera_info.cpp
         src/camera_nonlinear_refinement.cpp
         src/feature_extraction.cpp
         src/intrinsic_initialization.cpp

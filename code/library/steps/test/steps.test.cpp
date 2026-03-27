@@ -2,6 +2,7 @@
 
 #include <string_view>
 
+#include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/intrinsic_initialization.hpp"
@@ -25,6 +26,34 @@ class StepsFixture : public ::testing::Test {
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
 };
 
+TEST_F(StepsFixture, TestCameraInfoStep) {
+    std::vector<std::pair<uint64_t, cv::Mat>> const data{{0, cv::Mat::zeros(10, 20, CV_8UC1)},
+                                                         {1, cv::Mat::zeros(10, 20, CV_8UC1)}};
+    auto image_source{
+        [itr = std::cbegin(data), end = std::cend(data)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+            if (itr != end) {
+                auto const data_i{*itr};
+                itr = std::next(itr);
+                return data_i;
+            }
+            return std::nullopt;
+        }};
+
+    static constexpr std::string_view config_file{R"(
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+    )"sv};
+    toml::table const config{toml::parse(config_file)};
+
+    application::CameraInfoStep const step{"sha256-key", config, image_source};
+
+    auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    std::tie(camera_info, cache_status) = RunStep<CameraInfo>(step, db);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
 TEST_F(StepsFixture, TestFeatureExtractionStep) {
     std::vector<std::pair<uint64_t, cv::Mat>> const data{{0, cv::Mat::zeros(10, 20, CV_8UC1)},
                                                          {1, cv::Mat::zeros(10, 20, CV_8UC1)}};
@@ -35,41 +64,22 @@ TEST_F(StepsFixture, TestFeatureExtractionStep) {
                 itr = std::next(itr);
                 return data_i;
             }
-
             return std::nullopt;
         }};
 
     static constexpr std::string_view config_file{R"(
-        [sensor]
-        camera_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [target]
         pattern_size = [3,4]
         type = "circle_grid"
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
-    application::FeatureExtractionStep const step{image_source, "sha256-key", *config["target"].as_table(),
-                                                  *config["sensor"].as_table()};
+    application::FeatureExtractionStep const step{camera_info.sensor_name, "sha256-key", image_source, config};
 
-    // TODO CLEAN UP THIS TYPE!!!!
-    auto [result, cache_status]{RunStep<application::FeatureExtractionStep::Result>(step, db)};
-    auto& [camera_info, extracted_targets]{result};
-    // TODO(Jack): Add helper method to check camera info
-    EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
-    EXPECT_EQ(camera_info.bounds.u_max, 20);
-    EXPECT_EQ(camera_info.bounds.v_max, 10);
+    auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
     EXPECT_EQ(std::size(extracted_targets), 0);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    std::tie(result, cache_status) = RunStep<application::FeatureExtractionStep::Result>(step, db);
-    std::tie(camera_info, extracted_targets) = result;
-    EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
-    EXPECT_EQ(camera_info.bounds.u_max, 20);
-    EXPECT_EQ(camera_info.bounds.v_max, 10);
+    std::tie(extracted_targets, cache_status) = RunStep<CameraMeasurements>(step, db);
     EXPECT_EQ(std::size(extracted_targets), 0);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
