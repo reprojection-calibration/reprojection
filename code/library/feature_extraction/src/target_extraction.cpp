@@ -7,6 +7,32 @@
 
 namespace reprojection::feature_extraction {
 
+// TODO(Jack): If we run into trouble one day with different opencv image formats and depths we should extract the image
+//  type processing code here and unit test it.
+std::optional<ExtractedTarget> TargetExtractor::Extract(cv::Mat const& img) {
+    cv::Mat img_8u;
+    if (img.depth() != CV_8U) {
+        double minVal, maxVal;
+        cv::minMaxLoc(img, &minVal, &maxVal);
+        img.convertTo(img_8u, CV_8U, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
+    } else {
+        img_8u = img;
+    }
+
+    cv::Mat img_gray;
+    if (img_8u.channels() == 3) {
+        cv::cvtColor(img_8u, img_gray, cv::COLOR_BGR2GRAY);
+    } else if (img_8u.channels() == 4) {
+        cv::cvtColor(img_8u, img_gray, cv::COLOR_BGRA2GRAY);
+    } else if (img_8u.channels() == 1) {
+        img_gray = img_8u;
+    } else {
+        throw std::runtime_error("Unsupported number of channels: " + std::to_string(img_8u.channels()));
+    }
+
+    return ExtractImplementation(img_gray);
+}
+
 // TODO(Jack): This is a slightly controversial decision to let the toml::table type escape outside of the config
 //  package. However we need to allow for some dynamic behaviour (ex. circle grid asymmetric parameter), and the table
 //  is a type which lets us easily do this, when compared to making structs with base classes etc.
