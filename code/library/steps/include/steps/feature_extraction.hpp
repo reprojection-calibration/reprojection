@@ -19,7 +19,6 @@ struct FeatureExtractionStep {
     std::string sensor_name;
     std::string cache_key;
     ImageProvider image_source;
-
     // TODO(Jack): We should have structs here not unparsed toml tables, right?
     toml::table target_config;
 

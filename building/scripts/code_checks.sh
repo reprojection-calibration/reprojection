@@ -30,6 +30,7 @@ cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr 
   -I /temporary/code/library/projection_functions/include \
   -I /temporary/code/library/spline/include \
   -I /temporary/code/library/spline/src \
+  -I /temporary/code/library/steps/include \
   -I /temporary/code/library/testing_mocks/include \
   -I /temporary/code/library/testing_utilities/include \
   -I /temporary/code/library/types_internal/include \

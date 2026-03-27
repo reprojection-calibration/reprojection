@@ -18,7 +18,7 @@ std::string CameraInfoStep::CacheKey() const {
 CameraInfo CameraInfoStep::Compute() const {
     auto const result{image_source()};
     if (not result) {
-        throw std::runtime_error("we need na error handling strategy for empty image iterators to get camera info");
+        throw std::runtime_error("we need an error handling strategy for empty image sources to get camera info");
     }
     auto const& [_, img]{*result};
 
