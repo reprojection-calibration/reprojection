@@ -2,8 +2,7 @@
 
 #include "config/config_loading.hpp"
 #include "config/config_validation.hpp"
-
-#include "logging.hpp"
+#include "logging/logging.hpp"
 
 namespace reprojection::application {
 

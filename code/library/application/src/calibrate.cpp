@@ -2,6 +2,7 @@
 
 #include <ranges>
 
+#include "logging/logging.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
@@ -9,7 +10,6 @@
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
 
-#include "logging.hpp"
 #include "utils.hpp"
 
 namespace reprojection::application {

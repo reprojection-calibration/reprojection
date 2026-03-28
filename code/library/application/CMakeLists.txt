@@ -12,6 +12,7 @@ set(LINK_LIBRARIES
         calibration
         config
         database
+        logging
         optimization
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the linear_pose_init public header interface.
         spdlog::spdlog
