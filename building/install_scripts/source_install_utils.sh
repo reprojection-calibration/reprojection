@@ -3,7 +3,6 @@
 set -eoux pipefail
 
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
-CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX:-/usr/local}
 
 clone_repo() {
     local repo=$1
@@ -22,16 +21,19 @@ download_and_extract() {
 }
 
 cmake_build_install() {
-    local source_dir=$1
-    local build_dir=$2
+    local buildroot=$1
+    local name=$2
     shift 2
 
-    cmake -S "$source_dir" -B "$build_dir" \
+    local source_dir="${buildroot}/${name}"
+    local build_dir="${source_dir}-${CMAKE_BUILD_TYPE}"
+
+    cmake -S "${source_dir}" -B "${build_dir}" \
         -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DCMAKE_INSTALL_PREFIX="/opt/${name}" \
         -GNinja \
         "$@"
 
-    cmake --build "$build_dir"
-    cmake --install "$build_dir"
+    cmake --build "${build_dir}"
+    cmake --install "${build_dir}"
 }

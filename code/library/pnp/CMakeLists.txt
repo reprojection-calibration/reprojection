@@ -8,6 +8,7 @@ set(SRC_FILES
         src/pnp.cpp
 )
 set(LINK_LIBRARIES
+        Ceres::ceres
         Eigen3::Eigen
         eigen_utilities
         geometry

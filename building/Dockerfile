@@ -32,31 +32,31 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
     /temporary/${APT_INSTALL_GCC13}
 
 
-# NOTE(Jack): We introduce this source build base stage to guarantee that the artefacts from building are only brought
-# into the docker workflow via the /usr/local folder. All other build artefacts will be left behind in this stage.
-# WARN(Jack): If in future an apt package is installed here, this will not end up in base-stage because we only copy
-# /usr/local here!
-FROM apt-base-stage AS source-base-stage
+FROM apt-base-stage AS build-ceres-stage
 
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
-ARG SOURCE_INSTALL_LIBRARY_DEPS=building/install_scripts/source_install_library_deps.sh
+ARG SOURCE_INSTALL_CERES=building/install_scripts/source_install_ceres.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${SOURCE_INSTALL_LIBRARY_DEPS},target=/temporary/${SOURCE_INSTALL_LIBRARY_DEPS} \
-    /temporary/${SOURCE_INSTALL_LIBRARY_DEPS}
+    --mount=type=bind,source=${SOURCE_INSTALL_CERES},target=/temporary/${SOURCE_INSTALL_CERES} \
+    /temporary/${SOURCE_INSTALL_CERES}
 
-# TODO MOVE TO SOURCE INSTALL SCRIPT
-# TODO MOVE TO SOURCE INSTALL SCRIPT
-# TODO MOVE TO SOURCE INSTALL SCRIPT
-# TODO MOVE TO SOURCE INSTALL SCRIPT
-ARG SOURCE_INSTALL_SPDLOG=building/install_scripts/source_install_spdlog.sh
+
+FROM apt-base-stage AS build-small-libraries-stage
+
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+ARG SOURCE_INSTALL_SMALL_LIBRARIES=building/install_scripts/source_install_small_libraries.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${SOURCE_INSTALL_SPDLOG},target=/temporary/${SOURCE_INSTALL_SPDLOG} \
-    /temporary/${SOURCE_INSTALL_SPDLOG}
+    --mount=type=bind,source=${SOURCE_INSTALL_SMALL_LIBRARIES},target=/temporary/${SOURCE_INSTALL_SMALL_LIBRARIES} \
+    /temporary/${SOURCE_INSTALL_SMALL_LIBRARIES}
 
 
 FROM apt-base-stage AS base-stage
 
-COPY --from=source-base-stage  /usr/local  /usr/local
+COPY --from=build-ceres-stage  /opt/ceres-solver-2.2.0  /opt/ceres-solver-2.2.0
+COPY --from=build-ceres-stage  /opt/eigen  /opt/eigen
+COPY --from=build-small-libraries-stage  /opt/apriltag  /opt/apriltag
+COPY --from=build-small-libraries-stage  /opt/spdlog  /opt/spdlog
+COPY --from=build-small-libraries-stage  /opt/tomlplusplus  /opt/tomlplusplus
 
 
 FROM configuration-stage AS code-checks-stage

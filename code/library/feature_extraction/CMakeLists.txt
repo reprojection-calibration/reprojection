@@ -1,9 +1,16 @@
 set(LIBRARY_NAME "feature_extraction")
 
-# Taken from https://github.com/amy-tabb/apriltag-cmake-example/tree/master (did not include the link_directories() command here)
-find_package(PkgConfig)
-pkg_search_module(apriltag REQUIRED apriltag)
-set(apriltag_INCLUDE_DIRS "${apriltag_INCLUDE_DIRS}/apriltag")
+
+find_package(apriltag REQUIRED)
+
+
+if(apriltag_FOUND)
+    message(STATUS "apriltag FOUND!")
+    message(STATUS "Include dirs: ${apriltag_INCLUDE_DIRS}")
+    message(STATUS "Libraries: ${apriltag_LIBRARIES}")
+else()
+    message(FATAL_ERROR "apriltag NOT found!")
+endif()
 
 set(SRC_FILES
         src/april_tag_cpp_wrapper.cpp

@@ -11,6 +11,7 @@ set(SRC_FILES
 
 set(LINK_LIBRARIES
         ${OpenCV_LIBS}
+        Ceres::ceres
         Eigen3::Eigen
         caching
         calibration
@@ -19,6 +20,7 @@ set(LINK_LIBRARIES
         optimization
         spline # transitive dependency from "calibration/initialization_methods.hpp" - should be removed!
         types
+        tomlplusplus::tomlplusplus
         types_internal
 )
 AddLibrary()

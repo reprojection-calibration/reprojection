@@ -18,6 +18,7 @@ set(LINK_LIBRARIES
         spdlog::spdlog
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
         steps
+        tomlplusplus::tomlplusplus
         types
         types_internal
 )
