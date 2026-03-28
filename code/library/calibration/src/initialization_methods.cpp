@@ -1,5 +1,7 @@
 #include "calibration/initialization_methods.hpp"
 
+#include <spdlog/fmt/ranges.h>
+
 #include <ranges>
 
 #include "logging/logging.hpp"
@@ -8,8 +10,6 @@
 #include "camera_imu_initialization.hpp"
 #include "intrinsic_initialization.hpp"
 #include "linear_pose_initialization.hpp"
-#include <spdlog/fmt/ranges.h>
-
 
 namespace reprojection::calibration {
 
