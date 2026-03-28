@@ -2,8 +2,8 @@
 
 #include <ranges>
 
-#include "logging/logging.hpp"
 #include "logging/fmt.hpp"
+#include "logging/logging.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
