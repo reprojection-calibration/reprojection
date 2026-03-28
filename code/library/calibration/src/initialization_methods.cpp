@@ -2,6 +2,7 @@
 
 #include <ranges>
 
+#include "logging/logging.hpp"
 #include "projection_functions/initialize_camera.hpp"
 
 #include "camera_imu_initialization.hpp"
@@ -9,6 +10,12 @@
 #include "linear_pose_initialization.hpp"
 
 namespace reprojection::calibration {
+
+namespace {
+
+auto const log{logging::get("calibration")};
+
+}
 
 // TODO(Jack): This method is can eat up time because it runs pnp on every single intrinsic estimate. For example a
 //  single 6 by 7 target can give 42 gammas for each image, lets say you have 1000 images then that means we need to
@@ -37,6 +44,9 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
                 }
             }
         }
+
+        // TODO(Jack): Format to only print out three decimal places for the gamma
+        log->debug("{{cumulative_minimum_cost': {:.3g}, 'gammas': [{}]}}", min_cost, fmt::join(gammas, ", "));
     }
 
     return intrinsics;

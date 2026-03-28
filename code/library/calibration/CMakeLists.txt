@@ -14,6 +14,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         eigen_utilities
         geometry
+        logging
         optimization
         pnp
         projection_functions
