@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <spdlog/fmt/fmt.h>
 
 // TODO(Jack): I am honestly not 100% sure the best practices for such an adapter struct. All I know is that this needs
 //  to be compiled into the shared object for it to be recognized and used by fmt. Anyone who is more familiar can take

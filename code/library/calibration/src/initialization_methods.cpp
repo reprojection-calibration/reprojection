@@ -8,6 +8,8 @@
 #include "camera_imu_initialization.hpp"
 #include "intrinsic_initialization.hpp"
 #include "linear_pose_initialization.hpp"
+#include <spdlog/fmt/ranges.h>
+
 
 namespace reprojection::calibration {
 
@@ -46,7 +48,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         }
 
         // TODO(Jack): Format to only print out three decimal places for the gamma.
-        log->debug("{{cumulative_minimum_cost': {:.3g}, 'gammas': [{}]}}", min_cost, logging::Join(gammas, ", "));
+        log->debug("{{cumulative_minimum_cost': {:.3g}, 'gammas': [{}]}}", min_cost, fmt::join(gammas, ", "));
     }
 
     return intrinsics;
