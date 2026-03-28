@@ -48,68 +48,6 @@ std::optional<std::string> GetCommandOption(char const* const* const begin, char
     return std::nullopt;
 }
 
-// TODO MOVE TO FILE
-// TODO MOVE TO FILE
-// TODO MOVE TO FILE
-// TODO MOVE TO FILE
-std::string CompactPrettyJson(const std::string& input) {
-    std::string out;
-    out.reserve(input.size());
-
-    bool in_string = false;
-    bool escape = false;
-
-    for (size_t i = 0; i < input.size(); ++i) {
-        char c = input[i];
-
-        if (escape) {
-            out += c;
-            escape = false;
-            continue;
-        }
-
-        if (c == '\\') {
-            out += c;
-            escape = true;
-            continue;
-        }
-
-        if (c == '"') {
-            in_string = !in_string;
-            out += "'";
-            continue;
-        }
-
-        if (!in_string) {
-            if (std::isspace(static_cast<unsigned char>(c))) continue;
-
-            // Add normalized spacing so it is more readable
-            if (c == ':') {
-                out += ": ";
-                continue;
-            }
-            if (c == ',') {
-                out += ", ";
-                continue;
-            }
-        }
-
-        out += c;
-    }
-
-    return out;
-}
-
-// TODO MOVE TO FILE
-// TODO MOVE TO FILE// TODO MOVE TO FILE
-// TODO MOVE TO FILE
-std::string ToOneLineJson(const toml::table& tbl) {
-    std::ostringstream oss;
-    oss << toml::json_formatter{tbl};
-
-    return CompactPrettyJson(oss.str());
-}
-
 std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path) {
     auto const loaded_config{config::LoadConfigFile(config_path)};
     if (std::holds_alternative<TomlErrorMsg>(loaded_config)) {
@@ -124,7 +62,7 @@ std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path) {
     }
 
     auto const config{std::get<toml::table>(loaded_config)};
-    log->info("{{'config_path': '{}', 'config': {}}}", config_path.string(), ToOneLineJson(config));
+    log->info("{{'config_path': '{}', 'config': {}}}", config_path.string(), logging::ToOneLineJson(config));
 
     return config;
 }
