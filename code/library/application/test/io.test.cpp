@@ -9,6 +9,37 @@
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
+TEST(ApplicationIO, TestParseCommandLineInput) {
+    auto result{application::ParseCommandLineInput(0, nullptr)};
+    EXPECT_FALSE(result.has_value());
+
+    char const arg0[]{"program"};
+    char const arg1[]{"--config"};
+    char const arg2[]{"tmp/config.toml"};
+    char const arg3[]{"--data"};
+    char const arg4[]{"tmp/data.bag"};
+    char const arg5[]{"--workspace"};
+    char const arg6[]{"tmp/workspace/"};
+
+    char const* const argv[]{arg0, arg1, arg2, arg3, arg4, arg5, arg6};
+    int argc{5};
+
+    result = application::ParseCommandLineInput(argc, argv);
+    ASSERT_TRUE(result.has_value());
+
+    EXPECT_EQ(result->config_path, "tmp/config.toml");
+    EXPECT_EQ(result->data_path, "tmp/data.bag");
+    EXPECT_EQ(result->workspace_dir, "tmp");
+
+    argc = 7;
+    result = application::ParseCommandLineInput(argc, argv);
+    ASSERT_TRUE(result.has_value());
+
+    EXPECT_EQ(result->config_path, "tmp/config.toml");
+    EXPECT_EQ(result->data_path, "tmp/data.bag");
+    EXPECT_EQ(result->workspace_dir, "tmp/workspace/");
+}
+
 TEST(ApplicationIO, TestGetCommandOption) {
     auto result{application::GetCommandOption(nullptr, nullptr, "")};
     EXPECT_FALSE(result.has_value());
