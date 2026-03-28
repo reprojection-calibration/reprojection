@@ -18,7 +18,7 @@ include(../cmake_macros/add_tests.cmake)
 
 # Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/opt/ceres-solver-2.2.0;/opt/eigen;/opt/apriltag;/opt/tomlplusplus")
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/opt/eigen;/opt")
 
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -26,6 +26,7 @@ find_package(OpenCV REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(apriltag REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 

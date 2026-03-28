@@ -1,17 +1,5 @@
 set(LIBRARY_NAME "feature_extraction")
 
-
-find_package(apriltag REQUIRED)
-
-
-if(apriltag_FOUND)
-    message(STATUS "apriltag FOUND!")
-    message(STATUS "Include dirs: ${apriltag_INCLUDE_DIRS}")
-    message(STATUS "Libraries: ${apriltag_LIBRARIES}")
-else()
-    message(FATAL_ERROR "apriltag NOT found!")
-endif()
-
 set(SRC_FILES
         src/april_tag_cpp_wrapper.cpp
         src/generated_apriltag_code/tagCustom36h11.c
@@ -25,7 +13,7 @@ set(INCLUDE_DIRECTORIES
 )
 set(LINK_LIBRARIES
         ${OpenCV_LIBS}
-        ${apriltag_LIBRARIES}
+        apriltag::apriltag
         Eigen3::Eigen
         config
         eigen_utilities
