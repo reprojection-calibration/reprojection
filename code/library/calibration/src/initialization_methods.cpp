@@ -13,7 +13,7 @@ namespace reprojection::calibration {
 
 namespace {
 
-auto const log{logging::get("calibration")};
+auto const log{logging::Get("calibration")};
 
 }
 
@@ -45,8 +45,8 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
             }
         }
 
-        // TODO(Jack): Format to only print out three decimal places for the gamma
-        log->debug("{{cumulative_minimum_cost': {:.3g}, 'gammas': [{}]}}", min_cost, fmt::join(gammas, ", "));
+        // TODO(Jack): Format to only print out three decimal places for the gamma.
+        log->debug("{{cumulative_minimum_cost': {:.3g}, 'gammas': [{}]}}", min_cost, logging::Join(gammas, ", "));
     }
 
     return intrinsics;

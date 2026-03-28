@@ -8,7 +8,7 @@ namespace reprojection::application {
 
 namespace {
 
-auto const log{logging::get("application")};
+auto const log{logging::Get("application")};
 
 }
 

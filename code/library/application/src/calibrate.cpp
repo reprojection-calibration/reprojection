@@ -3,6 +3,7 @@
 #include <ranges>
 
 #include "logging/logging.hpp"
+#include "logging/fmt.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
@@ -16,7 +17,7 @@ namespace reprojection::application {
 
 namespace {
 
-auto const log{logging::get("application")};
+auto const log{logging::Get("application")};
 
 }
 

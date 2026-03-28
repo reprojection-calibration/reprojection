@@ -9,7 +9,7 @@
 
 namespace reprojection::logging {
 
-std::shared_ptr<spdlog::logger> get(std::string const& name) {
+std::shared_ptr<spdlog::logger> Get(std::string const& name) {
     auto logger{spdlog::get(name)};
     if (not logger) {
         spdlog::cfg::load_env_levels();

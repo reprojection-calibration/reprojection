@@ -2,6 +2,10 @@
 
 #include <Eigen/Dense>
 
+// TODO(Jack): I am honestly not 100% sure the best practices for such an adapter struct. All I know is that this needs
+//  to be compiled into the shared object for it to be recognized and used by fmt. Anyone who is more familiar can take
+//  a look if his becomes a problem.
+
 template <>
 struct fmt::formatter<Eigen::ArrayXd> {
     char format_specifier = 'f';
@@ -15,7 +19,7 @@ struct fmt::formatter<Eigen::ArrayXd> {
     }
 
     template <typename FormatContext>
-    auto format(const Eigen::ArrayXd& arr, FormatContext& ctx) {
+    auto format(const Eigen::ArrayXd& arr, FormatContext& ctx) const {
         std::string result;
         for (int i = 0; i < arr.size(); ++i) {
             if (i > 0) result += ", ";
