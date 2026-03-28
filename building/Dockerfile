@@ -259,7 +259,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
 # TODO(Jack): Use a proper packaging instead of copying over the usr/local directory! This stage should actually inherit
 # from the plain old base-stage and then apt install the calibration package. It is confusing that we bring in all
 # source build dependendcies (ex. tomlplusplus or aprilgrid) with this copy command here, along with the calibration lib.
-COPY --from=source-base-stage /usr/local /usr/local
+COPY --from=release-build-stage /usr/local /usr/local
 
 
 FROM ros1-base-stage AS ros1-application-stage
