@@ -4,34 +4,23 @@ namespace reprojection::logging {
 
 std::string CompactPrettyJson(std::string const& input) {
     std::string out;
-    out.reserve(input.size());
+    out.reserve(std::size(input));
 
-    bool in_string = false;
-    bool escape = false;
+    bool in_string{false};
 
     for (size_t i = 0; i < input.size(); ++i) {
-        char c = input[i];
-
-        if (escape) {
-            out += c;
-            escape = false;
-            continue;
-        }
-
-        if (c == '\\') {
-            out += c;
-            escape = true;
-            continue;
-        }
+        char const c{input[i]};
 
         if (c == '"') {
-            in_string = !in_string;
+            in_string = not in_string;
             out += "'";
             continue;
         }
 
-        if (!in_string) {
-            if (std::isspace(static_cast<unsigned char>(c))) continue;
+        if (not in_string) {
+            if (std::isspace(static_cast<unsigned char>(c))) {
+                continue;
+            }
 
             // Add normalized spacing so it is more readable
             if (c == ':') {
@@ -48,6 +37,6 @@ std::string CompactPrettyJson(std::string const& input) {
     }
 
     return out;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::logging

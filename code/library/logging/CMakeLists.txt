@@ -13,4 +13,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 
-# TODO(Jack): Add testing?
+set(TESTS
+        test/logging.test.cpp
+)
+AddTests()

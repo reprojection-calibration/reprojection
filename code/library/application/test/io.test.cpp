@@ -20,10 +20,13 @@ TEST(ApplicationIO, TestParseCommandLineInput) {
     char const arg4[]{"tmp/data.bag"};
     char const arg5[]{"--workspace"};
     char const arg6[]{"tmp/workspace/"};
-
     char const* const argv[]{arg0, arg1, arg2, arg3, arg4, arg5, arg6};
-    int argc{5};
 
+    int argc{3};
+    result = application::ParseCommandLineInput(argc, argv);
+    EXPECT_FALSE(result.has_value());
+
+    argc = 5;
     result = application::ParseCommandLineInput(argc, argv);
     ASSERT_TRUE(result.has_value());
 

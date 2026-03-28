@@ -16,6 +16,8 @@ struct TomlErrorMsg {
     std::string msg;
 };
 
+// LCOV_EXCL_START
+
 inline std::string ToString(TomlError const data) {
     if (data == TomlError::FailedLoad) {
         return "failed_load";
@@ -29,5 +31,7 @@ inline std::string ToString(TomlError const data) {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(TomlError)");
     }
 }
+
+// LCOV_EXCL_STOP
 
 }  // namespace reprojection

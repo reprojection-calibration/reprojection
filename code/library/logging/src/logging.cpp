@@ -22,9 +22,9 @@ std::shared_ptr<spdlog::logger> Get(std::string const& name) {
     }
 
     return logger;
-}
+}  // LCOV_EXCL_LINE
 
-std::string ToOneLineJson(const toml::table& tbl) {
+std::string ToOneLineJson(toml::table const& tbl) {
     std::ostringstream oss;
     oss << toml::json_formatter{tbl};
 

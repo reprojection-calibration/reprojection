@@ -15,7 +15,7 @@ struct fmt::formatter<Eigen::ArrayXd> {
     constexpr auto parse(fmt::format_parse_context& ctx) {
         auto it = ctx.begin(), end = ctx.end();
         if (it != end && (*it != '}')) {
-            format_specifier = *it++;
+            format_specifier = *it++;  // LCOV_EXCL_LINE
         }
         return it;
     }

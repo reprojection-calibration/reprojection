@@ -1,10 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "config/config_validation.hpp"
-#include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;
-using TemporaryFile = testing_utilities::TemporaryFile;
 
 static constexpr std::string_view minimum_config{R"(
         [sensor]
