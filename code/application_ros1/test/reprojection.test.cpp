@@ -1,8 +1,8 @@
-#include "reprojection/reprojection.hpp"
+#include "application_ros1/reprojection.hpp"
 
 #include <gtest/gtest.h>
 
-#include "reprojection/bag_wrapper.hpp"
+#include "application_ros1/bag_wrapper.hpp"
 
 #include "testing_utils.hpp"
 

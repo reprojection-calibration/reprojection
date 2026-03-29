@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(reprojection)
+project(application_ros1)
 
 # NOTE(Jack): We cannot enforce c++ 20 here because noetic and its boosts dependency are quite old and apparently not
 # compatible with our build environments gcc13.
@@ -15,6 +15,9 @@ find_package(cv_bridge REQUIRED)
 find_package(reprojection REQUIRED)
 find_package(rosbag REQUIRED)
 find_package(sensor_msgs REQUIRED)
+
+get_target_property(TARGET_INCLUDE_DIRS reprojection::application INTERFACE_INCLUDE_DIRECTORIES)
+message(STATUS "Include directories for reprojection::application: ${TARGET_INCLUDE_DIRS}")
 
 set(INCLUDE_DIRECTORIES
         ${cv_bridge_INCLUDE_DIRS}

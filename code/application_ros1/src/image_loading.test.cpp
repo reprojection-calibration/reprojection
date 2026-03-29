@@ -5,7 +5,7 @@
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 
-#include "reprojection/bag_wrapper.hpp"
+#include "application_ros1/bag_wrapper.hpp"
 
 #include "testing_utils.hpp"
 

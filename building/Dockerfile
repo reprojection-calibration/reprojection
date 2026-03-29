@@ -195,18 +195,19 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS release-build-stage
 
-# TODO(Jack): Currently the installation just happens in a folder called "application", we need to fix this! It should
-# be in a folder like "/usr/include/reprojection/application/*.hpp" or something like that. Application is too generic!
-ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
-RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
-    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_dir=/buildroot/build-library \
-                                    --src_dir=/temporary/code/library; \
-    cmake --install /buildroot/build-library-Release
+    set -eoux pipefail; \
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/library"
 
 # NOT EXECUTED IN CI!!!
 FROM release-build-stage AS feature-extraction-demo-stage
@@ -267,15 +268,18 @@ COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 FROM ros1-base-stage AS ros1-application-stage
 
-ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
-RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
+    set -eox pipefail; \
     source /opt/ros/noetic/setup.bash; \
-    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_dir=/buildroot/build-ros1-app \
-                                    --src_dir=/temporary/code/application_ros1 \
-                                    --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/application_ros1"
 
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 

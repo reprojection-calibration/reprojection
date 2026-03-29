@@ -3,8 +3,8 @@
 
 #include <reprojection/application/io.hpp>
 
-#include "reprojection/bag_wrapper.hpp"
-#include "reprojection/reprojection.hpp"
+#include "application_ros1/bag_wrapper.hpp"
+#include "application_ros1/reprojection.hpp"
 
 using namespace reprojection;
 
