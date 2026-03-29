@@ -147,17 +147,23 @@ FROM base-stage AS debug-build-stage
 # there might already be a solution, but I took the shortcut and just added some LCOV_EXCL_LINE suppression statements
 # to get past the problem.
 
-ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
-RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+# CHECK IN CMAKE MACROS IF TESTING IS ENABLED# CHECK IN CMAKE MACROS IF TESTING IS ENABLED
+# CHECK IN CMAKE MACROS IF TESTING IS ENABLED
+# CHECK IN CMAKE MACROS IF TESTING IS ENABLED
+# CHECK IN CMAKE MACROS IF TESTING IS ENABLED
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
-    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Debug \
-                                    --build_dir=/buildroot/build-library \
-                                    --src_dir=/temporary/code/library
-
-
+    set -eoux pipefail; \
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Debug; \
+    cmake_build_install \
+        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/library"
 
 
 FROM debug-build-stage AS code-coverage-stage

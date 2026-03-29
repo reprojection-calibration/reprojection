@@ -31,6 +31,7 @@ find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
 find_package(GTest REQUIRED)
+# CHECK IF TESITNG ENABLED OR USE CTEST?
 enable_testing()
 
 add_subdirectory(types_internal)
