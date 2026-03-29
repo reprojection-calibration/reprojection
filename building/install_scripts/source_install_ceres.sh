@@ -12,8 +12,8 @@ clone_repo \
     3.4.0 \
     "${buildroot}/${name}"
 cmake_build_install \
-    "${buildroot}" \
-    "${name}"
+    "${buildroot}/${name}-${CMAKE_BUILD_TYPE}" \
+    "${buildroot}/${name}"
 
 rm -r /buildroot/eigen-Release
 
@@ -22,9 +22,8 @@ download_and_extract \
     http://ceres-solver.org/${name}.tar.gz \
     "${buildroot}"
 cmake_build_install \
-    "${buildroot}" \
-    "${name}" \
+    "${buildroot}/${name}-${CMAKE_BUILD_TYPE}" \
+    "${buildroot}/${name}" \
     -DBUILD_BENCHMARKS=OFF \
     -DBUILD_EXAMPLES=OFF \
-    -DBUILD_TESTING=OFF \
-    -DCMAKE_PREFIX_PATH="/opt/reprojection/eigen"
+    -DCMAKE_PREFIX_PATH="/opt/reprojection"

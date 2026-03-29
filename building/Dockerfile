@@ -159,7 +159,7 @@ RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_
 
 
 
-# WARN(Jack): Due to problems with installing gcc13 on ubuntu 20/22 the code coverage does not work. This is future work!
+
 FROM debug-build-stage AS code-coverage-stage
 
 ARG CODE_COVERAGE=building/scripts/code_coverage.sh
@@ -256,7 +256,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
 # TODO(Jack): Use a proper packaging instead of copying over the usr/local directory! This stage should actually inherit
 # from the plain old base-stage and then apt install the calibration package. It is confusing that we bring in all
 # source build dependendcies (ex. tomlplusplus or aprilgrid) with this copy command here, along with the calibration lib.
-COPY --from=release-build-stage /usr/local /usr/local
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 
 FROM ros1-base-stage AS ros1-application-stage
@@ -289,7 +289,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
 
 # TODO(Jack): See note in ros1 stage!
-COPY --from=release-build-stage /usr/local /usr/local
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 FROM ros2-base-stage AS ros2-application-stage
 
