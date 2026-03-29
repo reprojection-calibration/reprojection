@@ -16,9 +16,6 @@ find_package(reprojection REQUIRED)
 find_package(rosbag REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
-get_target_property(TARGET_INCLUDE_DIRS reprojection::application INTERFACE_INCLUDE_DIRECTORIES)
-message(STATUS "Include directories for reprojection::application: ${TARGET_INCLUDE_DIRS}")
-
 set(INCLUDE_DIRECTORIES
         ${cv_bridge_INCLUDE_DIRS}
         ${std_msgs_INCLUDE_DIRS}

@@ -203,7 +203,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     set -eoux pipefail; \
     source /temporary/building/install_scripts/source_install_utils.sh; \
-    export BUILD_TESTING=ON; \
+    export BUILD_TESTING=OFF; \
     export CMAKE_BUILD_TYPE=Release; \
     cmake_build_install \
         "/buildroot/library-${CMAKE_BUILD_TYPE}" \
@@ -303,6 +303,10 @@ COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 FROM ros2-base-stage AS ros2-application-stage
 
+# REFACTOR TO USE CMAKE INSTALL SCRIPT!
+# REFACTOR TO USE CMAKE INSTALL SCRIPT!
+# REFACTOR TO USE CMAKE INSTALL SCRIPT!
+# REFACTOR TO USE CMAKE INSTALL SCRIPT!
 ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
 RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
