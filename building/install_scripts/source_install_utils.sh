@@ -26,9 +26,10 @@ cmake_build_install() {
     local source_dir=$2
     shift 2
 
-    cmake -S "${source_dir}" -B "${build_dir}" \
+    cmake -B "${build_dir}" -S "${source_dir}" \
+        -DBUILD_TESTING="${BUILD_TESTING}" \
         -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
-        -DCMAKE_INSTALL_PREFIX="/opt/reprojection/" \
+        -DCMAKE_INSTALL_PREFIX="/opt/reprojection" \
         -GNinja \
         "$@"
 
