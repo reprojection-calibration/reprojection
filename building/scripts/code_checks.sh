@@ -23,6 +23,7 @@ cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr 
   -I /temporary/code/library/feature_extraction/include \
   -I /temporary/code/library/feature_extraction/src \
   -I /temporary/code/library/geometry/include \
+  -I /temporary/code/library/logging/include \
   -I /temporary/code/library/optimization/include \
   -I /temporary/code/library/optimization/src \
   -I /temporary/code/library/pnp/include \

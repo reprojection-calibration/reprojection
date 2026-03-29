@@ -44,6 +44,15 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=${SOURCE_INSTALL_LIBRARY_DEPS},target=/temporary/${SOURCE_INSTALL_LIBRARY_DEPS} \
     /temporary/${SOURCE_INSTALL_LIBRARY_DEPS}
 
+# TODO MOVE TO SOURCE INSTALL SCRIPT
+# TODO MOVE TO SOURCE INSTALL SCRIPT
+# TODO MOVE TO SOURCE INSTALL SCRIPT
+# TODO MOVE TO SOURCE INSTALL SCRIPT
+ARG SOURCE_INSTALL_SPDLOG=building/install_scripts/source_install_spdlog.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${SOURCE_INSTALL_SPDLOG},target=/temporary/${SOURCE_INSTALL_SPDLOG} \
+    /temporary/${SOURCE_INSTALL_SPDLOG}
+
 
 FROM apt-base-stage AS base-stage
 
