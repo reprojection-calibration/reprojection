@@ -30,7 +30,7 @@ cmake_build_install() {
 
     cmake -S "${source_dir}" -B "${build_dir}" \
         -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
-        -DCMAKE_INSTALL_PREFIX="/opt/${name}" \
+        -DCMAKE_INSTALL_PREFIX="/opt/reprojection/${name}" \
         -GNinja \
         "$@"
 

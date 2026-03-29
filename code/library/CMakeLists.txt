@@ -18,7 +18,7 @@ include(../cmake_macros/add_tests.cmake)
 
 # Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/opt/eigen;/opt")
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/opt/reprojection/eigen;/opt/reprojection")
 
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)

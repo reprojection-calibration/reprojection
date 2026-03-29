@@ -27,4 +27,4 @@ cmake_build_install \
     -DBUILD_BENCHMARKS=OFF \
     -DBUILD_EXAMPLES=OFF \
     -DBUILD_TESTING=OFF \
-    -DCMAKE_PREFIX_PATH="/opt/eigen"
+    -DCMAKE_PREFIX_PATH="/opt/reprojection/eigen"
