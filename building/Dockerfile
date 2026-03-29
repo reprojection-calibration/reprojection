@@ -303,18 +303,18 @@ COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 FROM ros2-base-stage AS ros2-application-stage
 
-# REFACTOR TO USE CMAKE INSTALL SCRIPT!
-# REFACTOR TO USE CMAKE INSTALL SCRIPT!
-# REFACTOR TO USE CMAKE INSTALL SCRIPT!
-# REFACTOR TO USE CMAKE INSTALL SCRIPT!
-ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
-RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
+    set -eox pipefail; \
     source /opt/ros/jazzy/setup.bash; \
-    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_dir=/buildroot/build-ros2-app \
-                                    --src_dir=/temporary/code/application_ros2
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/application_ros2"
 
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
 

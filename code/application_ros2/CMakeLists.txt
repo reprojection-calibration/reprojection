@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(reprojection)
+project(application_ros2)
 
 include(../cmake_macros/add_examples.cmake)
 include(../cmake_macros/add_library.cmake)
