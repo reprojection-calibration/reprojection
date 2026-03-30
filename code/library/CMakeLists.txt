@@ -31,7 +31,8 @@ find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
 find_package(GTest REQUIRED)
-# CHECK IF TESITNG ENABLED OR USE CTEST?
+# TODO(Jack): We should have a more coherent cmake compliant testing strategy across the project. An if statement
+# wrapping the code inside the AddExample macro is not exactly the most modern solution I think.
 enable_testing()
 
 add_subdirectory(types_internal)
