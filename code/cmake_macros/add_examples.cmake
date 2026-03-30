@@ -12,5 +12,16 @@ macro(AddExamples)
                 ${LIBRARY_NAME}
                 ${LINK_LIBRARIES}
         )
+
+        if (NOT DEFINED INSTALL_EXAMPLES)
+            set(INSTALL_EXAMPLES OFF)
+        endif()
+
+        if (INSTALL_EXAMPLES)
+            install(TARGETS ${EXAMPLE_NAME}
+                    EXPORT reprojectionTargets
+                    RUNTIME DESTINATION bin
+            )
+        endif()
     endforeach ()
 endmacro()

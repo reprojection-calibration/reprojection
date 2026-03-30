@@ -260,9 +260,6 @@ ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
 
-# TODO(Jack): Use a proper packaging instead of copying over the usr/local directory! This stage should actually inherit
-# from the plain old base-stage and then apt install the calibration package. It is confusing that we bring in all
-# source build dependendcies (ex. tomlplusplus or aprilgrid) with this copy command here, along with the calibration lib.
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 
@@ -287,7 +284,7 @@ ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/noetic/setup.bash; \
-    export APP="/buildroot/build-ros1-app-Release/reprojection.reprojection_app"; \
+    export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
     /temporary/${INTEGRATION_TEST}
 
@@ -298,8 +295,8 @@ ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
 
-# TODO(Jack): See note in ros1 stage!
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+
 
 FROM ros2-base-stage AS ros2-application-stage
 
@@ -322,6 +319,6 @@ ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/jazzy/setup.bash; \
-    export APP="/buildroot/build-ros2-app-Release/reprojection.reprojection_app"; \
+    export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
     /temporary/${INTEGRATION_TEST}

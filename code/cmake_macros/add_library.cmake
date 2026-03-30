@@ -42,7 +42,6 @@ macro(AddLibrary)
                 EXPORT reprojectionTargets
                 LIBRARY DESTINATION lib
                 ARCHIVE DESTINATION lib
-                RUNTIME DESTINATION bin
         )
     endif()
 
