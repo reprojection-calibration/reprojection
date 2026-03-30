@@ -32,31 +32,28 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
     /temporary/${APT_INSTALL_GCC13}
 
 
-# NOTE(Jack): We introduce this source build base stage to guarantee that the artefacts from building are only brought
-# into the docker workflow via the /usr/local folder. All other build artefacts will be left behind in this stage.
-# WARN(Jack): If in future an apt package is installed here, this will not end up in base-stage because we only copy
-# /usr/local here!
-FROM apt-base-stage AS source-base-stage
+FROM apt-base-stage AS build-ceres-stage
 
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
-ARG SOURCE_INSTALL_LIBRARY_DEPS=building/install_scripts/source_install_library_deps.sh
+ARG SOURCE_INSTALL_CERES=building/install_scripts/source_install_ceres.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${SOURCE_INSTALL_LIBRARY_DEPS},target=/temporary/${SOURCE_INSTALL_LIBRARY_DEPS} \
-    /temporary/${SOURCE_INSTALL_LIBRARY_DEPS}
+    --mount=type=bind,source=${SOURCE_INSTALL_CERES},target=/temporary/${SOURCE_INSTALL_CERES} \
+    /temporary/${SOURCE_INSTALL_CERES}
 
-# TODO MOVE TO SOURCE INSTALL SCRIPT
-# TODO MOVE TO SOURCE INSTALL SCRIPT
-# TODO MOVE TO SOURCE INSTALL SCRIPT
-# TODO MOVE TO SOURCE INSTALL SCRIPT
-ARG SOURCE_INSTALL_SPDLOG=building/install_scripts/source_install_spdlog.sh
+
+FROM apt-base-stage AS build-small-libraries-stage
+
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+ARG SOURCE_INSTALL_SMALL_LIBRARIES=building/install_scripts/source_install_small_libraries.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${SOURCE_INSTALL_SPDLOG},target=/temporary/${SOURCE_INSTALL_SPDLOG} \
-    /temporary/${SOURCE_INSTALL_SPDLOG}
+    --mount=type=bind,source=${SOURCE_INSTALL_SMALL_LIBRARIES},target=/temporary/${SOURCE_INSTALL_SMALL_LIBRARIES} \
+    /temporary/${SOURCE_INSTALL_SMALL_LIBRARIES}
 
 
 FROM apt-base-stage AS base-stage
 
-COPY --from=source-base-stage  /usr/local  /usr/local
+COPY --from=build-ceres-stage /opt/reprojection /opt/reprojection
+COPY --from=build-small-libraries-stage /opt/reprojection /opt/reprojection
 
 
 FROM configuration-stage AS code-checks-stage
@@ -150,19 +147,24 @@ FROM base-stage AS debug-build-stage
 # there might already be a solution, but I took the shortcut and just added some LCOV_EXCL_LINE suppression statements
 # to get past the problem.
 
-ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
-RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+# TODO(Jack): We now have a very similar cmake build process nearly copy and pasted several times directly in the
+# dockerfile. If we find some commonality we should consider throwing it into one common bash script that accepts
+# arguments instead!
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
-    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Debug \
-                                    --build_dir=/buildroot/build-library \
-                                    --src_dir=/temporary/code/library
+    set -eoux pipefail; \
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Debug; \
+    cmake_build_install \
+        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/library"
 
 
-
-# WARN(Jack): Due to problems with installing gcc13 on ubuntu 20/22 the code coverage does not work. This is future work!
 FROM debug-build-stage AS code-coverage-stage
 
 ARG CODE_COVERAGE=building/scripts/code_coverage.sh
@@ -192,18 +194,19 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS release-build-stage
 
-# TODO(Jack): Currently the installation just happens in a folder called "application", we need to fix this! It should
-# be in a folder like "/usr/include/reprojection/application/*.hpp" or something like that. Application is too generic!
-ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
-RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
-    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_dir=/buildroot/build-library \
-                                    --src_dir=/temporary/code/library; \
-    cmake --install /buildroot/build-library-Release
+    set -eoux pipefail; \
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=OFF; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/library"
 
 # NOT EXECUTED IN CI!!!
 FROM release-build-stage AS feature-extraction-demo-stage
@@ -256,23 +259,23 @@ ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
 
-# TODO(Jack): Use a proper packaging instead of copying over the usr/local directory! This stage should actually inherit
-# from the plain old base-stage and then apt install the calibration package. It is confusing that we bring in all
-# source build dependendcies (ex. tomlplusplus or aprilgrid) with this copy command here, along with the calibration lib.
-COPY --from=release-build-stage /usr/local /usr/local
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 
 FROM ros1-base-stage AS ros1-application-stage
 
-ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
-RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
+    set -eox pipefail; \
     source /opt/ros/noetic/setup.bash; \
-    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_dir=/buildroot/build-ros1-app \
-                                    --src_dir=/temporary/code/application_ros1 \
-                                    --cmake_extra_args=-DCMAKE_PREFIX_PATH=/opt/ros/noetic
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/application_ros1"
 
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 
@@ -280,7 +283,7 @@ ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/noetic/setup.bash; \
-    export APP="/buildroot/build-ros1-app-Release/reprojection.reprojection_app"; \
+    export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
     /temporary/${INTEGRATION_TEST}
 
@@ -291,19 +294,23 @@ ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
 
-# TODO(Jack): See note in ros1 stage!
-COPY --from=release-build-stage /usr/local /usr/local
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+
 
 FROM ros2-base-stage AS ros2-application-stage
 
-ARG BUILD_CPP_PACKAGE=building/scripts/build_cpp_package.sh
-RUN --mount=type=bind,source=${BUILD_CPP_PACKAGE},target=/temporary/${BUILD_CPP_PACKAGE} \
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
+    set -eox pipefail; \
     source /opt/ros/jazzy/setup.bash; \
-    /temporary/${BUILD_CPP_PACKAGE} --cmake_build_type=Release \
-                                    --build_dir=/buildroot/build-ros2-app \
-                                    --src_dir=/temporary/code/application_ros2
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/application_ros2"
 
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
 
@@ -311,6 +318,6 @@ ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/jazzy/setup.bash; \
-    export APP="/buildroot/build-ros2-app-Release/reprojection.reprojection_app"; \
+    export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
     /temporary/${INTEGRATION_TEST}

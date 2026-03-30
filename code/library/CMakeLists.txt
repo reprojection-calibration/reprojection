@@ -16,20 +16,24 @@ include(../cmake_macros/add_examples.cmake)
 include(../cmake_macros/add_library.cmake)
 include(../cmake_macros/add_tests.cmake)
 
+# Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/opt/reprojection/eigen;/opt/reprojection")
+
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(apriltag REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
 find_package(GTest REQUIRED)
+# TODO(Jack): We should have a more coherent cmake compliant testing strategy across the project. An if statement
+# wrapping the code inside the AddExample macro is not exactly the most modern solution I think.
 enable_testing()
-
-# Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 add_subdirectory(types_internal)
 add_subdirectory(types)

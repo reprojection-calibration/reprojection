@@ -9,6 +9,7 @@ set(SRC_FILES
         src/sphere_trajectory.cpp
 )
 set(LINK_LIBRARIES
+        Ceres::ceres
         Eigen3::Eigen
         eigen_utilities
         geometry

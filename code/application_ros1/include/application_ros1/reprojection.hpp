@@ -3,7 +3,7 @@
 #include <optional>
 #include <string>
 
-#include "reprojection/bag_wrapper.hpp"
+#include "application_ros1/bag_wrapper.hpp"
 
 namespace reprojection::ros1 {
 

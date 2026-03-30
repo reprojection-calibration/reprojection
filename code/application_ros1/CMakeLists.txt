@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(reprojection)
+project(application_ros1)
 
 # NOTE(Jack): We cannot enforce c++ 20 here because noetic and its boosts dependency are quite old and apparently not
 # compatible with our build environments gcc13.
@@ -10,6 +10,9 @@ endif ()
 include(../cmake_macros/add_examples.cmake)
 include(../cmake_macros/add_library.cmake)
 include(../cmake_macros/add_tests.cmake)
+
+# Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 
 find_package(cv_bridge REQUIRED)
 find_package(reprojection REQUIRED)
@@ -45,5 +48,6 @@ AddTests()
 set(EXAMPLES
         examples/reprojection_app.cpp
 )
+set(INSTALL_EXAMPLES ON)
 AddExamples()
 

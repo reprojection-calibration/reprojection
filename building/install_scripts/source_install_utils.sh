@@ -3,7 +3,7 @@
 set -eoux pipefail
 
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
-CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX:-/usr/local}
+BUILD_TESTING=${BUILD_TESTING:-OFF}
 
 clone_repo() {
     local repo=$1
@@ -22,16 +22,25 @@ download_and_extract() {
 }
 
 cmake_build_install() {
-    local source_dir=$1
-    local build_dir=$2
+    local build_dir=$1
+    local source_dir=$2
     shift 2
 
-    cmake -S "$source_dir" -B "$build_dir" \
+    cmake -B "${build_dir}" -S "${source_dir}" \
+        -DBUILD_TESTING="${BUILD_TESTING}" \
         -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
-        -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
+        -DCMAKE_INSTALL_PREFIX="/opt/reprojection" \
         -GNinja \
         "$@"
 
-    cmake --build "$build_dir"
-    cmake --install "$build_dir"
+    cmake --build "${build_dir}"
+
+    if [[ "${BUILD_TESTING}" == "ON" ]]; then
+      # NOTE(Jack): The --test-dir option is not supported under cmake version 3.20 - ubuntu 20 defaults to 3.16 - so we just
+      # do it manually here.
+      cd "${build_dir}"
+      ctest --output-on-failure --progress
+    fi
+
+    cmake --install "${build_dir}"
 }

@@ -20,6 +20,7 @@ set(LINK_LIBRARIES
         projection_functions
         spline
         steps
+        tomlplusplus::tomlplusplus
         types
         types_internal
 )

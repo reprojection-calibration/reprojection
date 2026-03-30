@@ -9,6 +9,7 @@ set(SRC_FILES
         src/utilities.cpp
 )
 set(LINK_LIBRARIES
+        Ceres::ceres
         Eigen3::Eigen
         geometry
         types_internal
