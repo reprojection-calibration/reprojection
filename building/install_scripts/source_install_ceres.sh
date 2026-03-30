@@ -15,8 +15,6 @@ cmake_build_install \
     "${buildroot}/${name}-${CMAKE_BUILD_TYPE}" \
     "${buildroot}/${name}"
 
-rm -r /buildroot/eigen-Release
-
 name="ceres-solver-2.2.0"
 download_and_extract \
     http://ceres-solver.org/${name}.tar.gz \
