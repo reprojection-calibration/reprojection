@@ -147,10 +147,9 @@ FROM base-stage AS debug-build-stage
 # there might already be a solution, but I took the shortcut and just added some LCOV_EXCL_LINE suppression statements
 # to get past the problem.
 
-# CHECK IN CMAKE MACROS IF TESTING IS ENABLED# CHECK IN CMAKE MACROS IF TESTING IS ENABLED
-# CHECK IN CMAKE MACROS IF TESTING IS ENABLED
-# CHECK IN CMAKE MACROS IF TESTING IS ENABLED
-# CHECK IN CMAKE MACROS IF TESTING IS ENABLED
+# TODO(Jack): We now have a very similar cmake build process nearly copy and pasted several times directly in the
+# dockerfile. If we find some commonality we should consider throwing it into one common bash script that accepts
+# arguments instead!
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
