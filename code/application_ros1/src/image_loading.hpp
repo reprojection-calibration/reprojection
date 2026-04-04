@@ -6,6 +6,6 @@
 
 namespace reprojection::ros1 {
 
-cv::Mat ToCvMat(rosbag::MessageInstance const& msg);
+std::pair<uint64_t, cv::Mat> ToCvMat(rosbag::MessageInstance const& msg);
 
 }  // namespace reprojection::ros1
