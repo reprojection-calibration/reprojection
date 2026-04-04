@@ -262,7 +262,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 
-FROM ros1-base-stage AS ros1-application-stage
+FROM ros1-base-stage AS ros1-release-build-stage
 
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
@@ -277,6 +277,12 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/application_ros1"
 
+FROM ros1-base-stage AS ros1-integration-test-stage
+
+# TODO(Jack): The fact that we copy over the entire /opt/reprojection directory here again, instead of just the newly
+# built and installed ros1 release install, is a sign that we are not managing our packaging/installation well. Design
+# the system such that we only need to do the minumum copying/installing, or at least consider it!
+COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh

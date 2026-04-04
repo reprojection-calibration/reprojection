@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <reprojection/application/io.hpp>
+#include <reprojection/application/calibrate.hpp>
 
 #include "application_ros1/bag_wrapper.hpp"
 #include "application_ros1/reprojection.hpp"
@@ -25,9 +26,18 @@ int main(int argc, char* argv[]) {
 
     auto const reader_result{ros1::SingleTopicBagReader::Create(paths->data_path, camera_topic)};
     if (std::holds_alternative<ros1::BagError>(reader_result)) {
+        // TODO(Jack): Should we use the libraries logging pattern here too?
         std::cerr << std::get<ros1::BagError>(reader_result).message << "\n";
         return EXIT_FAILURE;
     }
+    auto const& bag_reader{std::get<ros1::SingleTopicBagReader>(reader_result)};
+
+    auto const data_signature{SerializeBagTopic(bag_reader)};
+    if (not data_signature) {
+        std::cerr << "Unable to calculate image data signature!\n";
+        return EXIT_FAILURE;
+    }
+    std::cout << *data_signature << std::endl;
 
     return 0;
 }
