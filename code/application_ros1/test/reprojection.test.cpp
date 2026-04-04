@@ -42,7 +42,7 @@ TEST(Ros1Reprojection, TestImageSource) {
     ASSERT_TRUE(std::holds_alternative<ros1::SingleTopicBagReader>(reader_result));
     auto const& reader{std::get<ros1::SingleTopicBagReader>(reader_result)};
 
-    ros1::ImageSource image_source{reader.view->begin(), reader.view->end()};
+    ros1::ImageSource image_source{reader};
 
     auto data{image_source()};
     ASSERT_TRUE(data.has_value());

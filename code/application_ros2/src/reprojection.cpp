@@ -31,9 +31,11 @@ std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     return oss.str();
 }
 
+ImageSource::ImageSource(SingleTopicBagReader& bag_reader) : bag_reader_{bag_reader} {}
+
 std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
-    if (auto const msg{bag_reader.Next()}) {
-        auto const data_i{ros2::ToCvMat(*msg, bag_reader.topic_type)};
+    if (auto const msg{bag_reader_.Next()}) {
+        auto const data_i{ros2::ToCvMat(*msg, bag_reader_.topic_type)};
         return data_i;
     }
 

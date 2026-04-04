@@ -11,10 +11,14 @@ namespace reprojection::ros2 {
 
 std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data);
 
-struct ImageSource {
-    SingleTopicBagReader& bag_reader;
+class ImageSource {
+   public:
+    explicit ImageSource(SingleTopicBagReader& bag_reader);
 
     std::optional<std::pair<uint64_t, cv::Mat>> operator()();
+
+   private:
+    SingleTopicBagReader& bag_reader_;
 };
 
 }  // namespace reprojection::ros2

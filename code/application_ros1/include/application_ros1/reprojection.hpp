@@ -11,11 +11,15 @@ namespace reprojection::ros1 {
 
 std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data);
 
-struct ImageSource {
-    rosbag::View::iterator itr;
-    rosbag::View::iterator end;
+class ImageSource {
+   public:
+    explicit ImageSource(SingleTopicBagReader const& reader);
 
     std::optional<std::pair<uint64_t, cv::Mat>> operator()();
+
+   private:
+    rosbag::View::iterator itr_;
+    rosbag::View::iterator end_;
 };
 
 }  // namespace reprojection::ros1

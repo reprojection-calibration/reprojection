@@ -31,10 +31,12 @@ std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     return oss.str();
 }
 
+ImageSource::ImageSource(SingleTopicBagReader const& reader) : itr_{reader.view->begin()}, end_{reader.view->end()} {}
+
 std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
-    if (itr != end) {
-        auto const data_i{ToCvMat(*itr)};
-        itr = std::next(itr);
+    if (itr_ != end_) {
+        auto const data_i{ToCvMat(*itr_)};
+        itr_ = std::next(itr_);
 
         return data_i;
     }
