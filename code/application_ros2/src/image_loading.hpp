@@ -5,6 +5,6 @@
 
 namespace reprojection::ros2 {
 
-cv::Mat ToCvMat(rosbag2_storage::SerializedBagMessage const& msg, std::string_view type);
+std::pair<uint64_t, cv::Mat> ToCvMat(rosbag2_storage::SerializedBagMessage const& msg, std::string_view type);
 
 }  // namespace reprojection::ros2

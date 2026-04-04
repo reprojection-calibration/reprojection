@@ -8,7 +8,11 @@
 
 namespace reprojection::ros2 {
 
-cv::Mat ToCvMat(rosbag2_storage::SerializedBagMessage const& bag_msg, std::string_view type) {
+uint64_t GetTimestampNs(std_msgs::msg::Header const& header) {
+    return static_cast<uint64_t>(header.stamp.sec) * 1'000'000'000ULL + static_cast<uint64_t>(header.stamp.nanosec);
+}
+
+std::pair<uint64_t, cv::Mat> ToCvMat(rosbag2_storage::SerializedBagMessage const& bag_msg, std::string_view type) {
     rclcpp::SerializedMessage const serialized_msg(*bag_msg.serialized_data);
 
     if (type == "sensor_msgs/msg/Image") {
@@ -17,19 +21,21 @@ cv::Mat ToCvMat(rosbag2_storage::SerializedBagMessage const& bag_msg, std::strin
         serializer.deserialize_message(&serialized_msg, &msg);
         cv_bridge::CvImagePtr const cv_ptr{cv_bridge::toCvCopy(msg)};
 
-        return cv_ptr->image;
-    }
+        uint64_t const timestamp_ns{GetTimestampNs(msg.header)};
 
-    if (type == "sensor_msgs/msg/CompressedImage") {
+        return {timestamp_ns, cv_ptr->image};
+    } else if (type == "sensor_msgs/msg/CompressedImage") {
         rclcpp::Serialization<sensor_msgs::msg::CompressedImage> serializer;
         sensor_msgs::msg::CompressedImage msg;
         serializer.deserialize_message(&serialized_msg, &msg);
         cv_bridge::CvImagePtr const cv_ptr{cv_bridge::toCvCopy(msg)};
 
-        return cv_ptr->image;
-    }
+        uint64_t const timestamp_ns{GetTimestampNs(msg.header)};
 
-    throw std::runtime_error("Failure during ROS2 image deserialization given type: " + std::string(type));
+        return {timestamp_ns, cv_ptr->image};
+    } else {
+        throw std::runtime_error("Failure during ROS2 image deserialization given type: " + std::string(type));
+    }
 }
 
 }  // namespace reprojection::ros2
