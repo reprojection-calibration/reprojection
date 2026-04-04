@@ -11,17 +11,17 @@
 
 namespace reprojection::ros1 {
 
-inline std_msgs::Header DummyHeader() {
+inline std_msgs::Header DummyHeader(ros::Time const& time = ros::Time(1)) {
     std_msgs::Header header;
-    header.stamp = ros::Time(1);
+    header.stamp = time;
     header.frame_id = "camera";
 
     return header;
 }
 
-inline sensor_msgs::Image DummyImage() {
+inline sensor_msgs::Image DummyImage(ros::Time const& time = ros::Time(1)) {
     sensor_msgs::Image img_msg;
-    img_msg.header = DummyHeader();
+    img_msg.header = DummyHeader(time);
 
     cv::Mat const dummy{cv::Mat::zeros(1, 1, CV_8UC3)};
     img_msg.height = dummy.rows;

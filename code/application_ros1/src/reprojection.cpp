@@ -5,6 +5,8 @@
 
 #include <filesystem>
 
+#include "image_loading.hpp"
+
 namespace reprojection::ros1 {
 
 std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
@@ -27,6 +29,19 @@ std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     oss << "|";
 
     return oss.str();
+}
+
+ImageSource::ImageSource(SingleTopicBagReader const& reader) : itr_{reader.view->begin()}, end_{reader.view->end()} {}
+
+std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
+    if (itr_ != end_) {
+        auto const data_i{ToCvMat(*itr_)};
+        itr_ = std::next(itr_);
+
+        return data_i;
+    }
+
+    return std::nullopt;
 }
 
 }  // namespace reprojection::ros1

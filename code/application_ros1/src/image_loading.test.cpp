@@ -29,8 +29,11 @@ TEST(Ros1ImageLoading, TestRawAndCompressedToCvMat) {
     ASSERT_EQ(view.size(), 2);
 
     for (auto const& msg : view) {
-        cv::Mat img;
-        EXPECT_NO_THROW(img = ros1::ToCvMat(msg));
+        std::pair<uint64_t, cv::Mat> result;
+        EXPECT_NO_THROW(result = ros1::ToCvMat(msg));
+
+        auto const& [timestamp_ns, img]{result};
+        EXPECT_EQ(timestamp_ns, 1e9);
         EXPECT_EQ(img.rows, 1);
         EXPECT_EQ(img.cols, 1);
     }
