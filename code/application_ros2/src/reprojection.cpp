@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <iostream>
 
-#include <rosbag2_cpp/reader.hpp>
+#include "image_loading.hpp"
 
 namespace reprojection::ros2 {
 
@@ -29,6 +29,15 @@ std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     }
 
     return oss.str();
+}
+
+std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
+    if (auto const msg{bag_reader.Next()}) {
+        auto const data_i{ros2::ToCvMat(*msg, bag_reader.topic_type)};
+        return data_i;
+    }
+
+    return std::nullopt;
 }
 
 }  // namespace reprojection::ros2

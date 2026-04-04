@@ -14,7 +14,7 @@ std::pair<uint64_t, cv::Mat> ToCvMat(rosbag::MessageInstance const& msg) {
 
         uint64_t const timestamp_ns{img_msg->header.stamp.toNSec()};
 
-        return {timestamp_ns,cv_ptr->image};
+        return {timestamp_ns, cv_ptr->image};
     }
 
     if (msg.getDataType() == "sensor_msgs/CompressedImage") {
@@ -23,7 +23,7 @@ std::pair<uint64_t, cv::Mat> ToCvMat(rosbag::MessageInstance const& msg) {
 
         uint64_t const timestamp_ns{img_msg->header.stamp.toNSec()};
 
-        return {timestamp_ns,cv_ptr->image};
+        return {timestamp_ns, cv_ptr->image};
     }
 
     throw std::runtime_error("You asked to decode a non-image message into an image, what's going on?");

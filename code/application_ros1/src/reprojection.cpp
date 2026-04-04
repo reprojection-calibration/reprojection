@@ -35,7 +35,7 @@ std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
     if (itr != end) {
         auto const data_i{ToCvMat(*itr)};
         itr = std::next(itr);
-        
+
         return data_i;
     }
 

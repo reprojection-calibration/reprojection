@@ -15,17 +15,19 @@ namespace reprojection::ros2 {
 // TODO(Jack): All these dummy datatypes are passed almost identically from the ROS1 code, also the scoped path below.
 //  Is there a non intrusive strategy to reduce copy paste? Note that the time function call is different between ROS1
 //  and ROS2
-inline std_msgs::msg::Header DummyHeader() {
+// TODO(Jack): Passing in the default timestamp values here is not a nice way to express our intent. Consider a refactor
+//  if we align the test data with the ROS1 version.
+inline std_msgs::msg::Header DummyHeader(rclcpp::Time const& time = rclcpp::Time(1)) {
     std_msgs::msg::Header header;
-    header.stamp = rclcpp::Time(1);
+    header.stamp = time;
     header.frame_id = "camera";
 
     return header;
 }
 
-inline sensor_msgs::msg::Image DummyImage() {
+inline sensor_msgs::msg::Image DummyImage(rclcpp::Time const& time = rclcpp::Time(1)) {
     sensor_msgs::msg::Image img_msg;
-    img_msg.header = DummyHeader();
+    img_msg.header = DummyHeader(time);
 
     cv::Mat const dummy{cv::Mat::zeros(1, 1, CV_8UC3)};
     img_msg.height = dummy.rows;

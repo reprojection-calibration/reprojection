@@ -1,8 +1,9 @@
 #pragma once
 
 #include <optional>
-#include <opencv2/opencv.hpp>
 #include <string>
+
+#include <opencv2/opencv.hpp>
 
 #include "application_ros1/bag_wrapper.hpp"
 
