@@ -66,6 +66,6 @@ test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --da
     1 \
     "{'workspace_dir': '', 'error_code': {'value': 2, 'message': 'No such file or directory'}}"
 
-test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data ${DATA}" \
+test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data ${DATA} --workspace /temporary/code/test_data" \
     0 \
-    ""
+    "The future is calibrated!"

@@ -50,5 +50,7 @@ int main(int argc, char* argv[]) {
 
     application::Calibrate(config_table, image_source, *data_signature, *db);
 
+    std::cout << "The future is calibrated!\n";
+
     return 0;
 }

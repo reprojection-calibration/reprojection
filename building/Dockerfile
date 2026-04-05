@@ -291,11 +291,10 @@ COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-ca
 ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
-    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 2c078231b5ce84b0420be5903d92ab1ec97c9732b79f1eb0a94b47fe632c386f
+    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 4b48d11db7fb0f110f39303804a13ef87d46ddf74ab2659a929149468b5f4f5a
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/noetic/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
