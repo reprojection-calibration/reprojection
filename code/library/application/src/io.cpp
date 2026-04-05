@@ -73,7 +73,7 @@ std::optional<database::DbPtr> Open(fs::path const& workspace_dir, fs::path cons
                    code.value(), code.message());
         return std::nullopt;
     } else if (not fs::exists(data_path, code)) {
-        log->error("{{'data_path': '{}', 'error_code': {{'value': {}, 'message': '{}'}}}}", workspace_dir.string(),
+        log->error("{{'data_path': '{}', 'error_code': {{'value': {}, 'message': '{}'}}}}", data_path.string(),
                    code.value(), code.message());
         return std::nullopt;
     }
@@ -82,9 +82,13 @@ std::optional<database::DbPtr> Open(fs::path const& workspace_dir, fs::path cons
     std::string const data_name{fs::is_regular_file(data_path) ? data_path.stem().string()
                                                                : data_path.parent_path().filename().string()};
 
+
     // If the database already exists then open it, if it does not exist then create and open it.
     fs::path const db_path{workspace_dir / (data_name + ".db3")};
-    if (fs::exists(db_path)) {
+    bool const db_exists{fs::exists(db_path)};
+    log->info("{{'db_path': '{}', 'exists': {}}}", db_path.string(), db_exists);
+
+    if (db_exists) {
         return std::make_shared<database::CalibrationDatabase>(db_path, false, false);
     }
 

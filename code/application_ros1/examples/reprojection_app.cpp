@@ -23,6 +23,11 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    auto const db{application::Open(paths->workspace_dir, paths->data_path)};
+    if (not db) {
+        return EXIT_FAILURE;
+    }
+
     toml::table const config_table{*config};
     // TODO(Jack): Should we use the generic templated key access function found in the library?
     std::string const camera_topic{*config_table["sensor"]["camera_name"].value<std::string>()};
@@ -40,7 +45,11 @@ int main(int argc, char* argv[]) {
         std::cerr << "Unable to calculate image data signature!\n";
         return EXIT_FAILURE;
     }
-    std::cout << *data_signature << std::endl;
+
+
+    ros1::ImageSource image_source{bag_reader};
+
+    application::Calibrate(config_table, image_source, *data_signature, *db);
 
     return 0;
 }
