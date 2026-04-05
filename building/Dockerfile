@@ -287,7 +287,6 @@ COPY code/test_data/minimum_config.toml /temporary/code/test_data/minimum_config
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 
-
 ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
@@ -310,7 +309,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 
-FROM ros2-base-stage AS ros2-application-stage
+FROM ros2-base-stage AS ros2-release-build-stage
 
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
@@ -325,7 +324,18 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/application_ros2"
 
+FROM ros2-base-stage AS ros2-integration-test-stage
+
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16.db3
+COPY code/test_data/minimum_config.toml /temporary/code/test_data/minimum_config.toml
+# NOTE(Jack): See note in the ros1 stage about why copying over the entire /opt/reprojection folder is overkill.
+COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
+
+ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
+    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 xxx
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
