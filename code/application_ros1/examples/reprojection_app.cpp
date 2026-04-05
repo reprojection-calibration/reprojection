@@ -1,8 +1,11 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <reprojection/application/io.hpp>
-#include <reprojection/application/calibrate.hpp>
+// WARN(Jack): We should be able to include this like #include <reprojection/application/io.hpp> but the install paths
+// are not working like we want! We need to take a look at this. We want this so we can prevent file name collisions and
+// simply make it more clear where this comes from.
+#include <application/calibrate.hpp>
+#include <application/io.hpp>
 
 #include "application_ros1/bag_wrapper.hpp"
 #include "application_ros1/reprojection.hpp"
