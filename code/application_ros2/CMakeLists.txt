@@ -13,6 +13,7 @@ find_package(rclcpp REQUIRED)
 find_package(reprojection REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(tomlplusplus REQUIRED)
 
 set(INCLUDE_DIRECTORIES
         ${sensor_msgs_INCLUDE_DIRS}
@@ -22,6 +23,7 @@ set(LINK_LIBRARIES
         rclcpp::rclcpp
         rosbag2_cpp::rosbag2_cpp
         reprojection::application
+        tomlplusplus::tomlplusplus
 )
 
 set(LIBRARY_NAME ${PROJECT_NAME})
