@@ -17,6 +17,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         config
         eigen_utilities
+        logging
         tomlplusplus::tomlplusplus
         types
         types_internal

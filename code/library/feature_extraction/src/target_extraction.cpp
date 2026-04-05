@@ -1,15 +1,25 @@
 #include "feature_extraction/target_extraction.hpp"
 
 #include "config/config_validation.hpp"
+#include "logging/logging.hpp"
 #include "types/enums.hpp"
 
 #include "target_extractors.hpp"
 
 namespace reprojection::feature_extraction {
 
+namespace {
+
+auto const log{logging::Get("feature_extraction")};
+
+}
+
 // TODO(Jack): If we run into trouble one day with different opencv image formats and depths we should extract the image
 //  type processing code here and unit test it.
 std::optional<ExtractedTarget> TargetExtractor::Extract(cv::Mat const& img) {
+    log->debug("{{'input_image': {{'height': {}, 'width': {}, 'depth': '{}', 'channels': {}}}}}", img.rows, img.cols,
+               cv::depthToString(img.depth()), img.channels());
+
     cv::Mat img_8u;
     if (img.depth() != CV_8U) {
         double minVal, maxVal;
@@ -31,7 +41,12 @@ std::optional<ExtractedTarget> TargetExtractor::Extract(cv::Mat const& img) {
                                  std::to_string(img_8u.channels()));
     }
 
-    return ExtractImplementation(img_gray);
+    auto const extracted_target{ExtractImplementation(img_gray)};
+
+    log->debug("{{'successful_extraction': {}, 'num_features': {}}}", extracted_target.has_value(),
+               extracted_target ? extracted_target.value().indices.rows() : 0);
+
+    return extracted_target;
 }
 
 // TODO(Jack): This is a slightly controversial decision to let the toml::table type escape outside of the config
@@ -69,8 +84,9 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target
     } else if (type == TargetType::AprilGrid3) {
         return std::make_unique<AprilGrid3Extractor>(pattern_size, unit_dimension);
     } else {
-        throw std::runtime_error("CreateTargetExtractor() invalid feature extractor type: " +  // LCOV_EXCL_LINE
-                                 type_str);                                                    // LCOV_EXCL_LINE
+        throw std::runtime_error(  // LCOV_EXCL_LINE
+            "LIBRARY IMPLEMENTATION ERROR - CreateTargetExtractor() invalid feature extractor type: " +  // LCOV_EXCL_LINE
+            type_str);  // LCOV_EXCL_LINE
     }
 }
 
