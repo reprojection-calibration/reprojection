@@ -40,14 +40,13 @@ int main(int argc, char* argv[]) {
     }
     auto const& bag_reader{std::get<ros1::SingleTopicBagReader>(reader_result)};
 
+    ros1::ImageSource image_source{bag_reader};
+
     auto const data_signature{SerializeBagTopic(bag_reader)};
     if (not data_signature) {
         std::cerr << "Unable to calculate image data signature!\n";
         return EXIT_FAILURE;
     }
-
-
-    ros1::ImageSource image_source{bag_reader};
 
     application::Calibrate(config_table, image_source, *data_signature, *db);
 
