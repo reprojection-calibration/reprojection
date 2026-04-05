@@ -2,6 +2,7 @@
 
 #include "config/config_loading.hpp"
 #include "config/config_validation.hpp"
+#include "database/calibration_database.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::application {
@@ -64,6 +65,30 @@ std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path) {
     log->info("{{'config_path': '{}', 'config': {}}}", config_path.string(), logging::ToOneLineJson(config));
 
     return config;
+}
+
+std::optional<database::DbPtr> Open(fs::path const& workspace_dir, fs::path const& data_path) {
+    if (std::error_code code; not fs::is_directory(workspace_dir, code)) {
+        log->error("{{'workspace_dir': '{}', 'error_code': {{'value': {}, 'message': '{}'}}}}", workspace_dir.string(),
+                   code.value(), code.message());
+        return std::nullopt;
+    } else if (not fs::exists(data_path, code)) {
+        log->error("{{'data_path': '{}', 'error_code': {{'value': {}, 'message': '{}'}}}}", workspace_dir.string(),
+                   code.value(), code.message());
+        return std::nullopt;
+    }
+
+    // Handle the case that the input data is a file (ex. ROS1 bag) or a folder (ex. ROS2 bag).
+    std::string const data_name{fs::is_regular_file(data_path) ? data_path.stem().string()
+                                                               : data_path.parent_path().filename().string()};
+
+    // If the database already exists then open it, if it does not exist then create and open it.
+    fs::path const db_path{workspace_dir / (data_name + ".db3")};
+    if (fs::exists(db_path)) {
+        return std::make_shared<database::CalibrationDatabase>(db_path, false, false);
+    }
+
+    return std::make_shared<database::CalibrationDatabase>(db_path, true, false);
 }
 
 }  // namespace reprojection::application

@@ -6,6 +6,8 @@
 
 #include <toml++/toml.hpp>
 
+#include "application/calibration_database_forward_declaration.hpp"
+
 namespace reprojection::application {
 
 namespace fs = std::filesystem;
@@ -23,5 +25,9 @@ std::optional<std::string> GetCommandOption(char const* const* const begin, char
                                             std::string const& option);
 
 std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path);
+
+// TODO(Jack): We probably want to tell the user that the database was opened and/or if it was created new or we are
+//  using an old one etc.
+std::optional<database::DbPtr> Open(fs::path const& workspace_dir, fs::path const& data_path);
 
 }  // namespace reprojection::application

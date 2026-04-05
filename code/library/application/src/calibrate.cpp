@@ -23,7 +23,7 @@ auto const log{logging::Get("application")};
 
 // TODO(Jack): Should we put image_source_signature and image_source into one object? They are 100% related.
 void Calibrate(toml::table const& config, ImageSource image_source, std::string const& image_source_signature,
-               DbPtr const db) {
+               database::DbPtr const db) {
     steps::CameraInfoStep const ci_step{image_source_signature, *config["sensor"].as_table(), image_source};
     auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(ci_step, db)};
     log->info(
