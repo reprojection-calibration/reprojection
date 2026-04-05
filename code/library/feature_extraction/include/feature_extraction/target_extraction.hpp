@@ -23,13 +23,16 @@ class TargetExtractor {
 
     virtual ~TargetExtractor() = default;
 
-    virtual std::optional<ExtractedTarget> Extract(cv::Mat const& image) const = 0;
+    std::optional<ExtractedTarget> Extract(cv::Mat const& img);
 
    protected:
     cv::Size pattern_size_;
     double unit_dimension_;
     ArrayX2i point_indices_;
     MatrixX3d points_;
+
+   private:
+    virtual std::optional<ExtractedTarget> ExtractImplementation(cv::Mat const& image) const = 0;
 };
 
 std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target_config);

@@ -20,7 +20,7 @@ CheckerboardExtractor::CheckerboardExtractor(cv::Size const& pattern_size, const
 
 // TODO(Jack): Scale down the image for the checkerboard extraction (faster) and then scale up the extracted points and
 // use the original image for the subpixel refinement.
-std::optional<ExtractedTarget> CheckerboardExtractor::Extract(cv::Mat const& image) const {
+std::optional<ExtractedTarget> CheckerboardExtractor::ExtractImplementation(cv::Mat const& image) const {
     std::vector<cv::Point2f> corners;
     bool const pattern_found{cv::findChessboardCorners(
         image, pattern_size_, corners,
@@ -52,7 +52,7 @@ CircleGridExtractor::CircleGridExtractor(cv::Size const& pattern_size, const dou
     points_.col(2).setZero();
 }
 
-std::optional<ExtractedTarget> CircleGridExtractor::Extract(cv::Mat const& image) const {
+std::optional<ExtractedTarget> CircleGridExtractor::ExtractImplementation(cv::Mat const& image) const {
     // cv::CALIB_CB_CLUSTERING - "uses a special algorithm for grid detection. It is more robust to perspective
     // distortions but much more sensitive to background clutter." - if I do not use this then I think I need to do
     // some tuning about what acceptable sizes and spacing are for the circle grid. For now this will do.
@@ -91,7 +91,7 @@ AprilGrid3Extractor::AprilGrid3Extractor(cv::Size const& pattern_size, const dou
     points_ = CornerPositions(point_indices_, unit_dimension);
 }
 
-std::optional<ExtractedTarget> AprilGrid3Extractor::Extract(cv::Mat const& image) const {
+std::optional<ExtractedTarget> AprilGrid3Extractor::ExtractImplementation(cv::Mat const& image) const {
     std::vector<AprilTagDetection> const raw_detections{tag_detector_.Detect(image)};
     if (std::size(raw_detections) == 0) {
         return std::nullopt;
