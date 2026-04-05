@@ -100,3 +100,8 @@ TEST(ApplicationIO, TestBadValidate) {
     auto const result{application::LoadAndValidateConfig(config_file.Path())};
     EXPECT_FALSE(result.has_value());
 }
+
+TEST(ApplicationIO, TestBadOpen) {
+    auto const db{application::Open("", "")};
+    EXPECT_FALSE(db.has_value());
+}
