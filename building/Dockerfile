@@ -335,11 +335,10 @@ COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-
 ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
-    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 xxx
+    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 5c03d9613253d7dc385a51d32090dc27dcdcee94459d21ccbb867e324c236931
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
