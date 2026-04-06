@@ -13,6 +13,8 @@ struct BagError {
     std::string message;
 };
 
+// TODO(Jack): Should we refactor to use optional and shared pointer instead if variant and mutable references/value
+// semantics?
 struct SingleTopicBagReader {
     std::string topic;
     std::string topic_type;
@@ -47,6 +49,11 @@ struct SingleTopicBagReader {
 
             return msg;
         }
+
+        // NOTE(Jack): We want the capability to iterate through the images multiples times. However the ros2 bag reader
+        // API provides us no explicit "rest back to start" functionality, therefore we instead the "seek" method to
+        // bring us back to the start. If this is 100% foolproof I am still not sure, but it seems to work.
+        reader->seek(0);
 
         return nullptr;
     }
