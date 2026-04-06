@@ -35,8 +35,7 @@ ImageSource::ImageSource(SingleTopicBagReader& bag_reader) : bag_reader_{bag_rea
 
 std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
     if (auto const msg{bag_reader_.Next()}) {
-        auto const data_i{ros2::ToCvMat(*msg, bag_reader_.topic_type)};
-        return data_i;
+        return ros2::ToCvMat(*msg, bag_reader_.topic_type);
     }
 
     return std::nullopt;
