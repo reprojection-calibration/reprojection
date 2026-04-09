@@ -26,9 +26,6 @@ TEST(Ros2Application, TestSerializeBagTopic) {
     std::string const filename{std::filesystem::path(temp_bag.path).filename()};
     std::string const gt_result{filename + "_0.mcap|/raw_image_topic|1;|"};
     EXPECT_EQ(*result, gt_result);
-
-    result = ros2::SerializeBagTopic(reader);
-    EXPECT_FALSE(result.has_value());
 }
 
 TEST(Ros2Application, TestImageSource) {

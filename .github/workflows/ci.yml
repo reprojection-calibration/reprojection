@@ -9,6 +9,11 @@ on:
   push:
     branches: [ "main" ]
 
+# https://stackoverflow.com/questions/66335225/how-to-cancel-previous-runs-in-the-pr-when-you-push-new-commitsupdate-the-curre
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   code-checks:
     runs-on: ubuntu-latest
@@ -78,10 +83,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          lfs: true
+      - run: git lfs pull
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
           cache_scope: ${{ matrix.applications.cache_scope }}
+          context: .
           external_cache_scope: test-data-download
           target: ${{ matrix.applications.target }}
     strategy:
@@ -90,8 +100,8 @@ jobs:
           - base: ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
             name: ros1
             cache_scope: ros1-application
-            target: ros1-application-stage
+            target: ros1-integration-test-stage
           - base: ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
             name: ros2
             cache_scope: ros2-application
-            target: ros2-application-stage
+            target: ros2-integration-test-stage

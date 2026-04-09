@@ -50,31 +50,34 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
         table = load_poses_table("nonexistent.db3")
         self.assertIsNone(table)
 
-        # Checked in test database does not hold tables for calculated values like poses
+        # Checked in test database has an empty pose table.
         table = load_poses_table(self.db_path)
-        self.assertIsNone(table)
-
-        # Create the table in a temporary database and test that at least a dataframe with no data rows is loaded.
-        with tempfile.NamedTemporaryFile(suffix=".db3") as db_path_tmp:
-            db_path = db_path_tmp.name
-            execute_sql(load_sql("poses_table.sql"), db_path)
-
-            table = load_poses_table(db_path)
-            self.assertEqual(table.shape, (0, 9))
+        self.assertEqual(table.shape, (0, 9))
+        self.assertTrue(
+            list(table.columns.values)
+            == [
+                "step_name",
+                "sensor_name",
+                "timestamp_ns",
+                "rx",
+                "ry",
+                "rz",
+                "x",
+                "y",
+                "z",
+            ]
+        )
 
     def test_load_reprojection_errors_table(self):
         table = load_reprojection_errors_table("nonexistent.db3")
         self.assertIsNone(table)
 
         table = load_reprojection_errors_table(self.db_path)
-        self.assertIsNone(table)
-
-        with tempfile.NamedTemporaryFile(suffix=".db3") as db_path_tmp:
-            db_path = db_path_tmp.name
-            execute_sql(load_sql("reprojection_error_table.sql"), db_path)
-
-            table = load_reprojection_errors_table(db_path)
-            self.assertEqual(table.shape, (0, 4))
+        self.assertEqual(table.shape, (0, 4))
+        self.assertTrue(
+            list(table.columns.values)
+            == ["step_name", "sensor_name", "timestamp_ns", "data"]
+        )
 
     def test_load_imu_data_table(self):
         table = load_imu_data_table("nonexistent.db3")

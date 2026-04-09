@@ -18,6 +18,7 @@ find_package(cv_bridge REQUIRED)
 find_package(reprojection REQUIRED)
 find_package(rosbag REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(tomlplusplus REQUIRED)
 
 set(INCLUDE_DIRECTORIES
         ${cv_bridge_INCLUDE_DIRS}
@@ -28,6 +29,7 @@ set(LINK_LIBRARIES
         ${rosbag_LIBRARIES}
         ${std_msgs_LIBRARIES}
         reprojection::application
+        tomlplusplus::tomlplusplus
 )
 
 set(LIBRARY_NAME ${PROJECT_NAME})

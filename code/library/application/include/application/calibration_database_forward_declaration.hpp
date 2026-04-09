@@ -5,4 +5,6 @@ namespace reprojection::database {
 
 struct CalibrationDatabase;
 
-}
+using DbPtr = std::shared_ptr<CalibrationDatabase>;
+
+}  // namespace reprojection::database

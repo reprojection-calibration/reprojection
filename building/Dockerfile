@@ -262,7 +262,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 
-FROM ros1-base-stage AS ros1-application-stage
+FROM ros1-base-stage AS ros1-release-build-stage
 
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
@@ -277,11 +277,23 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/application_ros1"
 
-COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
+FROM ros1-base-stage AS ros1-integration-test-stage
+
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
+COPY code/test_data/minimum_config.toml /temporary/code/test_data/
+# TODO(Jack): The fact that we copy over the entire /opt/reprojection directory here again, instead of just the newly
+# built and installed ros1 release install, is a sign that we are not managing our packaging/installation well. Design
+# the system such that we only need to do the minumum copying/installing, or at least consider it!
+COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/
+
+ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
+    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 4b48d11db7fb0f110f39303804a13ef87d46ddf74ab2659a929149468b5f4f5a
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/noetic/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
@@ -297,7 +309,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 
-FROM ros2-base-stage AS ros2-application-stage
+FROM ros2-base-stage AS ros2-release-build-stage
 
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
@@ -312,11 +324,21 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/application_ros2"
 
+FROM ros2-base-stage AS ros2-integration-test-stage
+
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
+COPY code/test_data/minimum_config.toml /temporary/code/test_data/
+# NOTE(Jack): See note in the ros1 stage about why copying over the entire /opt/reprojection folder is overkill.
+COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
+
+ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
+    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 5c03d9613253d7dc385a51d32090dc27dcdcee94459d21ccbb867e324c236931
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
