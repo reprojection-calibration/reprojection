@@ -101,7 +101,23 @@ TEST(ApplicationIO, TestBadValidate) {
     EXPECT_FALSE(result.has_value());
 }
 
-TEST(ApplicationIO, TestBadOpen) {
-    auto const db{application::Open("", "")};
+TEST(ApplicationIO, TestOpen) {
+    auto db{application::Open("", "")};
     EXPECT_FALSE(db.has_value());
+
+    TemporaryFile const bag_file{".bag", "imaginary_content_so_the_file_gets_created"};
+    db = application::Open(bag_file.Path().parent_path(), "");
+    EXPECT_FALSE(db.has_value());
+
+    // Here the database will get created because it does not already exist.
+    {
+        // NOTE(Jack): Put this in a local namespace so that the destructor gets called and we do not have to
+        // simultaneous connections open to the DB at the same time when we try to initialize db_exists below.
+        auto const db_new{application::Open(bag_file.Path().parent_path(), bag_file.Path())};
+        EXPECT_TRUE(db_new.has_value());
+    }
+
+    // Here an already existing database will be opened.
+    auto const db_exists{application::Open(bag_file.Path().parent_path(), bag_file.Path())};
+    EXPECT_TRUE(db_exists.has_value());
 }

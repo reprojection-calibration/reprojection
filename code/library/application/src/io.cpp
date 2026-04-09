@@ -73,8 +73,15 @@ std::optional<database::DbPtr> Open(fs::path const& workspace_dir, fs::path cons
                    code.value(), code.message());
         return std::nullopt;
     } else if (not fs::exists(data_path, code)) {
-        log->error("{{'data_path': '{}', 'error_code': {{'value': {}, 'message': '{}'}}}}", data_path.string(),
-                   code.value(), code.message());
+        // TODO(Jack): The error code message does not make sense to me here. This is why I added the 'fs::exists':
+        // false field. Otherwise the user would, for a non existent file or folder just see,
+        //
+        //      'error_code': {'value': 0, 'message': 'Success'}}
+        //
+        // which understandably does not communicate that this operation is messaging a failure... Not sure if I am
+        // doing something wrong or just do not understand what the error code here actually represents.
+        log->error("{{'data_path': '{}', 'fs::exists': false, 'error_code': {{'value': {}, 'message': '{}'}}}}",
+                   data_path.string(), code.value(), code.message());
         return std::nullopt;
     }
 
