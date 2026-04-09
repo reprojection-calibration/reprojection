@@ -73,14 +73,11 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
         self.assertIsNone(table)
 
         table = load_reprojection_errors_table(self.db_path)
-        self.assertIsNone(table)
-
-        with tempfile.NamedTemporaryFile(suffix=".db3") as db_path_tmp:
-            db_path = db_path_tmp.name
-            execute_sql(load_sql("reprojection_error_table.sql"), db_path)
-
-            table = load_reprojection_errors_table(db_path)
-            self.assertEqual(table.shape, (0, 4))
+        self.assertEqual(table.shape, (0, 4))
+        self.assertTrue(
+            list(table.columns.values)
+            == ["step_name", "sensor_name", "timestamp_ns", "data"]
+        )
 
     def test_load_imu_data_table(self):
         table = load_imu_data_table("nonexistent.db3")
