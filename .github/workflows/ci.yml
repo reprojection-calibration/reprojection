@@ -91,9 +91,9 @@ jobs:
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
           cache_scope: ${{ matrix.applications.cache_scope }}
+          context: .
           external_cache_scope: test-data-download
           target: ${{ matrix.applications.target }}
-          context: .
     strategy:
       matrix:
         applications:
