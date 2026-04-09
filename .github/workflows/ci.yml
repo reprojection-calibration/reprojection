@@ -89,6 +89,7 @@ jobs:
           cache_scope: ${{ matrix.applications.cache_scope }}
           external_cache_scope: test-data-download
           target: ${{ matrix.applications.target }}
+          context: .
     strategy:
       matrix:
         applications:
