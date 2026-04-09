@@ -332,6 +332,10 @@ COPY code/test_data/minimum_config.toml /temporary/code/test_data/
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
 
+RUN ls -l /temporary/code/test_data/ && \
+    file /temporary/code/test_data/dataset-calib-imu4_512_16.db3 && \
+    head -c 100 /temporary/code/test_data/dataset-calib-imu4_512_16.db3
+
 ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
