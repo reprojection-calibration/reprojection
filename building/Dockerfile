@@ -279,13 +279,13 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
-COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16.db3
-COPY code/test_data/minimum_config.toml /temporary/code/test_data/minimum_config.toml
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
+COPY code/test_data/minimum_config.toml /temporary/code/test_data/
 # TODO(Jack): The fact that we copy over the entire /opt/reprojection directory here again, instead of just the newly
 # built and installed ros1 release install, is a sign that we are not managing our packaging/installation well. Design
 # the system such that we only need to do the minumum copying/installing, or at least consider it!
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
-COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/
 
 ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
@@ -326,8 +326,8 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM ros2-base-stage AS ros2-integration-test-stage
 
-COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16.db3
-COPY code/test_data/minimum_config.toml /temporary/code/test_data/minimum_config.toml
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
+COPY code/test_data/minimum_config.toml /temporary/code/test_data/
 # NOTE(Jack): See note in the ros1 stage about why copying over the entire /opt/reprojection folder is overkill.
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
