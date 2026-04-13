@@ -2,10 +2,6 @@
 
 #include <sqlite3.h>
 
-#include <filesystem>
-#include <memory>
-#include <string>
-
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 

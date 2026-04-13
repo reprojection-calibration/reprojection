@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
