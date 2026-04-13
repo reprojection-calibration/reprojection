@@ -4,7 +4,6 @@
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"
 
 namespace reprojection::steps {
 

@@ -12,9 +12,7 @@ std::string LpiStep::CacheKey() const { return caching::CacheKey(camera_info, ta
 
 Frames LpiStep::Compute() const { return calibration::LinearPoseInitialization(camera_info, targets, camera_state); }
 
-Frames LpiStep::Load(SqlitePtr const& db) const {
-    return database::ReadPoses(db, step_type, SensorName());
-}
+Frames LpiStep::Load(SqlitePtr const& db) const { return database::ReadPoses(db, step_type, SensorName()); }
 
 void LpiStep::Save(Frames const& frames, SqlitePtr const& db) const {
     database::WriteToDb(frames, step_type, SensorName(), db);

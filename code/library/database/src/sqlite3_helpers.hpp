@@ -7,9 +7,10 @@
 #include <string>
 #include <vector>
 
+#include "database/calibration_database.hpp"
+
 #include "enums.hpp"
 #include "types.hpp"
-#include "database/calibration_database.hpp"
 
 namespace reprojection::database {
 

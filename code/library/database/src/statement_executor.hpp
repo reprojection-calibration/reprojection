@@ -4,9 +4,10 @@
 
 #include <string_view>
 
+#include "database/calibration_database.hpp"
+
 #include "sqlite3_helpers.hpp"
 #include "sqlite_wrappers.hpp"
-#include "database/calibration_database.hpp"
 
 namespace reprojection::database {
 
