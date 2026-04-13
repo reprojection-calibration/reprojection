@@ -11,13 +11,13 @@
 
 namespace reprojection::database {
 
-void RemoveFromDb(CalibrationStep const step, std::string_view sensor_name, DbPtr const db) {
+void RemoveFromDb(CalibrationStep const step, std::string_view sensor_name, SqlitePtr const& db) {
     auto const binder{[step, sensor_name](sqlite3_stmt* const stmt) {
         Sqlite3Tools::Bind(stmt, 1, ToString(step));
         Sqlite3Tools::Bind(stmt, 2, sensor_name);
     }};
 
-    ExecuteStatement(sql_statements::calibration_steps_delete, binder, db->db);
+    ExecuteStatement(sql_statements::calibration_steps_delete, binder, db);
 }
 
 }  // namespace reprojection::database

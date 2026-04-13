@@ -9,6 +9,7 @@
 
 #include "enums.hpp"
 #include "types.hpp"
+#include "database/calibration_database.hpp"
 
 namespace reprojection::database {
 

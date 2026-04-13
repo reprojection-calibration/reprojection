@@ -27,21 +27,23 @@
 namespace reprojection::database {
 
 void AddImage(CameraImage const& data, std::string_view sensor_name,
-              std::shared_ptr<CalibrationDatabase> const database);
+              SqlitePtr const& db);
 
 // TODO(Jack): Should we make this instead accept OptimizationState directly and iterate over that?
 void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
-              std::shared_ptr<CalibrationDatabase> const database);
+              SqlitePtr const& db);
 
 class ImageStreamer {
    public:
-    ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
+    ImageStreamer(SqlitePtr const& db, std::string const& sensor_name,
                   uint64_t const start_time = 0);
 
     std::optional<CameraImage> Next() const;
 
    private:
-    std::shared_ptr<CalibrationDatabase const> database_;
+    // TODO(Jack): Again we are holding a const reference to a resource we do not own! This is not pretty. We should
+    // probably be using move and own the resource here directly
+    SqlitePtr const& database_;
     SqlStatement statement_;
     std::string sensor_name_;
 };

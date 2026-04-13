@@ -7,8 +7,6 @@
 
 namespace reprojection::database {
 
-using DbPtr = std::shared_ptr<CalibrationDatabase>;
-
-void RemoveFromDb(CalibrationStep const step, std::string_view sensor_name, DbPtr const db);
+void RemoveFromDb(CalibrationStep const step, std::string_view sensor_name, SqlitePtr const& db);
 
 }  // namespace reprojection::database
