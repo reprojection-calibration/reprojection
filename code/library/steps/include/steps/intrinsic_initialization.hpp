@@ -2,6 +2,7 @@
 
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
+#include "database/calibration_database.hpp"
 
 namespace reprojection::steps {
 
@@ -17,9 +18,9 @@ struct IntrinsicInitializationStep {
 
     CameraState Compute() const;
 
-    CameraState Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+    CameraState Load(database::SqlitePtr const& db) const;
 
-    void Save(CameraState const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
+    void Save(CameraState const& frames, database::SqlitePtr const& db) const;
 };
 
 }  // namespace reprojection::steps

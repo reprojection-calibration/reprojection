@@ -31,12 +31,12 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
     return extracted_targets;
 }
 
-CameraMeasurements FeatureExtractionStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
+CameraMeasurements FeatureExtractionStep::Load(database::SqlitePtr const& db) const {
     return database::GetExtractedTargetData(db, SensorName());
 }
 
 void FeatureExtractionStep::Save(CameraMeasurements const& extracted_targets,
-                                 std::shared_ptr<database::CalibrationDatabase> const db) const {
+                                 database::SqlitePtr const& db) const {
     database::WriteToDb(extracted_targets, SensorName(), db);
 }
 

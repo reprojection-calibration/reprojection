@@ -1,10 +1,12 @@
 #pragma once
 
-// Forward declaration so we can hide the real db headers from the consuming applications.
+// TODO ADD NOTE ABOUT HWAT WE ARE DOING WITH THE FOWRARD DECLARATIONS AND WHY THIS IS OUTISDEOF THE NAMESPACE
+struct sqlite3;
+
 namespace reprojection::database {
 
-struct CalibrationDatabase;
+struct SqliteDeleter;
 
-using DbPtr = std::shared_ptr<CalibrationDatabase>;
+using SqlitePtr = std::unique_ptr<sqlite3, SqliteDeleter>;
 
 }  // namespace reprojection::database

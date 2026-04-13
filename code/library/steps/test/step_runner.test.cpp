@@ -15,13 +15,13 @@ struct DummyStep {
 
     int Compute() const { return 1; }
 
-    int Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
+    int Load(database::SqlitePtr const& db) const {
         (void)db;
 
         return 2;
     }
 
-    void Save(int const data, std::shared_ptr<database::CalibrationDatabase> const db) const {
+    void Save(int const data, database::SqlitePtr const& db) const {
         (void)data;
         (void)db;
     }
@@ -29,7 +29,7 @@ struct DummyStep {
 
 // TODO(Jack): How can we write a test to test the cascading delete and step replacement logic?
 TEST(stepsStepRunner, TestStepRunnerWithDummyStep) {
-    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
     database::WriteToDb(CameraInfo{"", CameraModel::Pinhole, {}}, db);
 
     DummyStep const step;

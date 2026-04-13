@@ -116,7 +116,7 @@ TEST_F(CameraReadFixture, TestReadPoses) {
 }
 
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
-    auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     std::string_view sensor_name{"/imu/polaris/123"};
     ImuMeasurements const data{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
@@ -130,7 +130,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
 }
 
 TEST(DatabaseSensorDataInterface, TestGetImuData) {
-    auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true)};
+    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};

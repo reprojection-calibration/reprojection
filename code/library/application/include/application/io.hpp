@@ -26,6 +26,6 @@ std::optional<std::string> GetCommandOption(char const* const* const begin, char
 
 std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path);
 
-std::optional<database::DbPtr> Open(fs::path const& workspace_dir, fs::path const& data_path);
+std::optional<database::SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path);
 
 }  // namespace reprojection::application

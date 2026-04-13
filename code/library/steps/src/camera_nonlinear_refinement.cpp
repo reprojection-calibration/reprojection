@@ -15,7 +15,7 @@ OptimizationState CnlrStep::Compute() const {
     return optimized_state;
 }
 
-OptimizationState CnlrStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
+OptimizationState CnlrStep::Load(database::SqlitePtr const& db) const {
     Frames const poses{database::ReadPoses(db, step_type, SensorName())};
     auto const intrinsics{database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
 
@@ -29,8 +29,7 @@ OptimizationState CnlrStep::Load(std::shared_ptr<database::CalibrationDatabase c
     return {CameraState{intrinsics.value()}, poses};
 }
 
-void CnlrStep::Save(OptimizationState const& optimized_state,
-                    std::shared_ptr<database::CalibrationDatabase> const db) const {
+void CnlrStep::Save(OptimizationState const& optimized_state, database::SqlitePtr const& db) const {
     database::WriteToDb(optimized_state.camera_state, camera_info.camera_model, step_type, SensorName(), db);
     database::WriteToDb(optimized_state.frames, step_type, SensorName(), db);
 

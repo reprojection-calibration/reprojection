@@ -36,9 +36,9 @@ struct CameraInfoStep {
 
     CameraInfo Compute() const;
 
-    CameraInfo Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+    CameraInfo Load(database::SqlitePtr const& db) const;
 
-    void Save(CameraInfo const& camera_info, std::shared_ptr<database::CalibrationDatabase> const db) const;
+    void Save(CameraInfo const& camera_info, database::SqlitePtr const& db) const;
 };
 
 }  // namespace reprojection::steps
