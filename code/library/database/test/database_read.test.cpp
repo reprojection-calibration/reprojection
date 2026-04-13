@@ -17,7 +17,7 @@ using namespace reprojection;
 class CameraReadFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
+        db = database::OpenCalibrationDatabase(":memory:", true, false);
 
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
@@ -28,7 +28,7 @@ class CameraReadFixture : public ::testing::Test {
         database::WriteToDb({{timestamp_ns, target}}, sensor_name, db);
     }
 
-    std::shared_ptr<database::CalibrationDatabase> db;
+    database::SqlitePtr db{nullptr};
     std::string sensor_name{"/cam/retro/123"};
     ExtractedTarget target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
                                   MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},

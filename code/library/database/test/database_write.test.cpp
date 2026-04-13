@@ -19,7 +19,9 @@ using namespace reprojection;
 
 class SensorDatabaseFixture : public ::testing::Test {
    protected:
-    void SetUp() override { db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false); }
+    void SetUp() override {
+         db = database::OpenCalibrationDatabase(":memory:", true, false);
+    }
 
     void AddCamera() const {
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
@@ -38,7 +40,7 @@ class SensorDatabaseFixture : public ::testing::Test {
         WriteToDb(frames, step_name, sensor_name, db);
     }
 
-    std::shared_ptr<database::CalibrationDatabase> db;
+    database::SqlitePtr db{nullptr};
     uint64_t timestamp_ns{0};
     std::string sensor_name{"/cam/retro/123"};
 };
@@ -112,7 +114,7 @@ TEST_F(SensorDatabaseFixture, TestAddReprojectionError) {
 }
 
 TEST(DatabaseSensorDataInterface, TestAddImuData) {
-    auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true)};
+    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     std::string_view sensor_name_1{"/imu/polaris/123"};
     EXPECT_NO_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //

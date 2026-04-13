@@ -12,12 +12,12 @@ using namespace reprojection;
 class DatabaseRemoveFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
+        db = database::OpenCalibrationDatabase(":memory:", true, false);
 
         database::WriteToDb(camera_info, db);
     }
 
-    std::shared_ptr<database::CalibrationDatabase> db;
+    database::SqlitePtr db{nullptr};
     CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
 };
 
