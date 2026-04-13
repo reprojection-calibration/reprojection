@@ -8,6 +8,7 @@ set(LINK_LIBRARIES
         ${apriltag_LIBRARIES}
         Ceres::ceres
         Eigen3::Eigen
+        SQLite::SQLite3
         application
         caching
         calibration
