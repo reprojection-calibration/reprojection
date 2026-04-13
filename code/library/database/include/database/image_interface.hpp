@@ -36,9 +36,7 @@ class ImageStreamer {
     std::optional<CameraImage> Next() const;
 
    private:
-    // TODO(Jack): Again we are holding a const reference to a resource we do not own! This is not pretty. We should
-    // probably be using move and own the resource here directly
-    SqlitePtr const& database_;
+    SqlitePtr database_;
     SqlStatement statement_;
     std::string sensor_name_;
 };
