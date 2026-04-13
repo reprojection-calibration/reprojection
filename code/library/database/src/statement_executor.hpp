@@ -28,15 +28,15 @@ void ExecuteStatement(std::string_view sql, Binder&& binder, sqlite3* db) {
 }
 
 // Used for cases that do not require dynamic binding - passes an empty lambda which is a no-op.
-inline void ExecuteStatement(std::string_view sql, sqlite3* db) {
-    ExecuteStatement(sql, [](sqlite3_stmt*) {}, db);
+inline void ExecuteStatement(std::string_view sql, SqlitePtr const& db) {
+    ExecuteStatement(sql, [](sqlite3_stmt*) {}, db.get());
 }
 
 // TODO(Jack): Can we use concepts here to enforce some properties on Container and Binder?
 template <typename Container, typename Binder>
-void BatchExecuteStatement(std::string_view sql, Container const& data, Binder&& binder, sqlite3* db) {
+void BatchExecuteStatement(std::string_view sql, Container const& data, Binder&& binder, SqlitePtr const& db) {
     for (SqlTransaction const transaction{db}; auto const& data_i : data) {
-        ExecuteStatement(sql, [&](sqlite3_stmt* stmt) { binder(stmt, data_i); }, db);
+        ExecuteStatement(sql, [&](sqlite3_stmt* stmt) { binder(stmt, data_i); }, db.get());
     }
 }
 

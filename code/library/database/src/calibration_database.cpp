@@ -13,7 +13,7 @@
 
 namespace reprojection::database {
 
-CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const create, bool const read_only) {
+SqlitePtr OpenCalibrationDatabase(std::string const& db_path, bool const create, bool const read_only) {
     if (create and read_only) {
         throw std::runtime_error(
             "You requested to open a database object with both options 'create' and 'read_only' true. This is "
@@ -21,20 +21,23 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
     }
 
     // TODO(Jack): Consider using sqlite3_errcode for better terminal output https://sqlite.org/c3ref/errcode.html
+    sqlite3* raw_db{nullptr};
     int code;
     if (create) {
         // WARN(Jack): Should it be an error if create is true and the database already exists. Is that a problem?
-        code = sqlite3_open_v2(db_path.c_str(), &db,
+        code = sqlite3_open_v2(db_path.c_str(), &raw_db,
                                static_cast<int>(SqliteFlag::OpenReadWrite) | static_cast<int>(SqliteFlag::OpenCreate),
                                nullptr);
     } else if (read_only) {
-        code = sqlite3_open_v2(db_path.c_str(), &db, static_cast<int>(SqliteFlag::OpenReadOnly), nullptr);
+        code = sqlite3_open_v2(db_path.c_str(), &raw_db, static_cast<int>(SqliteFlag::OpenReadOnly), nullptr);
     } else {
-        code = sqlite3_open_v2(db_path.c_str(), &db, static_cast<int>(SqliteFlag::OpenReadWrite), nullptr);
+        code = sqlite3_open_v2(db_path.c_str(), &raw_db, static_cast<int>(SqliteFlag::OpenReadWrite), nullptr);
     }
 
+    SqlitePtr db{raw_db};
+
     if (code != 0) {
-        sqlite3_close(db);
+        sqlite3_close(db.get());
         throw std::runtime_error("Attempted to open database at path - " + db_path + " - but was unsuccessful");
     }
 
@@ -57,8 +60,8 @@ CalibrationDatabase::CalibrationDatabase(std::string const& db_path, bool const 
         // need to manually turn it on here.
         ExecuteStatement("PRAGMA foreign_keys = ON;", db);
     }
-}
 
-CalibrationDatabase::~CalibrationDatabase() { sqlite3_close(db); }
+    return db;
+}
 
 };  // namespace reprojection::database
