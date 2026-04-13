@@ -16,8 +16,7 @@
 namespace reprojection::database {
 
 // Adopted from https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
-void AddImage(CameraImage const& data, std::string_view sensor_name,
-              std::shared_ptr<CalibrationDatabase> const database) {
+void AddImage(CameraImage const& data, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[&data, sensor_name](sqlite3_stmt* const stmt) {
         auto const& [timestamp_ns, image]{data};
 
@@ -31,27 +30,25 @@ void AddImage(CameraImage const& data, std::string_view sensor_name,
         Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer}));
     }};
 
-    ExecuteStatement(sql_statements::image_insert, binder, database->db);
+    ExecuteStatement(sql_statements::image_insert, binder, db);
 }
 
-void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
-              std::shared_ptr<CalibrationDatabase> const database) {
+void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[timestamp_ns, sensor_name](sqlite3_stmt* const stmt) {
         Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
         Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
     }};
 
-    ExecuteStatement(sql_statements::image_insert, binder, database->db);
+    ExecuteStatement(sql_statements::image_insert, binder, db);
 }
 
-ImageStreamer::ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
-                             uint64_t const start_time)
-    : database_{database}, statement_{database_->db, sql_statements::images_select}, sensor_name_{sensor_name} {
+ImageStreamer::ImageStreamer(SqlitePtr const db, std::string const& sensor_name, uint64_t const start_time)
+    : database_{db}, statement_{db, sql_statements::images_select}, sensor_name_{sensor_name} {
     try {
         Sqlite3Tools::Bind(statement_.stmt, 1, sensor_name);
         Sqlite3Tools::Bind(statement_.stmt, 2, static_cast<int64_t>(start_time));  // Warn cast!
     } catch (...) {                                                                // LCOV_EXCL_LINE
-        throw SqliteException(database->db, "");                                   // LCOV_EXCL_LINE
+        throw SqliteException(database_, "");                                      // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 }
 

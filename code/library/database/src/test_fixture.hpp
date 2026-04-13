@@ -1,14 +1,19 @@
 #include <gtest/gtest.h>
 
+#include "database/calibration_database.hpp"
+#include "types/io.hpp"
+
 #include "statement_executor.hpp"
 
 class SqliteTestFixture : public ::testing::Test {
    protected:
     // cppcheck-suppress unusedFunction
-    void SetUp() override { ASSERT_EQ(sqlite3_open(":memory:", &db), SQLITE_OK); }
+    void SetUp() override {
+        sqlite3* raw_db{nullptr};
+        ASSERT_EQ(sqlite3_open(":memory:", &raw_db), SQLITE_OK);
 
-    // cppcheck-suppress unusedFunction
-    void TearDown() override { sqlite3_close(db); }
+        db.reset(raw_db, reprojection::database::SqliteDeleter());
+    }
 
     void CreateExampleTable() const {
         std::string const sql{
@@ -28,7 +33,7 @@ class SqliteTestFixture : public ::testing::Test {
             db);
     }
 
-    sqlite3* db{nullptr};
+    reprojection::SqlitePtr db{nullptr};
     std::string const insert_sql{"INSERT INTO example_data_table (record_id) VALUES (?);"};
     std::vector<int64_t> const example_record_ids{0, 1, 2, 3, 4, 5};
 };

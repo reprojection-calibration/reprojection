@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
@@ -12,25 +10,23 @@
 
 namespace reprojection::database {
 
-using DbPtr = std::shared_ptr<CalibrationDatabase>;
-
-void WriteToDb(CameraInfo const& camera_info, DbPtr const database);
+void WriteToDb(CameraInfo const& camera_info, SqlitePtr const db);
 
 // NOTE(Jack): The calibration step has "upsert" semantics (https://sqlite.org/lang_upsert.html) because we need to
 // update the cache_key when the steps update on reruns.
 void WriteToDb(CalibrationStep const step_name, std::string_view cache_key, std::string_view sensor_name,
-               DbPtr const db);
+               SqlitePtr const db);
 
-void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, DbPtr const db);
+void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
 
 void WriteToDb(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
-               std::string_view sensor_name, DbPtr const db);
+               std::string_view sensor_name, SqlitePtr const db);
 
-void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, DbPtr const db);
+void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, SqlitePtr const db);
 
 void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
-               DbPtr const db);
+               SqlitePtr const db);
 
-void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, DbPtr const db);
+void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
 
 }  // namespace reprojection::database

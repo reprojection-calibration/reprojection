@@ -30,7 +30,7 @@ CameraInfo CameraInfoStep::Compute() const {
     return camera_info;
 }
 
-CameraInfo CameraInfoStep::Load(std::shared_ptr<database::CalibrationDatabase const> const db) const {
+CameraInfo CameraInfoStep::Load(SqlitePtr const db) const {
     auto const camera_info{database::ReadCameraInfo(db, SensorName())};
 
     if (not camera_info) {
@@ -40,8 +40,7 @@ CameraInfo CameraInfoStep::Load(std::shared_ptr<database::CalibrationDatabase co
     return *camera_info;
 }
 
-void CameraInfoStep::Save(CameraInfo const& camera_info,
-                          std::shared_ptr<database::CalibrationDatabase> const db) const {
+void CameraInfoStep::Save(CameraInfo const& camera_info, SqlitePtr const db) const {
     database::WriteToDb(camera_info, db);
 }
 

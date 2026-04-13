@@ -24,7 +24,7 @@ TEST(Application, TestCalibrate) {
         )"};
     toml::table const config{toml::parse(config_file)};
 
-    auto db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     // Write the camera info
     // TODO(Jack): Add foreign key constraint that a camera info must have a step!

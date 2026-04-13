@@ -18,9 +18,9 @@ struct LpiStep {
 
     Frames Compute() const;
 
-    Frames Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+    Frames Load(SqlitePtr const db) const;
 
-    void Save(Frames const& frames, std::shared_ptr<database::CalibrationDatabase> const db) const;
+    void Save(Frames const& frames, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

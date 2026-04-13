@@ -25,7 +25,7 @@ auto const log{logging::Get("application")};
 // the entire "image source" concept needs to be reworked as it does not play nice with the database. See note in
 // update_feature_extraction_cache_key.py
 void Calibrate(toml::table const& config, ImageSource image_source, std::string const& image_source_signature,
-               database::DbPtr const db) {
+               SqlitePtr const db) {
     // WARN(Jack): I am not 100% sure if this is actually how it works, but the CameraInfo reads the first image from
     // the image source. So it could be that the first image is never processed. This is not a material problem in my
     // opinion, but this does indeed violate the principle of least surprise.

@@ -23,10 +23,9 @@ struct FeatureExtractionStep {
 
     CameraMeasurements Compute() const;
 
-    CameraMeasurements Load(std::shared_ptr<database::CalibrationDatabase const> const db) const;
+    CameraMeasurements Load(SqlitePtr const db) const;
 
-    void Save(CameraMeasurements const& extracted_targets,
-              std::shared_ptr<database::CalibrationDatabase> const db) const;
+    void Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

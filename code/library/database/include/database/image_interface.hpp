@@ -1,12 +1,10 @@
 #pragma once
 
-#include <memory>
 #include <optional>
 #include <string>
 
 #include <opencv2/opencv.hpp>
 
-#include "database/calibration_database.hpp"
 #include "types/sensor_data_types.hpp"
 
 #include "sqlite_wrappers.hpp"
@@ -26,22 +24,19 @@
 
 namespace reprojection::database {
 
-void AddImage(CameraImage const& data, std::string_view sensor_name,
-              std::shared_ptr<CalibrationDatabase> const database);
+void AddImage(CameraImage const& data, std::string_view sensor_name, SqlitePtr const db);
 
 // TODO(Jack): Should we make this instead accept OptimizationState directly and iterate over that?
-void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name,
-              std::shared_ptr<CalibrationDatabase> const database);
+void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name, SqlitePtr const db);
 
 class ImageStreamer {
    public:
-    ImageStreamer(std::shared_ptr<CalibrationDatabase const> const database, std::string const& sensor_name,
-                  uint64_t const start_time = 0);
+    ImageStreamer(SqlitePtr const db, std::string const& sensor_name, uint64_t const start_time = 0);
 
     std::optional<CameraImage> Next() const;
 
    private:
-    std::shared_ptr<CalibrationDatabase const> database_;
+    SqlitePtr database_;
     SqlStatement statement_;
     std::string sensor_name_;
 };

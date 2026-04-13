@@ -8,6 +8,7 @@ set(SRC_FILES
 
 set(LINK_LIBRARIES
         Eigen3::Eigen
+        SQLite::SQLite3
         caching
         calibration
         config

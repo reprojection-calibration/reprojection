@@ -1,28 +1,26 @@
 #pragma once
 
-#include <sqlite3.h>
+#include <filesystem>
+#include <memory>
 
-#include <string>
+#include "types/io.hpp"
 
 namespace reprojection::database {
 
-// NOTE(Jack): Technically which database we use DOES NOT matter to the calibration process (it is an implementation
-// detail only)! However instead of starting with a pure virtual interface base class to define the interface, we will
-// start with a concrete implementation and if we need generalization later we will refactor.
-struct CalibrationDatabase {
-    CalibrationDatabase(std::string const& db_path, bool const create, bool const read_only = false);
+namespace fs = std::filesystem;
 
-    CalibrationDatabase(CalibrationDatabase const& other) = delete;
+SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only = false);
 
-    CalibrationDatabase(CalibrationDatabase&& other) noexcept = delete;
-
-    CalibrationDatabase& operator=(CalibrationDatabase const& other) = delete;
-
-    CalibrationDatabase& operator=(CalibrationDatabase&& other) noexcept = delete;
-
-    ~CalibrationDatabase();
-
-    sqlite3* db;
+// TODO(Jack): When I first did the smart pointer database refactor I started with a unique pointer. And in the unique
+// template definition you can directly define and add the deleter. For the shared pointer you cannot specify the
+// deleter directly in the using definition. Therefore we define it here and need to remember to pass it to each place
+// where we create the database smart pointer. There has be a better way to do this...
+struct SqliteDeleter {
+    void operator()(sqlite3* const db) const {
+        if (db) {
+            sqlite3_close(db);
+        }
+    }
 };
 
 }  // namespace reprojection::database

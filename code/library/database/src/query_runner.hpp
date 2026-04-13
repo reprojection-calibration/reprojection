@@ -10,8 +10,11 @@
 namespace reprojection::database {
 
 // TODO(Jack): Add override without a binder if we use that case not just in testing.
+// TODO(Jack): Technically "execute query" sounds like a read only operation, so we should be able to pass in
+// SqlitePtrConst instead of the the mutable version SqlitePtr. However at this time the statement lock requires it
+// to be mutable.
 template <typename Binder, typename RowFunc>
-void ExecuteQuery(sqlite3* const db, std::string_view sql, Binder&& binder, RowFunc&& on_row) {
+void ExecuteQuery(SqlitePtr const db, std::string_view sql, Binder&& binder, RowFunc&& on_row) {
     SqlStatement statement{db, std::string(sql).data()};
 
     try {

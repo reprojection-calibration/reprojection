@@ -2,10 +2,6 @@
 
 #include <sqlite3.h>
 
-#include <filesystem>
-#include <memory>
-#include <string>
-
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 
@@ -20,11 +16,11 @@ namespace reprojection::database {
 //  the timestamp int field.
 // NOTE(Jack): We hardcode the minumum image values to zero here, I think that is not a problem, but lets not forget
 // that we do it here.
-std::optional<CameraInfo> ReadCameraInfo(DbConstPtr const database, std::string_view sensor_name) {
+std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view sensor_name) {
     std::optional<CameraInfo> camera_info;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        database->db, sql_statements::camera_info_select,
+        db, sql_statements::camera_info_select,
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
         [&camera_info](sqlite3_stmt* const stmt) {
             CameraInfo result;
@@ -47,11 +43,11 @@ std::optional<CameraInfo> ReadCameraInfo(DbConstPtr const database, std::string_
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
 // differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
-CameraMeasurements GetExtractedTargetData(DbConstPtr const database, std::string_view sensor_name) {
+CameraMeasurements GetExtractedTargetData(SqlitePtr const db, std::string_view sensor_name) {
     CameraMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        database->db, sql_statements::extracted_targets_select,
+        db, sql_statements::extracted_targets_select,
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
         [&data, sensor_name](sqlite3_stmt* const stmt) {
             uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
@@ -72,12 +68,12 @@ CameraMeasurements GetExtractedTargetData(DbConstPtr const database, std::string
     return data;
 }  // LCOV_EXCL_LINE
 
-std::optional<ArrayXd> ReadCameraState(DbConstPtr const database, CalibrationStep const step_name,
+std::optional<ArrayXd> ReadCameraState(SqlitePtr const db, CalibrationStep const step_name,
                                        std::string_view sensor_name, CameraModel const camera_model) {
     std::optional<ArrayXd> intrinsics;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        database->db, sql_statements::camera_intrinsics_select,
+        db, sql_statements::camera_intrinsics_select,
         [step_name, sensor_name, camera_model](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
@@ -91,12 +87,12 @@ std::optional<ArrayXd> ReadCameraState(DbConstPtr const database, CalibrationSte
     return intrinsics;
 }  // LCOV_EXCL_LINE
 
-std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationStep const step_name,
+std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep const step_name,
                                         std::string_view sensor_name) {
     std::optional<std::string> cache_key;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        database->db, sql_statements::calibration_steps_select,
+        db, sql_statements::calibration_steps_select,
         [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
@@ -108,11 +104,11 @@ std::optional<std::string> ReadCacheKey(DbConstPtr const database, CalibrationSt
     return cache_key;
 }  // LCOV_EXCL_LINE
 
-Frames ReadPoses(DbConstPtr const database, CalibrationStep const step_name, std::string_view sensor_name) {
+Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
     Frames data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        database->db, sql_statements::poses_select,
+        db, sql_statements::poses_select,
         [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
@@ -134,11 +130,11 @@ Frames ReadPoses(DbConstPtr const database, CalibrationStep const step_name, std
     return data;
 }  // LCOV_EXCL_LINE
 
-ImuMeasurements GetImuData(DbConstPtr const database, std::string_view sensor_name) {
+ImuMeasurements GetImuData(SqlitePtr const db, std::string_view sensor_name) {
     ImuMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        database->db, sql_statements::imu_data_select,
+        db, sql_statements::imu_data_select,
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
         [&data](sqlite3_stmt* const stmt) {
             uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};

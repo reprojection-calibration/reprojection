@@ -19,14 +19,14 @@ using namespace reprojection;
 class ImageInterfaceFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
+        db = database::OpenCalibrationDatabase(":memory:", true, false);
 
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 
     void AddImage(int const timestamp_ns) const { database::AddImage({timestamp_ns, image}, sensor_name, db); }
 
-    std::shared_ptr<database::CalibrationDatabase> db;
+    SqlitePtr db{nullptr};
     std::string sensor_name{"/cam/retro/123"};
     cv::Mat image{cv::Mat(10, 20, CV_8UC1)};
 };

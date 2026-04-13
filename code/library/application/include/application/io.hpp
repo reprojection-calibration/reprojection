@@ -6,7 +6,7 @@
 
 #include <toml++/toml.hpp>
 
-#include "application/calibration_database_forward_declaration.hpp"
+#include "types/io.hpp"
 
 namespace reprojection::application {
 
@@ -26,6 +26,6 @@ std::optional<std::string> GetCommandOption(char const* const* const begin, char
 
 std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path);
 
-std::optional<database::DbPtr> Open(fs::path const& workspace_dir, fs::path const& data_path);
+std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path);
 
 }  // namespace reprojection::application

@@ -82,6 +82,7 @@ set(LINK_LIBRARIES
         SQLite::SQLite3
         protobuf::libprotobuf
         tomlplusplus::tomlplusplus
+        types
         types_internal
 )
 AddLibrary()

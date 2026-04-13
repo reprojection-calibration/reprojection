@@ -17,7 +17,7 @@ using namespace reprojection;
 class CameraReadFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        db = std::make_shared<database::CalibrationDatabase>(":memory:", true, false);
+        db = database::OpenCalibrationDatabase(":memory:", true, false);
 
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
@@ -28,7 +28,7 @@ class CameraReadFixture : public ::testing::Test {
         database::WriteToDb({{timestamp_ns, target}}, sensor_name, db);
     }
 
-    std::shared_ptr<database::CalibrationDatabase> db;
+    SqlitePtr db{nullptr};
     std::string sensor_name{"/cam/retro/123"};
     ExtractedTarget target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
                                   MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
@@ -86,13 +86,13 @@ TEST_F(CameraReadFixture, TestReadCacheKey) {
     auto cache_key{database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name)};
     EXPECT_FALSE(cache_key.has_value());
 
-    WriteToDb(CalibrationStep::Lpi, "1", sensor_name, db);
+    database::WriteToDb(CalibrationStep::Lpi, "1", sensor_name, db);
 
     cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "1");
 
-    WriteToDb(CalibrationStep::Lpi, "2", sensor_name, db);
+    database::WriteToDb(CalibrationStep::Lpi, "2", sensor_name, db);
 
     cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
@@ -103,20 +103,20 @@ TEST_F(CameraReadFixture, TestReadPoses) {
     auto const step{CalibrationStep::Lpi};
     uint64_t const timestamp_ns{0};
 
-    Frames result{ReadPoses(db, step, sensor_name)};
+    Frames result{database::ReadPoses(db, step, sensor_name)};
     EXPECT_EQ(std::size(result), 0);
 
     database::WriteToDb(step, "", sensor_name, db);
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}, {timestamp_ns + 1, {Array6d::Zero()}}};
-    WriteToDb(frames, step, sensor_name, db);
+    database::WriteToDb(frames, step, sensor_name, db);
 
-    result = ReadPoses(db, step, sensor_name);
+    result = database::ReadPoses(db, step, sensor_name);
     EXPECT_EQ(std::size(result), 2);
     EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(frames.at(timestamp_ns).pose));
 }
 
 TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
-    auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true, false)};
+    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     std::string_view sensor_name{"/imu/polaris/123"};
     ImuMeasurements const data{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
@@ -130,7 +130,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
 }
 
 TEST(DatabaseSensorDataInterface, TestGetImuData) {
-    auto const db{std::make_shared<database::CalibrationDatabase>(":memory:", true)};
+    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};

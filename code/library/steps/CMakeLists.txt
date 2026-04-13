@@ -13,6 +13,7 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         Ceres::ceres
         Eigen3::Eigen
+        SQLite::SQLite3
         caching
         calibration
         database
