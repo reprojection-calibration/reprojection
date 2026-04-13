@@ -17,9 +17,9 @@ struct IntrinsicInitializationStep {
 
     CameraState Compute() const;
 
-    CameraState Load(SqlitePtr const& db) const;
+    CameraState Load(SqlitePtr const db) const;
 
-    void Save(CameraState const& frames, SqlitePtr const& db) const;
+    void Save(CameraState const& frames, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

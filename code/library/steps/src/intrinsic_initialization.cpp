@@ -21,7 +21,7 @@ CameraState IntrinsicInitializationStep::Compute() const {
     return CameraState{*intrinsics};
 }
 
-CameraState IntrinsicInitializationStep::Load(SqlitePtr const& db) const {
+CameraState IntrinsicInitializationStep::Load(SqlitePtr const db) const {
     auto const loaded_intrinsics{
         database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
 
@@ -32,7 +32,7 @@ CameraState IntrinsicInitializationStep::Load(SqlitePtr const& db) const {
     return CameraState{*loaded_intrinsics};
 }
 
-void IntrinsicInitializationStep::Save(CameraState const& intrinsics, SqlitePtr const& db) const {
+void IntrinsicInitializationStep::Save(CameraState const& intrinsics, SqlitePtr const db) const {
     database::WriteToDb(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
 }
 

@@ -18,9 +18,9 @@ struct CnlrStep {
 
     OptimizationState Compute() const;
 
-    OptimizationState Load(SqlitePtr const& db) const;
+    OptimizationState Load(SqlitePtr const db) const;
 
-    void Save(OptimizationState const& optimized_state, SqlitePtr const& db) const;
+    void Save(OptimizationState const& optimized_state, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

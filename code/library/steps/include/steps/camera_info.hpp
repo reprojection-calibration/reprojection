@@ -36,9 +36,9 @@ struct CameraInfoStep {
 
     CameraInfo Compute() const;
 
-    CameraInfo Load(SqlitePtr const& db) const;
+    CameraInfo Load(SqlitePtr const db) const;
 
-    void Save(CameraInfo const& camera_info, SqlitePtr const& db) const;
+    void Save(CameraInfo const& camera_info, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps
