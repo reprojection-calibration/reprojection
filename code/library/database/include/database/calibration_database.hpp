@@ -1,13 +1,15 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
-#include <string>
 
 #include "types/io.hpp"
 
 namespace reprojection::database {
 
-SqlitePtr OpenCalibrationDatabase(std::string const& db_path, bool const create, bool const read_only = false);
+namespace fs = std::filesystem;
+
+SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only = false);
 
 // TODO(Jack): When I first did the smart pointer database refactor I started with a unique pointer. And in the unique
 // template definition you can directly define and add the deleter. For the shared pointer you cannot specify the

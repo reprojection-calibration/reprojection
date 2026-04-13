@@ -14,7 +14,7 @@
 
 namespace reprojection::database {
 
-SqlitePtr OpenCalibrationDatabase(std::string const& db_path, bool const create, bool const read_only) {
+SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only) {
     if (create and read_only) {
         throw std::runtime_error(
             "You requested to open a database object with both options 'create' and 'read_only' true. This is "
@@ -39,7 +39,8 @@ SqlitePtr OpenCalibrationDatabase(std::string const& db_path, bool const create,
 
     if (code != 0) {
         sqlite3_close(db.get());
-        throw std::runtime_error("Attempted to open database at path - " + db_path + " - but was unsuccessful");
+        throw std::runtime_error("Attempted to open database at path - " + db_path.string() +
+                                 " - but was unsuccessful");
     }
 
     if (not read_only) {
