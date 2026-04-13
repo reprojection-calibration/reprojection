@@ -38,7 +38,6 @@ SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bo
     SqlitePtr db(raw_db, SqliteDeleter());
 
     if (code != 0) {
-        sqlite3_close(db.get());
         throw std::runtime_error("Attempted to open database at path - " + db_path.string() +
                                  " - but was unsuccessful");
     }
