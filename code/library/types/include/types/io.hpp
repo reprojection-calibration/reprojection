@@ -17,7 +17,7 @@ struct SqliteDeleter {
     }
 };
 
-using SqlitePtr = std::unique_ptr<sqlite3, SqliteDeleter>;
+using SqlitePtr = std::shared_ptr<sqlite3>;
 
 using ImageSource = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
 

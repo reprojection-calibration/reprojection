@@ -7,6 +7,7 @@
 
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
+#include "types/io.hpp"
 
 #include "enums.hpp"
 #include "statement_executor.hpp"
@@ -34,7 +35,7 @@ SqlitePtr OpenCalibrationDatabase(std::string const& db_path, bool const create,
         code = sqlite3_open_v2(db_path.c_str(), &raw_db, static_cast<int>(SqliteFlag::OpenReadWrite), nullptr);
     }
 
-    SqlitePtr db{raw_db};
+    SqlitePtr db(raw_db, SqliteDeleter());
 
     if (code != 0) {
         sqlite3_close(db.get());

@@ -11,7 +11,7 @@
 
 namespace reprojection::database {
 
-void RemoveFromDb(CalibrationStep const step, std::string_view sensor_name, SqlitePtr const& db) {
+void RemoveFromDb(CalibrationStep const step, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[step, sensor_name](sqlite3_stmt* const stmt) {
         Sqlite3Tools::Bind(stmt, 1, ToString(step));
         Sqlite3Tools::Bind(stmt, 2, sensor_name);

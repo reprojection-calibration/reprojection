@@ -14,7 +14,7 @@ namespace reprojection::database {
 // SqlitePtrConst instead of the the mutable version SqlitePtr. However at this time the statement lock requires it
 // to be mutable.
 template <typename Binder, typename RowFunc>
-void ExecuteQuery(SqlitePtr const& db, std::string_view sql, Binder&& binder, RowFunc&& on_row) {
+void ExecuteQuery(SqlitePtr const db, std::string_view sql, Binder&& binder, RowFunc&& on_row) {
     SqlStatement statement{db, std::string(sql).data()};
 
     try {

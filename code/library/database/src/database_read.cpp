@@ -16,7 +16,7 @@ namespace reprojection::database {
 //  the timestamp int field.
 // NOTE(Jack): We hardcode the minumum image values to zero here, I think that is not a problem, but lets not forget
 // that we do it here.
-std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const& db, std::string_view sensor_name) {
+std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view sensor_name) {
     std::optional<CameraInfo> camera_info;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -43,7 +43,7 @@ std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const& db, std::string_view s
 // NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
 // differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
-CameraMeasurements GetExtractedTargetData(SqlitePtr const& db, std::string_view sensor_name) {
+CameraMeasurements GetExtractedTargetData(SqlitePtr const db, std::string_view sensor_name) {
     CameraMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -68,7 +68,7 @@ CameraMeasurements GetExtractedTargetData(SqlitePtr const& db, std::string_view 
     return data;
 }  // LCOV_EXCL_LINE
 
-std::optional<ArrayXd> ReadCameraState(SqlitePtr const& db, CalibrationStep const step_name,
+std::optional<ArrayXd> ReadCameraState(SqlitePtr const db, CalibrationStep const step_name,
                                        std::string_view sensor_name, CameraModel const camera_model) {
     std::optional<ArrayXd> intrinsics;
 
@@ -87,7 +87,7 @@ std::optional<ArrayXd> ReadCameraState(SqlitePtr const& db, CalibrationStep cons
     return intrinsics;
 }  // LCOV_EXCL_LINE
 
-std::optional<std::string> ReadCacheKey(SqlitePtr const& db, CalibrationStep const step_name,
+std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep const step_name,
                                         std::string_view sensor_name) {
     std::optional<std::string> cache_key;
 
@@ -104,7 +104,7 @@ std::optional<std::string> ReadCacheKey(SqlitePtr const& db, CalibrationStep con
     return cache_key;
 }  // LCOV_EXCL_LINE
 
-Frames ReadPoses(SqlitePtr const& db, CalibrationStep const step_name, std::string_view sensor_name) {
+Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
     Frames data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -130,7 +130,7 @@ Frames ReadPoses(SqlitePtr const& db, CalibrationStep const step_name, std::stri
     return data;
 }  // LCOV_EXCL_LINE
 
-ImuMeasurements GetImuData(SqlitePtr const& db, std::string_view sensor_name) {
+ImuMeasurements GetImuData(SqlitePtr const db, std::string_view sensor_name) {
     ImuMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE

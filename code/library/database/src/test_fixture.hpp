@@ -11,7 +11,7 @@ class SqliteTestFixture : public ::testing::Test {
         sqlite3* raw_db{nullptr};
         ASSERT_EQ(sqlite3_open(":memory:", &raw_db), SQLITE_OK);
 
-        db.reset(raw_db);
+        db.reset(raw_db, reprojection::SqliteDeleter());
     }
 
     void CreateExampleTable() const {

@@ -74,7 +74,7 @@ struct Sqlite3Tools {
 
 class SqliteException : public std::runtime_error {
    public:
-    SqliteException(SqlitePtr const& db, std::string_view operation)
+    SqliteException(SqlitePtr const db, std::string_view operation)
         : std::runtime_error(std::string(operation) + " - error code: " + std::to_string(sqlite3_errcode(db.get())) +
                              " - " + sqlite3_errmsg(db.get())) {}
 };
