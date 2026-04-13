@@ -6,11 +6,12 @@
 
 #include "sqlite3_helpers.hpp"
 #include "sqlite_wrappers.hpp"
+#include "database/calibration_database.hpp"
 
 namespace reprojection::database {
 
 template <typename Binder>
-void ExecuteStatement(std::string_view sql, Binder&& binder, sqlite3* db) {
+void ExecuteStatement(std::string_view sql, Binder&& binder, SqlitePtr const& db) {
     SqlStatement statement{db, std::string(sql).c_str()};
 
     try {
@@ -29,7 +30,7 @@ void ExecuteStatement(std::string_view sql, Binder&& binder, sqlite3* db) {
 
 // Used for cases that do not require dynamic binding - passes an empty lambda which is a no-op.
 inline void ExecuteStatement(std::string_view sql, SqlitePtr const& db) {
-    ExecuteStatement(sql, [](sqlite3_stmt*) {}, db.get());
+    ExecuteStatement(sql, [](sqlite3_stmt*) {}, db);
 }
 
 // TODO(Jack): Can we use concepts here to enforce some properties on Container and Binder?

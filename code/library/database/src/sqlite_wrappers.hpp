@@ -1,11 +1,12 @@
 #pragma once
 
 #include <sqlite3.h>
+#include "database/calibration_database.hpp"
 
 namespace reprojection::database {
 
 struct SqlStatement {
-    SqlStatement(sqlite3* const db, char const* const sql);
+    SqlStatement(SqlitePtr const& db, char const* const sql);
 
     ~SqlStatement();
 
@@ -13,14 +14,14 @@ struct SqlStatement {
 };
 
 struct SqlTransaction {
-    // TODO(Jack): Should this be a smart pointer?
-    explicit SqlTransaction(sqlite3* const db);
+    explicit SqlTransaction(SqlitePtr const& db);
 
     ~SqlTransaction();
 
    private:
-    // TODO(Jack): Should this be a smart pointer?
-    sqlite3* db_{nullptr};
+    // TODO(Jack): This is an ugly reference semantics where we have a const ref to an object that we do not own. But
+    // for the semantics of a lock (which the sql transaction basically is) maybe this is acceptable?
+    SqlitePtr const& db_;
 };
 
 }  // namespace reprojection::database

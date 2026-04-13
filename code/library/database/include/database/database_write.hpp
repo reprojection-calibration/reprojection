@@ -12,8 +12,6 @@
 
 namespace reprojection::database {
 
-using DbPtr = std::shared_ptr<CalibrationDatabase>;
-
 void WriteToDb(CameraInfo const& camera_info, DbPtr const database);
 
 // NOTE(Jack): The calibration step has "upsert" semantics (https://sqlite.org/lang_upsert.html) because we need to

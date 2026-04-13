@@ -5,15 +5,15 @@
 
 namespace reprojection::database {
 
-SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+SqlStatement::SqlStatement(SqlitePtr const& db, char const* const sql) {
+    if (sqlite3_prepare_v2(db.get(), sql, -1, &stmt, nullptr) != SQLITE_OK) {
         throw SqliteException(db, sql);
     }
 }
 
 SqlStatement::~SqlStatement() { sqlite3_finalize(stmt); }
 
-SqlTransaction::SqlTransaction(sqlite3* const db) : db_{db} { ExecuteStatement("BEGIN TRANSACTION", db_); }
+SqlTransaction::SqlTransaction(SqlitePtr const& db) : db_{db} { ExecuteStatement("BEGIN TRANSACTION", db_); }
 
 SqlTransaction::~SqlTransaction() { ExecuteStatement("END TRANSACTION", db_); }
 
