@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "database/calibration_database.hpp"
 #include "types/io.hpp"
 
 #include "statement_executor.hpp"
@@ -11,7 +12,7 @@ class SqliteTestFixture : public ::testing::Test {
         sqlite3* raw_db{nullptr};
         ASSERT_EQ(sqlite3_open(":memory:", &raw_db), SQLITE_OK);
 
-        db.reset(raw_db, reprojection::SqliteDeleter());
+        db.reset(raw_db, reprojection::database::SqliteDeleter());
     }
 
     void CreateExampleTable() const {
