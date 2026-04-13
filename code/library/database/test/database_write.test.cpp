@@ -19,9 +19,7 @@ using namespace reprojection;
 
 class SensorDatabaseFixture : public ::testing::Test {
    protected:
-    void SetUp() override {
-         db = database::OpenCalibrationDatabase(":memory:", true, false);
-    }
+    void SetUp() override { db = database::OpenCalibrationDatabase(":memory:", true, false); }
 
     void AddCamera() const {
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
@@ -29,18 +27,18 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddImage() const { database::AddImage(timestamp_ns, sensor_name, db); }
 
-    void AddTarget() const { WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db); }
+    void AddTarget() const { database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db); }
 
     void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
-        WriteToDb(step_name, cache_key, sensor_name, db);
+        database::WriteToDb(step_name, cache_key, sensor_name, db);
     }
 
     void AddPose(CalibrationStep const step_name) const {
         Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-        WriteToDb(frames, step_name, sensor_name, db);
+        database::WriteToDb(frames, step_name, sensor_name, db);
     }
 
-    database::SqlitePtr db{nullptr};
+    SqlitePtr db{nullptr};
     uint64_t timestamp_ns{0};
     std::string sensor_name{"/cam/retro/123"};
 };
@@ -51,12 +49,12 @@ TEST_F(SensorDatabaseFixture, WriteCameraInfo) {
 }
 
 TEST_F(SensorDatabaseFixture, AddExtractedTargetData) {
-    EXPECT_THROW(WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
 
     AddCamera();
     AddImage();
 
-    EXPECT_NO_THROW(WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
+    EXPECT_NO_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
 }
 
 TEST_F(SensorDatabaseFixture, AddCalibrationStep) {

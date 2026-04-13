@@ -67,7 +67,7 @@ std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path) {
     return config;
 }
 
-std::optional<database::SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path) {
+std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path) {
     if (std::error_code code; not fs::is_directory(workspace_dir, code)) {
         log->error("{{'workspace_dir': '{}', 'error_code': {{'value': {}, 'message': '{}'}}}}", workspace_dir.string(),
                    code.value(), code.message());

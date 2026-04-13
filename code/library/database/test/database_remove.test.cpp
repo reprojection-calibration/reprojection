@@ -17,7 +17,7 @@ class DatabaseRemoveFixture : public ::testing::Test {
         database::WriteToDb(camera_info, db);
     }
 
-    database::SqlitePtr db{nullptr};
+    SqlitePtr db{nullptr};
     CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
 };
 

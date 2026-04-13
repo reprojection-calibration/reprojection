@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "types/io.hpp"
+
 #include "statement_executor.hpp"
 
 class SqliteTestFixture : public ::testing::Test {
@@ -30,7 +32,7 @@ class SqliteTestFixture : public ::testing::Test {
             db);
     }
 
-    reprojection::database::SqlitePtr db{nullptr};
+    reprojection::SqlitePtr db{nullptr};
     std::string const insert_sql{"INSERT INTO example_data_table (record_id) VALUES (?);"};
     std::vector<int64_t> const example_record_ids{0, 1, 2, 3, 4, 5};
 };

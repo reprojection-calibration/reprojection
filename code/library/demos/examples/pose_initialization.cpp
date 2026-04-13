@@ -14,7 +14,7 @@ int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.db3"};
-    auto db{std::make_shared<database::CalibrationDatabase>(record_path, false, false)};
+    auto db{database::OpenCalibrationDatabase(record_path, false, false)};
 
     static constexpr std::string_view config_file{R"(
             [sensor]

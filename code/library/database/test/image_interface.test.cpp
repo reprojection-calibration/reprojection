@@ -26,7 +26,7 @@ class ImageInterfaceFixture : public ::testing::Test {
 
     void AddImage(int const timestamp_ns) const { database::AddImage({timestamp_ns, image}, sensor_name, db); }
 
-    database::SqlitePtr db{nullptr};
+    SqlitePtr db{nullptr};
     std::string sensor_name{"/cam/retro/123"};
     cv::Mat image{cv::Mat(10, 20, CV_8UC1)};
 };

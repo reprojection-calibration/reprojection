@@ -15,13 +15,13 @@ struct DummyStep {
 
     int Compute() const { return 1; }
 
-    int Load(database::SqlitePtr const& db) const {
+    int Load(SqlitePtr const& db) const {
         (void)db;
 
         return 2;
     }
 
-    void Save(int const data, database::SqlitePtr const& db) const {
+    void Save(int const data, SqlitePtr const& db) const {
         (void)data;
         (void)db;
     }

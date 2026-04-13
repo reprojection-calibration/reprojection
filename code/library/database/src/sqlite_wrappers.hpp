@@ -1,7 +1,8 @@
 #pragma once
 
 #include <sqlite3.h>
-#include "database/calibration_database.hpp"
+
+#include "types/io.hpp"
 
 namespace reprojection::database {
 

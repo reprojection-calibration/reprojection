@@ -22,7 +22,7 @@ class StepsFixture : public ::testing::Test {
         database::WriteToDb(camera_info, db);
     }
 
-    database::SqlitePtr db;
+    SqlitePtr db;
     CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
 };
