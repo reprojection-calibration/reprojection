@@ -17,9 +17,6 @@ struct SqliteDeleter {
 
 using SqlitePtr = std::unique_ptr<sqlite3, SqliteDeleter>;
 
-using SqlitePtrConst = std::unique_ptr<sqlite3 const, SqliteDeleter>;
-
 SqlitePtr OpenCalibrationDatabase(std::string const& db_path, bool const create, bool const read_only = false);
-
 
 }  // namespace reprojection::database
