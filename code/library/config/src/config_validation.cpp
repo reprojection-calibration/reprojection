@@ -34,6 +34,7 @@ std::optional<TomlErrorMsg> ValidateTargetConfig(toml::table const& target_cfg) 
     std::map<std::string, TomlType> const optional_keys{
         {"circle_grid", TomlType::Table},               // LCOV_EXCL_LINE
         {"circle_grid.asymmetric", TomlType::Boolean},  // LCOV_EXCL_LINE
+        {"show_extraction", TomlType::Boolean},         // LCOV_EXCL_LINE
         {"unit_dimension", TomlType::FloatingPoint}};
 
     return ValidateConfigKeys(target_cfg, required_keys, optional_keys);

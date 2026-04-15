@@ -37,4 +37,9 @@ class TargetExtractor {
 
 std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target_config);
 
+// NOTE(Jack): For those unfamiliar with the opencv type (or even those who know it well), this function signature might
+// look ugly. But what we need to remember is that a cv::Mat is basically just a smart pointer, and even though it is
+// passed here const, we can indeed still edit the data it points to.
+void DrawTarget(ExtractedTarget const& target, cv::Mat const& img);
+
 }  // namespace reprojection::feature_extraction

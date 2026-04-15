@@ -73,4 +73,20 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target
     }
 }
 
+// TODO/WARN(Jack): This functions expects that the image has three channels but that is not enforced anywhere here.
+// What would happen if this was fed a grayscale image or a float image?
+void DrawTarget(ExtractedTarget const& target, cv::Mat const& img) {
+    MatrixX2d const& pixels{target.bundle.pixels};
+    ArrayX2i const& indices{target.indices};
+
+    for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
+        cv::circle(img, cv::Point(pixels.row(i)[0], pixels.row(i)[1]), 1, cv::Scalar(0, 255, 0), 5, cv::LINE_8);
+
+        std::string const text{"(" + std::to_string(indices.row(i)[0]) + ", " + std::to_string(indices.row(i)[1]) +
+                               ")"};
+        cv::putText(img, text, cv::Point(pixels.row(i)[0], pixels.row(i)[1]), cv::FONT_HERSHEY_COMPLEX, 0.4,
+                    cv::Scalar(255, 255, 255), 1);
+    }
+}
+
 }  // namespace reprojection::feature_extraction

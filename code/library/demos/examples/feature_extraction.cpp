@@ -12,20 +12,23 @@
 
 using namespace reprojection;
 
+// NOTE(Jack): The entire purpose of the demo is to show the featue extraction which is why the display is hardcoded
+// here and not controlled by a config file parameter.
+
 int main(int argc, char* argv[]) {
-    auto const config_file{application::GetCommandOption(argv, argv + argc, "-c")};
+    auto const config_file{application::GetCommandOption(argv, argv + argc, "--config")};
     if (not config_file) {
-        std::cerr << "Target configuration TOML not provided! (-c <target_config_toml>)" << std::endl;
+        std::cerr << "Target configuration TOML not provided! (--config <target_config_toml>)" << std::endl;
         return EXIT_FAILURE;
     }
 
     // If no folder is provided then default to webcam demo.
     std::unique_ptr<demos::ImageSource> image_feed;
-    auto const folder{application::GetCommandOption(argv, argv + argc, "-f")};
+    auto const folder{application::GetCommandOption(argv, argv + argc, "--folder")};
     if (folder) {
         image_feed = std::make_unique<demos::ImageFolder>(*folder);
     } else {
-        std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
+        std::cout << "Folder not provided! (--folder <folder_path>)! Defaulting to webcam demo." << std::endl;
         // TODO(Jack): Provide user option to select a different device
         image_feed = std::make_unique<demos::VideoCapture>(0);
     }
@@ -42,17 +45,7 @@ int main(int argc, char* argv[]) {
 
         std::optional<ExtractedTarget> const target{extractor->Extract(gray)};
         if (target.has_value()) {
-            MatrixX2d const& pixels{target->bundle.pixels};
-            ArrayX2i const& indices{target->indices};
-            for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
-                cv::circle(frame, cv::Point(pixels.row(i)[0], pixels.row(i)[1]), 1, cv::Scalar(0, 255, 0), 5,
-                           cv::LINE_8);
-
-                std::string const text{"(" + std::to_string(indices.row(i)[0]) + ", " +
-                                       std::to_string(indices.row(i)[1]) + ")"};
-                cv::putText(frame, text, cv::Point(pixels.row(i)[0], pixels.row(i)[1]), cv::FONT_HERSHEY_COMPLEX, 0.4,
-                            cv::Scalar(255, 255, 255), 1);
-            }
+            feature_extraction::DrawTarget(*target, frame);
         }
 
         cv::imshow("Tag Detections", frame);
