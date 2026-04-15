@@ -15,6 +15,16 @@ std::string FeatureExtractionStep::CacheKey() const {
 }
 
 CameraMeasurements FeatureExtractionStep::Compute() const {
+    // TODO(Jack): Processing the toml config here is not so pretty! But we do not have a final strategy for dealing
+    // with the config tables and the feature extraction code.
+    bool show_extraction{false};  // Sensible default
+    if (auto const node{target_config["show_extraction"]}) {
+        show_extraction = node.as_boolean()->get();
+    }
+
+    // TODO(Jack): Right now if the user requests showing the extraction but there is no availalbe GUI we will just
+    // crash here. We might want to wrap the window visualizer in a little class with a factory function, and then log
+    // to the user a warning if they requested visualization but here is no gui device.
     if (show_extraction) {
         cv::namedWindow("Target Extraction", cv::WINDOW_AUTOSIZE);
     }

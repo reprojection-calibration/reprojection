@@ -14,8 +14,6 @@ struct FeatureExtractionStep {
     ImageSource image_source;
     // TODO(Jack): We should have structs here not unparsed toml tables, right?
     toml::table target_config;
-    // TODO DO NOT HARDCODE! HOW SHOULD WE GET THIS PARAMETER HERE?
-    bool show_extraction;
 
     CalibrationStep step_type{CalibrationStep::FtEx};
 

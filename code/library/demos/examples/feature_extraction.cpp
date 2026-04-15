@@ -13,19 +13,19 @@
 using namespace reprojection;
 
 int main(int argc, char* argv[]) {
-    auto const config_file{application::GetCommandOption(argv, argv + argc, "-c")};
+    auto const config_file{application::GetCommandOption(argv, argv + argc, "--config")};
     if (not config_file) {
-        std::cerr << "Target configuration TOML not provided! (-c <target_config_toml>)" << std::endl;
+        std::cerr << "Target configuration TOML not provided! (--config <target_config_toml>)" << std::endl;
         return EXIT_FAILURE;
     }
 
     // If no folder is provided then default to webcam demo.
     std::unique_ptr<demos::ImageSource> image_feed;
-    auto const folder{application::GetCommandOption(argv, argv + argc, "-f")};
+    auto const folder{application::GetCommandOption(argv, argv + argc, "--folder")};
     if (folder) {
         image_feed = std::make_unique<demos::ImageFolder>(*folder);
     } else {
-        std::cout << "Folder not provided! (-f <folder_path>)! Defaulting to webcam demo." << std::endl;
+        std::cout << "Folder not provided! (--folder <folder_path>)! Defaulting to webcam demo." << std::endl;
         // TODO(Jack): Provide user option to select a different device
         image_feed = std::make_unique<demos::VideoCapture>(0);
     }
