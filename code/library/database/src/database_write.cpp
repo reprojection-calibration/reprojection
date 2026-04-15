@@ -27,12 +27,15 @@ void WriteToDb(CameraInfo const& camera_info, SqlitePtr const db) {
     ExecuteStatement(sql_statements::camera_info_insert, binder, db);
 }
 
-void WriteToDb(CalibrationStep const step_name, std::string_view cache_key, std::string_view sensor_name,
+// TODO(Jack): Input arg order consistency.
+void WriteToDb(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[step_name, sensor_name, cache_key](sqlite3_stmt* const stmt) {
         Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
         Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        Sqlite3Tools::Bind(stmt, 3, cache_key);
+        if (cache_key) {
+            Sqlite3Tools::Bind(stmt, 3, *cache_key);
+        }
     }};
 
     ExecuteStatement(sql_statements::calibration_steps_upsert, binder, db);

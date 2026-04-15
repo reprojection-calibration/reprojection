@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS calibration_steps
                                            'spline_interpolation',
                                            'spline_nonlinear_refinement')),
     sensor_name TEXT     NOT NULL,
-    cache_key   TEXT     NOT NULL,
+    cache_key   TEXT,
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (step_name, sensor_name)
 );

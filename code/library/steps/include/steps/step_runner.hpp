@@ -37,14 +37,14 @@ std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
 
     Result const result{step.Compute()};
 
-    // ERROR(Jack): The step is required to be in the db in order to write a result (foreign key constraint). But in
-    // this current setup it is possible that we write the step but then the .Save() step below fails, this will make
-    // the next run a cache hit (because the step is here), but there will be no data to load. Whe need a real solution
-    // for this!
+    // NOTE(Jack): We should explain a little but of what we are doing with the database here because it is really the
+    // core caching logic.
     database::RemoveFromDb(step.step_type, step.SensorName(), db);
-    database::WriteToDb(step.step_type, new_key, step.SensorName(), db);
+    database::WriteToDb(step.step_type, std::nullopt, step.SensorName(), db);
 
     step.Save(result, db);
+
+    database::WriteToDb(step.step_type, new_key, step.SensorName(), db);
 
     return {result, CacheStatus::CacheMiss};
 }
