@@ -73,6 +73,8 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target
     }
 }
 
+// TODO/WARN(Jack): This functions expects that the image has three channels but that is not enforced anywhere here.
+// What would happen if this was fed a grayscale image or a float image?
 void DrawTarget(ExtractedTarget const& target, cv::Mat const& img) {
     MatrixX2d const& pixels{target.bundle.pixels};
     ArrayX2i const& indices{target.indices};

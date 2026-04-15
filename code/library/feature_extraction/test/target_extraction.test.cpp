@@ -6,6 +6,7 @@
 
 #include "target_extractors.hpp"
 
+using namespace reprojection;
 using namespace reprojection::feature_extraction;
 using namespace std::string_view_literals;
 
@@ -63,4 +64,15 @@ TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorErrorHandling) 
     toml::table const config{toml::parse(empty_config_file)};
 
     EXPECT_THROW(CreateTargetExtractor(config), std::runtime_error);
+}
+
+TEST(FeatureExtractionTargetExtraction, TestDrawTarget) {
+    ExtractedTarget const target{{MatrixX2d{{1, 1}, {50, 50}}, MatrixX3d::Random(2, 3)}, ArrayX2i::Random(2, 2)};
+    cv::Mat const img{cv::Mat::zeros(cv::Size(100, 100), CV_8UC3)};
+
+    DrawTarget(target, img);
+
+    // Check that at least the two target pixels are colored bright green.
+    EXPECT_TRUE(img.at<cv::Vec3b>(1, 1) == cv::Vec3b(0, 255, 0));
+    EXPECT_TRUE(img.at<cv::Vec3b>(50, 50) == cv::Vec3b(0, 255, 0));
 }
