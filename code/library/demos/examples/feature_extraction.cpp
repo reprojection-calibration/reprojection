@@ -12,6 +12,9 @@
 
 using namespace reprojection;
 
+// NOTE(Jack): The entire purpose of the demo is to show the featue extraction which is why the display is hardcoded
+// here and not controlled by a config file parameter.
+
 int main(int argc, char* argv[]) {
     auto const config_file{application::GetCommandOption(argv, argv + argc, "--config")};
     if (not config_file) {
