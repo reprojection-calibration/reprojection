@@ -62,7 +62,6 @@ set(SRC_FILES
         src/database_read.cpp
         src/database_remove.cpp
         src/database_write.cpp
-        src/image_interface.cpp
         src/serialization.cpp
         src/sqlite_wrappers.cpp
         src/toml_converters.cpp
@@ -101,6 +100,5 @@ set(TESTS
         test/database_read.test.cpp
         test/database_remove.test.cpp
         test/database_write.test.cpp
-        test/image_interface.test.cpp
 )
 AddTests()

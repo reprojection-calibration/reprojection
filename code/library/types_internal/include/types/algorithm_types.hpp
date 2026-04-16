@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "types/eigen_types.hpp"
 
 namespace reprojection {
@@ -21,6 +23,10 @@ struct ExtractedTarget {
 struct ImuData {
     Vector3d angular_velocity;
     Vector3d linear_acceleration;
+};
+
+struct ImageBuffer {
+    std::vector<unsigned char> data;
 };
 
 }  // namespace reprojection

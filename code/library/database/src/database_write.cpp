@@ -41,6 +41,23 @@ void WriteToDb(CalibrationStep const step_name, std::optional<std::string_view> 
     ExecuteStatement(sql_statements::calibration_steps_upsert, binder, db);
 }
 
+void WriteToDb(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db) {
+    auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, buffer]{data_i};
+
+        Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+
+        if (buffer.data.empty()) {
+            Sqlite3Tools::BindNull(stmt, 3);
+        } else {
+            Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer.data}));
+        }
+    }};
+
+    BatchExecuteStatement(sql_statements::image_insert, data, binder, db);
+}
+
 void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, target]{data_i};

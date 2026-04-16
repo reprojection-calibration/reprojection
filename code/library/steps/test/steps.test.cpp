@@ -5,6 +5,7 @@
 #include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
+#include "steps/image_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
@@ -59,6 +60,18 @@ class ImageSourceFixture : public StepsFixture {
     ImageSource image_source;
     toml::table config;
 };
+
+TEST_F(ImageSourceFixture, TestImageLoadingStep) {
+    steps::ImageLoadingStep const step{camera_info.sensor_name, "sha256-key", image_source};
+
+    auto [encoded_images, cache_status]{RunStep<EncodedImages>(step, db)};
+    EXPECT_EQ(std::size(encoded_images), 2);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    std::tie(encoded_images, cache_status) = RunStep<EncodedImages>(step, db);
+    EXPECT_EQ(std::size(encoded_images), 2);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
 
 TEST_F(ImageSourceFixture, TestCameraInfoStep) {
     steps::CameraInfoStep const step{"sha256-key", *config["sensor"].as_table(), image_source};

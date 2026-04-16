@@ -12,7 +12,7 @@ namespace reprojection {
 
 // TODO(Jack): It is honestly not so nice that we need to specify the steps here and once again in the sql database, and
 //  maybe once again in the python tooling. Is there any way for us to centrally store this with that repetition>
-enum class CalibrationStep { CameraInfo, Cnlr, FtEx, Ii, Lpi, Sint, Snlr };
+enum class CalibrationStep { CameraInfo, Cnlr, FtEx, ImageLoading, Ii, Lpi, Sint, Snlr };
 
 inline std::string ToString(CalibrationStep const step_name) {
     if (step_name == CalibrationStep::CameraInfo) {
@@ -21,6 +21,8 @@ inline std::string ToString(CalibrationStep const step_name) {
         return "camera_nonlinear_refinement";
     } else if (step_name == CalibrationStep::FtEx) {
         return "feature_extraction";
+    } else if (step_name == CalibrationStep::ImageLoading) {
+        return "image_loading";
     } else if (step_name == CalibrationStep::Ii) {
         return "intrinsic_initialization";
     } else if (step_name == CalibrationStep::Lpi) {

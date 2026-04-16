@@ -40,8 +40,30 @@ std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view se
     return camera_info;
 }  // LCOV_EXCL_LINE
 
-// NOTE(Jack): The core sql handling logic here is very similar to the ImageStreamer class, but there are enough
-// differences that we cannot easily reconcile the two and eliminate copy and past like we did for the Add* functions.
+EncodedImages GetEncodedImages(SqlitePtr const db, std::string_view sensor_name) {
+    EncodedImages data;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::images_select,
+        [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+
+            auto const blob{Sqlite3Tools::SqliteBlob(stmt, 1)};
+            std::span<uchar const> blob_span{reinterpret_cast<uchar const*>(blob.data()), blob.size()};
+            std::vector<uchar> buffer(std::cbegin(blob_span), std::cend(blob_span));
+
+            // TODO(Jack): Should we represent empty images with std::optional? Currently this will load all images, and
+            // if the image is a null value it will just be a buffer with length zero. This is not exactly a problem but
+            // it might be more consistent to explicitly label these empty images with std::optional. Otherwise as is
+            // all downstream users will need to manually check if the buffer is empty before attempting to decode it to
+            // make sure there is actually an image in there.
+            data.insert({timestamp_ns, ImageBuffer{buffer}});
+        });
+
+    return data;
+}  // LCOV_EXCL_LINE
+
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
 CameraMeasurements GetExtractedTargetData(SqlitePtr const db, std::string_view sensor_name) {
     CameraMeasurements data;

@@ -35,6 +35,12 @@ struct Sqlite3Tools {
         }
     }
 
+    static void BindNull(sqlite3_stmt* const stmt, int const index) {
+        if (sqlite3_bind_null(stmt, index) != static_cast<int>(SqliteFlag::Ok)) {
+            throw std::runtime_error("sqlite3_bind_null() failed");
+        }
+    }
+
     // NOTE(Jack): We use SQLITE_TRANSIENT here because the serialized buffers in the lambdas disappear when the lambda
     // is finished. Therefore, we want sql to make its own copy of the buffer when we call bind (i.e. SQLITE_TRANSIENT),
     // so that way the external lifetime management can be disregarded.

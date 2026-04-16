@@ -13,6 +13,10 @@ using CameraMeasurements = StampedMap<CameraMeasurement>;
 using ImuMeasurement = StampedData<ImuData>;
 using ImuMeasurements = StampedMap<ImuMeasurement>;
 
-using CameraImage = StampedData<cv::Mat>;
+using Image = StampedData<cv::Mat>;
+
+// TODO(Jack): We should consider making the absent of an image explicit with std::optional.
+using EncodedImage = StampedData<ImageBuffer>;
+using EncodedImages = StampedMap<EncodedImage>;
 
 }  // namespace reprojection
