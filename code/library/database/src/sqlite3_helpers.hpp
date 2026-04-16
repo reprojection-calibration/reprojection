@@ -101,7 +101,7 @@ class SqliteException : public std::runtime_error {
         }
 
         return result;
-    }
+    }  // LCOV_EXCL_LINE
 };
 
 }  // namespace reprojection::database
