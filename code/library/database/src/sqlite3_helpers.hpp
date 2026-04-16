@@ -75,9 +75,32 @@ struct Sqlite3Tools {
 
 class SqliteException : public std::runtime_error {
    public:
-    SqliteException(SqlitePtr const db, std::string_view operation)
-        : std::runtime_error(std::string(operation) + " - error code: " + std::to_string(sqlite3_errcode(db.get())) +
-                             " - " + sqlite3_errmsg(db.get())) {}
+    SqliteException(SqlitePtr const db, std::string_view sql) : std::runtime_error(FormatMessage(db, sql)) {}
+
+   private:
+    static std::string FormatMessage(SqlitePtr const db, std::string_view sql) {
+        return "\n[SQLite Exception]\n"
+               "----------------------------------------\n"
+               "SQL Query:\n" +
+               Indent(sql) + "\n\n" + "Error Code : " + std::to_string(sqlite3_errcode(db.get())) + "\n" +
+               "Error Msg  : " + std::string(sqlite3_errmsg(db.get())) + "\n" +
+               "----------------------------------------";
+    }
+
+    static std::string Indent(std::string_view text) {
+        std::string result;
+        result.reserve(text.size() + 16);
+
+        result += "  ";
+        for (char c : text) {
+            result += c;
+            if (c == '\n') {
+                result += "  ";
+            }
+        }
+
+        return result;
+    }
 };
 
 }  // namespace reprojection::database
