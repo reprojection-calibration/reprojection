@@ -6,6 +6,13 @@
 
 namespace reprojection::caching {
 
+std::string Serialize(std::string_view data);
+
+// TEST
+// TEST
+// TEST
+std::string Serialize(EncodedImages const& data);
+
 std::string Serialize(CameraInfo const& data);
 
 std::string Serialize(CameraMeasurements const& data);
