@@ -23,10 +23,9 @@ namespace reprojection::steps {
 // applications.
 
 struct CameraInfoStep {
-    std::string cache_key;
     // TODO(Jack): We should have structs here not unparsed toml tables, right?
     toml::table sensor_config;
-    ImageSource image_source;
+    std::shared_ptr<EncodedImages> images;
 
     CalibrationStep step_type{CalibrationStep::CameraInfo};
 

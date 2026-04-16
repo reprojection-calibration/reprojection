@@ -12,16 +12,23 @@ std::string CameraInfoStep::CacheKey() const {
     std::ostringstream oss;
     oss << sensor_config;
 
-    return caching::CacheKey(cache_key + oss.str());
+    return caching::CacheKey(oss.str(), *images);
 }
 
 CameraInfo CameraInfoStep::Compute() const {
-    auto const result{image_source()};
-    if (not result) {
+    if (images->size() == 0) {
         throw std::runtime_error(
-            "we need an error handling strategy for empty image sources to get camera info");  // LCOV_EXCL_LINE
+            "we need an error handling strategy for no images to get camera info");  // LCOV_EXCL_LINE
     }
-    auto const& [_, img]{*result};
+
+    // Arbitrarily check the size of the first image
+    cv::Mat const img{cv::imdecode(images->begin()->second.data, cv::IMREAD_COLOR)};
+
+    // TOD0(Jack): Is this check really needed? Is it possible that an empty image buffer makes it way here?
+    if (img.empty()) {
+        throw std::runtime_error(
+            "we need an error handling strategy for empty image to get camera info");  // LCOV_EXCL_LINE
+    }
 
     CameraInfo const camera_info{SensorName(),
                                  ToCameraModel(sensor_config["camera_model"].as_string()->get()),
