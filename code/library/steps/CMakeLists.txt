@@ -4,6 +4,7 @@ set(SRC_FILES
         src/camera_info.cpp
         src/camera_nonlinear_refinement.cpp
         src/feature_extraction.cpp
+        src/image_loading.cpp
         src/intrinsic_initialization.cpp
         src/linear_pose_initialization.cpp
 
