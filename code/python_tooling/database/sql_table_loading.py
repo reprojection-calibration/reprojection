@@ -17,7 +17,7 @@ def load_images_table(db_path):
 
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("images_select.sql"), conn)
+            table = pd.read_sql(load_sql("images_select_all.sql"), conn)
     except Exception as e:
         print(e)
         return None
