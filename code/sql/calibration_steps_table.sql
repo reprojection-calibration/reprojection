@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS calibration_steps
     step_name   TEXT CHECK ( step_name IN ('camera_info',
                                            'camera_nonlinear_refinement',
                                            'feature_extraction',
+                                           'image_loading',
                                            'intrinsic_initialization',
                                            'linear_pose_initialization',
                                            'spline_interpolation',

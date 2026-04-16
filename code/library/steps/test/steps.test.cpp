@@ -64,12 +64,12 @@ class ImageSourceFixture : public StepsFixture {
 TEST_F(ImageSourceFixture, TestImageLoadingStep) {
     steps::ImageLoadingStep const step{camera_info.sensor_name, "sha256-key", image_source};
 
-    auto [extracted_targets, cache_status]{RunStep<EncodedImages>(step, db)};
-    EXPECT_EQ(std::size(extracted_targets), 0);
+    auto [encoded_images, cache_status]{RunStep<EncodedImages>(step, db)};
+    EXPECT_EQ(std::size(encoded_images), 2);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    std::tie(extracted_targets, cache_status) = RunStep<EncodedImages>(step, db);
-    EXPECT_EQ(std::size(extracted_targets), 0);
+    std::tie(encoded_images, cache_status) = RunStep<EncodedImages>(step, db);
+    EXPECT_EQ(std::size(encoded_images), 2);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
