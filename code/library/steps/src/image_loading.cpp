@@ -10,8 +10,6 @@ namespace reprojection::steps {
 // serialized data signature. We should fix this name to clarify its purpose and use.
 std::string ImageLoadingStep::CacheKey() const { return caching::CacheKey(cache_key); }
 
-// TODO MAKE NOTE THAT WE CHOOSE TO USE THE OPENCV MAT AS THE APPLICATION IMAGE_SOURCE INTERFACE BUT WE COULD ALSO USE
-// THE BINARY DIRECTLY
 EncodedImages ImageLoadingStep::Compute() const {
     EncodedImages encoded_images;
     while (auto const data{image_source()}) {

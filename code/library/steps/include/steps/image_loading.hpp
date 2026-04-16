@@ -6,6 +6,12 @@
 
 namespace reprojection::steps {
 
+// NOTE(Jack): I had originally planned to note store the images in the database because it would require more
+// reading/writing than just feeding the images directly into the feature extractor. However, given that the images will
+// be cached after the first execution there is really no argument not to do this. But it will lead to the database
+// getting large (even though we only store .png encoded blobs). The benefit is that it makes our downstream workflow
+// and database visualization extremely consistent.
+
 struct ImageLoadingStep {
     std::string sensor_name;
     std::string cache_key;

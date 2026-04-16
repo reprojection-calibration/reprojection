@@ -54,9 +54,9 @@ EncodedImages GetEncodedImages(SqlitePtr const db, std::string_view sensor_name)
             std::vector<uchar> buffer(std::cbegin(blob_span), std::cend(blob_span));
 
             // TODO(Jack): Should we represent empty images with std::optional? Currently this will load all images, and
-            // if the image is a null value it will just a buffer with length zero. This is not exactly a problem but it
-            // might be more consistent to explicitly label these empty images with std::optional. Otherwise as is all
-            // downstream users will need to manually check if the buffer is empty before attempting to decode it to
+            // if the image is a null value it will just be a buffer with length zero. This is not exactly a problem but
+            // it might be more consistent to explicitly label these empty images with std::optional. Otherwise as is
+            // all downstream users will need to manually check if the buffer is empty before attempting to decode it to
             // make sure there is actually an image in there.
             data.insert({timestamp_ns, ImageBuffer{buffer}});
         });

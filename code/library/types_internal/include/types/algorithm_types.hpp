@@ -25,8 +25,6 @@ struct ImuData {
     Vector3d linear_acceleration;
 };
 
-// TODO(Jack): Where does this belong? It does not really fit neatly into nay category of types because it really just
-// has to do with data input and output. Except for feature extraction it is not used anywhere.
 struct ImageBuffer {
     std::vector<unsigned char> data;
 };
