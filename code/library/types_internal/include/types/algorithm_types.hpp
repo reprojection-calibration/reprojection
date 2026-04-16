@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "types/eigen_types.hpp"
 
 namespace reprojection {
@@ -25,8 +27,8 @@ struct ImuData {
 
 // TODO(Jack): Where does this belong? It does not really fit neatly into nay category of types because it really just
 // has to do with data input and output. Except for feature extraction it is not used anywhere.
-struct EncodedImage {
-    std::vector<uchar> data;
+struct ImageBuffer {
+    std::vector<unsigned char> data;
 };
 
 }  // namespace reprojection
