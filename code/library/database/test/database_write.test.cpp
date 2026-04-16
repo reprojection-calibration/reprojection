@@ -42,17 +42,17 @@ class SensorDatabaseFixture : public ::testing::Test {
     std::string sensor_name{"/cam/retro/123"};
 };
 
-TEST_F(SensorDatabaseFixture, WriteCameraInfo) {
+TEST_F(SensorDatabaseFixture, TestWriteToDbCameraInfo) {
     EXPECT_NO_THROW(AddCamera());
     EXPECT_THROW(AddCamera(), std::runtime_error);  // Duplicate entry not allowed!
 }
 
-TEST_F(SensorDatabaseFixture, WriteToDbEncodedImages) {
+TEST_F(SensorDatabaseFixture, TestWriteToDbEncodedImages) {
     EXPECT_NO_THROW(AddImage());
     EXPECT_THROW(AddImage(), std::runtime_error);  // Duplicate entry not allowed!
 }
 
-TEST_F(SensorDatabaseFixture, WriteToDbCameraMeasurements) {
+TEST_F(SensorDatabaseFixture, TestWriteToDbCameraMeasurements) {
     EXPECT_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
 
     AddCamera();
@@ -61,7 +61,7 @@ TEST_F(SensorDatabaseFixture, WriteToDbCameraMeasurements) {
     EXPECT_NO_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
 }
 
-TEST_F(SensorDatabaseFixture, WriteToDbCalibrationStep) {
+TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStep) {
     AddCamera();
 
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi));
@@ -70,7 +70,7 @@ TEST_F(SensorDatabaseFixture, WriteToDbCalibrationStep) {
     EXPECT_NO_THROW(AddStep(CalibrationStep::Snlr));
 }
 
-TEST_F(SensorDatabaseFixture, AddCalibrationStepUpsert) {
+TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
     AddCamera();
 
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "1"));
@@ -78,7 +78,7 @@ TEST_F(SensorDatabaseFixture, AddCalibrationStepUpsert) {
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "3"));
 }
 
-TEST_F(SensorDatabaseFixture, TestAddCameraIntrinsic) {
+TEST_F(SensorDatabaseFixture, TestWriteToDbCameraIntrinsic) {
     EXPECT_THROW(database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
                                      CalibrationStep::Lpi, sensor_name, db),
                  std::runtime_error);
@@ -90,7 +90,7 @@ TEST_F(SensorDatabaseFixture, TestAddCameraIntrinsic) {
                                         CalibrationStep::Lpi, sensor_name, db));
 }
 
-TEST_F(SensorDatabaseFixture, TestAddPoseData) {
+TEST_F(SensorDatabaseFixture, TestWriteToDbPoseData) {
     // Throws because the calibration step linear_pose_initialization has not been added to the database yet.
     EXPECT_THROW(AddPose(CalibrationStep::Lpi), std::runtime_error);
 
@@ -100,7 +100,7 @@ TEST_F(SensorDatabaseFixture, TestAddPoseData) {
     EXPECT_NO_THROW(AddPose(CalibrationStep::Lpi));
 }
 
-TEST_F(SensorDatabaseFixture, TestAddReprojectionError) {
+TEST_F(SensorDatabaseFixture, TestWriteToDbReprojectionError) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
     // Fails foreign key constraint because there is no corresponding poses table entry yet
@@ -115,7 +115,7 @@ TEST_F(SensorDatabaseFixture, TestAddReprojectionError) {
     EXPECT_NO_THROW(database::WriteToDb(data, CalibrationStep::Lpi, sensor_name, db));
 }
 
-TEST(DatabaseSensorDataInterface, TestAddImuData) {
+TEST(DatabaseSensorDataInterface, TestWriteToDbImuData) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     std::string_view sensor_name_1{"/imu/polaris/123"};
