@@ -1,13 +1,7 @@
 #pragma once
 
-#include <optional>
-#include <string>
-
-#include <opencv2/opencv.hpp>
-
+#include "database/calibration_database.hpp"
 #include "types/sensor_data_types.hpp"
-
-#include "sqlite_wrappers.hpp"
 
 // NOTE(Jack): We need this streaming interface here because it is not feasible to load all images at once into memory,
 // we will run into problems here with memory. Therefore, we create this streamer class which loads the images one by
@@ -24,21 +18,9 @@
 
 namespace reprojection::database {
 
-void AddImage(CameraImage const& data, std::string_view sensor_name, SqlitePtr const db);
+void AddImage(Image const& data, std::string_view sensor_name, SqlitePtr const db);
 
 // TODO(Jack): Should we make this instead accept OptimizationState directly and iterate over that?
 void AddImage(uint64_t const timestamp_ns, std::string_view sensor_name, SqlitePtr const db);
-
-class ImageStreamer {
-   public:
-    ImageStreamer(SqlitePtr const db, std::string const& sensor_name, uint64_t const start_time = 0);
-
-    std::optional<CameraImage> Next() const;
-
-   private:
-    SqlitePtr database_;
-    SqlStatement statement_;
-    std::string sensor_name_;
-};
 
 }  // namespace reprojection::database

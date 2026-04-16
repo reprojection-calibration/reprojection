@@ -34,39 +34,3 @@ class ImageInterfaceFixture : public ::testing::Test {
 TEST_F(ImageInterfaceFixture, TestAddImage) { EXPECT_NO_THROW(AddImage(0)); }
 
 TEST_F(ImageInterfaceFixture, TestAddImageHeaderOnly) { EXPECT_NO_THROW(database::AddImage(0, sensor_name, db)); }
-
-TEST_F(ImageInterfaceFixture, TestImageStreamer) {
-    AddImage(0);
-    AddImage(2);
-    AddImage(4);
-
-    database::ImageStreamer streamer{db, sensor_name};
-    auto const frame_0{streamer.Next()};
-    ASSERT_TRUE(frame_0.has_value());
-
-    auto const& [timestamp_ns, loaded_image]{frame_0.value()};
-    EXPECT_EQ(timestamp_ns, 0);
-    EXPECT_EQ(loaded_image.rows, 10);
-    EXPECT_EQ(loaded_image.cols, 20);
-
-    EXPECT_TRUE(streamer.Next().has_value());  // Frame 2
-    EXPECT_TRUE(streamer.Next().has_value());  // Frame 3, last frame
-    EXPECT_FALSE(streamer.Next().has_value());
-}
-
-// This simulates the case where we have already processed the images up to a certain time and only want to load the
-// images after that point.
-TEST_F(ImageInterfaceFixture, TestImageStreamerStartTime) {
-    AddImage(0);
-    AddImage(2);
-    AddImage(4);
-
-    database::ImageStreamer streamer{db, sensor_name, 1};
-
-    auto const frame_0{streamer.Next()};
-    ASSERT_TRUE(frame_0.has_value());
-    EXPECT_EQ(frame_0.value().first, 2);  // First frame starts at 2ns now
-
-    EXPECT_TRUE(streamer.Next().has_value());
-    EXPECT_FALSE(streamer.Next().has_value());
-}
