@@ -28,6 +28,8 @@ class StepsFixture : public ::testing::Test {
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
 };
 
+
+// TODO REFACTOR IMAGE SOURCE HERE TO READ DIRECTLR FROM AN ENCODEDIMAGES object!!!
 class ImageSourceFixture : public StepsFixture {
    protected:
     void SetUp() override {
@@ -73,8 +75,8 @@ TEST_F(ImageSourceFixture, TestImageLoadingStep) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(ImageSourceFixture, TestCameraInfoStep) {
-    steps::CameraInfoStep const step{"sha256-key", *config["sensor"].as_table(), image_source};
+TEST(StepsFixture, TestCameraInfoStep) {
+    steps::CameraInfoStep const step{*config["sensor"].as_table(), image_source};
 
     auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
