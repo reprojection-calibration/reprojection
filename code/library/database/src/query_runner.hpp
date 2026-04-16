@@ -18,9 +18,10 @@ void ExecuteQuery(SqlitePtr const db, std::string_view sql, Binder&& binder, Row
     SqlStatement statement{db, std::string(sql).data()};
 
     try {
-        // NOTE(Jack): If the sql query statement does not use any dynamic binding, then we do not need to call the
-        // binder. Therefore, this code lets the user pass in a nullptr for the binder, and it will then not execute any
-        // binding call. If this is actually possible for people to understand is not clear at this time :)
+        // NOTE(Jack): If the sql query statement does not use any dynamic binding (i.e. we want to perform a static
+        // operation like creating a table), then we do not need to call the binder. Therefore, this code lets the user
+        // pass in a nullptr for the binder, and it will then not execute any binding call. If this is actually possible
+        // for people to understand is not clear at this time :)
         if constexpr (not std::is_same_v<std::decay_t<Binder>, std::nullptr_t>) {
             binder(statement.stmt);
         }
@@ -28,8 +29,12 @@ void ExecuteQuery(SqlitePtr const db, std::string_view sql, Binder&& binder, Row
         throw SqliteException(db, sql);  // LCOV_EXCL_LINE
     }
 
-    while (Sqlite3Tools::StepRow(statement.stmt)) {
-        on_row(statement.stmt);
+    try {
+        while (Sqlite3Tools::StepRow(statement.stmt)) {
+            on_row(statement.stmt);
+        }
+    } catch (...) {                      // LCOV_EXCL_LINE
+        throw SqliteException(db, sql);  // LCOV_EXCL_LINE
     }
 }
 

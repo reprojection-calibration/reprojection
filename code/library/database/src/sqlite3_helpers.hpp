@@ -82,7 +82,8 @@ class SqliteException : public std::runtime_error {
         return "\n[SQLite Exception]\n"
                "----------------------------------------\n"
                "SQL Query:\n" +
-               Indent(sql) + "\n\n" + "Error Code : " + std::to_string(sqlite3_errcode(db.get())) + "\n" +
+               Indent(sql) + "\n" +                                                  //
+               "Error Code : " + std::to_string(sqlite3_errcode(db.get())) + "\n" +  //
                "Error Msg  : " + std::string(sqlite3_errmsg(db.get())) + "\n" +
                "----------------------------------------";
     }
