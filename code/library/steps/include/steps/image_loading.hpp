@@ -23,11 +23,11 @@ struct ImageLoadingStep {
 
     std::string CacheKey() const;
 
-    EncodedImages Compute() const;
+    std::shared_ptr<EncodedImages> Compute() const;
 
-    EncodedImages Load(SqlitePtr const db) const;
+    std::shared_ptr<EncodedImages> Load(SqlitePtr const db) const;
 
-    void Save(EncodedImages const& images, SqlitePtr const db) const;
+    void Save(std::shared_ptr<EncodedImages const> const images, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

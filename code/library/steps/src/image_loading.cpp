@@ -10,8 +10,8 @@ namespace reprojection::steps {
 // serialized data signature. We should fix this name to clarify its purpose and use.
 std::string ImageLoadingStep::CacheKey() const { return caching::CacheKey(cache_key); }
 
-EncodedImages ImageLoadingStep::Compute() const {
-    EncodedImages encoded_images;
+std::shared_ptr<EncodedImages> ImageLoadingStep::Compute() const {
+    auto encoded_images = std::make_shared<EncodedImages>();
     while (auto const data{image_source()}) {
         auto const& [timestamp_ns, img]{*data};
 
@@ -20,16 +20,18 @@ EncodedImages ImageLoadingStep::Compute() const {
             throw std::runtime_error("cv::imencode() failed for " + std::string(sensor_name));  // LCOV_EXCL_LINE
         }
 
-        encoded_images.insert({timestamp_ns, ImageBuffer{buffer}});  // LCOV_EXCL_LINE
+        encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});  // LCOV_EXCL_LINE
     }
 
     return encoded_images;
 }  // LCOV_EXCL_LINE
 
-EncodedImages ImageLoadingStep::Load(SqlitePtr const db) const { return database::GetEncodedImages(db, SensorName()); }
+std::shared_ptr<EncodedImages> ImageLoadingStep::Load(SqlitePtr const db) const {
+    return std::make_shared<EncodedImages>(database::GetEncodedImages(db, SensorName()));
+}
 
-void ImageLoadingStep::Save(EncodedImages const& encoded_images, SqlitePtr const db) const {
-    database::WriteToDb(encoded_images, SensorName(), db);
+void ImageLoadingStep::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
+    database::WriteToDb(*encoded_images, SensorName(), db);
 }
 
 }  // namespace reprojection::steps
