@@ -1,6 +1,7 @@
 #include "steps/image_loading.hpp"
 
 #include "caching/cache_keys.hpp"
+#include "database/database_write.hpp"
 
 namespace reprojection::steps {
 
@@ -34,8 +35,7 @@ EncodedImages ImageLoadingStep::Load(SqlitePtr const db) const {
 // IMPLEMENT!!!
 // IMPLEMENT!!!
 void ImageLoadingStep::Save(EncodedImages const& encoded_images, SqlitePtr const db) const {
-    (void)encoded_images;
-    (void)db;
+    database::WriteToDb(encoded_images, SensorName(), db);
 }
 
 }  // namespace reprojection::steps
