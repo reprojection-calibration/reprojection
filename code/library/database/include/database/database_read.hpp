@@ -14,6 +14,8 @@ namespace reprojection::database {
 // mutable SqlitePtr. But at this point the semantics around the sql statement lock do not allow it.
 std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view sensor_name);
 
+EncodedImages GetEncodedImages(SqlitePtr const db, std::string_view sensor_name);
+
 CameraMeasurements GetExtractedTargetData(SqlitePtr const db, std::string_view sensor_name);
 
 std::optional<ArrayXd> ReadCameraState(SqlitePtr const db, CalibrationStep const step_name,
