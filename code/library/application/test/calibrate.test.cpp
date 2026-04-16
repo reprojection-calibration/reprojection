@@ -26,12 +26,19 @@ TEST(Application, TestCalibrate) {
 
     auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
+    // TODO(Jack): This test is a little sketchy because we are trying to induce cache hits to avoid actually having to
+    // calculate anything. As a principle we do not want to use the checked in test database which means this is as much
+    // as we can do here. I guess we could also use the MVG test data generator, but that will be for a future
+    // contributor :)
+
     // Write the camera info
     // TODO(Jack): Add foreign key constraint that a camera info must have a step!
     CameraInfo const camera_info{config["sensor"]["camera_name"].as_string()->get(),
                                  ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
                                  {0, 512, 0, 512}};
     database::WriteToDb(camera_info, db);
+
+    database::WriteToDb(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
 
     std::ostringstream oss1;
     oss1 << *config["sensor"].as_table();
@@ -43,6 +50,10 @@ TEST(Application, TestCalibrate) {
 
     database::WriteToDb(CalibrationStep::Ii, caching::CacheKey(camera_info, {}), camera_info.sensor_name, db);
     database::WriteToDb({Array6d::Zero()}, camera_info.camera_model, CalibrationStep::Ii, camera_info.sensor_name, db);
+
+    // NOTE(Jack): We do not need to do anything for the linear_pose_initialization and camera_nonlinear_refinement
+    // steps to manufacture a cache hit because if their inputs are empty they themselves will just pass through with no
+    // problem. This might change in the future but for now it stands.
 
     EXPECT_NO_THROW(application::Calibrate(config, {}, "", db));
 }
