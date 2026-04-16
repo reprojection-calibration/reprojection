@@ -47,7 +47,12 @@ TEST_F(SensorDatabaseFixture, WriteCameraInfo) {
     EXPECT_THROW(AddCamera(), std::runtime_error);  // Duplicate entry not allowed!
 }
 
-TEST_F(SensorDatabaseFixture, AddExtractedTargetData) {
+TEST_F(SensorDatabaseFixture, WriteToDbEncodedImages) {
+    EXPECT_NO_THROW(AddImage());
+    EXPECT_THROW(AddImage(), std::runtime_error);  // Duplicate entry not allowed!
+}
+
+TEST_F(SensorDatabaseFixture, WriteToDbCameraMeasurements) {
     EXPECT_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
 
     AddCamera();
@@ -56,7 +61,7 @@ TEST_F(SensorDatabaseFixture, AddExtractedTargetData) {
     EXPECT_NO_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
 }
 
-TEST_F(SensorDatabaseFixture, AddCalibrationStep) {
+TEST_F(SensorDatabaseFixture, WriteToDbCalibrationStep) {
     AddCamera();
 
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi));

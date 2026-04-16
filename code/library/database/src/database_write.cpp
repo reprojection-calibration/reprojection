@@ -41,9 +41,6 @@ void WriteToDb(CalibrationStep const step_name, std::optional<std::string_view> 
     ExecuteStatement(sql_statements::calibration_steps_upsert, binder, db);
 }
 
-// TODO TEST?
-// TODO TEST?
-// TODO TEST?
 void WriteToDb(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, buffer]{data_i};
