@@ -37,14 +37,29 @@ std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
 
     Result const result{step.Compute()};
 
-    // ERROR(Jack): The step is required to be in the db in order to write a result (foreign key constraint). But in
-    // this current setup it is possible that we write the step but then the .Save() step below fails, this will make
-    // the next run a cache hit (because the step is here), but there will be no data to load. Whe need a real solution
-    // for this!
+    // NOTE(Jack): The cache key logic here looks a little messy, and I think a sign that we are doing something wrong.
+    // Combined with the underlying database logic it means I need to explain what's going on here. First of all if we
+    // are here this means that it was not a cache hit and we have a new result that we want to write to the db. The
+    // steps below are as follows:
+    //
+    // (1) In the first step here we RemoveFromDb() the step, and because we have ON DELETE CASCADE set
+    // for all dependent data, and PRAGMA foreign_keys = ON, this should mean that the step itself and all the data
+    // calculated in that step are removed.
+    // (2) Then we write the step to the db again, but with a null cache key, because we have a foreign key constraint
+    // that requires the step exists before we can Save() the data. The reason we leave it with a null key is that if
+    // the Save() fails for whatever reason, then the next run will show as a cache failure because the key is null.
+    // (3) Save the data - this can fail for whatever reason.
+    // (4) Add the cache key to the step (remember the calibration_steps table has "upsert" semantics). Now the step is
+    // actually cached.
+    //
+    // If there is a more clean way to express this logic, that would be a welcome addition. I think that the current
+    // implementation can lead to problems in the future.
     database::RemoveFromDb(step.step_type, step.SensorName(), db);
-    database::WriteToDb(step.step_type, new_key, step.SensorName(), db);
+    database::WriteToDb(step.step_type, std::nullopt, step.SensorName(), db);
 
     step.Save(result, db);
+
+    database::WriteToDb(step.step_type, new_key, step.SensorName(), db);
 
     return {result, CacheStatus::CacheMiss};
 }

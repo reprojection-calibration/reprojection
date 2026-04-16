@@ -98,7 +98,12 @@ std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep cons
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
         [&cache_key](sqlite3_stmt* const stmt) {
-            cache_key = std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
+            // TODO(Jack): Is the best way to express reading a value which might be null from a table? I do not see the
+            // problem with this implementation, but maybe sqlite has some pattern I don't know about.
+            uchar const* const value{sqlite3_column_text(stmt, 0)};
+            if (value) {
+                cache_key = std::string(reinterpret_cast<char const*>(value));
+            }
         });
 
     return cache_key;

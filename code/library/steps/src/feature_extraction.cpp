@@ -52,9 +52,8 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
             }
 
             cv::imshow("Target Extraction", img);  // LCOV_EXCL_LINE
-            if (cv::waitKey(30) >= 0) {            // LCOV_EXCL_LINE
-                break;                             // LCOV_EXCL_LINE
-            }
+            // TODO(Jack): Should we make the delay time here configurable?
+            cv::waitKey(5);  // LCOV_EXCL_LINE
         }
     }
 
