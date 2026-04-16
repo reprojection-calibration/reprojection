@@ -40,6 +40,9 @@ std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view se
     return camera_info;
 }  // LCOV_EXCL_LINE
 
+// TEST!
+// TEST!
+// TEST!
 EncodedImages GetEncodedImages(SqlitePtr const db, std::string_view sensor_name) {
     EncodedImages data;
 
