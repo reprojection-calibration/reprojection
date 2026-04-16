@@ -50,7 +50,12 @@ void WriteToDb(EncodedImages const& data, std::string_view sensor_name, SqlitePt
 
         Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
         Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
-        Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer.data}));
+
+        if (buffer.data.empty()) {
+            Sqlite3Tools::BindNull(stmt, 3);
+        } else {
+            Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer.data}));
+        }
     }};
 
     BatchExecuteStatement(sql_statements::image_insert, data, binder, db);

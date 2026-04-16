@@ -1,7 +1,6 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
-#include "database/image_interface.hpp"
 #include "types/calibration_types.hpp"
 #include "types/io.hpp"
 

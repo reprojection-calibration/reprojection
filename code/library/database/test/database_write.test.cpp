@@ -9,7 +9,6 @@
 #include <opencv2/opencv.hpp>
 
 #include "database/calibration_database.hpp"
-#include "database/image_interface.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/sensor_data_types.hpp"
 
@@ -25,7 +24,7 @@ class SensorDatabaseFixture : public ::testing::Test {
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 
-    void AddImage() const { database::AddImage(timestamp_ns, sensor_name, db); }
+    void AddImage() const { database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db); }
 
     void AddTarget() const { database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db); }
 
