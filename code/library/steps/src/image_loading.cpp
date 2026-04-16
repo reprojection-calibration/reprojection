@@ -24,7 +24,7 @@ EncodedImages ImageLoadingStep::Compute() const {
     }
 
     return encoded_images;
-}
+}  // LCOV_EXCL_LINE
 
 EncodedImages ImageLoadingStep::Load(SqlitePtr const db) const { return database::GetEncodedImages(db, SensorName()); }
 
