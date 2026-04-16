@@ -13,6 +13,7 @@ using CameraMeasurements = StampedMap<CameraMeasurement>;
 using ImuMeasurement = StampedData<ImuData>;
 using ImuMeasurements = StampedMap<ImuMeasurement>;
 
-using CameraImage = StampedData<cv::Mat>;
+using Image = StampedData<EncodedImage>;
+using Images = StampedMap<Image>;
 
 }  // namespace reprojection
