@@ -21,9 +21,15 @@ class CameraReadFixture : public ::testing::Test {
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 
-    void AddTarget(uint64_t const timestamp_ns) const {
+    void AddImage(uint64_t const timestamp_ns) const {
         // Due to foreign key relationship we need add an image before we add the target
         database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db);
+    }
+
+    void AddTarget(uint64_t const timestamp_ns) const {
+        // Due to foreign key relationship we need add an image before we add the target
+        AddImage(timestamp_ns);
+
         database::WriteToDb({{timestamp_ns, target}}, sensor_name, db);
     }
 
@@ -46,6 +52,24 @@ TEST_F(CameraReadFixture, TestReadCameraInfo) {
     EXPECT_EQ(camera_info->bounds.u_max, testing_utilities::image_bounds.u_max);
     EXPECT_EQ(camera_info->bounds.v_min, testing_utilities::image_bounds.v_min);
     EXPECT_EQ(camera_info->bounds.v_max, testing_utilities::image_bounds.v_max);
+}
+
+TEST_F(CameraReadFixture, TestGetEncodedImages) {
+    AddImage(0);
+    AddImage(1);
+    AddImage(2);
+
+    EncodedImages const loaded_data{database::GetEncodedImages(db, sensor_name)};
+    EXPECT_EQ(std::size(loaded_data), 3);
+
+    int test_timestamp{0};
+    for (auto const& [timestamp_ns_i, buffer] : loaded_data) {
+        EXPECT_EQ(timestamp_ns_i, test_timestamp);
+        test_timestamp += 1;
+
+        // TODO(Jack): We should consider making the absent of an image explicit with std::optional.
+        EXPECT_EQ(std::size(buffer.data), 0);
+    }
 }
 
 TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
