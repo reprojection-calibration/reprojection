@@ -53,7 +53,8 @@ int main() {
     } catch (...) {
     }
 
-    application::Calibrate(config, {}, "", db);
+    ImageSource empty_image_source{[]() { return std::nullopt; }};
+    application::Calibrate(config, empty_image_source, "", db);
 
     return EXIT_SUCCESS;
 }
