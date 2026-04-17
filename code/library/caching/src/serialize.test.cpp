@@ -6,7 +6,7 @@
 
 using namespace reprojection;
 
-TEST(CachingSerialize, TestSerializeEncodedImage) {
+TEST(CachingSerialize, TestSerializeEncodedImages) {
     EncodedImages const encoded_images{{0, ImageBuffer{}}, {1, ImageBuffer{}}};
 
     std::string const result{caching::Serialize(encoded_images)};
@@ -15,7 +15,7 @@ TEST(CachingSerialize, TestSerializeEncodedImage) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, CameraInfo) {
+TEST(CachingSerialize, TestSerializeCameraInfo) {
     CameraInfo const camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
 
     std::string const result{caching::Serialize(camera_info)};
@@ -24,7 +24,7 @@ TEST(CachingSerialize, CameraInfo) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, CameraMeasurements) {
+TEST(CachingSerialize, TestSerializeCameraMeasurements) {
     ExtractedTarget const target{
         Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}}, MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}}},
         {{5, 6}, {2, 3}}};
@@ -38,7 +38,7 @@ TEST(CachingSerialize, CameraMeasurements) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, CameraState) {
+TEST(CachingSerialize, TestSerializeCameraState) {
     CameraState const camera_state{testing_utilities::pinhole_intrinsics};
 
     std::string const result{caching::Serialize(camera_state)};
@@ -47,7 +47,7 @@ TEST(CachingSerialize, CameraState) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, Frames) {
+TEST(CachingSerialize, TestSerializeFrames) {
     Frames const frames{{0, {Array6d::Ones()}}, {1, {2 * Array6d::Ones()}}};
 
     std::string const result{caching::Serialize(frames)};
