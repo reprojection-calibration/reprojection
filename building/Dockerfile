@@ -290,7 +290,7 @@ COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/
 ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
-    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 4b48d11db7fb0f110f39303804a13ef87d46ddf74ab2659a929149468b5f4f5a
+    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
