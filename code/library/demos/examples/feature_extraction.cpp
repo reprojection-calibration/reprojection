@@ -24,9 +24,11 @@ int main(int argc, char* argv[]) {
 
     // If no folder is provided then default to webcam demo.
     std::unique_ptr<demos::ImageSource> image_feed;
-    auto const folder{application::GetCommandOption(argv, argv + argc, "--folder")};
-    if (folder) {
+
+    if (auto const folder{application::GetCommandOption(argv, argv + argc, "--folder")}) {
         image_feed = std::make_unique<demos::ImageFolder>(*folder);
+    } else if (auto const file{application::GetCommandOption(argv, argv + argc, "--file")}) {
+        image_feed = std::make_unique<demos::VideoCapture>(*file);
     } else {
         std::cout << "Folder not provided! (--folder <folder_path>)! Defaulting to webcam demo." << std::endl;
         // TODO(Jack): Provide user option to select a different device
