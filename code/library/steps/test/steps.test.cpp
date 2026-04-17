@@ -28,19 +28,34 @@ class StepsFixture : public ::testing::Test {
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
 };
 
-
 // TODO REFACTOR IMAGE SOURCE HERE TO READ DIRECTLR FROM AN ENCODEDIMAGES object!!!
 class ImageSourceFixture : public StepsFixture {
    protected:
     void SetUp() override {
         StepsFixture::SetUp();
 
-        image_source = [itr = std::cbegin(data),
-                        end = std::cend(data)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+        // NOTE(Jack): This test kind of captures the data paradigm that we have with our applications. But note that in
+        // real applications we create the EncodedImages from the ImageSource. However, in this file we need both of
+        // those objects to test the steps here therefore we are clever and use the EncodedImages to construct the
+        // ImageSource.
+
+        // Build the encoded images (cv::Mat -> serialized buffer)
+        cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
+        std::vector<uchar> buffer;
+        if (not cv::imencode(".png", img, buffer)) {
+            throw std::runtime_error("cv::imencode() failed");
+        }
+        encoded_images = EncodedImages{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}};
+
+        // Construct an image source from the encoded images (serialized buffer -> cv::Mat)
+        image_source = [itr = std::cbegin(encoded_images),
+                        end = std::cend(encoded_images)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
             if (itr != end) {
-                auto const data_i{*itr};
+                auto const& [timestamp_ns, buffer_i]{*itr};
+                cv::Mat const img_i{cv::imdecode(buffer_i.data, cv::IMREAD_COLOR)};
+
                 itr = std::next(itr);
-                return data_i;
+                return std::pair{timestamp_ns, img_i};
             }
             return std::nullopt;
         };
@@ -57,8 +72,7 @@ class ImageSourceFixture : public StepsFixture {
         config = toml::parse(config_file);
     }
 
-    std::vector<std::pair<uint64_t, cv::Mat>> data{{0, cv::Mat::zeros(10, 20, CV_8UC1)},
-                                                   {1, cv::Mat::zeros(10, 20, CV_8UC1)}};
+    EncodedImages encoded_images;
     ImageSource image_source;
     toml::table config;
 };
