@@ -7,6 +7,7 @@
 #include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
+#include "steps/image_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
@@ -26,17 +27,20 @@ auto const log{logging::Get("application")};
 // update_feature_extraction_cache_key.py
 void Calibrate(toml::table const& config, ImageSource image_source, std::string const& image_source_signature,
                SqlitePtr const db) {
-    // WARN(Jack): I am not 100% sure if this is actually how it works, but the CameraInfo reads the first image from
-    // the image source. So it could be that the first image is never processed. This is not a material problem in my
-    // opinion, but this does indeed violate the principle of least surprise.
-    steps::CameraInfoStep const ci_step{image_source_signature, *config["sensor"].as_table(), image_source};
+    steps::ImageLoadingStep const image_loading{config["sensor"]["camera_name"].as_string()->get(),
+                                                image_source_signature, image_source};
+    auto const [encoded_images, il_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
+    log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
+              ToString(il_cache_status), encoded_images->size());
+
+    steps::CameraInfoStep const ci_step{*config["sensor"].as_table(), encoded_images};
     auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(ci_step, db)};
     log->info(
         "{{'step': '{}', 'cache_status': '{}', 'camera_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
         ToString(ci_step.step_type), ToString(ci_cache_status), camera_info.sensor_name,
         ToString(camera_info.camera_model), camera_info.bounds.v_max, camera_info.bounds.u_max);
 
-    steps::FeatureExtractionStep const ftext_step{camera_info.sensor_name, image_source_signature, image_source,
+    steps::FeatureExtractionStep const ftext_step{camera_info.sensor_name, encoded_images,
                                                   *config["target"].as_table()};
     auto const [targets, ftext_cache_status]{steps::RunStep<CameraMeasurements>(ftext_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}", ToString(ftext_step.step_type),

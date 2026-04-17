@@ -27,6 +27,12 @@ Install the venv system dependencies (run with sudo as needed):
 
     ./building/install_scripts/apt_install_python_venv_deps.sh
 
+For the next step you will need a c-compiler, I recommend installing the `build-essential` package if you do not already 
+satisfy the requirement (run with sudo as needed):
+
+    apt update
+    apt install build-essential
+
 Build the actual virtual environment to work in:
 
     ./building/scripts/build_python_venv.sh

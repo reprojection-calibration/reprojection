@@ -28,17 +28,35 @@ class StepsFixture : public ::testing::Test {
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
 };
 
+// TODO REFACTOR IMAGE SOURCE HERE TO READ DIRECTLR FROM AN ENCODEDIMAGES object!!!
 class ImageSourceFixture : public StepsFixture {
    protected:
     void SetUp() override {
         StepsFixture::SetUp();
 
-        image_source = [itr = std::cbegin(data),
-                        end = std::cend(data)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+        // NOTE(Jack): This test kind of captures the data paradigm that we have with our applications. But note that in
+        // real applications we create the EncodedImages from the ImageSource. However, in this file we need both of
+        // those objects to test the steps here therefore we are clever and use the EncodedImages to construct the
+        // ImageSource.
+
+        // Build the encoded images (cv::Mat -> serialized buffer)
+        cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
+        std::vector<uchar> buffer;
+        if (not cv::imencode(".png", img, buffer)) {
+            throw std::runtime_error("cv::imencode() failed");
+        }
+        encoded_images =
+            std::make_shared<EncodedImages>(EncodedImages{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}});
+
+        // Construct an image source from the encoded images (serialized buffer -> cv::Mat)
+        image_source = [itr = std::cbegin(*encoded_images),
+                        end = std::cend(*encoded_images)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
             if (itr != end) {
-                auto const data_i{*itr};
+                auto const& [timestamp_ns, buffer_i]{*itr};
+                cv::Mat const img_i{cv::imdecode(buffer_i.data, cv::IMREAD_COLOR)};
+
                 itr = std::next(itr);
-                return data_i;
+                return std::pair{timestamp_ns, img_i};
             }
             return std::nullopt;
         };
@@ -55,8 +73,7 @@ class ImageSourceFixture : public StepsFixture {
         config = toml::parse(config_file);
     }
 
-    std::vector<std::pair<uint64_t, cv::Mat>> data{{0, cv::Mat::zeros(10, 20, CV_8UC1)},
-                                                   {1, cv::Mat::zeros(10, 20, CV_8UC1)}};
+    std::shared_ptr<EncodedImages> encoded_images;
     ImageSource image_source;
     toml::table config;
 };
@@ -64,17 +81,17 @@ class ImageSourceFixture : public StepsFixture {
 TEST_F(ImageSourceFixture, TestImageLoadingStep) {
     steps::ImageLoadingStep const step{camera_info.sensor_name, "sha256-key", image_source};
 
-    auto [encoded_images, cache_status]{RunStep<EncodedImages>(step, db)};
-    EXPECT_EQ(std::size(encoded_images), 2);
+    auto [encoded_images, cache_status]{RunStep<std::shared_ptr<EncodedImages>>(step, db)};
+    EXPECT_EQ(std::size(*encoded_images), 2);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    std::tie(encoded_images, cache_status) = RunStep<EncodedImages>(step, db);
-    EXPECT_EQ(std::size(encoded_images), 2);
+    std::tie(encoded_images, cache_status) = RunStep<std::shared_ptr<EncodedImages>>(step, db);
+    EXPECT_EQ(std::size(*encoded_images), 2);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(ImageSourceFixture, TestCameraInfoStep) {
-    steps::CameraInfoStep const step{"sha256-key", *config["sensor"].as_table(), image_source};
+    steps::CameraInfoStep const step{*config["sensor"].as_table(), encoded_images};
 
     auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
@@ -92,8 +109,7 @@ TEST_F(ImageSourceFixture, TestCameraInfoStep) {
 }
 
 TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
-    steps::FeatureExtractionStep const step{camera_info.sensor_name, "sha256-key", image_source,
-                                            *config["target"].as_table()};
+    steps::FeatureExtractionStep const step{camera_info.sensor_name, encoded_images, *config["target"].as_table()};
 
     auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
     EXPECT_EQ(std::size(extracted_targets), 0);

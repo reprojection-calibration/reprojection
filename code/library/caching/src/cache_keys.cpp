@@ -4,7 +4,11 @@
 
 namespace reprojection::caching {
 
-std::string CacheKey(std::string_view const& data) { return Sha256(data); }
+std::string CacheKey(std::string_view const& data) { return CacheKeyFrom(data); }
+
+std::string CacheKey(std::string_view config, EncodedImages const& encoded_images) {
+    return CacheKeyFrom(config, encoded_images);
+}
 
 // TODO(Jack): Can we replace these methods here with some "meta programming" or something like that? It is going to get
 //  very repetitive here.
