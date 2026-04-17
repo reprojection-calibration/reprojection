@@ -45,11 +45,12 @@ class ImageSourceFixture : public StepsFixture {
         if (not cv::imencode(".png", img, buffer)) {
             throw std::runtime_error("cv::imencode() failed");
         }
-        encoded_images = EncodedImages{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}};
+        encoded_images =
+            std::make_shared<EncodedImages>(EncodedImages{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}});
 
         // Construct an image source from the encoded images (serialized buffer -> cv::Mat)
-        image_source = [itr = std::cbegin(encoded_images),
-                        end = std::cend(encoded_images)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+        image_source = [itr = std::cbegin(*encoded_images),
+                        end = std::cend(*encoded_images)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
             if (itr != end) {
                 auto const& [timestamp_ns, buffer_i]{*itr};
                 cv::Mat const img_i{cv::imdecode(buffer_i.data, cv::IMREAD_COLOR)};
@@ -72,7 +73,7 @@ class ImageSourceFixture : public StepsFixture {
         config = toml::parse(config_file);
     }
 
-    EncodedImages encoded_images;
+    std::shared_ptr<EncodedImages> encoded_images;
     ImageSource image_source;
     toml::table config;
 };
@@ -89,8 +90,8 @@ TEST_F(ImageSourceFixture, TestImageLoadingStep) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST(StepsFixture, TestCameraInfoStep) {
-    steps::CameraInfoStep const step{*config["sensor"].as_table(), image_source};
+TEST_F(ImageSourceFixture, TestCameraInfoStep) {
+    steps::CameraInfoStep const step{*config["sensor"].as_table(), encoded_images};
 
     auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
