@@ -32,24 +32,26 @@ int main() {
     // essentially what we are doing here in the following block. The reason that we put it into a try catch block is to
     // prevent the database throwing and killing the program when we run the program more than once without resetting
     // the database.
+    // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
     try {
-        CameraInfo const camera_info{config["sensor"]["camera_name"].as_string()->get(),
-                                     ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
-                                     {0, 512, 0, 512}};
+        std::string const sensor_name{config["sensor"]["camera_name"].as_string()->get()};
+        database::WriteToDb(CalibrationStep::ImageLoading,
+                            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", sensor_name, db);
+
+        CameraInfo const camera_info{
+            sensor_name, ToCameraModel(config["sensor"]["camera_model"].as_string()->get()), {0, 512, 0, 512}};
         database::WriteToDb(camera_info, db);
 
-        // NOTE(Jack): Normally the cache key for both camera info and feature extraction steps is the sum of both
-        // their respective configurations and the image_source_signature. As we have no image source in this example
-        // script we can ignore it and simply pass it as a blank string when we call application::Calibrate(). That is
-        // the reason why the step cache keys we create here are only created from their respective configuration
-        // tables.
         std::ostringstream oss1;
         oss1 << *config["sensor"].as_table();
-        database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(oss1.str()), camera_info.sensor_name, db);
+        database::WriteToDb(CalibrationStep::CameraInfo,
+                            "f9dfdc874264f36f71b5d06f19787ac477de30e3808a0fbb14280c5fd1b0e647", camera_info.sensor_name,
+                            db);
 
         std::ostringstream oss2;
         oss2 << *config["target"].as_table();
-        database::WriteToDb(CalibrationStep::FtEx, caching::CacheKey(oss2.str()), camera_info.sensor_name, db);
+        database::WriteToDb(CalibrationStep::FtEx, "049b921634ea226820738b1b9c0f3cec0afe60868e6309cb01196a2787b65591",
+                            camera_info.sensor_name, db);
     } catch (...) {
     }
 
