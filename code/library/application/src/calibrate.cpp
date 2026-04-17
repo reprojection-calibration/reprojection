@@ -33,7 +33,7 @@ void Calibrate(toml::table const& config, ImageSource image_source, std::string 
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
               ToString(il_cache_status), encoded_images->size());
 
-    steps::CameraInfoStep const ci_step{image_source_signature, *config["sensor"].as_table(), image_source};
+    steps::CameraInfoStep const ci_step{*config["sensor"].as_table(), encoded_images};
     auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(ci_step, db)};
     log->info(
         "{{'step': '{}', 'cache_status': '{}', 'camera_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
