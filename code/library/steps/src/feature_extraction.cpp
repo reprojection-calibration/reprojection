@@ -11,7 +11,7 @@ std::string FeatureExtractionStep::CacheKey() const {
     std::ostringstream oss;
     oss << target_config;
 
-    return caching::CacheKey(cache_key + oss.str());
+    return caching::CacheKey(oss.str(), *images);
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!
@@ -36,8 +36,13 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
     auto const extractor{feature_extraction::CreateTargetExtractor(target_config)};
 
     CameraMeasurements extracted_targets;
-    while (auto const data{image_source()}) {
-        auto const& [timestamp_ns, img]{*data};
+    for (auto const& [timestamp_ns, buffer] : *images) {
+        // TODO COPY AND PASTED FROM CAMERA INFO AND THE STEPS TEST!
+        cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
+        if (img.empty()) {
+            throw std::runtime_error(
+                "we need an error handling strategy for empty images in feature extraction");  // LCOV_EXCL_LINE
+        }
 
         std::optional<ExtractedTarget> const target{extractor->Extract(img)};
         if (target.has_value()) {
