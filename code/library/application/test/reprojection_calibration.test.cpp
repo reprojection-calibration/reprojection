@@ -7,13 +7,41 @@
 #include "caching/cache_keys.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
+#include "testing_utilities/temporary_file.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
+using TemporaryFile = testing_utilities::TemporaryFile;
 
 TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     auto result{application::ParseArgs(1, nullptr)};
     EXPECT_FALSE(result.has_value());
+
+    // TODO(Jack): This is now copy and pasted in three places, should we make one common def in the testing utils?
+    static constexpr std::string_view minimum_config{R"(
+        [sensor]
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
+    )"};
+    TemporaryFile const config_file{".toml", minimum_config};
+
+    int const argc{5};
+
+    char const arg0[]{"program"};
+    char const arg1[]{"--config"};
+    // Please
+    auto arg2{std::make_unique<char[]>(std::strlen(config_file.Path().c_str()) + 1)};
+    std::strcpy(arg2.get(), config_file.Path().c_str());
+    char const arg3[]{"--data"};
+    char const arg4[]{"tmp/data.bag"};
+    char const* const argv[]{arg0, arg1, arg2.get(), arg3, arg4};
+
+    result = application::ParseArgs(argc, argv);
+    EXPECT_TRUE(result.has_value());
 }
 
 TEST(Application, TestCalibrate) {

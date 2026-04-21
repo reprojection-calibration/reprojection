@@ -13,6 +13,7 @@ TEST(ApplicationIO, TestParseCommandLineInput) {
     auto result{application::ParseCommandLineInput(0, nullptr)};
     EXPECT_FALSE(result.has_value());
 
+    // TODO(Jack): This is now used here and in the reprojection_calibration test, should we make it a helper?
     char const arg0[]{"program"};
     char const arg1[]{"--config"};
     char const arg2[]{"tmp/config.toml"};
