@@ -1,5 +1,6 @@
 #include "io.hpp"
 
+#include "application/cli_utils.hpp"
 #include "config/config_loading.hpp"
 #include "config/config_validation.hpp"
 #include "database/calibration_database.hpp"
@@ -36,20 +37,6 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
               path_config.data_path.string(), path_config.workspace_dir.string());
 
     return path_config;
-}
-
-std::optional<std::string> GetCommandOption(char const* const* const begin, char const* const* const end,
-                                            std::string const& option) {
-    if (not begin or not end) {
-        return std::nullopt;
-    }
-
-    char const* const* itr{std::find(begin, end, option)};
-    if (itr != end and ++itr != end) {
-        return std::string(*itr);
-    }
-
-    return std::nullopt;
 }
 
 std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path) {
