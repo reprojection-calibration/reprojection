@@ -25,12 +25,13 @@ int main(int argc, char* argv[]) {
     ImageSource image_source{[&image_feed]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
         auto const timestamp_ns{ch::duration_cast<ch::nanoseconds>(ch::steady_clock::now().time_since_epoch()).count()};
 
-        cv::Mat const img{image_feed->GetImage()};
+        cv::Mat img{image_feed->GetImage()};
         if (img.empty()) {
             return std::nullopt;
         }
 
-        std::cout << "got image " << img.size << std::endl;
+        cv::resize(img, img, cv::Size(), 0.50, 0.50);
+
         return std::pair<uint64_t, cv::Mat>{timestamp_ns, img};
     }};
 
