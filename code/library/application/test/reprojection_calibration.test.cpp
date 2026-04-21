@@ -39,7 +39,10 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     auto arg2{std::make_unique<char[]>(std::strlen(config_file.Path().c_str()) + 1)};
     std::strcpy(arg2.get(), config_file.Path().c_str());
     char const arg3[]{"--data"};
-    char const arg4[]{"tmp/data.bag"};
+    // TODO(Jack): We are implicitly relying on the fact that this directory exists because it is the folder where the
+    // TemporaryFile gets created by the fs::temp_directory_path() call. This is a little hacky and it might cause us
+    // problems if the assumption turns out not to be true.
+    char const arg4[]{"/tmp"};
     char const* const argv[]{arg0, arg1, arg2.get(), arg3, arg4};
 
     result = application::ParseArgs(argc, argv);
