@@ -47,6 +47,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 
     result = application::ParseArgs(argc, argv);
     EXPECT_TRUE(result.has_value());
+    EXPECT_EQ(result->data_path, "/tmp"); // Heuristic check of one of the values
 }
 
 TEST(Application, TestCalibrate) {
