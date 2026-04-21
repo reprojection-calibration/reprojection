@@ -1,4 +1,4 @@
-#include "application/calibrate.hpp"
+#include "application/reprojection_calibration.hpp"
 
 #include <ranges>
 
@@ -12,6 +12,7 @@
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
 
+#include "io.hpp"
 #include "utils.hpp"
 
 namespace reprojection::application {
@@ -20,6 +21,25 @@ namespace {
 
 auto const log{logging::Get("application")};
 
+}
+
+std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
+    auto const paths{ParseCommandLineInput(argc, argv)};
+    if (not paths) {
+        return std::nullopt;
+    }
+
+    auto const config{LoadAndValidateConfig(paths->config_path)};
+    if (not config) {
+        return std::nullopt;
+    }
+
+    auto const db{Open(paths->workspace_dir, paths->data_path)};
+    if (not db) {
+        return std::nullopt;
+    }
+
+    return AppArgs{paths->data_path, *config, *db};
 }
 
 // TODO(Jack): Should we put image_source_signature and image_source into one object? They are 100% related. Or maybe

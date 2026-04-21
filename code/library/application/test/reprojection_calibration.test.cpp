@@ -1,4 +1,4 @@
-#include "application/calibrate.hpp"
+#include "application/reprojection_calibration.hpp"
 
 #include <gtest/gtest.h>
 
@@ -10,6 +10,11 @@
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
+
+TEST(ApplicationReprojectionCalibration, TestParseArgs) {
+    auto result{application::ParseArgs(1, nullptr)};
+    EXPECT_FALSE(result.has_value());
+}
 
 TEST(Application, TestCalibrate) {
     // TODO(Jack): This is now copy and pasted in a lot of places right? Should we do a central definition?
