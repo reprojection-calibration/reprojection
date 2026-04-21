@@ -1,4 +1,4 @@
-#include "application/io.hpp"
+#include "io.hpp"
 
 #include <gtest/gtest.h>
 
@@ -13,6 +13,7 @@ TEST(ApplicationIO, TestParseCommandLineInput) {
     auto result{application::ParseCommandLineInput(0, nullptr)};
     EXPECT_FALSE(result.has_value());
 
+    // TODO(Jack): This is now used here and in the reprojection_calibration test, should we make it a helper?
     char const arg0[]{"program"};
     char const arg1[]{"--config"};
     char const arg2[]{"tmp/config.toml"};
@@ -41,31 +42,6 @@ TEST(ApplicationIO, TestParseCommandLineInput) {
     EXPECT_EQ(result->config_path, "tmp/config.toml");
     EXPECT_EQ(result->data_path, "tmp/data.bag");
     EXPECT_EQ(result->workspace_dir, "tmp/workspace/");
-}
-
-TEST(ApplicationIO, TestGetCommandOption) {
-    auto result{application::GetCommandOption(nullptr, nullptr, "")};
-    EXPECT_FALSE(result.has_value());
-
-    char const arg0[]{"program"};
-    char const arg1[]{"--key1"};
-    char const arg2[]{"value1"};
-    char const arg3[]{"--key2"};
-    char const arg4[]{"value2"};
-
-    char const* const argv[]{arg0, arg1, arg2, arg3, arg4};
-    int const argc{5};
-
-    result = application::GetCommandOption(argv, argv + argc, "--key1");
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(*result, "value1");
-
-    result = application::GetCommandOption(argv, argv + argc, "--key2");
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(*result, "value2");
-
-    result = application::GetCommandOption(argv, argv + argc, "--nonexistent_key");
-    EXPECT_FALSE(result.has_value());
 }
 
 TEST(ApplicationIO, TestHappyPath) {

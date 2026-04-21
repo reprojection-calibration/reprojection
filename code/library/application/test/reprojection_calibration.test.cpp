@@ -1,4 +1,4 @@
-#include "application/calibrate.hpp"
+#include "application/reprojection_calibration.hpp"
 
 #include <gtest/gtest.h>
 
@@ -7,9 +7,48 @@
 #include "caching/cache_keys.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
+#include "testing_utilities/temporary_file.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
+using TemporaryFile = testing_utilities::TemporaryFile;
+
+TEST(ApplicationReprojectionCalibration, TestParseArgs) {
+    auto result{application::ParseArgs(1, nullptr)};
+    EXPECT_FALSE(result.has_value());
+
+    // TODO(Jack): This is now copy and pasted in three places, should we make one common def in the testing utils?
+    static constexpr std::string_view minimum_config{R"(
+        [sensor]
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
+    )"};
+    TemporaryFile const config_file{".toml", minimum_config};
+
+    int const argc{5};
+
+    char const arg0[]{"program"};
+    char const arg1[]{"--config"};
+    // NOTE(Jack): Guys sorry this got so complicated! But we need to pass the config files path to the parser here in
+    // as a char const[], just like how command line args are passed. Getting an actual allocated c style char array
+    // a fs::path is not trivial and therefore we have to do this messy stuff here. Can this be simplified?
+    auto arg2{std::make_unique<char[]>(std::strlen(config_file.Path().c_str()) + 1)};
+    std::strcpy(arg2.get(), config_file.Path().c_str());
+    char const arg3[]{"--data"};
+    // TODO(Jack): We are implicitly relying on the fact that this directory exists because it is the folder where the
+    // TemporaryFile gets created by the fs::temp_directory_path() call. This is ts=a little hacky and it might cause us
+    // problems if the assumption turns out not to be true.
+    char const arg4[]{"/tmp"};
+    char const* const argv[]{arg0, arg1, arg2.get(), arg3, arg4};
+
+    result = application::ParseArgs(argc, argv);
+    EXPECT_TRUE(result.has_value());
+    EXPECT_EQ(result->data_path, "/tmp");  // Heuristic check of one of the values
+}
 
 TEST(Application, TestCalibrate) {
     // TODO(Jack): This is now copy and pasted in a lot of places right? Should we do a central definition?

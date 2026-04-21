@@ -1,8 +1,9 @@
 set(LIBRARY_NAME "application")
 
 set(SRC_FILES
-        src/calibrate.cpp
+        src/cli_utils.cpp
         src/io.cpp
+        src/reprojection_calibration.cpp
         src/utils.cpp
 )
 
@@ -32,7 +33,8 @@ set(TEST_LINK_LIBRARIES
 )
 set(TESTS
         src/utils.test.cpp
-        test/calibrate.test.cpp
-        test/io.test.cpp
+        src/io.test.cpp
+        test/cli_utils.test.cpp
+        test/reprojection_calibration.test.cpp
 )
 AddTests()
