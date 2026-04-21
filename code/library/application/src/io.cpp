@@ -1,4 +1,4 @@
-#include "application/io.hpp"
+#include "io.hpp"
 
 #include "config/config_loading.hpp"
 #include "config/config_validation.hpp"
@@ -40,6 +40,10 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
 
 std::optional<std::string> GetCommandOption(char const* const* const begin, char const* const* const end,
                                             std::string const& option) {
+    if (not begin or not end) {
+        return std::nullopt;
+    }
+
     char const* const* itr{std::find(begin, end, option)};
     if (itr != end and ++itr != end) {
         return std::string(*itr);
