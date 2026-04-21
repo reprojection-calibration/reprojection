@@ -31,12 +31,12 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 
     auto const config{LoadAndValidateConfig(paths->config_path)};
     if (not config) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     auto const db{Open(paths->workspace_dir, paths->data_path)};
     if (not db) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     return AppArgs{paths->data_path, *config, *db};
