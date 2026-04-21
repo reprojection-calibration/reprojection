@@ -40,14 +40,14 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     std::strcpy(arg2.get(), config_file.Path().c_str());
     char const arg3[]{"--data"};
     // TODO(Jack): We are implicitly relying on the fact that this directory exists because it is the folder where the
-    // TemporaryFile gets created by the fs::temp_directory_path() call. This is a little hacky and it might cause us
+    // TemporaryFile gets created by the fs::temp_directory_path() call. This is ts=a little hacky and it might cause us
     // problems if the assumption turns out not to be true.
     char const arg4[]{"/tmp"};
     char const* const argv[]{arg0, arg1, arg2.get(), arg3, arg4};
 
     result = application::ParseArgs(argc, argv);
     EXPECT_TRUE(result.has_value());
-    EXPECT_EQ(result->data_path, "/tmp"); // Heuristic check of one of the values
+    EXPECT_EQ(result->data_path, "/tmp");  // Heuristic check of one of the values
 }
 
 TEST(Application, TestCalibrate) {
