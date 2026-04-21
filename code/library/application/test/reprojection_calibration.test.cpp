@@ -33,7 +33,9 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 
     char const arg0[]{"program"};
     char const arg1[]{"--config"};
-    // Please
+    // NOTE(Jack): Guys sorry this got so complicated! But we need to pass the config files path to the parser here in
+    // as a char const[], just like how command line args are passed. Getting an actual allocated c style char array
+    // a fs::path is not trivial and therefore we have to do this messy stuff here. Can this be simplified?
     auto arg2{std::make_unique<char[]>(std::strlen(config_file.Path().c_str()) + 1)};
     std::strcpy(arg2.get(), config_file.Path().c_str());
     char const arg3[]{"--data"};
