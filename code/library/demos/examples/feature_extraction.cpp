@@ -3,7 +3,6 @@
 #include "application/cli_utils.hpp"
 #include "demos/image_source.hpp"
 #include "feature_extraction/target_extraction.hpp"
-#include "types/eigen_types.hpp"
 
 // To get this working from CLion dev env I followed this link:
 // https://medium.com/@steffen.stautmeister/how-to-build-and-run-opencv-and-pytorch-c-with-cuda-support-in-docker-in-clion-6f485155deb8
