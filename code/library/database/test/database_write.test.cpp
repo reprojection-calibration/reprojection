@@ -27,8 +27,6 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddImage() const { database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db); }
 
-    void AddTarget() const { database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db); }
-
     void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
         database::WriteToDb(step_name, cache_key, sensor_name, db);
     }
@@ -56,15 +54,13 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbEncodedImages) {
 TEST_F(SensorDatabaseFixture, TestWriteToDbCameraMeasurements) {
     EXPECT_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
 
-    AddCamera();
     AddImage();
+    database::WriteToDb(CalibrationStep::FtEx, "", sensor_name, db);
 
     EXPECT_NO_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStep) {
-    AddCamera();
-
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Cnlr));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Sint));
@@ -72,8 +68,6 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStep) {
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
-    AddCamera();
-
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "1"));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "2"));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi, "3"));
@@ -95,7 +89,6 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbPoseData) {
     // Throws because the calibration step linear_pose_initialization has not been added to the database yet.
     EXPECT_THROW(AddPose(CalibrationStep::Lpi), std::runtime_error);
 
-    AddCamera();
     AddStep(CalibrationStep::Lpi);
 
     EXPECT_NO_THROW(AddPose(CalibrationStep::Lpi));
@@ -107,9 +100,6 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbReprojectionError) {
     // Fails foreign key constraint because there is no corresponding poses table entry yet
     EXPECT_THROW(database::WriteToDb(data, CalibrationStep::Lpi, sensor_name, db), std::runtime_error);
 
-    AddCamera();
-    AddImage();
-    AddTarget();
     AddStep(CalibrationStep::Lpi);
     AddPose(CalibrationStep::Lpi);
 
