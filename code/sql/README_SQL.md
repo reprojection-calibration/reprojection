@@ -24,8 +24,8 @@ to keep the database clean when we need to rerun a step and remove the old data 
 the caching logic implemented in `step_runner.hpp` is responsible for orchestrating this.
 
 Establishing cascading delete relationships using `ON DELETE CASCADE` in the sql table directly prevents us from having
-to manually delete all dependent data. That would be error prone and harder to maintain in the c++ source code than it
-is to do directly in the sql table definitions.
+to manually delete all dependent data. That would be error-prone and harder to maintain in the c++ source code than it
+is to code directly into the sql table definitions.
 
 # Notes and disclaimers
 
@@ -41,4 +41,11 @@ to things like a pose which might come from an initialization step and then agai
 therefore require the step name.
 
 The reason that we need the `step_name`, even for the camera info table, is that we need to establish a foreign key
-relationship with the `calibration_steps` table. XXX
+relationship with the `calibration_steps` table. In order to do that we need to reference the steps table composite
+primary key `PRIMARY KEY (step_name, sensor_name)` which is what forces us to include `step_name`. Without that column
+in our `camera_info` table we cannot establish the foreign key relationship and take advantage of the cascading delete
+semantics.
+
+Camera info can only come from the `camera_info` step so I added the `CHECK ( step_name IN ('camera_info'))` constraint
+to guarantee this at the database level. Again this is a pretty major case of business logic being coded into the 
+database and I might be shooting myself in the foot... only time will tell :)
