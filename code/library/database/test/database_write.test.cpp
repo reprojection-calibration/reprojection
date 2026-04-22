@@ -25,7 +25,10 @@ class SensorDatabaseFixture : public ::testing::Test {
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 
-    void AddImage() const { database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db); }
+    void AddImage() const {
+        database::WriteToDb(CalibrationStep::ImageLoading, "", sensor_name, db);
+        database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db);
+    }
 
     void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
         database::WriteToDb(step_name, cache_key, sensor_name, db);

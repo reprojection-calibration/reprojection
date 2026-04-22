@@ -24,6 +24,7 @@ class CameraReadFixture : public ::testing::Test {
 
     void AddImage(uint64_t const timestamp_ns) const {
         // Due to foreign key relationship we need add an image before we add the target
+        database::WriteToDb(CalibrationStep::ImageLoading, "", sensor_name, db);
         database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db);
     }
 
