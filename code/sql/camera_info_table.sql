@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS camera_info
     height       INTEGER     NOT NULL,
     width        INTEGER     NOT NULL,
     PRIMARY KEY (sensor_name, camera_model),
-    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, sensor_name) ON DELETE CASCADE
+    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps ON DELETE CASCADE
 );
