@@ -49,3 +49,14 @@ semantics.
 Camera info can only come from the `camera_info` step so I added the `CHECK ( step_name IN ('camera_info'))` constraint
 to guarantee this at the database level. Again this is a pretty major case of business logic being coded into the 
 database and I might be shooting myself in the foot... only time will tell :)
+
+# Brainstorming
+
+## Store the image data in a video file
+Storing the images in the database as individually encoded images takes up a ton of space and also CPU to get them there 
+(i.e. to encode/decode them). It could also be an idea to store a video file (ex. mp4 etc.) in a table as a blob and 
+reference that instead. What I have noticed is that 100mb videos recorded will turn into 2GB bag files and 
+correspondingly larger database files.
+
+At this point I am a little afraid to dig into the image/video/codec/bitrate/formatting jungle, but clearly the current
+status quo (22.04.20266) is not maintainable for the long term.
