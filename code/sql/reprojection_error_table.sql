@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS reprojection_error
     sensor_name  TEXT    NOT NULL,
     timestamp_ns INTEGER NOT NULL,
     data         BLOB    NOT NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (step_name, sensor_name, timestamp_ns),
     FOREIGN KEY (step_name, sensor_name, timestamp_ns) REFERENCES poses (step_name, sensor_name, timestamp_ns) ON DELETE CASCADE
 );

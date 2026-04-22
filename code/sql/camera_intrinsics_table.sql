@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS camera_intrinsics
     sensor_name  TEXT NOT NULL,
     camera_model TEXT NOT NULL,
     intrinsics   TEXT NOT NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (step_name, sensor_name),
     FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, sensor_name) ON DELETE CASCADE,
     FOREIGN KEY (sensor_name, camera_model) REFERENCES camera_info (sensor_name, camera_model) ON DELETE CASCADE
