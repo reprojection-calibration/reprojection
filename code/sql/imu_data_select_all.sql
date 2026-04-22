@@ -7,4 +7,4 @@ SELECT sensor_name,
        ay,
        az
 FROM imu_data
-ORDER BY timestamp_ns ASC;
+ORDER BY timestamp_ns;

@@ -1,5 +1,4 @@
-SELECT timestamp_ns,
-       data
+SELECT timestamp_ns, data
 FROM images
 WHERE sensor_name = ?
-ORDER BY timestamp_ns ASC;
+ORDER BY timestamp_ns;
