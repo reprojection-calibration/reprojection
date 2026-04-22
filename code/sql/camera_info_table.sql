@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS camera_info
 (
-    step_name TEXT CHECK ( step_name IN ('camera_info')),
+    step_name TEXT NOT NULL CHECK ( step_name IN ('camera_info')),
     sensor_name  TEXT UNIQUE NOT NULL,
     camera_model TEXT CHECK ( camera_model IN ('double_sphere',
                                                'pinhole',

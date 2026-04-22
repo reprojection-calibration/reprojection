@@ -18,10 +18,11 @@ namespace reprojection::database {
 
 void WriteToDb(CameraInfo const& camera_info, SqlitePtr const db) {
     auto const binder{[camera_info](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, camera_info.sensor_name);
-        Sqlite3Tools::Bind(stmt, 2, ToString(camera_info.camera_model));
-        Sqlite3Tools::Bind(stmt, 3, camera_info.bounds.v_max);
-        Sqlite3Tools::Bind(stmt, 4, camera_info.bounds.u_max);
+        Sqlite3Tools::Bind(stmt, 1, "camera_info");
+        Sqlite3Tools::Bind(stmt, 2, camera_info.sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, ToString(camera_info.camera_model));
+        Sqlite3Tools::Bind(stmt, 4, camera_info.bounds.v_max);
+        Sqlite3Tools::Bind(stmt, 5, camera_info.bounds.u_max);
     }};
 
     ExecuteStatement(sql_statements::camera_info_insert, binder, db);

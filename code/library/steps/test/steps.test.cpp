@@ -20,6 +20,8 @@ class StepsFixture : public ::testing::Test {
    protected:
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
+
+        database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
         database::WriteToDb(camera_info, db);
     }
 

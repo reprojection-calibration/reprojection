@@ -21,6 +21,7 @@ class SensorDatabaseFixture : public ::testing::Test {
     void SetUp() override { db = database::OpenCalibrationDatabase(":memory:", true, false); }
 
     void AddCamera() const {
+        database::WriteToDb(CalibrationStep::CameraInfo, "", sensor_name, db);
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 

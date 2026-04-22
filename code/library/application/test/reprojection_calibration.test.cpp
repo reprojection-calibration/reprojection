@@ -75,6 +75,7 @@ TEST(Application, TestCalibrate) {
     CameraInfo const camera_info{config["sensor"]["camera_name"].as_string()->get(),
                                  ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
                                  {0, 512, 0, 512}};
+    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(""), camera_info.sensor_name, db);
     database::WriteToDb(camera_info, db);
 
     database::WriteToDb(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
