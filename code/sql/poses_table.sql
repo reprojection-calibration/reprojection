@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS poses
     x            REAL    NOT NULL,
     y            REAL    NOT NULL,
     z            REAL    NOT NULL,
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (step_name, sensor_name, timestamp_ns),
     FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, sensor_name) ON DELETE CASCADE
 );

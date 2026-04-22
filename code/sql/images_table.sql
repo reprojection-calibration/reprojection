@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS images
     sensor_name  TEXT    NOT NULL,
     timestamp_ns INTEGER NOT NULL,
     data         BLOB    NULL,
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (sensor_name, timestamp_ns),
     FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, sensor_name) ON DELETE CASCADE
 );

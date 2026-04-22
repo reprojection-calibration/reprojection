@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS camera_info
     camera_model TEXT CHECK ( camera_model IN ('double_sphere', 'pinhole', 'pinhole_radtan4', 'unified_camera_model')),
     height       INTEGER     NOT NULL,
     width        INTEGER     NOT NULL,
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (sensor_name, camera_model),
     FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, sensor_name) ON DELETE CASCADE
 );

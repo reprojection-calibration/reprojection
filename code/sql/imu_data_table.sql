@@ -8,6 +8,5 @@ CREATE TABLE IF NOT EXISTS imu_data
     ax           REAL    NOT NULL,
     ay           REAL    NOT NULL,
     az           REAL    NOT NULL,
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (sensor_name, timestamp_ns)
 );
