@@ -33,6 +33,7 @@ int main() {
     // prevent the database throwing and killing the program when we run the program more than once without resetting
     // the database.
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
+
     try {
         std::string const sensor_name{config["sensor"]["camera_name"].as_string()->get()};
         database::WriteToDb(CalibrationStep::ImageLoading,
@@ -40,19 +41,21 @@ int main() {
 
         CameraInfo const camera_info{
             sensor_name, ToCameraModel(config["sensor"]["camera_model"].as_string()->get()), {0, 512, 0, 512}};
-        database::WriteToDb(camera_info, db);
 
         std::ostringstream oss1;
         oss1 << *config["sensor"].as_table();
         database::WriteToDb(CalibrationStep::CameraInfo,
                             "f9dfdc874264f36f71b5d06f19787ac477de30e3808a0fbb14280c5fd1b0e647", camera_info.sensor_name,
                             db);
+        database::WriteToDb(camera_info, db);
 
         std::ostringstream oss2;
         oss2 << *config["target"].as_table();
-        database::WriteToDb(CalibrationStep::FtEx, "049b921634ea226820738b1b9c0f3cec0afe60868e6309cb01196a2787b65591",
-                            camera_info.sensor_name, db);
+        database::WriteToDb(CalibrationStep::FeatureExtraction,
+                            "049b921634ea226820738b1b9c0f3cec0afe60868e6309cb01196a2787b65591", camera_info.sensor_name,
+                            db);
     } catch (...) {
+        std::cerr << "Database setup threw exception." << std::endl;
     }
 
     ImageSource empty_image_source{[]() { return std::nullopt; }};

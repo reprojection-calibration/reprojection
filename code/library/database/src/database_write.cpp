@@ -18,10 +18,11 @@ namespace reprojection::database {
 
 void WriteToDb(CameraInfo const& camera_info, SqlitePtr const db) {
     auto const binder{[camera_info](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, camera_info.sensor_name);
-        Sqlite3Tools::Bind(stmt, 2, ToString(camera_info.camera_model));
-        Sqlite3Tools::Bind(stmt, 3, camera_info.bounds.v_max);
-        Sqlite3Tools::Bind(stmt, 4, camera_info.bounds.u_max);
+        Sqlite3Tools::Bind(stmt, 1, "camera_info");
+        Sqlite3Tools::Bind(stmt, 2, camera_info.sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, ToString(camera_info.camera_model));
+        Sqlite3Tools::Bind(stmt, 4, camera_info.bounds.v_max);
+        Sqlite3Tools::Bind(stmt, 5, camera_info.bounds.u_max);
     }};
 
     ExecuteStatement(sql_statements::camera_info_insert, binder, db);
@@ -45,13 +46,14 @@ void WriteToDb(EncodedImages const& data, std::string_view sensor_name, SqlitePt
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, buffer]{data_i};
 
-        Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
-        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        Sqlite3Tools::Bind(stmt, 1, ToString(CalibrationStep::ImageLoading));
+        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
 
         if (buffer.data.empty()) {
-            Sqlite3Tools::BindNull(stmt, 3);
+            Sqlite3Tools::BindNull(stmt, 4);
         } else {
-            Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer.data}));
+            Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer.data}));
         }
     }};
 
@@ -69,9 +71,10 @@ void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, Sql
                                      std::string(sensor_name));                                // LCOV_EXCL_LINE
         }
 
-        Sqlite3Tools::Bind(stmt, 1, std::string(sensor_name));
-        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
-        Sqlite3Tools::BindBlob(stmt, 3, std::as_bytes(std::span{buffer}));
+        Sqlite3Tools::Bind(stmt, 1, ToString(CalibrationStep::FeatureExtraction));
+        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer}));
     }};
 
     BatchExecuteStatement(sql_statements::extracted_target_insert, data, binder, db);

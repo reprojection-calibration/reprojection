@@ -75,6 +75,7 @@ TEST(Application, TestCalibrate) {
     CameraInfo const camera_info{config["sensor"]["camera_name"].as_string()->get(),
                                  ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
                                  {0, 512, 0, 512}};
+    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(""), camera_info.sensor_name, db);
     database::WriteToDb(camera_info, db);
 
     database::WriteToDb(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
@@ -85,10 +86,12 @@ TEST(Application, TestCalibrate) {
 
     std::ostringstream oss2;
     oss2 << *config["target"].as_table();
-    database::WriteToDb(CalibrationStep::FtEx, caching::CacheKey(oss2.str()), camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::FeatureExtraction, caching::CacheKey(oss2.str()), camera_info.sensor_name, db);
 
-    database::WriteToDb(CalibrationStep::Ii, caching::CacheKey(camera_info, {}), camera_info.sensor_name, db);
-    database::WriteToDb({Array6d::Zero()}, camera_info.camera_model, CalibrationStep::Ii, camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::IntrinsicInitialization, caching::CacheKey(camera_info, {}),
+                        camera_info.sensor_name, db);
+    database::WriteToDb({Array6d::Zero()}, camera_info.camera_model, CalibrationStep::IntrinsicInitialization,
+                        camera_info.sensor_name, db);
 
     // NOTE(Jack): We do not need to do anything for the linear_pose_initialization and camera_nonlinear_refinement
     // steps to manufacture a cache hit because if their inputs are empty they themselves will just pass through with no

@@ -9,7 +9,7 @@ struct IntrinsicInitializationStep {
     CameraInfo camera_info;
     CameraMeasurements targets;
 
-    CalibrationStep step_type{CalibrationStep::Ii};
+    CalibrationStep step_type{CalibrationStep::IntrinsicInitialization};
 
     std::string SensorName() const { return camera_info.sensor_name; }
 

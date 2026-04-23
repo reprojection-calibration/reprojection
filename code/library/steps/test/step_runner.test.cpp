@@ -7,7 +7,7 @@
 using namespace reprojection;
 
 struct DummyStep {
-    CalibrationStep step_type{CalibrationStep::Lpi};
+    CalibrationStep step_type{CalibrationStep::LinearPoseInitialization};
 
     std::string SensorName() const { return ""; }
 
@@ -30,7 +30,6 @@ struct DummyStep {
 // TODO(Jack): How can we write a test to test the cascading delete and step replacement logic?
 TEST(stepsStepRunner, TestStepRunnerWithDummyStep) {
     auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
-    database::WriteToDb(CameraInfo{"", CameraModel::Pinhole, {}}, db);
 
     DummyStep const step;
 

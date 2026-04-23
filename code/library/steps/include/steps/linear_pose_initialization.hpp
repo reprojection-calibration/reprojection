@@ -10,7 +10,7 @@ struct LpiStep {
     CameraMeasurements targets;
     CameraState camera_state;
 
-    CalibrationStep step_type{CalibrationStep::Lpi};
+    CalibrationStep step_type{CalibrationStep::LinearPoseInitialization};
 
     std::string SensorName() const { return camera_info.sensor_name; }
 

@@ -8,4 +8,4 @@ SELECT timestamp_ns,
 FROM poses
 WHERE step_name = ?
   AND sensor_name = ?
-ORDER BY timestamp_ns ASC;
+ORDER BY timestamp_ns;

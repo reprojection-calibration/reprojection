@@ -1,5 +1,3 @@
-SELECT sensor_name,
-       timestamp_ns,
-       data
+SELECT sensor_name, timestamp_ns, data
 FROM extracted_targets
-ORDER BY timestamp_ns ASC;
+ORDER BY timestamp_ns;

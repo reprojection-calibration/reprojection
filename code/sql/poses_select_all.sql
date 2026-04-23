@@ -8,4 +8,4 @@ SELECT step_name,
        y,
        z
 FROM poses
-ORDER BY timestamp_ns ASC;
+ORDER BY timestamp_ns;

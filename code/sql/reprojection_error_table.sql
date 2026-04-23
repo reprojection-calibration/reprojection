@@ -5,7 +5,5 @@ CREATE TABLE IF NOT EXISTS reprojection_error
     timestamp_ns INTEGER NOT NULL,
     data         BLOB    NOT NULL,
     PRIMARY KEY (step_name, sensor_name, timestamp_ns),
-    FOREIGN KEY (step_name, sensor_name, timestamp_ns)
-        REFERENCES poses (step_name, sensor_name, timestamp_ns)
-        ON DELETE CASCADE
+    FOREIGN KEY (step_name, sensor_name, timestamp_ns) REFERENCES poses ON DELETE CASCADE
 );
