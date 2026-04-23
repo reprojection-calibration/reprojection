@@ -71,7 +71,7 @@ void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, Sql
                                      std::string(sensor_name));                                // LCOV_EXCL_LINE
         }
 
-        Sqlite3Tools::Bind(stmt, 1, "feature_extraction");
+        Sqlite3Tools::Bind(stmt, 1, ToString(CalibrationStep::FtEx));
         Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
         Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
         Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer}));
