@@ -2,6 +2,7 @@ import os
 
 from database.geometry import InvertSe3
 from database.sql_table_loading import (
+    load_camera_info_table,
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
@@ -187,6 +188,10 @@ def load_data(db_path):
     table = load_images_table(db_path)
     if table is not None:
         data.update(process_images_table(table))
+
+    table = load_camera_info_table(db_path)
+    if table is not None:
+        process_camera_info_table(table, data)
 
     table = load_extracted_targets_table(db_path)
     if table is not None:
