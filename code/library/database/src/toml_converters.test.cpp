@@ -22,6 +22,7 @@ TEST(DatabaseTomlConverters, TestToToml) {
     EXPECT_EQ(result, gt_result);
 }
 
+// TODO(Jack): Add tests for pinhole and pinhole_radtan4.
 TEST(DatabaseTomlConverters, TestFromToml) {
     std::string const data{"alpha = 6.0\ncx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0\nxi = 5.0"};
     ArrayXd const result{database::FromToml(CameraModel::DoubleSphere, data)};
