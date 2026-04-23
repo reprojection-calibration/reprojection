@@ -65,7 +65,7 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCameraMeasurements) {
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStep) {
     EXPECT_NO_THROW(AddStep(CalibrationStep::Lpi));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::Cnlr));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::CameraNonlinearRefinement));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Sint));
     EXPECT_NO_THROW(AddStep(CalibrationStep::Snlr));
 }

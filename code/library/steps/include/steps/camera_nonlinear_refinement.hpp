@@ -10,7 +10,7 @@ struct CnlrStep {
     CameraMeasurements targets;
     OptimizationState initial_state;
 
-    CalibrationStep step_type{CalibrationStep::Cnlr};
+    CalibrationStep step_type{CalibrationStep::CameraNonlinearRefinement};
 
     std::string SensorName() const { return camera_info.sensor_name; }
 
