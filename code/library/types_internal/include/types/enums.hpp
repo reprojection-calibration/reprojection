@@ -17,10 +17,10 @@ enum class CalibrationStep {
     CameraNonlinearRefinement,
     FeatureExtraction,
     ImageLoading,
-    Ii,
-    Lpi,
-    Sint,
-    Snlr
+    IntrinsicInitialization,
+    LinearPoseInitialization,
+    SplineInterpolation,
+    SplineNonlinearRefinement
 };
 
 inline std::string ToString(CalibrationStep const step_name) {
@@ -32,13 +32,13 @@ inline std::string ToString(CalibrationStep const step_name) {
         return "feature_extraction";
     } else if (step_name == CalibrationStep::ImageLoading) {
         return "image_loading";
-    } else if (step_name == CalibrationStep::Ii) {
+    } else if (step_name == CalibrationStep::IntrinsicInitialization) {
         return "intrinsic_initialization";
-    } else if (step_name == CalibrationStep::Lpi) {
+    } else if (step_name == CalibrationStep::LinearPoseInitialization) {
         return "linear_pose_initialization";
-    } else if (step_name == CalibrationStep::Sint) {
+    } else if (step_name == CalibrationStep::SplineInterpolation) {
         return "spline_interpolation";
-    } else if (step_name == CalibrationStep::Snlr) {
+    } else if (step_name == CalibrationStep::SplineNonlinearRefinement) {
         return "spline_nonlinear_refinement";
     } else {
         throw std::runtime_error(

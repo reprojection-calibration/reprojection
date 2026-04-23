@@ -7,7 +7,7 @@
 using namespace reprojection;
 
 struct DummyStep {
-    CalibrationStep step_type{CalibrationStep::Lpi};
+    CalibrationStep step_type{CalibrationStep::LinearPoseInitialization};
 
     std::string SensorName() const { return ""; }
 

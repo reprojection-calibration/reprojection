@@ -24,18 +24,18 @@ class DatabaseRemoveFixture : public ::testing::Test {
 
 TEST_F(DatabaseRemoveFixture, TestRemoveFromDbStep) {
     // If there is no step to remove it is just silent
-    EXPECT_NO_THROW(database::RemoveFromDb(CalibrationStep::Lpi, "", db));
+    EXPECT_NO_THROW(database::RemoveFromDb(CalibrationStep::LinearPoseInitialization, "", db));
 
     // Write a step to the database and load its cache key to check its there.
-    database::WriteToDb(CalibrationStep::Lpi, "cache_key", camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::LinearPoseInitialization, "cache_key", camera_info.sensor_name, db);
 
-    auto cache_key{database::ReadCacheKey(db, CalibrationStep::Lpi, camera_info.sensor_name)};
+    auto cache_key{database::ReadCacheKey(db, CalibrationStep::LinearPoseInitialization, camera_info.sensor_name)};
     ASSERT_TRUE(cache_key.has_value());
 
     // Remove the step and then try to load the cache key - but the cache key should be std::nullopt because the step
     // has been removed.
-    EXPECT_NO_THROW(database::RemoveFromDb(CalibrationStep::Lpi, camera_info.sensor_name, db));
+    EXPECT_NO_THROW(database::RemoveFromDb(CalibrationStep::LinearPoseInitialization, camera_info.sensor_name, db));
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::Lpi, camera_info.sensor_name);
+    cache_key = database::ReadCacheKey(db, CalibrationStep::LinearPoseInitialization, camera_info.sensor_name);
     EXPECT_FALSE(cache_key.has_value());
 }
