@@ -46,26 +46,19 @@ removed. Foreign key relationships and the `ON DELETE CASCADE` enforces this.
 
 # Notes and disclaimers
 
-## The camera info table (22.04.2026)
+## Redundant `step_name` columns (22.04.2026)
 
-In the calibration process the camera info step is unique in that it does not actually calculate anything. Instead, it
-basically just collects a set of metadata which defines the camera being calibrated. This happens at the very start of
-the calibration process and is a pretty cut and dry process.
+The `camera_info` and `extracted_targets` tables both contain a `step_name` column. This is a piece of
+duplicated/redundant information because by their very definition they are products of the camera info and feature
+extraction steps respectively. Why do we do this then?
 
-It is so simple in fact that I at first decided there was no need to include the `step_name` in the table. Why would we
-need to specify the source step when there is only one possible step that it could have come from? That is in contrast
-to things like a pose which might come from an initialization step and then again from an optimization step and
-therefore require the step name.
+Including the `step_name` column lets us establish a foreign key relationship to the `calibration_steps` table. That
+ensures that the application can apply a common interface to every step in the calibration process. If a step gets
+removed then all dependent data (i.e. cache busted) gets removed to.
 
-The reason that we need the `step_name`, even for the camera info table, is that we need to establish a foreign key
-relationship with the `calibration_steps` table. In order to do that we need to reference the steps table composite
-primary key `PRIMARY KEY (step_name, sensor_name)` which is what forces us to include `step_name`. Without that column
-in our `camera_info` table we cannot establish the foreign key relationship and take advantage of the cascading delete
-semantics.
-
-Camera info can only come from the `camera_info` step so I added the `CHECK ( step_name IN ('camera_info'))` constraint
-to guarantee this at the database level. Again this is a pretty major case of business logic being coded into the
-database and I might be shooting myself in the foot... only time will tell :)
+As a precaution, and to ensure that the `step_name` is really only ever the correct value for the `camera_info` and
+`extracted_targets` tables I added a constraint to guarantee this at the database level using
+`CHECK ( step_name IN ('camera_info'))`.
 
 # Brainstorming
 
