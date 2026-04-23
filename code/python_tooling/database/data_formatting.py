@@ -28,7 +28,7 @@ def process_images_table(table):
             }
 
         timestamp_ns = int(row["timestamp_ns"])
-        data[sensor_name]["measurements"]["images"][timestamp_ns] = row["data"]
+        data[sensor_name]["measurements"]["images"][timestamp_ns] = None
 
     return data
 
