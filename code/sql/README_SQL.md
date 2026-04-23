@@ -21,7 +21,7 @@ An example of a single data dependency is found in the `reprojection_error` tabl
 
     FOREIGN KEY (step_name, sensor_name, timestamp_ns) REFERENCES poses ON DELETE CASCADE
 
-Please only use the minumum possible foreign key relationship to represent a dependency. For example, the
+Please only use the minimum possible foreign key relationship to represent a dependency. For example, the
 `reprojection_error` in some sense logically also depends on the step in the calibration process that it was created in.
 However, there is a 1-1 relationship between poses and reprojection errors and the step is already encoded in the pose
 table. Just like in regular programming, if you find yourself duplicating information than it's is a sign you might be
@@ -34,15 +34,15 @@ relationships keep the database safe.
 Note - You must set `PRAGMA foreign_keys = ON;` for foreign keys to be respected! This is not enabled by default and
 might cause the database to not behave as expected if you are manipulating it in third party tools like CLion.
 
-## Cascading delete
+## Cascade delete
 
-If a step is deleted then all data with a foreign key relationship on that step should also be deleted. This is critical
-to keep the database clean when we need to rerun a step and remove the old data and write in the new data. Fundamentally
-the caching logic implemented in `step_runner.hpp` is responsible for orchestrating this.
+"Whenever rows in the parent (referenced) table are deleted (or updated), the respective rows of the child (referencing)
+table with a matching foreign key column will be deleted (or updated) as well. This is called a cascade delete (or
+update)." - https://en.wikipedia.org/wiki/Foreign_key#CASCADE
 
-Establishing cascading delete relationships using `ON DELETE CASCADE` in the sql table directly prevents us from having
-to manually delete all dependent data. That would be error-prone and harder to maintain in the c++ source code than it
-is to code directly into the sql table definitions.
+We use caching to store calculations from the calibration in the database. When that cache becomes invalidated (ex. you
+change the target extraction config after extracting the targets) all the data in the invalidated step needs to be
+removed. Foreign key relationships and the `ON DELETE CASCADE` enforces this.
 
 # Notes and disclaimers
 
