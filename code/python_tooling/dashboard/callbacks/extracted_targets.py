@@ -10,6 +10,10 @@ from dashboard.server import app
     State({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
 )
 def update_extracted_targets_size(_, raw_data, fig):
+    # TODO Get sensor camera info to set axis size!
+    # Document where xaxis2 comes from
+    # DO the same for the feature extraction target size!
+    # TODO FIX panel metadata bug!
     fig["layout"]["xaxis2"]["range"] = [0, 640]
     fig["layout"]["xaxis2"]["autorange"] = False
 
