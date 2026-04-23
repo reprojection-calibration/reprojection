@@ -25,6 +25,20 @@ def load_images_table(db_path):
     return table
 
 
+def load_camera_info_table(db_path):
+    if not os.path.isfile(db_path):
+        return None
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            table = pd.read_sql(load_sql("camera_info_select_all.sql"), conn)
+    except Exception as e:
+        print(e)
+        return None
+
+    return table
+
+
 # TODO(Jack): This function is very similar to load_reprojection_errors_table(), can we eliminate copy and paste? One big
 #  difference is that the extracted targets do not have the "type" identifier in their table.
 def load_extracted_targets_table(db_path):
