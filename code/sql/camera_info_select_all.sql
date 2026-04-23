@@ -1,2 +1,2 @@
-SELECT camera_model, height, width
+SELECT sensor_name, camera_model, height, width
 FROM camera_info

@@ -44,7 +44,7 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
         self.assertIsNone(table)
 
         table = load_camera_info_table(self.db_path)
-        self.assertEqual(table.shape, (0, 3))
+        self.assertEqual(table.shape, (0, 4))
 
     def test_load_extracted_targets_table(self):
         table = load_extracted_targets_table("nonexistent.db3")
