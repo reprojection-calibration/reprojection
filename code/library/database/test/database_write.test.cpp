@@ -58,7 +58,7 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCameraMeasurements) {
     EXPECT_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
 
     AddImage();
-    database::WriteToDb(CalibrationStep::FtEx, "", sensor_name, db);
+    database::WriteToDb(CalibrationStep::FeatureExtraction, "", sensor_name, db);
 
     EXPECT_NO_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
 }

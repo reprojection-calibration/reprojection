@@ -86,7 +86,7 @@ TEST(Application, TestCalibrate) {
 
     std::ostringstream oss2;
     oss2 << *config["target"].as_table();
-    database::WriteToDb(CalibrationStep::FtEx, caching::CacheKey(oss2.str()), camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::FeatureExtraction, caching::CacheKey(oss2.str()), camera_info.sensor_name, db);
 
     database::WriteToDb(CalibrationStep::Ii, caching::CacheKey(camera_info, {}), camera_info.sensor_name, db);
     database::WriteToDb({Array6d::Zero()}, camera_info.camera_model, CalibrationStep::Ii, camera_info.sensor_name, db);

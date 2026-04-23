@@ -14,7 +14,7 @@ struct FeatureExtractionStep {
     // TODO(Jack): We should have structs here not unparsed toml tables, right?
     toml::table target_config;
 
-    CalibrationStep step_type{CalibrationStep::FtEx};
+    CalibrationStep step_type{CalibrationStep::FeatureExtraction};
 
     std::string SensorName() const { return sensor_name; }
 

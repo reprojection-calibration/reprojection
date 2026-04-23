@@ -32,7 +32,7 @@ class CameraReadFixture : public ::testing::Test {
         // Due to foreign key relationship we need add an image before we add the target
         AddImage(timestamp_ns);
 
-        database::WriteToDb(CalibrationStep::FtEx, "", sensor_name, db);
+        database::WriteToDb(CalibrationStep::FeatureExtraction, "", sensor_name, db);
         database::WriteToDb({{timestamp_ns, target}}, sensor_name, db);
     }
 
