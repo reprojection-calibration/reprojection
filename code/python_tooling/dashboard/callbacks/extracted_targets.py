@@ -2,6 +2,23 @@ from dash import MATCH, Input, Output, State
 
 from dashboard.server import app
 
+
+@app.callback(
+    Output({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
+    Input("sensor-content-container", "children"),
+    State("raw-data-store", "data"),
+    State({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
+)
+def update_extracted_targets_size(_, raw_data, fig):
+    fig["layout"]["xaxis2"]["range"] = [0, 640]
+    fig["layout"]["xaxis2"]["autorange"] = False
+
+    fig["layout"]["yaxis2"]["range"] = [0, 360]
+    fig["layout"]["yaxis2"]["autorange"] = False
+
+    return fig
+
+
 # TODO(Jack): Do not hardcode counter ID!
 app.clientside_callback(
     """
@@ -61,9 +78,14 @@ app.clientside_callback(
         return patch.build();
     }
     """,
-    Output({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
+    Output(
+        {"type": "extracted_targets", "sensor_name": MATCH},
+        "figure",
+        allow_duplicate=True,
+    ),
     Input({"type": "extracted_targets", "sensor_name": MATCH}, "id"),
     Input({"type": "target_slider", "sensor_name": MATCH}, "value"),
     Input("step-selector", "value"),
     State("raw-data-store", "data"),
+    prevent_initial_call=True,
 )
