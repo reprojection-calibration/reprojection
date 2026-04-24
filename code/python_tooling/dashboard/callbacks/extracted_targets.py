@@ -46,40 +46,46 @@ app.clientside_callback(
         if (!composite_id || frame_idx == null || !raw_data) {
             return dash_clientside.no_update;
         }
-        
+    
         const sensor_name = composite_id["sensor_name"];
         const targets = raw_data?.[sensor_name]?.measurements?.targets;
-        if(!targets){
+        if (!targets) {
             return dash_clientside.no_update;
         }
-
+    
         const keys = Object.keys(targets ?? {});
         const key = keys[frame_idx];
         if (!key) {
             throw new Error(`Invalid frame_idx: ${frame_idx}`);
         }
-        
+    
         const target = targets[key];
-        
+    
         // WARN(Jack): We are hardcoding that the points are 2D here, only taking into account (x,y) while ignoring z.
         const points = target.points.map(row => row.slice(0, 2));
         const pixels = target.pixels.map(row => row.slice(0, 2));
         const indices = target.indices.map(row => row.slice(0, 2))
-
+    
         const patch = new dash_clientside.Patch();
         patch.assign(['data', 0, 'x'], points.map(p => p[0]));
         patch.assign(['data', 0, 'y'], points.map(p => p[1]));
         patch.assign(['data', 1, 'x'], pixels.map(p => p[0]));
         patch.assign(['data', 1, 'y'], pixels.map(p => p[1]));
-        patch.assign(['data', 0, 'marker'], {size: 12, color: "darkgray"});
-        patch.assign(['data', 1, 'marker'], {size: 12, color: "darkgray"});
+        patch.assign(['data', 0, 'marker'], {
+            size: 12,
+            color: "darkgray"
+        });
+        patch.assign(['data', 1, 'marker'], {
+            size: 12,
+            color: "darkgray"
+        });
         patch.assign(['data', 0, 'customdata'], indices);
         patch.assign(['data', 1, 'customdata'], indices);
-                
+    
         const reprojection_errors = raw_data?.[sensor_name]?.reprojection_error?.[step_name];
-        if(reprojection_errors && (key in reprojection_errors)){
+        if (reprojection_errors && (key in reprojection_errors)) {
             const reprojection_error = reprojection_errors[key]
-
+    
             patch.assign(['data', 0, 'marker'], {
                 size: 12,
                 color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
@@ -97,19 +103,19 @@ app.clientside_callback(
         }
     
         patch.assign(
-          ['data', 0, 'hovertemplate'],
-          "xy: (%{x}, %{y})<br>" +
-          "id: (%{customdata[0]}, %{customdata[1]})<br>" +
-          "error: %{marker.color:.3f}<extra></extra>"
+            ['data', 0, 'hovertemplate'],
+            "xy: (%{x:.2f}, %{y:.2f})<br>" +
+            "id: (%{customdata[0]}, %{customdata[1]})<br>" +
+            "error: %{marker.color:.2f}<extra></extra>"
         );
-        
+    
         patch.assign(
-          ['data', 1, 'hovertemplate'],
-          "uv: (%{x}, %{y})<br>" +
-          "id: (%{customdata[0]}, %{customdata[1]})<br>" +
-          "error: %{marker.color:.3f}<extra></extra>"
+            ['data', 1, 'hovertemplate'],
+            "uv: (%{x:.2f}, %{y:.2f})<br>" +
+            "id: (%{customdata[0]}, %{customdata[1]})<br>" +
+            "error: %{marker.color:.2f}<extra></extra>"
         );
-        
+    
         return patch.build();
     }
     """,
