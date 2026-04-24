@@ -1,4 +1,4 @@
-from dash import MATCH, Input, Output, State
+from dash import MATCH, Input, Output, State, no_update
 
 from dashboard.server import app
 
@@ -6,19 +6,31 @@ from dashboard.server import app
 @app.callback(
     Output({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
     Input("sensor-content-container", "children"),
+    State("sensor-selection-dropdown", "value"),
     State("raw-data-store", "data"),
     State({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
 )
-def update_extracted_targets_size(_, raw_data, fig):
-    # TODO Get sensor camera info to set axis size!
+def update_extracted_targets_size(_, sensor_name, raw_data, fig):
+    if sensor_name is None or raw_data is None or fig is None:
+        return no_update
+
+    # TODO(Jack): Should we check that sensor_name exists first, or is that a given at this point?
+    camera_info = raw_data[sensor_name].get("camera_info")
+    if not camera_info:
+        return no_update
+
+    width = camera_info.get("width")
+    height = camera_info.get("height")
+
     # Document where xaxis2 comes from
     # DO the same for the feature extraction target size!
-    # TODO FIX panel metadata bug!
-    fig["layout"]["xaxis2"]["range"] = [0, 640]
+    fig["layout"]["xaxis2"]["range"] = [0, width]
     fig["layout"]["xaxis2"]["autorange"] = False
 
-    fig["layout"]["yaxis2"]["range"] = [0, 360]
+    fig["layout"]["yaxis2"]["range"] = [0, height]
     fig["layout"]["yaxis2"]["autorange"] = False
+
+
 
     return fig
 

@@ -103,7 +103,7 @@ app.layout = html.Div(
                 "position": "sticky",
                 "top": "0",
                 "zIndex": "1000",
-            }
+            },
         ),
         # Dynamic content container that holds all the sensor data visualizations
         html.Div(id="sensor-content-container"),
