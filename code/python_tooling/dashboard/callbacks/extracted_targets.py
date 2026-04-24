@@ -61,9 +61,11 @@ app.clientside_callback(
         
         const target = targets[key];
         
+        // WARN(Jack): We are hardcoding that the points are 2D here, only taking into account (x,y) while ignoring z.
         const points = target.points.map(row => row.slice(0, 2));
         const pixels = target.pixels.map(row => row.slice(0, 2));
-       
+        const indices = target.indices.map(row => row.slice(0, 2))
+
         const patch = new dash_clientside.Patch();
         patch.assign(['data', 0, 'x'], points.map(p => p[0]));
         patch.assign(['data', 0, 'y'], points.map(p => p[1]));
@@ -71,7 +73,9 @@ app.clientside_callback(
         patch.assign(['data', 1, 'y'], pixels.map(p => p[1]));
         patch.assign(['data', 0, 'marker'], {size: 12, color: "darkgray"});
         patch.assign(['data', 1, 'marker'], {size: 12, color: "darkgray"});
-        
+        patch.assign(['data', 0, 'customdata'], indices);
+        patch.assign(['data', 1, 'customdata'], indices);
+                
         const reprojection_errors = raw_data?.[sensor_name]?.reprojection_error?.[step_name];
         if(reprojection_errors && (key in reprojection_errors)){
             const reprojection_error = reprojection_errors[key]
@@ -90,11 +94,22 @@ app.clientside_callback(
                 cmin: 0,
                 cmax: 1,
             });
-            
-            patch.assign(['data', 0, 'hovertemplate'], "x: %{x}<br>y: %{y}<br>error: %{marker.color:.3f}<extra></extra>");
-            patch.assign(['data', 1, 'hovertemplate'], "x: %{x}<br>y: %{y}<br>error: %{marker.color:.3f}<extra></extra>");
         }
     
+        patch.assign(
+          ['data', 0, 'hovertemplate'],
+          "xy: (%{x}, %{y})<br>" +
+          "id: (%{customdata[0]}, %{customdata[1]})<br>" +
+          "error: %{marker.color:.3f}<extra></extra>"
+        );
+        
+        patch.assign(
+          ['data', 1, 'hovertemplate'],
+          "uv: (%{x}, %{y})<br>" +
+          "id: (%{customdata[0]}, %{customdata[1]})<br>" +
+          "error: %{marker.color:.3f}<extra></extra>"
+        );
+        
         return patch.build();
     }
     """,
