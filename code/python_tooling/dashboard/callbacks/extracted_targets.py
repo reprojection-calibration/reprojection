@@ -2,6 +2,7 @@ from dash import MATCH, Input, Output, State, no_update
 
 from dashboard.server import app
 
+
 @app.callback(
     Output({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
     Input("sensor-content-container", "children"),

@@ -49,4 +49,4 @@ def advance_slider(_, n_clicks, value, max_value):
 def update_pause_button_label(n_clicks):
     paused = (n_clicks or 0) % 2 == 1
 
-    return "▶" if paused else "⏸"
+    return "Play" if paused else "Pause"
