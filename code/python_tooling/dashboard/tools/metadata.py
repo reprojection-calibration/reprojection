@@ -21,6 +21,7 @@ def extract_labeled_metadata(data, parent_keys=None):
 # TODO(Jack): Test?!
 def build_sensor_statistics_html(sensor_metadata):
     stats = extract_labeled_metadata(sensor_metadata)
+    stats = sorted(stats, key=lambda x: x[0][0])
 
     stat_cards = []
     for key, value in stats:
@@ -70,7 +71,7 @@ def build_sensor_statistics_html(sensor_metadata):
                     ),
                 ],
                 style={
-                    "minWidth": "140px",
+                    "minWidth": "200px",
                     "padding": "10px",
                     "backgroundColor": "white",
                     "border": "1px solid #ddd",
@@ -89,7 +90,11 @@ def build_step_selector(sensor_metadata):
             {
                 key
                 for x in sensor_metadata
-                if x != "type" and x != "measurements"
+                # NOTE(Jack): This is a critical piece of business logic! The values here are the only keys from which
+                # calibrations steps will be retrieved from. If for example we add camera intrinsic display we should
+                # also add that here because a camera intrinsic is associated with a step, and it might be a step that
+                # is not present in poses or reprojection error. Is there a more eloquent way to do this?
+                if x == "poses" or x == "reprojection_error"
                 for key in sensor_metadata[x]
             }
         )
@@ -109,4 +114,4 @@ def build_sensor_metadata_layout(sensor_name, metadata):
     stat_cards = build_sensor_statistics_html(metadata[sensor_name])
     step_selector = build_step_selector(metadata[sensor_name])
 
-    return stat_cards + [step_selector]
+    return [step_selector] + stat_cards
