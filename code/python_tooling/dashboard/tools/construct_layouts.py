@@ -47,9 +47,12 @@ def camera_layout(sensor_name):
                 },
                 figure=build_figure_layout(TARGET_VISUALIZATION),
             ),
+            html.Button(
+                id={"type": "pause_button", "sensor_name": sensor_name},
+            ),
             dcc.Slider(
                 id={
-                    "type": "target_slider",
+                    "type": "slider",
                     "sensor_name": sensor_name,
                 },
                 min=0,

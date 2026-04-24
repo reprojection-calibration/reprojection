@@ -103,7 +103,7 @@ app.clientside_callback(
         allow_duplicate=True,
     ),
     Input({"type": "extracted_targets", "sensor_name": MATCH}, "id"),
-    Input({"type": "target_slider", "sensor_name": MATCH}, "value"),
+    Input({"type": "slider", "sensor_name": MATCH}, "value"),
     Input("step-selector", "value"),
     State("raw-data-store", "data"),
     prevent_initial_call=True,
