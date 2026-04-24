@@ -2,9 +2,6 @@ from dash import MATCH, Input, Output, State, no_update
 
 from dashboard.server import app
 
-
-# DO the same for the feature extraction target size!
-
 @app.callback(
     Output({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
     Input("sensor-content-container", "children"),
@@ -12,13 +9,16 @@ from dashboard.server import app
     State("raw-data-store", "data"),
     State({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
 )
-def update_extracted_targets_size(_, sensor_name, raw_data, fig):
+def update_image_size(_, sensor_name, raw_data, fig):
     if sensor_name is None or raw_data is None or fig is None:
         return no_update
 
     camera_info = raw_data[sensor_name].get("camera_info")
     if not camera_info:
         return no_update
+
+    # TODO(Jack): Load target config from database and set the target points graph dimensions too. If we do this than
+    # update the name of the function to reflect really what we are doing.
 
     width = camera_info.get("width")
     height = camera_info.get("height")
