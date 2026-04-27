@@ -39,9 +39,25 @@ def update_timeseries(composite_id, step_name, raw_data):
 
 app.clientside_callback(
     """
-    function(_) {
-        console.log(1);
-        
+    function(timestamp_ns) {
+        const new_shape = {{
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper',
+            x0: 2635607362888,
+            x1: 2635607362888,
+            y0: 0,
+            y1: 1,
+            line: {{
+                color: 'black',
+                width: 1
+            }},
+        }};
+    
+        patch = new dash_clientside.Patch();
+        patch.assign(['layout', 'shapes'], [new_shape]);
+    
+        return patch.build();
     }
     """,
     Output(
