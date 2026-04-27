@@ -43,22 +43,22 @@ app.clientside_callback(
         if (timestamp_ns == null) {
             return dash_clientside.no_update;
         }
-        
+    
         const timestamp_ns_int = Number(BigInt(timestamp_ns));
-        
+    
         const new_shape = {
-                type: 'rect',
-                xref: 'x',
-                yref: 'paper',
-                x0: timestamp_ns_int,
-                x1: timestamp_ns_int,
-                y0: 0,
-                y1: 1,
-                line: {
-                    color: 'black',
-                    width: 1
-                },
-            };
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper',
+            x0: timestamp_ns_int,
+            x1: timestamp_ns_int,
+            y0: 0,
+            y1: 1,
+            line: {
+                color: 'black',
+                width: 1
+            },
+        };
     
         patch = new dash_clientside.Patch();
         patch.assign(['layout', 'shapes'], [new_shape]);
