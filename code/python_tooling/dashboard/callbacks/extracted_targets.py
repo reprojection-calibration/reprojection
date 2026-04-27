@@ -128,7 +128,10 @@ app.clientside_callback(
         allow_duplicate=True,
     ),
     Input({"type": "extracted_targets", "sensor_name": MATCH}, "id"),
-    Input({"type": "slider", "sensor_name": MATCH, "sensor_type": SensorType.Camera}, "value"),
+    Input(
+        {"type": "slider", "sensor_name": MATCH, "sensor_type": SensorType.Camera},
+        "value",
+    ),
     Input("step-selector", "value"),
     State("raw-data-store", "data"),
     State({"type": "max_error", "sensor_name": MATCH}, "value"),

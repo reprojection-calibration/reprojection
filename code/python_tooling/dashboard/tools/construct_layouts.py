@@ -6,7 +6,6 @@ from dashboard.tools.timeseries_plotting import (
     SubplotConfig,
     build_figure_layout,
 )
-
 from database.types import SensorType
 
 TARGET_VISUALIZATION = FigureConfig(
@@ -119,7 +118,11 @@ def camera_layout(sensor_name):
                 },
             ),
             dcc.Graph(
-                id={"type": "pose", "sensor_name": sensor_name},
+                id={
+                    "type": "timeseries",
+                    "sensor_name": sensor_name,
+                    "sensor_type": SensorType.Camera,
+                },
                 figure=build_figure_layout(POSE_VISUALIZATION),
             ),
         ]
@@ -147,8 +150,9 @@ def imu_layout(sensor_name):
             html.H3("IMU Layout"),
             dcc.Graph(
                 id={
-                    "type": "imu_data",
+                    "type": "timeseries",
                     "sensor_name": sensor_name,
+                    "sensor_type": SensorType.Imu,
                 },
                 figure=build_figure_layout(IMU_DATA_VISUALIZATION),
             ),
