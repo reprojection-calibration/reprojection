@@ -40,6 +40,19 @@ def camera_layout(sensor_name):
     return html.Div(
         [
             html.H3("Camera Layout"),
+            dcc.Input(
+                id={
+                    "type": "max_error",
+                    "sensor_name": sensor_name,
+                },
+                min=0,
+                type="number",
+                value=1,
+                style={
+                    "width": "10%",
+                    "minWidth": "60px",
+                },
+            ),
             dcc.Graph(
                 id={
                     "type": "extracted_targets",
@@ -51,7 +64,7 @@ def camera_layout(sensor_name):
                 [
                     html.Div(
                         html.Button(
-                            "⏸",
+                            "Pause",
                             id={"type": "pause_button", "sensor_name": sensor_name},
                             # TODO(Jack): Style largely copy and pasted from the metadata cards. Centralize!
                             style={

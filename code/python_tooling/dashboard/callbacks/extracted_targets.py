@@ -44,8 +44,8 @@ def update_extracted_target_figure_size(_, sensor_name, raw_data, fig):
 # TODO(Jack): Do not hardcode counter ID!
 app.clientside_callback(
     """
-    function(composite_id, frame_idx, step_name, raw_data) {
-        if (!composite_id || frame_idx == null || !raw_data) {
+    function(composite_id, frame_idx, step_name, raw_data, cmax) {
+        if (!composite_id || frame_idx == null || !raw_data || !cmax) {
             return dash_clientside.no_update;
         }
     
@@ -93,14 +93,14 @@ app.clientside_callback(
                 color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
                 colorscale: "Bluered",
                 cmin: 0,
-                cmax: 1,
+                cmax: cmax,
             });
             patch.assign(['data', 1, 'marker'], {
                 size: 12,
                 color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
                 colorscale: "Bluered",
                 cmin: 0,
-                cmax: 1,
+                cmax: cmax,
             });
         }
     
@@ -130,5 +130,6 @@ app.clientside_callback(
     Input({"type": "slider", "sensor_name": MATCH}, "value"),
     Input("step-selector", "value"),
     State("raw-data-store", "data"),
+    State({"type": "max_error", "sensor_name": MATCH}, "value"),
     prevent_initial_call=True,
 )
