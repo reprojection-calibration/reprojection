@@ -35,3 +35,25 @@ def update_timeseries(composite_id, step_name, raw_data):
             return no_update
 
     return timeseries_6d_to_patch(data)
+
+
+app.clientside_callback(
+    """
+    function(_) {
+        console.log(1);
+        
+    }
+    """,
+    Output(
+        {"type": "timeseries", "sensor_name": MATCH, "sensor_type": MATCH}, "figure", allow_duplicate=True,
+    ),
+    Input(
+        {
+            "type": "current_timestamp",
+            "sensor_name": MATCH,
+            "sensor_type": MATCH,
+        },
+        "children",
+    ),
+    prevent_initial_call=True,
+)
