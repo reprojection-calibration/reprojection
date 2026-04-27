@@ -1,6 +1,7 @@
 from dash import MATCH, Input, Output, State, no_update
 
 from dashboard.server import app
+from database.types import SensorType
 
 
 @app.callback(
@@ -127,7 +128,7 @@ app.clientside_callback(
         allow_duplicate=True,
     ),
     Input({"type": "extracted_targets", "sensor_name": MATCH}, "id"),
-    Input({"type": "slider", "sensor_name": MATCH}, "value"),
+    Input({"type": "slider", "sensor_name": MATCH, "sensor_type": SensorType.Camera}, "value"),
     Input("step-selector", "value"),
     State("raw-data-store", "data"),
     State({"type": "max_error", "sensor_name": MATCH}, "value"),

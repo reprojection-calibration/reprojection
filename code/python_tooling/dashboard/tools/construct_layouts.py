@@ -7,6 +7,8 @@ from dashboard.tools.timeseries_plotting import (
     build_figure_layout,
 )
 
+from database.types import SensorType
+
 TARGET_VISUALIZATION = FigureConfig(
     "Feature Extraction",
     (
@@ -45,7 +47,7 @@ def camera_layout(sensor_name):
                     "type": "max_error",
                     "sensor_name": sensor_name,
                 },
-                min=0,
+                min=1e-6,
                 type="number",
                 value=1,
                 style={
@@ -85,6 +87,7 @@ def camera_layout(sensor_name):
                             id={
                                 "type": "slider",
                                 "sensor_name": sensor_name,
+                                "sensor_type": SensorType.Camera,
                             },
                             min=0,
                             value=0,
