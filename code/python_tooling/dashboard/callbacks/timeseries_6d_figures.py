@@ -67,7 +67,9 @@ app.clientside_callback(
     }
     """,
     Output(
-        {"type": "timeseries", "sensor_name": MATCH, "sensor_type": MATCH}, "figure", allow_duplicate=True,
+        {"type": "timeseries", "sensor_name": MATCH, "sensor_type": MATCH},
+        "figure",
+        allow_duplicate=True,
     ),
     Input(
         {
