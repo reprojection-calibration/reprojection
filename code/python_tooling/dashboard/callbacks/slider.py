@@ -45,6 +45,7 @@ def advance_slider(_, n_clicks, value, max_value):
     else:
         return value + 1
 
+
 @app.callback(
     Output({"type": "pause_button", "sensor_name": MATCH}, "children"),
     Input({"type": "pause_button", "sensor_name": MATCH}, "n_clicks"),
@@ -58,7 +59,32 @@ def update_pause_button_label(n_clicks):
 app.clientside_callback(
     """
     function(composite_id, frame_idx, raw_data) {    
-        return 1;
+        if (!composite_id || frame_idx == null || !raw_data) {
+            return dash_clientside.no_update;
+        }
+        
+        const sensor_name = composite_id["sensor_name"];
+        const sensor_type = composite_id["sensor_type"];
+        
+        let keys;
+        if(sensor_type == "camera"){
+            const targets = raw_data?.[sensor_name]?.measurements?.targets;
+            if (!targets) {
+                return dash_clientside.no_update;
+            }
+            
+            keys = Object.keys(targets ?? {});
+        } else{
+            // TODO(Jack): Add logic for IMU case
+            return dash_clientside.no_update;
+        }
+
+        const key = keys[frame_idx];
+        if (!key) {
+            throw new Error(`Invalid frame_idx: ${frame_idx}`);
+        }
+        
+        return key;
     }
     """,
     Output(
@@ -67,7 +93,7 @@ app.clientside_callback(
             "sensor_name": MATCH,
             "sensor_type": MATCH,
         },
-        "children"
+        "children",
     ),
     Input({"type": "slider", "sensor_name": MATCH, "sensor_type": MATCH}, "id"),
     Input(
