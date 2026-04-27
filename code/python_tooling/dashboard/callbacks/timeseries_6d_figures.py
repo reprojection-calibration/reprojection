@@ -40,7 +40,9 @@ def update_timeseries(composite_id, step_name, raw_data):
 app.clientside_callback(
     """
     function(timestamp_ns) {
-        console.log(console.log(timestamp_ns));
+        if (timestamp_ns == null) {
+            return dash_clientside.no_update;
+        }
         
         const timestamp_ns_int = Number(BigInt(timestamp_ns));
         
