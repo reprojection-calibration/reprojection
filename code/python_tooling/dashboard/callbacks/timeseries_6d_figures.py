@@ -43,3 +43,57 @@ def update_imu_data_figure(composite_id, raw_data):
         return no_update
 
     return timeseries_6d_to_patch(pose_data)
+
+app.clientside_callback(
+    """
+    function(timestamp_ns) {    
+        if  (timestamp_ns == null) {
+            return dash_clientside.no_update;
+        }
+      
+        const new_shape = {{
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper',
+            x0: timestamp_ns,
+            x1: timestamp_ns,
+            y0: 0,
+            y1: 1,
+            line: {{
+                color: 'black',
+                width: 1
+            }},
+        }};
+    
+        const new_annotation = {{
+            x: local_time_s,
+            y: 1,
+            xref: 'x',
+            yref: 'paper',
+            text: `${{frame_idx}}`,
+            showarrow: false,
+            yanchor: 'bottom',
+            xanchor: 'center',
+            font: {{
+                color: 'white',
+                size: 12
+            }},
+            bgcolor: 'rgba(10,10,10,0.7)',
+        }};
+    
+        patch.assign(['layout', 'shapes'], [new_shape]);
+        patch.assign(['layout', 'annotations'], [new_annotation]);
+    
+        return patch.build();
+    }
+    """,
+    Output({"type": "pose", "sensor_name": MATCH}, "figure"),
+    Input(
+        {
+            "type": "current_timestamp",
+            "sensor_name": MATCH,
+            "sensor_type": MATCH,
+        },
+        "children",
+    ),
+)
