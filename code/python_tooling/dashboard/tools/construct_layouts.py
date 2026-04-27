@@ -42,6 +42,14 @@ def camera_layout(sensor_name):
     return html.Div(
         [
             html.H3("Camera Layout"),
+            html.Div(
+                id={
+                    "type": "current_timestamp",
+                    "sensor_name": sensor_name,
+                    "sensor_type": SensorType.Camera,
+                },
+                children="N/A",
+            ),
             dcc.Input(
                 id={
                     "type": "max_error",
