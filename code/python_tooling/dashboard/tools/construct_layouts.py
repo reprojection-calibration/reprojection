@@ -6,6 +6,7 @@ from dashboard.tools.timeseries_plotting import (
     SubplotConfig,
     build_figure_layout,
 )
+from database.types import SensorType
 
 TARGET_VISUALIZATION = FigureConfig(
     "Feature Extraction",
@@ -40,6 +41,27 @@ def camera_layout(sensor_name):
     return html.Div(
         [
             html.H3("Camera Layout"),
+            html.Div(
+                id={
+                    "type": "current_timestamp",
+                    "sensor_name": sensor_name,
+                    "sensor_type": SensorType.Camera,
+                },
+                children="N/A",
+            ),
+            dcc.Input(
+                id={
+                    "type": "max_error",
+                    "sensor_name": sensor_name,
+                },
+                min=1e-6,
+                type="number",
+                value=1,
+                style={
+                    "width": "10%",
+                    "minWidth": "60px",
+                },
+            ),
             dcc.Graph(
                 id={
                     "type": "extracted_targets",
@@ -51,7 +73,7 @@ def camera_layout(sensor_name):
                 [
                     html.Div(
                         html.Button(
-                            "⏸",
+                            "Pause",
                             id={"type": "pause_button", "sensor_name": sensor_name},
                             # TODO(Jack): Style largely copy and pasted from the metadata cards. Centralize!
                             style={
@@ -72,6 +94,7 @@ def camera_layout(sensor_name):
                             id={
                                 "type": "slider",
                                 "sensor_name": sensor_name,
+                                "sensor_type": SensorType.Camera,
                             },
                             min=0,
                             value=0,
@@ -95,7 +118,11 @@ def camera_layout(sensor_name):
                 },
             ),
             dcc.Graph(
-                id={"type": "pose", "sensor_name": sensor_name},
+                id={
+                    "type": "timeseries",
+                    "sensor_name": sensor_name,
+                    "sensor_type": SensorType.Camera,
+                },
                 figure=build_figure_layout(POSE_VISUALIZATION),
             ),
         ]
@@ -123,8 +150,9 @@ def imu_layout(sensor_name):
             html.H3("IMU Layout"),
             dcc.Graph(
                 id={
-                    "type": "imu_data",
+                    "type": "timeseries",
                     "sensor_name": sensor_name,
+                    "sensor_type": SensorType.Imu,
                 },
                 figure=build_figure_layout(IMU_DATA_VISUALIZATION),
             ),
