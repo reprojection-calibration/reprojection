@@ -47,19 +47,51 @@ def camera_layout(sensor_name):
                 },
                 figure=build_figure_layout(TARGET_VISUALIZATION),
             ),
-            dcc.Slider(
-                id={
-                    "type": "target_slider",
-                    "sensor_name": sensor_name,
-                },
-                min=0,
-                value=0,
-                step=1,
-                marks=None,
-                updatemode="drag",
-                tooltip={
-                    "placement": "top",
-                    "always_visible": True,
+            html.Div(
+                [
+                    html.Div(
+                        html.Button(
+                            "⏸",
+                            id={"type": "pause_button", "sensor_name": sensor_name},
+                            # TODO(Jack): Style largely copy and pasted from the metadata cards. Centralize!
+                            style={
+                                "backgroundColor": "white",
+                                "border": "1px solid #ddd",
+                                "borderRadius": "6px",
+                                "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+                                "width": "90%",
+                            },
+                        ),
+                        style={
+                            "width": "10%",
+                            "minWidth": "60px",
+                        },
+                    ),
+                    html.Div(
+                        dcc.Slider(
+                            id={
+                                "type": "slider",
+                                "sensor_name": sensor_name,
+                            },
+                            min=0,
+                            value=0,
+                            step=1,
+                            marks=None,
+                            updatemode="drag",
+                            tooltip={
+                                "placement": "top",
+                                "always_visible": True,
+                            },
+                        ),
+                        style={
+                            "width": "90%",
+                        },
+                    ),
+                ],
+                style={
+                    "display": "flex",
+                    "alignItems": "center",
+                    "width": "100%",  # full row width
                 },
             ),
             dcc.Graph(

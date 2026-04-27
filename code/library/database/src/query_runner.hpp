@@ -25,16 +25,16 @@ void ExecuteQuery(SqlitePtr const db, std::string_view sql, Binder&& binder, Row
         if constexpr (not std::is_same_v<std::decay_t<Binder>, std::nullptr_t>) {
             binder(statement.stmt);
         }
-    } catch (...) {                      // LCOV_EXCL_LINE
-        throw SqliteException(db, sql);  // LCOV_EXCL_LINE
+    } catch (...) {                                        // LCOV_EXCL_LINE
+        std::throw_with_nested(SqliteException(db, sql));  // LCOV_EXCL_LINE
     }
 
     try {
         while (Sqlite3Tools::StepRow(statement.stmt)) {
             on_row(statement.stmt);
         }
-    } catch (...) {                      // LCOV_EXCL_LINE
-        throw SqliteException(db, sql);  // LCOV_EXCL_LINE
+    } catch (...) {                                        // LCOV_EXCL_LINE
+        std::throw_with_nested(SqliteException(db, sql));  // LCOV_EXCL_LINE
     }
 }
 

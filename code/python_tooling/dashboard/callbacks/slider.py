@@ -1,11 +1,11 @@
-from dash import MATCH, Input, Output, State
+from dash import MATCH, Input, Output, State, no_update
 
 from dashboard.server import app
 
 
 @app.callback(
-    Output({"type": "target_slider", "sensor_name": MATCH}, "max"),
-    Input({"type": "target_slider", "sensor_name": MATCH}, "id"),
+    Output({"type": "slider", "sensor_name": MATCH}, "max"),
+    Input({"type": "slider", "sensor_name": MATCH}, "id"),
     State("metadata-store", "data"),
 )
 def update_target_slider_properties(composite_id, metadata):
@@ -22,12 +22,17 @@ def update_target_slider_properties(composite_id, metadata):
 
 
 @app.callback(
-    Output({"type": MATCH, "sensor_name": MATCH}, "value"),
+    Output({"type": "slider", "sensor_name": MATCH}, "value"),
     Input("play-interval", "n_intervals"),
-    State({"type": MATCH, "sensor_name": MATCH}, "value"),
-    State({"type": MATCH, "sensor_name": MATCH}, "max"),
+    Input({"type": "pause_button", "sensor_name": MATCH}, "n_clicks"),
+    State({"type": "slider", "sensor_name": MATCH}, "value"),
+    State({"type": "slider", "sensor_name": MATCH}, "max"),
 )
-def advance_slider(_, value, max_value):
+def advance_slider(_, n_clicks, value, max_value):
+    paused = (n_clicks or 0) % 2 == 1
+    if paused:
+        return no_update
+
     if value is None or max_value is None:
         return 0
 
@@ -35,3 +40,13 @@ def advance_slider(_, value, max_value):
         return 0
     else:
         return value + 1
+
+
+@app.callback(
+    Output({"type": "pause_button", "sensor_name": MATCH}, "children"),
+    Input({"type": "pause_button", "sensor_name": MATCH}, "n_clicks"),
+)
+def update_pause_button_label(n_clicks):
+    paused = (n_clicks or 0) % 2 == 1
+
+    return "Play" if paused else "Pause"

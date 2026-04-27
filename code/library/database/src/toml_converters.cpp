@@ -41,6 +41,7 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         intrinsics[3] = tbl["cy"].value<double>().value();
         intrinsics[4] = tbl["xi"].value<double>().value();
         intrinsics[5] = tbl["alpha"].value<double>().value();
+
         return intrinsics;
     } else if (type == CameraModel::Pinhole) {
         auto tbl = toml::parse(toml_str);
@@ -49,6 +50,20 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         intrinsics[1] = tbl["fy"].value<double>().value();
         intrinsics[2] = tbl["cx"].value<double>().value();
         intrinsics[3] = tbl["cy"].value<double>().value();
+
+        return intrinsics;
+    } else if (type == CameraModel::PinholeRadtan4) {
+        auto tbl = toml::parse(toml_str);
+        ArrayXd intrinsics(8);
+        intrinsics[0] = tbl["fx"].value<double>().value();
+        intrinsics[1] = tbl["fy"].value<double>().value();
+        intrinsics[2] = tbl["cx"].value<double>().value();
+        intrinsics[3] = tbl["cy"].value<double>().value();
+        intrinsics[4] = tbl["k1"].value<double>().value();
+        intrinsics[5] = tbl["k2"].value<double>().value();
+        intrinsics[6] = tbl["p1"].value<double>().value();
+        intrinsics[7] = tbl["p2"].value<double>().value();
+
         return intrinsics;
     } else {
         throw std::runtime_error("Implement FromToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE

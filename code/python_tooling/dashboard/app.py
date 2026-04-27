@@ -95,11 +95,14 @@ app.layout = html.Div(
                 ),
             ],
             style={
+                "backgroundColor": "#f9f9f9",
+                "borderBottom": "1px solid #ddd",
                 "display": "flex",
                 "flexDirection": "column",
                 "padding": "15px",
-                "borderBottom": "1px solid #ddd",
-                "backgroundColor": "#f9f9f9",
+                "position": "sticky",
+                "top": "0",
+                "zIndex": "1000",
             },
         ),
         # Dynamic content container that holds all the sensor data visualizations

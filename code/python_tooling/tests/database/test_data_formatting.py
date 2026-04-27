@@ -5,19 +5,17 @@ import pandas as pd
 
 from database.data_formatting import (
     load_data,
+    process_camera_info_table,
     process_extracted_targets_table,
     process_images_table,
     process_imu_data_table,
     process_poses_table,
     process_reprojection_error_table,
 )
-from database.sql_statement_loading import load_sql
 from database.sql_table_loading import (
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
-    load_poses_table,
-    load_reprojection_errors_table,
 )
 from database.types import SensorType
 
@@ -46,6 +44,36 @@ class TestDataFormatting(unittest.TestCase):
             self.assertTrue("measurements" in data)
             self.assertTrue("images" in data["measurements"])
             self.assertEqual(len(data["measurements"]["images"]), 879)
+
+        check(data["/cam0/image_raw"])
+        check(data["/cam1/image_raw"])
+
+    def test_process_camera_info_table(self):
+        data = process_camera_info_table(None, None)
+        self.assertIsNone(data)
+
+        camera_info_data = {
+            "sensor_name": ["/cam0/image_raw", "/cam1/image_raw"],
+            "camera_model": ["pinhole_radtan4", "double_sphere"],
+            "height": [720, 720],
+            "width": [1080, 1080],
+        }
+        table = pd.DataFrame(camera_info_data)
+
+        self.assertRaises(KeyError, process_poses_table, table, {})
+
+        images_table = load_images_table(self.db_path)
+        data = process_images_table(images_table)
+
+        process_camera_info_table(table, data)
+
+        def check(data):
+            self.assertTrue("camera_info" in data)
+            self.assertTrue("camera_model" in data["camera_info"])
+            self.assertTrue("height" in data["camera_info"])
+            self.assertEqual(data["camera_info"]["height"], 720)
+            self.assertTrue("width" in data["camera_info"])
+            self.assertEqual(data["camera_info"]["width"], 1080)
 
         check(data["/cam0/image_raw"])
         check(data["/cam1/image_raw"])

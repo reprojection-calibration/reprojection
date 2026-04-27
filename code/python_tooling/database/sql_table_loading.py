@@ -17,7 +17,21 @@ def load_images_table(db_path):
 
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("images_select_all.sql"), conn)
+            table = pd.read_sql(load_sql("images_select_all_metadata_only.sql"), conn)
+    except Exception as e:
+        print(e)
+        return None
+
+    return table
+
+
+def load_camera_info_table(db_path):
+    if not os.path.isfile(db_path):
+        return None
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            table = pd.read_sql(load_sql("camera_info_select_all.sql"), conn)
     except Exception as e:
         print(e)
         return None

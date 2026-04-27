@@ -2,6 +2,7 @@ import os
 
 from database.geometry import InvertSe3
 from database.sql_table_loading import (
+    load_camera_info_table,
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
@@ -28,9 +29,27 @@ def process_images_table(table):
             }
 
         timestamp_ns = int(row["timestamp_ns"])
-        data[sensor_name]["measurements"]["images"][timestamp_ns] = row["data"]
+        data[sensor_name]["measurements"]["images"][timestamp_ns] = None
 
     return data
+
+
+def process_camera_info_table(table, data):
+    if table is None:
+        return None
+
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            raise KeyError(
+                f"Error while loading data for {sensor_name} - sensor does not already exist."
+            )
+        # TODO(Jack): Do we need any safety checks here either while reading from the row or inserting into data?
+        data[sensor_name]["camera_info"] = {
+            "camera_model": row["camera_model"],
+            "height": row["height"],
+            "width": row["width"],
+        }
 
 
 # NOTE(Jack): Although technically the extracted targets are a calculated output of the calibration process frontend,
@@ -52,6 +71,8 @@ def process_extracted_targets_table(table, data):
                 f"Error while loading data for {sensor_name} at time {timestamp_ns} - a corresponding image for the target was not found."
             )
 
+        # NOTE(Jack): Counting an extracted target as a measurement might violate the principle of least suprise!
+        # technically the only real measurement for a camera is the image itself.
         if "targets" not in data[sensor_name]["measurements"]:
             data[sensor_name]["measurements"].update({"targets": {}})
 
@@ -167,6 +188,10 @@ def load_data(db_path):
     table = load_images_table(db_path)
     if table is not None:
         data.update(process_images_table(table))
+
+    table = load_camera_info_table(db_path)
+    if table is not None:
+        process_camera_info_table(table, data)
 
     table = load_extracted_targets_table(db_path)
     if table is not None:
