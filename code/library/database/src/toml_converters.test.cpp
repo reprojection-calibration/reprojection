@@ -30,9 +30,9 @@ TEST(DatabaseTomlConverters, TestFromToml) {
     ArrayXd gt_result{Array6d{1, 2, 3, 4, 5, 6}};
     EXPECT_TRUE(result.isApprox(gt_result));
 
-    data = std::string{"cx = 1.0\ncy = 2.0\nfx = 3.0\nfy = 4.0\nk1 = 5.0\nk2 = 6.0\np1 = 7.0\np2 = 8.0"};
+    data = std::string{"cx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0\nk1 = 5.0\nk2 = 6.0\np1 = 7.0\np2 = 8.0"};
     result = database::FromToml(CameraModel::PinholeRadtan4, data);
 
-    gt_result = Array8d{3, 4, 1, 2, 5, 6, 7, 8};
+    gt_result = Array8d{1, 2, 3, 4, 5, 6, 7, 8};
     EXPECT_TRUE(result.isApprox(gt_result));
 }
