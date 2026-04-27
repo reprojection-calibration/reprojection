@@ -10,8 +10,10 @@ from dashboard.server import app
     State("raw-data-store", "data"),
     State({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
 )
-def update_image_size(_, sensor_name, raw_data, fig):
+def update_extracted_target_figure_size(_, sensor_name, raw_data, fig):
     if sensor_name is None or raw_data is None or fig is None:
+        # TODO(Jack): We do not yet have a logging policy/strategy for the visualization code, but here is a good
+        # example of a place where it might help us as this condition should never really happen.
         return no_update
 
     camera_info = raw_data[sensor_name].get("camera_info")
