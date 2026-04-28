@@ -30,8 +30,6 @@ int main(int argc, char* argv[]) {
             return std::nullopt;
         }
 
-        cv::resize(img, img, cv::Size(), 0.50, 0.50);
-
         return std::pair<uint64_t, cv::Mat>{timestamp_ns, img};
     }};
 
