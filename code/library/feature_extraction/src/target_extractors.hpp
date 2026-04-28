@@ -50,6 +50,8 @@ class AprilGrid3Extractor : public TargetExtractor {
 
     static Matrix42d RefineCorners(cv::Mat const& image, Matrix42d const& extraction_corners);
 
+    static ExtractedTarget RemoveOutliers(MatrixX2d const& raw_corners, ExtractedTarget const& target);
+
     AprilTagFamily tag_family_;
     AprilTagDetector tag_detector_;
 };
