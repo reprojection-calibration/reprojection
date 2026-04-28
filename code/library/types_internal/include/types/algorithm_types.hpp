@@ -16,6 +16,10 @@ struct Bundle {
 };
 
 struct ExtractedTarget {
+    ExtractedTarget operator()(ArrayXi const& valid_ids) const {
+        return ExtractedTarget{bundle(valid_ids), indices(valid_ids, Eigen::all)};
+    }
+
     Bundle bundle;
     ArrayX2i indices;
 };

@@ -5,6 +5,7 @@ extern "C" {
 }
 
 #include "eigen_utilities/grid.hpp"
+#include "eigen_utilities/statistics.hpp"
 
 #include "utilities.hpp"
 
@@ -91,13 +92,15 @@ AprilGrid3Extractor::AprilGrid3Extractor(cv::Size const& pattern_size, const dou
     points_ = CornerPositions(point_indices_, unit_dimension);
 }
 
+// TODO(Jack): Make corner and point naming consistent!
 std::optional<ExtractedTarget> AprilGrid3Extractor::ExtractImplementation(cv::Mat const& image) const {
     std::vector<AprilTagDetection> const raw_detections{tag_detector_.Detect(image)};
     if (std::size(raw_detections) == 0) {
         return std::nullopt;
     }
 
-    MatrixX2d corners{4 * std::size(raw_detections), 2};
+    MatrixX2d raw_corners{4 * std::size(raw_detections), 2};
+    MatrixX2d refined_corners{4 * std::size(raw_detections), 2};
     for (size_t i{0}; i < std::size(raw_detections); ++i) {
         // WARN(Jack): The homography can launch the corners outside the bound of the image, this is currently not
         // handled, and how that shows up in our code is not yet clear (2.10.2025).
@@ -105,18 +108,19 @@ std::optional<ExtractedTarget> AprilGrid3Extractor::ExtractImplementation(cv::Ma
             EstimateExtractionCorners(raw_detections[i].H, std::sqrt(tag_family_.tag_family->nbits))};
         Matrix42d const refined_extraction_corners{RefineCorners(image, extraction_corners)};
 
-        corners.block<4, 2>(4 * i, 0) = refined_extraction_corners;
+        raw_corners.block<4, 2>(4 * i, 0) = extraction_corners;
+        refined_corners.block<4, 2>(4 * i, 0) = refined_extraction_corners;
     }
 
-    ArrayXi const mask{AprilGrid3Extractor::VisibleGeometry(pattern_size_, raw_detections)};
+    ArrayXi const mask{VisibleGeometry(pattern_size_, raw_detections)};
+    ExtractedTarget const target{{refined_corners, points_(mask, Eigen::all)}, point_indices_(mask, Eigen::all)};
 
-    // TODO(Jack): Make corner and point naming consistent!
-    return ExtractedTarget{{corners, points_(mask, Eigen::all)}, point_indices_(mask, Eigen::all)};
+    return RemoveOutliers(raw_corners, target);
 }
 
 // This function is responsible for handling the more complex indexing and grid arrangement that is inherent to an
 // april board. Our goal when dealing with the april board is to produce rows and columns of points exactly like a
-// chekerboard or circle grid. Because of the nature of april tags (having four points for each tag) and the
+// checkerboard or circle grid. Because of the nature of april tags (having four points for each tag) and the
 // requirement to handle different size boards and different metric size tags, this is not trivial. This function is
 // the critical building block that is responsible for providing a mask which tells us, given the detection tag IDs,
 // which points are visible and which are not.
@@ -192,6 +196,18 @@ Matrix42d AprilGrid3Extractor::RefineCorners(cv::Mat const& image, Matrix42d con
                      cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
 
     return refined_extraction_corners.cast<double>();
+}
+
+// TODO TEST!
+ExtractedTarget AprilGrid3Extractor::RemoveOutliers(MatrixX2d const& raw_corners, ExtractedTarget const& target) {
+    ArrayXd const delta{(raw_corners.array() - target.bundle.pixels.array()).rowwise().norm()};
+    double const median{eigen_utilities::Median(delta)};
+    double const mad{eigen_utilities::Median((delta - median).abs())};
+
+    ArrayXb const mask{delta < median + (2 * mad)};
+    ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
+
+    return target(valid_indices);
 }
 
 }  // namespace reprojection::feature_extraction
