@@ -78,6 +78,8 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
         return CameraModel::Pinhole;
     } else if (camera_model == "pinhole_radtan4") {
         return CameraModel::PinholeRadtan4;
+    } else if (camera_model == "unified_camera_model") {
+        return CameraModel::UnifiedCameraModel;
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToCameraModel(): " +
                                  std::string(camera_model));
