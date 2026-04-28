@@ -120,7 +120,7 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3Extractor) {
     EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-6));
 
     MatrixX3d const& points{target->bundle.points};
-    Eigen::Matrix<double, 4, 3> const gt_points{{0, 0, 0}, {0.5, 0, 0}, {0, 0.5, 0}, {0.5, 0.5, 0}};
+    Eigen::Matrix<double, 4, 3> const gt_points{{0, 0, 0}, {0, 0.5, 0}, {0.5, 0, 0}, {0.5, 0.5, 0}};
     EXPECT_TRUE(points.isApprox(gt_points));
 
     ArrayX2i const& indices{target->indices};

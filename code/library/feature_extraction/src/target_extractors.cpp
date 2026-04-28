@@ -150,8 +150,8 @@ MatrixX3d AprilGrid3Extractor::CornerPositions(ArrayX2i const& indices, double c
     for (int i{0}; i < indices.rows(); ++i) {
         // WARN(Jack): If we change the pattern (num_bits or design) then this 0.4 (4bits/10bits) will change! This
         // function is currently assuming that AprilBoard3 will be fixed forever using the custom 36h11 tag family.
-        points.row(i)(0) = AlternatingSum(indices.row(i)(1), unit_dimension, 0.4 * unit_dimension);
-        points.row(i)(1) = AlternatingSum(indices.row(i)(0), unit_dimension, 0.4 * unit_dimension);
+        points.row(i)(0) = AlternatingSum(indices.row(i)(0), unit_dimension, 0.4 * unit_dimension);
+        points.row(i)(1) = AlternatingSum(indices.row(i)(1), unit_dimension, 0.4 * unit_dimension);
     }
     points.col(2).setZero();
 
