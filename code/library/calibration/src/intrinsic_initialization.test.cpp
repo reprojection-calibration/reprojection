@@ -45,8 +45,8 @@ TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
     std::vector<double> const ds_gammas{runner(target)};
     EXPECT_EQ(std::size(ds_gammas), 3);  // Simple heuristic to check we get any result from the runner.
 
-    Array6d const ds_intrinsics{initialization(600, height, width)};
-    Array6d const gt_ds_intrinsics{300, 300, 360, 240, 0, 0.5};
+    Array5d const ds_intrinsics{initialization(600, height, width)};
+    Array5d const gt_ds_intrinsics{300, 360, 240, 0, 0.5};
     EXPECT_TRUE(ds_intrinsics.isApprox(gt_ds_intrinsics));
 
     // Now we run the other methods too, mainly to get full test coverage, not because we need to.
