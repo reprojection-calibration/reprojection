@@ -102,7 +102,7 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_TCreate) {
                                                                                       testing_utilities::image_bounds)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);  // pinhole intrinsics
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], 6);  // camera pose
     EXPECT_EQ(cost_function->num_residuals(), 2);
     delete cost_function;

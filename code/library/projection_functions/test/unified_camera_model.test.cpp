@@ -10,9 +10,9 @@
 using namespace reprojection;
 
 Array4d const intrinsics{600, 360, 240, 0.1};
-MatrixX2d const gt_pixels{{intrinsics[1], intrinsics[3]},
-                          {37.598189013469323, intrinsics[3]},
-                          {682.31472984876814, intrinsics[3]},
+MatrixX2d const gt_pixels{{intrinsics[1], intrinsics[2]},
+                          {37.598189013469323, intrinsics[2]},
+                          {682.31472984876814, intrinsics[2]},
                           {intrinsics[1], 23.33548267325537},
                           {intrinsics[1], 456.57545045050017}};
 

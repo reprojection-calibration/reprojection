@@ -69,7 +69,7 @@ TEST(OptimizationSplineProjectionCostFunction, TestSplineProjectionCostFunction_
             pixel, point, testing_utilities::image_bounds, 0.0, 1)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 5);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);  // pinhole intrinsics
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], 6);  // control point 1
     EXPECT_EQ(cost_function->parameter_block_sizes()[2], 6);  // control point 2
     EXPECT_EQ(cost_function->parameter_block_sizes()[3], 6);  // control point 3

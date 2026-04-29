@@ -7,15 +7,15 @@ using namespace reprojection;
 TEST(ProjectionFunctionsInitializeCamera, TestInitializeCamera) {
     ImageBounds const bounds{};
 
-    auto camera_ptr{projection_functions::InitializeCamera(CameraModel::DoubleSphere, Array6d::Zero(), bounds)};
+    auto camera_ptr{projection_functions::InitializeCamera(CameraModel::DoubleSphere, Array5d::Zero(), bounds)};
     EXPECT_TRUE(camera_ptr);
 
-    camera_ptr = projection_functions::InitializeCamera(CameraModel::Pinhole, Array4d::Zero(), bounds);
+    camera_ptr = projection_functions::InitializeCamera(CameraModel::Pinhole, Array3d::Zero(), bounds);
     EXPECT_TRUE(camera_ptr);
 
-    camera_ptr = projection_functions::InitializeCamera(CameraModel::PinholeRadtan4, Array8d::Zero(), bounds);
+    camera_ptr = projection_functions::InitializeCamera(CameraModel::PinholeRadtan4, Array7d::Zero(), bounds);
     EXPECT_TRUE(camera_ptr);
 
-    camera_ptr = projection_functions::InitializeCamera(CameraModel::UnifiedCameraModel, Array5d::Zero(), bounds);
+    camera_ptr = projection_functions::InitializeCamera(CameraModel::UnifiedCameraModel, Array4d::Zero(), bounds);
     EXPECT_TRUE(camera_ptr);
 }
