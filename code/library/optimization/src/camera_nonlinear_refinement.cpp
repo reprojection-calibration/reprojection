@@ -11,7 +11,8 @@ namespace reprojection::optimization {
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
 std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo const& sensor,
                                                                     CameraMeasurements const& targets,
-                                                                    OptimizationState const& initial_state) {
+                                                                    OptimizationState const& initial_state,
+                                                                    bool const constant_intrinsics) {
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
@@ -25,6 +26,10 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
 
             problem.AddResidualBlock(cost_function, nullptr, optimized_state.camera_state.intrinsics.data(),
                                      optimized_state.frames.at(timestamp_ns).pose.data());
+            if (constant_intrinsics) {
+                problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
+            }
+
         }
     }
 
