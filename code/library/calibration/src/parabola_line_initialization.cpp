@@ -23,6 +23,10 @@ std::optional<double> ParabolaLineInitialization(Vector2d const& principal_point
     P.col(2).setConstant(0.5);
     P.col(3) = -pixels_c.rowwise().squaredNorm() / 2.0;
 
+    // TODO(Jack): Is it possible to detect a "failure" here by analyzing the svd result? Ex. bad condition numbers, bad
+    // rank, or bad residual? It would be nice if there was a principled way to interpret the result here and tell the
+    // user that given the input data we cannot initialize. Currently (29.04.2026) the user will get an answer but it
+    // will be a focal length of like 40,000 pixels which makes no sense.
     Eigen::JacobiSVD<MatrixXd> svd;
     svd.compute(P, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
