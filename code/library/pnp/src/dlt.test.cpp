@@ -17,14 +17,16 @@ TEST(PnpDlt, TestDlt23) {
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9, false)};
 
     for (auto const& [timestamp_ns, target_i] : targets) {
-        auto const [tf_co_w, K]{pnp::Dlt23(target_i.bundle)};
+        auto const [tf_co_w, K_vec]{pnp::Dlt23(target_i.bundle)};
         Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
                                                   << gt_tf_co_w.matrix();
         EXPECT_FLOAT_EQ(tf_co_w.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
-        EXPECT_TRUE(K.isApprox(intrinsics.intrinsics));
+        EXPECT_TRUE(K_vec.isApprox(intrinsics.intrinsics))<< "Result:\n"
+                                                  << K_vec.transpose() << "\nexpected result:\n"
+                                                  << intrinsics.intrinsics.transpose();
     }
 }
 
