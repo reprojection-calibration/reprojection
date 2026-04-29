@@ -50,10 +50,10 @@ inline std::string ToString(CalibrationStep const step_name) {
 // again in each projection class! This will be a pain point going forward if we do not find a solution here to
 // eliminate the manual and far apart duplication.
 enum class CameraModel {
-    DoubleSphere = 6,  //
-    Pinhole = 4,
-    PinholeRadtan4 = 8,
-    UnifiedCameraModel = 5,
+    DoubleSphere = 5,  //
+    Pinhole = 3,
+    PinholeRadtan4 = 7,
+    UnifiedCameraModel = 4,
 };
 
 // TODO(Jack): Is this the right place to put functions like this? What about testing?
