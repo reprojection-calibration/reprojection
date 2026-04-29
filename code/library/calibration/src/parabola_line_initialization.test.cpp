@@ -29,7 +29,7 @@ std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3
     // Project the four points to pixels using the ucm camera model with xi=1 (i.e. parabola case) and a focal
     // length/gamma of 600
     Array2d const principal_point{360, 240};
-    Array5d const intrinsics{600, 600, principal_point[0], principal_point[1], 1};
+    Array4d const intrinsics{600, principal_point[0], principal_point[1], 1};
     auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
     // ERROR
     // ERROR

@@ -6,7 +6,7 @@ namespace reprojection::projection_functions {
 
 std::optional<Array3d> DoubleSphere::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
                                                ImageBounds const& bounds, Array2d const& pixel) {
-    auto const ray{Pinhole::Unproject(intrinsics.head<4>(), bounds, pixel)};
+    auto const ray{Pinhole::Unproject(intrinsics.head<3>(), bounds, pixel)};
     if (not ray) {
         return std::nullopt;  // LCOV_EXCL_LINE
     }

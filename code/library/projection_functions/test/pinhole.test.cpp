@@ -68,8 +68,8 @@ TEST(ProjectionFunctionsPinhole, TestPinholeUnproject) {
 }
 
 TEST(ProjectionFunctionsPinhole, TestPinholeIntialize) {
-    Array4d const result{projection_functions::Pinhole::Initialize(1200, 480, 720)};
-    Array4d const gt_result{1200, 1200, 360, 240};
+    Array3d const result{projection_functions::Pinhole::Initialize(1200, 480, 720)};
+    Array3d const gt_result{1200, 360, 240};
 
     EXPECT_TRUE(result.isApprox(gt_result));
 }

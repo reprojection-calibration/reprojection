@@ -9,8 +9,8 @@
 
 using namespace reprojection;
 
-Array8d const pinhole_radtan4_intrinsics{600, 600, 360, 240, -0.1, 0.1, 0.001, 0.001};
-MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[2], pinhole_radtan4_intrinsics[3]},
+Array7d const pinhole_radtan4_intrinsics{600, 360, 240, -0.1, 0.1, 0.001, 0.001};
+MatrixX2d const gt_pixels{{pinhole_radtan4_intrinsics[1], pinhole_radtan4_intrinsics[2]},
                           {8.9424000000000206, 240.21600000000001},
                           {712.25756064927782, 240.21588001666666},
                           {360.096, 3.5135999999999683},
@@ -27,7 +27,7 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestProject) {
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeEquivalentProject) {
     // If [k1, k2, p1, p2] are zero then pinhole radtan4 should essentially just act as a pinhole camera.
-    Array8d const pinhole_intrinsics{600, 600, 360, 240, 0, 0, 0, 0};
+    Array7d const pinhole_intrinsics{600, 360, 240, 0, 0, 0, 0};
     MatrixX2d const gt_pinhole_pixels{{360, 240},  //
                                       {0, 240},
                                       {719.9, 240},
@@ -78,8 +78,8 @@ TEST(ProjectionFunctionsPinholeRadtan4, TestDistortionFunctor) {
 }
 
 TEST(ProjectionFunctionsPinholeRadtan4, TestPinholeRadtan4Intialize) {
-    Array8d const result{projection_functions::PinholeRadtan4::Initialize(1200, 480, 720)};
-    Array8d const gt_result{1200, 1200, 360, 240, 0, 0, 0, 0};
+    Array7d const result{projection_functions::PinholeRadtan4::Initialize(1200, 480, 720)};
+    Array7d const gt_result{1200, 360, 240, 0, 0, 0, 0};
 
     EXPECT_TRUE(result.isApprox(gt_result));
 }

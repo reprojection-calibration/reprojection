@@ -17,7 +17,7 @@ class FocalLengthInitFixture : public ::testing::Test {
         // initialization case that would otherwise resul tin no successful gamma estimate below.
         target_points.leftCols<2>().array() -= 3;
 
-        Array5d const ucm_intrinsics{600, 600, width / 2, height / 2, 1};
+        Array4d const ucm_intrinsics{600, width / 2, height / 2, 1};
         auto const camera{projection_functions::UcmCamera(ucm_intrinsics, testing_utilities::image_bounds)};
         auto const [pixels, mask]{camera.Project(target_points)};
 

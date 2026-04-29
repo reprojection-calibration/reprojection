@@ -9,12 +9,12 @@
 
 using namespace reprojection;
 
-Array5d const intrinsics{600, 600, 360, 240, 0.1};
-MatrixX2d const gt_pixels{{intrinsics[2], intrinsics[3]},
+Array4d const intrinsics{600, 360, 240, 0.1};
+MatrixX2d const gt_pixels{{intrinsics[1], intrinsics[3]},
                           {37.598189013469323, intrinsics[3]},
                           {682.31472984876814, intrinsics[3]},
-                          {intrinsics[2], 23.33548267325537},
-                          {intrinsics[2], 456.57545045050017}};
+                          {intrinsics[1], 23.33548267325537},
+                          {intrinsics[1], 456.57545045050017}};
 
 TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelProject) {
     auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
@@ -38,8 +38,8 @@ TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelUnproject) {
 }
 
 TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelIntialize) {
-    Array5d const result{projection_functions::UnifiedCameraModel::Initialize(1200, 480, 720)};
-    Array5d const gt_result{1200, 1200, 360, 240, 1};
+    Array4d const result{projection_functions::UnifiedCameraModel::Initialize(1200, 480, 720)};
+    Array4d const gt_result{1200, 360, 240, 1};
 
     EXPECT_TRUE(result.isApprox(gt_result));
 }

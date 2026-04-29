@@ -12,11 +12,11 @@ namespace reprojection::projection_functions {
  * \brief Classic four parameter radial-tangential distortion model on top of a pinhole camera.
  */
 struct PinholeRadtan4 {
-    static int constexpr Size{8};
+    static int constexpr Size{7};
 
     // TODO(Jack): Is there a more sophisticated way required to initialize the distortion components here?
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return {gamma, gamma, 0.5 * width, 0.5 * height, 0, 0, 0, 0};
+        return { gamma, 0.5 * width, 0.5 * height, 0, 0, 0, 0};
     }
 
     /**
@@ -62,7 +62,7 @@ struct PinholeRadtan4 {
         // masquerades as a 3D point, but it does not have nearly the amount of "freedom" at this point when compared to
         // the input P_co which was a real 3D point. It is constrained to the ideal/normalized camera frame. That is the
         // reason that I do not use a frame postfix like "_co" and instead just call it "_star".
-        return Pinhole::Project<T>(intrinsics.template head<4>(), bounds, P_star);
+        return Pinhole::Project<T>(intrinsics.template head<3>(), bounds, P_star);
     }
 
     static std::optional<Array3d> Unproject(Eigen::Array<double, Size, 1> const& intrinsics, ImageBounds const& bounds,

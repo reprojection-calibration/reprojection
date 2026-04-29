@@ -14,19 +14,19 @@ namespace reprojection::projection_functions {
  * \brief Implemented as a degenerate case of the DoubleSphere model (xi=1, alpha=0).
  */
 struct UnifiedCameraModel {
-    static int constexpr Size{5};
+    static int constexpr Size{4};
 
     // TODO(Jack): The UCM model is so similar to double sphere, then why is the initialization strategy so different?
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return {gamma, gamma, 0.5 * width, 0.5 * height, 1};
+        return {gamma, 0.5 * width, 0.5 * height, 1};
     }
 
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
         T const alpha{0};  // Set alpha to zero - make ds equivalent to ucm by collapsing the second sphere in ds
-        Eigen::Array<T, 6, 1> const ds_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), intrinsics(3),
-                                                  intrinsics(4), alpha);
+        Eigen::Array<T, DoubleSphere::Size, 1> const ds_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2),
+                                                                   intrinsics(3), alpha);
 
         return DoubleSphere::Project<T>(ds_intrinsics, bounds, P_co);
     }

@@ -23,6 +23,7 @@ using Array5d = Array5<double>;
 template <typename T>
 using Array6 = Eigen::Array<T, 6, 1>;
 using Array6d = Array6<double>;
+using Array7d = Eigen::Array<double, 7, 1>;
 using Array8d = Eigen::Array<double, 8, 1>;
 template <typename T>
 using ArrayX = Eigen::Array<T, Eigen::Dynamic, 1>;
