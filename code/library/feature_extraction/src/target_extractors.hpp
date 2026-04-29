@@ -50,6 +50,11 @@ class AprilGrid3Extractor : public TargetExtractor {
 
     static Matrix42d RefineCorners(cv::Mat const& image, Matrix42d const& extraction_corners);
 
+    // Remove outlier detections using the "median absolute deviation" (MAD). We chose MAD because it is very robust to
+    // outliers. We are assuming that if a pixel moved a lot during the subpixel refinement that it got "lost" and is
+    // not an accurate detection and refinement.
+    //
+    // See public documentation for the theory of MAD - https://en.wikipedia.org/wiki/Median_absolute_deviation
     static ExtractedTarget RemoveOutliers(MatrixX2d const& raw_corners, ExtractedTarget const& target);
 
     AprilTagFamily tag_family_;
