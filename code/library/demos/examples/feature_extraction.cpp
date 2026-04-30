@@ -3,6 +3,7 @@
 #include "application/cli_utils.hpp"
 #include "demos/image_source.hpp"
 #include "feature_extraction/target_extraction.hpp"
+#include "image_viewer/image_viewer.hpp"
 
 // To get this working from CLion dev env I followed this link:
 // https://medium.com/@steffen.stautmeister/how-to-build-and-run-opencv-and-pytorch-c-with-cuda-support-in-docker-in-clion-6f485155deb8
@@ -37,20 +38,19 @@ int main(int argc, char* argv[]) {
     toml::table const config{toml::parse_file(*config_file)};
     auto const extractor{feature_extraction::CreateTargetExtractor(*config["target"].as_table())};
 
-    std::cout << "\n\tPress any key to close the window and end the demo.\n" << std::endl;
-
-    cv::Mat frame, gray;
     while (true) {
-        frame = image_feed->GetImage();
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        cv::Mat const img{image_feed->GetImage()};
 
-        std::optional<ExtractedTarget> const target{extractor->Extract(gray)};
+        std::optional<ExtractedTarget> const target{extractor->Extract(img)};
         if (target.has_value()) {
-            feature_extraction::DrawTarget(*target, frame);
+            feature_extraction::DrawTarget(*target, img);
         }
 
-        cv::imshow("Tag Detections", frame);
-        if (cv::waitKey(30) >= 0) {
+        static image_viewer::ImageViewer viewer(
+            std::make_unique<image_viewer::OpenCvGuiInterface>("Target Feature Extraction"),
+            std::make_unique<image_viewer::OpenCvKeyboardInput>());
+        viewer.Show(img);
+        if (viewer.ShouldQuit()) {
             break;
         }
     }
