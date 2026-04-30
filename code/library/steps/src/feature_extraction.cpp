@@ -56,11 +56,11 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
             // just crash here. We might want to wrap the window visualizer in a little class with a factory function,
             // and then log to the user a warning if they requested visualization but here is no gui device.
             static image_viewer::ImageViewer viewer(
-                std::make_unique<image_viewer::OpenCvGuiInterface>("Target Feature Extraction"),
-                std::make_unique<image_viewer::OpenCvKeyboardInput>());
-            viewer.Show(img);
-            if (viewer.ShouldQuit()) {
-                break;
+                std::make_unique<image_viewer::OpenCvGuiInterface>("Target Feature Extraction"),  // LCOV_EXCL_LINE
+                std::make_unique<image_viewer::OpenCvKeyboardInput>());                           // LCOV_EXCL_LINE
+            viewer.Show(img);                                                                     // LCOV_EXCL_LINE
+            if (viewer.ShouldQuit()) {                                                            // LCOV_EXCL_LINE
+                break;                                                                            // LCOV_EXCL_LINE
             }
         }
     }
