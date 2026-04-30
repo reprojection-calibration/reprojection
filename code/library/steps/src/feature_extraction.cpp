@@ -4,6 +4,7 @@
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "feature_extraction/target_extraction.hpp"
+#include "image_viewer/image_viewer.hpp"
 
 namespace reprojection::steps {
 
@@ -56,9 +57,13 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
                 feature_extraction::DrawTarget(*target, img);  // LCOV_EXCL_LINE
             }
 
-            cv::imshow("Target Extraction", img);  // LCOV_EXCL_LINE
-            // TODO(Jack): Should we make the delay time here configurable?
-            cv::waitKey(5);  // LCOV_EXCL_LINE
+            // TODO(Jack): Here we are giving the GUI image displayer the possibility to end the feature extraction, is
+            // that really an interaction/power we want this code to have?
+            static image_viewer::ImageViewer viewer("Target Extraction", 30);
+            viewer.Show(img);
+            if (viewer.ShouldQuit()) {
+                break;
+            }
         }
     }
 
