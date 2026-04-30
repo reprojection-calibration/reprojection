@@ -1,7 +1,5 @@
 #include "toml_converters.hpp"
 
-#include <toml++/toml.hpp>
-
 namespace reprojection::database {
 
 // TODO(Jack): Add error handling if for example the length of intrinsics does not match the length expected for that
@@ -36,10 +34,8 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
     if (type == CameraModel::DoubleSphere) {
         auto tbl = toml::parse(toml_str);
         ArrayXd intrinsics(6);
-        intrinsics[0] = tbl["fx"].value<double>().value();
-        intrinsics[1] = tbl["fy"].value<double>().value();
-        intrinsics[2] = tbl["cx"].value<double>().value();
-        intrinsics[3] = tbl["cy"].value<double>().value();
+
+        intrinsics = ReadPinholeValues(tbl, intrinsics);
         intrinsics[4] = tbl["xi"].value<double>().value();
         intrinsics[5] = tbl["alpha"].value<double>().value();
 
@@ -47,19 +43,15 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
     } else if (type == CameraModel::Pinhole) {
         auto tbl = toml::parse(toml_str);
         ArrayXd intrinsics(4);
-        intrinsics[0] = tbl["fx"].value<double>().value();
-        intrinsics[1] = tbl["fy"].value<double>().value();
-        intrinsics[2] = tbl["cx"].value<double>().value();
-        intrinsics[3] = tbl["cy"].value<double>().value();
+
+        intrinsics = ReadPinholeValues(tbl, intrinsics);
 
         return intrinsics;
     } else if (type == CameraModel::PinholeRadtan4) {
         auto tbl = toml::parse(toml_str);
         ArrayXd intrinsics(8);
-        intrinsics[0] = tbl["fx"].value<double>().value();
-        intrinsics[1] = tbl["fy"].value<double>().value();
-        intrinsics[2] = tbl["cx"].value<double>().value();
-        intrinsics[3] = tbl["cy"].value<double>().value();
+
+        intrinsics = ReadPinholeValues(tbl, intrinsics);
         intrinsics[4] = tbl["k1"].value<double>().value();
         intrinsics[5] = tbl["k2"].value<double>().value();
         intrinsics[6] = tbl["p1"].value<double>().value();
@@ -69,16 +61,25 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
     } else if (type == CameraModel::UnifiedCameraModel) {
         auto tbl = toml::parse(toml_str);
         ArrayXd intrinsics(5);
-        intrinsics[0] = tbl["fx"].value<double>().value();
-        intrinsics[1] = tbl["fy"].value<double>().value();
-        intrinsics[2] = tbl["cx"].value<double>().value();
-        intrinsics[3] = tbl["cy"].value<double>().value();
+
+        intrinsics = ReadPinholeValues(tbl, intrinsics);
         intrinsics[4] = tbl["xi"].value<double>().value();
 
         return intrinsics;
     } else {
         throw std::runtime_error("Implement FromToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE
     }
+}
+
+// WARN(Jack): This function does no error/bounds checking or handling! It is a simple method but in the wrong hands it
+// is ticking timebomb if used inappropriately.
+ArrayXd ReadPinholeValues(toml::parse_result const& tbl, ArrayXd intrinsics) {
+    intrinsics[0] = tbl["fx"].value<double>().value();
+    intrinsics[1] = tbl["fy"].value<double>().value();
+    intrinsics[2] = tbl["cx"].value<double>().value();
+    intrinsics[3] = tbl["cy"].value<double>().value();
+
+    return intrinsics;
 }
 
 }  // namespace reprojection::database
