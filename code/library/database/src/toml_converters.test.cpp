@@ -28,6 +28,9 @@ Array5d const ucm_intrinsics{[]() {
     return data;
 }()};
 
+// TODO(Jack): We can also replace the two following tests with a single test that checks the forward and reverse
+// operation in one line.
+
 TEST(DatabaseTomlConverters, TestToToml) {
     std::string result{database::ToToml(CameraModel::DoubleSphere, testing_utilities::double_sphere_intrinsics)};
     EXPECT_EQ(result, ds_toml);
