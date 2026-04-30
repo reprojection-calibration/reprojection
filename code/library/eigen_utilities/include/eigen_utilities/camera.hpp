@@ -4,7 +4,7 @@
 
 namespace reprojection::eigen_utilities {
 
-// [fx, fy, cx, cy]
-Array4d FromK(Matrix3d const& matrix);
+// [f, cx, cy]
+Array3d FromK(Matrix3d const& matrix);
 
 }  // namespace reprojection::eigen_utilities

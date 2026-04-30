@@ -17,7 +17,7 @@ std::optional<std::pair<FrameState, double>> EstimatePoseViaPinholePnP(std::uniq
     auto const [rays, mask_unproject]{camera->Unproject(bundle.pixels)};
 
     // Project the rays using a unit ideal pinhole camera to get undistorted/linearized pixels
-    auto const pinhole_camera{PinholeCamera({1, 1, 0, 0}, {-1, 1, -1, 1})};
+    auto const pinhole_camera{PinholeCamera({1, 0, 0}, {-1, 1, -1, 1})};
     auto const [pixels, mask_project]{pinhole_camera.Project(rays)};
 
     // Combine the masks and make a new bundle from only the valid reprojected points.

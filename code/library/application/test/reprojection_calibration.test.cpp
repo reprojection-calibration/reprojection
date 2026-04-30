@@ -90,7 +90,7 @@ TEST(Application, TestCalibrate) {
 
     database::WriteToDb(CalibrationStep::IntrinsicInitialization, caching::CacheKey(camera_info, {}),
                         camera_info.sensor_name, db);
-    database::WriteToDb({Array6d::Zero()}, camera_info.camera_model, CalibrationStep::IntrinsicInitialization,
+    database::WriteToDb({Array5d::Zero()}, camera_info.camera_model, CalibrationStep::IntrinsicInitialization,
                         camera_info.sensor_name, db);
 
     // NOTE(Jack): We do not need to do anything for the linear_pose_initialization and camera_nonlinear_refinement

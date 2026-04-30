@@ -42,7 +42,7 @@ TEST(CachingSerialize, TestSerializeCameraState) {
     CameraState const camera_state{testing_utilities::pinhole_intrinsics};
 
     std::string const result{caching::Serialize(camera_state)};
-    std::string const gt_result{"600.000;600.000;360.000;240.000;|"};
+    std::string const gt_result{"600.000;360.000;240.000;|"};
 
     EXPECT_EQ(result, gt_result);
 }

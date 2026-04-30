@@ -69,7 +69,7 @@ TEST(OptimizationProjectionCostFunction, TestCreate) {
 // residual zero and that a point behind the camera returns false.
 TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
     using PinholeCostFunction = optimization::ProjectionCostFunction_T<projection_functions::Pinhole>;
-    Array2d const pixel{testing_utilities::pinhole_intrinsics[2], testing_utilities::pinhole_intrinsics[3]};
+    Array2d const pixel{testing_utilities::pinhole_intrinsics[1], testing_utilities::pinhole_intrinsics[2]};
     Array6d const pose{0, 0, 0, 0, 0, 0};
     Array2d residual{-1, -1};
 
@@ -102,7 +102,7 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_TCreate) {
                                                                                       testing_utilities::image_bounds)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);  // pinhole intrinsics
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], 6);  // camera pose
     EXPECT_EQ(cost_function->num_residuals(), 2);
     delete cost_function;

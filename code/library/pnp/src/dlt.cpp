@@ -11,7 +11,7 @@ namespace reprojection::pnp {
 // number of correspondences is already check in the public facing interface, we do not check it again here.
 // NOTE(Jack): We probably mainly want only the pose, but we calculate K anyway as part of the process, so following the
 // "law of useful return", we return K too.
-std::tuple<Isometry3d, Array4d> Dlt23(Bundle const& bundle) {
+std::tuple<Isometry3d, Array3d> Dlt23(Bundle const& bundle) {
     auto const [normalized_pixels, tf_pixels]{NormalizeColumnWise(bundle.pixels)};
     auto const [normalized_points, tf_points]{NormalizeColumnWise(bundle.points)};
 

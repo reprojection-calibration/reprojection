@@ -30,14 +30,14 @@ TEST_F(CacheKeysFixture, FocalLengthInitialization) {
 
 TEST_F(CacheKeysFixture, LinearPoseInitialization) {
     std::string const result{caching::CacheKey(camera_info, camera_measurements, camera_state)};
-    std::string const gt_result{"947b431f312e71ed52b4e85b84ae36e34c62ac1dd749f3988f631d23f3c029b9"};
+    std::string const gt_result{"c78e49018ab68ffc6b2ce19cc210aaba72ac7729ce5385ef9a231a34af2032fe"};
 
     EXPECT_EQ(result, gt_result);
 }
 
 TEST_F(CacheKeysFixture, CameraNonlinearRefinement) {
     std::string const result{caching::CacheKey(camera_info, camera_measurements, optimization_state)};
-    std::string const gt_result{"2a49e05662f0f402884fcb00bbe9b3388979381e9324181e513c56edd255ced7"};
+    std::string const gt_result{"b45889d48b71fc02fd39a3d8f9a41a909d6e98627d491596a63b2e24b2dca5b8"};
 
     EXPECT_EQ(result, gt_result);
 }

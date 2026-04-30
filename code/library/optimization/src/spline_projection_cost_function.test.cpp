@@ -46,7 +46,7 @@ TEST(OptimizationSplineProjectionCostFunction, TestCreate) {
 // Test with four of the same identity control points. This should give us an identity SE3 pose. Because the spline is
 // stationary as identity we arbitrarily choose u_i and delta_t_ns as it makes no difference here.
 TEST(OptimizationSplineProjectionCostFunction, TestSplineProjectionCostFunction_T) {
-    Array2d const pixel{testing_utilities::pinhole_intrinsics[2], testing_utilities::pinhole_intrinsics[3]};
+    Array2d const pixel{testing_utilities::pinhole_intrinsics[1], testing_utilities::pinhole_intrinsics[2]};
     Array3d const point{0, 0, 10};
     optimization::SplineProjectionCostFunction_T<projection_functions::Pinhole> const cost_function{
         pixel, point, testing_utilities::image_bounds, 0, 1};
@@ -69,7 +69,7 @@ TEST(OptimizationSplineProjectionCostFunction, TestSplineProjectionCostFunction_
             pixel, point, testing_utilities::image_bounds, 0.0, 1)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 5);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);  // pinhole intrinsics
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], 6);  // control point 1
     EXPECT_EQ(cost_function->parameter_block_sizes()[2], 6);  // control point 2
     EXPECT_EQ(cost_function->parameter_block_sizes()[3], 6);  // control point 3

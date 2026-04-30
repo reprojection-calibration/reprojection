@@ -12,10 +12,10 @@ namespace reprojection::projection_functions {
  * \ingroup projection_classes
  */
 struct Pinhole {
-    static int constexpr Size{4};
+    static int constexpr Size{3};
 
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return {gamma, gamma, 0.5 * width, 0.5 * height};
+        return {gamma, 0.5 * width, 0.5 * height};
     }
 
     // NOTE(Jack): The following notation is used for all projection functions, but we put it here in the pinhole class
@@ -58,14 +58,13 @@ struct Pinhole {
         T const y_cam{y / z};
 
         // TODO(Jack): Refactor to only use one single focal length!
-        T const& fx{intrinsics[0]};
-        T const& fy{intrinsics[1]};
-        T const& cx{intrinsics[2]};
-        T const& cy{intrinsics[3]};
+        T const& f{intrinsics[0]};
+        T const& cx{intrinsics[1]};
+        T const& cy{intrinsics[2]};
 
         // Put into image pixel space
-        T const u{(fx * x_cam) + cx};
-        T const v{(fy * y_cam) + cy};
+        T const u{(f * x_cam) + cx};
+        T const v{(f * y_cam) + cy};
 
         if (not InBounds(bounds, u, v)) {
             return std::nullopt;

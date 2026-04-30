@@ -17,7 +17,7 @@ class FocalLengthInitFixture : public ::testing::Test {
         // initialization case that would otherwise resul tin no successful gamma estimate below.
         target_points.leftCols<2>().array() -= 3;
 
-        Array5d const ucm_intrinsics{600, 600, width / 2, height / 2, 1};
+        Array4d const ucm_intrinsics{600, width / 2, height / 2, 1};
         auto const camera{projection_functions::UcmCamera(ucm_intrinsics, testing_utilities::image_bounds)};
         auto const [pixels, mask]{camera.Project(target_points)};
 
@@ -45,8 +45,8 @@ TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
     std::vector<double> const ds_gammas{runner(target)};
     EXPECT_EQ(std::size(ds_gammas), 3);  // Simple heuristic to check we get any result from the runner.
 
-    Array6d const ds_intrinsics{initialization(600, height, width)};
-    Array6d const gt_ds_intrinsics{300, 300, 360, 240, 0, 0.5};
+    Array5d const ds_intrinsics{initialization(600, height, width)};
+    Array5d const gt_ds_intrinsics{300, 360, 240, 0, 0.5};
     EXPECT_TRUE(ds_intrinsics.isApprox(gt_ds_intrinsics));
 
     // Now we run the other methods too, mainly to get full test coverage, not because we need to.

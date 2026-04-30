@@ -9,7 +9,7 @@ namespace reprojection::projection_functions {
 
 std::optional<Array3d> PinholeRadtan4::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
                                                  ImageBounds const& bounds, Array2d const& pixel) {
-    auto const P_ray{Pinhole::Unproject(intrinsics.head<4>(), bounds, pixel)};
+    auto const P_ray{Pinhole::Unproject(intrinsics.head<3>(), bounds, pixel)};
     if (not P_ray) {
         return std::nullopt;  // LCOV_EXCL_LINE
     }

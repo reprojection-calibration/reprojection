@@ -9,12 +9,12 @@
 
 using namespace reprojection;
 
-Array6d const ds_intrinsics{testing_utilities::double_sphere_intrinsics};
-MatrixX2d const gt_pixels{{ds_intrinsics[2], ds_intrinsics[3]},
-                          {46.087794035716172, ds_intrinsics[3]},
-                          {673.83161575882514, ds_intrinsics[3]},
-                          {ds_intrinsics[2], 26.040025446950807},
-                          {ds_intrinsics[2], 453.87414877978961}};
+Array5d const ds_intrinsics{testing_utilities::double_sphere_intrinsics};
+MatrixX2d const gt_pixels{{ds_intrinsics[1], ds_intrinsics[2]},
+                          {46.087794035716172, ds_intrinsics[2]},
+                          {673.83161575882514, ds_intrinsics[2]},
+                          {ds_intrinsics[1], 26.040025446950807},
+                          {ds_intrinsics[1], 453.87414877978961}};
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
     auto const camera{projection_functions::DoubleSphereCamera(ds_intrinsics, testing_utilities::image_bounds)};
@@ -26,7 +26,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereProject) {
 
 TEST(ProjectionFunctionsDoubleSphere, TestPinholeEquivalentProjection) {
     // If xi and alpha are zero then double sphere should essentially just act as a pinhole camera.
-    Array6d const pinhole_intrinsics{600, 600, 360, 240, 0, 0};
+    Array5d const pinhole_intrinsics{600, 360, 240, 0, 0};
     MatrixX2d const pinhole_pixels{{360, 240},  //
                                    {0, 240},
                                    {719.9, 240},
@@ -71,7 +71,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnprojectInvalid) {
     // an alpha equal to one so that we can actually trigger the invalid unprojection condition given the unit dimension
     // camera intrinsics.
     auto const camera{
-        projection_functions::DoubleSphereCamera(Array6d{1, 1, 0, 0, 0, 1}, testing_utilities::unit_image_bounds)};
+        projection_functions::DoubleSphereCamera(Array5d{1, 0, 0, 0, 1}, testing_utilities::unit_image_bounds)};
 
     MatrixX2d const pixels{{0, 0}, {0.99, 0.99}, {-0.99, -0.99}};
 
@@ -82,8 +82,8 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnprojectInvalid) {
 }
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereIntialize) {
-    Array6d const result{projection_functions::DoubleSphere::Initialize(1200, 480, 720)};
-    Array6d const gt_result{600, 600, 360, 240, 0, 0.5};
+    Array5d const result{projection_functions::DoubleSphere::Initialize(1200, 480, 720)};
+    Array5d const gt_result{600, 360, 240, 0, 0.5};
 
     EXPECT_TRUE(result.isApprox(gt_result));
 }
