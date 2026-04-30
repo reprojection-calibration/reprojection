@@ -6,7 +6,7 @@
 
 using namespace reprojection;
 
-std::string const pinhole_toml{"cx = 360.0\ncy = 240.0\nfx = 600.0\nfy = 600.0"};
+std::string const pinhole_toml{"cx = 360.0\ncy = 240.0\nf = 600.0"};
 std::string const ds_toml{"alpha = 0.20000000000000001\n" + pinhole_toml + "\nxi = 0.10000000000000001"};
 std::string const pinhole_radtan4_toml{pinhole_toml + "\nk1 = 1.0\nk2 = 2.0\np1 = 3.0\np2 = 4.0"};
 std::string const ucm_toml{pinhole_toml + "\nxi = 5.0"};
@@ -14,15 +14,15 @@ std::string const ucm_toml{pinhole_toml + "\nxi = 5.0"};
 // NOTE(Jack): This lambda initialization maybe looks a little ugly but this is the only direct way to define this
 // global here. We could also do this inside a test fixture, but I think that adds accidental complexity. Our solution
 // here, given the constraints of eigen array initialization, is just the essential complexity.
-Array8d const pinhole_radtan4_intrinsics{[]() {
-    Array8d data;
+Array7d const pinhole_radtan4_intrinsics{[]() {
+    Array7d data;
     data << testing_utilities::pinhole_intrinsics, 1, 2, 3, 4;
 
     return data;
 }()};
 
-Array5d const ucm_intrinsics{[]() {
-    Array5d data;
+Array4d const ucm_intrinsics{[]() {
+    Array4d data;
     data << testing_utilities::pinhole_intrinsics, 5;
 
     return data;
@@ -46,15 +46,15 @@ TEST(DatabaseTomlConverters, TestToToml) {
 }
 
 TEST(DatabaseTomlConverters, TestFromToml) {
-    Array6d const ds_result{database::FromToml(CameraModel::DoubleSphere, ds_toml)};
+    Array5d const ds_result{database::FromToml(CameraModel::DoubleSphere, ds_toml)};
     EXPECT_TRUE(ds_result.isApprox(testing_utilities::double_sphere_intrinsics));
 
-    Array4d const pinhole_result{database::FromToml(CameraModel::Pinhole, pinhole_toml)};
+    Array3d const pinhole_result{database::FromToml(CameraModel::Pinhole, pinhole_toml)};
     EXPECT_TRUE(pinhole_result.isApprox(testing_utilities::pinhole_intrinsics));
 
-    Array8d const pinhole_radtan4_result{database::FromToml(CameraModel::PinholeRadtan4, pinhole_radtan4_toml)};
+    Array7d const pinhole_radtan4_result{database::FromToml(CameraModel::PinholeRadtan4, pinhole_radtan4_toml)};
     EXPECT_TRUE(pinhole_radtan4_result.isApprox(pinhole_radtan4_intrinsics));
 
-    Array5d const ucm_result{database::FromToml(CameraModel::UnifiedCameraModel, ucm_toml)};
+    Array4d const ucm_result{database::FromToml(CameraModel::UnifiedCameraModel, ucm_toml)};
     EXPECT_TRUE(ucm_result.isApprox(ucm_intrinsics));
 }
