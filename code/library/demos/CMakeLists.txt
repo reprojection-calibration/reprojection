@@ -16,6 +16,7 @@ set(LINK_LIBRARIES
         eigen_utilities
         feature_extraction
         geometry
+        image_viewer
         optimization
         pnp
         projection_functions

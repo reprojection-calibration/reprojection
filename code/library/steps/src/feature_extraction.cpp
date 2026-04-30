@@ -4,6 +4,7 @@
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "feature_extraction/target_extraction.hpp"
+#include "image_viewer/image_viewer.hpp"
 
 namespace reprojection::steps {
 
@@ -23,13 +24,6 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
     bool show_extraction{false};  // Sensible default
     if (auto const node{target_config["show_extraction"]}) {
         show_extraction = node.as_boolean()->get();  // LCOV_EXCL_LINE
-    }
-
-    // TODO(Jack): Right now if the user requests showing the extraction but there is no availalbe GUI we will just
-    // crash here. We might want to wrap the window visualizer in a little class with a factory function, and then log
-    // to the user a warning if they requested visualization but here is no gui device.
-    if (show_extraction) {
-        cv::namedWindow("Target Extraction", cv::WINDOW_AUTOSIZE);  // LCOV_EXCL_LINE
     }
 
     // TODO(Jack): Is it really appropriate to use a toml table here instead of a struct?
@@ -56,9 +50,18 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
                 feature_extraction::DrawTarget(*target, img);  // LCOV_EXCL_LINE
             }
 
-            cv::imshow("Target Extraction", img);  // LCOV_EXCL_LINE
-            // TODO(Jack): Should we make the delay time here configurable?
-            cv::waitKey(5);  // LCOV_EXCL_LINE
+            // TODO(Jack): Here we are giving the GUI image displayer the possibility to end the feature extraction, is
+            // that really an interaction/power we want this code to have?
+            // TODO(Jack): Right now if the user requests showing the extraction but there is no available GUI we will
+            // just crash here. We might want to wrap the window visualizer in a little class with a factory function,
+            // and then log to the user a warning if they requested visualization but here is no gui device.
+            static image_viewer::ImageViewer viewer(
+                std::make_unique<image_viewer::OpenCvGuiInterface>("Target Feature Extraction"),  // LCOV_EXCL_LINE
+                std::make_unique<image_viewer::OpenCvKeyboardInput>());                           // LCOV_EXCL_LINE
+            viewer.Show(img);                                                                     // LCOV_EXCL_LINE
+            if (viewer.ShouldQuit()) {                                                            // LCOV_EXCL_LINE
+                break;                                                                            // LCOV_EXCL_LINE
+            }
         }
     }
 

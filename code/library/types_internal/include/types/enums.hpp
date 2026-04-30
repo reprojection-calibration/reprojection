@@ -116,7 +116,6 @@ enum class CacheStatus {
     CacheMiss,
 };
 
-// LCOV_EXCL_START
 inline std::string ToString(CacheStatus const status) {
     if (status == CacheStatus::CacheHit) {
         return "cache_hit";
