@@ -16,7 +16,7 @@ void ImageViewer::Show(cv::Mat const frame) {
 
     cv::imshow(window_name_, frame);
 
-    HandleInput();
+    this->HandleInput();
 }
 
 void ImageViewer::HandleInput() {
