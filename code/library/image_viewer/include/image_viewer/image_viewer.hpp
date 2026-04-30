@@ -7,6 +7,13 @@
 
 namespace reprojection::image_viewer {
 
+// NOTE(Jack): What we are doing here with the GuiInterface and KeyboardInput is dependency injection. I went down this
+// path because when I wanted to unit test the ImageViewer I could not without doing some magic behind the scenes.
+// Therefore, I instead modified the class to take the gui and keyboard as dependencies which I could then mock in the
+// unit test. Honestly it add some complexity and is very hardcoded/designed around the opencv style interface, but I
+// think it is the right path going forward! If it gets annoying we can simply remove it and figure out how to test the
+// image viewer another way :)
+
 class ImageViewer {
    public:
     explicit ImageViewer(std::unique_ptr<GuiInterface> gui_interface, std::unique_ptr<KeyboardInput> keyboard_input,

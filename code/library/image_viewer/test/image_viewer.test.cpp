@@ -44,7 +44,7 @@ TEST(ImageViewerImageViewer, TestXxx) {
     EXPECT_FALSE(viewer.ShouldQuit());
 
     // Keyboard input is only queried at the end of the Show() method. Therefore after this point it will register the
-    // escape key and ShouldQuit() will be true.
+    // escape key was pressed and ShouldQuit() will be true.
     EXPECT_NO_THROW(viewer.Show(cv::Mat::ones(1, 3, CV_8UC3)));
     EXPECT_TRUE(viewer.ShouldQuit());
 }
