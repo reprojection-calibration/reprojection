@@ -150,8 +150,8 @@ MatrixX3d AprilGrid3Extractor::CornerPositions(ArrayX2i const& indices, double c
     for (int i{0}; i < indices.rows(); ++i) {
         // WARN(Jack): If we change the pattern (num_bits or design) then this 0.4 (4bits/10bits) will change! This
         // function is currently assuming that AprilBoard3 will be fixed forever using the custom 36h11 tag family.
-        points.row(i)(0) = AlternatingSum(indices.row(i)(1), unit_dimension, 0.4 * unit_dimension);
-        points.row(i)(1) = AlternatingSum(indices.row(i)(0), unit_dimension, 0.4 * unit_dimension);
+        points.row(i)(0) = AlternatingSum(indices.row(i)(0), unit_dimension, 0.4 * unit_dimension);
+        points.row(i)(1) = AlternatingSum(indices.row(i)(1), unit_dimension, 0.4 * unit_dimension);
     }
     points.col(2).setZero();
 
@@ -204,6 +204,10 @@ ExtractedTarget AprilGrid3Extractor::RemoveOutliers(MatrixX2d const& raw_corners
     double const median{eigen_utilities::Median(delta)};
     double const mad{eigen_utilities::Median((delta - median).abs())};
 
+    // TODO(Jack): The scalar multiple of the MAD is at this time (29.04.2026) completely arbitrary. If someone had an
+    // intelligent or theoretically justified/conventional value that would be appreciated.
+    // NOTE(Jack): We only check that the delta is less than the threshold and not within an upper and lower bound
+    // because lower deltas are ok (reflect a accurate extraction under our assumption).
     ArrayXb const mask{delta < median + (2 * mad)};
     ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 

@@ -120,7 +120,7 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3Extractor) {
     EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-6));
 
     MatrixX3d const& points{target->bundle.points};
-    Eigen::Matrix<double, 4, 3> const gt_points{{0, 0, 0}, {0.5, 0, 0}, {0, 0.5, 0}, {0.5, 0.5, 0}};
+    Eigen::Matrix<double, 4, 3> const gt_points{{0, 0, 0}, {0, 0.5, 0}, {0.5, 0, 0}, {0.5, 0.5, 0}};
     EXPECT_TRUE(points.isApprox(gt_points));
 
     ArrayX2i const& indices{target->indices};
@@ -168,5 +168,5 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3CornerPositions) {
 
     EXPECT_EQ(points.rows(), grid.rows());
     EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));
-    EXPECT_TRUE(points.row(47).isApprox(Vector3d{2.6, 1.9, 0}.transpose()));
+    EXPECT_TRUE(points.row(47).isApprox(Vector3d{1.9, 2.6, 0}.transpose()));
 };
