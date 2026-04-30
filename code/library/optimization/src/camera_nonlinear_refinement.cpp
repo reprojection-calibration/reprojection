@@ -29,7 +29,6 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
             if (constant_intrinsics) {
                 problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
             }
-
         }
     }
 
