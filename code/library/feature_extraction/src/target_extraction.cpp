@@ -80,7 +80,7 @@ void DrawTarget(ExtractedTarget const& target, cv::Mat const& img) {
     ArrayX2i const& indices{target.indices};
 
     for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
-        cv::circle(img, cv::Point(pixels.row(i)[0], pixels.row(i)[1]), 1, cv::Scalar(0, 255, 0), 5, cv::LINE_8);
+        cv::circle(img, cv::Point(pixels.row(i)[0], pixels.row(i)[1]), 5, cv::Scalar(0, 255, 0), 1, cv::LINE_8);
 
         std::string const text{"(" + std::to_string(indices.row(i)[0]) + ", " + std::to_string(indices.row(i)[1]) +
                                ")"};
