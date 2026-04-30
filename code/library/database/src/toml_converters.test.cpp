@@ -2,44 +2,56 @@
 
 #include <gtest/gtest.h>
 
+#include "testing_utilities/constants.hpp"
+
 using namespace reprojection;
 
+std::string const pinhole_toml{"cx = 360.0\ncy = 240.0\nfx = 600.0\nfy = 600.0"};
+std::string const ds_toml{"alpha = 0.20000000000000001\n" + pinhole_toml + "\nxi = 0.10000000000000001"};
+std::string const pinhole_radtan4_toml{pinhole_toml + "\nk1 = 1.0\nk2 = 2.0\np1 = 3.0\np2 = 4.0"};
+std::string const ucm_toml{pinhole_toml + "\nxi = 5.0"};
+
+// NOTE(Jack): This lambda initialization maybe looks a little ugly but this is the only direct way to define this
+// global here. We could also do this inside a test fixture, but I think that adds accidental complexity. Our solution
+// here, given the constraints of eigen array initialization, is just the essential complexity.
+Array8d const pinhole_radtan4_intrinsics{[]() {
+    Array8d data;
+    data << testing_utilities::pinhole_intrinsics, 1, 2, 3, 4;
+
+    return data;
+}()};
+
+Array5d const ucm_intrinsics{[]() {
+    Array5d data;
+    data << testing_utilities::pinhole_intrinsics, 5;
+
+    return data;
+}()};
+
 TEST(DatabaseTomlConverters, TestToToml) {
-    std::string result{database::ToToml(CameraModel::DoubleSphere, Array6d{1, 2, 3, 4, 5, 6})};
-    std::string gt_result{"alpha = 6.0\ncx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0\nxi = 5.0"};
-    EXPECT_EQ(result, gt_result);
+    std::string result{database::ToToml(CameraModel::DoubleSphere, testing_utilities::double_sphere_intrinsics)};
+    EXPECT_EQ(result, ds_toml);
 
-    result = database::ToToml(CameraModel::Pinhole, Array4d{1, 2, 3, 4});
-    gt_result = "cx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0";
-    EXPECT_EQ(result, gt_result);
+    result = database::ToToml(CameraModel::Pinhole, testing_utilities::pinhole_intrinsics);
+    EXPECT_EQ(result, pinhole_toml);
 
-    result = database::ToToml(CameraModel::PinholeRadtan4, Eigen::Array<double, 8, 1>{1, 2, 3, 4, 5, 6, 7, 8});
-    gt_result = "cx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0\nk1 = 5.0\nk2 = 6.0\np1 = 7.0\np2 = 8.0";
-    EXPECT_EQ(result, gt_result);
+    result = database::ToToml(CameraModel::PinholeRadtan4, pinhole_radtan4_intrinsics);
+    EXPECT_EQ(result, pinhole_radtan4_toml);
 
-    result = database::ToToml(CameraModel::UnifiedCameraModel, Array5d{1, 2, 3, 4, 5});
-    gt_result = "cx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0\nxi = 5.0";
-    EXPECT_EQ(result, gt_result);
+    result = database::ToToml(CameraModel::UnifiedCameraModel, ucm_intrinsics);
+    EXPECT_EQ(result, ucm_toml);
 }
 
 TEST(DatabaseTomlConverters, TestFromToml) {
-    std::string data{"alpha = 6.1\ncx = 3.1\ncy = 4.1\nfx = 1.1\nfy = 2.1\nxi = 5.1"};
-    Array6d const ds_result{database::FromToml(CameraModel::DoubleSphere, data)};
-    Array6d const gt_ds_result{{1.1, 2.1, 3.1, 4.1, 5.1, 6.1}};
-    EXPECT_TRUE(ds_result.isApprox(gt_ds_result));
+    Array6d const ds_result{database::FromToml(CameraModel::DoubleSphere, ds_toml)};
+    EXPECT_TRUE(ds_result.isApprox(testing_utilities::double_sphere_intrinsics));
 
-    data = std::string{"cx = 3.2\ncy = 4.2\nfx = 1.2\nfy = 2.2"};
-    Array4d const ph_result{database::FromToml(CameraModel::Pinhole, data)};
-    Array4d const gt_ph_result{1.2, 2.2, 3.2, 4.2};
-    EXPECT_TRUE(ph_result.isApprox(gt_ph_result));
+    Array4d const pinhole_result{database::FromToml(CameraModel::Pinhole, pinhole_toml)};
+    EXPECT_TRUE(pinhole_result.isApprox(testing_utilities::pinhole_intrinsics));
 
-    data = std::string{"cx = 3.3\ncy = 4.3\nfx = 1.3\nfy = 2.3\nk1 = 5.3\nk2 = 6.3\np1 = 7.3\np2 = 8.3"};
-    Array8d const phrt4_result{database::FromToml(CameraModel::PinholeRadtan4, data)};
-    Array8d const gt_phrt4_result{1.3, 2.3, 3.3, 4.3, 5.3, 6.3, 7.3, 8.3};
-    EXPECT_TRUE(phrt4_result.isApprox(gt_phrt4_result));
+    Array8d const pinhole_radtan4_result{database::FromToml(CameraModel::PinholeRadtan4, pinhole_radtan4_toml)};
+    EXPECT_TRUE(pinhole_radtan4_result.isApprox(pinhole_radtan4_intrinsics));
 
-    data = std::string{"cx = 3.4\ncy = 4.4\nfx = 1.4\nfy = 2.4\nxi = 5.4"};
-    Array5d const ucm_result{database::FromToml(CameraModel::UnifiedCameraModel, data)};
-    Array5d const gt_ucm_result{1.4, 2.4, 3.4, 4.4, 5.4};
-    EXPECT_TRUE(ucm_result.isApprox(gt_ucm_result));
+    Array5d const ucm_result{database::FromToml(CameraModel::UnifiedCameraModel, ucm_toml)};
+    EXPECT_TRUE(ucm_result.isApprox(ucm_intrinsics));
 }
