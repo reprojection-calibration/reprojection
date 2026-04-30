@@ -18,6 +18,11 @@ class GuiInterface {
     std::string window_name_;
 };
 
+// NOTE(Jack): Because of the headless nature of CI pipelines there is no reasonable way to unit test the gui or
+// keyboard interface components.
+
+// LCOV_EXCL_START
+
 class OpenCvGuiInterface : public GuiInterface {
    public:
     OpenCvGuiInterface(std::string_view window_name) : GuiInterface(window_name) {}
@@ -26,5 +31,7 @@ class OpenCvGuiInterface : public GuiInterface {
 
     void Show(cv::Mat const frame) override { cv::imshow(window_name_, frame); }
 };
+
+// LCOV_EXCL_STOP
 
 }  // namespace reprojection::image_viewer

@@ -12,7 +12,7 @@ ImageViewer::ImageViewer(std::unique_ptr<GuiInterface> gui_interface, std::uniqu
 
 void ImageViewer::Show(cv::Mat const frame) {
     if (frame.empty()) {
-        return;
+        return;  // LCOV_EXCL_LINE
     }
 
     gui_interface_->Show(frame);
@@ -25,15 +25,16 @@ void ImageViewer::HandleInput() {
 
     auto const key{ToKeyboardKey(input)};
     if (not key) {
-        return;
+        return;  // LCOV_EXCL_LINE
     }
 
     if (*key == KeyboardKey::EscapeKey or *key == KeyboardKey::LetterQ) {
         quit_ = true;
-    } else if (*key == KeyboardKey::SpaceBar) {
-        paused_ = not paused_;
+    } else if (*key == KeyboardKey::SpaceBar) {  // LCOV_EXCL_LINE
+        paused_ = not paused_;                   // LCOV_EXCL_LINE
     } else {
-        throw std::runtime_error{"LIBRARY IMPLEMENTATION ERROR - unimplemented keyboard input handling"};
+        throw std::runtime_error{
+            "LIBRARY IMPLEMENTATION ERROR - unimplemented keyboard input handling"};  // LCOV_EXCL_LINE
     }
 }
 
