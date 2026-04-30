@@ -6,7 +6,7 @@ namespace reprojection::image_viewer {
 
 class GuiInterface {
    public:
-    GuiInterface(std::string_view window_name) : window_name_{window_name} {}
+    explicit GuiInterface(std::string_view window_name) : window_name_{window_name} {}
 
     virtual ~GuiInterface() = default;
 
@@ -25,7 +25,7 @@ class GuiInterface {
 
 class OpenCvGuiInterface : public GuiInterface {
    public:
-    OpenCvGuiInterface(std::string_view window_name) : GuiInterface(window_name) {}
+    explicit OpenCvGuiInterface(std::string_view window_name) : GuiInterface(window_name) {}
 
     void OpenWindow() override { cv::namedWindow(window_name_, cv::WINDOW_NORMAL); }
 

@@ -52,9 +52,9 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
 
             // TODO(Jack): Here we are giving the GUI image displayer the possibility to end the feature extraction, is
             // that really an interaction/power we want this code to have?
-            // TODO(Jack): Right now if the user requests showing the extraction but there is no availalbe GUI we will just
-            // crash here. We might want to wrap the window visualizer in a little class with a factory function, and then log
-            // to the user a warning if they requested visualization but here is no gui device.
+            // TODO(Jack): Right now if the user requests showing the extraction but there is no available GUI we will
+            // just crash here. We might want to wrap the window visualizer in a little class with a factory function,
+            // and then log to the user a warning if they requested visualization but here is no gui device.
             static image_viewer::ImageViewer viewer(
                 std::make_unique<image_viewer::OpenCvGuiInterface>("Target Feature Extraction"),
                 std::make_unique<image_viewer::OpenCvKeyboardInput>());

@@ -10,7 +10,7 @@ namespace reprojection::image_viewer {
 
 class MockedGuiInterface : public GuiInterface {
    public:
-    MockedGuiInterface(std::string_view window_name) : GuiInterface(window_name) {}
+    explicit MockedGuiInterface(std::string_view window_name) : GuiInterface(window_name) {}
 
     void OpenWindow() override { return; }
 
