@@ -4,8 +4,9 @@
 
 namespace reprojection::image_viewer {
 
-ImageViewer::ImageViewer(std::string_view const& window_name, int const delay_ms)
-    : window_name_{window_name}, delay_ms_{delay_ms} {
+ImageViewer::ImageViewer(std::unique_ptr<KeyboardInput> keyboard_input, std::string_view const& window_name,
+                         int const delay_ms)
+    : keyboard_input_{std::move(keyboard_input)}, window_name_{window_name}, delay_ms_{delay_ms} {
     cv::namedWindow(window_name_, cv::WINDOW_NORMAL);
 }
 
@@ -20,9 +21,9 @@ void ImageViewer::Show(cv::Mat const frame) {
 }
 
 void ImageViewer::HandleInput() {
-    int const keyboard_input{cv::waitKey(paused_ ? 0 : delay_ms_)};
+    int const input{keyboard_input_->WaitKey(paused_ ? 0 : delay_ms_)};
 
-    auto const key{ToKeyboardKey(keyboard_input)};
+    auto const key{ToKeyboardKey(input)};
     if (not key) {
         return;
     }

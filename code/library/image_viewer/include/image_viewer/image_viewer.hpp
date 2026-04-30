@@ -1,14 +1,15 @@
 #pragma once
 
-#include <deque>
-
 #include <opencv2/opencv.hpp>
+
+#include "image_viewer/keyboard_input.hpp"
 
 namespace reprojection::image_viewer {
 
 class ImageViewer {
    public:
-    explicit ImageViewer(std::string_view const& window_name = "Image Viewer", int const delay_ms = 30);
+    explicit ImageViewer(std::unique_ptr<KeyboardInput> keyboard_input,
+                         std::string_view const& window_name = "Image Viewer", int const delay_ms = 10);
 
     // NOTE(Jack): The cv::Mat is essentially a smart pointer with a reference counter - therefore we pass it here by
     // value so that the reference counter and not const& so the reference counter gets incremented and the memory will
@@ -20,6 +21,7 @@ class ImageViewer {
    private:
     void HandleInput();
 
+    std::unique_ptr<KeyboardInput> keyboard_input_;
     std::string window_name_;
     int delay_ms_;
 
