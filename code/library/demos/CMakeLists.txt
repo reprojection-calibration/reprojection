@@ -36,7 +36,6 @@ AddTests()
 set(EXAMPLES
         examples/calibration.cpp
         examples/feature_extraction.cpp
-        examples/pnp.cpp
         examples/pose_initialization.cpp
 )
 AddExamples()
