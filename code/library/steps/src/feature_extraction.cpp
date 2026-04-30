@@ -59,7 +59,9 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
 
             // TODO(Jack): Here we are giving the GUI image displayer the possibility to end the feature extraction, is
             // that really an interaction/power we want this code to have?
-            static image_viewer::ImageViewer viewer("Target Extraction", 30);
+            static image_viewer::ImageViewer viewer(
+                std::make_unique<image_viewer::OpenCvGuiInterface>("Target Feature Extraction"),
+                std::make_unique<image_viewer::OpenCvKeyboardInput>());
             viewer.Show(img);
             if (viewer.ShouldQuit()) {
                 break;

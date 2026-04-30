@@ -8,6 +8,19 @@ using namespace reprojection;
 
 namespace reprojection::image_viewer {
 
+class MockedGuiInterface : public GuiInterface {
+   public:
+    MockedGuiInterface(std::string_view window_name) : GuiInterface(window_name) {}
+
+    void OpenWindow() override { return; }
+
+    void Show(cv::Mat const frame) override {
+        static_cast<void>(frame);
+
+        return;
+    }
+};
+
 // NOTE(Jack): We hardcode the escape key here because the quitting behavior is the only state change that we can
 // query from public methods. The pause/step through behavior is not testable from public methods therefore we
 // do not even try.
@@ -25,7 +38,8 @@ class MockedKeyboardInput : public KeyboardInput {
 }  // namespace reprojection::image_viewer
 
 TEST(ImageViewerImageViewer, TestXxx) {
-    image_viewer::ImageViewer viewer(std::make_unique<image_viewer::MockedKeyboardInput>());
+    image_viewer::ImageViewer viewer(std::make_unique<image_viewer::MockedGuiInterface>("Image Viewer"),
+                                     std::make_unique<image_viewer::MockedKeyboardInput>());
 
     EXPECT_FALSE(viewer.ShouldQuit());
 
