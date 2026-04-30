@@ -6,28 +6,29 @@ namespace reprojection::database {
 
 // TODO(Jack): Add error handling if for example the length of intrinsics does not match the length expected for that
 //  camera model.
+// TODO(Jack): This makes the assumption that every single intrinsic is in the pinhole family of intrinsics. If we
+// one day use some crazy camera model that does not fit that assumption then we need to change this.
 std::string ToToml(CameraModel const type, ArrayXd const& intrinsics) {
-    toml::table tbl;
+    toml::table tbl{{"fx", intrinsics[0]}, {"fy", intrinsics[1]}, {"cx", intrinsics[2]}, {"cy", intrinsics[3]}};
     if (type == CameraModel::DoubleSphere) {
-        tbl = toml::table{{"fx", intrinsics[0]}, {"fy", intrinsics[1]}, {"cx", intrinsics[2]},
-                          {"cy", intrinsics[3]}, {"xi", intrinsics[4]}, {"alpha", intrinsics[5]}};
+        tbl.insert("xi", intrinsics[4]);
+        tbl.insert("alpha", intrinsics[5]);
     } else if (type == CameraModel::Pinhole) {
-        tbl = toml::table{{"fx", intrinsics[0]}, {"fy", intrinsics[1]}, {"cx", intrinsics[2]}, {"cy", intrinsics[3]}};
+        // Do nothing because tbl is already initialized with pinhole intrinsics - but keep here so we can still count
+        // on the else block below to throw if we have an unaccounted for camera model.
     } else if (type == CameraModel::PinholeRadtan4) {
-        tbl = toml::table{{"fx", intrinsics[0]}, {"fy", intrinsics[1]}, {"cx", intrinsics[2]}, {"cy", intrinsics[3]},
-                          {"k1", intrinsics[4]}, {"k2", intrinsics[5]}, {"p1", intrinsics[6]}, {"p2", intrinsics[7]}};
+        tbl.insert("k1", intrinsics[4]);
+        tbl.insert("k2", intrinsics[5]);
+        tbl.insert("p1", intrinsics[6]);
+        tbl.insert("p2", intrinsics[7]);
     } else if (type == CameraModel::UnifiedCameraModel) {
-        tbl = toml::table{{"fx", intrinsics[0]},
-                          {"fy", intrinsics[1]},
-                          {"cx", intrinsics[2]},
-                          {"cy", intrinsics[3]},
-                          {"xi", intrinsics[4]}};
+        tbl.insert("xi", intrinsics[4]);
     } else {
         throw std::runtime_error("Implement ToToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE
     }
 
     std::ostringstream oss;
-    oss << tbl;  // default formatter outputs TOML
+    oss << tbl;  // Default table formatter outputs toml :)
     return oss.str();
 }
 
