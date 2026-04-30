@@ -6,7 +6,6 @@ namespace reprojection::image_viewer {
 
 enum class KeyboardKey {
     EscapeKey = 27,
-    LetterN = 110,
     LetterQ = 113,
     SpaceBar = 32,
 };

@@ -12,7 +12,7 @@ ImageViewer::ImageViewer(std::string_view const& window_name, int const delay_ms
 void ImageViewer::Show(cv::Mat const frame) {
     if (frame.empty()) {
         return;
-    };
+    }
 
     cv::imshow(window_name_, frame);
 
@@ -31,8 +31,6 @@ void ImageViewer::HandleInput() {
         quit_ = true;
     } else if (*key == KeyboardKey::SpaceBar) {
         paused_ = not paused_;
-    } else if (*key == KeyboardKey::LetterN) {
-        paused_ = true;
     } else {
         throw std::runtime_error{"LIBRARY IMPLEMENTATION ERROR - unimplemented keyboard input handling"};
     }
