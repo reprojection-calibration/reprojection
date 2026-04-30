@@ -13,6 +13,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
+        src/keyboard_input_parsing.test.cpp
         test/image_viewer.test.cpp
 
 )
