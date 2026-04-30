@@ -60,7 +60,7 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         return intrinsics;
     } else if (type == CameraModel::UnifiedCameraModel) {
         auto tbl = toml::parse(toml_str);
-        ArrayXd intrinsics(5);
+        ArrayXd intrinsics(4);
 
         intrinsics = ReadPinholeValues(tbl, intrinsics);
         intrinsics[3] = tbl["xi"].value<double>().value();
