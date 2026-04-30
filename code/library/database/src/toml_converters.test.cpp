@@ -22,17 +22,24 @@ TEST(DatabaseTomlConverters, TestToToml) {
     EXPECT_EQ(result, gt_result);
 }
 
-// TODO(Jack): Add tests for pinhole.
 TEST(DatabaseTomlConverters, TestFromToml) {
     std::string data{"alpha = 6.0\ncx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0\nxi = 5.0"};
     ArrayXd result{database::FromToml(CameraModel::DoubleSphere, data)};
+    ArrayXd gt_result{Array5d{1, 2, 3, 4, 5}};
+    EXPECT_TRUE(result.isApprox(gt_result));
 
-    ArrayXd gt_result{Array6d{1, 2, 3, 4, 5, 6}};
+    data = std::string{"cx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0"};
+    result = database::FromToml(CameraModel::Pinhole, data);
+    gt_result = Array4d{1, 2, 3, 4};
     EXPECT_TRUE(result.isApprox(gt_result));
 
     data = std::string{"cx = 3.0\ncy = 4.0\nfx = 1.0\nfy = 2.0\nk1 = 5.0\nk2 = 6.0\np1 = 7.0\np2 = 8.0"};
     result = database::FromToml(CameraModel::PinholeRadtan4, data);
-
     gt_result = Array8d{1, 2, 3, 4, 5, 6, 7, 8};
     EXPECT_TRUE(result.isApprox(gt_result));
+
+    data = std::string{"cx = 3.4\ncy = 4.4\nfx = 1.4\nfy = 2.4\nxi = 5.4"};
+    Array5d const ucm_result{database::FromToml(CameraModel::UnifiedCameraModel, data)};
+    Array5d const gt_ucm_result{1.4, 2.4, 3.4, 4.4, 5.4};
+    EXPECT_TRUE(ucm_result.isApprox(gt_ucm_result));
 }
