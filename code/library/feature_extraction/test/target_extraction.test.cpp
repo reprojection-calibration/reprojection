@@ -72,7 +72,10 @@ TEST(FeatureExtractionTargetExtraction, TestDrawTarget) {
 
     DrawTarget(target, img);
 
-    // Check that at least the two target pixels are colored bright green.
-    EXPECT_TRUE(img.at<cv::Vec3b>(1, 1) == cv::Vec3b(0, 255, 0));
-    EXPECT_TRUE(img.at<cv::Vec3b>(50, 50) == cv::Vec3b(0, 255, 0));
+    // Note that we draw the extracted features as circles of radius=5 with no filling - this allows users to inspect
+    // how the circle is centered on the corner visually - but it also means that the pixel at the center is not itself
+    // colored. Therefore, here we check two pixels which are on the circle and not actually at the exact extracted pixel
+    // feature itself.
+    EXPECT_TRUE(img.at<cv::Vec3b>(0, 5) == cv::Vec3b(0, 255, 0));
+    EXPECT_TRUE(img.at<cv::Vec3b>(45, 50) == cv::Vec3b(0, 255, 0));
 }
