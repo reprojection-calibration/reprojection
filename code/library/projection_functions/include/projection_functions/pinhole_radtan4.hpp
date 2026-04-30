@@ -16,7 +16,7 @@ struct PinholeRadtan4 {
 
     // TODO(Jack): Is there a more sophisticated way required to initialize the distortion components here?
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return { gamma, 0.5 * width, 0.5 * height, 0, 0, 0, 0};
+        return {gamma, 0.5 * width, 0.5 * height, 0, 0, 0, 0};
     }
 
     /**

@@ -24,9 +24,9 @@ TEST(PnpDlt, TestDlt23) {
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
                                                   << gt_tf_co_w.matrix();
         EXPECT_FLOAT_EQ(tf_co_w.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
-        EXPECT_TRUE(K_vec.isApprox(intrinsics.intrinsics))<< "Result:\n"
-                                                  << K_vec.transpose() << "\nexpected result:\n"
-                                                  << intrinsics.intrinsics.transpose();
+        EXPECT_TRUE(K_vec.isApprox(intrinsics.intrinsics)) << "Result:\n"
+                                                           << K_vec.transpose() << "\nexpected result:\n"
+                                                           << intrinsics.intrinsics.transpose();
     }
 }
 

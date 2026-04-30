@@ -23,7 +23,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     Array3d pinhole_intrinsics;
     if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         tf_co_w = Dlt22(bundle);
-        pinhole_intrinsics = {1, 0, 0};   // Equivalent to K = I_3x3
+        pinhole_intrinsics = {1, 0, 0};      // Equivalent to K = I_3x3
         bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension bounds
     } else if (bundle.pixels.rows() > 6 and bounds) {
         std::tie(tf_co_w, pinhole_intrinsics) = Dlt23(bundle);
