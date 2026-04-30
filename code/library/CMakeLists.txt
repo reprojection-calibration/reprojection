@@ -52,6 +52,7 @@ add_subdirectory(calibration)
 add_subdirectory(feature_extraction)
 add_subdirectory(logging)
 add_subdirectory(steps)
+add_subdirectory(image_viewer)
 add_subdirectory(application)
 add_subdirectory(demos)
 
