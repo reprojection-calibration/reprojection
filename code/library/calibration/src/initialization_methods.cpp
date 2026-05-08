@@ -2,9 +2,15 @@
 
 #include <spdlog/fmt/ranges.h>
 
+#include <algorithm>
+#include <iterator>
+#include <map>
+#include <random>
 #include <ranges>
+#include <vector>
 
 #include "logging/logging.hpp"
+#include "optimization/camera_nonlinear_refinement.hpp"
 #include "projection_functions/initialize_camera.hpp"
 
 #include "camera_imu_initialization.hpp"
@@ -19,6 +25,23 @@ auto const log{logging::Get("calibration")};
 
 }
 
+// TODO MOVE!
+// TODO WHAT ARE THE PROPERTIES OF THIS SAMPLING?
+template <typename Map>
+auto SampleMap(Map const& map, std::size_t const num_samples) {
+    std::vector<typename Map::value_type> sampled;
+
+    std::sample(std::cbegin(map), std::cend(map), std::back_inserter(sampled), std::min(num_samples, std::size(map)),
+                std::mt19937{std::random_device{}()});
+
+    Map result;
+    for (auto const& sample : sampled) {
+        result.insert(sample);
+    }
+
+    return result;
+}
+
 // TODO(Jack): This method is can eat up time because it runs pnp on every single intrinsic estimate. For example a
 //  single 6 by 7 target can give 42 gammas for each image, lets say you have 1000 images then that means we need to
 //  run pnp 42000 times... Clearly that is overkill! We should investigate a strategy here to stop searching once we
@@ -27,31 +50,46 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
                                             CameraMeasurements const& targets) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
 
-    double min_cost{std::numeric_limits<double>::max()};
-    ArrayXd intrinsics;
+    std::vector<double> gammas;
     for (auto const& target : targets | std::views::values) {
-        std::vector<double> const gammas{runner(target)};
-
-        for (auto const gamma_i : gammas) {
-            ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
-            ImageBounds const image_bounds{0, width, 0, height};
-            auto const camera{projection_functions::InitializeCamera(camera_model, intrinsics_i, image_bounds)};
-
-            auto const result{EstimatePoseViaPinholePnP(camera, target.bundle, image_bounds)};
-            if (result.has_value()) {
-                auto const [_, final_cost]{*result};
-                if (final_cost < min_cost) {
-                    min_cost = final_cost;
-                    intrinsics = intrinsics_i;
-                }
-            }
-        }
-
-        // TODO(Jack): Format to only print out three decimal places for the gamma.
-        log->debug("{{cumulative_minimum_cost': {:.3g}, 'gammas': [{}]}}", min_cost, fmt::join(gammas, ", "));
+        std::vector<double> const gammas_i{runner(target)};
+        gammas.insert(std::cend(gammas), std::cbegin(gammas_i), std::cend(gammas_i));
     }
 
-    return intrinsics;
+    std::sort(std::begin(gammas), std::end(gammas));
+
+    // TODO(Jack): Should this be parameterized?
+    uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 200)};
+    std::map<double, ArrayXd> cost_intrinsic_map;
+    for (uint64_t i{0}; i < num_samples; ++i) {
+        uint64_t const idx{i * std::size(gammas) / num_samples};
+        double const gamma_i{gammas[idx]};
+
+        ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
+        ImageBounds const image_bounds{0, width, 0, height};
+        auto const camera{projection_functions::InitializeCamera(camera_model, intrinsics_i, image_bounds)};
+
+        // TODO VARIABLE NAMING!
+        auto const target_subset{SampleMap(targets, 5)};
+        OptimizationState initial_state;
+        initial_state.camera_state.intrinsics = intrinsics_i;
+        for (auto const& [timestamp_ns, target] : target_subset) {
+            // TODO(Jack): Do we still need to return the cost from this function? We do not use it here anymore.
+            auto const result{EstimatePoseViaPinholePnP(camera, target.bundle, image_bounds)};
+            if (not result.has_value()) {
+                std::cout << "we need to log a warning here - breaking here is already a strict policy" << std::endl;
+                break;
+            }
+            initial_state.frames[timestamp_ns] = result->first;
+        }
+
+        auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(
+            CameraInfo{"", camera_model, image_bounds}, target_subset, initial_state, true)};
+
+        cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
+    }
+
+    return std::cbegin(cost_intrinsic_map)->second;
 }
 
 // Doxygen notes: only work because we have same camera center for the pinhole and ds/other camera model used. The goal
