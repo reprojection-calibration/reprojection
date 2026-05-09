@@ -10,9 +10,8 @@ namespace reprojection::calibration {
 using Camera = projection_functions::Camera;
 using PinholeCamera = projection_functions::PinholeCamera;
 
-std::optional<std::pair<FrameState, double>> EstimatePoseViaPinholePnP(std::unique_ptr<Camera> const& camera,
-                                                                       Bundle const& bundle,
-                                                                       ImageBounds const& bounds) {
+std::optional<FrameState> EstimatePoseViaPinholePnP(std::unique_ptr<Camera> const& camera, Bundle const& bundle,
+                                                    ImageBounds const& bounds) {
     // Unproject to rays (pseudo 3D - no depth information) using the camera model provided by the user.
     auto const [rays, mask_unproject]{camera->Unproject(bundle.pixels)};
 
@@ -28,7 +27,7 @@ std::optional<std::pair<FrameState, double>> EstimatePoseViaPinholePnP(std::uniq
     auto const result{pnp::Pnp(linearized_bundle, bounds)};
     if (std::holds_alternative<pnp::PoseWithCost>(result)) {
         auto const [tf_co_w, cost]{std::get<pnp::PoseWithCost>(result)};
-        return std::pair<FrameState, double>{geometry::Log(tf_co_w), cost};
+        return FrameState{geometry::Log(tf_co_w)};
     } else {
         return std::nullopt;  // LCOV_EXCL_LINE
     }

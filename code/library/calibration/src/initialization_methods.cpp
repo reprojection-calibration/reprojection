@@ -91,11 +91,9 @@ Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements con
 
     Frames linear_solution;
     for (auto const& [timestamp_ns, target_i] : targets) {
-        auto const result{EstimatePoseViaPinholePnP(camera, target_i.bundle, sensor.bounds)};
-
-        if (result.has_value()) {
-            auto const [pose, _]{*result};
-            linear_solution[timestamp_ns] = pose;
+        auto const pose{EstimatePoseViaPinholePnP(camera, target_i.bundle, sensor.bounds)};
+        if (pose.has_value()) {
+            linear_solution[timestamp_ns] = *pose;
         }
     }
 
