@@ -28,10 +28,10 @@ auto const log{logging::Get("calibration")};
 // TODO MOVE!
 // TODO WHAT ARE THE PROPERTIES OF THIS SAMPLING?
 template <typename Map>
-auto SampleMap(Map const& map, std::size_t const num_samples) {
+auto SampleMap(Map const& map, std::size_t const num) {
     std::vector<typename Map::value_type> sampled;
 
-    std::sample(std::cbegin(map), std::cend(map), std::back_inserter(sampled), std::min(num_samples, std::size(map)),
+    std::sample(std::cbegin(map), std::cend(map), std::back_inserter(sampled), std::min(num, std::size(map)),
                 std::mt19937{std::random_device{}()});
 
     Map result;
@@ -42,10 +42,8 @@ auto SampleMap(Map const& map, std::size_t const num_samples) {
     return result;
 }
 
-// TODO(Jack): This method is can eat up time because it runs pnp on every single intrinsic estimate. For example a
-//  single 6 by 7 target can give 42 gammas for each image, lets say you have 1000 images then that means we need to
-//  run pnp 42000 times... Clearly that is overkill! We should investigate a strategy here to stop searching once we
-//  have found a good enough result, or anything to reduce the number of evaluations we need to perform.
+// TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we paramaterize the number
+// of targets sampled?
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
@@ -58,28 +56,27 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 
     std::sort(std::begin(gammas), std::end(gammas));
 
-    ImageBounds const image_bounds{0, width, 0, height};
-    CameraInfo const camera_info{"", camera_model, image_bounds};
-
-    // TODO(Jack): Should this be parameterized?
     uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 200)};
     std::map<double, ArrayXd> cost_intrinsic_map;
     for (uint64_t i{0}; i < num_samples; ++i) {
         uint64_t const idx{i * std::size(gammas) / num_samples};
         double const gamma_i{gammas[idx]};
+
+        CameraInfo const camera_info{"", camera_model, {0, width, 0, height}};
+        auto const target_subset{SampleMap(targets, 10)};
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
+        Frames const initial_poses{LinearPoseInitialization(camera_info, target_subset, {intrinsics_i})};
 
-        auto const target_subset{SampleMap(targets, 5)};
-        Frames const initial_poses{LinearPoseInitialization(camera_info, target_subset, CameraState{intrinsics_i})};
-
-        OptimizationState initial_state;
-        initial_state.camera_state.intrinsics = intrinsics_i;
+        OptimizationState const initial_state{{intrinsics_i}, initial_poses};
         auto const [optimized_state, diagnostics]{
             optimization::CameraNonlinearRefinement(camera_info, target_subset, initial_state, true)};
 
         cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
     }
 
+    // NOTE(Jack): std::map is sorted automatically by the key value, in this case here the key is the final cost of the
+    // optimization which means that the first value will be the key-value pair with the lowest cost - exactly what we
+    // want from the robust initialization.
     return std::cbegin(cost_intrinsic_map)->second;
 }
 
