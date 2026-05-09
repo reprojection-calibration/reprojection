@@ -38,20 +38,19 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
+      # TODO THROW ERROR?
       APP_ARGS+=("$1")
       shift
       ;;
   esac
 done
 
-
-# TODO(Jack): What is the best solution here for enabling xhost and running the container as --privileged?
 xhost +local:docker
 
 docker run \
+  --user $(id -u):$(id -g) \
   --env DISPLAY="$DISPLAY" \
   --name reprojection-calibration-application \
-  --privileged \
   --rm \
   --volume /dev:/dev \
   --volume /tmp/.X11-unix:/tmp/.X11-unix \
