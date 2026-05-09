@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eoux pipefail
+set -eou pipefail
 
 APP_FLAVOR=${APP_FLAVOR:-unset}
 
