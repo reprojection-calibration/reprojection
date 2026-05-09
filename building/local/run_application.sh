@@ -1,22 +1,42 @@
 #!/bin/bash
 set -euo pipefail
 
-SCRIPT_FOLDER="$(dirname "$(realpath -s "$0")")"
-# TODO HAVE USER PASS WHICH APP THEY WANT TO USE!
-TAG=reprojection:ros2-app
+# TODO(Jack): Add some sort of usage or help dialogue that will print out if the appropriate args are not provided
+
+APP_TYPE="${1}"
+shift
+
+case "${APP_TYPE}" in
+  ros1)
+    TAG="reprojection:ros1-app"
+    ;;
+  ros2)
+    TAG="reprojection:ros2-app"
+    ;;
+  video-file)
+    TAG="reprojection:video-file-app"
+    ;;
+  *)
+    echo "Unknown application type: ${APP_TYPE}"
+    exit 1
+    ;;
+esac
 
 DOCKER_ARGS=()
 APP_ARGS=()
 
 # TODO(Jack): There is an inconsistency that the library application will default to use the data's parent directory as
-# the "workspace", here however we are mounting exactly the file paths provided by the user which means
+# the "workspace", here however we are mounting exactly the file paths provided by the user which means that we MUST
+# specify the workspace, it is not optional. This in some sense contradicts my original intent when designing the
+# library but at the same time is a use case foreseen in the design.
 
+# NOTE(Jack): This function serves a very important role.
 mount_path_arg() {
-  local flag="$1"
-  local host_path="$2"
+  local flag="${1}"
+  local host_path="${2}"
 
   local abs_path
-  abs_path="$(realpath "$host_path")"
+  abs_path="$(realpath "${host_path}")"
 
   local container_path="/data_mount${host_path}"
 
@@ -24,18 +44,22 @@ mount_path_arg() {
   APP_ARGS+=("${flag}" "${container_path}")
 }
 
+# TODO(Jack): The workspace arg is basically required (maybe not for ros2 cause the folder is passed there?), therefore
+# I think it makes sense that we check that here to prevent the user from dealing with an error from the application
+# that a database file cannot be opened.
+
 while [[ $# -gt 0 ]]; do
-  case "$1" in
+  case "${1}" in
     --config)
-      mount_path_arg "$1" "$2"
+      mount_path_arg "${1}" "${2}"
       shift 2
       ;;
     --data)
-      mount_path_arg "$1" "$2"
+      mount_path_arg "${1}" "${2}"
       shift 2
       ;;
     --workspace)
-      mount_path_arg "$1" "$2"
+      mount_path_arg "${1}" "${2}"
       shift 2
       ;;
     *)
@@ -45,16 +69,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+script_folder="$(dirname "$(realpath -s "${0}")")"
+
+# TODO(Jack): Is this safe or a bad practice?
 xhost +local:docker
 
 docker run \
-  --user $(id -u):$(id -g) \
   --env DISPLAY="${DISPLAY}" \
   --name reprojection-calibration-application \
   --rm \
+  --user $(id -u):$(id -g) \
   --volume /dev:/dev \
   --volume /tmp/.X11-unix:/tmp/.X11-unix \
-  --volume "${SCRIPT_FOLDER}/../../:/temporary" \
+  --volume "${script_folder}/../../:/temporary" \
   "${DOCKER_ARGS[@]}" \
   "${TAG}" \
   "${APP_ARGS[@]}"
