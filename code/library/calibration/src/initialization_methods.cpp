@@ -1,11 +1,7 @@
 #include "calibration/initialization_methods.hpp"
 
-#include <spdlog/fmt/ranges.h>
-
 #include <algorithm>
-#include <iterator>
 #include <map>
-#include <random>
 #include <ranges>
 #include <vector>
 
@@ -16,6 +12,7 @@
 #include "camera_imu_initialization.hpp"
 #include "intrinsic_initialization.hpp"
 #include "linear_pose_initialization.hpp"
+#include "utilities.hpp"
 
 namespace reprojection::calibration {
 
@@ -25,24 +22,9 @@ auto const log{logging::Get("calibration")};
 
 }
 
-// TODO MOVE AND TEST!!!
-template <typename Map>
-auto SampleMap(Map const& map, std::size_t const num) {
-    std::vector<typename Map::value_type> sampled;
-
-    std::sample(std::cbegin(map), std::cend(map), std::back_inserter(sampled), std::min(num, std::size(map)),
-                std::mt19937{std::random_device{}()});
-
-    Map result;
-    for (auto const& sample : sampled) {
-        result.insert(sample);
-    }
-
-    return result;
-}
-
 // TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we parameterize the number
 // of targets sampled?
+//
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};

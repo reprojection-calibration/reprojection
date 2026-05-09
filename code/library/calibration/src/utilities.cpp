@@ -1,4 +1,3 @@
-
 #include "utilities.hpp"
 
 #include <set>
