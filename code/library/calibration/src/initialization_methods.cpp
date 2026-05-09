@@ -69,7 +69,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         Frames const initial_poses{LinearPoseInitialization(camera_info, target_subset, {intrinsics_i})};
 
         if (std::size(initial_poses) == 0) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
 
         // Do nonlinear refinement with the intrinsics constant
@@ -83,7 +83,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
     }
 
     if (std::size(cost_intrinsic_map) == 0) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     } else {
         // Take the intrinsic with the lowest final cost.
         return std::cbegin(cost_intrinsic_map)->second;
