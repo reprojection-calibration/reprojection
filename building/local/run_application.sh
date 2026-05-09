@@ -3,13 +3,15 @@
 set -eou pipefail
 
 SCRIPT_FOLDER="$(dirname "$(realpath -s "$0")")"
-TAG=reprojection:feature-extraction-demo
+TAG=reprojection:video-file-app
+
+# TODO(Jack): What is the best solution here for enabling xhost and running the container as --priveleged?
+xhost +local:docker
 
 echo "Running container from image '$TAG'..."
-xhost +
 docker run \
   --env DISPLAY=:0.0 \
-  --name feature_extraction_webcam_demo \
+  --name reprojection-calibration-application \
   --privileged \
   --rm \
   --volume /dev:/dev \
