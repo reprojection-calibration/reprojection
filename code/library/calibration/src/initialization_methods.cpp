@@ -62,6 +62,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         uint64_t const idx{i * std::size(gammas) / num_samples};
         double const gamma_i{gammas[idx]};
 
+        // Sample target subset and initialize poses
         CameraInfo const camera_info{"", camera_model, {0, width, 0, height}};
         auto const target_subset{SampleMap(targets, 10)};
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
@@ -71,6 +72,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
             continue;
         }
 
+        // Do nonlinear refinement with the intrinsics constant
         OptimizationState const initial_state{{intrinsics_i}, initial_poses};
         auto const [optimized_state, diagnostics]{
             optimization::CameraNonlinearRefinement(camera_info, target_subset, initial_state, true)};
