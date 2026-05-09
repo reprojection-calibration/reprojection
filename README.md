@@ -1,50 +1,53 @@
-## Get the Repo
+# Reprojection - The future is calibrated
 
-Get the code:
-    
-    git clone git@github.com:reprojection-calibration/reprojection.git
+Reprojection is an application for target-based camera intrinsic calibration meant to replace Kalibr.
 
-Make sure to also pull the git lfs objects:
+The project has over 240 unit tests, multiple integration/smoke tests, 100% code coverage of the core library, and a
+comprehensive Github Action CI pipeline. Every single piece of this repository has been painstakingly designed and
+battle tested to provide the world's best calibration experience.
 
-    cd reprojection
-    git lfs pull
+## Building the applications
 
-TODO(Jack): Add instruction for any symbolic links that need to be made (ex. the sql folder to python tooling).
+The three applications provide support for data in ROS1 or ROS2 bags and .mp4 video files, build the one you need.
 
-### Python Environment
+    # ROS1
+    ./building/local/build_image.sh -ts=ros1-app
 
-WARN: The following commands will install packages to your system, create a virtual environment in your home directory, 
-and symlink a directory. If you are not comfortable doing these things locally then use docker!
+    # ROS2
+    ./building/local/build_image.sh -ts=ros2-app
 
-NOTE: If the following install setup instructions do not work please see the python-tooling-stage in the Dockerfile. 
-That is run in CI and should be up to date.
+    # Video file
+    ./building/local/build_image.sh -ts=video-file-app
 
-Install pyenv:
+## Run the applications
 
-    ./building/install_scripts/install_pyenv.sh
+The application requires four command line arguments:
 
-Install the venv system dependencies (run with sudo as needed):
+1) `ros1`/`ros2`/`video-file` - The data input format
+2) `--data` - The path to the calibration dataset
+3) `--config` - The path to the calibration configuration
+4) `--workspace` - The path to a directory where output files can be written to
 
-    ./building/install_scripts/apt_install_python_venv_deps.sh
+An example command to run the video-file application is:
 
-For the next step you will need a c-compiler, I recommend installing the `build-essential` package if you do not already 
-satisfy the requirement (run with sudo as needed):
+    ./building/local/run_application.sh video-file \
+        --config /home/user/data/config.toml \
+        --data /home/user/data/target_capture_1.mp4 \
+        --workspace /home/user/data/
 
-    apt update
-    apt install build-essential
+## Supported targets
 
-Build the actual virtual environment to work in:
+The following target types are supported:
 
-    ./building/scripts/build_python_venv.sh
+1) Checkerboard
+2) Circle Grid (symmetric and asymmetric)
+3) AprilGrid3
 
-Test and install the python tooling package 
+> [!WARNING]
+> AprilGrid3 is NOT the same as the ubiquitous Kalibr Aprilgrid. Reprojection is not compatible with the Kalibr style
+> Aprilgrid.
 
-    # We need to symlink the sql definition files into the package - there has to be a better solution for this...
-    ln -s ${PWD}/code/sql/ code/python_tooling/database/sql
+To generate Checkerboard or Circle Grid targets
+the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
+provided by [calib.io](https://calib.io/) is a great choice.
 
-    # Activate the venv
-    source ~/.reprojection_venv/bin/activate
-
-    ./building/scripts/build_python_tooling.sh
-
-    
