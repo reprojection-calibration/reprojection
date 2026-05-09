@@ -37,6 +37,8 @@ struct SingleTopicBagReader {
 
             return SingleTopicBagReader{topic, topic_type_map.at(topic), std::move(reader)};
         } catch (...) {
+            // TODO(Jack): Instead of just swallowing the exception here we should use it to give the user some more
+            // useful output.
             return BagError{"Error loading data: " + path};
         }
     }

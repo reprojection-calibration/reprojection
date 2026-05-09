@@ -367,3 +367,27 @@ RUN set -eox pipefail; \
     ln /opt/reprojection/bin/demos.calibration /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
+
+FROM ros1-base-stage AS ros1-app-stage
+
+ENV APP_FLAVOR=ros1
+
+COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
+COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
+
+RUN set -eox pipefail; \
+    ln /opt/reprojection/bin/application_ros1.reprojection_app /buildroot/reprojection-calibration-application
+
+ENTRYPOINT ["/buildroot/entrypoint.sh"]
+
+FROM ros2-base-stage AS ros2-app-stage
+
+ENV APP_FLAVOR=ros2
+
+COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
+COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
+
+RUN set -eox pipefail; \
+    ln /opt/reprojection/bin/application_ros2.reprojection_app /buildroot/reprojection-calibration-application
+
+ENTRYPOINT ["/buildroot/entrypoint.sh"]

@@ -2,7 +2,8 @@
 set -euo pipefail
 
 SCRIPT_FOLDER="$(dirname "$(realpath -s "$0")")"
-TAG=reprojection:video-file-app
+# TODO HAVE USER PASS WHICH APP THEY WANT TO USE!
+TAG=reprojection:ros2-app
 
 DOCKER_ARGS=()
 APP_ARGS=()
@@ -38,9 +39,8 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      # TODO THROW ERROR?
-      APP_ARGS+=("$1")
-      shift
+      echo "Unrecognized command line argument!"
+      exit 1
       ;;
   esac
 done
@@ -49,7 +49,7 @@ xhost +local:docker
 
 docker run \
   --user $(id -u):$(id -g) \
-  --env DISPLAY="$DISPLAY" \
+  --env DISPLAY="${DISPLAY}" \
   --name reprojection-calibration-application \
   --rm \
   --volume /dev:/dev \
