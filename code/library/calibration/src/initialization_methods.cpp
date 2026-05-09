@@ -1,15 +1,18 @@
 #include "calibration/initialization_methods.hpp"
 
-#include <spdlog/fmt/ranges.h>
-
+#include <algorithm>
+#include <map>
 #include <ranges>
+#include <vector>
 
 #include "logging/logging.hpp"
+#include "optimization/camera_nonlinear_refinement.hpp"
 #include "projection_functions/initialize_camera.hpp"
 
 #include "camera_imu_initialization.hpp"
 #include "intrinsic_initialization.hpp"
 #include "linear_pose_initialization.hpp"
+#include "utilities.hpp"
 
 namespace reprojection::calibration {
 
@@ -19,39 +22,54 @@ auto const log{logging::Get("calibration")};
 
 }
 
-// TODO(Jack): This method is can eat up time because it runs pnp on every single intrinsic estimate. For example a
-//  single 6 by 7 target can give 42 gammas for each image, lets say you have 1000 images then that means we need to
-//  run pnp 42000 times... Clearly that is overkill! We should investigate a strategy here to stop searching once we
-//  have found a good enough result, or anything to reduce the number of evaluations we need to perform.
+// TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we parameterize the number
+// of targets sampled?
+//
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
 
-    double min_cost{std::numeric_limits<double>::max()};
-    ArrayXd intrinsics;
+    // Generate gamma estimates
+    std::vector<double> gammas;
     for (auto const& target : targets | std::views::values) {
-        std::vector<double> const gammas{runner(target)};
+        std::vector<double> const gammas_i{runner(target)};
+        gammas.insert(std::cend(gammas), std::cbegin(gammas_i), std::cend(gammas_i));
+    }
+    std::sort(std::begin(gammas), std::end(gammas));
 
-        for (auto const gamma_i : gammas) {
-            ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
-            ImageBounds const image_bounds{0, width, 0, height};
-            auto const camera{projection_functions::InitializeCamera(camera_model, intrinsics_i, image_bounds)};
+    // Test a uniform sampling of the gamma estimates using small randomly sampled pose-only optimizations.
+    uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 500)};
+    std::map<double, ArrayXd> cost_intrinsic_map;
+    for (uint64_t i{0}; i < num_samples; ++i) {
+        uint64_t const idx{i * std::size(gammas) / num_samples};
+        double const gamma_i{gammas[idx]};
 
-            auto const result{EstimatePoseViaPinholePnP(camera, target.bundle, image_bounds)};
-            if (result.has_value()) {
-                auto const [_, final_cost]{*result};
-                if (final_cost < min_cost) {
-                    min_cost = final_cost;
-                    intrinsics = intrinsics_i;
-                }
-            }
+        // Sample target subset and initialize poses
+        CameraInfo const camera_info{"", camera_model, {0, width, 0, height}};
+        auto const target_subset{SampleMap(targets, 10)};
+        ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
+        Frames const initial_poses{LinearPoseInitialization(camera_info, target_subset, {intrinsics_i})};
+
+        if (std::size(initial_poses) == 0) {
+            continue;  // LCOV_EXCL_LINE
         }
 
-        // TODO(Jack): Format to only print out three decimal places for the gamma.
-        log->debug("{{cumulative_minimum_cost': {:.3g}, 'gammas': [{}]}}", min_cost, fmt::join(gammas, ", "));
+        // Do nonlinear refinement with the intrinsics constant
+        OptimizationState const initial_state{{intrinsics_i}, initial_poses};
+        auto const [optimized_state, diagnostics]{
+            optimization::CameraNonlinearRefinement(camera_info, target_subset, initial_state, true)};
+        cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
+
+        log->debug("{{ 'idx': {}, 'gamma': {}, 'final_cost': {}, 'num_frames_used': {}}}", idx, gamma_i,
+                   diagnostics.solver_summary.final_cost, std::size(initial_poses));
     }
 
-    return intrinsics;
+    if (std::size(cost_intrinsic_map) == 0) {
+        return std::nullopt;  // LCOV_EXCL_LINE
+    } else {
+        // Take the intrinsic with the lowest final cost.
+        return std::cbegin(cost_intrinsic_map)->second;
+    }
 }
 
 // Doxygen notes: only work because we have same camera center for the pinhole and ds/other camera model used. The goal
@@ -66,11 +84,9 @@ Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements con
 
     Frames linear_solution;
     for (auto const& [timestamp_ns, target_i] : targets) {
-        auto const result{EstimatePoseViaPinholePnP(camera, target_i.bundle, sensor.bounds)};
-
-        if (result.has_value()) {
-            auto const [pose, _]{*result};
-            linear_solution[timestamp_ns] = pose;
+        auto const pose{EstimatePoseViaPinholePnP(camera, target_i.bundle, sensor.bounds)};
+        if (pose.has_value()) {
+            linear_solution[timestamp_ns] = *pose;
         }
     }
 
