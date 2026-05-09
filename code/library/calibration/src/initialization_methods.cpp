@@ -58,33 +58,24 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 
     std::sort(std::begin(gammas), std::end(gammas));
 
+    ImageBounds const image_bounds{0, width, 0, height};
+    CameraInfo const camera_info{"", camera_model, image_bounds};
+
     // TODO(Jack): Should this be parameterized?
     uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 200)};
     std::map<double, ArrayXd> cost_intrinsic_map;
     for (uint64_t i{0}; i < num_samples; ++i) {
         uint64_t const idx{i * std::size(gammas) / num_samples};
         double const gamma_i{gammas[idx]};
-
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
-        ImageBounds const image_bounds{0, width, 0, height};
-        auto const camera{projection_functions::InitializeCamera(camera_model, intrinsics_i, image_bounds)};
 
-        // TODO VARIABLE NAMING!
         auto const target_subset{SampleMap(targets, 5)};
+        Frames const initial_poses{LinearPoseInitialization(camera_info, target_subset, CameraState{intrinsics_i})};
+
         OptimizationState initial_state;
         initial_state.camera_state.intrinsics = intrinsics_i;
-        for (auto const& [timestamp_ns, target] : target_subset) {
-            // TODO(Jack): Do we still need to return the cost from this function? We do not use it here anymore.
-            auto const result{EstimatePoseViaPinholePnP(camera, target.bundle, image_bounds)};
-            if (not result.has_value()) {
-                std::cout << "we need to log a warning here - breaking here is already a strict policy" << std::endl;
-                break;
-            }
-            initial_state.frames[timestamp_ns] = result->first;
-        }
-
-        auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(
-            CameraInfo{"", camera_model, image_bounds}, target_subset, initial_state, true)};
+        auto const [optimized_state, diagnostics]{
+            optimization::CameraNonlinearRefinement(camera_info, target_subset, initial_state, true)};
 
         cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
     }
