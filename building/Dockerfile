@@ -192,6 +192,27 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 # Debug builds. However for applications we want them to be as fast as possible so we need a Release type build. We add
 # this stage to host that build so that it can be used by all applications.
 # NOT EXECUTED IN CI!!!
+FROM base-stage AS library-release-build-stage
+
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
+    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    set -eoux pipefail; \
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=OFF; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/library"
+
+# TODO(Jack): This is terrible... What we have here is basically completely copy pasted from library-release-build-stage
+# except that here we set INSTALL_EXAMPLES=ON. This all comes from the fact that we have no real packaging solution and
+# cannot specify which parts to install where. Instead we have to rebuild the entire thing because in the dependent
+# stages we copy the entire /opt/reprojection folder. We need to use something like cpack to solve this and eliminate
+# the duplication.
 FROM base-stage AS release-build-stage
 
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
@@ -204,6 +225,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     source /temporary/building/install_scripts/source_install_utils.sh; \
     export BUILD_TESTING=OFF; \
     export CMAKE_BUILD_TYPE=Release; \
+    export INSTALL_EXAMPLES=ON; \
     cmake_build_install \
         "/buildroot/library-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/library"
@@ -249,7 +271,7 @@ ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
 
-COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 
 
 FROM ros1-base-stage AS ros1-release-build-stage
@@ -296,7 +318,7 @@ ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
 
-COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 
 
 FROM ros2-base-stage AS ros2-release-build-stage
@@ -333,3 +355,15 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
     /temporary/${INTEGRATION_TEST}
+
+FROM base-stage AS video-file-app-stage
+
+ENV APP_FLAVOR=video-file
+
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
+
+RUN set -eox pipefail; \
+    ln /opt/reprojection/bin/demos.calibration /buildroot/reprojection-calibration-application
+
+ENTRYPOINT ["/buildroot/entrypoint.sh"]
