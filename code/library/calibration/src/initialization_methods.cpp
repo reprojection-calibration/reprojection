@@ -82,8 +82,12 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
                    diagnostics.solver_summary.final_cost, std::size(initial_poses));
     }
 
-    // Take the intrinsic with the lowest final cost.
-    return std::cbegin(cost_intrinsic_map)->second;
+    if (std::size(cost_intrinsic_map) == 0) {
+        return std::nullopt;
+    } else {
+        // Take the intrinsic with the lowest final cost.
+        return std::cbegin(cost_intrinsic_map)->second;
+    }
 }
 
 // Doxygen notes: only work because we have same camera center for the pinhole and ds/other camera model used. The goal
