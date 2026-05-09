@@ -11,9 +11,6 @@ APP_FLAVOR=${APP_FLAVOR:-unset}
 export XDG_RUNTIME_DIR="/tmp/runtime-ubuntu"
 
 case "${APP_FLAVOR:-}" in
-  video-file)
-    exec /buildroot/reprojection-calibration-application "$@"
-    ;;
   ros1)
     set +u
     source /opt/ros/noetic/setup.bash
@@ -26,6 +23,9 @@ case "${APP_FLAVOR:-}" in
     source /opt/ros/jazzy/setup.bash
     set -u
 
+    exec /buildroot/reprojection-calibration-application "$@"
+    ;;
+  video-file)
     exec /buildroot/reprojection-calibration-application "$@"
     ;;
   *)

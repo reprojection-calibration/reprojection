@@ -356,17 +356,6 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
     export DATA="/data/dataset-calib-imu4_512_16/"; \
     /temporary/${INTEGRATION_TEST}
 
-FROM base-stage AS video-file-app-stage
-
-ENV APP_FLAVOR=video-file
-
-COPY --from=release-build-stage /opt/reprojection /opt/reprojection
-COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
-
-RUN set -eox pipefail; \
-    ln /opt/reprojection/bin/demos.calibration /buildroot/reprojection-calibration-application
-
-ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM ros1-base-stage AS ros1-app-stage
 
@@ -380,6 +369,7 @@ RUN set -eox pipefail; \
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
+
 FROM ros2-base-stage AS ros2-app-stage
 
 ENV APP_FLAVOR=ros2
@@ -389,5 +379,18 @@ COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
 
 RUN set -eox pipefail; \
     ln /opt/reprojection/bin/application_ros2.reprojection_app /buildroot/reprojection-calibration-application
+
+ENTRYPOINT ["/buildroot/entrypoint.sh"]
+
+
+FROM base-stage AS video-file-app-stage
+
+ENV APP_FLAVOR=video-file
+
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
+
+RUN set -eox pipefail; \
+    ln /opt/reprojection/bin/demos.calibration /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
