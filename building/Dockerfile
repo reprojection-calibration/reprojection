@@ -208,16 +208,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         "/buildroot/library-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/library"
 
-# NOT EXECUTED IN CI!!!
-FROM release-build-stage AS feature-extraction-demo-stage
-
-# TODO(Jack): We should actually use cmakes install capability instead of just copying over the entire build folder!
-COPY --from=release-build-stage /buildroot/build-library-Release /buildroot/build-library-Release
-
-# NOTE(Jack): This requires that the folder having the config is properly mounted as a volume in the run command. We
-# could also copy it in here into the stage but then we would need to rebuild everytime we want to change the config...
-ENTRYPOINT ["/buildroot/build-library-Release/demos/demos.feature_extraction", "-c", "/temporary/code/library/demos/examples/target_config.toml"]
-
 
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS development-stage
