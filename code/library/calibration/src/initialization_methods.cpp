@@ -25,8 +25,7 @@ auto const log{logging::Get("calibration")};
 
 }
 
-// TODO MOVE!
-// TODO WHAT ARE THE PROPERTIES OF THIS SAMPLING?
+// TODO MOVE AND TEST!!!
 template <typename Map>
 auto SampleMap(Map const& map, std::size_t const num) {
     std::vector<typename Map::value_type> sampled;
@@ -57,7 +56,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
     std::sort(std::begin(gammas), std::end(gammas));
 
     // Test a uniform sampling of the gamma estimates using small randomly sampled pose-only optimizations.
-    uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 200)};
+    uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 500)};
     std::map<double, ArrayXd> cost_intrinsic_map;
     for (uint64_t i{0}; i < num_samples; ++i) {
         uint64_t const idx{i * std::size(gammas) / num_samples};
@@ -68,11 +67,18 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
         Frames const initial_poses{LinearPoseInitialization(camera_info, target_subset, {intrinsics_i})};
 
+        if (std::size(initial_poses) == 0) {
+            continue;
+        }
+
         OptimizationState const initial_state{{intrinsics_i}, initial_poses};
         auto const [optimized_state, diagnostics]{
             optimization::CameraNonlinearRefinement(camera_info, target_subset, initial_state, true)};
 
         cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
+
+        log->debug("{{ 'idx': {}, 'gamma': {}, 'final_cost': {}, 'num_frames_used': {}}}", idx, gamma_i,
+                   diagnostics.solver_summary.final_cost, std::size(initial_poses));
     }
 
     // Take the intrinsic with the lowest final cost.
