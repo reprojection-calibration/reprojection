@@ -42,20 +42,21 @@ auto SampleMap(Map const& map, std::size_t const num) {
     return result;
 }
 
-// TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we paramaterize the number
+// TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we parameterize the number
 // of targets sampled?
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
 
+    // Generate gamma estimates
     std::vector<double> gammas;
     for (auto const& target : targets | std::views::values) {
         std::vector<double> const gammas_i{runner(target)};
         gammas.insert(std::cend(gammas), std::cbegin(gammas_i), std::cend(gammas_i));
     }
-
     std::sort(std::begin(gammas), std::end(gammas));
 
+    // Test a uniform sampling of the gamma estimates using small randomly sampled pose-only optimizations.
     uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 200)};
     std::map<double, ArrayXd> cost_intrinsic_map;
     for (uint64_t i{0}; i < num_samples; ++i) {
@@ -74,9 +75,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
     }
 
-    // NOTE(Jack): std::map is sorted automatically by the key value, in this case here the key is the final cost of the
-    // optimization which means that the first value will be the key-value pair with the lowest cost - exactly what we
-    // want from the robust initialization.
+    // Take the intrinsic with the lowest final cost.
     return std::cbegin(cost_intrinsic_map)->second;
 }
 
