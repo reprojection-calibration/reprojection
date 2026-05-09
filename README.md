@@ -1,12 +1,18 @@
 # Reprojection - The future is calibrated
 
-Reprojection is an application for target-based camera intrinsic calibration meant to replace Kalibr.
+Reprojection is an application for target-based camera intrinsic calibration meant to
+replace [Kalibr](https://github.com/ethz-asl/kalibr).
 
 The project has over 240 unit tests, multiple integration/smoke tests, 100% code coverage of the core library, and a
 comprehensive Github Action CI pipeline. Every single piece of this repository has been painstakingly designed and
 battle tested to provide the world's best calibration experience.
 
-## Building the applications
+#### Notes
+
+* The first release (05.2026) only exposes monocular camera intrinsic calibration but camera-imu extrinsic calibration and
+camera-camera stereo calibration is planned and in progress.
+
+## Build
 
 The three applications provide support for data in ROS1 or ROS2 bags and .mp4 video files, build the one you need.
 
@@ -19,7 +25,7 @@ The three applications provide support for data in ROS1 or ROS2 bags and .mp4 vi
     # Video file
     ./building/local/build_image.sh -ts=video-file-app
 
-## Run the applications
+## Run
 
 The application requires four command line arguments:
 
@@ -35,13 +41,15 @@ An example command to run the video-file application is:
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
 
-## Supported targets
+## Supported calibration targets
 
 The following target types are supported:
 
-1) Checkerboard
-2) Circle Grid (symmetric and asymmetric)
-3) AprilGrid3
+1) AprilGrid3
+2) Checkerboard
+3) Circle Grid
+    1) asymmetric
+    2) symmetric
 
 > [!WARNING]
 > AprilGrid3 is NOT the same as the ubiquitous Kalibr Aprilgrid. Reprojection is not compatible with the Kalibr style
