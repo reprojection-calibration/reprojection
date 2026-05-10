@@ -99,7 +99,7 @@ jobs:
       - name: Run application smoke test
         run: |
           docker run --rm \
-            reprojection:${{ matrix.applications.tag }} \
+            reprojection:${{ matrix.applications.target }} \
             --config /temporary/code/test_data/minimum_config.toml \
             --data ${{ matrix.applications.data }} \
             --workspace /buildroot
