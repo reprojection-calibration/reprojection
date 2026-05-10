@@ -55,7 +55,7 @@ configuration for monocular camera intrinsic calibration is:
     pattern_size = [8,6]
     type = "aprilgrid3"
 
-Please save your configuration files using the `.toml` extension. 
+Please adapt this to your data abd save your configuration files using the `.toml` extension.
 
 > [!IMPORTANT]
 > For ROS1 and ROS2 data the `camera_name` must match the camera topic being calibrated exactly.
@@ -78,6 +78,28 @@ To generate Checkerboard or Circle Grid targets
 the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
 provided by [calib.io](https://calib.io/) is a great choice.
 
+### Configuring asymmetric circle grid
+
+Please add the following entry to your configuration file:
+
+        [target.circle_grid]
+        asymmetric = true
+
 ## Camera Models
+
+The following camera models are supported:
+
+1) `double_sphere` - [f, cx, cy, xi, alpha]
+2) `pinhole` - [f, cx, cy]
+3) `pinhole_radtan4` - [f, cx, cy, k1, k2, p1, p2]
+4) `unified_camera_model` - [f cx, cy, xi]
+ 
+All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please
+see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity) from the 
+industry calibration leader [Tangram Vision](https://www.tangramvision.com/) for an explanation. 
+
+
+
+
 
 
