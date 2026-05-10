@@ -13,6 +13,7 @@ export XDG_RUNTIME_DIR="/tmp/runtime-ubuntu"
 case "${APP_FLAVOR:-}" in
   ros1)
     set +u
+    # shellcheck disable=SC1091
     source /opt/ros/noetic/setup.bash
     set -u
 
@@ -20,6 +21,7 @@ case "${APP_FLAVOR:-}" in
     ;;
   ros2)
     set +u
+    # shellcheck disable=SC1091
     source /opt/ros/jazzy/setup.bash
     set -u
 

@@ -81,7 +81,7 @@ docker run \
   --env DISPLAY="${DISPLAY}" \
   --name reprojection-calibration-application \
   --rm \
-  --user $(id -u):$(id -g) \
+  --user "$(id -u):$(id -g)" \
   --volume /dev:/dev \
   --volume /tmp/.X11-unix:/tmp/.X11-unix \
   --volume "${script_folder}/../../:/temporary" \

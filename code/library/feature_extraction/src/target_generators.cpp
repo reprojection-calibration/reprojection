@@ -69,7 +69,7 @@ cv::Mat GenerateCircleGrid(cv::Size const& pattern_size, int const circle_radius
 }
 
 cv::Mat Aprilgrid3Generation::GenerateBoard(int const num_bits, uint64_t const tag_family[], int const bit_size_pixels,
-                                             cv::Size const& pattern_size) {
+                                            cv::Size const& pattern_size) {
     int const april_tag_size_pixels{
         (8 * bit_size_pixels) +
         (static_cast<int>(std::sqrt(num_bits)) * bit_size_pixels)};  // Fixed border width plus dynamic data area size
