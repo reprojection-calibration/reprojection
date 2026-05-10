@@ -369,6 +369,11 @@ RUN set -eox pipefail; \
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
+FROM ros1-app-stage AS ros1-app-test-stage
+
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
+COPY code/test_data/minimum_config.toml /temporary/code/test_data/
+
 
 FROM ros2-base-stage AS ros2-app-stage
 
