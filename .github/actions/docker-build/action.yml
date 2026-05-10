@@ -15,6 +15,9 @@ inputs:
   file:
     default: building/Dockerfile
     required: false
+  load:
+    default: false
+    required: false
   tag:
     required: false
   target:
@@ -38,6 +41,7 @@ runs:
         cache-to: type=gha,mode=max,scope=${{ inputs.cache_scope }}
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
+        load: ${{ inputs.load }}
         # TODO(Jack): Hardcoding "reprojection" here smells because this code in essence has nothing to do with the
         # specific repo. Can we refactor to prevent this?
         tags: ${{ inputs.tag && format('reprojection:{0}', inputs.tag) || '' }}

@@ -93,6 +93,7 @@ jobs:
           cache_scope: ${{ matrix.applications.cache_scope }}
           context: .
           external_cache_scope: test-data-download
+          load: true
           tag: ${{ matrix.applications.target }}
           target: ${{ matrix.applications.target }}
       - name: Run application smoke test
