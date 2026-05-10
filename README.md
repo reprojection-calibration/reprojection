@@ -61,6 +61,10 @@ Please adapt this to your data abd save your configuration files using the `.tom
 
 ## Calibration target types
 
+> [!WARNING]
+> Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
+> style Aprilgrid. You can find compatible Aprilgrid3 target files below. 
+
 The following target types are supported:
 
 1) `aprilgrid3`
@@ -68,10 +72,6 @@ The following target types are supported:
 3) `circle_grid`
     1) asymmetric
     2) symmetric
-
-> [!WARNING]
-> Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
-> style Aprilgrid.
 
 To generate Checkerboard or Circle Grid targets
 the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
