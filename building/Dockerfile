@@ -371,6 +371,7 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM ros1-app-stage AS ros1-app-test-stage
 
+COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/
 COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
 COPY code/test_data/minimum_config.toml /temporary/code/test_data/
 
