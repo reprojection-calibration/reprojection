@@ -102,7 +102,7 @@ jobs:
             reprojection:${{ matrix.applications.target }} \
             --config /temporary/code/test_data/minimum_config.toml \
             --data ${{ matrix.applications.data }} \
-            --workspace /buildroot
+            --workspace /temporary/code/test_data/
     strategy:
       matrix:
         applications:
