@@ -97,7 +97,7 @@ jobs:
       - name: Run application smoke test
         run: |
           docker run --rm \
-            reprojection:${{ matrix.applications.target }} \
+            reprojection:${{ matrix.applications.tag }} \
             --config /test-data/config.toml \
             --data /test-data/example.bag \
             --workspace /tmp/reprojection-output
@@ -106,4 +106,5 @@ jobs:
         applications:
           - base: ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
             cache_scope: ros1-app-test
+            tag: reprojection:ros1-app-test-stage
             target: ros1-app-test-stage
