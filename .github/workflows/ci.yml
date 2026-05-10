@@ -93,6 +93,7 @@ jobs:
           cache_scope: ${{ matrix.applications.cache_scope }}
           context: .
           external_cache_scope: test-data-download
+          tag: ${{ matrix.applications.target }}
           target: ${{ matrix.applications.target }}
       - name: Run application smoke test
         run: |
@@ -106,5 +107,4 @@ jobs:
         applications:
           - base: ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
             cache_scope: ros1-app-test
-            tag: ros1-app-test-stage
             target: ros1-app-test-stage
