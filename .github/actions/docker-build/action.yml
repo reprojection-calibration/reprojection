@@ -42,7 +42,5 @@ runs:
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
         load: ${{ inputs.load }}
-        # TODO(Jack): Hardcoding "reprojection" here smells because this code in essence has nothing to do with the
-        # specific repo. Can we refactor to prevent this?
-        tags: ${{ inputs.tag && format('reprojection:{0}', inputs.tag) || '' }}
+        tags: ${{ inputs.tag && format('{0}', inputs.tag) || '' }}
         target: ${{ inputs.target }}

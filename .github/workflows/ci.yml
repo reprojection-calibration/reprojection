@@ -94,12 +94,12 @@ jobs:
           context: .
           external_cache_scope: test-data-download
           load: true
-          tag: ${{ matrix.applications.target }}
+          tag: reprojection:${{ matrix.applications.target }}
           target: ${{ matrix.applications.target }}
       - name: Run application smoke test
         run: |
           docker run --rm \
-            reprojection:${{ matrix.applications.target }} \
+            ${{ matrix.applications.tag }} \
             --config /test-data/config.toml \
             --data /test-data/example.bag \
             --workspace /tmp/reprojection-output
