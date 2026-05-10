@@ -9,8 +9,9 @@ battle tested to provide the world's best calibration experience.
 
 #### Notes
 
-* The first release (05.2026) only exposes monocular camera intrinsic calibration but camera-imu extrinsic calibration and
-camera-camera stereo calibration is planned and in progress.
+* The first release (05.2026) only exposes monocular camera intrinsic calibration but camera-imu extrinsic calibration
+  and
+  camera-camera stereo calibration is planned and in progress.
 
 ## Build
 
@@ -43,22 +44,40 @@ An example command to run the video-file application is:
 
 ## Configuration
 
-## Supported calibration targets
+For configuration we use the [toml](https://toml.io/en/) configuration file format. An example minimum required
+configuration for monocular camera intrinsic calibration is:
+
+    [sensor]
+    camera_name = "/camera/image"
+    camera_model = "double_sphere"
+
+    [target]
+    pattern_size = [8,6]
+    type = "aprilgrid3"
+
+Please save your configuration files using the `.toml` extension. 
+
+> [!IMPORTANT]
+> For ROS1 and ROS2 data the `camera_name` must match the camera topic being calibrated exactly.
+
+## Calibration target types
 
 The following target types are supported:
 
-1) Aprilgrid3
-2) Checkerboard
-3) Circle Grid
+1) `aprilgrid3`
+2) `checkerboard`
+3) `circle_grid`
     1) asymmetric
     2) symmetric
 
 > [!WARNING]
-> Aprilgrid3 is NOT the same as the ubiquitous Kalibr Aprilgrid. Reprojection is not compatible with the Kalibr style
-> Aprilgrid.
+> Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
+> style Aprilgrid.
 
 To generate Checkerboard or Circle Grid targets
 the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
 provided by [calib.io](https://calib.io/) is a great choice.
+
+## Camera Models
 
 
