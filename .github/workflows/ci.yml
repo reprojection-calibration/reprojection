@@ -94,6 +94,13 @@ jobs:
           context: .
           external_cache_scope: test-data-download
           target: ${{ matrix.applications.target }}
+      - name: Run application smoke test
+        run: |
+          docker run --rm \
+            reprojection:${{ matrix.applications.name }}-test \
+            --config /test-data/config.toml \
+            --data /test-data/example.bag \
+            --workspace /tmp/reprojection-output
     strategy:
       matrix:
         applications:
