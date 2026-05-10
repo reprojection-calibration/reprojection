@@ -41,21 +41,24 @@ An example command to run the video-file application is:
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
 
+## Configuration
+
 ## Supported calibration targets
 
 The following target types are supported:
 
-1) AprilGrid3
+1) Aprilgrid3
 2) Checkerboard
 3) Circle Grid
     1) asymmetric
     2) symmetric
 
 > [!WARNING]
-> AprilGrid3 is NOT the same as the ubiquitous Kalibr Aprilgrid. Reprojection is not compatible with the Kalibr style
+> Aprilgrid3 is NOT the same as the ubiquitous Kalibr Aprilgrid. Reprojection is not compatible with the Kalibr style
 > Aprilgrid.
 
 To generate Checkerboard or Circle Grid targets
 the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
 provided by [calib.io](https://calib.io/) is a great choice.
+
 
