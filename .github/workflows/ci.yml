@@ -97,7 +97,7 @@ jobs:
       - name: Run application smoke test
         run: |
           docker run --rm \
-            ${{ matrix.applications.target }} \
+            reprojection:${{ matrix.applications.target }} \
             --config /test-data/config.toml \
             --data /test-data/example.bag \
             --workspace /tmp/reprojection-output
