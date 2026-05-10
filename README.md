@@ -100,8 +100,7 @@ The following camera models are supported:
 4) `unified_camera_model` - [f cx, cy, xi]
 
 All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please
-see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity) from the
-industry calibration leader [Tangram Vision](https://www.tangramvision.com/) for an explanation. 
+see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity) from [Tangram Vision](https://www.tangramvision.com/) for an explanation. 
 
 
 
