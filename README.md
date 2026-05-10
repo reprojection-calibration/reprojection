@@ -3,15 +3,14 @@
 Reprojection is an application for target-based camera intrinsic calibration meant to
 replace [Kalibr](https://github.com/ethz-asl/kalibr).
 
-The project has over 240 unit tests, multiple integration/smoke tests, 100% code coverage of the core library, and a
+The project has over 250 unit tests, multiple integration/smoke tests, 100% code coverage of the core library, and a
 comprehensive Github Action CI pipeline. Every single piece of this repository has been painstakingly designed and
 battle tested to provide the world's best calibration experience.
 
 #### Notes
 
 * The first release (05.2026) only exposes monocular camera intrinsic calibration but camera-imu extrinsic calibration
-  and
-  camera-camera stereo calibration is planned and in progress.
+  and camera-camera stereo calibration is planned and in progress.
 
 ## Build
 
@@ -58,7 +57,7 @@ configuration for monocular camera intrinsic calibration is:
 Please adapt this to your data abd save your configuration files using the `.toml` extension.
 
 > [!IMPORTANT]
-> For ROS1 and ROS2 data the `camera_name` must match the camera topic being calibrated exactly.
+> For ROS1 and ROS2 data the `camera_name` must match the image topic being calibrated exactly.
 
 ## Calibration target types
 
@@ -78,6 +77,12 @@ To generate Checkerboard or Circle Grid targets
 the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
 provided by [calib.io](https://calib.io/) is a great choice.
 
+### Aprilgrid3 target files
+
+* [aprilgrid3 6x4](media/aprilgrid3_6x4.png)
+* [aprilgrid3 7x5](media/aprilgrid3_7x5.png)
+* [aprilgrid3 8x6](media/aprilgrid3_8x6.png)
+
 ### Configuring asymmetric circle grid
 
 Please add the following entry to your configuration file:
@@ -93,9 +98,9 @@ The following camera models are supported:
 2) `pinhole` - [f, cx, cy]
 3) `pinhole_radtan4` - [f, cx, cy, k1, k2, p1, p2]
 4) `unified_camera_model` - [f cx, cy, xi]
- 
+
 All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please
-see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity) from the 
+see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity) from the
 industry calibration leader [Tangram Vision](https://www.tangramvision.com/) for an explanation. 
 
 
