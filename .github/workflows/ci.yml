@@ -106,5 +106,5 @@ jobs:
         applications:
           - base: ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
             cache_scope: ros1-app-test
-            tag: reprojection:ros1-app-test-stage
+            tag: ros1-app-test-stage
             target: ros1-app-test-stage
