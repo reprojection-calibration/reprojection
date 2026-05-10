@@ -13,7 +13,7 @@
 namespace reprojection::feature_extraction {
 
 // NOTE(Jack): For detectors which can only detect "whole" boards the Extract() method will simply return the points and
-// indices in their entirety. For targets which can have partial detections (ex. AprilGrid3) their Extract() method will
+// indices in their entirety. For targets which can have partial detections (ex. Aprilgrid3) their Extract() method will
 // mask out the indices and points which were visible and only return those. Never assume a target is whole! Always use
 // the indices.
 class TargetExtractor {

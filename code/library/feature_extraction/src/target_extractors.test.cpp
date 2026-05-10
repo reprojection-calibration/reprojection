@@ -101,12 +101,12 @@ TEST(TargetExtractors, TestCircleGridExtractorAsymmetric) {
     EXPECT_TRUE(indices.row(20).isApprox(Vector2i{6, 4}.transpose()));
 }
 
-TEST_F(AprilTagTestFixture, TestAprilGrid3Extractor) {
-    cv::Mat const april_tag{AprilBoard3Generation::GenerateTag(bit_size_pixel_, code_matrix_0_)};
+TEST_F(AprilTagTestFixture, TestAprilgrid3Extractor) {
+    cv::Mat const april_tag{Aprilgrid3Generation::GenerateTag(bit_size_pixel_, code_matrix_0_)};
 
     cv::Size const pattern_size{4, 3};
     double const unit_dimension{0.5};
-    auto const extractor{AprilGrid3Extractor{pattern_size, unit_dimension}};
+    auto const extractor{Aprilgrid3Extractor{pattern_size, unit_dimension}};
 
     std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(april_tag)};
     ASSERT_TRUE(target.has_value());
@@ -128,10 +128,10 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3Extractor) {
     EXPECT_TRUE(indices.isApprox(gt_indices));
 }
 
-TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
+TEST_F(AprilTagTestFixture, TestAprilgrid3VisibleGeometry) {
     cv::Size const pattern_size{3, 2};
 
-    // Make a simulated set of detections from a 3x2 AprilGrid3 - we only need the ID here
+    // Make a simulated set of detections from a 3x2 Aprilgrid3 - we only need the ID here
     std::vector<AprilTagDetection> detections;
     for (int i{0}; i < pattern_size.width * pattern_size.height; ++i) {
         AprilTagDetection detection_i;
@@ -146,7 +146,7 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
         detections.push_back(detection_i);
     }
 
-    ArrayXi const mask1{AprilGrid3Extractor::VisibleGeometry(pattern_size, detections)};
+    ArrayXi const mask1{Aprilgrid3Extractor::VisibleGeometry(pattern_size, detections)};
     EXPECT_EQ(mask1.rows(), 4 * pattern_size.width * pattern_size.height);
     EXPECT_TRUE(mask1.topRows(4).isApprox(Array4i{0, 1, 6, 7}));
     EXPECT_TRUE(mask1.bottomRows(4).isApprox(Array4i{16, 17, 22, 23}));
@@ -154,17 +154,17 @@ TEST_F(AprilTagTestFixture, TestAprilGrid3VisibleGeometry) {
     // Now remove the first tag detection and see that it still works
     detections.erase(std::begin(detections));
 
-    ArrayXi const mask2{AprilGrid3Extractor::VisibleGeometry(pattern_size, detections)};
+    ArrayXi const mask2{Aprilgrid3Extractor::VisibleGeometry(pattern_size, detections)};
     EXPECT_EQ(mask2.rows(), 4 * (pattern_size.width * pattern_size.height - 1));  // Four fewer elements
     EXPECT_TRUE(mask2.topRows(4).isApprox(Array4i{2, 3, 8, 9}));                  // Moved one tag over along the row
     EXPECT_TRUE(mask2.bottomRows(4).isApprox(Array4i{16, 17, 22, 23}));           // Same as before removal
 }
 
-TEST_F(AprilTagTestFixture, TestAprilGrid3CornerPositions) {
+TEST_F(AprilTagTestFixture, TestAprilgrid3CornerPositions) {
     // Should be even because aprilgrids always have even points in each direction because it is always a multiple of
     // two of the board's tag rows/columns
     ArrayX2i const grid{eigen_utilities::GenerateGridIndices(6, 8)};
-    MatrixX3d const points{AprilGrid3Extractor::CornerPositions(grid, 0.5)};
+    MatrixX3d const points{Aprilgrid3Extractor::CornerPositions(grid, 0.5)};
 
     EXPECT_EQ(points.rows(), grid.rows());
     EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));

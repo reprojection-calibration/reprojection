@@ -7,7 +7,7 @@ import sys
 #
 # The purpose of this little script is to manually write a feature extraction cache key so that we can trigger a cache
 # hit and just load the features from the database instead of trying to calculate them from the images (remember we do
-# not support Aprilgrid2 from Kalibr!).
+# not support Aprilgrid from Kalibr!).
 #
 # I warn you that this is naturally brittle because anytime the feature extraction cache key changes for any reason, we
 # will need to update it manually at the call site of this script. That is not the end of the world, but it is a little

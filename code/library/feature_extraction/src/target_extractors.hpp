@@ -30,9 +30,9 @@ class CircleGridExtractor : public TargetExtractor {
     bool asymmetric_;
 };
 
-class AprilGrid3Extractor : public TargetExtractor {
+class Aprilgrid3Extractor : public TargetExtractor {
    public:
-    explicit AprilGrid3Extractor(cv::Size const& pattern_size, double const unit_dimension);
+    explicit Aprilgrid3Extractor(cv::Size const& pattern_size, double const unit_dimension);
 
     std::optional<ExtractedTarget> ExtractImplementation(cv::Mat const& image) const override;
 

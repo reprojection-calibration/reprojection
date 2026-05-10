@@ -68,7 +68,7 @@ cv::Mat GenerateCircleGrid(cv::Size const& pattern_size, int const circle_radius
     return circlgrid;
 }
 
-cv::Mat AprilBoard3Generation::GenerateBoard(int const num_bits, uint64_t const tag_family[], int const bit_size_pixels,
+cv::Mat Aprilgrid3Generation::GenerateBoard(int const num_bits, uint64_t const tag_family[], int const bit_size_pixels,
                                              cv::Size const& pattern_size) {
     int const april_tag_size_pixels{
         (8 * bit_size_pixels) +
@@ -96,16 +96,16 @@ cv::Mat AprilBoard3Generation::GenerateBoard(int const num_bits, uint64_t const 
     return april_board;
 }
 
-cv::Mat AprilBoard3Generation::GenerateTag(int const num_bits, uint64_t const tag_code, int const bit_size_pixels) {
+cv::Mat Aprilgrid3Generation::GenerateTag(int const num_bits, uint64_t const tag_code, int const bit_size_pixels) {
     MatrixXi const code_matrix{GenerateCodeMatrix(num_bits, tag_code)};
 
     return GenerateTag(bit_size_pixels, code_matrix);
 }
 
-cv::Mat AprilBoard3Generation::GenerateTag(int const bit_size_pixels, MatrixXi const& code_matrix) {
+cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi const& code_matrix) {
     int const border_thickness_pixels{
         4 * bit_size_pixels};  // Three mainly white rings and one black ring. This is an intrinsic property
-                               // of the tags in our proposed AprilBoard3 design.
+                               // of the tags in our proposed Aprilgrid3 design.
     int const num_bits{static_cast<int>(code_matrix.rows())};  // Could also use .cols(), should always be square matrix
 
     int const tag_size_pixels{2 * border_thickness_pixels + (num_bits * bit_size_pixels)};
@@ -160,10 +160,10 @@ cv::Mat AprilBoard3Generation::GenerateTag(int const bit_size_pixels, MatrixXi c
 
 // NOTE(Jack): To understand this method you need to read the renderToArray() method in ImageLayout.java
 // (https://github.com/AprilRobotics/apriltag-generation/blob/master/src/april/tag/ImageLayout.java)
-// We simplify the implementation a little bit here because we assume that AprilBoard3 tag structure will always be the
+// We simplify the implementation a little bit here because we assume that Aprilgrid3 tag structure will always be the
 // same, therefore we only duplicate the actual data code area generation part here. A complete implementation of april
 // tag generation is not found here! Please see the original AprilRobotics repository for that.
-MatrixXi AprilBoard3Generation::GenerateCodeMatrix(int const num_bits, uint64_t tag_code) {
+MatrixXi Aprilgrid3Generation::GenerateCodeMatrix(int const num_bits, uint64_t tag_code) {
     int const sqrt_num_bits{static_cast<int>(std::sqrt(num_bits))};  // Only allow square data encoding areas
 
     // TODO(Jack): Is there a hard reason that we need to do this by generating each quadrant and then rotating 90
@@ -204,7 +204,7 @@ MatrixXi AprilBoard3Generation::GenerateCodeMatrix(int const num_bits, uint64_t 
     return code_matrix.transpose();
 }
 
-MatrixXi AprilBoard3Generation::Rotate90(MatrixXi const& matrix, bool const clockwise) {
+MatrixXi Aprilgrid3Generation::Rotate90(MatrixXi const& matrix, bool const clockwise) {
     MatrixXi const matrix_star{matrix.transpose()};
 
     return clockwise ? matrix_star.rowwise().reverse().eval() : matrix_star.colwise().reverse().eval();

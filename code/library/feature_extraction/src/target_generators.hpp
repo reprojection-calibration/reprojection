@@ -11,7 +11,7 @@ cv::Mat GenerateCheckerboard(cv::Size const& pattern_size, int const square_size
 cv::Mat GenerateCircleGrid(cv::Size const& pattern_size, int const circle_radius_pixels,
                            int const circle_spacing_pixels, bool const asymmetric);
 
-struct AprilBoard3Generation {
+struct Aprilgrid3Generation {
     static cv::Mat GenerateBoard(int const num_bits, uint64_t const tag_family[], int const bit_size_pixels,
                                  cv::Size const& pattern_size);
 
