@@ -280,12 +280,21 @@ FROM apt-base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
 
-# TODO(jack): We put a hard condition in botht he ROS1 and ROS2 install scripts that the ubuntu version is either 20.04
+# TODO(jack): We put a hard condition in both he ROS1 and ROS2 install scripts that the ubuntu version is either 20.04
 # or 24.04 respectively. This is a kind of hack to prevent someone using a non-intended base image (ex. trying to
 # install ROS1 on ubuntu 24). If this is a real long term strategy is at this time not 100% clear!
 ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
+
+COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
+
+
+FROM apt-base-stage AS ros2-base-stage
+
+ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
+RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
+    /temporary/${INSTALL_ROS2}
 
 COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 
@@ -304,6 +313,22 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     cmake_build_install \
         "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/application_ros1"
+
+
+FROM ros2-base-stage AS ros2-release-build-stage
+
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
+    set -eox pipefail; \
+    source /opt/ros/jazzy/setup.bash; \
+    source /temporary/building/install_scripts/source_install_utils.sh; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/application_ros2"
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
@@ -326,30 +351,6 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
     /temporary/${INTEGRATION_TEST}
 
-
-FROM apt-base-stage AS ros2-base-stage
-
-ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
-RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
-    /temporary/${INSTALL_ROS2}
-
-COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
-
-
-FROM ros2-base-stage AS ros2-release-build-stage
-
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
-    --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
-    set -eox pipefail; \
-    source /opt/ros/jazzy/setup.bash; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
-    export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=Release; \
-    cmake_build_install \
-        "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/application_ros2"
 
 FROM ros2-base-stage AS ros2-integration-test-stage
 
