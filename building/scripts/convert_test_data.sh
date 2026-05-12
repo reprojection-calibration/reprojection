@@ -2,15 +2,19 @@
 
 set -eoux pipefail
 
+# WARN(Jack):
+
 pip install opencv-python-headless rosbags rosbags-image
 
-# TODO(Jack): Something that we need to be careful about is that we now have these test data paths and names copied all
-#  over the place! It would be nice if we designed the system such that they are only specified in one place.
+mkdir /data/ros1 /data/ros2 /data/video_file
+
 rosbags-convert \
     --src /data/dataset-calib-imu4_512_16.bag \
-    --dst /data/dataset-calib-imu4_512_16/
+    --dst /data/ros2/dataset-calib-imu4_512_16/
 
 python3 /temporary/building/scripts/ros1_bag_topic_to_mp4.py \
   "/cam0/image_raw" \
   /data/dataset-calib-imu4_512_16.bag \
-  /data/dataset-calib-imu4_512_16.mp4
+  /data/video_file/dataset-calib-imu4_512_16.mp4
+
+mv /data/dataset-calib-imu4_512_16.bag /data/ros1/dataset-calib-imu4_512_16.bag

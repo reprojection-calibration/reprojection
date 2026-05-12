@@ -261,15 +261,19 @@ RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TE
     --mount=type=bind,source=${ROS1_BAG_TOPIC_TO_MP4},target=/temporary/${ROS1_BAG_TOPIC_TO_MP4} \
     /temporary/${CONVERT_TEST_DATA}
 
-COPY /temporary/code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16_ros.db3
-COPY /temporary/code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16_mp4.db3
-ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
-RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
-    /temporary/code/test_data/dataset-calib-imu4_512_16_ros.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f \
-    /temporary/code/test_data/dataset-calib-imu4_512_16_mp4.db3 blah
 
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros1/dataset-calib-imu4_512_16.db3
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros2/dataset-calib-imu4_512_16.db3
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib-imu4_512_16.db3
 
+ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
+      /data/ros1/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f; \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
+      /data/ros2/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f; \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
+      /data/video_file/dataset-calib-imu4_512_16.db3 blah
 
 
 FROM apt-base-stage AS ros1-base-stage
@@ -303,18 +307,12 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
-COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
-COPY code/test_data/minimum_config.toml /temporary/code/test_data/
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
 # TODO(Jack): The fact that we copy over the entire /opt/reprojection directory here again, instead of just the newly
 # built and installed ros1 release install, is a sign that we are not managing our packaging/installation well. Design
 # the system such that we only need to do the minumum copying/installing, or at least consider it!
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
-COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/
-
-ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
-RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
-    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f
+COPY --from=test-data-stage /data/ros1 /data
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
@@ -356,9 +354,9 @@ COPY code/test_data/minimum_config.toml /temporary/code/test_data/
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
 
-ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
-RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
+ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
     /temporary/code/test_data/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
@@ -416,9 +414,9 @@ COPY code/test_data/minimum_config.toml /temporary/code/test_data/
 # WARN(Jack): In order for this to work with the integration/smoke tests you need to set the --workspace to the folder
 # where the database is (ex. /temporary/code/test_data/)! If you do not then it will just try to create a new database
 # and run the process from scatch.
-ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
-RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
+ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
     /temporary/code/test_data/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f
 
 
@@ -431,9 +429,9 @@ COPY code/test_data/minimum_config.toml /temporary/code/test_data/
 # WARN(Jack): In order for this to work with the integration/smoke tests you need to set the --workspace to the folder
 # where the database is (ex. /temporary/code/test_data/)! If you do not then it will just try to create a new database
 # and run the process from scatch.
-ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
-RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
+ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
     /temporary/code/test_data/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f
 
 # TODO ADD VIDEO FILE SMOKE TEST \

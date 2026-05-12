@@ -15,7 +15,12 @@ import sys
 
 db_path, new_cache = sys.argv[1], sys.argv[2]
 
-conn = sqlite3.connect(db_path)
+try:
+    conn = sqlite3.connect(db_path)
+except Exception as e:
+    print(type(e).__name__, str(e), db_path)
+    sys.exit(1)
+
 conn.execute(
     """
     INSERT INTO calibration_steps (step_name, sensor_name, cache_key)
