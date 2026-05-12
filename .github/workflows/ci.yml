@@ -105,9 +105,9 @@ jobs:
         run: |
           docker run --rm \
             reprojection:${{ matrix.applications.target }} \
-            --config /temporary/code/test_data/minimum_config.toml \
+            --config /data/minimum_config.toml \
             --data ${{ matrix.applications.data }} \
-            --workspace /temporary/code/test_data/
+            --workspace /data/
     strategy:
       matrix:
         applications:
