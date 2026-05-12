@@ -87,6 +87,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          lfs: true
+      - run: git lfs pull
       - uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
@@ -111,6 +114,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          lfs: true
+      - run: git lfs pull
       - uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
