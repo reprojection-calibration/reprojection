@@ -12,9 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 # NOTE(Jack): I wish that we could have use the "regular" github actions variable style here, but for whatever reason
-# that does not work at least in matrix builds which means we have to use yaml anchors here. We use the "x-" syntax here
-# to indicate this is an extension and not GHA compliant schema component.
-x-env:
+# that does not work at least in matrix builds which means we have to use yaml anchors here.
+env:
   UBUNTU_20_BASE: &ubuntu_20_base ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
   UBUNTU_24_BASE: &ubuntu_24_base ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
 
