@@ -261,6 +261,16 @@ RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TE
     --mount=type=bind,source=${ROS1_BAG_TOPIC_TO_MP4},target=/temporary/${ROS1_BAG_TOPIC_TO_MP4} \
     /temporary/${CONVERT_TEST_DATA}
 
+COPY /temporary/code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16_ros.db3
+COPY /temporary/code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/dataset-calib-imu4_512_16_mp4.db3
+ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
+    /temporary/code/test_data/dataset-calib-imu4_512_16_ros.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f \
+    /temporary/code/test_data/dataset-calib-imu4_512_16_mp4.db3 blah
+
+
+
 
 FROM apt-base-stage AS ros1-base-stage
 
