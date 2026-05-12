@@ -65,8 +65,8 @@ jobs:
       - run: git lfs pull
       - uses: ./.github/actions/docker-build
         with:
-          context: .
           cache_scope: python-tooling
+          context: .
           target: python-tooling-stage
   test-data:
     runs-on: ubuntu-latest
@@ -78,6 +78,7 @@ jobs:
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: test-data
+          context: .
           target: test-data-stage
   application-integration-tests:
     # NOTE(Jack): We do not use the debug-build here directly but if that fails then there is no point of running the
