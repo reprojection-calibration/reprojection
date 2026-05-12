@@ -4,6 +4,7 @@ ARG PYTHON_3_12_SLIM=python:3.12-slim@sha256:3d5ed973e45820f5ba5e46bd065bd88b3a5
 FROM ${BASE_IMAGE} AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 
 SHELL ["/bin/bash", "-c"]
 WORKDIR /buildroot
@@ -34,7 +35,6 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
 
 FROM apt-base-stage AS build-ceres-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 ARG SOURCE_INSTALL_CERES=building/install_scripts/source_install_ceres.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_CERES},target=/temporary/${SOURCE_INSTALL_CERES} \
@@ -43,7 +43,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM apt-base-stage AS build-small-libraries-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 ARG SOURCE_INSTALL_SMALL_LIBRARIES=building/install_scripts/source_install_small_libraries.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_SMALL_LIBRARIES},target=/temporary/${SOURCE_INSTALL_SMALL_LIBRARIES} \
@@ -106,12 +105,9 @@ COPY code/python_tooling /temporary/code/python_tooling
 # TODO(Jack): We want to have a single source of truth for the sql files. Therefore we symlinked the `code/sql` directory
 # to the `code/python_tooling/database/sql` directory. Unfortunately in the dockerized python testing workflow this does not
 # work! Locally it works fine, but in the docker build we get the error "ModuleNotFoundError: No module named
-# 'database.sql'". To Test that this is the case I copied the sql files directly into the database package and then the
-# dockerized workflow worked no problem.
-#
-# This copy command copies the sql files over the symlinked directory in the python package and then the testing can
+# 'database.sql'". This copy command copies the sql files over the symlinked directory in the python package and then the testing can
 # find the files no problem. This is technically acceptable because the "single source of truth" rule is only violated
-# here ephermally in the build process. But if there was just a way to make it work without this and simply with the the
+# here ephermally in the build process. But if there was just a way to make it work without this and simply with the
 # symlinks, like it works for local testing, that would be great.
 COPY code/sql /temporary/code/python_tooling/database/sql
 
@@ -126,9 +122,7 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_P
     /temporary/${BUILD_PYTHON_TOOLING}
 
 
-# General code coverage notes:
-#
-# The solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example
+# The code coverage solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example
 #
 # A difference from the tutorial we adopted this from, is that instead of doing it all in the github action, I wanted to
 # do it here in docker stages. And to be perfectly honest I could not
@@ -146,14 +140,13 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_P
 # to get past the problem.
 FROM base-stage AS debug-build-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     set -eoux pipefail; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
     export CMAKE_BUILD_TYPE=Debug; \
     cmake_build_install \
@@ -194,14 +187,13 @@ RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends 
 # NOT EXECUTED IN CI!!!
 FROM base-stage AS library-release-build-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     set -eoux pipefail; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=OFF; \
     export CMAKE_BUILD_TYPE=Release; \
     cmake_build_install \
@@ -215,20 +207,20 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 # the duplication.
 FROM base-stage AS release-build-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
+
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     set -eoux pipefail; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=OFF; \
     export CMAKE_BUILD_TYPE=Release; \
     export INSTALL_EXAMPLES=ON; \
     cmake_build_install \
         "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/library" \
+        "/temporary/code/library"
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
@@ -292,13 +284,12 @@ COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 
 FROM ros1-base-stage AS ros1-release-build-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
     set -eox pipefail; \
     source /opt/ros/noetic/setup.bash; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
     export CMAKE_BUILD_TYPE=Release; \
     cmake_build_install \
@@ -308,13 +299,12 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM ros2-base-stage AS ros2-release-build-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
     set -eox pipefail; \
     source /opt/ros/jazzy/setup.bash; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
     export CMAKE_BUILD_TYPE=Release; \
     cmake_build_install \
@@ -333,7 +323,6 @@ COPY --from=test-data-stage /data/ros1 /data
 # built and installed ros1 release install, is a sign that we are not managing our packaging/installation well. Design
 # the system such that we only need to do the minumum copying/installing, or at least consider it!
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
-
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
