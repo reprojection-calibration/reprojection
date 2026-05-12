@@ -22,15 +22,18 @@ int main(int argc, char* argv[]) {
     // TODO(Jack): Unify the demos::ImageSource with the application/types ImageSource
     std::unique_ptr<demos::ImageSource> const image_feed{std::make_unique<demos::VideoCapture>(app_args->data_path)};
 
-    ImageSource image_source{[&image_feed]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
-        auto const timestamp_ns{ch::duration_cast<ch::nanoseconds>(ch::steady_clock::now().time_since_epoch()).count()};
-
+    // NOTE(Jack): We use a simple incremented timestamp here because we have no easily accessible time information from
+    // the video file (at least I don't think we can get that). I had first planned to use a system timestamp using
+    // the chrono library but then that meant the integration testing would not work because then the cache key would
+    // change every time.
+    int pseudo_timestamp{0};
+    ImageSource image_source{[&image_feed, &pseudo_timestamp]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
         cv::Mat img{image_feed->GetImage()};
         if (img.empty()) {
             return std::nullopt;
         }
 
-        return std::pair<uint64_t, cv::Mat>{timestamp_ns, img};
+        return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
     }};
 
     application::Calibrate(app_args->config, image_source, "", app_args->db);

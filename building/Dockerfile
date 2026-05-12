@@ -273,7 +273,7 @@ RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporar
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
       /data/ros2/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.db3 blah
+      /data/video_file/dataset-calib-imu4_512_16.db3 f7ef4ada7c1985a2fd3b2965ba848d5c9bf3962d7fd113988840a990b32edcc1
 
 
 FROM apt-base-stage AS ros1-base-stage
@@ -363,6 +363,18 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
     source /opt/ros/jazzy/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
+    /temporary/${INTEGRATION_TEST}
+
+FROM base-stage AS video-file-integration-test-stage
+
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY --from=test-data-stage /data/video_file /data
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+
+ARG INTEGRATION_TEST=building/scripts/integration_test.sh
+RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    export APP="/opt/reprojection/bin/demos.calibration"; \
+    export DATA="/data/dataset-calib-imu4_512_16.mp4"; \
     /temporary/${INTEGRATION_TEST}
 
 
