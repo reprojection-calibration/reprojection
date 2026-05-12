@@ -1,7 +1,7 @@
 # Reprojection - The future is calibrated
 
-Reprojection is an application for target-based camera intrinsic calibration meant to
-replace [Kalibr](https://github.com/ethz-asl/kalibr).
+Reprojection is an application for target-based camera intrinsic calibration meant to provide the same capabilities
+as [Kalibr](https://github.com/ethz-asl/kalibr).
 
 The project has over 250 unit tests, multiple integration/smoke tests, 100% code coverage of the core library, and a
 comprehensive Github Action CI pipeline. Every single piece of this repository has been painstakingly designed and
@@ -9,7 +9,7 @@ battle tested to provide the world's best calibration experience.
 
 #### Notes
 
-* The first release (05.2026) only exposes monocular camera intrinsic calibration but camera-imu extrinsic calibration
+* The first release (05.2026) only exposes monocular camera intrinsic calibration. Camera-imu extrinsic calibration
   and camera-camera stereo calibration is planned and in progress.
 
 ## Build
@@ -63,7 +63,7 @@ Please adapt this to your data abd save your configuration files using the `.tom
 
 > [!WARNING]
 > Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
-> style Aprilgrid. You can find compatible Aprilgrid3 target files below. 
+> style Aprilgrid. You can find compatible Aprilgrid3 target files below.
 
 The following target types are supported:
 
@@ -100,7 +100,8 @@ The following camera models are supported:
 4) `unified_camera_model` - [f cx, cy, xi]
 
 All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please
-see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity) from [Tangram Vision](https://www.tangramvision.com/) for an explanation. 
+see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity)
+from [Tangram Vision](https://www.tangramvision.com/) for an explanation. 
 
 
 
