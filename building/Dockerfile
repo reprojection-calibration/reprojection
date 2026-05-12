@@ -390,6 +390,7 @@ RUN set -eox pipefail; \
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
+
 FROM ros2-base-stage AS ros2-app-stage
 
 ENV APP_FLAVOR=ros2
@@ -427,7 +428,8 @@ FROM ros2-app-stage AS ros2-app-smoke-test-stage
 COPY code/test_data/minimum_config.toml /data/minimum_config.toml
 COPY --from=test-data-stage /data/ros2 /data
 
-FROM ros2-app-stage AS video-file-app-smoke-test-stage
+
+FROM video-file-app-stage AS video-file-app-smoke-test-stage
 
 COPY code/test_data/minimum_config.toml /data/minimum_config.toml
-COPY --from=test-data-stage /data/video-file /data
+COPY --from=test-data-stage /data/video_file /data
