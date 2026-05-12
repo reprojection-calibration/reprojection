@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
-ARG BASE_IMAGE_PYTHON=python:3.12-slim@sha256:3d5ed973e45820f5ba5e46bd065bd88b3a504ff0724d85980dcd05eab361fcf4
+ARG PYTHON_3_12_SLIM=python:3.12-slim@sha256:3d5ed973e45820f5ba5e46bd065bd88b3a504ff0724d85980dcd05eab361fcf4
 
 FROM ${BASE_IMAGE} AS configuration-stage
 
@@ -75,7 +75,7 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
 # and install what we need to get the code checks done. Unintentionally this caused problems with isort not being able
 # to disinguish between "first party" and "third party" packages. But we solve it, please see the note in
 # code_checks_python.sh for more details.
-FROM ${BASE_IMAGE_PYTHON} AS code-checks-python-stage
+FROM ${PYTHON_3_12_SLIM} AS code-checks-python-stage
 
 RUN pip install black isort
 
@@ -126,8 +126,6 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_P
     /temporary/${BUILD_PYTHON_TOOLING}
 
 
-FROM base-stage AS debug-build-stage
-
 # General code coverage notes:
 #
 # The solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example
@@ -146,10 +144,8 @@ FROM base-stage AS debug-build-stage
 # statements. I am not the first person to face this problem (https://github.com/linux-test-project/lcov/issues/129) and
 # there might already be a solution, but I took the shortcut and just added some LCOV_EXCL_LINE suppression statements
 # to get past the problem.
+FROM base-stage AS debug-build-stage
 
-# TODO(Jack): We now have a very similar cmake build process nearly copy and pasted several times directly in the
-# dockerfile. If we find some commonality we should consider throwing it into one common bash script that accepts
-# arguments instead!
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
@@ -181,11 +177,15 @@ RUN --mount=type=bind,source=${CODE_COVERAGE_ASSERTION},target=/temporary/${CODE
     /temporary/${CODE_COVERAGE_ASSERTION}
 
 
-# NOT EXECUTED IN CI!!!
 FROM nginx:1.29.2 AS code-coverage-report-stage
 
 # Open http://localhost:8080 to view the report
 COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/html
+
+
+FROM base-stage AS development-stage
+
+RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
 
 
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
@@ -228,15 +228,11 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     export INSTALL_EXAMPLES=ON; \
     cmake_build_install \
         "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/library"
+        "/temporary/code/library" \
 
 
-# NOT EXECUTED IN CI!!!
-FROM base-stage AS development-stage
-
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
-
-
+# NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
+# a redownload, unless of course you change the download script itself.
 FROM ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c AS test-data-download-stage
 
 ARG DOWNLOAD_TEST_DATA=building/install_scripts/download_test_data.sh
@@ -244,14 +240,7 @@ RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_
     /temporary/${DOWNLOAD_TEST_DATA}
 
 
-# NOTE(Jack): We seperate the test-data-download-stage and the test-data-stage to reduce the size of the docker cache we
-# consume in the github action CI pipeline. The internet download is the "expensive" process that actually needs to be
-# cached, the conversion/transformation of the raw dataset into other formats (ROS2 etc.) takes very little CPU time and can be
-# repeated everytime we run the pipeline if need be. This also has benefits locally because in the current structure
-# there is almost no way the test-data-download-stage's cache gets busted, which would forward us to redownload the data.
-# But if we want to add other conversion functions or change where the data is stored, we can do that any time in the
-# test-data-stage because CPU time is cheap. This is too long of an explanation now, but I hope it still makes sense!
-FROM ${BASE_IMAGE_PYTHON} AS test-data-stage
+FROM ${PYTHON_3_12_SLIM} AS test-data-stage
 
 COPY --from=test-data-download-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 
@@ -261,7 +250,9 @@ RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TE
     --mount=type=bind,source=${ROS1_BAG_TOPIC_TO_MP4},target=/temporary/${ROS1_BAG_TOPIC_TO_MP4} \
     /temporary/${CONVERT_TEST_DATA}
 
-
+# NOTE(Jack): I normally like to copy or mount files in the repository to `/temporary`. Consistently doing this means
+# that you could mount the repository to a docker container at `/temporary` and all scripts/paths etc. would work just
+# like they do when run during the build process. However here
 COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros1/dataset-calib-imu4_512_16.db3
 COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros2/dataset-calib-imu4_512_16.db3
 COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib-imu4_512_16.db3
@@ -346,6 +337,7 @@ COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    set -eox pipefail; \
     source /opt/ros/noetic/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
@@ -360,6 +352,7 @@ COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    set -eox pipefail; \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
