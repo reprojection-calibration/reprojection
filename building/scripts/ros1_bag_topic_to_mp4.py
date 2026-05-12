@@ -2,9 +2,9 @@ import argparse
 from pathlib import Path
 
 import cv2
+import numpy as np
 from rosbags.highlevel import AnyReader
 from rosbags.image import message_to_cvimage
-import numpy as np
 
 # WARN(Jack): There is absolutely no guarantee that this script produces a high quality mp4 video. For the purpose of
 # running the application integration tests we just need the mp4 video file and that is it because we cannot even
@@ -26,6 +26,7 @@ with AnyReader([args.input_bag]) as reader:
         msg = reader.deserialize(rawdata, connection.msgtype)
         frame = message_to_cvimage(msg)
 
+        # NOTE(Jack): Converts the mono16 images found in the TUM calibration data to the format required for mp4.
         frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX)
         frame = frame.astype(np.uint8)
         frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
