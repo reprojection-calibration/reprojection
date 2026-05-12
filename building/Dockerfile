@@ -427,7 +427,7 @@ FROM ros2-app-stage AS ros2-app-smoke-test-stage
 COPY code/test_data/minimum_config.toml /data/minimum_config.toml
 COPY --from=test-data-stage /data/ros2 /data
 
-# TODO ADD VIDEO FILE SMOKE TEST \
-    # TODO ADD VIDEO FILE SMOKE TEST
-    # TODO ADD VIDEO FILE SMOKE TEST
-    # TODO ADD VIDEO FILE SMOKE TEST
+FROM ros2-app-stage AS video-file-app-smoke-test-stage
+
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY --from=test-data-stage /data/video-file /data

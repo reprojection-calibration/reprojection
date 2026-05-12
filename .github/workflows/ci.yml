@@ -119,3 +119,7 @@ jobs:
             cache_scope: ros2-app-test
             data: /data/dataset-calib-imu4_512_16/
             target: ros2-app-smoke-test-stage
+          - base: ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
+            cache_scope: video-file-app-test
+            data: /data/dataset-calib-imu4_512_16.mp4
+            target: video-file-app-smoke-test-stage
