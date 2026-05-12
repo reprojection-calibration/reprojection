@@ -3,8 +3,8 @@
 Reprojection is an application for target-based camera intrinsic calibration meant to provide the same capabilities
 as [Kalibr](https://github.com/ethz-asl/kalibr).
 
-The project has over 250 unit tests, multiple integration/smoke tests, 100% code coverage of the core library, and a
-comprehensive Github Action CI pipeline. Every single piece of this repository has been painstakingly designed and
+The project has over 250 unit tests, comprehensive integration/smoke tests, 100% code coverage of the core library, and
+a comprehensive Github Action CI pipeline. Every single piece of this repository has been painstakingly designed and
 battle tested to provide the world's best calibration experience.
 
 #### Notes
