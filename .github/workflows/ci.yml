@@ -72,6 +72,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          lfs: true
+      - run: git lfs pull
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: test-data
@@ -82,10 +85,6 @@ jobs:
     needs: [ debug-build, test-data ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-        with:
-          lfs: true
-      - run: git lfs pull
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
@@ -110,10 +109,6 @@ jobs:
     needs: [ application-integration-tests ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-        with:
-          lfs: true
-      - run: git lfs pull
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
