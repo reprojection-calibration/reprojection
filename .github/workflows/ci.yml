@@ -69,18 +69,18 @@ jobs:
           context: .
           cache_scope: python-tooling
           target: python-tooling-stage
-  test-data-download:
+  test-data:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/docker-build
         with:
-          cache_scope: test-data-download
-          target: test-data-download-stage
+          cache_scope: test-data
+          target: test-data-stage
   application-integration-tests:
     # NOTE(Jack): We do not use the debug-build here directly but if that fails then there is no point of running the
     # integration tests.
-    needs: [ debug-build, test-data-download ]
+    needs: [ debug-build, test-data ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -93,7 +93,7 @@ jobs:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
           cache_scope: ${{ matrix.applications.cache_scope }}
           context: .
-          external_cache_scope: test-data-download
+          external_cache_scope: test-data
           target: ${{ matrix.applications.target }}
     strategy:
       matrix:
@@ -120,7 +120,7 @@ jobs:
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
           context: .
-          external_cache_scope: test-data-download
+          external_cache_scope: test-data
           load: true
           tag: reprojection:${{ matrix.applications.target }}
           target: ${{ matrix.applications.target }}

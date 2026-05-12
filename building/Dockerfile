@@ -315,13 +315,6 @@ FROM ros1-base-stage AS ros1-integration-test-stage
 
 COPY code/test_data/minimum_config.toml /data/minimum_config.toml
 COPY --from=test-data-stage /data/ros1 /data
-# TODO MAKE AN ISSUE
-# TODO MAKE AN ISSUE
-# TODO MAKE AN ISSUE
-# TODO MAKE AN ISSUE
-# TODO(Jack): The fact that we copy over the entire /opt/reprojection directory here again, instead of just the newly
-# built and installed ros1 release install, is a sign that we are not managing our packaging/installation well. Design
-# the system such that we only need to do the minumum copying/installing, or at least consider it!
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
