@@ -12,6 +12,8 @@ inputs:
     required: false
   external_cache_scope:
     required: false
+  external_cache_scope_1:
+    required: false
   file:
     default: building/Dockerfile
     required: false
@@ -33,6 +35,7 @@ runs:
         cache-from: |
           ${{ inputs.cache_scope && format('type=gha,scope={0}', inputs.cache_scope) || '' }}
           ${{ inputs.external_cache_scope && format('type=gha,scope={0}', inputs.external_cache_scope) || '' }}
+          ${{ inputs.external_cache_scope_1 && format('type=gha,scope={0}', inputs.external_cache_scope_1) || '' }}
         cache-to: ${{ inputs.cache_scope && format('type=gha,mode=max,scope={0}', inputs.cache_scope) || '' }}
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
