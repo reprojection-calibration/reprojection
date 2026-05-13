@@ -91,8 +91,9 @@ jobs:
           target: dashboard-smoke-test-stage
       - name: Run dashboard smoke test
         run: |
+          set -euox pipefail
+          
           docker run --detach --name dashboard-smoke-test reprojection:dashboard-smoke-test-stage
-
           timeout 30s bash -c '
             until [ "$(docker inspect -f "{{.State.Health.Status}}" dashboard-smoke-test)" = "healthy" ]; do
               sleep 1
