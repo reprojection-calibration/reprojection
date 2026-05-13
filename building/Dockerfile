@@ -237,7 +237,7 @@ FROM ${PYTHON_3_12_SLIM} AS test-data-stage
 COPY --from=test-data-download-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 
 ARG CONVERT_TEST_DATA=building/scripts/convert_test_data.sh
-ARG ROS1_BAG_TOPIC_TO_MP4=building/scripts/ros1_bag_topic_to_mp4.py
+ARG ROS1_BAG_TOPIC_TO_MP4=building/scripts/tum_image_topic_to_mp4.py
 RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TEST_DATA} \
     --mount=type=bind,source=${ROS1_BAG_TOPIC_TO_MP4},target=/temporary/${ROS1_BAG_TOPIC_TO_MP4} \
     /temporary/${CONVERT_TEST_DATA}

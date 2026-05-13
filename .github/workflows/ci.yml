@@ -54,7 +54,7 @@ jobs:
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: code-coverage-assertion
-          external_cache_scope: ubuntu_24
+          external_cache_scope: debug-build
           target: code-coverage-assertion-stage
 
   python-tooling:

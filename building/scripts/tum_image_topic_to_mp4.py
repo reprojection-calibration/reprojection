@@ -7,8 +7,8 @@ from rosbags.highlevel import AnyReader
 from rosbags.image import message_to_cvimage
 
 # WARN(Jack): There is absolutely no guarantee that this script produces a high quality mp4 video. For the purpose of
-# running the application integration tests we just need the mp4 video file and that is it because we cannot even
-# extract Kalibr style Aprilgrid features if we wanted to.
+# running the application integration tests we just need the mp4 video file. This script is not designed for any other
+# purpose and is specifically hardcoded to work with the TUM data.
 
 parser = argparse.ArgumentParser()
 parser.add_argument("image_topic", type=str)
