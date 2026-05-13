@@ -73,6 +73,21 @@ jobs:
           context: .
           target: python-tooling-stage
 
+  dashboard:
+    needs: python-tooling
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+      - run: git lfs pull
+      - uses: ./.github/actions/docker-build
+        with:
+          cache_scope: dashboard
+          context: .
+          external_cache_scope: python-tooling
+          target: dashboard-stage
+
   test-data:
     runs-on: ubuntu-latest
     steps:
