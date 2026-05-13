@@ -121,6 +121,7 @@ jobs:
             target: video-file-integration-test-stage
 
   entrypoint-smoke-tests:
+    name: entrypoint-smoke-tests (${{ matrix.applications.target }})
     needs: [ application-integration-tests ]
     runs-on: ubuntu-latest
     steps:
