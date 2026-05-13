@@ -86,6 +86,9 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
 
 FROM apt-base-stage AS python-tooling-stage
 
+# NOTE(Jack): We specify the PYENV_ROOT and VENV_DIR to prevent them from being their default values which will see
+# them both be put in the $HOME directory. This locatio cause us a lot of permissions issues when trying to create the
+# dashboard release stage so we moved them to non permission limited locations like you see here.
 ENV PYENV_ROOT="/opt/pyenv"
 ENV VENV_DIR=/buildroot/.reprojection_venv
 

@@ -2,17 +2,18 @@
 
 set -eoux pipefail
 
+# Defaults to $HOME if this is empty
+PYENV_ROOT=${PYENV_ROOT:-''}
+
 # NOTE(Jack): This needs to be a separate script because we need to write the .bash_profile and then source that.
 
-wget -qO-  https://pyenv.run | bash
+wget -qO- https://pyenv.run | bash
 
 # NOTE(Jack): We create the .bashprofile because when we tried to use the .bashrc the other variables/script in the
 # .bashrc caused problems.
 touch ~/.bash_profile
-
 cat <<'EOF' | tee -a ~/.bash_profile > /dev/null
 
-
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+[[ -d ${PYENV_ROOT}/bin ]] && export PATH="${PYENV_ROOT}/bin:${PATH}"
 eval "$(pyenv init - bash)"
 EOF
