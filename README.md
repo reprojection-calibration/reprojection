@@ -120,6 +120,16 @@ an aprilgrid3 target. If it is possible given your camera and ability to display
 
 ### Use a computer screen to display the calibration target
 
+Sometimes you just want to calibrate but do not have a printer to print out the calibration target... that is annoying.
+If that is the case I recommend just showing the target on a computer screen. My experience says that for debugging and
+proof of concept this works absolutely fine. I would even venture to propose that a target displayed on a nice
+resolution computer screen is better than a printed target which is not as flat and easier to damage in comparison.
+
+Note that when displaying the target you should turn off any "auto blur" effect that the image viewer applies. For
+example the GNOME Image Viewer, the default on Ubuntu, has "smooth images" settings which applies a blur that is
+intended to make the image more visually appealing. For calibration however this is problem because the feature
+extractor needs sharp exact corners.
+
 
  
 
