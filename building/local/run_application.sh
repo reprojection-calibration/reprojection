@@ -73,7 +73,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-script_folder="$(dirname "$(realpath -s "${0}")")"
 # TODO(Jack): Is this safe or a bad practice?
 xhost +local:docker
 

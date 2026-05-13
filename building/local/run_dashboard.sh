@@ -17,7 +17,6 @@ mount_path_arg() {
 
 mount_path_arg "${1}"
 
-script_folder="$(dirname "$(realpath -s "${0}")")"
 xhost +local:docker
 
 docker run \
