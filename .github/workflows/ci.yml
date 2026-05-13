@@ -87,6 +87,7 @@ jobs:
           target: test-data-stage
 
   application-integration-tests:
+    name: application-integration-tests (${{ matrix.applications.target }})
     # NOTE(Jack): We do not use the debug-build here directly but if that fails then there is no point of running the
     # integration tests.
     needs: [ debug-build, test-data ]

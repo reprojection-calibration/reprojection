@@ -103,7 +103,7 @@ All camera models use a single focal length `f` instead of the standard two foca
 see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity)
 from [Tangram Vision](https://www.tangramvision.com/) for an explanation.
 
-## Tips and Tricks
+## Tips and Tricks and Warnings
 
 ### Use a target with as many rows/columns as possible
 
@@ -118,7 +118,8 @@ sensitive algorithms and noise matters. Therefore, please use a target with as m
 I recommend at a bare minimum 6x6 for checkerboard and circle grid targets (10x10 an asymmetric circle grid) and 4x4 for
 an aprilgrid3 target. If it is possible given your camera and ability to display the targets please use more!
 
-### 
+### Use a computer screen to display the calibration target
+
 
  
 
