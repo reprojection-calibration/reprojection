@@ -73,7 +73,7 @@ jobs:
           context: .
           target: python-tooling-stage
 
-  dashboard:
+  dashboard-smoke-test:
     needs: python-tooling
     runs-on: ubuntu-latest
     steps:
@@ -86,7 +86,19 @@ jobs:
           cache_scope: dashboard
           context: .
           external_cache_scope: python-tooling
-          target: dashboard-stage
+          load: true
+          tag: reprojection:dashboard-smoke-test-stage
+          target: dashboard-smoke-test-stage
+      - name: Run dashboard smoke test
+        run: |
+          docker run --detach --name dashboard-smoke-test \
+            reprojection:dashboard-smoke-test-stage
+
+          timeout 60s bash -c '
+            until [ "$(docker inspect -f "{{.State.Health.Status}}" dashboard-smoke-test)" = "healthy" ]; do
+              sleep 1
+            done
+          '
 
   test-data:
     runs-on: ubuntu-latest
