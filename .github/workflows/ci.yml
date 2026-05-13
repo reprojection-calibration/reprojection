@@ -87,7 +87,7 @@ jobs:
           target: test-data-stage
 
   application-integration-tests:
-    name: application-integration-tests (${{ matrix.applications.target }})
+    name: ${{ matrix.applications.target }}
     # NOTE(Jack): We do not use the debug-build here directly but if that fails then there is no point of running the
     # integration tests.
     needs: [ debug-build, test-data ]
@@ -121,7 +121,7 @@ jobs:
             target: video-file-integration-test-stage
 
   entrypoint-smoke-tests:
-    name: entrypoint-smoke-tests (${{ matrix.applications.target }})
+    name: ${{ matrix.applications.target }}
     needs: [ application-integration-tests ]
     runs-on: ubuntu-latest
     steps:
