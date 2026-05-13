@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -euo pipefail
 
 # TODO(Jack): Add some sort of usage or help dialogue that will print out if the appropriate args are not provided
@@ -73,7 +74,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 script_folder="$(dirname "$(realpath -s "${0}")")"
-
 # TODO(Jack): Is this safe or a bad practice?
 xhost +local:docker
 
@@ -84,7 +84,6 @@ docker run \
   --user "$(id -u):$(id -g)" \
   --volume /dev:/dev \
   --volume /tmp/.X11-unix:/tmp/.X11-unix \
-  --volume "${script_folder}/../../:/temporary" \
   "${DOCKER_ARGS[@]}" \
   "${TAG}" \
   "${APP_ARGS[@]}"

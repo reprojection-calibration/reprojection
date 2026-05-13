@@ -29,7 +29,7 @@ app.layout = html.Div(
                                     placeholder="Enter path to database directory...",
                                     debounce=True,
                                     style={"width": "100%"},
-                                    value="../../code/test_data/",
+                                    value="/workspace/",
                                     persistence=True,
                                     persistence_type="local",
                                 ),
