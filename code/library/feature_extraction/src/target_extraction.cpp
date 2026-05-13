@@ -64,8 +64,8 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target
             asymmetric = node.as_boolean()->get();
         }
         return std::make_unique<CircleGridExtractor>(pattern_size, unit_dimension, asymmetric);
-    } else if (type == TargetType::AprilGrid3) {
-        return std::make_unique<AprilGrid3Extractor>(pattern_size, unit_dimension);
+    } else if (type == TargetType::Aprilgrid3) {
+        return std::make_unique<Aprilgrid3Extractor>(pattern_size, unit_dimension);
     } else {
         throw std::runtime_error(  // LCOV_EXCL_LINE
             "LIBRARY IMPLEMENTATION ERROR - CreateTargetExtractor() invalid feature extractor type: " +  // LCOV_EXCL_LINE

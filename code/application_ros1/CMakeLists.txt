@@ -13,6 +13,8 @@ include(../cmake_macros/add_tests.cmake)
 
 # Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(cv_bridge REQUIRED)
 find_package(reprojection REQUIRED)

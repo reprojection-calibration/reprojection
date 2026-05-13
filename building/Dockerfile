@@ -1,9 +1,10 @@
 ARG BASE_IMAGE=ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
-ARG BASE_IMAGE_PYTHON=python:3.12-slim@sha256:3d5ed973e45820f5ba5e46bd065bd88b3a504ff0724d85980dcd05eab361fcf4
+ARG PYTHON_3_12_SLIM=python:3.12-slim@sha256:3d5ed973e45820f5ba5e46bd065bd88b3a504ff0724d85980dcd05eab361fcf4
 
 FROM ${BASE_IMAGE} AS configuration-stage
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 
 SHELL ["/bin/bash", "-c"]
 WORKDIR /buildroot
@@ -34,7 +35,6 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
 
 FROM apt-base-stage AS build-ceres-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 ARG SOURCE_INSTALL_CERES=building/install_scripts/source_install_ceres.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_CERES},target=/temporary/${SOURCE_INSTALL_CERES} \
@@ -43,7 +43,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM apt-base-stage AS build-small-libraries-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 ARG SOURCE_INSTALL_SMALL_LIBRARIES=building/install_scripts/source_install_small_libraries.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_SMALL_LIBRARIES},target=/temporary/${SOURCE_INSTALL_SMALL_LIBRARIES} \
@@ -75,7 +74,7 @@ RUN --mount=type=bind,source=${CODE_CHECKS},target=/temporary/${CODE_CHECKS} \
 # and install what we need to get the code checks done. Unintentionally this caused problems with isort not being able
 # to disinguish between "first party" and "third party" packages. But we solve it, please see the note in
 # code_checks_python.sh for more details.
-FROM ${BASE_IMAGE_PYTHON} AS code-checks-python-stage
+FROM ${PYTHON_3_12_SLIM} AS code-checks-python-stage
 
 RUN pip install black isort
 
@@ -106,12 +105,9 @@ COPY code/python_tooling /temporary/code/python_tooling
 # TODO(Jack): We want to have a single source of truth for the sql files. Therefore we symlinked the `code/sql` directory
 # to the `code/python_tooling/database/sql` directory. Unfortunately in the dockerized python testing workflow this does not
 # work! Locally it works fine, but in the docker build we get the error "ModuleNotFoundError: No module named
-# 'database.sql'". To Test that this is the case I copied the sql files directly into the database package and then the
-# dockerized workflow worked no problem.
-#
-# This copy command copies the sql files over the symlinked directory in the python package and then the testing can
+# 'database.sql'". This copy command copies the sql files over the symlinked directory in the python package and then the testing can
 # find the files no problem. This is technically acceptable because the "single source of truth" rule is only violated
-# here ephermally in the build process. But if there was just a way to make it work without this and simply with the the
+# here ephermally in the build process. But if there was just a way to make it work without this and simply with the
 # symlinks, like it works for local testing, that would be great.
 COPY code/sql /temporary/code/python_tooling/database/sql
 
@@ -126,11 +122,7 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_P
     /temporary/${BUILD_PYTHON_TOOLING}
 
 
-FROM base-stage AS debug-build-stage
-
-# General code coverage notes:
-#
-# The solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example
+# The code coverage solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example
 #
 # A difference from the tutorial we adopted this from, is that instead of doing it all in the github action, I wanted to
 # do it here in docker stages. And to be perfectly honest I could not
@@ -146,18 +138,15 @@ FROM base-stage AS debug-build-stage
 # statements. I am not the first person to face this problem (https://github.com/linux-test-project/lcov/issues/129) and
 # there might already be a solution, but I took the shortcut and just added some LCOV_EXCL_LINE suppression statements
 # to get past the problem.
+FROM base-stage AS debug-build-stage
 
-# TODO(Jack): We now have a very similar cmake build process nearly copy and pasted several times directly in the
-# dockerfile. If we find some commonality we should consider throwing it into one common bash script that accepts
-# arguments instead!
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     set -eoux pipefail; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
     export CMAKE_BUILD_TYPE=Debug; \
     cmake_build_install \
@@ -181,50 +170,61 @@ RUN --mount=type=bind,source=${CODE_COVERAGE_ASSERTION},target=/temporary/${CODE
     /temporary/${CODE_COVERAGE_ASSERTION}
 
 
-# NOT EXECUTED IN CI!!!
 FROM nginx:1.29.2 AS code-coverage-report-stage
 
 # Open http://localhost:8080 to view the report
 COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/html
 
 
+FROM base-stage AS development-stage
+
+RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
+
+
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
 # Debug builds. However for applications we want them to be as fast as possible so we need a Release type build. We add
 # this stage to host that build so that it can be used by all applications.
 # NOT EXECUTED IN CI!!!
-FROM base-stage AS release-build-stage
+FROM base-stage AS library-release-build-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
     set -eoux pipefail; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=OFF; \
     export CMAKE_BUILD_TYPE=Release; \
     cmake_build_install \
         "/buildroot/library-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/library"
 
-# NOT EXECUTED IN CI!!!
-FROM release-build-stage AS feature-extraction-demo-stage
-
-# TODO(Jack): We should actually use cmakes install capability instead of just copying over the entire build folder!
-COPY --from=release-build-stage /buildroot/build-library-Release /buildroot/build-library-Release
-
-# NOTE(Jack): This requires that the folder having the config is properly mounted as a volume in the run command. We
-# could also copy it in here into the stage but then we would need to rebuild everytime we want to change the config...
-ENTRYPOINT ["/buildroot/build-library-Release/demos/demos.feature_extraction", "-c", "/temporary/code/library/demos/examples/target_config.toml"]
+# TODO(Jack): This is terrible... What we have here is basically completely copy pasted from library-release-build-stage
+# except that here we set INSTALL_EXAMPLES=ON. This all comes from the fact that we have no real packaging solution and
+# cannot specify which parts to install where. Instead we have to rebuild the entire thing because in the dependent
+# stages we copy the entire /opt/reprojection folder. We need to use something like cpack to solve this and eliminate
+# the duplication.
+FROM base-stage AS release-build-stage
 
 
-# NOT EXECUTED IN CI!!!
-FROM base-stage AS development-stage
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
+    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    set -eoux pipefail; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
+    export BUILD_TESTING=OFF; \
+    export CMAKE_BUILD_TYPE=Release; \
+    export INSTALL_EXAMPLES=ON; \
+    cmake_build_install \
+        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/library"
 
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
 
-
+# NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
+# a redownload, unless of course you change the download script itself.
 FROM ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c AS test-data-download-stage
 
 ARG DOWNLOAD_TEST_DATA=building/install_scripts/download_test_data.sh
@@ -232,72 +232,45 @@ RUN --mount=type=bind,source=${DOWNLOAD_TEST_DATA},target=/temporary/${DOWNLOAD_
     /temporary/${DOWNLOAD_TEST_DATA}
 
 
-# NOTE(Jack): We seperate the test-data-download-stage and the test-data-stage to reduce the size of the docker cache we
-# consume in the github action CI pipeline. The internet download is the "expensive" process that actually needs to be
-# cached, the conversion/transformation of the raw dataset into other formats (ROS2 etc.) takes very little CPU time and can be
-# repeated everytime we run the pipeline if need be. This also has benefits locally because in the current structure
-# there is almost no way the test-data-download-stage's cache gets busted, which would forward us to redownload the data.
-# But if we want to add other conversion functions or change where the data is stored, we can do that any time in the
-# test-data-stage because CPU time is cheap. This is too long of an explanation now, but I hope it still makes sense!
-FROM ${BASE_IMAGE_PYTHON} AS test-data-stage
+FROM ${PYTHON_3_12_SLIM} AS test-data-stage
 
 COPY --from=test-data-download-stage /data/dataset-calib-imu4_512_16.bag /data/dataset-calib-imu4_512_16.bag
 
 ARG CONVERT_TEST_DATA=building/scripts/convert_test_data.sh
+ARG ROS1_BAG_TOPIC_TO_MP4=building/scripts/tum_image_topic_to_mp4.py
 RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TEST_DATA} \
+    --mount=type=bind,source=${ROS1_BAG_TOPIC_TO_MP4},target=/temporary/${ROS1_BAG_TOPIC_TO_MP4} \
     /temporary/${CONVERT_TEST_DATA}
+
+# NOTE(Jack): I normally like to copy or mount files in the repository to `/temporary`. Consistently doing this means
+# that you could mount the repository to a docker container at `/temporary` and all scripts/paths etc. would work just
+# like they do when run during the build process. However here
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros1/dataset-calib-imu4_512_16.db3
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros2/dataset-calib-imu4_512_16.db3
+COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib-imu4_512_16.db3
+
+ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
+      /data/ros1/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f; \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
+      /data/ros2/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f; \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
+      /data/video_file/dataset-calib-imu4_512_16.db3 f7ef4ada7c1985a2fd3b2965ba848d5c9bf3962d7fd113988840a990b32edcc1
 
 
 FROM apt-base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
 
-# TODO(jack): We put a hard condition in botht he ROS1 and ROS2 install scripts that the ubuntu version is either 20.04
+# TODO(jack): We put a hard condition in both he ROS1 and ROS2 install scripts that the ubuntu version is either 20.04
 # or 24.04 respectively. This is a kind of hack to prevent someone using a non-intended base image (ex. trying to
 # install ROS1 on ubuntu 24). If this is a real long term strategy is at this time not 100% clear!
 ARG INSTALL_ROS1=building/install_scripts/install_ros1.sh
 RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
     /temporary/${INSTALL_ROS1}
 
-COPY --from=release-build-stage /opt/reprojection /opt/reprojection
-
-
-FROM ros1-base-stage AS ros1-release-build-stage
-
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
-    --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
-    set -eox pipefail; \
-    source /opt/ros/noetic/setup.bash; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
-    export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=Release; \
-    cmake_build_install \
-        "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/application_ros1"
-
-FROM ros1-base-stage AS ros1-integration-test-stage
-
-COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
-COPY code/test_data/minimum_config.toml /temporary/code/test_data/
-# TODO(Jack): The fact that we copy over the entire /opt/reprojection directory here again, instead of just the newly
-# built and installed ros1 release install, is a sign that we are not managing our packaging/installation well. Design
-# the system such that we only need to do the minumum copying/installing, or at least consider it!
-COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
-COPY --from=test-data-stage /data/dataset-calib-imu4_512_16.bag /data/
-
-ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
-RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
-    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f
-
-ARG INTEGRATION_TEST=building/scripts/integration_test.sh
-RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    source /opt/ros/noetic/setup.bash; \
-    export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
-    export DATA="/data/dataset-calib-imu4_512_16.bag"; \
-    /temporary/${INTEGRATION_TEST}
+COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 
 
 FROM apt-base-stage AS ros2-base-stage
@@ -306,40 +279,132 @@ ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
     /temporary/${INSTALL_ROS2}
 
-COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
+
+
+FROM ros1-base-stage AS ros1-release-build-stage
+
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
+    set -eox pipefail; \
+    source /opt/ros/noetic/setup.bash; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
+    export BUILD_TESTING=ON; \
+    export CMAKE_BUILD_TYPE=Release; \
+    cmake_build_install \
+        "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
+        "/temporary/code/application_ros1"
 
 
 FROM ros2-base-stage AS ros2-release-build-stage
 
-ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
     set -eox pipefail; \
     source /opt/ros/jazzy/setup.bash; \
-    source /temporary/building/install_scripts/source_install_utils.sh; \
+    source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
     export CMAKE_BUILD_TYPE=Release; \
     cmake_build_install \
         "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/application_ros2"
 
-FROM ros2-base-stage AS ros2-integration-test-stage
+FROM ros1-base-stage AS ros1-integration-test-stage
 
-COPY code/test_data/dataset-calib-imu4_512_16.db3 /temporary/code/test_data/
-COPY code/test_data/minimum_config.toml /temporary/code/test_data/
-# NOTE(Jack): See note in the ros1 stage about why copying over the entire /opt/reprojection folder is overkill.
-COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
-COPY --from=test-data-stage /data/dataset-calib-imu4_512_16 /data/dataset-calib-imu4_512_16
-
-ARG UPDATE_FEATURE_EXTRACTION_CACHE_KEY=building/scripts/update_feature_extraction_cache_key.py
-RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE_KEY},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY} \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE_KEY}  \
-    /temporary/code/test_data/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY --from=test-data-stage /data/ros1 /data
+COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    set -eox pipefail; \
+    source /opt/ros/noetic/setup.bash; \
+    export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
+    export DATA="/data/dataset-calib-imu4_512_16.bag"; \
+    /temporary/${INTEGRATION_TEST}
+
+
+FROM ros2-base-stage AS ros2-integration-test-stage
+
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY --from=test-data-stage /data/ros2 /data
+COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
+
+ARG INTEGRATION_TEST=building/scripts/integration_test.sh
+RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    set -eox pipefail; \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
     /temporary/${INTEGRATION_TEST}
+
+FROM base-stage AS video-file-integration-test-stage
+
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY --from=test-data-stage /data/video_file /data
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+
+ARG INTEGRATION_TEST=building/scripts/integration_test.sh
+RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    export APP="/opt/reprojection/bin/demos.calibration"; \
+    export DATA="/data/dataset-calib-imu4_512_16.mp4"; \
+    /temporary/${INTEGRATION_TEST}
+
+
+FROM ros1-base-stage AS ros1-app-stage
+
+ENV APP_FLAVOR=ros1
+
+COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
+COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
+
+RUN set -eox pipefail; \
+    ln /opt/reprojection/bin/application_ros1.reprojection_app /buildroot/reprojection-calibration-application
+
+ENTRYPOINT ["/buildroot/entrypoint.sh"]
+
+
+FROM ros2-base-stage AS ros2-app-stage
+
+ENV APP_FLAVOR=ros2
+
+COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
+COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
+
+RUN set -eox pipefail; \
+    ln /opt/reprojection/bin/application_ros2.reprojection_app /buildroot/reprojection-calibration-application
+
+ENTRYPOINT ["/buildroot/entrypoint.sh"]
+
+
+FROM base-stage AS video-file-app-stage
+
+ENV APP_FLAVOR=video-file
+
+COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
+
+RUN set -eox pipefail; \
+    ln /opt/reprojection/bin/demos.calibration /buildroot/reprojection-calibration-application
+
+ENTRYPOINT ["/buildroot/entrypoint.sh"]
+
+
+FROM ros1-app-stage AS ros1-app-smoke-test-stage
+
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY --from=test-data-stage /data/ros1 /data
+
+
+FROM ros2-app-stage AS ros2-app-smoke-test-stage
+
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY --from=test-data-stage /data/ros2 /data
+
+
+FROM video-file-app-stage AS video-file-app-smoke-test-stage
+
+COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY --from=test-data-stage /data/video_file /data

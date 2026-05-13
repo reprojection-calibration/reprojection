@@ -89,7 +89,7 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
 enum class TargetType {
     Checkerboard,
     CircleGrid,
-    AprilGrid3,
+    Aprilgrid3,
 };
 
 // TODO(Jack): Is this the right place to put functions like this? What about testing?
@@ -98,8 +98,8 @@ inline TargetType ToTargetType(std::string const& enum_string) {
         return TargetType::Checkerboard;
     } else if (enum_string == "circle_grid") {
         return TargetType::CircleGrid;
-    } else if (enum_string == "april_grid3") {
-        return TargetType::AprilGrid3;
+    } else if (enum_string == "aprilgrid3") {
+        return TargetType::Aprilgrid3;
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToTargetType(): " +
                                  enum_string);

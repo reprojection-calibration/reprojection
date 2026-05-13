@@ -46,16 +46,16 @@ TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCircleGrid) {
     EXPECT_EQ(extractor->Extract(empty_image), std::nullopt);
 }
 
-TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorAprilGrid3) {
+TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorAprilgrid3) {
     static constexpr std::string_view config_file{R"(
         pattern_size = [3,4]
-        type = "april_grid3"
+        type = "aprilgrid3"
     )"sv};
     toml::table const config{toml::parse(config_file)};
 
     std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(config)};
 
-    ASSERT_TRUE(dynamic_cast<AprilGrid3Extractor*>(extractor.get()));
+    ASSERT_TRUE(dynamic_cast<Aprilgrid3Extractor*>(extractor.get()));
     EXPECT_EQ(extractor->Extract(empty_image), std::nullopt);
 }
 

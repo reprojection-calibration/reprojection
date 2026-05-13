@@ -62,10 +62,10 @@ test_command "${APP} --config nonexistent.toml --data nonexistent.data" \
     1 \
     "{'toml_error': 'failed_load', 'message': 'Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)'}"
 
-test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data nonexistent.data" \
+test_command "${APP} --config /data/minimum_config.toml --data nonexistent.data" \
     1 \
     "{'workspace_dir': '', 'error_code': {'value': 2, 'message': 'No such file or directory'}}"
 
-test_command "${APP} --config /temporary/code/test_data/minimum_config.toml --data ${DATA} --workspace /temporary/code/test_data" \
+test_command "${APP} --config /data/minimum_config.toml --data ${DATA} --workspace /data" \
     0 \
     "The future is calibrated!"

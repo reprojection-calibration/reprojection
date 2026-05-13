@@ -18,8 +18,8 @@ class AprilTagTestFixture : public ::testing::Test {
     AprilTagTestFixture()
         : tag_family_handler_{AprilTagFamily{tagCustom36h11_create(), tagCustom36h11_destroy}},
           tag_detector_{AprilTagDetector{tag_family_handler_, {2.0, 0.0, 1, false, false}}},
-          code_matrix_0_{AprilBoard3Generation::GenerateCodeMatrix(tag_family_handler_.tag_family->nbits,
-                                                                   tag_family_handler_.tag_family->codes[0])},
+          code_matrix_0_{Aprilgrid3Generation::GenerateCodeMatrix(tag_family_handler_.tag_family->nbits,
+                                                                  tag_family_handler_.tag_family->codes[0])},
           bit_size_pixel_{10} {}
 
     AprilTagFamily tag_family_handler_;

@@ -1,6 +1,6 @@
 [target]
 pattern_size = [3, 4]
-type = "april_grid3"
+type = "aprilgrid3"
 unit_dimension = 1.0
 
 # This section is only relevant if target.type == "circle_grid"

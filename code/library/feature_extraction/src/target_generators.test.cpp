@@ -40,9 +40,9 @@ TEST(TargetGenerators, TestGenerateCircleGridAsymmetric) {
     EXPECT_EQ(circlegrid_image.cols, 320);
 }
 
-TEST_F(AprilTagTestFixture, TestGenerateAprilBoard) {
+TEST_F(AprilTagTestFixture, TestGenerateAprilgrid3) {
     cv::Size const pattern_size{4, 3};
-    cv::Mat const april_board{AprilBoard3Generation::GenerateBoard(
+    cv::Mat const april_board{Aprilgrid3Generation::GenerateBoard(
         tag_family_handler_.tag_family->nbits, tag_family_handler_.tag_family->codes, bit_size_pixel_, pattern_size)};
 
     EXPECT_EQ(april_board.rows, 420);
@@ -50,13 +50,13 @@ TEST_F(AprilTagTestFixture, TestGenerateAprilBoard) {
 }
 
 TEST_F(AprilTagTestFixture, TestGenerateAprilTag) {
-    cv::Mat const april_tag{AprilBoard3Generation::GenerateTag(bit_size_pixel_, code_matrix_0_)};
+    cv::Mat const april_tag{Aprilgrid3Generation::GenerateTag(bit_size_pixel_, code_matrix_0_)};
 
     EXPECT_EQ(april_tag.rows, 140);
     EXPECT_EQ(april_tag.cols, 140);
 
     // Test the overrided function matches the original
-    cv::Mat const april_tag_1{AprilBoard3Generation::GenerateTag(
+    cv::Mat const april_tag_1{Aprilgrid3Generation::GenerateTag(
         tag_family_handler_.tag_family->nbits, tag_family_handler_.tag_family->codes[0], bit_size_pixel_)};
 
     EXPECT_TRUE(cv::sum(april_tag != april_tag_1) == cv::Scalar(0));  // I.e. they are the exact same

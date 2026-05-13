@@ -9,9 +9,9 @@
 using namespace reprojection;
 using namespace reprojection::feature_extraction;
 
-TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilBoard) {
+TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilgrid3) {
     cv::Size const pattern_size{4, 3};
-    cv::Mat const april_board{AprilBoard3Generation::GenerateBoard(
+    cv::Mat const april_board{Aprilgrid3Generation::GenerateBoard(
         tag_family_handler_.tag_family->nbits, tag_family_handler_.tag_family->codes, bit_size_pixel_, pattern_size)};
 
     std::vector<AprilTagDetection> const detections{tag_detector_.Detect(april_board)};
@@ -24,7 +24,7 @@ TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilBoard) {
 }
 
 TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilTag) {
-    cv::Mat const april_tag{AprilBoard3Generation::GenerateTag(bit_size_pixel_, code_matrix_0_)};
+    cv::Mat const april_tag{Aprilgrid3Generation::GenerateTag(bit_size_pixel_, code_matrix_0_)};
 
     std::vector<AprilTagDetection> const detections{tag_detector_.Detect(april_tag)};
     EXPECT_EQ(std::size(detections), 1);
