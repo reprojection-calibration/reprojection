@@ -88,7 +88,7 @@ Please add the following entry to your configuration file:
 
 > [!WARNING]
 > Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
-> style Aprilgrid. You can find compatible Aprilgrid3 target files below.
+> style Aprilgrid.
 
 ## Camera Models
 
