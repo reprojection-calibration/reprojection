@@ -2,7 +2,6 @@
 
 set -eoux pipefail
 
-
 # System deps required for pyenv to build python - I am not 100% sure we need all of these.
 apt-get update
 apt-get install --no-install-recommends --yes \

@@ -86,6 +86,12 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
 
 FROM apt-base-stage AS python-tooling-stage
 
+# NOTE(Jack): We specify the PYENV_ROOT and VENV_DIR to prevent them from being their default values which will see
+# them both be put in the $HOME directory. This locatio cause us a lot of permissions issues when trying to create the
+# dashboard release stage so we moved them to non permission limited locations like you see here.
+ENV PYENV_ROOT="/opt/pyenv"
+ENV VENV_DIR=/buildroot/.reprojection_venv
+
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
     /temporary/${INSTALL_PYENV}
@@ -120,6 +126,17 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_P
     --mount=type=bind,source=code/proto,target=/temporary/code/proto \
     --mount=type=bind,source=code/test_data,target=/temporary/code/test_data \
     /temporary/${BUILD_PYTHON_TOOLING}
+
+
+FROM python-tooling-stage AS dashboard-stage
+
+COPY building/scripts/entrypoint_dashboard.sh /buildroot/entrypoint_dashboard.sh
+
+ENTRYPOINT ["/buildroot/entrypoint_dashboard.sh"]
+
+FROM dashboard-stage AS dashboard-smoke-test-stage
+
+HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://0.0.0.0:8050 || exit 1
 
 
 # The code coverage solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example

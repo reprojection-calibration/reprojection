@@ -25,6 +25,10 @@ The three applications provide support for data in ROS1 or ROS2 bags and .mp4 vi
     # Video file
     ./building/local/build_image.sh -ts=video-file-app
 
+To visualize the results you will also need to build the dashboard:
+
+    ./building/local/build_image.sh -ts=dashboard
+
 ## Run
 
 The application requires four command line arguments:
@@ -41,10 +45,16 @@ An example command to run the video-file application is:
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
 
+To view the results run the dashboard and pass the workspace directory path, an example command is:
+
+    ./building/local/run_dashboard.sh /home/user/data/
+
+Open the link displayed in the terminal.
+
 ## Configuration
 
-For configuration we use the [toml](https://toml.io/en/) configuration file format. An example minimum required
-configuration for monocular camera intrinsic calibration is:
+For configuration we use the [toml](https://toml.io/en/) configuration file format. An example configuration for
+monocular camera intrinsic calibration is:
 
     [sensor]
     camera_name = "/camera/image"
@@ -53,6 +63,7 @@ configuration for monocular camera intrinsic calibration is:
     [target]
     pattern_size = [8,6]
     type = "aprilgrid3"
+    show_extraction = true
 
 Please adapt this to your data abd save your configuration files using the `.toml` extension.
 
@@ -88,7 +99,7 @@ Please add the following entry to your configuration file:
 
 > [!WARNING]
 > Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
-> style Aprilgrid. You can find compatible Aprilgrid3 target files below.
+> style Aprilgrid.
 
 ## Camera Models
 
@@ -119,6 +130,16 @@ I recommend at a bare minimum 6x6 for checkerboard and circle grid targets (10x1
 an aprilgrid3 target. If it is possible given your camera and ability to display the targets please use more!
 
 ### Use a computer screen to display the calibration target
+
+Sometimes you just want to calibrate but do not have a printer to print out the calibration target... that is annoying.
+If that is the case I recommend just showing the target on a computer screen. My experience says that for debugging and
+proof of concept this works absolutely fine. I would even venture to propose that a target displayed on a nice
+resolution computer screen is better than a printed target which is not as flat and easier to damage in comparison.
+
+Note that when displaying the target you should turn off any "auto blur" effect that the image viewer applies. For
+example the GNOME Image Viewer, the default on Ubuntu, has "smooth images" settings which applies a blur that is
+intended to make the image more visually appealing. For calibration however this is problem because the feature
+extractor needs sharp exact corners.
 
 
  

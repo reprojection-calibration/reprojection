@@ -39,9 +39,9 @@ fi
 
 echo "Building image with tag '$tag' targeting stage '$target_stage'..."
 DOCKER_BUILDKIT=1 docker build \
+    "${no_cache[@]}" \
     --build-arg BASE_IMAGE="${base_image}" \
     --file "${script_folder}"/../Dockerfile \
-    "${no_cache[@]}" \
     --tag "${tag}" \
     --target "${target_stage}"-stage \
     --progress=plain \

@@ -73,6 +73,32 @@ jobs:
           context: .
           target: python-tooling-stage
 
+  dashboard-smoke-test:
+    needs: python-tooling
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+      - run: git lfs pull
+      - uses: ./.github/actions/docker-build
+        with:
+          cache_scope: dashboard-smoke-test
+          context: .
+          external_cache_scope: python-tooling
+          load: true
+          tag: reprojection:dashboard-smoke-test-stage
+          target: dashboard-smoke-test-stage
+      # If we do not get a positive health status in 30 seconds the test should fail.
+      - name: Run dashboard smoke test
+        run: |
+          docker run --detach --name dashboard-smoke-test reprojection:dashboard-smoke-test-stage
+          timeout 30s bash -c '
+            until [ "$(docker inspect -f "{{.State.Health.Status}}" dashboard-smoke-test)" = "healthy" ]; do
+              sleep 1
+            done
+          '
+
   test-data:
     runs-on: ubuntu-latest
     steps:
