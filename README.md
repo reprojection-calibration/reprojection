@@ -61,10 +61,6 @@ Please adapt this to your data abd save your configuration files using the `.tom
 
 ## Calibration target types
 
-> [!WARNING]
-> Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
-> style Aprilgrid. You can find compatible Aprilgrid3 target files below.
-
 The following target types are supported:
 
 1) `aprilgrid3`
@@ -90,6 +86,10 @@ Please add the following entry to your configuration file:
         [target.circle_grid]
         asymmetric = true
 
+> [!WARNING]
+> Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
+> style Aprilgrid. You can find compatible Aprilgrid3 target files below.
+
 ## Camera Models
 
 The following camera models are supported:
@@ -101,10 +101,25 @@ The following camera models are supported:
 
 All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please
 see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity)
-from [Tangram Vision](https://www.tangramvision.com/) for an explanation. 
+from [Tangram Vision](https://www.tangramvision.com/) for an explanation.
 
+## Tips and Tricks
 
+### Use a target with as many rows/columns as possible
 
+Why? Automatic intrinsic focal length initialization depends on some geometric constraint "black magic" like fitting
+circles to the rows/cols and then intersecting those circles or fitting lines to the rows/cols and intersecting those
+lines. As you can then imagine the quality of the fitted circle or line increases as the number of data points used
+increases.
 
+Trying to fit a line or circle to a row/col with just a couple noisy extracted features is not gonna work, these can be
+sensitive algorithms and noise matters. Therefore, please use a target with as many rows/cols as possible.
+
+I recommend at a bare minimum 6x6 for checkerboard and circle grid targets (10x10 an asymmetric circle grid) and 4x4 for
+an aprilgrid3 target. If it is possible given your camera and ability to display the targets please use more!
+
+### 
+
+ 
 
 
