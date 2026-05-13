@@ -25,6 +25,10 @@ The three applications provide support for data in ROS1 or ROS2 bags and .mp4 vi
     # Video file
     ./building/local/build_image.sh -ts=video-file-app
 
+To visualize the results you will also need to build the dashboard:
+
+    ./building/local/build_image.sh -ts=dashboard
+
 ## Run
 
 The application requires four command line arguments:
@@ -41,10 +45,16 @@ An example command to run the video-file application is:
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
 
+To view the results run the dashboard and pass the workspace directory path, an example command is:
+
+    ./building/local/run_dashboard.sh /home/user/data/
+
+Open the link displayed in the terminal.
+
 ## Configuration
 
-For configuration we use the [toml](https://toml.io/en/) configuration file format. An example minimum required
-configuration for monocular camera intrinsic calibration is:
+For configuration we use the [toml](https://toml.io/en/) configuration file format. An example configuration for
+monocular camera intrinsic calibration is:
 
     [sensor]
     camera_name = "/camera/image"
@@ -53,6 +63,7 @@ configuration for monocular camera intrinsic calibration is:
     [target]
     pattern_size = [8,6]
     type = "aprilgrid3"
+    show_extraction = true
 
 Please adapt this to your data abd save your configuration files using the `.toml` extension.
 
