@@ -30,6 +30,9 @@ battle tested to provide the world's best calibration experience.
    inputs and outputs stored in the database. During repeated runs on the same dataset, only stages affected by changed
    inputs are recomputed. For example, changing the selected camera model does not require feature extraction to be
    repeated, significantly reducing time spent debugging.
+6) Extensive testing - Reprojection was developed in large part with test driven development and has 100% unit test code
+   coverage of the core calibration library. This reduces regressions and makes it easy for others to contribute and be
+   confident in their changes. 
 
 ## Build
 
