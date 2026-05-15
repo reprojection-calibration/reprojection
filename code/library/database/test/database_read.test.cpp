@@ -57,12 +57,27 @@ TEST_F(CameraReadFixture, TestReadCameraInfo) {
     EXPECT_EQ(camera_info->bounds.v_max, testing_utilities::image_bounds.v_max);
 }
 
+TEST_F(CameraReadFixture, TestReadTargetInfo) {
+    auto target_info{database::ReadTargetInfo(db, "/nonexistent/camera")};
+    EXPECT_FALSE(target_info.has_value());
+
+    database::WriteToDb(CalibrationStep::TargetInfo, "", sensor_name, db);
+    database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, false}, sensor_name, db);
+
+    target_info = database::ReadTargetInfo(db, sensor_name);
+    ASSERT_TRUE(target_info.has_value());
+    EXPECT_EQ(target_info->target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info->height, 8);
+    EXPECT_EQ(target_info->width, 6);
+    EXPECT_EQ(target_info->asymmetric, false);
+}
+
 TEST_F(CameraReadFixture, TestGetEncodedImages) {
     AddImage(0);
     AddImage(1);
     AddImage(2);
 
-    EncodedImages const loaded_data{database::GetEncodedImages(db, sensor_name)};
+    EncodedImages const loaded_data{database::ReadEncodedImages(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), 3);
 
     int test_timestamp{0};
@@ -80,7 +95,7 @@ TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
     AddTarget(1);
     AddTarget(2);
 
-    CameraMeasurements const loaded_data{database::GetExtractedTargetData(db, sensor_name)};
+    CameraMeasurements const loaded_data{database::ReadExtractedTargets(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), 3);
 
     int test_timestamp{0};
@@ -151,7 +166,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
 
     EXPECT_NO_THROW(database::WriteToDb(data, sensor_name, db));
 
-    auto const loaded_data{database::GetImuData(db, sensor_name)};
+    auto const loaded_data{database::ReadImuData(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), std::size(data));
 }
 
@@ -170,7 +185,7 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
                                         {20, {Vector3d::Zero(), Vector3d::Zero()}}},
                         sensor_name_2, db);
 
-    auto const imu_1_data{database::GetImuData(db, sensor_name_1)};
+    auto const imu_1_data{database::ReadImuData(db, sensor_name_1)};
     EXPECT_EQ(std::size(imu_1_data), 3);
 
     // Check the values of the first element to make sure the callback lambda reading logic is correct
@@ -182,10 +197,10 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
     EXPECT_EQ(imu_data_i.linear_acceleration[1], 5);
     EXPECT_EQ(imu_data_i.linear_acceleration[2], 6);
 
-    auto const imu_2_data{database::GetImuData(db, sensor_name_2)};
+    auto const imu_2_data{database::ReadImuData(db, sensor_name_2)};
     EXPECT_EQ(std::size(imu_2_data), 2);
 
     // If the sensor is not present we simply get an empty set back, this is not an error
-    auto const unknown_sensor_data{database::GetImuData(db, "/imu/polaris/unknown")};
+    auto const unknown_sensor_data{database::ReadImuData(db, "/imu/polaris/unknown")};
     EXPECT_EQ(std::size(unknown_sensor_data), 0);
 }

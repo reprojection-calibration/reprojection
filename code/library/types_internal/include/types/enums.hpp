@@ -10,8 +10,10 @@ namespace reprojection {
 
 // LCOV_EXCL_START
 
+// WARN(Jack): If tou add a step here but forget to add it to the ToString() function below you will get really cryptic
+// errors from the sql database because it does no rethrow the error properly.
 // TODO(Jack): It is honestly not so nice that we need to specify the steps here and once again in the sql database, and
-//  maybe once again in the python tooling. Is there any way for us to centrally store this with that repetition>
+// maybe once again in the python tooling. Is there any way for us to centrally store this with that repetition.
 enum class CalibrationStep {
     CameraInfo,
     CameraNonlinearRefinement,
@@ -20,7 +22,8 @@ enum class CalibrationStep {
     IntrinsicInitialization,
     LinearPoseInitialization,
     SplineInterpolation,
-    SplineNonlinearRefinement
+    SplineNonlinearRefinement,
+    TargetInfo
 };
 
 inline std::string ToString(CalibrationStep const step_name) {
@@ -40,6 +43,8 @@ inline std::string ToString(CalibrationStep const step_name) {
         return "spline_interpolation";
     } else if (step_name == CalibrationStep::SplineNonlinearRefinement) {
         return "spline_nonlinear_refinement";
+    } else if (step_name == CalibrationStep::TargetInfo) {
+        return "target_info";
     } else {
         throw std::runtime_error(
             "LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(CalibrationStep)");
@@ -91,6 +96,18 @@ enum class TargetType {
     CircleGrid,
     Aprilgrid3,
 };
+
+inline std::string ToString(TargetType const target_type) {
+    if (target_type == TargetType::Aprilgrid3) {
+        return "aprilgrid3";
+    } else if (target_type == TargetType::Checkerboard) {
+        return "checkerboard";
+    } else if (target_type == TargetType::CircleGrid) {
+        return "circle_grid";
+    } else {
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(TargetType)");
+    }
+}
 
 // TODO(Jack): Is this the right place to put functions like this? What about testing?
 inline TargetType ToTargetType(std::string const& enum_string) {

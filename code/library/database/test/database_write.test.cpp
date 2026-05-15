@@ -49,9 +49,20 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCameraInfo) {
     EXPECT_THROW(AddCamera(), std::runtime_error);  // Duplicate entry not allowed!
 }
 
+// TODO(Jack): If we have foreign key constraints one day, like we will have to for the multi-target case, then we can
+// add helpers like we have in the test fixture for other types, but for now we do not need to add a target info to the
+// database for any other reason.
+TEST_F(SensorDatabaseFixture, TestWriteToDbTargetInfo) {
+    database::WriteToDb(CalibrationStep::TargetInfo, "", sensor_name, db);
+
+    EXPECT_NO_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, false}, sensor_name, db));
+    EXPECT_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, false}, sensor_name, db),
+                 std::runtime_error);
+}
+
 TEST_F(SensorDatabaseFixture, TestWriteToDbEncodedImages) {
     EXPECT_NO_THROW(AddImage());
-    EXPECT_THROW(AddImage(), std::runtime_error);  // Duplicate entry not allowed!
+    EXPECT_THROW(AddImage(), std::runtime_error);
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbCameraMeasurements) {

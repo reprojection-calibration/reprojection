@@ -12,10 +12,32 @@
 
 namespace reprojection::database {
 
+std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep const step_name,
+                                        std::string_view sensor_name) {
+    std::optional<std::string> cache_key;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::calibration_steps_select,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&cache_key](sqlite3_stmt* const stmt) {
+            // TODO(Jack): Is the best way to express reading a value which might be null from a table? I do not see the
+            // problem with this implementation, but maybe sqlite has some pattern I don't know about.
+            uchar const* const value{sqlite3_column_text(stmt, 0)};
+            if (value) {
+                cache_key = std::string(reinterpret_cast<char const*>(value));
+            }
+        });
+
+    return cache_key;
+}  // LCOV_EXCL_LINE
+
 // TODO(Jack): Write helper to convert a text column to a string, we copy paste this logic in several places, same for
 //  the timestamp int field.
-// NOTE(Jack): We hardcode the minumum image values to zero here, I think that is not a problem, but lets not forget
-// that we do it here.
+// NOTE(Jack): We hardcode the minimum image height/width values to zero here, I think that is not a problem, but lets
+// not forget that we do it here.
 std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view sensor_name) {
     std::optional<CameraInfo> camera_info;
 
@@ -40,7 +62,26 @@ std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view se
     return camera_info;
 }  // LCOV_EXCL_LINE
 
-EncodedImages GetEncodedImages(SqlitePtr const db, std::string_view sensor_name) {
+std::optional<ArrayXd> ReadCameraState(SqlitePtr const db, CalibrationStep const step_name,
+                                       std::string_view sensor_name, CameraModel const camera_model) {
+    std::optional<ArrayXd> intrinsics;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::camera_intrinsics_select,
+        [step_name, sensor_name, camera_model](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+            Sqlite3Tools::Bind(stmt, 3, ToString(camera_model));
+        },
+        [&intrinsics, camera_model](sqlite3_stmt* const stmt) {
+            intrinsics =
+                FromToml(camera_model, std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0))));
+        });
+
+    return intrinsics;
+}  // LCOV_EXCL_LINE
+
+EncodedImages ReadEncodedImages(SqlitePtr const db, std::string_view sensor_name) {
     EncodedImages data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -65,7 +106,7 @@ EncodedImages GetEncodedImages(SqlitePtr const db, std::string_view sensor_name)
 }  // LCOV_EXCL_LINE
 
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
-CameraMeasurements GetExtractedTargetData(SqlitePtr const db, std::string_view sensor_name) {
+CameraMeasurements ReadExtractedTargets(SqlitePtr const db, std::string_view sensor_name) {
     CameraMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -90,45 +131,27 @@ CameraMeasurements GetExtractedTargetData(SqlitePtr const db, std::string_view s
     return data;
 }  // LCOV_EXCL_LINE
 
-std::optional<ArrayXd> ReadCameraState(SqlitePtr const db, CalibrationStep const step_name,
-                                       std::string_view sensor_name, CameraModel const camera_model) {
-    std::optional<ArrayXd> intrinsics;
+ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name) {
+    ImuMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::camera_intrinsics_select,
-        [step_name, sensor_name, camera_model](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-            Sqlite3Tools::Bind(stmt, 3, ToString(camera_model));
-        },
-        [&intrinsics, camera_model](sqlite3_stmt* const stmt) {
-            intrinsics =
-                FromToml(camera_model, std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0))));
+        db, sql_statements::imu_data_select,
+        [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+
+            double const omega_x{sqlite3_column_double(stmt, 1)};
+            double const omega_y{sqlite3_column_double(stmt, 2)};
+            double const omega_z{sqlite3_column_double(stmt, 3)};
+
+            double const ax{sqlite3_column_double(stmt, 4)};
+            double const ay{sqlite3_column_double(stmt, 5)};
+            double const az{sqlite3_column_double(stmt, 6)};
+
+            data.insert(ImuMeasurement{timestamp_ns, {{omega_x, omega_y, omega_z}, {ax, ay, az}}});
         });
 
-    return intrinsics;
-}  // LCOV_EXCL_LINE
-
-std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep const step_name,
-                                        std::string_view sensor_name) {
-    std::optional<std::string> cache_key;
-
-    ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::calibration_steps_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
-        [&cache_key](sqlite3_stmt* const stmt) {
-            // TODO(Jack): Is the best way to express reading a value which might be null from a table? I do not see the
-            // problem with this implementation, but maybe sqlite has some pattern I don't know about.
-            uchar const* const value{sqlite3_column_text(stmt, 0)};
-            if (value) {
-                cache_key = std::string(reinterpret_cast<char const*>(value));
-            }
-        });
-
-    return cache_key;
+    return data;
 }  // LCOV_EXCL_LINE
 
 Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
@@ -157,27 +180,23 @@ Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::strin
     return data;
 }  // LCOV_EXCL_LINE
 
-ImuMeasurements GetImuData(SqlitePtr const db, std::string_view sensor_name) {
-    ImuMeasurements data;
+std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view sensor_name) {
+    std::optional<TargetInfo> target_info;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::imu_data_select,
+        db, sql_statements::target_info_select,
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
-        [&data](sqlite3_stmt* const stmt) {
-            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+        [&target_info](sqlite3_stmt* const stmt) {
+            TargetInfo result;
+            result.target_type = ToTargetType(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
+            result.height = sqlite3_column_int(stmt, 1);
+            result.width = sqlite3_column_int(stmt, 2);
+            result.asymmetric = static_cast<bool>(sqlite3_column_int(stmt, 3));
 
-            double const omega_x{sqlite3_column_double(stmt, 1)};
-            double const omega_y{sqlite3_column_double(stmt, 2)};
-            double const omega_z{sqlite3_column_double(stmt, 3)};
-
-            double const ax{sqlite3_column_double(stmt, 4)};
-            double const ay{sqlite3_column_double(stmt, 5)};
-            double const az{sqlite3_column_double(stmt, 6)};
-
-            data.insert(ImuMeasurement{timestamp_ns, {{omega_x, omega_y, omega_z}, {ax, ay, az}}});
+            target_info = result;
         });
 
-    return data;
+    return target_info;
 }  // LCOV_EXCL_LINE
 
 };  // namespace reprojection::database

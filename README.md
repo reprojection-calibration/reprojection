@@ -12,9 +12,9 @@ battle tested to provide the world's best calibration experience.
 * The first release (05.2026) only exposes monocular camera intrinsic calibration. Camera-imu extrinsic calibration
   and camera-camera stereo calibration is planned and in progress.
 
-## Benefits Compared to Kalibr
+## Benefits compared to Kalibr
 
-1) ROS1, ROS2, and MP4 support - Kalibr is primarily designed around a ROS1 bag based workflow, while Reprojection
+1) Support for ROS1, ROS2, and MP4 - Kalibr is primarily designed around a ROS1 bag based workflow, while Reprojection
    supports ROS1, ROS2, and direct MP4 video inputs.
 2) Pure CMake build system - Kalibr relies on the ROS1 catkin build system. Reprojection instead uses a standard
    CMake-based build system without ROS-specific build requirements, simplifying integration into other development
@@ -22,7 +22,7 @@ battle tested to provide the world's best calibration experience.
 3) Robust focal length initialization - Reprojection uses a multiframe hypothesis-testing strategy for focal length
    initialization. This approach improves robustness when compared to the single frame or "no-frame average only"
    strategies used in Kalibr.
-4) Database-backed calibration storage - Calibration artifacts such as poses, intrinsics, extracted targets, and
+4) Database calibration storage - Calibration artifacts such as poses, intrinsics, extracted targets, and
    intermediate optimization results are stored in a SQLite database. This provides a persistent and queryable record of
    the calibration process that can be used for visualization, quality assessment, reproducibility, and long-term
    storage.
@@ -32,7 +32,7 @@ battle tested to provide the world's best calibration experience.
    repeated, significantly reducing time spent debugging.
 6) Extensive testing - Reprojection was developed in large part with test driven development and has 100% unit test code
    coverage of the core calibration library. This reduces regressions and makes it easy for others to contribute and be
-   confident in their changes. 
+   confident in their changes.
 
 ## Build
 

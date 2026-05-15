@@ -27,7 +27,7 @@ std::shared_ptr<EncodedImages> ImageLoadingStep::Compute() const {
 }  // LCOV_EXCL_LINE
 
 std::shared_ptr<EncodedImages> ImageLoadingStep::Load(SqlitePtr const db) const {
-    return std::make_shared<EncodedImages>(database::GetEncodedImages(db, SensorName()));
+    return std::make_shared<EncodedImages>(database::ReadEncodedImages(db, SensorName()));
 }
 
 void ImageLoadingStep::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
