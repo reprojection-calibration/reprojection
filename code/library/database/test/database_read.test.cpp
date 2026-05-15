@@ -70,7 +70,6 @@ TEST_F(CameraReadFixture, TestReadTargetInfo) {
     EXPECT_EQ(target_info->height, 8);
     EXPECT_EQ(target_info->width, 6);
     EXPECT_EQ(target_info->asymmetric, false);
-
 }
 
 TEST_F(CameraReadFixture, TestGetEncodedImages) {
