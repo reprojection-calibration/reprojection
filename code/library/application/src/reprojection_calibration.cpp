@@ -63,17 +63,16 @@ void Calibrate(toml::table const& config, ImageSource image_source, std::string 
 
     steps::TargetInfoStep const target_info_step{*config["target"].as_table(), camera_info.sensor_name};
     auto const [target_info, target_info_cache_status]{steps::RunStep<TargetInfo>(target_info_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height (rows)': {}, 'width (cols)': {}}}",
+    log->info("{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height': {}, 'width': {}}}",
               ToString(target_info_step.step_type), ToString(target_info_cache_status),
               ToString(target_info.target_type), target_info.height, target_info.width);
 
-    static_cast<void>(target_info);
-
-    steps::FeatureExtractionStep const ftext_step{camera_info.sensor_name, encoded_images,
-                                                  *config["target"].as_table()};
-    auto const [targets, ftext_cache_status]{steps::RunStep<CameraMeasurements>(ftext_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}", ToString(ftext_step.step_type),
-              ToString(ftext_cache_status), std::size(targets));
+    steps::FeatureExtractionStep const feature_extraction_step{camera_info.sensor_name, encoded_images, target_info};
+    auto const [targets,
+                feature_extraction_cache_status]{steps::RunStep<CameraMeasurements>(feature_extraction_step, db)};
+    log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}",
+              ToString(feature_extraction_step.step_type), ToString(feature_extraction_cache_status),
+              std::size(targets));
 
     steps::IntrinsicInitializationStep const ii_step{camera_info, targets};
     auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};
