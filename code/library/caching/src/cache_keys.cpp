@@ -10,8 +10,8 @@ std::string CacheKey(std::string_view config, EncodedImages const& encoded_image
     return CacheKeyFrom(config, encoded_images);
 }
 
-std::string CacheKey(TargetInfo const& target_info, EncodedImages const& encoded_images) {
-    return CacheKeyFrom(target_info, encoded_images);
+std::string CacheKey(TargetInfo const& target_info, EncodedImages const& encoded_images, std::string_view config) {
+    return CacheKeyFrom(target_info, encoded_images, config);
 }
 
 // TODO(Jack): Can we replace these methods here with some "meta programming" or something like that? It is going to get

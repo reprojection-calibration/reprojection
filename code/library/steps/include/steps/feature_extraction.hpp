@@ -11,8 +11,10 @@ namespace reprojection::steps {
 struct FeatureExtractionStep {
     std::string sensor_name;
     std::shared_ptr<EncodedImages> images;
-    // TODO(Jack): We should have structs here not unparsed toml tables, right?
-    toml::table target_config;
+    TargetInfo target_info;
+    // TODO(Jack): Long term we should parse the app config at the top level and pass it we do camera_info/target_info.
+    // But for now we will just put it here.
+    toml::table app_config;
 
     CalibrationStep step_type{CalibrationStep::FeatureExtraction};
 
