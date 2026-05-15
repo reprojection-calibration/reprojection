@@ -40,14 +40,14 @@ std::optional<std::array<T, N>> ExtractArray(std::string_view key, toml::table& 
 
     auto const& array{*node->as_array()};
     if (array.size() != N) {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     std::array<T, N> result;
     for (size_t i{0}; i < N; ++i) {
         auto const value{array[i].value<T>()};
         if (not value) {
-            return std::nullopt;
+            return std::nullopt;  // LCOV_EXCL_LINE
         }
 
         result[i] = *value;
