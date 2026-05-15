@@ -36,8 +36,8 @@ std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep cons
 
 // TODO(Jack): Write helper to convert a text column to a string, we copy paste this logic in several places, same for
 //  the timestamp int field.
-// NOTE(Jack): We hardcode the minumum image values to zero here, I think that is not a problem, but lets not forget
-// that we do it here.
+// NOTE(Jack): We hardcode the minimum image height/width values to zero here, I think that is not a problem, but lets
+// not forget that we do it here.
 std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view sensor_name) {
     std::optional<CameraInfo> camera_info;
 
@@ -178,6 +178,25 @@ Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::strin
         });
 
     return data;
+}  // LCOV_EXCL_LINE
+
+std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view sensor_name) {
+    std::optional<TargetInfo> target_info;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::target_info_select,
+        [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
+        [&target_info](sqlite3_stmt* const stmt) {
+            TargetInfo result;
+            result.target_type = ToTargetType(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
+            result.height = sqlite3_column_int(stmt, 1);
+            result.width = sqlite3_column_int(stmt, 2);
+            result.asymmetric = static_cast<bool>(sqlite3_column_int(stmt, 3));
+
+            target_info = result;
+        });
+
+    return target_info;
 }  // LCOV_EXCL_LINE
 
 };  // namespace reprojection::database

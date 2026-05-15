@@ -32,6 +32,7 @@ set(SQL_FILES
         sql/reprojection_error_insert.sql
         sql/reprojection_error_table.sql
         sql/target_info_insert.sql
+        sql/target_info_select.sql
         sql/target_info_table.sql
 )
 

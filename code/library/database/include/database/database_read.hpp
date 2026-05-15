@@ -28,4 +28,7 @@ ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name);
 
 Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name);
 
+// TODO(Jack): See note in database_write.hpp how having the sensor name here is a hack and should be removed one day!
+std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view sensor_name);
+
 }  // namespace reprojection::database
