@@ -26,6 +26,9 @@ TEST(ConfigConfigParsing, TestParseTargetConfig) {
     static constexpr std::string_view target_config{R"(
         pattern_size = [3,4]
         type = "aprilgrid3"
+
+        [circle_grid]
+        asymmetric = true
     )"};
     toml::table toml{toml::parse(target_config)};
 
@@ -33,6 +36,7 @@ TEST(ConfigConfigParsing, TestParseTargetConfig) {
     EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
     EXPECT_EQ(target_info.height, 3);
     EXPECT_EQ(target_info.width, 4);
+    EXPECT_EQ(target_info.asymmetric, true);
 
     static constexpr std::string_view bad_config{R"(
         random_key = 123

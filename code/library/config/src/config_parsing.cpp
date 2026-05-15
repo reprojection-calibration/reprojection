@@ -23,13 +23,13 @@ std::pair<std::string, CameraModel> ParseSensorConfig(toml::table sensor_cfg) {
 
 TargetInfo ParseTargetConfig(toml::table target_cfg) {
     auto const type{ExtractValue<std::string>("type", target_cfg)};
-    auto const height{ExtractValue<int64_t>("height", target_cfg)};
-    auto const width{ExtractValue<int64_t>("width", target_cfg)};
+    auto const pattern_size{ExtractArray<int, 2>("pattern_size", target_cfg)};
 
-    if (not type or not height or not width) {
+    if (not type or not pattern_size) {
         throw std::runtime_error{std::format("Error during target config parse: type = {}, height = {}, width = {}",
-                                             type ? *type : "N/A", height ? std::to_string(*height) : "N/A",
-                                             width ? std::to_string(*width) : "N/A")};
+                                             type ? *type : "N/A",
+                                             pattern_size ? std::to_string((*pattern_size)[0]) : "N/A",
+                                             pattern_size ? std::to_string((*pattern_size)[1]) : "N/A")};
     }
 
     // ADD UNIT DIMENSION TO TARGET INFO!!!!
@@ -38,11 +38,19 @@ TargetInfo ParseTargetConfig(toml::table target_cfg) {
     // ADD UNIT DIMENSION TO TARGET INFO!!!!
     // auto const unit_dimension{ExtractValue<double>("unit_dimension", target_cfg)};
 
-    auto const asymmetric{ExtractValue<bool>("circle_grid.asymmetric", target_cfg)};
+    bool asymmetric{false};
+    if (auto circle_grid_cfg{ExtractTable("circle_grid", target_cfg)}) {
+        auto const asymmetric_parse{ExtractValue<bool>("asymmetric", *circle_grid_cfg)};
+        if (asymmetric_parse) {
+            asymmetric = *asymmetric_parse;
+        }
+
+        ThrowIfUnexpectedKeys(*circle_grid_cfg, "target.circle_grid");
+    }
 
     ThrowIfUnexpectedKeys(target_cfg, "target");
 
-    return TargetInfo{ToTargetType(*type), static_cast<int>(*height), static_cast<int>(*width), *asymmetric};
+    return TargetInfo{ToTargetType(*type), (*pattern_size)[0], (*pattern_size)[1], asymmetric};
 }
 
 }  // namespace reprojection::config
