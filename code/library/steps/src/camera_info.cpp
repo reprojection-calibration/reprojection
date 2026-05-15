@@ -16,6 +16,9 @@ std::string CameraInfoStep::CacheKey() const {
 }
 
 CameraInfo CameraInfoStep::Compute() const {
+    // TODO(Jack): Use the config validation functions to make sure the config is good! Are we sure if we put that here
+    // it will be called before we call SensorName() which accesses the table directly?
+
     if (images->size() == 0) {
         throw std::runtime_error(
             "we need an error handling strategy for no images to get camera info");  // LCOV_EXCL_LINE

@@ -5,6 +5,7 @@
 #include "caching/cache_keys.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "config/config_validation.hpp"
 
 namespace reprojection::steps {
 
@@ -17,6 +18,10 @@ std::string TargetInfoStep::CacheKey() const {
 }
 
 TargetInfo TargetInfoStep::Compute() const {
+    if (auto const error_msg{config::ValidateTargetConfig(target_config)}) {
+        throw std::runtime_error(error_msg->msg);
+    }
+
     bool asymmetric{false};
     if (auto const node{target_config.at_path("circle_grid.asymmetric")}) {
         asymmetric = node.as_boolean()->get();

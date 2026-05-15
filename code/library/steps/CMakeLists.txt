@@ -18,6 +18,7 @@ set(LINK_LIBRARIES
         SQLite::SQLite3
         caching
         calibration
+        config
         database
         feature_extraction
         image_viewer
