@@ -52,7 +52,7 @@ int main() {
         std::ostringstream oss2;
         oss2 << *config["target"].as_table();
         database::WriteToDb(CalibrationStep::FeatureExtraction,
-                            "f643200a78834fcb692bc97b222192a24d1eb4ad645977048b0afd3ac65b9256", camera_info.sensor_name,
+                            "dbfa49204a3050725438dac6dadbaa5dff108d0d60f2c2114c71778084576737", camera_info.sensor_name,
                             db);
     } catch (...) {
         std::cerr << "Database setup threw exception." << std::endl;

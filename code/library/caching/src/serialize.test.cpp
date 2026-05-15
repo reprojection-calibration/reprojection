@@ -28,7 +28,7 @@ TEST(CachingSerialize, TestSerializeTargetInfo) {
     TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
 
     std::string const result{caching::Serialize(target_info)};
-    std::string const gt_result{"aprilgrid3|8,6|0|"};
+    std::string const gt_result{"aprilgrid3|8,6|0.100|0|"};
 
     EXPECT_EQ(result, gt_result);
 }
