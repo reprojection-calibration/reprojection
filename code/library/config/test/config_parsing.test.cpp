@@ -22,6 +22,25 @@ TEST(ConfigConfigParsing, TestParseSensorConfig) {
     EXPECT_THROW(config::ParseSensorConfig(toml), std::runtime_error);
 }
 
+TEST(ConfigConfigParsing, TestParseTargetConfig) {
+    static constexpr std::string_view target_config{R"(
+        pattern_size = [3,4]
+        type = "aprilgrid3"
+    )"};
+    toml::table toml{toml::parse(target_config)};
+
+    TargetInfo const target_info{config::ParseTargetConfig(toml)};
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.height, 3);
+    EXPECT_EQ(target_info.width, 4);
+
+    static constexpr std::string_view bad_config{R"(
+        random_key = 123
+    )"};
+    toml = toml::parse(bad_config);
+    EXPECT_THROW(config::ParseTargetConfig(toml), std::runtime_error);
+}
+
 TEST(ConfigConfigParsing, TestParseSolverConfig) {
     static constexpr std::string_view solver_config{R"(
         minimizer_type = "LINE_SEARCH"

@@ -4,6 +4,7 @@
 
 #include <toml++/toml.hpp>
 
+#include "types/calibration_types.hpp"
 #include "types/enums.hpp"
 
 namespace reprojection::config {
@@ -18,6 +19,10 @@ namespace reprojection::config {
 //  we do not have the image bounds here too means I do not want to partially construct it and have it be invalid.
 std::pair<std::string, CameraModel> ParseSensorConfig(toml::table solver_cfg);
 
+TargetInfo ParseTargetConfig(toml::table target_cfg);
+
 ceres::Solver::Options ParseSolverConfig(toml::table solver_cfg);
+
+
 
 }  // namespace reprojection::config
