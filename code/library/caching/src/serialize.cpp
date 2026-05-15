@@ -11,6 +11,8 @@ namespace reprojection::caching {
 // with the CacheKeyFrom() variadic template function.
 std::string Serialize(std::string_view data) { return std::string(data); }
 
+std::string Serialize(CameraModel const data) { return ToString(data); }
+
 std::string Serialize(EncodedImages const& data) {
     std::ostringstream oss;
 

@@ -6,8 +6,9 @@ namespace reprojection::caching {
 
 std::string CacheKey(std::string_view const& data) { return CacheKeyFrom(data); }
 
-std::string CacheKey(std::string_view config, EncodedImages const& encoded_images) {
-    return CacheKeyFrom(config, encoded_images);
+std::string CacheKey(std::string_view sensor_name, CameraModel const camera_model,
+                     EncodedImages const& encoded_images) {
+    return CacheKeyFrom(sensor_name, camera_model, encoded_images);
 }
 
 std::string CacheKey(TargetInfo const& target_info, EncodedImages const& encoded_images, std::string_view config) {

@@ -50,9 +50,10 @@ void Calibrate(toml::table const& config, ImageSource image_source, std::string 
                SqlitePtr const db) {
     steps::ImageLoadingStep const image_loading{config["sensor"]["camera_name"].as_string()->get(),
                                                 image_source_signature, image_source};
-    auto const [encoded_images, il_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
+    auto const [encoded_images,
+                image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
-              ToString(il_cache_status), encoded_images->size());
+              ToString(image_loading_cache_status), encoded_images->size());
 
     steps::CameraInfoStep const camera_info_step{*config["sensor"].as_table(), encoded_images};
     auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(camera_info_step, db)};

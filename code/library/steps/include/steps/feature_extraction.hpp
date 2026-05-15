@@ -12,8 +12,6 @@ struct FeatureExtractionStep {
     std::string sensor_name;
     std::shared_ptr<EncodedImages> images;
     TargetInfo target_info;
-    // TODO(Jack): Long term we should parse the app config at the top level and pass it we do camera_info/target_info.
-    // But for now we will just put it here.
     bool show_extraction;
 
     CalibrationStep step_type{CalibrationStep::FeatureExtraction};

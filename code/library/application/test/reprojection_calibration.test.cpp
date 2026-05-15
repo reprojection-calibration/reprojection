@@ -71,22 +71,16 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     // as we can do here. I guess we could also use the MVG test data generator, but that will be for a future
     // contributor :)
 
-    // TODO(Jack): Add foreign key constraint that a camera info must have a step!
     auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
     CameraInfo const camera_info{camera_name, camera_model, {0, 512, 0, 512}};
 
-    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(""), camera_info.sensor_name, db);
-    database::WriteToDb(camera_info, db);
-
     database::WriteToDb(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
 
-    std::ostringstream oss1;
-    oss1 << *config["sensor"].as_table();
-    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(oss1.str()), camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(camera_name, camera_model, {}),
+                        camera_info.sensor_name, db);
+    database::WriteToDb(camera_info, db);
 
-    std::ostringstream oss2;
-    oss2 << *config["target"].as_table();
-    database::WriteToDb(CalibrationStep::FeatureExtraction, caching::CacheKey(oss2.str()), camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::FeatureExtraction, caching::CacheKey(""), camera_info.sensor_name, db);
 
     database::WriteToDb(CalibrationStep::IntrinsicInitialization, caching::CacheKey(camera_info, {}),
                         camera_info.sensor_name, db);
