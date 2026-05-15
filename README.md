@@ -75,21 +75,12 @@ Open the link displayed in the terminal.
 
 ## Configuration
 
-For configuration we use the [toml](https://toml.io/en/) configuration file format. An example configuration for
-monocular camera intrinsic calibration is:
+Please use [minimum_config.toml](code/test_data/minimum_config.toml) as the example to build your configuration file
+from. That configuration file is used in all integration and smoke testing which mean it stays up to date. Please
+adapt this to your data and save your configuration file with your data.
 
-      [application]
-      show_extraction = true
- 
-      [sensor]
-      camera_name = "/camera/image"
-      camera_model = "double_sphere"
-
-      [target]
-      pattern_size = [8,6]
-      type = "aprilgrid3"
-
-Please adapt this to your data and save your configuration files using the `.toml` extension.
+For a full list of the required and optional parameters please
+see [config_validation.cpp](code/library/config/src/config_validation.cpp) directly.
 
 > [!IMPORTANT]
 > For ROS1 and ROS2 data the `camera_name` must match the image topic being calibrated exactly.
