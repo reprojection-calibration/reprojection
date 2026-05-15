@@ -3,9 +3,10 @@
 #include <toml++/toml.h>
 
 #include "caching/cache_keys.hpp"
+#include "config/config_parsing.hpp"
+#include "config/config_validation.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
-#include "config/config_validation.hpp"
 
 namespace reprojection::steps {
 
@@ -22,15 +23,7 @@ TargetInfo TargetInfoStep::Compute() const {
         throw std::runtime_error(error_msg->msg);
     }
 
-    bool asymmetric{false};
-    if (auto const node{target_config.at_path("circle_grid.asymmetric")}) {
-        asymmetric = node.as_boolean()->get();
-    }
-
-    TargetInfo const target_info{ToTargetType(target_config["type"].as_string()->get()),
-                                 static_cast<int>(target_config["pattern_size"].as_array()->at(0).as_integer()->get()),
-                                 static_cast<int>(target_config["pattern_size"].as_array()->at(1).as_integer()->get()),
-                                 asymmetric};
+    TargetInfo const target_info{config::ParseTargetConfig(*target_config.as_table())};
 
     return target_info;
 }

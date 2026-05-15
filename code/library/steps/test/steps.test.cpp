@@ -2,6 +2,7 @@
 
 #include <string_view>
 
+#include "config/config_parsing.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
@@ -36,9 +37,8 @@ class StepsFixture : public ::testing::Test {
         )"};
         config = toml::parse(config_file);
 
-        camera_info = CameraInfo{config["sensor"]["camera_name"].as_string()->get(),
-                                 ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
-                                 testing_utilities::image_bounds};
+        auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
+        camera_info = CameraInfo{camera_name, camera_model, testing_utilities::image_bounds};
 
         database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
         database::WriteToDb(camera_info, db);
@@ -85,10 +85,7 @@ class ImageSourceFixture : public StepsFixture {
 
         // TODO(Jack): This conversion logic is now at least repeated here and in the target info step exactly the same,
         // this could be good place for a reusable config parsing function instead of copy and paste.
-        target_info =
-            TargetInfo{ToTargetType(config["target"]["type"].as_string()->get()),
-                       static_cast<int>(config["target"]["pattern_size"].as_array()->at(0).as_integer()->get()),
-                       static_cast<int>(config["target"]["pattern_size"].as_array()->at(1).as_integer()->get()), false};
+        target_info = config::ParseTargetConfig(*config["target"].as_table());
     }
 
     std::shared_ptr<EncodedImages> encoded_images;

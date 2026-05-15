@@ -17,7 +17,7 @@ namespace reprojection::config {
 // TODO(Jack): Returning just a pair here is not so nice, because there is no semantic type system enforcement of what
 //  these represent. We could return a CameraInfo type from here (which we will probably do one day), but the fact that
 //  we do not have the image bounds here too means I do not want to partially construct it and have it be invalid.
-std::pair<std::string, CameraModel> ParseSensorConfig(toml::table solver_cfg);
+std::pair<std::string, CameraModel> ParseSensorConfig(toml::table sensor_ccfg);
 
 TargetInfo ParseTargetConfig(toml::table target_cfg);
 
