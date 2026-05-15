@@ -38,6 +38,9 @@ TargetInfo ParseTargetConfig(toml::table target_cfg) {
     // ADD UNIT DIMENSION TO TARGET INFO!!!!
     // auto const unit_dimension{ExtractValue<double>("unit_dimension", target_cfg)};
 
+    // TODO(Jack): It is turtles all the way down. As we do not have a principled pattern to deal with related nested
+    // tables at this scope we just write this directly here by hand. I do not think this case of nested related tables
+    // will come up to often, but if it does we should implement a good pattern.
     bool asymmetric{false};
     if (auto circle_grid_cfg{ExtractTable("circle_grid", target_cfg)}) {
         auto const asymmetric_parse{ExtractValue<bool>("asymmetric", *circle_grid_cfg)};
