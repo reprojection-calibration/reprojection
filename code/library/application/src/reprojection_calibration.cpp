@@ -11,6 +11,7 @@
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
+#include "steps/target_info.hpp"
 
 #include "io.hpp"
 #include "utils.hpp"
@@ -53,12 +54,20 @@ void Calibrate(toml::table const& config, ImageSource image_source, std::string 
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
               ToString(il_cache_status), encoded_images->size());
 
-    steps::CameraInfoStep const ci_step{*config["sensor"].as_table(), encoded_images};
-    auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(ci_step, db)};
+    steps::CameraInfoStep const camera_info_step{*config["sensor"].as_table(), encoded_images};
+    auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(camera_info_step, db)};
     log->info(
         "{{'step': '{}', 'cache_status': '{}', 'camera_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
-        ToString(ci_step.step_type), ToString(ci_cache_status), camera_info.sensor_name,
+        ToString(camera_info_step.step_type), ToString(ci_cache_status), camera_info.sensor_name,
         ToString(camera_info.camera_model), camera_info.bounds.v_max, camera_info.bounds.u_max);
+
+    steps::TargetInfoStep const target_info_step{*config["target"].as_table(), camera_info.sensor_name};
+    auto const [target_info, target_info_cache_status]{steps::RunStep<TargetInfo>(target_info_step, db)};
+    log->info("{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height (rows)': {}, 'width (cols)': {}}}",
+              ToString(target_info_step.step_type), ToString(target_info_cache_status),
+              ToString(target_info.target_type), target_info.height, target_info.width);
+
+    static_cast<void>(target_info);
 
     steps::FeatureExtractionStep const ftext_step{camera_info.sensor_name, encoded_images,
                                                   *config["target"].as_table()};

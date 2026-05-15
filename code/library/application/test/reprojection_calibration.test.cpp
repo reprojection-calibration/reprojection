@@ -50,7 +50,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     EXPECT_EQ(result->data_path, "/tmp");  // Heuristic check of one of the values
 }
 
-TEST(Application, TestCalibrate) {
+TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     // TODO(Jack): This is now copy and pasted in a lot of places right? Should we do a central definition?
     static constexpr std::string_view config_file{R"(
             [sensor]
