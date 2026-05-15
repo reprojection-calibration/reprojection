@@ -57,6 +57,22 @@ TEST_F(CameraReadFixture, TestReadCameraInfo) {
     EXPECT_EQ(camera_info->bounds.v_max, testing_utilities::image_bounds.v_max);
 }
 
+TEST_F(CameraReadFixture, TestReadTargetInfo) {
+    auto target_info{database::ReadTargetInfo(db, "/nonexistent/camera")};
+    EXPECT_FALSE(target_info.has_value());
+
+    database::WriteToDb(CalibrationStep::TargetInfo, "", sensor_name, db);
+    database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, false}, sensor_name, db);
+
+    target_info = database::ReadTargetInfo(db, sensor_name);
+    ASSERT_TRUE(target_info.has_value());
+    EXPECT_EQ(target_info->target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info->height, 8);
+    EXPECT_EQ(target_info->width, 6);
+    EXPECT_EQ(target_info->asymmetric, false);
+
+}
+
 TEST_F(CameraReadFixture, TestGetEncodedImages) {
     AddImage(0);
     AddImage(1);
