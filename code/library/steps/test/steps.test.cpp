@@ -9,6 +9,7 @@
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
+#include "steps/target_info.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/io.hpp"
@@ -21,13 +22,29 @@ class StepsFixture : public ::testing::Test {
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
+        static constexpr std::string_view config_file{R"(
+            [sensor]
+            camera_name = "/cam0/image_raw"
+            camera_model = "pinhole"
+
+            [target]
+            pattern_size = [3,4]
+            type = "aprilgrid3"
+        )"};
+        config = toml::parse(config_file);
+
+        camera_info = CameraInfo{config["sensor"]["camera_name"].as_string()->get(),
+                                 ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
+                                 testing_utilities::image_bounds};
+
         database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
         database::WriteToDb(camera_info, db);
     }
 
     SqlitePtr db;
-    CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo camera_info;
     CameraState camera_state{testing_utilities::pinhole_intrinsics};
+    toml::table config;
 };
 
 // TODO REFACTOR IMAGE SOURCE HERE TO READ DIRECTLR FROM AN ENCODEDIMAGES object!!!
@@ -62,22 +79,10 @@ class ImageSourceFixture : public StepsFixture {
             }
             return std::nullopt;
         };
-
-        static constexpr std::string_view config_file{R"(
-            [sensor]
-            camera_name = "/cam0/image_raw"
-            camera_model = "double_sphere"
-
-            [target]
-            pattern_size = [3,4]
-            type = "circle_grid"
-        )"};
-        config = toml::parse(config_file);
     }
 
     std::shared_ptr<EncodedImages> encoded_images;
     ImageSource image_source;
-    toml::table config;
 };
 
 TEST_F(ImageSourceFixture, TestImageLoadingStep) {
@@ -97,16 +102,32 @@ TEST_F(ImageSourceFixture, TestCameraInfoStep) {
 
     auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
+    EXPECT_EQ(camera_info.camera_model, CameraModel::Pinhole);
     EXPECT_EQ(camera_info.bounds.u_max, 20);
     EXPECT_EQ(camera_info.bounds.v_max, 10);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     std::tie(camera_info, cache_status) = RunStep<CameraInfo>(step, db);
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
+    EXPECT_EQ(camera_info.camera_model, CameraModel::Pinhole);
     EXPECT_EQ(camera_info.bounds.u_max, 20);
     EXPECT_EQ(camera_info.bounds.v_max, 10);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
+TEST_F(StepsFixture, TestTargetInfoStep) {
+    steps::TargetInfoStep const step{*config["target"].as_table(), camera_info.sensor_name};
+
+    auto [target_info, cache_status]{RunStep<TargetInfo>(step, db)};
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.height, 3);
+    EXPECT_EQ(target_info.width, 4);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db);
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.height, 3);
+    EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
