@@ -70,7 +70,7 @@ void Calibrate(toml::table const& config, ImageSource image_source, std::string 
     // TODO(Jack): The loading and parsing of the app config belongs in its own step! Having this here is a hack for
     // now.
     bool show_extraction{true};
-    if (auto const node{config["app"]["show_extraction"]}) {
+    if (auto const node{config["application"]["show_extraction"]}) {
         show_extraction = node.as_boolean()->get();  // LCOV_EXCL_LINE
     }
 

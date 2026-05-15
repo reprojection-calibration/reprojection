@@ -19,10 +19,6 @@ std::string TargetInfoStep::CacheKey() const {
 }
 
 TargetInfo TargetInfoStep::Compute() const {
-    if (auto const error_msg{config::ValidateTargetConfig(target_config)}) {
-        throw std::runtime_error(error_msg->msg);
-    }
-
     TargetInfo const target_info{config::ParseTargetConfig(*target_config.as_table())};
 
     return target_info;

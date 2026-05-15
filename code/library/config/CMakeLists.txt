@@ -26,7 +26,6 @@ set(TESTS
         src/toml_helpers.test.cpp
         test/config_loading.test.cpp
         test/config_parsing.test.cpp
-        test/validate_config.test.cpp
-        test/validate_target_config.test.cpp
+        test/config_validation.test.cpp
 )
 AddTests()
