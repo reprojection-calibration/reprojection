@@ -33,6 +33,24 @@ std::string Serialize(CameraInfo const& data) {
     return oss.str();
 }
 
+/// TODO UPDATE HERE IF WE ADD ID TO TARGET INFO!
+/// /// TODO UPDATE HERE IF WE ADD ID TO TARGET INFO!
+/// /// TODO UPDATE HERE IF WE ADD ID TO TARGET INFO!
+/// /// TODO UPDATE HERE IF WE ADD ID TO TARGET INFO!
+/// /// TODO UPDATE HERE IF WE ADD ID TO TARGET INFO!
+/// /// TODO UPDATE HERE IF WE ADD ID TO TARGET INFO!
+
+std::string Serialize(TargetInfo const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    oss << ToString(data.target_type) << "|";
+    oss << data.height << "," << data.width << "|";
+    oss << data.asymmetric << "|";
+
+    return oss.str();
+}
+
 std::string Serialize(CameraMeasurements const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);

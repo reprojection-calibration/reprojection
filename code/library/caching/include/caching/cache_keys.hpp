@@ -11,6 +11,8 @@ std::string CacheKey(std::string_view const& data);
 
 std::string CacheKey(std::string_view config, EncodedImages const& encoded_images);
 
+std::string CacheKey(TargetInfo const& target_info, EncodedImages const& encoded_images);
+
 std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements);
 
 std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,

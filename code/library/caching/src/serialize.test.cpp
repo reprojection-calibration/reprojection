@@ -24,6 +24,15 @@ TEST(CachingSerialize, TestSerializeCameraInfo) {
     EXPECT_EQ(result, gt_result);
 }
 
+TEST(CachingSerialize, TestSerializeTargetInfo) {
+    TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, false};
+
+    std::string const result{caching::Serialize(target_info)};
+    std::string const gt_result{"aprilgrid3|8,6|0|"};
+
+    EXPECT_EQ(result, gt_result);
+}
+
 TEST(CachingSerialize, TestSerializeCameraMeasurements) {
     ExtractedTarget const target{
         Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}}, MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}}},
