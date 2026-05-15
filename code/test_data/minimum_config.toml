@@ -1,3 +1,6 @@
+[application]
+show_extraction = false
+
 [sensor]
 camera_name = "/cam0/image_raw"
 camera_model = "double_sphere"
