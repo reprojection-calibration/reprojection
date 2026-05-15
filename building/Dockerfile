@@ -330,7 +330,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/ros1 /data
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 
@@ -345,7 +345,7 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM ros2-base-stage AS ros2-integration-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/ros2 /data
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 
@@ -359,7 +359,7 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM base-stage AS video-file-integration-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/video_file /data
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
@@ -411,17 +411,17 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM ros1-app-stage AS ros1-app-smoke-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/ros1 /data
 
 
 FROM ros2-app-stage AS ros2-app-smoke-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/ros2 /data
 
 
 FROM video-file-app-stage AS video-file-app-smoke-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/video_file /data

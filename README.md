@@ -75,7 +75,7 @@ Open the link displayed in the terminal.
 
 ## Configuration
 
-Please use [minimum_config.toml](code/test_data/minimum_config.toml) as the example to build your configuration file
+Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration file
 from. That configuration file is used in all integration and smoke testing which mean it stays up to date. Please
 adapt this to your data and save your configuration file with your data.
 
