@@ -5,6 +5,7 @@
 
 #include "application/reprojection_calibration.hpp"
 #include "caching/cache_keys.hpp"
+#include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
 
@@ -35,13 +36,12 @@ int main() {
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
     try {
-        std::string const sensor_name{config["sensor"]["camera_name"].as_string()->get()};
+        auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
+
         database::WriteToDb(CalibrationStep::ImageLoading,
-                            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", sensor_name, db);
+                            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", camera_name, db);
 
-        CameraInfo const camera_info{
-            sensor_name, ToCameraModel(config["sensor"]["camera_model"].as_string()->get()), {0, 512, 0, 512}};
-
+        CameraInfo const camera_info{camera_name, camera_model, {0, 512, 0, 512}};
         std::ostringstream oss1;
         oss1 << *config["sensor"].as_table();
         database::WriteToDb(CalibrationStep::CameraInfo,
