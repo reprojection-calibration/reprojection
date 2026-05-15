@@ -32,6 +32,15 @@ struct CameraInfo {
     ImageBounds bounds;
 };
 
+// TODO(Jack): One day if we add multi-target calibration we will likely have to add a target ID here. But for now
+// (15.5.26) we only support one target at a time therefore we do not require an identifier.
+struct TargetInfo {
+    TargetType target_type;
+    int height;
+    int width;
+    bool asymmetric;
+};
+
 // TODO(Jack): The CameraState is a type that I regret using. It was designed with the intent that one day in
 // the future it would contain the rest of the camera state (ex. extrinsics (?)). But that has not happened yet
 // and instead we are left here everytime forced to initialize the struct with the array which seems useless and
