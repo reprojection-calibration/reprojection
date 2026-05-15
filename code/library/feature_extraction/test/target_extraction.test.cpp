@@ -15,7 +15,7 @@ using namespace std::string_view_literals;
 auto const empty_image{cv::Mat::zeros(cv::Size(100, 100), CV_8UC1)};
 
 TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCheckerboard) {
-    TargetInfo const target_info{TargetType::Checkerboard, 3, 4, false};
+    TargetInfo const target_info{TargetType::Checkerboard, 3, 4, 0.1, false};
 
     std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(target_info)};
 
@@ -26,7 +26,7 @@ TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCheckerboard) {
 }
 
 TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCircleGrid) {
-    TargetInfo const target_info{TargetType::CircleGrid, 3, 4, true};
+    TargetInfo const target_info{TargetType::CircleGrid, 3, 4, 0.1, true};
 
     std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(target_info)};
 
@@ -35,7 +35,7 @@ TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCircleGrid) {
 }
 
 TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorAprilgrid3) {
-    TargetInfo const target_info{TargetType::Aprilgrid3, 3, 4, false};
+    TargetInfo const target_info{TargetType::Aprilgrid3, 3, 4, 0.1, false};
 
     std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(target_info)};
 

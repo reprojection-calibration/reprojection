@@ -55,8 +55,8 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCameraInfo) {
 TEST_F(SensorDatabaseFixture, TestWriteToDbTargetInfo) {
     database::WriteToDb(CalibrationStep::TargetInfo, "", sensor_name, db);
 
-    EXPECT_NO_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, false}, sensor_name, db));
-    EXPECT_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, false}, sensor_name, db),
+    EXPECT_NO_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db));
+    EXPECT_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db),
                  std::runtime_error);
 }
 

@@ -62,13 +62,14 @@ TEST_F(CameraReadFixture, TestReadTargetInfo) {
     EXPECT_FALSE(target_info.has_value());
 
     database::WriteToDb(CalibrationStep::TargetInfo, "", sensor_name, db);
-    database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, false}, sensor_name, db);
+    database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db);
 
     target_info = database::ReadTargetInfo(db, sensor_name);
     ASSERT_TRUE(target_info.has_value());
     EXPECT_EQ(target_info->target_type, TargetType::Aprilgrid3);
     EXPECT_EQ(target_info->height, 8);
     EXPECT_EQ(target_info->width, 6);
+    EXPECT_EQ(target_info->unit_dimension, 0.1);
     EXPECT_EQ(target_info->asymmetric, false);
 }
 

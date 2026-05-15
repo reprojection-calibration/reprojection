@@ -25,7 +25,7 @@ TEST(CachingSerialize, TestSerializeCameraInfo) {
 }
 
 TEST(CachingSerialize, TestSerializeTargetInfo) {
-    TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, false};
+    TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
 
     std::string const result{caching::Serialize(target_info)};
     std::string const gt_result{"aprilgrid3|8,6|0|"};

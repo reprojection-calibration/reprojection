@@ -160,7 +160,8 @@ void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, Sqli
         Sqlite3Tools::Bind(stmt, 3, ToString(target_info.target_type));
         Sqlite3Tools::Bind(stmt, 4, static_cast<int64_t>(target_info.height));
         Sqlite3Tools::Bind(stmt, 5, static_cast<int64_t>(target_info.width));
-        Sqlite3Tools::Bind(stmt, 6, static_cast<int64_t>(target_info.asymmetric));
+        Sqlite3Tools::Bind(stmt, 6, target_info.unit_dimension);
+        Sqlite3Tools::Bind(stmt, 7, static_cast<int64_t>(target_info.asymmetric));
     }};
 
     ExecuteStatement(sql_statements::target_info_insert, binder, db);
