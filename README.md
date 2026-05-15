@@ -78,14 +78,16 @@ Open the link displayed in the terminal.
 For configuration we use the [toml](https://toml.io/en/) configuration file format. An example configuration for
 monocular camera intrinsic calibration is:
 
-    [sensor]
-    camera_name = "/camera/image"
-    camera_model = "double_sphere"
+      [application]
+      show_extraction = true
+ 
+      [sensor]
+      camera_name = "/camera/image"
+      camera_model = "double_sphere"
 
-    [target]
-    pattern_size = [8,6]
-    type = "aprilgrid3"
-    show_extraction = true
+      [target]
+      pattern_size = [8,6]
+      type = "aprilgrid3"
 
 Please adapt this to your data and save your configuration files using the `.toml` extension.
 
