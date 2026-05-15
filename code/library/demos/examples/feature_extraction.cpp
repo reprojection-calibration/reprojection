@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
     toml::table const config{toml::parse_file(*config_file)};
     TargetInfo const target_info{config::ParseTargetConfig(*config["target"].as_table())};
-    
+
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
 
     while (true) {

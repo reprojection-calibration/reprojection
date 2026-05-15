@@ -9,9 +9,8 @@ namespace reprojection::config {
 
 template <typename T>
 std::optional<T> ExtractValue(std::string_view key, toml::table& cfg) {
-    T value;
     if (auto const node{cfg.get(key)}) {
-        value = node->as<T>()->get();
+        T const value{node->as<T>()->get()};
         cfg.erase(key);
 
         return value;
