@@ -30,6 +30,9 @@ class StepsFixture : public ::testing::Test {
             [target]
             pattern_size = [3,4]
             type = "aprilgrid3"
+
+            [app]
+            show_extraction = false
         )"};
         config = toml::parse(config_file);
 
@@ -79,10 +82,18 @@ class ImageSourceFixture : public StepsFixture {
             }
             return std::nullopt;
         };
+
+        // TODO(Jack): This conversion logic is now at least repeated here and in the target info step exactly the same,
+        // this could be good place for a reusable config parsing function instead of copy and paste.
+        target_info =
+            TargetInfo{ToTargetType(config["target"]["type"].as_string()->get()),
+                       static_cast<int>(config["target"]["pattern_size"].as_array()->at(0).as_integer()->get()),
+                       static_cast<int>(config["target"]["pattern_size"].as_array()->at(1).as_integer()->get()), false};
     }
 
     std::shared_ptr<EncodedImages> encoded_images;
     ImageSource image_source;
+    TargetInfo target_info;
 };
 
 TEST_F(ImageSourceFixture, TestImageLoadingStep) {
@@ -132,7 +143,8 @@ TEST_F(StepsFixture, TestTargetInfoStep) {
 }
 
 TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
-    steps::FeatureExtractionStep const step{camera_info.sensor_name, encoded_images, *config["target"].as_table()};
+    steps::FeatureExtractionStep const step{camera_info.sensor_name, encoded_images, target_info,
+                                            *config["app"].as_table()};
 
     auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
     EXPECT_EQ(std::size(extracted_targets), 0);

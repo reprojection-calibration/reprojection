@@ -11,14 +11,16 @@ namespace reprojection::config {
 // counting on that fact the config has been validated before being passed here? If so that depends a lot on the user
 // doing the right thing... Bad idea!
 template <typename T>
-T ExtractValue(std::string_view key, toml::table& cfg) {
+std::optional<T> ExtractValue(std::string_view key, toml::table& cfg) {
     T value;
     if (auto const node{cfg.get(key)}) {
         value = node->as<T>()->get();
         cfg.erase(key);
-    }
 
-    return value;
+        return value;
+    } else {
+        return std::nullopt;
+    }
 }  // LCOV_EXCL_LINE
 
 // TODO(Jack): Instead of throwing should we refactor to return a variant with an error message? I think in the config

@@ -67,7 +67,8 @@ void Calibrate(toml::table const& config, ImageSource image_source, std::string 
               ToString(target_info_step.step_type), ToString(target_info_cache_status),
               ToString(target_info.target_type), target_info.height, target_info.width);
 
-    steps::FeatureExtractionStep const feature_extraction_step{camera_info.sensor_name, encoded_images, target_info};
+    steps::FeatureExtractionStep const feature_extraction_step{camera_info.sensor_name, encoded_images, target_info,
+                                                               *config["app"].as_table()};
     auto const [targets,
                 feature_extraction_cache_status]{steps::RunStep<CameraMeasurements>(feature_extraction_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}",

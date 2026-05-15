@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "application/cli_utils.hpp"
+#include "config/config_parsing.hpp"
 #include "demos/image_source.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "image_viewer/image_viewer.hpp"
@@ -36,7 +37,9 @@ int main(int argc, char* argv[]) {
     }
 
     toml::table const config{toml::parse_file(*config_file)};
-    auto const extractor{feature_extraction::CreateTargetExtractor(*config["target"].as_table())};
+    TargetInfo const target_info{config::ParseTargetConfig(*config["target"].as_table())};
+    
+    auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
 
     while (true) {
         cv::Mat const img{image_feed->GetImage()};

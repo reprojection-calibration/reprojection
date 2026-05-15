@@ -8,6 +8,7 @@
 #include <toml++/toml.hpp>
 
 #include "types/algorithm_types.hpp"
+#include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::feature_extraction {
@@ -35,7 +36,7 @@ class TargetExtractor {
     virtual std::optional<ExtractedTarget> ExtractImplementation(cv::Mat const& image) const = 0;
 };
 
-std::unique_ptr<TargetExtractor> CreateTargetExtractor(toml::table const& target_config);
+std::unique_ptr<TargetExtractor> CreateTargetExtractor(TargetInfo const& target_info);
 
 // NOTE(Jack): For those unfamiliar with the opencv type (or even those who know it well), this function signature might
 // look ugly. But what we need to remember is that a cv::Mat is basically just a smart pointer, and even though it is
