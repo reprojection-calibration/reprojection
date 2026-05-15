@@ -31,9 +31,6 @@ class StepsFixture : public ::testing::Test {
             [target]
             pattern_size = [3,4]
             type = "aprilgrid3"
-
-            [app]
-            show_extraction = false
         )"};
         config = toml::parse(config_file);
 
@@ -140,8 +137,7 @@ TEST_F(StepsFixture, TestTargetInfoStep) {
 }
 
 TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
-    steps::FeatureExtractionStep const step{camera_info.sensor_name, encoded_images, target_info,
-                                            *config["app"].as_table()};
+    steps::FeatureExtractionStep const step{camera_info.sensor_name, encoded_images, target_info, false};
 
     auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
     EXPECT_EQ(std::size(extracted_targets), 0);

@@ -10,7 +10,7 @@ namespace reprojection::steps {
 
 std::string FeatureExtractionStep::CacheKey() const {
     std::ostringstream oss;
-    oss << app_config;
+    oss << show_extraction;
 
     return caching::CacheKey(target_info, *images, oss.str());
 }
@@ -19,11 +19,6 @@ std::string FeatureExtractionStep::CacheKey() const {
 // NOTE(Jack): The unit tests and CI pipeline run headless which means that we cannot get the GUI show feature
 // extraction code path unit tested and covered.
 CameraMeasurements FeatureExtractionStep::Compute() const {
-    bool show_extraction{false};  // Sensible default
-    if (auto const node{app_config["show_extraction"]}) {
-        show_extraction = node.as_boolean()->get();  // LCOV_EXCL_LINE
-    }
-
     // TODO(Jack): Is it really appropriate to use a toml table here instead of a struct?
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
 
