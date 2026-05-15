@@ -154,9 +154,16 @@ void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, 
 }
 
 void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, SqlitePtr const db) {
-    (void)target_info;
-    (void)sensor_name;
-    (void)db;
+    auto const binder{[target_info, sensor_name](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, "target_info");
+        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, ToString(target_info.target_type));
+        Sqlite3Tools::Bind(stmt, 4, static_cast<int64_t>(target_info.height));
+        Sqlite3Tools::Bind(stmt, 5, static_cast<int64_t>(target_info.width));
+        Sqlite3Tools::Bind(stmt, 6, static_cast<int64_t>(target_info.asymmetric));
+    }};
+
+    ExecuteStatement(sql_statements::target_info_insert, binder, db);
 }
 
 }  // namespace reprojection::database
