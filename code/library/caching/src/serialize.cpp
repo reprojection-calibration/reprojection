@@ -7,21 +7,6 @@
 
 namespace reprojection::caching {
 
-// NOTE(Jack): It is kind of dumb this version exists because it does not really do anything, but we need it to work
-// with the CacheKeyFrom() variadic template function.
-std::string Serialize(std::string_view data) { return std::string(data); }
-
-std::string Serialize(EncodedImages const& data) {
-    std::ostringstream oss;
-
-    for (auto const& [timestamp_ns, encoded_image] : data) {
-        oss << timestamp_ns << "|";
-        oss << std::size(encoded_image.data) << "|";
-    }
-
-    return oss.str();
-}
-
 std::string Serialize(CameraInfo const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
@@ -51,12 +36,25 @@ std::string Serialize(CameraMeasurements const& data) {
     return oss.str();
 }
 
+std::string Serialize(CameraModel const data) { return ToString(data); }
+
 std::string Serialize(CameraState const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
     SerializeEigenByRows(data.intrinsics, oss);
     oss << "|";
+
+    return oss.str();
+}
+
+std::string Serialize(EncodedImages const& data) {
+    std::ostringstream oss;
+
+    for (auto const& [timestamp_ns, encoded_image] : data) {
+        oss << timestamp_ns << "|";
+        oss << std::size(encoded_image.data) << "|";
+    }
 
     return oss.str();
 }
@@ -73,5 +71,21 @@ std::string Serialize(Frames const& data) {
 
     return oss.str();
 }
+
+std::string Serialize(TargetInfo const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    oss << ToString(data.target_type) << "|";
+    oss << data.height << "," << data.width << "|";
+    oss << data.unit_dimension << "|";
+    oss << data.asymmetric << "|";
+
+    return oss.str();
+}
+
+// NOTE(Jack): It is kind of dumb this version exists because it does not really do anything, but we need it to work
+// with the CacheKeyFrom() variadic template function.
+std::string Serialize(std::string_view data) { return std::string(data); }
 
 }  // namespace reprojection::caching

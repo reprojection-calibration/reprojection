@@ -2,16 +2,15 @@
 
 #include <gtest/gtest.h>
 
+// cppcheck-suppress missingInclude
+#include "testing_utilities/generated/minimum_config.hpp"
+
 using namespace reprojection;
 
 TEST(ConfigConfigParsing, TestParseSensorConfig) {
-    static constexpr std::string_view sensor_config{R"(
-        camera_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-    )"};
-    toml::table toml{toml::parse(sensor_config)};
+    toml::table toml{toml::parse(testing_utilities::minimum_config)};
 
-    auto const [camera_name, camera_model]{config::ParseSensorConfig(toml)};
+    auto const [camera_name, camera_model]{config::ParseSensorConfig(*toml["sensor"].as_table())};
     EXPECT_EQ(camera_name, "/cam0/image_raw");
     EXPECT_EQ(camera_model, CameraModel::DoubleSphere);
 
@@ -20,6 +19,31 @@ TEST(ConfigConfigParsing, TestParseSensorConfig) {
     )"};
     toml = toml::parse(bad_config);
     EXPECT_THROW(config::ParseSensorConfig(toml), std::runtime_error);
+}
+
+TEST(ConfigConfigParsing, TestParseTargetConfig) {
+    static constexpr std::string_view target_config{R"(
+        pattern_size = [3,4]
+        type = "aprilgrid3"
+        unit_dimension = 0.1
+
+        [circle_grid]
+        asymmetric = true
+    )"};
+    toml::table toml{toml::parse(target_config)};
+
+    TargetInfo const target_info{config::ParseTargetConfig(toml)};
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.height, 3);
+    EXPECT_EQ(target_info.width, 4);
+    EXPECT_EQ(target_info.unit_dimension, 0.1);
+    EXPECT_EQ(target_info.asymmetric, true);
+
+    static constexpr std::string_view bad_config{R"(
+        random_key = 123
+    )"};
+    toml = toml::parse(bad_config);
+    EXPECT_THROW(config::ParseTargetConfig(toml), std::runtime_error);
 }
 
 TEST(ConfigConfigParsing, TestParseSolverConfig) {

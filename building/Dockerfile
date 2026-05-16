@@ -162,6 +162,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
@@ -209,6 +210,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=OFF; \
@@ -230,6 +232,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=OFF; \
@@ -269,11 +272,11 @@ COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f; \
+      /data/ros1/dataset-calib-imu4_512_16.db3 3d7d82fa27ae8e58aca0a1809aa060433bb73b8eb576102904d82f7ce2bfeed5; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.db3 59eb88b6978d78f618edf2437a177941768fead55d757f5cee2dd42e69870b9f; \
+      /data/ros2/dataset-calib-imu4_512_16.db3 3d7d82fa27ae8e58aca0a1809aa060433bb73b8eb576102904d82f7ce2bfeed5; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.db3 f7ef4ada7c1985a2fd3b2965ba848d5c9bf3962d7fd113988840a990b32edcc1
+      /data/video_file/dataset-calib-imu4_512_16.db3 33fc780c48e68617edef7c3d1784cf544609d37822c98852e571ca06e67d2dce
 
 
 FROM apt-base-stage AS ros1-base-stage
@@ -330,7 +333,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/ros1 /data
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 
@@ -345,7 +348,7 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM ros2-base-stage AS ros2-integration-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/ros2 /data
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 
@@ -359,7 +362,7 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM base-stage AS video-file-integration-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/video_file /data
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
@@ -411,17 +414,17 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM ros1-app-stage AS ros1-app-smoke-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/ros1 /data
 
 
 FROM ros2-app-stage AS ros2-app-smoke-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/ros2 /data
 
 
 FROM video-file-app-stage AS video-file-app-smoke-test-stage
 
-COPY code/test_data/minimum_config.toml /data/minimum_config.toml
+COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/video_file /data

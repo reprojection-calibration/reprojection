@@ -5,8 +5,11 @@
 #include <memory>
 
 #include "caching/cache_keys.hpp"
+#include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
+// cppcheck-suppress missingInclude
+#include "testing_utilities/generated/minimum_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 #include "types/calibration_types.hpp"
 
@@ -17,17 +20,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     auto result{application::ParseArgs(1, nullptr)};
     EXPECT_FALSE(result.has_value());
 
-    // TODO(Jack): This is now copy and pasted in three places, should we make one common def in the testing utils?
-    static constexpr std::string_view minimum_config{R"(
-        [sensor]
-        camera_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [target]
-        pattern_size = [3,4]
-        type = "circle_grid"
-    )"};
-    TemporaryFile const config_file{".toml", minimum_config};
+    TemporaryFile const config_file{".toml", testing_utilities::minimum_config};
 
     int const argc{5};
 
@@ -50,18 +43,8 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     EXPECT_EQ(result->data_path, "/tmp");  // Heuristic check of one of the values
 }
 
-TEST(Application, TestCalibrate) {
-    // TODO(Jack): This is now copy and pasted in a lot of places right? Should we do a central definition?
-    static constexpr std::string_view config_file{R"(
-            [sensor]
-            camera_name = "/cam0/image_raw"
-            camera_model = "double_sphere"
-
-            [target]
-            pattern_size = [3,4]
-            type = "circle_grid"
-        )"};
-    toml::table const config{toml::parse(config_file)};
+TEST(ApplicationReprojectionCalibration, TestCalibrate) {
+    toml::table const config{toml::parse(testing_utilities::minimum_config)};
 
     auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
@@ -70,23 +53,16 @@ TEST(Application, TestCalibrate) {
     // as we can do here. I guess we could also use the MVG test data generator, but that will be for a future
     // contributor :)
 
-    // Write the camera info
-    // TODO(Jack): Add foreign key constraint that a camera info must have a step!
-    CameraInfo const camera_info{config["sensor"]["camera_name"].as_string()->get(),
-                                 ToCameraModel(config["sensor"]["camera_model"].as_string()->get()),
-                                 {0, 512, 0, 512}};
-    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(""), camera_info.sensor_name, db);
-    database::WriteToDb(camera_info, db);
+    auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
+    CameraInfo const camera_info{camera_name, camera_model, {0, 512, 0, 512}};
 
     database::WriteToDb(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
 
-    std::ostringstream oss1;
-    oss1 << *config["sensor"].as_table();
-    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(oss1.str()), camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(camera_name, camera_model, {}),
+                        camera_info.sensor_name, db);
+    database::WriteToDb(camera_info, db);
 
-    std::ostringstream oss2;
-    oss2 << *config["target"].as_table();
-    database::WriteToDb(CalibrationStep::FeatureExtraction, caching::CacheKey(oss2.str()), camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::FeatureExtraction, caching::CacheKey(""), camera_info.sensor_name, db);
 
     database::WriteToDb(CalibrationStep::IntrinsicInitialization, caching::CacheKey(camera_info, {}),
                         camera_info.sensor_name, db);

@@ -1,0 +1,7 @@
+#pragma once
+
+namespace reprojection::testing_utilities {
+
+@TOML_CONFIG@
+
+}

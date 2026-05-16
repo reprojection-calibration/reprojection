@@ -15,13 +15,9 @@ using namespace std::string_view_literals;
 auto const empty_image{cv::Mat::zeros(cv::Size(100, 100), CV_8UC1)};
 
 TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCheckerboard) {
-    static constexpr std::string_view config_file{R"(
-        pattern_size = [3,4]
-        type = "checkerboard"
-    )"sv};
-    toml::table const config{toml::parse(config_file)};
+    TargetInfo const target_info{TargetType::Checkerboard, 3, 4, 0.1, false};
 
-    std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(config)};
+    std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(target_info)};
 
     ASSERT_TRUE(dynamic_cast<CheckerboardExtractor*>(extractor.get()));
     EXPECT_EQ(extractor->Extract(empty_image),
@@ -30,40 +26,21 @@ TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCheckerboard) {
 }
 
 TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCircleGrid) {
-    static constexpr std::string_view config_file{R"(
-    pattern_size = [3, 4]
-    type = "circle_grid"
-    unit_dimension = 1.0
+    TargetInfo const target_info{TargetType::CircleGrid, 3, 4, 0.1, true};
 
-    [circle_grid]
-    asymmetric = true
-    )"sv};
-    toml::table const config{toml::parse(config_file)};
-
-    std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(config)};
+    std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(target_info)};
 
     ASSERT_TRUE(dynamic_cast<CircleGridExtractor*>(extractor.get()));
     EXPECT_EQ(extractor->Extract(empty_image), std::nullopt);
 }
 
 TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorAprilgrid3) {
-    static constexpr std::string_view config_file{R"(
-        pattern_size = [3,4]
-        type = "aprilgrid3"
-    )"sv};
-    toml::table const config{toml::parse(config_file)};
+    TargetInfo const target_info{TargetType::Aprilgrid3, 3, 4, 0.1, false};
 
-    std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(config)};
+    std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(target_info)};
 
     ASSERT_TRUE(dynamic_cast<Aprilgrid3Extractor*>(extractor.get()));
     EXPECT_EQ(extractor->Extract(empty_image), std::nullopt);
-}
-
-TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorErrorHandling) {
-    static constexpr std::string_view empty_config_file{R"()"sv};
-    toml::table const config{toml::parse(empty_config_file)};
-
-    EXPECT_THROW(CreateTargetExtractor(config), std::runtime_error);
 }
 
 TEST(FeatureExtractionTargetExtraction, TestDrawTarget) {

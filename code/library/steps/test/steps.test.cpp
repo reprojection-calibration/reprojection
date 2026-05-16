@@ -2,6 +2,7 @@
 
 #include <string_view>
 
+#include "config/config_parsing.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
@@ -9,8 +10,11 @@
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
+#include "steps/target_info.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
+// cppcheck-suppress missingInclude
+#include "testing_utilities/generated/minimum_config.hpp"
 #include "types/io.hpp"
 
 using namespace reprojection;
@@ -21,13 +25,19 @@ class StepsFixture : public ::testing::Test {
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
+        config = toml::parse(testing_utilities::minimum_config);
+
+        auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
+        camera_info = CameraInfo{camera_name, camera_model, testing_utilities::image_bounds};
+
         database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
         database::WriteToDb(camera_info, db);
     }
 
     SqlitePtr db;
-    CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
-    CameraState camera_state{testing_utilities::pinhole_intrinsics};
+    CameraInfo camera_info;
+    CameraState camera_state{testing_utilities::double_sphere_intrinsics};
+    toml::table config;
 };
 
 // TODO REFACTOR IMAGE SOURCE HERE TO READ DIRECTLR FROM AN ENCODEDIMAGES object!!!
@@ -63,21 +73,14 @@ class ImageSourceFixture : public StepsFixture {
             return std::nullopt;
         };
 
-        static constexpr std::string_view config_file{R"(
-            [sensor]
-            camera_name = "/cam0/image_raw"
-            camera_model = "double_sphere"
-
-            [target]
-            pattern_size = [3,4]
-            type = "circle_grid"
-        )"};
-        config = toml::parse(config_file);
+        // TODO(Jack): This conversion logic is now at least repeated here and in the target info step exactly the same,
+        // this could be good place for a reusable config parsing function instead of copy and paste.
+        target_info = config::ParseTargetConfig(*config["target"].as_table());
     }
 
     std::shared_ptr<EncodedImages> encoded_images;
     ImageSource image_source;
-    toml::table config;
+    TargetInfo target_info;
 };
 
 TEST_F(ImageSourceFixture, TestImageLoadingStep) {
@@ -110,8 +113,24 @@ TEST_F(ImageSourceFixture, TestCameraInfoStep) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
+TEST_F(StepsFixture, TestTargetInfoStep) {
+    steps::TargetInfoStep const step{*config["target"].as_table(), camera_info.sensor_name};
+
+    auto [target_info, cache_status]{RunStep<TargetInfo>(step, db)};
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.height, 3);
+    EXPECT_EQ(target_info.width, 4);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db);
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.height, 3);
+    EXPECT_EQ(target_info.width, 4);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
 TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
-    steps::FeatureExtractionStep const step{camera_info.sensor_name, encoded_images, *config["target"].as_table()};
+    steps::FeatureExtractionStep const step{camera_info.sensor_name, encoded_images, target_info, false};
 
     auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
     EXPECT_EQ(std::size(extracted_targets), 0);
@@ -129,7 +148,7 @@ TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
     // strategy is unclear at this time.
-    Array3d const gt_result{287.773, 360, 240};  // Heuristic!
+    Array5d const gt_result{1048.01, 360, 240, 0, 0.5};  // Heuristic!
 
     auto [result, cache_status]{RunStep<CameraState>(step, db)};
     EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));

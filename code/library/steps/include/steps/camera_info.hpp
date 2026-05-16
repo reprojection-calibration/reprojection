@@ -23,13 +23,15 @@ namespace reprojection::steps {
 // applications.
 
 struct CameraInfoStep {
-    // TODO(Jack): We should have structs here not unparsed toml tables, right?
-    toml::table sensor_config;
+    std::string sensor_name;
+    CameraModel camera_model;
     std::shared_ptr<EncodedImages> images;
 
     CalibrationStep step_type{CalibrationStep::CameraInfo};
 
-    std::string SensorName() const { return sensor_config["camera_name"].as_string()->get(); }
+    CameraInfoStep(toml::table const& _sensor_config, std::shared_ptr<EncodedImages> const& _images);
+
+    std::string SensorName() const { return sensor_name; }
 
     std::string CacheKey() const;
 

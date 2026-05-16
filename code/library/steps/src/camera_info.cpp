@@ -3,17 +3,18 @@
 #include <toml++/toml.h>
 
 #include "caching/cache_keys.hpp"
+#include "config/config_parsing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 
 namespace reprojection::steps {
 
-std::string CameraInfoStep::CacheKey() const {
-    std::ostringstream oss;
-    oss << sensor_config;
-
-    return caching::CacheKey(oss.str(), *images);
+CameraInfoStep::CameraInfoStep(toml::table const& _sensor_config, std::shared_ptr<EncodedImages> const& _images)
+    : images{_images} {
+    std::tie(sensor_name, camera_model) = config::ParseSensorConfig(_sensor_config);
 }
+
+std::string CameraInfoStep::CacheKey() const { return caching::CacheKey(sensor_name, camera_model, *images); }
 
 CameraInfo CameraInfoStep::Compute() const {
     if (images->size() == 0) {
@@ -31,7 +32,7 @@ CameraInfo CameraInfoStep::Compute() const {
     }
 
     CameraInfo const camera_info{SensorName(),
-                                 ToCameraModel(sensor_config["camera_model"].as_string()->get()),
+                                 camera_model,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
     return camera_info;

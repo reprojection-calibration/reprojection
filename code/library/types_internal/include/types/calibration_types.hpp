@@ -38,6 +38,7 @@ struct TargetInfo {
     TargetType target_type;
     int height;
     int width;
+    double unit_dimension;
     // TODO(Jack): This annoys me that this is here because it only actually really applies to the circle grid target.
     // You can have a symmetric or asymmetric circle grid but that is not possible for the other targets. Therefore is
     // an extra piece of information that has no use for most targets. We are missing some abstraction here and if

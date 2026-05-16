@@ -191,7 +191,8 @@ std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view se
             result.target_type = ToTargetType(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
             result.height = sqlite3_column_int(stmt, 1);
             result.width = sqlite3_column_int(stmt, 2);
-            result.asymmetric = static_cast<bool>(sqlite3_column_int(stmt, 3));
+            result.unit_dimension = sqlite3_column_double(stmt, 3);
+            result.asymmetric = static_cast<bool>(sqlite3_column_int(stmt, 4));
 
             target_info = result;
         });

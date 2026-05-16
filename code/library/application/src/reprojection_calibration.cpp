@@ -11,6 +11,7 @@
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/linear_pose_initialization.hpp"
 #include "steps/step_runner.hpp"
+#include "steps/target_info.hpp"
 
 #include "io.hpp"
 #include "utils.hpp"
@@ -49,22 +50,40 @@ void Calibrate(toml::table const& config, ImageSource image_source, std::string 
                SqlitePtr const db) {
     steps::ImageLoadingStep const image_loading{config["sensor"]["camera_name"].as_string()->get(),
                                                 image_source_signature, image_source};
-    auto const [encoded_images, il_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
+    auto const [encoded_images,
+                image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
-              ToString(il_cache_status), encoded_images->size());
+              ToString(image_loading_cache_status), encoded_images->size());
 
-    steps::CameraInfoStep const ci_step{*config["sensor"].as_table(), encoded_images};
-    auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(ci_step, db)};
+    steps::CameraInfoStep const camera_info_step{*config["sensor"].as_table(), encoded_images};
+    auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(camera_info_step, db)};
     log->info(
         "{{'step': '{}', 'cache_status': '{}', 'camera_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
-        ToString(ci_step.step_type), ToString(ci_cache_status), camera_info.sensor_name,
+        ToString(camera_info_step.step_type), ToString(ci_cache_status), camera_info.sensor_name,
         ToString(camera_info.camera_model), camera_info.bounds.v_max, camera_info.bounds.u_max);
 
-    steps::FeatureExtractionStep const ftext_step{camera_info.sensor_name, encoded_images,
-                                                  *config["target"].as_table()};
-    auto const [targets, ftext_cache_status]{steps::RunStep<CameraMeasurements>(ftext_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}", ToString(ftext_step.step_type),
-              ToString(ftext_cache_status), std::size(targets));
+    steps::TargetInfoStep const target_info_step{*config["target"].as_table(), camera_info.sensor_name};
+    auto const [target_info, target_info_cache_status]{steps::RunStep<TargetInfo>(target_info_step, db)};
+    log->info(
+        "{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height': {}, 'width': {}, 'unit_dimension': {}, "
+        "'asymmetric': {}}}",
+        ToString(target_info_step.step_type), ToString(target_info_cache_status), ToString(target_info.target_type),
+        target_info.height, target_info.width, target_info.unit_dimension, target_info.asymmetric);
+
+    // TODO(Jack): The loading and parsing of the app config belongs in its own step! Having this here is a hack for
+    // now.
+    bool show_extraction{true};
+    if (auto const node{config["application"]["show_extraction"]}) {
+        show_extraction = node.as_boolean()->get();  // LCOV_EXCL_LINE
+    }
+
+    steps::FeatureExtractionStep const feature_extraction_step{camera_info.sensor_name, encoded_images, target_info,
+                                                               show_extraction};
+    auto const [targets,
+                feature_extraction_cache_status]{steps::RunStep<CameraMeasurements>(feature_extraction_step, db)};
+    log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}",
+              ToString(feature_extraction_step.step_type), ToString(feature_extraction_cache_status),
+              std::size(targets));
 
     steps::IntrinsicInitializationStep const ii_step{camera_info, targets};
     auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};

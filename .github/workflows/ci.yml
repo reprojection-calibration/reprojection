@@ -168,7 +168,7 @@ jobs:
         run: |
           docker run --rm \
             reprojection:${{ matrix.applications.target }} \
-            --config /data/minimum_config.toml \
+            --config /data/calibration_config.toml \
             --data ${{ matrix.applications.data }} \
             --workspace /data/
     strategy:

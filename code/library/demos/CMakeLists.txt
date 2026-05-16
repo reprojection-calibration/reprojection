@@ -12,6 +12,7 @@ set(LINK_LIBRARIES
         application
         caching
         calibration
+        config
         database
         eigen_utilities
         feature_extraction
@@ -33,9 +34,9 @@ set(LINK_LIBRARIES
 # example applications (ex. for the video-file application release stages) then we need it. It would be nice if this was
 # automatically handled by some type of packaging framework and that we did not need to handle it manually here.
 set(INSTALL_SO OFF)
-if(INSTALL_EXAMPLES)
+if (INSTALL_EXAMPLES)
     set(INSTALL_SO ON)
-endif()
+endif ()
 AddLibrary()
 
 set(TESTS

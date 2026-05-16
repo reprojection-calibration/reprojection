@@ -7,6 +7,7 @@ set(SRC_FILES
         src/image_loading.cpp
         src/intrinsic_initialization.cpp
         src/linear_pose_initialization.cpp
+        src/target_info.cpp
 
 )
 
@@ -17,6 +18,7 @@ set(LINK_LIBRARIES
         SQLite::SQLite3
         caching
         calibration
+        config
         database
         feature_extraction
         image_viewer

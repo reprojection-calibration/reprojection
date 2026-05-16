@@ -2,25 +2,17 @@
 
 #include <gtest/gtest.h>
 
+// cppcheck-suppress missingInclude
+#include "testing_utilities/generated/minimum_config.hpp"
+
 using namespace reprojection;
 
 TEST(LoggingLogging, TestToOneLineJson) {
-    // TODO(Jack): Copy and pasted in many places!
-    static constexpr std::string_view minimum_config{R"(
-        [sensor]
-        camera_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [target]
-        pattern_size = [3,4]
-        type = "circle_grid"
-    )"};
-
-    toml::table const toml{toml::parse(minimum_config)};
+    toml::table const toml{toml::parse(testing_utilities::minimum_config)};
 
     std::string const result{logging::ToOneLineJson(toml)};
 
     EXPECT_EQ(result,
-              "{'sensor': {'camera_model': 'double_sphere', 'camera_name': '/cam0/image_raw'}, 'target': "
-              "{'pattern_size': [3, 4], 'type': 'circle_grid'}}");
+              "{'application': {'show_extraction': false}, 'sensor': {'camera_model': 'double_sphere', 'camera_name': "
+              "'/cam0/image_raw'}, 'target': {'pattern_size': [3, 4], 'type': 'aprilgrid3'}}");
 }

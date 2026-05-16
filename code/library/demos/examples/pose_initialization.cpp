@@ -5,6 +5,7 @@
 
 #include "application/reprojection_calibration.hpp"
 #include "caching/cache_keys.hpp"
+#include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
 
@@ -35,24 +36,19 @@ int main() {
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
     try {
-        std::string const sensor_name{config["sensor"]["camera_name"].as_string()->get()};
+        auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
+
         database::WriteToDb(CalibrationStep::ImageLoading,
-                            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", sensor_name, db);
+                            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", camera_name, db);
 
-        CameraInfo const camera_info{
-            sensor_name, ToCameraModel(config["sensor"]["camera_model"].as_string()->get()), {0, 512, 0, 512}};
-
-        std::ostringstream oss1;
-        oss1 << *config["sensor"].as_table();
+        CameraInfo const camera_info{camera_name, camera_model, {0, 512, 0, 512}};
         database::WriteToDb(CalibrationStep::CameraInfo,
-                            "f9dfdc874264f36f71b5d06f19787ac477de30e3808a0fbb14280c5fd1b0e647", camera_info.sensor_name,
+                            "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e", camera_info.sensor_name,
                             db);
         database::WriteToDb(camera_info, db);
 
-        std::ostringstream oss2;
-        oss2 << *config["target"].as_table();
         database::WriteToDb(CalibrationStep::FeatureExtraction,
-                            "049b921634ea226820738b1b9c0f3cec0afe60868e6309cb01196a2787b65591", camera_info.sensor_name,
+                            "dbfa49204a3050725438dac6dadbaa5dff108d0d60f2c2114c71778084576737", camera_info.sensor_name,
                             db);
     } catch (...) {
         std::cerr << "Database setup threw exception." << std::endl;

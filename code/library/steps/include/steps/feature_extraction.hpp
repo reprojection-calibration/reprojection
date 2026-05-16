@@ -11,8 +11,8 @@ namespace reprojection::steps {
 struct FeatureExtractionStep {
     std::string sensor_name;
     std::shared_ptr<EncodedImages> images;
-    // TODO(Jack): We should have structs here not unparsed toml tables, right?
-    toml::table target_config;
+    TargetInfo target_info;
+    bool show_extraction;
 
     CalibrationStep step_type{CalibrationStep::FeatureExtraction};
 
