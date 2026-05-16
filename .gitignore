@@ -7,3 +7,5 @@ __pycache__/
 *_pb2_grpc.py
 
 .idea/
+
+**/generated
