@@ -46,7 +46,7 @@ endforeach ()
 
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/sql.hpp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/generated/sql.hpp
         @ONLY
 )
 
