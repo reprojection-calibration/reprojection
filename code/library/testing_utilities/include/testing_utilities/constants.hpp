@@ -33,7 +33,7 @@ static constexpr std::string_view minimum_config{R"(
 
         [target]
         pattern_size = [3,4]
-        type = "circle_grid"
+        type = "aprilgrid3"
     )"};
 
 }  // namespace reprojection::testing_utilities

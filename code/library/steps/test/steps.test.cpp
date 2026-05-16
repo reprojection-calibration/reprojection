@@ -115,13 +115,13 @@ TEST_F(StepsFixture, TestTargetInfoStep) {
     steps::TargetInfoStep const step{*config["target"].as_table(), camera_info.sensor_name};
 
     auto [target_info, cache_status]{RunStep<TargetInfo>(step, db)};
-    EXPECT_EQ(target_info.target_type, TargetType::CircleGrid);
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
     EXPECT_EQ(target_info.height, 3);
     EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db);
-    EXPECT_EQ(target_info.target_type, TargetType::CircleGrid);
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
     EXPECT_EQ(target_info.height, 3);
     EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);

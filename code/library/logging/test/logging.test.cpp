@@ -13,5 +13,5 @@ TEST(LoggingLogging, TestToOneLineJson) {
 
     EXPECT_EQ(result,
               "{'sensor': {'camera_model': 'double_sphere', 'camera_name': '/cam0/image_raw'}, 'target': "
-              "{'pattern_size': [3, 4], 'type': 'circle_grid'}}");
+              "{'pattern_size': [3, 4], 'type': 'aprilgrid3'}}");
 }

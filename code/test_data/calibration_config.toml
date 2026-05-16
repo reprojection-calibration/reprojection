@@ -7,4 +7,4 @@ camera_model = "double_sphere"
 
 [target]
 pattern_size = [3,4]
-type = "circle_grid"
+type = "aprilgrid3"
