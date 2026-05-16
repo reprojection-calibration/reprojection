@@ -6,29 +6,11 @@
 
 using namespace reprojection;
 
-TEST(CachingSerialize, TestSerializeEncodedImages) {
-    EncodedImages const encoded_images{{0, ImageBuffer{}}, {1, ImageBuffer{}}};
-
-    std::string const result{caching::Serialize(encoded_images)};
-    std::string const gt_result{"0|0|1|0|"};
-
-    EXPECT_EQ(result, gt_result);
-}
-
 TEST(CachingSerialize, TestSerializeCameraInfo) {
     CameraInfo const camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
 
     std::string const result{caching::Serialize(camera_info)};
     std::string const gt_result{"/cam/retro/123|pinhole|0.000,720.000,0.000,480.000|"};
-
-    EXPECT_EQ(result, gt_result);
-}
-
-TEST(CachingSerialize, TestSerializeTargetInfo) {
-    TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
-
-    std::string const result{caching::Serialize(target_info)};
-    std::string const gt_result{"aprilgrid3|8,6|0.100|0|"};
 
     EXPECT_EQ(result, gt_result);
 }
@@ -56,11 +38,29 @@ TEST(CachingSerialize, TestSerializeCameraState) {
     EXPECT_EQ(result, gt_result);
 }
 
+TEST(CachingSerialize, TestSerializeEncodedImages) {
+    EncodedImages const encoded_images{{0, ImageBuffer{}}, {1, ImageBuffer{}}};
+
+    std::string const result{caching::Serialize(encoded_images)};
+    std::string const gt_result{"0|0|1|0|"};
+
+    EXPECT_EQ(result, gt_result);
+}
+
 TEST(CachingSerialize, TestSerializeFrames) {
     Frames const frames{{0, {Array6d::Ones()}}, {1, {2 * Array6d::Ones()}}};
 
     std::string const result{caching::Serialize(frames)};
     std::string const gt_result{"0|1.000;1.000;1.000;1.000;1.000;1.000;|1|2.000;2.000;2.000;2.000;2.000;2.000;|"};
+
+    EXPECT_EQ(result, gt_result);
+}
+
+TEST(CachingSerialize, TestSerializeTargetInfo) {
+    TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
+
+    std::string const result{caching::Serialize(target_info)};
+    std::string const gt_result{"aprilgrid3|8,6|0.100|0|"};
 
     EXPECT_EQ(result, gt_result);
 }

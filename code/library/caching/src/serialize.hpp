@@ -6,24 +6,22 @@
 
 namespace reprojection::caching {
 
-std::string Serialize(std::string_view data);
-
-std::string Serialize(CameraModel const data);
-
-// TEST
-// TEST
-// TEST
-std::string Serialize(EncodedImages const& data);
-
 std::string Serialize(CameraInfo const& data);
-
-std::string Serialize(TargetInfo const& data);
 
 std::string Serialize(CameraMeasurements const& data);
 
+std::string Serialize(CameraModel const data);
+
 std::string Serialize(CameraState const& data);
 
+// TODO(Jack): Test!
+std::string Serialize(EncodedImages const& data);
+
 std::string Serialize(Frames const& data);
+
+std::string Serialize(TargetInfo const& data);
+
+std::string Serialize(std::string_view data);
 
 template <typename Derived>
 void SerializeEigenByRows(Eigen::DenseBase<Derived> const& m, std::ostream& os) {
