@@ -162,6 +162,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
