@@ -50,15 +50,19 @@ TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
     EXPECT_TRUE(ds_intrinsics.isApprox(gt_ds_intrinsics));
 
     // Now we run the other methods too, mainly to get full test coverage, not because we need to.
+    std::tie(runner, initialization) = calibration::SelectInitializationStrategy(CameraModel::Pinhole, height, width);
+    std::vector<double> const pinhole_gammas{runner(target)};
+    EXPECT_EQ(std::size(pinhole_gammas), 6);
+
     std::tie(runner, initialization) =
         calibration::SelectInitializationStrategy(CameraModel::PinholeRadtan4, height, width);
-    std::vector<double> const prt4_gammas{runner(target)};
-    EXPECT_EQ(std::size(prt4_gammas), 6);  // Simple heuristic to check we get any result from the runner.
+    std::vector<double> const phrt4_gammas{runner(target)};
+    EXPECT_EQ(std::size(phrt4_gammas), 6);
 
     std::tie(runner, initialization) =
         calibration::SelectInitializationStrategy(CameraModel::UnifiedCameraModel, height, width);
     std::vector<double> const ucm_gammas{runner(target)};
-    EXPECT_EQ(std::size(ucm_gammas), 3);  // Simple heuristic to check we get any result from the runner.
+    EXPECT_EQ(std::size(ucm_gammas), 3);
 }
 
 // NOTE(Jack): We use the UCM camera model for testing because the parabola line math is exact when xi=1, which explains
