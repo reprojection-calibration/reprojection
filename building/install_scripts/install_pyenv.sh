@@ -3,7 +3,7 @@
 set -eoux pipefail
 
 # Defaults to $HOME if this is empty
-PYENV_ROOT=${PYENV_ROOT:-''}
+PYENV_ROOT=${PYENV_ROOT:-"${HOME}/.pyenv"}
 
 # NOTE(Jack): This needs to be a separate script because we need to write the .bash_profile and then source that.
 

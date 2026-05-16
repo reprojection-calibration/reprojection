@@ -99,6 +99,10 @@ To generate Checkerboard or Circle Grid targets
 the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
 provided by [calib.io](https://calib.io/) is a great choice.
 
+> [!WARNING]
+> Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
+> style Aprilgrid.
+
 ### Aprilgrid3 target files
 
 * [aprilgrid3 6x4](media/aprilgrid3_6x4.png)
@@ -112,9 +116,7 @@ Please add the following entry to your configuration file:
         [target.circle_grid]
         asymmetric = true
 
-> [!WARNING]
-> Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
-> style Aprilgrid.
+
 
 ## Camera Models
 
