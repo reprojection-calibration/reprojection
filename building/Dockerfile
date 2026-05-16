@@ -232,6 +232,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
     --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=OFF; \
@@ -271,11 +272,11 @@ COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.db3 70bab61999a066ff5fd2c15cafbd02c7d6690b40e5d2f2cd05e9ee9068efb47e; \
+      /data/ros1/dataset-calib-imu4_512_16.db3 3d7d82fa27ae8e58aca0a1809aa060433bb73b8eb576102904d82f7ce2bfeed5; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.db3 70bab61999a066ff5fd2c15cafbd02c7d6690b40e5d2f2cd05e9ee9068efb47e; \
+      /data/ros2/dataset-calib-imu4_512_16.db3 3d7d82fa27ae8e58aca0a1809aa060433bb73b8eb576102904d82f7ce2bfeed5; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.db3 308180ae70b9029674235538bd2c701442e14d24f8ed7c3eb3443adb1fa97f63
+      /data/video_file/dataset-calib-imu4_512_16.db3 33fc780c48e68617edef7c3d1784cf544609d37822c98852e571ca06e67d2dce
 
 
 FROM apt-base-stage AS ros1-base-stage
