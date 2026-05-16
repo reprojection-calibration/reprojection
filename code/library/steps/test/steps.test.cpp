@@ -13,6 +13,7 @@
 #include "steps/target_info.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
+// cppcheck-suppress missingInclude
 #include "testing_utilities/generated/minimum_config.hpp"
 #include "types/io.hpp"
 

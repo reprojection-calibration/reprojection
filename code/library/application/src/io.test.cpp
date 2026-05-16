@@ -4,6 +4,7 @@
 
 #include <ranges>
 
+// cppcheck-suppress missingInclude
 #include "testing_utilities/generated/minimum_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
