@@ -64,9 +64,11 @@ void Calibrate(toml::table const& config, ImageSource image_source, std::string 
 
     steps::TargetInfoStep const target_info_step{*config["target"].as_table(), camera_info.sensor_name};
     auto const [target_info, target_info_cache_status]{steps::RunStep<TargetInfo>(target_info_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height': {}, 'width': {}}}",
-              ToString(target_info_step.step_type), ToString(target_info_cache_status),
-              ToString(target_info.target_type), target_info.height, target_info.width);
+    log->info(
+        "{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height': {}, 'width': {}, 'unit_dimension': {}, "
+        "'asymmetric': {}}}",
+        ToString(target_info_step.step_type), ToString(target_info_cache_status), ToString(target_info.target_type),
+        target_info.height, target_info.width, target_info.unit_dimension, target_info.asymmetric);
 
     // TODO(Jack): The loading and parsing of the app config belongs in its own step! Having this here is a hack for
     // now.
