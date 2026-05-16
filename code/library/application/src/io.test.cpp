@@ -4,6 +4,7 @@
 
 #include <ranges>
 
+#include "testing_utilities/constants.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;
@@ -45,21 +46,11 @@ TEST(ApplicationIO, TestParseCommandLineInput) {
 }
 
 TEST(ApplicationIO, TestHappyPath) {
-    // TODO(Jack): This is now copy and pasted in three places, should we make one common def in the testing utils?
-    static constexpr std::string_view minimum_config{R"(
-        [sensor]
-        camera_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [target]
-        pattern_size = [3,4]
-        type = "circle_grid"
-    )"};
-    TemporaryFile const config_file{".toml", minimum_config};
+    TemporaryFile const config_file{".toml", testing_utilities::minimum_config};
 
     auto const result{application::LoadAndValidateConfig(config_file.Path())};
     ASSERT_TRUE(result.has_value());
-    toml::table const gt_result{toml::parse(minimum_config)};
+    toml::table const gt_result{toml::parse(testing_utilities::minimum_config)};
     EXPECT_EQ(*result, gt_result);
 }
 

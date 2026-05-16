@@ -2,16 +2,14 @@
 
 #include <gtest/gtest.h>
 
+#include "testing_utilities/constants.hpp"
+
 using namespace reprojection;
 
 TEST(ConfigConfigParsing, TestParseSensorConfig) {
-    static constexpr std::string_view sensor_config{R"(
-        camera_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-    )"};
-    toml::table toml{toml::parse(sensor_config)};
+    toml::table toml{toml::parse(testing_utilities::minimum_config)};
 
-    auto const [camera_name, camera_model]{config::ParseSensorConfig(toml)};
+    auto const [camera_name, camera_model]{config::ParseSensorConfig(*toml["sensor"].as_table())};
     EXPECT_EQ(camera_name, "/cam0/image_raw");
     EXPECT_EQ(camera_model, CameraModel::DoubleSphere);
 

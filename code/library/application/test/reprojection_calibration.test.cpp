@@ -8,6 +8,7 @@
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
+#include "testing_utilities/constants.hpp"
 #include "testing_utilities/temporary_file.hpp"
 #include "types/calibration_types.hpp"
 
@@ -18,17 +19,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     auto result{application::ParseArgs(1, nullptr)};
     EXPECT_FALSE(result.has_value());
 
-    // TODO(Jack): This is now copy and pasted in three places, should we make one common def in the testing utils?
-    static constexpr std::string_view minimum_config{R"(
-        [sensor]
-        camera_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [target]
-        pattern_size = [3,4]
-        type = "circle_grid"
-    )"};
-    TemporaryFile const config_file{".toml", minimum_config};
+    TemporaryFile const config_file{".toml", testing_utilities::minimum_config};
 
     int const argc{5};
 
@@ -52,17 +43,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 }
 
 TEST(ApplicationReprojectionCalibration, TestCalibrate) {
-    // TODO(Jack): This is now copy and pasted in a lot of places right? Should we do a central definition?
-    static constexpr std::string_view config_file{R"(
-            [sensor]
-            camera_name = "/cam0/image_raw"
-            camera_model = "double_sphere"
-
-            [target]
-            pattern_size = [3,4]
-            type = "circle_grid"
-        )"};
-    toml::table const config{toml::parse(config_file)};
+    toml::table const config{toml::parse(testing_utilities::minimum_config)};
 
     auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
 

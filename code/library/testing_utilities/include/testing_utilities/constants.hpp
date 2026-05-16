@@ -26,4 +26,14 @@ inline MatrixX3d const gt_points{{0, 0, 600},  //
                                  {0, -240, 600},
                                  {0, 239.9, 600}};
 
+static constexpr std::string_view minimum_config{R"(
+        [sensor]
+        camera_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+
+        [target]
+        pattern_size = [3,4]
+        type = "circle_grid"
+    )"};
+
 }  // namespace reprojection::testing_utilities

@@ -23,16 +23,7 @@ class StepsFixture : public ::testing::Test {
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
-        static constexpr std::string_view config_file{R"(
-            [sensor]
-            camera_name = "/cam0/image_raw"
-            camera_model = "pinhole"
-
-            [target]
-            pattern_size = [3,4]
-            type = "aprilgrid3"
-        )"};
-        config = toml::parse(config_file);
+        config = toml::parse(testing_utilities::minimum_config);
 
         auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
         camera_info = CameraInfo{camera_name, camera_model, testing_utilities::image_bounds};
@@ -43,7 +34,7 @@ class StepsFixture : public ::testing::Test {
 
     SqlitePtr db;
     CameraInfo camera_info;
-    CameraState camera_state{testing_utilities::pinhole_intrinsics};
+    CameraState camera_state{testing_utilities::double_sphere_intrinsics};
     toml::table config;
 };
 
@@ -107,14 +98,14 @@ TEST_F(ImageSourceFixture, TestCameraInfoStep) {
 
     auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(camera_info.camera_model, CameraModel::Pinhole);
+    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
     EXPECT_EQ(camera_info.bounds.u_max, 20);
     EXPECT_EQ(camera_info.bounds.v_max, 10);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     std::tie(camera_info, cache_status) = RunStep<CameraInfo>(step, db);
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(camera_info.camera_model, CameraModel::Pinhole);
+    EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
     EXPECT_EQ(camera_info.bounds.u_max, 20);
     EXPECT_EQ(camera_info.bounds.v_max, 10);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
@@ -124,13 +115,13 @@ TEST_F(StepsFixture, TestTargetInfoStep) {
     steps::TargetInfoStep const step{*config["target"].as_table(), camera_info.sensor_name};
 
     auto [target_info, cache_status]{RunStep<TargetInfo>(step, db)};
-    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.target_type, TargetType::CircleGrid);
     EXPECT_EQ(target_info.height, 3);
     EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db);
-    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.target_type, TargetType::CircleGrid);
     EXPECT_EQ(target_info.height, 3);
     EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
@@ -155,7 +146,7 @@ TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
     // strategy is unclear at this time.
-    Array3d const gt_result{287.773, 360, 240};  // Heuristic!
+    Array5d const gt_result{1048.01, 360, 240, 0, 0.5};  // Heuristic!
 
     auto [result, cache_status]{RunStep<CameraState>(step, db)};
     EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));

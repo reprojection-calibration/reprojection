@@ -13,6 +13,10 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 
+set(TEST_LINK_LIBRARIES
+        testing_utilities
+        types_internal
+)
 set(TESTS
         test/logging.test.cpp
 )
