@@ -8,7 +8,7 @@
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
-#include "testing_utilities/constants.hpp"
+#include "testing_utilities/generated/minimum_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 #include "types/calibration_types.hpp"
 

@@ -4,7 +4,7 @@
 
 #include <ranges>
 
-#include "testing_utilities/constants.hpp"
+#include "testing_utilities/generated/minimum_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;

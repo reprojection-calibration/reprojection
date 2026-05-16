@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "testing_utilities/constants.hpp"
+#include "testing_utilities/generated/minimum_config.hpp"
 
 using namespace reprojection;
 
