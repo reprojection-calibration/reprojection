@@ -41,7 +41,7 @@ foreach (sql ${SQL_FILES})
     file(READ "../../${sql}" contents)
 
     set(SQL_STRING_ENTRIES
-            "${SQL_STRING_ENTRIES}\nconstexpr char const * const ${name} = R\"sql(\n${contents}\n)sql\";\n")
+            "${SQL_STRING_ENTRIES}constexpr char const* const ${name} = R\"sql(\n${contents}\n)sql\";\n")
 endforeach ()
 
 configure_file(
