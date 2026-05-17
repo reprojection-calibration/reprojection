@@ -3,9 +3,6 @@ import tomllib
 from database.types import CameraModel
 
 
-# TEST
-# TEST
-# TEST
 def toml_to_intrinsic_array(intrinsics_str, camera_model):
     intrinsics_toml = tomllib.loads(intrinsics_str)
 
