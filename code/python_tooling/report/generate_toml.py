@@ -10,6 +10,8 @@ from database.sql_table_loading import (
     load_camera_intrinsics_table,
 )
 
+# TODO(Jack): Naming of this file!
+
 
 def main():
     # TODO(Jack): We should not hardcode workspace here because than that means it only works in the docker application.
