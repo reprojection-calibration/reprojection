@@ -9,8 +9,7 @@ from database.sql_table_loading import (
     load_poses_table,
     load_reprojection_errors_table,
 )
-from database.types import SensorType
-
+from database.types import SensorType, TargetType
 
 # TODO(Jack): Does it not make more sense to store the dictionary time keys as strings to prevent any problems with
 #  dash/json serialization?
@@ -164,8 +163,8 @@ def process_reprojection_error_table(table, data):
         timestamp_ns = int(row["timestamp_ns"])
         step_name = row["step_name"]
         if (
-                timestamp_ns not in data[sensor_name]["measurements"]["images"]
-                or timestamp_ns not in data[sensor_name]["poses"][step_name]
+            timestamp_ns not in data[sensor_name]["measurements"]["images"]
+            or timestamp_ns not in data[sensor_name]["poses"][step_name]
         ):
             raise KeyError(
                 f"Error while loading data for {sensor_name} in step {step_name} at time {timestamp_ns} - a corresponding target and/or pose was not found."
@@ -179,6 +178,7 @@ def process_reprojection_error_table(table, data):
 
         data[sensor_name]["reprojection_error"][step_name][timestamp_ns] = row["data"]
 
+
 def process_target_info_table(table, data):
     if table is None:
         return None
@@ -191,12 +191,13 @@ def process_target_info_table(table, data):
             )
 
         data[sensor_name]["target_info"] = {
-            "target_type": row["target_type"],
+            "target_type": TargetType(row["target_type"]),
             "height": row["height"],
             "width": row["width"],
             "unit_dimension": row["unit_dimension"],
-            "asymmetric": row["asymmetric"],
+            "asymmetric": bool(row["asymmetric"]),
         }
+
 
 def load_data(db_path):
     if db_path is None or not os.path.isfile(db_path):
