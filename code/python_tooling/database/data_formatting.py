@@ -179,6 +179,11 @@ def process_reprojection_error_table(table, data):
         data[sensor_name]["reprojection_error"][step_name][timestamp_ns] = row["data"]
 
 
+# WARN(Jack): As noted in the library and github issues, there is no reason to that the target has a "sensor name".
+# A target is not specifically related to any sensor. For now we will leave this but the second we want to go to
+# multi-target we are gonna need to fix this! This assumption is gonna force us to do some weird things here when
+# integrating the target info with the existing dashboard that we would not do if we had the right abstraction
+# representing target as its own entity that is then related to certain others via an ID.
 def process_target_info_table(table, data):
     if table is None:
         return None
