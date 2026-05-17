@@ -58,8 +58,7 @@ def camera_tomls(camera_info, camera_intrinsics):
             f'sensor_id = "{sensor_name}"\n'
             f'camera_model = "{sensor["camera_model"]}"\n'
             f"intrinsics = {intrinsics_arr}\n"
-            f'height = {int(sensor["height"])}\n'
-            f'width = {int(sensor["width"])}\n'
+            f'resolution = [{int(sensor["height"])}, {int(sensor["height"])}]'
         )
 
         output.append(toml_text)
