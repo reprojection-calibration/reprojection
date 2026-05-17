@@ -179,6 +179,24 @@ def process_reprojection_error_table(table, data):
 
         data[sensor_name]["reprojection_error"][step_name][timestamp_ns] = row["data"]
 
+def process_target_info_table(table, data):
+    if table is None:
+        return None
+
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            raise KeyError(
+                f"Error while loading data for {sensor_name} - sensor does not already exist."
+            )
+
+        data[sensor_name]["target_info"] = {
+            "target_type": row["target_type"],
+            "height": row["height"],
+            "width": row["width"],
+            "unit_dimension": row["unit_dimension"],
+            "asymmetric": row["asymmetric"],
+        }
 
 def load_data(db_path):
     if db_path is None or not os.path.isfile(db_path):
