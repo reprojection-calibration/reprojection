@@ -9,6 +9,7 @@ from database.sql_table_loading import (
     load_imu_data_table,
     load_poses_table,
     load_reprojection_errors_table,
+load_target_info_table,
 )
 
 
@@ -91,6 +92,13 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
             list(table.columns.values)
             == ["step_name", "sensor_name", "timestamp_ns", "data"]
         )
+
+    def test_load_target_info_table(self):
+        table = load_target_info_table("nonexistent.db3")
+        self.assertIsNone(table)
+
+        table = load_target_info_table(self.db_path)
+        self.assertEqual(table.shape, (0, 6))
 
 
 if __name__ == "__main__":
