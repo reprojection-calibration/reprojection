@@ -27,7 +27,7 @@ def main():
         result = build_camera_tomls(camera_info, camera_intrinsics)
 
         if len(result) == 0:
-            print("No camera intrinsics exported for", name)
+            print("\n\tNo camera intrinsics exported for", name, "\n")
             continue
 
         output_name = name.removesuffix(".db3") + ".toml"
@@ -35,7 +35,7 @@ def main():
         with open(output_path, "w") as f:
             f.write(result)
 
-        print("Camera intrinsics successfully exported for", name)
+        print("\n\tCamera intrinsics successfully exported for", name, "\n")
 
 
 if __name__ == "__main__":
