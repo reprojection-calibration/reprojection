@@ -2,7 +2,6 @@ import os
 import sqlite3
 import unittest
 
-from database.sql_statement_loading import load_sql
 from database.sql_table_loading import (
     load_camera_info_table,
     load_extracted_targets_table,
@@ -10,6 +9,7 @@ from database.sql_table_loading import (
     load_imu_data_table,
     load_poses_table,
     load_reprojection_errors_table,
+    load_target_info_table,
 )
 
 
@@ -32,13 +32,6 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3"
         )
 
-    def test_load_images_table(self):
-        table = load_images_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_images_table(self.db_path)
-        self.assertEqual(table.shape, (1758, 2))
-
     def test_load_camera_info_table(self):
         table = load_camera_info_table("nonexistent.db3")
         self.assertIsNone(table)
@@ -52,6 +45,20 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
 
         table = load_extracted_targets_table(self.db_path)
         self.assertEqual(table.shape, (1758, 3))
+
+    def test_load_images_table(self):
+        table = load_images_table("nonexistent.db3")
+        self.assertIsNone(table)
+
+        table = load_images_table(self.db_path)
+        self.assertEqual(table.shape, (1758, 2))
+
+    def test_load_imu_data_table(self):
+        table = load_imu_data_table("nonexistent.db3")
+        self.assertIsNone(table)
+
+        table = load_imu_data_table(self.db_path)
+        self.assertEqual(table.shape, (8770, 8))
 
     def test_load_poses_table(self):
         table = load_poses_table("nonexistent.db3")
@@ -86,12 +93,12 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
             == ["step_name", "sensor_name", "timestamp_ns", "data"]
         )
 
-    def test_load_imu_data_table(self):
-        table = load_imu_data_table("nonexistent.db3")
+    def test_load_target_info_table(self):
+        table = load_target_info_table("nonexistent.db3")
         self.assertIsNone(table)
 
-        table = load_imu_data_table(self.db_path)
-        self.assertEqual(table.shape, (8770, 8))
+        table = load_target_info_table(self.db_path)
+        self.assertEqual(table.shape, (0, 6))
 
 
 if __name__ == "__main__":

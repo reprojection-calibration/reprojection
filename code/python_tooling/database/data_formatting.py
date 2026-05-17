@@ -8,30 +8,12 @@ from database.sql_table_loading import (
     load_imu_data_table,
     load_poses_table,
     load_reprojection_errors_table,
+    load_target_info_table,
 )
-from database.types import SensorType
+from database.types import SensorType, TargetType
 
 # TODO(Jack): Does it not make more sense to store the dictionary time keys as strings to prevent any problems with
 #  dash/json serialization?
-
-
-def process_images_table(table):
-    if table is None:
-        return None
-
-    data = {}
-    for index, row in table.iterrows():
-        sensor_name = row["sensor_name"]
-        if sensor_name not in data:
-            data[sensor_name] = {
-                "type": SensorType.Camera,
-                "measurements": {"images": {}},
-            }
-
-        timestamp_ns = int(row["timestamp_ns"])
-        data[sensor_name]["measurements"]["images"][timestamp_ns] = None
-
-    return data
 
 
 def process_camera_info_table(table, data):
@@ -82,6 +64,43 @@ def process_extracted_targets_table(table, data):
             "points": target["points"],
             "indices": target["indices"],
         }
+
+
+def process_images_table(table):
+    if table is None:
+        return None
+
+    data = {}
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            data[sensor_name] = {
+                "type": SensorType.Camera,
+                "measurements": {"images": {}},
+            }
+
+        timestamp_ns = int(row["timestamp_ns"])
+        data[sensor_name]["measurements"]["images"][timestamp_ns] = None
+
+    return data
+
+
+# NOTE(Jack): The imu data only consists of one length six array so we store it timestamped directly under the
+# 'measurements' key.
+def process_imu_data_table(table):
+    if table is None:
+        return None
+
+    data = {}
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            data[sensor_name] = {"type": SensorType.Imu, "measurements": {}}
+
+        timestamp_ns = int(row["timestamp_ns"])
+        data[sensor_name]["measurements"][timestamp_ns] = row.iloc[-6:].tolist()
+
+    return data
 
 
 # NOTE(Jack): When we start the project we enforced the foreign key relationship that a pose could only exist if there
@@ -161,22 +180,29 @@ def process_reprojection_error_table(table, data):
         data[sensor_name]["reprojection_error"][step_name][timestamp_ns] = row["data"]
 
 
-# NOTE(Jack): The imu data only consists of one length six array so we store it timestamped directly under the
-# 'measurements' key.
-def process_imu_data_table(table):
+# WARN(Jack): As noted in the library and github issues, there is no reason to that the target has a "sensor name".
+# A target is not specifically related to any sensor. For now we will leave this but the second we want to go to
+# multi-target we are gonna need to fix this! This assumption is gonna force us to do some weird things here when
+# integrating the target info with the existing dashboard that we would not do if we had the right abstraction
+# representing target as its own entity that is then related to certain others via an ID.
+def process_target_info_table(table, data):
     if table is None:
         return None
 
-    data = {}
     for index, row in table.iterrows():
         sensor_name = row["sensor_name"]
         if sensor_name not in data:
-            data[sensor_name] = {"type": SensorType.Imu, "measurements": {}}
+            raise KeyError(
+                f"Error while loading data for {sensor_name} - sensor does not already exist."
+            )
 
-        timestamp_ns = int(row["timestamp_ns"])
-        data[sensor_name]["measurements"][timestamp_ns] = row.iloc[-6:].tolist()
-
-    return data
+        data[sensor_name]["target_info"] = {
+            "target_type": TargetType(row["target_type"]),
+            "height": row["height"],
+            "width": row["width"],
+            "unit_dimension": row["unit_dimension"],
+            "asymmetric": bool(row["asymmetric"]),
+        }
 
 
 def load_data(db_path):
@@ -192,6 +218,10 @@ def load_data(db_path):
     table = load_camera_info_table(db_path)
     if table is not None:
         process_camera_info_table(table, data)
+
+    table = load_target_info_table(db_path)
+    if table is not None:
+        process_target_info_table(table, data)
 
     table = load_extracted_targets_table(db_path)
     if table is not None:

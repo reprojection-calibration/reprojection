@@ -7,24 +7,6 @@ from database.proto_parsing import parse_array_x2d_proto, parse_extracted_target
 from database.sql_statement_loading import load_sql
 
 
-# TODO(Jack): Make generic loading function for the basic case and use that to eliminate copy and paste!
-# WARN(Jack): We not actually decode the image data here in this function. if we one data get to the point where we do
-# want to visualize images in the dashboard then we need to look again here. For now we just assume all the image data
-# is null.
-def load_images_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("images_select_all_metadata_only.sql"), conn)
-    except Exception as e:
-        print(e)
-        return None
-
-    return table
-
-
 def load_camera_info_table(db_path):
     if not os.path.isfile(db_path):
         return None
@@ -60,6 +42,38 @@ def load_extracted_targets_table(db_path):
                     return None
 
             table["data"] = table["data"].apply(safe_parse)
+    except Exception as e:
+        print(e)
+        return None
+
+    return table
+
+
+# TODO(Jack): Make generic loading function for the basic case and use that to eliminate copy and paste!
+# WARN(Jack): We not actually decode the image data here in this function. if we one data get to the point where we do
+# want to visualize images in the dashboard then we need to look again here. For now we just assume all the image data
+# is null.
+def load_images_table(db_path):
+    if not os.path.isfile(db_path):
+        return None
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            table = pd.read_sql(load_sql("images_select_all_metadata_only.sql"), conn)
+    except Exception as e:
+        print(e)
+        return None
+
+    return table
+
+
+def load_imu_data_table(db_path):
+    if not os.path.isfile(db_path):
+        return None
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            table = pd.read_sql(load_sql("imu_data_select_all.sql"), conn)
     except Exception as e:
         print(e)
         return None
@@ -107,13 +121,13 @@ def load_reprojection_errors_table(db_path):
     return table
 
 
-def load_imu_data_table(db_path):
+def load_target_info_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("imu_data_select_all.sql"), conn)
+            table = pd.read_sql(load_sql("target_info_select_all.sql"), conn)
     except Exception as e:
         print(e)
         return None

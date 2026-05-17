@@ -23,8 +23,9 @@ int main() {
             camera_model = "double_sphere"
 
             [target]
-            pattern_size = [3,4]
-            type = "circle_grid"
+            pattern_size = [6,6]
+            type = "aprilgrid3"
+            unit_dimension = 0.1
         )"};
     toml::table const config{toml::parse(config_file)};
 
@@ -48,7 +49,7 @@ int main() {
         database::WriteToDb(camera_info, db);
 
         database::WriteToDb(CalibrationStep::FeatureExtraction,
-                            "dbfa49204a3050725438dac6dadbaa5dff108d0d60f2c2114c71778084576737", camera_info.sensor_name,
+                            "5d87595c7c8f53d8c355f8b889374c6d1d1cd4bed1472da698725bd51777385a", camera_info.sensor_name,
                             db);
     } catch (...) {
         std::cerr << "Database setup threw exception." << std::endl;

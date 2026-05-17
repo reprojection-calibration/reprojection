@@ -11,13 +11,14 @@ from database.data_formatting import (
     process_imu_data_table,
     process_poses_table,
     process_reprojection_error_table,
+    process_target_info_table,
 )
 from database.sql_table_loading import (
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
 )
-from database.types import SensorType
+from database.types import SensorType, TargetType
 
 
 class TestDataFormatting(unittest.TestCase):
@@ -27,26 +28,16 @@ class TestDataFormatting(unittest.TestCase):
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3"
         )
 
-    def test_process_images_table(self):
-        data = process_images_table(None)
+    def test_load_data(self):
+        data = load_data("nonexistent.db3")
         self.assertIsNone(data)
 
-        table = load_images_table(self.db_path)
-        data = process_images_table(table)
+        data = load_data(self.db_path)
 
-        self.assertEqual(len(data), 2)
-        self.assertEqual(list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw"])
-
-        def check(data):
-            self.assertTrue("type" in data)
-            self.assertTrue(SensorType.Camera in data["type"])
-
-            self.assertTrue("measurements" in data)
-            self.assertTrue("images" in data["measurements"])
-            self.assertEqual(len(data["measurements"]["images"]), 879)
-
-        check(data["/cam0/image_raw"])
-        check(data["/cam1/image_raw"])
+        self.assertEqual(len(data), 3)
+        self.assertEqual(
+            list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw", "/imu0"]
+        )
 
     def test_process_camera_info_table(self):
         data = process_camera_info_table(None, None)
@@ -101,6 +92,43 @@ class TestDataFormatting(unittest.TestCase):
 
         check(data["/cam0/image_raw"])
         check(data["/cam1/image_raw"])
+
+    def test_process_images_table(self):
+        data = process_images_table(None)
+        self.assertIsNone(data)
+
+        table = load_images_table(self.db_path)
+        data = process_images_table(table)
+
+        self.assertEqual(len(data), 2)
+        self.assertEqual(list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw"])
+
+        def check(data):
+            self.assertTrue("type" in data)
+            self.assertTrue(SensorType.Camera in data["type"])
+
+            self.assertTrue("measurements" in data)
+            self.assertTrue("images" in data["measurements"])
+            self.assertEqual(len(data["measurements"]["images"]), 879)
+
+        check(data["/cam0/image_raw"])
+        check(data["/cam1/image_raw"])
+
+    def test_process_imu_data_table(self):
+        data = process_imu_data_table(None)
+        self.assertIsNone(data)
+
+        table = load_imu_data_table(self.db_path)
+        data = process_imu_data_table(table)
+
+        self.assertEqual(len(data), 1)
+        self.assertEqual(list(data.keys()), ["/imu0"])
+
+        self.assertTrue("type" in data["/imu0"])
+        self.assertTrue(SensorType.Imu in data["/imu0"]["type"])
+
+        self.assertTrue("measurements" in data["/imu0"])
+        self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
 
     # TODO(Jack): The following two tests are good examples how our testing is hard to read! For both tests we need to
     #  create relatively complicated state setups to check the foreign key constraints, and we do it all right in the
@@ -185,29 +213,44 @@ class TestDataFormatting(unittest.TestCase):
             2,
         )
 
-    def test_process_imu_data_table(self):
-        data = process_imu_data_table(None)
+    def test_process_target_info_table(self):
+        data = process_target_info_table(None, None)
         self.assertIsNone(data)
 
-        table = load_imu_data_table(self.db_path)
-        data = process_imu_data_table(table)
+        camera_info_data = {
+            "sensor_name": ["/cam0/image_raw", "/cam1/image_raw"],
+            "target_type": ["aprilgrid3", "checkerboard"],
+            "height": [5, 5],
+            "width": [6, 6],
+            "unit_dimension": [0.1, 0.1],
+            "asymmetric": [0, 0],
+        }
+        table = pd.DataFrame(camera_info_data)
 
-        self.assertEqual(len(data), 1)
-        self.assertEqual(list(data.keys()), ["/imu0"])
+        self.assertRaises(KeyError, process_poses_table, table, {})
 
-        self.assertTrue("type" in data["/imu0"])
-        self.assertTrue(SensorType.Imu in data["/imu0"]["type"])
+        images_table = load_images_table(self.db_path)
+        data = process_images_table(images_table)
 
-        self.assertTrue("measurements" in data["/imu0"])
-        self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
+        process_target_info_table(table, data)
 
-    def test_load_data(self):
-        data = load_data("nonexistent.db3")
-        self.assertIsNone(data)
+        def check(data, target_type):
+            self.assertTrue("target_info" in data)
 
-        data = load_data(self.db_path)
+            self.assertTrue("target_type" in data["target_info"])
+            self.assertEqual(data["target_info"]["target_type"], target_type)
 
-        self.assertEqual(len(data), 3)
-        self.assertEqual(
-            list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw", "/imu0"]
-        )
+            self.assertTrue("height" in data["target_info"])
+            self.assertEqual(data["target_info"]["height"], 5)
+
+            self.assertTrue("width" in data["target_info"])
+            self.assertEqual(data["target_info"]["width"], 6)
+
+            self.assertTrue("unit_dimension" in data["target_info"])
+            self.assertEqual(data["target_info"]["unit_dimension"], 0.1)
+
+            self.assertTrue("asymmetric" in data["target_info"])
+            self.assertEqual(data["target_info"]["asymmetric"], False)
+
+        check(data["/cam0/image_raw"], TargetType.Aprilgrid3)
+        check(data["/cam1/image_raw"], TargetType.Checkerboard)
