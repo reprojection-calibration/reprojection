@@ -11,6 +11,7 @@ class TargetType(str, Enum):
     Checkerboard = "checkerboard"
     CircleGrid = "circle_grid"
 
+
 class CameraModel(str, Enum):
     DoubleSphere = "double_sphere"
     Pinhole = "pinhole"
