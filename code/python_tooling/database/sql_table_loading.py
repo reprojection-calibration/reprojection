@@ -120,6 +120,7 @@ def load_reprojection_errors_table(db_path):
 
     return table
 
+
 def load_target_info_table(db_path):
     if not os.path.isfile(db_path):
         return None

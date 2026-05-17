@@ -9,7 +9,7 @@ from database.sql_table_loading import (
     load_imu_data_table,
     load_poses_table,
     load_reprojection_errors_table,
-load_target_info_table,
+    load_target_info_table,
 )
 
 

@@ -17,26 +17,43 @@ def update_extracted_target_figure_size(_, sensor_name, raw_data, fig):
         # example of a place where it might help us as this condition should never really happen.
         return no_update
 
+    target_info = raw_data[sensor_name].get("target_info")
+    if not target_info:
+        return no_update
+
+    target_unit_dimension = target_info.get("unit_dimension")
+    target_width = target_unit_dimension * target_info.get("width")
+    target_height = target_unit_dimension * target_info.get("height")
+
     camera_info = raw_data[sensor_name].get("camera_info")
     if not camera_info:
         return no_update
 
-    # TODO(Jack): Load target config from database and set the target points graph dimensions too. If we do this than
-    # update the name of the function to reflect really what we are doing.
-
-    width = camera_info.get("width")
-    height = camera_info.get("height")
+    image_width = camera_info.get("width")
+    image_height = camera_info.get("height")
 
     # NOTE(Jack): We have subplots in the figure but the process of json dict serialization that dash does prevent us
     # from reforming a proper subplot figure here. Therefore, we have to acces the values directly here which is
     # looks extremely brittle to me and I am quite sure will be annoying to maintain over time. But for now we have no
     # other choice!
-    #
+
+    fig["layout"]["xaxis"]["range"] = [
+        -0.05 * target_width,
+        target_width + 0.05 * target_width,
+    ]
+    fig["layout"]["xaxis"]["autorange"] = False
+
+    fig["layout"]["yaxis"]["range"] = [
+        -0.05 * target_height,
+        target_height + 0.05 * target_height,
+    ]
+    fig["layout"]["yaxis"]["autorange"] = False
+
     # Here "axis2" should be the extracted image figure on the right side.
-    fig["layout"]["xaxis2"]["range"] = [0, width]
+    fig["layout"]["xaxis2"]["range"] = [0, image_width]
     fig["layout"]["xaxis2"]["autorange"] = False
 
-    fig["layout"]["yaxis2"]["range"] = [0, height]
+    fig["layout"]["yaxis2"]["range"] = [0, image_height]
     fig["layout"]["yaxis2"]["autorange"] = False
 
     return fig
