@@ -1,0 +1,6 @@
+I called this package "business logic" because it was the first place/time in the python tooling
+where I found myself really duplicating core calibration application logic which was also found
+in the library.
+
+My hope with this name was to make it clear that this part is actually specific to calibration.
+Everything else only cares about the database and displaying data.
