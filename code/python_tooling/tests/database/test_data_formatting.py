@@ -18,7 +18,7 @@ from database.sql_table_loading import (
     load_images_table,
     load_imu_data_table,
 )
-from database.types import SensorType
+from database.types import SensorType, TargetType
 
 
 class TestDataFormatting(unittest.TestCase):
@@ -212,3 +212,45 @@ class TestDataFormatting(unittest.TestCase):
             ),
             2,
         )
+
+    def test_process_target_info_table(self):
+        data = process_target_info_table(None, None)
+        self.assertIsNone(data)
+
+        camera_info_data = {
+            "sensor_name": ["/cam0/image_raw", "/cam1/image_raw"],
+            "target_type": ["aprilgrid3", "checkerboard"],
+            "height": [5, 5],
+            "width": [6, 6],
+            "unit_dimension": [0.1, 0.1],
+            "asymmetric": [0, 0],
+        }
+        table = pd.DataFrame(camera_info_data)
+
+        self.assertRaises(KeyError, process_poses_table, table, {})
+
+        images_table = load_images_table(self.db_path)
+        data = process_images_table(images_table)
+
+        process_target_info_table(table, data)
+
+        def check(data, target_type):
+            self.assertTrue("target_info" in data)
+
+            self.assertTrue("target_type" in data["target_info"])
+            self.assertEqual(data["target_info"]["target_type"], target_type)
+
+            self.assertTrue("height" in data["target_info"])
+            self.assertEqual(data["target_info"]["height"], 5)
+
+            self.assertTrue("width" in data["target_info"])
+            self.assertEqual(data["target_info"]["width"], 6)
+
+            self.assertTrue("unit_dimension" in data["target_info"])
+            self.assertEqual(data["target_info"]["unit_dimension"], 0.1)
+
+            self.assertTrue("asymmetric" in data["target_info"])
+            self.assertEqual(data["target_info"]["asymmetric"], False)
+
+        check(data["/cam0/image_raw"], TargetType.Aprilgrid3)
+        check(data["/cam1/image_raw"], TargetType.Checkerboard)
