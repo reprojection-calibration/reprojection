@@ -1,14 +1,14 @@
-from build_camera_tomls import build_camera_tomls
-
-from database.sql_table_loading import (
-    load_camera_info_table,
-    load_camera_intrinsics_table,
-)
 from pathlib import Path
+
+from build_camera_tomls import build_camera_tomls
 
 # TODO(Jack): Using refresh_database_list here means that it is not really specific to the dashboard itself, maybe we
 # should move it to another location.
 from dashboard.tools.data_loading import refresh_database_list
+from database.sql_table_loading import (
+    load_camera_info_table,
+    load_camera_intrinsics_table,
+)
 
 
 def main():
@@ -18,8 +18,8 @@ def main():
 
     db_list, _ = refresh_database_list(workspace_dir)
     for entry in db_list:
-        name = entry['label']
-        path = entry['value']
+        name = entry["label"]
+        path = entry["value"]
 
         camera_info = load_camera_info_table(path)
         camera_intrinsics = load_camera_intrinsics_table(path)
