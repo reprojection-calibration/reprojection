@@ -11,27 +11,9 @@ from database.sql_table_loading import (
 )
 from database.types import SensorType
 
+
 # TODO(Jack): Does it not make more sense to store the dictionary time keys as strings to prevent any problems with
 #  dash/json serialization?
-
-
-def process_images_table(table):
-    if table is None:
-        return None
-
-    data = {}
-    for index, row in table.iterrows():
-        sensor_name = row["sensor_name"]
-        if sensor_name not in data:
-            data[sensor_name] = {
-                "type": SensorType.Camera,
-                "measurements": {"images": {}},
-            }
-
-        timestamp_ns = int(row["timestamp_ns"])
-        data[sensor_name]["measurements"]["images"][timestamp_ns] = None
-
-    return data
 
 
 def process_camera_info_table(table, data):
@@ -82,6 +64,43 @@ def process_extracted_targets_table(table, data):
             "points": target["points"],
             "indices": target["indices"],
         }
+
+
+def process_images_table(table):
+    if table is None:
+        return None
+
+    data = {}
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            data[sensor_name] = {
+                "type": SensorType.Camera,
+                "measurements": {"images": {}},
+            }
+
+        timestamp_ns = int(row["timestamp_ns"])
+        data[sensor_name]["measurements"]["images"][timestamp_ns] = None
+
+    return data
+
+
+# NOTE(Jack): The imu data only consists of one length six array so we store it timestamped directly under the
+# 'measurements' key.
+def process_imu_data_table(table):
+    if table is None:
+        return None
+
+    data = {}
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            data[sensor_name] = {"type": SensorType.Imu, "measurements": {}}
+
+        timestamp_ns = int(row["timestamp_ns"])
+        data[sensor_name]["measurements"][timestamp_ns] = row.iloc[-6:].tolist()
+
+    return data
 
 
 # NOTE(Jack): When we start the project we enforced the foreign key relationship that a pose could only exist if there
@@ -145,8 +164,8 @@ def process_reprojection_error_table(table, data):
         timestamp_ns = int(row["timestamp_ns"])
         step_name = row["step_name"]
         if (
-            timestamp_ns not in data[sensor_name]["measurements"]["images"]
-            or timestamp_ns not in data[sensor_name]["poses"][step_name]
+                timestamp_ns not in data[sensor_name]["measurements"]["images"]
+                or timestamp_ns not in data[sensor_name]["poses"][step_name]
         ):
             raise KeyError(
                 f"Error while loading data for {sensor_name} in step {step_name} at time {timestamp_ns} - a corresponding target and/or pose was not found."
@@ -159,24 +178,6 @@ def process_reprojection_error_table(table, data):
             data[sensor_name]["reprojection_error"][step_name] = {}
 
         data[sensor_name]["reprojection_error"][step_name][timestamp_ns] = row["data"]
-
-
-# NOTE(Jack): The imu data only consists of one length six array so we store it timestamped directly under the
-# 'measurements' key.
-def process_imu_data_table(table):
-    if table is None:
-        return None
-
-    data = {}
-    for index, row in table.iterrows():
-        sensor_name = row["sensor_name"]
-        if sensor_name not in data:
-            data[sensor_name] = {"type": SensorType.Imu, "measurements": {}}
-
-        timestamp_ns = int(row["timestamp_ns"])
-        data[sensor_name]["measurements"][timestamp_ns] = row.iloc[-6:].tolist()
-
-    return data
 
 
 def load_data(db_path):

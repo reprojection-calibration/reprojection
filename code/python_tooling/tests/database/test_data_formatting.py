@@ -11,6 +11,7 @@ from database.data_formatting import (
     process_imu_data_table,
     process_poses_table,
     process_reprojection_error_table,
+    process_target_info_table,
 )
 from database.sql_table_loading import (
     load_extracted_targets_table,
@@ -27,26 +28,16 @@ class TestDataFormatting(unittest.TestCase):
             "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3"
         )
 
-    def test_process_images_table(self):
-        data = process_images_table(None)
+    def test_load_data(self):
+        data = load_data("nonexistent.db3")
         self.assertIsNone(data)
 
-        table = load_images_table(self.db_path)
-        data = process_images_table(table)
+        data = load_data(self.db_path)
 
-        self.assertEqual(len(data), 2)
-        self.assertEqual(list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw"])
-
-        def check(data):
-            self.assertTrue("type" in data)
-            self.assertTrue(SensorType.Camera in data["type"])
-
-            self.assertTrue("measurements" in data)
-            self.assertTrue("images" in data["measurements"])
-            self.assertEqual(len(data["measurements"]["images"]), 879)
-
-        check(data["/cam0/image_raw"])
-        check(data["/cam1/image_raw"])
+        self.assertEqual(len(data), 3)
+        self.assertEqual(
+            list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw", "/imu0"]
+        )
 
     def test_process_camera_info_table(self):
         data = process_camera_info_table(None, None)
@@ -101,6 +92,43 @@ class TestDataFormatting(unittest.TestCase):
 
         check(data["/cam0/image_raw"])
         check(data["/cam1/image_raw"])
+
+    def test_process_images_table(self):
+        data = process_images_table(None)
+        self.assertIsNone(data)
+
+        table = load_images_table(self.db_path)
+        data = process_images_table(table)
+
+        self.assertEqual(len(data), 2)
+        self.assertEqual(list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw"])
+
+        def check(data):
+            self.assertTrue("type" in data)
+            self.assertTrue(SensorType.Camera in data["type"])
+
+            self.assertTrue("measurements" in data)
+            self.assertTrue("images" in data["measurements"])
+            self.assertEqual(len(data["measurements"]["images"]), 879)
+
+        check(data["/cam0/image_raw"])
+        check(data["/cam1/image_raw"])
+
+    def test_process_imu_data_table(self):
+        data = process_imu_data_table(None)
+        self.assertIsNone(data)
+
+        table = load_imu_data_table(self.db_path)
+        data = process_imu_data_table(table)
+
+        self.assertEqual(len(data), 1)
+        self.assertEqual(list(data.keys()), ["/imu0"])
+
+        self.assertTrue("type" in data["/imu0"])
+        self.assertTrue(SensorType.Imu in data["/imu0"]["type"])
+
+        self.assertTrue("measurements" in data["/imu0"])
+        self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
 
     # TODO(Jack): The following two tests are good examples how our testing is hard to read! For both tests we need to
     #  create relatively complicated state setups to check the foreign key constraints, and we do it all right in the
@@ -183,31 +211,4 @@ class TestDataFormatting(unittest.TestCase):
                 ]
             ),
             2,
-        )
-
-    def test_process_imu_data_table(self):
-        data = process_imu_data_table(None)
-        self.assertIsNone(data)
-
-        table = load_imu_data_table(self.db_path)
-        data = process_imu_data_table(table)
-
-        self.assertEqual(len(data), 1)
-        self.assertEqual(list(data.keys()), ["/imu0"])
-
-        self.assertTrue("type" in data["/imu0"])
-        self.assertTrue(SensorType.Imu in data["/imu0"]["type"])
-
-        self.assertTrue("measurements" in data["/imu0"])
-        self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
-
-    def test_load_data(self):
-        data = load_data("nonexistent.db3")
-        self.assertIsNone(data)
-
-        data = load_data(self.db_path)
-
-        self.assertEqual(len(data), 3)
-        self.assertEqual(
-            list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw", "/imu0"]
         )
