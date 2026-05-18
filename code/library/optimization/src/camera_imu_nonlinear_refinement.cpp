@@ -4,13 +4,14 @@
 
 #include "spline/spline_initialization.hpp"
 
+#include "spline_imu_cost_functions.hpp"
 #include "spline_projection_cost_function.hpp"
 
 namespace reprojection::optimization {
 
 std::tuple<std::pair<CameraState, spline::Se3Spline>, CeresState> SplineNonlinearRefinement(
-    CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& camera_state,
-    spline::Se3Spline const& spline) {
+    CameraInfo const& sensor, CameraMeasurements const& targets, ImuMeasurements const& imu_data,
+    CameraState const& camera_state, Matrix3d const& R_imu_co, spline::Se3Spline const& spline) {
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
@@ -36,8 +37,21 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, CeresState> SplineNonlinea
         }
     }
 
+    Array3d aa_imu_co{geometry::Log(R_imu_co)};
+    for (auto const timestamp_ns : imu_data | std::views::keys) {
+        auto const normalized_position{
+            spline.GetTimeHandler().SplinePosition(timestamp_ns, optimized_control_points.cols())};
+        if (not normalized_position.has_value()) {
+            continue;  // LCOV_EXCL_LINE
+        }
+        auto const [u_i, i]{normalized_position.value()};
+
+        ceres::CostFunction* const cost_function{
+            Create(imu_data.at(timestamp_ns).angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
+    }
+
     ceres_state.solver_options.minimizer_progress_to_stdout = true;
-    ceres_state.solver_options.num_threads = 6; // DO NOT HARDCODE!!!
+    ceres_state.solver_options.num_threads = 6;  // DO NOT HARDCODE!!!
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
     std::cout << ceres_state.solver_summary.FullReport() << "\n";
 
@@ -46,10 +60,10 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, CeresState> SplineNonlinea
     return {{optimized_camera_state, optimized_spline}, ceres_state};
 }
 
-
-std::pair<Frames,ReprojectionErrors> SplineReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                               CameraState const& camera_state, spline::Se3Spline const& spline) {
-
+std::pair<Frames, ReprojectionErrors> SplineReprojectionResiduals(CameraInfo const& sensor,
+                                                                  CameraMeasurements const& targets,
+                                                                  CameraState const& camera_state,
+                                                                  spline::Se3Spline const& spline) {
     Frames poses;
     for (auto const timestamp_ns : targets | std::views::keys) {
         auto const pose_i{spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
@@ -57,7 +71,6 @@ std::pair<Frames,ReprojectionErrors> SplineReprojectionResiduals(CameraInfo cons
             poses[timestamp_ns].pose = pose_i.value();
         }
     }
-
 
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
     //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
