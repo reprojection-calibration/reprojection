@@ -75,7 +75,7 @@ int main() {
     auto const intrinsics{
         database::ReadCameraState(db, CalibrationStep::CameraNonlinearRefinement, sensor_name, camera_model)};
 
-    auto const [frames,errors]{optimization::SplineReprojectionResiduals(
+    auto const [frames, errors]{optimization::SplineReprojectionResiduals(
         camera_info, camera_measurements, CameraState{*intrinsics}, interpolated_spline)};
 
     // TODO(Jack): Is "spline interpolation" the right name?
@@ -84,7 +84,7 @@ int main() {
     database::WriteToDb(errors, CalibrationStep::SplineInterpolation, sensor_name, db);
 
     auto const [state, _1]{optimization::SplineNonlinearRefinement(camera_info, camera_measurements,
-                                                               CameraState{*intrinsics}, interpolated_spline)};
+                                                                   CameraState{*intrinsics}, interpolated_spline)};
 
     auto const [frames1, errors1]{
         optimization::SplineReprojectionResiduals(camera_info, camera_measurements, state.first, state.second)};
@@ -93,7 +93,6 @@ int main() {
     database::WriteToDb(frames1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
     database::WriteToDb(errors1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
 
-
     ImuMeasurements const imu_data{database::ReadImuData(db, "/imu0")};
     auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
         {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
@@ -101,6 +100,20 @@ int main() {
 
     std::cout << R_imu_co << std::endl;
     std::cout << gravity_w.transpose() << std::endl;
+
+    ImuMeasurements spline_imu_data;
+    for (auto const& timestamp_ns : imu_data | std::views::keys) {
+        auto const velocity{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::First)};
+        auto const acceleration{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Second)};
+
+        if (velocity and acceleration) {
+            // TODO(Jack): Figure out scaling!
+            ImuData const data_i{1e9*velocity->topRows(3), 1e18*acceleration->bottomRows(3)};
+            spline_imu_data[timestamp_ns] = data_i;
+        }
+    }
+
+    database::WriteToDb(spline_imu_data, "spline_imu_data", db);
 
     return EXIT_SUCCESS;
 }
