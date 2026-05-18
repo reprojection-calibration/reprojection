@@ -5,6 +5,7 @@
 
 #include "application/reprojection_calibration.hpp"
 #include "caching/cache_keys.hpp"
+#include "calibration/initialization_methods.hpp"
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_read.hpp"
@@ -91,6 +92,15 @@ int main() {
     database::WriteToDb(CalibrationStep::SplineNonlinearRefinement, "", sensor_name, db);
     database::WriteToDb(frames1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
     database::WriteToDb(errors1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
+
+
+    ImuMeasurements const imu_data{database::ReadImuData(db, "/imu0")};
+    auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
+        {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
+    auto const [R_imu_co, _]{orientation_init};
+
+    std::cout << R_imu_co << std::endl;
+    std::cout << gravity_w.transpose() << std::endl;
 
     return EXIT_SUCCESS;
 }
