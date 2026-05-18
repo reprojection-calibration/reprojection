@@ -88,21 +88,29 @@ int main() {
         {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
     auto const [R_imu_co, _]{orientation_init};
 
-    std::cout << R_imu_co << std::endl;
-    std::cout << gravity_w.transpose() << std::endl;
+    auto const [state, _1]{optimization::SplineNonlinearRefinement(
+        camera_info, camera_measurements, CameraState{*intrinsics}, R_imu_co, interpolated_spline)};
+    auto const [spline_optimized_intrinsics, optimized_spline]{state};
+    auto const [frames1, errors1]{optimization::SplineReprojectionResiduals(
+        camera_info, camera_measurements, spline_optimized_intrinsics, optimized_spline)};
+
+    database::WriteToDb(CalibrationStep::SplineNonlinearRefinement, "", sensor_name, db);
+    database::WriteToDb(frames1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
+    database::WriteToDb(errors1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
 
     ImuMeasurements spline_imu_data;
     for (auto const& timestamp_ns : imu_data | std::views::keys) {
-        auto const position{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
-        auto const velocity{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::First)};
-        auto const acceleration{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Second)};
+        auto const position{optimized_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
+        auto const velocity{optimized_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::First)};
+        auto const acceleration{optimized_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Second)};
 
         if (position and velocity and acceleration) {
             auto const R_co_w{geometry::Exp<double>(position->topRows(3))};
 
             // TODO(Jack): Figure out scaling!
             // TODO(Jack): Account for IMU-cam translation! Currently assumes same position!
-            ImuData const data_i{R_imu_co * 1e9 * velocity->topRows(3), R_imu_co*R_co_w * (gravity_w + acceleration->bottomRows(3))};
+            ImuData const data_i{R_imu_co * 1e9 * velocity->topRows(3),
+                                 R_imu_co * R_co_w * (gravity_w + acceleration->bottomRows(3))};
             spline_imu_data[timestamp_ns] = data_i;
         }
     }
