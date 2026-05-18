@@ -6,6 +6,7 @@
 
 namespace reprojection::optimization {
 
+// TODO DO WE EVEN USE THIS IN ANY REAL APPLICATION?
 template <typename T_Model, spline::DerivativeOrder D>
     requires spline::CanEvaluateCubicBSplineC3<T_Model>
 class SplineCostFunction_T {
