@@ -44,12 +44,10 @@ class SplineImuCostFunction {
         Eigen::Map<Eigen::Vector<T, 3> const> gravity_XXX(gravity_w);
         Vector3<T> const a_w{1e18 * spline::R3Spline::Evaluate<T, spline::DerivativeOrder::Second>(
                                         control_points.template bottomRows<3>(), u_i_, delta_t_ns_)};  // NAMING!
-        Array3<T> const a_co{geometry::Exp<T>(aa_co_w.template topRows<3>()) * (gravity_XXX - a_w)};
-
-        // FIGURE OUT SCALE!!! 1e9
         Vector3<T> const alpha_co{1e18 * spline::So3Spline::Evaluate<T, spline::DerivativeOrder::Second>(
                                              control_points.template topRows<3>(), u_i_, delta_t_ns_)};
 
+        Vector3<T> const a_co{geometry::Exp<T>(aa_co_w.template topRows<3>()) * (gravity_XXX - a_w)};
         Vector3<T> const a_imu{TransformRigidBodyAcceleration<T>(tf_imu_co_XXX, omega_co, alpha_co, a_co)};
 
         residual[3] = T(imu_data_.linear_acceleration[0]) - a_imu[0];
