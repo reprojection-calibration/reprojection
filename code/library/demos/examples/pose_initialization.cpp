@@ -89,7 +89,7 @@ int main() {
     auto const [R_imu_co, _]{orientation_init};
 
     auto const [state, opt_R_imu_co, _1]{optimization::SplineNonlinearRefinement(
-        camera_info, camera_measurements, imu_data, CameraState{*intrinsics}, R_imu_co, interpolated_spline)};
+        camera_info, camera_measurements, imu_data, CameraState{*intrinsics}, R_imu_co, gravity_w, interpolated_spline)};
     auto const [spline_optimized_intrinsics, optimized_spline]{state};
 
     std::cout << R_imu_co << std::endl;
