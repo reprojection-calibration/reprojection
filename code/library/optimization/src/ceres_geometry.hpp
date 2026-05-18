@@ -8,6 +8,7 @@
 
 namespace reprojection::optimization {
 
+// TODO TEST ALONE!
 template <typename T>
 Vector3<T> RotatePoint(Eigen::Ref<Eigen::Vector<T, 3> const> const& aa_i_j,
                           Eigen::Ref<Vector3<T> const> const& point_j) {

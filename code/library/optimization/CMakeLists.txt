@@ -26,6 +26,7 @@ set(TEST_LINK_LIBRARIES
 set(TESTS
         src/angular_velocity_cost_function.test.cpp
         src/ceres_geometry.test.cpp
+        src/ceres_kinematics.test.cpp
         src/projection_cost_function.test.cpp
         src/spline_nonlinear_refinement.test.cpp
         src/spline_projection_cost_function.test.cpp
