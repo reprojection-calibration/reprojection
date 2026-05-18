@@ -92,7 +92,6 @@ int main() {
         camera_info, camera_measurements, imu_data, CameraState{*intrinsics}, R_imu_co, interpolated_spline)};
     auto const [spline_optimized_intrinsics, optimized_spline]{state};
 
-
     std::cout << R_imu_co << std::endl;
     std::cout << opt_R_imu_co << std::endl;
 
@@ -115,7 +114,7 @@ int main() {
             // TODO(Jack): Figure out scaling!
             // TODO(Jack): Account for IMU-cam translation! Currently assumes same position!
             ImuData const data_i{R_imu_co * 1e9 * velocity->topRows(3),
-                                 R_imu_co * R_co_w * (gravity_w + acceleration->bottomRows(3))};
+                                 R_imu_co * R_co_w * (gravity_w - 1e18 * acceleration->bottomRows(3))};
             spline_imu_data[timestamp_ns] = data_i;
         }
     }
