@@ -17,7 +17,6 @@ class SplineImuCostFunction {
     SplineImuCostFunction(ImuData const& imu_data, double const u_i, uint64_t const delta_t_ns)
         : imu_data_{imu_data}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
 
-    // TODO MAKE FULL 6D TF!!!
     template <typename T>
     bool operator()(T const* const tf_imu_co, T const* const gravity_w, T const* const control_point_0_ptr,
                     T const* const control_point_1_ptr, T const* const control_point_2_ptr,

@@ -40,7 +40,8 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, Matrix3d, CeresState> Spli
         }
     }
 
-    Array3d aa_imu_co{geometry::Log(R_imu_co)};
+    Array6d tf_imu_co;
+    tf_imu_co << geometry::Log(R_imu_co), 0, 0, 0;  // Initialize translation to zero
     Vector3d gravity_XXX{gravity};
     for (auto const timestamp_ns : imu_data | std::views::keys) {
         auto const normalized_position{
@@ -50,25 +51,17 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, Matrix3d, CeresState> Spli
         }
         auto const [u_i, i]{normalized_position.value()};
 
-        // TODO ACCOUNT FOR TRANSLATION!!!!
-        ceres::CostFunction* const cost_function{SplineRotationalVelocityCostFunction::Create(
-            imu_data.at(timestamp_ns).angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
+        ceres::CostFunction* const cost_function{
+            SplineImuCostFunction::Create(imu_data.at(timestamp_ns), u_i, spline.GetTimeHandler().delta_t_ns_)};
 
-        problem.AddResidualBlock(cost_function, nullptr, aa_imu_co.data(), optimized_control_points.col(i).data(),
-                                 optimized_control_points.col(i + 1).data(), optimized_control_points.col(i + 2).data(),
-                                 optimized_control_points.col(i + 3).data());
-
-        ceres::CostFunction* const cost_function_XXX{SplineLinearAccelerationCostFunction::Create(
-            imu_data.at(timestamp_ns).linear_acceleration, u_i, spline.GetTimeHandler().delta_t_ns_)};
-
-        problem.AddResidualBlock(cost_function_XXX, nullptr, aa_imu_co.data(), gravity_XXX.data(),
+        problem.AddResidualBlock(cost_function, nullptr, tf_imu_co.data(), gravity_XXX.data(),
                                  optimized_control_points.col(i).data(), optimized_control_points.col(i + 1).data(),
                                  optimized_control_points.col(i + 2).data(),
                                  optimized_control_points.col(i + 3).data());
     }
 
     ceres_state.solver_options.minimizer_progress_to_stdout = true;
-    ceres_state.solver_options.num_threads = 6;  // DO NOT HARDCODE!!!
+    ceres_state.solver_options.num_threads = 15;  // DO NOT HARDCODE!!!
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
     std::cout << ceres_state.solver_summary.FullReport() << "\n";
 
@@ -78,8 +71,9 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, Matrix3d, CeresState> Spli
     std::cout << optimized_camera_state.intrinsics.transpose() << std::endl;
     std::cout << gravity.norm() << std::endl;
     std::cout << gravity_XXX.norm() << std::endl;
+    std::cout << tf_imu_co.transpose() << std::endl;
 
-    return {{optimized_camera_state, optimized_spline}, geometry::Exp<double>(aa_imu_co), ceres_state};
+    return {{optimized_camera_state, optimized_spline}, geometry::Exp<double>(tf_imu_co.topRows(3)), ceres_state};
 }
 
 std::pair<Frames, ReprojectionErrors> SplineReprojectionResiduals(CameraInfo const& sensor,
