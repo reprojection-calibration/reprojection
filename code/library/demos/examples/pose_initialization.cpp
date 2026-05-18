@@ -67,7 +67,7 @@ int main() {
     auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
     Frames const poses{database::ReadPoses(db, CalibrationStep::CameraNonlinearRefinement, sensor_name)};
 
-    // TODO(Jack): Do we also want to save these posese to the db?
+    // TODO(Jack): Do we also want to save these poses to the db?
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(poses)};
 
     CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
@@ -83,16 +83,6 @@ int main() {
     database::WriteToDb(frames, CalibrationStep::SplineInterpolation, sensor_name, db);
     database::WriteToDb(errors, CalibrationStep::SplineInterpolation, sensor_name, db);
 
-    auto const [state, _1]{optimization::SplineNonlinearRefinement(camera_info, camera_measurements,
-                                                                   CameraState{*intrinsics}, interpolated_spline)};
-
-    auto const [frames1, errors1]{
-        optimization::SplineReprojectionResiduals(camera_info, camera_measurements, state.first, state.second)};
-
-    database::WriteToDb(CalibrationStep::SplineNonlinearRefinement, "", sensor_name, db);
-    database::WriteToDb(frames1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
-    database::WriteToDb(errors1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
-
     ImuMeasurements const imu_data{database::ReadImuData(db, "/imu0")};
     auto const [orientation_init, gravity_w]{calibration::EstimateCameraImuRotationAndGravity(
         {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
@@ -103,12 +93,16 @@ int main() {
 
     ImuMeasurements spline_imu_data;
     for (auto const& timestamp_ns : imu_data | std::views::keys) {
+        auto const position{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
         auto const velocity{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::First)};
         auto const acceleration{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Second)};
 
-        if (velocity and acceleration) {
+        if (position and velocity and acceleration) {
+            auto const R_co_w{geometry::Exp<double>(position->topRows(3))};
+
             // TODO(Jack): Figure out scaling!
-            ImuData const data_i{1e9*velocity->topRows(3), 1e18*acceleration->bottomRows(3)};
+            // TODO(Jack): Account for IMU-cam translation! Currently assumes same position!
+            ImuData const data_i{R_imu_co * 1e9 * velocity->topRows(3), R_imu_co*R_co_w * (gravity_w + acceleration->bottomRows(3))};
             spline_imu_data[timestamp_ns] = data_i;
         }
     }
