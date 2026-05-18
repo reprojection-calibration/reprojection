@@ -7,7 +7,11 @@
 #include "caching/cache_keys.hpp"
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
+#include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "optimization/camera_imu_nonlinear_refinement.hpp"
+#include "spline/se3_spline.hpp"
+#include "spline/spline_initialization.hpp"
 
 using namespace reprojection;
 
@@ -57,6 +61,36 @@ int main() {
 
     ImageSource empty_image_source{[]() { return std::nullopt; }};
     application::Calibrate(config, empty_image_source, "", db);
+
+    //////////////////
+    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
+    Frames const poses{database::ReadPoses(db, CalibrationStep::CameraNonlinearRefinement, sensor_name)};
+
+    // TODO(Jack): Do we also want to save these posese to the db?
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(poses)};
+
+    CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
+    auto const camera_measurements{database::ReadExtractedTargets(db, sensor_name)};
+    auto const intrinsics{
+        database::ReadCameraState(db, CalibrationStep::CameraNonlinearRefinement, sensor_name, camera_model)};
+
+    auto const [frames,errors]{optimization::SplineReprojectionResiduals(
+        camera_info, camera_measurements, CameraState{*intrinsics}, interpolated_spline)};
+
+    // TODO(Jack): Is "spline interpolation" the right name?
+    database::WriteToDb(CalibrationStep::SplineInterpolation, "", sensor_name, db);
+    database::WriteToDb(frames, CalibrationStep::SplineInterpolation, sensor_name, db);
+    database::WriteToDb(errors, CalibrationStep::SplineInterpolation, sensor_name, db);
+
+    auto const [state, _1]{optimization::SplineNonlinearRefinement(camera_info, camera_measurements,
+                                                               CameraState{*intrinsics}, interpolated_spline)};
+
+    auto const [frames1, errors1]{
+        optimization::SplineReprojectionResiduals(camera_info, camera_measurements, state.first, state.second)};
+
+    database::WriteToDb(CalibrationStep::SplineNonlinearRefinement, "", sensor_name, db);
+    database::WriteToDb(frames1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
+    database::WriteToDb(errors1, CalibrationStep::SplineNonlinearRefinement, sensor_name, db);
 
     return EXIT_SUCCESS;
 }
