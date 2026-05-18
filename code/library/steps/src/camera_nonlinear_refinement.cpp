@@ -17,7 +17,7 @@ OptimizationState CnlrStep::Compute() const {
 
 OptimizationState CnlrStep::Load(SqlitePtr const db) const {
     Frames const poses{database::ReadPoses(db, step_type, SensorName())};
-    auto const intrinsics{database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
+    auto const intrinsics{database::ReadCameraState(db, step_type, SensorName(), camera_info.camera_model)};
 
     // TODO(Jack): Is this the appropriate error handling? What actual invariants do we have/want here? What if there
     //  are zero poses, is that ok?
