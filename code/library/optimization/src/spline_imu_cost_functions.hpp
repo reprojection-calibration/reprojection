@@ -89,6 +89,8 @@ class SplineLinearAccelerationCostFunction {
         residual[1] = T(acceleration_[1]) - acceleration_imu[1];
         residual[2] = T(acceleration_[2]) - acceleration_imu[2];
 
+        // TODO(Jack): Add gravity magnitude = 9.8 residual term
+
         return true;
     }
 

@@ -13,6 +13,8 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, Matrix3d, CeresState> Spli
     CameraInfo const& sensor, CameraMeasurements const& targets, ImuMeasurements const& imu_data,
     CameraState const& camera_state, Matrix3d const& R_imu_co, Vector3d const& gravity,
     spline::Se3Spline const& spline) {
+
+    // TODO(Jack): Set intrinsics constant!
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
