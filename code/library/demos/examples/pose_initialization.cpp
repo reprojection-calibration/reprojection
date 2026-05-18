@@ -88,9 +88,14 @@ int main() {
         {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
     auto const [R_imu_co, _]{orientation_init};
 
-    auto const [state, _1]{optimization::SplineNonlinearRefinement(
-        camera_info, camera_measurements, CameraState{*intrinsics}, R_imu_co, interpolated_spline)};
+    auto const [state, opt_R_imu_co, _1]{optimization::SplineNonlinearRefinement(
+        camera_info, camera_measurements, imu_data, CameraState{*intrinsics}, R_imu_co, interpolated_spline)};
     auto const [spline_optimized_intrinsics, optimized_spline]{state};
+
+
+    std::cout << R_imu_co << std::endl;
+    std::cout << opt_R_imu_co << std::endl;
+
     auto const [frames1, errors1]{optimization::SplineReprojectionResiduals(
         camera_info, camera_measurements, spline_optimized_intrinsics, optimized_spline)};
 

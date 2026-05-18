@@ -9,7 +9,7 @@
 
 namespace reprojection::optimization {
 
-std::tuple<std::pair<CameraState, spline::Se3Spline>, CeresState> SplineNonlinearRefinement(
+std::tuple<std::pair<CameraState, spline::Se3Spline>, Matrix3d, CeresState> SplineNonlinearRefinement(
     CameraInfo const& sensor, CameraMeasurements const& targets, ImuMeasurements const& imu_data,
     CameraState const& camera_state, Matrix3d const& R_imu_co, spline::Se3Spline const& spline) {
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_SCHUR};
@@ -46,8 +46,14 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, CeresState> SplineNonlinea
         }
         auto const [u_i, i]{normalized_position.value()};
 
-        ceres::CostFunction* const cost_function{
-            Create(imu_data.at(timestamp_ns).angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
+        // TODO ACCOUNT FOR TRANSLATION!!!!
+        ceres::CostFunction* const cost_function{SplineRotationalVelocityCostFunction::Create(
+            imu_data.at(timestamp_ns).angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
+
+        problem.AddResidualBlock(cost_function, nullptr, aa_imu_co.data(),
+                         optimized_control_points.col(i).data(), optimized_control_points.col(i + 1).data(),
+                         optimized_control_points.col(i + 2).data(),
+                         optimized_control_points.col(i + 3).data());
     }
 
     ceres_state.solver_options.minimizer_progress_to_stdout = true;
@@ -57,7 +63,7 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, CeresState> SplineNonlinea
 
     spline::Se3Spline const optimized_spline{optimized_control_points, spline.GetTimeHandler()};
 
-    return {{optimized_camera_state, optimized_spline}, ceres_state};
+    return {{optimized_camera_state, optimized_spline}, geometry::Exp<double>(aa_imu_co), ceres_state};
 }
 
 std::pair<Frames, ReprojectionErrors> SplineReprojectionResiduals(CameraInfo const& sensor,

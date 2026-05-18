@@ -11,8 +11,6 @@
 
 namespace reprojection::optimization {
 
-ceres::CostFunction* Create(Vector3d const& angular_velocity, double const u_i, uint64_t const delta_t_ns);
-
 class SplineRotationalVelocityCostFunction {
    public:
     SplineRotationalVelocityCostFunction(Vector3d const& omega, double const u_i, uint64_t const delta_t_ns)
@@ -30,7 +28,8 @@ class SplineRotationalVelocityCostFunction {
             control_points.col(i) = Eigen::Map<Eigen::Vector<T, 6> const>(ptrs[i], 6, 1);
         }
 
-        Vector3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(
+        // FIGURE OUT SCALE!!! 1e9
+        Vector3<T> const omega_co{1e9 * spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(
             control_points.template topRows<3>(), u_i_, delta_t_ns_)};
 
         Eigen::Map<Eigen::Vector<T, 3> const> aa_imu_co_XXX(aa_imu_co);
