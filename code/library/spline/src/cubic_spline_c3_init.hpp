@@ -30,7 +30,7 @@ struct CubicBSplineC3Init {
                                                   TimeHandler const& time_handler);
 
     /**
-     * \brief How many control points are required to evaluate the spline (=3 for cubic spline).
+     * \brief How many control points are required to evaluate the spline (=4 for cubic spline).
      */
     static int constexpr K{constants::order};
 
