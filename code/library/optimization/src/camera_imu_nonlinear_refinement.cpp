@@ -9,7 +9,7 @@
 
 namespace reprojection::optimization {
 
-std::tuple<std::pair<CameraState, spline::Se3Spline>, Matrix3d, CeresState> SplineNonlinearRefinement(
+std::tuple<std::pair<CameraState, spline::Se3Spline>, Array6d, CeresState> SplineNonlinearRefinement(
     CameraInfo const& sensor, CameraMeasurements const& targets, ImuMeasurements const& imu_data,
     CameraState const& camera_state, Matrix3d const& R_imu_co, Vector3d const& gravity,
     spline::Se3Spline const& spline) {
@@ -69,11 +69,11 @@ std::tuple<std::pair<CameraState, spline::Se3Spline>, Matrix3d, CeresState> Spli
 
     // RETURN VALUE!
     std::cout << optimized_camera_state.intrinsics.transpose() << std::endl;
-    std::cout << gravity.norm() << std::endl;
-    std::cout << gravity_XXX.norm() << std::endl;
-    std::cout << tf_imu_co.transpose() << std::endl;
+    std::cout << gravity.transpose() << " " << gravity.norm() << std::endl;
+    std::cout << gravity_XXX.transpose() << " " << gravity_XXX.norm() << std::endl;
+    std::cout << geometry::Exp(tf_imu_co).matrix() << std::endl;
 
-    return {{optimized_camera_state, optimized_spline}, geometry::Exp<double>(tf_imu_co.topRows(3)), ceres_state};
+    return {{optimized_camera_state, optimized_spline}, tf_imu_co, ceres_state};
 }
 
 std::pair<Frames, ReprojectionErrors> SplineReprojectionResiduals(CameraInfo const& sensor,

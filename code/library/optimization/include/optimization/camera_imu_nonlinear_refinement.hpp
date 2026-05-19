@@ -6,7 +6,7 @@
 
 namespace reprojection::optimization {
 
-std::tuple<std::pair<CameraState, spline::Se3Spline>, Matrix3d, CeresState> SplineNonlinearRefinement(
+std::tuple<std::pair<CameraState, spline::Se3Spline>, Array6d, CeresState> SplineNonlinearRefinement(
     CameraInfo const& sensor, CameraMeasurements const& targets, ImuMeasurements const& imu_data,
     CameraState const& camera_state, Matrix3d const& R_imu_co, Vector3d const& gravity,
     spline::Se3Spline const& spline);
