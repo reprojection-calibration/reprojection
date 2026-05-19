@@ -28,6 +28,7 @@ set(TESTS
         src/ceres_geometry.test.cpp
         src/ceres_kinematics.test.cpp
         src/projection_cost_function.test.cpp
+        src/spline_imu_cost_function.test.cpp
         src/spline_nonlinear_refinement.test.cpp
         src/spline_projection_cost_function.test.cpp
         test/angular_velocity_alignment.test.cpp
