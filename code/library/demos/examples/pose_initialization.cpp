@@ -16,6 +16,29 @@
 
 using namespace reprojection;
 
+template <typename T>
+Vector3<T> RotatePoint(Eigen::Ref<Eigen::Vector<T, 3> const> const& aa_i_j,
+                          Eigen::Ref<Vector3<T> const> const& point_j) {
+    Vector3<T> point_i;
+    ceres::AngleAxisRotatePoint(aa_i_j.data(), point_j.data(), point_i.data());
+
+    return point_i;
+}
+
+template <typename T>
+Vector3<T> TransformRigidBodyAcceleration(Eigen::Ref<Eigen::Vector<T, 6> const> const& tf_i_j,
+                                          Eigen::Ref<Vector3<T> const> const& omega_j,
+                                          Eigen::Ref<Vector3<T> const> const& alpha_j,
+                                          Eigen::Ref<Vector3<T> const> const& a_j) {
+    Vector3<T> const r3{tf_i_j.template bottomRows<3>()};
+    Vector3<T> const XXX{a_j + alpha_j.cross(r3) + omega_j.cross(omega_j.cross(r3))};  // NAMING!!!!
+
+    Vector3<T> const aa_i_j{tf_i_j.template topRows<3>()};
+    Vector3<T> const a_i{RotatePoint<T>(aa_i_j, XXX)};  // Is RotatePoint the right name????
+
+    return a_i;
+}
+
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
@@ -88,12 +111,10 @@ int main() {
         {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
     auto const [R_imu_co, _]{orientation_init};
 
-    auto const [state, opt_R_imu_co, _1]{optimization::SplineNonlinearRefinement(
-        camera_info, camera_measurements, imu_data, CameraState{*intrinsics}, R_imu_co, gravity_w, interpolated_spline)};
+    auto const [state, tf_imu_co, _1]{
+        optimization::SplineNonlinearRefinement(camera_info, camera_measurements, imu_data, CameraState{*intrinsics},
+                                                R_imu_co, gravity_w, interpolated_spline)};
     auto const [spline_optimized_intrinsics, optimized_spline]{state};
-
-    std::cout << R_imu_co << std::endl;
-    std::cout << opt_R_imu_co << std::endl;
 
     auto const [frames1, errors1]{optimization::SplineReprojectionResiduals(
         camera_info, camera_measurements, spline_optimized_intrinsics, optimized_spline)};
@@ -109,12 +130,17 @@ int main() {
         auto const acceleration{optimized_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Second)};
 
         if (position and velocity and acceleration) {
-            auto const R_co_w{geometry::Exp<double>(position->topRows(3))};
+            Vector3d const aa_co_w{position->topRows(3)};
+            Vector3d const a_w{1e18 * acceleration->bottomRows(3)};
+            Vector3d const alpha_co{1e18 * acceleration->topRows(3)};
+
+            Vector3d const omega_co{1e9 * velocity->topRows(3)};
+            Vector3d const a_co{geometry::Exp<double>(aa_co_w.template topRows<3>()) * (gravity_w - a_w)};
+            Vector3d const a_imu{TransformRigidBodyAcceleration<double>(tf_imu_co, omega_co, alpha_co, a_co)};
 
             // TODO(Jack): Figure out scaling!
             // TODO(Jack): Account for IMU-cam translation! Currently assumes same position!
-            ImuData const data_i{R_imu_co * 1e9 * velocity->topRows(3),
-                                 R_imu_co * R_co_w * (gravity_w - 1e18 * acceleration->bottomRows(3))};
+            ImuData const data_i{R_imu_co * 1e9 * velocity->topRows(3), a_imu};
             spline_imu_data[timestamp_ns] = data_i;
         }
     }
