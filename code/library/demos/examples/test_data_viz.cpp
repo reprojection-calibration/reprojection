@@ -16,25 +16,27 @@ using namespace reprojection;
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
-    std::string const record_path{"/tmp/reprojection/code/test_data/test_data.db3"};
+    std::string const record_path{"/tmp/reprojection/code/test_data/a1_test_data.db3"};
     auto db{database::OpenCalibrationDatabase(record_path, true, false)};
 
-    static constexpr std::string_view config_file{R"(
-            [sensor]
-            camera_name = "test_sensor"
-            camera_model = "double_sphere"
-
-            [target]
-            pattern_size = [6,6]
-            type = "aprilgrid3"
-            unit_dimension = 0.1
-        )"};
-    toml::table const config{toml::parse(config_file)};
-
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const camera_info{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
-    auto const [_, camera_frames]{
-        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
+    auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(
+        camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
+
+    EncodedImages image_data;
+    for (auto const timestamp_ns : targets | std::views::keys) {
+        image_data[timestamp_ns] = {};
+    }
+
+    database::WriteToDb(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
+    database::WriteToDb(image_data, camera_info.sensor_name, db);
+
+    database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
+    database::WriteToDb(targets, camera_info.sensor_name, db);
+
+    database::WriteToDb(CalibrationStep::LinearPoseInitialization, "", camera_info.sensor_name, db);
+    database::WriteToDb(camera_frames, CalibrationStep::LinearPoseInitialization, camera_info.sensor_name, db);
 
     return EXIT_SUCCESS;
 }
