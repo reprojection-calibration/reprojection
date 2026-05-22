@@ -23,6 +23,8 @@ set(LINK_LIBRARIES
         projection_functions
         spline
         steps
+        testing_mocks
+        testing_utilities
         tomlplusplus::tomlplusplus
         types
         types_internal
@@ -48,5 +50,6 @@ set(EXAMPLES
         examples/calibration.cpp
         examples/feature_extraction.cpp
         examples/pose_initialization.cpp
+        examples/test_data_viz.cpp
 )
 AddExamples()
