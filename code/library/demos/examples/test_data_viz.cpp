@@ -8,6 +8,9 @@
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
+#include "spline/se3_spline.hpp"
+#include "spline/spline_evaluation.hpp"
+#include "spline/spline_initialization.hpp"
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
@@ -53,6 +56,23 @@ int main() {
 
     std::string const imu_name{"imu1"};
     database::WriteToDb(imu_data, imu_name, db);
+
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames)};
+
+    ImuMeasurements interpolated_imu_data;
+    for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
+        auto const omega_i_co{spline::EvaluateSpline<spline::So3Spline>(interpolated_spline.So3(),
+                                                                        interpolated_spline.GetTimeHandler(),
+                                                                        timestamp_ns, spline::DerivativeOrder::First)};
+        auto const a_i_co{spline::EvaluateSpline<spline::R3Spline>(interpolated_spline.R3(),
+                                                                   interpolated_spline.GetTimeHandler(), timestamp_ns,
+                                                                   spline::DerivativeOrder::Second)};
+        if (omega_i_co.has_value() and a_i_co.has_value()) {
+            interpolated_imu_data[timestamp_ns] = ImuData{omega_i_co.value(), a_i_co.value()};
+        }
+    }
+
+    database::WriteToDb(interpolated_imu_data, "interpolated", db);
 
     return EXIT_SUCCESS;
 }
