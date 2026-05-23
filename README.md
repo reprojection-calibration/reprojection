@@ -15,7 +15,7 @@ as the excellent but unmaintained [Kalibr](https://github.com/ethz-asl/kalibr) r
 2) Pure CMake build system - Kalibr relies on the ROS1 catkin build system. Reprojection instead uses a standard
    CMake-based build system without ROS-specific build requirements, simplifying integration into other development
    environments.
-3) Robust automatic focal length initialization 
+3) Robust automatic focal length initialization
 4) Database calibration storage - Calibration artifacts such as poses, intrinsics, extracted targets, and
    intermediate optimization results are stored in a SQLite database. This provides a persistent and queryable record of
    the calibration process that can be used for visualization, reproducibility, and long-term storage.
@@ -64,9 +64,17 @@ To view the results run the dashboard and pass the workspace directory path, an 
 
 Open the link displayed in the terminal.
 
+### Set the log level
+
+To get a deeper look into the calibration process set the log level to debug. Before running the application execute
+this command in the terminal:
+
+      export SPDLOG_LEVEL=debug
+
 ## Configuration
 
-Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration file
+Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration
+file
 from. That configuration file is used in all integration and smoke testing which mean it stays up to date. Please
 adapt this to your data and save your configuration file with your data.
 
@@ -106,8 +114,6 @@ Please add the following entry to your configuration file:
 
         [target.circle_grid]
         asymmetric = true
-
-
 
 ## Camera Models
 
