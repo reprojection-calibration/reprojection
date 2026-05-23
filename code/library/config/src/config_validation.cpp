@@ -7,9 +7,9 @@
 namespace reprojection::config {
 
 std::optional<TomlErrorMsg> ValidateCalibrationConfig(toml::table const& calibration_cfg) {
-    std::map<std::string, TomlType> const required_keys{{"sensor", TomlType::Table},                // LCOV_EXCL_LINE
-                                                        {"sensor.camera_model", TomlType::String},  // LCOV_EXCL_LINE
-                                                        {"sensor.camera_name", TomlType::String},   // LCOV_EXCL_LINE
+    std::map<std::string, TomlType> const required_keys{{"camera", TomlType::Table},                // LCOV_EXCL_LINE
+                                                        {"camera.camera_model", TomlType::String},  // LCOV_EXCL_LINE
+                                                        {"camera.sensor_name", TomlType::String},   // LCOV_EXCL_LINE
                                                         {"target", TomlType::Table},                // LCOV_EXCL_LINE
                                                         {"target.pattern_size", TomlType::Array},   // LCOV_EXCL_LINE
                                                         {"target.type", TomlType::String}};
