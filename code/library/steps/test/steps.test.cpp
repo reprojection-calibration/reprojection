@@ -27,8 +27,8 @@ class StepsFixture : public ::testing::Test {
 
         config = toml::parse(testing_utilities::minimum_config);
 
-        auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
-        camera_info = CameraInfo{camera_name, camera_model, testing_utilities::image_bounds};
+        auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
+        camera_info = CameraInfo{sensor_name, camera_model, testing_utilities::image_bounds};
 
         database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
         database::WriteToDb(camera_info, db);
@@ -96,7 +96,7 @@ TEST_F(ImageSourceFixture, TestImageLoadingStep) {
 }
 
 TEST_F(ImageSourceFixture, TestCameraInfoStep) {
-    steps::CameraInfoStep const step{*config["sensor"].as_table(), encoded_images};
+    steps::CameraInfoStep const step{*config["camera"].as_table(), encoded_images};
 
     auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");

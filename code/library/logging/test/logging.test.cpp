@@ -13,6 +13,6 @@ TEST(LoggingLogging, TestToOneLineJson) {
     std::string const result{logging::ToOneLineJson(toml)};
 
     EXPECT_EQ(result,
-              "{'application': {'show_extraction': false}, 'sensor': {'camera_model': 'double_sphere', 'camera_name': "
+              "{'application': {'show_extraction': false}, 'camera': {'camera_model': 'double_sphere', 'sensor_name': "
               "'/cam0/image_raw'}, 'target': {'pattern_size': [3, 4], 'type': 'aprilgrid3'}}");
 }

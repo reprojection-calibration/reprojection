@@ -48,17 +48,17 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 // update_feature_extraction_cache_key.py
 void Calibrate(toml::table const& config, ImageSource image_source, std::string const& image_source_signature,
                SqlitePtr const db) {
-    steps::ImageLoadingStep const image_loading{config["sensor"]["camera_name"].as_string()->get(),
+    steps::ImageLoadingStep const image_loading{config["camera"]["sensor_name"].as_string()->get(),
                                                 image_source_signature, image_source};
     auto const [encoded_images,
                 image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
               ToString(image_loading_cache_status), encoded_images->size());
 
-    steps::CameraInfoStep const camera_info_step{*config["sensor"].as_table(), encoded_images};
+    steps::CameraInfoStep const camera_info_step{*config["camera"].as_table(), encoded_images};
     auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(camera_info_step, db)};
     log->info(
-        "{{'step': '{}', 'cache_status': '{}', 'camera_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
+        "{{'step': '{}', 'cache_status': '{}', 'sensor_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
         ToString(camera_info_step.step_type), ToString(ci_cache_status), camera_info.sensor_name,
         ToString(camera_info.camera_model), camera_info.bounds.v_max, camera_info.bounds.u_max);
 

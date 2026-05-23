@@ -19,7 +19,7 @@ int main() {
 
     static constexpr std::string_view config_file{R"(
             [sensor]
-            camera_name = "/cam0/image_raw"
+            sensor_name = "/cam0/image_raw"
             camera_model = "double_sphere"
 
             [target]
@@ -37,12 +37,12 @@ int main() {
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
     try {
-        auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
+        auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
 
         database::WriteToDb(CalibrationStep::ImageLoading,
-                            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", camera_name, db);
+                            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", sensor_name, db);
 
-        CameraInfo const camera_info{camera_name, camera_model, {0, 512, 0, 512}};
+        CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
         database::WriteToDb(CalibrationStep::CameraInfo,
                             "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e", camera_info.sensor_name,
                             db);

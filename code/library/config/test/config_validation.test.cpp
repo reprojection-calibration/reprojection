@@ -18,8 +18,8 @@ static constexpr std::string_view maximum_config{R"(
         [application]
         show_extraction = true
 
-        [sensor]
-        camera_name = "/cam0/image_raw"
+        [camera]
+        sensor_name = "/cam0/image_raw"
         camera_model = "double_sphere"
 
         [target]
