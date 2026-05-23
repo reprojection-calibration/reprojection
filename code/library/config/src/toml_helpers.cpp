@@ -57,8 +57,8 @@ std::optional<TomlErrorMsg> ValidateRequiredKeys(toml::table const& table, TomlK
                                     "Configuration key: " + key + " is not of expected type: " + ToString(type)};
             }
         } else {
-            return TomlErrorMsg{TomlError::MissingKey,
-                                "Configuration does not contain required key: " + key + " of type: " + ToString(type)};
+            return TomlErrorMsg{TomlError::MissingKey, "Configuration does not contain required key: '" + key +
+                                                           "' of type: '" + ToString(type) + "'"};
         }
     }
 
