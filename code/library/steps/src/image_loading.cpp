@@ -28,12 +28,12 @@ std::shared_ptr<EncodedImages> ImageLoadingStep::Compute() const {
             throw std::runtime_error("cv::imencode() failed for " + std::string(sensor_name));  // LCOV_EXCL_LINE
         }
 
-        encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});  // LCOV_EXCL_LINE
+        encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});
 
         ++num_images;
         if (num_images % 50 == 0) {
-            log->debug("{{'step': '{}', 'stage': '{}', 'sensor_id': '{}', 'num_images': {}}}", ToString(step_type),
-                       "Compute()", SensorName(), num_images);
+            log->debug("{{'step': '{}', 'stage': '{}', 'sensor_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
+                       ToString(step_type), "Compute()", SensorName(), num_images);             // LCOV_EXCL_LINE
         }
     }
 
