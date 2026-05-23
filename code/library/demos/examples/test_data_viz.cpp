@@ -26,7 +26,7 @@ int main() {
     CameraInfo const camera_info{"cam1", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
     auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(
-        camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
+        camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200 , timespan_ns)};
 
     EncodedImages image_data;
     for (auto const timestamp_ns : targets | std::views::keys) {
@@ -59,19 +59,28 @@ int main() {
 
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames)};
 
+    // WHAT ABOUT THE INVERSE IN THE CAMERA MVG DATA GEN!???
+
+    ImuMeasurements interpolated_frames;  // HACK TO STORE POSE DATA IN IMU DATA!
     ImuMeasurements interpolated_imu_data;
     for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
+        auto const tf_w_co{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
         auto const omega_i_co{spline::EvaluateSpline<spline::So3Spline>(interpolated_spline.So3(),
                                                                         interpolated_spline.GetTimeHandler(),
                                                                         timestamp_ns, spline::DerivativeOrder::First)};
         auto const a_i_co{spline::EvaluateSpline<spline::R3Spline>(interpolated_spline.R3(),
                                                                    interpolated_spline.GetTimeHandler(), timestamp_ns,
                                                                    spline::DerivativeOrder::Second)};
-        if (omega_i_co.has_value() and a_i_co.has_value()) {
-            interpolated_imu_data[timestamp_ns] = ImuData{omega_i_co.value(), a_i_co.value()};
+
+        if (tf_w_co.has_value() and omega_i_co.has_value() and a_i_co.has_value()) {
+            auto const R_w_co{geometry::Exp(tf_w_co->topRows(3))};
+
+            interpolated_frames[timestamp_ns] = ImuData{tf_w_co->topRows(3), tf_w_co->bottomRows(3)};
+            interpolated_imu_data[timestamp_ns] = ImuData{R_w_co * omega_i_co.value(), R_w_co * a_i_co.value()};
         }
     }
 
+    database::WriteToDb(interpolated_frames, "interpolated_frames", db);
     database::WriteToDb(interpolated_imu_data, "interpolated", db);
 
     return EXIT_SUCCESS;
