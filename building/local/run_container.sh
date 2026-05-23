@@ -3,7 +3,7 @@
 set -eou pipefail
 
 local_mount=()
-target_stage=development
+stage=development
 
 for i in "$@"; do
   case $i in
@@ -12,8 +12,8 @@ for i in "$@"; do
       local_mount=("${script_folder}/../../:/temporary")
       shift
       ;;
-    -ts=*|--target-stage=*)
-      target_stage="${i#*=}"
+    --stage=*)
+      stage="${i#*=}"
       shift
       ;;
     -*)
@@ -26,7 +26,7 @@ for i in "$@"; do
 done
 
 image=reprojection
-tag=${image}:${target_stage}
+tag=${image}:${stage}
 
 echo "Running container from image with tag '$tag'..."
 docker run \

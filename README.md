@@ -30,17 +30,17 @@ as the excellent but unmaintained [Kalibr](https://github.com/ethz-asl/kalibr) r
 The three applications provide support for data in ROS1 or ROS2 bags and .mp4 video files, build the one you need.
 
     # ROS1
-    ./building/local/build_image.sh -ts=ros1-app
+    ./building/local/build_image.sh --stage=ros1-app
 
     # ROS2
-    ./building/local/build_image.sh -ts=ros2-app
+    ./building/local/build_image.sh --stage=ros2-app
 
     # Video file
-    ./building/local/build_image.sh -ts=video-file-app
+    ./building/local/build_image.sh --stage=video-file-app
 
 To visualize the results you will also need to build the dashboard:
 
-    ./building/local/build_image.sh -ts=dashboard
+    ./building/local/build_image.sh --stage=dashboard
 
 ## Run
 
