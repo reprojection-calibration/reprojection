@@ -32,8 +32,8 @@ std::shared_ptr<EncodedImages> ImageLoadingStep::Compute() const {
 
         ++num_images;
         if (num_images % 50 == 0) {
-            log->debug("{{'step': '{}', 'stage': '{}', 'num_images': '{}'}}", ToString(step_type), "Compute()",
-                       num_images);
+            log->debug("{{'step': '{}', 'stage': '{}', 'sensor_id': '{}', 'num_images': {}}}", ToString(step_type),
+                       "Compute()", SensorName(), num_images);
         }
     }
 
