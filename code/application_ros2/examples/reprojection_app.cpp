@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::string const camera_topic{*app_args->config["sensor"]["camera_name"].value<std::string>()};
+    std::string const camera_topic{*app_args->config["camera"]["sensor_name"].value<std::string>()};
 
     // NOTE(Jack): We want to control the terminal output of our program entirely. But ROS loves to log so we need to
     // manually set the log level to the highest possible level in an effort to prevent ROS logging for normal errors

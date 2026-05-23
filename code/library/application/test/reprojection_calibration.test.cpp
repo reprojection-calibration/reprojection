@@ -53,12 +53,12 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     // as we can do here. I guess we could also use the MVG test data generator, but that will be for a future
     // contributor :)
 
-    auto const [camera_name, camera_model]{config::ParseSensorConfig(*config["sensor"].as_table())};
-    CameraInfo const camera_info{camera_name, camera_model, {0, 512, 0, 512}};
+    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
+    CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
 
     database::WriteToDb(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
 
-    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(camera_name, camera_model, {}),
+    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(sensor_name, camera_model, {}),
                         camera_info.sensor_name, db);
     database::WriteToDb(camera_info, db);
 

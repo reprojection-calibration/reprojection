@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     }
 
     // TODO(Jack): Should we use the generic templated key access function found in the library?
-    std::string const camera_topic{*app_args->config["sensor"]["camera_name"].value<std::string>()};
+    std::string const camera_topic{*app_args->config["camera"]["sensor_name"].value<std::string>()};
 
     auto const reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, camera_topic)};
     if (std::holds_alternative<ros1::BagError>(reader_result)) {

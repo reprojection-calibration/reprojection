@@ -10,7 +10,7 @@ using namespace reprojection;
 TEST(ConfigConfigParsing, TestParseSensorConfig) {
     toml::table toml{toml::parse(testing_utilities::minimum_config)};
 
-    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*toml["sensor"].as_table())};
+    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*toml["camera"].as_table())};
     EXPECT_EQ(sensor_name, "/cam0/image_raw");
     EXPECT_EQ(camera_model, CameraModel::DoubleSphere);
 
