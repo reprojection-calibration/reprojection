@@ -6,14 +6,14 @@ no_cache=()
 stage=development
 
 for i in "$@"; do
-  case $i in
+  case "${i}" in
     --no-cache)
       no_cache=("--no-cache")
       shift
       ;;
-    --stage=*)
-      stage="${i#*=}"
-      shift
+    --stage)
+      stage="${2}"
+      shift 2
       ;;
     -*)
       echo "Unknown option $i"
