@@ -3,10 +3,6 @@
 Reprojection is an application for target-based camera intrinsic calibration meant to provide the same capabilities
 as the excellent but unmaintained [Kalibr](https://github.com/ethz-asl/kalibr) repository.
 
-Reprojection has over 250 unit tests, comprehensive integration/smoke tests, 100% code coverage of the core library, and
-a complete Github Action CI pipeline. Every single piece of this repository has been painstakingly designed and
-battle tested to provide the world's best calibration experience.
-
 #### Notes
 
 * The first release (05.2026) only exposes monocular camera intrinsic calibration. Camera-imu extrinsic calibration
@@ -19,37 +15,32 @@ battle tested to provide the world's best calibration experience.
 2) Pure CMake build system - Kalibr relies on the ROS1 catkin build system. Reprojection instead uses a standard
    CMake-based build system without ROS-specific build requirements, simplifying integration into other development
    environments.
-3) Robust focal length initialization - Reprojection uses a multiframe hypothesis-testing strategy for focal length
-   initialization. This approach improves robustness when compared to the single frame or "no-frame average only"
-   strategies used in Kalibr.
+3) Robust automatic focal length initialization
 4) Database calibration storage - Calibration artifacts such as poses, intrinsics, extracted targets, and
    intermediate optimization results are stored in a SQLite database. This provides a persistent and queryable record of
-   the calibration process that can be used for visualization, quality assessment, reproducibility, and long-term
-   storage.
+   the calibration process that can be used for visualization, reproducibility, and long-term storage.
 5) Cached execution pipeline - The calibration pipeline is organized into hierarchical processing steps with explicit
    inputs and outputs stored in the database. During repeated runs on the same dataset, only stages affected by changed
-   inputs are recomputed. For example, changing the selected camera model does not require feature extraction to be
-   repeated, significantly reducing time spent debugging.
-6) Extensive testing - Reprojection was developed in large part with test driven development and has 100% unit test code
-   coverage of the core calibration library. This reduces regressions and makes it easy for others to contribute and be
-   confident in their changes.
+   inputs are recomputed.
+6) Extensive testing - Reprojection was developed using with test driven development and has 100% unit test code
+   coverage of the core calibration library.
 
 ## Build
 
 The three applications provide support for data in ROS1 or ROS2 bags and .mp4 video files, build the one you need.
 
     # ROS1
-    ./building/local/build_image.sh -ts=ros1-app
+    ./building/local/build_image.sh --stage ros1-app
 
     # ROS2
-    ./building/local/build_image.sh -ts=ros2-app
+    ./building/local/build_image.sh --stage ros2-app
 
     # Video file
-    ./building/local/build_image.sh -ts=video-file-app
+    ./building/local/build_image.sh --stage video-file-app
 
 To visualize the results you will also need to build the dashboard:
 
-    ./building/local/build_image.sh -ts=dashboard
+    ./building/local/build_image.sh --stage dashboard
 
 ## Run
 
@@ -73,9 +64,17 @@ To view the results run the dashboard and pass the workspace directory path, an 
 
 Open the link displayed in the terminal.
 
+### Set the log level
+
+To get a deeper look into the calibration process set the log level to debug. Before running the application execute
+this command in the terminal:
+
+      export SPDLOG_LEVEL=debug
+
 ## Configuration
 
-Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration file
+Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration
+file
 from. That configuration file is used in all integration and smoke testing which mean it stays up to date. Please
 adapt this to your data and save your configuration file with your data.
 
@@ -115,8 +114,6 @@ Please add the following entry to your configuration file:
 
         [target.circle_grid]
         asymmetric = true
-
-
 
 ## Camera Models
 

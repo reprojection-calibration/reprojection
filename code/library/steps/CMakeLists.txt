@@ -22,6 +22,7 @@ set(LINK_LIBRARIES
         database
         feature_extraction
         image_viewer
+        logging
         optimization
         spline # transitive dependency from "calibration/initialization_methods.hpp" - should be removed!
         types

@@ -4,6 +4,8 @@ set -euo pipefail
 
 # TODO(Jack): Add some sort of usage or help dialogue that will print out if the appropriate args are not provided
 
+SPDLOG_LEVEL=${SPDLOG_LEVEL:-info}
+
 APP_TYPE="${1}"
 shift
 
@@ -78,6 +80,7 @@ xhost +local:docker
 
 docker run \
   --env DISPLAY="${DISPLAY}" \
+  --env SPDLOG_LEVEL="${SPDLOG_LEVEL}" \
   --name reprojection-calibration-application \
   --rm \
   --user "$(id -u):$(id -g)" \
