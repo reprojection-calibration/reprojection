@@ -27,6 +27,7 @@ def build_camera_tomls(camera_info, camera_intrinsics):
             f"[cam{i}]\n"
             f'sensor_id = "{sensor_name}"\n'
             f'camera_model = "{sensor["camera_model"]}"\n'
+            f'# The intrinsic parameterization is described here - https://github.com/reprojection-calibration/reprojection#camera-models\n'
             f"intrinsics = {intrinsics_arr}\n"
             f'resolution = [{int(sensor["height"])}, {int(sensor["width"])}]'
             "\n"
