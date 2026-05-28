@@ -7,9 +7,7 @@
 
 namespace reprojection::spline {
 
-// TODO(Jack): Is 20 times the number of frames high enough num_segments for the imu data frequency? Do we need to
-//  parameterize this?
-std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames) {
+std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames, int const frequency) {
     PositionMeasurements so3;
     PositionMeasurements r3;
     for (auto const& [timestamp_ns, frame_i] : frames) {
@@ -17,7 +15,9 @@ std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames
         r3.insert({timestamp_ns, {frame_i.pose.bottomRows<constants::states>()}});
     }
 
-    size_t const num_segments{20 * std::size(frames)};
+    double const delta_t_s{(std::crbegin(frames)->first - std::cbegin(frames)->first) / 1e9};
+    int64_t const num_segments{static_cast<int64_t>(frequency * delta_t_s)};
+
     auto const [so3_control_points, time_handler_a]{InitializeC3SplineState(so3, num_segments)};
     auto const [r3_control_points, time_handler_b]{InitializeC3SplineState(r3, num_segments)};
 

@@ -1,8 +1,5 @@
 set(LIBRARY_NAME "demos")
 
-set(SRC_FILES
-        src/image_source.cpp
-)
 set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         ${apriltag_LIBRARIES}
@@ -23,30 +20,25 @@ set(LINK_LIBRARIES
         projection_functions
         spline
         steps
+        testing_mocks
+        testing_utilities
         tomlplusplus::tomlplusplus
         types
         types_internal
 )
 
-# TODO(Jack): This is kind of a hack here to make sure this library only gets installed if we are installing the
-# examples. Because for the case where we just want to install the library we do not want the "demos" .so because it is
-# specific to the demo applications which consumers of the library do not use. But if we install the library with the
-# example applications (ex. for the video-file application release stages) then we need it. It would be nice if this was
-# automatically handled by some type of packaging framework and that we did not need to handle it manually here.
-set(INSTALL_SO OFF)
-if (INSTALL_EXAMPLES)
-    set(INSTALL_SO ON)
-endif ()
-AddLibrary()
-
-set(TESTS
-        test/image_source.test.cpp
-)
-AddTests()
+# NOTE(Jack): We have an unclear separation of what is an internal example application and what a external user facing
+# application is. Right now both of those are just considered "examples". Here in the demos folder we have internal only
+# examples - i.e. we would never install them inside a docker and release stage and give them to a user. The public
+# facing calibration "example" is found in the application folder. Due to this confusing, unclear, and arbitrary split
+# of different types of "examples" we need ot hardcode INSTALL_EXAMPLES to OFF here. The bottom line is that we do not
+# want to install anything the app user does not use! Will this be easy to maintain or easy for future developers to
+# understand? No.
+set(INSTALL_EXAMPLES OFF)
 
 set(EXAMPLES
-        examples/calibration.cpp
         examples/feature_extraction.cpp
         examples/pose_initialization.cpp
+        examples/test_data_viz.cpp
 )
 AddExamples()

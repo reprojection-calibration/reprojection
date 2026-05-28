@@ -2,12 +2,14 @@ set(LIBRARY_NAME "application")
 
 set(SRC_FILES
         src/cli_utils.cpp
+        src/image_source.cpp
         src/io.cpp
         src/reprojection_calibration.cpp
         src/utils.cpp
 )
 
 set(LINK_LIBRARIES
+        ${OpenCV_LIBS}
         Eigen3::Eigen
         SQLite::SQLite3
         caching
@@ -35,6 +37,14 @@ set(TESTS
         src/utils.test.cpp
         src/io.test.cpp
         test/cli_utils.test.cpp
+        test/image_source.test.cpp
         test/reprojection_calibration.test.cpp
 )
 AddTests()
+
+
+
+set(EXAMPLES
+        examples/calibration.cpp
+)
+AddExamples()

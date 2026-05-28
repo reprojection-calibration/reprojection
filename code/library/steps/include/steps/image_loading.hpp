@@ -15,7 +15,7 @@ namespace reprojection::steps {
 struct ImageLoadingStep {
     std::string sensor_name;
     std::string cache_key;
-    ImageSource image_source;
+    ImageSourceSignature image_source;
 
     CalibrationStep step_type{CalibrationStep::ImageLoading};
 

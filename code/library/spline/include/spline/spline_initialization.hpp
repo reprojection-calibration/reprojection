@@ -7,7 +7,7 @@ namespace reprojection::spline {
 
 // TODO(Jack): Does this belong in the calibration package? Using Frames here is a little too far away from the core
 //  pure spline logic. Or maybe even in the optimization package?
-std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames);
+std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames, int const frequency);
 
 std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
                                                           size_t const num_segments);

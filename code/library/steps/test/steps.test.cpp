@@ -47,9 +47,9 @@ class ImageSourceFixture : public StepsFixture {
         StepsFixture::SetUp();
 
         // NOTE(Jack): This test kind of captures the data paradigm that we have with our applications. But note that in
-        // real applications we create the EncodedImages from the ImageSource. However, in this file we need both of
-        // those objects to test the steps here therefore we are clever and use the EncodedImages to construct the
-        // ImageSource.
+        // real applications we create the EncodedImages from the ImageSourceSignature. However, in this file we need
+        // both of those objects to test the steps here therefore we are clever and use the EncodedImages to construct
+        // the ImageSourceSignature.
 
         // Build the encoded images (cv::Mat -> serialized buffer)
         cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
@@ -79,7 +79,7 @@ class ImageSourceFixture : public StepsFixture {
     }
 
     std::shared_ptr<EncodedImages> encoded_images;
-    ImageSource image_source;
+    ImageSourceSignature image_source;
     TargetInfo target_info;
 };
 

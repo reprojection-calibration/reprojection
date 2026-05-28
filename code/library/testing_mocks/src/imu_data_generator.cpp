@@ -19,8 +19,6 @@ ImuMeasurements GenerateImuData(int const num_samples, uint64_t const timespan_n
             throw std::runtime_error("GenerateImuData() failed trajectory.Evaluate().");  // LCOV_EXCL_LINE
         }
 
-        // TODO(Jack): Kind of hacky that we store the measurement data which has timestamp in a timestamped map. See
-        //  comment at top of method.
         data.insert({time_i, {velocity_t->head<3>(), acceleration_t->tail<3>()}});
     }
 

@@ -8,20 +8,26 @@ macro(AddExamples)
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
                 ${INCLUDE_DIRECTORIES}
         )
+        # Protect the case where these is no library. Like in the demos package there are only examples and no library
+        # to build/link against.
+        if (TARGET ${LIBRARY_NAME})
+            target_link_libraries(${EXAMPLE_NAME}
+                    ${LIBRARY_NAME}
+            )
+        endif ()
         target_link_libraries(${EXAMPLE_NAME}
-                ${LIBRARY_NAME}
                 ${LINK_LIBRARIES}
         )
 
         if (NOT DEFINED INSTALL_EXAMPLES)
             set(INSTALL_EXAMPLES OFF)
-        endif()
+        endif ()
 
         if (INSTALL_EXAMPLES)
             install(TARGETS ${EXAMPLE_NAME}
                     EXPORT reprojectionTargets
                     RUNTIME DESTINATION bin
             )
-        endif()
+        endif ()
     endforeach ()
 endmacro()

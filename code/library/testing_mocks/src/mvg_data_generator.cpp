@@ -44,12 +44,12 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
     CameraMeasurements targets;
     Frames poses;
     for (auto const time_ns_i : times_ns) {
-        auto const aa_w_co{trajectory.Evaluate(time_ns_i, spline::DerivativeOrder::Null)};
-        if (not aa_w_co.has_value()) {
+        auto const tf_w_co{trajectory.Evaluate(time_ns_i, spline::DerivativeOrder::Null)};
+        if (not tf_w_co.has_value()) {
             throw std::runtime_error("GenerateMvgData() failed trajectory.Evaluate().");  // LCOV_EXCL_LINE
         }
 
-        Isometry3d const tf_co_w{geometry::Exp(aa_w_co.value()).inverse()};
+        Isometry3d const tf_co_w{geometry::Exp(tf_w_co.value()).inverse()};
         auto const [pixels, mask]{MvgHelpers::Project(points, camera, tf_co_w)};
         ArrayXi const valid_row_ids{eigen_utilities::MaskToRowId(mask)};
 
