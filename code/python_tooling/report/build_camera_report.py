@@ -1,30 +1,25 @@
-from business_logic.toml_conversions import toml_to_intrinsic_array
-from database.types import CameraModel
+from io import BytesIO
 from pathlib import Path
+
+import numpy as np
+import plotly.graph_objects as go
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import (
+    Image,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 from dashboard.tools.data_loading import refresh_database_list
 from database.sql_table_loading import (
     load_camera_info_table,
-    load_extracted_targets_table
+    load_extracted_targets_table,
+    load_reprojection_errors_table,
 )
-
-import numpy as np
-import plotly.graph_objects as go
-
-from io import BytesIO
-
-import plotly.graph_objects as go
-
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Image,
-    Table,
-    TableStyle,
-)
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.pagesizes import letter
 
 styles = getSampleStyleSheet()
 
@@ -71,7 +66,7 @@ def build_figure_with_caption(fig, caption):
     )
 
 
-def build_camera_report(camera_info, extracted_targets):
+def coverage_figure(camera_info, extracted_targets):
     sensor_name = camera_info["sensor_name"]
 
     cam_df = extracted_targets[extracted_targets["sensor_name"] == sensor_name]
@@ -114,6 +109,123 @@ def build_camera_report(camera_info, extracted_targets):
         ),
     )
 
+    return fig
+
+
+def build_reprojection_error_figure(
+    extracted_targets, reprojection_errors, sensor_name, image_width, image_height
+):
+    targets = extracted_targets[extracted_targets["sensor_name"] == sensor_name]
+
+    # WARN(Jack): Hardcode to only do the reprojection errors of the camera_nonlinear_refinement step
+    errors = reprojection_errors[
+        (reprojection_errors["sensor_name"] == sensor_name)
+        & (reprojection_errors["step_name"] == "camera_nonlinear_refinement")
+    ]
+
+    rows = targets.merge(
+        errors,
+        on=["sensor_name", "timestamp_ns"],
+        suffixes=("_target", "_error"),
+    )
+
+    image_center = np.array(
+        [
+            image_width / 2.0,
+            image_height / 2.0,
+        ]
+    )
+
+    projected_points = []
+    for _, row in rows.iterrows():
+        pixels = np.asarray(
+            row["data_target"]["pixels"],
+            dtype=float,
+        )
+
+        errors = np.asarray(
+            row["data_error"],
+            dtype=float,
+        )
+
+        if len(pixels) != len(errors):
+            print(
+                "Warning: skipping frame because number of pixels "
+                f"({len(pixels)}) does not match number of errors "
+                f"({len(errors)}) for timestamp "
+                f"{row['timestamp_ns']}"
+            )
+            continue
+
+        pixel_vectors = pixels - image_center
+
+        pixel_distances = np.linalg.norm(
+            pixel_vectors,
+            axis=1,
+        )
+
+        valid = pixel_distances > 0.0
+
+        directions = pixel_vectors[valid] / pixel_distances[valid, None]
+
+        magnitudes = np.linalg.norm(
+            errors[valid],
+            axis=1,
+        )
+
+        projected = directions * magnitudes[:, None]
+
+        projected_points.append(projected)
+
+    if not projected_points:
+        return go.Figure()
+
+    projected_points = np.concatenate(
+        projected_points,
+        axis=0,
+    )
+
+    plot_x = projected_points[:, 0]
+    plot_y = projected_points[:, 1]
+
+    max_abs = np.max(np.abs(projected_points))
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=plot_x,
+            y=plot_y,
+            mode="markers",
+            marker={
+                "size": 5,
+            },
+        )
+    )
+
+    fig.update_layout(
+        title=f"camera_nonlinear_refinement - {sensor_name}",
+        template="plotly_white",
+        xaxis={
+            "title": "Projected reprojection error [px]",
+            "range": [-max_abs, max_abs],
+            "scaleratio": 1,
+        },
+        yaxis={
+            "title": "Projected reprojection error [px]",
+            "range": [-max_abs, max_abs],
+        },
+    )
+
+    fig.add_hline(
+        y=0,
+        line_width=1,
+    )
+
+    fig.add_vline(
+        x=0,
+        line_width=1,
+    )
 
     return fig
 
@@ -130,17 +242,27 @@ def main():
 
         camera_infos = load_camera_info_table(path)
         extracted_targets = load_extracted_targets_table(path)
+        reprojection_errors = load_reprojection_errors_table(path)
 
         for i, camera_info in camera_infos.iterrows():
-            result = build_camera_report(camera_info, extracted_targets)
+            result1 = coverage_figure(camera_info, extracted_targets)
+
+            sensor_name = camera_info["sensor_name"]
+            result2 = build_reprojection_error_figure(
+                extracted_targets=extracted_targets,
+                reprojection_errors=reprojection_errors,
+                sensor_name=sensor_name,
+                image_width=512,
+                image_height=512,
+            )
 
             left = build_figure_with_caption(
-                result,
+                result1,
                 "Figure 1: Reprojection error distribution.",
             )
 
             right = build_figure_with_caption(
-                result,
+                result2,
                 "Figure 2: Coverage analysis.",
             )
 
@@ -155,7 +277,6 @@ def main():
                     ]
                 ),
             )
-
 
             output_name = name.removesuffix(".db3") + ".pdf"
             output_path = workspace_dir / output_name
@@ -172,7 +293,6 @@ def main():
             ]
 
             doc.build(elements)
-
 
 
 if __name__ == "__main__":
