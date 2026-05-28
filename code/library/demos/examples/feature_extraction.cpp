@@ -24,16 +24,16 @@ int main(int argc, char* argv[]) {
     }
 
     // If no folder is provided then default to webcam demo.
-    std::unique_ptr<demos::ImageSource> image_feed;
+    std::unique_ptr<application::ImageSource> image_feed;
 
     if (auto const folder{application::GetCommandOption(argv, argv + argc, "--folder")}) {
-        image_feed = std::make_unique<demos::ImageFolder>(*folder);
+        image_feed = std::make_unique<application::ImageFolder>(*folder);
     } else if (auto const file{application::GetCommandOption(argv, argv + argc, "--file")}) {
-        image_feed = std::make_unique<demos::VideoCapture>(*file);
+        image_feed = std::make_unique<application::VideoCapture>(*file);
     } else {
         std::cout << "Folder not provided! (--folder <folder_path>)! Defaulting to webcam demo." << std::endl;
         // TODO(Jack): Provide user option to select a different device
-        image_feed = std::make_unique<demos::VideoCapture>(0);
+        image_feed = std::make_unique<application::VideoCapture>(0);
     }
 
     toml::table const config{toml::parse_file(*config_file)};

@@ -35,10 +35,6 @@ set(INSTALL_EXAMPLES OFF)
 
 AddLibrary()
 
-set(TESTS
-        ../application/test/image_source.test.cpp
-)
-AddTests()
 
 set(EXAMPLES
         examples/feature_extraction.cpp

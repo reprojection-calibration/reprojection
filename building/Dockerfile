@@ -368,7 +368,7 @@ COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    export APP="/opt/reprojection/bin/demos.calibration"; \
+    export APP="/opt/reprojection/bin/application.calibration"; \
     export DATA="/data/dataset-calib-imu4_512_16.mp4"; \
     /temporary/${INTEGRATION_TEST}
 
@@ -407,7 +407,7 @@ COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
 
 RUN set -eox pipefail; \
-    ln /opt/reprojection/bin/demos.calibration /buildroot/reprojection-calibration-application
+    ln /opt/reprojection/bin/application.calibration /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
