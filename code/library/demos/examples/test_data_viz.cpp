@@ -64,7 +64,7 @@ int main() {
     for (auto& value : camera_frames_inverse | std::views::values) {
         value.pose = geometry::Log(geometry::Exp(value.pose).inverse());
     }
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames_inverse)};
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames_inverse, 100)};
 
     // WHAT ABOUT THE INVERSE IN THE CAMERA MVG DATA GEN!???
 

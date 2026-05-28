@@ -54,7 +54,7 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
     //  because needing to interpolate the frames here should be considered some complicated setup/precondition for the
     //  test below. For now it can stand, and we are happy that the initialization method is getting stretched in
     //  another place, but long term this might not be sustainable.
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames)};
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames, 100)};
 
     auto const [rotation_result, gravity]{calibration::EstimateCameraImuRotationAndGravity(
         {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
