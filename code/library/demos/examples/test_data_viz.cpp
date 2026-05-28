@@ -26,7 +26,7 @@ int main() {
     CameraInfo const camera_info{"cam1", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
     auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(
-        camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200 , timespan_ns)};
+        camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
 
     EncodedImages image_data;
     for (auto const timestamp_ns : targets | std::views::keys) {
@@ -57,7 +57,14 @@ int main() {
     std::string const imu_name{"imu1"};
     database::WriteToDb(imu_data, imu_name, db);
 
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames)};
+    // HACK HACK HACK
+    // HACK HACK HACK
+    // HACK HACK HACK
+    auto camera_frames_inverse{camera_frames};
+    for (auto& value : camera_frames_inverse | std::views::values) {
+        value.pose = geometry::Log(geometry::Exp(value.pose).inverse());
+    }
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames_inverse)};
 
     // WHAT ABOUT THE INVERSE IN THE CAMERA MVG DATA GEN!???
 
@@ -73,15 +80,13 @@ int main() {
                                                                    spline::DerivativeOrder::Second)};
 
         if (tf_w_co.has_value() and omega_i_co.has_value() and a_i_co.has_value()) {
-            auto const R_w_co{geometry::Exp(tf_w_co->topRows(3))};
-
             interpolated_frames[timestamp_ns] = ImuData{tf_w_co->topRows(3), tf_w_co->bottomRows(3)};
-            interpolated_imu_data[timestamp_ns] = ImuData{R_w_co * omega_i_co.value(), R_w_co * a_i_co.value()};
+            interpolated_imu_data[timestamp_ns] = ImuData{omega_i_co.value(), a_i_co.value()};
         }
     }
 
     database::WriteToDb(interpolated_frames, "interpolated_frames", db);
-    database::WriteToDb(interpolated_imu_data, "interpolated", db);
+    database::WriteToDb(interpolated_imu_data, "interpolated_imu_data", db);
 
     return EXIT_SUCCESS;
 }
