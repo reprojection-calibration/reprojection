@@ -50,4 +50,4 @@ cv::Mat ImageFolder::GetImage() {
     return image;
 }
 
-}  // namespace reprojection::demos
+}  // namespace reprojection::application
