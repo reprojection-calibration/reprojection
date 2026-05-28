@@ -1,8 +1,5 @@
 set(LIBRARY_NAME "demos")
 
-set(SRC_FILES
-        ../application/src/image_source.cpp
-)
 set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         ${apriltag_LIBRARIES}
@@ -37,10 +34,7 @@ set(LINK_LIBRARIES
 # of different types of "examples" we need ot hardcode INSTALL_EXAMPLES to OFF here. The bottom line is that we do not
 # want to install anything the app user does not use! Will this be easy to maintain or easy for future developers to
 # understand? No.
-set(INSTALL_SO OFF)
 set(INSTALL_EXAMPLES OFF)
-
-AddLibrary()
 
 set(EXAMPLES
         examples/feature_extraction.cpp
