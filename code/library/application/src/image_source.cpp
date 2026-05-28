@@ -1,9 +1,9 @@
-#include "demos/image_source.hpp"
+#include "application/image_source.hpp"
 
 #include <algorithm>
 #include <filesystem>
 
-namespace reprojection::demos {
+namespace reprojection::application {
 
 // NOTE(Jack): We literally cannot unit test this because there is no way to simulate a physical camera device.
 VideoCapture::VideoCapture(int const device_id)     // LCOV_EXCL_LINE

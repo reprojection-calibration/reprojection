@@ -5,7 +5,7 @@
 
 #include <opencv2/opencv.hpp>
 
-namespace reprojection::demos {
+namespace reprojection::application {
 
 class ImageSource {
    public:
@@ -41,4 +41,4 @@ class ImageFolder final : public ImageSource {
     std::size_t current_id_{0};
 };
 
-}  // namespace reprojection::demos
+}  // namespace reprojection::application

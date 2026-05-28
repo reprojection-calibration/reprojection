@@ -16,6 +16,6 @@ using SqlitePtr = std::shared_ptr<sqlite3>;
 // the application might perform an unnecessary deserialization of the image just to pass it here. However, the cv::Mat
 // is such a standard type that the risk of passing encoded image buffers here directly just does not make sense. If we
 // benchmark it and notice a big slowdown than we can consider an optimization here.
-using ImageSource = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
+using ImageSourceSignature = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
 
 }  // namespace reprojection

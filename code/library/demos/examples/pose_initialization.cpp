@@ -55,7 +55,7 @@ int main() {
         std::cerr << "Database setup threw exception." << std::endl;
     }
 
-    ImageSource empty_image_source{[]() { return std::nullopt; }};
+    ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
     application::Calibrate(config, empty_image_source, "", db);
 
     return EXIT_SUCCESS;

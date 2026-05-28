@@ -1,4 +1,4 @@
-#include "demos/image_source.hpp"
+#include "application/image_source.hpp"
 
 #include <gtest/gtest.h>
 
@@ -28,7 +28,7 @@ TEST(DemosImageSource, VideoCaptureMp4) {
     writer.release();
 
     // Load the video and test that we get two frames
-    demos::VideoCapture image_feed{folder + "video.mp4"};
+    application::VideoCapture image_feed{folder + "video.mp4"};
 
     cv::Mat loaded_image{image_feed.GetImage()};
     EXPECT_EQ(loaded_image.rows * loaded_image.cols, 100);
@@ -41,7 +41,7 @@ TEST(DemosImageSource, VideoCaptureMp4) {
 }
 
 TEST(DemosImageSource, VideoCaptureError) {
-    EXPECT_THROW(demos::VideoCapture image_feed{"non_existent_video.mp4"}, std::runtime_error);
+    EXPECT_THROW(application::VideoCapture image_feed{"non_existent_video.mp4"}, std::runtime_error);
 }
 
 TEST(DemosImageSource, TestImageFolder) {
@@ -53,7 +53,7 @@ TEST(DemosImageSource, TestImageFolder) {
     cv::imwrite(folder + "02.png", blank_image);
 
     // Load the folder and check that we get two frames
-    demos::ImageFolder image_feed{folder};
+    application::ImageFolder image_feed{folder};
 
     cv::Mat loaded_image{image_feed.GetImage()};
     EXPECT_EQ(loaded_image.rows * loaded_image.cols, 100);

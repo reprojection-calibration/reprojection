@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include "application/cli_utils.hpp"
+#include "application/image_source.hpp"
 #include "config/config_parsing.hpp"
-#include "demos/image_source.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "image_viewer/image_viewer.hpp"
 
