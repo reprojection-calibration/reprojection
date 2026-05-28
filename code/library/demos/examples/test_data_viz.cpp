@@ -17,17 +17,30 @@
 
 using namespace reprojection;
 
+void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns);
+
+void WriteImuData(SqlitePtr db, uint64_t const timespan_ns);
+
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
-    std::string const record_path{"/tmp/reprojection/code/test_data/a1_test_data.db3"};
+    std::string const record_path{"/tmp/reprojection/code/test_data/test_data.db3"};
     auto db{database::OpenCalibrationDatabase(record_path, true, false)};
 
-    CameraInfo const camera_info{"cam1", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
+
+    WriteMvgData(db, timespan_ns);
+    WriteImuData(db, timespan_ns);
+
+    return EXIT_SUCCESS;
+}
+
+void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
+    CameraInfo const camera_info{"cam1", CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(
         camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
 
+    // We need to satisfy the foreign key requirements here and below.
     EncodedImages image_data;
     for (auto const timestamp_ns : targets | std::views::keys) {
         image_data[timestamp_ns] = {};
@@ -42,6 +55,8 @@ int main() {
     // WARN(Jack): The test data target has points at negative coordinates but setting negative bounds in the dashboard
     // is not possible so the target visualization is cut off.
     database::WriteToDb(CalibrationStep::TargetInfo, "", camera_info.sensor_name, db);
+    // TODO(Jack): It would be nice if the mvg data generator used and returned us the target info. Hardcoding it here
+    // means that it will go out of sync with the data generator.
     TargetInfo const target_info{TargetType::Checkerboard, 5, 5, 0.25, false};
     database::WriteToDb(target_info, camera_info.sensor_name, db);
 
@@ -50,41 +65,12 @@ int main() {
 
     database::WriteToDb(CalibrationStep::LinearPoseInitialization, "", camera_info.sensor_name, db);
     database::WriteToDb(camera_frames, CalibrationStep::LinearPoseInitialization, camera_info.sensor_name, db);
+}
 
+void WriteImuData(SqlitePtr db, uint64_t const timespan_ns) {
     uint64_t const num_imu_data{1000};
     ImuMeasurements const imu_data{testing_mocks::GenerateImuData(num_imu_data, timespan_ns)};
 
     std::string const imu_name{"imu1"};
     database::WriteToDb(imu_data, imu_name, db);
-
-    // HACK HACK HACK
-    // HACK HACK HACK
-    // HACK HACK HACK
-    auto camera_frames_inverse{camera_frames};
-    for (auto& value : camera_frames_inverse | std::views::values) {
-        value.pose = geometry::Log(geometry::Exp(value.pose).inverse());
-    }
-    // TODO(Jack): This 10Hz is a very low frequency for a real IMU. But if I increase it to say 50Hz the data looks
-    // crazy. THere is some problem here with time management that we need to understand better for a all the test data
-    // generation. The basic recurring problem is managing the sampling frequency to prevent artefacts showing up during
-    // spline interpolations.
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames_inverse, 10)};
-
-    ImuMeasurements interpolated_imu_data;
-    for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
-        auto const omega_i_co{spline::EvaluateSpline<spline::So3Spline>(interpolated_spline.So3(),
-                                                                        interpolated_spline.GetTimeHandler(),
-                                                                        timestamp_ns, spline::DerivativeOrder::First)};
-        auto const a_i_co{spline::EvaluateSpline<spline::R3Spline>(interpolated_spline.R3(),
-                                                                   interpolated_spline.GetTimeHandler(), timestamp_ns,
-                                                                   spline::DerivativeOrder::Second)};
-
-        if (omega_i_co.has_value() and a_i_co.has_value()) {
-            interpolated_imu_data[timestamp_ns] = ImuData{omega_i_co.value(), a_i_co.value()};
-        }
-    }
-
-    database::WriteToDb(interpolated_imu_data, "interpolated_imu_data", db);
-
-    return EXIT_SUCCESS;
 }
