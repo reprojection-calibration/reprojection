@@ -18,7 +18,7 @@ int main() {
     auto db{database::OpenCalibrationDatabase(record_path, false, false)};
 
     static constexpr std::string_view config_file{R"(
-            [sensor]
+            [camera]
             sensor_name = "/cam0/image_raw"
             camera_model = "double_sphere"
 

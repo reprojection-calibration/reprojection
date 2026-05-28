@@ -58,11 +58,13 @@ An example command to run the video-file application is:
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
 
-To view the results run the dashboard and pass the workspace directory path, an example command is:
+To generate human-readable outputs run the dashboard and pass the workspace directory path, an example command is:
 
     ./building/local/run_dashboard.sh /home/user/data/
 
-Open the link displayed in the terminal.
+This command will (1) export the calibrations from each database and (2) run the interactive dashboard. You will find
+the exported calibrations inside the workspace folder, and you can open the link shown in the terminal to access the
+dashboard.
 
 ### Set the log level
 
