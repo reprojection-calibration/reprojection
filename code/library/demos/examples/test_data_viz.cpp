@@ -54,7 +54,7 @@ int main() {
     uint64_t const num_imu_data{1000};
     ImuMeasurements const imu_data{testing_mocks::GenerateImuData(num_imu_data, timespan_ns)};
 
-    std::string const imu_name{"imu1"};
+    std::string const imu_name{"/imu1"};
     database::WriteToDb(imu_data, imu_name, db);
 
     // HACK HACK HACK
@@ -64,14 +64,10 @@ int main() {
     for (auto& value : camera_frames_inverse | std::views::values) {
         value.pose = geometry::Log(geometry::Exp(value.pose).inverse());
     }
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames_inverse, 100)};
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames_inverse, 50)};
 
-    // WHAT ABOUT THE INVERSE IN THE CAMERA MVG DATA GEN!???
-
-    ImuMeasurements interpolated_frames;  // HACK TO STORE POSE DATA IN IMU DATA!
     ImuMeasurements interpolated_imu_data;
     for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
-        auto const tf_w_co{interpolated_spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
         auto const omega_i_co{spline::EvaluateSpline<spline::So3Spline>(interpolated_spline.So3(),
                                                                         interpolated_spline.GetTimeHandler(),
                                                                         timestamp_ns, spline::DerivativeOrder::First)};
@@ -79,13 +75,11 @@ int main() {
                                                                    interpolated_spline.GetTimeHandler(), timestamp_ns,
                                                                    spline::DerivativeOrder::Second)};
 
-        if (tf_w_co.has_value() and omega_i_co.has_value() and a_i_co.has_value()) {
-            interpolated_frames[timestamp_ns] = ImuData{tf_w_co->topRows(3), tf_w_co->bottomRows(3)};
+        if (omega_i_co.has_value() and a_i_co.has_value()) {
             interpolated_imu_data[timestamp_ns] = ImuData{omega_i_co.value(), a_i_co.value()};
         }
     }
 
-    database::WriteToDb(interpolated_frames, "interpolated_frames", db);
     database::WriteToDb(interpolated_imu_data, "interpolated_imu_data", db);
 
     return EXIT_SUCCESS;
