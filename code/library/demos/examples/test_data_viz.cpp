@@ -54,7 +54,7 @@ int main() {
     uint64_t const num_imu_data{1000};
     ImuMeasurements const imu_data{testing_mocks::GenerateImuData(num_imu_data, timespan_ns)};
 
-    std::string const imu_name{"/imu1"};
+    std::string const imu_name{"imu1"};
     database::WriteToDb(imu_data, imu_name, db);
 
     // HACK HACK HACK
@@ -64,7 +64,11 @@ int main() {
     for (auto& value : camera_frames_inverse | std::views::values) {
         value.pose = geometry::Log(geometry::Exp(value.pose).inverse());
     }
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames_inverse, 50)};
+    // TODO(Jack): This 10Hz is a very low frequency for a real IMU. But if I increase it to say 50Hz the data looks
+    // crazy. THere is some problem here with time management that we need to understand better for a all the test data
+    // generation. The basic recurring problem is managing the sampling frequency to prevent artefacts showing up during
+    // spline interpolations.
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames_inverse, 10)};
 
     ImuMeasurements interpolated_imu_data;
     for (uint64_t const timestamp_ns : imu_data | std::views::keys) {
