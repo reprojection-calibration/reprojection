@@ -90,7 +90,7 @@ def make_two_column_row(left_cell, right_cell, column_width):
     )
 
 
-def build_two_column_pdf(output_path, rows, title="Calibration Report"):
+def build_two_column_pdf(output_path, camera_sections, title="Calibration Report"):
     doc = make_document(output_path)
     styles = getSampleStyleSheet()
     column_width = get_column_width(doc)
@@ -100,27 +100,38 @@ def build_two_column_pdf(output_path, rows, title="Calibration Report"):
         Spacer(1, 16),
     ]
 
-    for left, right in rows:
-        left_cell = make_figure_cell(
-            fig=left["fig"],
-            caption=left["caption"],
-            column_width=column_width,
-            styles=styles,
-        )
-
-        right_cell = make_figure_cell(
-            fig=right["fig"],
-            caption=right["caption"],
-            column_width=column_width,
-            styles=styles,
-        )
-
+    for section in camera_sections:
         elements.append(
-            make_two_column_row(
-                left_cell,
-                right_cell,
-                column_width,
+            Paragraph(
+                f"Camera: {section['sensor_name']}",
+                styles["Heading2"],
             )
         )
+        elements.append(Spacer(1, 8))
+
+        for left, right in section["rows"]:
+            left_cell = make_figure_cell(
+                fig=left["fig"],
+                caption=left["caption"],
+                column_width=column_width,
+                styles=styles,
+            )
+
+            right_cell = make_figure_cell(
+                fig=right["fig"],
+                caption=right["caption"],
+                column_width=column_width,
+                styles=styles,
+            )
+
+            elements.append(
+                make_two_column_row(
+                    left_cell,
+                    right_cell,
+                    column_width,
+                )
+            )
+
+        elements.append(Spacer(1, 16))
 
     doc.build(elements)

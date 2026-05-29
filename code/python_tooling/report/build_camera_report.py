@@ -3,8 +3,8 @@ from pathlib import Path
 
 import numpy as np
 import plotly.graph_objects as go
-
 from pdf_layout import build_two_column_pdf
+
 from dashboard.tools.data_loading import refresh_database_list
 from database.sql_table_loading import (
     load_camera_info_table,
@@ -68,33 +68,43 @@ def main():
 
     db_list, _ = refresh_database_list(workspace_dir)
     for entry in db_list:
-        name = entry["label"]
-        path = entry["value"]
+        db_path = entry["value"]
 
-        camera_infos = load_camera_info_table(path)
-        extracted_targets = load_extracted_targets_table(path)
+        camera_infos = load_camera_info_table(db_path)
+        extracted_targets = load_extracted_targets_table(db_path)
 
+        camera_sections = []
         for i, camera_info in camera_infos.iterrows():
+            sensor_name = camera_info["sensor_name"]
             result1 = coverage_figure(camera_info, extracted_targets)
 
-            output_name = name.removesuffix(".db3") + ".pdf"
-            output_path = workspace_dir / output_name
-
-            build_two_column_pdf(
-                output_path=Path(output_path),
-                rows=[
+            camera_section_i = {
+                "sensor_name": sensor_name,
+                "rows": [
                     (
                         {
                             "fig": result1,
-                            "caption": "Figure 1: Reprojection error distribution.",
+                            "caption": "Extracted target pixel coverage.",
                         },
                         {
                             "fig": result1,
-                            "caption": "Figure 2: Image coverage.",
+                            "caption": "Reprojection error distribution.",
                         },
                     ),
                 ],
-            )
+            }
+
+            camera_sections.append(camera_section_i)
+            camera_sections.append(camera_section_i) # TODO DO NOT DUPLICATE!!!
+
+        db_name = entry["label"]
+        output_name = db_name.removesuffix(".db3") + ".pdf"
+        output_path = workspace_dir / output_name
+
+        build_two_column_pdf(
+            output_path=output_path,
+            camera_sections=camera_sections
+        )
 
 
 if __name__ == "__main__":
