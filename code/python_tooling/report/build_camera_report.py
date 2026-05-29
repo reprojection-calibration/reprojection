@@ -62,6 +62,13 @@ def coverage_figure(camera_info, extracted_target_df):
     return fig
 
 
+def error_figure(extracted_target_df, reprojection_error_df):
+    print(extracted_target_df)
+    print(reprojection_error_df)
+
+    return None
+
+
 def main():
     # TODO(Jack): We should not hardcode workspace here because than that means it only works in the docker application.
     # We need to find a principled way to pass workspace to both the dashboard and here. It is not hard.
@@ -74,15 +81,21 @@ def main():
         camera_info_df = load_camera_info_table(db_path)
         camera_info_map = camera_info_df.set_index("sensor_name").to_dict("index")
         extracted_target_df = load_extracted_targets_table(db_path)
+        reprojection_error_df = load_reprojection_errors_table(db_path)
 
         camera_sections = []
         for sensor_name in extracted_target_df["sensor_name"].unique():
             camera_info_i = camera_info_map.get(sensor_name)
             extracted_targets_i = extracted_target_df[
                 extracted_target_df["sensor_name"] == sensor_name
-            ]
+                ]
 
             coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
+
+            reprojection_errors_i = reprojection_error_df[
+                reprojection_error_df["sensor_name"] == sensor_name
+                ]
+            error_figure_i = error_figure(extracted_targets_i, reprojection_errors_i)
 
             camera_section_i = {
                 "sensor_name": sensor_name,
@@ -93,7 +106,7 @@ def main():
                             "caption": "Extracted target pixel coverage.",
                         },
                         {
-                            "fig": None,
+                            "fig": error_figure_i,
                             "caption": "",
                         },
                     ),
