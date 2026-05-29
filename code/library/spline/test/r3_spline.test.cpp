@@ -37,20 +37,22 @@ TEST(Spline_r3Spline, TestEvaluate) {
     MatrixNKd const four_control_points{{0, 1, 2, 3},  //
                                         {0, 1, 2, 3},
                                         {0, 1, 2, 3}};
-    CubicBSplineC3 const one_segment_spline{four_control_points, TimeHandler{100, 5}};
+    uint64_t const delta_t_ns{5'000'000};  // 5ms
+    uint64_t const reference_t_ns{0};
+    CubicBSplineC3 const one_segment_spline{four_control_points, TimeHandler{reference_t_ns, delta_t_ns}};
 
     // Position
-    auto const p_0{EvaluateSpline<R3Spline>(one_segment_spline, 100, Null)};
+    auto const p_0{EvaluateSpline<R3Spline>(one_segment_spline, reference_t_ns, Null)};
     ASSERT_TRUE(p_0.has_value());
     EXPECT_TRUE(p_0.value().isApproxToConstant(1));
 
     // Velocity
-    auto const v_0{EvaluateSpline<R3Spline>(one_segment_spline, 100, First)};
+    auto const v_0{EvaluateSpline<R3Spline>(one_segment_spline, reference_t_ns, First)};
     ASSERT_TRUE(v_0.has_value());
-    EXPECT_TRUE(v_0.value().isApproxToConstant(0.2));  // 1m/5ns
+    EXPECT_TRUE(v_0.value().isApproxToConstant(200));
 
     // Acceleration
-    auto const a_0{EvaluateSpline<R3Spline>(one_segment_spline, 100, Second)};
+    auto const a_0{EvaluateSpline<R3Spline>(one_segment_spline, reference_t_ns, Second)};
     ASSERT_TRUE(a_0.has_value());
     EXPECT_TRUE(a_0.value().isApproxToConstant(0));  // Straight line has no acceleration
 
@@ -58,8 +60,10 @@ TEST(Spline_r3Spline, TestEvaluate) {
     Eigen::Matrix<double, constants::states, constants::order + 1> const five_control_points{{0, 1, 2, 3, 4},  //
                                                                                              {0, 1, 2, 3, 4},
                                                                                              {0, 1, 2, 3, 4}};
-    CubicBSplineC3 const two_segment_spline{five_control_points, TimeHandler{100, 5}};
-    auto const p_1{EvaluateSpline<R3Spline>(two_segment_spline, 105, Null)};
+    CubicBSplineC3 const two_segment_spline{five_control_points, TimeHandler{reference_t_ns, delta_t_ns}};
+
+    // t0_ns + delta_t_ns puts us right at the start of the second spline segment
+    auto const p_1{EvaluateSpline<R3Spline>(two_segment_spline, reference_t_ns + delta_t_ns, Null)};
     ASSERT_TRUE(p_1.has_value());
     EXPECT_TRUE(p_1.value().isApproxToConstant(2));
 }
