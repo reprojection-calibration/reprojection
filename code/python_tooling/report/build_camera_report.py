@@ -65,14 +65,14 @@ def coverage_figure(camera_info, extracted_target_df):
 def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_name):
     reprojection_error_df = reprojection_error_df[
         reprojection_error_df["step_name"] == step_name
-        ]
+    ]
 
     if reprojection_error_df.empty:
         print(f"\t\tNo reprojection errors for {step_name}")
         return None
 
     assert (
-            camera_info is not None
+        camera_info is not None
     ), "Camera info was `None` even thought we have reprojection errors... Is the database ok?"
 
     rows = extracted_target_df.merge(
@@ -81,59 +81,28 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
         suffixes=("_target", "_error"),
     )
 
-    # TODO(Jack): Should we use the calibrated image center instead of the pure
+    # TODO(Jack): Should we use the calibrated image center instead of the pure camera info image dimensions?
     image_center = np.array([camera_info["width"] / 2.0, camera_info["height"] / 2.0])
 
     angles = []
     magnitudes = []
-
     for _, row in rows.iterrows():
-        pixels = np.asarray(
-            row["data_target"]["pixels"],
-            dtype=float,
-        )
+        pixels = np.asarray(row["data_target"]["pixels"], dtype=float)
+        pixels[0,:] = [0,0]
+        errors = np.asarray(row["data_error"], dtype=float)
+        errors[0,:] = [5,5]
 
-        errors = np.asarray(
-            row["data_error"],
-            dtype=float,
-        )
-
-        if len(pixels) != len(errors):
-            print(
-                "Warning: skipping frame because number of pixels "
-                f"({len(pixels)}) does not match number of errors "
-                f"({len(errors)}) for timestamp "
-                f"{row['timestamp_ns']}"
-            )
-            continue
+        assert len(pixels) == len(
+            errors
+        ), "Mismatched number if pixels and reprojection errors... Is the database ok?"
 
         pixel_vectors = pixels - image_center
-        pixel_distances = np.linalg.norm(pixel_vectors, axis=1)
+        angles_i = np.degrees(np.arctan2(pixel_vectors[:, 1], pixel_vectors[:, 0]))
 
-        valid = pixel_distances > 0.0
+        error_magnitude_i = np.linalg.norm(errors, axis=1)
 
-        valid_pixel_vectors = pixel_vectors[valid]
-        valid_errors = errors[valid]
-
-        frame_angles = np.degrees(
-            np.arctan2(
-                valid_pixel_vectors[:, 1],
-                valid_pixel_vectors[:, 0],
-            )
-        )
-
-        frame_magnitudes = np.linalg.norm(
-            valid_errors,
-            axis=1,
-        )
-
-        angles.extend(frame_angles)
-        magnitudes.extend(frame_magnitudes)
-
-    if not magnitudes:
-        return go.Figure()
-
-    max_radius = max(magnitudes)
+        angles.extend(angles_i)
+        magnitudes.extend(error_magnitude_i)
 
     fig = go.Figure()
 
@@ -148,6 +117,7 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
         )
     )
 
+    max_radius = max(magnitudes)
     fig.update_layout(
         title=f"camera_nonlinear_refinement",
         template="plotly_white",
@@ -157,8 +127,8 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
                 "range": [0, max_radius],
             },
             "angularaxis": {
-                "rotation": 0,
-                "direction": "counterclockwise",
+                "rotation": 90,
+                "direction": "clockwise",
             },
         },
         showlegend=False,
@@ -190,12 +160,12 @@ def main():
             camera_info_i = camera_info_map.get(sensor_name)
             extracted_targets_i = extracted_target_df[
                 extracted_target_df["sensor_name"] == sensor_name
-                ]
+            ]
             coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
 
             reprojection_errors_i = reprojection_error_df[
                 reprojection_error_df["sensor_name"] == sensor_name
-                ]
+            ]
             error_figure_i = error_figure(
                 camera_info_i,
                 extracted_targets_i,
