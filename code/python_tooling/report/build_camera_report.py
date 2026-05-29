@@ -36,24 +36,26 @@ def coverage_figure(camera_info, extracted_target_df):
     )
 
     if camera_info is not None:
-        img_width = [0, camera_info["width"]]
-        img_height = [camera_info["height"], 0]
+        x_range = [0, camera_info["width"]]
+        y_range = [camera_info["height"], 0]
     else:
-        img_width = [min(all_x), max(all_x)]
-        img_height = [max(all_y), min(all_y)]
+        x_range = [min(all_x), max(all_x)]
+        y_range = [max(all_y), min(all_y)]
 
     fig.update_layout(
         title=f"Pixel Tracks",
         template="plotly_white",
         xaxis=dict(
-            range=[0, img_width],
+            range=x_range,
             title="x",
+            constrain="domain",
         ),
         yaxis=dict(
-            range=[img_height, 0],
+            range=y_range,
             title="y",
             scaleanchor="x",
             scaleratio=1,
+            constrain="domain",
         ),
     )
 
