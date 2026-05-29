@@ -37,7 +37,7 @@ CubicBSplineC3 BuildSo3TestSpline() {
                                   geometry::Exp<double>(((static_cast<double>(i) / 10) * Vector3d::Ones()).eval()));
     }
 
-    return CubicBSplineC3{so3_control_points, TimeHandler{100, 5}};
+    return CubicBSplineC3{so3_control_points, TimeHandler{0, 5'000'000}};
 }
 
 TEST(SplineSo3Spline, TestEvaluate) {
@@ -62,11 +62,11 @@ TEST(SplineSo3Spline, TestEvaluateVelocity) {
     CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
     // RANDOM HEURISTIC TESTS!
-    Vector3d const v0{EvaluateSpline<So3Spline>(spline, 100, First).value()};
-    EXPECT_TRUE(v0.isApproxToConstant(0.03));
+    Vector3d const v0{EvaluateSpline<So3Spline>(spline, 0, First).value()};
+    EXPECT_TRUE(v0.isApproxToConstant(30));
 
-    Vector3d const v4{EvaluateSpline<So3Spline>(spline, 104, First).value()};
-    EXPECT_TRUE(v4.isApproxToConstant(0.046));
+    Vector3d const v4{EvaluateSpline<So3Spline>(spline, 4'000'000, First).value()};
+    EXPECT_TRUE(v4.isApproxToConstant(46));
 }
 
 TEST(SplineSo3Spline, TestEvaluateAcceleration) {
