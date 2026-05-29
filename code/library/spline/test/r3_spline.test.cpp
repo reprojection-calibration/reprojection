@@ -112,7 +112,7 @@ TEST(Spline_r3Spline, TestTemplatedEvaluateOnParabola) {
                       {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
                       {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
     double const u_middle{0.5};  // Middle/center and therefore "bottom" of the "parabola" specified by control points P
-    uint64_t const delta_t_ns{5'000'000};  // 5ms
+    uint64_t const delta_t_ns{5'000'000};
 
     Vector3d const position{R3Spline::Evaluate<double, Null>(P, u_middle, delta_t_ns)};
     EXPECT_TRUE(position.isApprox(Vector3d{

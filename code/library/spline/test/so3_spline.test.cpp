@@ -92,14 +92,14 @@ TEST(SplineSo3Spline, TestTemplatedEvaluateOnParabola) {
                        {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
                        {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
     double const u_middle{0.5};
-    std::uint64_t const delta_t_ns{1};
+    uint64_t const delta_t_ns{5'000'000};
 
     Vector3d const position{So3Spline::Evaluate<double, Null>(P1, u_middle, delta_t_ns)};
     EXPECT_TRUE(position.isApprox(Vector3d{0.1460482362445171, 0.3755842237411095, 0.39702710822143839}));
 
     Vector3d const velocity{So3Spline::Evaluate<double, First>(P1, u_middle, delta_t_ns)};
-    EXPECT_TRUE(velocity.isApprox(Vector3d{0.8563971186898035, -0.1204280865611993, 0.12722122556164611}));
+    EXPECT_TRUE(velocity.isApprox(Vector3d{171.27942373796074, -24.085617312239847, 25.44424511232922}));
 
     Vector3d const acceleration{So3Spline::Evaluate<double, Second>(P1, u_middle, delta_t_ns)};
-    EXPECT_TRUE(acceleration.isApprox(Vector3d{0.0069974409407700944, 0.80095289350156396, 0.71108131312833733}));
+    EXPECT_TRUE(acceleration.isApprox(Vector3d{279.89763763080555, 32038.115740062553, 28443.252525133488}));
 }
