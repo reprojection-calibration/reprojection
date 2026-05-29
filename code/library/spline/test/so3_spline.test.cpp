@@ -43,18 +43,17 @@ CubicBSplineC3 BuildSo3TestSpline() {
 TEST(SplineSo3Spline, TestEvaluate) {
     CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
-    // Check that all timestamps from 100 to 104 evaluate without error - one time segment of length delta_t_ns
-    for (int i{0}; i < 5; ++i) {
-        auto const p_i{EvaluateSpline<So3Spline>(spline, 100 + i, Null)};
+    for (int i{0}; i < 5'000'000; i = i + 1'000'000) {
+        auto const p_i{EvaluateSpline<So3Spline>(spline, i, Null)};
         ASSERT_TRUE(p_i.has_value());
     }
 
-    Vector3d const p0{EvaluateSpline<So3Spline>(spline, 100, Null).value()};
+    Vector3d const p0{EvaluateSpline<So3Spline>(spline, 0, Null).value()};
     EXPECT_TRUE(p0.isApproxToConstant(
         0.11666666666666659));  // HEURISTIC! No theoretical testing strategy at this time - we have this here just so
                                 // that we can detect changes to the implementation quickly (hopefully. )
 
-    Vector3d const p4{EvaluateSpline<So3Spline>(spline, 104, Null).value()};
+    Vector3d const p4{EvaluateSpline<So3Spline>(spline, 4'000'000, Null).value()};
     EXPECT_TRUE(p4.isApproxToConstant(0.26866666666666655));
 }
 
