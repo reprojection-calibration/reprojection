@@ -78,21 +78,23 @@ def main():
         camera_sections = []
         for sensor_name in extracted_target_df["sensor_name"].unique():
             camera_info_i = camera_info_map.get(sensor_name)
-            extracted_targets_i = extracted_target_df[extracted_target_df["sensor_name"] == sensor_name]
+            extracted_targets_i = extracted_target_df[
+                extracted_target_df["sensor_name"] == sensor_name
+            ]
 
-            result1 = coverage_figure(camera_info_i, extracted_targets_i)
+            coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
 
             camera_section_i = {
                 "sensor_name": sensor_name,
                 "rows": [
                     (
                         {
-                            "fig": result1,
+                            "fig": coverage_figure_i,
                             "caption": "Extracted target pixel coverage.",
                         },
                         {
-                            "fig": result1,
-                            "caption": "Reprojection error distribution.",
+                            "fig": None,
+                            "caption": "",
                         },
                     ),
                 ],

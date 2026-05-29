@@ -56,6 +56,9 @@ def make_scaled_image(image_buffer, width):
 
 
 def make_figure_cell(fig, caption, column_width, styles):
+    if fig is None:
+        return Table([[Spacer(column_width, 1)]], colWidths=[column_width])
+
     image_buffer = plotly_to_image_buffer(fig)
     image = make_scaled_image(image_buffer, column_width)
 
