@@ -64,14 +64,14 @@ def coverage_figure(camera_info, extracted_target_df):
 def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_name):
     reprojection_error_df = reprojection_error_df[
         reprojection_error_df["step_name"] == step_name
-    ]
+        ]
 
     if reprojection_error_df.empty:
         print(f"\t\tNo reprojection errors for {step_name}")
         return None
 
     assert (
-        camera_info is not None
+            camera_info is not None
     ), "Camera info was `None` even thought we have reprojection errors... Is the database ok?"
 
     rows = extracted_target_df.merge(
@@ -93,10 +93,15 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
             errors
         ), "Mismatched number if pixels and reprojection errors... Is the database ok?"
 
+        # NOTE(Jack): We want it so that when the user looks at an image or the pixel coverage figure the orientations
+        # on the reprojection error bullseye plot align. When calculating the angle we need to account for the fact that
+        # the y-axis is flipped and that we want the 0-degree mark to be the top of the image. To solve this here we
+        # take the negative of the y coordinate and offset by 270 degrees. If this is really the best solution I am not
+        # sure, but it gets the job done!
         pixel_vectors = pixels - image_center
         angles_i = (
-            np.degrees(np.arctan2(-pixel_vectors[:, 1], pixel_vectors[:, 0]))
-            + 270 % 360
+                np.degrees(np.arctan2(-pixel_vectors[:, 1], pixel_vectors[:, 0]))
+                + 270 % 360
         )
 
         error_magnitude_i = np.linalg.norm(errors, axis=1)
@@ -159,12 +164,12 @@ def main():
             camera_info_i = camera_info_map.get(sensor_name)
             extracted_targets_i = extracted_target_df[
                 extracted_target_df["sensor_name"] == sensor_name
-            ]
+                ]
             coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
 
             reprojection_errors_i = reprojection_error_df[
                 reprojection_error_df["sensor_name"] == sensor_name
-            ]
+                ]
             error_figure_i = error_figure(
                 camera_info_i,
                 extracted_targets_i,
