@@ -20,10 +20,7 @@ std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const&
     for (uint64_t const timestamp_ns : omega_imu | std::views::keys) {
         auto const omega_i_co{EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::First)};
         if (omega_i_co.has_value()) {
-            // WARN(Jack): We are hard coding a scale multiplication here of 1e9 to bring it out of ns space and into
-            // normal second space. Why we need this I am not 100% sure. But if we do not have it then our spline
-            // derivative data does not match the real world scale by exactly a factor of 1e-9 :)
-            omega_co.insert({timestamp_ns, {1e9 * omega_i_co.value()}});
+            omega_co.insert({timestamp_ns, {omega_i_co.value()}});
         }
     }
 
