@@ -39,7 +39,11 @@ struct R3Spline {
                                std::uint64_t const delta_t_ns) {
         static int constexpr derivative_order{static_cast<int>(D)};
 
-        return P * B<D>(u_i).template cast<T>() / std::pow(delta_t_ns, derivative_order);
+        // TODO(Jack): Is this the right place to convert from ns to s space? Is there a fundamental problem with this
+        // here or do we maybe introduce some rounding error or anything like that?
+        double const delta_t_s{static_cast<double>(delta_t_ns) / 1'000'000'000};
+
+        return P * B<D>(u_i).template cast<T>() / std::pow(delta_t_s, derivative_order);
     }
 
     static inline MatrixKd const M_{BlendingMatrix(constants::order)};

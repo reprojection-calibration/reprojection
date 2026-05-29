@@ -75,9 +75,9 @@ struct So3Spline {
         if constexpr (D == DerivativeOrder::Null) {
             return rotation;
         } else if constexpr (D == DerivativeOrder::First) {
-            return velocity;
+            return 1e9 * velocity;
         } else if constexpr (D == DerivativeOrder::Second) {
-            return acceleration;
+            return 1e18 * acceleration;
         } else {
             static_assert(D == DerivativeOrder::Null or D == DerivativeOrder::First or D == DerivativeOrder::Second,
                           "Unsupported DerivativeOrder in So3Spline::Evaluate()");
