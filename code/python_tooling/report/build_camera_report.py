@@ -43,8 +43,7 @@ def coverage_figure(camera_info, extracted_target_df):
         y_range = [max(all_y), min(all_y)]
 
     fig.update_layout(
-        title=f"Pixel Tracks",
-        template="plotly_white",
+        title=f"Pixel coverage",
         xaxis=dict(
             range=x_range,
             title="x",
@@ -88,16 +87,17 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
     magnitudes = []
     for _, row in rows.iterrows():
         pixels = np.asarray(row["data_target"]["pixels"], dtype=float)
-        pixels[0,:] = [0,0]
         errors = np.asarray(row["data_error"], dtype=float)
-        errors[0,:] = [5,5]
 
         assert len(pixels) == len(
             errors
         ), "Mismatched number if pixels and reprojection errors... Is the database ok?"
 
         pixel_vectors = pixels - image_center
-        angles_i = np.degrees(np.arctan2(pixel_vectors[:, 1], pixel_vectors[:, 0]))
+        angles_i = (
+            np.degrees(np.arctan2(-pixel_vectors[:, 1], pixel_vectors[:, 0]))
+            + 270 % 360
+        )
 
         error_magnitude_i = np.linalg.norm(errors, axis=1)
 
@@ -119,8 +119,7 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
 
     max_radius = max(magnitudes)
     fig.update_layout(
-        title=f"camera_nonlinear_refinement",
-        template="plotly_white",
+        title=f"Reprojection error bullseye",
         polar={
             "radialaxis": {
                 "title": "Reprojection error [px]",
@@ -128,7 +127,7 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
             },
             "angularaxis": {
                 "rotation": 90,
-                "direction": "clockwise",
+                "direction": "counterclockwise",
             },
         },
         showlegend=False,
