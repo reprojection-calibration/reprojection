@@ -39,11 +39,14 @@ struct So3Spline {
                                std::uint64_t const delta_t_ns) {
         std::array<Vector3<T>, constants::degree> const delta_phis{DeltaPhi(P)};
 
+        // TODO(Jack): See note in R3 spline if this is the right way to convert to seconds.
+        double const delta_t_s{static_cast<double>(delta_t_ns) / 1'000'000'000};
+
         int constexpr order{static_cast<int>(D)};
         std::array<VectorKd, order + 1> weights;  // We use an array because the required size is known at compile time
         for (int j{0}; j <= order; ++j) {
             VectorKd const u_j{CalculateU(u_i, j)};
-            VectorKd const weight_j{M_ * u_j / std::pow(delta_t_ns, j)};
+            VectorKd const weight_j{M_ * u_j / std::pow(delta_t_s, j)};
 
             weights[j] = weight_j;
         }

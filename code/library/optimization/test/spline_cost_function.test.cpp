@@ -24,7 +24,7 @@ class OptimizationSplineCostFunctionFixture : public ::testing::Test {
     }
 
     double u_i_{0.5};
-    std::uint64_t delta_t_ns_{1};
+    std::uint64_t delta_t_ns_{5'000'000};
     // The P_ matrix can be used by the templated static evaluation functions directly and serves as the storage
     // container for the data referenced to by the ceres friendly parameter blocks initialized in the constructor.
     spline::MatrixNKd P_;
@@ -43,25 +43,25 @@ void CheckSplineResidual(std::vector<double const*> const& parameter_blocks,
     bool const success{cost_function->Evaluate(parameter_blocks.data(), residual.data(), nullptr)};
 
     EXPECT_TRUE(success);
-    EXPECT_TRUE(residual.isZero());
+    EXPECT_TRUE(residual.isZero()) << residual.transpose();
 }
 
 TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_R3) {
     // Position
     Array3d const position{0, 0.28125, 0.28125};
-    // WARN(Jack): We have to use "this->u_i_" here to avoid an insuppressible cppcheck error. Who can solve this?
+    // WARN(Jack): We have to use "this->u_i_" here to avoid an unsuppressible cppcheck error. Who can solve this?
     auto cost_function{std::unique_ptr<ceres::CostFunction>(optimization::CreateSplineCostFunction_T<spline::R3Spline>(
         spline::DerivativeOrder::Null, position, this->u_i_, delta_t_ns_))};
     CheckSplineResidual(parameter_blocks_, std::move(cost_function));
 
     // Velocity
-    Array3d const velocity{0.875, 0, 0};
+    Array3d const velocity{175, 0, 0};
     cost_function = std::unique_ptr<ceres::CostFunction>(optimization::CreateSplineCostFunction_T<spline::R3Spline>(
         spline::DerivativeOrder::First, velocity, u_i_, delta_t_ns_));
     CheckSplineResidual(parameter_blocks_, std::move(cost_function));
 
     // Acceleration
-    Array3d const acceleration{0, 0.75, 0.75};
+    Array3d const acceleration{0, 30000, 30000};
     cost_function = std::unique_ptr<ceres::CostFunction>(optimization::CreateSplineCostFunction_T<spline::R3Spline>(
         spline::DerivativeOrder::Second, acceleration, u_i_, delta_t_ns_));
     CheckSplineResidual(parameter_blocks_, std::move(cost_function));
@@ -75,13 +75,13 @@ TEST_F(OptimizationSplineCostFunctionFixture, TestCreateSplineCostFunction_so3) 
     CheckSplineResidual(parameter_blocks_, std::move(cost_function));
 
     // Velocity
-    Array3d const velocity{0.8563971186898035, -0.1204280865611993, 0.12722122556164611};
+    Array3d const velocity{171.27942373796074, -24.085617312239847, 25.44424511232922};
     cost_function = std::unique_ptr<ceres::CostFunction>(optimization::CreateSplineCostFunction_T<spline::So3Spline>(
         spline::DerivativeOrder::First, velocity, u_i_, delta_t_ns_));
     CheckSplineResidual(parameter_blocks_, std::move(cost_function));
 
     // Acceleration
-    Array3d const acceleration{0.0069974409407700944, 0.80095289350156396, 0.71108131312833733};
+    Array3d const acceleration{279.89763763080555, 32038.115740062553, 28443.252525133488};
     cost_function = std::unique_ptr<ceres::CostFunction>(optimization::CreateSplineCostFunction_T<spline::So3Spline>(
         spline::DerivativeOrder::Second, acceleration, u_i_, delta_t_ns_));
     CheckSplineResidual(parameter_blocks_, std::move(cost_function));
