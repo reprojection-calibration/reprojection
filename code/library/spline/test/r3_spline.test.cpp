@@ -75,17 +75,17 @@ TEST(Spline_r3Spline, TestEvaluate) {
 // see that when u=0 we get back the point 2, and when u=0.99999 we get back the point 3. Values in between 0 and 1
 // and 3 and 4 cannot be estimated.
 TEST(Spline_r3Spline, TestTemplatedEvaluateOnLine) {
-    MatrixNKd const P1{{0, 1, 2, 3},  //
-                       {0, 1, 2, 3},
-                       {0, 1, 2, 3}};
+    MatrixNKd const P{{0, 1, 2, 3},  //
+                      {0, 1, 2, 3},
+                      {0, 1, 2, 3}};
     std::uint64_t const delta_t_ns{5};  // No effect when derivative order is Null (5^0 = 1)
 
-    Vector3d const position_1{R3Spline::Evaluate<double, Null>(P1, 0, delta_t_ns)};
+    Vector3d const position_1{R3Spline::Evaluate<double, Null>(P, 0, delta_t_ns)};
     EXPECT_TRUE(position_1.isApproxToConstant(1));
 
     // NOTE(Jack): The spline time u include [0,1), therefore we have to set u_i=0.999999 something, instead of
     // just 1.
-    Vector3d const position_2{R3Spline::Evaluate<double, Null>(P1, 0.999999, delta_t_ns)};
+    Vector3d const position_2{R3Spline::Evaluate<double, Null>(P, 0.999999, delta_t_ns)};
     EXPECT_TRUE(position_2.isApproxToConstant(2, 1e-6));
 
     // Shift the control points now to start at 1 and end at 4 manually by creating a new P, and see that the spline
@@ -108,19 +108,19 @@ double Squared(double const x) { return x * x; }  // COPY PASTED
 // note that the control points are generated like a parabola, but that does not necessarily mean the spline is a
 // parabola itself! Look at the nurbs calculator viewer to try to understand what is going on here!
 TEST(Spline_r3Spline, TestTemplatedEvaluateOnParabola) {
-    MatrixNKd const P1{{-1, -0.5, 0.5, 1},
-                       {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
-                       {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
+    MatrixNKd const P{{-1, -0.5, 0.5, 1},
+                      {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)},
+                      {Squared(-1), Squared(-0.5), Squared(0.5), Squared(1)}};
     double const u_middle{0.5};  // Middle/center and therefore "bottom" of the "parabola" specified by control points P
-    std::uint64_t const delta_t_ns{1};  // Setting to 1 avoids time dependent distortion to the velocity/acceleration
+    uint64_t const delta_t_ns{5'000'000};  // 5ms
 
-    Vector3d const position{R3Spline::Evaluate<double, Null>(P1, u_middle, delta_t_ns)};
+    Vector3d const position{R3Spline::Evaluate<double, Null>(P, u_middle, delta_t_ns)};
     EXPECT_TRUE(position.isApprox(Vector3d{
         0, 0.28125, 0.28125}));  // Aligned and centered on the x-axis, value taken from nurbs calculator linked above.
 
-    Vector3d const velocity{R3Spline::Evaluate<double, First>(P1, u_middle, delta_t_ns)};
-    EXPECT_TRUE(velocity.isApprox(Vector3d{0.875, 0, 0}));  // Only x-axis motion at base of aligned parabola
+    Vector3d const velocity{R3Spline::Evaluate<double, First>(P, u_middle, delta_t_ns)};
+    EXPECT_TRUE(velocity.isApprox(Vector3d{175, 0, 0}));  // Only x-axis motion at base of aligned parabola
 
-    Vector3d const acceleration{R3Spline::Evaluate<double, Second>(P1, u_middle, delta_t_ns)};
-    EXPECT_TRUE(acceleration.isApprox(Vector3d{0, 0.75, 0.75}));  // TODO(Jack): Explain why this makes sense!
+    Vector3d const acceleration{R3Spline::Evaluate<double, Second>(P, u_middle, delta_t_ns)};
+    EXPECT_TRUE(acceleration.isApprox(Vector3d{0, 30000, 30000}));  // TODO(Jack): Explain why this makes sense!
 }
