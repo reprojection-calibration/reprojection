@@ -73,11 +73,11 @@ TEST(SplineSo3Spline, TestEvaluateAcceleration) {
     CubicBSplineC3 const spline{BuildSo3TestSpline()};
 
     // RANDOM HEURISTIC TESTS! - but this does match exactly the change in velocity we see in the previous test :)
-    Vector3d const a0{EvaluateSpline<So3Spline>(spline, 100, Second).value()};
-    EXPECT_TRUE(a0.isApproxToConstant(0.004));
+    Vector3d const a0{EvaluateSpline<So3Spline>(spline, 0, Second).value()};
+    EXPECT_TRUE(a0.isApproxToConstant(4000));
 
-    Vector3d const a4{EvaluateSpline<So3Spline>(spline, 104, Second).value()};
-    EXPECT_TRUE(a4.isApproxToConstant(0.004));
+    Vector3d const a4{EvaluateSpline<So3Spline>(spline, 4'000'000, Second).value()};
+    EXPECT_TRUE(a4.isApproxToConstant(4000));
 }
 
 double Squared(double const x) { return x * x; }  // COPY PASTED
