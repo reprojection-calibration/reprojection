@@ -62,7 +62,7 @@ def coverage_figure(camera_info, extracted_target_df):
     return fig
 
 
-def error_figure(extracted_target_df, reprojection_error_df, step_name):
+def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_name):
     reprojection_error_df = reprojection_error_df[
         reprojection_error_df["step_name"] == step_name
         ]
@@ -71,7 +71,100 @@ def error_figure(extracted_target_df, reprojection_error_df, step_name):
         print(f"\t\tNo reprojection errors for {step_name}")
         return None
 
-    return None
+    assert (
+            camera_info is not None
+    ), "Camera info was `None` even thought we have reprojection errors... Is the database ok?"
+
+    rows = extracted_target_df.merge(
+        reprojection_error_df,
+        on=["sensor_name", "timestamp_ns"],
+        suffixes=("_target", "_error"),
+    )
+
+    # TODO(Jack): Should we use the calibrated image center instead of the pure
+    image_center = np.array([camera_info["width"] / 2.0, camera_info["height"] / 2.0])
+
+    angles = []
+    magnitudes = []
+
+    for _, row in rows.iterrows():
+        pixels = np.asarray(
+            row["data_target"]["pixels"],
+            dtype=float,
+        )
+
+        errors = np.asarray(
+            row["data_error"],
+            dtype=float,
+        )
+
+        if len(pixels) != len(errors):
+            print(
+                "Warning: skipping frame because number of pixels "
+                f"({len(pixels)}) does not match number of errors "
+                f"({len(errors)}) for timestamp "
+                f"{row['timestamp_ns']}"
+            )
+            continue
+
+        pixel_vectors = pixels - image_center
+        pixel_distances = np.linalg.norm(pixel_vectors, axis=1)
+
+        valid = pixel_distances > 0.0
+
+        valid_pixel_vectors = pixel_vectors[valid]
+        valid_errors = errors[valid]
+
+        frame_angles = np.degrees(
+            np.arctan2(
+                valid_pixel_vectors[:, 1],
+                valid_pixel_vectors[:, 0],
+            )
+        )
+
+        frame_magnitudes = np.linalg.norm(
+            valid_errors,
+            axis=1,
+        )
+
+        angles.extend(frame_angles)
+        magnitudes.extend(frame_magnitudes)
+
+    if not magnitudes:
+        return go.Figure()
+
+    max_radius = max(magnitudes)
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatterpolar(
+            r=magnitudes,
+            theta=angles,
+            mode="markers",
+            marker={
+                "size": 5,
+            },
+        )
+    )
+
+    fig.update_layout(
+        title=f"camera_nonlinear_refinement",
+        template="plotly_white",
+        polar={
+            "radialaxis": {
+                "title": "Reprojection error [px]",
+                "range": [0, max_radius],
+            },
+            "angularaxis": {
+                "rotation": 0,
+                "direction": "counterclockwise",
+            },
+        },
+        showlegend=False,
+    )
+
+    return fig
 
 
 def main():
@@ -98,13 +191,17 @@ def main():
             extracted_targets_i = extracted_target_df[
                 extracted_target_df["sensor_name"] == sensor_name
                 ]
-
             coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
 
             reprojection_errors_i = reprojection_error_df[
                 reprojection_error_df["sensor_name"] == sensor_name
                 ]
-            error_figure_i = error_figure(extracted_targets_i, reprojection_errors_i, "camera_nonlinear_refinement")
+            error_figure_i = error_figure(
+                camera_info_i,
+                extracted_targets_i,
+                reprojection_errors_i,
+                "camera_nonlinear_refinement",
+            )
 
             camera_section_i = {
                 "sensor_name": sensor_name,
