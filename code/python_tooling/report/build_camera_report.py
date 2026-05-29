@@ -13,14 +13,10 @@ from database.sql_table_loading import (
 )
 
 
-def coverage_figure(camera_info, extracted_targets):
-    sensor_name = camera_info["sensor_name"]
-
-    cam_df = extracted_targets[extracted_targets["sensor_name"] == sensor_name]
-
+def coverage_figure(camera_info, extracted_target_df):
     all_x = []
     all_y = []
-    for row in cam_df.itertuples():
+    for row in extracted_target_df.itertuples():
         pixels = np.asarray(row.data["pixels"])
 
         all_x.extend(pixels[:, 0])
@@ -36,15 +32,18 @@ def coverage_figure(camera_info, extracted_targets):
                 size=3,
                 opacity=0.5,
             ),
-            name=sensor_name,
         )
     )
 
-    img_width = camera_info["width"]
-    img_height = camera_info["height"]
+    if camera_info is not None:
+        img_width = [0, camera_info["width"]]
+        img_height = [camera_info["height"], 0]
+    else:
+        img_width = [min(all_x), max(all_x)]
+        img_height = [max(all_y), min(all_y)]
 
     fig.update_layout(
-        title=f"Pixel Tracks: {sensor_name}",
+        title=f"Pixel Tracks",
         template="plotly_white",
         xaxis=dict(
             range=[0, img_width],
@@ -70,13 +69,16 @@ def main():
     for entry in db_list:
         db_path = entry["value"]
 
-        camera_infos = load_camera_info_table(db_path)
-        extracted_targets = load_extracted_targets_table(db_path)
+        camera_info_df = load_camera_info_table(db_path)
+        camera_info_map = camera_info_df.set_index("sensor_name").to_dict("index")
+        extracted_target_df = load_extracted_targets_table(db_path)
 
         camera_sections = []
-        for i, camera_info in camera_infos.iterrows():
-            sensor_name = camera_info["sensor_name"]
-            result1 = coverage_figure(camera_info, extracted_targets)
+        for sensor_name in extracted_target_df["sensor_name"].unique():
+            camera_info_i = camera_info_map.get(sensor_name)
+            extracted_targets_i = extracted_target_df[extracted_target_df["sensor_name"] == sensor_name]
+
+            result1 = coverage_figure(camera_info_i, extracted_targets_i)
 
             camera_section_i = {
                 "sensor_name": sensor_name,
@@ -95,16 +97,12 @@ def main():
             }
 
             camera_sections.append(camera_section_i)
-            camera_sections.append(camera_section_i) # TODO DO NOT DUPLICATE!!!
 
         db_name = entry["label"]
         output_name = db_name.removesuffix(".db3") + ".pdf"
         output_path = workspace_dir / output_name
 
-        build_two_column_pdf(
-            output_path=output_path,
-            camera_sections=camera_sections
-        )
+        build_two_column_pdf(output_path=output_path, camera_sections=camera_sections)
 
 
 if __name__ == "__main__":
