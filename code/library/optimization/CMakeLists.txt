@@ -5,7 +5,6 @@ set(SRC_FILES
         src/camera_imu_nonlinear_refinement.cpp
         src/camera_nonlinear_refinement.cpp
         src/projection_cost_function.cpp
-        src/spline_nonlinear_refinement.cpp
         src/spline_projection_cost_function.cpp
 )
 set(LINK_LIBRARIES
@@ -27,7 +26,6 @@ set(TESTS
         src/angular_velocity_cost_function.test.cpp
         src/ceres_geometry.test.cpp
         src/projection_cost_function.test.cpp
-        src/spline_nonlinear_refinement.test.cpp
         src/spline_projection_cost_function.test.cpp
         test/angular_velocity_alignment.test.cpp
         test/camera_imu_nonlinear_refinement.test.cpp
