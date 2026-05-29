@@ -3,67 +3,14 @@ from pathlib import Path
 
 import numpy as np
 import plotly.graph_objects as go
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import (
-    Image,
-    Paragraph,
-    SimpleDocTemplate,
-    Spacer,
-    Table,
-    TableStyle,
-)
 
+from pdf_layout import build_two_column_pdf
 from dashboard.tools.data_loading import refresh_database_list
 from database.sql_table_loading import (
     load_camera_info_table,
     load_extracted_targets_table,
     load_reprojection_errors_table,
 )
-
-styles = getSampleStyleSheet()
-
-
-def plotly_figure_to_image(fig, width, height):
-    image_bytes = fig.to_image(
-        format="png",
-        width=width,
-        height=height,
-        scale=2,
-    )
-
-    return BytesIO(image_bytes)
-
-
-def build_figure_with_caption(fig, caption):
-    image_buffer = plotly_figure_to_image(
-        fig,
-        width=600,
-        height=400,
-    )
-
-    image = Image(
-        image_buffer,
-        width=250,
-        height=170,
-    )
-
-    caption_paragraph = Paragraph(
-        f"<font size=9>{caption}</font>",
-        styles["BodyText"],
-    )
-
-    return Table(
-        [[image], [caption_paragraph]],
-        colWidths=[250],
-        style=TableStyle(
-            [
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("TOPPADDING", (0, 0), (-1, -1), 4),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-            ]
-        ),
-    )
 
 
 def coverage_figure(camera_info, extracted_targets):
@@ -106,6 +53,8 @@ def coverage_figure(camera_info, extracted_targets):
         yaxis=dict(
             range=[img_height, 0],
             title="y",
+            scaleanchor="x",
+            scaleratio=1,
         ),
     )
 
@@ -124,48 +73,28 @@ def main():
 
         camera_infos = load_camera_info_table(path)
         extracted_targets = load_extracted_targets_table(path)
-        reprojection_errors = load_reprojection_errors_table(path)
 
         for i, camera_info in camera_infos.iterrows():
             result1 = coverage_figure(camera_info, extracted_targets)
 
-            left = build_figure_with_caption(
-                result1,
-                "Figure 1: Reprojection error distribution.",
-            )
-
-            right = build_figure_with_caption(
-                result1,
-                "Figure 2: Coverage analysis.",
-            )
-
-            layout = Table(
-                [[left, right]],
-                colWidths=[260, 260],
-                style=TableStyle(
-                    [
-                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                        ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                    ]
-                ),
-            )
-
             output_name = name.removesuffix(".db3") + ".pdf"
             output_path = workspace_dir / output_name
 
-            doc = SimpleDocTemplate(
-                str(output_path),
-                pagesize=letter,
+            build_two_column_pdf(
+                output_path=Path(output_path),
+                rows=[
+                    (
+                        {
+                            "fig": result1,
+                            "caption": "Figure 1: Reprojection error distribution.",
+                        },
+                        {
+                            "fig": result1,
+                            "caption": "Figure 2: Image coverage.",
+                        },
+                    ),
+                ],
             )
-
-            elements = [
-                Paragraph("Calibration Report", styles["Heading1"]),
-                Spacer(1, 20),
-                layout,
-            ]
-
-            doc.build(elements)
 
 
 if __name__ == "__main__":
