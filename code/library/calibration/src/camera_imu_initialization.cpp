@@ -65,7 +65,8 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
     //  more data. My gut tells me that the actual threshold would be to say less than g. But that might be too strict?
     Vector3d const net_acceleration_w{acceleration_w.colwise().mean()};
     if (net_acceleration_w.norm() < 1) {
-        return Vector3d::Zero();
+        // WHEN WE ENABLE TESTING WE REMOVE THE SUPPRESSION!
+        return Vector3d::Zero();  // LCOV_EXCL_LINE
     } else {
         // TODO(Jack): Engineer more sophisticated IMU test data with gravity so that we can cover this branch in unit
         //  testing!
