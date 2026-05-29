@@ -62,9 +62,14 @@ def coverage_figure(camera_info, extracted_target_df):
     return fig
 
 
-def error_figure(extracted_target_df, reprojection_error_df):
-    print(extracted_target_df)
-    print(reprojection_error_df)
+def error_figure(extracted_target_df, reprojection_error_df, step_name):
+    reprojection_error_df = reprojection_error_df[
+        reprojection_error_df["step_name"] == step_name
+        ]
+
+    if reprojection_error_df.empty:
+        print(f"\t\tNo reprojection errors for {step_name}")
+        return None
 
     return None
 
@@ -76,7 +81,9 @@ def main():
 
     db_list, _ = refresh_database_list(workspace_dir)
     for entry in db_list:
+        db_name = entry["label"]
         db_path = entry["value"]
+        print(f"Generating pdf report for database {db_name}")
 
         camera_info_df = load_camera_info_table(db_path)
         camera_info_map = camera_info_df.set_index("sensor_name").to_dict("index")
@@ -85,6 +92,8 @@ def main():
 
         camera_sections = []
         for sensor_name in extracted_target_df["sensor_name"].unique():
+            print(f"\tProcessing sensor {sensor_name}")
+
             camera_info_i = camera_info_map.get(sensor_name)
             extracted_targets_i = extracted_target_df[
                 extracted_target_df["sensor_name"] == sensor_name
@@ -95,7 +104,7 @@ def main():
             reprojection_errors_i = reprojection_error_df[
                 reprojection_error_df["sensor_name"] == sensor_name
                 ]
-            error_figure_i = error_figure(extracted_targets_i, reprojection_errors_i)
+            error_figure_i = error_figure(extracted_targets_i, reprojection_errors_i, "camera_nonlinear_refinement")
 
             camera_section_i = {
                 "sensor_name": sensor_name,
@@ -115,10 +124,10 @@ def main():
 
             camera_sections.append(camera_section_i)
 
-        db_name = entry["label"]
         output_name = db_name.removesuffix(".db3") + ".pdf"
         output_path = workspace_dir / output_name
 
+        print(f"\tAssembling pdf and saving to {output_path}")
         build_two_column_pdf(output_path=output_path, camera_sections=camera_sections)
 
 
