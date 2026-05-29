@@ -1,6 +1,3 @@
-from io import BytesIO
-from pathlib import Path
-
 import numpy as np
 import plotly.graph_objects as go
 from pdf_layout import build_two_column_pdf
@@ -11,6 +8,64 @@ from database.sql_table_loading import (
     load_extracted_targets_table,
     load_reprojection_errors_table,
 )
+
+
+def run_report_export(workspace_dir):
+    db_list, _ = refresh_database_list(workspace_dir)
+
+    for entry in db_list:
+        db_name = entry["label"]
+        db_path = entry["value"]
+        print(f"Generating pdf camera report for database {db_name}")
+
+        camera_info_df = load_camera_info_table(db_path)
+        camera_info_map = camera_info_df.set_index("sensor_name").to_dict("index")
+        extracted_target_df = load_extracted_targets_table(db_path)
+        reprojection_error_df = load_reprojection_errors_table(db_path)
+
+        camera_sections = []
+        for sensor_name in extracted_target_df["sensor_name"].unique():
+            print(f"\tProcessing sensor {sensor_name}")
+
+            camera_info_i = camera_info_map.get(sensor_name)
+            extracted_targets_i = extracted_target_df[
+                extracted_target_df["sensor_name"] == sensor_name
+            ]
+            coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
+
+            reprojection_errors_i = reprojection_error_df[
+                reprojection_error_df["sensor_name"] == sensor_name
+            ]
+            error_figure_i = error_figure(
+                camera_info_i,
+                extracted_targets_i,
+                reprojection_errors_i,
+                "camera_nonlinear_refinement",
+            )
+
+            camera_section_i = {
+                "sensor_name": sensor_name,
+                "rows": [
+                    (
+                        {
+                            "fig": coverage_figure_i,
+                            "caption": "Extracted target pixel coverage.",
+                        },
+                        {
+                            "fig": error_figure_i,
+                            "caption": "Reprojection error magnitude.",
+                        },
+                    ),
+                ],
+            }
+
+            camera_sections.append(camera_section_i)
+
+        output_name = db_name.removesuffix(".db3") + ".pdf"
+        output_path = workspace_dir / output_name
+
+        print(f"\tAssembling pdf and saving to {output_path}")
+        build_two_column_pdf(output_path=output_path, camera_sections=camera_sections)
 
 
 def coverage_figure(camera_info, extracted_target_df):
@@ -64,14 +119,14 @@ def coverage_figure(camera_info, extracted_target_df):
 def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_name):
     reprojection_error_df = reprojection_error_df[
         reprojection_error_df["step_name"] == step_name
-        ]
+    ]
 
     if reprojection_error_df.empty:
         print(f"\t\tNo reprojection errors for {step_name}")
         return None
 
     assert (
-            camera_info is not None
+        camera_info is not None
     ), "Camera info was `None` even thought we have reprojection errors... Is the database ok?"
 
     rows = extracted_target_df.merge(
@@ -100,8 +155,8 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
         # sure, but it gets the job done!
         pixel_vectors = pixels - image_center
         angles_i = (
-                np.degrees(np.arctan2(-pixel_vectors[:, 1], pixel_vectors[:, 0]))
-                + 270 % 360
+            np.degrees(np.arctan2(-pixel_vectors[:, 1], pixel_vectors[:, 0]))
+            + 270 % 360
         )
 
         error_magnitude_i = np.linalg.norm(errors, axis=1)
@@ -139,68 +194,3 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
     )
 
     return fig
-
-
-def main():
-    # TODO(Jack): We should not hardcode workspace here because than that means it only works in the docker application.
-    # We need to find a principled way to pass workspace to both the dashboard and here. It is not hard.
-    workspace_dir = Path("../../code/test_data/")
-
-    db_list, _ = refresh_database_list(workspace_dir)
-    for entry in db_list:
-        db_name = entry["label"]
-        db_path = entry["value"]
-        print(f"Generating pdf report for database {db_name}")
-
-        camera_info_df = load_camera_info_table(db_path)
-        camera_info_map = camera_info_df.set_index("sensor_name").to_dict("index")
-        extracted_target_df = load_extracted_targets_table(db_path)
-        reprojection_error_df = load_reprojection_errors_table(db_path)
-
-        camera_sections = []
-        for sensor_name in extracted_target_df["sensor_name"].unique():
-            print(f"\tProcessing sensor {sensor_name}")
-
-            camera_info_i = camera_info_map.get(sensor_name)
-            extracted_targets_i = extracted_target_df[
-                extracted_target_df["sensor_name"] == sensor_name
-                ]
-            coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
-
-            reprojection_errors_i = reprojection_error_df[
-                reprojection_error_df["sensor_name"] == sensor_name
-                ]
-            error_figure_i = error_figure(
-                camera_info_i,
-                extracted_targets_i,
-                reprojection_errors_i,
-                "camera_nonlinear_refinement",
-            )
-
-            camera_section_i = {
-                "sensor_name": sensor_name,
-                "rows": [
-                    (
-                        {
-                            "fig": coverage_figure_i,
-                            "caption": "Extracted target pixel coverage.",
-                        },
-                        {
-                            "fig": error_figure_i,
-                            "caption": "",
-                        },
-                    ),
-                ],
-            }
-
-            camera_sections.append(camera_section_i)
-
-        output_name = db_name.removesuffix(".db3") + ".pdf"
-        output_path = workspace_dir / output_name
-
-        print(f"\tAssembling pdf and saving to {output_path}")
-        build_two_column_pdf(output_path=output_path, camera_sections=camera_sections)
-
-
-if __name__ == "__main__":
-    main()
