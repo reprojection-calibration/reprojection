@@ -36,8 +36,8 @@ std::tuple<OptimizationState, CeresState> BundleAdjustment(CameraInfo const& sen
     return {optimized_state, ceres_state};
 }
 
-ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                         OptimizationState const& state) {
+ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
+                                     OptimizationState const& state) {
     ReprojectionErrors residuals;
     for (auto const& [timestamp_ns, frame_i] : state.frames) {
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};

@@ -18,7 +18,7 @@ void LpiStep::Save(Frames const& frames, SqlitePtr const db) const {
     database::WriteToDb(frames, step_type, SensorName(), db);
 
     OptimizationState const state{camera_state, frames};
-    ReprojectionErrors const error{optimization::ReprojectionResiduals(camera_info, targets, state)};
+    ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, state)};
     database::WriteToDb(error, step_type, SensorName(), db);
 }
 

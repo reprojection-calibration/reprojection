@@ -13,7 +13,7 @@ std::tuple<OptimizationState, CeresState> BundleAdjustment(CameraInfo const& sen
                                                                     OptimizationState const& initial_state,
                                                                     bool const constant_intrinsics = false);
 
-ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
+ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
                                          OptimizationState const& state);
 
 }  // namespace  reprojection::optimization

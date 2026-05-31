@@ -7,7 +7,7 @@
 
 namespace reprojection::optimization {
 
-ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
+ReprojectionErrors ReprojectionErrorSpline(CameraInfo const& sensor, CameraMeasurements const& targets,
                                                CameraState const& camera_state, spline::Se3Spline const& spline) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
     //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign

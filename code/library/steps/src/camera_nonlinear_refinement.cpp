@@ -33,7 +33,7 @@ void CnlrStep::Save(OptimizationState const& optimized_state, SqlitePtr const db
     database::WriteToDb(optimized_state.camera_state, camera_info.camera_model, step_type, SensorName(), db);
     database::WriteToDb(optimized_state.frames, step_type, SensorName(), db);
 
-    ReprojectionErrors const error{optimization::ReprojectionResiduals(camera_info, targets, optimized_state)};
+    ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, optimized_state)};
     database::WriteToDb(error, step_type, SensorName(), db);
 }
 

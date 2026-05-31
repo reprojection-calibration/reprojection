@@ -111,7 +111,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
     OptimizationState const state{CameraState{testing_utilities::pinhole_intrinsics},
                                   {{timestamp_ns, {Array6d::Zero()}}}};
 
-    ReprojectionErrors const residuals{optimization::ReprojectionResiduals(sensor, targets, state)};
+    ReprojectionErrors const residuals{optimization::ReprojectionError(sensor, targets, state)};
     EXPECT_EQ(std::size(residuals), 1);
     EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))
         << "Result:\n"
