@@ -3,7 +3,7 @@ set(LIBRARY_NAME "optimization")
 set(SRC_FILES
         src/angular_velocity_alignment.cpp
         src/camera_imu_nonlinear_refinement.cpp
-        src/camera_nonlinear_refinement.cpp
+        src/bundle_adjustment.cpp
         src/cost_functions/reprojection_error.cpp
         src/cost_functions/reprojection_error_spline.cpp
 )
@@ -28,7 +28,7 @@ set(TESTS
         src/cost_functions/reprojection_error_spline.test.cpp
         src/cost_functions/rigid_body_angular_velocity.test.cpp
         test/angular_velocity_alignment.test.cpp
+        test/bundle_adjustment.test.cpp
         test/camera_imu_nonlinear_refinement.test.cpp
-        test/camera_nonlinear_refinement.test.cpp
 )
 AddTests()

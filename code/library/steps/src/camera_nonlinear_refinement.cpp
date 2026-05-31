@@ -3,14 +3,14 @@
 #include "caching/cache_keys.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"
+#include "optimization/bundle_adjustment.hpp"
 
 namespace reprojection::steps {
 
 std::string CnlrStep::CacheKey() const { return caching::CacheKey(camera_info, targets, initial_state); }
 
 OptimizationState CnlrStep::Compute() const {
-    auto const [optimized_state, _]{optimization::CameraNonlinearRefinement(camera_info, targets, initial_state)};
+    auto const [optimized_state, _]{optimization::BundleAdjustment(camera_info, targets, initial_state)};
 
     return optimized_state;
 }

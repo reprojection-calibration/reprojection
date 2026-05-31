@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "logging/logging.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"
+#include "optimization/bundle_adjustment.hpp"
 #include "projection_functions/initialize_camera.hpp"
 
 #include "camera_imu_initialization.hpp"
@@ -57,7 +57,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         // Do nonlinear refinement with the intrinsics constant
         OptimizationState const initial_state{{intrinsics_i}, initial_poses};
         auto const [optimized_state, diagnostics]{
-            optimization::CameraNonlinearRefinement(camera_info, target_subset, initial_state, true)};
+            optimization::BundleAdjustment(camera_info, target_subset, initial_state, true)};
         cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
 
         log->debug("{{ 'idx': {}, 'gamma': {}, 'final_cost': {}, 'num_frames_used': {}}}", idx, gamma_i,

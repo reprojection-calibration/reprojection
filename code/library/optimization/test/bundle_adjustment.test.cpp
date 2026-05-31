@@ -1,8 +1,7 @@
-#include "optimization/camera_nonlinear_refinement.hpp"
-
 #include <gtest/gtest.h>
 
 #include "geometry/lie.hpp"
+#include "optimization/bundle_adjustment.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
@@ -20,7 +19,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 
     // Solve
     OptimizationState const initial_state{gt_intrinsics, gt_frames};
-    auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
+    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state)};
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     // Assert
@@ -54,7 +53,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
     }
 
     OptimizationState const initial_state{gt_intrinsics, noisy_frames};
-    auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
+    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state)};
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     EXPECT_EQ(std::size(optimized_state.frames), 50);
