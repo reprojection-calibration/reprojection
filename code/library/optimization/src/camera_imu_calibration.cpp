@@ -1,8 +1,7 @@
-#include "optimization/camera_imu_nonlinear_refinement.hpp"
-
 #include <ranges>
 
 #include "cost_functions/reprojection_error_spline.hpp"
+#include "optimization/camera_imu_calibration.hpp"
 #include "spline/spline_initialization.hpp"
 
 namespace reprojection::optimization {

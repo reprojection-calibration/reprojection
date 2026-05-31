@@ -1,7 +1,6 @@
-#include "optimization/camera_imu_nonlinear_refinement.hpp"
-
 #include <gtest/gtest.h>
 
+#include "optimization/camera_imu_calibration.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
