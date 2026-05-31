@@ -10,7 +10,7 @@
 #include "types/enums.hpp"
 
 #include "ceres_geometry.hpp"
-#include "projection_cost_function.hpp"
+#include "reprojection_error.hpp"
 
 namespace reprojection::optimization {
 
@@ -40,7 +40,8 @@ class SplineProjectionCostFunction_T {
         // Calculate the se3 pose and then return the standard reprojection error.
         Array6<T> const pose{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
 
-        return ProjectionCostFunction_T<T_Model>(pixel_, point_, bounds_)
+        // TODO REMOVE NAMESPACE!
+        return cost_functions::ReprojectionError_T<T_Model>(pixel_, point_, bounds_)
             .template operator()<T>(intrinsics_ptr, pose.data(), residual);
     }
 

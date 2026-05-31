@@ -1,4 +1,4 @@
-#include "projection_cost_function.hpp"
+#include "reprojection_error.hpp"
 
 #include <gtest/gtest.h>
 
@@ -7,9 +7,9 @@
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
 #include "testing_utilities/constants.hpp"
-#include "types/calibration_types.hpp"
 
 using namespace reprojection;
+using namespace reprojection::optimization::cost_functions;
 
 // NOTE(Jack): Normally the cost functions are attached to a ceres "problem" object which takes ownership of them and is
 // then responsible for deallocating them. This is actually controlled by the problem parameter option
@@ -20,7 +20,7 @@ using namespace reprojection;
 // here we do not attach the cost functions to a problem, therefore we have to call delete manually on each one we
 // create! This violate RAII, and we should never let this pattern percolate into real library/application code!
 
-TEST(OptimizationProjectionCostFunction, TestCreate) {
+TEST(OptimizationCostFunctions, TestReprojectionErrorCreate) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
 
@@ -29,29 +29,28 @@ TEST(OptimizationProjectionCostFunction, TestCreate) {
     int const residual_size{2};         // pixel size: {u, v}
 
     ceres::CostFunction* cost_function{
-        optimization::Create(CameraModel::DoubleSphere, testing_utilities::image_bounds, pixel, point)};
+        Create(CameraModel::DoubleSphere, testing_utilities::image_bounds, pixel, point)};
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::DoubleSphere::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
-    cost_function = optimization::Create(CameraModel::Pinhole, testing_utilities::image_bounds, pixel, point);
+    cost_function = Create(CameraModel::Pinhole, testing_utilities::image_bounds, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::Pinhole::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
-    cost_function = optimization::Create(CameraModel::PinholeRadtan4, testing_utilities::image_bounds, pixel, point);
+    cost_function = Create(CameraModel::PinholeRadtan4, testing_utilities::image_bounds, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::PinholeRadtan4::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
-    cost_function =
-        optimization::Create(CameraModel::UnifiedCameraModel, testing_utilities::image_bounds, pixel, point);
+    cost_function = Create(CameraModel::UnifiedCameraModel, testing_utilities::image_bounds, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::UnifiedCameraModel::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
@@ -67,8 +66,8 @@ TEST(OptimizationProjectionCostFunction, TestCreate) {
 //
 // We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) succesfully and has
 // residual zero and that a point behind the camera returns false.
-TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
-    using PinholeCostFunction = optimization::ProjectionCostFunction_T<projection_functions::Pinhole>;
+TEST(OptimizationCostFunctions, TestReprojectionError_T) {
+    using PinholeCostFunction = ReprojectionError_T<projection_functions::Pinhole>;
     Array2d const pixel{testing_utilities::pinhole_intrinsics[1], testing_utilities::pinhole_intrinsics[2]};
     Array6d const pose{0, 0, 0, 0, 0, 0};
     Array2d residual{-1, -1};
@@ -94,12 +93,11 @@ TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_T) {
 // pointers takes some thought, but cost_function->Evaluate() should be tested when there is interest and time! Note
 // that the logic required to allocate the required input parameters for the evaluate function is found in
 // projection_functions:: PinholeRadtan4::JacobianUpdate().
-TEST(OptimizationProjectionCostFunction, TestProjectionCostFunction_TCreate) {
+TEST(OptimizationCostFunctions, TestReprojectionError_TCreate) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
     ceres::CostFunction const* const cost_function{
-        optimization::ProjectionCostFunction_T<projection_functions::Pinhole>::Create(pixel, point,
-                                                                                      testing_utilities::image_bounds)};
+        ReprojectionError_T<projection_functions::Pinhole>::Create(pixel, point, testing_utilities::image_bounds)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);  // pinhole intrinsics

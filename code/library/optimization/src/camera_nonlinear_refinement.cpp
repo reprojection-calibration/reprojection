@@ -2,7 +2,7 @@
 
 #include <ranges>
 
-#include "cost_functions/projection_cost_function.hpp"
+#include "cost_functions/reprojection_error.hpp"
 
 namespace reprojection::optimization {
 
@@ -22,7 +22,7 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
 
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
             ceres::CostFunction* const cost_function{
-                Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j))};
+                cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j))};
 
             problem.AddResidualBlock(cost_function, nullptr, optimized_state.camera_state.intrinsics.data(),
                                      optimized_state.frames.at(timestamp_ns).pose.data());
@@ -53,7 +53,7 @@ ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasure
         Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
         for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
             ceres::CostFunction const* const cost_function{
-                Create(sensor.camera_model, sensor.bounds, pixels.row(i), points.row(i))};
+                cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(i), points.row(i))};
 
             cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(i).data(), nullptr);
         }
