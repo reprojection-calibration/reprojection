@@ -26,7 +26,7 @@ namespace reprojection::optimization::cost_functions {
  * will leak!
  */
 ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
-                            Vector3d const& point);
+                            Vector3d const& point_w);
 
 // NOTE(Jack): Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
 // WARN(Jack): As we move past simple mono camera calibration we might find out that it is not the best option and that
@@ -45,9 +45,9 @@ template <typename T_Model>
 class ReprojectionError_T {
    public:
     template <typename T>
-    bool operator()(T const* const intrinsics_ptr, T const* const pose_ptr, T* const residual) const {
-        Eigen::Map<Eigen::Vector<T, 6> const> pose(pose_ptr);
-        Vector3<T> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
+    bool operator()(T const* const intrinsics_ptr, T const* const tf_co_w_ptr, T* const residual) const {
+        Eigen::Map<Eigen::Vector<T, 6> const> tf_co_w(tf_co_w_ptr);
+        Vector3<T> const point_co{TransformPoint<T>(tf_co_w, point_w_.cast<T>())};
 
         Eigen::Map<Eigen::Array<T, T_Model::Size, 1> const> intrinsics(intrinsics_ptr);
         auto const pixel{T_Model::template Project<T>(intrinsics, bounds_, point_co)};
@@ -102,13 +102,13 @@ class ReprojectionError_T {
         return true;
     }
 
-    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds) {
+    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point_w, ImageBounds const& bounds) {
         return new ceres::AutoDiffCostFunction<ReprojectionError_T, 2, T_Model::Size, 6>(
-            new ReprojectionError_T(pixel, point, bounds));
+            new ReprojectionError_T(pixel, point_w, bounds));
     }
 
     Vector2d pixel_;
-    Vector3d point_;
+    Vector3d point_w_;
     ImageBounds bounds_;
 };
 

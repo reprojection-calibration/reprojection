@@ -9,15 +9,15 @@
 namespace reprojection::optimization::cost_functions {
 
 ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
-                            Vector3d const& point) {
+                            Vector3d const& point_w) {
     if (projection_type == CameraModel::DoubleSphere) {
-        return ReprojectionError_T<projection_functions::DoubleSphere>::Create(pixel, point, bounds);
+        return ReprojectionError_T<projection_functions::DoubleSphere>::Create(pixel, point_w, bounds);
     } else if (projection_type == CameraModel::Pinhole) {
-        return ReprojectionError_T<projection_functions::Pinhole>::Create(pixel, point, bounds);
+        return ReprojectionError_T<projection_functions::Pinhole>::Create(pixel, point_w, bounds);
     } else if (projection_type == CameraModel::PinholeRadtan4) {
-        return ReprojectionError_T<projection_functions::PinholeRadtan4>::Create(pixel, point, bounds);
+        return ReprojectionError_T<projection_functions::PinholeRadtan4>::Create(pixel, point_w, bounds);
     } else if (projection_type == CameraModel::UnifiedCameraModel) {
-        return ReprojectionError_T<projection_functions::UnifiedCameraModel>::Create(pixel, point, bounds);
+        return ReprojectionError_T<projection_functions::UnifiedCameraModel>::Create(pixel, point_w, bounds);
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - ReprojectionError_T - Create()");  // LCOV_EXCL_LINE
     }
