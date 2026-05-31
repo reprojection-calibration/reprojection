@@ -62,9 +62,9 @@ To generate human-readable outputs run the dashboard and pass the workspace dire
 
     ./building/local/run_dashboard.sh /home/user/data/
 
-This command will (1) export the calibrations from each database and (2) run the interactive dashboard. You will find
-the exported calibrations inside the workspace folder, and you can open the link shown in the terminal to access the
-dashboard.
+This command will (1) export the calibrations and generate a pdf report from each database and (2) run the interactive
+dashboard. You will find the exported calibrations inside the workspace folder, and you can open the link shown in the
+terminal to access the interactive dashboard.
 
 ### Set the log level
 
