@@ -1,4 +1,4 @@
-#include "optimization/camera_nonlinear_refinement.hpp"
+#include "optimization/bundle_adjustment.hpp"
 
 #include <ranges>
 
@@ -6,13 +6,11 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): Confirm that OptimizationState initialization is a deep copy!
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
-std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo const& sensor,
-                                                                    CameraMeasurements const& targets,
-                                                                    OptimizationState const& initial_state,
-                                                                    bool const constant_intrinsics) {
+std::tuple<OptimizationState, CeresState> BundleAdjustment(CameraInfo const& sensor, CameraMeasurements const& targets,
+                                                           OptimizationState const& initial_state,
+                                                           bool const constant_intrinsics) {
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
@@ -26,10 +24,11 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
 
             problem.AddResidualBlock(cost_function, nullptr, optimized_state.camera_state.intrinsics.data(),
                                      optimized_state.frames.at(timestamp_ns).pose.data());
-            if (constant_intrinsics) {
-                problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
-            }
         }
+    }
+
+    if (constant_intrinsics) {
+        problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
     }
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
@@ -37,8 +36,8 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
     return {optimized_state, ceres_state};
 }
 
-ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                         OptimizationState const& state) {
+ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
+                                     OptimizationState const& state) {
     ReprojectionErrors residuals;
     for (auto const& [timestamp_ns, frame_i] : state.frames) {
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
@@ -51,6 +50,7 @@ ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasure
         // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two
         // column elements! That is the reason why we have to specifically specify RowMajor here!
         Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
+
         for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
             ceres::CostFunction const* const cost_function{
                 cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(i), points.row(i))};

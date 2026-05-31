@@ -1,4 +1,4 @@
-#include "optimization/camera_imu_nonlinear_refinement.hpp"
+#include "optimization/camera_imu_calibration.hpp"
 
 #include <ranges>
 
@@ -7,8 +7,8 @@
 
 namespace reprojection::optimization {
 
-ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                               CameraState const& camera_state, spline::Se3Spline const& spline) {
+ReprojectionErrors ReprojectionErrorSpline(CameraInfo const& sensor, CameraMeasurements const& targets,
+                                           CameraState const& camera_state, spline::Se3Spline const& spline) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
     //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
     //  key constraint. Do we need new tables for this?
@@ -23,10 +23,9 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
 
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(camera_state.intrinsics.data());
-        parameter_blocks.push_back(spline.ControlPoints().col(i).data());
-        parameter_blocks.push_back(spline.ControlPoints().col(i + 1).data());
-        parameter_blocks.push_back(spline.ControlPoints().col(i + 2).data());
-        parameter_blocks.push_back(spline.ControlPoints().col(i + 3).data());
+        for (int j{0}; j < 4; ++j) {
+            parameter_blocks.push_back(spline.ControlPoints().col(i + j).data());
+        }
 
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
         Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};

@@ -4,7 +4,7 @@
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"  // REQUIRED BECAUSE OF ReprojectionResiduals()
+#include "optimization/bundle_adjustment.hpp"  // REQUIRED BECAUSE OF ReprojectionResiduals()
 
 namespace reprojection::steps {
 
@@ -18,7 +18,7 @@ void LpiStep::Save(Frames const& frames, SqlitePtr const db) const {
     database::WriteToDb(frames, step_type, SensorName(), db);
 
     OptimizationState const state{camera_state, frames};
-    ReprojectionErrors const error{optimization::ReprojectionResiduals(camera_info, targets, state)};
+    ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, state)};
     database::WriteToDb(error, step_type, SensorName(), db);
 }
 

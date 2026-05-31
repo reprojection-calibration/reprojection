@@ -1,4 +1,4 @@
-#include "optimization/camera_nonlinear_refinement.hpp"
+#include "optimization/bundle_adjustment.hpp"
 
 #include <gtest/gtest.h>
 
@@ -20,7 +20,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 
     // Solve
     OptimizationState const initial_state{gt_intrinsics, gt_frames};
-    auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
+    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state)};
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     // Assert
@@ -54,7 +54,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
     }
 
     OptimizationState const initial_state{gt_intrinsics, noisy_frames};
-    auto const [optimized_state, diagnostics]{optimization::CameraNonlinearRefinement(sensor, targets, initial_state)};
+    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state)};
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     EXPECT_EQ(std::size(optimized_state.frames), 50);
@@ -112,7 +112,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
     OptimizationState const state{CameraState{testing_utilities::pinhole_intrinsics},
                                   {{timestamp_ns, {Array6d::Zero()}}}};
 
-    ReprojectionErrors const residuals{optimization::ReprojectionResiduals(sensor, targets, state)};
+    ReprojectionErrors const residuals{optimization::ReprojectionError(sensor, targets, state)};
     EXPECT_EQ(std::size(residuals), 1);
     EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))
         << "Result:\n"

@@ -1,7 +1,7 @@
 #include "pnp/pnp.hpp"
 
 #include "geometry/lie.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"
+#include "optimization/bundle_adjustment.hpp"
 #include "types/algorithm_types.hpp"
 #include "types/calibration_types.hpp"
 
@@ -48,8 +48,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     OptimizationState const initial_state{CameraState{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
 
     // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
-    auto const [optimized_state,
-                diagnostics]{optimization::CameraNonlinearRefinement(sensor, target, initial_state, true)};
+    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, target, initial_state, true)};
     if (diagnostics.solver_summary.termination_type == ceres::CONVERGENCE) {
         return PoseWithCost{geometry::Exp(optimized_state.frames.at(timestamp_ns).pose),
                             diagnostics.solver_summary.final_cost};

@@ -1,4 +1,4 @@
-#include "optimization/camera_imu_nonlinear_refinement.hpp"
+#include "optimization/camera_imu_calibration.hpp"
 
 #include <gtest/gtest.h>
 
@@ -37,8 +37,7 @@ TEST(OptimizationCameraImuNonlinearRefinement, TestEvaluateSplineReprojectionRes
     control_points << Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero();
     spline::Se3Spline const spline{control_points, {0, 1}};
 
-    ReprojectionErrors const residuals{
-        optimization::SplineReprojectionResiduals(sensor, targets, camera_state, spline)};
+    ReprojectionErrors const residuals{optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
     EXPECT_EQ(std::size(residuals), 1);
     EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))
         << "Result:\n"

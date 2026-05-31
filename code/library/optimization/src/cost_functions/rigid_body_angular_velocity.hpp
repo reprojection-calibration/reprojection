@@ -5,22 +5,20 @@
 
 #include "types/eigen_types.hpp"
 
+#include "ceres_geometry.hpp"
+
 namespace reprojection::optimization::cost_functions {
 
-// TODO(Jack) Refactor to generic GyroscopeError error.
-
-// NOTE(Jack): The rotational velocities must come from two frames on a rigid body. If they are not on the same body
-// this optimization is not meaningful.
 class RigidBodyAngularVelocity {
    public:
-    // TODO CHECK COORDINATE CONVENTIONS ARE CORRECT!
+    // TODO(Jack): Are we sure the coordinate frame naming and conventions/usage are actually correct?
     template <typename T>
-    bool operator()(T const* const orientation_ptr, T* const residual) const {
-        Eigen::Map<Eigen::Vector<T, 3> const> aa_a_b(orientation_ptr);
+    bool operator()(T const* const aa_a_b_ptr, T* const residual) const {
+        Eigen::Map<Eigen::Vector<T, 3> const> aa_a_b(aa_a_b_ptr);
         Vector3<T> const T_omega_b{omega_b_.cast<T>()};
 
-        Vector3<T> omega_a;
-        ceres::AngleAxisRotatePoint(aa_a_b.data(), T_omega_b.data(), omega_a.data());
+        // TODO(Jack): Is it really appropriate to rotate points and vectors interchangeably here? At least the naming?
+        Vector3<T> const omega_a{RotatePoint<T>(aa_a_b, T_omega_b)};
 
         // ERROR(Jack): This is not nice at all. We are hardcoding the absolute value difference here because somewhere
         // in the flow we are getting a flipped omega-x. This means that after transforming the interpolate camera

@@ -3,14 +3,14 @@
 #include "caching/cache_keys.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
-#include "optimization/camera_nonlinear_refinement.hpp"
+#include "optimization/bundle_adjustment.hpp"
 
 namespace reprojection::steps {
 
 std::string CnlrStep::CacheKey() const { return caching::CacheKey(camera_info, targets, initial_state); }
 
 OptimizationState CnlrStep::Compute() const {
-    auto const [optimized_state, _]{optimization::CameraNonlinearRefinement(camera_info, targets, initial_state)};
+    auto const [optimized_state, _]{optimization::BundleAdjustment(camera_info, targets, initial_state)};
 
     return optimized_state;
 }
@@ -33,7 +33,7 @@ void CnlrStep::Save(OptimizationState const& optimized_state, SqlitePtr const db
     database::WriteToDb(optimized_state.camera_state, camera_info.camera_model, step_type, SensorName(), db);
     database::WriteToDb(optimized_state.frames, step_type, SensorName(), db);
 
-    ReprojectionErrors const error{optimization::ReprojectionResiduals(camera_info, targets, optimized_state)};
+    ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, optimized_state)};
     database::WriteToDb(error, step_type, SensorName(), db);
 }
 

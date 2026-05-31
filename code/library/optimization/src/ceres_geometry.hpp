@@ -8,20 +8,22 @@
 
 namespace reprojection::optimization {
 
+template <typename T>
+Vector3<T> RotatePoint(Eigen::Ref<Eigen::Vector<T, 3> const> const& aa_i_j,
+                       Eigen::Ref<Vector3<T> const> const& point_j) {
+    Vector3<T> point_i;
+    ceres::AngleAxisRotatePoint(aa_i_j.data(), point_j.data(), point_i.data());
+
+    return point_i;
+}
+
 // NOTE(Jack): We use Eigen::Ref here so we can pass both maps (in the PinholeCostFunction.operator()) and the direct
 // types (in the testing for example).
 // TODO(Jack): Does the point here really need to be templated? Or as a constant can we avoid that?
 template <typename T>
 Vector3<T> TransformPoint(Eigen::Ref<Eigen::Vector<T, 6> const> const& tf_i_j,
                           Eigen::Ref<Vector3<T> const> const& point_j) {
-    Vector3<T> const axis_angle{tf_i_j.template topRows<3>()};
-    Vector3<T> point_i;
-    ceres::AngleAxisRotatePoint(axis_angle.data(), point_j.data(), point_i.data());
-
-    Vector3<T> const translation{tf_i_j.template bottomRows<3>()};
-    point_i += translation;
-
-    return point_i;
+    return RotatePoint<T>(tf_i_j.template topRows<3>(), point_j) + tf_i_j.template bottomRows<3>();
 }
 
 }  // namespace  reprojection::optimization
