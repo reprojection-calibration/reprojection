@@ -5,17 +5,14 @@
 
 #include "types/eigen_types.hpp"
 
-namespace reprojection::optimization {
+namespace reprojection::optimization::cost_functions {
 
 // TODO(Jack) Refactor to generic GyroscopeError error.
 
 // NOTE(Jack): The rotational velocities must come from two frames on a rigid body. If they are not on the same body
 // this optimization is not meaningful.
-class AngularVelocityCostFunction {
+class RigidBodyAngularVelocity {
    public:
-    AngularVelocityCostFunction(Vector3d const& omega_a, Vector3d const& omega_b)
-        : omega_a_{omega_a}, omega_b_{omega_b} {}
-
     // TODO CHECK COORDINATE CONVENTIONS ARE CORRECT!
     template <typename T>
     bool operator()(T const* const orientation_ptr, T* const residual) const {
@@ -42,12 +39,12 @@ class AngularVelocityCostFunction {
     }
 
     static ceres::CostFunction* Create(Vector3d const& omega_a, Vector3d const& omega_b) {
-        return new ceres::AutoDiffCostFunction<AngularVelocityCostFunction, 3, 3>(
-            new AngularVelocityCostFunction(omega_a, omega_b));
+        return new ceres::AutoDiffCostFunction<RigidBodyAngularVelocity, 3, 3>(
+            new RigidBodyAngularVelocity(omega_a, omega_b));
     }
 
     Vector3d omega_a_;
     Vector3d omega_b_;
 };
 
-}  // namespace  reprojection::optimization
+}  // namespace reprojection::optimization::cost_functions

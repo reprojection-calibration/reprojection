@@ -9,7 +9,7 @@
 
 #include "ceres_geometry.hpp"
 
-namespace reprojection::optimization {
+namespace reprojection::optimization::cost_functions {
 
 /**
  * \brief Generates a camera model specific projection cost function for use in the optimization.
@@ -32,7 +32,6 @@ ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const
 // WARN(Jack): As we move past simple mono camera calibration we might find out that it is not the best option and that
 // the pose/transform will play a less central role here and instead be part of the spline. This is unclear at this
 // point, so I am gonna hold off from adding any documentation, it is not so hard to understand anyway.
-template <typename T_Model>
 // WARN(Jack): Technically for the cost function we only need the HasIntrinsicsSize<> and CanProject<> concepts.
 // Therefore, using the ProjectionClass<> concept is overkill because it requires template parameters to also satisfy
 // the CanUnproject<> requirement. That being said, in the context of the entire project, when some introduces a new
@@ -41,12 +40,10 @@ template <typename T_Model>
 // ProjectionClass<> concept. This makes the project more homogenous and will catch errors more quickly. That being said
 // maybe this also indicates we have an incorrect abstraction because information which is not strictly needed (i.e.
 // that CanUnproject<> is required) is present here. Let's see how this plays out in the long term!
+template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
-class ProjectionCostFunction_T {
+class ReprojectionError_T {
    public:
-    ProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds)
-        : pixel_{pixel}, point_{point}, bounds_{bounds} {}
-
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const pose_ptr, T* const residual) const {
         Eigen::Map<Eigen::Vector<T, 6> const> pose(pose_ptr);
@@ -106,8 +103,8 @@ class ProjectionCostFunction_T {
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds) {
-        return new ceres::AutoDiffCostFunction<ProjectionCostFunction_T, 2, T_Model::Size, 6>(
-            new ProjectionCostFunction_T(pixel, point, bounds));
+        return new ceres::AutoDiffCostFunction<ReprojectionError_T, 2, T_Model::Size, 6>(
+            new ReprojectionError_T(pixel, point, bounds));
     }
 
     Vector2d pixel_;
@@ -115,4 +112,4 @@ class ProjectionCostFunction_T {
     ImageBounds bounds_;
 };
 
-}  // namespace  reprojection::optimization
+}  // namespace reprojection::optimization::cost_functions

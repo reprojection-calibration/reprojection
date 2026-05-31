@@ -1,4 +1,4 @@
-#include "spline_projection_cost_function.hpp"
+#include "reprojection_error_spline.hpp"
 
 #include <gtest/gtest.h>
 
@@ -9,8 +9,9 @@
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
+using namespace reprojection::optimization::cost_functions;
 
-TEST(OptimizationSplineProjectionCostFunction, TestCreate) {
+TEST(OptimizationCostFunctions, TestCreate) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
     double const u_i{0};
@@ -18,26 +19,24 @@ TEST(OptimizationSplineProjectionCostFunction, TestCreate) {
 
     int const num_parameter_blocks{5};  // intrinsics and four control points
 
-    ceres::CostFunction* cost_function{optimization::Create(CameraModel::DoubleSphere, testing_utilities::image_bounds,
-                                                            pixel, point, u_i, delta_t_ns)};
+    ceres::CostFunction* cost_function{
+        Create(CameraModel::DoubleSphere, testing_utilities::image_bounds, pixel, point, u_i, delta_t_ns)};
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::DoubleSphere::Size);
     delete cost_function;
 
-    cost_function =
-        optimization::Create(CameraModel::Pinhole, testing_utilities::image_bounds, pixel, point, u_i, delta_t_ns);
+    cost_function = Create(CameraModel::Pinhole, testing_utilities::image_bounds, pixel, point, u_i, delta_t_ns);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::Pinhole::Size);
     delete cost_function;
 
-    cost_function = optimization::Create(CameraModel::PinholeRadtan4, testing_utilities::image_bounds, pixel, point,
-                                         u_i, delta_t_ns);
+    cost_function = Create(CameraModel::PinholeRadtan4, testing_utilities::image_bounds, pixel, point, u_i, delta_t_ns);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::PinholeRadtan4::Size);
     delete cost_function;
 
-    cost_function = optimization::Create(CameraModel::UnifiedCameraModel, testing_utilities::image_bounds, pixel, point,
-                                         u_i, delta_t_ns);
+    cost_function =
+        Create(CameraModel::UnifiedCameraModel, testing_utilities::image_bounds, pixel, point, u_i, delta_t_ns);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::UnifiedCameraModel::Size);
     delete cost_function;
@@ -45,11 +44,11 @@ TEST(OptimizationSplineProjectionCostFunction, TestCreate) {
 
 // Test with four of the same identity control points. This should give us an identity SE3 pose. Because the spline is
 // stationary as identity we arbitrarily choose u_i and delta_t_ns as it makes no difference here.
-TEST(OptimizationSplineProjectionCostFunction, TestSplineProjectionCostFunction_T) {
+TEST(OptimizationCostFunctions, TestReprojectionErrorSpline_T) {
     Array2d const pixel{testing_utilities::pinhole_intrinsics[1], testing_utilities::pinhole_intrinsics[2]};
     Array3d const point{0, 0, 10};
-    optimization::SplineProjectionCostFunction_T<projection_functions::Pinhole> const cost_function{
-        pixel, point, testing_utilities::image_bounds, 0, 1};
+    ReprojectionErrorSpline_T<projection_functions::Pinhole> const cost_function{pixel, point,
+                                                                                 testing_utilities::image_bounds, 0, 1};
 
     Array6d const control_point{Array6d::Zero()};
     Array2d residual{-1, -1};
@@ -61,12 +60,11 @@ TEST(OptimizationSplineProjectionCostFunction, TestSplineProjectionCostFunction_
     EXPECT_FLOAT_EQ(residual[1], 0.0);
 }
 
-TEST(OptimizationSplineProjectionCostFunction, TestSplineProjectionCostFunction_TCreate) {
+TEST(OptimizationCostFunctions, TestReprojectionErrorSpline_TCreate) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
-    ceres::CostFunction const* const cost_function{
-        optimization::SplineProjectionCostFunction_T<projection_functions::Pinhole>::Create(
-            pixel, point, testing_utilities::image_bounds, 0.0, 1)};
+    ceres::CostFunction const* const cost_function{ReprojectionErrorSpline_T<projection_functions::Pinhole>::Create(
+        pixel, point, testing_utilities::image_bounds, 0.0, 1)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 5);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);  // pinhole intrinsics

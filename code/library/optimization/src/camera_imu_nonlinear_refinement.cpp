@@ -2,9 +2,8 @@
 
 #include <ranges>
 
+#include "cost_functions/reprojection_error_spline.hpp"
 #include "spline/spline_initialization.hpp"
-
-#include "spline_projection_cost_function.hpp"
 
 namespace reprojection::optimization {
 
@@ -32,9 +31,9 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
         Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
-            ceres::CostFunction const* const cost_function{Create(sensor.camera_model, sensor.bounds, pixels.row(j),
-                                                                  points.row(j), u_i,
-                                                                  spline.GetTimeHandler().delta_t_ns_)};
+            ceres::CostFunction const* const cost_function{cost_functions::Create(sensor.camera_model, sensor.bounds,
+                                                                                  pixels.row(j), points.row(j), u_i,
+                                                                                  spline.GetTimeHandler().delta_t_ns_)};
 
             cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(j).data(), nullptr);
         }

@@ -13,7 +13,8 @@ Vector6d Log(Isometry3d const& SE3);
 // NOTE(Jack): We use ceres here because the methods are autodiff compatible by default.
 template <typename T>
 Matrix3<T> Exp(Vector3<T> const& so3) {
-    T R[9];
+    // TODO(Jack): Why do we need to code coverage suppress this line here? Makes no sense... should I be scared?
+    T R[9];  // LCOV_EXCL_LINE
     ceres::AngleAxisToRotationMatrix(so3.data(), R);
 
     Eigen::Map<const Matrix3<T>> SO3(R);

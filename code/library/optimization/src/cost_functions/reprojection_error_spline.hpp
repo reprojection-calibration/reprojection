@@ -10,21 +10,17 @@
 #include "types/enums.hpp"
 
 #include "ceres_geometry.hpp"
-#include "projection_cost_function.hpp"
+#include "reprojection_error.hpp"
 
-namespace reprojection::optimization {
+namespace reprojection::optimization::cost_functions {
 
 ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
                             Vector3d const& point, double const u_i, uint64_t const delta_t_ns);
 
 template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
-class SplineProjectionCostFunction_T {
+class ReprojectionErrorSpline_T {
    public:
-    SplineProjectionCostFunction_T(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds,
-                                   double const u_i, uint64_t const delta_t_ns)
-        : pixel_{pixel}, point_{point}, bounds_{bounds}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
-
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const control_point_0_ptr,
                     T const* const control_point_1_ptr, T const* const control_point_2_ptr,
@@ -40,14 +36,14 @@ class SplineProjectionCostFunction_T {
         // Calculate the se3 pose and then return the standard reprojection error.
         Array6<T> const pose{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
 
-        return ProjectionCostFunction_T<T_Model>(pixel_, point_, bounds_)
+        return ReprojectionError_T<T_Model>(pixel_, point_, bounds_)
             .template operator()<T>(intrinsics_ptr, pose.data(), residual);
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds,
                                        double const u_i, uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<SplineProjectionCostFunction_T, 2, T_Model::Size, 6, 6, 6, 6>(
-            new SplineProjectionCostFunction_T(pixel, point, bounds, u_i, delta_t_ns));
+        return new ceres::AutoDiffCostFunction<ReprojectionErrorSpline_T, 2, T_Model::Size, 6, 6, 6, 6>(
+            new ReprojectionErrorSpline_T(pixel, point, bounds, u_i, delta_t_ns));
     }
 
     Vector2d pixel_;
@@ -58,4 +54,4 @@ class SplineProjectionCostFunction_T {
     uint64_t delta_t_ns_;
 };
 
-}  // namespace  reprojection::optimization
+}  // namespace reprojection::optimization::cost_functions
