@@ -177,7 +177,10 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
         )
     )
 
-    max_radius = max(magnitudes)
+    # TODO(Jack): It would be smart to dynamically set this (?) but it is required that we show the user that there are
+    # errors outside of this max radius that do not show up on the graph. Hardcoding this to a small value here might
+    # hide outlier points to the user that they would otherwise expect to see.
+    max_radius = 10
     fig.update_layout(
         title=f"Reprojection error bullseye",
         polar={
