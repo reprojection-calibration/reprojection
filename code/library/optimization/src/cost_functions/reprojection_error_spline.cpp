@@ -14,15 +14,15 @@ using namespace projection_functions;
 // we missing the concept that would let us just do this once?
 // WARN(Jack): This is an overloaded function, this error will not help the user identify which Create() failed!
 ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
-                            Vector3d const& point, double const u_i, uint64_t const delta_t_ns) {
+                            Vector3d const& point_w, double const u_i, uint64_t const delta_t_ns) {
     if (projection_type == CameraModel::DoubleSphere) {
-        return ReprojectionErrorSpline_T<DoubleSphere>::Create(pixel, point, bounds, u_i, delta_t_ns);
+        return ReprojectionErrorSpline_T<DoubleSphere>::Create(pixel, point_w, bounds, u_i, delta_t_ns);
     } else if (projection_type == CameraModel::Pinhole) {
-        return ReprojectionErrorSpline_T<Pinhole>::Create(pixel, point, bounds, u_i, delta_t_ns);
+        return ReprojectionErrorSpline_T<Pinhole>::Create(pixel, point_w, bounds, u_i, delta_t_ns);
     } else if (projection_type == CameraModel::PinholeRadtan4) {
-        return ReprojectionErrorSpline_T<PinholeRadtan4>::Create(pixel, point, bounds, u_i, delta_t_ns);
+        return ReprojectionErrorSpline_T<PinholeRadtan4>::Create(pixel, point_w, bounds, u_i, delta_t_ns);
     } else if (projection_type == CameraModel::UnifiedCameraModel) {
-        return ReprojectionErrorSpline_T<UnifiedCameraModel>::Create(pixel, point, bounds, u_i, delta_t_ns);
+        return ReprojectionErrorSpline_T<UnifiedCameraModel>::Create(pixel, point_w, bounds, u_i, delta_t_ns);
     } else {
         throw std::runtime_error(
             "The requested camera model is not supported by the reprojection::optimization::Create() function.");  // LCOV_EXCL_LINE

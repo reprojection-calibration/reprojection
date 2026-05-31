@@ -34,20 +34,20 @@ class ReprojectionErrorSpline_T {
         }
 
         // Calculate the se3 pose and then return the standard reprojection error.
-        Array6<T> const pose{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
+        Array6<T> const tf_co_w{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
 
-        return ReprojectionError_T<T_Model>(pixel_, point_, bounds_)
-            .template operator()<T>(intrinsics_ptr, pose.data(), residual);
+        return ReprojectionError_T<T_Model>(pixel_, point_w_, bounds_)
+            .template operator()<T>(intrinsics_ptr, tf_co_w.data(), residual);
     }
 
-    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds,
+    static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point_w, ImageBounds const& bounds,
                                        double const u_i, uint64_t const delta_t_ns) {
         return new ceres::AutoDiffCostFunction<ReprojectionErrorSpline_T, 2, T_Model::Size, 6, 6, 6, 6>(
-            new ReprojectionErrorSpline_T(pixel, point, bounds, u_i, delta_t_ns));
+            new ReprojectionErrorSpline_T(pixel, point_w, bounds, u_i, delta_t_ns));
     }
 
     Vector2d pixel_;
-    Vector3d point_;
+    Vector3d point_w_;
     ImageBounds bounds_;
 
     double u_i_;
