@@ -5,7 +5,7 @@ set(SRC_FILES
         src/camera_imu_nonlinear_refinement.cpp
         src/camera_nonlinear_refinement.cpp
         src/cost_functions/reprojection_error.cpp
-        src/cost_functions/spline_projection_cost_function.cpp
+        src/cost_functions/reprojection_error_spline.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -24,9 +24,9 @@ set(TEST_LINK_LIBRARIES
 )
 set(TESTS
         src/ceres_geometry.test.cpp
-        src/cost_functions/rigid_body_angular_velocity.test.cpp
         src/cost_functions/reprojection_error.test.cpp
-        src/cost_functions/spline_projection_cost_function.test.cpp
+        src/cost_functions/reprojection_error_spline.test.cpp
+        src/cost_functions/rigid_body_angular_velocity.test.cpp
         test/angular_velocity_alignment.test.cpp
         test/camera_imu_nonlinear_refinement.test.cpp
         test/camera_nonlinear_refinement.test.cpp
