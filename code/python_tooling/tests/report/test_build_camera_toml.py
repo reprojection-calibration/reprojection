@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-from report.build_camera_tomls import build_camera_tomls
+from report.build_camera_toml import build_camera_toml
 
 
 class TestBuildCameraTomls(unittest.TestCase):
@@ -54,17 +54,19 @@ class TestBuildCameraTomls(unittest.TestCase):
         }
         camera_intrinsics_table = pd.DataFrame(camera_intrinsics_data)
 
-        result = build_camera_tomls(camera_info_table, camera_intrinsics_table)
+        result = build_camera_toml(camera_info_table, camera_intrinsics_table)
 
         result_gt = """\
         [cam0]
         sensor_id = "/cam0/image_raw"
+        # https://github.com/reprojection-calibration/reprojection#camera-models
         camera_model = "pinhole_radtan4"
         intrinsics = [160.0, 256.0, 256.0, 0.1, 0.2, 0.3, 0.4]
         resolution = [720, 1080]
         
         [cam1]
         sensor_id = "/cam1/image_raw"
+        # https://github.com/reprojection-calibration/reprojection#camera-models
         camera_model = "double_sphere"
         intrinsics = [160.0, 256.0, 256.0, 0.0, 0.5]
         resolution = [720, 1080]
