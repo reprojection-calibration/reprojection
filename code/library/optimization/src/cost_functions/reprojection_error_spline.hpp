@@ -21,10 +21,6 @@ template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
 class ReprojectionErrorSpline_T {
    public:
-    ReprojectionErrorSpline_T(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds, double const u_i,
-                              uint64_t const delta_t_ns)
-        : pixel_{pixel}, point_{point}, bounds_{bounds}, u_i_{u_i}, delta_t_ns_{delta_t_ns} {}
-
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const control_point_0_ptr,
                     T const* const control_point_1_ptr, T const* const control_point_2_ptr,

@@ -44,9 +44,6 @@ template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
 class ReprojectionError_T {
    public:
-    ReprojectionError_T(Vector2d const& pixel, Vector3d const& point, ImageBounds const& bounds)
-        : pixel_{pixel}, point_{point}, bounds_{bounds} {}
-
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const pose_ptr, T* const residual) const {
         Eigen::Map<Eigen::Vector<T, 6> const> pose(pose_ptr);
@@ -115,4 +112,4 @@ class ReprojectionError_T {
     ImageBounds bounds_;
 };
 
-}  // namespace  reprojection::optimization
+}  // namespace reprojection::optimization::cost_functions

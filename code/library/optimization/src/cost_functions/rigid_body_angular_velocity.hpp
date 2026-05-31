@@ -13,9 +13,6 @@ namespace reprojection::optimization::cost_functions {
 // this optimization is not meaningful.
 class RigidBodyAngularVelocity {
    public:
-    RigidBodyAngularVelocity(Vector3d const& omega_a, Vector3d const& omega_b)
-        : omega_a_{omega_a}, omega_b_{omega_b} {}
-
     // TODO CHECK COORDINATE CONVENTIONS ARE CORRECT!
     template <typename T>
     bool operator()(T const* const orientation_ptr, T* const residual) const {
@@ -50,4 +47,4 @@ class RigidBodyAngularVelocity {
     Vector3d omega_b_;
 };
 
-}  // namespace  reprojection::optimization
+}  // namespace reprojection::optimization::cost_functions

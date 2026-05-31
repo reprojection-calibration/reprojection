@@ -1,4 +1,5 @@
 #include "cost_functions/reprojection_error.hpp"
+
 #include "projection_functions/double_sphere.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
@@ -22,4 +23,4 @@ ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const
     }
 }
 
-}  // namespace  reprojection::optimization
+}  // namespace reprojection::optimization::cost_functions
