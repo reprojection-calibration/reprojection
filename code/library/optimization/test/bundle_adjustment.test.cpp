@@ -1,7 +1,8 @@
+#include "optimization/bundle_adjustment.hpp"
+
 #include <gtest/gtest.h>
 
 #include "geometry/lie.hpp"
-#include "optimization/bundle_adjustment.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"

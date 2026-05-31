@@ -1,13 +1,14 @@
+#include "optimization/camera_imu_calibration.hpp"
+
 #include <ranges>
 
 #include "cost_functions/reprojection_error_spline.hpp"
-#include "optimization/camera_imu_calibration.hpp"
 #include "spline/spline_initialization.hpp"
 
 namespace reprojection::optimization {
 
 ReprojectionErrors ReprojectionErrorSpline(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                               CameraState const& camera_state, spline::Se3Spline const& spline) {
+                                           CameraState const& camera_state, spline::Se3Spline const& spline) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
     //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
     //  key constraint. Do we need new tables for this?

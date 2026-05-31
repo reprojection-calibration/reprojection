@@ -1,6 +1,7 @@
+#include "optimization/camera_imu_calibration.hpp"
+
 #include <gtest/gtest.h>
 
-#include "optimization/camera_imu_calibration.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
@@ -36,8 +37,7 @@ TEST(OptimizationCameraImuNonlinearRefinement, TestEvaluateSplineReprojectionRes
     control_points << Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero();
     spline::Se3Spline const spline{control_points, {0, 1}};
 
-    ReprojectionErrors const residuals{
-        optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
+    ReprojectionErrors const residuals{optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
     EXPECT_EQ(std::size(residuals), 1);
     EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))
         << "Result:\n"
