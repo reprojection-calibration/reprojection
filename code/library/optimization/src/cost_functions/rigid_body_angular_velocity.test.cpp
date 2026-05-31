@@ -1,8 +1,9 @@
-#include "angular_velocity_cost_function.hpp"
+#include "rigid_body_angular_velocity.hpp"
 
 #include <gtest/gtest.h>
 
 using namespace reprojection;
+using namespace reprojection::optimization::cost_functions;
 
 // {aa_a_b, omega_a, omega_b}
 std::vector<std::tuple<Array3d, Vector3d, Vector3d>> const test_cases{
@@ -14,10 +15,10 @@ std::vector<std::tuple<Array3d, Vector3d, Vector3d>> const test_cases{
     // Negative case gives opposite rotation direction
     {{0, 0, -M_PI / 2}, -Vector3d::UnitY(), Vector3d::UnitX()}};
 
-TEST(OptimizationAngularVelocityCostFunction, TestAngularVelocityCostFunctionZeroResidual) {
+TEST(OptimizationCostFunctions, TestRigidBodyAngularVelocityZeroResidual) {
     for (auto const& [aa_a_b, omega_a, omega_b] : test_cases) {
         Array3d residual{-1, -1, -1};
-        optimization::AngularVelocityCostFunction const cost_function{omega_a, omega_b};
+        RigidBodyAngularVelocity const cost_function{omega_a, omega_b};
 
         bool const success{cost_function(aa_a_b.data(), residual.data())};
         EXPECT_TRUE(success);
@@ -28,11 +29,11 @@ TEST(OptimizationAngularVelocityCostFunction, TestAngularVelocityCostFunctionZer
 }
 
 // One test with heuristic residual values with non-trivial rotation - canary in the coal mine test.
-TEST(OptimizationAngularVelocityCostFunction, TestAngularVelocityCostFunction) {
+TEST(OptimizationCostFunctions, TestRigidBodyAngularVelocityHeuristic) {
     Vector3d const omega_a{0, 0, 0};
     Vector3d const omega_b{1, 2, 3};
 
-    optimization::AngularVelocityCostFunction const cost_function{omega_a, omega_b};
+    RigidBodyAngularVelocity const cost_function{omega_a, omega_b};
 
     Array3d const aa_a_b{0.1, 0.1, 0.1};
     Array3d residual{-1, -1, -1};
@@ -43,10 +44,10 @@ TEST(OptimizationAngularVelocityCostFunction, TestAngularVelocityCostFunction) {
     EXPECT_FLOAT_EQ(residual[2], -3.0845382119845914);
 }
 
-TEST(OptimizationAngularVelocityCostFunction, TestAngularVelocityCostFunctionCreate) {
+TEST(OptimizationCostFunctions, TestRigidBodyAngularVelocityCreate) {
     Vector3d const omega_a{Vector3d::Zero()};
     Vector3d const omega_b{Vector3d::Zero()};
-    ceres::CostFunction const* const cost_function{optimization::AngularVelocityCostFunction::Create(omega_a, omega_b)};
+    ceres::CostFunction const* const cost_function{RigidBodyAngularVelocity::Create(omega_a, omega_b)};
 
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 1);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);  // Axis angle rotation

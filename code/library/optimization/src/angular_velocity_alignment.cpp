@@ -2,7 +2,7 @@
 
 #include <ranges>
 
-#include "cost_functions/angular_velocity_cost_function.hpp"
+#include "cost_functions/rigid_body_angular_velocity.hpp"
 #include "geometry/lie.hpp"
 
 namespace reprojection::optimization {
@@ -18,8 +18,8 @@ std::tuple<Matrix3d, CeresState> AngularVelocityAlignment(VelocityMeasurements c
 
     Array3d aa_a_b{0, 0, 0};
     for (auto const timestamp_ns : omega_a | std::views::keys) {
-        ceres::CostFunction* const cost_function{
-            AngularVelocityCostFunction::Create(omega_a.at(timestamp_ns).velocity, omega_b.at(timestamp_ns).velocity)};
+        ceres::CostFunction* const cost_function{cost_functions::RigidBodyAngularVelocity::Create(
+            omega_a.at(timestamp_ns).velocity, omega_b.at(timestamp_ns).velocity)};
 
         problem.AddResidualBlock(cost_function, nullptr, aa_a_b.data());
     }
