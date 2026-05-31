@@ -26,10 +26,11 @@ std::tuple<OptimizationState, CeresState> CameraNonlinearRefinement(CameraInfo c
 
             problem.AddResidualBlock(cost_function, nullptr, optimized_state.camera_state.intrinsics.data(),
                                      optimized_state.frames.at(timestamp_ns).pose.data());
-            if (constant_intrinsics) {
-                problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
-            }
         }
+    }
+
+    if (constant_intrinsics) {
+        problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
     }
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
@@ -51,6 +52,7 @@ ReprojectionErrors ReprojectionResiduals(CameraInfo const& sensor, CameraMeasure
         // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two
         // column elements! That is the reason why we have to specifically specify RowMajor here!
         Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
+
         for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
             ceres::CostFunction const* const cost_function{
                 cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(i), points.row(i))};

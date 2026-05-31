@@ -23,10 +23,9 @@ ReprojectionErrors SplineReprojectionResiduals(CameraInfo const& sensor, CameraM
 
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(camera_state.intrinsics.data());
-        parameter_blocks.push_back(spline.ControlPoints().col(i).data());
-        parameter_blocks.push_back(spline.ControlPoints().col(i + 1).data());
-        parameter_blocks.push_back(spline.ControlPoints().col(i + 2).data());
-        parameter_blocks.push_back(spline.ControlPoints().col(i + 3).data());
+        for (int j{0}; j < 4; ++j) {
+            parameter_blocks.push_back(spline.ControlPoints().col(i + j).data());
+        }
 
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
         Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
