@@ -16,9 +16,11 @@ source "${VENV_DIR}/bin/activate"
 python3 -m pip install \
  build \
  dash \
+ kaleido \
  numpy \
  pandas \
  plotly \
+ reportlab \
  scipy \
  setuptools
 
@@ -27,3 +29,6 @@ python3 -m pip install \
   grpcio \
   grpcio-tools \
   protobuf
+
+# Kaleido is needed by plotly for image export, which needs google chrome apparently...
+plotly_get_chrome -y
