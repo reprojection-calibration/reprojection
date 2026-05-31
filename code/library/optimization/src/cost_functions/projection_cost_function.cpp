@@ -1,4 +1,4 @@
-#include "projection_cost_function.hpp"
+#include "cost_functions/projection_cost_function.hpp"
 
 #include "projection_functions/double_sphere.hpp"
 #include "projection_functions/pinhole.hpp"

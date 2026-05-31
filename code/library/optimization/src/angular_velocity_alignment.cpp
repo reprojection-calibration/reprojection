@@ -2,9 +2,8 @@
 
 #include <ranges>
 
+#include "cost_functions/angular_velocity_cost_function.hpp"
 #include "geometry/lie.hpp"
-
-#include "angular_velocity_cost_function.hpp"
 
 namespace reprojection::optimization {
 

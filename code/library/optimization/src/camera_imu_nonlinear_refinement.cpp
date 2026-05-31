@@ -2,9 +2,8 @@
 
 #include <ranges>
 
+#include "cost_functions/spline_projection_cost_function.hpp"
 #include "spline/spline_initialization.hpp"
-
-#include "spline_projection_cost_function.hpp"
 
 namespace reprojection::optimization {
 

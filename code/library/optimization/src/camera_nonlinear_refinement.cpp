@@ -2,7 +2,7 @@
 
 #include <ranges>
 
-#include "projection_cost_function.hpp"
+#include "cost_functions/projection_cost_function.hpp"
 
 namespace reprojection::optimization {
 
