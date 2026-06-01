@@ -10,7 +10,7 @@ struct PoseInitialization {
     CameraMeasurements targets;
     CameraState camera_state;
 
-    CalibrationStep step_type{CalibrationStep::pose_initialization};
+    CalibrationStep step_type{CalibrationStep::PoseInitialization};
 
     std::string SensorName() const { return camera_info.sensor_name; }
 

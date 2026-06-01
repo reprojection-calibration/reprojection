@@ -20,7 +20,7 @@ enum class CalibrationStep {
     FeatureExtraction,
     ImageLoading,
     IntrinsicInitialization,
-    pose_initialization,
+    PoseInitialization,
     SplineInterpolation,
     SplineNonlinearRefinement,
     TargetInfo
@@ -37,7 +37,7 @@ inline std::string ToString(CalibrationStep const step_name) {
         return "image_loading";
     } else if (step_name == CalibrationStep::IntrinsicInitialization) {
         return "intrinsic_initialization";
-    } else if (step_name == CalibrationStep::pose_initialization) {
+    } else if (step_name == CalibrationStep::PoseInitialization) {
         return "pose_initialization";
     } else if (step_name == CalibrationStep::SplineInterpolation) {
         return "spline_interpolation";

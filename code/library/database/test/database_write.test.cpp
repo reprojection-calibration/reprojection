@@ -75,49 +75,49 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCameraMeasurements) {
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStep) {
-    EXPECT_NO_THROW(AddStep(CalibrationStep::pose_initialization));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization));
     EXPECT_NO_THROW(AddStep(CalibrationStep::BundleAdjustment));
     EXPECT_NO_THROW(AddStep(CalibrationStep::SplineInterpolation));
     EXPECT_NO_THROW(AddStep(CalibrationStep::SplineNonlinearRefinement));
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
-    EXPECT_NO_THROW(AddStep(CalibrationStep::pose_initialization, "1"));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::pose_initialization, "2"));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::pose_initialization, "3"));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "1"));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "2"));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "3"));
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbCameraIntrinsic) {
     EXPECT_THROW(database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
-                                     CalibrationStep::pose_initialization, sensor_name, db),
+                                     CalibrationStep::PoseInitialization, sensor_name, db),
                  std::runtime_error);
 
     AddCamera();
-    AddStep(CalibrationStep::pose_initialization);
+    AddStep(CalibrationStep::PoseInitialization);
 
     EXPECT_NO_THROW(database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
-                                        CalibrationStep::pose_initialization, sensor_name, db));
+                                        CalibrationStep::PoseInitialization, sensor_name, db));
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbPoseData) {
     // Throws because the calibration step pose_initialization has not been added to the database yet.
-    EXPECT_THROW(AddPose(CalibrationStep::pose_initialization), std::runtime_error);
+    EXPECT_THROW(AddPose(CalibrationStep::PoseInitialization), std::runtime_error);
 
-    AddStep(CalibrationStep::pose_initialization);
+    AddStep(CalibrationStep::PoseInitialization);
 
-    EXPECT_NO_THROW(AddPose(CalibrationStep::pose_initialization));
+    EXPECT_NO_THROW(AddPose(CalibrationStep::PoseInitialization));
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbReprojectionError) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
     // Fails foreign key constraint because there is no corresponding poses table entry yet
-    EXPECT_THROW(database::WriteToDb(data, CalibrationStep::pose_initialization, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(database::WriteToDb(data, CalibrationStep::PoseInitialization, sensor_name, db), std::runtime_error);
 
-    AddStep(CalibrationStep::pose_initialization);
-    AddPose(CalibrationStep::pose_initialization);
+    AddStep(CalibrationStep::PoseInitialization);
+    AddPose(CalibrationStep::PoseInitialization);
 
-    EXPECT_NO_THROW(database::WriteToDb(data, CalibrationStep::pose_initialization, sensor_name, db));
+    EXPECT_NO_THROW(database::WriteToDb(data, CalibrationStep::PoseInitialization, sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestWriteToDbImuData) {
