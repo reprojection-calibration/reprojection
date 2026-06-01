@@ -55,6 +55,7 @@ TEST(OptimizationCameraImuCalibration, TestImuError) {
     Array3d const gravity_w{Array3d::Zero()};
     auto const errors{optimization::ImuError(imu_data, tf_imu_co, gravity_w, trajectory)};
 
+    EXPECT_EQ(std::size(errors), 100);
     for (auto const& error : errors) {
         EXPECT_TRUE(error.second.isApproxToConstant(0));
     }
