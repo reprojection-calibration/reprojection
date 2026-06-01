@@ -159,9 +159,7 @@ class TestDataFormatting(unittest.TestCase):
         process_poses_table(table, data)
 
         self.assertTrue("poses" in data["/cam0/image_raw"])
-        self.assertTrue(
-            "pose_initialization" in data["/cam0/image_raw"]["poses"]
-        )
+        self.assertTrue("pose_initialization" in data["/cam0/image_raw"]["poses"])
         self.assertEqual(
             len(data["/cam0/image_raw"]["poses"]["pose_initialization"]), 2
         )
@@ -201,15 +199,10 @@ class TestDataFormatting(unittest.TestCase):
 
         self.assertTrue("poses" in data["/cam0/image_raw"])
         self.assertTrue(
-            "pose_initialization"
-            in data["/cam0/image_raw"]["reprojection_error"]
+            "pose_initialization" in data["/cam0/image_raw"]["reprojection_error"]
         )
         self.assertEqual(
-            len(
-                data["/cam0/image_raw"]["reprojection_error"][
-                    "pose_initialization"
-                ]
-            ),
+            len(data["/cam0/image_raw"]["reprojection_error"]["pose_initialization"]),
             2,
         )
 
