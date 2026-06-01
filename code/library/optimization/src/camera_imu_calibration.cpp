@@ -45,7 +45,7 @@ ReprojectionErrors ReprojectionErrorSpline(CameraInfo const& sensor, CameraMeasu
     return residuals;
 }  // LCOV_EXCL_LINE
 
-// TODO TYPE?
+// TODO(Jack): Should we introduce a specific imu error type here? This custom definition here is not nice.
 StampedMap<StampedData<Vector6d>> ImuError(ImuMeasurements const& imu_data, Array6d const& tf_imu_co,
                                            Array3d const& gravity_w, spline::Se3Spline const& spline) {
     StampedMap<StampedData<Vector6d>> imu_residuals;
