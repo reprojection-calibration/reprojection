@@ -80,6 +80,6 @@ StampedMap<StampedData<Vector6d>> ImuError(ImuMeasurements const& imu_data, Arra
     }
 
     return imu_residuals;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace  reprojection::optimization
