@@ -112,8 +112,7 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbReprojectionError) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
     // Fails foreign key constraint because there is no corresponding poses table entry yet
-    EXPECT_THROW(database::WriteToDb(data, CalibrationStep::pose_initialization, sensor_name, db),
-                 std::runtime_error);
+    EXPECT_THROW(database::WriteToDb(data, CalibrationStep::pose_initialization, sensor_name, db), std::runtime_error);
 
     AddStep(CalibrationStep::pose_initialization);
     AddPose(CalibrationStep::pose_initialization);

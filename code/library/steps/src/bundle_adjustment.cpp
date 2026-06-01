@@ -1,7 +1,8 @@
+#include "optimization/bundle_adjustment.hpp"
+
 #include "caching/cache_keys.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
-#include "optimization/bundle_adjustment.hpp"
 #include "steps/bundle_adjustment.hpp"
 
 namespace reprojection::steps {
