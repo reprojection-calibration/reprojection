@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ceres/autodiff_cost_function.h>
-#include <ceres/rotation.h>
 
 #include "spline/constants.hpp"
 #include "spline/so3_spline.hpp"
