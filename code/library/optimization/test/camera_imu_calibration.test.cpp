@@ -2,14 +2,15 @@
 
 #include <gtest/gtest.h>
 
+#include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
 
-// See comments in TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) for context.
-TEST(OptimizationCameraImuNonlinearRefinement, TestEvaluateSplineReprojectionResiduals) {
+// See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
+TEST(OptimizationCameraImuCalibration, TestReprojectionErrorSpline) {
     MatrixX2d const gt_pixels{{-1, -1},  //
                               {350, 230},
                               {-1, -1},
@@ -43,4 +44,19 @@ TEST(OptimizationCameraImuNonlinearRefinement, TestEvaluateSplineReprojectionRes
         << "Result:\n"
         << residuals.at(timestamp_ns).transpose() << "\nexpected result:\n"
         << gt_residuals.transpose();
+}
+
+TEST(OptimizationCameraImuCalibration, TestImuError) {
+    // TODO(Jack): Are we really sure that this test reflects the camera calibration case? In the camera calibration
+    // case the trajectory is actually inversed (look at the mvg data generator). Lets try this on real data :)
+    auto [imu_data, trajectory]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
+
+    Array6d const tf_imu_co{Array6d::Zero()};
+    Array3d const gravity_w{Array3d::Zero()};
+    auto const errors{optimization::ImuError(imu_data, tf_imu_co, gravity_w, trajectory)};
+
+    EXPECT_EQ(std::size(errors), 100);
+    for (auto const& error : errors) {
+        EXPECT_TRUE(error.second.isApproxToConstant(0));
+    }
 }

@@ -10,4 +10,7 @@ namespace reprojection::optimization {
 ReprojectionErrors ReprojectionErrorSpline(CameraInfo const& sensor, CameraMeasurements const& targets,
                                            CameraState const& camera_state, spline::Se3Spline const& spline);
 
+StampedMap<StampedData<Vector6d>> ImuError(ImuMeasurements const& imu_data, Array6d const& tf_imu_co,
+                                           Array3d const& gravity_w, spline::Se3Spline const& spline);
+
 }  // namespace  reprojection::optimization

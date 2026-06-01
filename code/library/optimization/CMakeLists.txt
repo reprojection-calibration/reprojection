@@ -27,6 +27,7 @@ set(TESTS
         src/cost_functions/reprojection_error.test.cpp
         src/cost_functions/reprojection_error_spline.test.cpp
         src/cost_functions/rigid_body_angular_velocity.test.cpp
+        src/cost_functions/rigid_body_linear_acceleration.test.cpp
         test/angular_velocity_alignment.test.cpp
         test/bundle_adjustment.test.cpp
         test/camera_imu_calibration.test.cpp

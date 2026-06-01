@@ -71,9 +71,4 @@ struct OptimizationState {
 using ReprojectionError = StampedData<ArrayX2d>;
 using ReprojectionErrors = StampedMap<ReprojectionError>;
 
-struct ImuInfo {
-    std::string sensor_name;
-    // TODO(Jack): Add other non optimized parameterization like known calibration bias or noise properties?
-};
-
 }  // namespace reprojection
