@@ -2,6 +2,10 @@
 
 #include <ceres/autodiff_cost_function.h>
 
+#include "spline/constants.hpp"
+#include "spline/r3_spline.hpp"
+#include "spline/so3_spline.hpp"
+#include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 #include "ceres_geometry.hpp"
@@ -10,19 +14,32 @@ namespace reprojection::optimization::cost_functions {
 
 class RigidBodyLinearAcceleration {
    public:
-    // TODO(Jack): Are we sure the coordinate frame naming and conventions/usage are actually correct?
     template <typename T>
-    bool operator()(T const* const tf_imu_co_ptr, T const* const control_point_0_ptr,
+    bool operator()(T const* const tf_imu_co_ptr, T const* const gravity_w_ptr, T const* const control_point_0_ptr,
                     T const* const control_point_1_ptr, T const* const control_point_2_ptr,
                     T const* const control_point_3_ptr, T* const residual) const {
-        Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
+        // TODO(Jack): Do not copy and paste this - three places right now!
+        std::array<T const* const, spline::constants::order> const ptrs{control_point_0_ptr, control_point_1_ptr,
+                                                                        control_point_2_ptr, control_point_3_ptr};
+        spline::Matrix2NK<T> control_points;
+        for (int i{0}; i < spline::constants::order; ++i) {
+            control_points.col(i) = Eigen::Map<Eigen::Vector<T, 6> const>(ptrs[i], 6, 1);
+        }
 
-        // REMOVE
-        (void)control_point_0_ptr;
-        (void)control_point_1_ptr;
-        (void)control_point_2_ptr;
-        (void)control_point_3_ptr;
-        Vector3<T> const acc_imu{T(1.0), T(2.0), T(3.0)};
+        // TODO(Jack): What is the actual from of a_w?
+        Vector3<T> const aa_co_w{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::Null>(
+            control_points.template topRows<3>(), u_i_, delta_t_ns_)};
+        Vector3<T> const acc_w{spline::R3Spline::Evaluate<T, spline::DerivativeOrder::Second>(
+            control_points.template bottomRows<3>(), u_i_, delta_t_ns_)};
+        Eigen::Map<Eigen::Vector<T, 3> const> gravity_w(gravity_w_ptr);
+        Vector3<T> const acc_co{geometry::Exp<T>(aa_co_w.template topRows<3>()) * (gravity_w - acc_w)};
+
+        Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
+        Vector3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(
+            control_points.template topRows<3>(), u_i_, delta_t_ns_)};
+        Vector3<T> const alpha_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::Second>(
+            control_points.template topRows<3>(), u_i_, delta_t_ns_)};
+        Vector3<T> const acc_imu{TransformRigidBodyAcceleration<T>(tf_imu_co, omega_co, alpha_co, acc_co)};
 
         residual[0] = T(acc_imu_[0]) - acc_imu[0];
         residual[1] = T(acc_imu_[1]) - acc_imu[1];
@@ -32,7 +49,7 @@ class RigidBodyLinearAcceleration {
     }
 
     static ceres::CostFunction* Create(Vector3d const& acc_imu, double const u_i, uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<RigidBodyLinearAcceleration, 3, 6, 6, 6, 6, 6>(
+        return new ceres::AutoDiffCostFunction<RigidBodyLinearAcceleration, 3, 6, 3, 6, 6, 6, 6>(
             new RigidBodyLinearAcceleration(acc_imu, u_i, delta_t_ns));
     }
 
