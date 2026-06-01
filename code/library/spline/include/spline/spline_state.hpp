@@ -26,6 +26,8 @@ struct CubicBSplineC3 {
 
     Eigen::Ref<MatrixNXd const> ControlPoints() const { return control_points_; }
 
+    Eigen::Ref<MatrixNXd> MutableControlPoints() { return control_points_; }
+
     TimeHandler GetTimeHandler() const { return time_handler_; }
 
     // TODO(Jack): Can remove?

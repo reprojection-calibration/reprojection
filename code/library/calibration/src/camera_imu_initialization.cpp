@@ -14,20 +14,6 @@ namespace reprojection::calibration {
 using namespace spline;
 
 // TODO(Jack): Unit test!
-std::tuple<Matrix3d, CeresState> EstimateCameraImuRotation(CubicBSplineC3 const& camera_orientation,
-                                                           VelocityMeasurements const& omega_imu) {
-    VelocityMeasurements omega_co;
-    for (uint64_t const timestamp_ns : omega_imu | std::views::keys) {
-        auto const omega_i_co{EvaluateSpline<So3Spline>(camera_orientation, timestamp_ns, DerivativeOrder::First)};
-        if (omega_i_co.has_value()) {
-            omega_co.insert({timestamp_ns, {omega_i_co.value()}});
-        }
-    }
-
-    return optimization::AngularVelocityAlignment(omega_co, omega_imu);
-}
-
-// TODO(Jack): Unit test!
 Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationMeasurements const& imu_acceleration,
                          Matrix3d const& R_imu_co) {
     // Calculate the camera orientation required to transform each linear acceleration into the camera world frame.
@@ -78,6 +64,10 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
     }
 }
 
+// CAN REMOVE?
+// CAN REMOVE?
+// CAN REMOVE?
+// CAN REMOVE?
 VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
     VelocityMeasurements imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {

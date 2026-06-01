@@ -7,26 +7,37 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): This function is dependent on the data being synchronized - how can we assert or easily tell the user
-//  when there is a problem here? For now we will iterate over omega_co because this should only be as large as
-//  omega_imu but cannot be larger because it is sampled from the interpolated spline using the timestamps from the imu
-//  data. Therefore it might be smaller, but cannot include a timestamp which is not also in omega_imu.
-std::tuple<Matrix3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_a,
-                                                          VelocityMeasurements const& omega_b) {
+std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu,
+                                                        spline::CubicBSplineC3 so3_spline) {
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
     Array3d aa_a_b{0, 0, 0};
-    for (auto const timestamp_ns : omega_a | std::views::keys) {
-        ceres::CostFunction* const cost_function{cost_functions::RigidBodyAngularVelocity::Create(
-            omega_a.at(timestamp_ns).velocity, omega_b.at(timestamp_ns).velocity)};
+    for (auto const timestamp_ns : omega_imu | std::views::keys) {
+        auto const normalized_position{so3_spline.GetTimeHandler().SplinePosition(timestamp_ns, so3_spline.Size())};
+        if (not normalized_position) {
+            continue;  // LCOV_EXCL_LINE
+        }
+        auto const [u_i, i]{normalized_position.value()};
 
-        problem.AddResidualBlock(cost_function, nullptr, aa_a_b.data());
+        ceres::CostFunction* const cost_function{cost_functions::RigidBodyAngularVelocity::Create(
+            omega_imu.at(timestamp_ns).velocity, u_i, so3_spline.GetTimeHandler().delta_t_ns_)};
+
+        problem.AddResidualBlock(cost_function, nullptr, aa_a_b.data(), so3_spline.MutableControlPoints().col(i).data(),
+                                 so3_spline.MutableControlPoints().col(i + 1).data(),
+                                 so3_spline.MutableControlPoints().col(i + 2).data(),
+                                 so3_spline.MutableControlPoints().col(i + 3).data());
+
+        // NOTE(Jack): We only want to initialize the extrinsic orientation between the imu and camera therefore we set
+        // the control points constant.
+        for (int j{0}; j < 4; ++j) {
+            problem.SetParameterBlockConstant(so3_spline.MutableControlPoints().col(i + j).data());
+        }
     }
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    return {geometry::Exp<double>(aa_a_b), ceres_state};
+    return {aa_a_b, ceres_state};
 }
 
 }  // namespace  reprojection::optimization
