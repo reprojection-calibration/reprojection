@@ -11,7 +11,7 @@
 
 using namespace reprojection;
 
-TEST(CalibrationLinearPoseInitialization, TestInitializeIntrinsics) {
+TEST(CalibrationPoseInitialization, TestInitializeIntrinsics) {
     // TODO(Jack): Use a fixture!!!
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
@@ -23,7 +23,7 @@ TEST(CalibrationLinearPoseInitialization, TestInitializeIntrinsics) {
     ASSERT_TRUE(result.has_value());
 }
 
-TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
+TEST(CalibrationPoseInitialization, TestPoseInitialization) {
     // Setup test data
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
