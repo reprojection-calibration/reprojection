@@ -64,10 +64,6 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
     }
 }
 
-// CAN REMOVE?
-// CAN REMOVE?
-// CAN REMOVE?
-// CAN REMOVE?
 VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
     VelocityMeasurements imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {

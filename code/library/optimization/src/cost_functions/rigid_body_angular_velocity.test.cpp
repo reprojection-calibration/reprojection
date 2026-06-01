@@ -21,7 +21,6 @@ TEST(OptimizationCostFunctions, TestRigidBodyAngularVelocityZeroResidual) {
     EXPECT_FLOAT_EQ(residual[2], 0.0);
 }
 
-// One test with heuristic residual values with non-trivial rotation - canary in the coal mine test.
 TEST(OptimizationCostFunctions, TestRigidBodyAngularVelocityHeuristic) {
     Vector3d const omega_imu{Vector3d::Zero()};
     RigidBodyAngularVelocity const cost_function{omega_imu, 0, 1};
