@@ -5,7 +5,9 @@
 #include <ranges>
 #include <vector>
 
+#include "geometry/lie.hpp"
 #include "logging/logging.hpp"
+#include "optimization/angular_velocity_alignment.hpp"
 #include "optimization/bundle_adjustment.hpp"
 #include "projection_functions/initialize_camera.hpp"
 
@@ -96,7 +98,10 @@ Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements con
 std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
     spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data) {
     auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
-    auto const [R_imu_co, diagnostics]{EstimateCameraImuRotation(camera_orientation, imu_angular_velocity)};
+    auto const [aa_imu_co,
+                diagnostics]{optimization::AngularVelocityAlignment(imu_angular_velocity, camera_orientation)};
+
+    Matrix3d const R_imu_co{geometry::Exp<double>(aa_imu_co)};
 
     auto const imu_linear_acceleration{ExtractLinearAcceleration(imu_data)};
     Vector3d const gravity_w{EstimateGravity(camera_orientation, imu_linear_acceleration, R_imu_co)};

@@ -1,7 +1,6 @@
 #include "sphere_trajectory.hpp"
 
 #include "geometry/lie.hpp"
-#include "spline/se3_spline.hpp"
 
 #include "constants.hpp"
 

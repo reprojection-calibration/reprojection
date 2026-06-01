@@ -2,32 +2,27 @@
 
 #include <gtest/gtest.h>
 
+#include "testing_mocks/imu_data_generator.hpp"
 #include "types/eigen_types.hpp"
 #include "types/spline_types.hpp"
 
 using namespace reprojection;
 
-// TODO(Jack): Use a non-symmetric matrix here so we can actually make sure there is no weird symmetric result hiding a
-//  real problem.
 TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
-    Matrix3d const gt_R_co_imu{{-1, 0, 0},  //
-                               {0, 0, -1},
-                               {0, -1, 0}};
+    auto const [imu_data, trajectory]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
 
-    VelocityMeasurements omega_co;
+    // Rotate every IMU velocity by some arbitrary rotation matrix and then check that this is recovered by the
+    // optimization.
+    static Matrix3d const R{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
     VelocityMeasurements omega_imu;
-    for (uint64_t t{0}; t < 100; ++t) {
-        Vector3d const omega_imu_i{Vector3d::Random()};
-        Vector3d const omega_co_i{gt_R_co_imu * omega_imu_i};
-
-        omega_co.insert({t, {omega_co_i}});
-        omega_imu.insert({t, {omega_imu_i}});
+    for (auto const& [timestamp_ns, data_i] : imu_data) {
+        omega_imu.insert({timestamp_ns, {R * data_i.angular_velocity}});
     }
 
-    auto const [R_co_imu, diagnostics]{optimization::AngularVelocityAlignment(omega_co, omega_imu)};
-    EXPECT_TRUE(R_co_imu.isApprox(gt_R_co_imu, 1e-9)) << "Result:\n"
-                                                      << R_co_imu << "\nexpected result:\n"
-                                                      << gt_R_co_imu;
+    auto const [aa_co_imu, diagnostics]{
+        optimization::AngularVelocityAlignment(omega_imu, {trajectory.So3(), trajectory.GetTimeHandler()})};
+
+    EXPECT_TRUE(aa_co_imu.matrix().isApprox(geometry::Log(R)));
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
     EXPECT_NEAR(diagnostics.solver_summary.final_cost, 0, 1e-18);
 }
