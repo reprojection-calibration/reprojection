@@ -9,19 +9,12 @@
 
 namespace reprojection::optimization {
 
-// UPDATE DOCS
-// UPDATE DOCS
-// UPDATE DOCS
-// UPDATE DOCS
-// UPDATE DOCS
-// UPDATE DOCS
-// UPDATE DOCS
 /**
  * \brief Estimate the approximate extrinsic rotation matrix between the IMU and camera optical frame (R_co_imu).
  *
  * Given the camera orientation spline we can differentiate it to get the camera's angular velocity (omega_co). Because
- * all points on a rigid body have the same angular velocity we can use optimization::AngularVelocityAlignment() to
- * estimate the rotation matrix which aligns the camera's angular velocity to the IMU gyroscope's angular velocity.
+ * all points on a rigid body have the same angular velocity we can estimate the rotation matrix which aligns the
+ * camera's angular velocity to the IMU's angular velocity.
  *
  * Note that if not all axes of the camera-IMU motion have sufficient rotational velocity excitement then the returned
  * solution will be degenerate.
