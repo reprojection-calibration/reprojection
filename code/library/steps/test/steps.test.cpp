@@ -160,7 +160,7 @@ TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(StepsFixture, TestLpiStep) {
+TEST_F(StepsFixture, TestPoseInitializationStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
     steps::PoseInitialization const step{camera_info, targets, camera_state};
 
@@ -191,7 +191,7 @@ TEST_F(StepsFixture, TestLpiStep) {
     EXPECT_EQ(std::size(poses), 40);
 }
 
-TEST_F(StepsFixture, TestCnlrStep) {
+TEST_F(StepsFixture, TestBundleAdjustmentStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
     steps::BundleAdjustmentStep const step{camera_info, targets, {camera_state, gt_poses}};
 
