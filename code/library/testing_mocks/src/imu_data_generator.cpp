@@ -6,11 +6,11 @@
 
 namespace reprojection::testing_mocks {
 
-ImuMeasurements GenerateImuData(int const num_samples, uint64_t const timespan_ns) {
+std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(int const num_samples, uint64_t const timespan_ns) {
     spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
     std::set<uint64_t> const times{SampleTimes(num_samples, timespan_ns)};
 
-    ImuMeasurements data;
+    ImuMeasurements imu_data;
     for (auto const time_i : times) {
         auto const velocity_t{trajectory.Evaluate(time_i, spline::DerivativeOrder::First)};
         auto const acceleration_t{trajectory.Evaluate(time_i, spline::DerivativeOrder::Second)};
@@ -19,10 +19,10 @@ ImuMeasurements GenerateImuData(int const num_samples, uint64_t const timespan_n
             throw std::runtime_error("GenerateImuData() failed trajectory.Evaluate().");  // LCOV_EXCL_LINE
         }
 
-        data.insert({time_i, {velocity_t->head<3>(), acceleration_t->tail<3>()}});
+        imu_data.insert({time_i, {velocity_t->head<3>(), acceleration_t->tail<3>()}});
     }
 
-    return data;
+    return {imu_data, trajectory};
 }
 
 }  // namespace reprojection::testing_mocks
