@@ -3,7 +3,6 @@
 #include <ranges>
 
 #include "cost_functions/rigid_body_angular_velocity.hpp"
-#include "geometry/lie.hpp"
 
 namespace reprojection::optimization {
 

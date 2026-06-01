@@ -48,7 +48,7 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
     uint64_t const timespan_ns{10000000000};
     auto const [_, camera_frames]{
         testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
-    ImuMeasurements const imu_data{testing_mocks::GenerateImuData(1000, timespan_ns)};
+    auto const [imu_data, _1]{testing_mocks::GenerateImuData(1000, timespan_ns)};
 
     // TODO(Jack): Honestly it would be nice if the data generator automatically provided us the underlying spline,
     //  because needing to interpolate the frames here should be considered some complicated setup/precondition for the

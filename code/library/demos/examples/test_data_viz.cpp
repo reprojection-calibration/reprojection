@@ -69,7 +69,7 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
 
 void WriteImuData(SqlitePtr db, uint64_t const timespan_ns) {
     uint64_t const num_imu_data{1000};
-    ImuMeasurements const imu_data{testing_mocks::GenerateImuData(num_imu_data, timespan_ns)};
+    auto const [imu_data, _]{testing_mocks::GenerateImuData(num_imu_data, timespan_ns)};
 
     std::string const imu_name{"imu1"};
     database::WriteToDb(imu_data, imu_name, db);
