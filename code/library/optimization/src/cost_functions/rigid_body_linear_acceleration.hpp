@@ -12,6 +12,11 @@
 
 namespace reprojection::optimization::cost_functions {
 
+using So3Spline = spline::So3Spline;
+using R3Spline = spline::R3Spline;
+
+using Order = spline::DerivativeOrder;
+
 class RigidBodyLinearAcceleration {
    public:
     template <typename T>
@@ -26,19 +31,18 @@ class RigidBodyLinearAcceleration {
             control_points.col(i) = Eigen::Map<Eigen::Vector<T, 6> const>(ptrs[i], 6, 1);
         }
 
+        auto const so3{control_points.template topRows<3>()};
+        auto const r3{control_points.template bottomRows<3>()};\
+
         // TODO(Jack): What is the actual from of a_w?
-        Vector3<T> const aa_co_w{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::Null>(
-            control_points.template topRows<3>(), u_i_, delta_t_ns_)};
-        Vector3<T> const acc_w{spline::R3Spline::Evaluate<T, spline::DerivativeOrder::Second>(
-            control_points.template bottomRows<3>(), u_i_, delta_t_ns_)};
+        Vector3<T> const aa_co_w{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
+        Vector3<T> const acc_w{R3Spline::Evaluate<T, Order::Second>(r3, u_i_, delta_t_ns_)};
         Eigen::Map<Eigen::Vector<T, 3> const> gravity_w(gravity_w_ptr);
-        Vector3<T> const acc_co{geometry::Exp<T>(aa_co_w.template topRows<3>()) * (gravity_w - acc_w)};
+        Vector3<T> const acc_co{geometry::Exp<T>(aa_co_w) * (gravity_w - acc_w)};
 
         Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
-        Vector3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(
-            control_points.template topRows<3>(), u_i_, delta_t_ns_)};
-        Vector3<T> const alpha_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::Second>(
-            control_points.template topRows<3>(), u_i_, delta_t_ns_)};
+        Vector3<T> const omega_co{So3Spline::Evaluate<T, Order::First>(so3, u_i_, delta_t_ns_)};
+        Vector3<T> const alpha_co{So3Spline::Evaluate<T, Order::Second>(so3, u_i_, delta_t_ns_)};
         Vector3<T> const acc_imu{TransformRigidBodyAcceleration<T>(tf_imu_co, omega_co, alpha_co, acc_co)};
 
         residual[0] = T(acc_imu_[0]) - acc_imu[0];
