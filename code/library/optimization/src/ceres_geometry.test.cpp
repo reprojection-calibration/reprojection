@@ -48,6 +48,8 @@ TEST(OptimizationCeresGeometry, TestTransformRigidBodyAcceleration) {
         {Vector6d{0, 0, 0, 1, 0, 0}, Vector3d{0, 0, 2}, Vector3d::Zero(), Vector3d::Zero(), Vector3d{-4, 0, 0}},
         // Tangential acceleration only
         {Vector6d{0, 0, 0, 1, 0, 0}, Vector3d::Zero(), Vector3d{0, 0, 1}, Vector3d::Zero(), Vector3d{0, 1, 0}},
+        // Extrinsic rotation only
+        {Vector6d{0, 0, M_PI / 2, 0, 0, 0}, Vector3d::Zero(), Vector3d::Zero(), Vector3d{1, 2, 3}, Vector3d{-2, 1, 3}},
         // Random all axis heuristic because I got too lazy to test all the rotation and rotation+translation cases :(
         {Vector6d{M_PI / 2, M_PI / 2, M_PI / 2, 1, 1, 1}, Vector3d{1, 2, 3}, Vector3d{1, 2, 3}, Vector3d::Zero(),
          Vector3d{5.0967441810920171, -6.6561475737114524, -4.44059660738057}},
