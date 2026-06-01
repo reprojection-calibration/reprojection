@@ -5,22 +5,22 @@
 
 namespace reprojection::steps {
 
-struct LpiStep {
+struct BundleAdjustmentStep {
     CameraInfo camera_info;
     CameraMeasurements targets;
-    CameraState camera_state;
+    OptimizationState initial_state;
 
-    CalibrationStep step_type{CalibrationStep::LinearPoseInitialization};
+    CalibrationStep step_type{CalibrationStep::BundleAdjustment};
 
     std::string SensorName() const { return camera_info.sensor_name; }
 
     std::string CacheKey() const;
 
-    Frames Compute() const;
+    OptimizationState Compute() const;
 
-    Frames Load(SqlitePtr const db) const;
+    OptimizationState Load(SqlitePtr const db) const;
 
-    void Save(Frames const& frames, SqlitePtr const db) const;
+    void Save(OptimizationState const& optimized_state, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

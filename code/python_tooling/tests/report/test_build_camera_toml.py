@@ -18,8 +18,8 @@ class TestBuildCameraTomls(unittest.TestCase):
 
         camera_intrinsics_data = {
             "step_name": [
-                "camera_nonlinear_refinement",
-                "camera_nonlinear_refinement",
+                "bundle_adjustment",
+                "bundle_adjustment",
                 "intrinsic_initialization",
             ],
             "sensor_name": ["/cam0/image_raw", "/cam1/image_raw", "/cam0/image_raw"],

@@ -1,4 +1,4 @@
-#include "steps/linear_pose_initialization.hpp"
+#include "steps/pose_initialization.hpp"
 
 #include "caching/cache_keys.hpp"
 #include "calibration/initialization_methods.hpp"
@@ -8,13 +8,15 @@
 
 namespace reprojection::steps {
 
-std::string LpiStep::CacheKey() const { return caching::CacheKey(camera_info, targets, camera_state); }
+std::string PoseInitialization::CacheKey() const { return caching::CacheKey(camera_info, targets, camera_state); }
 
-Frames LpiStep::Compute() const { return calibration::LinearPoseInitialization(camera_info, targets, camera_state); }
+Frames PoseInitialization::Compute() const {
+    return calibration::PoseInitialization(camera_info, targets, camera_state);
+}
 
-Frames LpiStep::Load(SqlitePtr const db) const { return database::ReadPoses(db, step_type, SensorName()); }
+Frames PoseInitialization::Load(SqlitePtr const db) const { return database::ReadPoses(db, step_type, SensorName()); }
 
-void LpiStep::Save(Frames const& frames, SqlitePtr const db) const {
+void PoseInitialization::Save(Frames const& frames, SqlitePtr const db) const {
     database::WriteToDb(frames, step_type, SensorName(), db);
 
     OptimizationState const state{camera_state, frames};

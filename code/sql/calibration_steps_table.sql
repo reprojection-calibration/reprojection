@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS calibration_steps
 (
-    step_name   TEXT     NOT NULL CHECK ( step_name IN ('camera_info',
-                                                        'camera_nonlinear_refinement',
+    step_name   TEXT     NOT NULL CHECK ( step_name IN ('bundle_adjustment',
+                                                        'camera_info',
                                                         'feature_extraction',
                                                         'image_loading',
                                                         'intrinsic_initialization',
-                                                        'linear_pose_initialization',
+                                                        'pose_initialization',
                                                         'spline_interpolation',
                                                         'spline_nonlinear_refinement',
                                                         'target_info')),

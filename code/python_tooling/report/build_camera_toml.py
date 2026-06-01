@@ -38,7 +38,7 @@ def build_camera_toml(camera_info, camera_intrinsics):
     # NOTE(Jack): For now we only care about the "polished/final" intrinsics from the camera only nonlinear refinement
     # step. This might change one day with the stereo or IMU calibration but that is future music :)
     refined_intrinsics = camera_intrinsics[
-        camera_intrinsics["step_name"] == "camera_nonlinear_refinement"
+        camera_intrinsics["step_name"] == "bundle_adjustment"
     ]
 
     output = []

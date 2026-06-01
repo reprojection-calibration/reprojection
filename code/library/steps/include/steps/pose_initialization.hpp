@@ -5,22 +5,22 @@
 
 namespace reprojection::steps {
 
-struct CnlrStep {
+struct PoseInitialization {
     CameraInfo camera_info;
     CameraMeasurements targets;
-    OptimizationState initial_state;
+    CameraState camera_state;
 
-    CalibrationStep step_type{CalibrationStep::CameraNonlinearRefinement};
+    CalibrationStep step_type{CalibrationStep::PoseInitialization};
 
     std::string SensorName() const { return camera_info.sensor_name; }
 
     std::string CacheKey() const;
 
-    OptimizationState Compute() const;
+    Frames Compute() const;
 
-    OptimizationState Load(SqlitePtr const db) const;
+    Frames Load(SqlitePtr const db) const;
 
-    void Save(OptimizationState const& optimized_state, SqlitePtr const db) const;
+    void Save(Frames const& frames, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

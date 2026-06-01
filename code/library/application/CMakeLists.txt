@@ -18,7 +18,7 @@ set(LINK_LIBRARIES
         database
         logging
         optimization
-        projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the linear_pose_init public header interface.
+        projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the pose_init public header interface.
         spdlog::spdlog
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
         steps

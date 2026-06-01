@@ -3,12 +3,12 @@
 #include <string_view>
 
 #include "config/config_parsing.hpp"
+#include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
-#include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
-#include "steps/linear_pose_initialization.hpp"
+#include "steps/pose_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
@@ -160,9 +160,9 @@ TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(StepsFixture, TestLpiStep) {
+TEST_F(StepsFixture, TestPoseInitializationStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    steps::LpiStep const step{camera_info, targets, camera_state};
+    steps::PoseInitialization const step{camera_info, targets, camera_state};
 
     auto [frames, cache_status]{RunStep<Frames>(step, db)};
     EXPECT_EQ(std::size(frames), 50);
@@ -181,7 +181,7 @@ TEST_F(StepsFixture, TestLpiStep) {
     // Make a new different set of targets to trigger a cache miss and data removal (i.e. sql cascade operation) and
     // replacement with a new set of poses.
     std::tie(targets, gt_poses) = testing_mocks::GenerateMvgData(camera_info, camera_state, 40, 1e9);
-    steps::LpiStep const step_2{camera_info, targets, camera_state};
+    steps::PoseInitialization const step_2{camera_info, targets, camera_state};
 
     std::tie(frames, cache_status) = RunStep<Frames>(step_2, db);
     EXPECT_EQ(std::size(frames), 40);
@@ -191,9 +191,9 @@ TEST_F(StepsFixture, TestLpiStep) {
     EXPECT_EQ(std::size(poses), 40);
 }
 
-TEST_F(StepsFixture, TestCnlrStep) {
+TEST_F(StepsFixture, TestBundleAdjustmentStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    steps::CnlrStep const step{camera_info, targets, {camera_state, gt_poses}};
+    steps::BundleAdjustmentStep const step{camera_info, targets, {camera_state, gt_poses}};
 
     auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
     EXPECT_EQ(std::size(result.frames), 50);

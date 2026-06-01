@@ -1,4 +1,4 @@
-#include "linear_pose_initialization.hpp"
+#include "pose_initialization.hpp"
 
 #include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"

@@ -63,8 +63,8 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
     database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
     database::WriteToDb(targets, camera_info.sensor_name, db);
 
-    database::WriteToDb(CalibrationStep::LinearPoseInitialization, "", camera_info.sensor_name, db);
-    database::WriteToDb(camera_frames, CalibrationStep::LinearPoseInitialization, camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::PoseInitialization, "", camera_info.sensor_name, db);
+    database::WriteToDb(camera_frames, CalibrationStep::PoseInitialization, camera_info.sensor_name, db);
 }
 
 void WriteImuData(SqlitePtr db, uint64_t const timespan_ns) {

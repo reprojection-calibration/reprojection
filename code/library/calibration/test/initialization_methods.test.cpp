@@ -11,7 +11,7 @@
 
 using namespace reprojection;
 
-TEST(CalibrationLinearPoseInitialization, TestInitializeIntrinsics) {
+TEST(CalibrationPoseInitialization, TestInitializeIntrinsics) {
     // TODO(Jack): Use a fixture!!!
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
@@ -23,14 +23,14 @@ TEST(CalibrationLinearPoseInitialization, TestInitializeIntrinsics) {
     ASSERT_TRUE(result.has_value());
 }
 
-TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
+TEST(CalibrationPoseInitialization, TestPoseInitialization) {
     // Setup test data
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
 
     // Act
-    Frames const linear_solution{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
+    Frames const linear_solution{calibration::PoseInitialization(sensor, targets, intrinsics)};
 
     // Assert
     EXPECT_EQ(std::size(linear_solution), 50);

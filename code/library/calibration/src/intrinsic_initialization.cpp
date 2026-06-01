@@ -1,7 +1,7 @@
 #include "intrinsic_initialization.hpp"
 
-#include "linear_pose_initialization.hpp"
 #include "parabola_line_initialization.hpp"
+#include "pose_initialization.hpp"
 #include "utilities.hpp"
 #include "vanishing_point_initialization.hpp"
 
