@@ -12,7 +12,7 @@ using namespace reprojection;
 // Test with perfect data - means inputs will be exact same as outputs. Technically this test might miss something
 // because the optimization will likely not even execute once because the error is zero. For a real test look at the
 // next case where we add some noisy so it actually does some iterations.
-TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) {
+TEST(OptimizationBundleAdjustment, TestCameraNonlinearRefinementBatch) {
     // Generate the data
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
@@ -41,7 +41,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestCameraNonlinearRefinementBatch) 
 
 // Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
 // and intrinsic back.
-TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) {
+TEST(OptimizationBundleAdjustment, TestNoisyCameraNonlinearRefinement) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 50, 1e9, false)};
@@ -83,7 +83,7 @@ TEST(OptimizationCameraNonlinearRefinement, TestNoisyCameraNonlinearRefinement) 
         << gt_intrinsics.intrinsics.transpose();
 }
 
-TEST(OptimizationCameraNonlinearRefinement, TestEvaluateReprojectionResiduals) {
+TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {
     // NOTE(Jack): The real ground truth value for both the valid pixels here is actually the center of the image (i.e.
     // [360, 240])! But because we want to see that the reprojection error is actually the correct value we make the
     // "ground truth" pixels here have some error.
