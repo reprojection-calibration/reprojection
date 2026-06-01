@@ -26,4 +26,18 @@ Vector3<T> TransformPoint(Eigen::Ref<Eigen::Vector<T, 6> const> const& tf_i_j,
     return RotatePoint<T>(tf_i_j.template topRows<3>(), point_j) + tf_i_j.template bottomRows<3>();
 }
 
+template <typename T>
+Vector3<T> TransformRigidBodyAcceleration(Eigen::Ref<Eigen::Vector<T, 6> const> const& tf_i_j,
+                                          Eigen::Ref<Vector3<T> const> const& omega_j,
+                                          Eigen::Ref<Vector3<T> const> const& alpha_j,
+                                          Eigen::Ref<Vector3<T> const> const& acc_j) {
+    Vector3<T> const r_i_j{tf_i_j.template bottomRows<3>()};
+    Vector3<T> const acc_i_j{acc_j + alpha_j.cross(r_i_j) + omega_j.cross(omega_j.cross(r_i_j))};
+
+    Vector3<T> const aa_i_j{tf_i_j.template topRows<3>()};
+    Vector3<T> const acc_i{RotatePoint<T>(aa_i_j, acc_i_j)};
+
+    return acc_i;
+}
+
 }  // namespace  reprojection::optimization
