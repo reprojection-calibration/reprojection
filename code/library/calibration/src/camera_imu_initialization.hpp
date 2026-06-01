@@ -1,13 +1,11 @@
 #pragma once
 
 #include "spline/spline_state.hpp"
-#include "types/ceres_types.hpp"
 #include "types/eigen_types.hpp"
 #include "types/sensor_data_types.hpp"
 #include "types/spline_types.hpp"
 
 namespace reprojection::calibration {
-
 
 /**
  * \brief Estimate gravity in the camera's world frame using the "zero mean acceleration" assumption.
