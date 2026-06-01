@@ -47,15 +47,15 @@ TEST(OptimizationCameraImuCalibration, TestReprojectionErrorSpline) {
 }
 
 TEST(OptimizationCameraImuCalibration, TestImuError) {
-    auto const [imu_data, trajectory]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
+    // TODO(Jack): Are we really sure that this test reflects the camera calibration case? In the camera calibration
+    // case the trajectory is actually inversed (look at the mvg data generator). Lets try this on real data :)
+    auto [imu_data, trajectory]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
 
     Array6d const tf_imu_co{Array6d::Zero()};
     Array3d const gravity_w{Array3d::Zero()};
     auto const errors{optimization::ImuError(imu_data, tf_imu_co, gravity_w, trajectory)};
 
     for (auto const& error : errors) {
-        std::cout << error.second.transpose() << std::endl;
+        EXPECT_TRUE(error.second.isApproxToConstant(0));
     }
-
-
 }
