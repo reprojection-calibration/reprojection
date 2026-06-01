@@ -24,6 +24,6 @@ namespace reprojection::optimization {
  * underconstrained and produce a degenerate result.
  */
 std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu,
-                                                        spline::CubicBSplineC3 const& so3_spline);
+                                                        spline::CubicBSplineC3 so3_spline);
 
 }  // namespace  reprojection::optimization
