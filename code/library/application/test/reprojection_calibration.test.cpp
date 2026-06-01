@@ -69,7 +69,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     database::WriteToDb({Array5d::Zero()}, camera_info.camera_model, CalibrationStep::IntrinsicInitialization,
                         camera_info.sensor_name, db);
 
-    // NOTE(Jack): We do not need to do anything for the linear_pose_initialization and camera_nonlinear_refinement
+    // NOTE(Jack): We do not need to do anything for the pose_initialization and bundle_adjustment
     // steps to manufacture a cache hit because if their inputs are empty they themselves will just pass through with no
     // problem. This might change in the future but for now it stands.
 

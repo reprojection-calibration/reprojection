@@ -13,7 +13,7 @@
 
 #include "camera_imu_initialization.hpp"
 #include "intrinsic_initialization.hpp"
-#include "linear_pose_initialization.hpp"
+#include "pose_initialization.hpp"
 #include "utilities.hpp"
 
 namespace reprojection::calibration {
@@ -50,7 +50,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         CameraInfo const camera_info{"", camera_model, {0, width, 0, height}};
         auto const target_subset{SampleMap(targets, 10)};
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
-        Frames const initial_poses{LinearPoseInitialization(camera_info, target_subset, {intrinsics_i})};
+        Frames const initial_poses{PoseInitialization(camera_info, target_subset, {intrinsics_i})};
 
         if (std::size(initial_poses) == 0) {
             continue;  // LCOV_EXCL_LINE
@@ -79,7 +79,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
 // TODO(Jack): This name is misleading because the process is not actually strictly linear!
-Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets,
+Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets,
                                 CameraState const& intrinsics) {
     auto const camera{
         projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};

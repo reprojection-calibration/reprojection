@@ -2,12 +2,12 @@
 
 #include <gtest/gtest.h>
 
-#include "steps/camera_nonlinear_refinement.hpp"
+#include "steps/bundle_adjustment.hpp"
 
 using namespace reprojection;
 
 struct DummyStep {
-    CalibrationStep step_type{CalibrationStep::LinearPoseInitialization};
+    CalibrationStep step_type{CalibrationStep::pose_initialization};
 
     std::string SensorName() const { return ""; }
 

@@ -139,7 +139,7 @@ class TestDataFormatting(unittest.TestCase):
 
         # Pose loading has no timestamp foreign key requirements so we can use any random timestamps here.
         pose_data = {
-            "step_name": ["linear_pose_initialization", "linear_pose_initialization"],
+            "step_name": ["pose_initialization", "pose_initialization"],
             "sensor_name": ["/cam0/image_raw", "/cam0/image_raw"],
             "timestamp_ns": [0, 1],
             "rx": [0, 0],
@@ -160,10 +160,10 @@ class TestDataFormatting(unittest.TestCase):
 
         self.assertTrue("poses" in data["/cam0/image_raw"])
         self.assertTrue(
-            "linear_pose_initialization" in data["/cam0/image_raw"]["poses"]
+            "pose_initialization" in data["/cam0/image_raw"]["poses"]
         )
         self.assertEqual(
-            len(data["/cam0/image_raw"]["poses"]["linear_pose_initialization"]), 2
+            len(data["/cam0/image_raw"]["poses"]["pose_initialization"]), 2
         )
 
     def test_process_reprojection_error_table(self):
@@ -171,7 +171,7 @@ class TestDataFormatting(unittest.TestCase):
         self.assertIsNone(data)
 
         reprojection_data = {
-            "step_name": ["linear_pose_initialization", "linear_pose_initialization"],
+            "step_name": ["pose_initialization", "pose_initialization"],
             "sensor_name": ["/cam0/image_raw", "/cam0/image_raw"],
             "timestamp_ns": [1520528314264184064, 1520528314314184960],
             "data": [{}, {}],
@@ -184,7 +184,7 @@ class TestDataFormatting(unittest.TestCase):
         data = process_images_table(images_table)
 
         pose_data = {
-            "step_name": ["linear_pose_initialization", "linear_pose_initialization"],
+            "step_name": ["pose_initialization", "pose_initialization"],
             "sensor_name": ["/cam0/image_raw", "/cam0/image_raw"],
             "timestamp_ns": [1520528314264184064, 1520528314314184960],
             "rx": [0, 0],
@@ -201,13 +201,13 @@ class TestDataFormatting(unittest.TestCase):
 
         self.assertTrue("poses" in data["/cam0/image_raw"])
         self.assertTrue(
-            "linear_pose_initialization"
+            "pose_initialization"
             in data["/cam0/image_raw"]["reprojection_error"]
         )
         self.assertEqual(
             len(
                 data["/cam0/image_raw"]["reprojection_error"][
-                    "linear_pose_initialization"
+                    "pose_initialization"
                 ]
             ),
             2,

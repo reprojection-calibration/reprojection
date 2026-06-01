@@ -30,7 +30,7 @@ TEST(CalibrationLinearPoseInitialization, TestLinearPoseInitialization) {
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
 
     // Act
-    Frames const linear_solution{calibration::LinearPoseInitialization(sensor, targets, intrinsics)};
+    Frames const linear_solution{calibration::PoseInitialization(sensor, targets, intrinsics)};
 
     // Assert
     EXPECT_EQ(std::size(linear_solution), 50);

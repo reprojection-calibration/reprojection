@@ -16,11 +16,11 @@ namespace reprojection {
 // maybe once again in the python tooling. Is there any way for us to centrally store this with that repetition.
 enum class CalibrationStep {
     CameraInfo,
-    CameraNonlinearRefinement,
+    BundleAdjustment,
     FeatureExtraction,
     ImageLoading,
     IntrinsicInitialization,
-    LinearPoseInitialization,
+    pose_initialization,
     SplineInterpolation,
     SplineNonlinearRefinement,
     TargetInfo
@@ -29,16 +29,16 @@ enum class CalibrationStep {
 inline std::string ToString(CalibrationStep const step_name) {
     if (step_name == CalibrationStep::CameraInfo) {
         return "camera_info";
-    } else if (step_name == CalibrationStep::CameraNonlinearRefinement) {
-        return "camera_nonlinear_refinement";
+    } else if (step_name == CalibrationStep::BundleAdjustment) {
+        return "bundle_adjustment";
     } else if (step_name == CalibrationStep::FeatureExtraction) {
         return "feature_extraction";
     } else if (step_name == CalibrationStep::ImageLoading) {
         return "image_loading";
     } else if (step_name == CalibrationStep::IntrinsicInitialization) {
         return "intrinsic_initialization";
-    } else if (step_name == CalibrationStep::LinearPoseInitialization) {
-        return "linear_pose_initialization";
+    } else if (step_name == CalibrationStep::pose_initialization) {
+        return "pose_initialization";
     } else if (step_name == CalibrationStep::SplineInterpolation) {
         return "spline_interpolation";
     } else if (step_name == CalibrationStep::SplineNonlinearRefinement) {

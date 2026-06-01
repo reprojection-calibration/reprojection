@@ -40,7 +40,7 @@ def run_report_export(workspace_dir):
                 camera_info_i,
                 extracted_targets_i,
                 reprojection_errors_i,
-                "camera_nonlinear_refinement",
+                "bundle_adjustment",
             )
 
             camera_section_i = {

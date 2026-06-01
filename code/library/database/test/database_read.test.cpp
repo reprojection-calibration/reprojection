@@ -111,12 +111,12 @@ TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
 }
 
 TEST_F(CameraReadFixture, TestReadCameraState) {
-    auto const step{CalibrationStep::LinearPoseInitialization};
+    auto const step{CalibrationStep::pose_initialization};
 
     auto intrinsics{database::ReadCameraState(db, step, "", CameraModel::Pinhole)};
     EXPECT_FALSE(intrinsics.has_value());
 
-    database::WriteToDb(CalibrationStep::LinearPoseInitialization, "", sensor_name, db);
+    database::WriteToDb(CalibrationStep::pose_initialization, "", sensor_name, db);
     database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole, step, sensor_name, db);
 
     intrinsics = database::ReadCameraState(db, step, sensor_name, CameraModel::Pinhole);
@@ -125,24 +125,24 @@ TEST_F(CameraReadFixture, TestReadCameraState) {
 }
 
 TEST_F(CameraReadFixture, TestReadCacheKey) {
-    auto cache_key{database::ReadCacheKey(db, CalibrationStep::LinearPoseInitialization, sensor_name)};
+    auto cache_key{database::ReadCacheKey(db, CalibrationStep::pose_initialization, sensor_name)};
     EXPECT_FALSE(cache_key.has_value());
 
-    database::WriteToDb(CalibrationStep::LinearPoseInitialization, "1", sensor_name, db);
+    database::WriteToDb(CalibrationStep::pose_initialization, "1", sensor_name, db);
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::LinearPoseInitialization, sensor_name);
+    cache_key = database::ReadCacheKey(db, CalibrationStep::pose_initialization, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "1");
 
-    database::WriteToDb(CalibrationStep::LinearPoseInitialization, "2", sensor_name, db);
+    database::WriteToDb(CalibrationStep::pose_initialization, "2", sensor_name, db);
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::LinearPoseInitialization, sensor_name);
+    cache_key = database::ReadCacheKey(db, CalibrationStep::pose_initialization, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "2");
 }
 
 TEST_F(CameraReadFixture, TestReadPoses) {
-    auto const step{CalibrationStep::LinearPoseInitialization};
+    auto const step{CalibrationStep::pose_initialization};
     uint64_t const timestamp_ns{0};
 
     Frames result{database::ReadPoses(db, step, sensor_name)};

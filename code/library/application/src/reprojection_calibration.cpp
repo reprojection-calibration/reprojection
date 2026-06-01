@@ -4,12 +4,12 @@
 
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
+#include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
-#include "steps/camera_nonlinear_refinement.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
-#include "steps/linear_pose_initialization.hpp"
+#include "steps/pose_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 
@@ -90,14 +90,14 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     log->info("{{'step': '{}', 'cache_status': '{}', 'intrinsics': {}}}", ToString(ii_step.step_type),
               ToString(ii_cache_status), camera_state.intrinsics);
 
-    steps::LpiStep const lpi_step{camera_info, targets, camera_state};
+    steps::PoseInitialization const lpi_step{camera_info, targets, camera_state};
     auto const [initial_poses, lpi_cache_status]{steps::RunStep<Frames>(lpi_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}}}", ToString(lpi_step.step_type),
               ToString(lpi_cache_status), std::size(initial_poses));
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
 
-    steps::CnlrStep const cnlr_step{camera_info, targets, aligned_initial_state};
+    steps::BundleAdjustmentStep const cnlr_step{camera_info, targets, aligned_initial_state};
     auto const [optimized_state, cnlr_cache_status]{steps::RunStep<OptimizationState>(cnlr_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}",
               ToString(cnlr_step.step_type), ToString(cnlr_cache_status), std::size(initial_poses),

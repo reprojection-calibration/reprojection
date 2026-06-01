@@ -5,8 +5,8 @@ set(SRC_FILES
         src/initialization_methods.cpp
         src/intrinsic_initialization.cpp
         src/parabola_line_initialization.cpp
+        src/pose_initialization.cpp
         src/utilities.cpp
-        src/linear_pose_initialization.cpp
         src/vanishing_point_initialization.cpp
 )
 set(LINK_LIBRARIES

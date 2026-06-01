@@ -21,7 +21,7 @@ namespace reprojection::calibration {
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets);
 
-Frames LinearPoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets,
+Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets,
                                 CameraState const& intrinsics);
 
 // TODO(Jack): This point applies much more to the spline package, but it comes to the surface here. And that is that
