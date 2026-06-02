@@ -7,6 +7,7 @@ set(SRC_FILES
         src/image_loading.cpp
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
+        src/spline_interpolation.cpp
         src/target_info.cpp
 
 )
@@ -25,7 +26,7 @@ set(LINK_LIBRARIES
         image_viewer
         logging
         optimization
-        spline # transitive dependency from "calibration/initialization_methods.hpp" - should be removed!
+        spline
         types
         tomlplusplus::tomlplusplus
         types_internal
