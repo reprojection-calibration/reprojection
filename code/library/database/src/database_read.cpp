@@ -131,6 +131,28 @@ CameraMeasurements ReadExtractedTargets(SqlitePtr const db, std::string_view sen
     return data;
 }  // LCOV_EXCL_LINE
 
+std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, CalibrationStep const step_name,
+                                      std::string_view sensor_name) {
+    std::optional<Array6d> extrinsic;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::extrinsics_select,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&extrinsic](sqlite3_stmt* const stmt) {
+            Array6d result;
+            for (int i{0}; i < 6; ++i) {
+                result(i) = sqlite3_column_double(stmt, i);
+            }
+
+            extrinsic = result;
+        });
+
+    return extrinsic;
+}
+
 ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name) {
     ImuMeasurements data;
 
