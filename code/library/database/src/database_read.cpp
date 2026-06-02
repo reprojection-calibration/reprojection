@@ -206,7 +206,7 @@ spline::Matrix2NXd ReadSplineControlPoints(SqlitePtr const db, CalibrationStep c
     int64_t num_control_points{-1};
     ExecuteQuery(
         db, sql_statements::spline_control_points_count,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
@@ -214,6 +214,7 @@ spline::Matrix2NXd ReadSplineControlPoints(SqlitePtr const db, CalibrationStep c
             num_control_points = static_cast<uint64_t>(sqlite3_column_int64(stmt, 0));
         });
 
+    // Now get the actual control points and put them into the pre-sized eigen matrix :)
     spline::Matrix2NXd data(6, num_control_points);
     ExecuteQuery(  // LCOV_EXCL_LINE
         db, sql_statements::spline_control_points_select,
@@ -243,7 +244,7 @@ std::optional<spline::TimeHandler> ReadSplineTimeHandler(SqlitePtr const db, Cal
 
     ExecuteQuery(  // LCOV_EXCL_LINE
         db, sql_statements::spline_time_handler_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
