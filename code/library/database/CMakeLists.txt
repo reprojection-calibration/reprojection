@@ -35,6 +35,9 @@ set(SQL_FILES
         sql/spline_control_points_insert.sql
         sql/spline_control_points_select.sql
         sql/spline_control_points_table.sql
+        sql/spline_time_handler_insert.sql
+        sql/spline_time_handler_select.sql
+        sql/spline_time_handler_table.sql
         sql/target_info_insert.sql
         sql/target_info_select.sql
         sql/target_info_table.sql
