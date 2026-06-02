@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <ranges>
 #include <string>
 
 // cppcheck-suppress missingInclude
@@ -165,6 +166,31 @@ void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, Sqli
     }};
 
     ExecuteStatement(sql_statements::target_info_insert, binder, db);
+}
+
+auto IndexedControlPointColumns(auto const& spline) {
+    return std::views::iota(0, static_cast<int>(spline.ControlPoints().cols())) |
+           std::views::transform([&](int i) { return std::pair{i, spline.ControlPoints().col(i)}; });
+}
+
+void WriteToDb(spline::Se3Spline const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               SqlitePtr const db) {
+    auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [i, control_point] = data_i;
+
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(i));
+
+        Sqlite3Tools::Bind(stmt, 4, control_point(0));
+        Sqlite3Tools::Bind(stmt, 5, control_point(1));
+        Sqlite3Tools::Bind(stmt, 6, control_point(2));
+        Sqlite3Tools::Bind(stmt, 7, control_point(3));
+        Sqlite3Tools::Bind(stmt, 8, control_point(4));
+        Sqlite3Tools::Bind(stmt, 9, control_point(5));
+    }};
+
+    BatchExecuteStatement(sql_statements::spline_control_points_insert, IndexedControlPointColumns(data), binder, db);
 }
 
 }  // namespace reprojection::database
