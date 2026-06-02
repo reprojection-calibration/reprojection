@@ -17,6 +17,19 @@
 
 namespace reprojection::database {
 
+void WriteGravityToDb(Array3d const& data, CalibrationStep const step_name, std::string_view sensor_name,
+                      SqlitePtr const db) {
+    auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 3, data(0));
+        Sqlite3Tools::Bind(stmt, 4, data(1));
+        Sqlite3Tools::Bind(stmt, 5, data(2));
+    }};
+
+    ExecuteStatement(sql_statements::gravity_insert, binder, db);
+}
+
 void WriteExtrinsicToDb(Array6d const& data, CalibrationStep const step_name, std::string_view sensor_name,
                         SqlitePtr const db) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {

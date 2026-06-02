@@ -153,6 +153,27 @@ std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, CalibrationStep const 
     return extrinsic;
 }
 
+std::optional<Array3d> ReadGravity(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
+    std::optional<Array3d> gravity;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::gravity_select,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&gravity](sqlite3_stmt* const stmt) {
+            Array3d result;
+            for (int i{0}; i < 3; ++i) {
+                result(i) = sqlite3_column_double(stmt, i);
+            }
+
+            gravity = result;
+        });
+
+    return gravity;
+}
+
 ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name) {
     ImuMeasurements data;
 

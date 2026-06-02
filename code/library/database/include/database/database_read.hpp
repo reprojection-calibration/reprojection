@@ -32,6 +32,8 @@ CameraMeasurements ReadExtractedTargets(SqlitePtr const db, std::string_view sen
 std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, CalibrationStep const step_name,
                                       std::string_view sensor_name);
 
+std::optional<Array3d> ReadGravity(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name);
+
 ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name);
 
 Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name);

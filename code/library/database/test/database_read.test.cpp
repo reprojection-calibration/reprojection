@@ -258,3 +258,20 @@ TEST(DatabaseDatabaseRead, TestReadExtrinsics) {
         database::ReadExtrinsics(db, CalibrationStep::ExtrinsicInitialization, "tf_blah_blah")};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }
+
+TEST(DatabaseDatabaseRead, TestReadGravity) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+
+    std::string_view sensor_name{"world"};
+    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    Array3d const gravity_w_gt{0, 1, 2};
+
+    database::WriteGravityToDb(gravity_w_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);
+
+    auto const gravity_w{database::ReadGravity(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
+    ASSERT_TRUE(gravity_w.has_value());
+    EXPECT_TRUE(gravity_w->isApprox(gravity_w_gt));
+
+    auto const unknown_sensor_data{database::ReadGravity(db, CalibrationStep::ExtrinsicInitialization, "gravity_blah")};
+    EXPECT_FALSE(unknown_sensor_data.has_value());
+}

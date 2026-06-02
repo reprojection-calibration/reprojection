@@ -174,6 +174,22 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbSplineTimeHandler) {
                  std::runtime_error);
 }
 
+TEST(DatabaseSensorDataInterface, TestWriteGravityToDb) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
+
+    // WARN(Jack): Similar to the case for the extrinsic (see test below), we are hijacking the sensor_name here.
+    // Gravity is not really directly associated with any single sensor. If anything it is more related to the target
+    // because that is what sets the world coordinate frame.
+    std::string_view sensor_name{"world"};
+    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+
+    Array3d const gravity_w{0, 1, 2};
+    EXPECT_NO_THROW(database::WriteGravityToDb(gravity_w, CalibrationStep::ExtrinsicInitialization, sensor_name, db));
+
+    EXPECT_THROW(database::WriteGravityToDb(gravity_w, CalibrationStep::ExtrinsicInitialization, sensor_name, db),
+                 std::runtime_error);
+}
+
 TEST(DatabaseSensorDataInterface, TestWriteExtrinsicsToDb) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
