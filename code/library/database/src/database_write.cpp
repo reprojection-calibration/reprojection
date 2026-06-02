@@ -168,12 +168,12 @@ void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, Sqli
     ExecuteStatement(sql_statements::target_info_insert, binder, db);
 }
 
-auto IndexedControlPointColumns(auto const& spline) {
-    return std::views::iota(0, static_cast<int>(spline.ControlPoints().cols())) |
-           std::views::transform([&](int i) { return std::pair{i, spline.ControlPoints().col(i)}; });
+auto IndexedControlPointColumns(auto const& control_points) {
+    return std::views::iota(0, static_cast<int>(control_points.cols())) |
+           std::views::transform([&](int i) { return std::pair{i, control_points.col(i)}; });
 }
 
-void WriteToDb(spline::Se3Spline const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [i, control_point] = data_i;

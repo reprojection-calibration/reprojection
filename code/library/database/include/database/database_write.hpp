@@ -32,7 +32,8 @@ void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, 
 // day when we successfully abstract the pipeline to handle multi-target calibration.
 void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, SqlitePtr const db);
 
-void WriteToDb(spline::Se3Spline const& data, CalibrationStep const step_name, std::string_view sensor_name,
+// WARN(Jack): Hardcoded for an SE3 spline. Nx6 control point block.
+void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);
 
 }  // namespace reprojection::database

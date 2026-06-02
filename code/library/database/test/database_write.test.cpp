@@ -137,3 +137,21 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbImuData) {
     EXPECT_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
                  std::runtime_error);
 }
+
+TEST(DatabaseSensorDataInterface, TestWriteToDbSplineControlPoints) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
+
+    database::WriteToDb(CalibrationStep::SplineInterpolation, "", "/cam/retro/123", db);
+    database::WriteToDb(CalibrationStep::SplineInterpolation, "", "/cam/retro/456", db);
+
+    spline::Matrix2NXd const control_points{spline::Matrix2NXd::Random(6, 10)};
+
+    std::string_view sensor_name_1{"/cam/retro/123"};
+    EXPECT_NO_THROW(database::WriteToDb(control_points, CalibrationStep::SplineInterpolation, sensor_name_1, db));
+
+    std::string_view sensor_name_2{"/cam/retro/456"};
+    EXPECT_NO_THROW(database::WriteToDb(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db));
+
+    EXPECT_THROW(database::WriteToDb(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db),
+                 std::runtime_error);
+}
