@@ -15,9 +15,9 @@ auto const log{logging::Get("steps")};
 
 // TODO(Jack): The name of the class variable "cache_key" is misleading because it is not a cache key but really a
 // serialized data signature. We should fix this name to clarify its purpose and use.
-std::string ImageLoadingStep::CacheKey() const { return caching::CacheKey(cache_key); }
+std::string ImageLoading::CacheKey() const { return caching::CacheKey(cache_key); }
 
-std::shared_ptr<EncodedImages> ImageLoadingStep::Compute() const {
+std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
     auto encoded_images = std::make_shared<EncodedImages>();
     int num_images{0};
     while (auto const data{image_source()}) {
@@ -40,11 +40,11 @@ std::shared_ptr<EncodedImages> ImageLoadingStep::Compute() const {
     return encoded_images;
 }  // LCOV_EXCL_LINE
 
-std::shared_ptr<EncodedImages> ImageLoadingStep::Load(SqlitePtr const db) const {
+std::shared_ptr<EncodedImages> ImageLoading::Load(SqlitePtr const db) const {
     return std::make_shared<EncodedImages>(database::ReadEncodedImages(db, SensorName()));
 }
 
-void ImageLoadingStep::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
+void ImageLoading::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
     database::WriteToDb(*encoded_images, SensorName(), db);
 }
 

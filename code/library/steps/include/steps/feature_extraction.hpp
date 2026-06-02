@@ -8,7 +8,7 @@
 
 namespace reprojection::steps {
 
-struct FeatureExtractionStep {
+struct FeatureExtraction {
     std::string sensor_name;
     std::shared_ptr<EncodedImages> images;
     TargetInfo target_info;

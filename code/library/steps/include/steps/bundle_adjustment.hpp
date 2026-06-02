@@ -5,7 +5,7 @@
 
 namespace reprojection::steps {
 
-struct BundleAdjustmentStep {
+struct BundleAdjustment {
     CameraInfo camera_info;
     CameraMeasurements targets;
     OptimizationState initial_state;

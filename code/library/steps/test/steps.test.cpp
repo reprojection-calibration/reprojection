@@ -84,7 +84,7 @@ class ImageSourceFixture : public StepsFixture {
 };
 
 TEST_F(ImageSourceFixture, TestImageLoadingStep) {
-    steps::ImageLoadingStep const step{camera_info.sensor_name, "sha256-key", image_source};
+    steps::ImageLoading const step{camera_info.sensor_name, "sha256-key", image_source};
 
     auto [encoded_images, cache_status]{RunStep<std::shared_ptr<EncodedImages>>(step, db)};
     EXPECT_EQ(std::size(*encoded_images), 2);
@@ -130,7 +130,7 @@ TEST_F(StepsFixture, TestTargetInfoStep) {
 }
 
 TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
-    steps::FeatureExtractionStep const step{camera_info.sensor_name, encoded_images, target_info, false};
+    steps::FeatureExtraction const step{camera_info.sensor_name, encoded_images, target_info, false};
 
     auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
     EXPECT_EQ(std::size(extracted_targets), 0);
@@ -143,7 +143,7 @@ TEST_F(ImageSourceFixture, TestFeatureExtractionStep) {
 
 TEST_F(StepsFixture, TestIntrinsicInitializationStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
-    steps::IntrinsicInitializationStep const step{camera_info, targets};
+    steps::IntrinsicInitialization const step{camera_info, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
@@ -193,7 +193,7 @@ TEST_F(StepsFixture, TestPoseInitializationStep) {
 
 TEST_F(StepsFixture, TestBundleAdjustmentStep) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    steps::BundleAdjustmentStep const step{camera_info, targets, {camera_state, gt_poses}};
+    steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
 
     auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
     EXPECT_EQ(std::size(result.frames), 50);

@@ -7,9 +7,9 @@
 
 namespace reprojection::steps {
 
-std::string IntrinsicInitializationStep::CacheKey() const { return caching::CacheKey(camera_info, targets); }
+std::string IntrinsicInitialization::CacheKey() const { return caching::CacheKey(camera_info, targets); }
 
-CameraState IntrinsicInitializationStep::Compute() const {
+CameraState IntrinsicInitialization::Compute() const {
     // TODO(Jack): Confirm v and u are height and width in the correct order!
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info.camera_model, camera_info.bounds.v_max,
                                                             camera_info.bounds.u_max, targets)};
@@ -22,7 +22,7 @@ CameraState IntrinsicInitializationStep::Compute() const {
     return CameraState{*intrinsics};
 }
 
-CameraState IntrinsicInitializationStep::Load(SqlitePtr const db) const {
+CameraState IntrinsicInitialization::Load(SqlitePtr const db) const {
     auto const loaded_intrinsics{
         database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
 
@@ -33,7 +33,7 @@ CameraState IntrinsicInitializationStep::Load(SqlitePtr const db) const {
     return CameraState{*loaded_intrinsics};
 }
 
-void IntrinsicInitializationStep::Save(CameraState const& intrinsics, SqlitePtr const db) const {
+void IntrinsicInitialization::Save(CameraState const& intrinsics, SqlitePtr const db) const {
     database::WriteToDb(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
 }
 

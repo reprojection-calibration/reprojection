@@ -12,7 +12,7 @@ namespace reprojection::steps {
 // getting large (even though we only store .png encoded blobs). The benefit is that it makes our downstream workflow
 // and database visualization extremely consistent.
 
-struct ImageLoadingStep {
+struct ImageLoading {
     std::string sensor_name;
     std::string cache_key;
     ImageSourceSignature image_source;

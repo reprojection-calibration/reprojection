@@ -21,6 +21,7 @@ set(LINK_LIBRARIES
         config
         database
         feature_extraction
+        geometry
         image_viewer
         logging
         optimization

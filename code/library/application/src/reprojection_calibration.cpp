@@ -48,8 +48,8 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 // update_feature_extraction_cache_key.py
 void Calibrate(toml::table const& config, ImageSourceSignature image_source, std::string const& image_source_signature,
                SqlitePtr const db) {
-    steps::ImageLoadingStep const image_loading{config["camera"]["sensor_name"].as_string()->get(),
-                                                image_source_signature, image_source};
+    steps::ImageLoading const image_loading{config["camera"]["sensor_name"].as_string()->get(), image_source_signature,
+                                            image_source};
     auto const [encoded_images,
                 image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
@@ -77,15 +77,15 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
         show_extraction = node.as_boolean()->get();  // LCOV_EXCL_LINE
     }
 
-    steps::FeatureExtractionStep const feature_extraction_step{camera_info.sensor_name, encoded_images, target_info,
-                                                               show_extraction};
+    steps::FeatureExtraction const feature_extraction_step{camera_info.sensor_name, encoded_images, target_info,
+                                                           show_extraction};
     auto const [targets,
                 feature_extraction_cache_status]{steps::RunStep<CameraMeasurements>(feature_extraction_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}",
               ToString(feature_extraction_step.step_type), ToString(feature_extraction_cache_status),
               std::size(targets));
 
-    steps::IntrinsicInitializationStep const ii_step{camera_info, targets};
+    steps::IntrinsicInitialization const ii_step{camera_info, targets};
     auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'intrinsics': {}}}", ToString(ii_step.step_type),
               ToString(ii_cache_status), camera_state.intrinsics);
@@ -97,7 +97,7 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
 
-    steps::BundleAdjustmentStep const ba_step{camera_info, targets, aligned_initial_state};
+    steps::BundleAdjustment const ba_step{camera_info, targets, aligned_initial_state};
     auto const [optimized_state, ba_cache_status]{steps::RunStep<OptimizationState>(ba_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.step_type),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
