@@ -7,7 +7,7 @@ set(SRC_FILES
         src/image_loading.cpp
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
-        src/spline_interpolation.cpp
+        src/spline_initialization.cpp
         src/target_info.cpp
 
 )

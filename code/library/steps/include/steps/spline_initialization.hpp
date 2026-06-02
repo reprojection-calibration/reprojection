@@ -6,10 +6,11 @@
 
 namespace reprojection::steps {
 
-struct SplineInterpolation {
+struct SplineInitialization {
     std::string sensor_name;
     Frames poses;
 
+    // TODO(Jack): Should we rename the CalibrationStep to SplineInitialization?
     CalibrationStep step_type{CalibrationStep::SplineInterpolation};
 
     std::string SensorName() const { return sensor_name; }
