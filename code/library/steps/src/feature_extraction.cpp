@@ -8,7 +8,7 @@
 
 namespace reprojection::steps {
 
-std::string FeatureExtractionStep::CacheKey() const {
+std::string FeatureExtraction::CacheKey() const {
     std::ostringstream oss;
     oss << show_extraction;
 
@@ -18,7 +18,7 @@ std::string FeatureExtractionStep::CacheKey() const {
 // TODO(Jack): We really need to split the visualization logic from the core computation!
 // NOTE(Jack): The unit tests and CI pipeline run headless which means that we cannot get the GUI show feature
 // extraction code path unit tested and covered.
-CameraMeasurements FeatureExtractionStep::Compute() const {
+CameraMeasurements FeatureExtraction::Compute() const {
     // TODO(Jack): Is it really appropriate to use a toml table here instead of a struct?
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
 
@@ -61,11 +61,11 @@ CameraMeasurements FeatureExtractionStep::Compute() const {
     return extracted_targets;
 }
 
-CameraMeasurements FeatureExtractionStep::Load(SqlitePtr const db) const {
+CameraMeasurements FeatureExtraction::Load(SqlitePtr const db) const {
     return database::ReadExtractedTargets(db, SensorName());
 }
 
-void FeatureExtractionStep::Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const {
+void FeatureExtraction::Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const {
     database::WriteToDb(extracted_targets, SensorName(), db);
 }
 

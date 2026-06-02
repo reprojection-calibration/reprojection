@@ -5,7 +5,7 @@
 
 namespace reprojection::steps {
 
-struct IntrinsicInitializationStep {
+struct IntrinsicInitialization {
     CameraInfo camera_info;
     CameraMeasurements targets;
 

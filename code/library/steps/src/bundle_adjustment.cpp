@@ -7,15 +7,15 @@
 
 namespace reprojection::steps {
 
-std::string BundleAdjustmentStep::CacheKey() const { return caching::CacheKey(camera_info, targets, initial_state); }
+std::string BundleAdjustment::CacheKey() const { return caching::CacheKey(camera_info, targets, initial_state); }
 
-OptimizationState BundleAdjustmentStep::Compute() const {
+OptimizationState BundleAdjustment::Compute() const {
     auto const [optimized_state, _]{optimization::BundleAdjustment(camera_info, targets, initial_state)};
 
     return optimized_state;
 }
 
-OptimizationState BundleAdjustmentStep::Load(SqlitePtr const db) const {
+OptimizationState BundleAdjustment::Load(SqlitePtr const db) const {
     Frames const poses{database::ReadPoses(db, step_type, SensorName())};
     auto const intrinsics{database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
 
@@ -29,7 +29,7 @@ OptimizationState BundleAdjustmentStep::Load(SqlitePtr const db) const {
     return {CameraState{intrinsics.value()}, poses};
 }
 
-void BundleAdjustmentStep::Save(OptimizationState const& optimized_state, SqlitePtr const db) const {
+void BundleAdjustment::Save(OptimizationState const& optimized_state, SqlitePtr const db) const {
     database::WriteToDb(optimized_state.camera_state, camera_info.camera_model, step_type, SensorName(), db);
     database::WriteToDb(optimized_state.frames, step_type, SensorName(), db);
 
