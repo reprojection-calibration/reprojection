@@ -23,6 +23,9 @@ set(SQL_FILES
         sql/extrinsics_insert.sql
         sql/extrinsics_select.sql
         sql/extrinsics_table.sql
+        sql/gravity_insert.sql
+        sql/gravity_select.sql
+        sql/gravity_table.sql
         sql/image_insert.sql
         sql/images_select.sql
         sql/images_table.sql
