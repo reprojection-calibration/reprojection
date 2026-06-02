@@ -7,7 +7,7 @@
 
 namespace reprojection::database {
 
-// TODO(Jack): See the note below for WriteExtrinsicToDb(). Same problems are plaguing us here.  
+// TODO(Jack): See the note below for WriteExtrinsicToDb(). Same problems are plaguing us here.
 void WriteGravityToDb(Array3d const& data, CalibrationStep const step_name, std::string_view sensor_name,
                       SqlitePtr const db);
 
