@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <ranges>
 #include <string>
 
 // cppcheck-suppress missingInclude
@@ -165,6 +166,44 @@ void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, Sqli
     }};
 
     ExecuteStatement(sql_statements::target_info_insert, binder, db);
+}
+
+// TODO(Jack): Move to lambda directly in consumer method below?
+auto IndexedControlPointColumns(auto const& control_points) {
+    return std::views::iota(0, static_cast<int>(control_points.cols())) |
+           std::views::transform([&](int i) { return std::pair{i, control_points.col(i)}; });
+}
+
+void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               SqlitePtr const db) {
+    auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [i, control_point]{data_i};
+
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(i));
+
+        Sqlite3Tools::Bind(stmt, 4, control_point(0));
+        Sqlite3Tools::Bind(stmt, 5, control_point(1));
+        Sqlite3Tools::Bind(stmt, 6, control_point(2));
+        Sqlite3Tools::Bind(stmt, 7, control_point(3));
+        Sqlite3Tools::Bind(stmt, 8, control_point(4));
+        Sqlite3Tools::Bind(stmt, 9, control_point(5));
+    }};
+
+    BatchExecuteStatement(sql_statements::spline_control_points_insert, IndexedControlPointColumns(data), binder, db);
+}
+
+void WriteToDb(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               SqlitePtr const db) {
+    auto const binder{[&data, step_name, sensor_name](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(data.t0_ns_));       // WARN CAST
+        Sqlite3Tools::Bind(stmt, 4, static_cast<int64_t>(data.delta_t_ns_));  // WARN CAST
+    }};
+
+    ExecuteStatement(sql_statements::spline_time_handler_insert, binder, db);
 }
 
 }  // namespace reprojection::database

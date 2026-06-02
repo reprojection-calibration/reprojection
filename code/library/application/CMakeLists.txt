@@ -16,6 +16,7 @@ set(LINK_LIBRARIES
         calibration
         config
         database
+        geometry # Required due to database write dependency on spline
         logging
         optimization
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the pose_init public header interface.

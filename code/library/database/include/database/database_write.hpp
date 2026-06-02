@@ -1,6 +1,7 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
+#include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
 
@@ -28,7 +29,14 @@ void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, 
                SqlitePtr const db);
 
 // WARN(Jack): This is a hack! There is no requirement for a target to have a sensor name! This should get removed one
-// day when we succesfully abstract the pipeline to handle multi-target calibration.
+// day when we successfully abstract the pipeline to handle multi-target calibration.
 void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, SqlitePtr const db);
+
+// WARN(Jack): Hardcoded for an SE3 spline. Nx6 control point block.
+void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               SqlitePtr const db);
+
+void WriteToDb(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               SqlitePtr const db);
 
 }  // namespace reprojection::database
