@@ -1,7 +1,8 @@
+#include "spline/spline_initialization.hpp"
+
 #include "caching/cache_keys.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
-#include "spline/spline_initialization.hpp"
 #include "steps/spline_initialization.hpp"
 
 namespace reprojection::steps {

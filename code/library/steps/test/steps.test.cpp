@@ -211,7 +211,7 @@ TEST_F(StepsFixture, TestBundleAdjustmentStep) {
 
 TEST_F(StepsFixture, TestSplineInitialization) {
     auto [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    steps::SplineInitialization const step{camera_info.sensor_name,poses };
+    steps::SplineInitialization const step{camera_info.sensor_name, poses};
 
     auto [result, cache_status]{RunStep<spline::Se3Spline>(step, db)};
     EXPECT_EQ(result.ControlPoints().cols(), 95);
