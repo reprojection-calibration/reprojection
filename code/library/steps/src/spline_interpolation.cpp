@@ -14,8 +14,15 @@ spline::Se3Spline SplineInterpolation::Compute() const {
     return spline;
 }
 
-spline::Se3Spline SplineInterpolation::Load(SqlitePtr const db) const {}
+spline::Se3Spline SplineInterpolation::Load(SqlitePtr const db) const {
+    (void)db;
 
-void SplineInterpolation::Save(spline::Se3Spline const& spline, SqlitePtr const db) const {}
+    return spline::Se3Spline{{}, {0, 1}};
+}
+
+void SplineInterpolation::Save(spline::Se3Spline const& spline, SqlitePtr const db) const {
+    (void)spline;
+    (void)db;
+}
 
 }  // namespace reprojection::steps
