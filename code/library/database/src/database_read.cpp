@@ -137,7 +137,7 @@ std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, CalibrationStep const 
 
     ExecuteQuery(  // LCOV_EXCL_LINE
         db, sql_statements::extrinsics_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
@@ -158,7 +158,7 @@ std::optional<Array3d> ReadGravity(SqlitePtr const db, CalibrationStep const ste
 
     ExecuteQuery(  // LCOV_EXCL_LINE
         db, sql_statements::gravity_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
