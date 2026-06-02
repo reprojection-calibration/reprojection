@@ -36,4 +36,7 @@ void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, Sqli
 void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);
 
+void WriteToDb(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               SqlitePtr const db);
+
 }  // namespace reprojection::database

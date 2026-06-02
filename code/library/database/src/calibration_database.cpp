@@ -52,6 +52,7 @@ SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bo
         ExecuteStatement(sql_statements::poses_table, db);
         ExecuteStatement(sql_statements::reprojection_error_table, db);
         ExecuteStatement(sql_statements::spline_control_points_table, db);
+        ExecuteStatement(sql_statements::spline_time_handler_table, db);
         ExecuteStatement(sql_statements::target_info_table, db);
 
         // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For example a
