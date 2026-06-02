@@ -9,7 +9,6 @@
 using namespace reprojection;
 
 using CubicBSplineC3 = spline::CubicBSplineC3;
-using DerivativeOrder = spline::DerivativeOrder;
 
 // TODO(Jack): Because we cannot test t0_ns directly of the created spline we shouls test some evaluations to check
 // which times are invalid or not.

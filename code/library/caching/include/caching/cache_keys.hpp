@@ -21,4 +21,6 @@ std::string CacheKey(std::string_view const& data);
 
 std::string CacheKey(std::string_view sensor_name, CameraModel const camera_model, EncodedImages const& encoded_images);
 
+std::string CacheKey(std::string_view sensor_name, Frames const& frames);
+
 }  // namespace reprojection::caching
