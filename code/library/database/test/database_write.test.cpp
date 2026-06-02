@@ -173,3 +173,36 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbSplineTimeHandler) {
     EXPECT_THROW(database::WriteToDb(time_handler, CalibrationStep::SplineInterpolation, sensor_name_2, db),
                  std::runtime_error);
 }
+
+TEST(DatabaseSensorDataInterface, TestWriteGravityToDb) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
+
+    // WARN(Jack): Similar to the case for the extrinsic (see test below), we are hijacking the sensor_name here.
+    // Gravity is not really directly associated with any single sensor. If anything it is more related to the target
+    // because that is what sets the world coordinate frame.
+    std::string_view sensor_name{"world"};
+    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+
+    Array3d const gravity_w{0, 1, 2};
+    EXPECT_NO_THROW(database::WriteGravityToDb(gravity_w, CalibrationStep::ExtrinsicInitialization, sensor_name, db));
+
+    EXPECT_THROW(database::WriteGravityToDb(gravity_w, CalibrationStep::ExtrinsicInitialization, sensor_name, db),
+                 std::runtime_error);
+}
+
+TEST(DatabaseSensorDataInterface, TestWriteExtrinsicsToDb) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
+
+    // WARN(Jack): We are hacking the sensor_name of the extrinsic calibration table to actually be the name of the
+    // transform. This is a hack! The extrinsic table is the first time that we came across datat that was related to
+    // two sensors, and as of today (02.06.26) our database design does not handle this, and therefore we are restoring
+    // to hacks :(
+    std::string_view sensor_name{"tf_imu_co"};
+    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+
+    Array6d const tf_imu_co{0, 1, 2, 3, 4, 5};
+    EXPECT_NO_THROW(database::WriteExtrinsicToDb(tf_imu_co, CalibrationStep::ExtrinsicInitialization, sensor_name, db));
+
+    EXPECT_THROW(database::WriteExtrinsicToDb(tf_imu_co, CalibrationStep::ExtrinsicInitialization, sensor_name, db),
+                 std::runtime_error);
+}

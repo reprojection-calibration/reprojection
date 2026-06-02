@@ -47,6 +47,8 @@ SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bo
         ExecuteStatement(sql_statements::camera_info_table, db);
         ExecuteStatement(sql_statements::camera_intrinsics_table, db);
         ExecuteStatement(sql_statements::extracted_targets_table, db);
+        ExecuteStatement(sql_statements::extrinsics_table, db);
+        ExecuteStatement(sql_statements::gravity_table, db);
         ExecuteStatement(sql_statements::images_table, db);
         ExecuteStatement(sql_statements::imu_data_table, db);
         ExecuteStatement(sql_statements::poses_table, db);
