@@ -157,7 +157,7 @@ TEST_F(CameraReadFixture, TestReadPoses) {
     EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(frames.at(timestamp_ns).pose));
 }
 
-TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
+TEST(DatabaseDatabaseRead, TestFullImuAddGetCycle) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     std::string_view sensor_name{"/imu/polaris/123"};
@@ -171,7 +171,7 @@ TEST(DatabaseSensorDataInterface, TestFullImuAddGetCycle) {
     EXPECT_EQ(std::size(loaded_data), std::size(data));
 }
 
-TEST(DatabaseSensorDataInterface, TestGetImuData) {
+TEST(DatabaseDatabaseRead, TestGetImuData) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Data from imu 123
@@ -204,4 +204,21 @@ TEST(DatabaseSensorDataInterface, TestGetImuData) {
     // If the sensor is not present we simply get an empty set back, this is not an error
     auto const unknown_sensor_data{database::ReadImuData(db, "/imu/polaris/unknown")};
     EXPECT_EQ(std::size(unknown_sensor_data), 0);
+}
+
+TEST(DatabaseDatabaseRead, TestReadSplineControlPoints) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+
+    std::string_view sensor_name{"/cam/retro/123"};
+    database::WriteToDb(CalibrationStep::SplineInterpolation, "", sensor_name, db);
+    spline::Matrix2NXd const control_points_gt{spline::Matrix2NXd::Random(6, 10)};
+
+    database::WriteToDb(control_points_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
+
+    auto const control_points{database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    EXPECT_TRUE(control_points.isApprox(control_points_gt));
+
+    auto const unknown_sensor_data{
+        database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
+    EXPECT_EQ(unknown_sensor_data.cols(), 0);
 }

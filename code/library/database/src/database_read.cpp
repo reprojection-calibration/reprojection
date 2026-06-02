@@ -200,4 +200,41 @@ std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view se
     return target_info;
 }  // LCOV_EXCL_LINE
 
+spline::Matrix2NXd ReadSplineControlPoints(SqlitePtr const db, CalibrationStep const step_name,
+                                           std::string_view sensor_name) {
+    // First we need to recover how many control points there are so we can size the control point matrix properly.
+    int64_t num_control_points{-1};
+    ExecuteQuery(
+        db, sql_statements::spline_control_points_count,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&num_control_points](sqlite3_stmt* const stmt) {
+            num_control_points = static_cast<uint64_t>(sqlite3_column_int64(stmt, 0));
+        });
+
+    spline::Matrix2NXd data(6, num_control_points);
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::spline_control_points_select,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&data](sqlite3_stmt* const stmt) {
+            int64_t const id{sqlite3_column_int64(stmt, 0)};
+            double const rx{sqlite3_column_double(stmt, 1)};
+            double const ry{sqlite3_column_double(stmt, 2)};
+            double const rz{sqlite3_column_double(stmt, 3)};
+
+            double const x{sqlite3_column_double(stmt, 4)};
+            double const y{sqlite3_column_double(stmt, 5)};
+            double const z{sqlite3_column_double(stmt, 6)};
+
+            data.col(id) = Array6d{rx, ry, rz, x, y, z};
+        });
+
+    return data;
+}  // LCOV_EXCL_LINE
+
 };  // namespace reprojection::database

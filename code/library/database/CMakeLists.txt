@@ -31,7 +31,9 @@ set(SQL_FILES
         sql/poses_table.sql
         sql/reprojection_error_insert.sql
         sql/reprojection_error_table.sql
+        sql/spline_control_points_count.sql
         sql/spline_control_points_insert.sql
+        sql/spline_control_points_select.sql
         sql/spline_control_points_table.sql
         sql/target_info_insert.sql
         sql/target_info_select.sql

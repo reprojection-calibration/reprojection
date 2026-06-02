@@ -176,7 +176,7 @@ auto IndexedControlPointColumns(auto const& control_points) {
 void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
-        auto const& [i, control_point] = data_i;
+        auto const& [i, control_point]{data_i};
 
         Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
         Sqlite3Tools::Bind(stmt, 2, sensor_name);
