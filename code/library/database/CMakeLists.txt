@@ -20,6 +20,9 @@ set(SQL_FILES
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
+        sql/extrinsics_insert.sql
+        sql/extrinsics_select.sql
+        sql/extrinsics_table.sql
         sql/image_insert.sql
         sql/images_select.sql
         sql/images_table.sql

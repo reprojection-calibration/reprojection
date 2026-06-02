@@ -17,6 +17,22 @@
 
 namespace reprojection::database {
 
+void WriteExtrinsicToDb(Array6d const& data, CalibrationStep const step_name, std::string_view sensor_name,
+                        SqlitePtr const db) {
+    auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
+        Sqlite3Tools::Bind(stmt, 3, data(0));
+        Sqlite3Tools::Bind(stmt, 4, data(1));
+        Sqlite3Tools::Bind(stmt, 5, data(2));
+        Sqlite3Tools::Bind(stmt, 6, data(3));
+        Sqlite3Tools::Bind(stmt, 7, data(4));
+        Sqlite3Tools::Bind(stmt, 8, data(5));
+    }};
+
+    ExecuteStatement(sql_statements::extrinsics_insert, binder, db);
+}
+
 // TODO(Jack): Input arg order consistency.
 void WriteToDb(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
                SqlitePtr const db) {
@@ -198,7 +214,7 @@ void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, 
 
 void WriteToDb(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db) {
-    auto const binder{[&data, step_name, sensor_name](sqlite3_stmt* const stmt) {
+    auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
         Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
         Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
         Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(data.t0_ns_));       // WARN CAST
