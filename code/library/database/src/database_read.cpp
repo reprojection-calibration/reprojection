@@ -237,4 +237,25 @@ spline::Matrix2NXd ReadSplineControlPoints(SqlitePtr const db, CalibrationStep c
     return data;
 }  // LCOV_EXCL_LINE
 
+std::optional<spline::TimeHandler> ReadSplineTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
+                                                         std::string_view sensor_name) {
+    std::optional<spline::TimeHandler> time_handler;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::spline_time_handler_select,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&time_handler](sqlite3_stmt* const stmt) {
+            spline::TimeHandler result;
+            result.t0_ns_ = sqlite3_column_int(stmt, 0);
+            result.delta_t_ns_ = sqlite3_column_int(stmt, 1);
+
+            time_handler = result;
+        });
+
+    return time_handler;
+}  // LCOV_EXCL_LINE
+
 };  // namespace reprojection::database

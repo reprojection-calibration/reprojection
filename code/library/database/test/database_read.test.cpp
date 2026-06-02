@@ -222,3 +222,20 @@ TEST(DatabaseDatabaseRead, TestReadSplineControlPoints) {
         database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
     EXPECT_EQ(unknown_sensor_data.cols(), 0);
 }
+
+TEST(DatabaseDatabaseRead, TestReadSplineTimeHandler) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+
+    std::string_view sensor_name{"/cam/retro/123"};
+    database::WriteToDb(CalibrationStep::SplineInterpolation, "", sensor_name, db);
+    spline::TimeHandler const time_handler_gt{100, 200};
+
+    database::WriteToDb(time_handler_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
+
+    auto const time_handler{database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    EXPECT_EQ(time_handler, time_handler_gt);
+
+    auto const unknown_sensor_data{
+        database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
+    EXPECT_FALSE(unknown_sensor_data.has_value());
+}

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
+#include "spline/time_handler.hpp"
 #include "spline/types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/enums.hpp"
@@ -34,5 +35,8 @@ std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view se
 
 spline::Matrix2NXd ReadSplineControlPoints(SqlitePtr const db, CalibrationStep const step_name,
                                            std::string_view sensor_name);
+
+std::optional<spline::TimeHandler> ReadSplineTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
+                                                         std::string_view sensor_name);
 
 }  // namespace reprojection::database
