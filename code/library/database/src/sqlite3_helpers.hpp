@@ -5,12 +5,10 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "database/calibration_database.hpp"
 
 #include "enums.hpp"
-#include "types.hpp"
 
 namespace reprojection::database {
 
