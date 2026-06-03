@@ -45,7 +45,7 @@ std::shared_ptr<EncodedImages> ImageLoading::Load(SqlitePtr const db) const {
 }
 
 void ImageLoading::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
-    database::WriteToDb(*encoded_images, SensorName(), db);
+    database::InsertImages(*encoded_images, SensorName(), db);
 }
 
 }  // namespace reprojection::steps

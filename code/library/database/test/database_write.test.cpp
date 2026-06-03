@@ -31,7 +31,7 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddImage() const {
         AddStep(CalibrationStep::ImageLoading);
-        database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db);
+        database::InsertImages(EncodedImages{{timestamp_ns, {}}}, sensor_name, db);
     }
 
     void AddTarget() const {
@@ -65,7 +65,7 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbTargetInfo) {
                  std::runtime_error);
 }
 
-TEST_F(SensorDatabaseFixture, TestWriteToDbEncodedImages) {
+TEST_F(SensorDatabaseFixture, TestInsertImages) {
     EXPECT_NO_THROW(AddImage());
     EXPECT_THROW(AddImage(), std::runtime_error);
 }

@@ -111,7 +111,7 @@ void InsertIntrinsics(CameraState const& data, CameraModel const camera_model, C
     ExecuteStatement(sql_statements::camera_intrinsics_insert, binder, db);
 }
 
-void WriteToDb(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db) {
+void InsertImages(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, buffer]{data_i};
 

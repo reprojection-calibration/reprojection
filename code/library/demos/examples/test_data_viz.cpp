@@ -47,7 +47,7 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
     }
 
     database::InsertStep(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
-    database::WriteToDb(image_data, camera_info.sensor_name, db);
+    database::InsertImages(image_data, camera_info.sensor_name, db);
 
     database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
     database::InsertCameraInfo(camera_info, db);

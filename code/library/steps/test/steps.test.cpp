@@ -52,7 +52,7 @@ class StepsFixture : public ::testing::Test {
         }()};
 
         database::InsertStep(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
-        database::WriteToDb(images, camera_info.sensor_name, db);
+        database::InsertImages(images, camera_info.sensor_name, db);
         database::InsertStep(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
         database::InsertTargets(targets, camera_info.sensor_name, db);
     }

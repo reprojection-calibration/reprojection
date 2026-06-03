@@ -30,7 +30,7 @@ void InsertTargets(CameraMeasurements const& data, std::string_view sensor_name,
 void InsertIntrinsics(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
                std::string_view sensor_name, SqlitePtr const db);
 
-void WriteToDb(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db);
+void InsertImages(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db);
 
 void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, SqlitePtr const db);
 
