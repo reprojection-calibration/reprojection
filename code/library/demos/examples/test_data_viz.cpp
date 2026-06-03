@@ -58,7 +58,7 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
     // TODO(Jack): It would be nice if the mvg data generator used and returned us the target info. Hardcoding it here
     // means that it will go out of sync with the data generator.
     TargetInfo const target_info{TargetType::Checkerboard, 5, 5, 0.25, false};
-    database::WriteToDb(target_info, camera_info.sensor_name, db);
+    database::InsertTargetInfo(target_info, camera_info.sensor_name, db);
 
     database::InsertStep(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
     database::InsertTargets(targets, camera_info.sensor_name, db);

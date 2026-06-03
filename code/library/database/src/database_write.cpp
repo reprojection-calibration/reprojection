@@ -189,7 +189,7 @@ void InsertReprojectionErrors(ReprojectionErrors const& data, CalibrationStep co
     BatchExecuteStatement(sql_statements::reprojection_error_insert, data, binder, db);
 }
 
-void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, SqlitePtr const db) {
+void InsertTargetInfo(TargetInfo const& target_info, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[target_info, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, CalibrationStep::TargetInfo, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, ToString(target_info.target_type));
@@ -202,7 +202,7 @@ void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, Sqli
     ExecuteStatement(sql_statements::target_info_insert, binder, db);
 }
 
-void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertControlPoints(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db) {
     // NOTE(Jack): This lets use treat the columns of the eigen matrix like a regular type that we can iterate over.
     // This is required to be compatible with BatchExecuteStatement().

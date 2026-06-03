@@ -62,7 +62,7 @@ TEST_F(CameraReadFixture, TestReadTargetInfo) {
     EXPECT_FALSE(target_info.has_value());
 
     database::InsertStep(CalibrationStep::TargetInfo, "", sensor_name, db);
-    database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db);
+    database::InsertTargetInfo(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db);
 
     target_info = database::ReadTargetInfo(db, sensor_name);
     ASSERT_TRUE(target_info.has_value());
@@ -251,7 +251,7 @@ TEST(DatabaseDatabaseRead, TestReadSplineControlPoints) {
     database::InsertStep(CalibrationStep::SplineInterpolation, "", sensor_name, db);
     spline::Matrix2NXd const control_points_gt{spline::Matrix2NXd::Random(6, 10)};
 
-    database::WriteToDb(control_points_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
+    database::InsertControlPoints(control_points_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
 
     auto const control_points{database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
     EXPECT_TRUE(control_points.isApprox(control_points_gt));

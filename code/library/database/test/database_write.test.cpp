@@ -57,11 +57,11 @@ TEST_F(SensorDatabaseFixture, TestInsertCameraInfo) {
 // TODO(Jack): If we have foreign key constraints one day, like we will have to for the multi-target case, then we can
 // add helpers like we have in the test fixture for other types, but for now we do not need to add a target info to the
 // database for any other reason.
-TEST_F(SensorDatabaseFixture, TestWriteToDbTargetInfo) {
+TEST_F(SensorDatabaseFixture, TestInsertTargetInfo) {
     database::InsertStep(CalibrationStep::TargetInfo, "", sensor_name, db);
 
-    EXPECT_NO_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db));
-    EXPECT_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db),
+    EXPECT_NO_THROW(database::InsertTargetInfo(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db));
+    EXPECT_THROW(database::InsertTargetInfo(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db),
                  std::runtime_error);
 }
 
@@ -173,7 +173,7 @@ TEST(DatabaseSensorDataInterface, TestInsertImuErrors) {
                  std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestWriteToDbSplineControlPoints) {
+TEST(DatabaseSensorDataInterface, TestInsertControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     database::InsertStep(CalibrationStep::SplineInterpolation, "", "/cam/retro/123", db);
@@ -182,12 +182,12 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbSplineControlPoints) {
     spline::Matrix2NXd const control_points{spline::Matrix2NXd::Random(6, 10)};
 
     std::string_view sensor_name_1{"/cam/retro/123"};
-    EXPECT_NO_THROW(database::WriteToDb(control_points, CalibrationStep::SplineInterpolation, sensor_name_1, db));
+    EXPECT_NO_THROW(database::InsertControlPoints(control_points, CalibrationStep::SplineInterpolation, sensor_name_1, db));
 
     std::string_view sensor_name_2{"/cam/retro/456"};
-    EXPECT_NO_THROW(database::WriteToDb(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db));
+    EXPECT_NO_THROW(database::InsertControlPoints(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db));
 
-    EXPECT_THROW(database::WriteToDb(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db),
+    EXPECT_THROW(database::InsertControlPoints(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db),
                  std::runtime_error);
 }
 
