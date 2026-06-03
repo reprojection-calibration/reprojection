@@ -150,12 +150,12 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbImuData) {
                  std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestWriteToDbImuError) {
+TEST(DatabaseSensorDataInterface, TestInsertImuErrors) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
     std::string_view sensor_name{"/imu/polaris/123"};
 
     // Try to add a record before the foreign key requirements are met - not gonna work!
-    EXPECT_THROW(database::WriteToDb(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
+    EXPECT_THROW(database::InsertImuErrors(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
                                      CalibrationStep::ExtrinsicInitialization, sensor_name, db),
                  std::runtime_error);
 
@@ -164,11 +164,11 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbImuError) {
     database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
     // Happy path.
-    EXPECT_NO_THROW(database::WriteToDb(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
+    EXPECT_NO_THROW(database::InsertImuErrors(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
                                         CalibrationStep::ExtrinsicInitialization, sensor_name, db));
 
     // Try to add a repeated record - this is not successful because the primary key must always be unique!
-    EXPECT_THROW(database::WriteToDb(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
+    EXPECT_THROW(database::InsertImuErrors(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
                                      CalibrationStep::ExtrinsicInitialization, sensor_name, db),
                  std::runtime_error);
 }

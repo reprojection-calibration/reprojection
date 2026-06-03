@@ -222,7 +222,7 @@ TEST(DatabaseDatabaseRead, TestReadImuErrors) {
                         sensor_name, db);
     database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
-    database::WriteToDb(ImuErrors{{5, {{1, 2, 3}, {4, 5, 6}}},  //
+    database::InsertImuErrors(ImuErrors{{5, {{1, 2, 3}, {4, 5, 6}}},  //
                                   {10, {Vector3d::Zero(), Vector3d::Zero()}},
                                   {15, {Vector3d::Zero(), Vector3d::Zero()}}},
                         CalibrationStep::ExtrinsicInitialization, sensor_name, db);

@@ -140,7 +140,7 @@ void InsertPoses(Frames const& data, CalibrationStep const step_name, std::strin
     BatchExecuteStatement(sql_statements::poses_insert, data, binder, db);
 }
 
-void WriteToDb(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertImuErrors(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_error] = data_i;

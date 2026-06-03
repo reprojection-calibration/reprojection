@@ -34,7 +34,7 @@ void InsertImages(EncodedImages const& data, std::string_view sensor_name, Sqlit
 
 void InsertPoses(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, SqlitePtr const db);
 
-void WriteToDb(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertImuErrors(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);
 
 void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
