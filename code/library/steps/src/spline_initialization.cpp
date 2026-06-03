@@ -3,7 +3,7 @@
 #include "caching/cache_keys.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
-#include "steps/spline_initialization.hpp"
+#include "steps/spline_initialization.hpp"  // This should be the first header!
 
 namespace reprojection::steps {
 
@@ -21,7 +21,7 @@ spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
     auto const time_handler{database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
 
     if (not time_handler) {
-        std::cout << "WE NEED AN ERROR HANDLING STRATEGY! SplineInterpolation::Load()" << std::endl;  // LCOV_EXCL_LINE
+        std::cout << "WE NEED AN ERROR STRATEGY! SplineInterpolation::Load()" << std::endl;  // LCOV_EXCL_LINE
     }
 
     return spline::Se3Spline{control_points, *time_handler};
