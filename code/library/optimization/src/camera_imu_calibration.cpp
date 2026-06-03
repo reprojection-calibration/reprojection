@@ -45,10 +45,9 @@ ReprojectionErrors ReprojectionErrorSpline(CameraInfo const& sensor, CameraMeasu
     return residuals;
 }  // LCOV_EXCL_LINE
 
-// TODO(Jack): Should we introduce a specific imu error type here? This custom definition here is not nice.
-StampedMap<StampedData<Vector6d>> ImuError(ImuMeasurements const& imu_data, Array6d const& tf_imu_co,
-                                           Array3d const& gravity_w, spline::Se3Spline const& spline) {
-    StampedMap<StampedData<Vector6d>> imu_residuals;
+ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Array6d const& tf_imu_co, Array3d const& gravity_w,
+                           spline::Se3Spline const& spline) {
+    ImuErrors imu_residuals;
 
     for (auto const timestamp_ns : imu_data | std::views::keys) {
         // TODO(Jack): This logic is now repeated several times... we are missing the point I think. How to fix!?
@@ -76,7 +75,7 @@ StampedMap<StampedData<Vector6d>> ImuError(ImuMeasurements const& imu_data, Arra
 
         cost_function_2->Evaluate(parameter_blocks.data(), residual_i.bottomRows<3>().data(), nullptr);
 
-        imu_residuals.insert({timestamp_ns, residual_i});
+        imu_residuals.insert({timestamp_ns, {residual_i.topRows<3>(), residual_i.bottomRows<3>()}});
     }
 
     return imu_residuals;

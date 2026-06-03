@@ -7,7 +7,11 @@
 #include "caching/cache_keys.hpp"
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
+#include "database/database_read.hpp"  // REMOVE
 #include "database/database_write.hpp"
+#include "steps/extrinsic_initialization.hpp"  // REMOVE
+#include "steps/spline_initialization.hpp"     // REMOVE
+#include "steps/step_runner.hpp"               // REMOVE
 
 using namespace reprojection;
 
@@ -29,6 +33,9 @@ int main() {
         )"};
     toml::table const config{toml::parse(config_file)};
 
+    // TODO(Jack): Move back into try catch block?
+    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
+
     // NOTE(Jack): Because we do not have the images themselves checked into the test data, and only the extracted
     // features, we need to "manufacture" cache hits for the camera info and feature extraction steps. This is
     // essentially what we are doing here in the following block. The reason that we put it into a try catch block is to
@@ -37,8 +44,6 @@ int main() {
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
     try {
-        auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
-
         database::WriteToDb(CalibrationStep::ImageLoading,
                             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", sensor_name, db);
 
@@ -57,6 +62,21 @@ int main() {
 
     ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
     application::Calibrate(config, empty_image_source, "", db);
+
+    ////
+    Frames const poses{database::ReadPoses(db, CalibrationStep::BundleAdjustment, sensor_name)};
+
+    steps::SplineInitialization const spline_init_step{sensor_name, poses, CalibrationStep::SplineInterpolation};
+    auto const [spline, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
+    std::cout << "Spline init cache: " << ToString(spline_init_cache_status) << std::endl;
+
+    ImuMeasurements const imu_data{database::ReadImuData(db, "/imu0")};
+
+    steps::ExtrinsicInitialization const extrinsic_init_step{
+        "tf_co_imu", imu_data, {spline.So3(), spline.GetTimeHandler()}};
+    auto const [extrinsics,
+                extrinsic_init_cache_status]{steps::RunStep<std::pair<Array6d, Array3d>>(extrinsic_init_step, db)};
+    std::cout << "Extrinsic init cache: " << ToString(extrinsic_init_cache_status) << std::endl;
 
     return EXIT_SUCCESS;
 }

@@ -20,18 +20,23 @@ class SensorDatabaseFixture : public ::testing::Test {
    protected:
     void SetUp() override { db = database::OpenCalibrationDatabase(":memory:", true, false); }
 
+    void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
+        database::WriteToDb(step_name, cache_key, sensor_name, db);
+    }
+
     void AddCamera() const {
-        database::WriteToDb(CalibrationStep::CameraInfo, "", sensor_name, db);
+        AddStep(CalibrationStep::CameraInfo);
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 
     void AddImage() const {
-        database::WriteToDb(CalibrationStep::ImageLoading, "", sensor_name, db);
+        AddStep(CalibrationStep::ImageLoading);
         database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db);
     }
 
-    void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
-        database::WriteToDb(step_name, cache_key, sensor_name, db);
+    void AddTarget() const {
+        AddStep(CalibrationStep::FeatureExtraction);
+        database::WriteToDb({{timestamp_ns, ExtractedTarget{Bundle{{}, {}}, {}}}}, sensor_name, db);
     }
 
     void AddPose(CalibrationStep const step_name) const {
@@ -100,20 +105,27 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCameraIntrinsic) {
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbPoseData) {
-    // Throws because the calibration step pose_initialization has not been added to the database yet.
+    // Throws because the foreign key constraints are not met yet.
     EXPECT_THROW(AddPose(CalibrationStep::PoseInitialization), std::runtime_error);
 
+    // Satisfy foreign key constraints.
+    AddImage();
+    AddTarget();
     AddStep(CalibrationStep::PoseInitialization);
 
+    // Passes with no problem.
     EXPECT_NO_THROW(AddPose(CalibrationStep::PoseInitialization));
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbReprojectionError) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
-    // Fails foreign key constraint because there is no corresponding poses table entry yet
+    // Throws because the foreign key constraints are not met yet.
     EXPECT_THROW(database::WriteToDb(data, CalibrationStep::PoseInitialization, sensor_name, db), std::runtime_error);
 
+    // Satisfy foreign key constraints.
+    AddImage();
+    AddTarget();
     AddStep(CalibrationStep::PoseInitialization);
     AddPose(CalibrationStep::PoseInitialization);
 
@@ -135,6 +147,29 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbImuData) {
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
     EXPECT_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
+                 std::runtime_error);
+}
+
+TEST(DatabaseSensorDataInterface, TestWriteToDbImuError) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
+    std::string_view sensor_name{"/imu/polaris/123"};
+
+    // Try to add a record before the foreign key requirements are met - not gonna work!
+    EXPECT_THROW(database::WriteToDb(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
+                                     CalibrationStep::ExtrinsicInitialization, sensor_name, db),
+                 std::runtime_error);
+
+    // Satisfy foreign key requirements - an imu error requires a corresponding imu measurement and calibratio step.
+    database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name, db);
+    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+
+    // Happy path.
+    EXPECT_NO_THROW(database::WriteToDb(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
+                                        CalibrationStep::ExtrinsicInitialization, sensor_name, db));
+
+    // Try to add a repeated record - this is not successful because the primary key must always be unique!
+    EXPECT_THROW(database::WriteToDb(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
+                                     CalibrationStep::ExtrinsicInitialization, sensor_name, db),
                  std::runtime_error);
 }
 
