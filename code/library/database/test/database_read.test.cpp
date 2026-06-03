@@ -113,30 +113,30 @@ TEST_F(CameraReadFixture, TestReadTargets) {
 TEST_F(CameraReadFixture, TestReadIntrinsics) {
     auto const step{CalibrationStep::PoseInitialization};
 
-    auto intrinsics{database::ReadIntrinsics(db, step, "", CameraModel::Pinhole)};
+    auto intrinsics{database::ReadIntrinsics(db, "", step, CameraModel::Pinhole)};
     EXPECT_FALSE(intrinsics.has_value());
 
     database::InsertStep(CalibrationStep::PoseInitialization, "", sensor_name, db);
     database::InsertIntrinsics({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole, step, sensor_name, db);
 
-    intrinsics = database::ReadIntrinsics(db, step, sensor_name, CameraModel::Pinhole);
+    intrinsics = database::ReadIntrinsics(db, sensor_name, step, CameraModel::Pinhole);
     ASSERT_TRUE(intrinsics.has_value());
     EXPECT_TRUE(intrinsics->isApprox(testing_utilities::pinhole_intrinsics));
 }
 
 TEST_F(CameraReadFixture, TestReadCacheKey) {
-    auto cache_key{database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name)};
+    auto cache_key{database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization)};
     EXPECT_FALSE(cache_key.has_value());
 
     database::InsertStep(CalibrationStep::PoseInitialization, "1", sensor_name, db);
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name);
+    cache_key = database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "1");
 
     database::InsertStep(CalibrationStep::PoseInitialization, "2", sensor_name, db);
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name);
+    cache_key = database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "2");
 }
@@ -146,7 +146,7 @@ TEST_F(CameraReadFixture, TestReadPoses) {
     uint64_t const timestamp_ns{0};
 
     // No matching frames in the database means we get an empty container.
-    Frames result{database::ReadPoses(db, step, sensor_name)};
+    Frames result{database::ReadPoses(db, sensor_name, step)};
     EXPECT_EQ(std::size(result), 0);
 
     // Satisfy the foreign key constraints for adding a camera frame pose.
@@ -157,7 +157,7 @@ TEST_F(CameraReadFixture, TestReadPoses) {
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     database::InsertPoses(frames, step, sensor_name, db);
 
-    result = database::ReadPoses(db, step, sensor_name);
+    result = database::ReadPoses(db, sensor_name, step);
     EXPECT_EQ(std::size(result), 1);
     EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(frames.at(timestamp_ns).pose));
 }
@@ -228,7 +228,7 @@ TEST(DatabaseDatabaseRead, TestReadImuErrors) {
                               CalibrationStep::ExtrinsicInitialization, sensor_name, db);
 
     // Load the errors and check their size and the values in the first one.
-    auto const imu_errors{database::ReadImuErrors(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
+    auto const imu_errors{database::ReadImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
     EXPECT_EQ(std::size(imu_errors), 3);
 
     ImuErrorState const imu_error_i{imu_errors.at(5)};
@@ -253,11 +253,11 @@ TEST(DatabaseDatabaseRead, TestReadControlPoints) {
 
     database::InsertControlPoints(control_points_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
 
-    auto const control_points{database::ReadControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const control_points{database::ReadControlPoints(db, sensor_name, CalibrationStep::SplineInterpolation)};
     EXPECT_TRUE(control_points.isApprox(control_points_gt));
 
     auto const unknown_sensor_data{
-        database::ReadControlPoints(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
+        database::ReadControlPoints(db, "/cam/retro/unknown", CalibrationStep::SplineInterpolation)};
     EXPECT_EQ(unknown_sensor_data.cols(), 0);
 }
 
@@ -270,12 +270,12 @@ TEST(DatabaseDatabaseRead, TestReadTimeHandler) {
 
     database::InsertTimeHandler(time_handler_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
 
-    auto const time_handler{database::ReadTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const time_handler{database::ReadTimeHandler(db, sensor_name, CalibrationStep::SplineInterpolation)};
     ASSERT_TRUE(time_handler.has_value());
     EXPECT_EQ(time_handler, time_handler_gt);
 
     auto const unknown_sensor_data{
-        database::ReadTimeHandler(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
+        database::ReadTimeHandler(db, "/cam/retro/unknown", CalibrationStep::SplineInterpolation)};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }
 
@@ -288,12 +288,12 @@ TEST(DatabaseDatabaseRead, TestReadExtrinsics) {
 
     database::InsertExtrinsic(tf_imu_co_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);
 
-    auto const tf_imu_co{database::ReadExtrinsics(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
+    auto const tf_imu_co{database::ReadExtrinsics(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
     ASSERT_TRUE(tf_imu_co.has_value());
     EXPECT_TRUE(tf_imu_co->isApprox(tf_imu_co_gt));
 
     auto const unknown_sensor_data{
-        database::ReadExtrinsics(db, CalibrationStep::ExtrinsicInitialization, "tf_blah_blah")};
+        database::ReadExtrinsics(db, "tf_blah_blah", CalibrationStep::ExtrinsicInitialization)};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }
 
@@ -306,10 +306,10 @@ TEST(DatabaseDatabaseRead, TestReadGravity) {
 
     database::InsertGravity(gravity_w_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);
 
-    auto const gravity_w{database::ReadGravity(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
+    auto const gravity_w{database::ReadGravity(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
     ASSERT_TRUE(gravity_w.has_value());
     EXPECT_TRUE(gravity_w->isApprox(gravity_w_gt));
 
-    auto const unknown_sensor_data{database::ReadGravity(db, CalibrationStep::ExtrinsicInitialization, "gravity_blah")};
+    auto const unknown_sensor_data{database::ReadGravity(db, "gravity_blah", CalibrationStep::ExtrinsicInitialization)};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }

@@ -14,7 +14,7 @@ Frames PoseInitialization::Compute() const {
     return calibration::PoseInitialization(camera_info, targets, camera_state);
 }
 
-Frames PoseInitialization::Load(SqlitePtr const db) const { return database::ReadPoses(db, step_type, SensorName()); }
+Frames PoseInitialization::Load(SqlitePtr const db) const { return database::ReadPoses(db, SensorName(), step_type); }
 
 void PoseInitialization::Save(Frames const& frames, SqlitePtr const db) const {
     database::InsertPoses(frames, step_type, SensorName(), db);

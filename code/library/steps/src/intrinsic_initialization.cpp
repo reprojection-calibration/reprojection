@@ -24,7 +24,7 @@ CameraState IntrinsicInitialization::Compute() const {
 
 CameraState IntrinsicInitialization::Load(SqlitePtr const db) const {
     auto const loaded_intrinsics{
-        database::ReadIntrinsics(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
+        database::ReadIntrinsics(db, camera_info.sensor_name, step_type, camera_info.camera_model)};
 
     if (not loaded_intrinsics.has_value()) {
         throw std::runtime_error("We have no error handling strategy for failed IiStep::Load()");  // LCOV_EXCL_LINE

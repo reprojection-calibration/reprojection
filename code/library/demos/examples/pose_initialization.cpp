@@ -64,7 +64,7 @@ int main() {
     application::Calibrate(config, empty_image_source, "", db);
 
     ////
-    Frames const poses{database::ReadPoses(db, CalibrationStep::BundleAdjustment, sensor_name)};
+    Frames const poses{database::ReadPoses(db, sensor_name, CalibrationStep::BundleAdjustment)};
 
     steps::SplineInitialization const spline_init_step{sensor_name, poses, CalibrationStep::SplineInterpolation};
     auto const [spline, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};

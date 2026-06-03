@@ -36,8 +36,8 @@ auto BindStepAndSensor(CalibrationStep const step_name, std::string_view sensor_
 
 }  // namespace utils
 
-std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep const step_name,
-                                        std::string_view sensor_name) {
+std::optional<std::string> ReadCacheKey(SqlitePtr const db, std::string_view sensor_name,
+                                        CalibrationStep const step_name) {
     std::optional<std::string> cache_key;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -82,7 +82,7 @@ std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view se
     return camera_info;
 }  // LCOV_EXCL_LINE
 
-std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name,
+std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
                                       CameraModel const camera_model) {
     std::optional<ArrayXd> intrinsics;
 
@@ -151,8 +151,8 @@ CameraMeasurements ReadTargets(SqlitePtr const db, std::string_view sensor_name)
     return data;
 }  // LCOV_EXCL_LINE
 
-std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, CalibrationStep const step_name,
-                                      std::string_view sensor_name) {
+std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, std::string_view sensor_name,
+                                      CalibrationStep const step_name) {
     std::optional<Array6d> extrinsic;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -162,7 +162,7 @@ std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, CalibrationStep const 
     return extrinsic;
 }
 
-std::optional<Array3d> ReadGravity(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
+std::optional<Array3d> ReadGravity(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name) {
     std::optional<Array3d> gravity;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -190,7 +190,7 @@ ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name) {
 
 // TODO(Jack): This looks really similar to the ImuMeasurement version, and in general we are starting to see a lot of
 // repetition here, lets think about if there is anything we can to simplify here.
-ImuErrors ReadImuErrors(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
+ImuErrors ReadImuErrors(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name) {
     ImuErrors data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -205,7 +205,7 @@ ImuErrors ReadImuErrors(SqlitePtr const db, CalibrationStep const step_name, std
     return data;
 }  // LCOV_EXCL_LINE
 
-Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
+Frames ReadPoses(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name) {
     Frames data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -240,8 +240,8 @@ std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view se
     return target_info;
 }  // LCOV_EXCL_LINE
 
-spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const step_name,
-                                     std::string_view sensor_name) {
+spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, std::string_view sensor_name,
+                                     CalibrationStep const step_name) {
     // First we need to recover how many control points there are so we can size the control point matrix properly.
     int64_t num_control_points{-1};
     ExecuteQuery(db, sql_statements::spline_control_points_count, utils::BindStepAndSensor(step_name, sensor_name),
@@ -261,8 +261,8 @@ spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const s
     return data;
 }  // LCOV_EXCL_LINE
 
-std::optional<spline::TimeHandler> ReadTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
-                                                   std::string_view sensor_name) {
+std::optional<spline::TimeHandler> ReadTimeHandler(SqlitePtr const db, std::string_view sensor_name,
+                                                   CalibrationStep const step_name) {
     std::optional<spline::TimeHandler> time_handler;
 
     ExecuteQuery(  // LCOV_EXCL_LINE

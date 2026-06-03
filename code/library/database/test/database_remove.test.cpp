@@ -29,13 +29,13 @@ TEST_F(DatabaseRemoveFixture, TestRemoveFromDbStep) {
     // Write a step to the database and load its cache key to check its there.
     database::InsertStep(CalibrationStep::PoseInitialization, "cache_key", camera_info.sensor_name, db);
 
-    auto cache_key{database::ReadCacheKey(db, CalibrationStep::PoseInitialization, camera_info.sensor_name)};
+    auto cache_key{database::ReadCacheKey(db, camera_info.sensor_name, CalibrationStep::PoseInitialization)};
     ASSERT_TRUE(cache_key.has_value());
 
     // Remove the step and then try to load the cache key - but the cache key should be std::nullopt because the step
     // has been removed.
     EXPECT_NO_THROW(database::RemoveFromDb(CalibrationStep::PoseInitialization, camera_info.sensor_name, db));
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::PoseInitialization, camera_info.sensor_name);
+    cache_key = database::ReadCacheKey(db, camera_info.sensor_name, CalibrationStep::PoseInitialization);
     EXPECT_FALSE(cache_key.has_value());
 }

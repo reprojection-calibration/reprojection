@@ -28,7 +28,7 @@ concept IsStep = requires(Result const result, Step const step, SqlitePtr const 
 template <typename Result, typename Step>
     requires IsStep<Result, Step>
 std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
-    auto const cached_key{database::ReadCacheKey(db, step.step_type, step.SensorName())};
+    auto const cached_key{database::ReadCacheKey(db, step.SensorName(), step.step_type)};
     std::string const new_key{step.CacheKey()};
 
     if (CacheHit(cached_key, new_key)) {
