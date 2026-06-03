@@ -182,14 +182,14 @@ TEST(DatabaseDatabaseRead, TestGetImuData) {
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};
     database::InsertImuData({{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                         {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                         {15, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        sensor_name_1, db);
+                             {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                             {15, {Vector3d::Zero(), Vector3d::Zero()}}},
+                            sensor_name_1, db);
     // Data from imu 456
     std::string_view sensor_name_2{"/imu/polaris/456"};
     database::InsertImuData(ImuMeasurements{{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                                        {20, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        sensor_name_2, db);
+                                            {20, {Vector3d::Zero(), Vector3d::Zero()}}},
+                            sensor_name_2, db);
 
     auto const imu_1_data{database::ReadImuData(db, sensor_name_1)};
     EXPECT_EQ(std::size(imu_1_data), 3);
@@ -217,15 +217,15 @@ TEST(DatabaseDatabaseRead, TestReadImuErrors) {
 
     // Satisfy foreign key constraints and write the imu errors to the database so we can load them.
     database::InsertImuData({{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                         {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                         {15, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        sensor_name, db);
+                             {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                             {15, {Vector3d::Zero(), Vector3d::Zero()}}},
+                            sensor_name, db);
     database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
     database::InsertImuErrors(ImuErrors{{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                                  {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                                  {15, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        CalibrationStep::ExtrinsicInitialization, sensor_name, db);
+                                        {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                                        {15, {Vector3d::Zero(), Vector3d::Zero()}}},
+                              CalibrationStep::ExtrinsicInitialization, sensor_name, db);
 
     // Load the errors and check their size and the values in the first one.
     auto const imu_errors{database::ReadImuErrors(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};

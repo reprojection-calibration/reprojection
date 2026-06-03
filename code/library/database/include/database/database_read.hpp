@@ -19,8 +19,8 @@ std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep cons
 // mutable SqlitePtr. But at this point the semantics around the sql statement lock do not allow it.
 std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view sensor_name);
 
-std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const step_name,
-                                       std::string_view sensor_name, CameraModel const camera_model);
+std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name,
+                                      CameraModel const camera_model);
 
 EncodedImages ReadImages(SqlitePtr const db, std::string_view sensor_name);
 
@@ -43,10 +43,9 @@ Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::strin
 // TODO(Jack): See note in database_write.hpp how having the sensor name here is a hack and should be removed one day!
 std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view sensor_name);
 
-spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const step_name,
-                                           std::string_view sensor_name);
+spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name);
 
 std::optional<spline::TimeHandler> ReadTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
-                                                         std::string_view sensor_name);
+                                                   std::string_view sensor_name);
 
 }  // namespace reprojection::database

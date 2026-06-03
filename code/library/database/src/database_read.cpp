@@ -82,8 +82,8 @@ std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view se
     return camera_info;
 }  // LCOV_EXCL_LINE
 
-std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const step_name,
-                                       std::string_view sensor_name, CameraModel const camera_model) {
+std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name,
+                                      CameraModel const camera_model) {
     std::optional<ArrayXd> intrinsics;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
@@ -241,7 +241,7 @@ std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view se
 }  // LCOV_EXCL_LINE
 
 spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const step_name,
-                                           std::string_view sensor_name) {
+                                     std::string_view sensor_name) {
     // First we need to recover how many control points there are so we can size the control point matrix properly.
     int64_t num_control_points{-1};
     ExecuteQuery(db, sql_statements::spline_control_points_count, utils::BindStepAndSensor(step_name, sensor_name),
@@ -262,7 +262,7 @@ spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const s
 }  // LCOV_EXCL_LINE
 
 std::optional<spline::TimeHandler> ReadTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
-                                                         std::string_view sensor_name) {
+                                                   std::string_view sensor_name) {
     std::optional<spline::TimeHandler> time_handler;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
