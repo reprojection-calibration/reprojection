@@ -48,7 +48,7 @@ std::string Serialize(CameraState const& data) {
     return oss.str();
 }
 
-std::string Serialize(Eigen::Matrix3Xd const& data) {
+std::string Serialize(Eigen::Matrix<double, 6, -1> const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
