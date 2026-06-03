@@ -58,7 +58,7 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
 
     auto const [rotation_result, gravity]{calibration::EstimateCameraImuRotationAndGravity(
         {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
-    auto const [R_co_imu, diagnostics]{rotation_result};
+    auto const [aa_imu_co, diagnostics]{rotation_result};
 
     // EXPECT_TRUE(R_co_imu.isApprox(Matrix3d::Identity()));
     // EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
