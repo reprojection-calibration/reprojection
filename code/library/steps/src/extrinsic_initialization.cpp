@@ -4,6 +4,7 @@
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "optimization/camera_imu_calibration.hpp"
 
 namespace reprojection::steps {
 
@@ -28,21 +29,24 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Compute() const {
 }
 
 std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) const {
-    auto const tf_co_imu{database::ReadExtrinsics(db, SensorName(), CalibrationStep::ExtrinsicInitialization)};
+    auto const tf_imu_co{database::ReadExtrinsics(db, SensorName(), CalibrationStep::ExtrinsicInitialization)};
     auto const gravity_w{database::ReadGravity(db, SensorName(), CalibrationStep::ExtrinsicInitialization)};
 
-    if (not tf_co_imu or not gravity_w) {
+    if (not tf_imu_co or not gravity_w) {
         std::cout << "WE NEED AN ERROR STRATEGY! ExtrinsicInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE
     }
 
-    return {*tf_co_imu, *gravity_w};
+    return {*tf_imu_co, *gravity_w};
 }
 
 void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const {
-    auto const [tf_co_imu, gravity_w]{extrinsic};
+    auto const [tf_imu_co, gravity_w]{extrinsic};
 
-    database::InsertExtrinsic(db, sensor_name, step_type, tf_co_imu);
+    database::InsertExtrinsic(db, sensor_name, step_type, tf_imu_co);
     database::InsertGravity(db, sensor_name, step_type, gravity_w);
+
+    ImuErrors const error{optimization::EvaluateImuError(imu_data, tf_imu_co, gravity_w, spline)};
+    database::InsertImuErrors(db, SensorName(), step_type, error);
 }
 
 }  // namespace reprojection::steps
