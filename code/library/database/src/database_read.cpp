@@ -292,11 +292,10 @@ std::optional<spline::TimeHandler> ReadSplineTimeHandler(SqlitePtr const db, Cal
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
         [&time_handler](sqlite3_stmt* const stmt) {
-            spline::TimeHandler result;
-            result.t0_ns_ = sqlite3_column_int(stmt, 0);
-            result.delta_t_ns_ = sqlite3_column_int(stmt, 1);
+            uint64_t const t0_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+            uint64_t const delta_t_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 1))};
 
-            time_handler = result;
+            time_handler = spline::TimeHandler{t0_ns, delta_t_ns};
         });
 
     return time_handler;
