@@ -197,6 +197,35 @@ ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name) {
     return data;
 }  // LCOV_EXCL_LINE
 
+// TODO(Jack): This looks really similar to the ImuMeasurement version, and in general we are starting to see a lot of
+// repetition here, lets think about if there is anything we can to simplify here.
+ImuErrors ReadImuErrors(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
+    ImuErrors data;
+
+    ExecuteQuery(  // LCOV_EXCL_LINE
+        db, sql_statements::imu_error_select,
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+            Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+
+            double const delta_omega_x{sqlite3_column_double(stmt, 1)};
+            double const delta_omega_y{sqlite3_column_double(stmt, 2)};
+            double const delta_omega_z{sqlite3_column_double(stmt, 3)};
+
+            double const delta_ax{sqlite3_column_double(stmt, 4)};
+            double const delta_ay{sqlite3_column_double(stmt, 5)};
+            double const delta_az{sqlite3_column_double(stmt, 6)};
+
+            data.insert(ImuError{timestamp_ns,
+                                 {{delta_omega_x, delta_omega_y, delta_omega_z}, {delta_ax, delta_ay, delta_az}}});
+        });
+
+    return data;
+}
+
 Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
     Frames data;
 

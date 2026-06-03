@@ -211,6 +211,39 @@ TEST(DatabaseDatabaseRead, TestGetImuData) {
     EXPECT_EQ(std::size(unknown_sensor_data), 0);
 }
 
+TEST(DatabaseDatabaseRead, TestReadImuErrors) {
+    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+    std::string_view sensor_name{"/imu/polaris/123"};
+
+    // Satisfy foreign key constraints and write the imu errors to the database so we can load them.
+    database::WriteToDb({{5, {{1, 2, 3}, {4, 5, 6}}},  //
+                         {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                         {15, {Vector3d::Zero(), Vector3d::Zero()}}},
+                        sensor_name, db);
+    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+
+    database::WriteToDb(ImuErrors{{5, {{1, 2, 3}, {4, 5, 6}}},  //
+                                  {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                                  {15, {Vector3d::Zero(), Vector3d::Zero()}}},
+                        CalibrationStep::ExtrinsicInitialization, sensor_name, db);
+
+    // Load the errors and check their size and the values in the first one.
+    auto const imu_errors{database::ReadImuErrors(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
+    EXPECT_EQ(std::size(imu_errors), 3);
+
+    ImuErrorState const imu_error_i{imu_errors.at(5)};
+    EXPECT_EQ(imu_error_i.delta_angular_velocity[0], 1);
+    EXPECT_EQ(imu_error_i.delta_angular_velocity[1], 2);
+    EXPECT_EQ(imu_error_i.delta_angular_velocity[2], 3);
+    EXPECT_EQ(imu_error_i.delta_linear_acceleration[0], 4);
+    EXPECT_EQ(imu_error_i.delta_linear_acceleration[1], 5);
+    EXPECT_EQ(imu_error_i.delta_linear_acceleration[2], 6);
+
+    // Try to read data that does not exist - this simply returns an empty container and is NOT an error.
+    auto const unknown_sensor_data{database::ReadImuData(db, "/imu/polaris/unknown")};
+    EXPECT_EQ(std::size(unknown_sensor_data), 0);
+}
+
 TEST(DatabaseDatabaseRead, TestReadSplineControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
