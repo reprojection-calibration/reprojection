@@ -17,11 +17,11 @@ Frames PoseInitialization::Compute() const {
 Frames PoseInitialization::Load(SqlitePtr const db) const { return database::ReadPoses(db, SensorName(), step_type); }
 
 void PoseInitialization::Save(Frames const& frames, SqlitePtr const db) const {
-    database::InsertPoses(frames, step_type, SensorName(), db);
+    database::InsertPoses(db, SensorName(), step_type, frames);
 
     OptimizationState const state{camera_state, frames};
     ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, state)};
-    database::InsertReprojectionErrors(error, step_type, SensorName(), db);
+    database::InsertReprojectionErrors(db, SensorName(), step_type, error);
 }
 
 }  // namespace reprojection::steps

@@ -37,8 +37,8 @@ void BindEigenColumn(sqlite3_stmt* const stmt, int const start_idx, Eigen::Dense
 
 }  // namespace utils
 
-void InsertGravity(Array3d const& data, CalibrationStep const step_name, std::string_view sensor_name,
-                   SqlitePtr const db) {
+void InsertGravity(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                   Array3d const& data) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);
         utils::BindEigenColumn<Array3d>(stmt, 3, data);
@@ -47,8 +47,8 @@ void InsertGravity(Array3d const& data, CalibrationStep const step_name, std::st
     ExecuteStatement(sql_statements::gravity_insert, binder, db);
 }
 
-void InsertExtrinsic(Array6d const& data, CalibrationStep const step_name, std::string_view sensor_name,
-                     SqlitePtr const db) {
+void InsertExtrinsic(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                     Array6d const& data) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);
         utils::BindEigenColumn<Array6d>(stmt, 3, data);
@@ -58,8 +58,8 @@ void InsertExtrinsic(Array6d const& data, CalibrationStep const step_name, std::
 }
 
 // TODO(Jack): Input arg order consistency.
-void InsertStep(CalibrationStep const step_name, std::optional<std::string_view> cache_key,
-                std::string_view sensor_name, SqlitePtr const db) {
+void InsertStep(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                std::optional<std::string_view> cache_key) {
     auto const binder{[step_name, sensor_name, cache_key](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);
         if (cache_key) {
@@ -70,7 +70,7 @@ void InsertStep(CalibrationStep const step_name, std::optional<std::string_view>
     ExecuteStatement(sql_statements::calibration_steps_upsert, binder, db);
 }
 
-void InsertCameraInfo(CameraInfo const& camera_info, SqlitePtr const db) {
+void InsertCameraInfo(SqlitePtr const db, CameraInfo const& camera_info) {
     auto const binder{[camera_info](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, CalibrationStep::CameraInfo, camera_info.sensor_name);
         Sqlite3Tools::Bind(stmt, 3, ToString(camera_info.camera_model));
@@ -81,7 +81,7 @@ void InsertCameraInfo(CameraInfo const& camera_info, SqlitePtr const db) {
     ExecuteStatement(sql_statements::camera_info_insert, binder, db);
 }
 
-void InsertTargets(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
+void InsertTargets(SqlitePtr const db, std::string_view sensor_name, CameraMeasurements const& data) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, target]{data_i};
 
@@ -100,8 +100,8 @@ void InsertTargets(CameraMeasurements const& data, std::string_view sensor_name,
     BatchExecuteStatement(sql_statements::extracted_target_insert, data, binder, db);
 }
 
-void InsertIntrinsics(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
-                      std::string_view sensor_name, SqlitePtr const db) {
+void InsertIntrinsics(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                      CameraModel const camera_model, CameraState const& data) {
     auto const binder{[&data, camera_model, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, ToString(camera_model));
@@ -111,7 +111,7 @@ void InsertIntrinsics(CameraState const& data, CameraModel const camera_model, C
     ExecuteStatement(sql_statements::camera_intrinsics_insert, binder, db);
 }
 
-void InsertImages(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db) {
+void InsertImages(SqlitePtr const db, std::string_view sensor_name, EncodedImages const& data) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, buffer]{data_i};
 
@@ -128,8 +128,8 @@ void InsertImages(EncodedImages const& data, std::string_view sensor_name, Sqlit
     BatchExecuteStatement(sql_statements::image_insert, data, binder, db);
 }
 
-void InsertPoses(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name,
-                 SqlitePtr const db) {
+void InsertPoses(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                 Frames const& data) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
@@ -141,8 +141,8 @@ void InsertPoses(Frames const& data, CalibrationStep const step_name, std::strin
     BatchExecuteStatement(sql_statements::poses_insert, data, binder, db);
 }
 
-void InsertImuErrors(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
-                     SqlitePtr const db) {
+void InsertImuErrors(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                     ImuErrors const& data) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_error] = data_i;
 
@@ -155,7 +155,7 @@ void InsertImuErrors(ImuErrors const& data, CalibrationStep const step_name, std
     BatchExecuteStatement(sql_statements::imu_error_insert, data, binder, db);
 }
 
-void InsertImuData(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
+void InsertImuData(SqlitePtr const db, std::string_view sensor_name, ImuMeasurements const& data) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_data] = data_i;
 
@@ -170,8 +170,8 @@ void InsertImuData(ImuMeasurements const& data, std::string_view sensor_name, Sq
 
 // NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
-void InsertReprojectionErrors(ReprojectionErrors const& data, CalibrationStep const step_name,
-                              std::string_view sensor_name, SqlitePtr const db) {
+void InsertReprojectionErrors(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                              ReprojectionErrors const& data) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
@@ -190,7 +190,7 @@ void InsertReprojectionErrors(ReprojectionErrors const& data, CalibrationStep co
     BatchExecuteStatement(sql_statements::reprojection_error_insert, data, binder, db);
 }
 
-void InsertTargetInfo(TargetInfo const& target_info, std::string_view sensor_name, SqlitePtr const db) {
+void InsertTargetInfo(SqlitePtr const db, std::string_view sensor_name, TargetInfo const& target_info) {
     auto const binder{[target_info, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, CalibrationStep::TargetInfo, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, ToString(target_info.target_type));
@@ -203,8 +203,8 @@ void InsertTargetInfo(TargetInfo const& target_info, std::string_view sensor_nam
     ExecuteStatement(sql_statements::target_info_insert, binder, db);
 }
 
-void InsertControlPoints(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
-                         SqlitePtr const db) {
+void InsertControlPoints(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                         spline::Matrix2NXd const& data) {
     // NOTE(Jack): This lets use treat the columns of the eigen matrix like a regular type that we can iterate over.
     // This is required to be compatible with BatchExecuteStatement().
     // NOTE(Jack): We cast the column expression to to an Array6d so that we can use BindEigenColumn, if we do not do
@@ -228,8 +228,8 @@ void InsertControlPoints(spline::Matrix2NXd const& data, CalibrationStep const s
                           db);
 }
 
-void InsertTimeHandler(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
-                       SqlitePtr const db) {
+void InsertTimeHandler(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                       spline::TimeHandler const& data) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, data.t0_ns_);

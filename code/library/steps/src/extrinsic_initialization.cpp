@@ -41,8 +41,8 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) co
 void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const {
     auto const [tf_co_imu, gravity_w]{extrinsic};
 
-    database::InsertExtrinsic(tf_co_imu, step_type, sensor_name, db);
-    database::InsertGravity(gravity_w, step_type, sensor_name, db);
+    database::InsertExtrinsic(db, sensor_name, step_type, tf_co_imu);
+    database::InsertGravity(db, sensor_name, step_type, gravity_w);
 }
 
 }  // namespace reprojection::steps

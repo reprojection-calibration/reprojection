@@ -35,7 +35,7 @@ TargetInfo TargetInfoStep::Load(SqlitePtr const db) const {
 }
 
 void TargetInfoStep::Save(TargetInfo const& target_info, SqlitePtr const db) const {
-    database::InsertTargetInfo(target_info, SensorName(), db);
+    database::InsertTargetInfo(db, SensorName(), target_info);
 }
 
 }  // namespace reprojection::steps

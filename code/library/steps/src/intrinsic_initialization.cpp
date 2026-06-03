@@ -34,7 +34,7 @@ CameraState IntrinsicInitialization::Load(SqlitePtr const db) const {
 }
 
 void IntrinsicInitialization::Save(CameraState const& intrinsics, SqlitePtr const db) const {
-    database::InsertIntrinsics(intrinsics, camera_info.camera_model, step_type, camera_info.sensor_name, db);
+    database::InsertIntrinsics(db, camera_info.sensor_name, step_type, camera_info.camera_model, intrinsics);
 }
 
 }  // namespace reprojection::steps

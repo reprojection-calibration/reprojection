@@ -55,11 +55,11 @@ std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
     // If there is a more clean way to express this logic, that would be a welcome addition. I think that the current
     // implementation can lead to problems in the future.
     database::RemoveFromDb(db, step.SensorName(), step.step_type);
-    database::InsertStep(step.step_type, std::nullopt, step.SensorName(), db);
+    database::InsertStep(db, step.SensorName(), step.step_type, std::nullopt);
 
     step.Save(result, db);
 
-    database::InsertStep(step.step_type, new_key, step.SensorName(), db);
+    database::InsertStep(db, step.SensorName(), step.step_type, new_key);
 
     return {result, CacheStatus::CacheMiss};
 }

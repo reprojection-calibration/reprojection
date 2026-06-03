@@ -30,11 +30,11 @@ OptimizationState BundleAdjustment::Load(SqlitePtr const db) const {
 }
 
 void BundleAdjustment::Save(OptimizationState const& optimized_state, SqlitePtr const db) const {
-    database::InsertIntrinsics(optimized_state.camera_state, camera_info.camera_model, step_type, SensorName(), db);
-    database::InsertPoses(optimized_state.frames, step_type, SensorName(), db);
+    database::InsertIntrinsics(db, SensorName(), step_type, camera_info.camera_model, optimized_state.camera_state);
+    database::InsertPoses(db, SensorName(), step_type, optimized_state.frames);
 
     ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, optimized_state)};
-    database::InsertReprojectionErrors(error, step_type, SensorName(), db);
+    database::InsertReprojectionErrors(db, SensorName(), step_type, error);
 }
 
 }  // namespace reprojection::steps

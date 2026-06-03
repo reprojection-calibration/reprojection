@@ -35,8 +35,8 @@ class StepsFixture : public ::testing::Test {
         auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
         camera_info = CameraInfo{sensor_name, camera_model, testing_utilities::image_bounds};
 
-        database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
-        database::InsertCameraInfo(camera_info, db);
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo, "");
+        database::InsertCameraInfo(db, camera_info);
     }
 
     void SatisfyPoseForeignKeys(CameraMeasurements const& targets) {
@@ -51,10 +51,10 @@ class StepsFixture : public ::testing::Test {
             return images;
         }()};
 
-        database::InsertStep(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
-        database::InsertImages(images, camera_info.sensor_name, db);
-        database::InsertStep(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
-        database::InsertTargets(targets, camera_info.sensor_name, db);
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, "");
+        database::InsertImages(db, camera_info.sensor_name, images);
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, "");
+        database::InsertTargets(db, camera_info.sensor_name, targets);
     }
 
     SqlitePtr db;

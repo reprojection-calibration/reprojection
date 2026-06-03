@@ -46,25 +46,25 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
         image_data[timestamp_ns] = {};
     }
 
-    database::InsertStep(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
-    database::InsertImages(image_data, camera_info.sensor_name, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, "");
+    database::InsertImages(db, camera_info.sensor_name, image_data);
 
-    database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
-    database::InsertCameraInfo(camera_info, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo, "");
+    database::InsertCameraInfo(db, camera_info);
 
     // WARN(Jack): The test data target has points at negative coordinates but setting negative bounds in the dashboard
     // is not possible so the target visualization is cut off.
-    database::InsertStep(CalibrationStep::TargetInfo, "", camera_info.sensor_name, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::TargetInfo, "");
     // TODO(Jack): It would be nice if the mvg data generator used and returned us the target info. Hardcoding it here
     // means that it will go out of sync with the data generator.
     TargetInfo const target_info{TargetType::Checkerboard, 5, 5, 0.25, false};
-    database::InsertTargetInfo(target_info, camera_info.sensor_name, db);
+    database::InsertTargetInfo(db, camera_info.sensor_name, target_info);
 
-    database::InsertStep(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
-    database::InsertTargets(targets, camera_info.sensor_name, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, "");
+    database::InsertTargets(db, camera_info.sensor_name, targets);
 
-    database::InsertStep(CalibrationStep::PoseInitialization, "", camera_info.sensor_name, db);
-    database::InsertPoses(camera_frames, CalibrationStep::PoseInitialization, camera_info.sensor_name, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::PoseInitialization, "");
+    database::InsertPoses(db, camera_info.sensor_name, CalibrationStep::PoseInitialization, camera_frames);
 }
 
 void WriteImuData(SqlitePtr db, uint64_t const timespan_ns) {
@@ -72,5 +72,5 @@ void WriteImuData(SqlitePtr db, uint64_t const timespan_ns) {
     auto const [imu_data, _]{testing_mocks::GenerateImuData(num_imu_data, timespan_ns)};
 
     std::string const imu_name{"imu1"};
-    database::InsertImuData(imu_data, imu_name, db);
+    database::InsertImuData(db, imu_name, imu_data);
 }
