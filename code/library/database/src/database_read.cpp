@@ -12,16 +12,35 @@
 
 namespace reprojection::database {
 
+namespace utils {
+
+// NOTE(Jack): we have this little utils namespace because the following two segments of code showed up constantly and
+// these two functions helper us eliminate a lot of repetition.
+
+template <int N>
+Eigen::Array<double, N, 1> ColumnArray(sqlite3_stmt* const stmt, int const start_idx) {
+    Eigen::Array<double, N, 1> result;
+    for (int i{0}; i < N; ++i) {
+        result(i) = sqlite3_column_double(stmt, start_idx + i);
+    }
+    return result;
+}
+
+auto BindStepAndSensor(CalibrationStep const step_name, std::string_view sensor_name) {
+    return [step_name, sensor_name](sqlite3_stmt* stmt) {
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+    };
+}
+
+}  // namespace utils
+
 std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep const step_name,
                                         std::string_view sensor_name) {
     std::optional<std::string> cache_key;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::calibration_steps_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
+        db, sql_statements::calibration_steps_select, utils::BindStepAndSensor(step_name, sensor_name),
         [&cache_key](sqlite3_stmt* const stmt) {
             // TODO(Jack): Is the best way to express reading a value which might be null from a table? I do not see the
             // problem with this implementation, but maybe sqlite has some pattern I don't know about.
@@ -136,19 +155,8 @@ std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, CalibrationStep const 
     std::optional<Array6d> extrinsic;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::extrinsics_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
-        [&extrinsic](sqlite3_stmt* const stmt) {
-            Array6d result;
-            for (int i{0}; i < 6; ++i) {
-                result(i) = sqlite3_column_double(stmt, i);
-            }
-
-            extrinsic = result;
-        });
+        db, sql_statements::extrinsics_select, utils::BindStepAndSensor(step_name, sensor_name),
+        [&extrinsic](sqlite3_stmt* const stmt) { extrinsic = utils::ColumnArray<6>(stmt, 0); });
 
     return extrinsic;
 }
@@ -157,19 +165,8 @@ std::optional<Array3d> ReadGravity(SqlitePtr const db, CalibrationStep const ste
     std::optional<Array3d> gravity;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::gravity_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
-        [&gravity](sqlite3_stmt* const stmt) {
-            Array3d result;
-            for (int i{0}; i < 3; ++i) {
-                result(i) = sqlite3_column_double(stmt, i);
-            }
-
-            gravity = result;
-        });
+        db, sql_statements::gravity_select, utils::BindStepAndSensor(step_name, sensor_name),
+        [&gravity](sqlite3_stmt* const stmt) { gravity = utils::ColumnArray<3>(stmt, 0); });
 
     return gravity;
 }
@@ -182,16 +179,9 @@ ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name) {
         [sensor_name](sqlite3_stmt* const stmt) { Sqlite3Tools::Bind(stmt, 1, sensor_name); },
         [&data](sqlite3_stmt* const stmt) {
             uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+            Array6d const loaded{utils::ColumnArray<6>(stmt, 1)};
 
-            double const omega_x{sqlite3_column_double(stmt, 1)};
-            double const omega_y{sqlite3_column_double(stmt, 2)};
-            double const omega_z{sqlite3_column_double(stmt, 3)};
-
-            double const ax{sqlite3_column_double(stmt, 4)};
-            double const ay{sqlite3_column_double(stmt, 5)};
-            double const az{sqlite3_column_double(stmt, 6)};
-
-            data.insert(ImuMeasurement{timestamp_ns, {{omega_x, omega_y, omega_z}, {ax, ay, az}}});
+            data.insert(ImuMeasurement{timestamp_ns, {loaded.topRows<3>(), loaded.bottomRows<3>()}});
         });
 
     return data;
@@ -203,24 +193,12 @@ ImuErrors ReadImuErrors(SqlitePtr const db, CalibrationStep const step_name, std
     ImuErrors data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::imu_error_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
+        db, sql_statements::imu_error_select, utils::BindStepAndSensor(step_name, sensor_name),
         [&data](sqlite3_stmt* const stmt) {
             uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+            Array6d const loaded{utils::ColumnArray<6>(stmt, 1)};
 
-            double const delta_omega_x{sqlite3_column_double(stmt, 1)};
-            double const delta_omega_y{sqlite3_column_double(stmt, 2)};
-            double const delta_omega_z{sqlite3_column_double(stmt, 3)};
-
-            double const delta_ax{sqlite3_column_double(stmt, 4)};
-            double const delta_ay{sqlite3_column_double(stmt, 5)};
-            double const delta_az{sqlite3_column_double(stmt, 6)};
-
-            data.insert(ImuError{timestamp_ns,
-                                 {{delta_omega_x, delta_omega_y, delta_omega_z}, {delta_ax, delta_ay, delta_az}}});
+            data.insert(ImuError{timestamp_ns, {loaded.topRows<3>(), loaded.bottomRows<3>()}});
         });
 
     return data;
@@ -230,23 +208,12 @@ Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::strin
     Frames data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::poses_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
+        db, sql_statements::poses_select, utils::BindStepAndSensor(step_name, sensor_name),
         [&data](sqlite3_stmt* const stmt) {
             uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+            Array6d const loaded{utils::ColumnArray<6>(stmt, 1)};
 
-            double const rx{sqlite3_column_double(stmt, 1)};
-            double const ry{sqlite3_column_double(stmt, 2)};
-            double const rz{sqlite3_column_double(stmt, 3)};
-
-            double const x{sqlite3_column_double(stmt, 4)};
-            double const y{sqlite3_column_double(stmt, 5)};
-            double const z{sqlite3_column_double(stmt, 6)};
-
-            data.insert(Frame{timestamp_ns, Array6d{rx, ry, rz, x, y, z}});
+            data.insert(Frame{timestamp_ns, loaded});
         });
 
     return data;
@@ -276,35 +243,18 @@ spline::Matrix2NXd ReadSplineControlPoints(SqlitePtr const db, CalibrationStep c
                                            std::string_view sensor_name) {
     // First we need to recover how many control points there are so we can size the control point matrix properly.
     int64_t num_control_points{-1};
-    ExecuteQuery(
-        db, sql_statements::spline_control_points_count,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
-        [&num_control_points](sqlite3_stmt* const stmt) {
-            num_control_points = static_cast<uint64_t>(sqlite3_column_int64(stmt, 0));
-        });
+    ExecuteQuery(db, sql_statements::spline_control_points_count, utils::BindStepAndSensor(step_name, sensor_name),
+                 [&num_control_points](sqlite3_stmt* const stmt) {
+                     num_control_points = static_cast<uint64_t>(sqlite3_column_int64(stmt, 0));
+                 });
 
     // Now get the actual control points and put them into the pre-sized eigen matrix :)
     spline::Matrix2NXd data(6, num_control_points);
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::spline_control_points_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
+        db, sql_statements::spline_control_points_select, utils::BindStepAndSensor(step_name, sensor_name),
         [&data](sqlite3_stmt* const stmt) {
             int64_t const id{sqlite3_column_int64(stmt, 0)};
-            double const rx{sqlite3_column_double(stmt, 1)};
-            double const ry{sqlite3_column_double(stmt, 2)};
-            double const rz{sqlite3_column_double(stmt, 3)};
-
-            double const x{sqlite3_column_double(stmt, 4)};
-            double const y{sqlite3_column_double(stmt, 5)};
-            double const z{sqlite3_column_double(stmt, 6)};
-
-            data.col(id) = Array6d{rx, ry, rz, x, y, z};
+            data.col(id) = utils::ColumnArray<6>(stmt, 1);
         });
 
     return data;
@@ -315,11 +265,7 @@ std::optional<spline::TimeHandler> ReadSplineTimeHandler(SqlitePtr const db, Cal
     std::optional<spline::TimeHandler> time_handler;
 
     ExecuteQuery(  // LCOV_EXCL_LINE
-        db, sql_statements::spline_time_handler_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
-            Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-            Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        },
+        db, sql_statements::spline_time_handler_select, utils::BindStepAndSensor(step_name, sensor_name),
         [&time_handler](sqlite3_stmt* const stmt) {
             uint64_t const t0_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
             uint64_t const delta_t_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 1))};

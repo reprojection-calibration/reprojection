@@ -17,14 +17,31 @@
 
 namespace reprojection::database {
 
+namespace utils {
+
+// TODO(Jack): Combine this one with the one in the database read file?
+void BindStepAndSensor(sqlite3_stmt* const stmt, CalibrationStep const step, std::string_view sensor_name) {
+    Sqlite3Tools::Bind(stmt, 1, ToString(step));
+    Sqlite3Tools::Bind(stmt, 2, sensor_name);
+}
+
+// TODO(Jack): This naming is not great but I want this to work for both Eigen Arrays, Vectors and even Matrices that
+// have just one column. We use this basic data struct to represent almost everything.
+template <typename T>
+    requires(T::ColsAtCompileTime == 1)
+void BindEigenColumn(sqlite3_stmt* const stmt, int const start_idx, Eigen::DenseBase<T> const& v) {
+    for (Eigen::Index i{0}; i < v.size(); ++i) {
+        Sqlite3Tools::Bind(stmt, start_idx + static_cast<int>(i), v.derived()(i));
+    }
+}
+
+}  // namespace utils
+
 void WriteGravityToDb(Array3d const& data, CalibrationStep const step_name, std::string_view sensor_name,
                       SqlitePtr const db) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
-        Sqlite3Tools::Bind(stmt, 3, data(0));
-        Sqlite3Tools::Bind(stmt, 4, data(1));
-        Sqlite3Tools::Bind(stmt, 5, data(2));
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
+        utils::BindEigenColumn<Array3d>(stmt, 3, data);
     }};
 
     ExecuteStatement(sql_statements::gravity_insert, binder, db);
@@ -33,14 +50,8 @@ void WriteGravityToDb(Array3d const& data, CalibrationStep const step_name, std:
 void WriteExtrinsicToDb(Array6d const& data, CalibrationStep const step_name, std::string_view sensor_name,
                         SqlitePtr const db) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
-        Sqlite3Tools::Bind(stmt, 3, data(0));
-        Sqlite3Tools::Bind(stmt, 4, data(1));
-        Sqlite3Tools::Bind(stmt, 5, data(2));
-        Sqlite3Tools::Bind(stmt, 6, data(3));
-        Sqlite3Tools::Bind(stmt, 7, data(4));
-        Sqlite3Tools::Bind(stmt, 8, data(5));
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
+        utils::BindEigenColumn<Array6d>(stmt, 3, data);
     }};
 
     ExecuteStatement(sql_statements::extrinsics_insert, binder, db);
@@ -50,8 +61,7 @@ void WriteExtrinsicToDb(Array6d const& data, CalibrationStep const step_name, st
 void WriteToDb(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[step_name, sensor_name, cache_key](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
         if (cache_key) {
             Sqlite3Tools::Bind(stmt, 3, *cache_key);
         }
@@ -62,8 +72,7 @@ void WriteToDb(CalibrationStep const step_name, std::optional<std::string_view> 
 
 void WriteToDb(CameraInfo const& camera_info, SqlitePtr const db) {
     auto const binder{[camera_info](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, "camera_info");
-        Sqlite3Tools::Bind(stmt, 2, camera_info.sensor_name);
+        utils::BindStepAndSensor(stmt, CalibrationStep::CameraInfo, camera_info.sensor_name);
         Sqlite3Tools::Bind(stmt, 3, ToString(camera_info.camera_model));
         Sqlite3Tools::Bind(stmt, 4, camera_info.bounds.v_max);
         Sqlite3Tools::Bind(stmt, 5, camera_info.bounds.u_max);
@@ -83,9 +92,8 @@ void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, Sql
                                      std::string(sensor_name));                                // LCOV_EXCL_LINE
         }
 
-        Sqlite3Tools::Bind(stmt, 1, ToString(CalibrationStep::FeatureExtraction));
-        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
-        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        utils::BindStepAndSensor(stmt, CalibrationStep::FeatureExtraction, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, timestamp_ns);
         Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer}));
     }};
 
@@ -95,8 +103,7 @@ void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, Sql
 void WriteToDb(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
                std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[&data, camera_model, step_name, sensor_name](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, ToString(camera_model));
         Sqlite3Tools::Bind(stmt, 4, ToToml(camera_model, data.intrinsics));
     }};
@@ -108,9 +115,8 @@ void WriteToDb(EncodedImages const& data, std::string_view sensor_name, SqlitePt
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, buffer]{data_i};
 
-        Sqlite3Tools::Bind(stmt, 1, ToString(CalibrationStep::ImageLoading));
-        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
-        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        utils::BindStepAndSensor(stmt, CalibrationStep::ImageLoading, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, timestamp_ns);
 
         if (buffer.data.empty()) {
             Sqlite3Tools::BindNull(stmt, 4);
@@ -126,16 +132,9 @@ void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Warn cast!
-
-        Sqlite3Tools::Bind(stmt, 4, frame.pose[0]);
-        Sqlite3Tools::Bind(stmt, 5, frame.pose[1]);
-        Sqlite3Tools::Bind(stmt, 6, frame.pose[2]);
-        Sqlite3Tools::Bind(stmt, 7, frame.pose[3]);
-        Sqlite3Tools::Bind(stmt, 8, frame.pose[4]);
-        Sqlite3Tools::Bind(stmt, 9, frame.pose[5]);
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, timestamp_ns);
+        utils::BindEigenColumn<Array6d>(stmt, 4, frame.pose);
     }};
 
     BatchExecuteStatement(sql_statements::poses_insert, data, binder, db);
@@ -146,16 +145,10 @@ void WriteToDb(ImuErrors const& data, CalibrationStep const step_name, std::stri
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_error] = data_i;
 
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, sensor_name);
-        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Warn cast!
-
-        Sqlite3Tools::Bind(stmt, 4, imu_error.delta_angular_velocity(0));
-        Sqlite3Tools::Bind(stmt, 5, imu_error.delta_angular_velocity(1));
-        Sqlite3Tools::Bind(stmt, 6, imu_error.delta_angular_velocity(2));
-        Sqlite3Tools::Bind(stmt, 7, imu_error.delta_linear_acceleration(0));
-        Sqlite3Tools::Bind(stmt, 8, imu_error.delta_linear_acceleration(1));
-        Sqlite3Tools::Bind(stmt, 9, imu_error.delta_linear_acceleration(2));
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, timestamp_ns);
+        utils::BindEigenColumn<Vector3d>(stmt, 4, imu_error.delta_angular_velocity);
+        utils::BindEigenColumn<Vector3d>(stmt, 7, imu_error.delta_linear_acceleration);
     }};
 
     BatchExecuteStatement(sql_statements::imu_error_insert, data, binder, db);
@@ -163,18 +156,12 @@ void WriteToDb(ImuErrors const& data, CalibrationStep const step_name, std::stri
 
 void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
-        auto const& [timestamp_ns, frame] = data_i;
+        auto const& [timestamp_ns, imu_data] = data_i;
 
         Sqlite3Tools::Bind(stmt, 1, sensor_name);
-        Sqlite3Tools::Bind(stmt, 2, static_cast<int64_t>(timestamp_ns));
-
-        Sqlite3Tools::Bind(stmt, 3, frame.angular_velocity[0]);
-        Sqlite3Tools::Bind(stmt, 4, frame.angular_velocity[1]);
-        Sqlite3Tools::Bind(stmt, 5, frame.angular_velocity[2]);
-
-        Sqlite3Tools::Bind(stmt, 6, frame.linear_acceleration[0]);
-        Sqlite3Tools::Bind(stmt, 7, frame.linear_acceleration[1]);
-        Sqlite3Tools::Bind(stmt, 8, frame.linear_acceleration[2]);
+        Sqlite3Tools::Bind(stmt, 2, timestamp_ns);
+        utils::BindEigenColumn<Vector3d>(stmt, 3, imu_data.angular_velocity);
+        utils::BindEigenColumn<Vector3d>(stmt, 6, imu_data.linear_acceleration);
     }};
 
     BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, db);
@@ -194,9 +181,8 @@ void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, 
                                      std::string(sensor_name));                         // LCOV_EXCL_LINE
         }
 
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
-        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Possible dangerous cast!
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, timestamp_ns);
         Sqlite3Tools::BindBlob(stmt, 4, std::as_bytes(std::span{buffer}));
     }};
 
@@ -205,8 +191,7 @@ void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, 
 
 void WriteToDb(TargetInfo const& target_info, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[target_info, sensor_name](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, "target_info");
-        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        utils::BindStepAndSensor(stmt, CalibrationStep::TargetInfo, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, ToString(target_info.target_type));
         Sqlite3Tools::Bind(stmt, 4, static_cast<int64_t>(target_info.height));
         Sqlite3Tools::Bind(stmt, 5, static_cast<int64_t>(target_info.width));
@@ -221,24 +206,21 @@ void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, 
                SqlitePtr const db) {
     // NOTE(Jack): This lets use treat the columns of the eigen matrix like a regular type that we can iterate over.
     // This is required to be compatible with BatchExecuteStatement().
+    // NOTE(Jack): We cast the column expression to to an Array6d so that we can use BindEigenColumn, if we do not do
+    // that we get some crazy errors about trying to template on a column expression. I bet it can be done but I
+    // couldn't figure it out quickly.
     auto indexed_control_point_columns{[](auto const& control_points) {
         return std::views::iota(0, static_cast<int>(control_points.cols())) |
-               std::views::transform([&control_points](int i) { return std::pair{i, control_points.col(i)}; });
+               std::views::transform(
+                   [&control_points](int const i) { return std::pair{i, Array6d{control_points.col(i)}}; });
     }};
 
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [i, control_point]{data_i};
 
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
         Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(i));
-
-        Sqlite3Tools::Bind(stmt, 4, control_point(0));
-        Sqlite3Tools::Bind(stmt, 5, control_point(1));
-        Sqlite3Tools::Bind(stmt, 6, control_point(2));
-        Sqlite3Tools::Bind(stmt, 7, control_point(3));
-        Sqlite3Tools::Bind(stmt, 8, control_point(4));
-        Sqlite3Tools::Bind(stmt, 9, control_point(5));
+        utils::BindEigenColumn<Array6d>(stmt, 4, control_point);
     }};
 
     BatchExecuteStatement(sql_statements::spline_control_points_insert, indexed_control_point_columns(data), binder,
@@ -248,10 +230,9 @@ void WriteToDb(spline::Matrix2NXd const& data, CalibrationStep const step_name, 
 void WriteToDb(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
-        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
-        Sqlite3Tools::Bind(stmt, 2, std::string(sensor_name));
-        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(data.t0_ns_));       // WARN CAST
-        Sqlite3Tools::Bind(stmt, 4, static_cast<int64_t>(data.delta_t_ns_));  // WARN CAST
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, data.t0_ns_);
+        Sqlite3Tools::Bind(stmt, 4, data.delta_t_ns_);
     }};
 
     ExecuteStatement(sql_statements::spline_time_handler_insert, binder, db);
