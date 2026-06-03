@@ -94,7 +94,7 @@ Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& ta
     return linear_solution;
 }  // LCOV_EXCL_LINE
 
-std::tuple<std::tuple<Array6d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
+std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(
     spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data) {
     auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
     auto const [aa_imu_co,
