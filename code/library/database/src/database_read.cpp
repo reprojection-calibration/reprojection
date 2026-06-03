@@ -204,7 +204,7 @@ ImuErrors ReadImuErrors(SqlitePtr const db, CalibrationStep const step_name, std
 
     ExecuteQuery(  // LCOV_EXCL_LINE
         db, sql_statements::imu_error_select,
-        [step_name, sensor_name](sqlite3_stmt* const stmt) {
+        [step_name, sensor_name](sqlite3_stmt* const stmt) {  // LCOV_EXCL_LINE
             Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
             Sqlite3Tools::Bind(stmt, 2, sensor_name);
         },
@@ -224,7 +224,7 @@ ImuErrors ReadImuErrors(SqlitePtr const db, CalibrationStep const step_name, std
         });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 Frames ReadPoses(SqlitePtr const db, CalibrationStep const step_name, std::string_view sensor_name) {
     Frames data;
