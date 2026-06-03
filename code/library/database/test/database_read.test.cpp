@@ -117,7 +117,7 @@ TEST_F(CameraReadFixture, TestReadCameraState) {
     EXPECT_FALSE(intrinsics.has_value());
 
     database::InsertStep(CalibrationStep::PoseInitialization, "", sensor_name, db);
-    database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole, step, sensor_name, db);
+    database::InsertIntrinsics({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole, step, sensor_name, db);
 
     intrinsics = database::ReadCameraState(db, step, sensor_name, CameraModel::Pinhole);
     ASSERT_TRUE(intrinsics.has_value());

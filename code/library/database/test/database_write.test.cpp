@@ -92,15 +92,15 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
     EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "3"));
 }
 
-TEST_F(SensorDatabaseFixture, TestWriteToDbCameraIntrinsic) {
-    EXPECT_THROW(database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
+TEST_F(SensorDatabaseFixture, TestInsertIntrinsics) {
+    EXPECT_THROW(database::InsertIntrinsics({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
                                      CalibrationStep::PoseInitialization, sensor_name, db),
                  std::runtime_error);
 
     AddCamera();
     AddStep(CalibrationStep::PoseInitialization);
 
-    EXPECT_NO_THROW(database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
+    EXPECT_NO_THROW(database::InsertIntrinsics({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
                                         CalibrationStep::PoseInitialization, sensor_name, db));
 }
 

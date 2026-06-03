@@ -66,7 +66,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     database::InsertStep(CalibrationStep::IntrinsicInitialization, caching::CacheKey(camera_info, {}),
                         camera_info.sensor_name, db);
-    database::WriteToDb({Array5d::Zero()}, camera_info.camera_model, CalibrationStep::IntrinsicInitialization,
+    database::InsertIntrinsics({Array5d::Zero()}, camera_info.camera_model, CalibrationStep::IntrinsicInitialization,
                         camera_info.sensor_name, db);
 
     // NOTE(Jack): We do not need to do anything for the pose_initialization and bundle_adjustment

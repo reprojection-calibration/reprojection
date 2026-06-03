@@ -100,7 +100,7 @@ void InsertTargets(CameraMeasurements const& data, std::string_view sensor_name,
     BatchExecuteStatement(sql_statements::extracted_target_insert, data, binder, db);
 }
 
-void WriteToDb(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
+void InsertIntrinsics(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
                std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[&data, camera_model, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);
