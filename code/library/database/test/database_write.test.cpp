@@ -36,7 +36,7 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddTarget() const {
         AddStep(CalibrationStep::FeatureExtraction);
-        database::WriteToDb({{timestamp_ns, ExtractedTarget{Bundle{{}, {}}, {}}}}, sensor_name, db);
+        database::InsertTargets({{timestamp_ns, ExtractedTarget{Bundle{{}, {}}, {}}}}, sensor_name, db);
     }
 
     void AddPose(CalibrationStep const step_name) const {
@@ -70,13 +70,13 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbEncodedImages) {
     EXPECT_THROW(AddImage(), std::runtime_error);
 }
 
-TEST_F(SensorDatabaseFixture, TestWriteToDbCameraMeasurements) {
-    EXPECT_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
+TEST_F(SensorDatabaseFixture, TestInsertTargets) {
+    EXPECT_THROW(database::InsertTargets(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
 
     AddImage();
     database::InsertStep(CalibrationStep::FeatureExtraction, "", sensor_name, db);
 
-    EXPECT_NO_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
+    EXPECT_NO_THROW(database::InsertTargets(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStep) {

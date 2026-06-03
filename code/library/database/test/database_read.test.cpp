@@ -33,7 +33,7 @@ class CameraReadFixture : public ::testing::Test {
         AddImage(timestamp_ns);
 
         database::InsertStep(CalibrationStep::FeatureExtraction, "", sensor_name, db);
-        database::WriteToDb({{timestamp_ns, target}}, sensor_name, db);
+        database::InsertTargets({{timestamp_ns, target}}, sensor_name, db);
     }
 
     SqlitePtr db{nullptr};

@@ -81,7 +81,7 @@ void InsertCameraInfo(CameraInfo const& camera_info, SqlitePtr const db) {
     ExecuteStatement(sql_statements::camera_info_insert, binder, db);
 }
 
-void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
+void InsertTargets(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, target]{data_i};
 

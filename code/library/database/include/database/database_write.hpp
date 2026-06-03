@@ -25,7 +25,7 @@ void InsertStep(CalibrationStep const step_name, std::optional<std::string_view>
 
 void InsertCameraInfo(CameraInfo const& camera_info, SqlitePtr const db);
 
-void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
+void InsertTargets(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
 
 void WriteToDb(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
                std::string_view sensor_name, SqlitePtr const db);

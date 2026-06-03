@@ -66,7 +66,7 @@ CameraMeasurements FeatureExtraction::Load(SqlitePtr const db) const {
 }
 
 void FeatureExtraction::Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const {
-    database::WriteToDb(extracted_targets, SensorName(), db);
+    database::InsertTargets(extracted_targets, SensorName(), db);
 }
 
 }  // namespace reprojection::steps
