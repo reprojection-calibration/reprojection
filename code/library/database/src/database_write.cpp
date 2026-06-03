@@ -47,7 +47,7 @@ void InsertGravity(Array3d const& data, CalibrationStep const step_name, std::st
     ExecuteStatement(sql_statements::gravity_insert, binder, db);
 }
 
-void WriteExtrinsicToDb(Array6d const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertExtrinsic(Array6d const& data, CalibrationStep const step_name, std::string_view sensor_name,
                         SqlitePtr const db) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);

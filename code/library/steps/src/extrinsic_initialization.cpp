@@ -41,7 +41,7 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) co
 void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const {
     auto const [tf_co_imu, gravity_w]{extrinsic};
 
-    database::WriteExtrinsicToDb(tf_co_imu, step_type, sensor_name, db);
+    database::InsertExtrinsic(tf_co_imu, step_type, sensor_name, db);
     database::InsertGravity(gravity_w, step_type, sensor_name, db);
 }
 

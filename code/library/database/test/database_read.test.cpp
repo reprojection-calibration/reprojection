@@ -286,7 +286,7 @@ TEST(DatabaseDatabaseRead, TestReadExtrinsics) {
     database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
     Array6d const tf_imu_co_gt{0, 1, 2, 3, 4, 5};
 
-    database::WriteExtrinsicToDb(tf_imu_co_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);
+    database::InsertExtrinsic(tf_imu_co_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);
 
     auto const tf_imu_co{database::ReadExtrinsics(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
     ASSERT_TRUE(tf_imu_co.has_value());

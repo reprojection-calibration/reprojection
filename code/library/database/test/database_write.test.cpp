@@ -225,7 +225,7 @@ TEST(DatabaseSensorDataInterface, TestInsertGravity) {
                  std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestWriteExtrinsicsToDb) {
+TEST(DatabaseSensorDataInterface, TestInsertExtrinsic) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     // WARN(Jack): We are hacking the sensor_name of the extrinsic calibration table to actually be the name of the
@@ -236,8 +236,8 @@ TEST(DatabaseSensorDataInterface, TestWriteExtrinsicsToDb) {
     database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
     Array6d const tf_imu_co{0, 1, 2, 3, 4, 5};
-    EXPECT_NO_THROW(database::WriteExtrinsicToDb(tf_imu_co, CalibrationStep::ExtrinsicInitialization, sensor_name, db));
+    EXPECT_NO_THROW(database::InsertExtrinsic(tf_imu_co, CalibrationStep::ExtrinsicInitialization, sensor_name, db));
 
-    EXPECT_THROW(database::WriteExtrinsicToDb(tf_imu_co, CalibrationStep::ExtrinsicInitialization, sensor_name, db),
+    EXPECT_THROW(database::InsertExtrinsic(tf_imu_co, CalibrationStep::ExtrinsicInitialization, sensor_name, db),
                  std::runtime_error);
 }
