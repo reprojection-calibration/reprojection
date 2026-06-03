@@ -78,9 +78,5 @@ int main() {
                 extrinsic_init_cache_status]{steps::RunStep<std::pair<Array6d, Array3d>>(extrinsic_init_step, db)};
     std::cout << "Extrinsic init cache: " << ToString(extrinsic_init_cache_status) << std::endl;
 
-    auto const [tf_imu_co, gravity_w]{extrinsics};
-    std::cout<< tf_imu_co.transpose() << std::endl;
-    std::cout<< gravity_w.transpose() << std::endl;
-
     return EXIT_SUCCESS;
 }
