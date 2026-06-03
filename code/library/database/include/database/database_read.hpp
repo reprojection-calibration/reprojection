@@ -24,7 +24,7 @@ std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const 
 
 EncodedImages ReadImages(SqlitePtr const db, std::string_view sensor_name);
 
-CameraMeasurements ReadExtractedTargets(SqlitePtr const db, std::string_view sensor_name);
+CameraMeasurements ReadTargets(SqlitePtr const db, std::string_view sensor_name);
 
 // TODO(Jack): One day we need to redesign this with a more informative extrinsic calibration type that also describes
 // which frames it converts between. Right now this is pretty rudimentary to just load an array here and hijack the

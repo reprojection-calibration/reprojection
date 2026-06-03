@@ -62,7 +62,7 @@ CameraMeasurements FeatureExtraction::Compute() const {
 }
 
 CameraMeasurements FeatureExtraction::Load(SqlitePtr const db) const {
-    return database::ReadExtractedTargets(db, SensorName());
+    return database::ReadTargets(db, SensorName());
 }
 
 void FeatureExtraction::Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const {

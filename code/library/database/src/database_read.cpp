@@ -126,7 +126,7 @@ EncodedImages ReadImages(SqlitePtr const db, std::string_view sensor_name) {
 }  // LCOV_EXCL_LINE
 
 // NOTE(Jack): See notes above to understand why we suppress code coverage.
-CameraMeasurements ReadExtractedTargets(SqlitePtr const db, std::string_view sensor_name) {
+CameraMeasurements ReadTargets(SqlitePtr const db, std::string_view sensor_name) {
     CameraMeasurements data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE

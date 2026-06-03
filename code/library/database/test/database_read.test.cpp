@@ -91,12 +91,12 @@ TEST_F(CameraReadFixture, TestReadImages) {
     }
 }
 
-TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
+TEST_F(CameraReadFixture, TestReadTargets) {
     AddTarget(0);
     AddTarget(1);
     AddTarget(2);
 
-    CameraMeasurements const loaded_data{database::ReadExtractedTargets(db, sensor_name)};
+    CameraMeasurements const loaded_data{database::ReadTargets(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), 3);
 
     int test_timestamp{0};
