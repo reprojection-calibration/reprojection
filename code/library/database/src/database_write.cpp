@@ -141,6 +141,26 @@ void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_
     BatchExecuteStatement(sql_statements::poses_insert, data, binder, db);
 }
 
+void WriteToDb(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
+               SqlitePtr const db) {
+    auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, imu_error] = data_i;
+
+        Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
+        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, static_cast<int64_t>(timestamp_ns));  // Warn cast!
+
+        Sqlite3Tools::Bind(stmt, 4, imu_error.delta_angular_velocity(0));
+        Sqlite3Tools::Bind(stmt, 5, imu_error.delta_angular_velocity(1));
+        Sqlite3Tools::Bind(stmt, 6, imu_error.delta_angular_velocity(2));
+        Sqlite3Tools::Bind(stmt, 7, imu_error.delta_linear_acceleration(0));
+        Sqlite3Tools::Bind(stmt, 8, imu_error.delta_linear_acceleration(1));
+        Sqlite3Tools::Bind(stmt, 9, imu_error.delta_linear_acceleration(2));
+    }};
+
+    BatchExecuteStatement(sql_statements::imu_error_insert, data, binder, db);
+}
+
 void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
