@@ -28,8 +28,8 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Compute() const {
 }
 
 std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) const {
-    auto const tf_co_imu{database::ReadExtrinsics(db, CalibrationStep::ExtrinsicInitialization, SensorName())};
-    auto const gravity_w{database::ReadGravity(db, CalibrationStep::ExtrinsicInitialization, SensorName())};
+    auto const tf_co_imu{database::ReadExtrinsics(db, SensorName(), CalibrationStep::ExtrinsicInitialization)};
+    auto const gravity_w{database::ReadGravity(db, SensorName(), CalibrationStep::ExtrinsicInitialization)};
 
     if (not tf_co_imu or not gravity_w) {
         std::cout << "WE NEED AN ERROR STRATEGY! ExtrinsicInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE
@@ -41,8 +41,8 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) co
 void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const {
     auto const [tf_co_imu, gravity_w]{extrinsic};
 
-    database::WriteExtrinsicToDb(tf_co_imu, step_type, sensor_name, db);
-    database::WriteGravityToDb(gravity_w, step_type, sensor_name, db);
+    database::InsertExtrinsic(db, sensor_name, step_type, tf_co_imu);
+    database::InsertGravity(db, sensor_name, step_type, gravity_w);
 }
 
 }  // namespace reprojection::steps

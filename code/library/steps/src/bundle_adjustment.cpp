@@ -16,8 +16,8 @@ OptimizationState BundleAdjustment::Compute() const {
 }
 
 OptimizationState BundleAdjustment::Load(SqlitePtr const db) const {
-    Frames const poses{database::ReadPoses(db, step_type, SensorName())};
-    auto const intrinsics{database::ReadCameraState(db, step_type, camera_info.sensor_name, camera_info.camera_model)};
+    Frames const poses{database::ReadPoses(db, SensorName(), step_type)};
+    auto const intrinsics{database::ReadIntrinsics(db, camera_info.sensor_name, step_type, camera_info.camera_model)};
 
     // TODO(Jack): Is this the appropriate error handling? What actual invariants do we have/want here? What if there
     //  are zero poses, is that ok?
@@ -30,11 +30,11 @@ OptimizationState BundleAdjustment::Load(SqlitePtr const db) const {
 }
 
 void BundleAdjustment::Save(OptimizationState const& optimized_state, SqlitePtr const db) const {
-    database::WriteToDb(optimized_state.camera_state, camera_info.camera_model, step_type, SensorName(), db);
-    database::WriteToDb(optimized_state.frames, step_type, SensorName(), db);
+    database::InsertIntrinsics(db, SensorName(), step_type, camera_info.camera_model, optimized_state.camera_state);
+    database::InsertPoses(db, SensorName(), step_type, optimized_state.frames);
 
     ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, optimized_state)};
-    database::WriteToDb(error, step_type, SensorName(), db);
+    database::InsertReprojectionErrors(db, SensorName(), step_type, error);
 }
 
 }  // namespace reprojection::steps

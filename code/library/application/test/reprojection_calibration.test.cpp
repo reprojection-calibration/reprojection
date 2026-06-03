@@ -56,18 +56,18 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
     CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
 
-    database::WriteToDb(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, caching::CacheKey(""));
 
-    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(sensor_name, camera_model, {}),
-                        camera_info.sensor_name, db);
-    database::WriteToDb(camera_info, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
+                         caching::CacheKey(sensor_name, camera_model, {}));
+    database::InsertCameraInfo(db, camera_info);
 
-    database::WriteToDb(CalibrationStep::FeatureExtraction, caching::CacheKey(""), camera_info.sensor_name, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, caching::CacheKey(""));
 
-    database::WriteToDb(CalibrationStep::IntrinsicInitialization, caching::CacheKey(camera_info, {}),
-                        camera_info.sensor_name, db);
-    database::WriteToDb({Array5d::Zero()}, camera_info.camera_model, CalibrationStep::IntrinsicInitialization,
-                        camera_info.sensor_name, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
+                         caching::CacheKey(camera_info, {}));
+    database::InsertIntrinsics(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
+                               camera_info.camera_model, {Array5d::Zero()});
 
     // NOTE(Jack): We do not need to do anything for the pose_initialization and bundle_adjustment
     // steps to manufacture a cache hit because if their inputs are empty they themselves will just pass through with no

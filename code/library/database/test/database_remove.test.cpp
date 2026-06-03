@@ -14,8 +14,8 @@ class DatabaseRemoveFixture : public ::testing::Test {
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
-        database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
-        database::WriteToDb(camera_info, db);
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo, "");
+        database::InsertCameraInfo(db, camera_info);
     }
 
     SqlitePtr db{nullptr};
@@ -24,18 +24,18 @@ class DatabaseRemoveFixture : public ::testing::Test {
 
 TEST_F(DatabaseRemoveFixture, TestRemoveFromDbStep) {
     // If there is no step to remove it is just silent
-    EXPECT_NO_THROW(database::RemoveFromDb(CalibrationStep::PoseInitialization, "", db));
+    EXPECT_NO_THROW(database::RemoveFromDb(db, "", CalibrationStep::PoseInitialization));
 
     // Write a step to the database and load its cache key to check its there.
-    database::WriteToDb(CalibrationStep::PoseInitialization, "cache_key", camera_info.sensor_name, db);
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::PoseInitialization, "cache_key");
 
-    auto cache_key{database::ReadCacheKey(db, CalibrationStep::PoseInitialization, camera_info.sensor_name)};
+    auto cache_key{database::ReadCacheKey(db, camera_info.sensor_name, CalibrationStep::PoseInitialization)};
     ASSERT_TRUE(cache_key.has_value());
 
     // Remove the step and then try to load the cache key - but the cache key should be std::nullopt because the step
     // has been removed.
-    EXPECT_NO_THROW(database::RemoveFromDb(CalibrationStep::PoseInitialization, camera_info.sensor_name, db));
+    EXPECT_NO_THROW(database::RemoveFromDb(db, camera_info.sensor_name, CalibrationStep::PoseInitialization));
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::PoseInitialization, camera_info.sensor_name);
+    cache_key = database::ReadCacheKey(db, camera_info.sensor_name, CalibrationStep::PoseInitialization);
     EXPECT_FALSE(cache_key.has_value());
 }

@@ -17,8 +17,8 @@ spline::Se3Spline SplineInitialization::Compute() const {
 }
 
 spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
-    auto const control_points{database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
-    auto const time_handler{database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const control_points{database::ReadControlPoints(db, sensor_name, CalibrationStep::SplineInterpolation)};
+    auto const time_handler{database::ReadTimeHandler(db, sensor_name, CalibrationStep::SplineInterpolation)};
 
     if (not time_handler) {
         std::cout << "WE NEED AN ERROR STRATEGY! SplineInterpolation::Load()" << std::endl;  // LCOV_EXCL_LINE
@@ -28,8 +28,8 @@ spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
 }
 
 void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const db) const {
-    database::WriteToDb(spline.ControlPoints(), step_type, sensor_name, db);
-    database::WriteToDb(spline.GetTimeHandler(), step_type, sensor_name, db);
+    database::InsertControlPoints(db, sensor_name, step_type, spline.ControlPoints());
+    database::InsertTimeHandler(db, sensor_name, step_type, spline.GetTimeHandler());
 }
 
 }  // namespace reprojection::steps

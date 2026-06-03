@@ -18,22 +18,22 @@ class CameraReadFixture : public ::testing::Test {
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
-        database::WriteToDb(CalibrationStep::CameraInfo, "", sensor_name, db);
-        database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+        database::InsertStep(db, sensor_name, CalibrationStep::CameraInfo, "");
+        database::InsertCameraInfo(db, CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds});
     }
 
     void AddImage(uint64_t const timestamp_ns) const {
         // Due to foreign key relationship we need add an image before we add the target
-        database::WriteToDb(CalibrationStep::ImageLoading, "", sensor_name, db);
-        database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db);
+        database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading, "");
+        database::InsertImages(db, sensor_name, EncodedImages{{timestamp_ns, {}}});
     }
 
     void AddTarget(uint64_t const timestamp_ns) const {
         // Due to foreign key relationship we need add an image before we add the target
         AddImage(timestamp_ns);
 
-        database::WriteToDb(CalibrationStep::FeatureExtraction, "", sensor_name, db);
-        database::WriteToDb({{timestamp_ns, target}}, sensor_name, db);
+        database::InsertStep(db, sensor_name, CalibrationStep::FeatureExtraction, "");
+        database::InsertTargets(db, sensor_name, {{timestamp_ns, target}});
     }
 
     SqlitePtr db{nullptr};
@@ -61,8 +61,8 @@ TEST_F(CameraReadFixture, TestReadTargetInfo) {
     auto target_info{database::ReadTargetInfo(db, "/nonexistent/camera")};
     EXPECT_FALSE(target_info.has_value());
 
-    database::WriteToDb(CalibrationStep::TargetInfo, "", sensor_name, db);
-    database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db);
+    database::InsertStep(db, sensor_name, CalibrationStep::TargetInfo, "");
+    database::InsertTargetInfo(db, sensor_name, TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false});
 
     target_info = database::ReadTargetInfo(db, sensor_name);
     ASSERT_TRUE(target_info.has_value());
@@ -73,12 +73,12 @@ TEST_F(CameraReadFixture, TestReadTargetInfo) {
     EXPECT_EQ(target_info->asymmetric, false);
 }
 
-TEST_F(CameraReadFixture, TestGetEncodedImages) {
+TEST_F(CameraReadFixture, TestReadImages) {
     AddImage(0);
     AddImage(1);
     AddImage(2);
 
-    EncodedImages const loaded_data{database::ReadEncodedImages(db, sensor_name)};
+    EncodedImages const loaded_data{database::ReadImages(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), 3);
 
     int test_timestamp{0};
@@ -91,12 +91,12 @@ TEST_F(CameraReadFixture, TestGetEncodedImages) {
     }
 }
 
-TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
+TEST_F(CameraReadFixture, TestReadTargets) {
     AddTarget(0);
     AddTarget(1);
     AddTarget(2);
 
-    CameraMeasurements const loaded_data{database::ReadExtractedTargets(db, sensor_name)};
+    CameraMeasurements const loaded_data{database::ReadTargets(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), 3);
 
     int test_timestamp{0};
@@ -110,33 +110,33 @@ TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
     }
 }
 
-TEST_F(CameraReadFixture, TestReadCameraState) {
+TEST_F(CameraReadFixture, TestReadIntrinsics) {
     auto const step{CalibrationStep::PoseInitialization};
 
-    auto intrinsics{database::ReadCameraState(db, step, "", CameraModel::Pinhole)};
+    auto intrinsics{database::ReadIntrinsics(db, "", step, CameraModel::Pinhole)};
     EXPECT_FALSE(intrinsics.has_value());
 
-    database::WriteToDb(CalibrationStep::PoseInitialization, "", sensor_name, db);
-    database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole, step, sensor_name, db);
+    database::InsertStep(db, sensor_name, CalibrationStep::PoseInitialization, "");
+    database::InsertIntrinsics(db, sensor_name, step, CameraModel::Pinhole, {testing_utilities::pinhole_intrinsics});
 
-    intrinsics = database::ReadCameraState(db, step, sensor_name, CameraModel::Pinhole);
+    intrinsics = database::ReadIntrinsics(db, sensor_name, step, CameraModel::Pinhole);
     ASSERT_TRUE(intrinsics.has_value());
     EXPECT_TRUE(intrinsics->isApprox(testing_utilities::pinhole_intrinsics));
 }
 
 TEST_F(CameraReadFixture, TestReadCacheKey) {
-    auto cache_key{database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name)};
+    auto cache_key{database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization)};
     EXPECT_FALSE(cache_key.has_value());
 
-    database::WriteToDb(CalibrationStep::PoseInitialization, "1", sensor_name, db);
+    database::InsertStep(db, sensor_name, CalibrationStep::PoseInitialization, "1");
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name);
+    cache_key = database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "1");
 
-    database::WriteToDb(CalibrationStep::PoseInitialization, "2", sensor_name, db);
+    database::InsertStep(db, sensor_name, CalibrationStep::PoseInitialization, "2");
 
-    cache_key = database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name);
+    cache_key = database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "2");
 }
@@ -146,18 +146,18 @@ TEST_F(CameraReadFixture, TestReadPoses) {
     uint64_t const timestamp_ns{0};
 
     // No matching frames in the database means we get an empty container.
-    Frames result{database::ReadPoses(db, step, sensor_name)};
+    Frames result{database::ReadPoses(db, sensor_name, step)};
     EXPECT_EQ(std::size(result), 0);
 
     // Satisfy the foreign key constraints for adding a camera frame pose.
     AddTarget(timestamp_ns);
-    database::WriteToDb(step, "", sensor_name, db);
+    database::InsertStep(db, sensor_name, step, "");
 
     // Add one frame to the database then load it and see that it's the same.
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-    database::WriteToDb(frames, step, sensor_name, db);
+    database::InsertPoses(db, sensor_name, step, frames);
 
-    result = database::ReadPoses(db, step, sensor_name);
+    result = database::ReadPoses(db, sensor_name, step);
     EXPECT_EQ(std::size(result), 1);
     EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(frames.at(timestamp_ns).pose));
 }
@@ -170,7 +170,7 @@ TEST(DatabaseDatabaseRead, TestFullImuAddGetCycle) {
                                {1, {Vector3d::Zero(), Vector3d::Zero()}},
                                {2, {Vector3d::Zero(), Vector3d::Zero()}}};
 
-    EXPECT_NO_THROW(database::WriteToDb(data, sensor_name, db));
+    EXPECT_NO_THROW(database::InsertImuData(db, sensor_name, data));
 
     auto const loaded_data{database::ReadImuData(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), std::size(data));
@@ -181,15 +181,15 @@ TEST(DatabaseDatabaseRead, TestGetImuData) {
 
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    database::WriteToDb({{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                         {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                         {15, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        sensor_name_1, db);
+    database::InsertImuData(db, sensor_name_1,
+                            {{5, {{1, 2, 3}, {4, 5, 6}}},  //
+                             {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                             {15, {Vector3d::Zero(), Vector3d::Zero()}}});
     // Data from imu 456
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    database::WriteToDb(ImuMeasurements{{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                                        {20, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        sensor_name_2, db);
+    database::InsertImuData(db, sensor_name_2,
+                            ImuMeasurements{{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
+                                            {20, {Vector3d::Zero(), Vector3d::Zero()}}});
 
     auto const imu_1_data{database::ReadImuData(db, sensor_name_1)};
     EXPECT_EQ(std::size(imu_1_data), 3);
@@ -216,19 +216,19 @@ TEST(DatabaseDatabaseRead, TestReadImuErrors) {
     std::string_view sensor_name{"/imu/polaris/123"};
 
     // Satisfy foreign key constraints and write the imu errors to the database so we can load them.
-    database::WriteToDb({{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                         {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                         {15, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        sensor_name, db);
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertImuData(db, sensor_name,
+                            {{5, {{1, 2, 3}, {4, 5, 6}}},  //
+                             {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                             {15, {Vector3d::Zero(), Vector3d::Zero()}}});
+    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
 
-    database::WriteToDb(ImuErrors{{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                                  {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                                  {15, {Vector3d::Zero(), Vector3d::Zero()}}},
-                        CalibrationStep::ExtrinsicInitialization, sensor_name, db);
+    database::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
+                              ImuErrors{{5, {{1, 2, 3}, {4, 5, 6}}},  //
+                                        {10, {Vector3d::Zero(), Vector3d::Zero()}},
+                                        {15, {Vector3d::Zero(), Vector3d::Zero()}}});
 
     // Load the errors and check their size and the values in the first one.
-    auto const imu_errors{database::ReadImuErrors(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
+    auto const imu_errors{database::ReadImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
     EXPECT_EQ(std::size(imu_errors), 3);
 
     ImuErrorState const imu_error_i{imu_errors.at(5)};
@@ -244,38 +244,38 @@ TEST(DatabaseDatabaseRead, TestReadImuErrors) {
     EXPECT_EQ(std::size(unknown_sensor_data), 0);
 }
 
-TEST(DatabaseDatabaseRead, TestReadSplineControlPoints) {
+TEST(DatabaseDatabaseRead, TestReadControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"/cam/retro/123"};
-    database::WriteToDb(CalibrationStep::SplineInterpolation, "", sensor_name, db);
+    database::InsertStep(db, sensor_name, CalibrationStep::SplineInterpolation, "");
     spline::Matrix2NXd const control_points_gt{spline::Matrix2NXd::Random(6, 10)};
 
-    database::WriteToDb(control_points_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
+    database::InsertControlPoints(db, sensor_name, CalibrationStep::SplineInterpolation, control_points_gt);
 
-    auto const control_points{database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const control_points{database::ReadControlPoints(db, sensor_name, CalibrationStep::SplineInterpolation)};
     EXPECT_TRUE(control_points.isApprox(control_points_gt));
 
     auto const unknown_sensor_data{
-        database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
+        database::ReadControlPoints(db, "/cam/retro/unknown", CalibrationStep::SplineInterpolation)};
     EXPECT_EQ(unknown_sensor_data.cols(), 0);
 }
 
-TEST(DatabaseDatabaseRead, TestReadSplineTimeHandler) {
+TEST(DatabaseDatabaseRead, TestReadTimeHandler) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"/cam/retro/123"};
-    database::WriteToDb(CalibrationStep::SplineInterpolation, "", sensor_name, db);
+    database::InsertStep(db, sensor_name, CalibrationStep::SplineInterpolation, "");
     spline::TimeHandler const time_handler_gt{100, 200};
 
-    database::WriteToDb(time_handler_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
+    database::InsertTimeHandler(db, sensor_name, CalibrationStep::SplineInterpolation, time_handler_gt);
 
-    auto const time_handler{database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const time_handler{database::ReadTimeHandler(db, sensor_name, CalibrationStep::SplineInterpolation)};
     ASSERT_TRUE(time_handler.has_value());
     EXPECT_EQ(time_handler, time_handler_gt);
 
     auto const unknown_sensor_data{
-        database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
+        database::ReadTimeHandler(db, "/cam/retro/unknown", CalibrationStep::SplineInterpolation)};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }
 
@@ -283,17 +283,17 @@ TEST(DatabaseDatabaseRead, TestReadExtrinsics) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"tf_imu_co"};
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
     Array6d const tf_imu_co_gt{0, 1, 2, 3, 4, 5};
 
-    database::WriteExtrinsicToDb(tf_imu_co_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);
+    database::InsertExtrinsic(db, sensor_name, CalibrationStep::ExtrinsicInitialization, tf_imu_co_gt);
 
-    auto const tf_imu_co{database::ReadExtrinsics(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
+    auto const tf_imu_co{database::ReadExtrinsics(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
     ASSERT_TRUE(tf_imu_co.has_value());
     EXPECT_TRUE(tf_imu_co->isApprox(tf_imu_co_gt));
 
     auto const unknown_sensor_data{
-        database::ReadExtrinsics(db, CalibrationStep::ExtrinsicInitialization, "tf_blah_blah")};
+        database::ReadExtrinsics(db, "tf_blah_blah", CalibrationStep::ExtrinsicInitialization)};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }
 
@@ -301,15 +301,15 @@ TEST(DatabaseDatabaseRead, TestReadGravity) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"world"};
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
     Array3d const gravity_w_gt{0, 1, 2};
 
-    database::WriteGravityToDb(gravity_w_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);
+    database::InsertGravity(db, sensor_name, CalibrationStep::ExtrinsicInitialization, gravity_w_gt);
 
-    auto const gravity_w{database::ReadGravity(db, CalibrationStep::ExtrinsicInitialization, sensor_name)};
+    auto const gravity_w{database::ReadGravity(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
     ASSERT_TRUE(gravity_w.has_value());
     EXPECT_TRUE(gravity_w->isApprox(gravity_w_gt));
 
-    auto const unknown_sensor_data{database::ReadGravity(db, CalibrationStep::ExtrinsicInitialization, "gravity_blah")};
+    auto const unknown_sensor_data{database::ReadGravity(db, "gravity_blah", CalibrationStep::ExtrinsicInitialization)};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }

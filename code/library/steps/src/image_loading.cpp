@@ -41,11 +41,11 @@ std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
 }  // LCOV_EXCL_LINE
 
 std::shared_ptr<EncodedImages> ImageLoading::Load(SqlitePtr const db) const {
-    return std::make_shared<EncodedImages>(database::ReadEncodedImages(db, SensorName()));
+    return std::make_shared<EncodedImages>(database::ReadImages(db, SensorName()));
 }
 
 void ImageLoading::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
-    database::WriteToDb(*encoded_images, SensorName(), db);
+    database::InsertImages(db, SensorName(), *encoded_images);
 }
 
 }  // namespace reprojection::steps

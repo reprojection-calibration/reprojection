@@ -5,12 +5,10 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "database/calibration_database.hpp"
 
 #include "enums.hpp"
-#include "types.hpp"
 
 namespace reprojection::database {
 
@@ -27,6 +25,11 @@ struct Sqlite3Tools {
         if (sqlite3_bind_int64(stmt, index, value) != static_cast<int>(SqliteFlag::Ok)) {
             throw std::runtime_error("sqlite3_bind_int64() failed");
         }
+    }
+
+    // WARN(Jack): Here we just do a static case - the loss of precision  might hurt us one day!
+    static void Bind(sqlite3_stmt* const stmt, int const index, uint64_t const value) {
+        Bind(stmt, index, static_cast<int64_t>(value));
     }
 
     static void Bind(sqlite3_stmt* const stmt, int const index, double const value) {
