@@ -46,7 +46,7 @@ std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view se
 spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const step_name,
                                            std::string_view sensor_name);
 
-std::optional<spline::TimeHandler> ReadSplineTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
+std::optional<spline::TimeHandler> ReadTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
                                                          std::string_view sensor_name);
 
 }  // namespace reprojection::database

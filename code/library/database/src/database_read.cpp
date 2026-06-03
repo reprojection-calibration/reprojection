@@ -261,7 +261,7 @@ spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const s
     return data;
 }  // LCOV_EXCL_LINE
 
-std::optional<spline::TimeHandler> ReadSplineTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
+std::optional<spline::TimeHandler> ReadTimeHandler(SqlitePtr const db, CalibrationStep const step_name,
                                                          std::string_view sensor_name) {
     std::optional<spline::TimeHandler> time_handler;
 

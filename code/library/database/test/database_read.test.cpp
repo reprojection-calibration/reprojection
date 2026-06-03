@@ -261,7 +261,7 @@ TEST(DatabaseDatabaseRead, TestReadControlPoints) {
     EXPECT_EQ(unknown_sensor_data.cols(), 0);
 }
 
-TEST(DatabaseDatabaseRead, TestReadSplineTimeHandler) {
+TEST(DatabaseDatabaseRead, TestReadTimeHandler) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"/cam/retro/123"};
@@ -270,12 +270,12 @@ TEST(DatabaseDatabaseRead, TestReadSplineTimeHandler) {
 
     database::InsertTimeHandler(time_handler_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
 
-    auto const time_handler{database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const time_handler{database::ReadTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
     ASSERT_TRUE(time_handler.has_value());
     EXPECT_EQ(time_handler, time_handler_gt);
 
     auto const unknown_sensor_data{
-        database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
+        database::ReadTimeHandler(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }
 

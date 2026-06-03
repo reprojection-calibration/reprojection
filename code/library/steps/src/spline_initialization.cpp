@@ -18,7 +18,7 @@ spline::Se3Spline SplineInitialization::Compute() const {
 
 spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
     auto const control_points{database::ReadControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
-    auto const time_handler{database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const time_handler{database::ReadTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
 
     if (not time_handler) {
         std::cout << "WE NEED AN ERROR STRATEGY! SplineInterpolation::Load()" << std::endl;  // LCOV_EXCL_LINE
