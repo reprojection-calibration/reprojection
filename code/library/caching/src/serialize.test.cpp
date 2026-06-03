@@ -38,6 +38,14 @@ TEST(CachingSerialize, TestSerializeCameraState) {
     EXPECT_EQ(result, gt_result);
 }
 
+TEST(CachingSerialize, TestSerializeControlPointMatrix) {
+    Matrix3Xd const control_points{{1, 2}, {3, 4}, {5, 6}};
+
+    std::string const result{caching::Serialize(control_points)};
+    std::string const gt_result{"1.000;3.000;5.000;|2.000;4.000;6.000;|"};
+
+    EXPECT_EQ(result, gt_result);
+}
 TEST(CachingSerialize, TestSerializeEncodedImages) {
     EncodedImages const encoded_images{{0, ImageBuffer{}}, {1, ImageBuffer{}}};
 
