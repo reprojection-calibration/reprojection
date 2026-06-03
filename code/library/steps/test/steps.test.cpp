@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <ranges>
 #include <string_view>
 
 #include "config/config_parsing.hpp"
@@ -16,9 +17,8 @@
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
-// cppcheck-suppress missingInclude
-#include <ranges>
 
+// cppcheck-suppress missingInclude
 #include "testing_utilities/generated/minimum_config.hpp"
 #include "types/io.hpp"
 
