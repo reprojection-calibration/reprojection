@@ -227,7 +227,7 @@ void InsertControlPoints(spline::Matrix2NXd const& data, CalibrationStep const s
                           db);
 }
 
-void WriteToDb(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertTimeHandler(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);

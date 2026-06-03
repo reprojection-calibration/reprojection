@@ -268,7 +268,7 @@ TEST(DatabaseDatabaseRead, TestReadSplineTimeHandler) {
     database::InsertStep(CalibrationStep::SplineInterpolation, "", sensor_name, db);
     spline::TimeHandler const time_handler_gt{100, 200};
 
-    database::WriteToDb(time_handler_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
+    database::InsertTimeHandler(time_handler_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
 
     auto const time_handler{database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
     ASSERT_TRUE(time_handler.has_value());

@@ -29,7 +29,7 @@ spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
 
 void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const db) const {
     database::InsertControlPoints(spline.ControlPoints(), step_type, sensor_name, db);
-    database::WriteToDb(spline.GetTimeHandler(), step_type, sensor_name, db);
+    database::InsertTimeHandler(spline.GetTimeHandler(), step_type, sensor_name, db);
 }
 
 }  // namespace reprojection::steps

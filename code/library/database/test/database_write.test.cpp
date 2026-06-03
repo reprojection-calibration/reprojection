@@ -191,7 +191,7 @@ TEST(DatabaseSensorDataInterface, TestInsertControlPoints) {
                  std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestWriteToDbSplineTimeHandler) {
+TEST(DatabaseSensorDataInterface, TestInsertTimeHandler) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     database::InsertStep(CalibrationStep::SplineInterpolation, "", "/cam/retro/123", db);
@@ -200,12 +200,12 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbSplineTimeHandler) {
     spline::TimeHandler const time_handler{100, 200};
 
     std::string_view sensor_name_1{"/cam/retro/123"};
-    EXPECT_NO_THROW(database::WriteToDb(time_handler, CalibrationStep::SplineInterpolation, sensor_name_1, db));
+    EXPECT_NO_THROW(database::InsertTimeHandler(time_handler, CalibrationStep::SplineInterpolation, sensor_name_1, db));
 
     std::string_view sensor_name_2{"/cam/retro/456"};
-    EXPECT_NO_THROW(database::WriteToDb(time_handler, CalibrationStep::SplineInterpolation, sensor_name_2, db));
+    EXPECT_NO_THROW(database::InsertTimeHandler(time_handler, CalibrationStep::SplineInterpolation, sensor_name_2, db));
 
-    EXPECT_THROW(database::WriteToDb(time_handler, CalibrationStep::SplineInterpolation, sensor_name_2, db),
+    EXPECT_THROW(database::InsertTimeHandler(time_handler, CalibrationStep::SplineInterpolation, sensor_name_2, db),
                  std::runtime_error);
 }
 

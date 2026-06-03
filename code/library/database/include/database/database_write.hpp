@@ -50,7 +50,7 @@ void InsertTargetInfo(TargetInfo const& target_info, std::string_view sensor_nam
 void InsertControlPoints(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);
 
-void WriteToDb(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertTimeHandler(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);
 
 }  // namespace reprojection::database
