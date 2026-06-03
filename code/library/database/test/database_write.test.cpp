@@ -94,14 +94,14 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
 
 TEST_F(SensorDatabaseFixture, TestInsertIntrinsics) {
     EXPECT_THROW(database::InsertIntrinsics({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
-                                     CalibrationStep::PoseInitialization, sensor_name, db),
+                                            CalibrationStep::PoseInitialization, sensor_name, db),
                  std::runtime_error);
 
     AddCamera();
     AddStep(CalibrationStep::PoseInitialization);
 
     EXPECT_NO_THROW(database::InsertIntrinsics({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole,
-                                        CalibrationStep::PoseInitialization, sensor_name, db));
+                                               CalibrationStep::PoseInitialization, sensor_name, db));
 }
 
 TEST_F(SensorDatabaseFixture, TestWriteToDbPoseData) {
@@ -121,7 +121,8 @@ TEST_F(SensorDatabaseFixture, TestInsertReprojectionErrors) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
     // Throws because the foreign key constraints are not met yet.
-    EXPECT_THROW(database::InsertReprojectionErrors(data, CalibrationStep::PoseInitialization, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(database::InsertReprojectionErrors(data, CalibrationStep::PoseInitialization, sensor_name, db),
+                 std::runtime_error);
 
     // Satisfy foreign key constraints.
     AddImage();
@@ -137,13 +138,14 @@ TEST(DatabaseSensorDataInterface, TestInsertImuData) {
 
     std::string_view sensor_name_1{"/imu/polaris/123"};
     EXPECT_NO_THROW(database::InsertImuData(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                                                        {1, {Vector3d::Zero(), Vector3d::Zero()}}},
-                                        sensor_name_1, db));
+                                                            {1, {Vector3d::Zero(), Vector3d::Zero()}}},
+                                            sensor_name_1, db));
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary
     // key (timestamp_ns, sensor_name) so it is not a duplicate
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    EXPECT_NO_THROW(database::InsertImuData(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db));
+    EXPECT_NO_THROW(
+        database::InsertImuData(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db));
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
     EXPECT_THROW(database::InsertImuData(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
@@ -156,7 +158,7 @@ TEST(DatabaseSensorDataInterface, TestInsertImuErrors) {
 
     // Try to add a record before the foreign key requirements are met - not gonna work!
     EXPECT_THROW(database::InsertImuErrors(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
-                                     CalibrationStep::ExtrinsicInitialization, sensor_name, db),
+                                           CalibrationStep::ExtrinsicInitialization, sensor_name, db),
                  std::runtime_error);
 
     // Satisfy foreign key requirements - an imu error requires a corresponding imu measurement and calibratio step.
@@ -165,11 +167,11 @@ TEST(DatabaseSensorDataInterface, TestInsertImuErrors) {
 
     // Happy path.
     EXPECT_NO_THROW(database::InsertImuErrors(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
-                                        CalibrationStep::ExtrinsicInitialization, sensor_name, db));
+                                              CalibrationStep::ExtrinsicInitialization, sensor_name, db));
 
     // Try to add a repeated record - this is not successful because the primary key must always be unique!
     EXPECT_THROW(database::InsertImuErrors(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
-                                     CalibrationStep::ExtrinsicInitialization, sensor_name, db),
+                                           CalibrationStep::ExtrinsicInitialization, sensor_name, db),
                  std::runtime_error);
 }
 
@@ -182,10 +184,12 @@ TEST(DatabaseSensorDataInterface, TestInsertControlPoints) {
     spline::Matrix2NXd const control_points{spline::Matrix2NXd::Random(6, 10)};
 
     std::string_view sensor_name_1{"/cam/retro/123"};
-    EXPECT_NO_THROW(database::InsertControlPoints(control_points, CalibrationStep::SplineInterpolation, sensor_name_1, db));
+    EXPECT_NO_THROW(
+        database::InsertControlPoints(control_points, CalibrationStep::SplineInterpolation, sensor_name_1, db));
 
     std::string_view sensor_name_2{"/cam/retro/456"};
-    EXPECT_NO_THROW(database::InsertControlPoints(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db));
+    EXPECT_NO_THROW(
+        database::InsertControlPoints(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db));
 
     EXPECT_THROW(database::InsertControlPoints(control_points, CalibrationStep::SplineInterpolation, sensor_name_2, db),
                  std::runtime_error);

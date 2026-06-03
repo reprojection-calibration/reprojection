@@ -20,27 +20,27 @@ void InsertExtrinsic(Array6d const& data, CalibrationStep const step_name, std::
 
 // NOTE(Jack): The calibration step has "upsert" semantics (https://sqlite.org/lang_upsert.html) because we need to
 // update the cache_key when the steps update on reruns.
-void InsertStep(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
-               SqlitePtr const db);
+void InsertStep(CalibrationStep const step_name, std::optional<std::string_view> cache_key,
+                std::string_view sensor_name, SqlitePtr const db);
 
 void InsertCameraInfo(CameraInfo const& camera_info, SqlitePtr const db);
 
 void InsertTargets(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
 
 void InsertIntrinsics(CameraState const& data, CameraModel const camera_model, CalibrationStep const step_name,
-               std::string_view sensor_name, SqlitePtr const db);
+                      std::string_view sensor_name, SqlitePtr const db);
 
 void InsertImages(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db);
 
 void InsertPoses(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, SqlitePtr const db);
 
 void InsertImuErrors(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
-               SqlitePtr const db);
+                     SqlitePtr const db);
 
 void InsertImuData(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
 
-void InsertReprojectionErrors(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
-               SqlitePtr const db);
+void InsertReprojectionErrors(ReprojectionErrors const& data, CalibrationStep const step_name,
+                              std::string_view sensor_name, SqlitePtr const db);
 
 // WARN(Jack): This is a hack! There is no requirement for a target to have a sensor name! This should get removed one
 // day when we successfully abstract the pipeline to handle multi-target calibration.
@@ -48,9 +48,9 @@ void InsertTargetInfo(TargetInfo const& target_info, std::string_view sensor_nam
 
 // WARN(Jack): Hardcoded for an SE3 spline. Nx6 control point block.
 void InsertControlPoints(spline::Matrix2NXd const& data, CalibrationStep const step_name, std::string_view sensor_name,
-               SqlitePtr const db);
+                         SqlitePtr const db);
 
 void InsertTimeHandler(spline::TimeHandler const& data, CalibrationStep const step_name, std::string_view sensor_name,
-               SqlitePtr const db);
+                       SqlitePtr const db);
 
 }  // namespace reprojection::database
