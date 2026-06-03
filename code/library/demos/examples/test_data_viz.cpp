@@ -46,24 +46,24 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
         image_data[timestamp_ns] = {};
     }
 
-    database::WriteToDb(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
+    database::InsertStep(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
     database::WriteToDb(image_data, camera_info.sensor_name, db);
 
-    database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
+    database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
     database::WriteToDb(camera_info, db);
 
     // WARN(Jack): The test data target has points at negative coordinates but setting negative bounds in the dashboard
     // is not possible so the target visualization is cut off.
-    database::WriteToDb(CalibrationStep::TargetInfo, "", camera_info.sensor_name, db);
+    database::InsertStep(CalibrationStep::TargetInfo, "", camera_info.sensor_name, db);
     // TODO(Jack): It would be nice if the mvg data generator used and returned us the target info. Hardcoding it here
     // means that it will go out of sync with the data generator.
     TargetInfo const target_info{TargetType::Checkerboard, 5, 5, 0.25, false};
     database::WriteToDb(target_info, camera_info.sensor_name, db);
 
-    database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
+    database::InsertStep(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
     database::WriteToDb(targets, camera_info.sensor_name, db);
 
-    database::WriteToDb(CalibrationStep::PoseInitialization, "", camera_info.sensor_name, db);
+    database::InsertStep(CalibrationStep::PoseInitialization, "", camera_info.sensor_name, db);
     database::WriteToDb(camera_frames, CalibrationStep::PoseInitialization, camera_info.sensor_name, db);
 }
 

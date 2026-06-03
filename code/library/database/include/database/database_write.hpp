@@ -20,7 +20,7 @@ void InsertExtrinsic(Array6d const& data, CalibrationStep const step_name, std::
 
 // NOTE(Jack): The calibration step has "upsert" semantics (https://sqlite.org/lang_upsert.html) because we need to
 // update the cache_key when the steps update on reruns.
-void WriteToDb(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
+void InsertStep(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
                SqlitePtr const db);
 
 void WriteToDb(CameraInfo const& camera_info, SqlitePtr const db);

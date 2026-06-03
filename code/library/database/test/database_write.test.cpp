@@ -21,7 +21,7 @@ class SensorDatabaseFixture : public ::testing::Test {
     void SetUp() override { db = database::OpenCalibrationDatabase(":memory:", true, false); }
 
     void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
-        database::WriteToDb(step_name, cache_key, sensor_name, db);
+        database::InsertStep(step_name, cache_key, sensor_name, db);
     }
 
     void AddCamera() const {
@@ -58,7 +58,7 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCameraInfo) {
 // add helpers like we have in the test fixture for other types, but for now we do not need to add a target info to the
 // database for any other reason.
 TEST_F(SensorDatabaseFixture, TestWriteToDbTargetInfo) {
-    database::WriteToDb(CalibrationStep::TargetInfo, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::TargetInfo, "", sensor_name, db);
 
     EXPECT_NO_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db));
     EXPECT_THROW(database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db),
@@ -74,7 +74,7 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbCameraMeasurements) {
     EXPECT_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db), std::runtime_error);
 
     AddImage();
-    database::WriteToDb(CalibrationStep::FeatureExtraction, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::FeatureExtraction, "", sensor_name, db);
 
     EXPECT_NO_THROW(database::WriteToDb(CameraMeasurements{{timestamp_ns, {}}}, sensor_name, db));
 }
@@ -161,7 +161,7 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbImuError) {
 
     // Satisfy foreign key requirements - an imu error requires a corresponding imu measurement and calibratio step.
     database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name, db);
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
     // Happy path.
     EXPECT_NO_THROW(database::WriteToDb(ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}},
@@ -176,8 +176,8 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbImuError) {
 TEST(DatabaseSensorDataInterface, TestWriteToDbSplineControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
-    database::WriteToDb(CalibrationStep::SplineInterpolation, "", "/cam/retro/123", db);
-    database::WriteToDb(CalibrationStep::SplineInterpolation, "", "/cam/retro/456", db);
+    database::InsertStep(CalibrationStep::SplineInterpolation, "", "/cam/retro/123", db);
+    database::InsertStep(CalibrationStep::SplineInterpolation, "", "/cam/retro/456", db);
 
     spline::Matrix2NXd const control_points{spline::Matrix2NXd::Random(6, 10)};
 
@@ -194,8 +194,8 @@ TEST(DatabaseSensorDataInterface, TestWriteToDbSplineControlPoints) {
 TEST(DatabaseSensorDataInterface, TestWriteToDbSplineTimeHandler) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
-    database::WriteToDb(CalibrationStep::SplineInterpolation, "", "/cam/retro/123", db);
-    database::WriteToDb(CalibrationStep::SplineInterpolation, "", "/cam/retro/456", db);
+    database::InsertStep(CalibrationStep::SplineInterpolation, "", "/cam/retro/123", db);
+    database::InsertStep(CalibrationStep::SplineInterpolation, "", "/cam/retro/456", db);
 
     spline::TimeHandler const time_handler{100, 200};
 
@@ -216,7 +216,7 @@ TEST(DatabaseSensorDataInterface, TestInsertGravity) {
     // Gravity is not really directly associated with any single sensor. If anything it is more related to the target
     // because that is what sets the world coordinate frame.
     std::string_view sensor_name{"world"};
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
     Array3d const gravity_w{0, 1, 2};
     EXPECT_NO_THROW(database::InsertGravity(gravity_w, CalibrationStep::ExtrinsicInitialization, sensor_name, db));
@@ -233,7 +233,7 @@ TEST(DatabaseSensorDataInterface, TestInsertExtrinsic) {
     // two sensors, and as of today (02.06.26) our database design does not handle this, and therefore we are restoring
     // to hacks :(
     std::string_view sensor_name{"tf_imu_co"};
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
     Array6d const tf_imu_co{0, 1, 2, 3, 4, 5};
     EXPECT_NO_THROW(database::InsertExtrinsic(tf_imu_co, CalibrationStep::ExtrinsicInitialization, sensor_name, db));

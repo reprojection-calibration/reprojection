@@ -44,16 +44,16 @@ int main() {
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
     try {
-        database::WriteToDb(CalibrationStep::ImageLoading,
+        database::InsertStep(CalibrationStep::ImageLoading,
                             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", sensor_name, db);
 
         CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
-        database::WriteToDb(CalibrationStep::CameraInfo,
+        database::InsertStep(CalibrationStep::CameraInfo,
                             "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e", camera_info.sensor_name,
                             db);
         database::WriteToDb(camera_info, db);
 
-        database::WriteToDb(CalibrationStep::FeatureExtraction,
+        database::InsertStep(CalibrationStep::FeatureExtraction,
                             "5d87595c7c8f53d8c355f8b889374c6d1d1cd4bed1472da698725bd51777385a", camera_info.sensor_name,
                             db);
     } catch (...) {

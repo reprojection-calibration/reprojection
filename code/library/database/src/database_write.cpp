@@ -58,7 +58,7 @@ void InsertExtrinsic(Array6d const& data, CalibrationStep const step_name, std::
 }
 
 // TODO(Jack): Input arg order consistency.
-void WriteToDb(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
+void InsertStep(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[step_name, sensor_name, cache_key](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);

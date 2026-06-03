@@ -35,7 +35,7 @@ class StepsFixture : public ::testing::Test {
         auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
         camera_info = CameraInfo{sensor_name, camera_model, testing_utilities::image_bounds};
 
-        database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
+        database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
         database::WriteToDb(camera_info, db);
     }
 
@@ -51,9 +51,9 @@ class StepsFixture : public ::testing::Test {
             return images;
         }()};
 
-        database::WriteToDb(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
+        database::InsertStep(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
         database::WriteToDb(images, camera_info.sensor_name, db);
-        database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
+        database::InsertStep(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
         database::WriteToDb(targets, camera_info.sensor_name, db);
     }
 

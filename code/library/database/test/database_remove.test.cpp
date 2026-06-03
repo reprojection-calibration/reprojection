@@ -14,7 +14,7 @@ class DatabaseRemoveFixture : public ::testing::Test {
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
-        database::WriteToDb(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
+        database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
         database::WriteToDb(camera_info, db);
     }
 
@@ -27,7 +27,7 @@ TEST_F(DatabaseRemoveFixture, TestRemoveFromDbStep) {
     EXPECT_NO_THROW(database::RemoveFromDb(CalibrationStep::PoseInitialization, "", db));
 
     // Write a step to the database and load its cache key to check its there.
-    database::WriteToDb(CalibrationStep::PoseInitialization, "cache_key", camera_info.sensor_name, db);
+    database::InsertStep(CalibrationStep::PoseInitialization, "cache_key", camera_info.sensor_name, db);
 
     auto cache_key{database::ReadCacheKey(db, CalibrationStep::PoseInitialization, camera_info.sensor_name)};
     ASSERT_TRUE(cache_key.has_value());

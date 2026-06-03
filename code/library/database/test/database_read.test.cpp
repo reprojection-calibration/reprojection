@@ -18,13 +18,13 @@ class CameraReadFixture : public ::testing::Test {
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
-        database::WriteToDb(CalibrationStep::CameraInfo, "", sensor_name, db);
+        database::InsertStep(CalibrationStep::CameraInfo, "", sensor_name, db);
         database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 
     void AddImage(uint64_t const timestamp_ns) const {
         // Due to foreign key relationship we need add an image before we add the target
-        database::WriteToDb(CalibrationStep::ImageLoading, "", sensor_name, db);
+        database::InsertStep(CalibrationStep::ImageLoading, "", sensor_name, db);
         database::WriteToDb(EncodedImages{{timestamp_ns, {}}}, sensor_name, db);
     }
 
@@ -32,7 +32,7 @@ class CameraReadFixture : public ::testing::Test {
         // Due to foreign key relationship we need add an image before we add the target
         AddImage(timestamp_ns);
 
-        database::WriteToDb(CalibrationStep::FeatureExtraction, "", sensor_name, db);
+        database::InsertStep(CalibrationStep::FeatureExtraction, "", sensor_name, db);
         database::WriteToDb({{timestamp_ns, target}}, sensor_name, db);
     }
 
@@ -61,7 +61,7 @@ TEST_F(CameraReadFixture, TestReadTargetInfo) {
     auto target_info{database::ReadTargetInfo(db, "/nonexistent/camera")};
     EXPECT_FALSE(target_info.has_value());
 
-    database::WriteToDb(CalibrationStep::TargetInfo, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::TargetInfo, "", sensor_name, db);
     database::WriteToDb(TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}, sensor_name, db);
 
     target_info = database::ReadTargetInfo(db, sensor_name);
@@ -116,7 +116,7 @@ TEST_F(CameraReadFixture, TestReadCameraState) {
     auto intrinsics{database::ReadCameraState(db, step, "", CameraModel::Pinhole)};
     EXPECT_FALSE(intrinsics.has_value());
 
-    database::WriteToDb(CalibrationStep::PoseInitialization, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::PoseInitialization, "", sensor_name, db);
     database::WriteToDb({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole, step, sensor_name, db);
 
     intrinsics = database::ReadCameraState(db, step, sensor_name, CameraModel::Pinhole);
@@ -128,13 +128,13 @@ TEST_F(CameraReadFixture, TestReadCacheKey) {
     auto cache_key{database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name)};
     EXPECT_FALSE(cache_key.has_value());
 
-    database::WriteToDb(CalibrationStep::PoseInitialization, "1", sensor_name, db);
+    database::InsertStep(CalibrationStep::PoseInitialization, "1", sensor_name, db);
 
     cache_key = database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "1");
 
-    database::WriteToDb(CalibrationStep::PoseInitialization, "2", sensor_name, db);
+    database::InsertStep(CalibrationStep::PoseInitialization, "2", sensor_name, db);
 
     cache_key = database::ReadCacheKey(db, CalibrationStep::PoseInitialization, sensor_name);
     ASSERT_TRUE(cache_key.has_value());
@@ -151,7 +151,7 @@ TEST_F(CameraReadFixture, TestReadPoses) {
 
     // Satisfy the foreign key constraints for adding a camera frame pose.
     AddTarget(timestamp_ns);
-    database::WriteToDb(step, "", sensor_name, db);
+    database::InsertStep(step, "", sensor_name, db);
 
     // Add one frame to the database then load it and see that it's the same.
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
@@ -220,7 +220,7 @@ TEST(DatabaseDatabaseRead, TestReadImuErrors) {
                          {10, {Vector3d::Zero(), Vector3d::Zero()}},
                          {15, {Vector3d::Zero(), Vector3d::Zero()}}},
                         sensor_name, db);
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
     database::WriteToDb(ImuErrors{{5, {{1, 2, 3}, {4, 5, 6}}},  //
                                   {10, {Vector3d::Zero(), Vector3d::Zero()}},
@@ -248,7 +248,7 @@ TEST(DatabaseDatabaseRead, TestReadSplineControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"/cam/retro/123"};
-    database::WriteToDb(CalibrationStep::SplineInterpolation, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::SplineInterpolation, "", sensor_name, db);
     spline::Matrix2NXd const control_points_gt{spline::Matrix2NXd::Random(6, 10)};
 
     database::WriteToDb(control_points_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
@@ -265,7 +265,7 @@ TEST(DatabaseDatabaseRead, TestReadSplineTimeHandler) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"/cam/retro/123"};
-    database::WriteToDb(CalibrationStep::SplineInterpolation, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::SplineInterpolation, "", sensor_name, db);
     spline::TimeHandler const time_handler_gt{100, 200};
 
     database::WriteToDb(time_handler_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
@@ -283,7 +283,7 @@ TEST(DatabaseDatabaseRead, TestReadExtrinsics) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"tf_imu_co"};
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
     Array6d const tf_imu_co_gt{0, 1, 2, 3, 4, 5};
 
     database::InsertExtrinsic(tf_imu_co_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);
@@ -301,7 +301,7 @@ TEST(DatabaseDatabaseRead, TestReadGravity) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"world"};
-    database::WriteToDb(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
+    database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
     Array3d const gravity_w_gt{0, 1, 2};
 
     database::InsertGravity(gravity_w_gt, CalibrationStep::ExtrinsicInitialization, sensor_name, db);

@@ -56,15 +56,15 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
     CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
 
-    database::WriteToDb(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
+    database::InsertStep(CalibrationStep::ImageLoading, caching::CacheKey(""), camera_info.sensor_name, db);
 
-    database::WriteToDb(CalibrationStep::CameraInfo, caching::CacheKey(sensor_name, camera_model, {}),
+    database::InsertStep(CalibrationStep::CameraInfo, caching::CacheKey(sensor_name, camera_model, {}),
                         camera_info.sensor_name, db);
     database::WriteToDb(camera_info, db);
 
-    database::WriteToDb(CalibrationStep::FeatureExtraction, caching::CacheKey(""), camera_info.sensor_name, db);
+    database::InsertStep(CalibrationStep::FeatureExtraction, caching::CacheKey(""), camera_info.sensor_name, db);
 
-    database::WriteToDb(CalibrationStep::IntrinsicInitialization, caching::CacheKey(camera_info, {}),
+    database::InsertStep(CalibrationStep::IntrinsicInitialization, caching::CacheKey(camera_info, {}),
                         camera_info.sensor_name, db);
     database::WriteToDb({Array5d::Zero()}, camera_info.camera_model, CalibrationStep::IntrinsicInitialization,
                         camera_info.sensor_name, db);
