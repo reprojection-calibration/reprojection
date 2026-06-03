@@ -110,16 +110,16 @@ TEST_F(CameraReadFixture, TestGetExtractedTargetData) {
     }
 }
 
-TEST_F(CameraReadFixture, TestReadCameraState) {
+TEST_F(CameraReadFixture, TestReadIntrinsics) {
     auto const step{CalibrationStep::PoseInitialization};
 
-    auto intrinsics{database::ReadCameraState(db, step, "", CameraModel::Pinhole)};
+    auto intrinsics{database::ReadIntrinsics(db, step, "", CameraModel::Pinhole)};
     EXPECT_FALSE(intrinsics.has_value());
 
     database::InsertStep(CalibrationStep::PoseInitialization, "", sensor_name, db);
     database::InsertIntrinsics({testing_utilities::pinhole_intrinsics}, CameraModel::Pinhole, step, sensor_name, db);
 
-    intrinsics = database::ReadCameraState(db, step, sensor_name, CameraModel::Pinhole);
+    intrinsics = database::ReadIntrinsics(db, step, sensor_name, CameraModel::Pinhole);
     ASSERT_TRUE(intrinsics.has_value());
     EXPECT_TRUE(intrinsics->isApprox(testing_utilities::pinhole_intrinsics));
 }

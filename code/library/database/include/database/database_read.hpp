@@ -19,7 +19,7 @@ std::optional<std::string> ReadCacheKey(SqlitePtr const db, CalibrationStep cons
 // mutable SqlitePtr. But at this point the semantics around the sql statement lock do not allow it.
 std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view sensor_name);
 
-std::optional<ArrayXd> ReadCameraState(SqlitePtr const db, CalibrationStep const step_name,
+std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const step_name,
                                        std::string_view sensor_name, CameraModel const camera_model);
 
 EncodedImages ReadEncodedImages(SqlitePtr const db, std::string_view sensor_name);
