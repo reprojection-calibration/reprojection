@@ -31,6 +31,12 @@ std::string CacheKey(std::string_view sensor_name, CameraModel const camera_mode
     return CacheKeyFrom(sensor_name, camera_model, encoded_images);
 }
 
+std::string CacheKey(std::string_view sensor_name, ImuMeasurements const imu_data,
+                     Eigen::Matrix<double, 3, -1> const& so3_control_points, uint64_t const t0_ns,
+                     uint64_t const delta_t_ns) {
+    return CacheKeyFrom(sensor_name, imu_data, so3_control_points, std::to_string(t0_ns), std::to_string(delta_t_ns));
+}
+
 std::string CacheKey(std::string_view sensor_name, Frames const& frames) { return CacheKeyFrom(sensor_name, frames); }
 
 }  // namespace reprojection::caching

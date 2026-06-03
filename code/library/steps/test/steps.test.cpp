@@ -89,20 +89,33 @@ class ImageSourceFixture : public StepsFixture {
 TEST(StepsSteps, TestExtrinsicInitialization) {
     SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
-    auto [imu_data, spline]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
-    steps::ExtrinsicInitialization const step{"tf_co_imu", imu_data, spline};
+    // NOTE(Jack): Normally the extrinsic initialization function will actually run against the camera frames which I
+    // think are inverted compared to the spline returned by the imu data generation function here. The proper way to
+    // get the camera orientation spline would actually be to also run the mvg data generation and then interpolate the
+    // frames returned from there. But this test does not need algorithmic correctness as we are just wanting to test
+    // the process mechanics. But still it would be nice to get a "proper" result here so maybe we change this.
+    auto const [imu_data, spline]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
+
+    spline::CubicBSplineC3 const so3_spline{spline.So3(), spline.GetTimeHandler()};
+    steps::ExtrinsicInitialization const step{"tf_co_imu", imu_data, so3_spline};
 
     // TODO(Jack): Define a type instead of just using std::pair<Array6d, Array3d>!!!
     auto [result, cache_status]{RunStep<std::pair<Array6d, Array3d>>(step, db)};
     auto [tf_co_imu, gravity_w]{result};
 
-
+    Array6d const tf_imu_co_gt{Array6d::Zero()};
+    // ERROR(Jack): The actual gravity should be zero! But right now we have some error in the gravity calculation so we
+    // put this value here just as a heuristic canary to see if anything changes.
+    Array3d const gravity_w_gt{2.8826920613096214, 0.073608289211483421, 9.3731026091642597};
+    EXPECT_TRUE(tf_co_imu.isApprox(tf_imu_co_gt));
+    EXPECT_TRUE(gravity_w.isApprox(gravity_w_gt));
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<std::pair<Array6d, Array3d>>(step, db);
     std::tie(tf_co_imu, gravity_w) = result;
-
+    EXPECT_TRUE(tf_co_imu.isApprox(tf_imu_co_gt));
+    EXPECT_TRUE(gravity_w.isApprox(gravity_w_gt));
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 

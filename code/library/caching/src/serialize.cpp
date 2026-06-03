@@ -48,6 +48,18 @@ std::string Serialize(CameraState const& data) {
     return oss.str();
 }
 
+std::string Serialize(Eigen::Matrix<double, 3, -1> const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    for (int i{0}; i < data.cols(); ++i) {
+        SerializeEigenByRows(data.col(i), oss);
+        oss << "|";
+    }
+
+    return oss.str();
+}
+
 std::string Serialize(EncodedImages const& data) {
     std::ostringstream oss;
 
@@ -66,6 +78,22 @@ std::string Serialize(Frames const& data) {
     for (auto const& [timestamp_ns, frame] : data) {
         oss << timestamp_ns << "|";
         SerializeEigenByRows(frame.pose, oss);
+        oss << "|";
+    }
+
+    return oss.str();
+}
+
+std::string Serialize(ImuMeasurements const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    for (auto const& [timestamp_ns, data_i] : data) {
+        oss << timestamp_ns << "|";
+
+        SerializeEigenByRows(data_i.angular_velocity, oss);
+        oss << "|";
+        SerializeEigenByRows(data_i.linear_acceleration, oss);
         oss << "|";
     }
 
