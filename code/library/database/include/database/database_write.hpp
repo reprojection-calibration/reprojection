@@ -8,7 +8,7 @@
 namespace reprojection::database {
 
 // TODO(Jack): See the note below for WriteExtrinsicToDb(). Same problems are plaguing us here.
-void WriteGravityToDb(Array3d const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertGravity(Array3d const& data, CalibrationStep const step_name, std::string_view sensor_name,
                       SqlitePtr const db);
 
 // TODO(Jack): We are hardcoding into the database that there is only ever on extrinsic - from one camera to one imu.

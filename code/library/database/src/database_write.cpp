@@ -37,7 +37,7 @@ void BindEigenColumn(sqlite3_stmt* const stmt, int const start_idx, Eigen::Dense
 
 }  // namespace utils
 
-void WriteGravityToDb(Array3d const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertGravity(Array3d const& data, CalibrationStep const step_name, std::string_view sensor_name,
                       SqlitePtr const db) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);
