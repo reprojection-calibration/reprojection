@@ -70,8 +70,7 @@ int main() {
 
     ImuMeasurements const imu_data{database::ReadImuData(db, "/imu0")};
 
-    steps::ExtrinsicInitialization const extrinsic_init_step{
-        "tf_co_imu", imu_data, {spline.So3(), spline.GetTimeHandler()}};
+    steps::ExtrinsicInitialization const extrinsic_init_step{"tf_co_imu", imu_data, spline};
     auto const [extrinsics,
                 extrinsic_init_cache_status]{steps::RunStep<std::pair<Array6d, Array3d>>(extrinsic_init_step, db)};
     std::cout << "Extrinsic init cache: " << ToString(extrinsic_init_cache_status) << std::endl;

@@ -116,8 +116,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     // the process mechanics. But still it would be nice to get a "proper" result here so maybe we change this.
     auto const [imu_data, spline]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
 
-    spline::CubicBSplineC3 const so3_spline{spline.So3(), spline.GetTimeHandler()};
-    steps::ExtrinsicInitialization const step{"tf_co_imu", imu_data, so3_spline};
+    steps::ExtrinsicInitialization const step{"tf_co_imu", imu_data, spline};
 
     // TODO(Jack): Define a type instead of just using std::pair<Array6d, Array3d>!!!
     auto [result, cache_status]{RunStep<std::pair<Array6d, Array3d>>(step, db)};
