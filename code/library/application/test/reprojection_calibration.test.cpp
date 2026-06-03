@@ -60,7 +60,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     database::InsertStep(CalibrationStep::CameraInfo, caching::CacheKey(sensor_name, camera_model, {}),
                         camera_info.sensor_name, db);
-    database::WriteToDb(camera_info, db);
+    database::InsertCameraInfo(camera_info, db);
 
     database::InsertStep(CalibrationStep::FeatureExtraction, caching::CacheKey(""), camera_info.sensor_name, db);
 

@@ -51,7 +51,7 @@ int main() {
         database::InsertStep(CalibrationStep::CameraInfo,
                             "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e", camera_info.sensor_name,
                             db);
-        database::WriteToDb(camera_info, db);
+        database::InsertCameraInfo(camera_info, db);
 
         database::InsertStep(CalibrationStep::FeatureExtraction,
                             "5d87595c7c8f53d8c355f8b889374c6d1d1cd4bed1472da698725bd51777385a", camera_info.sensor_name,

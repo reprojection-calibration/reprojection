@@ -23,7 +23,7 @@ void InsertExtrinsic(Array6d const& data, CalibrationStep const step_name, std::
 void InsertStep(CalibrationStep const step_name, std::optional<std::string_view> cache_key, std::string_view sensor_name,
                SqlitePtr const db);
 
-void WriteToDb(CameraInfo const& camera_info, SqlitePtr const db);
+void InsertCameraInfo(CameraInfo const& camera_info, SqlitePtr const db);
 
 void WriteToDb(CameraMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
 

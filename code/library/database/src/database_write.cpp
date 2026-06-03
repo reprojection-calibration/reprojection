@@ -70,7 +70,7 @@ void InsertStep(CalibrationStep const step_name, std::optional<std::string_view>
     ExecuteStatement(sql_statements::calibration_steps_upsert, binder, db);
 }
 
-void WriteToDb(CameraInfo const& camera_info, SqlitePtr const db) {
+void InsertCameraInfo(CameraInfo const& camera_info, SqlitePtr const db) {
     auto const binder{[camera_info](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, CalibrationStep::CameraInfo, camera_info.sensor_name);
         Sqlite3Tools::Bind(stmt, 3, ToString(camera_info.camera_model));

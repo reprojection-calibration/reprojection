@@ -26,7 +26,7 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddCamera() const {
         AddStep(CalibrationStep::CameraInfo);
-        database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+        database::InsertCameraInfo(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 
     void AddImage() const {
@@ -49,7 +49,7 @@ class SensorDatabaseFixture : public ::testing::Test {
     std::string sensor_name{"/cam/retro/123"};
 };
 
-TEST_F(SensorDatabaseFixture, TestWriteToDbCameraInfo) {
+TEST_F(SensorDatabaseFixture, TestInsertCameraInfo) {
     EXPECT_NO_THROW(AddCamera());
     EXPECT_THROW(AddCamera(), std::runtime_error);  // Duplicate entry not allowed!
 }

@@ -50,7 +50,7 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
     database::WriteToDb(image_data, camera_info.sensor_name, db);
 
     database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
-    database::WriteToDb(camera_info, db);
+    database::InsertCameraInfo(camera_info, db);
 
     // WARN(Jack): The test data target has points at negative coordinates but setting negative bounds in the dashboard
     // is not possible so the target visualization is cut off.

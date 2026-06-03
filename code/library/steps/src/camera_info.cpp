@@ -49,7 +49,7 @@ CameraInfo CameraInfoStep::Load(SqlitePtr const db) const {
 }
 
 void CameraInfoStep::Save(CameraInfo const& camera_info, SqlitePtr const db) const {
-    database::WriteToDb(camera_info, db);
+    database::InsertCameraInfo(camera_info, db);
 }
 
 }  // namespace reprojection::steps

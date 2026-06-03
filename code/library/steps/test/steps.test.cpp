@@ -36,7 +36,7 @@ class StepsFixture : public ::testing::Test {
         camera_info = CameraInfo{sensor_name, camera_model, testing_utilities::image_bounds};
 
         database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
-        database::WriteToDb(camera_info, db);
+        database::InsertCameraInfo(camera_info, db);
     }
 
     void SatisfyPoseForeignKeys(CameraMeasurements const& targets) {

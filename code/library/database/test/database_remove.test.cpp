@@ -15,7 +15,7 @@ class DatabaseRemoveFixture : public ::testing::Test {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
         database::InsertStep(CalibrationStep::CameraInfo, "", camera_info.sensor_name, db);
-        database::WriteToDb(camera_info, db);
+        database::InsertCameraInfo(camera_info, db);
     }
 
     SqlitePtr db{nullptr};

@@ -19,7 +19,7 @@ class CameraReadFixture : public ::testing::Test {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
         database::InsertStep(CalibrationStep::CameraInfo, "", sensor_name, db);
-        database::WriteToDb(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
+        database::InsertCameraInfo(CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds}, db);
     }
 
     void AddImage(uint64_t const timestamp_ns) const {
