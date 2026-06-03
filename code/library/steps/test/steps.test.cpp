@@ -5,6 +5,7 @@
 #include "config/config_parsing.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
+#include "steps/extrinsic_initialization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
@@ -12,6 +13,7 @@
 #include "steps/spline_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
+#include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 // cppcheck-suppress missingInclude
@@ -84,6 +86,39 @@ class ImageSourceFixture : public StepsFixture {
     TargetInfo target_info;
 };
 
+TEST(StepsSteps, TestExtrinsicInitialization) {
+    SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
+
+    // NOTE(Jack): Normally the extrinsic initialization function will actually run against the camera frames which I
+    // think are inverted compared to the spline returned by the imu data generation function here. The proper way to
+    // get the camera orientation spline would actually be to also run the mvg data generation and then interpolate the
+    // frames returned from there. But this test does not need algorithmic correctness as we are just wanting to test
+    // the process mechanics. But still it would be nice to get a "proper" result here so maybe we change this.
+    auto const [imu_data, spline]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
+
+    spline::CubicBSplineC3 const so3_spline{spline.So3(), spline.GetTimeHandler()};
+    steps::ExtrinsicInitialization const step{"tf_co_imu", imu_data, so3_spline};
+
+    // TODO(Jack): Define a type instead of just using std::pair<Array6d, Array3d>!!!
+    auto [result, cache_status]{RunStep<std::pair<Array6d, Array3d>>(step, db)};
+    auto [tf_co_imu, gravity_w]{result};
+
+    Array6d const tf_imu_co_gt{Array6d::Zero()};
+    // ERROR(Jack): The actual gravity should be zero! But right now we have some error in the gravity calculation so we
+    // put this value here just as a heuristic canary to see if anything changes.
+    Array3d const gravity_w_gt{2.8826920613096214, 0.073608289211483421, 9.3731026091642597};
+    EXPECT_TRUE(tf_co_imu.isApprox(tf_imu_co_gt));
+    EXPECT_TRUE(gravity_w.isApprox(gravity_w_gt));
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    // On rerun with the same inputs it will be a cache hit
+    std::tie(result, cache_status) = RunStep<std::pair<Array6d, Array3d>>(step, db);
+    std::tie(tf_co_imu, gravity_w) = result;
+    EXPECT_TRUE(tf_co_imu.isApprox(tf_imu_co_gt));
+    EXPECT_TRUE(gravity_w.isApprox(gravity_w_gt));
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
 TEST_F(ImageSourceFixture, TestImageLoading) {
     steps::ImageLoading const step{camera_info.sensor_name, "sha256-key", image_source};
 
@@ -114,22 +149,6 @@ TEST_F(ImageSourceFixture, TestCameraInfoStep) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(StepsFixture, TestTargetInfoStep) {
-    steps::TargetInfoStep const step{*config["target"].as_table(), camera_info.sensor_name};
-
-    auto [target_info, cache_status]{RunStep<TargetInfo>(step, db)};
-    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
-    EXPECT_EQ(target_info.height, 3);
-    EXPECT_EQ(target_info.width, 4);
-    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
-
-    std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db);
-    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
-    EXPECT_EQ(target_info.height, 3);
-    EXPECT_EQ(target_info.width, 4);
-    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
-}
-
 TEST_F(ImageSourceFixture, TestFeatureExtraction) {
     steps::FeatureExtraction const step{camera_info.sensor_name, encoded_images, target_info, false};
 
@@ -139,6 +158,23 @@ TEST_F(ImageSourceFixture, TestFeatureExtraction) {
 
     std::tie(extracted_targets, cache_status) = RunStep<CameraMeasurements>(step, db);
     EXPECT_EQ(std::size(extracted_targets), 0);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
+TEST_F(StepsFixture, TestBundleAdjustmentStep) {
+    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+    steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
+
+    auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
+    EXPECT_EQ(std::size(result.frames), 50);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    auto const poses{database::ReadPoses(db, step.step_type, camera_info.sensor_name)};
+    EXPECT_EQ(std::size(poses), 50);
+
+    // On rerun with the same inputs it will be a cache hit
+    std::tie(result, cache_status) = RunStep<OptimizationState>(step, db);
+    EXPECT_EQ(std::size(result.frames), 50);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
@@ -192,23 +228,6 @@ TEST_F(StepsFixture, TestPoseInitialization) {
     EXPECT_EQ(std::size(poses), 40);
 }
 
-TEST_F(StepsFixture, TestBundleAdjustmentStep) {
-    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
-
-    auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
-    EXPECT_EQ(std::size(result.frames), 50);
-    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
-
-    auto const poses{database::ReadPoses(db, step.step_type, camera_info.sensor_name)};
-    EXPECT_EQ(std::size(poses), 50);
-
-    // On rerun with the same inputs it will be a cache hit
-    std::tie(result, cache_status) = RunStep<OptimizationState>(step, db);
-    EXPECT_EQ(std::size(result.frames), 50);
-    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
-}
-
 TEST_F(StepsFixture, TestSplineInitialization) {
     auto [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
     steps::SplineInitialization const step{camera_info.sensor_name, poses};
@@ -223,5 +242,21 @@ TEST_F(StepsFixture, TestSplineInitialization) {
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<spline::Se3Spline>(step, db);
     EXPECT_EQ(result.ControlPoints().cols(), 95);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
+TEST_F(StepsFixture, TestTargetInfoStep) {
+    steps::TargetInfoStep const step{*config["target"].as_table(), camera_info.sensor_name};
+
+    auto [target_info, cache_status]{RunStep<TargetInfo>(step, db)};
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.height, 3);
+    EXPECT_EQ(target_info.width, 4);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db);
+    EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(target_info.height, 3);
+    EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }

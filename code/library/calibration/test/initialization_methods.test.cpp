@@ -56,9 +56,9 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
     //  another place, but long term this might not be sustainable.
     spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames, 100)};
 
-    auto const [rotation_result, gravity]{calibration::EstimateCameraImuRotationAndGravity(
+    auto const [rotation_result, gravity]{calibration::EstimateCameraImuAlignment(
         {interpolated_spline.So3(), interpolated_spline.GetTimeHandler()}, imu_data)};
-    auto const [R_co_imu, diagnostics]{rotation_result};
+    auto const [aa_imu_co, diagnostics]{rotation_result};
 
     // EXPECT_TRUE(R_co_imu.isApprox(Matrix3d::Identity()));
     // EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);

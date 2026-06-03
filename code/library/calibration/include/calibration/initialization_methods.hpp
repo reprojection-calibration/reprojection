@@ -28,7 +28,7 @@ Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& ta
 //  we have the generic CubicBSplineC3 type, and their is no structural guarantee or encouragement about what is
 //  actually inside of it. This is something which plagues the entire spline code, not a deal breaker, but an idea that
 //  smells to me.
-std::tuple<std::tuple<Matrix3d, CeresState>, Vector3d> EstimateCameraImuRotationAndGravity(
+std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(
     spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data);
 
 }  // namespace reprojection::calibration
