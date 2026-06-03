@@ -240,7 +240,7 @@ std::optional<TargetInfo> ReadTargetInfo(SqlitePtr const db, std::string_view se
     return target_info;
 }  // LCOV_EXCL_LINE
 
-spline::Matrix2NXd ReadSplineControlPoints(SqlitePtr const db, CalibrationStep const step_name,
+spline::Matrix2NXd ReadControlPoints(SqlitePtr const db, CalibrationStep const step_name,
                                            std::string_view sensor_name) {
     // First we need to recover how many control points there are so we can size the control point matrix properly.
     int64_t num_control_points{-1};

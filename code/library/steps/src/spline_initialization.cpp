@@ -17,7 +17,7 @@ spline::Se3Spline SplineInitialization::Compute() const {
 }
 
 spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
-    auto const control_points{database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const control_points{database::ReadControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
     auto const time_handler{database::ReadSplineTimeHandler(db, CalibrationStep::SplineInterpolation, sensor_name)};
 
     if (not time_handler) {

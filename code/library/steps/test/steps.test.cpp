@@ -253,7 +253,7 @@ TEST_F(StepsFixture, TestSplineInitialization) {
     EXPECT_EQ(result.ControlPoints().cols(), 95);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    auto const control_points{database::ReadSplineControlPoints(db, step.step_type, camera_info.sensor_name)};
+    auto const control_points{database::ReadControlPoints(db, step.step_type, camera_info.sensor_name)};
     EXPECT_EQ(control_points.cols(), 95);
 
     // On rerun with the same inputs it will be a cache hit

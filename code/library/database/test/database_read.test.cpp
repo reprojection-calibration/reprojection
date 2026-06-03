@@ -244,7 +244,7 @@ TEST(DatabaseDatabaseRead, TestReadImuErrors) {
     EXPECT_EQ(std::size(unknown_sensor_data), 0);
 }
 
-TEST(DatabaseDatabaseRead, TestReadSplineControlPoints) {
+TEST(DatabaseDatabaseRead, TestReadControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"/cam/retro/123"};
@@ -253,11 +253,11 @@ TEST(DatabaseDatabaseRead, TestReadSplineControlPoints) {
 
     database::InsertControlPoints(control_points_gt, CalibrationStep::SplineInterpolation, sensor_name, db);
 
-    auto const control_points{database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
+    auto const control_points{database::ReadControlPoints(db, CalibrationStep::SplineInterpolation, sensor_name)};
     EXPECT_TRUE(control_points.isApprox(control_points_gt));
 
     auto const unknown_sensor_data{
-        database::ReadSplineControlPoints(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
+        database::ReadControlPoints(db, CalibrationStep::SplineInterpolation, "/cam/retro/unknown")};
     EXPECT_EQ(unknown_sensor_data.cols(), 0);
 }
 
