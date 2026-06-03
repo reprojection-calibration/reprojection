@@ -154,7 +154,7 @@ void InsertImuErrors(ImuErrors const& data, CalibrationStep const step_name, std
     BatchExecuteStatement(sql_statements::imu_error_insert, data, binder, db);
 }
 
-void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
+void InsertImuData(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_data] = data_i;
 

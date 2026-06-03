@@ -37,7 +37,7 @@ void InsertPoses(Frames const& data, CalibrationStep const step_name, std::strin
 void InsertImuErrors(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);
 
-void WriteToDb(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
+void InsertImuData(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
 
 void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);

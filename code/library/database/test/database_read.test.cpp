@@ -170,7 +170,7 @@ TEST(DatabaseDatabaseRead, TestFullImuAddGetCycle) {
                                {1, {Vector3d::Zero(), Vector3d::Zero()}},
                                {2, {Vector3d::Zero(), Vector3d::Zero()}}};
 
-    EXPECT_NO_THROW(database::WriteToDb(data, sensor_name, db));
+    EXPECT_NO_THROW(database::InsertImuData(data, sensor_name, db));
 
     auto const loaded_data{database::ReadImuData(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), std::size(data));
@@ -181,13 +181,13 @@ TEST(DatabaseDatabaseRead, TestGetImuData) {
 
     // Data from imu 123
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    database::WriteToDb({{5, {{1, 2, 3}, {4, 5, 6}}},  //
+    database::InsertImuData({{5, {{1, 2, 3}, {4, 5, 6}}},  //
                          {10, {Vector3d::Zero(), Vector3d::Zero()}},
                          {15, {Vector3d::Zero(), Vector3d::Zero()}}},
                         sensor_name_1, db);
     // Data from imu 456
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    database::WriteToDb(ImuMeasurements{{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
+    database::InsertImuData(ImuMeasurements{{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
                                         {20, {Vector3d::Zero(), Vector3d::Zero()}}},
                         sensor_name_2, db);
 
@@ -216,7 +216,7 @@ TEST(DatabaseDatabaseRead, TestReadImuErrors) {
     std::string_view sensor_name{"/imu/polaris/123"};
 
     // Satisfy foreign key constraints and write the imu errors to the database so we can load them.
-    database::WriteToDb({{5, {{1, 2, 3}, {4, 5, 6}}},  //
+    database::InsertImuData({{5, {{1, 2, 3}, {4, 5, 6}}},  //
                          {10, {Vector3d::Zero(), Vector3d::Zero()}},
                          {15, {Vector3d::Zero(), Vector3d::Zero()}}},
                         sensor_name, db);

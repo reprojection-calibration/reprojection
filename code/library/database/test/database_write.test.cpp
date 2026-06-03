@@ -132,21 +132,21 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbReprojectionError) {
     EXPECT_NO_THROW(database::WriteToDb(data, CalibrationStep::PoseInitialization, sensor_name, db));
 }
 
-TEST(DatabaseSensorDataInterface, TestWriteToDbImuData) {
+TEST(DatabaseSensorDataInterface, TestInsertImuData) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     std::string_view sensor_name_1{"/imu/polaris/123"};
-    EXPECT_NO_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
+    EXPECT_NO_THROW(database::InsertImuData(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
                                                         {1, {Vector3d::Zero(), Vector3d::Zero()}}},
                                         sensor_name_1, db));
 
     // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary
     // key (timestamp_ns, sensor_name) so it is not a duplicate
     std::string_view sensor_name_2{"/imu/polaris/456"};
-    EXPECT_NO_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db));
+    EXPECT_NO_THROW(database::InsertImuData(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db));
 
     // Add a repeated record - this is not successful because the primary key must always be unique!
-    EXPECT_THROW(database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
+    EXPECT_THROW(database::InsertImuData(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name_2, db),
                  std::runtime_error);
 }
 
@@ -160,7 +160,7 @@ TEST(DatabaseSensorDataInterface, TestInsertImuErrors) {
                  std::runtime_error);
 
     // Satisfy foreign key requirements - an imu error requires a corresponding imu measurement and calibratio step.
-    database::WriteToDb(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name, db);
+    database::InsertImuData(ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}, sensor_name, db);
     database::InsertStep(CalibrationStep::ExtrinsicInitialization, "", sensor_name, db);
 
     // Happy path.
