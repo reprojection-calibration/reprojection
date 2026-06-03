@@ -71,4 +71,12 @@ struct OptimizationState {
 using ReprojectionError = StampedData<ArrayX2d>;
 using ReprojectionErrors = StampedMap<ReprojectionError>;
 
+struct ImuErrorState {
+    Vector3d delta_angular_velocity;
+    Vector3d delta_linear_acceleration;
+};
+
+using ImuError = StampedData<ImuErrorState>;
+using ImuErrors = StampedMap<ImuError>;
+
 }  // namespace reprojection
