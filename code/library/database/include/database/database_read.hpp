@@ -22,7 +22,7 @@ std::optional<CameraInfo> ReadCameraInfo(SqlitePtr const db, std::string_view se
 std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const step_name,
                                        std::string_view sensor_name, CameraModel const camera_model);
 
-EncodedImages ReadEncodedImages(SqlitePtr const db, std::string_view sensor_name);
+EncodedImages ReadImages(SqlitePtr const db, std::string_view sensor_name);
 
 CameraMeasurements ReadExtractedTargets(SqlitePtr const db, std::string_view sensor_name);
 

@@ -101,7 +101,7 @@ std::optional<ArrayXd> ReadIntrinsics(SqlitePtr const db, CalibrationStep const 
     return intrinsics;
 }  // LCOV_EXCL_LINE
 
-EncodedImages ReadEncodedImages(SqlitePtr const db, std::string_view sensor_name) {
+EncodedImages ReadImages(SqlitePtr const db, std::string_view sensor_name) {
     EncodedImages data;
 
     ExecuteQuery(  // LCOV_EXCL_LINE

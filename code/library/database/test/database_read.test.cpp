@@ -73,12 +73,12 @@ TEST_F(CameraReadFixture, TestReadTargetInfo) {
     EXPECT_EQ(target_info->asymmetric, false);
 }
 
-TEST_F(CameraReadFixture, TestGetEncodedImages) {
+TEST_F(CameraReadFixture, TestReadImages) {
     AddImage(0);
     AddImage(1);
     AddImage(2);
 
-    EncodedImages const loaded_data{database::ReadEncodedImages(db, sensor_name)};
+    EncodedImages const loaded_data{database::ReadImages(db, sensor_name)};
     EXPECT_EQ(std::size(loaded_data), 3);
 
     int test_timestamp{0};
