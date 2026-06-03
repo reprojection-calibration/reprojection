@@ -39,7 +39,7 @@ void InsertImuErrors(ImuErrors const& data, CalibrationStep const step_name, std
 
 void InsertImuData(ImuMeasurements const& data, std::string_view sensor_name, SqlitePtr const db);
 
-void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertReprojectionErrors(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);
 
 // WARN(Jack): This is a hack! There is no requirement for a target to have a sensor name! This should get removed one

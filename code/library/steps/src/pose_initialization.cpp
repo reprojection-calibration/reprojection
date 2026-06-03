@@ -21,7 +21,7 @@ void PoseInitialization::Save(Frames const& frames, SqlitePtr const db) const {
 
     OptimizationState const state{camera_state, frames};
     ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, state)};
-    database::WriteToDb(error, step_type, SensorName(), db);
+    database::InsertReprojectionErrors(error, step_type, SensorName(), db);
 }
 
 }  // namespace reprojection::steps

@@ -169,7 +169,7 @@ void InsertImuData(ImuMeasurements const& data, std::string_view sensor_name, Sq
 
 // NOTE(Jack): We suppress the code coverage for the SerializeToString() because I do not know how to malform/change the
 // eigen array input to trigger this.
-void WriteToDb(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
+void InsertReprojectionErrors(ReprojectionErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;

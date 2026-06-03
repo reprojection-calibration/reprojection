@@ -117,11 +117,11 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbPoseData) {
     EXPECT_NO_THROW(AddPose(CalibrationStep::PoseInitialization));
 }
 
-TEST_F(SensorDatabaseFixture, TestWriteToDbReprojectionError) {
+TEST_F(SensorDatabaseFixture, TestInsertReprojectionErrors) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
     // Throws because the foreign key constraints are not met yet.
-    EXPECT_THROW(database::WriteToDb(data, CalibrationStep::PoseInitialization, sensor_name, db), std::runtime_error);
+    EXPECT_THROW(database::InsertReprojectionErrors(data, CalibrationStep::PoseInitialization, sensor_name, db), std::runtime_error);
 
     // Satisfy foreign key constraints.
     AddImage();
@@ -129,7 +129,7 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbReprojectionError) {
     AddStep(CalibrationStep::PoseInitialization);
     AddPose(CalibrationStep::PoseInitialization);
 
-    EXPECT_NO_THROW(database::WriteToDb(data, CalibrationStep::PoseInitialization, sensor_name, db));
+    EXPECT_NO_THROW(database::InsertReprojectionErrors(data, CalibrationStep::PoseInitialization, sensor_name, db));
 }
 
 TEST(DatabaseSensorDataInterface, TestInsertImuData) {
