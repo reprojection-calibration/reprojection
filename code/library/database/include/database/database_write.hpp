@@ -32,7 +32,7 @@ void InsertIntrinsics(CameraState const& data, CameraModel const camera_model, C
 
 void InsertImages(EncodedImages const& data, std::string_view sensor_name, SqlitePtr const db);
 
-void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, SqlitePtr const db);
+void InsertPoses(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, SqlitePtr const db);
 
 void WriteToDb(ImuErrors const& data, CalibrationStep const step_name, std::string_view sensor_name,
                SqlitePtr const db);

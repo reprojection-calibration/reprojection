@@ -64,7 +64,7 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
     database::InsertTargets(targets, camera_info.sensor_name, db);
 
     database::InsertStep(CalibrationStep::PoseInitialization, "", camera_info.sensor_name, db);
-    database::WriteToDb(camera_frames, CalibrationStep::PoseInitialization, camera_info.sensor_name, db);
+    database::InsertPoses(camera_frames, CalibrationStep::PoseInitialization, camera_info.sensor_name, db);
 }
 
 void WriteImuData(SqlitePtr db, uint64_t const timespan_ns) {

@@ -41,7 +41,7 @@ class SensorDatabaseFixture : public ::testing::Test {
 
     void AddPose(CalibrationStep const step_name) const {
         Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-        database::WriteToDb(frames, step_name, sensor_name, db);
+        database::InsertPoses(frames, step_name, sensor_name, db);
     }
 
     SqlitePtr db{nullptr};

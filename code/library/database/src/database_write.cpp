@@ -128,7 +128,7 @@ void InsertImages(EncodedImages const& data, std::string_view sensor_name, Sqlit
     BatchExecuteStatement(sql_statements::image_insert, data, binder, db);
 }
 
-void WriteToDb(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, SqlitePtr const db) {
+void InsertPoses(Frames const& data, CalibrationStep const step_name, std::string_view sensor_name, SqlitePtr const db) {
     auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 

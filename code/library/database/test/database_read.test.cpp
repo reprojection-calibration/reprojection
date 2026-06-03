@@ -155,7 +155,7 @@ TEST_F(CameraReadFixture, TestReadPoses) {
 
     // Add one frame to the database then load it and see that it's the same.
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-    database::WriteToDb(frames, step, sensor_name, db);
+    database::InsertPoses(frames, step, sensor_name, db);
 
     result = database::ReadPoses(db, step, sensor_name);
     EXPECT_EQ(std::size(result), 1);
