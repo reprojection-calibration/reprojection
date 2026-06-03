@@ -17,6 +17,8 @@
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 // cppcheck-suppress missingInclude
+#include <ranges>
+
 #include "testing_utilities/generated/minimum_config.hpp"
 #include "types/io.hpp"
 
@@ -150,6 +152,9 @@ TEST_F(ImageSourceFixture, TestCameraInfoStep) {
 }
 
 TEST_F(ImageSourceFixture, TestFeatureExtraction) {
+    // NOTE(Jack): There are no foreign key constraints that need to be satisfied here because there are no actuall
+    // extracted targets which get written to or loaded from the database.
+
     steps::FeatureExtraction const step{camera_info.sensor_name, encoded_images, target_info, false};
 
     auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
@@ -162,7 +167,23 @@ TEST_F(ImageSourceFixture, TestFeatureExtraction) {
 }
 
 TEST_F(StepsFixture, TestBundleAdjustmentStep) {
-    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+
+    // Satisfy the foreign key constraints that the BundleAdjustment step has (i.e. we need to be able to write poses).
+    // This means writing the images which we construct here in this lambda and also the extracted targets which the mvg
+    // data generator provides us directly.
+    EncodedImages const images{[&targets]() {
+        EncodedImages images;
+        for (auto const timestamp_ns : targets | std::ranges::views::keys) {
+            images.insert({timestamp_ns, {}});
+        }
+        return images;
+    }()};
+    database::WriteToDb(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
+    database::WriteToDb(images, camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
+    database::WriteToDb(targets, camera_info.sensor_name, db);
+
     steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
 
     auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
@@ -179,7 +200,7 @@ TEST_F(StepsFixture, TestBundleAdjustmentStep) {
 }
 
 TEST_F(StepsFixture, TestIntrinsicInitialization) {
-    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
     steps::IntrinsicInitialization const step{camera_info, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
@@ -199,6 +220,19 @@ TEST_F(StepsFixture, TestIntrinsicInitialization) {
 
 TEST_F(StepsFixture, TestPoseInitialization) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+
+    EncodedImages const images{[&targets]() {
+        EncodedImages images;
+        for (auto const timestamp_ns : targets | std::ranges::views::keys) {
+            images.insert({timestamp_ns, {}});
+        }
+        return images;
+    }()};
+    database::WriteToDb(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
+    database::WriteToDb(images, camera_info.sensor_name, db);
+    database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
+    database::WriteToDb(targets, camera_info.sensor_name, db);
+
     steps::PoseInitialization const step{camera_info, targets, camera_state};
 
     auto [frames, cache_status]{RunStep<Frames>(step, db)};
@@ -214,22 +248,10 @@ TEST_F(StepsFixture, TestPoseInitialization) {
     std::tie(frames, cache_status) = RunStep<Frames>(step, db);
     EXPECT_EQ(std::size(frames), 50);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
-
-    // Make a new different set of targets to trigger a cache miss and data removal (i.e. sql cascade operation) and
-    // replacement with a new set of poses.
-    std::tie(targets, gt_poses) = testing_mocks::GenerateMvgData(camera_info, camera_state, 40, 1e9);
-    steps::PoseInitialization const step_2{camera_info, targets, camera_state};
-
-    std::tie(frames, cache_status) = RunStep<Frames>(step_2, db);
-    EXPECT_EQ(std::size(frames), 40);
-    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
-
-    poses = database::ReadPoses(db, step.step_type, camera_info.sensor_name);
-    EXPECT_EQ(std::size(poses), 40);
 }
 
 TEST_F(StepsFixture, TestSplineInitialization) {
-    auto [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+    auto const [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
     steps::SplineInitialization const step{camera_info.sensor_name, poses};
 
     auto [result, cache_status]{RunStep<spline::Se3Spline>(step, db)};

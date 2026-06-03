@@ -145,15 +145,20 @@ TEST_F(CameraReadFixture, TestReadPoses) {
     auto const step{CalibrationStep::PoseInitialization};
     uint64_t const timestamp_ns{0};
 
+    // No matching frames in the database means we get an empty container.
     Frames result{database::ReadPoses(db, step, sensor_name)};
     EXPECT_EQ(std::size(result), 0);
 
+    // Satisfy the foreign key constraints for adding a camera frame pose.
+    AddTarget(timestamp_ns);
     database::WriteToDb(step, "", sensor_name, db);
-    Frames const frames{{timestamp_ns, {Array6d::Zero()}}, {timestamp_ns + 1, {Array6d::Zero()}}};
+
+    // Add one frame to the database then load it and see that it's the same.
+    Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     database::WriteToDb(frames, step, sensor_name, db);
 
     result = database::ReadPoses(db, step, sensor_name);
-    EXPECT_EQ(std::size(result), 2);
+    EXPECT_EQ(std::size(result), 1);
     EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(frames.at(timestamp_ns).pose));
 }
 
