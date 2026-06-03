@@ -28,7 +28,7 @@ std::string CacheKey(std::string_view sensor_name, CameraModel const camera_mode
 // to be able to pass the C3CubicSpline here directly like we do for all the other calibration types. I think the real
 // solution is to refactor the spline stuff into the generic internal types package as this is getting a little out of
 // hand.
-std::string CacheKey(std::string_view sensor_name, ImuMeasurements const imu_data,
+std::string CacheKey(std::string_view sensor_name, ImuMeasurements const& imu_data,
                      Eigen::Matrix3Xd const& so3_control_points, uint64_t const t0_ns, uint64_t const delta_t_ns);
 
 std::string CacheKey(std::string_view sensor_name, Frames const& frames);
