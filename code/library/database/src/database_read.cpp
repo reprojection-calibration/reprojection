@@ -26,6 +26,7 @@ Eigen::Array<double, N, 1> ColumnArray(sqlite3_stmt* const stmt, int const start
     return result;
 }
 
+// TODO(Jack): This is mostly duplicated in the write utils (except that it's not a lambda), can we combine these?
 auto BindStepAndSensor(CalibrationStep const step_name, std::string_view sensor_name) {
     return [step_name, sensor_name](sqlite3_stmt* stmt) {
         Sqlite3Tools::Bind(stmt, 1, ToString(step_name));
