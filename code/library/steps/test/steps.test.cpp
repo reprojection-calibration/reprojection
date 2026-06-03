@@ -7,6 +7,7 @@
 #include "steps/camera_info.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
+#include "steps/extrinsic_initialization.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
 #include "steps/spline_initialization.hpp"
@@ -142,6 +143,23 @@ TEST_F(ImageSourceFixture, TestFeatureExtraction) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
+TEST_F(StepsFixture, TestBundleAdjustmentStep) {
+    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+    steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
+
+    auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
+    EXPECT_EQ(std::size(result.frames), 50);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    auto const poses{database::ReadPoses(db, step.step_type, camera_info.sensor_name)};
+    EXPECT_EQ(std::size(poses), 50);
+
+    // On rerun with the same inputs it will be a cache hit
+    std::tie(result, cache_status) = RunStep<OptimizationState>(step, db);
+    EXPECT_EQ(std::size(result.frames), 50);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
 TEST_F(StepsFixture, TestIntrinsicInitialization) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
     steps::IntrinsicInitialization const step{camera_info, targets};
@@ -190,23 +208,6 @@ TEST_F(StepsFixture, TestPoseInitialization) {
 
     poses = database::ReadPoses(db, step.step_type, camera_info.sensor_name);
     EXPECT_EQ(std::size(poses), 40);
-}
-
-TEST_F(StepsFixture, TestBundleAdjustmentStep) {
-    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
-
-    auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
-    EXPECT_EQ(std::size(result.frames), 50);
-    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
-
-    auto const poses{database::ReadPoses(db, step.step_type, camera_info.sensor_name)};
-    EXPECT_EQ(std::size(poses), 50);
-
-    // On rerun with the same inputs it will be a cache hit
-    std::tie(result, cache_status) = RunStep<OptimizationState>(step, db);
-    EXPECT_EQ(std::size(result.frames), 50);
-    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(StepsFixture, TestSplineInitialization) {
