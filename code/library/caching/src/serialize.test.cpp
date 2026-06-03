@@ -56,6 +56,15 @@ TEST(CachingSerialize, TestSerializeFrames) {
     EXPECT_EQ(result, gt_result);
 }
 
+TEST(CachingSerialize, TestSerializeImuMeasurements) {
+    ImuMeasurements const imu_data{{0, {{0, 1, 2}, {3, 4, 5}}}};
+
+    std::string const result{caching::Serialize(imu_data)};
+    std::string const gt_result{"0|0.000;1.000;2.000;|3.000;4.000;5.000;|"};
+
+    EXPECT_EQ(result, gt_result);
+}
+
 TEST(CachingSerialize, TestSerializeTargetInfo) {
     TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
 
