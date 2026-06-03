@@ -1,7 +1,7 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
-#include "spline/se3_spline.hpp"
+#include "spline/spline_state.hpp"
 #include "types/calibration_types.hpp"
 
 namespace reprojection::steps {
@@ -11,7 +11,8 @@ namespace reprojection::steps {
 struct ExtrinsicInitialization {
     std::string sensor_name;
     ImuMeasurements imu_data;
-    spline::Se3Spline spline;
+    // TODO(Jack): Should we name this to make it clear its the camera orientation spline?
+    spline::CubicBSplineC3 spline;
 
     CalibrationStep step_type{CalibrationStep::ExtrinsicInitialization};
 

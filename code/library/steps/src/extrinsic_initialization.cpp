@@ -7,11 +7,14 @@
 
 namespace reprojection::steps {
 
-std::string ExtrinsicInitialization::CacheKey() const { return caching::CacheKey(sensor_name, imu_data, spline); }
+std::string ExtrinsicInitialization::CacheKey() const {
+    return caching::CacheKey(sensor_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
+                             spline.GetTimeHandler().delta_t_ns_);
+}
 
 std::pair<Array6d, Array3d> ExtrinsicInitialization::Compute() const {
-    auto const [rotation_result,
-                gravity_w]{calibration::EstimateCameraImuAlignment({spline.So3(), spline.GetTimeHandler()}, imu_data)};
+    auto const [rotation_result, gravity_w]{
+        calibration::EstimateCameraImuAlignment({spline.ControlPoints(), spline.GetTimeHandler()}, imu_data)};
 
     // TODO(Jack): Should we do something with the diagnostics? There are several places now where we ignore the
     // returned optimization diagnostics but I am sure that a user would appreciate these in the database.
