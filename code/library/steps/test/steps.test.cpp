@@ -39,6 +39,24 @@ class StepsFixture : public ::testing::Test {
         database::WriteToDb(camera_info, db);
     }
 
+    void SatisfyPoseForeignKeys(CameraMeasurements const& targets) {
+        // Satisfy the foreign key constraints that the BundleAdjustment/PoseInitialization steps have (i.e. we need to
+        // be able to write poses). This means writing the images which we construct here in this lambda and also the
+        // extracted targets which the mvg data generator provides us directly.
+        EncodedImages const images{[&targets]() {
+            EncodedImages images;
+            for (auto const timestamp_ns : targets | std::ranges::views::keys) {
+                images.insert({timestamp_ns, {}});
+            }
+            return images;
+        }()};
+
+        database::WriteToDb(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
+        database::WriteToDb(images, camera_info.sensor_name, db);
+        database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
+        database::WriteToDb(targets, camera_info.sensor_name, db);
+    }
+
     SqlitePtr db;
     CameraInfo camera_info;
     CameraState camera_state{testing_utilities::double_sphere_intrinsics};
@@ -169,20 +187,7 @@ TEST_F(ImageSourceFixture, TestFeatureExtraction) {
 TEST_F(StepsFixture, TestBundleAdjustmentStep) {
     auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
 
-    // Satisfy the foreign key constraints that the BundleAdjustment step has (i.e. we need to be able to write poses).
-    // This means writing the images which we construct here in this lambda and also the extracted targets which the mvg
-    // data generator provides us directly.
-    EncodedImages const images{[&targets]() {
-        EncodedImages images;
-        for (auto const timestamp_ns : targets | std::ranges::views::keys) {
-            images.insert({timestamp_ns, {}});
-        }
-        return images;
-    }()};
-    database::WriteToDb(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
-    database::WriteToDb(images, camera_info.sensor_name, db);
-    database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
-    database::WriteToDb(targets, camera_info.sensor_name, db);
+    SatisfyPoseForeignKeys(targets);
 
     steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
 
@@ -221,17 +226,7 @@ TEST_F(StepsFixture, TestIntrinsicInitialization) {
 TEST_F(StepsFixture, TestPoseInitialization) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
 
-    EncodedImages const images{[&targets]() {
-        EncodedImages images;
-        for (auto const timestamp_ns : targets | std::ranges::views::keys) {
-            images.insert({timestamp_ns, {}});
-        }
-        return images;
-    }()};
-    database::WriteToDb(CalibrationStep::ImageLoading, "", camera_info.sensor_name, db);
-    database::WriteToDb(images, camera_info.sensor_name, db);
-    database::WriteToDb(CalibrationStep::FeatureExtraction, "", camera_info.sensor_name, db);
-    database::WriteToDb(targets, camera_info.sensor_name, db);
+    SatisfyPoseForeignKeys(targets);
 
     steps::PoseInitialization const step{camera_info, targets, camera_state};
 
