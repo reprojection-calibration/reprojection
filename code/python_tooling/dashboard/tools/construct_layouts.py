@@ -11,9 +11,9 @@ from database.types import SensorType
 TARGET_VISUALIZATION = FigureConfig(
     "Feature Extraction",
     (
-        SubplotConfig("Target", AxisConfig("x", "m"), AxisConfig("y", "m"), 1, ["Target Points"]),
+        SubplotConfig("Target", AxisConfig("x", "m"), AxisConfig("y", "m"), 1, ["Target Points"], ("blue",)),
         SubplotConfig(
-            "Extracted Features", AxisConfig("u", "pix"), AxisConfig("v", "pix"), 1, ["Image Points"]
+            "Extracted Features", AxisConfig("u", "pix"), AxisConfig("v", "pix"), 1, ["Image Points"], ("blue",)
         ),
     ),
     "cols",
