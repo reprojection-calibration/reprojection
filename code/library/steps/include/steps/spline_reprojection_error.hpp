@@ -1,13 +1,23 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
+#include "spline/se3_spline.hpp"
+#include "types/calibration_types.hpp"
 
 namespace reprojection::steps {
 
 struct DoNotUse {};
 
 struct SplineReprojectionError {
-    std::string SensorName() const { return "TODO!!!"; }
+    CameraInfo camera_info;
+    CameraMeasurements targets;
+    CameraState intrinsics;
+    spline::Se3Spline spline;
+
+    CalibrationStep step_type;
+
+
+    std::string SensorName() const { return camera_info.sensor_name; }
 
     std::string CacheKey() const;
 

@@ -13,6 +13,10 @@ std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& ca
                      CameraState const& camera_state);
 
 std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
+                     CameraState const& camera_state, Eigen::Matrix<double, 6, -1> const& control_points,
+                     uint64_t const t0_ns, uint64_t const delta_t_ns);
+
+std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
                      OptimizationState const& optimization_state);
 
 std::string CacheKey(TargetInfo const& target_info, EncodedImages const& encoded_images, std::string_view config);

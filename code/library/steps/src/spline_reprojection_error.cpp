@@ -7,7 +7,10 @@
 
 namespace reprojection::steps {
 
-std::string SplineReprojectionError::CacheKey() const { return "TODO!!!!!"; }
+std::string SplineReprojectionError::CacheKey() const {
+    return caching::CacheKey(camera_info, targets, intrinsics, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
+                             spline.GetTimeHandler().delta_t_ns_);
+}
 
 DoNotUse SplineReprojectionError::Compute() const { return DoNotUse{}; }
 
@@ -20,6 +23,8 @@ DoNotUse SplineReprojectionError::Load(SqlitePtr const db) const {
 void SplineReprojectionError::Save(DoNotUse const do_not_use, SqlitePtr const db) const {
     static_cast<void>(do_not_use);
     static_cast<void>(db);  // REMOVE
+
+
 }
 
 }  // namespace reprojection::steps

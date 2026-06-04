@@ -9,13 +9,22 @@
 
 namespace reprojection::optimization {
 
-ReprojectionErrors ReprojectionErrorSpline(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                           CameraState const& camera_state, spline::Se3Spline const& spline) {
+std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
+                                                              CameraMeasurements const& targets,
+                                                              CameraState const& camera_state,
+                                                              spline::Se3Spline const& spline) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
     //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
     //  key constraint. Do we need new tables for this?
+    Frames poses;
     ReprojectionErrors residuals;
     for (auto const timestamp_ns : targets | std::views::keys) {
+        auto const pose{spline.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
+        if (not pose) {
+            continue;
+        }
+        poses.insert({timestamp_ns, {*pose}});
+
         auto const normalized_position{
             spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
         if (not normalized_position.has_value()) {
@@ -42,7 +51,7 @@ ReprojectionErrors ReprojectionErrorSpline(CameraInfo const& sensor, CameraMeasu
         residuals.insert({timestamp_ns, residuals_i});
     }
 
-    return residuals;
+    return {poses, residuals};
 }  // LCOV_EXCL_LINE
 
 ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Array6d const& tf_imu_co, Array3d const& gravity_w,

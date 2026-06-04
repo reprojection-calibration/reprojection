@@ -16,6 +16,13 @@ std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& ca
 }
 
 std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
+                     CameraState const& camera_state, Eigen::Matrix<double, 6, -1> const& control_points,
+                     uint64_t const t0_ns, uint64_t const delta_t_ns) {
+    return CacheKeyFrom(camera_info, camera_measurements, camera_state, control_points, std::to_string(t0_ns),
+                        std::to_string(delta_t_ns));
+}
+
+std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
                      OptimizationState const& optimization_state) {
     return CacheKeyFrom(camera_info, camera_measurements, optimization_state.camera_state, optimization_state.frames);
 }
