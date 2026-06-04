@@ -37,9 +37,21 @@ def timeseries_6d_to_patch(data, error):
         def add_error_trace(data, id, patch):
             patch["data"][id]["marker"]["color"] = data[:, i]
             patch["data"][id]["marker"]["colorscale"] = "RdBu"
+            # TODO(Jack): We should be able to set these ranges from the GUI
             patch["data"][id]["marker"]["cmin"] = -1
             patch["data"][id]["marker"]["cmax"] = 1
-            patch["data"][id]["marker"]["showscale"] = True
+
+            # We only need to plot one scale bar
+            if (id == 0):
+                patch["data"][id]["marker"]["showscale"] = True
+                patch["data"][id]["marker"]["colorbar"] = {
+                    "title": {
+                        "text": "Signed Error"
+                    },
+                    "x": 1.1,
+                    "y": 0.5,
+                    "len": 1,
+                }
 
         for i in range(6):
             add_error_trace(error_array, i, patch)
