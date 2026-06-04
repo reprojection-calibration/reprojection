@@ -95,6 +95,20 @@ def load_imu_data_table(db_path):
     return table
 
 
+def load_imu_errors_table(db_path):
+    if not os.path.isfile(db_path):
+        return None
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            table = pd.read_sql(load_sql("imu_errors_select_all.sql"), conn)
+    except Exception as e:
+        print(e)
+        return None
+
+    return table
+
+
 def load_poses_table(db_path):
     if not os.path.isfile(db_path):
         return None

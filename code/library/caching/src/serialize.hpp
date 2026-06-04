@@ -15,7 +15,7 @@ std::string Serialize(CameraModel const data);
 
 std::string Serialize(CameraState const& data);
 
-std::string Serialize(Eigen::Matrix3Xd const& data);
+std::string Serialize(Eigen::Matrix<double, 6, -1> const& data);
 
 // TODO(Jack): Test!
 std::string Serialize(EncodedImages const& data);

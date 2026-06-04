@@ -51,7 +51,7 @@ SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bo
         ExecuteStatement(sql_statements::gravity_table, db);
         ExecuteStatement(sql_statements::images_table, db);
         ExecuteStatement(sql_statements::imu_data_table, db);
-        ExecuteStatement(sql_statements::imu_error_table, db);
+        ExecuteStatement(sql_statements::imu_errors_table, db);
         ExecuteStatement(sql_statements::poses_table, db);
         ExecuteStatement(sql_statements::reprojection_error_table, db);
         ExecuteStatement(sql_statements::spline_control_points_table, db);

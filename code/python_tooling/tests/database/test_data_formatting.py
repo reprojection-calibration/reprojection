@@ -9,6 +9,7 @@ from database.data_formatting import (
     process_extracted_targets_table,
     process_images_table,
     process_imu_data_table,
+    process_imu_errors_table,
     process_poses_table,
     process_reprojection_error_table,
     process_target_info_table,
@@ -129,6 +130,35 @@ class TestDataFormatting(unittest.TestCase):
 
         self.assertTrue("measurements" in data["/imu0"])
         self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
+
+    def test_process_imu_errors_table(self):
+        data = process_imu_errors_table(None, {})
+        self.assertIsNone(data)
+
+        imu_errors_data = {
+            "step_name": ["extrinsic_initialization"],
+            "sensor_name": ["/imu0"],
+            "timestamp_ns": ["1520528314236489759"],
+            "delta_omega_x": [0.1],
+            "delta_omega_y": [0.2],
+            "delta_omega_z": [0.3],
+            "delta_ax": [0.4],
+            "delta_ay": [0.5],
+            "delta_az": [0.6],
+        }
+        table = pd.DataFrame(imu_errors_data)
+
+        # No imu data yet present in data so foreign key constraint not met
+        self.assertRaises(KeyError, process_imu_errors_table, table, {})
+
+        imu_table = load_imu_data_table(self.db_path)
+        data = process_imu_data_table(imu_table)
+
+        process_imu_errors_table(table, data)
+
+        self.assertTrue("imu_error" in data["/imu0"])
+        self.assertTrue("extrinsic_initialization" in data["/imu0"]["imu_error"])
+        self.assertEqual(len(data["/imu0"]["imu_error"]["extrinsic_initialization"]), 1)
 
     # TODO(Jack): The following two tests are good examples how our testing is hard to read! For both tests we need to
     #  create relatively complicated state setups to check the foreign key constraints, and we do it all right in the

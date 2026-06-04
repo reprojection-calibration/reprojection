@@ -24,6 +24,19 @@ class SubplotConfig:
     x_axis: AxisConfig
     y_axis: AxisConfig
     n_traces: int
+    trace_labels: list
+    trace_colors: tuple = ("red", "green", "blue")
+
+    def __post_init__(self):
+        if not len(self.trace_labels) == self.n_traces:
+            raise ValueError(
+                "You have to provide as many trace labels as there are traces!"
+            )
+
+        if not len(self.trace_colors) == self.n_traces:
+            raise ValueError(
+                "You have to provide as many trace colors as there are traces!"
+            )
 
 
 # NOTE(Jack): This configuration and the code below is only meant to construct one dimensional figure sets. Either in an
@@ -74,13 +87,21 @@ def build_figure_layout(config):
             title_text=subplot_config.y_axis.full_title,
             row=i_row,
             col=i_col,
-            range=[-3.14, 3.14],  # TODO(Jack): Do not hardcode!!!
         )
 
         for i in range(subplot_config.n_traces):
-            # TODO(Jack): Make webgl scatter trace?
             fig.add_trace(
-                go.Scattergl(x=[], y=[], mode="markers"), row=i_row, col=i_col
+                go.Scattergl(
+                    x=[],
+                    y=[],
+                    mode="markers",
+                    name=subplot_config.trace_labels[i],
+                    marker=dict(
+                        color=subplot_config.trace_colors[i],
+                    ),
+                ),
+                row=i_row,
+                col=i_col,
             )
 
     return fig

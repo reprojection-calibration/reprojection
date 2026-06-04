@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS imu_error
+CREATE TABLE IF NOT EXISTS imu_errors
 (
     step_name     TEXT    NOT NULL,
     sensor_name   TEXT    NOT NULL,

@@ -116,8 +116,16 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     // the process mechanics. But still it would be nice to get a "proper" result here so maybe we change this.
     auto const [imu_data, spline]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
 
-    spline::CubicBSplineC3 const so3_spline{spline.So3(), spline.GetTimeHandler()};
-    steps::ExtrinsicInitialization const step{"tf_co_imu", imu_data, so3_spline};
+    // NOTE(Jack): That using the sensor_name for the extrinsic calibration does not make sense  because it describes
+    // the relation between two sensors and not just a property of one single sensor. But we need to do it like this to
+    // meet the foreign key requirements of the ImuErrors written to the database during the following extrinsic
+    // initialization step.
+    std::string const sensor_name{"/imu/polaris/123"};
+    // Satisfy foreign key constraint because the Save() stage will write out ImuErrors which depend on having a
+    // correspondent IMU data point.
+    database::InsertImuData(db, sensor_name, imu_data);
+
+    steps::ExtrinsicInitialization const step{sensor_name, imu_data, spline};
 
     // TODO(Jack): Define a type instead of just using std::pair<Array6d, Array3d>!!!
     auto [result, cache_status]{RunStep<std::pair<Array6d, Array3d>>(step, db)};

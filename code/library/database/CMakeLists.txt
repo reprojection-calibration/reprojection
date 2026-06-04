@@ -32,9 +32,9 @@ set(SQL_FILES
         sql/imu_data_insert.sql
         sql/imu_data_select.sql
         sql/imu_data_table.sql
-        sql/imu_error_insert.sql
-        sql/imu_error_select.sql
-        sql/imu_error_table.sql
+        sql/imu_errors_insert.sql
+        sql/imu_errors_select.sql
+        sql/imu_errors_table.sql
         sql/poses_insert.sql
         sql/poses_select.sql
         sql/poses_table.sql

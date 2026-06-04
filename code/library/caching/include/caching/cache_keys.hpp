@@ -29,7 +29,8 @@ std::string CacheKey(std::string_view sensor_name, CameraModel const camera_mode
 // solution is to refactor the spline stuff into the generic internal types package as this is getting a little out of
 // hand.
 std::string CacheKey(std::string_view sensor_name, ImuMeasurements const& imu_data,
-                     Eigen::Matrix3Xd const& so3_control_points, uint64_t const t0_ns, uint64_t const delta_t_ns);
+                     Eigen::Matrix<double, 6, -1> const& control_points, uint64_t const t0_ns,
+                     uint64_t const delta_t_ns);
 
 std::string CacheKey(std::string_view sensor_name, Frames const& frames);
 

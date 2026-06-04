@@ -6,6 +6,7 @@ from database.sql_table_loading import (
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
+    load_imu_errors_table,
     load_poses_table,
     load_reprojection_errors_table,
     load_target_info_table,
@@ -99,6 +100,35 @@ def process_imu_data_table(table):
 
         timestamp_ns = int(row["timestamp_ns"])
         data[sensor_name]["measurements"][timestamp_ns] = row.iloc[-6:].tolist()
+
+    return data
+
+
+def process_imu_errors_table(table, data):
+    if table is None:
+        return None
+
+    for index, row in table.iterrows():
+        sensor_name = row["sensor_name"]
+        if sensor_name not in data:
+            raise KeyError(
+                f"Error while loading imu errors for {sensor_name} - sensor does not already exist."
+            )
+
+        step_name = row["step_name"]
+        timestamp_ns = int(row["timestamp_ns"])
+        if timestamp_ns not in data[sensor_name]["measurements"]:
+            raise KeyError(
+                f"Error while loading data for {sensor_name} in step {step_name} at time {timestamp_ns} - a corresponding imu measurement was not found."
+            )
+
+        if "imu_error" not in data[sensor_name]:
+            data[sensor_name]["imu_error"] = {}
+
+        if step_name not in data[sensor_name]["imu_error"]:
+            data[sensor_name]["imu_error"][step_name] = {}
+
+        data[sensor_name]["imu_error"][step_name][timestamp_ns] = row.iloc[-6:].tolist()
 
     return data
 
@@ -238,5 +268,9 @@ def load_data(db_path):
     table = load_imu_data_table(db_path)
     if table is not None:
         data.update(process_imu_data_table(table))
+
+    table = load_imu_errors_table(db_path)
+    if table is not None:
+        process_imu_errors_table(table, data)
 
     return data

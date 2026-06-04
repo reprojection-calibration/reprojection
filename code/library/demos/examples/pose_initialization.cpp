@@ -68,10 +68,11 @@ int main() {
     auto const [spline, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
     std::cout << "Spline init cache: " << ToString(spline_init_cache_status) << std::endl;
 
-    ImuMeasurements const imu_data{database::ReadImuData(db, "/imu0")};
+    std::string const imu_sensor_name{"/imu0"};
+    ImuMeasurements const imu_data{database::ReadImuData(db, imu_sensor_name)};
 
-    steps::ExtrinsicInitialization const extrinsic_init_step{
-        "tf_co_imu", imu_data, {spline.So3(), spline.GetTimeHandler()}};
+    // NOTE(Jack): Has to be the imu name here due to ImuError foreign key constraint.
+    steps::ExtrinsicInitialization const extrinsic_init_step{imu_sensor_name, imu_data, spline};
     auto const [extrinsics,
                 extrinsic_init_cache_status]{steps::RunStep<std::pair<Array6d, Array3d>>(extrinsic_init_step, db)};
     std::cout << "Extrinsic init cache: " << ToString(extrinsic_init_cache_status) << std::endl;

@@ -11,9 +11,21 @@ from database.types import SensorType
 TARGET_VISUALIZATION = FigureConfig(
     "Feature Extraction",
     (
-        SubplotConfig("Target", AxisConfig("x", "m"), AxisConfig("y", "m"), 1),
         SubplotConfig(
-            "Extracted Features", AxisConfig("u", "pix"), AxisConfig("v", "pix"), 1
+            "Target",
+            AxisConfig("x", "m"),
+            AxisConfig("y", "m"),
+            1,
+            ["Target Points"],
+            ("blue",),
+        ),
+        SubplotConfig(
+            "Extracted Features",
+            AxisConfig("u", "pix"),
+            AxisConfig("v", "pix"),
+            1,
+            ["Image Points"],
+            ("blue",),
         ),
     ),
     "cols",
@@ -24,10 +36,18 @@ POSE_VISUALIZATION = FigureConfig(
     "Camera Poses",
     (
         SubplotConfig(
-            "Orientation", AxisConfig("Time", "s"), AxisConfig("Axis Angle", "rad"), 3
+            "Orientation",
+            AxisConfig("Time", "s"),
+            AxisConfig("Axis Angle", "rad"),
+            3,
+            ["rx", "ry", "rz"],
         ),
         SubplotConfig(
-            "Translation", AxisConfig("Time", "s"), AxisConfig("Position", "m"), 3
+            "Translation",
+            AxisConfig("Time", "s"),
+            AxisConfig("Position", "m"),
+            3,
+            ["x", "y", "z"],
         ),
     ),
     "rows",
@@ -133,10 +153,18 @@ IMU_DATA_VISUALIZATION = FigureConfig(
     "Imu Data",
     (
         SubplotConfig(
-            "Angular Velocity", AxisConfig("Time", "s"), AxisConfig("omega", "rad/s"), 3
+            "Angular Velocity",
+            AxisConfig("Time", "s"),
+            AxisConfig("omega", "rad/s"),
+            3,
+            ["omega_x", "omega_y", "omega_z"],
         ),
         SubplotConfig(
-            "Linear Acceleration", AxisConfig("Time", "s"), AxisConfig("a", "m/s^2"), 3
+            "Linear Acceleration",
+            AxisConfig("Time", "s"),
+            AxisConfig("a", "m/s^2"),
+            3,
+            ["acc_x", "acc_y", "acc_z"],
         ),
     ),
     "rows",
