@@ -7,13 +7,16 @@
 namespace reprojection::steps {
 
 struct SplineInitialization {
-    std::string sensor_name;
-    Frames poses;
+    // These members are only needed to calculate the reprojection error - they are not actually used for the spline
+    // initialization/interpolation.
+    CameraInfo camera_info;
+    CameraMeasurements targets;
+    OptimizationState bundle;
 
     // TODO(Jack): Should we rename the CalibrationStep to SplineInitialization?
     CalibrationStep step_type{CalibrationStep::SplineInterpolation};
 
-    std::string SensorName() const { return sensor_name; }
+    std::string SensorName() const { return camera_info.sensor_name; }
 
     std::string CacheKey() const;
 

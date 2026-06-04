@@ -16,13 +16,6 @@ std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& ca
 }
 
 std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
-                     CameraState const& camera_state, Eigen::Matrix<double, 6, -1> const& control_points,
-                     uint64_t const t0_ns, uint64_t const delta_t_ns) {
-    return CacheKeyFrom(camera_info, camera_measurements, camera_state, control_points, std::to_string(t0_ns),
-                        std::to_string(delta_t_ns));
-}
-
-std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
                      OptimizationState const& optimization_state) {
     return CacheKeyFrom(camera_info, camera_measurements, optimization_state.camera_state, optimization_state.frames);
 }
@@ -44,6 +37,13 @@ std::string CacheKey(std::string_view sensor_name, ImuMeasurements const& imu_da
     return CacheKeyFrom(sensor_name, imu_data, control_points, std::to_string(t0_ns), std::to_string(delta_t_ns));
 }
 
-std::string CacheKey(std::string_view sensor_name, Frames const& frames) { return CacheKeyFrom(sensor_name, frames); }
+std::string CacheKey(std::string_view sensor_name, Frames const& frames) {
+    std::cout << "-- spline init cache key --" <<std::endl;
+    std::cout << Sha256(Serialize(sensor_name)) <<std::endl;
+    std::cout << Sha256(Serialize(frames)) <<std::endl;
+    std::cout << CacheKeyFrom(sensor_name, frames) <<std::endl;
+
+    return CacheKeyFrom(sensor_name, frames);
+}
 
 }  // namespace reprojection::caching

@@ -9,7 +9,6 @@ set(SRC_FILES
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
         src/spline_initialization.cpp
-        src/spline_reprojection_error.cpp
         src/target_info.cpp
 
 )
