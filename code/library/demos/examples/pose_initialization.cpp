@@ -9,9 +9,10 @@
 #include "database/calibration_database.hpp"
 #include "database/database_read.hpp"  // REMOVE
 #include "database/database_write.hpp"
-#include "steps/extrinsic_initialization.hpp"  // REMOVE
-#include "steps/spline_initialization.hpp"     // REMOVE
-#include "steps/step_runner.hpp"               // REMOVE
+#include "steps/extrinsic_initialization.hpp"   // REMOVE
+#include "steps/spline_initialization.hpp"      // REMOVE
+#include "steps/spline_reprojection_error.hpp"  // REMOVE
+#include "steps/step_runner.hpp"                // REMOVE
 
 using namespace reprojection;
 
@@ -43,11 +44,11 @@ int main() {
     // the database.
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
+    CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
     try {
         database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading,
                              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
-        CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
                              "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e");
         database::InsertCameraInfo(db, camera_info);
@@ -64,9 +65,21 @@ int main() {
     ////
     Frames const poses{database::ReadPoses(db, sensor_name, CalibrationStep::BundleAdjustment)};
 
-    steps::SplineInitialization const spline_init_step{sensor_name, poses, CalibrationStep::SplineInterpolation};
+    steps::SplineInitialization const spline_init_step{sensor_name, poses};
     auto const [spline, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
     std::cout << "Spline init cache: " << ToString(spline_init_cache_status) << std::endl;
+
+    CameraMeasurements const targets{database::ReadTargets(db, camera_info.sensor_name)};
+    // UNPROTECTED OPTIONAL ACCESS OF THIS VARIABLE!
+    auto const intrinsics{database::ReadIntrinsics(db, camera_info.sensor_name, CalibrationStep::BundleAdjustment,
+                                                   camera_info.camera_model)};
+
+    // TODO DOES THIS EVER CACHE?
+    steps::SplineReprojectionError const spline_reprojection_error_step{
+        camera_info, targets, {*intrinsics}, spline, CalibrationStep::SplineInterpolation};
+    auto const [_, spline_reprojection_error_cache_status]{
+        steps::RunStep<steps::DoNotUse>(spline_reprojection_error_step, db)};
+    std::cout << "Spline reprojection error cache: " << ToString(spline_reprojection_error_cache_status) << std::endl;
 
     std::string const imu_sensor_name{"/imu0"};
     ImuMeasurements const imu_data{database::ReadImuData(db, imu_sensor_name)};
