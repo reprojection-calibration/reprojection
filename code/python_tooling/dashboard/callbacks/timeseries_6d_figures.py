@@ -26,15 +26,17 @@ def update_timeseries(composite_id, step_name, raw_data):
     if sensor_type == SensorType.Camera:
         try:
             data = raw_data[sensor_name]["poses"][step_name]
+            error = None
         except (KeyError, TypeError):
             return no_update
     elif sensor_type == SensorType.Imu:
         try:
             data = raw_data[sensor_name]["measurements"]
+            error = raw_data[sensor_name]["imu_error"][step_name]
         except (KeyError, TypeError):
             return no_update
 
-    return timeseries_6d_to_patch(data)
+    return timeseries_6d_to_patch(data, error)
 
 
 app.clientside_callback(
