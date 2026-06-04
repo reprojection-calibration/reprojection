@@ -6,7 +6,7 @@
 
 namespace reprojection::optimization {
 
-std::pair< Frames,ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
+std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
                                                               CameraMeasurements const& targets,
                                                               CameraState const& camera_state,
                                                               spline::Se3Spline const& spline);

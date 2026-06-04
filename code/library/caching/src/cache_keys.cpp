@@ -37,13 +37,6 @@ std::string CacheKey(std::string_view sensor_name, ImuMeasurements const& imu_da
     return CacheKeyFrom(sensor_name, imu_data, control_points, std::to_string(t0_ns), std::to_string(delta_t_ns));
 }
 
-std::string CacheKey(std::string_view sensor_name, Frames const& frames) {
-    std::cout << "-- spline init cache key --" <<std::endl;
-    std::cout << Sha256(Serialize(sensor_name)) <<std::endl;
-    std::cout << Sha256(Serialize(frames)) <<std::endl;
-    std::cout << CacheKeyFrom(sensor_name, frames) <<std::endl;
-
-    return CacheKeyFrom(sensor_name, frames);
-}
+std::string CacheKey(std::string_view sensor_name, Frames const& frames) { return CacheKeyFrom(sensor_name, frames); }
 
 }  // namespace reprojection::caching
