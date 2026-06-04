@@ -8,6 +8,7 @@ from database.sql_table_loading import (
     load_extracted_targets_table,
     load_images_table,
     load_imu_data_table,
+    load_imu_errors_table,
     load_poses_table,
     load_reprojection_errors_table,
     load_target_info_table,
@@ -67,6 +68,15 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
 
         table = load_imu_data_table(self.db_path)
         self.assertEqual(table.shape, (8770, 8))
+
+    def test_load_imu_errors_table(self):
+        table = load_imu_errors_table("nonexistent.db3")
+        self.assertIsNone(table)
+
+        # TODO(Jack): If one day the imu_errors table gets added to the database then we should enable this. But for now
+        # it is not part of the check in database yet.
+        # table = load_imu_errors_table(self.db_path)
+        # self.assertEqual(table.shape, (0, 9))
 
     def test_load_poses_table(self):
         table = load_poses_table("nonexistent.db3")
