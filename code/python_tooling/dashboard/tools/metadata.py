@@ -94,7 +94,7 @@ def build_step_selector(sensor_metadata):
                 # calibrations steps will be retrieved from. If for example we add camera intrinsic display we should
                 # also add that here because a camera intrinsic is associated with a step, and it might be a step that
                 # is not present in poses or reprojection error. Is there a more eloquent way to do this?
-                if x == "poses" or x == "reprojection_error"
+                if x == "poses" or x == "reprojection_error" or x == "imu_error"
                 for key in sensor_metadata[x]
             }
         )
