@@ -25,11 +25,17 @@ class SubplotConfig:
     y_axis: AxisConfig
     n_traces: int
     trace_labels: list
+    trace_colors: tuple = ("red", "green", "blue")
 
     def __post_init__(self):
         if not len(self.trace_labels) == self.n_traces:
             raise ValueError(
                 "You have to provide as many trace labels as there are traces!"
+            )
+
+        if not len(self.trace_colors) == self.n_traces:
+            raise ValueError(
+                "You have to provide as many trace colors as there are traces!"
             )
 
 
@@ -91,6 +97,9 @@ def build_figure_layout(config):
                     y=[],
                     mode="markers",
                     name=subplot_config.trace_labels[i],
+                    marker=dict(
+                        color=subplot_config.trace_colors[i],
+                    ),
                 ),
                 row=i_row,
                 col=i_col,
