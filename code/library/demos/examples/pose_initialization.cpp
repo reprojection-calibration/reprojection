@@ -62,7 +62,10 @@ int main() {
     ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
     application::Calibrate(config, empty_image_source, "", db);
 
-    ////
+    /////// Hack Workspace Below ////
+    /////// Hack Workspace Below ////
+    /////// Hack Workspace Below ////
+    /////// Hack Workspace Below ////
     Frames const poses{database::ReadPoses(db, sensor_name, CalibrationStep::BundleAdjustment)};
 
     steps::SplineInitialization const spline_init_step{sensor_name, poses};
