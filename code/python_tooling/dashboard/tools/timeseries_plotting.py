@@ -87,7 +87,6 @@ def build_figure_layout(config):
             title_text=subplot_config.y_axis.full_title,
             row=i_row,
             col=i_col,
-            range=[-3.14, 3.14],  # TODO(Jack): Do not hardcode!!!
         )
 
         for i in range(subplot_config.n_traces):
