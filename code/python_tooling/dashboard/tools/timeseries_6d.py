@@ -33,7 +33,7 @@ def timeseries_6d_to_patch(data, error):
 
         for i in range(6):
             patch["data"][i]["error_y"] = {
-                "color":"black",
+                "color": "black",
                 "type": "data",
                 "symmetric": False,
                 "array": np.maximum(error_array[:, i], 0.0),
