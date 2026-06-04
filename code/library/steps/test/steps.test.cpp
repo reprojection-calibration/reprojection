@@ -255,7 +255,10 @@ TEST_F(StepsFixture, TestPoseInitialization) {
 
 TEST_F(StepsFixture, TestSplineInitialization) {
     auto const [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
-    steps::SplineInitialization const step{camera_info.sensor_name, poses};
+
+    SatisfyPoseForeignKeys(targets);
+
+    steps::SplineInitialization const step{camera_info, targets, {camera_state, poses}};
 
     auto [result, cache_status]{RunStep<spline::Se3Spline>(step, db)};
     EXPECT_EQ(result.ControlPoints().cols(), 95);
