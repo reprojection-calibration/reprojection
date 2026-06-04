@@ -94,6 +94,7 @@ def load_imu_data_table(db_path):
 
     return table
 
+
 def load_imu_errors_table(db_path):
     if not os.path.isfile(db_path):
         return None
