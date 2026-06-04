@@ -271,6 +271,6 @@ def load_data(db_path):
 
     table = load_imu_errors_table(db_path)
     if table is not None:
-        load_imu_errors_table(table, data)
+        process_imu_errors_table(table, data)
 
     return data
