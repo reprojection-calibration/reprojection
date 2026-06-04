@@ -158,9 +158,7 @@ class TestDataFormatting(unittest.TestCase):
 
         self.assertTrue("imu_error" in data["/imu0"])
         self.assertTrue("extrinsic_initialization" in data["/imu0"]["imu_error"])
-        self.assertEqual(
-            len(data["/imu0"]["imu_error"]["extrinsic_initialization"]), 1
-        )
+        self.assertEqual(len(data["/imu0"]["imu_error"]["extrinsic_initialization"]), 1)
 
     # TODO(Jack): The following two tests are good examples how our testing is hard to read! For both tests we need to
     #  create relatively complicated state setups to check the foreign key constraints, and we do it all right in the
