@@ -6,6 +6,13 @@
 
 namespace reprojection::steps {
 
+// ADD NOTE
+
+// ADD NOTE
+
+// ADD NOTE
+
+// ADD NOTE
 struct DoNotUse {};
 
 struct SplineReprojectionError {
@@ -15,7 +22,6 @@ struct SplineReprojectionError {
     spline::Se3Spline spline;
 
     CalibrationStep step_type;
-
 
     std::string SensorName() const { return camera_info.sensor_name; }
 

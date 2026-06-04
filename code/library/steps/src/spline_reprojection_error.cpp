@@ -22,9 +22,10 @@ DoNotUse SplineReprojectionError::Load(SqlitePtr const db) const {
 
 void SplineReprojectionError::Save(DoNotUse const do_not_use, SqlitePtr const db) const {
     static_cast<void>(do_not_use);
-    static_cast<void>(db);  // REMOVE
 
-
+    auto const [poses, errors]{optimization::ReprojectionErrorSpline(camera_info, targets, intrinsics, spline)};
+    database::InsertPoses(db, SensorName(), step_type, poses);
+    database::InsertReprojectionErrors(db, SensorName(), step_type, errors);
 }
 
 }  // namespace reprojection::steps
