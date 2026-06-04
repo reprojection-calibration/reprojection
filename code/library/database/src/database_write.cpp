@@ -152,7 +152,7 @@ void InsertImuErrors(SqlitePtr const db, std::string_view sensor_name, Calibrati
         utils::BindEigenColumn<Vector3d>(stmt, 7, imu_error.delta_linear_acceleration);
     }};
 
-    BatchExecuteStatement(sql_statements::imu_error_insert, data, binder, db);
+    BatchExecuteStatement(sql_statements::imu_errors_insert, data, binder, db);
 }
 
 void InsertImuData(SqlitePtr const db, std::string_view sensor_name, ImuMeasurements const& data) {

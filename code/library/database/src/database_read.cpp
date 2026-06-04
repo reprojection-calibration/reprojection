@@ -191,7 +191,7 @@ ImuMeasurements ReadImuData(SqlitePtr const db, std::string_view sensor_name) {
 ImuErrors ReadImuErrors(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name) {
     ImuErrors imu_errors;
 
-    ExecuteQuery(db, sql_statements::imu_error_select, utils::BindStepAndSensor(step_name, sensor_name),
+    ExecuteQuery(db, sql_statements::imu_errors_select, utils::BindStepAndSensor(step_name, sensor_name),
                  [&imu_errors](sqlite3_stmt* const stmt) {
                      uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
                      Array6d const loaded{utils::ColumnArray<6>(stmt, 1)};
