@@ -42,12 +42,10 @@ def timeseries_6d_to_patch(data, error):
             patch["data"][id]["marker"]["cmax"] = 1
 
             # We only need to plot one scale bar
-            if (id == 0):
+            if id == 0:
                 patch["data"][id]["marker"]["showscale"] = True
                 patch["data"][id]["marker"]["colorbar"] = {
-                    "title": {
-                        "text": "Signed Error"
-                    },
+                    "title": {"text": "Signed Error"},
                     "x": 1.1,
                     "y": 0.5,
                     "len": 1,
