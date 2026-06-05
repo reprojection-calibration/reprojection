@@ -13,8 +13,8 @@ std::tuple<spline::Se3Spline, Array6d, Array3d, CeresState> ExtrinsicOptimizatio
     ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, Array6d const& initial_tf_imu_co,
     Array3d const& initial_gravity_w, CameraInfo const& sensor, CameraMeasurements const& targets,
     CameraState const& intrinsics) {
-    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
-
+    // TODO(Jack): What is the correct linear solver?
+    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY};
     ceres::Problem problem{ceres_state.problem_options};
 
     spline::Se3Spline optimized_spline{initial_spline};
@@ -77,9 +77,11 @@ std::tuple<spline::Se3Spline, Array6d, Array3d, CeresState> ExtrinsicOptimizatio
     // further optimize it here.
     problem.SetParameterBlockConstant(intrinsics_x.intrinsics.data());
 
+    ceres_state.solver_options.num_threads = 10;
+    ceres_state.solver_options.minimizer_progress_to_stdout = true;
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    std::cout << ceres_state.solver_summary.FullReport() <<std::endl;
+    std::cout << ceres_state.solver_summary.FullReport() << std::endl;
 
     return {optimized_spline, optimized_tf_imu_co, optimized_gravity_w, ceres_state};
 }
