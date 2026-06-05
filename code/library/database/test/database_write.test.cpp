@@ -16,28 +16,36 @@
 
 using namespace reprojection;
 
-class SensorDatabaseFixture : public ::testing::Test {
-   protected:
-    void SetUp() override { db = database::OpenCalibrationDatabase(":memory:", true, false); }
+// TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
+// add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-    void AddEntity() const { database::InsertEntity(db, sensor_name, Entity::Camera); }
+class CameraDatabaseFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        db = database::OpenCalibrationDatabase(":memory:", true, false);
+
+        database::InsertEntity(db, sensor_name, Entity::Camera);
+    }
 
     void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
         database::InsertStep(db, sensor_name, step_name, cache_key);
     }
 
-    void AddCamera() const {
+    void AddCameraInfo() const {
         AddStep(CalibrationStep::CameraInfo);
+
         database::InsertCameraInfo(db, CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds});
     }
 
     void AddImage() const {
         AddStep(CalibrationStep::ImageLoading);
+
         database::InsertImages(db, sensor_name, EncodedImages{{timestamp_ns, {}}});
     }
 
     void AddTarget() const {
         AddStep(CalibrationStep::FeatureExtraction);
+
         database::InsertTargets(db, sensor_name, {{timestamp_ns, ExtractedTarget{Bundle{{}, {}}, {}}}});
     }
 
@@ -51,20 +59,15 @@ class SensorDatabaseFixture : public ::testing::Test {
     std::string sensor_name{"/cam/retro/123"};
 };
 
-TEST_F(SensorDatabaseFixture, TestInsertEntityInfo) {
-    EXPECT_NO_THROW(AddEntity());
-    EXPECT_THROW(AddEntity(), std::runtime_error);  // Duplicate entry not allowed!
-}
-
-TEST_F(SensorDatabaseFixture, TestInsertCameraInfo) {
-    EXPECT_NO_THROW(AddCamera());
-    EXPECT_THROW(AddCamera(), std::runtime_error);  // Duplicate entry not allowed!
+TEST_F(CameraDatabaseFixture, TestInsertCameraInfo) {
+    EXPECT_NO_THROW(AddCameraInfo());
+    EXPECT_THROW(AddCameraInfo(), std::runtime_error);  // Duplicate entry not allowed!
 }
 
 // TODO(Jack): If we have foreign key constraints one day, like we will have to for the multi-target case, then we can
 // add helpers like we have in the test fixture for other types, but for now we do not need to add a target info to the
 // database for any other reason.
-TEST_F(SensorDatabaseFixture, TestInsertTargetInfo) {
+TEST_F(CameraDatabaseFixture, TestInsertTargetInfo) {
     database::InsertStep(db, sensor_name, CalibrationStep::TargetInfo, "");
 
     EXPECT_NO_THROW(database::InsertTargetInfo(db, sensor_name, TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}));
@@ -72,12 +75,12 @@ TEST_F(SensorDatabaseFixture, TestInsertTargetInfo) {
                  std::runtime_error);
 }
 
-TEST_F(SensorDatabaseFixture, TestInsertImages) {
+TEST_F(CameraDatabaseFixture, TestInsertImages) {
     EXPECT_NO_THROW(AddImage());
     EXPECT_THROW(AddImage(), std::runtime_error);
 }
 
-TEST_F(SensorDatabaseFixture, TestInsertTargets) {
+TEST_F(CameraDatabaseFixture, TestInsertTargets) {
     EXPECT_THROW(database::InsertTargets(db, sensor_name, CameraMeasurements{{timestamp_ns, {}}}), std::runtime_error);
 
     AddImage();
@@ -86,32 +89,31 @@ TEST_F(SensorDatabaseFixture, TestInsertTargets) {
     EXPECT_NO_THROW(database::InsertTargets(db, sensor_name, CameraMeasurements{{timestamp_ns, {}}}));
 }
 
-TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStep) {
+TEST_F(CameraDatabaseFixture, TestWriteToDbCalibrationStep) {
     EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization));
     EXPECT_NO_THROW(AddStep(CalibrationStep::BundleAdjustment));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::SplineInterpolation));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::SplineNonlinearRefinement));
+    EXPECT_NO_THROW(AddStep(CalibrationStep::SplineInitialization));
 }
 
-TEST_F(SensorDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
+TEST_F(CameraDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
     EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "1"));
     EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "2"));
     EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "3"));
 }
 
-TEST_F(SensorDatabaseFixture, TestInsertIntrinsics) {
+TEST_F(CameraDatabaseFixture, TestInsertIntrinsics) {
     EXPECT_THROW(database::InsertIntrinsics(db, sensor_name, CalibrationStep::PoseInitialization, CameraModel::Pinhole,
                                             {testing_utilities::pinhole_intrinsics}),
                  std::runtime_error);
 
-    AddCamera();
+    AddCameraInfo();
     AddStep(CalibrationStep::PoseInitialization);
 
     EXPECT_NO_THROW(database::InsertIntrinsics(db, sensor_name, CalibrationStep::PoseInitialization,
                                                CameraModel::Pinhole, {testing_utilities::pinhole_intrinsics}));
 }
 
-TEST_F(SensorDatabaseFixture, TestWriteToDbPoseData) {
+TEST_F(CameraDatabaseFixture, TestWriteToDbPoseData) {
     // Throws because the foreign key constraints are not met yet.
     EXPECT_THROW(AddPose(CalibrationStep::PoseInitialization), std::runtime_error);
 
@@ -124,7 +126,7 @@ TEST_F(SensorDatabaseFixture, TestWriteToDbPoseData) {
     EXPECT_NO_THROW(AddPose(CalibrationStep::PoseInitialization));
 }
 
-TEST_F(SensorDatabaseFixture, TestInsertReprojectionErrors) {
+TEST_F(CameraDatabaseFixture, TestInsertReprojectionErrors) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
 
     // Throws because the foreign key constraints are not met yet.
@@ -185,38 +187,41 @@ TEST(DatabaseSensorDataInterface, TestInsertImuErrors) {
 TEST(DatabaseSensorDataInterface, TestInsertControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
-    database::InsertStep(db, "/cam/retro/123", CalibrationStep::SplineInterpolation, "");
-    database::InsertStep(db, "/cam/retro/456", CalibrationStep::SplineInterpolation, "");
+    database::InsertStep(db, "/cam/retro/123", CalibrationStep::SplineInitialization, "");
+    database::InsertStep(db, "/cam/retro/456", CalibrationStep::SplineInitialization, "");
 
     spline::Matrix2NXd const control_points{spline::Matrix2NXd::Random(6, 10)};
 
     std::string_view sensor_name_1{"/cam/retro/123"};
     EXPECT_NO_THROW(
-        database::InsertControlPoints(db, sensor_name_1, CalibrationStep::SplineInterpolation, control_points));
+        database::InsertControlPoints(db, sensor_name_1, CalibrationStep::SplineInitialization, control_points));
 
     std::string_view sensor_name_2{"/cam/retro/456"};
     EXPECT_NO_THROW(
-        database::InsertControlPoints(db, sensor_name_2, CalibrationStep::SplineInterpolation, control_points));
+        database::InsertControlPoints(db, sensor_name_2, CalibrationStep::SplineInitialization, control_points));
 
-    EXPECT_THROW(database::InsertControlPoints(db, sensor_name_2, CalibrationStep::SplineInterpolation, control_points),
-                 std::runtime_error);
+    EXPECT_THROW(
+        database::InsertControlPoints(db, sensor_name_2, CalibrationStep::SplineInitialization, control_points),
+        std::runtime_error);
 }
 
 TEST(DatabaseSensorDataInterface, TestInsertTimeHandler) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
-    database::InsertStep(db, "/cam/retro/123", CalibrationStep::SplineInterpolation, "");
-    database::InsertStep(db, "/cam/retro/456", CalibrationStep::SplineInterpolation, "");
+    database::InsertStep(db, "/cam/retro/123", CalibrationStep::SplineInitialization, "");
+    database::InsertStep(db, "/cam/retro/456", CalibrationStep::SplineInitialization, "");
 
     spline::TimeHandler const time_handler{100, 200};
 
     std::string_view sensor_name_1{"/cam/retro/123"};
-    EXPECT_NO_THROW(database::InsertTimeHandler(db, sensor_name_1, CalibrationStep::SplineInterpolation, time_handler));
+    EXPECT_NO_THROW(
+        database::InsertTimeHandler(db, sensor_name_1, CalibrationStep::SplineInitialization, time_handler));
 
     std::string_view sensor_name_2{"/cam/retro/456"};
-    EXPECT_NO_THROW(database::InsertTimeHandler(db, sensor_name_2, CalibrationStep::SplineInterpolation, time_handler));
+    EXPECT_NO_THROW(
+        database::InsertTimeHandler(db, sensor_name_2, CalibrationStep::SplineInitialization, time_handler));
 
-    EXPECT_THROW(database::InsertTimeHandler(db, sensor_name_2, CalibrationStep::SplineInterpolation, time_handler),
+    EXPECT_THROW(database::InsertTimeHandler(db, sensor_name_2, CalibrationStep::SplineInitialization, time_handler),
                  std::runtime_error);
 }
 

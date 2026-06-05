@@ -14,7 +14,7 @@ struct SplineInitialization {
     OptimizationState bundle;
 
     // TODO(Jack): Should we rename the CalibrationStep to SplineInitialization?
-    CalibrationStep step_type{CalibrationStep::SplineInterpolation};
+    CalibrationStep step_type{CalibrationStep::SplineInitialization};
 
     std::string SensorName() const { return camera_info.sensor_name; }
 

@@ -248,16 +248,16 @@ TEST(DatabaseDatabaseRead, TestReadControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"/cam/retro/123"};
-    database::InsertStep(db, sensor_name, CalibrationStep::SplineInterpolation, "");
+    database::InsertStep(db, sensor_name, CalibrationStep::SplineInitialization, "");
     spline::Matrix2NXd const control_points_gt{spline::Matrix2NXd::Random(6, 10)};
 
-    database::InsertControlPoints(db, sensor_name, CalibrationStep::SplineInterpolation, control_points_gt);
+    database::InsertControlPoints(db, sensor_name, CalibrationStep::SplineInitialization, control_points_gt);
 
-    auto const control_points{database::ReadControlPoints(db, sensor_name, CalibrationStep::SplineInterpolation)};
+    auto const control_points{database::ReadControlPoints(db, sensor_name, CalibrationStep::SplineInitialization)};
     EXPECT_TRUE(control_points.isApprox(control_points_gt));
 
     auto const unknown_sensor_data{
-        database::ReadControlPoints(db, "/cam/retro/unknown", CalibrationStep::SplineInterpolation)};
+        database::ReadControlPoints(db, "/cam/retro/unknown", CalibrationStep::SplineInitialization)};
     EXPECT_EQ(unknown_sensor_data.cols(), 0);
 }
 
@@ -265,17 +265,17 @@ TEST(DatabaseDatabaseRead, TestReadTimeHandler) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
 
     std::string_view sensor_name{"/cam/retro/123"};
-    database::InsertStep(db, sensor_name, CalibrationStep::SplineInterpolation, "");
+    database::InsertStep(db, sensor_name, CalibrationStep::SplineInitialization, "");
     spline::TimeHandler const time_handler_gt{100, 200};
 
-    database::InsertTimeHandler(db, sensor_name, CalibrationStep::SplineInterpolation, time_handler_gt);
+    database::InsertTimeHandler(db, sensor_name, CalibrationStep::SplineInitialization, time_handler_gt);
 
-    auto const time_handler{database::ReadTimeHandler(db, sensor_name, CalibrationStep::SplineInterpolation)};
+    auto const time_handler{database::ReadTimeHandler(db, sensor_name, CalibrationStep::SplineInitialization)};
     ASSERT_TRUE(time_handler.has_value());
     EXPECT_EQ(time_handler, time_handler_gt);
 
     auto const unknown_sensor_data{
-        database::ReadTimeHandler(db, "/cam/retro/unknown", CalibrationStep::SplineInterpolation)};
+        database::ReadTimeHandler(db, "/cam/retro/unknown", CalibrationStep::SplineInitialization)};
     EXPECT_FALSE(unknown_sensor_data.has_value());
 }
 
