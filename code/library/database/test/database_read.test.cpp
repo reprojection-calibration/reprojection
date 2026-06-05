@@ -110,6 +110,7 @@ TEST_F(CameraDatabaseFixture, TestTargets) {
     EXPECT_EQ(std::size(result), 1);
     EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
 
+    // Loaded target matches the groundtruth target that we wrote to the database at the start.
     auto const [bundle, indices]{result.at(timestamp_ns)};
     EXPECT_TRUE(bundle.pixels.isApprox(target.bundle.pixels));
     EXPECT_TRUE(bundle.points.isApprox(target.bundle.points));
