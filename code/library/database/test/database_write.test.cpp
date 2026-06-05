@@ -36,19 +36,3 @@ TEST_F(ExtrinsicDatabaseFixture, TestInsertGravity) {
     EXPECT_THROW(database::InsertGravity(db, extrinsic_id, CalibrationStep::ExtrinsicInitialization, gravity_w),
                  std::runtime_error);
 }
-
-TEST_F(ExtrinsicDatabaseFixture, TestInsertExtrinsic) {
-    Array6d const tf_imu_co{0, 1, 2, 3, 4, 5};
-
-    EXPECT_THROW(database::InsertExtrinsic(db, extrinsic_id, CalibrationStep::ExtrinsicInitialization, tf_imu_co),
-                 std::runtime_error);
-
-    // Satisfy foreign key requirement
-    database::InsertStep(db, extrinsic_id, CalibrationStep::ExtrinsicInitialization, "");
-
-    EXPECT_NO_THROW(database::InsertExtrinsic(db, extrinsic_id, CalibrationStep::ExtrinsicInitialization, tf_imu_co));
-
-    // Duplicate entry throws
-    EXPECT_THROW(database::InsertExtrinsic(db, extrinsic_id, CalibrationStep::ExtrinsicInitialization, tf_imu_co),
-                 std::runtime_error);
-}

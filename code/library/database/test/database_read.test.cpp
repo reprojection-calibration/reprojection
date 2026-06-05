@@ -270,6 +270,24 @@ TEST_F(ExtrinsicDatabaseFixture, TestExtrinsics) {
     EXPECT_TRUE(result->isApprox(data));
 }
 
+TEST_F(ExtrinsicDatabaseFixture, TestGravity) {
+    auto const step_type{CalibrationStep::SplineInitialization};
+
+    auto result{database::ReadGravity(db, extrinsic_id, step_type)};
+    EXPECT_FALSE(result.has_value());
+
+    Array3d const data{0, 1, 2};
+    EXPECT_THROW(database::InsertGravity(db, camera_name, step_type, data), std::runtime_error);
+
+    // Satisfy foreign key constraint.
+    InsertStep(camera_name, step_type);
+    EXPECT_NO_THROW(database::InsertGravity(db, camera_name, step_type, data));
+
+    result = database::ReadGravity(db, camera_name, step_type);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(result->isApprox(data));
+}
+
 TEST_F(ExtrinsicDatabaseFixture, TestTimeHandler) {
     auto const step_type{CalibrationStep::SplineInitialization};
 
@@ -286,21 +304,4 @@ TEST_F(ExtrinsicDatabaseFixture, TestTimeHandler) {
     result = database::ReadTimeHandler(db, camera_name, step_type);
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result, data);
-}
-
-TEST(DatabaseDatabaseRead, TestReadGravity) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
-
-    std::string_view sensor_name{"world"};
-    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
-    Array3d const gravity_w_gt{0, 1, 2};
-
-    database::InsertGravity(db, sensor_name, CalibrationStep::ExtrinsicInitialization, gravity_w_gt);
-
-    auto const gravity_w{database::ReadGravity(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
-    ASSERT_TRUE(gravity_w.has_value());
-    EXPECT_TRUE(gravity_w->isApprox(gravity_w_gt));
-
-    auto const unknown_sensor_data{database::ReadGravity(db, "gravity_blah", CalibrationStep::ExtrinsicInitialization)};
-    EXPECT_FALSE(unknown_sensor_data.has_value());
 }
