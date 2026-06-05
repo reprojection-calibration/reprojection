@@ -126,12 +126,17 @@ class ImuDatabaseFixture : public ::testing::Test {
 };
 
 class ExtrinsicDatabaseFixture : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         db = db::OpenCalibrationDatabase(":memory:", true, false);
 
         db::InsertEntity(db, camera_name, Entity::Camera);
         db::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
+    }
+
+    void InsertStep(std::string_view entity_id, CalibrationStep const step_name,
+                    std::string const& cache_key = "") const {
+        db::InsertStep(db, entity_id, step_name, cache_key);
     }
 
     SqlitePtr db{nullptr};

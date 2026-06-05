@@ -241,23 +241,22 @@ TEST_F(ImuDatabaseFixture, TestImuErrors) {
     EXPECT_TRUE(delta_acc.isApprox(imu_errors.at(timestamp_ns).delta_linear_acceleration));
 }
 
+TEST_F(ExtrinsicDatabaseFixture, TestControlPoints) {
+    auto const step_type{CalibrationStep::SplineInitialization};
 
+    spline::Matrix2NXd result{database::ReadControlPoints(db, camera_name, step_type)};
+    EXPECT_EQ(std::size(result), 0);
 
-TEST(DatabaseDatabaseRead, TestReadControlPoints) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+    spline::Matrix2NXd const data{spline::Matrix2NXd::Random(6, 10)};
+    EXPECT_THROW(database::InsertControlPoints(db, camera_name, step_type, data), std::runtime_error);
 
-    std::string_view sensor_name{"/cam/retro/123"};
-    database::InsertStep(db, sensor_name, CalibrationStep::SplineInitialization, "");
-    spline::Matrix2NXd const control_points_gt{spline::Matrix2NXd::Random(6, 10)};
+    // Foreign key requirement.
+    InsertStep(camera_name, step_type);
 
-    database::InsertControlPoints(db, sensor_name, CalibrationStep::SplineInitialization, control_points_gt);
+    EXPECT_NO_THROW(database::InsertControlPoints(db, camera_name, step_type, data));
 
-    auto const control_points{database::ReadControlPoints(db, sensor_name, CalibrationStep::SplineInitialization)};
-    EXPECT_TRUE(control_points.isApprox(control_points_gt));
-
-    auto const unknown_sensor_data{
-        database::ReadControlPoints(db, "/cam/retro/unknown", CalibrationStep::SplineInitialization)};
-    EXPECT_EQ(unknown_sensor_data.cols(), 0);
+    result = database::ReadControlPoints(db, camera_name, step_type);
+    EXPECT_TRUE(result.isApprox(data));
 }
 
 TEST(DatabaseDatabaseRead, TestReadTimeHandler) {
