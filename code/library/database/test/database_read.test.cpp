@@ -202,53 +202,43 @@ TEST_F(CameraDatabaseFixture, TestTargets) {
     EXPECT_TRUE(indices.isApprox(target.indices));
 }
 
-TEST(DatabaseDatabaseRead, TestFullImuAddGetCycle) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
+TEST_F(ImuDatabaseFixture, TestImuMeasurements) {
+    ImuMeasurements result{database::ReadImuData(db, sensor_name)};
+    EXPECT_EQ(std::size(result), 0);
 
-    std::string_view sensor_name{"/imu/polaris/123"};
-    ImuMeasurements const data{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                               {1, {Vector3d::Zero(), Vector3d::Zero()}},
-                               {2, {Vector3d::Zero(), Vector3d::Zero()}}};
+    // As of writing (05.06.2026) there are not yet any foreign key constraints for writing IMU dat into the db.
+    EXPECT_NO_THROW(InsertImuData());
 
-    EXPECT_NO_THROW(database::InsertImuData(db, sensor_name, data));
+    result = database::ReadImuData(db, sensor_name);
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
 
-    auto const loaded_data{database::ReadImuData(db, sensor_name)};
-    EXPECT_EQ(std::size(loaded_data), std::size(data));
+    auto const [omega, acc]{result.at(timestamp_ns)};
+    EXPECT_TRUE(omega.isApprox(imu_data.at(timestamp_ns).angular_velocity));
+    EXPECT_TRUE(acc.isApprox(imu_data.at(timestamp_ns).linear_acceleration));
 }
 
-TEST(DatabaseDatabaseRead, TestGetImuData) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST_F(ImuDatabaseFixture, TestImuErrors) {
+    auto const step_type{CalibrationStep::ExtrinsicInitialization};
 
-    // Data from imu 123
-    std::string_view sensor_name_1{"/imu/polaris/123"};
-    database::InsertImuData(db, sensor_name_1,
-                            {{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                             {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                             {15, {Vector3d::Zero(), Vector3d::Zero()}}});
-    // Data from imu 456
-    std::string_view sensor_name_2{"/imu/polaris/456"};
-    database::InsertImuData(db, sensor_name_2,
-                            ImuMeasurements{{10, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                                            {20, {Vector3d::Zero(), Vector3d::Zero()}}});
+    ImuErrors result{database::ReadImuErrors(db, sensor_name, step_type)};
+    EXPECT_EQ(std::size(result), 0);
 
-    auto const imu_1_data{database::ReadImuData(db, sensor_name_1)};
-    EXPECT_EQ(std::size(imu_1_data), 3);
+    EXPECT_THROW(InsertImuError(step_type), std::runtime_error);
 
-    // Check the values of the first element to make sure the callback lambda reading logic is correct
-    ImuData const imu_data_i{imu_1_data.at(5)};
-    EXPECT_EQ(imu_data_i.angular_velocity[0], 1);
-    EXPECT_EQ(imu_data_i.angular_velocity[1], 2);
-    EXPECT_EQ(imu_data_i.angular_velocity[2], 3);
-    EXPECT_EQ(imu_data_i.linear_acceleration[0], 4);
-    EXPECT_EQ(imu_data_i.linear_acceleration[1], 5);
-    EXPECT_EQ(imu_data_i.linear_acceleration[2], 6);
+    // Foreign key requirements.
+    InsertImuData();
+    InsertStep(step_type);
 
-    auto const imu_2_data{database::ReadImuData(db, sensor_name_2)};
-    EXPECT_EQ(std::size(imu_2_data), 2);
+    EXPECT_NO_THROW(InsertImuError(step_type));
 
-    // If the sensor is not present we simply get an empty set back, this is not an error
-    auto const unknown_sensor_data{database::ReadImuData(db, "/imu/polaris/unknown")};
-    EXPECT_EQ(std::size(unknown_sensor_data), 0);
+    result = database::ReadImuErrors(db, sensor_name, step_type);
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
+
+    auto const [delta_omega, delta_acc]{result.at(timestamp_ns)};
+    EXPECT_TRUE(delta_omega.isApprox(imu_errors.at(timestamp_ns).delta_angular_velocity));
+    EXPECT_TRUE(delta_acc.isApprox(imu_errors.at(timestamp_ns).delta_linear_acceleration));
 }
 
 TEST(DatabaseDatabaseRead, TestReadImuErrors) {

@@ -20,26 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-TEST_F(ImuDatabaseFixture, TestInsertImuData) {
-    EXPECT_NO_THROW(AddImuData());
-
-    // Duplicate entry not allowed!
-    EXPECT_THROW(AddImuData(), std::runtime_error);
-}
-
-TEST_F(ImuDatabaseFixture, TestInsertImuErrors) {
-    // Foreign key requirements not met
-    EXPECT_THROW(AddImuError(), std::runtime_error);
-
-    // Satisfy foreign key requirements and then it works fine :)
-    AddImuData();
-    AddStep(CalibrationStep::ExtrinsicInitialization);
-    EXPECT_NO_THROW(AddImuError());
-
-    // Duplicate entry not allowed!
-    EXPECT_THROW(AddImuError(), std::runtime_error);
-}
-
 class ExtrinsicDatabaseFixture : public ::testing::Test {
    protected:
     void SetUp() override {

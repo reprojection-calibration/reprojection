@@ -107,20 +107,20 @@ class ImuDatabaseFixture : public ::testing::Test {
         db::InsertEntity(db, sensor_name, Entity::Imu);
     }
 
-    void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
+    void InsertStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
         db::InsertStep(db, sensor_name, step_name, cache_key);
     }
 
-    void AddImuData() const {
-        db::InsertImuData(db, sensor_name, ImuMeasurements{{timestamp_ns, {{1, 2, 3}, {4, 5, 6}}}});
-    }
+    void InsertImuData() const { db::InsertImuData(db, sensor_name, imu_data); }
 
-    void AddImuError() const {
-        db::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
-                            ImuErrors{{timestamp_ns, {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}}});
+    void InsertImuError(CalibrationStep const step_type) const {
+        db::InsertImuErrors(db, sensor_name, step_type, imu_errors);
     }
 
     SqlitePtr db{nullptr};
     uint64_t timestamp_ns{0};
     std::string sensor_name{"/imu/polaris/123"};
+
+    ImuMeasurements imu_data{{timestamp_ns, {{1, 2, 3}, {4, 5, 6}}}};
+    ImuErrors imu_errors{{timestamp_ns, {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}}};
 };
