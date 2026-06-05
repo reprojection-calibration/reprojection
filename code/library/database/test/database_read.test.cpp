@@ -79,7 +79,7 @@ TEST_F(CameraDatabaseFixture, TestTargetInfo) {
 }
 
 TEST_F(CameraDatabaseFixture, TestImages) {
-    EncodedImages result = database::ReadImages(db, sensor_name);
+    EncodedImages result{database::ReadImages(db, sensor_name)};
     EXPECT_EQ(std::size(result), 0);
 
     EXPECT_NO_THROW(InsertImage());
@@ -87,27 +87,33 @@ TEST_F(CameraDatabaseFixture, TestImages) {
 
     result = database::ReadImages(db, sensor_name);
     EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
+
     // Loaded image is empty so the data array length is zero.
     EXPECT_EQ(std::size(result.at(timestamp_ns).data), 0);
 }
 
-TEST_F(CameraReadFixture, TestReadTargets) {
-    AddTarget(0);
-    AddTarget(1);
-    AddTarget(2);
+TEST_F(CameraDatabaseFixture, TestTargets) {
+    CameraMeasurements result{database::ReadTargets(db, sensor_name)};
+    EXPECT_EQ(std::size(result), 0);
 
-    CameraMeasurements const loaded_data{database::ReadTargets(db, sensor_name)};
-    EXPECT_EQ(std::size(loaded_data), 3);
+    // Foreign key constraint not met.
+    EXPECT_THROW(InsertTarget(), std::runtime_error);
 
-    int test_timestamp{0};
-    for (auto const& [timestamp_ns_i, target_i] : loaded_data) {
-        EXPECT_EQ(timestamp_ns_i, test_timestamp);
-        test_timestamp += 1;
+    // Satisfy foreign key constraint.
+    InsertImage();
 
-        EXPECT_TRUE(target_i.bundle.pixels.isApprox(target.bundle.pixels));
-        EXPECT_TRUE(target_i.bundle.points.isApprox(target.bundle.points));
-        EXPECT_TRUE(target_i.indices.isApprox(target.indices));
-    }
+    EXPECT_NO_THROW(InsertTarget());
+    EXPECT_THROW(InsertTarget(), std::runtime_error);
+
+    result = database::ReadTargets(db, sensor_name);
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
+
+    auto const [bundle, indices]{result.at(timestamp_ns)};
+    EXPECT_TRUE(bundle.pixels.isApprox(target.bundle.pixels));
+    EXPECT_TRUE(bundle.points.isApprox(target.bundle.points));
+    EXPECT_TRUE(indices.isApprox(target.indices));
 }
 
 TEST_F(CameraReadFixture, TestReadIntrinsics) {

@@ -20,10 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-TEST_F(CameraDatabaseFixture, TestInsertImages) {
-    EXPECT_NO_THROW(InsertImage());
-    EXPECT_THROW(InsertImage(), std::runtime_error);
-}
 
 TEST_F(CameraDatabaseFixture, TestInsertTargets) {
     EXPECT_THROW(database::InsertTargets(db, sensor_name, CameraMeasurements{{timestamp_ns, {}}}), std::runtime_error);

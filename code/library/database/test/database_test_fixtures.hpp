@@ -23,6 +23,8 @@ using EncodedImages = reprojection::EncodedImages;
 using Entity = reprojection::Entity;
 using ExtractedTarget = reprojection::ExtractedTarget;
 using Frames = reprojection::Frames;
+using MatrixX2d = reprojection::MatrixX2d;
+using MatrixX3d = reprojection::MatrixX3d;
 using SqlitePtr = reprojection::SqlitePtr;
 using TargetInfo = reprojection::TargetInfo;
 using TargetType = reprojection::TargetType;
@@ -60,7 +62,7 @@ class CameraDatabaseFixture : public ::testing::Test {
         // NOTE(Jack): See note in InsertCameraInfo() above.
         InsertStep(CalibrationStep::FeatureExtraction);
 
-        db::InsertTargets(db, sensor_name, {{timestamp_ns, ExtractedTarget{{{}, {}}, {}}}});
+        db::InsertTargets(db, sensor_name, {{timestamp_ns, target}});
     }
 
     void InsertTargetInfo() const {
@@ -78,7 +80,10 @@ class CameraDatabaseFixture : public ::testing::Test {
     SqlitePtr db{nullptr};
     uint64_t timestamp_ns{0};
     std::string sensor_name{"/cam/retro/123"};
-    TargetInfo target_info { TargetType::Aprilgrid3, 8, 6, 0.1, false };
+    ExtractedTarget target{{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
+                            MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
+                           {{5, 6}, {2, 3}, {650, 600}}};
+    TargetInfo target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
 
     // All the data values - we store these as part of the fixture so we can compare the reread values to the
     // groundtruth stored here.
