@@ -9,33 +9,25 @@
 
 using namespace reprojection;
 
-class DatabaseRemoveFixture : public ::testing::Test {
-   protected:
-    void SetUp() override {
-        db = database::OpenCalibrationDatabase(":memory:", true, false);
+TEST(DatabaseDatabaseRemove, TestRemoveFromDb) {
+    SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo, "");
-        database::InsertCameraInfo(db, camera_info);
-    }
+    std::string const sensor_name{"/cam/retro/123"};
+    auto const step_type{CalibrationStep::PoseInitialization};
 
-    SqlitePtr db{nullptr};
-    CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
-};
-
-TEST_F(DatabaseRemoveFixture, TestRemoveFromDbStep) {
     // If there is no step to remove it is just silent
-    EXPECT_NO_THROW(database::RemoveFromDb(db, "", CalibrationStep::PoseInitialization));
+    EXPECT_NO_THROW(database::RemoveFromDb(db, sensor_name, step_type));
 
     // Write a step to the database and load its cache key to check its there.
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::PoseInitialization, "cache_key");
-
-    auto cache_key{database::ReadCacheKey(db, camera_info.sensor_name, CalibrationStep::PoseInitialization)};
+    database::InsertEntity(db, sensor_name, Entity::Camera);
+    database::InsertStep(db, sensor_name, step_type, "cache_key");
+    auto cache_key{database::ReadCacheKey(db, sensor_name, step_type)};
     ASSERT_TRUE(cache_key.has_value());
 
     // Remove the step and then try to load the cache key - but the cache key should be std::nullopt because the step
     // has been removed.
-    EXPECT_NO_THROW(database::RemoveFromDb(db, camera_info.sensor_name, CalibrationStep::PoseInitialization));
+    EXPECT_NO_THROW(database::RemoveFromDb(db, sensor_name, step_type));
 
-    cache_key = database::ReadCacheKey(db, camera_info.sensor_name, CalibrationStep::PoseInitialization);
+    cache_key = database::ReadCacheKey(db, sensor_name, step_type);
     EXPECT_FALSE(cache_key.has_value());
 }
