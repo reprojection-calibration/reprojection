@@ -37,6 +37,4 @@ std::string CacheKey(std::string_view sensor_name, ImuMeasurements const& imu_da
     return CacheKeyFrom(sensor_name, imu_data, control_points, std::to_string(t0_ns), std::to_string(delta_t_ns));
 }
 
-std::string CacheKey(std::string_view sensor_name, Frames const& frames) { return CacheKeyFrom(sensor_name, frames); }
-
 }  // namespace reprojection::caching

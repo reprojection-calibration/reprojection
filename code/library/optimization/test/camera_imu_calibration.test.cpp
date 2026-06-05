@@ -38,11 +38,13 @@ TEST(OptimizationCameraImuCalibration, TestReprojectionErrorSpline) {
     control_points << Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero();
     spline::Se3Spline const spline{control_points, {0, 1}};
 
-    ReprojectionErrors const residuals{optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
-    EXPECT_EQ(std::size(residuals), 1);
-    EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))
+    auto const [poses, errors]{optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
+    EXPECT_EQ(std::size(poses), 1);
+    EXPECT_TRUE(poses.at(timestamp_ns).pose.isApproxToConstant(0));
+    EXPECT_EQ(std::size(errors), 1);
+    EXPECT_TRUE(errors.at(timestamp_ns).isApprox(gt_residuals))
         << "Result:\n"
-        << residuals.at(timestamp_ns).transpose() << "\nexpected result:\n"
+        << errors.at(timestamp_ns).transpose() << "\nexpected result:\n"
         << gt_residuals.transpose();
 }
 

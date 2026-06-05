@@ -43,11 +43,11 @@ int main() {
     // the database.
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
+    CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
     try {
         database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading,
                              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
-        CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
                              "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e");
         database::InsertCameraInfo(db, camera_info);
@@ -61,10 +61,17 @@ int main() {
     ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
     application::Calibrate(config, empty_image_source, "", db);
 
-    ////
+    /////// Hack Workspace Below ////
+    /////// Hack Workspace Below ////
+    /////// Hack Workspace Below ////
+    /////// Hack Workspace Below ////
+    CameraMeasurements const targets{database::ReadTargets(db, camera_info.sensor_name)};
+    // UNPROTECTED OPTIONAL ACCESS OF THIS VARIABLE!
+    auto const intrinsics{database::ReadIntrinsics(db, camera_info.sensor_name, CalibrationStep::BundleAdjustment,
+                                                   camera_info.camera_model)};
     Frames const poses{database::ReadPoses(db, sensor_name, CalibrationStep::BundleAdjustment)};
 
-    steps::SplineInitialization const spline_init_step{sensor_name, poses, CalibrationStep::SplineInterpolation};
+    steps::SplineInitialization const spline_init_step{camera_info, targets, {{*intrinsics}, poses}};
     auto const [spline, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
     std::cout << "Spline init cache: " << ToString(spline_init_cache_status) << std::endl;
 

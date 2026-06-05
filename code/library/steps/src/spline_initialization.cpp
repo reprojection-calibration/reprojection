@@ -3,22 +3,23 @@
 #include "caching/cache_keys.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "optimization/camera_imu_calibration.hpp"
 #include "steps/spline_initialization.hpp"  // This should be the first header!
 
 namespace reprojection::steps {
 
-std::string SplineInitialization::CacheKey() const { return caching::CacheKey(sensor_name, poses); }
+std::string SplineInitialization::CacheKey() const { return caching::CacheKey(camera_info, targets, bundle); }
 
 spline::Se3Spline SplineInitialization::Compute() const {
     // TODO(Jack): Parameterize frequency! Add to cache key probably?
-    spline::Se3Spline const spline{spline::InitializeSe3SplineState(poses, 100)};
+    spline::Se3Spline const spline{spline::InitializeSe3SplineState(bundle.frames, 100)};
 
     return spline;
 }
 
 spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
-    auto const control_points{database::ReadControlPoints(db, sensor_name, CalibrationStep::SplineInterpolation)};
-    auto const time_handler{database::ReadTimeHandler(db, sensor_name, CalibrationStep::SplineInterpolation)};
+    auto const control_points{database::ReadControlPoints(db, SensorName(), CalibrationStep::SplineInterpolation)};
+    auto const time_handler{database::ReadTimeHandler(db, SensorName(), CalibrationStep::SplineInterpolation)};
 
     if (not time_handler) {
         std::cout << "WE NEED AN ERROR STRATEGY! SplineInterpolation::Load()" << std::endl;  // LCOV_EXCL_LINE
@@ -28,8 +29,13 @@ spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
 }
 
 void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const db) const {
-    database::InsertControlPoints(db, sensor_name, step_type, spline.ControlPoints());
-    database::InsertTimeHandler(db, sensor_name, step_type, spline.GetTimeHandler());
+    database::InsertControlPoints(db, SensorName(), step_type, spline.ControlPoints());
+    database::InsertTimeHandler(db, SensorName(), step_type, spline.GetTimeHandler());
+
+    auto const [spline_poses,
+                errors]{optimization::ReprojectionErrorSpline(camera_info, targets, bundle.camera_state, spline)};
+    database::InsertPoses(db, SensorName(), step_type, spline_poses);
+    database::InsertReprojectionErrors(db, SensorName(), step_type, errors);
 }
 
 }  // namespace reprojection::steps
