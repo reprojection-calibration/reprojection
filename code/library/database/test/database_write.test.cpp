@@ -20,6 +20,8 @@ class SensorDatabaseFixture : public ::testing::Test {
    protected:
     void SetUp() override { db = database::OpenCalibrationDatabase(":memory:", true, false); }
 
+    void AddEntity() const { database::InsertEntity(db, sensor_name, Entity::Camera); }
+
     void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
         database::InsertStep(db, sensor_name, step_name, cache_key);
     }
@@ -48,6 +50,11 @@ class SensorDatabaseFixture : public ::testing::Test {
     uint64_t timestamp_ns{0};
     std::string sensor_name{"/cam/retro/123"};
 };
+
+TEST_F(SensorDatabaseFixture, TestInsertEntityInfo) {
+    EXPECT_NO_THROW(AddEntity());
+    EXPECT_THROW(AddEntity(), std::runtime_error);  // Duplicate entry not allowed!
+}
 
 TEST_F(SensorDatabaseFixture, TestInsertCameraInfo) {
     EXPECT_NO_THROW(AddCamera());

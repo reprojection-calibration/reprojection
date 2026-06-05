@@ -37,14 +37,13 @@ void BindEigenColumn(sqlite3_stmt* const stmt, int const start_idx, Eigen::Dense
 
 }  // namespace utils
 
-void InsertGravity(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
-                   Array3d const& data) {
-    auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
-        utils::BindStepAndSensor(stmt, step_name, sensor_name);
-        utils::BindEigenColumn<Array3d>(stmt, 3, data);
+void InsertEntity(SqlitePtr const db, std::string_view entity_id, Entity const entity_type) {
+    auto const binder{[entity_id, entity_type](sqlite3_stmt* const stmt) {
+        Sqlite3Tools::Bind(stmt, 1, entity_id);
+        Sqlite3Tools::Bind(stmt, 2, ToString(entity_type));
     }};
 
-    ExecuteStatement(sql_statements::gravity_insert, binder, db);
+    ExecuteStatement(sql_statements::entity_insert, binder, db);
 }
 
 void InsertExtrinsic(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
@@ -55,6 +54,16 @@ void InsertExtrinsic(SqlitePtr const db, std::string_view sensor_name, Calibrati
     }};
 
     ExecuteStatement(sql_statements::extrinsics_insert, binder, db);
+}
+
+void InsertGravity(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                   Array3d const& data) {
+    auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
+        utils::BindStepAndSensor(stmt, step_name, sensor_name);
+        utils::BindEigenColumn<Array3d>(stmt, 3, data);
+    }};
+
+    ExecuteStatement(sql_statements::gravity_insert, binder, db);
 }
 
 // TODO(Jack): Input arg order consistency.

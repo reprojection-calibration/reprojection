@@ -14,6 +14,6 @@ CREATE TABLE IF NOT EXISTS calibration_steps
     cache_key  TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (entity_id) REFERENCES entities ON DELETE CASCADE,
+    FOREIGN KEY (entity_id) REFERENCES entity ON DELETE CASCADE,
     PRIMARY KEY (step_name, entity_id)
 );

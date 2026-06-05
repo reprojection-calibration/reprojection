@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS entities
+CREATE TABLE IF NOT EXISTS entity
 (
     entity_id   TEXT     NOT NULL,
     entity_type TEXT     NOT NULL CHECK ( entity_type IN ('camera',
