@@ -20,7 +20,7 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
     }
 
     auto const [aa_co_imu, diagnostics]{
-        optimization::AngularVelocityAlignment(omega_imu, {trajectory.So3(), trajectory.GetTimeHandler()})};
+        optimization::AngularVelocityAlignment(omega_imu, {trajectory.ControlPoints(), trajectory.GetTimeHandler()})};
 
     EXPECT_TRUE(aa_co_imu.matrix().isApprox(geometry::Log(R)));
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);

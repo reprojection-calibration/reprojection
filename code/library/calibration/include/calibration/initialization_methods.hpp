@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spline/spline_state.hpp"
+#include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/ceres_types.hpp"
 #include "types/eigen_types.hpp"
@@ -28,7 +28,7 @@ Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& ta
 //  we have the generic CubicBSplineC3 type, and their is no structural guarantee or encouragement about what is
 //  actually inside of it. This is something which plagues the entire spline code, not a deal breaker, but an idea that
 //  smells to me.
-std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(
-    spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data);
+std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
+                                                                               ImuMeasurements const& imu_data);
 
 }  // namespace reprojection::calibration

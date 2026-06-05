@@ -1,13 +1,15 @@
 #pragma once
 
-#include <tuple>
-
-#include "spline/spline_state.hpp"
+#include "spline/se3_spline.hpp"
 #include "types/ceres_types.hpp"
 #include "types/eigen_types.hpp"
 #include "types/spline_types.hpp"
 
 namespace reprojection::optimization {
+
+// NOTE(Jack): We actually only need to pass the rotation component of the spline, but because of the way that ceres
+// works and how we use the rigid body angular velocity cost function we have to pass in the full size control points so
+// we pass the full spline here.
 
 /**
  * \brief Estimate the approximate extrinsic rotation matrix between the IMU and camera optical frame (R_co_imu).
@@ -20,6 +22,6 @@ namespace reprojection::optimization {
  * solution will be degenerate.
  */
 std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu,
-                                                        spline::CubicBSplineC3 const& so3_spline);
+                                                        spline::Se3Spline const& spline);
 
 }  // namespace  reprojection::optimization
