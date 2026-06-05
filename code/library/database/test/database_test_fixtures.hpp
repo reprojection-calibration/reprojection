@@ -77,7 +77,8 @@ class CameraDatabaseFixture : public ::testing::Test {
     }
 
     void InsertPose(CalibrationStep const step_name) const {
-        Frames const frames{{timestamp_ns, {Array6d{0, 1, 2, 3, 4, 5}}}};
+        Frames const frames{{timestamp_ns, {pose}}};
+
         db::InsertPoses(db, sensor_name, step_name, frames);
     }
 
@@ -86,6 +87,7 @@ class CameraDatabaseFixture : public ::testing::Test {
     std::string sensor_name{"/cam/retro/123"};
 
     CameraInfo camera_info{sensor_name, CameraModel::Pinhole, tu::image_bounds};
+    Array6d pose{0, 1, 2, 3, 4, 5};
     ExtractedTarget target{{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
                             MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
                            {{5, 6}, {2, 3}, {650, 600}}};

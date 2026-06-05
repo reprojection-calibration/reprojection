@@ -20,18 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-TEST_F(CameraDatabaseFixture, TestWriteToDbPoseData) {
-    // Throws because the foreign key constraints are not met yet.
-    EXPECT_THROW(InsertPose(CalibrationStep::PoseInitialization), std::runtime_error);
-
-    // Satisfy foreign key constraints.
-    InsertImage();
-    InsertTarget();
-    InsertStep(CalibrationStep::PoseInitialization);
-
-    // Passes with no problem.
-    EXPECT_NO_THROW(InsertPose(CalibrationStep::PoseInitialization));
-}
 
 TEST_F(CameraDatabaseFixture, TestInsertReprojectionErrors) {
     std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};

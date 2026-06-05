@@ -112,6 +112,28 @@ TEST_F(CameraDatabaseFixture, TestIntrinsic) {
     EXPECT_TRUE(intrinsic->isApprox(testing_utilities::pinhole_intrinsics));
 }
 
+TEST_F(CameraDatabaseFixture, TestPoses) {
+    auto const step_type{CalibrationStep::PoseInitialization};
+
+    Frames result{database::ReadPoses(db, sensor_name, step_type)};
+    EXPECT_EQ(std::size(result), 0);
+
+    EXPECT_THROW(InsertPose(step_type), std::runtime_error);
+
+    // Satisfy foreign key constraints.
+    InsertImage();
+    InsertTarget();
+    InsertStep(step_type);
+
+    EXPECT_NO_THROW(InsertPose(step_type));
+
+    result = database::ReadPoses(db, sensor_name, step_type);
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
+
+    EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(pose));
+}
+
 // NOTE(Jack): We do not use the test fixtures built in methods for the foreign key requirement check because the entity
 // is already added in the SetUp() method. This test is also more complicated because we also test the ReadCacheKey()
 // function which is essentially the read counterpart to the InsertStep() function.
@@ -178,27 +200,6 @@ TEST_F(CameraReadFixture, TestReadCacheKey) {
     cache_key = database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization);
     ASSERT_TRUE(cache_key.has_value());
     EXPECT_EQ(cache_key.value(), "2");
-}
-
-TEST_F(CameraReadFixture, TestReadPoses) {
-    auto const step{CalibrationStep::PoseInitialization};
-    uint64_t const timestamp_ns{0};
-
-    // No matching frames in the database means we get an empty container.
-    Frames result{database::ReadPoses(db, sensor_name, step)};
-    EXPECT_EQ(std::size(result), 0);
-
-    // Satisfy the foreign key constraints for adding a camera frame pose.
-    AddTarget(timestamp_ns);
-    database::InsertStep(db, sensor_name, step, "");
-
-    // Add one frame to the database then load it and see that it's the same.
-    Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-    database::InsertPoses(db, sensor_name, step, frames);
-
-    result = database::ReadPoses(db, sensor_name, step);
-    EXPECT_EQ(std::size(result), 1);
-    EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(frames.at(timestamp_ns).pose));
 }
 
 TEST(DatabaseDatabaseRead, TestFullImuAddGetCycle) {
