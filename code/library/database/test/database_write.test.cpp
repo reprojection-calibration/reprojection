@@ -20,18 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-TEST_F(CameraDatabaseFixture, TestInsertIntrinsics) {
-    EXPECT_THROW(database::InsertIntrinsics(db, sensor_name, CalibrationStep::PoseInitialization, CameraModel::Pinhole,
-                                            {testing_utilities::pinhole_intrinsics}),
-                 std::runtime_error);
-
-    InsertCameraInfo();
-    InsertStep(CalibrationStep::PoseInitialization);
-
-    EXPECT_NO_THROW(database::InsertIntrinsics(db, sensor_name, CalibrationStep::PoseInitialization,
-                                               CameraModel::Pinhole, {testing_utilities::pinhole_intrinsics}));
-}
-
 TEST_F(CameraDatabaseFixture, TestWriteToDbPoseData) {
     // Throws because the foreign key constraints are not met yet.
     EXPECT_THROW(InsertPose(CalibrationStep::PoseInitialization), std::runtime_error);

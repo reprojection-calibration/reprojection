@@ -93,10 +93,29 @@ TEST_F(CameraDatabaseFixture, TestImages) {
     EXPECT_EQ(std::size(result.at(timestamp_ns).data), 0);
 }
 
+TEST_F(CameraDatabaseFixture, TestIntrinsic) {
+    auto const step_type{CalibrationStep::PoseInitialization};
+
+    auto intrinsic{database::ReadIntrinsics(db, "/nonexistent/camera", step_type, camera_info.camera_model)};
+    EXPECT_FALSE(intrinsic.has_value());
+
+    EXPECT_THROW(InsertIntrinsic(step_type), std::runtime_error);
+
+    // Satisfy foreign key requirements for a camera intrinsic
+    InsertStep(step_type);
+    InsertCameraInfo();
+
+    EXPECT_NO_THROW(InsertIntrinsic(step_type));
+
+    intrinsic = database::ReadIntrinsics(db, camera_info.sensor_name, step_type, camera_info.camera_model);
+    ASSERT_TRUE(intrinsic.has_value());
+    EXPECT_TRUE(intrinsic->isApprox(testing_utilities::pinhole_intrinsics));
+}
+
 // NOTE(Jack): We do not use the test fixtures built in methods for the foreign key requirement check because the entity
 // is already added in the SetUp() method. This test is also more complicated because we also test the ReadCacheKey()
 // function which is essentially the read counterpart to the InsertStep() function.
-TEST_F(CameraDatabaseFixture, TestStepsAndReadCacheKey) {
+TEST_F(CameraDatabaseFixture, TestStepAndReadCacheKey) {
     // Foreign key requirement is not satisfied
     EXPECT_THROW(db::InsertStep(db, "sensor_x", CalibrationStep::BundleAdjustment, "123"), std::runtime_error);
 
@@ -142,20 +161,6 @@ TEST_F(CameraDatabaseFixture, TestTargets) {
     EXPECT_TRUE(bundle.pixels.isApprox(target.bundle.pixels));
     EXPECT_TRUE(bundle.points.isApprox(target.bundle.points));
     EXPECT_TRUE(indices.isApprox(target.indices));
-}
-
-TEST_F(CameraReadFixture, TestReadIntrinsics) {
-    auto const step{CalibrationStep::PoseInitialization};
-
-    auto intrinsics{database::ReadIntrinsics(db, "", step, CameraModel::Pinhole)};
-    EXPECT_FALSE(intrinsics.has_value());
-
-    database::InsertStep(db, sensor_name, CalibrationStep::PoseInitialization, "");
-    database::InsertIntrinsics(db, sensor_name, step, CameraModel::Pinhole, {testing_utilities::pinhole_intrinsics});
-
-    intrinsics = database::ReadIntrinsics(db, sensor_name, step, CameraModel::Pinhole);
-    ASSERT_TRUE(intrinsics.has_value());
-    EXPECT_TRUE(intrinsics->isApprox(testing_utilities::pinhole_intrinsics));
 }
 
 TEST_F(CameraReadFixture, TestReadCacheKey) {
