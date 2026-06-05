@@ -18,6 +18,7 @@ set(SQL_FILES
         sql/camera_intrinsics_select.sql
         sql/camera_intrinsics_table.sql
         sql/extracted_target_insert.sql
+        sql/entities_table.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
         sql/extrinsics_insert.sql
