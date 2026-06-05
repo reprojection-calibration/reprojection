@@ -104,7 +104,6 @@ TEST_F(CameraDatabaseFixture, TestIntrinsic) {
     // Satisfy foreign key requirements for a camera intrinsic
     InsertStep(step_type);
     InsertCameraInfo();
-
     EXPECT_NO_THROW(InsertIntrinsic(step_type));
 
     intrinsic = database::ReadIntrinsics(db, camera_info.sensor_name, step_type, camera_info.camera_model);
@@ -124,7 +123,6 @@ TEST_F(CameraDatabaseFixture, TestPoses) {
     InsertImage();
     InsertTarget();
     InsertStep(step_type);
-
     EXPECT_NO_THROW(InsertPose(step_type));
 
     result = database::ReadPoses(db, sensor_name, step_type);
@@ -137,9 +135,9 @@ TEST_F(CameraDatabaseFixture, TestPoses) {
 // NOTE(Jack): There is not "read" component of this test because as of now (05.06.2026) there is no reason or code to
 // read reprojection errors back from the database.
 TEST_F(CameraDatabaseFixture, TestReprojectionErrors) {
-    std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
     auto const step_type{CalibrationStep::PoseInitialization};
 
+    std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
     EXPECT_THROW(database::InsertReprojectionErrors(db, sensor_name, step_type, data), std::runtime_error);
 
     // Satisfy foreign key constraints.
@@ -147,7 +145,6 @@ TEST_F(CameraDatabaseFixture, TestReprojectionErrors) {
     InsertTarget();
     InsertStep(step_type);
     InsertPose(step_type);
-
     EXPECT_NO_THROW(database::InsertReprojectionErrors(db, sensor_name, step_type, data));
 }
 
@@ -163,7 +160,6 @@ TEST_F(CameraDatabaseFixture, TestStepAndReadCacheKey) {
 
     // Satisfy foreign key requirement.
     db::InsertEntity(db, "sensor_x", Entity::Camera);
-
     EXPECT_NO_THROW(db::InsertStep(db, "sensor_x", CalibrationStep::BundleAdjustment, "123"));
 
     result = db::ReadCacheKey(db, "sensor_x", CalibrationStep::BundleAdjustment);
@@ -187,7 +183,6 @@ TEST_F(CameraDatabaseFixture, TestTargets) {
 
     // Satisfy foreign key constraint.
     InsertImage();
-
     EXPECT_NO_THROW(InsertTarget());
     EXPECT_THROW(InsertTarget(), std::runtime_error);
 
@@ -229,7 +224,6 @@ TEST_F(ImuDatabaseFixture, TestImuErrors) {
     // Satisfy foreign key constraints.
     InsertImuData();
     InsertStep(step_type);
-
     EXPECT_NO_THROW(InsertImuError(step_type));
 
     result = database::ReadImuErrors(db, sensor_name, step_type);
@@ -252,7 +246,6 @@ TEST_F(ExtrinsicDatabaseFixture, TestControlPoints) {
 
     // Satisfy foreign key constraint.
     InsertStep(camera_name, step_type);
-
     EXPECT_NO_THROW(database::InsertControlPoints(db, camera_name, step_type, data));
 
     result = database::ReadControlPoints(db, camera_name, step_type);
@@ -270,7 +263,6 @@ TEST_F(ExtrinsicDatabaseFixture, TestReadTimeHandler) {
 
     // Satisfy foreign key constraint.
     InsertStep(camera_name, step_type);
-
     EXPECT_NO_THROW(database::InsertTimeHandler(db, camera_name, step_type, data));
 
     result = database::ReadTimeHandler(db, camera_name, step_type);
