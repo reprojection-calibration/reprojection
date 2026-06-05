@@ -1,2 +1,2 @@
-INSERT INTO gravity (step_name, sensor_name, ax, ay, az)
+INSERT INTO gravity (step_name, entity_id, ax, ay, az)
 VALUES (?, ?, ?, ?, ?);

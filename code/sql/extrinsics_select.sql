@@ -6,4 +6,4 @@ SELECT rx,
        z
 FROM extrinsics
 WHERE step_name = ?
-  AND sensor_name = ?
+  AND entity_id = ?
