@@ -9,7 +9,8 @@ namespace reprojection::optimization {
 // TODO(Jack): This has SOOOO many arguments... is that just how it is? Or a sign that we are missing a clean
 // abstraction?
 // TODO(Jack): Get a type for the extrinsic calibration! Both the tf and gravity!
-std::tuple<spline::Se3Spline, Array6d, Array3d> ExtrinsicOptimization(
+// TODO(Jack): Return ceres state diagnostics?
+std::tuple<spline::Se3Spline, Array6d, Array3d, CeresState> ExtrinsicOptimization(
     ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, Array6d const& initial_tf_imu_co,
     Array3d const& initial_gravity_w, CameraInfo const& sensor, CameraMeasurements const& targets,
     CameraState const& intrinsics);

@@ -9,7 +9,7 @@
 
 namespace reprojection::optimization {
 
-std::tuple<spline::Se3Spline, Array6d, Array3d> ExtrinsicOptimization(
+std::tuple<spline::Se3Spline, Array6d, Array3d, CeresState> ExtrinsicOptimization(
     ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, Array6d const& initial_tf_imu_co,
     Array3d const& initial_gravity_w, CameraInfo const& sensor, CameraMeasurements const& targets,
     CameraState const& intrinsics) {
@@ -72,9 +72,13 @@ std::tuple<spline::Se3Spline, Array6d, Array3d> ExtrinsicOptimization(
         }
     }
 
+    // This was already solved for in the bundle adjustment step, therefore I do not think there is a good reason to
+    // further optimize it here.
+    problem.SetParameterBlockConstant(intrinsics_x.intrinsics.data());
+
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    return {optimized_spline, optimized_tf_imu_co, optimized_gravity_w};
+    return {optimized_spline, optimized_tf_imu_co, optimized_gravity_w, ceres_state};
 }
 
 std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(spline::Se3Spline const& spline, CameraInfo const& sensor,
