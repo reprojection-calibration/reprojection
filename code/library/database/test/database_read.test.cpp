@@ -134,6 +134,23 @@ TEST_F(CameraDatabaseFixture, TestPoses) {
     EXPECT_TRUE(result.at(timestamp_ns).pose.isApprox(pose));
 }
 
+// NOTE(Jack): There is not "read" component of this test because as of now (05.06.2026) there is no reason or code to
+// read reprojection errors back from the database.
+TEST_F(CameraDatabaseFixture, TestReprojectionErrors) {
+    std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
+    auto const step_type{CalibrationStep::PoseInitialization};
+
+    EXPECT_THROW(database::InsertReprojectionErrors(db, sensor_name, step_type, data), std::runtime_error);
+
+    // Satisfy foreign key constraints.
+    InsertImage();
+    InsertTarget();
+    InsertStep(step_type);
+    InsertPose(step_type);
+
+    EXPECT_NO_THROW(database::InsertReprojectionErrors(db, sensor_name, step_type, data));
+}
+
 // NOTE(Jack): We do not use the test fixtures built in methods for the foreign key requirement check because the entity
 // is already added in the SetUp() method. This test is also more complicated because we also test the ReadCacheKey()
 // function which is essentially the read counterpart to the InsertStep() function.
@@ -183,23 +200,6 @@ TEST_F(CameraDatabaseFixture, TestTargets) {
     EXPECT_TRUE(bundle.pixels.isApprox(target.bundle.pixels));
     EXPECT_TRUE(bundle.points.isApprox(target.bundle.points));
     EXPECT_TRUE(indices.isApprox(target.indices));
-}
-
-TEST_F(CameraReadFixture, TestReadCacheKey) {
-    auto cache_key{database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization)};
-    EXPECT_FALSE(cache_key.has_value());
-
-    database::InsertStep(db, sensor_name, CalibrationStep::PoseInitialization, "1");
-
-    cache_key = database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization);
-    ASSERT_TRUE(cache_key.has_value());
-    EXPECT_EQ(cache_key.value(), "1");
-
-    database::InsertStep(db, sensor_name, CalibrationStep::PoseInitialization, "2");
-
-    cache_key = database::ReadCacheKey(db, sensor_name, CalibrationStep::PoseInitialization);
-    ASSERT_TRUE(cache_key.has_value());
-    EXPECT_EQ(cache_key.value(), "2");
 }
 
 TEST(DatabaseDatabaseRead, TestFullImuAddGetCycle) {
