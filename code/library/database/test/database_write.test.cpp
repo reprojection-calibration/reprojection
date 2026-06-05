@@ -237,19 +237,21 @@ TEST_F(ExtrinsicDatabaseFixture, TestInsertTimeHandler) {
                  std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestInsertGravity) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
-
-    // WARN(Jack): Similar to the case for the extrinsic (see test below), we are hijacking the sensor_name here.
-    // Gravity is not really directly associated with any single sensor. If anything it is more related to the target
-    // because that is what sets the world coordinate frame.
-    std::string_view sensor_name{"world"};
-    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
-
+// TODO(Jack): Should the gravity really be associated with the extrinsic entity?
+TEST_F(ExtrinsicDatabaseFixture, TestInsertGravity) {
     Array3d const gravity_w{0, 1, 2};
-    EXPECT_NO_THROW(database::InsertGravity(db, sensor_name, CalibrationStep::ExtrinsicInitialization, gravity_w));
 
-    EXPECT_THROW(database::InsertGravity(db, sensor_name, CalibrationStep::ExtrinsicInitialization, gravity_w),
+    EXPECT_THROW(database::InsertGravity(db, extrinsic_entity_id, CalibrationStep::ExtrinsicInitialization, gravity_w),
+                 std::runtime_error);
+
+    // Satisfy foreign key requirement
+    database::InsertStep(db, extrinsic_entity_id, CalibrationStep::ExtrinsicInitialization, "");
+
+    EXPECT_NO_THROW(
+        database::InsertGravity(db, extrinsic_entity_id, CalibrationStep::ExtrinsicInitialization, gravity_w));
+
+    // Duplicate entry throws
+    EXPECT_THROW(database::InsertGravity(db, extrinsic_entity_id, CalibrationStep::ExtrinsicInitialization, gravity_w),
                  std::runtime_error);
 }
 
