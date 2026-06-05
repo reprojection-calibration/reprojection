@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS target_info
     width          INTEGER     NOT NULL,
     unit_dimension REAL        NOT NULL,
     asymmetric     INTEGER     NOT NULL CHECK ( asymmetric IN (0, 1)),
-    PRIMARY KEY (sensor_name, target_type),
-    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps ON DELETE CASCADE
+
+    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, entity_id) ON DELETE CASCADE,
+    PRIMARY KEY (sensor_name, target_type)
 );
