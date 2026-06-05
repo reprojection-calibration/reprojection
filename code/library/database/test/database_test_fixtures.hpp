@@ -124,3 +124,19 @@ class ImuDatabaseFixture : public ::testing::Test {
     ImuMeasurements imu_data{{timestamp_ns, {{1, 2, 3}, {4, 5, 6}}}};
     ImuErrors imu_errors{{timestamp_ns, {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}}};
 };
+
+class ExtrinsicDatabaseFixture : public ::testing::Test {
+protected:
+    void SetUp() override {
+        db = db::OpenCalibrationDatabase(":memory:", true, false);
+
+        db::InsertEntity(db, camera_name, Entity::Camera);
+        db::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
+    }
+
+    SqlitePtr db{nullptr};
+    // The spline stuff gets associated with the camera it comes from and the actual extrinsic tf (including gravity,
+    // but not sure if that makes sense long term) get associated with an extrinsic specific entity id.
+    std::string camera_name{"/cam/retro/123"};
+    std::string extrinsic_id{"tf_imu_co"};
+};

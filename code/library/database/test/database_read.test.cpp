@@ -241,38 +241,7 @@ TEST_F(ImuDatabaseFixture, TestImuErrors) {
     EXPECT_TRUE(delta_acc.isApprox(imu_errors.at(timestamp_ns).delta_linear_acceleration));
 }
 
-TEST(DatabaseDatabaseRead, TestReadImuErrors) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
-    std::string_view sensor_name{"/imu/polaris/123"};
 
-    // Satisfy foreign key constraints and write the imu errors to the database so we can load them.
-    database::InsertImuData(db, sensor_name,
-                            {{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                             {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                             {15, {Vector3d::Zero(), Vector3d::Zero()}}});
-    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
-
-    database::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
-                              ImuErrors{{5, {{1, 2, 3}, {4, 5, 6}}},  //
-                                        {10, {Vector3d::Zero(), Vector3d::Zero()}},
-                                        {15, {Vector3d::Zero(), Vector3d::Zero()}}});
-
-    // Load the errors and check their size and the values in the first one.
-    auto const imu_errors{database::ReadImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
-    EXPECT_EQ(std::size(imu_errors), 3);
-
-    ImuErrorState const imu_error_i{imu_errors.at(5)};
-    EXPECT_EQ(imu_error_i.delta_angular_velocity[0], 1);
-    EXPECT_EQ(imu_error_i.delta_angular_velocity[1], 2);
-    EXPECT_EQ(imu_error_i.delta_angular_velocity[2], 3);
-    EXPECT_EQ(imu_error_i.delta_linear_acceleration[0], 4);
-    EXPECT_EQ(imu_error_i.delta_linear_acceleration[1], 5);
-    EXPECT_EQ(imu_error_i.delta_linear_acceleration[2], 6);
-
-    // Try to read data that does not exist - this simply returns an empty container and is NOT an error.
-    auto const unknown_sensor_data{database::ReadImuData(db, "/imu/polaris/unknown")};
-    EXPECT_EQ(std::size(unknown_sensor_data), 0);
-}
 
 TEST(DatabaseDatabaseRead, TestReadControlPoints) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
