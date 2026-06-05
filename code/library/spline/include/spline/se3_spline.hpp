@@ -56,6 +56,8 @@ class Se3Spline {
 
     Eigen::Ref<Matrix2NXd const> ControlPoints() const { return control_points_; }
 
+    Eigen::Ref<Matrix2NXd> MutableControlPoints() { return control_points_; }
+
     // WARN(Jack): We tried to return an Eigen::Ref here (and for the R3() method) like we do above for the
     // ControlPoints(), but that does not play nicely with the block expression returned by .topRows()/.bottomRows()! It
     // compiled and executed without segfaults or anything like that, but when we tried to get a map of the local
