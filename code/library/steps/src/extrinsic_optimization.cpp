@@ -45,13 +45,14 @@ void ExtrinsicOptimization::Save(std::tuple<spline::Se3Spline, Array6d, Array3d>
     database::InsertExtrinsic(db, SensorName(), step_type, _tf_imu_co);
     database::InsertGravity(db, SensorName(), step_type, _gravity_w);
 
+    // ERROR(Jack): Hardcoding the IMU name here due to foreign key constraint!!!
     // Save Imu errors
-    ImuErrors const imu_error{optimization::EvaluateImuError(imu_data, spline, tf_imu_co, gravity_w)};
-    database::InsertImuErrors(db, SensorName(), step_type, imu_error);
+    ImuErrors const imu_error{optimization::EvaluateImuError(imu_data, _spline, _tf_imu_co, _gravity_w)};
+    database::InsertImuErrors(db, "/imu0", step_type, imu_error);
 
     // Save reprojection error
     auto const [spline_poses,
-                reprojection_error]{optimization::ReprojectionErrorSpline(spline, camera_info, targets, intrinsics)};
+                reprojection_error]{optimization::ReprojectionErrorSpline(_spline, camera_info, targets, intrinsics)};
     database::InsertPoses(db, SensorName(), step_type, spline_poses);
     database::InsertReprojectionErrors(db, SensorName(), step_type, reprojection_error);
 }
