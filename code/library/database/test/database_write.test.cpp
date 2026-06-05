@@ -20,28 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-
-TEST_F(CameraDatabaseFixture, TestInsertTargets) {
-    EXPECT_THROW(database::InsertTargets(db, sensor_name, CameraMeasurements{{timestamp_ns, {}}}), std::runtime_error);
-
-    InsertImage();
-    database::InsertStep(db, sensor_name, CalibrationStep::FeatureExtraction, "");
-
-    EXPECT_NO_THROW(database::InsertTargets(db, sensor_name, CameraMeasurements{{timestamp_ns, {}}}));
-}
-
-TEST_F(CameraDatabaseFixture, TestWriteToDbCalibrationStep) {
-    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization));
-    EXPECT_NO_THROW(InsertStep(CalibrationStep::BundleAdjustment));
-    EXPECT_NO_THROW(InsertStep(CalibrationStep::SplineInitialization));
-}
-
-TEST_F(CameraDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
-    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "1"));
-    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "2"));
-    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "3"));
-}
-
 TEST_F(CameraDatabaseFixture, TestInsertIntrinsics) {
     EXPECT_THROW(database::InsertIntrinsics(db, sensor_name, CalibrationStep::PoseInitialization, CameraModel::Pinhole,
                                             {testing_utilities::pinhole_intrinsics}),

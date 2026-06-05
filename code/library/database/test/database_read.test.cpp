@@ -93,6 +93,33 @@ TEST_F(CameraDatabaseFixture, TestImages) {
     EXPECT_EQ(std::size(result.at(timestamp_ns).data), 0);
 }
 
+// NOTE(Jack): We do not use the test fixtures built in methods for the foreign key requirement check because the entity
+// is already added in the SetUp() method. This test is also more complicated because we also test the ReadCacheKey()
+// function which is essentially the read counterpart to the InsertStep() function.
+TEST_F(CameraDatabaseFixture, TestStepsAndReadCacheKey) {
+    // Foreign key requirement is not satisfied
+    EXPECT_THROW(db::InsertStep(db, "sensor_x", CalibrationStep::BundleAdjustment, "123"), std::runtime_error);
+
+    auto result{db::ReadCacheKey(db, "sensor_x", CalibrationStep::BundleAdjustment)};
+    EXPECT_FALSE(result.has_value());
+
+    // Satisfy foreign key requirement.
+    db::InsertEntity(db, "sensor_x", Entity::Camera);
+
+    EXPECT_NO_THROW(db::InsertStep(db, "sensor_x", CalibrationStep::BundleAdjustment, "123"));
+
+    result = db::ReadCacheKey(db, "sensor_x", CalibrationStep::BundleAdjustment);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, "123");
+
+    // Finally check the "upsert" semantics for updating a given steps cache key. All the other insert methods throw
+    // when you try to insert another value with the same primary key, but not the calibration step because we want the
+    // ability to update the cache key during the calibration process.
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "1"));
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "2"));
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "3"));
+}
+
 TEST_F(CameraDatabaseFixture, TestTargets) {
     CameraMeasurements result{database::ReadTargets(db, sensor_name)};
     EXPECT_EQ(std::size(result), 0);
