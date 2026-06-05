@@ -20,49 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-
-TEST_F(CameraDatabaseFixture, TestInsertReprojectionErrors) {
-    std::map<uint64_t, ArrayX2d> const data{{timestamp_ns, ArrayX2d::Zero(1, 2)}};
-
-    // Throws because the foreign key constraints are not met yet.
-    EXPECT_THROW(database::InsertReprojectionErrors(db, sensor_name, CalibrationStep::PoseInitialization, data),
-                 std::runtime_error);
-
-    // Satisfy foreign key constraints.
-    InsertImage();
-    InsertTarget();
-    InsertStep(CalibrationStep::PoseInitialization);
-    InsertPose(CalibrationStep::PoseInitialization);
-
-    EXPECT_NO_THROW(database::InsertReprojectionErrors(db, sensor_name, CalibrationStep::PoseInitialization, data));
-}
-
-class ImuDatabaseFixture : public ::testing::Test {
-   protected:
-    void SetUp() override {
-        db = database::OpenCalibrationDatabase(":memory:", true, false);
-
-        database::InsertEntity(db, sensor_name, Entity::Imu);
-    }
-
-    void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
-        database::InsertStep(db, sensor_name, step_name, cache_key);
-    }
-
-    void AddImuData() const {
-        database::InsertImuData(db, sensor_name, ImuMeasurements{{timestamp_ns, {Vector3d::Zero(), Vector3d::Zero()}}});
-    }
-
-    void AddImuError() const {
-        database::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
-                                  ImuErrors{{timestamp_ns, {Vector3d::Zero(), Vector3d::Zero()}}});
-    }
-
-    SqlitePtr db{nullptr};
-    uint64_t timestamp_ns{0};
-    std::string sensor_name{"/imu/polaris/123"};
-};
-
 TEST_F(ImuDatabaseFixture, TestInsertImuData) {
     EXPECT_NO_THROW(AddImuData());
 

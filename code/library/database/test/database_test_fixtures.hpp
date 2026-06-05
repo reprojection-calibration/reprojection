@@ -23,6 +23,8 @@ using EncodedImages = reprojection::EncodedImages;
 using Entity = reprojection::Entity;
 using ExtractedTarget = reprojection::ExtractedTarget;
 using Frames = reprojection::Frames;
+using ImuErrors = reprojection::ImuErrors;
+using ImuMeasurements = reprojection::ImuMeasurements;
 using MatrixX2d = reprojection::MatrixX2d;
 using MatrixX3d = reprojection::MatrixX3d;
 using SqlitePtr = reprojection::SqlitePtr;
@@ -95,4 +97,30 @@ class CameraDatabaseFixture : public ::testing::Test {
 
     // All the data values - we store these as part of the fixture so we can compare the reread values to the
     // groundtruth stored here.
+};
+
+class ImuDatabaseFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        db = db::OpenCalibrationDatabase(":memory:", true, false);
+
+        db::InsertEntity(db, sensor_name, Entity::Imu);
+    }
+
+    void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
+        db::InsertStep(db, sensor_name, step_name, cache_key);
+    }
+
+    void AddImuData() const {
+        db::InsertImuData(db, sensor_name, ImuMeasurements{{timestamp_ns, {{1, 2, 3}, {4, 5, 6}}}});
+    }
+
+    void AddImuError() const {
+        db::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
+                            ImuErrors{{timestamp_ns, {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}}});
+    }
+
+    SqlitePtr db{nullptr};
+    uint64_t timestamp_ns{0};
+    std::string sensor_name{"/imu/polaris/123"};
 };
