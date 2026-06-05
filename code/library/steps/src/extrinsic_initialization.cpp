@@ -45,7 +45,7 @@ void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic,
     database::InsertExtrinsic(db, sensor_name, step_type, tf_imu_co);
     database::InsertGravity(db, sensor_name, step_type, gravity_w);
 
-    ImuErrors const error{optimization::EvaluateImuError(imu_data, tf_imu_co, gravity_w, spline)};
+    ImuErrors const error{optimization::EvaluateImuError(imu_data, spline, tf_imu_co, gravity_w)};
     database::InsertImuErrors(db, SensorName(), step_type, error);
 }
 

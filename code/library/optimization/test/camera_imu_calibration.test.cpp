@@ -38,7 +38,7 @@ TEST(OptimizationCameraImuCalibration, TestReprojectionErrorSpline) {
     control_points << Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero();
     spline::Se3Spline const spline{control_points, {0, 1}};
 
-    auto const [poses, errors]{optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
+    auto const [poses, errors]{optimization::ReprojectionErrorSpline(spline, sensor, targets, camera_state)};
     EXPECT_EQ(std::size(poses), 1);
     EXPECT_TRUE(poses.at(timestamp_ns).pose.isApproxToConstant(0));
     EXPECT_EQ(std::size(errors), 1);
@@ -55,7 +55,7 @@ TEST(OptimizationCameraImuCalibration, TestEvaluateImuError) {
 
     Array6d const tf_imu_co{Array6d::Zero()};
     Array3d const gravity_w{Array3d::Zero()};
-    auto const errors{optimization::EvaluateImuError(imu_data, tf_imu_co, gravity_w, trajectory)};
+    auto const errors{optimization::EvaluateImuError(imu_data, trajectory, tf_imu_co, gravity_w)};
 
     EXPECT_EQ(std::size(errors), 100);
     for (auto const& error : errors) {

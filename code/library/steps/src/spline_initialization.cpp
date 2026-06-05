@@ -33,7 +33,7 @@ void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const
     database::InsertTimeHandler(db, SensorName(), step_type, spline.GetTimeHandler());
 
     auto const [spline_poses,
-                errors]{optimization::ReprojectionErrorSpline(camera_info, targets, bundle.camera_state, spline)};
+                errors]{optimization::ReprojectionErrorSpline(spline, camera_info, targets, bundle.camera_state)};
     database::InsertPoses(db, SensorName(), step_type, spline_poses);
     database::InsertReprojectionErrors(db, SensorName(), step_type, errors);
 }
