@@ -198,8 +198,10 @@ class ExtrinsicDatabaseFixture : public ::testing::Test {
     }
 
     SqlitePtr db{nullptr};
-    std::string extrinsic_entity_id{"tf_imu_co"};
+    // The spline stuff gets associated with the camera it comes from and the actual extrinsic tf (including gravity,
+    // but not sure if that makes sense long term) get associated with an extrinsic specific entity id.
     std::string camera_name{"/cam/retro/123"};
+    std::string extrinsic_entity_id{"tf_imu_co"};
 };
 
 TEST_F(ExtrinsicDatabaseFixture, TestInsertControlPoints) {
