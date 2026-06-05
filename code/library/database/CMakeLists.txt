@@ -120,8 +120,7 @@ set(TESTS
         src/sqlite_wrappers.test.cpp
         src/toml_converters.test.cpp
         test/calibration_database.test.cpp
-        test/database_read.test.cpp
+        test/database_read_write.test.cpp
         test/database_remove.test.cpp
-        test/database_write.test.cpp
 )
 AddTests()
