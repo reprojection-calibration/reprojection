@@ -11,6 +11,8 @@
 #include "testing_utilities/constants.hpp"
 #include "types/sensor_data_types.hpp"
 
+#include "database_test_fixtures.hpp"
+
 using namespace reprojection;
 
 class CameraReadFixture : public ::testing::Test {
@@ -43,34 +45,37 @@ class CameraReadFixture : public ::testing::Test {
                            {{5, 6}, {2, 3}, {650, 600}}};
 };
 
-TEST_F(CameraReadFixture, TestReadCameraInfo) {
+TEST_F(CameraDatabaseFixture, TestCameraInfo) {
     auto camera_info{database::ReadCameraInfo(db, "/nonexistent/camera")};
     EXPECT_FALSE(camera_info.has_value());
+
+    EXPECT_NO_THROW(InsertCameraInfo());
+    EXPECT_THROW(InsertCameraInfo(), std::runtime_error);  // Duplicate entry not allowed!
 
     camera_info = database::ReadCameraInfo(db, sensor_name);
     ASSERT_TRUE(camera_info.has_value());
     EXPECT_EQ(camera_info->sensor_name, sensor_name);
     EXPECT_EQ(camera_info->camera_model, CameraModel::Pinhole);
-    EXPECT_EQ(camera_info->bounds.u_min, testing_utilities::image_bounds.u_min);
-    EXPECT_EQ(camera_info->bounds.u_max, testing_utilities::image_bounds.u_max);
-    EXPECT_EQ(camera_info->bounds.v_min, testing_utilities::image_bounds.v_min);
-    EXPECT_EQ(camera_info->bounds.v_max, testing_utilities::image_bounds.v_max);
+    EXPECT_EQ(camera_info->bounds.u_min, tu::image_bounds.u_min);
+    EXPECT_EQ(camera_info->bounds.u_max, tu::image_bounds.u_max);
+    EXPECT_EQ(camera_info->bounds.v_min, tu::image_bounds.v_min);
+    EXPECT_EQ(camera_info->bounds.v_max, tu::image_bounds.v_max);
 }
 
-TEST_F(CameraReadFixture, TestReadTargetInfo) {
-    auto target_info{database::ReadTargetInfo(db, "/nonexistent/camera")};
-    EXPECT_FALSE(target_info.has_value());
+TEST_F(CameraDatabaseFixture, TestTargetInfo) {
+    auto result{database::ReadTargetInfo(db, "/nonexistent/camera")};
+    EXPECT_FALSE(result.has_value());
 
-    database::InsertStep(db, sensor_name, CalibrationStep::TargetInfo, "");
-    database::InsertTargetInfo(db, sensor_name, TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false});
+    EXPECT_NO_THROW(InsertTargetInfo());
+    EXPECT_THROW(InsertTargetInfo(), std::runtime_error);
 
-    target_info = database::ReadTargetInfo(db, sensor_name);
-    ASSERT_TRUE(target_info.has_value());
-    EXPECT_EQ(target_info->target_type, TargetType::Aprilgrid3);
-    EXPECT_EQ(target_info->height, 8);
-    EXPECT_EQ(target_info->width, 6);
-    EXPECT_EQ(target_info->unit_dimension, 0.1);
-    EXPECT_EQ(target_info->asymmetric, false);
+    result = database::ReadTargetInfo(db, sensor_name);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->target_type, target_info.target_type);
+    EXPECT_EQ(result->height, target_info.height);
+    EXPECT_EQ(result->width, target_info.width);
+    EXPECT_EQ(result->unit_dimension, target_info.unit_dimension);
+    EXPECT_EQ(result->asymmetric, target_info.asymmetric);
 }
 
 TEST_F(CameraReadFixture, TestReadImages) {

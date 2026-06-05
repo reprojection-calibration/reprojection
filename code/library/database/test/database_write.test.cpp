@@ -20,11 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-TEST_F(CameraDatabaseFixture, TestInsertCameraInfo) {
-    EXPECT_NO_THROW(InsertCameraInfo());
-    EXPECT_THROW(InsertCameraInfo(), std::runtime_error);  // Duplicate entry not allowed!
-}
-
 // TODO(Jack): If we have foreign key constraints one day, like we will have to for the multi-target case, then we can
 // add helpers like we have in the test fixture for other types, but for now we do not need to add a target info to the
 // database for any other reason.

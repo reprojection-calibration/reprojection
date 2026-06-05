@@ -24,6 +24,8 @@ using Entity = reprojection::Entity;
 using ExtractedTarget = reprojection::ExtractedTarget;
 using Frames = reprojection::Frames;
 using SqlitePtr = reprojection::SqlitePtr;
+using TargetInfo = reprojection::TargetInfo;
+using TargetType = reprojection::TargetType;
 
 class CameraDatabaseFixture : public ::testing::Test {
    protected:
@@ -59,6 +61,12 @@ class CameraDatabaseFixture : public ::testing::Test {
         db::InsertTargets(db, sensor_name, {{timestamp_ns, ExtractedTarget{{{}, {}}, {}}}});
     }
 
+    void InsertTargetInfo() const {
+        InsertStep(CalibrationStep::TargetInfo);
+
+        db::InsertTargetInfo(db, sensor_name, target_info);
+    }
+
     void InsertPose(CalibrationStep const step_name) const {
         Frames const frames{{timestamp_ns, {Array6d{0, 1, 2, 3, 4, 5}}}};
         db::InsertPoses(db, sensor_name, step_name, frames);
@@ -67,6 +75,7 @@ class CameraDatabaseFixture : public ::testing::Test {
     SqlitePtr db{nullptr};
     uint64_t timestamp_ns{0};
     std::string sensor_name{"/cam/retro/123"};
+    TargetInfo target_info { TargetType::Aprilgrid3, 8, 6, 0.1, false };
 
     // All the data values - we store these as part of the fixture so we can compare the reread values to the
     // groundtruth stored here.
