@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS calibration_steps
     step_name   TEXT     NOT NULL CHECK ( step_name IN ('bundle_adjustment',
                                                         'camera_info',
                                                         'extrinsic_initialization',
+                                                        'extrinsic_optimization',
                                                         'feature_extraction',
                                                         'image_loading',
                                                         'intrinsic_initialization',
