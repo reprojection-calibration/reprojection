@@ -20,6 +20,14 @@ std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& ca
     return CacheKeyFrom(camera_info, camera_measurements, optimization_state.camera_state, optimization_state.frames);
 }
 
+std::string CacheKey(ImuMeasurements const& imu_data, Eigen::Matrix<double, 6, -1> const& control_points,
+                     uint64_t const t0_ns, uint64_t const delta_t_ns, Array6d const& tf_imu_co,
+                     Array3d const& gravity_w, CameraInfo const& camera_info, CameraMeasurements const& targets,
+                     CameraState const& intrinsics) {
+    return CacheKeyFrom(imu_data, control_points, std::to_string(t0_ns), std::to_string(delta_t_ns), tf_imu_co,
+                        gravity_w, camera_info, targets, intrinsics);
+}
+
 std::string CacheKey(TargetInfo const& target_info, EncodedImages const& encoded_images, std::string_view config) {
     return CacheKeyFrom(target_info, encoded_images, config);
 }

@@ -15,6 +15,12 @@ std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& ca
 std::string CacheKey(CameraInfo const& camera_info, CameraMeasurements const& camera_measurements,
                      OptimizationState const& optimization_state);
 
+// TODO(Jack): This function signature is crazy complicated! What are we doing wrong?
+std::string CacheKey(ImuMeasurements const& imu_data, Eigen::Matrix<double, 6, -1> const& control_points,
+                     uint64_t const t0_ns, uint64_t const delta_t_ns, Array6d const& tf_imu_co,
+                     Array3d const& gravity_w, CameraInfo const& camera_info, CameraMeasurements const& targets,
+                     CameraState const& intrinsics);
+
 std::string CacheKey(TargetInfo const& target_info, EncodedImages const& encoded_images, std::string_view config);
 
 std::string CacheKey(std::string_view const& data);

@@ -15,8 +15,6 @@ std::string Serialize(CameraModel const data);
 
 std::string Serialize(CameraState const& data);
 
-std::string Serialize(Eigen::Matrix<double, 6, -1> const& data);
-
 // TODO(Jack): Test!
 std::string Serialize(EncodedImages const& data);
 
@@ -39,6 +37,19 @@ void SerializeEigenByRows(Eigen::DenseBase<Derived> const& m, std::ostream& os) 
         }
         os << ";";
     }
+}
+
+template <typename Derived>
+std::string Serialize(Eigen::DenseBase<Derived> const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    for (Eigen::Index i{0}; i < data.cols(); ++i) {
+        SerializeEigenByRows(data.col(i), oss);
+        oss << "|";
+    }
+
+    return oss.str();
 }
 
 }  // namespace reprojection::caching

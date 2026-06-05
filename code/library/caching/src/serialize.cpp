@@ -48,18 +48,6 @@ std::string Serialize(CameraState const& data) {
     return oss.str();
 }
 
-std::string Serialize(Eigen::Matrix<double, 6, -1> const& data) {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(3);
-
-    for (int i{0}; i < data.cols(); ++i) {
-        SerializeEigenByRows(data.col(i), oss);
-        oss << "|";
-    }
-
-    return oss.str();
-}
-
 std::string Serialize(EncodedImages const& data) {
     std::ostringstream oss;
 
