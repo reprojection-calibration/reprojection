@@ -16,9 +16,9 @@ TEST(OptimizationCameraImuCalibration, TestExtrinsicOptimization) {
     uint64_t const timespan_ns{1'000'000'000};
 
     auto const [targets, poses]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 50, timespan_ns, false)};
-    auto const [imu_data, _]{testing_mocks::GenerateImuData(200, timespan_ns)};
+    auto const [imu_data, _]{testing_mocks::GenerateImuData(100, timespan_ns)};
 
-    spline::Se3Spline const initial_spline{spline::InitializeSe3SplineState(poses, 500)};
+    spline::Se3Spline const initial_spline{spline::InitializeSe3SplineState(poses, 200)};
     Array6d const initial_tf_imu_co{Array6d::Zero()};
     Array3d const initial_gravity_w{Array3d::Zero()};
 

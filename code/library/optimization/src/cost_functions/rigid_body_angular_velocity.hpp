@@ -43,8 +43,15 @@ class RigidBodyAngularVelocity {
         return true;
     }
 
+    // ADD NOTE
+    // ADD NOTE
+    // ADD NOTE
+    // ADD NOTE
+    // F20260605 05:09:39.452593     1 problem_impl.cc:132] Check failed: size == existing_size Tried adding a parameter
+    // block with the same double pointer, 0x7ffe17a85940, twice, but with different block sizes. Original size was 3
+    // but new size is 6
     static ceres::CostFunction* Create(Vector3d const& omega_imu, double const u_i, uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<RigidBodyAngularVelocity, 3, 3, 3, 3, 3, 3>(
+        return new ceres::AutoDiffCostFunction<RigidBodyAngularVelocity, 3, 6, 6, 6, 6, 6>(
             new RigidBodyAngularVelocity(omega_imu, u_i, delta_t_ns));
     }
 
