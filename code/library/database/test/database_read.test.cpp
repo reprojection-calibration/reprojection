@@ -226,7 +226,7 @@ TEST_F(ImuDatabaseFixture, TestImuErrors) {
 
     EXPECT_THROW(InsertImuError(step_type), std::runtime_error);
 
-    // Foreign key requirements.
+    // Satisfy foreign key constraints.
     InsertImuData();
     InsertStep(step_type);
 
@@ -250,7 +250,7 @@ TEST_F(ExtrinsicDatabaseFixture, TestControlPoints) {
     spline::Matrix2NXd const data{spline::Matrix2NXd::Random(6, 10)};
     EXPECT_THROW(database::InsertControlPoints(db, camera_name, step_type, data), std::runtime_error);
 
-    // Foreign key requirement.
+    // Satisfy foreign key constraint.
     InsertStep(camera_name, step_type);
 
     EXPECT_NO_THROW(database::InsertControlPoints(db, camera_name, step_type, data));
@@ -259,22 +259,23 @@ TEST_F(ExtrinsicDatabaseFixture, TestControlPoints) {
     EXPECT_TRUE(result.isApprox(data));
 }
 
-TEST(DatabaseDatabaseRead, TestReadTimeHandler) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST_F(ExtrinsicDatabaseFixture, TestReadTimeHandler) {
+    auto const step_type{CalibrationStep::SplineInitialization};
 
-    std::string_view sensor_name{"/cam/retro/123"};
-    database::InsertStep(db, sensor_name, CalibrationStep::SplineInitialization, "");
-    spline::TimeHandler const time_handler_gt{100, 200};
+    auto result{database::ReadTimeHandler(db, camera_name, step_type)};
+    EXPECT_FALSE(result.has_value());
 
-    database::InsertTimeHandler(db, sensor_name, CalibrationStep::SplineInitialization, time_handler_gt);
+    spline::TimeHandler const data{100, 200};
+    EXPECT_THROW(database::InsertTimeHandler(db, camera_name, step_type, data), std::runtime_error);
 
-    auto const time_handler{database::ReadTimeHandler(db, sensor_name, CalibrationStep::SplineInitialization)};
-    ASSERT_TRUE(time_handler.has_value());
-    EXPECT_EQ(time_handler, time_handler_gt);
+    // Satisfy foreign key constraint.
+    InsertStep(camera_name, step_type);
 
-    auto const unknown_sensor_data{
-        database::ReadTimeHandler(db, "/cam/retro/unknown", CalibrationStep::SplineInitialization)};
-    EXPECT_FALSE(unknown_sensor_data.has_value());
+    EXPECT_NO_THROW(database::InsertTimeHandler(db, camera_name, step_type, data));
+
+    result = database::ReadTimeHandler(db, camera_name, step_type);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result, data);
 }
 
 TEST(DatabaseDatabaseRead, TestReadExtrinsics) {

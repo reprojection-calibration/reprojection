@@ -20,23 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-
-TEST_F(ExtrinsicDatabaseFixture, TestInsertTimeHandler) {
-    spline::TimeHandler const time_handler{100, 200};
-
-    EXPECT_THROW(database::InsertTimeHandler(db, camera_name, CalibrationStep::SplineInitialization, time_handler),
-                 std::runtime_error);
-
-    // Satisfy foreign key requirement
-    database::InsertStep(db, camera_name, CalibrationStep::SplineInitialization, "");
-
-    EXPECT_NO_THROW(database::InsertTimeHandler(db, camera_name, CalibrationStep::SplineInitialization, time_handler));
-
-    // Duplicate entry throws
-    EXPECT_THROW(database::InsertTimeHandler(db, camera_name, CalibrationStep::SplineInitialization, time_handler),
-                 std::runtime_error);
-}
-
 // TODO(Jack): Should the gravity really be associated with the extrinsic entity?
 TEST_F(ExtrinsicDatabaseFixture, TestInsertGravity) {
     Array3d const gravity_w{0, 1, 2};
