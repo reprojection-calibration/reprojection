@@ -142,23 +142,28 @@ TEST_F(CameraDatabaseFixture, TestInsertReprojectionErrors) {
     EXPECT_NO_THROW(database::InsertReprojectionErrors(db, sensor_name, CalibrationStep::PoseInitialization, data));
 }
 
-TEST(DatabaseSensorDataInterface, TestInsertImuData) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
+class ImuDatabaseFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        db = database::OpenCalibrationDatabase(":memory:", true, false);
 
-    std::string_view sensor_name_1{"/imu/polaris/123"};
-    EXPECT_NO_THROW(database::InsertImuData(db, sensor_name_1,
-                                            ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}},  //
-                                                            {1, {Vector3d::Zero(), Vector3d::Zero()}}}));
+        database::InsertEntity(db, sensor_name, Entity::Imu);
+    }
 
-    // Add second sensors data with same timestamp as a preexisting record - works because we use a compound primary
-    // key (timestamp_ns, sensor_name) so it is not a duplicate
-    std::string_view sensor_name_2{"/imu/polaris/456"};
-    EXPECT_NO_THROW(
-        database::InsertImuData(db, sensor_name_2, ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}));
+    void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
+        database::InsertStep(db, sensor_name, step_name, cache_key);
+    }
 
-    // Add a repeated record - this is not successful because the primary key must always be unique!
-    EXPECT_THROW(database::InsertImuData(db, sensor_name_2, ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}}),
-                 std::runtime_error);
+    void AddImuData() const { database::InsertImuData(db, sensor_name, ImuMeasurements{{timestamp_ns, {Vector3d::Zero(),Vector3d::Zero()}}}); }
+
+    SqlitePtr db{nullptr};
+    uint64_t timestamp_ns{0};
+    std::string sensor_name{"/imu/polaris/123"};
+};
+
+TEST_F(ImuDatabaseFixture, TestInsertImuData) {
+    EXPECT_NO_THROW(AddImuData());
+    EXPECT_THROW(AddImuData(), std::runtime_error);  // Duplicate entry not allowed!
 }
 
 TEST(DatabaseSensorDataInterface, TestInsertImuErrors) {
