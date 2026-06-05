@@ -10,8 +10,9 @@
 #include "database/database_read.hpp"  // REMOVE
 #include "database/database_write.hpp"
 #include "steps/extrinsic_initialization.hpp"  // REMOVE
-#include "steps/spline_initialization.hpp"     // REMOVE
-#include "steps/step_runner.hpp"               // REMOVE
+#include "steps/extrinsic_optimization.hpp"
+#include "steps/spline_initialization.hpp"  // REMOVE
+#include "steps/step_runner.hpp"            // REMOVE
 
 using namespace reprojection;
 
@@ -80,9 +81,15 @@ int main() {
 
     // NOTE(Jack): Has to be the imu name here due to ImuError foreign key constraint.
     steps::ExtrinsicInitialization const extrinsic_init_step{imu_sensor_name, imu_data, spline};
-    auto const [extrinsics,
+    auto const [extrinsics_init,
                 extrinsic_init_cache_status]{steps::RunStep<std::pair<Array6d, Array3d>>(extrinsic_init_step, db)};
     std::cout << "Extrinsic init cache: " << ToString(extrinsic_init_cache_status) << std::endl;
+
+    steps::ExtrinsicOptimization const extrinsic_opt_step{
+        imu_data, spline, extrinsics_init.first, extrinsics_init.second, camera_info, targets, {*intrinsics}};
+    auto const [extrinsics_opt, extrinsic_opt_cache_status]{
+        steps::RunStep<std::tuple<spline::Se3Spline, Array6d, Array3d>>(extrinsic_opt_step, db)};
+    std::cout << "Extrinsic init cache: " << ToString(extrinsic_opt_cache_status) << std::endl;
 
     return EXIT_SUCCESS;
 }
