@@ -154,7 +154,14 @@ class ImuDatabaseFixture : public ::testing::Test {
         database::InsertStep(db, sensor_name, step_name, cache_key);
     }
 
-    void AddImuData() const { database::InsertImuData(db, sensor_name, ImuMeasurements{{timestamp_ns, {Vector3d::Zero(),Vector3d::Zero()}}}); }
+    void AddImuData() const {
+        database::InsertImuData(db, sensor_name, ImuMeasurements{{timestamp_ns, {Vector3d::Zero(), Vector3d::Zero()}}});
+    }
+
+    void AddImuError() const {
+        database::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
+                                  ImuErrors{{timestamp_ns, {Vector3d::Zero(), Vector3d::Zero()}}});
+    }
 
     SqlitePtr db{nullptr};
     uint64_t timestamp_ns{0};
@@ -163,30 +170,22 @@ class ImuDatabaseFixture : public ::testing::Test {
 
 TEST_F(ImuDatabaseFixture, TestInsertImuData) {
     EXPECT_NO_THROW(AddImuData());
-    EXPECT_THROW(AddImuData(), std::runtime_error);  // Duplicate entry not allowed!
+
+    // Duplicate entry not allowed!
+    EXPECT_THROW(AddImuData(), std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestInsertImuErrors) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
-    std::string_view sensor_name{"/imu/polaris/123"};
+TEST_F(ImuDatabaseFixture, TestInsertImuErrors) {
+    // Foreign key requirements not met
+    EXPECT_THROW(AddImuError(), std::runtime_error);
 
-    // Try to add a record before the foreign key requirements are met - not gonna work!
-    EXPECT_THROW(database::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
-                                           ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}}),
-                 std::runtime_error);
+    // Satisfy foreign key requirements and then it works fine :)
+    AddImuData();
+    AddStep(CalibrationStep::ExtrinsicInitialization);
+    EXPECT_NO_THROW(AddImuError());
 
-    // Satisfy foreign key requirements - an imu error requires a corresponding imu measurement and calibratio step.
-    database::InsertImuData(db, sensor_name, ImuMeasurements{{0, {Vector3d::Zero(), Vector3d::Zero()}}});
-    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
-
-    // Happy path.
-    EXPECT_NO_THROW(database::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
-                                              ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}}));
-
-    // Try to add a repeated record - this is not successful because the primary key must always be unique!
-    EXPECT_THROW(database::InsertImuErrors(db, sensor_name, CalibrationStep::ExtrinsicInitialization,
-                                           ImuErrors{{0, {Vector3d::Zero(), Vector3d::Zero()}}}),
-                 std::runtime_error);
+    // Duplicate entry not allowed!
+    EXPECT_THROW(AddImuError(), std::runtime_error);
 }
 
 TEST(DatabaseSensorDataInterface, TestInsertControlPoints) {
