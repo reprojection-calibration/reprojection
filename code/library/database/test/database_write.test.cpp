@@ -12,6 +12,7 @@
 #include "testing_utilities/constants.hpp"
 #include "types/sensor_data_types.hpp"
 
+#include "database_test_fixtures.hpp"
 #include "sqlite3_helpers.hpp"
 
 using namespace reprojection;
@@ -19,49 +20,9 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-class CameraDatabaseFixture : public ::testing::Test {
-   protected:
-    void SetUp() override {
-        db = database::OpenCalibrationDatabase(":memory:", true, false);
-
-        database::InsertEntity(db, sensor_name, Entity::Camera);
-    }
-
-    void AddStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
-        database::InsertStep(db, sensor_name, step_name, cache_key);
-    }
-
-    void AddCameraInfo() const {
-        AddStep(CalibrationStep::CameraInfo);
-
-        database::InsertCameraInfo(db, CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds});
-    }
-
-    void AddImage() const {
-        AddStep(CalibrationStep::ImageLoading);
-
-        database::InsertImages(db, sensor_name, EncodedImages{{timestamp_ns, {}}});
-    }
-
-    void AddTarget() const {
-        AddStep(CalibrationStep::FeatureExtraction);
-
-        database::InsertTargets(db, sensor_name, {{timestamp_ns, ExtractedTarget{Bundle{{}, {}}, {}}}});
-    }
-
-    void AddPose(CalibrationStep const step_name) const {
-        Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
-        database::InsertPoses(db, sensor_name, step_name, frames);
-    }
-
-    SqlitePtr db{nullptr};
-    uint64_t timestamp_ns{0};
-    std::string sensor_name{"/cam/retro/123"};
-};
-
 TEST_F(CameraDatabaseFixture, TestInsertCameraInfo) {
-    EXPECT_NO_THROW(AddCameraInfo());
-    EXPECT_THROW(AddCameraInfo(), std::runtime_error);  // Duplicate entry not allowed!
+    EXPECT_NO_THROW(InsertCameraInfo());
+    EXPECT_THROW(InsertCameraInfo(), std::runtime_error);  // Duplicate entry not allowed!
 }
 
 // TODO(Jack): If we have foreign key constraints one day, like we will have to for the multi-target case, then we can
@@ -76,29 +37,29 @@ TEST_F(CameraDatabaseFixture, TestInsertTargetInfo) {
 }
 
 TEST_F(CameraDatabaseFixture, TestInsertImages) {
-    EXPECT_NO_THROW(AddImage());
-    EXPECT_THROW(AddImage(), std::runtime_error);
+    EXPECT_NO_THROW(InsertImage());
+    EXPECT_THROW(InsertImage(), std::runtime_error);
 }
 
 TEST_F(CameraDatabaseFixture, TestInsertTargets) {
     EXPECT_THROW(database::InsertTargets(db, sensor_name, CameraMeasurements{{timestamp_ns, {}}}), std::runtime_error);
 
-    AddImage();
+    InsertImage();
     database::InsertStep(db, sensor_name, CalibrationStep::FeatureExtraction, "");
 
     EXPECT_NO_THROW(database::InsertTargets(db, sensor_name, CameraMeasurements{{timestamp_ns, {}}}));
 }
 
 TEST_F(CameraDatabaseFixture, TestWriteToDbCalibrationStep) {
-    EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::BundleAdjustment));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::SplineInitialization));
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization));
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::BundleAdjustment));
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::SplineInitialization));
 }
 
 TEST_F(CameraDatabaseFixture, TestWriteToDbCalibrationStepUpsert) {
-    EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "1"));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "2"));
-    EXPECT_NO_THROW(AddStep(CalibrationStep::PoseInitialization, "3"));
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "1"));
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "2"));
+    EXPECT_NO_THROW(InsertStep(CalibrationStep::PoseInitialization, "3"));
 }
 
 TEST_F(CameraDatabaseFixture, TestInsertIntrinsics) {
@@ -106,8 +67,8 @@ TEST_F(CameraDatabaseFixture, TestInsertIntrinsics) {
                                             {testing_utilities::pinhole_intrinsics}),
                  std::runtime_error);
 
-    AddCameraInfo();
-    AddStep(CalibrationStep::PoseInitialization);
+    InsertCameraInfo();
+    InsertStep(CalibrationStep::PoseInitialization);
 
     EXPECT_NO_THROW(database::InsertIntrinsics(db, sensor_name, CalibrationStep::PoseInitialization,
                                                CameraModel::Pinhole, {testing_utilities::pinhole_intrinsics}));
@@ -115,15 +76,15 @@ TEST_F(CameraDatabaseFixture, TestInsertIntrinsics) {
 
 TEST_F(CameraDatabaseFixture, TestWriteToDbPoseData) {
     // Throws because the foreign key constraints are not met yet.
-    EXPECT_THROW(AddPose(CalibrationStep::PoseInitialization), std::runtime_error);
+    EXPECT_THROW(InsertPose(CalibrationStep::PoseInitialization), std::runtime_error);
 
     // Satisfy foreign key constraints.
-    AddImage();
-    AddTarget();
-    AddStep(CalibrationStep::PoseInitialization);
+    InsertImage();
+    InsertTarget();
+    InsertStep(CalibrationStep::PoseInitialization);
 
     // Passes with no problem.
-    EXPECT_NO_THROW(AddPose(CalibrationStep::PoseInitialization));
+    EXPECT_NO_THROW(InsertPose(CalibrationStep::PoseInitialization));
 }
 
 TEST_F(CameraDatabaseFixture, TestInsertReprojectionErrors) {
@@ -134,10 +95,10 @@ TEST_F(CameraDatabaseFixture, TestInsertReprojectionErrors) {
                  std::runtime_error);
 
     // Satisfy foreign key constraints.
-    AddImage();
-    AddTarget();
-    AddStep(CalibrationStep::PoseInitialization);
-    AddPose(CalibrationStep::PoseInitialization);
+    InsertImage();
+    InsertTarget();
+    InsertStep(CalibrationStep::PoseInitialization);
+    InsertPose(CalibrationStep::PoseInitialization);
 
     EXPECT_NO_THROW(database::InsertReprojectionErrors(db, sensor_name, CalibrationStep::PoseInitialization, data));
 }
