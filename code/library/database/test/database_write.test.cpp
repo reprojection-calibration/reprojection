@@ -193,8 +193,8 @@ class ExtrinsicDatabaseFixture : public ::testing::Test {
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
 
-        database::InsertEntity(db, extrinsic_entity_id, Entity::Extrinsic);
         database::InsertEntity(db, camera_name, Entity::Camera);
+        database::InsertEntity(db, extrinsic_entity_id, Entity::Extrinsic);
     }
 
     SqlitePtr db{nullptr};
@@ -205,20 +205,18 @@ class ExtrinsicDatabaseFixture : public ::testing::Test {
 TEST_F(ExtrinsicDatabaseFixture, TestInsertControlPoints) {
     spline::Matrix2NXd const control_points{spline::Matrix2NXd::Random(6, 10)};
 
-    EXPECT_THROW(
-        database::InsertControlPoints(db, extrinsic_entity_id, CalibrationStep::SplineInitialization, control_points),
-        std::runtime_error);
+    EXPECT_THROW(database::InsertControlPoints(db, camera_name, CalibrationStep::SplineInitialization, control_points),
+                 std::runtime_error);
 
     // Satisfy foreign key requirement
-    database::InsertStep(db, extrinsic_entity_id, CalibrationStep::SplineInitialization, "");
+    database::InsertStep(db, camera_name, CalibrationStep::SplineInitialization, "");
 
     EXPECT_NO_THROW(
-        database::InsertControlPoints(db, extrinsic_entity_id, CalibrationStep::SplineInitialization, control_points));
+        database::InsertControlPoints(db, camera_name, CalibrationStep::SplineInitialization, control_points));
 
     // Duplicate entry throws
-    EXPECT_THROW(
-        database::InsertControlPoints(db, extrinsic_entity_id, CalibrationStep::SplineInitialization, control_points),
-        std::runtime_error);
+    EXPECT_THROW(database::InsertControlPoints(db, camera_name, CalibrationStep::SplineInitialization, control_points),
+                 std::runtime_error);
 }
 
 TEST_F(ExtrinsicDatabaseFixture, TestInsertTimeHandler) {
@@ -255,19 +253,21 @@ TEST_F(ExtrinsicDatabaseFixture, TestInsertGravity) {
                  std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestInsertExtrinsic) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
-
-    // WARN(Jack): We are hacking the sensor_name of the extrinsic calibration table to actually be the name of the
-    // transform. This is a hack! The extrinsic table is the first time that we came across datat that was related to
-    // two sensors, and as of today (02.06.26) our database design does not handle this, and therefore we are restoring
-    // to hacks :(
-    std::string_view sensor_name{"tf_imu_co"};
-    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
-
+TEST_F(ExtrinsicDatabaseFixture, TestInsertExtrinsic) {
     Array6d const tf_imu_co{0, 1, 2, 3, 4, 5};
-    EXPECT_NO_THROW(database::InsertExtrinsic(db, sensor_name, CalibrationStep::ExtrinsicInitialization, tf_imu_co));
 
-    EXPECT_THROW(database::InsertExtrinsic(db, sensor_name, CalibrationStep::ExtrinsicInitialization, tf_imu_co),
-                 std::runtime_error);
+    EXPECT_THROW(
+        database::InsertExtrinsic(db, extrinsic_entity_id, CalibrationStep::ExtrinsicInitialization, tf_imu_co),
+        std::runtime_error);
+
+    // Satisfy foreign key requirement
+    database::InsertStep(db, extrinsic_entity_id, CalibrationStep::ExtrinsicInitialization, "");
+
+    EXPECT_NO_THROW(
+        database::InsertExtrinsic(db, extrinsic_entity_id, CalibrationStep::ExtrinsicInitialization, tf_imu_co));
+
+    // Duplicate entry throws
+    EXPECT_THROW(
+        database::InsertExtrinsic(db, extrinsic_entity_id, CalibrationStep::ExtrinsicInitialization, tf_imu_co),
+        std::runtime_error);
 }
