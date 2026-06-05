@@ -18,12 +18,13 @@ enum class CalibrationStep {
     BundleAdjustment,
     CameraInfo,
     ExtrinsicInitialization,
+    ExtrinsicOptimization,
     FeatureExtraction,
     ImageLoading,
     IntrinsicInitialization,
     PoseInitialization,
     SplineInterpolation,
-    SplineNonlinearRefinement,
+    SplineNonlinearRefinement,  // REMOVE?
     TargetInfo
 };
 
