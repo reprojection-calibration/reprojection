@@ -35,6 +35,8 @@ inline std::string ToString(CalibrationStep const step_name) {
         return "camera_info";
     } else if (step_name == CalibrationStep::ExtrinsicInitialization) {
         return "extrinsic_initialization";
+    } else if (step_name == CalibrationStep::ExtrinsicOptimization) {
+        return "extrinsic_optimization";
     } else if (step_name == CalibrationStep::FeatureExtraction) {
         return "feature_extraction";
     } else if (step_name == CalibrationStep::ImageLoading) {
