@@ -42,8 +42,8 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) co
 void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const {
     auto const [tf_imu_co, gravity_w]{extrinsic};
 
-    database::InsertExtrinsic(db, sensor_name, step_type, tf_imu_co);
-    database::InsertGravity(db, sensor_name, step_type, gravity_w);
+    database::InsertExtrinsic(db, SensorName(), step_type, tf_imu_co);
+    database::InsertGravity(db, SensorName(), step_type, gravity_w);
 
     ImuErrors const error{optimization::EvaluateImuError(imu_data, spline, tf_imu_co, gravity_w)};
     database::InsertImuErrors(db, SensorName(), step_type, error);
