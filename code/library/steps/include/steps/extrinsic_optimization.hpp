@@ -13,7 +13,7 @@ struct ExtrinsicOptimization {
     Array3d gravity_w;
     CameraInfo camera_info;
     CameraMeasurements targets;
-    CameraState bundle;
+    CameraState intrinsics;
 
     CalibrationStep step_type{CalibrationStep::ExtrinsicOptimization};
 
