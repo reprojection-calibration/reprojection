@@ -188,44 +188,52 @@ TEST_F(ImuDatabaseFixture, TestInsertImuErrors) {
     EXPECT_THROW(AddImuError(), std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestInsertControlPoints) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
+class ExtrinsicDatabaseFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        db = database::OpenCalibrationDatabase(":memory:", true, false);
 
-    database::InsertStep(db, "/cam/retro/123", CalibrationStep::SplineInitialization, "");
-    database::InsertStep(db, "/cam/retro/456", CalibrationStep::SplineInitialization, "");
+        database::InsertEntity(db, extrinsic_entity_id, Entity::Extrinsic);
+        database::InsertEntity(db, camera_name, Entity::Camera);
+    }
 
+    SqlitePtr db{nullptr};
+    std::string extrinsic_entity_id{"tf_imu_co"};
+    std::string camera_name{"/cam/retro/123"};
+};
+
+TEST_F(ExtrinsicDatabaseFixture, TestInsertControlPoints) {
     spline::Matrix2NXd const control_points{spline::Matrix2NXd::Random(6, 10)};
 
-    std::string_view sensor_name_1{"/cam/retro/123"};
-    EXPECT_NO_THROW(
-        database::InsertControlPoints(db, sensor_name_1, CalibrationStep::SplineInitialization, control_points));
-
-    std::string_view sensor_name_2{"/cam/retro/456"};
-    EXPECT_NO_THROW(
-        database::InsertControlPoints(db, sensor_name_2, CalibrationStep::SplineInitialization, control_points));
-
     EXPECT_THROW(
-        database::InsertControlPoints(db, sensor_name_2, CalibrationStep::SplineInitialization, control_points),
+        database::InsertControlPoints(db, extrinsic_entity_id, CalibrationStep::SplineInitialization, control_points),
+        std::runtime_error);
+
+    // Satisfy foreign key requirement
+    database::InsertStep(db, extrinsic_entity_id, CalibrationStep::SplineInitialization, "");
+
+    EXPECT_NO_THROW(
+        database::InsertControlPoints(db, extrinsic_entity_id, CalibrationStep::SplineInitialization, control_points));
+
+    // Duplicate entry throws
+    EXPECT_THROW(
+        database::InsertControlPoints(db, extrinsic_entity_id, CalibrationStep::SplineInitialization, control_points),
         std::runtime_error);
 }
 
-TEST(DatabaseSensorDataInterface, TestInsertTimeHandler) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true, false)};
-
-    database::InsertStep(db, "/cam/retro/123", CalibrationStep::SplineInitialization, "");
-    database::InsertStep(db, "/cam/retro/456", CalibrationStep::SplineInitialization, "");
-
+TEST_F(ExtrinsicDatabaseFixture, TestInsertTimeHandler) {
     spline::TimeHandler const time_handler{100, 200};
 
-    std::string_view sensor_name_1{"/cam/retro/123"};
-    EXPECT_NO_THROW(
-        database::InsertTimeHandler(db, sensor_name_1, CalibrationStep::SplineInitialization, time_handler));
+    EXPECT_THROW(database::InsertTimeHandler(db, camera_name, CalibrationStep::SplineInitialization, time_handler),
+                 std::runtime_error);
 
-    std::string_view sensor_name_2{"/cam/retro/456"};
-    EXPECT_NO_THROW(
-        database::InsertTimeHandler(db, sensor_name_2, CalibrationStep::SplineInitialization, time_handler));
+    // Satisfy foreign key requirement
+    database::InsertStep(db, camera_name, CalibrationStep::SplineInitialization, "");
 
-    EXPECT_THROW(database::InsertTimeHandler(db, sensor_name_2, CalibrationStep::SplineInitialization, time_handler),
+    EXPECT_NO_THROW(database::InsertTimeHandler(db, camera_name, CalibrationStep::SplineInitialization, time_handler));
+
+    // Duplicate entry throws
+    EXPECT_THROW(database::InsertTimeHandler(db, camera_name, CalibrationStep::SplineInitialization, time_handler),
                  std::runtime_error);
 }
 
