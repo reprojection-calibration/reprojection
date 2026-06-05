@@ -252,7 +252,25 @@ TEST_F(ExtrinsicDatabaseFixture, TestControlPoints) {
     EXPECT_TRUE(result.isApprox(data));
 }
 
-TEST_F(ExtrinsicDatabaseFixture, TestReadTimeHandler) {
+TEST_F(ExtrinsicDatabaseFixture, TestExtrinsics) {
+    auto const step_type{CalibrationStep::SplineInitialization};
+
+    auto result{database::ReadExtrinsics(db, extrinsic_id, step_type)};
+    EXPECT_FALSE(result.has_value());
+
+    Array6d const data{0, 1, 2, 3, 4, 5};
+    EXPECT_THROW(database::InsertExtrinsic(db, camera_name, step_type, data), std::runtime_error);
+
+    // Satisfy foreign key constraint.
+    InsertStep(camera_name, step_type);
+    EXPECT_NO_THROW(database::InsertExtrinsic(db, camera_name, step_type, data));
+
+    result = database::ReadExtrinsics(db, camera_name, step_type);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(result->isApprox(data));
+}
+
+TEST_F(ExtrinsicDatabaseFixture, TestTimeHandler) {
     auto const step_type{CalibrationStep::SplineInitialization};
 
     auto result{database::ReadTimeHandler(db, camera_name, step_type)};
@@ -268,24 +286,6 @@ TEST_F(ExtrinsicDatabaseFixture, TestReadTimeHandler) {
     result = database::ReadTimeHandler(db, camera_name, step_type);
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result, data);
-}
-
-TEST(DatabaseDatabaseRead, TestReadExtrinsics) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
-
-    std::string_view sensor_name{"tf_imu_co"};
-    database::InsertStep(db, sensor_name, CalibrationStep::ExtrinsicInitialization, "");
-    Array6d const tf_imu_co_gt{0, 1, 2, 3, 4, 5};
-
-    database::InsertExtrinsic(db, sensor_name, CalibrationStep::ExtrinsicInitialization, tf_imu_co_gt);
-
-    auto const tf_imu_co{database::ReadExtrinsics(db, sensor_name, CalibrationStep::ExtrinsicInitialization)};
-    ASSERT_TRUE(tf_imu_co.has_value());
-    EXPECT_TRUE(tf_imu_co->isApprox(tf_imu_co_gt));
-
-    auto const unknown_sensor_data{
-        database::ReadExtrinsics(db, "tf_blah_blah", CalibrationStep::ExtrinsicInitialization)};
-    EXPECT_FALSE(unknown_sensor_data.has_value());
 }
 
 TEST(DatabaseDatabaseRead, TestReadGravity) {

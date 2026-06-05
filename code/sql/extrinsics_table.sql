@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS extrinsics
     x           REAL NOT NULL,
     y           REAL NOT NULL,
     z           REAL NOT NULL,
-    PRIMARY KEY (step_name, entity_id),
-    FOREIGN KEY (step_name, entity_id) REFERENCES calibration_steps ON DELETE CASCADE
+
+    FOREIGN KEY (step_name, entity_id) REFERENCES calibration_steps ON DELETE CASCADE,
+    PRIMARY KEY (step_name, entity_id)
 );
