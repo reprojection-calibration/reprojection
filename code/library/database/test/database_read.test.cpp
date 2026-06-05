@@ -78,22 +78,17 @@ TEST_F(CameraDatabaseFixture, TestTargetInfo) {
     EXPECT_EQ(result->asymmetric, target_info.asymmetric);
 }
 
-TEST_F(CameraReadFixture, TestReadImages) {
-    AddImage(0);
-    AddImage(1);
-    AddImage(2);
+TEST_F(CameraDatabaseFixture, TestImages) {
+    EncodedImages result = database::ReadImages(db, sensor_name);
+    EXPECT_EQ(std::size(result), 0);
 
-    EncodedImages const loaded_data{database::ReadImages(db, sensor_name)};
-    EXPECT_EQ(std::size(loaded_data), 3);
+    EXPECT_NO_THROW(InsertImage());
+    EXPECT_THROW(InsertImage(), std::runtime_error);
 
-    int test_timestamp{0};
-    for (auto const& [timestamp_ns_i, buffer] : loaded_data) {
-        EXPECT_EQ(timestamp_ns_i, test_timestamp);
-        test_timestamp += 1;
-
-        // TODO(Jack): We should consider making the absent of an image explicit with std::optional.
-        EXPECT_EQ(std::size(buffer.data), 0);
-    }
+    result = database::ReadImages(db, sensor_name);
+    EXPECT_EQ(std::size(result), 1);
+    // Loaded image is empty so the data array length is zero.
+    EXPECT_EQ(std::size(result.at(timestamp_ns).data), 0);
 }
 
 TEST_F(CameraReadFixture, TestReadTargets) {

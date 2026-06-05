@@ -50,18 +50,21 @@ class CameraDatabaseFixture : public ::testing::Test {
     }
 
     void InsertImage() const {
+        // NOTE(Jack): See note in InsertCameraInfo() above.
         InsertStep(CalibrationStep::ImageLoading);
 
         db::InsertImages(db, sensor_name, EncodedImages{{timestamp_ns, {}}});
     }
 
     void InsertTarget() const {
+        // NOTE(Jack): See note in InsertCameraInfo() above.
         InsertStep(CalibrationStep::FeatureExtraction);
 
         db::InsertTargets(db, sensor_name, {{timestamp_ns, ExtractedTarget{{{}, {}}, {}}}});
     }
 
     void InsertTargetInfo() const {
+        // NOTE(Jack): See note in InsertCameraInfo() above.
         InsertStep(CalibrationStep::TargetInfo);
 
         db::InsertTargetInfo(db, sensor_name, target_info);

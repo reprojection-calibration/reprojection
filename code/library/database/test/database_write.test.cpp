@@ -20,17 +20,6 @@ using namespace reprojection;
 // TODO(Jack): Refactor the tests that do not currently have a test fixture to either use the existing test fixture or
 // add and imu test fixture and a extrinsic calibration test fixture to find a place for them.
 
-// TODO(Jack): If we have foreign key constraints one day, like we will have to for the multi-target case, then we can
-// add helpers like we have in the test fixture for other types, but for now we do not need to add a target info to the
-// database for any other reason.
-TEST_F(CameraDatabaseFixture, TestInsertTargetInfo) {
-    database::InsertStep(db, sensor_name, CalibrationStep::TargetInfo, "");
-
-    EXPECT_NO_THROW(database::InsertTargetInfo(db, sensor_name, TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}));
-    EXPECT_THROW(database::InsertTargetInfo(db, sensor_name, TargetInfo{TargetType::Aprilgrid3, 8, 6, 0.1, false}),
-                 std::runtime_error);
-}
-
 TEST_F(CameraDatabaseFixture, TestInsertImages) {
     EXPECT_NO_THROW(InsertImage());
     EXPECT_THROW(InsertImage(), std::runtime_error);
