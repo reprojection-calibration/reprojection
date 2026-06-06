@@ -43,7 +43,7 @@ void InsertEntity(SqlitePtr const db, std::string_view entity_id, Entity const e
         Sqlite3Tools::Bind(stmt, 2, ToString(entity_type));
     }};
 
-    ExecuteStatement(sql_statements::entity_insert, binder, db);
+    ExecuteStatement(sql_statements::entity_insert_or_ignore, binder, db);
 }
 
 void InsertExtrinsic(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
