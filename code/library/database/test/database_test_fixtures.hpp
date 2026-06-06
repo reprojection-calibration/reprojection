@@ -9,6 +9,9 @@
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
+// TODO(Jack): There is no real reason for these test fxitures to be in their own file. Should be commbined with the
+// tests directly.
+
 // NOTE(Jack): This is a little ridiculous to use all these declarations here, but we are in a header file and I did not
 // want to do something like "using namespace reprojection;" here because that kind of namespace exposure in a header
 // file can be confusing later.
