@@ -128,7 +128,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     // correspondent IMU data point.
     database::InsertImuData(db, imu_name, imu_data);
 
-    steps::ExtrinsicInitialization const step{extrinsic_id, imu_data, spline};
+    steps::ExtrinsicInitialization const step{extrinsic_id, imu_name, imu_data, spline};
 
     // TODO(Jack): Define a type instead of just using std::pair<Array6d, Array3d>!!!
     auto [result, cache_status]{RunStep<std::pair<Array6d, Array3d>>(step, db)};
