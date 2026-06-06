@@ -32,10 +32,14 @@ struct DummyStep {
 };
 
 // TODO(Jack): How can we write a test to test the cascading delete and step replacement logic?
-TEST(stepsStepRunner, TestStepRunnerWithDummyStep) {
+TEST(StepsStepRunner, TestStepRunnerWithDummyStep) {
     auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
     DummyStep step{2};
+
+    // TODO(Jack): We need to find a clean way to incorporate the entity into the step testing. For now we add it here
+    // manually and for all other setps.
+    database::InsertEntity(db, step.SensorName(), Entity::Camera);
 
     auto [data, cache_status]{steps::RunStep<int>(step, db)};
     EXPECT_EQ(data, 2);  // Result from DummyStep.Compute()

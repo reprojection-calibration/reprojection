@@ -10,6 +10,22 @@ namespace reprojection {
 
 // LCOV_EXCL_START
 
+enum class Entity { Camera, Extrinsic, Imu, Target };
+
+inline std::string ToString(Entity const entity_id) {
+    if (entity_id == Entity::Camera) {
+        return "camera";
+    } else if (entity_id == Entity::Extrinsic) {
+        return "extrinsic";
+    } else if (entity_id == Entity::Imu) {
+        return "imu";
+    } else if (entity_id == Entity::Target) {
+        return "target";
+    } else {
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(Entity)");
+    }
+}
+
 // WARN(Jack): If tou add a step here but forget to add it to the ToString() function below you will get really cryptic
 // errors from the sql database because it does no rethrow the error properly.
 // TODO(Jack): It is honestly not so nice that we need to specify the steps here and once again in the sql database, and
@@ -22,8 +38,7 @@ enum class CalibrationStep {
     ImageLoading,
     IntrinsicInitialization,
     PoseInitialization,
-    SplineInterpolation,
-    SplineNonlinearRefinement,
+    SplineInitialization,
     TargetInfo
 };
 
@@ -42,10 +57,8 @@ inline std::string ToString(CalibrationStep const step_name) {
         return "intrinsic_initialization";
     } else if (step_name == CalibrationStep::PoseInitialization) {
         return "pose_initialization";
-    } else if (step_name == CalibrationStep::SplineInterpolation) {
-        return "spline_interpolation";
-    } else if (step_name == CalibrationStep::SplineNonlinearRefinement) {
-        return "spline_nonlinear_refinement";
+    } else if (step_name == CalibrationStep::SplineInitialization) {
+        return "spline_initialization";
     } else if (step_name == CalibrationStep::TargetInfo) {
         return "target_info";
     } else {

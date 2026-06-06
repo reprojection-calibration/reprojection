@@ -27,6 +27,10 @@ as the excellent but unmaintained [Kalibr](https://github.com/ethz-asl/kalibr) r
 
 ## Build
 
+Pull the git-lfs manged files - this includes a test database which is required by the dashboard unit tests.
+
+    git lfs pull
+
 The three applications provide support for data in ROS1 or ROS2 bags and .mp4 video files, build the one you need.
 
     # ROS1
@@ -54,7 +58,7 @@ The application requires four command line arguments:
 An example command to run the video-file application is:
 
     ./building/local/run_application.sh video-file \
-        --config /home/user/data/config.toml \
+        --config /home/user/data/calibration_config.toml \
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
 
@@ -148,9 +152,7 @@ an aprilgrid3 target. If it is possible given your camera and ability to display
 ### Use a computer screen to display the calibration target
 
 Sometimes you just want to calibrate but do not have a printer to print out the calibration target... that is annoying.
-If that is the case I recommend just showing the target on a computer screen. My experience says that for debugging and
-proof of concept this works absolutely fine. I would even venture to propose that a target displayed on a nice
-resolution computer screen is better than a printed target which is not as flat and easier to damage in comparison.
+If that is the case I recommend just showing the target on a computer screen.
 
 Note that when displaying the target you should turn off any "auto blur" effect that the image viewer applies. For
 example the GNOME Image Viewer, the default on Ubuntu, has "smooth images" settings which applies a blur that is

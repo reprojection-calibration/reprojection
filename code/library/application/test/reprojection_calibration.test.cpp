@@ -56,6 +56,8 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
     CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
 
+    database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, caching::CacheKey(""));
 
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,

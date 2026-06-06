@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS extracted_targets
     sensor_name  TEXT    NOT NULL,
     timestamp_ns INTEGER NOT NULL,
     data         BLOB    NOT NULL,
-    PRIMARY KEY (sensor_name, timestamp_ns),
-    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps ON DELETE CASCADE,
-    FOREIGN KEY (sensor_name, timestamp_ns) REFERENCES images
+
+    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, entity_id) ON DELETE CASCADE,
+    FOREIGN KEY (sensor_name, timestamp_ns) REFERENCES images,
+    PRIMARY KEY (sensor_name, timestamp_ns)
 );

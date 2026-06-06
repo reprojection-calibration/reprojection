@@ -39,14 +39,14 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
         self.assertIsNone(table)
 
         table = load_camera_info_table(self.db_path)
-        self.assertEqual(table.shape, (0, 4))
+        self.assertIsNone(table)
 
-    def test_load_camera_info_table(self):
+    def test_load_camera_intrinsics_table(self):
         table = load_camera_intrinsics_table("nonexistent.db3")
         self.assertIsNone(table)
 
         table = load_camera_intrinsics_table(self.db_path)
-        self.assertEqual(table.shape, (0, 4))
+        self.assertIsNone(table)
 
     def test_load_extracted_targets_table(self):
         table = load_extracted_targets_table("nonexistent.db3")
@@ -73,10 +73,8 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
         table = load_imu_errors_table("nonexistent.db3")
         self.assertIsNone(table)
 
-        # TODO(Jack): If one day the imu_errors table gets added to the database then we should enable this. But for now
-        # it is not part of the check in database yet.
-        # table = load_imu_errors_table(self.db_path)
-        # self.assertEqual(table.shape, (0, 9))
+        table = load_imu_errors_table(self.db_path)
+        self.assertIsNone(table)
 
     def test_load_poses_table(self):
         table = load_poses_table("nonexistent.db3")
@@ -84,39 +82,21 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
 
         # Checked in test database has an empty pose table.
         table = load_poses_table(self.db_path)
-        self.assertEqual(table.shape, (0, 9))
-        self.assertTrue(
-            list(table.columns.values)
-            == [
-                "step_name",
-                "sensor_name",
-                "timestamp_ns",
-                "rx",
-                "ry",
-                "rz",
-                "x",
-                "y",
-                "z",
-            ]
-        )
+        self.assertIsNone(table)
 
     def test_load_reprojection_errors_table(self):
         table = load_reprojection_errors_table("nonexistent.db3")
         self.assertIsNone(table)
 
         table = load_reprojection_errors_table(self.db_path)
-        self.assertEqual(table.shape, (0, 4))
-        self.assertTrue(
-            list(table.columns.values)
-            == ["step_name", "sensor_name", "timestamp_ns", "data"]
-        )
+        self.assertIsNone(table)
 
     def test_load_target_info_table(self):
         table = load_target_info_table("nonexistent.db3")
         self.assertIsNone(table)
 
         table = load_target_info_table(self.db_path)
-        self.assertEqual(table.shape, (0, 6))
+        self.assertIsNone(table)
 
 
 if __name__ == "__main__":

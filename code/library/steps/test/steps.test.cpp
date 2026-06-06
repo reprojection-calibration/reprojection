@@ -25,6 +25,7 @@
 using namespace reprojection;
 using namespace std::string_view_literals;
 
+// TODO(Jack): Rename to reflect this is specific to a camera entity.
 class StepsFixture : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -35,6 +36,8 @@ class StepsFixture : public ::testing::Test {
         auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
         camera_info = CameraInfo{sensor_name, camera_model, testing_utilities::image_bounds};
 
+        // WARN(Jack): Make sure all tests that use this are really a camera!!!
+        database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo, "");
         database::InsertCameraInfo(db, camera_info);
     }
@@ -109,6 +112,11 @@ class ImageSourceFixture : public StepsFixture {
 TEST(StepsSteps, TestExtrinsicInitialization) {
     SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
 
+    std::string const imu_name{"/imu/polaris/123"};
+    database::InsertEntity(db, imu_name, Entity::Imu);
+    std::string const extrinsic_id{"tf_imu_co"};
+    database::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
+
     // NOTE(Jack): Normally the extrinsic initialization function will actually run against the camera frames which I
     // think are inverted compared to the spline returned by the imu data generation function here. The proper way to
     // get the camera orientation spline would actually be to also run the mvg data generation and then interpolate the
@@ -116,16 +124,11 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     // the process mechanics. But still it would be nice to get a "proper" result here so maybe we change this.
     auto const [imu_data, spline]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
 
-    // NOTE(Jack): That using the sensor_name for the extrinsic calibration does not make sense  because it describes
-    // the relation between two sensors and not just a property of one single sensor. But we need to do it like this to
-    // meet the foreign key requirements of the ImuErrors written to the database during the following extrinsic
-    // initialization step.
-    std::string const sensor_name{"/imu/polaris/123"};
     // Satisfy foreign key constraint because the Save() stage will write out ImuErrors which depend on having a
     // correspondent IMU data point.
-    database::InsertImuData(db, sensor_name, imu_data);
+    database::InsertImuData(db, imu_name, imu_data);
 
-    steps::ExtrinsicInitialization const step{sensor_name, imu_data, spline};
+    steps::ExtrinsicInitialization const step{extrinsic_id, imu_name, imu_data, spline};
 
     // TODO(Jack): Define a type instead of just using std::pair<Array6d, Array3d>!!!
     auto [result, cache_status]{RunStep<std::pair<Array6d, Array3d>>(step, db)};

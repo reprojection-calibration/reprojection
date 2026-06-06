@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS poses
     x            REAL    NOT NULL,
     y            REAL    NOT NULL,
     z            REAL    NOT NULL,
-    PRIMARY KEY (step_name, sensor_name, timestamp_ns),
-    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps ON DELETE CASCADE,
-    FOREIGN KEY (sensor_name, timestamp_ns) REFERENCES extracted_targets
+
+    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, entity_id) ON DELETE CASCADE,
+    FOREIGN KEY (sensor_name, timestamp_ns) REFERENCES extracted_targets,
+    PRIMARY KEY (step_name, sensor_name, timestamp_ns)
 );

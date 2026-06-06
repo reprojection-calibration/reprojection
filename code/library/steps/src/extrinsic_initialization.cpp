@@ -9,7 +9,7 @@
 namespace reprojection::steps {
 
 std::string ExtrinsicInitialization::CacheKey() const {
-    return caching::CacheKey(sensor_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
+    return caching::CacheKey(extrinsic_id, imu_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
                              spline.GetTimeHandler().delta_t_ns_);
 }
 
@@ -42,11 +42,15 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) co
 void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const {
     auto const [tf_imu_co, gravity_w]{extrinsic};
 
-    database::InsertExtrinsic(db, sensor_name, step_type, tf_imu_co);
-    database::InsertGravity(db, sensor_name, step_type, gravity_w);
+    database::InsertExtrinsic(db, SensorName(), step_type, tf_imu_co);
+    database::InsertGravity(db, SensorName(), step_type, gravity_w);
 
+    // TODO(Jack): We save the imu errors here under the imu and not the extrinsic identity name! Is it hacky here that
+    // we use a second sensor name and also write an additional step to the database outside of the sanctioned step
+    // runner workflow?
     ImuErrors const error{optimization::EvaluateImuError(imu_data, tf_imu_co, gravity_w, spline)};
-    database::InsertImuErrors(db, SensorName(), step_type, error);
+    database::InsertStep(db, imu_name, step_type, CacheKey());
+    database::InsertImuErrors(db, imu_name, step_type, error);
 }
 
 }  // namespace reprojection::steps

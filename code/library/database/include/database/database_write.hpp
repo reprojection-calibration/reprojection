@@ -7,16 +7,18 @@
 
 namespace reprojection::database {
 
-// TODO(Jack): See the note below for InsertExtrinsic(). Same problems are plaguing us here.
-void InsertGravity(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
-                   Array3d const& data);
+void InsertEntity(SqlitePtr const db, std::string_view entity_id, Entity const entity_type);
 
-// TODO(Jack): We are hardcoding into the database that there is only ever on extrinsic - from one camera to one imu.
-// This will not scale if we add multiple cameras or multiple IMUs. But instead of overengineering from the start I am
-// going to wait until we need multisensor extrinsics instead of trying to guess what we will need.
+// TODO(Jack): We are hardcoding into the database that there is only ever on extrinsic - from one camera to one
+// imu. This will not scale if we add multiple cameras or multiple IMUs. But instead of overengineering from the
+// start I am going to wait until we need multisensor extrinsics instead of trying to guess what we will need.
 // NOTE(Jack): Because it is so opaque what is getting written to the database (it is just a random Array6d )
 void InsertExtrinsic(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
                      Array6d const& data);
+
+// TODO(Jack): See the note below for InsertExtrinsic(). Same problems are plaguing us here.
+void InsertGravity(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
+                   Array3d const& data);
 
 // NOTE(Jack): The calibration step has "upsert" semantics (https://sqlite.org/lang_upsert.html) because we need to
 // update the cache_key when the steps update on reruns.

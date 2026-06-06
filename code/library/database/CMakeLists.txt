@@ -17,6 +17,8 @@ set(SQL_FILES
         sql/camera_intrinsics_insert.sql
         sql/camera_intrinsics_select.sql
         sql/camera_intrinsics_table.sql
+        sql/entity_insert_or_ignore.sql
+        sql/entity_table.sql
         sql/extracted_target_insert.sql
         sql/extracted_targets_select.sql
         sql/extracted_targets_table.sql
@@ -118,8 +120,7 @@ set(TESTS
         src/sqlite_wrappers.test.cpp
         src/toml_converters.test.cpp
         test/calibration_database.test.cpp
-        test/database_read.test.cpp
+        test/database_read_write.test.cpp
         test/database_remove.test.cpp
-        test/database_write.test.cpp
 )
 AddTests()

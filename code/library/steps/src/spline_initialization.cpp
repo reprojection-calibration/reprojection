@@ -18,11 +18,11 @@ spline::Se3Spline SplineInitialization::Compute() const {
 }
 
 spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
-    auto const control_points{database::ReadControlPoints(db, SensorName(), CalibrationStep::SplineInterpolation)};
-    auto const time_handler{database::ReadTimeHandler(db, SensorName(), CalibrationStep::SplineInterpolation)};
+    auto const control_points{database::ReadControlPoints(db, SensorName(), CalibrationStep::SplineInitialization)};
+    auto const time_handler{database::ReadTimeHandler(db, SensorName(), CalibrationStep::SplineInitialization)};
 
     if (not time_handler) {
-        std::cout << "WE NEED AN ERROR STRATEGY! SplineInterpolation::Load()" << std::endl;  // LCOV_EXCL_LINE
+        std::cout << "WE NEED AN ERROR STRATEGY! SplineInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE
     }
 
     return spline::Se3Spline{control_points, *time_handler};
