@@ -49,6 +49,12 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 void Calibrate(toml::table const& config, ImageSourceSignature image_source, std::string const& image_source_signature,
                SqlitePtr const db) {
     // TODO(Jack): Add a config parsing step where all entities get written to the entity table.
+    // NOTE(Jack): The entity holds a special place in the calibration process in that it is not part of the regular
+    // cachable step workflow process. That is readily apparent by the foreign key dependency of the calibration step
+    // table on the entity ids found in the entity table. The most important implication of this is that the entity
+    // table needs a custom read/write step like object. And in addition to that, instead of pure "insert" semantics
+    // the entity use "insert or ignore" semantics because every time the calibration runs it will try to insert
+    // all the entities that are present. And if it is already present that is not an error!
     std::string const camera_name{config["camera"]["sensor_name"].as_string()->get()};
     database::InsertEntity(db, camera_name, Entity::Camera);
 

@@ -40,10 +40,11 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 
     result = application::ParseArgs(argc, argv);
     EXPECT_TRUE(result.has_value());
-    EXPECT_EQ(result->data_path, "/tmp");  // Heuristic check of one of the values
+    EXPECT_EQ(result->data_path, "/tmp"); // Heuristic check of one of the values
 }
 
-TEST(ApplicationReprojectionCalibration, TestCalibrate) {
+TEST(ApplicationReprojectionCalibration, TestCalibrate)
+{
     toml::table const config{toml::parse(testing_utilities::minimum_config)};
 
     auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
