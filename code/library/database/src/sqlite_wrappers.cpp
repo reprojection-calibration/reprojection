@@ -7,7 +7,7 @@ namespace reprojection::database {
 
 SqlStatement::SqlStatement(SqlitePtr const db, char const* const sql) {
     if (sqlite3_prepare_v2(db.get(), sql, -1, &stmt, nullptr) != SQLITE_OK) {
-        throw SqliteException(db, sql);
+        throw std::runtime_error("SqlStatement() constructor failed.");
     }
 }
 
