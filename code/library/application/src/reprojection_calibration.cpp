@@ -48,8 +48,11 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 // update_feature_extraction_cache_key.py
 void Calibrate(toml::table const& config, ImageSourceSignature image_source, std::string const& image_source_signature,
                SqlitePtr const db) {
-    steps::ImageLoading const image_loading{config["camera"]["sensor_name"].as_string()->get(), image_source_signature,
-                                            image_source};
+    // TODO(Jack): Add a config parsing step where all entities get written to the entity table.
+    std::string const camera_name{config["camera"]["sensor_name"].as_string()->get()};
+    database::InsertEntity(db, camera_name, Entity::Camera);
+
+    steps::ImageLoading const image_loading{camera_name, image_source_signature, image_source};
     auto const [encoded_images,
                 image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
