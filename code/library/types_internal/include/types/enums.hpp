@@ -59,7 +59,7 @@ inline std::string ToString(CalibrationStep const step_name) {
         return "pose_initialization";
     } else if (step_name == CalibrationStep::SplineInitialization) {
         return "spline_initialization";
-    }  else if (step_name == CalibrationStep::TargetInfo) {
+    } else if (step_name == CalibrationStep::TargetInfo) {
         return "target_info";
     } else {
         throw std::runtime_error(

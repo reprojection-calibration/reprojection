@@ -1,5 +1,3 @@
-#include "database/database_read.hpp"
-
 #include <gtest/gtest.h>
 
 #include <filesystem>
@@ -7,6 +5,7 @@
 #include <string>
 
 #include "database/calibration_database.hpp"
+#include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/sensor_data_types.hpp"
@@ -14,36 +13,6 @@
 #include "database_test_fixtures.hpp"
 
 using namespace reprojection;
-
-class CameraReadFixture : public ::testing::Test {
-   protected:
-    void SetUp() override {
-        db = database::OpenCalibrationDatabase(":memory:", true, false);
-
-        database::InsertStep(db, sensor_name, CalibrationStep::CameraInfo, "");
-        database::InsertCameraInfo(db, CameraInfo{sensor_name, CameraModel::Pinhole, testing_utilities::image_bounds});
-    }
-
-    void AddImage(uint64_t const timestamp_ns) const {
-        // Due to foreign key relationship we need add an image before we add the target
-        database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading, "");
-        database::InsertImages(db, sensor_name, EncodedImages{{timestamp_ns, {}}});
-    }
-
-    void AddTarget(uint64_t const timestamp_ns) const {
-        // Due to foreign key relationship we need add an image before we add the target
-        AddImage(timestamp_ns);
-
-        database::InsertStep(db, sensor_name, CalibrationStep::FeatureExtraction, "");
-        database::InsertTargets(db, sensor_name, {{timestamp_ns, target}});
-    }
-
-    SqlitePtr db{nullptr};
-    std::string sensor_name{"/cam/retro/123"};
-    ExtractedTarget target{Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
-                                  MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
-                           {{5, 6}, {2, 3}, {650, 600}}};
-};
 
 TEST_F(CameraDatabaseFixture, TestCameraInfo) {
     auto camera_info{database::ReadCameraInfo(db, "/nonexistent/camera")};
