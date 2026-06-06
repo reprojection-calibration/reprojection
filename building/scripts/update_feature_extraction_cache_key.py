@@ -22,11 +22,15 @@ except Exception as e:
     sys.exit(1)
 
 conn.execute(
+    # NOTE(Jack): This "ON CONFLICT" part is what gives us "upsert" semantics.
     """
-    INSERT INTO calibration_steps (step_name, sensor_name, cache_key)
+    INSERT INTO calibration_steps (step_name, entity_id, cache_key)
     VALUES (?, ?, ?)
+    ON CONFLICT(step_name, entity_id) DO UPDATE SET cache_key  = excluded.cache_key,
+                                                    created_at = CURRENT_TIMESTAMP;
     """,
     ("feature_extraction", "/cam0/image_raw", new_cache),
 )
 conn.commit()
 conn.close()
+
