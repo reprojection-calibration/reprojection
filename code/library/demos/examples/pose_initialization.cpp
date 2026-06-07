@@ -45,8 +45,9 @@ int main() {
 
     CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
     try {
-        database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading,
-                             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+
+        database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
                              "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e");
@@ -55,7 +56,7 @@ int main() {
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
                              "5d87595c7c8f53d8c355f8b889374c6d1d1cd4bed1472da698725bd51777385a");
     } catch (...) {
-        std::cerr << "Database setup threw exception." << std::endl;
+        std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
 
     ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
