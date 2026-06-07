@@ -53,9 +53,8 @@ TEST(OptimizationCameraImuCalibration, TestEvaluateImuError) {
     // case the trajectory is actually inversed (look at the mvg data generator). Lets try this on real data :)
     auto [imu_data, trajectory]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
 
-    Array6d const tf_imu_co{Array6d::Zero()};
-    Array3d const gravity_w{Array3d::Zero()};
-    auto const errors{optimization::EvaluateImuError(imu_data, tf_imu_co, gravity_w, trajectory)};
+    ImuCamExtrinsic const extrinsic{Extrinsic{"imu", "cam", Array6d::Zero()}, Array3d::Zero()};
+    auto const errors{optimization::EvaluateImuError(imu_data, extrinsic, trajectory)};
 
     EXPECT_EQ(std::size(errors), 100);
     for (auto const& error : errors) {

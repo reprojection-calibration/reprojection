@@ -9,11 +9,11 @@
 namespace reprojection::steps {
 
 std::string ExtrinsicInitialization::HashInputs() const {
-    return hashing::HashArguments(extrinsic_id, imu_name, imu_data, spline.ControlPoints(),
+    return hashing::HashArguments(imu_name, camera_name, imu_data, spline.ControlPoints(),
                                   spline.GetTimeHandler().t0_ns_, spline.GetTimeHandler().delta_t_ns_);
 }
 
-std::pair<Array6d, Array3d> ExtrinsicInitialization::Compute() const {
+ImuCamExtrinsic ExtrinsicInitialization::Compute() const {
     auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline, imu_data)};
 
     // TODO(Jack): Should we do something with the diagnostics? There are several places now where we ignore the
@@ -27,7 +27,7 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Compute() const {
     return {tf_imu_co, gravity_w};
 }
 
-std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) const {
+ImuCamExtrinsic ExtrinsicInitialization::Load(SqlitePtr const db) const {
     auto const tf_imu_co{database::ReadExtrinsics(db, EntityId(), CalibrationStep::ExtrinsicInitialization)};
     auto const gravity_w{database::ReadGravity(db, EntityId(), CalibrationStep::ExtrinsicInitialization)};
 
@@ -38,11 +38,11 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) co
     return {*tf_imu_co, *gravity_w};
 }
 
-void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const {
+void ExtrinsicInitialization::Save(ImuCamExtrinsic const& extrinsic, SqlitePtr const db) const {
     auto const [tf_imu_co, gravity_w]{extrinsic};
 
-    database::InsertExtrinsic(db, EntityId(), step_type, tf_imu_co);
-    database::InsertGravity(db, EntityId(), step_type, gravity_w);
+    database::InsertExtrinsic(db, EntityId(), step_type, extrinsic.tf);
+    database::InsertGravity(db, EntityId(), step_type, extrinsic.gravity);
 
     // TODO(Jack): We save the imu errors here under the imu and not the extrinsic identity name! Is it hacky here that
     // we use a second sensor name and also write an additional step to the database outside of the sanctioned step
