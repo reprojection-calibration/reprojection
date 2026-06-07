@@ -100,6 +100,8 @@ std::string Serialize(ImuMeasurements const& data) {
     return oss.str();
 }
 
+std::string Serialize(OptimizationState const& data) { return Serialize(data.camera_state) + Serialize(data.frames); }
+
 std::string Serialize(TargetInfo const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
@@ -115,5 +117,7 @@ std::string Serialize(TargetInfo const& data) {
 // NOTE(Jack): It is kind of dumb this version exists because it does not really do anything, but we need it to work
 // with the CacheKeyFrom() variadic template function.
 std::string Serialize(std::string_view data) { return std::string(data); }
+
+std::string Serialize(uint64_t const data) { return std::to_string(data); }
 
 }  // namespace reprojection::caching

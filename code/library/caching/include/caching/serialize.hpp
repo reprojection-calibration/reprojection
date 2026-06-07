@@ -31,9 +31,13 @@ std::string Serialize(Frames const& data);
 
 std::string Serialize(ImuMeasurements const& data);
 
+std::string Serialize(OptimizationState const& data);
+
 std::string Serialize(TargetInfo const& data);
 
 std::string Serialize(std::string_view data);
+
+std::string Serialize(uint64_t const data);
 
 template <typename Derived>
 void SerializeEigenByRows(Eigen::DenseBase<Derived> const& m, std::ostream& os) {

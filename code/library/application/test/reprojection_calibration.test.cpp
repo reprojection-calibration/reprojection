@@ -61,13 +61,13 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, caching::CacheKeyFrom(""));
 
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
-                         caching::CacheKeyFrom(sensor_name, camera_model, {}));
+                         caching::CacheKeyFrom(sensor_name, camera_model, EncodedImages{}));
     database::InsertCameraInfo(db, camera_info);
 
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, caching::CacheKeyFrom(""));
 
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
-                         caching::CacheKeyFrom(camera_info, {}));
+                         caching::CacheKeyFrom(camera_info, CameraMeasurements{}));
     database::InsertIntrinsics(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
                                camera_info.camera_model, {Array5d::Zero()});
 
