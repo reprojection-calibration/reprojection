@@ -6,7 +6,7 @@
 
 using namespace reprojection;
 
-TEST(CachingSerialize, TestSerializeCameraInfo) {
+TEST(HashingSerialize, TestSerializeCameraInfo) {
     CameraInfo const camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
 
     std::string const result{hashing::Serialize(camera_info)};
@@ -15,7 +15,7 @@ TEST(CachingSerialize, TestSerializeCameraInfo) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, TestSerializeCameraMeasurements) {
+TEST(HashingSerialize, TestSerializeCameraMeasurements) {
     ExtractedTarget const target{
         Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}}, MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}}},
         {{5, 6}, {2, 3}}};
@@ -29,7 +29,7 @@ TEST(CachingSerialize, TestSerializeCameraMeasurements) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, TestSerializeCameraState) {
+TEST(HashingSerialize, TestSerializeCameraState) {
     CameraState const camera_state{testing_utilities::pinhole_intrinsics};
 
     std::string const result{hashing::Serialize(camera_state)};
@@ -38,7 +38,7 @@ TEST(CachingSerialize, TestSerializeCameraState) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, TestSerializeControlPointMatrix) {
+TEST(HashingSerialize, TestSerializeControlPointMatrix) {
     Eigen::Matrix<double, 6, 2> const control_points{{1, 2}, {3, 4}, {5, 6}, {1, 2}, {3, 4}, {5, 6}};
 
     std::string const result{hashing::Serialize(control_points)};
@@ -46,7 +46,7 @@ TEST(CachingSerialize, TestSerializeControlPointMatrix) {
 
     EXPECT_EQ(result, gt_result);
 }
-TEST(CachingSerialize, TestSerializeEncodedImages) {
+TEST(HashingSerialize, TestSerializeEncodedImages) {
     EncodedImages const encoded_images{{0, ImageBuffer{}}, {1, ImageBuffer{}}};
 
     std::string const result{hashing::Serialize(encoded_images)};
@@ -55,7 +55,7 @@ TEST(CachingSerialize, TestSerializeEncodedImages) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, TestSerializeFrames) {
+TEST(HashingSerialize, TestSerializeFrames) {
     Frames const frames{{0, {Array6d::Ones()}}, {1, {2 * Array6d::Ones()}}};
 
     std::string const result{hashing::Serialize(frames)};
@@ -64,7 +64,7 @@ TEST(CachingSerialize, TestSerializeFrames) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, TestSerializeImuMeasurements) {
+TEST(HashingSerialize, TestSerializeImuMeasurements) {
     ImuMeasurements const imu_data{{0, {{0, 1, 2}, {3, 4, 5}}}};
 
     std::string const result{hashing::Serialize(imu_data)};
@@ -73,7 +73,7 @@ TEST(CachingSerialize, TestSerializeImuMeasurements) {
     EXPECT_EQ(result, gt_result);
 }
 
-TEST(CachingSerialize, TestSerializeTargetInfo) {
+TEST(HashingSerialize, TestSerializeTargetInfo) {
     TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
 
     std::string const result{hashing::Serialize(target_info)};
