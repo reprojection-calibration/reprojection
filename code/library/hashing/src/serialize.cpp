@@ -1,5 +1,5 @@
 
-#include "../include/hashing/serialize.hpp"
+#include "hashing/serialize.hpp"
 
 #include <ranges>
 

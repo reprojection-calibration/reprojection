@@ -11,7 +11,6 @@ done
 # TODO(Jack): Do not manually specify includes!
 cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
   -I /temporary/code/library/application/include \
-  -I /temporary/code/library/hashing/include \
   -I /temporary/code/library/calibration/include \
   -I /temporary/code/library/calibration/src \
   -I /temporary/code/library/calibration_data_views/include \
@@ -23,6 +22,7 @@ cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr 
   -I /temporary/code/library/feature_extraction/include \
   -I /temporary/code/library/feature_extraction/src \
   -I /temporary/code/library/geometry/include \
+  -I /temporary/code/library/hashing/include \
   -I /temporary/code/library/image_viewer/include \
   -I /temporary/code/library/logging/include \
   -I /temporary/code/library/optimization/include \

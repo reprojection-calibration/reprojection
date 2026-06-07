@@ -7,13 +7,13 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         SQLite::SQLite3
         application
-        hashing
         calibration
         config
         database
         eigen_utilities
         feature_extraction
         geometry
+        hashing
         image_viewer
         optimization
         pnp

@@ -12,11 +12,11 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         Eigen3::Eigen
         SQLite::SQLite3
-        hashing
         calibration
         config
         database
         geometry # Required due to database write dependency on spline
+        hashing
         logging
         optimization
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the pose_init public header interface.
