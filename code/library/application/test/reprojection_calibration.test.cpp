@@ -58,16 +58,16 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, caching::CacheKey(""));
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, caching::CacheKeyFrom(""));
 
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
-                         caching::CacheKey(sensor_name, camera_model, {}));
+                         caching::CacheKeyFrom(sensor_name, camera_model, {}));
     database::InsertCameraInfo(db, camera_info);
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, caching::CacheKey(""));
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, caching::CacheKeyFrom(""));
 
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
-                         caching::CacheKey(camera_info, {}));
+                         caching::CacheKeyFrom(camera_info, {}));
     database::InsertIntrinsics(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
                                camera_info.camera_model, {Array5d::Zero()});
 

@@ -15,7 +15,7 @@ auto const log{logging::Get("steps")};
 
 // TODO(Jack): The name of the class variable "cache_key" is misleading because it is not a cache key but really a
 // serialized data signature. We should fix this name to clarify its purpose and use.
-std::string ImageLoading::CacheKey() const { return caching::CacheKey(cache_key); }
+std::string ImageLoading::CacheKey() const { return caching::CacheKeyFrom(cache_key); }
 
 std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
     auto encoded_images = std::make_shared<EncodedImages>();
