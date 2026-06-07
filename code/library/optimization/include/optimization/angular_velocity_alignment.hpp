@@ -1,8 +1,6 @@
 #pragma once
 
-#include <tuple>
-
-#include "spline/spline_state.hpp"
+#include "spline/se3_spline.hpp"
 #include "types/ceres_types.hpp"
 #include "types/eigen_types.hpp"
 #include "types/spline_types.hpp"
@@ -20,6 +18,6 @@ namespace reprojection::optimization {
  * solution will be degenerate.
  */
 std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu,
-                                                        spline::CubicBSplineC3 so3_spline);
+                                                        spline::Se3Spline spline);
 
 }  // namespace  reprojection::optimization

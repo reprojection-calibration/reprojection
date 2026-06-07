@@ -25,8 +25,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
         }
         poses.insert({timestamp_ns, {*pose}});
 
-        auto const normalized_position{
-            spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
+        auto const normalized_position{spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.Size())};
         if (not normalized_position.has_value()) {
             continue;  // LCOV_EXCL_LINE
         }
@@ -60,8 +59,7 @@ ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Array6d const& tf_im
 
     for (auto const timestamp_ns : imu_data | std::views::keys) {
         // TODO(Jack): This logic is now repeated several times... we are missing the point I think. How to fix!?
-        auto const normalized_position{
-            spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
+        auto const normalized_position{spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.Size())};
         if (not normalized_position.has_value()) {
             continue;  // LCOV_EXCL_LINE
         }
