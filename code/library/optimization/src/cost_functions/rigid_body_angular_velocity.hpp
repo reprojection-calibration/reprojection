@@ -38,6 +38,17 @@ class RigidBodyAngularVelocity {
         return true;
     }
 
+    // NOTE(Jack): The rigid body angular velocity optimization actually only requires the rotation components of the
+    // extrinsic and the rotation components of the spline. But we use this cost function also in the full optimization
+    // (not just for the extrinsic initialization) and there we have full size control point parameter blocks. Ceres
+    // does not allow use to have two cost functions attached to a problem that reference the same pointer to a
+    // parameter block but with different sizes. It throws this error if we try:
+    //
+    //      1 problem_impl.cc:132] Check failed: size == existing_size Tried adding a parameter block with the same
+    //      double pointer, 0x7ffe17a85940, twice, but with different block sizes. Original size was 3 but new size is 6
+    //
+    // Therefore we are forced to make the RigidBodyAngularVelocity cost function accept the full length 6 control
+    // points parameter blocks, but in the cost function itself we will only use the rotation parts.
     static ceres::CostFunction* Create(Vector3d const& omega_imu, double const u_i, uint64_t const delta_t_ns) {
         return new ceres::AutoDiffCostFunction<RigidBodyAngularVelocity, 3, 6, 6, 6, 6, 6>(
             new RigidBodyAngularVelocity(omega_imu, u_i, delta_t_ns));
