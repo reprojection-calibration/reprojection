@@ -1,7 +1,6 @@
 set(LIBRARY_NAME "caching")
 
 set(SRC_FILES
-        src/cache_keys.cpp
         src/hashing.cpp
         src/serialize.cpp
 )
