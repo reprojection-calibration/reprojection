@@ -13,7 +13,7 @@ struct IntrinsicInitialization {
 
     std::string EntityId() const { return camera_info.sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     CameraState Compute() const;
 

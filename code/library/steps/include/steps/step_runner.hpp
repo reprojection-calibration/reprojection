@@ -19,7 +19,7 @@ concept IsStep = requires(Result const result, Step const step, SqlitePtr const 
     { step.step_type } -> std::convertible_to<CalibrationStep>;
     // TODO(Jack): Refactor EntityId() to EntityId()
     { step.EntityId() } -> std::same_as<std::string>;
-    { step.CacheKey() } -> std::same_as<std::string>;
+    { step.HashInputs() } -> std::same_as<std::string>;
     { step.Compute() } -> std::same_as<Result>;
     { step.Load(db) } -> std::same_as<Result>;
     { step.Save(result, db) };
@@ -30,7 +30,7 @@ template <typename Result, typename Step>
     requires IsStep<Result, Step>
 std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
     auto const cached_key{database::ReadCacheKey(db, step.EntityId(), step.step_type)};
-    std::string const new_key{step.CacheKey()};
+    std::string const new_key{step.HashInputs()};
 
     if (CacheHit(cached_key, new_key)) {
         return {step.Load(db), CacheStatus::CacheHit};

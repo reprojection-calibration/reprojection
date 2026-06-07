@@ -8,7 +8,7 @@
 
 namespace reprojection::steps {
 
-std::string ExtrinsicInitialization::CacheKey() const {
+std::string ExtrinsicInitialization::HashInputs() const {
     return hashing::HashArguments(extrinsic_id, imu_name, imu_data, spline.ControlPoints(),
                                   spline.GetTimeHandler().t0_ns_, spline.GetTimeHandler().delta_t_ns_);
 }
@@ -49,7 +49,7 @@ void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic,
     // we use a second sensor name and also write an additional step to the database outside of the sanctioned step
     // runner workflow?
     ImuErrors const error{optimization::EvaluateImuError(imu_data, tf_imu_co, gravity_w, spline)};
-    database::InsertStep(db, imu_name, step_type, CacheKey());
+    database::InsertStep(db, imu_name, step_type, HashInputs());
     database::InsertImuErrors(db, imu_name, step_type, error);
 }
 

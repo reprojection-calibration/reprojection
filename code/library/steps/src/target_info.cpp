@@ -10,7 +10,7 @@
 
 namespace reprojection::steps {
 
-std::string TargetInfoStep::CacheKey() const {
+std::string TargetInfoStep::HashInputs() const {
     std::ostringstream oss;
     oss << target_config;
     oss << sensor_name;

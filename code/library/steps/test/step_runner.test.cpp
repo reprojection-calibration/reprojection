@@ -13,7 +13,7 @@ struct DummyStep {
 
     std::string EntityId() const { return ""; }
 
-    std::string CacheKey() const { return std::to_string(result); };
+    std::string HashInputs() const { return std::to_string(result); };
 
     int Compute() const { return result; }
 

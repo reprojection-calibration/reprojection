@@ -8,7 +8,7 @@
 
 namespace reprojection::steps {
 
-std::string FeatureExtraction::CacheKey() const {
+std::string FeatureExtraction::HashInputs() const {
     std::ostringstream oss;
     oss << show_extraction;
 

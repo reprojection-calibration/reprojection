@@ -7,7 +7,7 @@
 
 namespace reprojection::steps {
 
-std::string BundleAdjustment::CacheKey() const { return hashing::HashArguments(camera_info, targets, initial_state); }
+std::string BundleAdjustment::HashInputs() const { return hashing::HashArguments(camera_info, targets, initial_state); }
 
 OptimizationState BundleAdjustment::Compute() const {
     auto const [optimized_state, _]{optimization::BundleAdjustment(camera_info, targets, initial_state)};

@@ -8,7 +8,7 @@
 
 namespace reprojection::steps {
 
-std::string SplineInitialization::CacheKey() const { return hashing::HashArguments(camera_info, targets, bundle); }
+std::string SplineInitialization::HashInputs() const { return hashing::HashArguments(camera_info, targets, bundle); }
 
 spline::Se3Spline SplineInitialization::Compute() const {
     // TODO(Jack): Parameterize frequency! Add to cache key probably?

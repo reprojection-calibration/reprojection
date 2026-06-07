@@ -18,7 +18,7 @@ struct SplineInitialization {
 
     std::string EntityId() const { return camera_info.sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     spline::Se3Spline Compute() const;
 

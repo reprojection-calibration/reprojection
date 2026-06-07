@@ -16,7 +16,7 @@ struct TargetInfoStep {
 
     std::string EntityId() const { return sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     TargetInfo Compute() const;
 

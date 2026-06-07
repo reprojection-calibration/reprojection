@@ -7,7 +7,7 @@
 
 namespace reprojection::steps {
 
-std::string IntrinsicInitialization::CacheKey() const { return hashing::HashArguments(camera_info, targets); }
+std::string IntrinsicInitialization::HashInputs() const { return hashing::HashArguments(camera_info, targets); }
 
 CameraState IntrinsicInitialization::Compute() const {
     // TODO(Jack): Confirm v and u are height and width in the correct order!

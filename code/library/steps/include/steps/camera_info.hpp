@@ -33,7 +33,7 @@ struct CameraInfoStep {
 
     std::string EntityId() const { return sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     CameraInfo Compute() const;
 
