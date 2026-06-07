@@ -1,4 +1,6 @@
-SELECT rx,
+SELECT frame_a,
+       frame_b,
+       rx,
        ry,
        rz,
        x,

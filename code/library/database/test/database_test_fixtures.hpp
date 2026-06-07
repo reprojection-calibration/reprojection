@@ -133,6 +133,7 @@ class ExtrinsicDatabaseFixture : public ::testing::Test {
     void SetUp() override {
         db = db::OpenCalibrationDatabase(":memory:", true, false);
 
+        db::InsertEntity(db, imu_name, Entity::Imu);
         db::InsertEntity(db, camera_name, Entity::Camera);
         db::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
     }
@@ -143,8 +144,9 @@ class ExtrinsicDatabaseFixture : public ::testing::Test {
     }
 
     SqlitePtr db{nullptr};
-    // The spline stuff gets associated with the camera it comes from and the actual extrinsic tf (including gravity,
-    // but not sure if that makes sense long term) get associated with an extrinsic specific entity id.
+    std::string imu_name{"/imu/polaris/123"};
     std::string camera_name{"/cam/retro/123"};
-    std::string extrinsic_id{"tf_imu_co"};
+    // TODO(Jack): This construction of the extrinsic id key is now replicated in at least three different places - copy
+    // and pasted.
+    std::string extrinsic_id{"tf_" + imu_name + "_xxx_" + camera_name};
 };

@@ -11,7 +11,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
                                                               CameraState const& camera_state,
                                                               spline::Se3Spline const& spline);
 
-ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Array6d const& tf_imu_co, Array3d const& gravity_w,
+ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic const& extrinsic,
                            spline::Se3Spline const& spline);
 
 }  // namespace  reprojection::optimization

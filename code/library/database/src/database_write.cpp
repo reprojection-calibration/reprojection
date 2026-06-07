@@ -47,10 +47,12 @@ void InsertEntity(SqlitePtr const db, std::string_view entity_id, Entity const e
 }
 
 void InsertExtrinsic(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
-                     Array6d const& data) {
+                     Extrinsic const& data) {
     auto const binder{[data, step_name, sensor_name](sqlite3_stmt* const stmt) {
         utils::BindStepAndSensor(stmt, step_name, sensor_name);
-        utils::BindEigenColumn<Array6d>(stmt, 3, data);
+        Sqlite3Tools::Bind(stmt, 3, data.frame_a);
+        Sqlite3Tools::Bind(stmt, 4, data.frame_b);
+        utils::BindEigenColumn<Array6d>(stmt, 5, data.se3_a_b);
     }};
 
     ExecuteStatement(sql_statements::extrinsics_insert, binder, db);

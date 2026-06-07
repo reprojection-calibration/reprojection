@@ -9,8 +9,8 @@ namespace reprojection::steps {
 // TODO(Jack): Is it ok to consider gravity as part of the extrinsic calibration?
 
 struct ExtrinsicInitialization {
-    std::string extrinsic_id;
     std::string imu_name;
+    std::string camera_name;
     ImuMeasurements imu_data;
     // NOTE(Jack): To actually just initialize the cam-imu extrinsics we actually only need the orientation component of
     // the spline. BUT we actually also want to save the ImuErrors to the database as a sort of diagnostic. To do that
@@ -19,16 +19,16 @@ struct ExtrinsicInitialization {
 
     CalibrationStep step_type{CalibrationStep::ExtrinsicInitialization};
 
-    std::string EntityId() const { return extrinsic_id; }
+    std::string EntityId() const { return "tf_" + imu_name + "_xxx_" + camera_name; }
 
     std::string HashInputs() const;
 
     // TODO(Jack): Define types for extrinsics and gravity?
-    std::pair<Array6d, Array3d> Compute() const;
+    ImuCamExtrinsic Compute() const;
 
-    std::pair<Array6d, Array3d> Load(SqlitePtr const db) const;
+    ImuCamExtrinsic Load(SqlitePtr const db) const;
 
-    void Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const;
+    void Save(ImuCamExtrinsic const& extrinsic, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

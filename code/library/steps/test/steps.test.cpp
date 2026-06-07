@@ -114,7 +114,12 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
 
     std::string const imu_name{"/imu/polaris/123"};
     database::InsertEntity(db, imu_name, Entity::Imu);
-    std::string const extrinsic_id{"tf_imu_co"};
+    std::string const camera_name{"/cam0/image_raw"};
+    database::InsertEntity(db, camera_name, Entity::Camera);
+
+    // TODO(Jack): This extrinsic entity id logic is copy and pasted from the step, is there a better way to unify
+    // this and make the extrinsic entity id a first class concept?
+    std::string const extrinsic_id{"tf_" + imu_name + "_xxx_" + camera_name};
     database::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
 
     // NOTE(Jack): Normally the extrinsic initialization function will actually run against the camera frames which I
@@ -128,25 +133,27 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     // correspondent IMU data point.
     database::InsertImuData(db, imu_name, imu_data);
 
-    steps::ExtrinsicInitialization const step{extrinsic_id, imu_name, imu_data, spline};
+    steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline};
 
     // TODO(Jack): Define a type instead of just using std::pair<Array6d, Array3d>!!!
-    auto [result, cache_status]{RunStep<std::pair<Array6d, Array3d>>(step, db)};
-    auto [tf_co_imu, gravity_w]{result};
+    auto [result, cache_status]{RunStep<ImuCamExtrinsic>(step, db)};
 
     Array6d const tf_imu_co_gt{Array6d::Zero()};
     // ERROR(Jack): The actual gravity should be zero! But right now we have some error in the gravity calculation so we
     // put this value here just as a heuristic canary to see if anything changes.
     Array3d const gravity_w_gt{2.8826920613096214, 0.073608289211483421, 9.3731026091642597};
-    EXPECT_TRUE(tf_co_imu.isApprox(tf_imu_co_gt));
-    EXPECT_TRUE(gravity_w.isApprox(gravity_w_gt));
+    EXPECT_EQ(result.tf.frame_a, imu_name);
+    EXPECT_EQ(result.tf.frame_b, camera_name);
+    EXPECT_TRUE(result.tf.se3_a_b.isApprox(tf_imu_co_gt));
+    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
-    std::tie(result, cache_status) = RunStep<std::pair<Array6d, Array3d>>(step, db);
-    std::tie(tf_co_imu, gravity_w) = result;
-    EXPECT_TRUE(tf_co_imu.isApprox(tf_imu_co_gt));
-    EXPECT_TRUE(gravity_w.isApprox(gravity_w_gt));
+    std::tie(result, cache_status) = RunStep<ImuCamExtrinsic>(step, db);
+    EXPECT_EQ(result.tf.frame_a, imu_name);
+    EXPECT_EQ(result.tf.frame_b, camera_name);
+    EXPECT_TRUE(result.tf.se3_a_b.isApprox(tf_imu_co_gt));
+    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
