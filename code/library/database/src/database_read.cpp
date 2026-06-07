@@ -165,7 +165,7 @@ std::optional<Extrinsic> ReadExtrinsics(SqlitePtr const db, std::string_view sen
                  });
 
     return extrinsic;
-}
+}  // LCOV_EXCL_LINE
 
 std::optional<Array3d> ReadGravity(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name) {
     std::optional<Array3d> gravity;
