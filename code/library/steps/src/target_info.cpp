@@ -2,20 +2,20 @@
 
 #include <toml++/toml.h>
 
-#include "caching/cache_keys.hpp"
 #include "config/config_parsing.hpp"
 #include "config/config_validation.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 
 namespace reprojection::steps {
 
-std::string TargetInfoStep::CacheKey() const {
+std::string TargetInfoStep::HashInputs() const {
     std::ostringstream oss;
     oss << target_config;
     oss << sensor_name;
 
-    return caching::CacheKey(oss.str());
+    return hashing::HashArguments(oss.str());
 }
 
 TargetInfo TargetInfoStep::Compute() const {
@@ -25,7 +25,7 @@ TargetInfo TargetInfoStep::Compute() const {
 }
 
 TargetInfo TargetInfoStep::Load(SqlitePtr const db) const {
-    auto const target_info{database::ReadTargetInfo(db, SensorName())};
+    auto const target_info{database::ReadTargetInfo(db, EntityId())};
 
     if (not target_info) {
         throw std::runtime_error("we need a consistent error handling strategy!!!");  // LCOV_EXCL_LINE
@@ -35,7 +35,7 @@ TargetInfo TargetInfoStep::Load(SqlitePtr const db) const {
 }
 
 void TargetInfoStep::Save(TargetInfo const& target_info, SqlitePtr const db) const {
-    database::InsertTargetInfo(db, SensorName(), target_info);
+    database::InsertTargetInfo(db, EntityId(), target_info);
 }
 
 }  // namespace reprojection::steps

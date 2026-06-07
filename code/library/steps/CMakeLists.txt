@@ -18,12 +18,12 @@ set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
         SQLite::SQLite3
-        caching
         calibration
         config
         database
         feature_extraction
         geometry
+        hashing
         image_viewer
         logging
         optimization

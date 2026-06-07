@@ -2,10 +2,10 @@
 
 #include <toml++/toml.h>
 
-#include "caching/cache_keys.hpp"
 #include "config/config_parsing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 
 namespace reprojection::steps {
 
@@ -14,7 +14,7 @@ CameraInfoStep::CameraInfoStep(toml::table const& _sensor_config, std::shared_pt
     std::tie(sensor_name, camera_model) = config::ParseSensorConfig(_sensor_config);
 }
 
-std::string CameraInfoStep::CacheKey() const { return caching::CacheKey(sensor_name, camera_model, *images); }
+std::string CameraInfoStep::HashInputs() const { return hashing::HashArguments(sensor_name, camera_model, *images); }
 
 CameraInfo CameraInfoStep::Compute() const {
     if (images->size() == 0) {
@@ -31,7 +31,7 @@ CameraInfo CameraInfoStep::Compute() const {
             "we need an error handling strategy for empty image to get camera info");  // LCOV_EXCL_LINE
     }
 
-    CameraInfo const camera_info{SensorName(),
+    CameraInfo const camera_info{EntityId(),
                                  camera_model,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
@@ -39,7 +39,7 @@ CameraInfo CameraInfoStep::Compute() const {
 }
 
 CameraInfo CameraInfoStep::Load(SqlitePtr const db) const {
-    auto const camera_info{database::ReadCameraInfo(db, SensorName())};
+    auto const camera_info{database::ReadCameraInfo(db, EntityId())};
 
     if (not camera_info) {
         throw std::runtime_error("we need a consistent error handling strategy!!!");  // LCOV_EXCL_LINE

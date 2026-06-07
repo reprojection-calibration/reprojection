@@ -16,9 +16,9 @@ struct FeatureExtraction {
 
     CalibrationStep step_type{CalibrationStep::FeatureExtraction};
 
-    std::string SensorName() const { return sensor_name; }
+    std::string EntityId() const { return sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     CameraMeasurements Compute() const;
 

@@ -118,7 +118,7 @@ TEST_F(CameraDatabaseFixture, TestReprojectionErrors) {
 }
 
 // NOTE(Jack): We do not use the test fixtures built in methods for the foreign key requirement check because the entity
-// is already added in the SetUp() method. This test is also more complicated because we also test the ReadCacheKey()
+// is already added in the SetUp() method. This test is also more complicated because we also test the ReadHashInputs()
 // function which is essentially the read counterpart to the InsertStep() function.
 TEST_F(CameraDatabaseFixture, TestStepAndReadCacheKey) {
     // Foreign key requirement is not satisfied

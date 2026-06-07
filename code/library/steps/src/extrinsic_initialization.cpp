@@ -1,16 +1,16 @@
 #include "steps/extrinsic_initialization.hpp"
 
-#include "caching/cache_keys.hpp"
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 #include "optimization/camera_imu_calibration.hpp"
 
 namespace reprojection::steps {
 
-std::string ExtrinsicInitialization::CacheKey() const {
-    return caching::CacheKey(extrinsic_id, imu_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
-                             spline.GetTimeHandler().delta_t_ns_);
+std::string ExtrinsicInitialization::HashInputs() const {
+    return hashing::HashArguments(extrinsic_id, imu_name, imu_data, spline.ControlPoints(),
+                                  spline.GetTimeHandler().t0_ns_, spline.GetTimeHandler().delta_t_ns_);
 }
 
 std::pair<Array6d, Array3d> ExtrinsicInitialization::Compute() const {
@@ -29,8 +29,8 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Compute() const {
 }
 
 std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) const {
-    auto const tf_imu_co{database::ReadExtrinsics(db, SensorName(), CalibrationStep::ExtrinsicInitialization)};
-    auto const gravity_w{database::ReadGravity(db, SensorName(), CalibrationStep::ExtrinsicInitialization)};
+    auto const tf_imu_co{database::ReadExtrinsics(db, EntityId(), CalibrationStep::ExtrinsicInitialization)};
+    auto const gravity_w{database::ReadGravity(db, EntityId(), CalibrationStep::ExtrinsicInitialization)};
 
     if (not tf_imu_co or not gravity_w) {
         std::cout << "WE NEED AN ERROR STRATEGY! ExtrinsicInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE
@@ -42,14 +42,14 @@ std::pair<Array6d, Array3d> ExtrinsicInitialization::Load(SqlitePtr const db) co
 void ExtrinsicInitialization::Save(std::pair<Array6d, Array3d> const& extrinsic, SqlitePtr const db) const {
     auto const [tf_imu_co, gravity_w]{extrinsic};
 
-    database::InsertExtrinsic(db, SensorName(), step_type, tf_imu_co);
-    database::InsertGravity(db, SensorName(), step_type, gravity_w);
+    database::InsertExtrinsic(db, EntityId(), step_type, tf_imu_co);
+    database::InsertGravity(db, EntityId(), step_type, gravity_w);
 
     // TODO(Jack): We save the imu errors here under the imu and not the extrinsic identity name! Is it hacky here that
     // we use a second sensor name and also write an additional step to the database outside of the sanctioned step
     // runner workflow?
     ImuErrors const error{optimization::EvaluateImuError(imu_data, tf_imu_co, gravity_w, spline)};
-    database::InsertStep(db, imu_name, step_type, CacheKey());
+    database::InsertStep(db, imu_name, step_type, HashInputs());
     database::InsertImuErrors(db, imu_name, step_type, error);
 }
 

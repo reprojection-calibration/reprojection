@@ -17,9 +17,8 @@ inline bool CacheHit(std::optional<std::string> const& loaded_key, std::string_v
 template <typename Result, typename Step>
 concept IsStep = requires(Result const result, Step const step, SqlitePtr const db) {
     { step.step_type } -> std::convertible_to<CalibrationStep>;
-    // TODO(Jack): Refactor SensorName() to EntityId()
-    { step.SensorName() } -> std::same_as<std::string>;
-    { step.CacheKey() } -> std::same_as<std::string>;
+    { step.EntityId() } -> std::same_as<std::string>;
+    { step.HashInputs() } -> std::same_as<std::string>;
     { step.Compute() } -> std::same_as<Result>;
     { step.Load(db) } -> std::same_as<Result>;
     { step.Save(result, db) };
@@ -29,8 +28,8 @@ concept IsStep = requires(Result const result, Step const step, SqlitePtr const 
 template <typename Result, typename Step>
     requires IsStep<Result, Step>
 std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
-    auto const cached_key{database::ReadCacheKey(db, step.SensorName(), step.step_type)};
-    std::string const new_key{step.CacheKey()};
+    auto const cached_key{database::ReadCacheKey(db, step.EntityId(), step.step_type)};
+    std::string const new_key{step.HashInputs()};
 
     if (CacheHit(cached_key, new_key)) {
         return {step.Load(db), CacheStatus::CacheHit};
@@ -55,12 +54,12 @@ std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
     //
     // If there is a more clean way to express this logic, that would be a welcome addition. I think that the current
     // implementation can lead to problems in the future.
-    database::RemoveFromDb(db, step.SensorName(), step.step_type);
-    database::InsertStep(db, step.SensorName(), step.step_type, std::nullopt);
+    database::RemoveFromDb(db, step.EntityId(), step.step_type);
+    database::InsertStep(db, step.EntityId(), step.step_type, std::nullopt);
 
     step.Save(result, db);
 
-    database::InsertStep(db, step.SensorName(), step.step_type, new_key);
+    database::InsertStep(db, step.EntityId(), step.step_type, new_key);
 
     return {result, CacheStatus::CacheMiss};
 }

@@ -19,9 +19,9 @@ struct ImageLoading {
 
     CalibrationStep step_type{CalibrationStep::ImageLoading};
 
-    std::string SensorName() const { return sensor_name; }
+    std::string EntityId() const { return sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     std::shared_ptr<EncodedImages> Compute() const;
 

@@ -1,11 +1,11 @@
 
-#include "serialize.hpp"
+#include "hashing/serialize.hpp"
 
 #include <ranges>
 
 #include "types/enums.hpp"
 
-namespace reprojection::caching {
+namespace reprojection::hashing {
 
 std::string Serialize(CameraInfo const& data) {
     std::ostringstream oss;
@@ -100,6 +100,8 @@ std::string Serialize(ImuMeasurements const& data) {
     return oss.str();
 }
 
+std::string Serialize(OptimizationState const& data) { return Serialize(data.camera_state) + Serialize(data.frames); }
+
 std::string Serialize(TargetInfo const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
@@ -113,7 +115,9 @@ std::string Serialize(TargetInfo const& data) {
 }
 
 // NOTE(Jack): It is kind of dumb this version exists because it does not really do anything, but we need it to work
-// with the CacheKeyFrom() variadic template function.
+// with the HashArguments() variadic template function.
 std::string Serialize(std::string_view data) { return std::string(data); }
 
-}  // namespace reprojection::caching
+std::string Serialize(uint64_t const data) { return std::to_string(data); }
+
+}  // namespace reprojection::hashing

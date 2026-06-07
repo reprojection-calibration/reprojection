@@ -19,9 +19,9 @@ struct ExtrinsicInitialization {
 
     CalibrationStep step_type{CalibrationStep::ExtrinsicInitialization};
 
-    std::string SensorName() const { return extrinsic_id; }
+    std::string EntityId() const { return extrinsic_id; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     // TODO(Jack): Define types for extrinsics and gravity?
     std::pair<Array6d, Array3d> Compute() const;

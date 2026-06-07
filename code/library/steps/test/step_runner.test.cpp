@@ -11,9 +11,9 @@ struct DummyStep {
 
     CalibrationStep step_type{CalibrationStep::PoseInitialization};
 
-    std::string SensorName() const { return ""; }
+    std::string EntityId() const { return ""; }
 
-    std::string CacheKey() const { return std::to_string(result); };
+    std::string HashInputs() const { return std::to_string(result); };
 
     int Compute() const { return result; }
 
@@ -39,7 +39,7 @@ TEST(StepsStepRunner, TestStepRunnerWithDummyStep) {
 
     // TODO(Jack): We need to find a clean way to incorporate the entity into the step testing. For now we add it here
     // manually and for all other setps.
-    database::InsertEntity(db, step.SensorName(), Entity::Camera);
+    database::InsertEntity(db, step.EntityId(), Entity::Camera);
 
     auto [data, cache_status]{steps::RunStep<int>(step, db)};
     EXPECT_EQ(data, 2);  // Result from DummyStep.Compute()

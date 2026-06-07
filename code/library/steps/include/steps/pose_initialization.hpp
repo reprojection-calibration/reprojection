@@ -12,9 +12,9 @@ struct PoseInitialization {
 
     CalibrationStep step_type{CalibrationStep::PoseInitialization};
 
-    std::string SensorName() const { return camera_info.sensor_name; }
+    std::string EntityId() const { return camera_info.sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     Frames Compute() const;
 

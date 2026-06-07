@@ -12,9 +12,9 @@ struct BundleAdjustment {
 
     CalibrationStep step_type{CalibrationStep::BundleAdjustment};
 
-    std::string SensorName() const { return camera_info.sensor_name; }
+    std::string EntityId() const { return camera_info.sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     OptimizationState Compute() const;
 

@@ -1,7 +1,6 @@
-set(LIBRARY_NAME "caching")
+set(LIBRARY_NAME "hashing")
 
 set(SRC_FILES
-        src/cache_keys.cpp
         src/hashing.cpp
         src/serialize.cpp
 )
@@ -19,8 +18,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        src/hashing.test.cpp
-        src/serialize.test.cpp
-        test/cache_keys.test.cpp
+        test/hashing.test.cpp
+        test/serialize.test.cpp
 )
 AddTests()

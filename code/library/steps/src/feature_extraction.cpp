@@ -1,18 +1,18 @@
 #include "steps/feature_extraction.hpp"
 
-#include "caching/cache_keys.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "feature_extraction/target_extraction.hpp"
+#include "hashing/hashing.hpp"
 #include "image_viewer/image_viewer.hpp"
 
 namespace reprojection::steps {
 
-std::string FeatureExtraction::CacheKey() const {
+std::string FeatureExtraction::HashInputs() const {
     std::ostringstream oss;
     oss << show_extraction;
 
-    return caching::CacheKey(target_info, *images, oss.str());
+    return hashing::HashArguments(target_info, *images, oss.str());
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!
@@ -61,10 +61,10 @@ CameraMeasurements FeatureExtraction::Compute() const {
     return extracted_targets;
 }
 
-CameraMeasurements FeatureExtraction::Load(SqlitePtr const db) const { return database::ReadTargets(db, SensorName()); }
+CameraMeasurements FeatureExtraction::Load(SqlitePtr const db) const { return database::ReadTargets(db, EntityId()); }
 
 void FeatureExtraction::Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const {
-    database::InsertTargets(db, SensorName(), extracted_targets);
+    database::InsertTargets(db, EntityId(), extracted_targets);
 }
 
 }  // namespace reprojection::steps

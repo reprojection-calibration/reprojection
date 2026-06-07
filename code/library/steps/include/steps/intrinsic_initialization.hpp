@@ -11,9 +11,9 @@ struct IntrinsicInitialization {
 
     CalibrationStep step_type{CalibrationStep::IntrinsicInitialization};
 
-    std::string SensorName() const { return camera_info.sensor_name; }
+    std::string EntityId() const { return camera_info.sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     CameraState Compute() const;
 

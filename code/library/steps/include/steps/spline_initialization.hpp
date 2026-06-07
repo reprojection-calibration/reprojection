@@ -16,9 +16,9 @@ struct SplineInitialization {
     // TODO(Jack): Should we rename the CalibrationStep to SplineInitialization?
     CalibrationStep step_type{CalibrationStep::SplineInitialization};
 
-    std::string SensorName() const { return camera_info.sensor_name; }
+    std::string EntityId() const { return camera_info.sensor_name; }
 
-    std::string CacheKey() const;
+    std::string HashInputs() const;
 
     spline::Se3Spline Compute() const;
 
