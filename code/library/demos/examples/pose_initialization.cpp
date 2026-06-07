@@ -44,8 +44,12 @@ int main() {
     // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
     CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
+    std::string const imu_name{"/imu0"};
     try {
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+        database::InsertEntity(db, imu_name, Entity::Imu);
+        // TODO(Jack): This name creation logic is now found in many places!
+        database::InsertEntity(db, "tf_" + imu_name + "_xxx_" + camera_info.sensor_name, Entity::Extrinsic);
 
         database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
 
@@ -76,12 +80,10 @@ int main() {
     auto const [spline, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
     std::cout << "Spline init cache: " << ToString(spline_init_cache_status) << std::endl;
 
-    std::string const extrinsic_id{"/imu0"};
-    std::string const imu_name{"/imu0"};
     ImuMeasurements const imu_data{database::ReadImuData(db, imu_name)};
 
     // NOTE(Jack): Has to be the imu name here due to ImuError foreign key constraint.
-    steps::ExtrinsicInitialization const extrinsic_init_step{extrinsic_id, imu_name, imu_data, spline};
+    steps::ExtrinsicInitialization const extrinsic_init_step{imu_name, camera_info.sensor_name, imu_data, spline};
     auto const [extrinsics, extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
     std::cout << "Extrinsic init cache: " << ToString(extrinsic_init_cache_status) << std::endl;
 
