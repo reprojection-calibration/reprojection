@@ -53,7 +53,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
     return {poses, residuals};
 }  // LCOV_EXCL_LINE
 
-ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Array6d const& tf_imu_co, Array3d const& gravity_w,
+ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic const& extrinsic,
                            spline::Se3Spline const& spline) {
     ImuErrors imu_residuals;
 
@@ -66,7 +66,7 @@ ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Array6d const& tf_im
         auto const [u_i, i]{normalized_position.value()};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(tf_imu_co.data());
+        parameter_blocks.push_back(extrinsic.tf.se3_a_b.data());
         for (int j{0}; j < 4; ++j) {
             parameter_blocks.push_back(spline.ControlPoints().col(i + j).data());
         }
@@ -76,7 +76,7 @@ ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Array6d const& tf_im
         Vector6d residual_i;
         cost_function_1->Evaluate(parameter_blocks.data(), residual_i.topRows<3>().data(), nullptr);
 
-        parameter_blocks.insert(std::begin(parameter_blocks) + 1, gravity_w.data());
+        parameter_blocks.insert(std::begin(parameter_blocks) + 1, extrinsic.gravity.data());
         ceres::CostFunction const* const cost_function_2{cost_functions::RigidBodyLinearAcceleration::Create(
             imu_data.at(timestamp_ns).linear_acceleration, u_i, spline.GetTimeHandler().delta_t_ns_)};
 

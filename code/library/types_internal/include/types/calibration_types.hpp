@@ -82,7 +82,7 @@ using ImuErrors = StampedMap<ImuError>;
 struct Extrinsic {
     std::string frame_a;
     std::string frame_b;
-    Array6d tf_a_b;
+    Array6d se3_a_b;
 };
 
 // TODO(Jack): Does the existence of this type and its naming make sense at all? Is the gravity term really so closely
