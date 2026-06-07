@@ -12,7 +12,7 @@ std::string FeatureExtraction::CacheKey() const {
     std::ostringstream oss;
     oss << show_extraction;
 
-    return caching::CacheKeyFrom(target_info, *images, oss.str());
+    return caching::HashArguments(target_info, *images, oss.str());
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!

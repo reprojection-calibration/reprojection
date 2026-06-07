@@ -15,7 +15,7 @@ std::string TargetInfoStep::CacheKey() const {
     oss << target_config;
     oss << sensor_name;
 
-    return caching::CacheKeyFrom(oss.str());
+    return caching::HashArguments(oss.str());
 }
 
 TargetInfo TargetInfoStep::Compute() const {

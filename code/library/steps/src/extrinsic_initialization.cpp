@@ -9,7 +9,7 @@
 namespace reprojection::steps {
 
 std::string ExtrinsicInitialization::CacheKey() const {
-    return caching::CacheKeyFrom(extrinsic_id, imu_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
+    return caching::HashArguments(extrinsic_id, imu_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
                              spline.GetTimeHandler().delta_t_ns_);
 }
 

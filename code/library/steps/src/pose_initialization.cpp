@@ -8,7 +8,7 @@
 
 namespace reprojection::steps {
 
-std::string PoseInitialization::CacheKey() const { return caching::CacheKeyFrom(camera_info, targets, camera_state); }
+std::string PoseInitialization::CacheKey() const { return caching::HashArguments(camera_info, targets, camera_state); }
 
 Frames PoseInitialization::Compute() const {
     return calibration::PoseInitialization(camera_info, targets, camera_state);

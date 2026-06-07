@@ -22,21 +22,21 @@ class CacheKeysFixture : public ::testing::Test {
 };
 
 TEST_F(CacheKeysFixture, FocalLengthInitialization) {
-    std::string const result{caching::CacheKeyFrom(camera_info, camera_measurements)};
+    std::string const result{caching::HashArguments(camera_info, camera_measurements)};
     std::string const gt_result{"f4fa69df1a139cf559ab0e423312ecbcb1afe1fff9fffe0782da63a7c22e1b51"};
 
     EXPECT_EQ(result, gt_result);
 }
 
 TEST_F(CacheKeysFixture, PoseInitialization) {
-    std::string const result{caching::CacheKeyFrom(camera_info, camera_measurements, camera_state)};
+    std::string const result{caching::HashArguments(camera_info, camera_measurements, camera_state)};
     std::string const gt_result{"c78e49018ab68ffc6b2ce19cc210aaba72ac7729ce5385ef9a231a34af2032fe"};
 
     EXPECT_EQ(result, gt_result);
 }
 
 TEST_F(CacheKeysFixture, BundleAdjustment) {
-    std::string const result{caching::CacheKeyFrom(camera_info, camera_measurements, optimization_state)};
+    std::string const result{caching::HashArguments(camera_info, camera_measurements, optimization_state)};
     std::string const gt_result{"b45889d48b71fc02fd39a3d8f9a41a909d6e98627d491596a63b2e24b2dca5b8"};
 
     EXPECT_EQ(result, gt_result);
