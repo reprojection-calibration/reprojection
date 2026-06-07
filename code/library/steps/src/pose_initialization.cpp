@@ -14,14 +14,14 @@ Frames PoseInitialization::Compute() const {
     return calibration::PoseInitialization(camera_info, targets, camera_state);
 }
 
-Frames PoseInitialization::Load(SqlitePtr const db) const { return database::ReadPoses(db, SensorName(), step_type); }
+Frames PoseInitialization::Load(SqlitePtr const db) const { return database::ReadPoses(db, EntityId(), step_type); }
 
 void PoseInitialization::Save(Frames const& frames, SqlitePtr const db) const {
-    database::InsertPoses(db, SensorName(), step_type, frames);
+    database::InsertPoses(db, EntityId(), step_type, frames);
 
     OptimizationState const state{camera_state, frames};
     ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, state)};
-    database::InsertReprojectionErrors(db, SensorName(), step_type, error);
+    database::InsertReprojectionErrors(db, EntityId(), step_type, error);
 }
 
 }  // namespace reprojection::steps

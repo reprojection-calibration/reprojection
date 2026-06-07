@@ -33,7 +33,7 @@ std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
         ++num_images;
         if (num_images % 50 == 0) {
             log->debug("{{'step': '{}', 'stage': '{}', 'sensor_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
-                       ToString(step_type), "Compute()", SensorName(), num_images);             // LCOV_EXCL_LINE
+                       ToString(step_type), "Compute()", EntityId(), num_images);               // LCOV_EXCL_LINE
         }
     }
 
@@ -41,11 +41,11 @@ std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
 }  // LCOV_EXCL_LINE
 
 std::shared_ptr<EncodedImages> ImageLoading::Load(SqlitePtr const db) const {
-    return std::make_shared<EncodedImages>(database::ReadImages(db, SensorName()));
+    return std::make_shared<EncodedImages>(database::ReadImages(db, EntityId()));
 }
 
 void ImageLoading::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
-    database::InsertImages(db, SensorName(), *encoded_images);
+    database::InsertImages(db, EntityId(), *encoded_images);
 }
 
 }  // namespace reprojection::steps

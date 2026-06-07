@@ -16,7 +16,7 @@ OptimizationState BundleAdjustment::Compute() const {
 }
 
 OptimizationState BundleAdjustment::Load(SqlitePtr const db) const {
-    Frames const poses{database::ReadPoses(db, SensorName(), step_type)};
+    Frames const poses{database::ReadPoses(db, EntityId(), step_type)};
     auto const intrinsics{database::ReadIntrinsics(db, camera_info.sensor_name, step_type, camera_info.camera_model)};
 
     // TODO(Jack): Is this the appropriate error handling? What actual invariants do we have/want here? What if there
@@ -30,11 +30,11 @@ OptimizationState BundleAdjustment::Load(SqlitePtr const db) const {
 }
 
 void BundleAdjustment::Save(OptimizationState const& optimized_state, SqlitePtr const db) const {
-    database::InsertIntrinsics(db, SensorName(), step_type, camera_info.camera_model, optimized_state.camera_state);
-    database::InsertPoses(db, SensorName(), step_type, optimized_state.frames);
+    database::InsertIntrinsics(db, EntityId(), step_type, camera_info.camera_model, optimized_state.camera_state);
+    database::InsertPoses(db, EntityId(), step_type, optimized_state.frames);
 
     ReprojectionErrors const error{optimization::ReprojectionError(camera_info, targets, optimized_state)};
-    database::InsertReprojectionErrors(db, SensorName(), step_type, error);
+    database::InsertReprojectionErrors(db, EntityId(), step_type, error);
 }
 
 }  // namespace reprojection::steps

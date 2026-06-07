@@ -31,7 +31,7 @@ CameraInfo CameraInfoStep::Compute() const {
             "we need an error handling strategy for empty image to get camera info");  // LCOV_EXCL_LINE
     }
 
-    CameraInfo const camera_info{SensorName(),
+    CameraInfo const camera_info{EntityId(),
                                  camera_model,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
@@ -39,7 +39,7 @@ CameraInfo CameraInfoStep::Compute() const {
 }
 
 CameraInfo CameraInfoStep::Load(SqlitePtr const db) const {
-    auto const camera_info{database::ReadCameraInfo(db, SensorName())};
+    auto const camera_info{database::ReadCameraInfo(db, EntityId())};
 
     if (not camera_info) {
         throw std::runtime_error("we need a consistent error handling strategy!!!");  // LCOV_EXCL_LINE

@@ -31,7 +31,7 @@ struct CameraInfoStep {
 
     CameraInfoStep(toml::table const& _sensor_config, std::shared_ptr<EncodedImages> const& _images);
 
-    std::string SensorName() const { return sensor_name; }
+    std::string EntityId() const { return sensor_name; }
 
     std::string CacheKey() const;
 
