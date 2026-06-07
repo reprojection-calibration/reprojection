@@ -115,7 +115,7 @@ std::string Serialize(TargetInfo const& data) {
 }
 
 // NOTE(Jack): It is kind of dumb this version exists because it does not really do anything, but we need it to work
-// with the CacheKeyFrom() variadic template function.
+// with the HashArguments() variadic template function.
 std::string Serialize(std::string_view data) { return std::string(data); }
 
 std::string Serialize(uint64_t const data) { return std::to_string(data); }

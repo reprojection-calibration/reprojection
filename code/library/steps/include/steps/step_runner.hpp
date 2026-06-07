@@ -17,7 +17,6 @@ inline bool CacheHit(std::optional<std::string> const& loaded_key, std::string_v
 template <typename Result, typename Step>
 concept IsStep = requires(Result const result, Step const step, SqlitePtr const db) {
     { step.step_type } -> std::convertible_to<CalibrationStep>;
-    // TODO(Jack): Refactor EntityId() to EntityId()
     { step.EntityId() } -> std::same_as<std::string>;
     { step.HashInputs() } -> std::same_as<std::string>;
     { step.Compute() } -> std::same_as<Result>;
