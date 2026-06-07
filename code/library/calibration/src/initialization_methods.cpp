@@ -94,15 +94,15 @@ Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& ta
     return linear_solution;
 }  // LCOV_EXCL_LINE
 
-std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(
-    spline::CubicBSplineC3 const& camera_orientation, ImuMeasurements const& imu_data) {
+std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
+                                                                               ImuMeasurements const& imu_data) {
     auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
-    auto const [aa_imu_co,
-                diagnostics]{optimization::AngularVelocityAlignment(imu_angular_velocity, camera_orientation)};
+    auto const [aa_imu_co, diagnostics]{optimization::AngularVelocityAlignment(imu_angular_velocity, spline)};
 
     Matrix3d const R_imu_co{geometry::Exp<double>(aa_imu_co)};
     auto const imu_linear_acceleration{ExtractLinearAcceleration(imu_data)};
-    Vector3d const gravity_w{EstimateGravity(camera_orientation, imu_linear_acceleration, R_imu_co)};
+    Vector3d const gravity_w{
+        EstimateGravity({spline.So3(), spline.GetTimeHandler()}, imu_linear_acceleration, R_imu_co)};
 
     return {{aa_imu_co, diagnostics}, gravity_w};
 }

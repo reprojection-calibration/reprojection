@@ -264,7 +264,7 @@ TEST_F(StepsFixture, TestSplineInitialization) {
     steps::SplineInitialization const step{camera_info, targets, {camera_state, poses}};
 
     auto [result, cache_status]{RunStep<spline::Se3Spline>(step, db)};
-    EXPECT_EQ(result.ControlPoints().cols(), 95);
+    EXPECT_EQ(result.Size(), 95);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     auto const control_points{database::ReadControlPoints(db, camera_info.sensor_name, step.step_type)};
@@ -272,7 +272,7 @@ TEST_F(StepsFixture, TestSplineInitialization) {
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<spline::Se3Spline>(step, db);
-    EXPECT_EQ(result.ControlPoints().cols(), 95);
+    EXPECT_EQ(result.Size(), 95);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
