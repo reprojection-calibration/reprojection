@@ -19,8 +19,7 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
         omega_imu.insert({timestamp_ns, {R * data_i.angular_velocity}});
     }
 
-    auto const [aa_co_imu, diagnostics]{
-        optimization::AngularVelocityAlignment(omega_imu, trajectory)};
+    auto const [aa_co_imu, diagnostics]{optimization::AngularVelocityAlignment(omega_imu, trajectory)};
 
     EXPECT_TRUE(aa_co_imu.matrix().isApprox(geometry::Log(R)));
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
