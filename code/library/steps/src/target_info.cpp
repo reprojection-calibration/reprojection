@@ -2,7 +2,7 @@
 
 #include <toml++/toml.h>
 
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 #include "config/config_parsing.hpp"
 #include "config/config_validation.hpp"
 #include "database/database_read.hpp"
@@ -15,7 +15,7 @@ std::string TargetInfoStep::CacheKey() const {
     oss << target_config;
     oss << sensor_name;
 
-    return caching::HashArguments(oss.str());
+    return hashing::HashArguments(oss.str());
 }
 
 TargetInfo TargetInfoStep::Compute() const {

@@ -2,7 +2,7 @@
 
 #include <toml++/toml.h>
 
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 #include "config/config_parsing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
@@ -14,7 +14,7 @@ CameraInfoStep::CameraInfoStep(toml::table const& _sensor_config, std::shared_pt
     std::tie(sensor_name, camera_model) = config::ParseSensorConfig(_sensor_config);
 }
 
-std::string CameraInfoStep::CacheKey() const { return caching::HashArguments(sensor_name, camera_model, *images); }
+std::string CameraInfoStep::CacheKey() const { return hashing::HashArguments(sensor_name, camera_model, *images); }
 
 CameraInfo CameraInfoStep::Compute() const {
     if (images->size() == 0) {

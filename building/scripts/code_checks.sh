@@ -11,7 +11,7 @@ done
 # TODO(Jack): Do not manually specify includes!
 cppcheck /temporary/code/library --enable=all --error-exitcode=1 --inline-suppr --suppress=missingIncludeSystem \
   -I /temporary/code/library/application/include \
-  -I /temporary/code/library/caching/include \
+  -I /temporary/code/library/hashing/include \
   -I /temporary/code/library/calibration/include \
   -I /temporary/code/library/calibration/src \
   -I /temporary/code/library/calibration_data_views/include \

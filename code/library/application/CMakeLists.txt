@@ -12,7 +12,7 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         Eigen3::Eigen
         SQLite::SQLite3
-        caching
+        hashing
         calibration
         config
         database

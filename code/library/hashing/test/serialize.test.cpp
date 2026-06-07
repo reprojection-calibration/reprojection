@@ -1,4 +1,4 @@
-#include "../include/caching/serialize.hpp"
+#include "../include/hashing/serialize.hpp"
 
 #include <gtest/gtest.h>
 
@@ -9,7 +9,7 @@ using namespace reprojection;
 TEST(CachingSerialize, TestSerializeCameraInfo) {
     CameraInfo const camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
 
-    std::string const result{caching::Serialize(camera_info)};
+    std::string const result{hashing::Serialize(camera_info)};
     std::string const gt_result{"/cam/retro/123|pinhole|0.000,720.000,0.000,480.000|"};
 
     EXPECT_EQ(result, gt_result);
@@ -21,7 +21,7 @@ TEST(CachingSerialize, TestSerializeCameraMeasurements) {
         {{5, 6}, {2, 3}}};
     CameraMeasurements const camera_measurements{{0, target}, {1, target}};
 
-    std::string const result{caching::Serialize(camera_measurements)};
+    std::string const result{hashing::Serialize(camera_measurements)};
     std::string const gt_result{
         "0|1.230,1.430;2.750,2.350;|3.250,3.450,5.430;6.180,6.780,4.560;|5,6;2,3;|1|1.230,1.430;2.750,2.350;|3.250,3."
         "450,5.430;6.180,6.780,4.560;|5,6;2,3;|"};
@@ -32,7 +32,7 @@ TEST(CachingSerialize, TestSerializeCameraMeasurements) {
 TEST(CachingSerialize, TestSerializeCameraState) {
     CameraState const camera_state{testing_utilities::pinhole_intrinsics};
 
-    std::string const result{caching::Serialize(camera_state)};
+    std::string const result{hashing::Serialize(camera_state)};
     std::string const gt_result{"600.000;360.000;240.000;|"};
 
     EXPECT_EQ(result, gt_result);
@@ -41,7 +41,7 @@ TEST(CachingSerialize, TestSerializeCameraState) {
 TEST(CachingSerialize, TestSerializeControlPointMatrix) {
     Eigen::Matrix<double, 6, 2> const control_points{{1, 2}, {3, 4}, {5, 6}, {1, 2}, {3, 4}, {5, 6}};
 
-    std::string const result{caching::Serialize(control_points)};
+    std::string const result{hashing::Serialize(control_points)};
     std::string const gt_result{"1.000;3.000;5.000;1.000;3.000;5.000;|2.000;4.000;6.000;2.000;4.000;6.000;|"};
 
     EXPECT_EQ(result, gt_result);
@@ -49,7 +49,7 @@ TEST(CachingSerialize, TestSerializeControlPointMatrix) {
 TEST(CachingSerialize, TestSerializeEncodedImages) {
     EncodedImages const encoded_images{{0, ImageBuffer{}}, {1, ImageBuffer{}}};
 
-    std::string const result{caching::Serialize(encoded_images)};
+    std::string const result{hashing::Serialize(encoded_images)};
     std::string const gt_result{"0|0|1|0|"};
 
     EXPECT_EQ(result, gt_result);
@@ -58,7 +58,7 @@ TEST(CachingSerialize, TestSerializeEncodedImages) {
 TEST(CachingSerialize, TestSerializeFrames) {
     Frames const frames{{0, {Array6d::Ones()}}, {1, {2 * Array6d::Ones()}}};
 
-    std::string const result{caching::Serialize(frames)};
+    std::string const result{hashing::Serialize(frames)};
     std::string const gt_result{"0|1.000;1.000;1.000;1.000;1.000;1.000;|1|2.000;2.000;2.000;2.000;2.000;2.000;|"};
 
     EXPECT_EQ(result, gt_result);
@@ -67,7 +67,7 @@ TEST(CachingSerialize, TestSerializeFrames) {
 TEST(CachingSerialize, TestSerializeImuMeasurements) {
     ImuMeasurements const imu_data{{0, {{0, 1, 2}, {3, 4, 5}}}};
 
-    std::string const result{caching::Serialize(imu_data)};
+    std::string const result{hashing::Serialize(imu_data)};
     std::string const gt_result{"0|0.000;1.000;2.000;|3.000;4.000;5.000;|"};
 
     EXPECT_EQ(result, gt_result);
@@ -76,7 +76,7 @@ TEST(CachingSerialize, TestSerializeImuMeasurements) {
 TEST(CachingSerialize, TestSerializeTargetInfo) {
     TargetInfo const target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
 
-    std::string const result{caching::Serialize(target_info)};
+    std::string const result{hashing::Serialize(target_info)};
     std::string const gt_result{"aprilgrid3|8,6|0.100|0|"};
 
     EXPECT_EQ(result, gt_result);

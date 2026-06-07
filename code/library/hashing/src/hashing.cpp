@@ -1,10 +1,10 @@
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 
 #include <openssl/evp.h>
 
 #include <format>
 
-namespace reprojection::caching {
+namespace reprojection::hashing {
 
 std::string Sha256(std::string_view input) {
     std::array<unsigned char, EVP_MAX_MD_SIZE> hash;
@@ -23,4 +23,4 @@ std::string Sha256(std::string_view input) {
     return result;
 }  // LCOV_EXCL_LINE
 
-}  // namespace reprojection::caching
+}  // namespace reprojection::hashing

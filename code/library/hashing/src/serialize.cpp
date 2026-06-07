@@ -1,11 +1,11 @@
 
-#include "../include/caching/serialize.hpp"
+#include "../include/hashing/serialize.hpp"
 
 #include <ranges>
 
 #include "types/enums.hpp"
 
-namespace reprojection::caching {
+namespace reprojection::hashing {
 
 std::string Serialize(CameraInfo const& data) {
     std::ostringstream oss;
@@ -120,4 +120,4 @@ std::string Serialize(std::string_view data) { return std::string(data); }
 
 std::string Serialize(uint64_t const data) { return std::to_string(data); }
 
-}  // namespace reprojection::caching
+}  // namespace reprojection::hashing

@@ -1,13 +1,13 @@
 #include "steps/intrinsic_initialization.hpp"
 
-#include "caching/hashing.hpp"
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 
 namespace reprojection::steps {
 
-std::string IntrinsicInitialization::CacheKey() const { return caching::HashArguments(camera_info, targets); }
+std::string IntrinsicInitialization::CacheKey() const { return hashing::HashArguments(camera_info, targets); }
 
 CameraState IntrinsicInitialization::Compute() const {
     // TODO(Jack): Confirm v and u are height and width in the correct order!

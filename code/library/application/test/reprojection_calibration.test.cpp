@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
@@ -58,16 +58,16 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, caching::HashArguments(""));
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::HashArguments(""));
 
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
-                         caching::HashArguments(sensor_name, camera_model, EncodedImages{}));
+                         hashing::HashArguments(sensor_name, camera_model, EncodedImages{}));
     database::InsertCameraInfo(db, camera_info);
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, caching::HashArguments(""));
+    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, hashing::HashArguments(""));
 
     database::InsertStep(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
-                         caching::HashArguments(camera_info, CameraMeasurements{}));
+                         hashing::HashArguments(camera_info, CameraMeasurements{}));
     database::InsertIntrinsics(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
                                camera_info.camera_model, {Array5d::Zero()});
 

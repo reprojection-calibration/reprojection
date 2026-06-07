@@ -7,7 +7,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         SQLite::SQLite3
         application
-        caching
+        hashing
         calibration
         config
         database

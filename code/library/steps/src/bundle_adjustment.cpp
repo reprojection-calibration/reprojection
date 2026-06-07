@@ -1,13 +1,13 @@
 #include "optimization/bundle_adjustment.hpp"
 
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "steps/bundle_adjustment.hpp"
 
 namespace reprojection::steps {
 
-std::string BundleAdjustment::CacheKey() const { return caching::HashArguments(camera_info, targets, initial_state); }
+std::string BundleAdjustment::CacheKey() const { return hashing::HashArguments(camera_info, targets, initial_state); }
 
 OptimizationState BundleAdjustment::Compute() const {
     auto const [optimized_state, _]{optimization::BundleAdjustment(camera_info, targets, initial_state)};

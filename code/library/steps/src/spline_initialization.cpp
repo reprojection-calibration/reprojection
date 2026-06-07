@@ -1,6 +1,6 @@
 #include "spline/spline_initialization.hpp"
 
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "optimization/camera_imu_calibration.hpp"
@@ -8,7 +8,7 @@
 
 namespace reprojection::steps {
 
-std::string SplineInitialization::CacheKey() const { return caching::HashArguments(camera_info, targets, bundle); }
+std::string SplineInitialization::CacheKey() const { return hashing::HashArguments(camera_info, targets, bundle); }
 
 spline::Se3Spline SplineInitialization::Compute() const {
     // TODO(Jack): Parameterize frequency! Add to cache key probably?

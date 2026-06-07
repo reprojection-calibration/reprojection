@@ -8,7 +8,7 @@
 // TODO(Jack): I would like these to be private to the module here but the fact is that HashArguments() needs access to
 // these functions, and therefore they need to be part of the modules public interface. Is that right?
 
-namespace reprojection::caching {
+namespace reprojection::hashing {
 
 std::string Serialize(CameraInfo const& data);
 
@@ -19,7 +19,7 @@ std::string Serialize(CameraModel const data);
 std::string Serialize(CameraState const& data);
 
 // WARN(Jack): The spline module does a very poor job of isolating dependencies and exposing types. As I did not want to
-// have the caching module depend on the spline module (very different abstraction levels), I instead decided to
+// have the hashing module depend on the spline module (very different abstraction levels), I instead decided to
 // decompose the spline and pass its basic types. This is not nice because instead of using spline::MatrixNXd like we
 // should for the C3 spline control points we redefine it and use Matrix3Xd here instead. It would have been nice just
 // to be able to pass the C3CubicSpline here directly like we do for all the other calibration types. I think the real
@@ -55,4 +55,4 @@ void SerializeEigenByRows(Eigen::DenseBase<Derived> const& m, std::ostream& os) 
     }
 }
 
-}  // namespace reprojection::caching
+}  // namespace reprojection::hashing

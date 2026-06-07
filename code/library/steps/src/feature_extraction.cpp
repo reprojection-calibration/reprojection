@@ -1,6 +1,6 @@
 #include "steps/feature_extraction.hpp"
 
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "feature_extraction/target_extraction.hpp"
@@ -12,7 +12,7 @@ std::string FeatureExtraction::CacheKey() const {
     std::ostringstream oss;
     oss << show_extraction;
 
-    return caching::HashArguments(target_info, *images, oss.str());
+    return hashing::HashArguments(target_info, *images, oss.str());
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!

@@ -1,6 +1,6 @@
 #include "steps/pose_initialization.hpp"
 
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
@@ -8,7 +8,7 @@
 
 namespace reprojection::steps {
 
-std::string PoseInitialization::CacheKey() const { return caching::HashArguments(camera_info, targets, camera_state); }
+std::string PoseInitialization::CacheKey() const { return hashing::HashArguments(camera_info, targets, camera_state); }
 
 Frames PoseInitialization::Compute() const {
     return calibration::PoseInitialization(camera_info, targets, camera_state);

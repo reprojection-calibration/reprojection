@@ -1,6 +1,6 @@
 #include "steps/extrinsic_initialization.hpp"
 
-#include "caching/hashing.hpp"
+#include "hashing/hashing.hpp"
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
@@ -9,7 +9,7 @@
 namespace reprojection::steps {
 
 std::string ExtrinsicInitialization::CacheKey() const {
-    return caching::HashArguments(extrinsic_id, imu_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
+    return hashing::HashArguments(extrinsic_id, imu_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
                              spline.GetTimeHandler().delta_t_ns_);
 }
 

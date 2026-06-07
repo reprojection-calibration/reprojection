@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "caching/serialize.hpp"
+#include "hashing/serialize.hpp"
 
-namespace reprojection::caching {
+namespace reprojection::hashing {
 
 std::string Sha256(std::string_view input);
 
@@ -18,4 +18,4 @@ std::string HashArguments(Args const&... args) {
     return Sha256(data);
 }
 
-}  // namespace reprojection::caching
+}  // namespace reprojection::hashing

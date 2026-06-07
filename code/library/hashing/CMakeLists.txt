@@ -1,4 +1,4 @@
-set(LIBRARY_NAME "caching")
+set(LIBRARY_NAME "hashing")
 
 set(SRC_FILES
         src/hashing.cpp
