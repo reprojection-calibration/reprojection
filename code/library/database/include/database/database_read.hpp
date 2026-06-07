@@ -29,7 +29,7 @@ CameraMeasurements ReadTargets(SqlitePtr const db, std::string_view sensor_name)
 // TODO(Jack): One day we need to redesign this with a more informative extrinsic calibration type that also describes
 // which frames it converts between. Right now this is pretty rudimentary to just load an array here and hijack the
 // sensor_name field to hold something like tf_imu_co. Hacky!
-std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, std::string_view sensor_name,
+std::optional<Extrinsic> ReadExtrinsics(SqlitePtr const db, std::string_view sensor_name,
                                       CalibrationStep const step_name);
 
 std::optional<Array3d> ReadGravity(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name);

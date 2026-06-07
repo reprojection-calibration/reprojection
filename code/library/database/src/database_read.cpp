@@ -151,12 +151,18 @@ CameraMeasurements ReadTargets(SqlitePtr const db, std::string_view sensor_name)
     return targets;
 }  // LCOV_EXCL_LINE
 
-std::optional<Array6d> ReadExtrinsics(SqlitePtr const db, std::string_view sensor_name,
-                                      CalibrationStep const step_name) {
-    std::optional<Array6d> extrinsic;
+std::optional<Extrinsic> ReadExtrinsics(SqlitePtr const db, std::string_view sensor_name,
+                                        CalibrationStep const step_name) {
+    std::optional<Extrinsic> extrinsic;
 
     ExecuteQuery(db, sql_statements::extrinsics_select, utils::BindStepAndSensor(step_name, sensor_name),
-                 [&extrinsic](sqlite3_stmt* const stmt) { extrinsic = utils::ColumnArray<6>(stmt, 0); });
+                 [&extrinsic](sqlite3_stmt* const stmt) {
+                     std::string const frame_a{reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0))};
+                     std::string const frame_b{reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1))};
+                     Array6d const tf_a_b = utils::ColumnArray<6>(stmt, 2);
+
+                     extrinsic = Extrinsic{frame_a, frame_b, tf_a_b};
+                 });
 
     return extrinsic;
 }

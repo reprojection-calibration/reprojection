@@ -81,8 +81,7 @@ int main() {
 
     // NOTE(Jack): Has to be the imu name here due to ImuError foreign key constraint.
     steps::ExtrinsicInitialization const extrinsic_init_step{extrinsic_id, imu_name, imu_data, spline};
-    auto const [extrinsics,
-                extrinsic_init_cache_status]{steps::RunStep<std::pair<Array6d, Array3d>>(extrinsic_init_step, db)};
+    auto const [extrinsics, extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
     std::cout << "Extrinsic init cache: " << ToString(extrinsic_init_cache_status) << std::endl;
 
     return EXIT_SUCCESS;

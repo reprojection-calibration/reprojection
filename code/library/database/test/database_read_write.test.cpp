@@ -227,7 +227,7 @@ TEST_F(ExtrinsicDatabaseFixture, TestExtrinsics) {
     auto result{database::ReadExtrinsics(db, extrinsic_id, step_type)};
     EXPECT_FALSE(result.has_value());
 
-    Array6d const data{0, 1, 2, 3, 4, 5};
+    Extrinsic const data{"frame_a", "frame_b", Array6d{0, 1, 2, 3, 4, 5}};
     EXPECT_THROW(database::InsertExtrinsic(db, camera_name, step_type, data), std::runtime_error);
 
     // Satisfy foreign key constraint.
@@ -236,7 +236,9 @@ TEST_F(ExtrinsicDatabaseFixture, TestExtrinsics) {
 
     result = database::ReadExtrinsics(db, camera_name, step_type);
     ASSERT_TRUE(result.has_value());
-    EXPECT_TRUE(result->isApprox(data));
+    EXPECT_EQ(result->frame_a, data.frame_a);
+    EXPECT_EQ(result->frame_b, data.frame_b);
+    EXPECT_TRUE(result->se3_a_b.isApprox(data.se3_a_b));
 }
 
 TEST_F(ExtrinsicDatabaseFixture, TestGravity) {
