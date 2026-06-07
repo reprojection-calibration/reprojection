@@ -2,10 +2,10 @@
 
 #include <toml++/toml.h>
 
-#include "hashing/hashing.hpp"
 #include "config/config_parsing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 
 namespace reprojection::steps {
 

@@ -4,10 +4,10 @@
 #include <toml++/toml.hpp>
 
 #include "application/reprojection_calibration.hpp"
-#include "hashing/hashing.hpp"
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_evaluation.hpp"
 #include "spline/spline_initialization.hpp"

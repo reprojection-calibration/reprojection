@@ -1,8 +1,8 @@
 #include "spline/spline_initialization.hpp"
 
-#include "hashing/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 #include "optimization/camera_imu_calibration.hpp"
 #include "steps/spline_initialization.hpp"  // This should be the first header!
 

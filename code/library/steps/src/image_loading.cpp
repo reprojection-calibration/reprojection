@@ -1,8 +1,8 @@
 #include "steps/image_loading.hpp"
 
-#include "hashing/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::steps {

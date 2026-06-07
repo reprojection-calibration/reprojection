@@ -1,8 +1,8 @@
 #include "optimization/bundle_adjustment.hpp"
 
-#include "hashing/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 #include "steps/bundle_adjustment.hpp"
 
 namespace reprojection::steps {

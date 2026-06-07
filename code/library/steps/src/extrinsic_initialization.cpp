@@ -1,16 +1,16 @@
 #include "steps/extrinsic_initialization.hpp"
 
-#include "hashing/hashing.hpp"
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 #include "optimization/camera_imu_calibration.hpp"
 
 namespace reprojection::steps {
 
 std::string ExtrinsicInitialization::CacheKey() const {
-    return hashing::HashArguments(extrinsic_id, imu_name, imu_data, spline.ControlPoints(), spline.GetTimeHandler().t0_ns_,
-                             spline.GetTimeHandler().delta_t_ns_);
+    return hashing::HashArguments(extrinsic_id, imu_name, imu_data, spline.ControlPoints(),
+                                  spline.GetTimeHandler().t0_ns_, spline.GetTimeHandler().delta_t_ns_);
 }
 
 std::pair<Array6d, Array3d> ExtrinsicInitialization::Compute() const {

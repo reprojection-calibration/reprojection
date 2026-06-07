@@ -1,9 +1,9 @@
 #include "steps/feature_extraction.hpp"
 
-#include "hashing/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "feature_extraction/target_extraction.hpp"
+#include "hashing/hashing.hpp"
 #include "image_viewer/image_viewer.hpp"
 
 namespace reprojection::steps {

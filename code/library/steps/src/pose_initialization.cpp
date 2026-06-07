@@ -1,9 +1,9 @@
 #include "steps/pose_initialization.hpp"
 
-#include "hashing/hashing.hpp"
 #include "calibration/initialization_methods.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
+#include "hashing/hashing.hpp"
 #include "optimization/bundle_adjustment.hpp"  // REQUIRED BECAUSE OF ReprojectionResiduals()
 
 namespace reprojection::steps {
