@@ -79,4 +79,19 @@ struct ImuErrorState {
 using ImuError = StampedData<ImuErrorState>;
 using ImuErrors = StampedMap<ImuError>;
 
+struct Extrinsic {
+    std::string frame_a;
+    std::string frame_b;
+    Array6d tf_a_b;
+};
+
+// TODO(Jack): Does the existence of this type and its naming make sense at all? Is the gravity term really so closely
+// related to the extrinsic calibration that this makes sense?
+struct ImuCamExtrinsic {
+    Extrinsic tf;
+    // TODO(Jack): Does it matter what frame this gravity is in? Or is it implied/true that its always in the world
+    // frame? Or does that not matter at all...?
+    Array3d gravity;
+};
+
 }  // namespace reprojection
