@@ -11,7 +11,7 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements con
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
     ceres::Problem problem{ceres_state.problem_options};
 
-    Array3d aa_imu_co{0, 0, 0};
+    Array6d tf_imu_co{0, 0, 0, 0, 0, 0};
     for (auto const timestamp_ns : omega_imu | std::views::keys) {
         auto const normalized_position{spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.Size())};
         if (not normalized_position) {
@@ -22,7 +22,7 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements con
         ceres::CostFunction* const cost_function{cost_functions::RigidBodyAngularVelocity::Create(
             omega_imu.at(timestamp_ns).velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
 
-        problem.AddResidualBlock(cost_function, nullptr, aa_imu_co.data(),     //
+        problem.AddResidualBlock(cost_function, nullptr, tf_imu_co.data(),     //
                                  spline.MutableControlPoints().col(i).data(),  //
                                  spline.MutableControlPoints().col(i + 1).data(),
                                  spline.MutableControlPoints().col(i + 2).data(),
@@ -37,7 +37,7 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements con
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    return {aa_imu_co, ceres_state};
+    return {tf_imu_co.topRows<3>(), ceres_state};
 }
 
 }  // namespace  reprojection::optimization
