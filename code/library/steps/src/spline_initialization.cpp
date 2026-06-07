@@ -1,6 +1,6 @@
 #include "spline/spline_initialization.hpp"
 
-#include "caching/cache_keys.hpp"
+#include "caching/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "optimization/camera_imu_calibration.hpp"

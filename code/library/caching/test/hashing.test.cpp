@@ -1,10 +1,15 @@
-#include "caching/cache_keys.hpp"
+#include "caching/hashing.hpp"
 
 #include <gtest/gtest.h>
 
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
+
+TEST(CachingHashing, TestHash) {
+    std::string const result{caching::Sha256("Jack")};
+    EXPECT_EQ(result, "b5fd03dd91df1cfbd2f19c115d24d58bbda01a23fb01924bb78b2cc14f7ff1cb");
+}
 
 // TODO(Jack): Fixture is copy and pasted
 class CacheKeysFixture : public ::testing::Test {

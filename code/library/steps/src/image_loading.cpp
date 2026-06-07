@@ -1,6 +1,6 @@
 #include "steps/image_loading.hpp"
 
-#include "caching/cache_keys.hpp"
+#include "caching/hashing.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "logging/logging.hpp"
