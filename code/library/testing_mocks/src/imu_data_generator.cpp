@@ -7,8 +7,14 @@
 namespace reprojection::testing_mocks {
 
 std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(int const num_samples, uint64_t const timespan_ns) {
-    spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
+    spline::Se3Spline trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
     std::set<uint64_t> const times{SampleTimes(num_samples, timespan_ns)};
+
+    // TODO KEEP THIS?
+    for (int i{0}; i < trajectory.Size(); ++i) {
+        trajectory.MutableControlPoints().col(i) =
+            geometry::Log(geometry::Exp(trajectory.MutableControlPoints().col(i)).inverse());
+    }
 
     ImuMeasurements imu_data;
     for (auto const time_i : times) {
