@@ -8,71 +8,65 @@
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
-#include "spline/se3_spline.hpp"
-#include "spline/spline_evaluation.hpp"
-#include "spline/spline_initialization.hpp"
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
 
-void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns);
-
-void WriteImuData(SqlitePtr db, uint64_t const timespan_ns);
-
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
-    std::string const record_path{"/tmp/reprojection/code/test_data/test_data.db3"};
+    std::string const record_path{"/tmp/reprojection/code/test_data/testing_mocks.db3"};
     auto db{database::OpenCalibrationDatabase(record_path, true, false)};
 
+    static constexpr std::string_view config_file{R"(
+            [camera]
+            sensor_name = "cam"
+            camera_model = "pinhole"
+
+            [target]
+            pattern_size = [5, 5]
+            type = "checkerboard"
+            unit_dimension = 0.1
+        )"};
+    toml::table const config{toml::parse(config_file)};
+
     uint64_t const timespan_ns{10000000000};
+    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
 
-    WriteMvgData(db, timespan_ns);
-    WriteImuData(db, timespan_ns);
+    CameraInfo const camera_info{sensor_name, camera_model, testing_utilities::image_bounds};
+    CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
+    auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 200, timespan_ns)};
 
-    return EXIT_SUCCESS;
-}
+    std::string const image_hash{""};
+    try {
+        database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
 
-void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
-    CameraInfo const camera_info{"cam1", CameraModel::Pinhole, testing_utilities::image_bounds};
-    auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(
-        camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
+        // Insert empty images to satisfy foreign key constraint.
+        EncodedImages const images{[&targets]() {
+            EncodedImages images;
+            for (auto const& timestamp_ns : targets | std::views::keys) {
+                images.insert({timestamp_ns, {}});
+            }
+            return images;
+        }()};
+        database::InsertImages(db, camera_info.sensor_name, images);
 
-    // We need to satisfy the foreign key requirements here and below.
-    database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
+                             hashing::HashArguments(camera_info.sensor_name, camera_info.camera_model, images));
+        database::InsertCameraInfo(db, camera_info);
 
-    EncodedImages image_data;
-    for (auto const timestamp_ns : targets | std::views::keys) {
-        image_data[timestamp_ns] = {};
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
+                             "532eb1a35212026c31475ec9e2c68b6e0c701ac96ac9c40e615f648f3a6d8317");
+        database::InsertTargets(db, camera_info.sensor_name, targets);
+    } catch (...) {
+        std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, "");
-    database::InsertImages(db, camera_info.sensor_name, image_data);
+    ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
+    application::Calibrate(config, empty_image_source, image_hash, db);
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo, "");
-    database::InsertCameraInfo(db, camera_info);
-
-    // WARN(Jack): The test data target has points at negative coordinates but setting negative bounds in the dashboard
-    // is not possible so the target visualization is cut off.
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::TargetInfo, "");
-    // TODO(Jack): It would be nice if the mvg data generator used and returned us the target info. Hardcoding it here
-    // means that it will go out of sync with the data generator.
-    TargetInfo const target_info{TargetType::Checkerboard, 5, 5, 0.25, false};
-    database::InsertTargetInfo(db, camera_info.sensor_name, target_info);
-
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, "");
-    database::InsertTargets(db, camera_info.sensor_name, targets);
-
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::PoseInitialization, "");
-    database::InsertPoses(db, camera_info.sensor_name, CalibrationStep::PoseInitialization, camera_frames);
-}
-
-void WriteImuData(SqlitePtr db, uint64_t const timespan_ns) {
-    uint64_t const num_imu_data{1000};
-    auto const [imu_data, _]{testing_mocks::GenerateImuData(num_imu_data, timespan_ns)};
-
-    std::string const imu_name{"imu1"};
-    database::InsertImuData(db, imu_name, imu_data);
+    return EXIT_SUCCESS;
 }
