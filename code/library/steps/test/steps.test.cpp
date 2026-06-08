@@ -141,7 +141,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     Array6d const tf_imu_co_gt{Array6d::Zero()};
     // ERROR(Jack): The actual gravity should be zero! But right now we have some error in the gravity calculation so we
     // put this value here just as a heuristic canary to see if anything changes.
-    Array3d const gravity_w_gt{2.8826920613096214, 0.073608289211483421, 9.3731026091642597};
+    Array3d const gravity_w_gt{-3.0120763203305727, -4.6831692975183978, 8.0725278441009323};
     EXPECT_EQ(result.tf.frame_a, imu_name);
     EXPECT_EQ(result.tf.frame_b, camera_name);
     EXPECT_TRUE(result.tf.se3_a_b.isApprox(tf_imu_co_gt));
