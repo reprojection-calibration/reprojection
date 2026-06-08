@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include "database/calibration_database.hpp"
+#include "database/database_write.hpp"
 #include "spline/spline_initialization.hpp"
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
@@ -19,13 +21,21 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
 
     spline::Se3Spline const spline{spline::InitializeSe3SplineState(camera_frames, 100)};
 
-    ImuCamExtrinsic const initial_extrinsic{{"imu", camera_info.sensor_name, Vector6d::Zero()}, Vector3d::Zero()};
+    std::string const imu_name{"imu"};
+    ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Vector6d::Zero()}, Vector3d::Zero()};
 
     auto const [optimized_spline, optimized_extrinsic]{optimization::ExtrinsicOptimization(
         imu_data, spline, initial_extrinsic, camera_info, targets, {testing_utilities::pinhole_intrinsics})};
 
-    std::cout << optimized_extrinsic.tf.se3_a_b.transpose() << std::endl;
+    std::cout << geometry::Exp(optimized_extrinsic.tf.se3_a_b).matrix() << std::endl;
     std::cout << optimized_extrinsic.gravity.transpose() << std::endl;
+
+    std::string const record_path{"/tmp/reprojection/code/test_data/a1.db3"};
+    auto db{database::OpenCalibrationDatabase(record_path, true, false)};
+    database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+    database::InsertEntity(db, imu_name, Entity::Imu);
+
+    database::InsertImuData(db, imu_name, imu_data);
 }
 
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
