@@ -1,6 +1,8 @@
+#include "optimization/extrinsic_optimization.hpp"
+
 #include <gtest/gtest.h>
 
-#include "optimization/extrinsic_optimization.hpp"
+#include "spline/spline_initialization.hpp"
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"
@@ -8,8 +10,26 @@
 
 using namespace reprojection;
 
+TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
+    uint64_t const timespan_ns{10000000000};
+    CameraInfo const camera_info{"cam", CameraModel::Pinhole, testing_utilities::image_bounds};
+    auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(
+        camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
+    auto const [imu_data, _]{testing_mocks::GenerateImuData(1000, timespan_ns)};
+
+    spline::Se3Spline const spline{spline::InitializeSe3SplineState(camera_frames, 100)};
+
+    ImuCamExtrinsic const initial_extrinsic{{"imu", camera_info.sensor_name, Vector6d::Zero()}, Vector3d::Zero()};
+
+    auto const [optimized_spline, optimized_extrinsic]{optimization::ExtrinsicOptimization(
+        imu_data, spline, initial_extrinsic, camera_info, targets, {testing_utilities::pinhole_intrinsics})};
+
+    std::cout << optimized_extrinsic.tf.se3_a_b.transpose() << std::endl;
+    std::cout << optimized_extrinsic.gravity.transpose() << std::endl;
+}
+
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
-TEST(OptimizationCameraImuCalibration, TestReprojectionErrorSpline) {
+TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
     MatrixX2d const gt_pixels{{-1, -1},  //
                               {350, 230},
                               {-1, -1},
@@ -47,7 +67,7 @@ TEST(OptimizationCameraImuCalibration, TestReprojectionErrorSpline) {
         << gt_residuals.transpose();
 }
 
-TEST(OptimizationCameraImuCalibration, TestEvaluateImuError) {
+TEST(OptimizationExtrinsicOptimization, TestEvaluateImuError) {
     // TODO(Jack): Are we really sure that this test reflects the camera calibration case? In the camera calibration
     // case the trajectory is actually inversed (look at the mvg data generator). Lets try this on real data :)
     auto [imu_data, trajectory]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
