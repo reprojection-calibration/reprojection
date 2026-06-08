@@ -54,15 +54,14 @@ TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
     //  because needing to interpolate the frames here should be considered some complicated setup/precondition for the
     //  test below. For now it can stand, and we are happy that the initialization method is getting stretched in
     //  another place, but long term this might not be sustainable.
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames, 100)};
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames, 500)};
 
     auto const [rotation_result, gravity]{calibration::EstimateCameraImuAlignment(interpolated_spline, imu_data)};
     auto const [aa_imu_co, diagnostics]{rotation_result};
 
-    std::cout << geometry::Exp<double>(aa_imu_co) << std::endl;
-    std::cout << "gravity: " << gravity.transpose() << std::endl;
-
-    // EXPECT_TRUE(R_co_imu.isApprox(Matrix3d::Identity()));
-    // EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
-    // EXPECT_TRUE(gravity.isApprox(Vector3d::Zero()));
+    // Heuristic! I wish it was really exactly the identity matrix, but it's a little off.
+    Array3d const gt_aa_imu_co{-0.00612964, 0.00687257, 0.00407725};
+    EXPECT_TRUE(aa_imu_co.isApprox(gt_aa_imu_co, 1e-6));
+    EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
+    EXPECT_TRUE(gravity.isApprox(Vector3d::Zero()));
 }
