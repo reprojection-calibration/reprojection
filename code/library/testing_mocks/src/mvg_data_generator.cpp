@@ -47,10 +47,11 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
 
         Isometry3d const tf_co_w{geometry::Exp(tf_w_co.value()).inverse()};
         auto const [pixels, mask]{MvgHelpers::Project(points, camera, tf_co_w)};
-        ArrayXi const valid_row_ids{eigen_utilities::MaskToRowId(mask)};
 
+        ArrayXi const valid_row_ids{eigen_utilities::MaskToRowId(mask)};
         ExtractedTarget const target_i{Bundle{pixels(valid_row_ids, Eigen::all), points(valid_row_ids, Eigen::all)},
                                        indices(valid_row_ids, Eigen::all)};
+
         targets.insert({time_ns_i, target_i});
         poses[time_ns_i].pose = geometry::Log(tf_co_w);
     }

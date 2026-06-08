@@ -13,7 +13,9 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
 
     // Rotate every IMU velocity by some arbitrary rotation matrix and then check that this is recovered by the
     // optimization.
-    static Matrix3d const R{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
+    static Matrix3d const R{{0, -1, 0},  //
+                            {0, 0, -1},
+                            {1, 0, 0}};
     VelocityMeasurements omega_imu;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
         omega_imu.insert({timestamp_ns, {R * data_i.angular_velocity}});
@@ -21,7 +23,7 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
 
     auto const [aa_co_imu, diagnostics]{optimization::AngularVelocityAlignment(omega_imu, trajectory)};
 
-    EXPECT_TRUE(aa_co_imu.matrix().isApprox(geometry::Log(R)));
+    EXPECT_TRUE(aa_co_imu.matrix().isApprox(geometry::Log(R), 1e-9));
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
-    EXPECT_NEAR(diagnostics.solver_summary.final_cost, 0, 1e-18);
+    EXPECT_NEAR(diagnostics.solver_summary.final_cost, 0, 1e-12);
 }

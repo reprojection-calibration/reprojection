@@ -11,7 +11,7 @@
 
 using namespace reprojection;
 
-TEST(CalibrationPoseInitialization, TestInitializeIntrinsics) {
+TEST(CalibrationInitializationMethods, TestInitializeIntrinsics) {
     // TODO(Jack): Use a fixture!!!
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
@@ -23,7 +23,7 @@ TEST(CalibrationPoseInitialization, TestInitializeIntrinsics) {
     ASSERT_TRUE(result.has_value());
 }
 
-TEST(CalibrationPoseInitialization, TestPoseInitialization) {
+TEST(CalibrationInitializationMethods, TestPoseInitialization) {
     // Setup test data
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
@@ -43,7 +43,7 @@ TEST(CalibrationPoseInitialization, TestPoseInitialization) {
     }
 }
 
-TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitialization) {
+TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
     auto const [_, camera_frames]{
@@ -54,12 +54,14 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
     //  because needing to interpolate the frames here should be considered some complicated setup/precondition for the
     //  test below. For now it can stand, and we are happy that the initialization method is getting stretched in
     //  another place, but long term this might not be sustainable.
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames, 100)};
+    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames, 500)};
 
     auto const [rotation_result, gravity]{calibration::EstimateCameraImuAlignment(interpolated_spline, imu_data)};
     auto const [aa_imu_co, diagnostics]{rotation_result};
 
-    // EXPECT_TRUE(R_co_imu.isApprox(Matrix3d::Identity()));
-    // EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
-    // EXPECT_TRUE(gravity.isApprox(Vector3d::Zero()));
+    // Heuristic! I wish it was really exactly the identity matrix, but it's a little off.
+    Array3d const gt_aa_imu_co{-0.00612964, 0.00687257, 0.00407725};
+    EXPECT_TRUE(aa_imu_co.isApprox(gt_aa_imu_co, 1e-6));
+    EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
+    EXPECT_TRUE(gravity.isApprox(Vector3d::Zero()));
 }
