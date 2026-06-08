@@ -19,23 +19,30 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
         camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
     auto const [imu_data, _]{testing_mocks::GenerateImuData(1000, timespan_ns)};
 
-    spline::Se3Spline const spline{spline::InitializeSe3SplineState(camera_frames, 100)};
+    spline::Se3Spline const initial_spline{spline::InitializeSe3SplineState(camera_frames, 100)};
 
     std::string const imu_name{"imu"};
     ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Vector6d::Zero()}, Vector3d::Zero()};
 
     auto const [optimized_spline, optimized_extrinsic]{optimization::ExtrinsicOptimization(
-        imu_data, spline, initial_extrinsic, camera_info, targets, {testing_utilities::pinhole_intrinsics})};
+        imu_data, initial_spline, initial_extrinsic, camera_info, targets, {testing_utilities::pinhole_intrinsics})};
 
     std::cout << geometry::Exp(optimized_extrinsic.tf.se3_a_b).matrix() << std::endl;
     std::cout << optimized_extrinsic.gravity.transpose() << std::endl;
 
     std::string const record_path{"/tmp/reprojection/code/test_data/a1.db3"};
     auto db{database::OpenCalibrationDatabase(record_path, true, false)};
-    database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
-    database::InsertEntity(db, imu_name, Entity::Imu);
 
+    database::InsertEntity(db, imu_name, Entity::Imu);
     database::InsertImuData(db, imu_name, imu_data);
+
+    auto const errors1{optimization::EvaluateImuError(imu_data, initial_extrinsic, initial_spline)};
+    database::InsertStep(db, imu_name, CalibrationStep::ExtrinsicInitialization, "");
+    database::InsertImuErrors(db, imu_name, CalibrationStep::ExtrinsicInitialization, errors1);
+
+    auto const errors2{optimization::EvaluateImuError(imu_data, optimized_extrinsic, optimized_spline)};
+    database::InsertStep(db, imu_name, CalibrationStep::ExtrinsicOptimization, "");
+    database::InsertImuErrors(db, imu_name, CalibrationStep::ExtrinsicOptimization, errors2);
 }
 
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
