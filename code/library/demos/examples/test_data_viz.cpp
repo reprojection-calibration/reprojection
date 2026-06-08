@@ -40,7 +40,7 @@ int main() {
     auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 200, timespan_ns)};
 
     std::string const image_hash{""};
-
+    try {
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
@@ -54,18 +54,19 @@ int main() {
         }()};
         database::InsertImages(db, camera_info.sensor_name, images);
 
-        database::InsertStep(
-            db, camera_info.sensor_name, CalibrationStep::CameraInfo,
-            hashing::HashArguments(camera_info.sensor_name, camera_info.camera_model, images));
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
+                             hashing::HashArguments(camera_info.sensor_name, camera_info.camera_model, images));
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
                              "532eb1a35212026c31475ec9e2c68b6e0c701ac96ac9c40e615f648f3a6d8317");
         database::InsertTargets(db, camera_info.sensor_name, targets);
-
+    } catch (...) {
+        std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
+    }
 
     ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
-    application::Calibrate(config, empty_image_source, "", db);
+    application::Calibrate(config, empty_image_source, image_hash, db);
 
     return EXIT_SUCCESS;
 }
