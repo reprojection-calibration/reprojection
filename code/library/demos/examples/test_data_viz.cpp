@@ -41,6 +41,8 @@ void WriteMvgData(SqlitePtr db, uint64_t const timespan_ns) {
         camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
 
     // We need to satisfy the foreign key requirements here and below.
+    database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+
     EncodedImages image_data;
     for (auto const timestamp_ns : targets | std::views::keys) {
         image_data[timestamp_ns] = {};
