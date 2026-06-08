@@ -1,7 +1,6 @@
-#include "optimization/camera_imu_calibration.hpp"
-
 #include <gtest/gtest.h>
 
+#include "optimization/extrinsic_optimization.hpp"
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
 #include "testing_utilities/constants.hpp"

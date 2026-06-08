@@ -1,10 +1,9 @@
-#include "optimization/camera_imu_calibration.hpp"
-
 #include <ranges>
 
 #include "cost_functions/reprojection_error_spline.hpp"
 #include "cost_functions/rigid_body_angular_velocity.hpp"
 #include "cost_functions/rigid_body_linear_acceleration.hpp"
+#include "optimization/extrinsic_optimization.hpp"
 #include "spline/spline_initialization.hpp"
 
 namespace reprojection::optimization {
