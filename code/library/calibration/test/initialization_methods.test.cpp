@@ -11,7 +11,7 @@
 
 using namespace reprojection;
 
-TEST(CalibrationPoseInitialization, TestInitializeIntrinsics) {
+TEST(CalibrationInitializationMethods, TestInitializeIntrinsics) {
     // TODO(Jack): Use a fixture!!!
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
@@ -23,7 +23,7 @@ TEST(CalibrationPoseInitialization, TestInitializeIntrinsics) {
     ASSERT_TRUE(result.has_value());
 }
 
-TEST(CalibrationPoseInitialization, TestPoseInitialization) {
+TEST(CalibrationInitializationMethods, TestPoseInitialization) {
     // Setup test data
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
@@ -43,7 +43,7 @@ TEST(CalibrationPoseInitialization, TestPoseInitialization) {
     }
 }
 
-TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitialization) {
+TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
     auto const [_, camera_frames]{
@@ -58,6 +58,9 @@ TEST(CalibrationCameraImuExtrinsicInitialization, TestCameraImuExtrinsicInitiali
 
     auto const [rotation_result, gravity]{calibration::EstimateCameraImuAlignment(interpolated_spline, imu_data)};
     auto const [aa_imu_co, diagnostics]{rotation_result};
+
+    std::cout << geometry::Exp<double>(aa_imu_co) << std::endl;
+    std::cout << "gravity: " << gravity.transpose() << std::endl;
 
     // EXPECT_TRUE(R_co_imu.isApprox(Matrix3d::Identity()));
     // EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
