@@ -9,6 +9,7 @@
 #include "steps/camera_info.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
+#include "steps/imu_data_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
 #include "steps/step_runner.hpp"
@@ -120,6 +121,13 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
         if (imu_name) {
             std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
             database::InsertEntity(db, *imu_name, Entity::Imu);
+
+            // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
+            // source lambda!
+            steps::ImuDataLoading const imu_data_loading{*imu_name, "", {}};
+            auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
+            log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.step_type),
+                      ToString(imu_data_loading_cache_status), std::size(imu_data));
         }
     }
 }
