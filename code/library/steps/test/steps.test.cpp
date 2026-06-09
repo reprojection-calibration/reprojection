@@ -312,9 +312,9 @@ TEST(StepsSteps, TestImuDataLoading) {
             if (itr != end) {
                 auto const& [timestamp_ns, data_i]{*itr};
 
-                std::array<double, 6> array{data_i.angular_velocity[0],    data_i.angular_velocity[1],
-                                            data_i.angular_velocity[2],    data_i.linear_acceleration[0],
-                                            data_i.linear_acceleration[1], data_i.linear_acceleration[2]};
+                std::array<double, 6> const array{data_i.angular_velocity[0],    data_i.angular_velocity[1],
+                                                  data_i.angular_velocity[2],    data_i.linear_acceleration[0],
+                                                  data_i.linear_acceleration[1], data_i.linear_acceleration[2]};
 
                 itr = std::next(itr);
                 return std::pair{timestamp_ns, array};
