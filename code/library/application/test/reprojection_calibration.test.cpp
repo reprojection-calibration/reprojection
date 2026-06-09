@@ -53,7 +53,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     // as we can do here. I guess we could also use the MVG test data generator, but that will be for a future
     // contributor :)
 
-    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
+    auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
     CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
 
     database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);

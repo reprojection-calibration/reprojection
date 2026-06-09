@@ -2,6 +2,7 @@
 
 #include <sqlite3.h>
 
+#include <array>
 #include <functional>
 #include <optional>
 
@@ -17,5 +18,7 @@ using SqlitePtr = std::shared_ptr<sqlite3>;
 // is such a standard type that the risk of passing encoded image buffers here directly just does not make sense. If we
 // benchmark it and notice a big slowdown than we can consider an optimization here.
 using ImageSourceSignature = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
+
+using ImuDataSourceSignature = std::function<std::optional<std::pair<uint64_t, std::array<double, 6>>>()>;
 
 }  // namespace reprojection

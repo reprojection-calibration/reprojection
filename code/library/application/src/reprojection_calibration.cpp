@@ -2,14 +2,18 @@
 
 #include <ranges>
 
+#include "config/config_parsing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
+#include "steps/extrinsic_initialization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
+#include "steps/imu_data_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
+#include "steps/spline_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 
@@ -110,6 +114,41 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     auto const [optimized_state, ba_cache_status]{steps::RunStep<OptimizationState>(ba_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.step_type),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
+
+    // TODO(Jack): This is a hack! At this moment this is meant for internal development only therefore we will not
+    // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
+    // someone tried to use this from an application it will be impossible.
+    // TODO(Jack): Remove code coverage exclusion!
+    // LCOV_EXCL_START
+    if (config.contains("imu")) {
+        auto const imu_name{config::ParseImuConfig(*config["imu"].as_table())};
+        if (imu_name) {
+            std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
+            database::InsertEntity(db, *imu_name, Entity::Imu);
+            database::InsertEntity(db, "tf_" + *imu_name + "_xxx_" + camera_info.sensor_name, Entity::Extrinsic);
+
+            // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
+            // source lambda! For now though this only works if we write the imu data seperately and manually trigger a
+            // cache hit.
+            steps::ImuDataLoading const imu_data_loading{*imu_name, "", {}};
+            auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
+            log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.step_type),
+                      ToString(imu_data_loading_cache_status), std::size(imu_data));
+
+            steps::SplineInitialization const spline_init_step{camera_info, targets, aligned_initial_state};
+            auto const [spline_init, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
+            log->info("{{'step': '{}', 'cache_status': '{}', 'num_control_points': {}}}",
+                      ToString(spline_init_step.step_type), ToString(spline_init_cache_status), spline_init.Size());
+
+            steps::ExtrinsicInitialization const extrinsic_init_step{*imu_name, camera_info.sensor_name, imu_data,
+                                                                     spline_init};
+            auto const [extrinsic,
+                        extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
+            log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.step_type),
+                      ToString(extrinsic_init_cache_status));
+        }
+    }
+    // LCOV_EXCL_STOP
 }
 
 }  // namespace reprojection::application

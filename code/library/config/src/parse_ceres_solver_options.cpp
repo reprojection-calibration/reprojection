@@ -109,7 +109,7 @@ ceres::Solver::Options ParseSolverConfig(toml::table solver_cfg) {
     CFG_GET_AND_ERASE(update_state_every_iteration, solver_cfg, options, bool);
     // IGNORED - options.callbacks
 
-    ThrowIfUnexpectedKeys(solver_cfg, "solver");
+    ThrowIfUnexpectedKeys(solver_cfg);
 
     return options;
 }

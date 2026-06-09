@@ -25,6 +25,9 @@ int main() {
             sensor_name = "cam"
             camera_model = "pinhole"
 
+            [imu]
+            sensor_name = "imu"
+
             [target]
             pattern_size = [5, 5]
             type = "checkerboard"
@@ -32,15 +35,17 @@ int main() {
         )"};
     toml::table const config{toml::parse(config_file)};
 
-    uint64_t const timespan_ns{10000000000};
-    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
-
-    CameraInfo const camera_info{sensor_name, camera_model, testing_utilities::image_bounds};
-    CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
-    auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 200, timespan_ns)};
-
     std::string const image_hash{""};
+
     try {
+        uint64_t const timespan_ns{10000000000};
+        auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
+
+        CameraInfo const camera_info{sensor_name, camera_model, testing_utilities::image_bounds};
+        CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
+        auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 200, timespan_ns)};
+
+        // Camera stuff
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
@@ -61,6 +66,14 @@ int main() {
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
                              "532eb1a35212026c31475ec9e2c68b6e0c701ac96ac9c40e615f648f3a6d8317");
         database::InsertTargets(db, camera_info.sensor_name, targets);
+
+        // Imu stuff
+        auto const imu_name{config::ParseImuConfig(*config["imu"].as_table())};
+        database::InsertEntity(db, *imu_name, Entity::Imu);  // Unprotected optional access!!!
+        database::InsertStep(db, *imu_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
+
+        auto const [imu_data, _1]{testing_mocks::GenerateImuData(1000, timespan_ns)};
+        database::InsertImuData(db, *imu_name, imu_data);
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }

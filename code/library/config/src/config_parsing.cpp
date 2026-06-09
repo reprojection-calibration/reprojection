@@ -4,9 +4,9 @@
 
 namespace reprojection::config {
 
-std::pair<std::string, CameraModel> ParseSensorConfig(toml::table sensor_cfg) {
-    auto const sensor_name{ExtractValue<std::string>("sensor_name", sensor_cfg)};
-    auto const camera_model{ExtractValue<std::string>("camera_model", sensor_cfg)};
+std::pair<std::string, CameraModel> ParseCameraConfig(toml::table camera_cfg) {
+    auto const sensor_name{ExtractValue<std::string>("sensor_name", camera_cfg)};
+    auto const camera_model{ExtractValue<std::string>("camera_model", camera_cfg)};
 
     // TODO(Jack): Now that we are essentially doing validity checking here what purpose does the "config validation"
     // serve for us now? Are we sure we still need both or can we just do it here directly? I think for now it makes
@@ -16,9 +16,17 @@ std::pair<std::string, CameraModel> ParseSensorConfig(toml::table sensor_cfg) {
                                              camera_model ? *camera_model : "N/A", sensor_name ? *sensor_name : "N/A")};
     }
 
-    ThrowIfUnexpectedKeys(sensor_cfg, "sensor");
+    ThrowIfUnexpectedKeys(camera_cfg);
 
     return {*sensor_name, ToCameraModel(*camera_model)};
+}
+
+std::optional<std::string> ParseImuConfig(toml::table imu_cfg) {
+    auto const sensor_name{ExtractValue<std::string>("sensor_name", imu_cfg)};
+
+    ThrowIfUnexpectedKeys(imu_cfg);
+
+    return sensor_name;
 }
 
 TargetInfo ParseTargetConfig(toml::table target_cfg) {
@@ -46,10 +54,10 @@ TargetInfo ParseTargetConfig(toml::table target_cfg) {
             asymmetric = *asymmetric_parse;
         }
 
-        ThrowIfUnexpectedKeys(*circle_grid_cfg, "target.circle_grid");
+        ThrowIfUnexpectedKeys(*circle_grid_cfg);
     }
 
-    ThrowIfUnexpectedKeys(target_cfg, "target");
+    ThrowIfUnexpectedKeys(target_cfg);
 
     return TargetInfo{ToTargetType(*type), (*pattern_size)[0], (*pattern_size)[1], unit_dimension, asymmetric};
 }

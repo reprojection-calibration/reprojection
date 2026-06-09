@@ -26,6 +26,9 @@ int main() {
             sensor_name = "/cam0/image_raw"
             camera_model = "double_sphere"
 
+            [imu]
+            sensor_name = "/imu0"
+
             [target]
             pattern_size = [6,6]
             type = "aprilgrid3"
@@ -33,23 +36,18 @@ int main() {
         )"};
     toml::table const config{toml::parse(config_file)};
 
-    // TODO(Jack): Move back into try catch block?
-    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
-
     // NOTE(Jack): Because we do not have the images themselves checked into the test data, and only the extracted
     // features, we need to "manufacture" cache hits for the camera info and feature extraction steps. This is
     // essentially what we are doing here in the following block. The reason that we put it into a try catch block is to
     // prevent the database throwing and killing the program when we run the program more than once without resetting
     // the database.
-    // TODO(Jack): Is there anyway to avoid hardcoding the cache keys? This is extremely brittle as it stands.
 
-    CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
-    std::string const imu_name{"/imu0"};
     try {
+        auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
+        CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
+
+        // Camera stuff
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
-        database::InsertEntity(db, imu_name, Entity::Imu);
-        // TODO(Jack): This name creation logic is now found in many places!
-        database::InsertEntity(db, "tf_" + imu_name + "_xxx_" + camera_info.sensor_name, Entity::Extrinsic);
 
         database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
 
@@ -59,33 +57,18 @@ int main() {
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
                              "5d87595c7c8f53d8c355f8b889374c6d1d1cd4bed1472da698725bd51777385a");
+
+        // Imu stuff
+        auto const imu_name{config::ParseImuConfig(*config["imu"].as_table())};
+        database::InsertEntity(db, *imu_name, Entity::Imu);  // Unprotected optional access!!!
+
+        database::InsertStep(db, *imu_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
 
     ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
     application::Calibrate(config, empty_image_source, "", db);
-
-    /////// Hack Workspace Below ////
-    /////// Hack Workspace Below ////
-    /////// Hack Workspace Below ////
-    /////// Hack Workspace Below ////
-    CameraMeasurements const targets{database::ReadTargets(db, camera_info.sensor_name)};
-    // UNPROTECTED OPTIONAL ACCESS OF THIS VARIABLE!
-    auto const intrinsics{database::ReadIntrinsics(db, camera_info.sensor_name, CalibrationStep::BundleAdjustment,
-                                                   camera_info.camera_model)};
-    Frames const poses{database::ReadPoses(db, sensor_name, CalibrationStep::BundleAdjustment)};
-
-    steps::SplineInitialization const spline_init_step{camera_info, targets, {{*intrinsics}, poses}};
-    auto const [spline, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
-    std::cout << "Spline init cache: " << ToString(spline_init_cache_status) << std::endl;
-
-    ImuMeasurements const imu_data{database::ReadImuData(db, imu_name)};
-
-    // NOTE(Jack): Has to be the imu name here due to ImuError foreign key constraint.
-    steps::ExtrinsicInitialization const extrinsic_init_step{imu_name, camera_info.sensor_name, imu_data, spline};
-    auto const [extrinsics, extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
-    std::cout << "Extrinsic init cache: " << ToString(extrinsic_init_cache_status) << std::endl;
 
     return EXIT_SUCCESS;
 }

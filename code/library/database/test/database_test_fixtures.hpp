@@ -114,7 +114,11 @@ class ImuDatabaseFixture : public ::testing::Test {
         db::InsertStep(db, sensor_name, step_name, cache_key);
     }
 
-    void InsertImuData() const { db::InsertImuData(db, sensor_name, imu_data); }
+    void InsertImuData() const {
+        InsertStep(CalibrationStep::ImuDataLoading);
+
+        db::InsertImuData(db, sensor_name, imu_data);
+    }
 
     void InsertImuError(CalibrationStep const step_type) const {
         db::InsertImuErrors(db, sensor_name, step_type, imu_errors);

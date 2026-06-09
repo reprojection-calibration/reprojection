@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS calibration_steps
                                                        'extrinsic_initialization',
                                                        'feature_extraction',
                                                        'image_loading',
+                                                       'imu_data_loading',
                                                        'intrinsic_initialization',
                                                        'pose_initialization',
                                                        'spline_initialization',

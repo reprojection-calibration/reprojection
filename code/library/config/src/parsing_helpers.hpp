@@ -61,13 +61,13 @@ std::optional<std::array<T, N>> ExtractArray(std::string_view key, toml::table& 
 // TODO(Jack): Instead of throwing should we refactor to return a variant with an error message? I think in the config
 //  code we do not have a consistent error handling strategy. Sometimes we throw, sometimes we use optional, and
 //  sometimes we use variant.
-inline void ThrowIfUnexpectedKeys(toml::table const& cfg, std::string_view section) {
+inline void ThrowIfUnexpectedKeys(toml::table const& cfg) {
     if (cfg.empty()) {
         return;
     }
 
     std::ostringstream oss;
-    oss << "Unexpected parameters found in the " << section << " configuration, are you sure they are correct?\n";
+    oss << "Unexpected configuration parameters found., are you sure they are correct?\n";
     for (const auto& [key, _] : cfg) {
         oss << "  - " << key.str() << "\n";
     }

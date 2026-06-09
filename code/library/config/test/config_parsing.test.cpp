@@ -7,10 +7,10 @@
 
 using namespace reprojection;
 
-TEST(ConfigConfigParsing, TestParseSensorConfig) {
+TEST(ConfigConfigParsing, TestParseCameraConfig) {
     toml::table toml{toml::parse(testing_utilities::minimum_config)};
 
-    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*toml["camera"].as_table())};
+    auto const [sensor_name, camera_model]{config::ParseCameraConfig(*toml["camera"].as_table())};
     EXPECT_EQ(sensor_name, "/cam0/image_raw");
     EXPECT_EQ(camera_model, CameraModel::DoubleSphere);
 
@@ -18,7 +18,26 @@ TEST(ConfigConfigParsing, TestParseSensorConfig) {
         random_key = 123
     )"};
     toml = toml::parse(bad_config);
-    EXPECT_THROW(config::ParseSensorConfig(toml), std::runtime_error);
+    EXPECT_THROW(config::ParseCameraConfig(toml), std::runtime_error);
+}
+
+TEST(ConfigConfigParsing, TestParseImuConfig) {
+    auto sensor_name{config::ParseImuConfig({})};
+    EXPECT_FALSE(sensor_name.has_value());
+
+    static constexpr std::string_view imu_config = R"toml(
+        sensor_name = "/imu0")toml";
+    toml::table toml{toml::parse(imu_config)};
+
+    sensor_name = config::ParseImuConfig(toml);
+    ASSERT_TRUE(sensor_name.has_value());
+    EXPECT_EQ(*sensor_name, "/imu0");
+
+    static constexpr std::string_view bad_config{R"(
+        random_key = 123
+    )"};
+    toml = toml::parse(bad_config);
+    EXPECT_THROW(config::ParseImuConfig(toml), std::runtime_error);
 }
 
 TEST(ConfigConfigParsing, TestParseTargetConfig) {
