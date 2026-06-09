@@ -25,6 +25,9 @@ int main() {
             sensor_name = "cam"
             camera_model = "pinhole"
 
+            [imu]
+            sensor_name = "imu"
+
             [target]
             pattern_size = [5, 5]
             type = "checkerboard"

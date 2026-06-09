@@ -2,6 +2,7 @@
 
 #include <ranges>
 
+#include "config/config_parsing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
@@ -110,6 +111,17 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     auto const [optimized_state, ba_cache_status]{steps::RunStep<OptimizationState>(ba_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.step_type),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
+
+    // TODO(Jack): This is a hack! At this moment this is meant for internal development only therefore we will not
+    // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
+    // someone tried to use this from an application it will be impossible.
+    if (config.contains("imu")) {
+        auto const imu_name{config::ParseImuConfig(*config["imu"].as_table())};
+        if (imu_name) {
+            std::cout << "Doing an IMU calibration..." << std::endl;
+            database::InsertEntity(db, *imu_name, Entity::Imu);
+        }
+    }
 }
 
 }  // namespace reprojection::application
