@@ -33,7 +33,7 @@ class RigidBodyLinearAcceleration {
         auto const so3{control_points.template topRows<3>()};
         auto const r3{control_points.template bottomRows<3>()};
 
-        // TODO(Jack): What is the actual from of a_w?
+        // TODO(Jack): What is the actual form of a_w?
         // TODO(Jack): Edit naming to reflect the fact that the imu is actually measuring specific force and not the
         // motion acceleration.
         Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
