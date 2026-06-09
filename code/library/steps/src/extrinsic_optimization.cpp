@@ -17,8 +17,9 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization::Compute() c
 }
 
 std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization::Load(SqlitePtr const db) const {
-    auto const control_points{database::ReadControlPoints(db, EntityId(), step_type)};
-    auto const time_handler{database::ReadTimeHandler(db, EntityId(), step_type)};
+    // WARN(Jack): Here we are again hardcoding frame_b to be the camera frame!
+    auto const control_points{database::ReadControlPoints(db, extrinsic.tf.frame_b, step_type)};
+    auto const time_handler{database::ReadTimeHandler(db, extrinsic.tf.frame_b, step_type)};
 
     if (not time_handler) {
         std::cout << "WE NEED AN ERROR STRATEGY! ExtrinsicOptimization::Load()" << std::endl;  // LCOV_EXCL_LINE
@@ -40,7 +41,10 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization::Load(Sqlite
 void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> const& data, SqlitePtr const db) const {
     auto const [optimized_spline, optimized_extrinsic]{data};
 
-    // WARN(Jack): Hardcoding frames to frame a/b! See TODO below.
+    // WARN(Jack): Hardcoding frames to frame a/b! See note below!!!
+    // ERROR(Jack): This is also unique here that we are inserting extra steps here in the save method! I do not think
+    // these steps and their outputs will get removed if the main step entity cache busts. This is a danger!
+    database::InsertStep(db, optimized_extrinsic.tf.frame_b, step_type, HashInputs());
     database::InsertControlPoints(db, optimized_extrinsic.tf.frame_b, step_type, optimized_spline.ControlPoints());
     database::InsertTimeHandler(db, optimized_extrinsic.tf.frame_b, step_type, optimized_spline.GetTimeHandler());
 
@@ -56,6 +60,7 @@ void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> c
     // want here is to make sure that these are saved under the entity_id of the imu which just so happens to be frame_a
     // but that might change! We also do this above with the camera stuff!
     ImuErrors const imu_error{optimization::EvaluateImuError(imu_data, optimized_extrinsic, optimized_spline)};
+    database::InsertStep(db, optimized_extrinsic.tf.frame_b, step_type, HashInputs());
     database::InsertStep(db, optimized_extrinsic.tf.frame_a, step_type, HashInputs());
     database::InsertImuErrors(db, optimized_extrinsic.tf.frame_a, step_type, imu_error);
 }
