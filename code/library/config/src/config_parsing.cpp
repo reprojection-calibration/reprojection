@@ -4,9 +4,9 @@
 
 namespace reprojection::config {
 
-std::pair<std::string, CameraModel> ParseSensorConfig(toml::table sensor_cfg) {
-    auto const sensor_name{ExtractValue<std::string>("sensor_name", sensor_cfg)};
-    auto const camera_model{ExtractValue<std::string>("camera_model", sensor_cfg)};
+std::pair<std::string, CameraModel> ParseCameraConfig(toml::table camera_cfg) {
+    auto const sensor_name{ExtractValue<std::string>("sensor_name", camera_cfg)};
+    auto const camera_model{ExtractValue<std::string>("camera_model", camera_cfg)};
 
     // TODO(Jack): Now that we are essentially doing validity checking here what purpose does the "config validation"
     // serve for us now? Are we sure we still need both or can we just do it here directly? I think for now it makes
@@ -16,7 +16,7 @@ std::pair<std::string, CameraModel> ParseSensorConfig(toml::table sensor_cfg) {
                                              camera_model ? *camera_model : "N/A", sensor_name ? *sensor_name : "N/A")};
     }
 
-    ThrowIfUnexpectedKeys(sensor_cfg, "sensor");
+    ThrowIfUnexpectedKeys(camera_cfg, "sensor");
 
     return {*sensor_name, ToCameraModel(*camera_model)};
 }

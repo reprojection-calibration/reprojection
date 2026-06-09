@@ -33,7 +33,7 @@ class StepsFixture : public ::testing::Test {
 
         config = toml::parse(testing_utilities::minimum_config);
 
-        auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
+        auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
         camera_info = CameraInfo{sensor_name, camera_model, testing_utilities::image_bounds};
 
         // WARN(Jack): Make sure all tests that use this are really a camera!!!

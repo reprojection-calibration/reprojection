@@ -33,7 +33,7 @@ int main() {
     toml::table const config{toml::parse(config_file)};
 
     uint64_t const timespan_ns{10000000000};
-    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
+    auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
 
     CameraInfo const camera_info{sensor_name, camera_model, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::pinhole_intrinsics};

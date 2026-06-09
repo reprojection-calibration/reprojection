@@ -34,7 +34,7 @@ int main() {
     toml::table const config{toml::parse(config_file)};
 
     // TODO(Jack): Move back into try catch block?
-    auto const [sensor_name, camera_model]{config::ParseSensorConfig(*config["camera"].as_table())};
+    auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
 
     // NOTE(Jack): Because we do not have the images themselves checked into the test data, and only the extracted
     // features, we need to "manufacture" cache hits for the camera info and feature extraction steps. This is
