@@ -6,6 +6,7 @@ set(SRC_FILES
         src/extrinsic_initialization.cpp
         src/feature_extraction.cpp
         src/image_loading.cpp
+        src/imu_data_loading.cpp
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
         src/spline_initialization.cpp
