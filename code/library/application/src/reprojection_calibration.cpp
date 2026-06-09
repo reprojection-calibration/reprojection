@@ -125,7 +125,7 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
         if (imu_name) {
             std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
             database::InsertEntity(db, *imu_name, Entity::Imu);
-            database::InsertEntity(db, "tf_" + *imu_name + "_xxx_" + camera_info.sensor_name, Entity::Extrinsic);
+            database::InsertEntity(db, Extrinsic::EntityId(*imu_name, camera_info.sensor_name), Entity::Extrinsic);
 
             // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
             // source lambda! For now though this only works if we write the imu data seperately and manually trigger a

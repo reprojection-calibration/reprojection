@@ -259,10 +259,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     std::string const camera_name{"/cam0/image_raw"};
     database::InsertEntity(db, camera_name, Entity::Camera);
 
-    // TODO(Jack): This extrinsic entity id logic is copy and pasted from the step, is there a better way to unify
-    // this and make the extrinsic entity id a first class concept?
-    std::string const extrinsic_id{"tf_" + imu_name + "_xxx_" + camera_name};
-    database::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
+    database::InsertEntity(db, Extrinsic::EntityId(imu_name, camera_name), Entity::Extrinsic);
 
     // NOTE(Jack): Normally the extrinsic initialization function will actually run against the camera frames which I
     // think are inverted compared to the spline returned by the imu data generation function here. The proper way to

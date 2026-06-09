@@ -17,7 +17,7 @@ struct ExtrinsicInitialization {
 
     CalibrationStep step_type{CalibrationStep::ExtrinsicInitialization};
 
-    std::string EntityId() const { return "tf_" + imu_name + "_xxx_" + camera_name; }
+    std::string EntityId() const { return Extrinsic::EntityId(imu_name, camera_name); }
 
     std::string HashInputs() const;
 
