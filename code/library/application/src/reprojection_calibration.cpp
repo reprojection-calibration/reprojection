@@ -118,6 +118,8 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     // TODO(Jack): This is a hack! At this moment this is meant for internal development only therefore we will not
     // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
     // someone tried to use this from an application it will be impossible.
+    // TODO(Jack): Remove code coverage exclusion!
+    // LCOV_EXCL_START
     if (config.contains("imu")) {
         auto const imu_name{config::ParseImuConfig(*config["imu"].as_table())};
         if (imu_name) {
@@ -146,6 +148,7 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
                       ToString(extrinsic_init_cache_status));
         }
     }
+    // LCOV_EXCL_STOP
 }
 
 }  // namespace reprojection::application

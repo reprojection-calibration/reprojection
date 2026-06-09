@@ -20,7 +20,7 @@ ImuMeasurements ImuDataLoading::Compute() const {
     }
 
     return imu_data;
-}
+}  // LCOV_EXCL_LINE
 
 ImuMeasurements ImuDataLoading::Load(SqlitePtr const db) const { return database::ReadImuData(db, EntityId()); }
 
