@@ -9,6 +9,7 @@
 #include "steps/extrinsic_initialization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
+#include "steps/imu_data_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
 #include "steps/spline_initialization.hpp"
@@ -154,6 +155,42 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     EXPECT_EQ(result.tf.frame_b, camera_name);
     EXPECT_TRUE(result.tf.se3_a_b.isApprox(tf_imu_co_gt));
     EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
+TEST(StepsSteps, TestImuDataLoading) {
+    SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
+    std::string const imu_name{"imu"};
+
+    // TODO(Jack): As we add more tests this should probable be packed into a test fixture.
+    ImuMeasurements const gt_imu_data{{0, {Array3d::Ones(), Array3d::Ones()}}, {1, {Array3d::Ones(), Array3d::Ones()}}};
+    ImuDataSourceSignature imu_data_source{
+        [itr = std::cbegin(gt_imu_data),
+         end = std::cend(gt_imu_data)]() mutable -> std::optional<std::pair<uint64_t, std::array<double, 6>>> {
+            if (itr != end) {
+                auto const& [timestamp_ns, data_i]{*itr};
+
+                std::array<double, 6> array{data_i.angular_velocity[0],    data_i.angular_velocity[1],
+                                            data_i.angular_velocity[2],    data_i.linear_acceleration[0],
+                                            data_i.linear_acceleration[1], data_i.linear_acceleration[2]};
+
+                itr = std::next(itr);
+                return std::pair{timestamp_ns, array};
+            }
+            return std::nullopt;
+        }};
+
+    // Satisfy foreign key constraints
+    database::InsertEntity(db, imu_name, Entity::Imu);
+
+    steps::ImuDataLoading const step{imu_name, "", imu_data_source};
+
+    auto [imu_data, cache_status]{RunStep<ImuMeasurements>(step, db)};
+    EXPECT_EQ(std::size(imu_data), 2);
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    std::tie(imu_data, cache_status) = RunStep<ImuMeasurements>(step, db);
+    EXPECT_EQ(std::size(imu_data), 2);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
