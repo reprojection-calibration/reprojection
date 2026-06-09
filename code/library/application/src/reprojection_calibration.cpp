@@ -154,6 +154,9 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
                 steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
             log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.step_type),
                       ToString(extrinsic_opt_cache_status));
+
+            std::cout << geometry::Exp(result.second.tf.se3_a_b).matrix() << std::endl;
+            std::cout << result.second.gravity.transpose() << std::endl;
         }
     }
     // LCOV_EXCL_STOP

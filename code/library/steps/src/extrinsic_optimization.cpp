@@ -53,8 +53,8 @@ void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> c
     database::InsertPoses(db, optimized_extrinsic.tf.frame_b, step_type, spline_poses);
     database::InsertReprojectionErrors(db, optimized_extrinsic.tf.frame_b, step_type, errors);
 
-    database::InsertExtrinsic(db, EntityId(), step_type, extrinsic.tf);
-    database::InsertGravity(db, EntityId(), step_type, extrinsic.gravity);
+    database::InsertExtrinsic(db, EntityId(), step_type, optimized_extrinsic.tf);
+    database::InsertGravity(db, EntityId(), step_type, optimized_extrinsic.gravity);
 
     // TODO(Jack): Hardcoding the imu error to be saved under the entity_id of "frame_a" is a hacky hardcode! What we
     // want here is to make sure that these are saved under the entity_id of the imu which just so happens to be frame_a
