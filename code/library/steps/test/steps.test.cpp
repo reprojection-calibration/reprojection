@@ -26,7 +26,7 @@ using namespace reprojection;
 using namespace std::string_view_literals;
 
 // TODO(Jack): Rename to reflect this is specific to a camera entity.
-class StepsFixture : public ::testing::Test {
+class CameraStepsFixture : public ::testing::Test {
    protected:
     void SetUp() override {
         db = database::OpenCalibrationDatabase(":memory:", true, false);
@@ -66,11 +66,10 @@ class StepsFixture : public ::testing::Test {
     toml::table config;
 };
 
-// TODO REFACTOR IMAGE SOURCE HERE TO READ DIRECTLR FROM AN ENCODEDIMAGES object!!!
-class ImageSourceFixture : public StepsFixture {
+class ImageSourceFixture : public CameraStepsFixture {
    protected:
     void SetUp() override {
-        StepsFixture::SetUp();
+        CameraStepsFixture::SetUp();
 
         // NOTE(Jack): This test kind of captures the data paradigm that we have with our applications. But note that in
         // real applications we create the EncodedImages from the ImageSourceSignature. However, in this file we need
@@ -202,7 +201,7 @@ TEST_F(ImageSourceFixture, TestFeatureExtraction) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(StepsFixture, TestBundleAdjustmentStep) {
+TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
     auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
 
     SatisfyPoseForeignKeys(targets);
@@ -222,7 +221,7 @@ TEST_F(StepsFixture, TestBundleAdjustmentStep) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(StepsFixture, TestIntrinsicInitialization) {
+TEST_F(CameraStepsFixture, TestIntrinsicInitialization) {
     auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
     steps::IntrinsicInitialization const step{camera_info, targets};
 
@@ -241,7 +240,7 @@ TEST_F(StepsFixture, TestIntrinsicInitialization) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(StepsFixture, TestPoseInitialization) {
+TEST_F(CameraStepsFixture, TestPoseInitialization) {
     auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
 
     SatisfyPoseForeignKeys(targets);
@@ -263,7 +262,7 @@ TEST_F(StepsFixture, TestPoseInitialization) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(StepsFixture, TestSplineInitialization) {
+TEST_F(CameraStepsFixture, TestSplineInitialization) {
     auto const [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
 
     SatisfyPoseForeignKeys(targets);
@@ -283,7 +282,7 @@ TEST_F(StepsFixture, TestSplineInitialization) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-TEST_F(StepsFixture, TestTargetInfoStep) {
+TEST_F(CameraStepsFixture, TestTargetInfoStep) {
     steps::TargetInfoStep const step{*config["target"].as_table(), camera_info.sensor_name};
 
     auto [target_info, cache_status]{RunStep<TargetInfo>(step, db)};
