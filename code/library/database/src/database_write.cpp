@@ -170,10 +170,10 @@ void InsertImuData(SqlitePtr const db, std::string_view sensor_name, ImuMeasurem
     auto const binder{[sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_data] = data_i;
 
-        Sqlite3Tools::Bind(stmt, 1, sensor_name);
-        Sqlite3Tools::Bind(stmt, 2, timestamp_ns);
-        utils::BindEigenColumn<Vector3d>(stmt, 3, imu_data.angular_velocity);
-        utils::BindEigenColumn<Vector3d>(stmt, 6, imu_data.linear_acceleration);
+        utils::BindStepAndSensor(stmt, CalibrationStep::ImuDataLoading, sensor_name);
+        Sqlite3Tools::Bind(stmt, 3, timestamp_ns);
+        utils::BindEigenColumn<Vector3d>(stmt, 4, imu_data.angular_velocity);
+        utils::BindEigenColumn<Vector3d>(stmt, 7, imu_data.linear_acceleration);
     }};
 
     BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, db);

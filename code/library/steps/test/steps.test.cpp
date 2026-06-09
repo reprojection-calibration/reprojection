@@ -130,6 +130,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
 
     // Satisfy foreign key constraint because the Save() stage will write out ImuErrors which depend on having a
     // correspondent IMU data point.
+    database::InsertStep(db, imu_name, CalibrationStep::ImuDataLoading, "");
     database::InsertImuData(db, imu_name, imu_data);
 
     steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline};
