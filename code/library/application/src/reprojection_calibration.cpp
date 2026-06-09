@@ -7,6 +7,7 @@
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
+#include "steps/extrinsic_initialization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
@@ -122,6 +123,7 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
         if (imu_name) {
             std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
             database::InsertEntity(db, *imu_name, Entity::Imu);
+            database::InsertEntity(db, "tf_" + *imu_name + "_xxx_" + camera_info.sensor_name, Entity::Extrinsic);
 
             // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
             // source lambda! For now though this only works if we write the imu data seperately and manually trigger a
@@ -135,6 +137,13 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
             auto const [spline_init, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
             log->info("{{'step': '{}', 'cache_status': '{}', 'num_control_points': {}}}",
                       ToString(spline_init_step.step_type), ToString(spline_init_cache_status), spline_init.Size());
+
+            steps::ExtrinsicInitialization const extrinsic_init_step{*imu_name, camera_info.sensor_name, imu_data,
+                                                                     spline_init};
+            auto const [extrinsic,
+                        extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
+            log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.step_type),
+                      ToString(extrinsic_init_cache_status));
         }
     }
 }
