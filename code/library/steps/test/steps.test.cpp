@@ -297,6 +297,13 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+
 TEST(StepsSteps, TestImuDataLoading) {
     SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
     std::string const imu_name{"imu"};

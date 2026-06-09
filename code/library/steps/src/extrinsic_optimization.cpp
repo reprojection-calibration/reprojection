@@ -40,20 +40,21 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization::Load(Sqlite
 void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> const& data, SqlitePtr const db) const {
     auto const [optimized_spline, optimized_extrinsic]{data};
 
-    database::InsertControlPoints(db, EntityId(), step_type, optimized_spline.ControlPoints());
-    database::InsertTimeHandler(db, EntityId(), step_type, optimized_spline.GetTimeHandler());
+    // WARN(Jack): Hardcoding frames to frame a/b! See TODO below.
+    database::InsertControlPoints(db, optimized_extrinsic.tf.frame_b, step_type, optimized_spline.ControlPoints());
+    database::InsertTimeHandler(db, optimized_extrinsic.tf.frame_b, step_type, optimized_spline.GetTimeHandler());
 
     auto const [spline_poses,
                 errors]{optimization::ReprojectionErrorSpline(camera_info, targets, intrinsics, optimized_spline)};
-    database::InsertPoses(db, EntityId(), step_type, spline_poses);
-    database::InsertReprojectionErrors(db, EntityId(), step_type, errors);
+    database::InsertPoses(db, optimized_extrinsic.tf.frame_b, step_type, spline_poses);
+    database::InsertReprojectionErrors(db, optimized_extrinsic.tf.frame_b, step_type, errors);
 
     database::InsertExtrinsic(db, EntityId(), step_type, extrinsic.tf);
     database::InsertGravity(db, EntityId(), step_type, extrinsic.gravity);
 
     // TODO(Jack): Hardcoding the imu error to be saved under the entity_id of "frame_a" is a hacky hardcode! What we
     // want here is to make sure that these are saved under the entity_id of the imu which just so happens to be frame_a
-    // but that might change!
+    // but that might change! We also do this above with the camera stuff!
     ImuErrors const imu_error{optimization::EvaluateImuError(imu_data, optimized_extrinsic, optimized_spline)};
     database::InsertStep(db, optimized_extrinsic.tf.frame_a, step_type, HashInputs());
     database::InsertImuErrors(db, optimized_extrinsic.tf.frame_a, step_type, imu_error);
