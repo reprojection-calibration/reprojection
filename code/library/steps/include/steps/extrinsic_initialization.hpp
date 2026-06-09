@@ -6,8 +6,6 @@
 
 namespace reprojection::steps {
 
-// TODO(Jack): Is it ok to consider gravity as part of the extrinsic calibration?
-
 struct ExtrinsicInitialization {
     std::string imu_name;
     std::string camera_name;
@@ -23,7 +21,6 @@ struct ExtrinsicInitialization {
 
     std::string HashInputs() const;
 
-    // TODO(Jack): Define types for extrinsics and gravity?
     ImuCamExtrinsic Compute() const;
 
     ImuCamExtrinsic Load(SqlitePtr const db) const;

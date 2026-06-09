@@ -28,8 +28,8 @@ ImuCamExtrinsic ExtrinsicInitialization::Compute() const {
 }
 
 ImuCamExtrinsic ExtrinsicInitialization::Load(SqlitePtr const db) const {
-    auto const tf_imu_co{database::ReadExtrinsics(db, EntityId(), CalibrationStep::ExtrinsicInitialization)};
-    auto const gravity_w{database::ReadGravity(db, EntityId(), CalibrationStep::ExtrinsicInitialization)};
+    auto const tf_imu_co{database::ReadExtrinsics(db, EntityId(), step_type)};
+    auto const gravity_w{database::ReadGravity(db, EntityId(), step_type)};
 
     if (not tf_imu_co or not gravity_w) {
         std::cout << "WE NEED AN ERROR STRATEGY! ExtrinsicInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE

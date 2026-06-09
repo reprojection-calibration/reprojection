@@ -18,8 +18,8 @@ spline::Se3Spline SplineInitialization::Compute() const {
 }
 
 spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
-    auto const control_points{database::ReadControlPoints(db, EntityId(), CalibrationStep::SplineInitialization)};
-    auto const time_handler{database::ReadTimeHandler(db, EntityId(), CalibrationStep::SplineInitialization)};
+    auto const control_points{database::ReadControlPoints(db, EntityId(), step_type)};
+    auto const time_handler{database::ReadTimeHandler(db, EntityId(), step_type)};
 
     if (not time_handler) {
         std::cout << "WE NEED AN ERROR STRATEGY! SplineInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE
