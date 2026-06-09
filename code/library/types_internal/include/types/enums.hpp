@@ -36,6 +36,7 @@ enum class CalibrationStep {
     ExtrinsicInitialization,
     FeatureExtraction,
     ImageLoading,
+    ImuDataLoading,
     IntrinsicInitialization,
     PoseInitialization,
     SplineInitialization,
@@ -53,6 +54,8 @@ inline std::string ToString(CalibrationStep const step_name) {
         return "feature_extraction";
     } else if (step_name == CalibrationStep::ImageLoading) {
         return "image_loading";
+    } else if (step_name == CalibrationStep::ImuDataLoading) {
+        return "imu_data_loading";
     } else if (step_name == CalibrationStep::IntrinsicInitialization) {
         return "intrinsic_initialization";
     } else if (step_name == CalibrationStep::PoseInitialization) {

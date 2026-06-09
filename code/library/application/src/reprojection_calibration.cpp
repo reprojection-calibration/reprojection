@@ -118,7 +118,7 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     if (config.contains("imu")) {
         auto const imu_name{config::ParseImuConfig(*config["imu"].as_table())};
         if (imu_name) {
-            std::cout << "Doing an IMU calibration..." << std::endl;
+            std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
             database::InsertEntity(db, *imu_name, Entity::Imu);
         }
     }
