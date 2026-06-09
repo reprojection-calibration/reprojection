@@ -27,22 +27,7 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     auto const [optimized_spline, optimized_extrinsic]{optimization::ExtrinsicOptimization(
         imu_data, initial_spline, initial_extrinsic, camera_info, targets, {testing_utilities::pinhole_intrinsics})};
 
-    std::cout << geometry::Exp(optimized_extrinsic.tf.se3_a_b).matrix() << std::endl;
-    std::cout << optimized_extrinsic.gravity.transpose() << std::endl;
-
-    std::string const record_path{"/tmp/reprojection/code/test_data/a1.db3"};
-    auto db{database::OpenCalibrationDatabase(record_path, true, false)};
-
-    database::InsertEntity(db, imu_name, Entity::Imu);
-    database::InsertImuData(db, imu_name, imu_data);
-
-    auto const errors1{optimization::EvaluateImuError(imu_data, initial_extrinsic, initial_spline)};
-    database::InsertStep(db, imu_name, CalibrationStep::ExtrinsicInitialization, "");
-    database::InsertImuErrors(db, imu_name, CalibrationStep::ExtrinsicInitialization, errors1);
-
-    auto const errors2{optimization::EvaluateImuError(imu_data, optimized_extrinsic, optimized_spline)};
-    database::InsertStep(db, imu_name, CalibrationStep::ExtrinsicOptimization, "");
-    database::InsertImuErrors(db, imu_name, CalibrationStep::ExtrinsicOptimization, errors2);
+    EXPECT_FALSE(true);
 }
 
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
