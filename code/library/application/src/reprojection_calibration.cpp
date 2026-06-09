@@ -12,6 +12,7 @@
 #include "steps/imu_data_loading.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
+#include "steps/spline_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 
@@ -123,11 +124,17 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
             database::InsertEntity(db, *imu_name, Entity::Imu);
 
             // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
-            // source lambda!
+            // source lambda! For now though this only works if we write the imu data seperately and manually trigger a
+            // cache hit.
             steps::ImuDataLoading const imu_data_loading{*imu_name, "", {}};
             auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
             log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.step_type),
                       ToString(imu_data_loading_cache_status), std::size(imu_data));
+
+            steps::SplineInitialization const spline_init_step{camera_info, targets, aligned_initial_state};
+            auto const [spline_init, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
+            log->info("{{'step': '{}', 'cache_status': '{}', 'num_control_points': {}}}",
+                      ToString(spline_init_step.step_type), ToString(spline_init_cache_status), spline_init.Size());
         }
     }
 }
