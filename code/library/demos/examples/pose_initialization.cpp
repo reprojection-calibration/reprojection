@@ -36,14 +36,11 @@ int main() {
         )"};
     toml::table const config{toml::parse(config_file)};
 
-
-
     // NOTE(Jack): Because we do not have the images themselves checked into the test data, and only the extracted
     // features, we need to "manufacture" cache hits for the camera info and feature extraction steps. This is
     // essentially what we are doing here in the following block. The reason that we put it into a try catch block is to
     // prevent the database throwing and killing the program when we run the program more than once without resetting
     // the database.
-
 
     try {
         auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
@@ -72,7 +69,6 @@ int main() {
 
     ImageSourceSignature empty_image_source{[]() { return std::nullopt; }};
     application::Calibrate(config, empty_image_source, "", db);
-
 
     return EXIT_SUCCESS;
 }
