@@ -60,7 +60,6 @@ void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> c
     // want here is to make sure that these are saved under the entity_id of the imu which just so happens to be frame_a
     // but that might change! We also do this above with the camera stuff!
     ImuErrors const imu_error{optimization::EvaluateImuError(imu_data, optimized_extrinsic, optimized_spline)};
-    database::InsertStep(db, optimized_extrinsic.tf.frame_b, step_type, HashInputs());
     database::InsertStep(db, optimized_extrinsic.tf.frame_a, step_type, HashInputs());
     database::InsertImuErrors(db, optimized_extrinsic.tf.frame_a, step_type, imu_error);
 }
