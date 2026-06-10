@@ -27,7 +27,7 @@ struct CameraInfoStep {
     CameraModel camera_model_;
     std::shared_ptr<EncodedImages> images_;
 
-    CalibrationStep step_type{CalibrationStep::CameraInfo};
+    static CalibrationStep StepType() { return CalibrationStep::CameraInfo; }
 
     CameraInfoStep(toml::table const& sensor_config, std::shared_ptr<EncodedImages> const& _images);
 

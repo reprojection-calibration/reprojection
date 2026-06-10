@@ -10,7 +10,7 @@ struct ImuDataLoading {
     std::string serialized_data_signature_;
     ImuDataSourceSignature imu_data_source_;
 
-    CalibrationStep step_type{CalibrationStep::ImuDataLoading};
+    static CalibrationStep StepType() { return CalibrationStep::ImuDataLoading; }
 
     std::string EntityId() const { return imu_name_; }
 

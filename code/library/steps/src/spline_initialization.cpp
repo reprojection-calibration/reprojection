@@ -18,8 +18,8 @@ spline::Se3Spline SplineInitialization::Compute() const {
 }
 
 spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
-    auto const control_points{database::ReadControlPoints(db, EntityId(), step_type)};
-    auto const time_handler{database::ReadTimeHandler(db, EntityId(), step_type)};
+    auto const control_points{database::ReadControlPoints(db, EntityId(), StepType())};
+    auto const time_handler{database::ReadTimeHandler(db, EntityId(), StepType())};
 
     if (not time_handler) {
         std::cout << "WE NEED AN ERROR STRATEGY! SplineInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE
@@ -29,13 +29,13 @@ spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
 }
 
 void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const db) const {
-    database::InsertControlPoints(db, EntityId(), step_type, spline.ControlPoints());
-    database::InsertTimeHandler(db, EntityId(), step_type, spline.GetTimeHandler());
+    database::InsertControlPoints(db, EntityId(), StepType(), spline.ControlPoints());
+    database::InsertTimeHandler(db, EntityId(), StepType(), spline.GetTimeHandler());
 
     auto const [spline_poses,
                 errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, bundle_.camera_state, spline)};
-    database::InsertPoses(db, EntityId(), step_type, spline_poses);
-    database::InsertReprojectionErrors(db, EntityId(), step_type, errors);
+    database::InsertPoses(db, EntityId(), StepType(), spline_poses);
+    database::InsertReprojectionErrors(db, EntityId(), StepType(), errors);
 }
 
 }  // namespace reprojection::steps

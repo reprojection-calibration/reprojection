@@ -28,8 +28,8 @@ ImuCamExtrinsic ExtrinsicInitialization::Compute() const {
 }
 
 ImuCamExtrinsic ExtrinsicInitialization::Load(SqlitePtr const db) const {
-    auto const tf_imu_co{database::ReadExtrinsics(db, EntityId(), step_type)};
-    auto const gravity_w{database::ReadGravity(db, EntityId(), step_type)};
+    auto const tf_imu_co{database::ReadExtrinsics(db, EntityId(), StepType())};
+    auto const gravity_w{database::ReadGravity(db, EntityId(), StepType())};
 
     if (not tf_imu_co or not gravity_w) {
         std::cout << "WE NEED AN ERROR STRATEGY! ExtrinsicInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE
@@ -39,15 +39,15 @@ ImuCamExtrinsic ExtrinsicInitialization::Load(SqlitePtr const db) const {
 }
 
 void ExtrinsicInitialization::Save(ImuCamExtrinsic const& extrinsic, SqlitePtr const db) const {
-    database::InsertExtrinsic(db, EntityId(), step_type, extrinsic.tf);
-    database::InsertGravity(db, EntityId(), step_type, extrinsic.gravity);
+    database::InsertExtrinsic(db, EntityId(), StepType(), extrinsic.tf);
+    database::InsertGravity(db, EntityId(), StepType(), extrinsic.gravity);
 
     // TODO(Jack): We save the imu errors here under the imu and not the extrinsic identity name! Is it hacky here that
     // we use a second sensor name and also write an additional step to the database outside of the sanctioned step
     // runner workflow?
     ImuErrors const error{optimization::EvaluateImuError(imu_data_, extrinsic, spline_)};
-    database::InsertStep(db, imu_name_, step_type, HashInputs());
-    database::InsertImuErrors(db, imu_name_, step_type, error);
+    database::InsertStep(db, imu_name_, StepType(), HashInputs());
+    database::InsertImuErrors(db, imu_name_, StepType(), error);
 }
 
 }  // namespace reprojection::steps

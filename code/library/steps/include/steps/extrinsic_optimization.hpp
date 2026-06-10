@@ -17,7 +17,7 @@ struct ExtrinsicOptimization {
     spline::Se3Spline spline_;
     ImuCamExtrinsic extrinsic_;
 
-    CalibrationStep step_type{CalibrationStep::ExtrinsicOptimization};
+    static CalibrationStep StepType() { return CalibrationStep::ExtrinsicOptimization; }
 
     std::string EntityId() const { return extrinsic_.tf.EntityId(); }
 

@@ -13,7 +13,7 @@ struct TargetInfoStep {
     // TODO(Jack): Is this really associated with a sensor or just an entity?
     std::string sensor_name_;
 
-    CalibrationStep step_type{CalibrationStep::TargetInfo};
+    static CalibrationStep StepType() { return CalibrationStep::TargetInfo; };
 
     std::string EntityId() const { return sensor_name_; }
 

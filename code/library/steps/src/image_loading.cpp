@@ -33,7 +33,7 @@ std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
         ++num_images;
         if (num_images % 50 == 0) {
             log->debug("{{'step': '{}', 'stage': '{}', 'sensor_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
-                       ToString(step_type), "Compute()", EntityId(), num_images);               // LCOV_EXCL_LINE
+                       ToString(StepType()), "Compute()", EntityId(), num_images);               // LCOV_EXCL_LINE
         }
     }
 

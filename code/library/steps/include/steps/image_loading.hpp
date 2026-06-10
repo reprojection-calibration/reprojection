@@ -16,7 +16,7 @@ struct ImageLoading {
     std::string serialized_data_signature_;
     ImageSourceSignature image_source_;
 
-    CalibrationStep step_type{CalibrationStep::ImageLoading};
+    static CalibrationStep StepType() { return CalibrationStep::ImageLoading; }
 
     std::string EntityId() const { return camera_name_; }
 

@@ -165,7 +165,7 @@ TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
     EXPECT_EQ(std::size(result.frames), 50);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    auto const poses{database::ReadPoses(db, camera_info.sensor_name, step.step_type)};
+    auto const poses{database::ReadPoses(db, camera_info.sensor_name, step.StepType())};
     EXPECT_EQ(std::size(poses), 50);
 
     // On rerun with the same inputs it will be a cache hit
@@ -206,7 +206,7 @@ TEST_F(CameraStepsFixture, TestPoseInitialization) {
 
     // Check that the proper amount of poses got written to the database.
     // TODO(Jack): We should also check that the reprojection errors got written!
-    auto poses{database::ReadPoses(db, camera_info.sensor_name, step.step_type)};
+    auto poses{database::ReadPoses(db, camera_info.sensor_name, step.StepType())};
     EXPECT_EQ(std::size(poses), 50);
 
     // On rerun with the same inputs it will be a cache hit
@@ -226,7 +226,7 @@ TEST_F(CameraStepsFixture, TestSplineInitialization) {
     EXPECT_EQ(result.Size(), 95);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    auto const control_points{database::ReadControlPoints(db, camera_info.sensor_name, step.step_type)};
+    auto const control_points{database::ReadControlPoints(db, camera_info.sensor_name, step.StepType())};
     EXPECT_EQ(control_points.cols(), 95);
 
     // On rerun with the same inputs it will be a cache hit

@@ -14,7 +14,7 @@ struct FeatureExtraction {
     TargetInfo target_info_;
     bool show_extraction_;
 
-    CalibrationStep step_type{CalibrationStep::FeatureExtraction};
+    static CalibrationStep StepType() { return CalibrationStep::FeatureExtraction; }
 
     std::string EntityId() const { return camera_name_; }
 
