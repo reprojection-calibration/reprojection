@@ -76,10 +76,10 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
     // further optimize it here.
     problem.SetParameterBlockConstant(intrinsics_x.intrinsics.data());
 
-    ceres_state.solver_options.minimizer_progress_to_stdout = true;
-    ceres_state.solver_options.num_threads = 10; // DO NOT HARDCODE
+    ceres_state.solver_options.minimizer_progress_to_stdout = true;  // REMOVE
+    ceres_state.solver_options.num_threads = 10;                     // DO NOT HARDCODE
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
-    std::cout << ceres_state.solver_summary.FullReport() << std::endl;
+    std::cout << ceres_state.solver_summary.FullReport() << std::endl;  // REMOVE
 
     return {optimized_spline, optimized_extrinsic};
 }
