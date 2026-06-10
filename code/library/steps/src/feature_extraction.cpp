@@ -9,21 +9,17 @@
 namespace reprojection::steps {
 
 std::string FeatureExtraction::HashInputs() const {
-    std::ostringstream oss;
-    oss << show_extraction;
-
-    return hashing::HashArguments(target_info, *images, oss.str());
+    return hashing::HashArguments(target_info_, *images_, static_cast<uint64_t>(show_extraction_));
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!
 // NOTE(Jack): The unit tests and CI pipeline run headless which means that we cannot get the GUI show feature
 // extraction code path unit tested and covered.
 CameraMeasurements FeatureExtraction::Compute() const {
-    // TODO(Jack): Is it really appropriate to use a toml table here instead of a struct?
-    auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
+    auto const extractor{feature_extraction::CreateTargetExtractor(target_info_)};
 
     CameraMeasurements extracted_targets;
-    for (auto const& [timestamp_ns, buffer] : *images) {
+    for (auto const& [timestamp_ns, buffer] : *images_) {
         // TODO COPY AND PASTED FROM CAMERA INFO AND THE STEPS TEST!
         cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
         if (img.empty()) {
@@ -38,7 +34,7 @@ CameraMeasurements FeatureExtraction::Compute() const {
 
         // NOTE(Jack): If we have an extracted target then draw the points and display. Otherwise, just display the
         // image.
-        if (show_extraction) {
+        if (show_extraction_) {
             if (target.has_value()) {                          // LCOV_EXCL_LINE
                 feature_extraction::DrawTarget(*target, img);  // LCOV_EXCL_LINE
             }
