@@ -9,21 +9,21 @@
 
 namespace reprojection::steps {
 
-CameraInfoStep::CameraInfoStep(toml::table const& _sensor_config, std::shared_ptr<EncodedImages> const& _images)
-    : images{_images} {
-    std::tie(sensor_name, camera_model) = config::ParseCameraConfig(_sensor_config);
+CameraInfoStep::CameraInfoStep(toml::table const& sensor_config, std::shared_ptr<EncodedImages> const& _images)
+    : images_{_images} {
+    std::tie(sensor_name_, camera_model_) = config::ParseCameraConfig(sensor_config);
 }
 
-std::string CameraInfoStep::HashInputs() const { return hashing::HashArguments(sensor_name, camera_model, *images); }
+std::string CameraInfoStep::HashInputs() const { return hashing::HashArguments(sensor_name_, camera_model_, *images_); }
 
 CameraInfo CameraInfoStep::Compute() const {
-    if (images->size() == 0) {
+    if (images_->size() == 0) {
         throw std::runtime_error(
             "we need an error handling strategy for no images to get camera info");  // LCOV_EXCL_LINE
     }
 
     // Arbitrarily check the size of the first image
-    cv::Mat const img{cv::imdecode(images->begin()->second.data, cv::IMREAD_COLOR)};
+    cv::Mat const img{cv::imdecode(images_->begin()->second.data, cv::IMREAD_COLOR)};
 
     // TOD0(Jack): Is this check really needed? Is it possible that an empty image buffer makes it way here?
     if (img.empty()) {
@@ -32,7 +32,7 @@ CameraInfo CameraInfoStep::Compute() const {
     }
 
     CameraInfo const camera_info{EntityId(),
-                                 camera_model,
+                                 camera_model_,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
     return camera_info;
