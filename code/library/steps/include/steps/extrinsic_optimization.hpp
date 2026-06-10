@@ -9,17 +9,17 @@ namespace reprojection::steps {
 struct ExtrinsicOptimization {
     // These members are only needed to calculate the reprojection error - they are not actually used for the spline
     // initialization/interpolation.
-    CameraInfo camera_info;
-    CameraMeasurements targets;
-    CameraState intrinsics;
+    CameraInfo camera_info_;
+    CameraMeasurements targets_;
+    CameraState intrinsics_;
 
-    ImuMeasurements imu_data;
-    spline::Se3Spline spline;
-    ImuCamExtrinsic extrinsic;
+    ImuMeasurements imu_data_;
+    spline::Se3Spline spline_;
+    ImuCamExtrinsic extrinsic_;
 
     CalibrationStep step_type{CalibrationStep::ExtrinsicOptimization};
 
-    std::string EntityId() const { return extrinsic.tf.EntityId(); }
+    std::string EntityId() const { return extrinsic_.tf.EntityId(); }
 
     std::string HashInputs() const;
 
