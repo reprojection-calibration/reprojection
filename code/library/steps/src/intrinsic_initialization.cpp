@@ -10,7 +10,6 @@ namespace reprojection::steps {
 std::string IntrinsicInitialization::HashInputs() const { return hashing::HashArguments(camera_info_, targets_); }
 
 CameraState IntrinsicInitialization::Compute() const {
-    // TODO(Jack): Confirm v and u are height and width in the correct order!
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
                                                             camera_info_.bounds.u_max, targets_)};
 
