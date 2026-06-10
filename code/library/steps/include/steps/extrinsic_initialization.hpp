@@ -7,17 +7,17 @@
 namespace reprojection::steps {
 
 struct ExtrinsicInitialization {
-    std::string imu_name;
-    std::string camera_name;
-    ImuMeasurements imu_data;
+    std::string imu_name_;
+    std::string camera_name_;
+    ImuMeasurements imu_data_;
     // NOTE(Jack): To actually just initialize the cam-imu extrinsics we actually only need the orientation component of
     // the spline. BUT we actually also want to save the ImuErrors to the database as a sort of diagnostic. To do that
     // we need the full spline.
-    spline::Se3Spline spline;
+    spline::Se3Spline spline_;
 
     CalibrationStep step_type{CalibrationStep::ExtrinsicInitialization};
 
-    std::string EntityId() const { return Extrinsic::EntityId(imu_name, camera_name); }
+    std::string EntityId() const { return Extrinsic::EntityId(imu_name_, camera_name_); }
 
     std::string HashInputs() const;
 
