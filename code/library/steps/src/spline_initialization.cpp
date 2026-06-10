@@ -8,11 +8,11 @@
 
 namespace reprojection::steps {
 
-std::string SplineInitialization::HashInputs() const { return hashing::HashArguments(camera_info, targets, bundle); }
+std::string SplineInitialization::HashInputs() const { return hashing::HashArguments(camera_info_, targets_, bundle_); }
 
 spline::Se3Spline SplineInitialization::Compute() const {
     // TODO(Jack): Parameterize frequency! Add to cache key probably?
-    spline::Se3Spline const spline{spline::InitializeSe3SplineState(bundle.frames, 100)};
+    spline::Se3Spline const spline{spline::InitializeSe3SplineState(bundle_.frames, 100)};
 
     return spline;
 }
@@ -33,7 +33,7 @@ void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const
     database::InsertTimeHandler(db, EntityId(), step_type, spline.GetTimeHandler());
 
     auto const [spline_poses,
-                errors]{optimization::ReprojectionErrorSpline(camera_info, targets, bundle.camera_state, spline)};
+                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, bundle_.camera_state, spline)};
     database::InsertPoses(db, EntityId(), step_type, spline_poses);
     database::InsertReprojectionErrors(db, EntityId(), step_type, errors);
 }

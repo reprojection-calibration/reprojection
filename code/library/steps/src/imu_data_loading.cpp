@@ -6,11 +6,11 @@
 
 namespace reprojection::steps {
 
-std::string ImuDataLoading::HashInputs() const { return hashing::HashArguments(cache_key); }
+std::string ImuDataLoading::HashInputs() const { return hashing::HashArguments(serialized_data_signature_); }
 
 ImuMeasurements ImuDataLoading::Compute() const {
     ImuMeasurements imu_data;
-    while (auto const data{imu_data_source()}) {
+    while (auto const data{imu_data_source_()}) {
         auto const& [timestamp_ns, data_i]{*data};
 
         Array3d const angular_velocity{data_i[0], data_i[1], data_i[2]};

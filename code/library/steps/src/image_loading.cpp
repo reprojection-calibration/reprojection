@@ -15,17 +15,17 @@ auto const log{logging::Get("steps")};
 
 // TODO(Jack): The name of the class variable "cache_key" is misleading because it is not a cache key but really a
 // serialized data signature. We should fix this name to clarify its purpose and use.
-std::string ImageLoading::HashInputs() const { return hashing::HashArguments(cache_key); }
+std::string ImageLoading::HashInputs() const { return hashing::HashArguments(serialized_data_signature_); }
 
 std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
     auto encoded_images = std::make_shared<EncodedImages>();
     int num_images{0};
-    while (auto const data{image_source()}) {
+    while (auto const data{image_source_()}) {
         auto const& [timestamp_ns, img]{*data};
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error("cv::imencode() failed for " + std::string(sensor_name));  // LCOV_EXCL_LINE
+            throw std::runtime_error("cv::imencode() failed for " + std::string(camera_name_));  // LCOV_EXCL_LINE
         }
 
         encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});

@@ -6,13 +6,13 @@
 namespace reprojection::steps {
 
 struct ImuDataLoading {
-    std::string sensor_name;
-    std::string cache_key;
-    ImuDataSourceSignature imu_data_source;
+    std::string imu_name_;
+    std::string serialized_data_signature_;
+    ImuDataSourceSignature imu_data_source_;
 
     CalibrationStep step_type{CalibrationStep::ImuDataLoading};
 
-    std::string EntityId() const { return sensor_name; }
+    std::string EntityId() const { return imu_name_; }
 
     std::string HashInputs() const;
 

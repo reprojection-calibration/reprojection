@@ -9,12 +9,13 @@
 namespace reprojection::steps {
 
 struct TargetInfoStep {
-    toml::table target_config;
-    std::string sensor_name;
+    toml::table target_config_;
+    // TODO(Jack): Is this really associated with a sensor or just an entity?
+    std::string sensor_name_;
 
     CalibrationStep step_type{CalibrationStep::TargetInfo};
 
-    std::string EntityId() const { return sensor_name; }
+    std::string EntityId() const { return sensor_name_; }
 
     std::string HashInputs() const;
 
