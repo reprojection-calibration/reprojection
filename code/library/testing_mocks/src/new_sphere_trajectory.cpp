@@ -24,7 +24,7 @@ Matrix3d RotZ(double const theta) {
 Vector3d Vee(Matrix3d const& R) { return Vector3d{R(2, 1), R(0, 2), R(1, 0)}; }
 
 Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const origin_w, double const radius) {
-    const double timestamp_s{static_cast<double>(timestamp_ns / 1'000'000'000)};
+    const double timestamp_s{static_cast<double>(timestamp_ns) / 1e9};
     constexpr double speed_factor{0.1};
 
     // The main orbital rate - a speed_factor == 0.1 means that one full loop around the origin takes 10s.
@@ -44,25 +44,26 @@ Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const origin_w
 
 // TODO(Jack): Does this handle edge cases like the target and position being in the same coordinate plane?
 Matrix3d LookAtRotationWorldBody(Vector3d const position_w, Vector3d const target_w) {
-    Vector3d const x_b_w{(target_w - position_w).normalized()};
-
-    if (x_b_w.norm() < 1e-3) {
+    Vector3d const target_delta_w{target_w - position_w};
+    if (target_delta_w.norm() < 1e-3) {
         return Matrix3d::Identity();
     }
 
+    Vector3d const x_b_w{target_delta_w.normalized()};
+
     Vector3d world_up{0, 0, 1};
-    if (std::abs(x_b_w.dot(world_up)) < 0.95) {
+    if (std::abs(x_b_w.dot(world_up)) > 0.95) {
         world_up = Vector3d{0, 1, 0};
     }
 
     Vector3d const y_b_w{world_up.cross(x_b_w).normalized()};
-    Vector3d const z_b_w{world_up.cross(y_b_w).normalized()};
+    Vector3d const z_b_w{x_b_w.cross(y_b_w).normalized()};
 
     // TODO(Jack): Check that this fills by columns and not rows!!!
-    Matrix3d R_b_w;
-    R_b_w << x_b_w, y_b_w, z_b_w;
+    Matrix3d R_w_b;
+    R_w_b << x_b_w, y_b_w, z_b_w;
 
-    return R_b_w;
+    return R_w_b;
 }
 
 Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const sample_rate_hz) {
@@ -75,8 +76,8 @@ Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const 
     return times_ns;
 }
 
-std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double const sample_rate_hz, Vector3d const origin_w, Vector3d const target_w,
-                double const radius) {
+std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double const sample_rate_hz,
+                                               Vector3d const origin_w, Vector3d const target_w, double const radius) {
     auto const time_ns{SampleTimes(duration_s, sample_rate_hz)};
 
     std::vector<Vector3d> p_w;
@@ -112,8 +113,10 @@ std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double c
         Matrix3d const R_b_w{R_w_b[i].transpose()};
 
         Vector3d const gravity_w{0.0, 0.0, -9.81};
-        Vector3d const specific_force_b_i{R_b_w * (acc_w[i - 2] - gravity_w)};  // ERROR -2!!!
-        specific_force_b.insert({time_ns[i], specific_force_b_i});
+        uint64_t const time_ns_i{time_ns[i]};
+
+        Vector3d const specific_force_b_i{R_b_w * (acc_w.at(time_ns_i) - gravity_w)};
+        specific_force_b.insert({time_ns_i, specific_force_b_i});
     }
 
     Frames frames;
