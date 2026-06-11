@@ -20,6 +20,9 @@ Matrix3d RotZ(double const theta) {
     return Matrix3d{{c, -s, 0}, {s, c, 0}, {0, 0, 1}};
 }
 
+// TODO DOES THIS ALREADY EXIST SOMEHWERE?
+Vector3d Vee(Matrix3d const& R) { return Vector3d{R(2, 1), R(0, 2), R(1, 0)}; }
+
 Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const origin_w, double const radius) {
     const double timestamp_s{static_cast<double>(timestamp_ns / 1'000'000'000)};
     constexpr double speed_factor{0.1};
@@ -72,23 +75,47 @@ Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const 
     return times_ns;
 }
 
-Frames Trajectory(double const duration_s, double const sample_rate_hz, Vector3d const origin_w,
-                  Vector3d const target_w, double const radius) {
+void Trajectory(double const duration_s, double const sample_rate_hz, Vector3d const origin_w, Vector3d const target_w,
+                double const radius) {
     auto const time_ns{SampleTimes(duration_s, sample_rate_hz)};
 
-    // TODO(Jack): Naming?
-    Frames poses_w;
+    std::vector<Vector3d> p_w;
+    std::vector<Matrix3d> R_w_b;
     for (auto const time_ns_i : time_ns) {
-        Vector3d const p_w{TrajectoryPosition(time_ns_i, origin_w, radius)};
-        Matrix3d const R_w_b{LookAtRotationWorldBody(p_w, target_w)};
-
-        Vector6d se3;
-        se3 << geometry::Log<double>(R_w_b), p_w;
-
-        poses_w.insert({time_ns_i, {se3}});
+        auto const p_w_i{TrajectoryPosition(time_ns_i, origin_w, radius)};
+        p_w.push_back(p_w_i);
+        R_w_b.push_back(LookAtRotationWorldBody(p_w_i, target_w));
     }
 
-    return poses_w;
+    // TODO CHECK THIS IS THE SAME DT AS FOUND IN TIMES VECTOR!
+    double const dt{1.0 / sample_rate_hz};
+
+    // WARN acc_w has four less values than times!!!
+    std::vector<Vector3d> acc_w;
+    for (int i{2}; i < std::size(time_ns) - 2; ++i) {
+        Vector3d const acc_w_i{(-p_w[i - 2] + 16 * p_w[i - 1] - 30 * p_w[i] + 16 * p_w[i + 1] - p_w[i + 2]) /
+                               (12.0 * std::pow(dt, 2))};
+        acc_w.push_back(acc_w_i);
+    }
+
+    std::vector<Vector3d> omega_b;
+    for (int i{2}; i < std::size(time_ns) - 2; ++i) {
+        Matrix3d const R_dot{(R_w_b[i - 2] - 8.0 * R_w_b[i - 1] + 8.0 * R_w_b[i + 1] - R_w_b[i + 2]) / (12.0 * dt)};
+
+        Matrix3d omega_hat_b = R_w_b[i].transpose() * R_dot;
+        omega_hat_b = 0.5 * (omega_hat_b - omega_hat_b.transpose());
+
+        omega_b[i] = Vee(omega_hat_b);
+    }
+
+    std::vector<Vector3d> specific_force_b;
+    for (int i{2}; i < std::size(time_ns) - 2; ++i) {
+        Matrix3d const R_b_w{R_w_b[i].transpose()};
+
+        Vector3d const gravity_w{0.0, 0.0, -9.81};
+        Vector3d const specific_force_b_i{ R_b_w * (acc_w[i-2] - gravity_w)}; // ERROR -2!!!
+        specific_force_b.push_back(specific_force_b_i);
+    }
 }
 
 }  // namespace reprojection::testing_mocks
