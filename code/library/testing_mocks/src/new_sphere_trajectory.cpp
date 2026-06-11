@@ -113,7 +113,7 @@ void Trajectory(double const duration_s, double const sample_rate_hz, Vector3d c
         Matrix3d const R_b_w{R_w_b[i].transpose()};
 
         Vector3d const gravity_w{0.0, 0.0, -9.81};
-        Vector3d const specific_force_b_i{ R_b_w * (acc_w[i-2] - gravity_w)}; // ERROR -2!!!
+        Vector3d const specific_force_b_i{R_b_w * (acc_w[i - 2] - gravity_w)};  // ERROR -2!!!
         specific_force_b.push_back(specific_force_b_i);
     }
 }
