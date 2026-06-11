@@ -275,7 +275,6 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
 
     steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline};
 
-    // TODO(Jack): Define a type instead of just using std::pair<Array6d, Array3d>!!!
     auto [result, cache_status]{RunStep<ImuCamExtrinsic>(step, db)};
 
     Array6d const tf_imu_co_gt{Array6d::Zero()};
@@ -308,7 +307,7 @@ TEST(StepsSteps, TestImuDataLoading) {
     SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
     std::string const imu_name{"imu"};
 
-    // TODO(Jack): As we add more tests this should probable be packed into a test fixture.
+    // TODO(Jack): As we add more tests this should probably be packed into a test fixture.
     ImuMeasurements const gt_imu_data{{0, {Array3d::Ones(), Array3d::Ones()}}, {1, {Array3d::Ones(), Array3d::Ones()}}};
     ImuDataSourceSignature imu_data_source{
         [itr = std::cbegin(gt_imu_data),
