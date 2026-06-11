@@ -11,21 +11,23 @@
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
+namespace tu = testing_utilities;
 
 TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     uint64_t const timespan_ns{10000000000};
-    CameraInfo const camera_info{"cam", CameraModel::Pinhole, testing_utilities::image_bounds};
-    auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(
-        camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
+    CameraInfo const camera_info{"cam", CameraModel::Pinhole, tu::image_bounds};
+
+    auto const [targets, camera_poses]{
+        testing_mocks::GenerateMvgData(camera_info, CameraState{tu::pinhole_intrinsics}, 200, timespan_ns)};
     auto const [imu_data, _]{testing_mocks::GenerateImuData(1000, timespan_ns)};
 
-    spline::Se3Spline const initial_spline{spline::InitializeSe3SplineState(camera_frames, 100)};
+    spline::Se3Spline const initial_spline{spline::InitializeSe3SplineState(camera_poses, 100)};
 
     std::string const imu_name{"imu"};
     ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Vector6d::Zero()}, Vector3d::Zero()};
 
     auto const [optimized_spline, optimized_extrinsic]{optimization::ExtrinsicOptimization(
-        imu_data, initial_spline, initial_extrinsic, camera_info, targets, {testing_utilities::pinhole_intrinsics})};
+        imu_data, initial_spline, initial_extrinsic, camera_info, targets, {tu::pinhole_intrinsics})};
 
     EXPECT_FALSE(true);
 }
@@ -50,9 +52,9 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 
     uint64_t const timestamp_ns{0};
 
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const sensor{"", CameraModel::Pinhole, tu::image_bounds};
     CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
-    auto const camera_state{CameraState{testing_utilities::pinhole_intrinsics}};
+    auto const camera_state{CameraState{tu::pinhole_intrinsics}};
 
     // The control points for a spline with one segment that is simply the constant identity transform.
     spline::Matrix2NK<double> control_points;
