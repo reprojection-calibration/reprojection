@@ -20,4 +20,14 @@ TEST(TestingMocksNewSphereTrajectory, TestTrajectoryPosition) {
     EXPECT_TRUE(result.isApprox(Vector3d{-1.1755705045849465, 1.6180339887498949, 0}));
 }
 
+TEST(TestingMocksNewSphereTrajectory, TestLookAtRotationWorldBody) {
+    Vector3d const target_w{0, 0, 0};
+
+    Vector3d position_w{0, 0, 0};
+    Matrix3d R_w_b{LookAtRotationWorldBody(position_w, target_w)};
+    EXPECT_TRUE(R_w_b.isApprox(Matrix3d::Identity()));
+
+    // TOOD(Jack): Are there any other cases we can/should test here?
+}
+
 }  // namespace reprojection::testing_mocks

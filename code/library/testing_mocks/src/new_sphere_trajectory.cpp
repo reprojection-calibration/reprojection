@@ -37,4 +37,26 @@ Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const origin_w
     return origin_w + (R * local);
 }
 
+// TODO(Jack): Does this handle edge cases like the target and position being in the same coordinate plane?
+Matrix3d LookAtRotationWorldBody(Vector3d const position_w, Vector3d const target_w) {
+    Vector3d const x_b_w{(target_w - position_w).normalized()};
+
+    if (x_b_w.norm() < 1e-3) {
+        return Matrix3d::Identity();
+    }
+
+    Vector3d world_up{0, 0, 1};
+    if (std::abs(x_b_w.dot(world_up)) < 0.95) {
+        world_up = Vector3d{0, 1, 0};
+    }
+
+    Vector3d const y_b_w{world_up.cross(x_b_w).normalized()};
+    Vector3d const z_b_w{world_up.cross(y_b_w).normalized()};
+
+    Matrix3d R_b_w;
+    R_b_w << x_b_w, y_b_w, z_b_w;
+
+    return R_b_w;
+}
+
 }  // namespace reprojection::testing_mocks
