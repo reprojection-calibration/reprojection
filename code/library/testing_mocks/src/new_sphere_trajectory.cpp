@@ -53,10 +53,21 @@ Matrix3d LookAtRotationWorldBody(Vector3d const position_w, Vector3d const targe
     Vector3d const y_b_w{world_up.cross(x_b_w).normalized()};
     Vector3d const z_b_w{world_up.cross(y_b_w).normalized()};
 
+    // TODO(Jack): Check that this fills by columns and not rows!!!
     Matrix3d R_b_w;
     R_b_w << x_b_w, y_b_w, z_b_w;
 
     return R_b_w;
+}
+
+Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const sample_rate_hz) {
+    int const num_samples{static_cast<int>(duration_s * sample_rate_hz)};
+    uint64_t const duration_ns{static_cast<uint64_t>(1'000'000'000 * duration_s)};
+
+    // TODO(Jack): Define type for Eigen::Array<uint64_t, -1, 1>?
+    auto const times_ns{Eigen::Array<uint64_t, -1, 1>::LinSpaced(num_samples, 0, duration_ns)};
+
+    return times_ns;
 }
 
 }  // namespace reprojection::testing_mocks
