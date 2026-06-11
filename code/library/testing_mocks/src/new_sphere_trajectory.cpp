@@ -75,7 +75,7 @@ Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const 
     return times_ns;
 }
 
-void Trajectory(double const duration_s, double const sample_rate_hz, Vector3d const origin_w, Vector3d const target_w,
+std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double const sample_rate_hz, Vector3d const origin_w, Vector3d const target_w,
                 double const radius) {
     auto const time_ns{SampleTimes(duration_s, sample_rate_hz)};
 
@@ -90,32 +90,46 @@ void Trajectory(double const duration_s, double const sample_rate_hz, Vector3d c
     // TODO CHECK THIS IS THE SAME DT AS FOUND IN TIMES VECTOR!
     double const dt{1.0 / sample_rate_hz};
 
-    // WARN acc_w has four less values than times!!!
-    std::vector<Vector3d> acc_w;
-    for (int i{2}; i < std::size(time_ns) - 2; ++i) {
-        Vector3d const acc_w_i{(-p_w[i - 2] + 16 * p_w[i - 1] - 30 * p_w[i] + 16 * p_w[i + 1] - p_w[i + 2]) /
-                               (12.0 * std::pow(dt, 2))};
-        acc_w.push_back(acc_w_i);
-    }
-
-    std::vector<Vector3d> omega_b;
+    std::map<uint64_t, Vector3d> omega_b;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
         Matrix3d const R_dot{(R_w_b[i - 2] - 8.0 * R_w_b[i - 1] + 8.0 * R_w_b[i + 1] - R_w_b[i + 2]) / (12.0 * dt)};
 
         Matrix3d omega_hat_b = R_w_b[i].transpose() * R_dot;
         omega_hat_b = 0.5 * (omega_hat_b - omega_hat_b.transpose());
 
-        omega_b[i] = Vee(omega_hat_b);
+        omega_b.insert({time_ns[i], Vee(omega_hat_b)});
     }
 
-    std::vector<Vector3d> specific_force_b;
+    std::map<uint64_t, Vector3d> acc_w;
+    for (int i{2}; i < std::size(time_ns) - 2; ++i) {
+        Vector3d const acc_w_i{(-p_w[i - 2] + 16 * p_w[i - 1] - 30 * p_w[i] + 16 * p_w[i + 1] - p_w[i + 2]) /
+                               (12.0 * std::pow(dt, 2))};
+        acc_w.insert({time_ns[i], acc_w_i});
+    }
+
+    std::map<uint64_t, Vector3d> specific_force_b;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
         Matrix3d const R_b_w{R_w_b[i].transpose()};
 
         Vector3d const gravity_w{0.0, 0.0, -9.81};
         Vector3d const specific_force_b_i{R_b_w * (acc_w[i - 2] - gravity_w)};  // ERROR -2!!!
-        specific_force_b.push_back(specific_force_b_i);
+        specific_force_b.insert({time_ns[i], specific_force_b_i});
     }
+
+    Frames frames;
+    ImuMeasurements imu_measurements;
+    for (int i{2}; i < std::size(time_ns) - 2; ++i) {
+        Vector6d se3;
+        se3 << geometry::Log(R_w_b[i]), p_w[i];
+
+        uint64_t const time_ns_i{time_ns[i]};
+        frames.insert({time_ns_i, {se3}});
+
+        ImuMeasurement const imu_measurement_i{time_ns_i, {{omega_b.at(time_ns_i)}, {specific_force_b.at(time_ns_i)}}};
+        imu_measurements.insert(imu_measurement_i);
+    }
+
+    return {frames, imu_measurements};
 }
 
 }  // namespace reprojection::testing_mocks
