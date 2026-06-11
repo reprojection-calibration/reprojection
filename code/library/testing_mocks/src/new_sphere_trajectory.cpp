@@ -1,5 +1,7 @@
 #include "new_sphere_trajectory.hpp"
 
+#include "geometry/lie.hpp"
+
 namespace reprojection::testing_mocks {
 
 // TODO(Jack): Can this be replaced with the ceres rotation functions I already have?
@@ -68,6 +70,25 @@ Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const 
     auto const times_ns{Eigen::Array<uint64_t, -1, 1>::LinSpaced(num_samples, 0, duration_ns)};
 
     return times_ns;
+}
+
+Frames Trajectory(double const duration_s, double const sample_rate_hz, Vector3d const origin_w,
+                  Vector3d const target_w, double const radius) {
+    auto const time_ns{SampleTimes(duration_s, sample_rate_hz)};
+
+    // TODO(Jack): Naming?
+    Frames poses_w;
+    for (auto const time_ns_i : time_ns) {
+        Vector3d const p_w{TrajectoryPosition(time_ns_i, origin_w, radius)};
+        Matrix3d const R_w_b{LookAtRotationWorldBody(p_w, target_w)};
+
+        Vector6d se3;
+        se3 << geometry::Log<double>(R_w_b), p_w;
+
+        poses_w.insert({time_ns_i, {se3}});
+    }
+
+    return poses_w;
 }
 
 }  // namespace reprojection::testing_mocks
