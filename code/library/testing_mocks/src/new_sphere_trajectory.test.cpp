@@ -1,4 +1,4 @@
-#include "new_sphere_trajectory.hpp"
+#include "../include/testing_mocks/new_sphere_trajectory.hpp"
 
 #include <gtest/gtest.h>
 

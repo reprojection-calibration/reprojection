@@ -1,4 +1,4 @@
-#include "new_sphere_trajectory.hpp"
+#include "../include/testing_mocks/new_sphere_trajectory.hpp"
 
 #include "geometry/lie.hpp"
 
@@ -75,7 +75,7 @@ Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const 
     return times_ns;
 }
 
-std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double const sample_rate_hz, Vector3d const origin_w, Vector3d const target_w,
+std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double const sample_rate_hz, Vector3d const origin_w, Vector3d const target_w,
                 double const radius) {
     auto const time_ns{SampleTimes(duration_s, sample_rate_hz)};
 
