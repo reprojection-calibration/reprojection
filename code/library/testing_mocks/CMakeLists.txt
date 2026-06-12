@@ -23,6 +23,6 @@ set(TESTS
         src/mvg_helpers.test.cpp
         src/new_sphere_trajectory.test.cpp
         src/noise_generation.test.cpp
-        test/mvg_data_generator.test.cpp
+        test/data_generators.test.cpp
 )
 AddTests()

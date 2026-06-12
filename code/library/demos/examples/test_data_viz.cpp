@@ -43,7 +43,7 @@ int main() {
         double const duration_s{60};
         CameraInfo const camera_info{sensor_name, camera_model, testing_utilities::image_bounds};
         CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
-        auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, duration_s, 20)};
+        auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, duration_s, 1)};
 
         // Camera stuff
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
@@ -64,7 +64,7 @@ int main() {
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "f81fa4b6955d6980dff27e45171e5e06c7b53968e05422bae84577382cef4a2d");
+                             "46a5ca319d179e0c28d940f76e7cf9d8a93192fe4c856e35dfd4d5bcf2e72ae4");
         database::InsertTargets(db, camera_info.sensor_name, targets);
 
         // Imu stuff
