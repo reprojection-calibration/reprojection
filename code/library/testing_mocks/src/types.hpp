@@ -5,9 +5,10 @@
 namespace reprojection::testing_mocks {
 
 struct Trajectory {
-    Vector3d world_origin;
-    double sphere_radius;
-    Vector3d trajectory_center;
+    Vector3d origin_w;
+    Vector3d target_w;
+    double radius;
+
 };
 
 }  // namespace reprojection::testing_mocks

@@ -38,12 +38,12 @@ int main() {
     std::string const image_hash{""};
 
     try {
-        uint64_t const timespan_ns{10000000000};
         auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
 
+        double const duration_s{60};
         CameraInfo const camera_info{sensor_name, camera_model, testing_utilities::image_bounds};
         CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
-        auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 200, timespan_ns)};
+        auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, duration_s, 20)};
 
         // Camera stuff
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
@@ -64,7 +64,7 @@ int main() {
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "c520cc248854c26fee56acf2952f93da35e22e6a9b5878d1bd021b2bce6abd19");
+                             "f81fa4b6955d6980dff27e45171e5e06c7b53968e05422bae84577382cef4a2d");
         database::InsertTargets(db, camera_info.sensor_name, targets);
 
         // Imu stuff
@@ -72,7 +72,7 @@ int main() {
         database::InsertEntity(db, *imu_name, Entity::Imu);  // Unprotected optional access!!!
         database::InsertStep(db, *imu_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
 
-        auto const [_1, imu_data]{testing_mocks::Trajectory2(60, 200, {0, 0, 0}, {3, 0, 0}, 1.0)};
+        auto const [imu_data, _1]{testing_mocks::GenerateImuData(duration_s, 100)};
         database::InsertImuData(db, *imu_name, imu_data);
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;

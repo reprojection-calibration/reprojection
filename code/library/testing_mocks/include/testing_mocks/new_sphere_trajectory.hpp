@@ -3,6 +3,8 @@
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
+// TODO MAKE PRIVATE!
+
 namespace reprojection::testing_mocks {
 
 Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius);

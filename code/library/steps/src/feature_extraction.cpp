@@ -12,6 +12,7 @@ std::string FeatureExtraction::HashInputs() const {
     std::ostringstream oss;
     oss << show_extraction;
 
+    std::cout<< hashing::HashArguments(target_info, *images, oss.str())<<std::endl;
     return hashing::HashArguments(target_info, *images, oss.str());
 }
 

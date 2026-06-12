@@ -14,8 +14,8 @@
 namespace reprojection::testing_mocks {
 
 std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz) {
-    auto const [frames, imu_data]{Trajectory2(duration_s, sample_rate_hz, constants::trajectory.trajectory_center,
-                                              constants::trajectory.world_origin, constants::trajectory.sphere_radius)};
+    auto const [frames, imu_data]{Trajectory2(duration_s, sample_rate_hz, constants::trajectory.origin_w,
+                                              constants::trajectory.target_w, constants::trajectory.radius)};
 
     // TODO(Jack): Do we need to invert the frames or anything like that? Also is this the right frequency to pass in?
     spline::Se3Spline const spline{spline::InitializeSe3SplineState(frames, sample_rate_hz)};
@@ -26,8 +26,8 @@ std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const durat
 std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,
                                                       double const duration_s, double const sample_rate_hz,
                                                       bool const flat) {
-    auto const [frames, _]{Trajectory2(duration_s, sample_rate_hz, constants::trajectory.trajectory_center,
-                                       constants::trajectory.world_origin, constants::trajectory.sphere_radius)};
+    auto const [frames, _]{Trajectory2(duration_s, sample_rate_hz, constants::trajectory.origin_w,
+                                       constants::trajectory.target_w, constants::trajectory.radius)};
 
     auto const camera{
         projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
