@@ -154,33 +154,33 @@ TEST_F(ImageSourceFixture, TestFeatureExtraction) {
 }
 
 TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
-    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
 
     SatisfyPoseForeignKeys(targets);
 
     steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
 
     auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
-    EXPECT_EQ(std::size(result.frames), 50);
+    EXPECT_EQ(std::size(result.frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     auto const poses{database::ReadPoses(db, camera_info.sensor_name, step.step_type)};
-    EXPECT_EQ(std::size(poses), 50);
+    EXPECT_EQ(std::size(poses), 56);
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<OptimizationState>(step, db);
-    EXPECT_EQ(std::size(result.frames), 50);
+    EXPECT_EQ(std::size(result.frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(CameraStepsFixture, TestIntrinsicInitialization) {
-    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 5, 1e9)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
     steps::IntrinsicInitialization const step{camera_info, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
     // strategy is unclear at this time.
-    Array5d const gt_result{1048.01, 360, 240, 0, 0.5};  // Heuristic!
+    Array5d const gt_result{535.023, 360, 240, 0, 0.5};  // Heuristic!
 
     auto [result, cache_status]{RunStep<CameraState>(step, db)};
     EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));
@@ -193,44 +193,44 @@ TEST_F(CameraStepsFixture, TestIntrinsicInitialization) {
 }
 
 TEST_F(CameraStepsFixture, TestPoseInitialization) {
-    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
 
     SatisfyPoseForeignKeys(targets);
 
     steps::PoseInitialization const step{camera_info, targets, camera_state};
 
     auto [frames, cache_status]{RunStep<Frames>(step, db)};
-    EXPECT_EQ(std::size(frames), 50);
+    EXPECT_EQ(std::size(frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // Check that the proper amount of poses got written to the database.
     // TODO(Jack): We should also check that the reprojection errors got written!
     auto poses{database::ReadPoses(db, camera_info.sensor_name, step.step_type)};
-    EXPECT_EQ(std::size(poses), 50);
+    EXPECT_EQ(std::size(poses), 56);
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(frames, cache_status) = RunStep<Frames>(step, db);
-    EXPECT_EQ(std::size(frames), 50);
+    EXPECT_EQ(std::size(frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(CameraStepsFixture, TestSplineInitialization) {
-    auto const [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 50, 1e9)};
+    auto const [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 10, 1)};
 
     SatisfyPoseForeignKeys(targets);
 
     steps::SplineInitialization const step{camera_info, targets, {camera_state, poses}};
 
     auto [result, cache_status]{RunStep<spline::Se3Spline>(step, db)};
-    EXPECT_EQ(result.Size(), 95);
+    EXPECT_EQ(result.Size(), 558);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     auto const control_points{database::ReadControlPoints(db, camera_info.sensor_name, step.step_type)};
-    EXPECT_EQ(control_points.cols(), 95);
+    EXPECT_EQ(control_points.cols(), 558);
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<spline::Se3Spline>(step, db);
-    EXPECT_EQ(result.Size(), 95);
+    EXPECT_EQ(result.Size(), 558);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
