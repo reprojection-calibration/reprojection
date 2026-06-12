@@ -10,6 +10,7 @@
 #include "hashing/hashing.hpp"
 #include "testing_mocks/imu_data_generator.hpp"
 #include "testing_mocks/mvg_data_generator.hpp"
+#include "testing_mocks/new_sphere_trajectory.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
@@ -17,7 +18,7 @@ using namespace reprojection;
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
-    std::string const record_path{"/tmp/reprojection/code/test_data/testing_mocks.db3"};
+    std::string const record_path{"/tmp/reprojection/code/test_data/a1_testing_mocks.db3"};
     auto db{database::OpenCalibrationDatabase(record_path, true, false)};
 
     static constexpr std::string_view config_file{R"(
@@ -64,7 +65,7 @@ int main() {
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "532eb1a35212026c31475ec9e2c68b6e0c701ac96ac9c40e615f648f3a6d8317");
+                             "25654605dfc5dfa5eaa22d4f628f2e23c236f26d66e187b75e38b5c4e027d804");
         database::InsertTargets(db, camera_info.sensor_name, targets);
 
         // Imu stuff
@@ -72,7 +73,7 @@ int main() {
         database::InsertEntity(db, *imu_name, Entity::Imu);  // Unprotected optional access!!!
         database::InsertStep(db, *imu_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
 
-        auto const [imu_data, _1]{testing_mocks::GenerateImuData(1000, timespan_ns)};
+        auto const [_1, imu_data]{testing_mocks::Trajectory2(60, 200, {0, 0, 0}, {3, 0, 0}, 1.0)};
         database::InsertImuData(db, *imu_name, imu_data);
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;

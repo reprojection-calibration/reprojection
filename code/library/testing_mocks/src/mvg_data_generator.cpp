@@ -4,9 +4,9 @@
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "projection_functions/initialize_camera.hpp"
-#include "spline/se3_spline.hpp"
+#include "testing_mocks/new_sphere_trajectory.hpp"
 
-#include "data_generator_helpers.hpp"
+
 #include "mvg_helpers.hpp"
 #include "noise_generation.hpp"
 
@@ -27,11 +27,9 @@ namespace reprojection::testing_mocks {
 std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,
                                                       int const num_samples, uint64_t const timespan_ns,
                                                       bool const flat) {
-    // NOTE(Jack): Instead of building and using a spline here, I guess we could have all just used the poses from
-    // SphereTrajectory() directly (?) But we follow this pattern here and in the imu data generator for consistencies'
-    // sake. The more places we use the spline code the more robust it makes it!
-    spline::Se3Spline const trajectory{TimedSphereTrajectorySpline(5 * num_samples, timespan_ns)};
-    std::set<uint64_t> const times_ns{SampleTimes(num_samples, timespan_ns)};
+    (void)num_samples;
+    (void)timespan_ns;
+    auto const [frames, _]{Trajectory2(60, 200, {0, 0, 2}, {0, 0, 0}, 1.0)};
 
     auto const camera{
         projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
@@ -39,13 +37,14 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
 
     CameraMeasurements targets;
     Frames poses;
-    for (auto const time_ns_i : times_ns) {
-        auto const tf_w_co{trajectory.Evaluate(time_ns_i, spline::DerivativeOrder::Null)};
-        if (not tf_w_co.has_value()) {
-            throw std::runtime_error("GenerateMvgData() failed trajectory.Evaluate().");  // LCOV_EXCL_LINE
-        }
+    for (auto const& [time_ns_i, frame] : frames) {
+        Isometry3d const tf_w_b{geometry::Exp(frame.pose)};
+        Isometry3d const tf_b_w{tf_w_b.inverse()};
 
-        Isometry3d const tf_co_w{geometry::Exp(tf_w_co.value()).inverse()};
+        // The canonical_camera_R here is the classic "z-forward, x-right, y-down" optical camera frame.
+        static Matrix3d const R_co_b{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}};
+        Isometry3d const tf_co_w{R_co_b * tf_b_w};
+
         auto const [pixels, mask]{MvgHelpers::Project(points, camera, tf_co_w)};
 
         ArrayXi const valid_row_ids{eigen_utilities::MaskToRowId(mask)};
