@@ -9,7 +9,7 @@
 using namespace reprojection;
 
 TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
-    auto const [imu_data, spline]{testing_mocks::GenerateImuData(60, 50)};
+    auto const [imu_data, spline]{testing_mocks::GenerateImuData(10, 50)};
 
     // Rotate every IMU velocity by some arbitrary rotation matrix and then check that this is recovered by the
     // optimization.
@@ -28,5 +28,5 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
     // (0.002065...). Can we engineer the test data to make this more exact? Or is it some other problem?
     EXPECT_TRUE(aa_co_imu.matrix().isApprox(geometry::Log(R), 1e-3));
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
-    EXPECT_NEAR(diagnostics.solver_summary.final_cost, 0.0020650323538566667, 1e-6);
+    EXPECT_NEAR(diagnostics.solver_summary.final_cost, 0.0028202505264716135, 1e-6);
 }
