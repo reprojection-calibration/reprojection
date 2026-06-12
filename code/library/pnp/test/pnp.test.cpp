@@ -13,7 +13,7 @@ using namespace reprojection;
 TEST(Pnp, TestPnp) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets, gt_frames]{
-        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
+        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 60, 1, false)};
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle, sensor.bounds)};
