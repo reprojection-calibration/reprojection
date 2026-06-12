@@ -65,7 +65,7 @@ int main() {
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "25654605dfc5dfa5eaa22d4f628f2e23c236f26d66e187b75e38b5c4e027d804");
+                             "c520cc248854c26fee56acf2952f93da35e22e6a9b5878d1bd021b2bce6abd19");
         database::InsertTargets(db, camera_info.sensor_name, targets);
 
         // Imu stuff

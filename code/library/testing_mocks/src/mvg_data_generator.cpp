@@ -29,7 +29,7 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
                                                       bool const flat) {
     (void)num_samples;
     (void)timespan_ns;
-    auto const [frames, _]{Trajectory2(60, 200, {0, 0, 2}, {0, 0, 0}, 1.0)};
+    auto const [frames, _]{Trajectory2(60, 30, {1.5, 1.5, 1.5}, {0, 0, 0}, 1.0)};
 
     auto const camera{
         projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};

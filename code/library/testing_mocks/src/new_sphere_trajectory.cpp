@@ -23,7 +23,7 @@ Matrix3d RotZ(double const theta) {
 // TODO DOES THIS ALREADY EXIST SOMEHWERE?
 Vector3d Vee(Matrix3d const& R) { return Vector3d{R(2, 1), R(0, 2), R(1, 0)}; }
 
-Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const origin_w, double const radius) {
+Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius) {
     const double timestamp_s{static_cast<double>(timestamp_ns) / 1e9};
     constexpr double speed_factor{0.1};
 
@@ -43,27 +43,75 @@ Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const origin_w
 }
 
 // TODO(Jack): Does this handle edge cases like the target and position being in the same coordinate plane?
-Matrix3d LookAtRotationWorldBody(Vector3d const position_w, Vector3d const target_w) {
+Matrix3d LookAtRotationWorldBody(Vector3d const& position_w, Vector3d const& target_w,
+                                 std::optional<Matrix3d> const& R_w_b_prev) {
     Vector3d const target_delta_w{target_w - position_w};
-    if (target_delta_w.norm() < 1e-3) {
-        return Matrix3d::Identity();
+
+    if (target_delta_w.norm() < 1e-8) {
+        return R_w_b_prev.value_or(Matrix3d::Identity());
     }
 
-    Vector3d const x_b_w{target_delta_w.normalized()};
+    Vector3d const x_b_w_new{target_delta_w.normalized()};
 
-    Vector3d world_up{0, 0, 1};
-    if (std::abs(x_b_w.dot(world_up)) > 0.95) {
-        world_up = Vector3d{0, 1, 0};
+    if (!R_w_b_prev.has_value()) {
+        //
+        // Initialize orientation from world_up.
+        //
+
+        Vector3d world_up{0.0, 0.0, 1.0};
+
+        if (std::abs(x_b_w_new.dot(world_up)) > 0.95) {
+            world_up = Vector3d{0.0, 1.0, 0.0};
+        }
+
+        Vector3d const y_b_w{world_up.cross(x_b_w_new).normalized()};
+
+        Vector3d const z_b_w{x_b_w_new.cross(y_b_w).normalized()};
+
+        Matrix3d R_w_b;
+        R_w_b << x_b_w_new, y_b_w, z_b_w;
+
+        return R_w_b;
+    } else {
+        //
+        // Propagate previous orientation using the smallest rotation
+        // that moves the previous forward axis onto the new forward axis.
+        //
+
+        Vector3d const x_b_w_prev{R_w_b_prev->col(0)};
+
+        Vector3d const axis{x_b_w_prev.cross(x_b_w_new)};
+
+        double const sin_angle{axis.norm()};
+
+        double const cos_angle{std::clamp(x_b_w_prev.dot(x_b_w_new), -1.0, 1.0)};
+
+        // No meaningful change.
+        if (sin_angle < 1e-8 && cos_angle > 0.0) {
+            return *R_w_b_prev;
+        }
+
+        // 180-degree flip case.
+        if (sin_angle < 1e-8 && cos_angle < 0.0) {
+            Vector3d axis_180{x_b_w_prev.cross(Vector3d::UnitZ())};
+
+            if (axis_180.norm() < 1e-8) {
+                axis_180 = x_b_w_prev.cross(Vector3d::UnitY());
+            }
+
+            Eigen::AngleAxisd const aa{M_PI, axis_180.normalized()};
+
+            return aa.toRotationMatrix() * (*R_w_b_prev);
+        }
+
+        double const angle{std::atan2(sin_angle, cos_angle)};
+
+        Eigen::AngleAxisd const aa{angle, axis.normalized()};
+
+        Matrix3d const R_delta{aa.toRotationMatrix()};
+
+        return R_delta * (*R_w_b_prev);
     }
-
-    Vector3d const y_b_w{world_up.cross(x_b_w).normalized()};
-    Vector3d const z_b_w{x_b_w.cross(y_b_w).normalized()};
-
-    // TODO(Jack): Check that this fills by columns and not rows!!!
-    Matrix3d R_w_b;
-    R_w_b << x_b_w, y_b_w, z_b_w;
-
-    return R_w_b;
 }
 
 Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const sample_rate_hz) {
@@ -77,15 +125,20 @@ Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const 
 }
 
 std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double const sample_rate_hz,
-                                               Vector3d const origin_w, Vector3d const target_w, double const radius) {
+                                               Vector3d const& origin_w, Vector3d const& target_w,
+                                               double const radius) {
     auto const time_ns{SampleTimes(duration_s, sample_rate_hz)};
 
     std::vector<Vector3d> p_w;
     std::vector<Matrix3d> R_w_b;
+    std::optional<Matrix3d> R_w_b_prev;
     for (auto const time_ns_i : time_ns) {
-        auto const p_w_i{TrajectoryPosition(time_ns_i, origin_w, radius)};
+        Vector3d const p_w_i{TrajectoryPosition(time_ns_i, origin_w, radius)};
+        Matrix3d const R_w_b_i{LookAtRotationWorldBody(p_w_i, target_w, R_w_b_prev)};
+
         p_w.push_back(p_w_i);
-        R_w_b.push_back(LookAtRotationWorldBody(p_w_i, target_w));
+        R_w_b.push_back(R_w_b_i);
+        R_w_b_prev = R_w_b_i;
     }
 
     // TODO CHECK THIS IS THE SAME DT AS FOUND IN TIMES VECTOR!
