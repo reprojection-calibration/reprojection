@@ -25,7 +25,7 @@ Vector3d Vee(Matrix3d const& R) { return Vector3d{R(2, 1), R(0, 2), R(1, 0)}; }
 
 // TES!!!
 Matrix3d RollAboutBodyX(double const t_s) {
-    double constexpr roll_amp{0.35};      // rad
+    double constexpr roll_amp{0.001};      // rad
     double constexpr roll_freq_hz{0.1};  // cycles / second
 
     double const roll{roll_amp * std::sin(2.0 * M_PI * roll_freq_hz * t_s)};
@@ -150,7 +150,7 @@ std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double c
 
         p_w.push_back(p_w_i);
         R_w_b.push_back(R_w_b_i);
-        R_w_b_prev = R_w_b_lookat;
+        R_w_b_prev = R_w_b_i;
     }
 
     // TODO CHECK THIS IS THE SAME DT AS FOUND IN TIMES VECTOR!
