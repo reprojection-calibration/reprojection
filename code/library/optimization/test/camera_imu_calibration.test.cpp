@@ -57,7 +57,7 @@ TEST(OptimizationCameraImuCalibration, TestEvaluateImuError) {
 
     EXPECT_EQ(std::size(errors), 195);
     for (auto const& error : errors) {
-        //std::cout << error.second.delta_angular_velocity.norm() << std::endl;
+        // std::cout << error.second.delta_angular_velocity.norm() << std::endl;
         std::cout << error.second.delta_linear_acceleration.norm() << std::endl;
     }
 }

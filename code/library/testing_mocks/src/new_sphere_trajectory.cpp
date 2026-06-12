@@ -25,7 +25,7 @@ Vector3d Vee(Matrix3d const& R) { return Vector3d{R(2, 1), R(0, 2), R(1, 0)}; }
 
 // TES!!!
 Matrix3d RollAboutBodyX(double const t_s) {
-    double constexpr roll_amp{0.001};      // rad
+    double constexpr roll_amp{0.001};    // rad
     double constexpr roll_freq_hz{0.1};  // cycles / second
 
     double const roll{roll_amp * std::sin(2.0 * M_PI * roll_freq_hz * t_s)};
@@ -142,7 +142,8 @@ std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double c
     std::vector<Vector3d> p_w;
     std::vector<Matrix3d> R_w_b;
     std::optional<Matrix3d> R_w_b_prev;
-    for (auto const time_ns_i : time_ns) {       Vector3d const p_w_i{TrajectoryPosition(time_ns_i, origin_w, radius)};
+    for (auto const time_ns_i : time_ns) {
+        Vector3d const p_w_i{TrajectoryPosition(time_ns_i, origin_w, radius)};
         Matrix3d const R_w_b_lookat{LookAtRotationWorldBody(p_w_i, target_w, R_w_b_prev)};
 
         double const t_s{static_cast<double>(time_ns_i) / 1e9};

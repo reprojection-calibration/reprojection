@@ -36,4 +36,3 @@ TEST(TestingMocksNewSphereTrajectory, TestSampleTimes) {
     EXPECT_EQ(times_ns[0], 0);
     EXPECT_EQ(times_ns[199], 1999999949);
 }
-
