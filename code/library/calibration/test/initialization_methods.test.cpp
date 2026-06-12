@@ -45,17 +45,10 @@ TEST(CalibrationInitializationMethods, TestPoseInitialization) {
 TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     uint64_t const timespan_ns{10000000000};
-    auto const [_, camera_frames]{
-        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 200, timespan_ns)};
-    auto const [imu_data, _1]{testing_mocks::GenerateImuData(1000, timespan_ns)};
+    auto const [imu_data, spline]{testing_mocks::GenerateImuData(1000, timespan_ns)};
 
-    // TODO(Jack): Honestly it would be nice if the data generator automatically provided us the underlying spline,
-    //  because needing to interpolate the frames here should be considered some complicated setup/precondition for the
-    //  test below. For now it can stand, and we are happy that the initialization method is getting stretched in
-    //  another place, but long term this might not be sustainable.
-    spline::Se3Spline const interpolated_spline{spline::InitializeSe3SplineState(camera_frames, 500)};
 
-    auto const [rotation_result, gravity]{calibration::EstimateCameraImuAlignment(interpolated_spline, imu_data)};
+    auto const [rotation_result, gravity]{calibration::EstimateCameraImuAlignment(spline, imu_data)};
     auto const [aa_imu_co, diagnostics]{rotation_result};
 
     // Heuristic! I wish it was really exactly the identity matrix, but it's a little off.

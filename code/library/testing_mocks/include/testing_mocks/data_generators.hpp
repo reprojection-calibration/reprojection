@@ -1,11 +1,12 @@
 #pragma once
 
+#include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::testing_mocks {
 
-ImuMeasurements GenerateImuData(double duration_s, double sample_rate_hz);
+std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz);
 
 // MVG = "multiple view geometry"
 std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,

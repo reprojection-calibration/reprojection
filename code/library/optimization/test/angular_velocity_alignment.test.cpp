@@ -9,7 +9,7 @@
 using namespace reprojection;
 
 TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
-    auto const imu_data{testing_mocks::GenerateImuData(60, 50)};
+    auto const [imu_data, spline]{testing_mocks::GenerateImuData(60, 50)};
 
     // Rotate every IMU velocity by some arbitrary rotation matrix and then check that this is recovered by the
     // optimization.
@@ -21,7 +21,7 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
         omega_imu.insert({timestamp_ns, {R * data_i.angular_velocity}});
     }
 
-    auto const [aa_co_imu, diagnostics]{optimization::AngularVelocityAlignment(omega_imu, trajectory)};
+    auto const [aa_co_imu, diagnostics]{optimization::AngularVelocityAlignment(omega_imu, spline)};
 
     EXPECT_TRUE(aa_co_imu.matrix().isApprox(geometry::Log(R), 1e-9));
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);

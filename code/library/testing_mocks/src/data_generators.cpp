@@ -4,6 +4,7 @@
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "projection_functions/initialize_camera.hpp"
+#include "spline/spline_initialization.hpp"
 #include "testing_mocks/new_sphere_trajectory.hpp"
 
 #include "constants.hpp"
@@ -12,11 +13,14 @@
 
 namespace reprojection::testing_mocks {
 
-ImuMeasurements const GenerateImuMeasurements(double const duration_s, double const sample_rate_hz) {
-    auto const [_, imu_data]{Trajectory2(duration_s, sample_rate_hz, constants::trajectory.trajectory_center,
-                                         constants::trajectory.world_origin, constants::trajectory.sphere_radius)};
+std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz) {
+    auto const [frames, imu_data]{Trajectory2(duration_s, sample_rate_hz, constants::trajectory.trajectory_center,
+                                              constants::trajectory.world_origin, constants::trajectory.sphere_radius)};
 
-    return imu_data;
+    // TODO(Jack): Do we need to invert the frames or anything like that? Also is this the right frequency to pass in?
+    spline::Se3Spline const spline{spline::InitializeSe3SplineState(frames, sample_rate_hz)};
+
+    return {imu_data, spline};
 }
 
 std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,

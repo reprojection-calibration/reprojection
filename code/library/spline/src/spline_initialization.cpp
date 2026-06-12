@@ -7,6 +7,7 @@
 
 namespace reprojection::spline {
 
+// TODO(Jack): Rename frequency to sample_rate_hz? And change type to double?
 std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames, int const frequency) {
     PositionMeasurements so3;
     PositionMeasurements r3;
