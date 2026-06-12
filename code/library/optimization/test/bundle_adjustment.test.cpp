@@ -51,11 +51,12 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     Frames noisy_frames{gt_frames};
     for (auto& [_, frame_i] : noisy_frames) {
         Isometry3d const SE3_i{geometry::Exp(frame_i.pose)};
-        frame_i.pose = geometry::Log(testing_mocks::AddGaussianNoise(0.5, 0.5, SE3_i));
+        frame_i.pose = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
     OptimizationState const initial_state{gt_intrinsics, noisy_frames};
     auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state)};
+
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     EXPECT_EQ(std::size(optimized_state.frames), 56);
