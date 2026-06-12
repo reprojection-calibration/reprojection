@@ -24,7 +24,7 @@ TEST(TestingMocksNewSphereTrajectory, TestLookAtRotationWorldBody) {
     Vector3d const target_w{0, 0, 0};
 
     Vector3d position_w{0, 0, 0};
-    Matrix3d R_w_b{testing_mocks::LookAtRotationWorldBody(position_w, target_w)};
+    Matrix3d R_w_b{testing_mocks::LookAtRotationWorldBody(position_w, target_w, std::nullopt)};
     EXPECT_TRUE(R_w_b.isApprox(Matrix3d::Identity()));
 
     // TOOD(Jack): Are there any other cases we can/should test here?
