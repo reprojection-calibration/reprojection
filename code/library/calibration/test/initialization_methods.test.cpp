@@ -3,8 +3,6 @@
 #include <gtest/gtest.h>
 
 #include "projection_functions/camera_model.hpp"
-#include "spline/se3_spline.hpp"
-#include "spline/spline_initialization.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 
@@ -14,7 +12,7 @@ TEST(CalibrationInitializationMethods, TestInitializeIntrinsics) {
     // TODO(Jack): Use a fixture!!!
     CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
-    auto const [targets, _]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
+    auto const [targets, _]{testing_mocks::GenerateMvgData(sensor, intrinsics, 10, 1)};
 
     auto const result{
         calibration::InitializeIntrinsics(sensor.camera_model, sensor.bounds.v_max, sensor.bounds.u_max, targets)};
@@ -24,18 +22,17 @@ TEST(CalibrationInitializationMethods, TestInitializeIntrinsics) {
 
 TEST(CalibrationInitializationMethods, TestPoseInitialization) {
     // Setup test data
-    CameraInfo const sensor{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
+    CameraInfo const camera_info{"", CameraModel::DoubleSphere, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::double_sphere_intrinsics};
-    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 50, 1e9)};
+    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 60, 1)};
 
     // Act
-    Frames const linear_solution{calibration::PoseInitialization(sensor, targets, intrinsics)};
+    Frames const linear_solution{calibration::PoseInitialization(camera_info, targets, intrinsics)};
 
     // Assert
-    EXPECT_EQ(std::size(linear_solution), 50);
+    EXPECT_EQ(std::size(linear_solution), 56);
     for (auto const& [timestamp_ns, frame_i] : linear_solution) {
         Array6d const gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
-
         EXPECT_TRUE(frame_i.pose.isApprox(gt_aa_co_w, 1e-12)) << "Linear pose initialization result:\n"
                                                               << frame_i.pose.transpose() << "\nGround truth:\n"
                                                               << gt_aa_co_w.transpose();
@@ -43,10 +40,7 @@ TEST(CalibrationInitializationMethods, TestPoseInitialization) {
 }
 
 TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
-    uint64_t const timespan_ns{10000000000};
-    auto const [imu_data, spline]{testing_mocks::GenerateImuData(1000, timespan_ns)};
-
+    auto const [imu_data, spline]{testing_mocks::GenerateImuData(60, 5)};
 
     auto const [rotation_result, gravity]{calibration::EstimateCameraImuAlignment(spline, imu_data)};
     auto const [aa_imu_co, diagnostics]{rotation_result};
