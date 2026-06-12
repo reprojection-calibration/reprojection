@@ -39,29 +39,10 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
         i += 1;
     }
 
-    // NOTE(Jack): This logic here is handling the case where there is no gravity in the acceleration data and
-    // protecting us against a division by zero. How can this happen?
-    //      1) The imu is in free fall -_-, very unlikely!
-    //      2) The imu has some filtering which optimizes and subtracts gravity - possible.
-    //      3) The imu test mock data does not have gravity added to the acceleration data :)
-    //
-    // TODO(Jack): What is the proper threshold to test here? Technically the acceleration vector should roughly have
-    //  length 9.8 because of the net-gravity being present. But what is actually reasonable here to identify data that
-    //  does not have gravity present is not clear to me. A long term strategy is needed here and should come as we see
-    //  more data. My gut tells me that the actual threshold would be to say less than g. But that might be too strict?
     Vector3d const net_acceleration_w{acceleration_w.colwise().mean()};
-    if (net_acceleration_w.norm() < 1) {
-        // WHEN WE ENABLE TESTING WE REMOVE THE SUPPRESSION!
-        return Vector3d::Zero();  // LCOV_EXCL_LINE
-    } else {
-        // TODO(Jack): Engineer more sophisticated IMU test data with gravity so that we can cover this branch in unit
-        //  testing!
-        // NOTE(Jack): By normalizing and then multiplying by 9.81 we are hacking this/stuffing this into a gravity
-        // looking vector that is not really 100% gravity because it includes non-zero mean components like noise, bias,
-        // and any non-symmetric accelerations (ex. free fall).
-        double constexpr g{9.80665};                 // LCOV_EXCL_LINE
-        return g * net_acceleration_w.normalized();  // LCOV_EXCL_LINE
-    }
+    double constexpr g{9.80665};
+
+    return g * net_acceleration_w.normalized();
 }
 
 VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {

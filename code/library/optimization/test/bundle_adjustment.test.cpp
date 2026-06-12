@@ -16,7 +16,7 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     // Generate the data
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
-    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 50, 1e9, false)};
+    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 60, 1, false)};
 
     // Solve
     OptimizationState const initial_state{gt_intrinsics, gt_frames};
@@ -24,10 +24,11 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     // Assert
-    EXPECT_EQ(std::size(optimized_state.frames), 50);
+    EXPECT_EQ(std::size(optimized_state.frames), 56);
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         Array6d const gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
         Array6d const aa_co_w{frame_i.pose};
+
         EXPECT_TRUE(aa_co_w.isApprox(gt_aa_co_w, 1e-6)) << "Result:\n"
                                                         << aa_co_w.transpose() << "\nexpected result:\n"
                                                         << gt_aa_co_w.transpose();
@@ -44,7 +45,7 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
 TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
-    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 50, 1e9, false)};
+    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 60, 1, false)};
 
     // Add gaussian noise to the initial poses
     Frames noisy_frames{gt_frames};
@@ -57,7 +58,7 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state)};
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    EXPECT_EQ(std::size(optimized_state.frames), 50);
+    EXPECT_EQ(std::size(optimized_state.frames), 56);
     for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
         // happened that I will explain. This test using noisy poses had been working for months, no problems to report.
