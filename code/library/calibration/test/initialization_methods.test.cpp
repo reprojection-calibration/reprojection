@@ -5,8 +5,7 @@
 #include "projection_functions/camera_model.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
-#include "testing_mocks/imu_data_generator.hpp"
-#include "testing_mocks/mvg_data_generator.hpp"
+#include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;

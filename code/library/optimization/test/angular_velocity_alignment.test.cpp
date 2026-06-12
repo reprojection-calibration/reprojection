@@ -2,14 +2,14 @@
 
 #include <gtest/gtest.h>
 
-#include "testing_mocks/imu_data_generator.hpp"
+#include "testing_mocks/data_generators.hpp"
 #include "types/eigen_types.hpp"
 #include "types/spline_types.hpp"
 
 using namespace reprojection;
 
 TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
-    auto const [imu_data, trajectory]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
+    auto const imu_data{testing_mocks::GenerateImuData(60, 50)};
 
     // Rotate every IMU velocity by some arbitrary rotation matrix and then check that this is recovered by the
     // optimization.

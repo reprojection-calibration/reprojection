@@ -2,8 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "testing_mocks/imu_data_generator.hpp"
-#include "testing_mocks/mvg_data_generator.hpp"
+#include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
 
@@ -51,7 +50,7 @@ TEST(OptimizationCameraImuCalibration, TestReprojectionErrorSpline) {
 TEST(OptimizationCameraImuCalibration, TestEvaluateImuError) {
     // TODO(Jack): Are we really sure that this test reflects the camera calibration case? In the camera calibration
     // case the trajectory is actually inversed (look at the mvg data generator). Lets try this on real data :)
-    auto [imu_data, trajectory]{testing_mocks::GenerateImuData(100, 1'000'000'000)};
+    auto const imu_data{testing_mocks::GenerateImuData(60, 50)};
 
     ImuCamExtrinsic const extrinsic{Extrinsic{"imu", "cam", Array6d::Zero()}, Array3d::Zero()};
     auto const errors{optimization::EvaluateImuError(imu_data, extrinsic, trajectory)};

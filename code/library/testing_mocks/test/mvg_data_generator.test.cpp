@@ -1,8 +1,7 @@
-#include "testing_mocks/mvg_data_generator.hpp"
-
 #include <gtest/gtest.h>
 
 #include "geometry/lie.hpp"
+#include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/eigen_types.hpp"
 

@@ -8,8 +8,7 @@
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
-#include "testing_mocks/imu_data_generator.hpp"
-#include "testing_mocks/mvg_data_generator.hpp"
+#include "testing_mocks/data_generators.hpp"
 #include "testing_mocks/new_sphere_trajectory.hpp"
 #include "testing_utilities/constants.hpp"
 

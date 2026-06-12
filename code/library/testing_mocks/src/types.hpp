@@ -4,10 +4,10 @@
 
 namespace reprojection::testing_mocks {
 
-struct CameraTrajectory {
+struct Trajectory {
     Vector3d world_origin;
     double sphere_radius;
-    Vector3d sphere_origin;
+    Vector3d trajectory_center;
 };
 
 }  // namespace reprojection::testing_mocks
