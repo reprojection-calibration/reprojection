@@ -30,6 +30,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        src/camera_imu_initialization.test.cpp
         src/intrinsic_initialization.test.cpp
         src/parabola_line_initialization.test.cpp
         src/utilities.test.cpp
