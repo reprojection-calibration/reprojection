@@ -176,7 +176,7 @@ std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double c
 
     std::map<uint64_t, Vector3d> specific_force_b;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
-        Matrix3d const R_b_w{R_w_b[i].transpose()};
+        Matrix3d const R_b_w{R_w_b[i].inverse()};
 
         Vector3d const gravity_w{0.0, 0.0, -9.81};
         uint64_t const time_ns_i{time_ns[i]};

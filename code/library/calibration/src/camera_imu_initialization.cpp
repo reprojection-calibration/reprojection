@@ -30,9 +30,8 @@ Vector3d EstimateGravity(CubicBSplineC3 const& camera_orientation, AccelerationM
     // Transform the imu acceleration into the world frame and store it. This assumes zero translation between camera
     // and imu, of course not true but is acceptable approximation for small translations.
     MatrixXd acceleration_w(std::size(so3_w_b), 3);
-    for (int i{0}; auto const& [timestamp_ns, so3_i_b_w] : so3_w_b) {
-        Matrix3d const R_b_w{geometry::Exp(so3_i_b_w.position)};
-        Matrix3d const R_w_b{R_b_w};
+    for (int i{0}; auto const& [timestamp_ns, so3_i_w_b] : so3_w_b) {
+        Matrix3d const R_w_b{geometry::Exp(so3_i_w_b.position)};
 
         Vector3d const& acceleration_i_b{imu_acceleration.at(timestamp_ns).acceleration};
 
