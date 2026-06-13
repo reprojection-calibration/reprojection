@@ -15,7 +15,7 @@ class RigidBodyAngularVelocity {
    public:
     // TODO(Jack): Are we sure the coordinate frame naming and conventions/usage are actually correct?
     template <typename T>
-    bool operator()(T const* const aa_imu_co_ptr, T const* const control_point_0_ptr,
+    bool operator()(T const* const tf_imu_co_ptr, T const* const control_point_0_ptr,
                     T const* const control_point_1_ptr, T const* const control_point_2_ptr,
                     T const* const control_point_3_ptr, T* const residual) const {
         std::array<T const* const, spline::constants::order> const ptrs{control_point_0_ptr, control_point_1_ptr,
@@ -27,7 +27,7 @@ class RigidBodyAngularVelocity {
         Array3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(
             control_points.template topRows<3>(), u_i_, delta_t_ns_)};
 
-        Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(aa_imu_co_ptr);
+        Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
         // TODO(Jack): Is it really appropriate to rotate points and vectors interchangeably here? At least the naming?
         Vector3<T> const omega_imu{RotatePoint<T>(tf_imu_co.template topRows<3>(), omega_co)};
 
