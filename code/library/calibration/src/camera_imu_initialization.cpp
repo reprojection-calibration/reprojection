@@ -13,7 +13,6 @@ namespace reprojection::calibration {
 
 using namespace spline;
 
-// TODO(Jack): Unit test!
 Vector3d EstimateGravity(CubicBSplineC3 const& so3_co_w, AccelerationMeasurements const& acc_imu,
                          Matrix3d const& R_imu_co) {
     // Calculate the camera orientation required to transform each linear acceleration into the camera world frame.
