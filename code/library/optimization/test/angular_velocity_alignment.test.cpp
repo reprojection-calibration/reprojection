@@ -2,31 +2,41 @@
 
 #include <gtest/gtest.h>
 
+#include "spline/spline_initialization.hpp"
 #include "testing_mocks/data_generators.hpp"
+#include "testing_utilities/constants.hpp"
 #include "types/eigen_types.hpp"
 #include "types/spline_types.hpp"
 
 using namespace reprojection;
 
-TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
-    auto const [imu_data, spline]{testing_mocks::GenerateImuData(10, 50)};
-
-    // Rotate every IMU velocity by some arbitrary rotation matrix and then check that this is recovered by the
-    // optimization.
-    static Matrix3d const R{{0, -1, 0},  //
-                            {0, 0, -1},
-                            {1, 0, 0}};
-    VelocityMeasurements omega_imu;
+VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
+    VelocityMeasurements imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
-        omega_imu.insert({timestamp_ns, {R * data_i.angular_velocity}});
+        imu_angular_velocity.insert({timestamp_ns, {data_i.angular_velocity}});
     }
 
-    auto const [aa_co_imu, diagnostics]{optimization::AngularVelocityAlignment(omega_imu, spline)};
+    return imu_angular_velocity;
+}  // LCOV_EXCL_LINE
 
-    // TODO(Jack): I wanted both the aa_co_imu and final cost to be more exact! But I think there is some numerical
-    // inconsistency in the test data generation that means we need the large tolerance (1e-3) and the non-zero cost
-    // (0.002065...). Can we engineer the test data to make this more exact? Or is it some other problem?
-    EXPECT_TRUE(aa_co_imu.matrix().isApprox(geometry::Log(R), 1e-3));
+TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
+    double const duration_s{40};
+    auto [imu_data, _]{testing_mocks::GenerateImuData(duration_s, 20)};
+
+    // TODO(Jack): Should we just make a version of the data generation functions that also returns the camera pose
+    // spline? We have this in multiple places now
+    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
+    auto const [_1, camera_poses]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, duration_s, 10)};
+    spline::Se3Spline const spline_co_w{spline::InitializeSe3SplineState(camera_poses, 50)};
+
+    VelocityMeasurements const omega_imu{ExtractAngularVelocity(imu_data)};
+    auto const [aa_co_imu, diagnostics]{optimization::AngularVelocityAlignment(omega_imu, spline_co_w)};
+
+    std::cout << geometry::Exp<double>(aa_co_imu) << std::endl;
+    std::cout << "break" << std::endl;
+    std::cout << geometry::Exp<double>(aa_co_imu).inverse() << std::endl;
+
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
     EXPECT_NEAR(diagnostics.solver_summary.final_cost, 0.0028202505264716135, 1e-6);
 }
