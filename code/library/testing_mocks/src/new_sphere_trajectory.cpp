@@ -159,9 +159,10 @@ std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double c
 
     std::map<uint64_t, Vector3d> omega_b;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
-        Matrix3d const R_dot{(R_w_b[i - 2] - 8.0 * R_w_b[i - 1] + 8.0 * R_w_b[i + 1] - R_w_b[i + 2]) / (12.0 * dt)};
+        Matrix3d const R_dot_w{(R_w_b[i - 2] - 8.0 * R_w_b[i - 1] + 8.0 * R_w_b[i + 1] - R_w_b[i + 2]) / (12.0 * dt)};
 
-        Matrix3d omega_hat_b = R_w_b[i].transpose() * R_dot;
+        Matrix3d const R_b_w{R_w_b[i].inverse()};
+        Matrix3d omega_hat_b{R_b_w * R_dot_w};
         omega_hat_b = 0.5 * (omega_hat_b - omega_hat_b.transpose());
 
         omega_b.insert({time_ns[i], Vee(omega_hat_b)});
