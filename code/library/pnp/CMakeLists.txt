@@ -14,7 +14,6 @@ set(LINK_LIBRARIES
         geometry
         optimization
         projection_functions
-
         types_internal
 )
 AddLibrary()

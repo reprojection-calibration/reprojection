@@ -56,8 +56,8 @@ TEST(OptimizationCameraImuCalibration, TestEvaluateImuError) {
     auto const errors{optimization::EvaluateImuError(imu_data, extrinsic, spline)};
 
     EXPECT_EQ(std::size(errors), 195);
-    for (auto const& error : errors) {
-        // std::cout << error.second.delta_angular_velocity.norm() << std::endl;
-        std::cout << error.second.delta_linear_acceleration.norm() << std::endl;
-    }
+
+    // TODO(Jack): WE should check that the IMU angular velocity erros are all zero and gravity is the specific force
+    // left over. But right now there is some problem with the data generation/spline that means the values at the start
+    // and end of the data have large deviations which means we cannot write a simple condition to check here
 }
