@@ -4,35 +4,6 @@
 
 namespace reprojection::testing_mocks {
 
-// TODO(Jack): Can this be replaced with the ceres rotation functions I already have?
-Matrix3d RotY(double const theta) {
-    double const c{std::cos(theta)};
-    double const s{std::sin(theta)};
-
-    return Matrix3d{{c, 0, s}, {0, 1, 0}, {-s, 0, c}};
-}
-
-// TODO(Jack): Can this be replaced with the ceres rotation functions I already have?
-Matrix3d RotZ(double const theta) {
-    double const c{std::cos(theta)};
-    double const s{std::sin(theta)};
-
-    return Matrix3d{{c, -s, 0}, {s, c, 0}, {0, 0, 1}};
-}
-
-// TODO DOES THIS ALREADY EXIST SOMEHWERE?
-Vector3d Vee(Matrix3d const& R) { return Vector3d{R(2, 1), R(0, 2), R(1, 0)}; }
-
-// TES!!!
-Matrix3d RollAboutBodyX(double const t_s) {
-    double constexpr roll_amp{0.001};    // rad
-    double constexpr roll_freq_hz{0.1};  // cycles / second
-
-    double const roll{roll_amp * std::sin(2.0 * M_PI * roll_freq_hz * t_s)};
-
-    return Eigen::AngleAxisd{roll, Vector3d::UnitX()}.toRotationMatrix();
-}
-
 Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius) {
     const double timestamp_s{static_cast<double>(timestamp_ns) / 1e9};
     constexpr double speed_factor{0.1};
@@ -200,6 +171,18 @@ std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double c
     }
 
     return {frames, imu_measurements};
+}
+
+Matrix3d RollAboutBodyX(double const t_s) {
+    // TODO(Jack): These are actually critical constants which control the trajectory. Hardcoding them here is a little
+    // hacky, but honestly I can't imagine a world where we actually need to parameterize these things, therefore having
+    // them hardcoded here close to the usage is a solution for now.
+    double constexpr roll_amplitude{0.001};
+    double constexpr roll_frequency_hz{0.1};
+
+    double const roll{roll_amplitude * std::sin(2.0 * M_PI * roll_frequency_hz * t_s)};
+
+    return geometry::Exp<double>({roll, 0, 0});
 }
 
 }  // namespace reprojection::testing_mocks

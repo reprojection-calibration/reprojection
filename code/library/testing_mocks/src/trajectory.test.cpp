@@ -1,10 +1,12 @@
+#include "trajectory.hpp"
+
 #include <gtest/gtest.h>
 
-#include "trajectory.hpp"
+#include "geometry/lie.hpp"
 
 using namespace reprojection;
 
-TEST(TestingMocksNewSphereTrajectory, TestTrajectoryPosition) {
+TEST(TestingMocksTrajectory, TestTrajectoryPosition) {
     Vector3d const origin_w{0, 0, 0};
     double const radius{2};
 
@@ -20,7 +22,7 @@ TEST(TestingMocksNewSphereTrajectory, TestTrajectoryPosition) {
     EXPECT_TRUE(result.isApprox(Vector3d{-1.1755705045849465, 1.6180339887498949, 0}));
 }
 
-TEST(TestingMocksNewSphereTrajectory, TestLookAtRotationWorldBody) {
+TEST(TestingMocksTrajectory, TestLookAtRotationWorldBody) {
     Vector3d const target_w{0, 0, 0};
 
     Vector3d position_w{0, 0, 0};
@@ -30,7 +32,7 @@ TEST(TestingMocksNewSphereTrajectory, TestLookAtRotationWorldBody) {
     // TOOD(Jack): Are there any other cases we can/should test here?
 }
 
-TEST(TestingMocksNewSphereTrajectory, TestSampleTimes) {
+TEST(TestingMocksTrajectory, TestSampleTimes) {
     auto const times_ns{testing_mocks::SampleTimes(2, 100)};
     EXPECT_EQ(times_ns.count(), 199);
     EXPECT_EQ(times_ns[0], 0);

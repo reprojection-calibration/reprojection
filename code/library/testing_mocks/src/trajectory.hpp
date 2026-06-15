@@ -1,9 +1,8 @@
 #pragma once
 
+#include "geometry/lie.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
-
-// TODO MAKE PRIVATE!
 
 namespace reprojection::testing_mocks {
 
@@ -16,5 +15,13 @@ Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const 
 
 std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double const sample_rate_hz,
                                                Vector3d const& origin_w, Vector3d const& target_w, double const radius);
+
+Matrix3d RollAboutBodyX(double const t_s);
+
+inline Matrix3d RotY(double const theta) { return geometry::Exp<double>({0, theta, 0}); }
+
+inline Matrix3d RotZ(double const theta) { return geometry::Exp<double>({0, 0, theta}); }
+
+inline Vector3d Vee(Matrix3d const& mat) { return Vector3d{mat(2, 1), mat(0, 2), mat(1, 0)}; }
 
 }  // namespace reprojection::testing_mocks
