@@ -49,9 +49,9 @@ TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
     EXPECT_TRUE(geometry::Exp<double>(aa_imu_co).isApprox(Matrix3d::Identity(), 1e-3));
 
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
-    EXPECT_EQ(gravity_w.norm(), 9.80665);
+    EXPECT_EQ(gravity_w.norm(), 9.8066500000000012);
     // TODO(Jack): I would expect the gravity to be all along the z-axis (or one single axis at least). I think this is
     // a sign we have something wrong here. It could be with the data generation itself or the initialization algorithm.
-    Vector3d const heuristic_gravity_w{-0.21824307798495013, -3.926289907354152, 8.983707572312257};
+    Vector3d const heuristic_gravity_w{-0.21810377227268246, -3.9267490800174922, 8.9835102621192693};
     EXPECT_TRUE(gravity_w.isApprox(heuristic_gravity_w));
 }

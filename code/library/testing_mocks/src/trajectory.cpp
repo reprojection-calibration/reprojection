@@ -17,8 +17,11 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
     std::vector<Matrix3d> R_w_b;
     for (auto const time_ns_i : time_ns) {
         Vector3d const p_w_i{PositionWorldBody(time_ns_i, origin_w, radius)};
-        Matrix3d const R_w_b_lookat{LookAtRotationWorldBody(p_w_i, target_w, R_w_b_prev)};
 
+        // NOTE(Jack): The "look at" rotation only really turns the y and z axes. The x-axis, which is our forward
+        // direction remains pointing forward the entire time and therefore there is no roll effect. Because extrinsic
+        // calibration requires that we excite all axes we manually add a roll about the x-axis here.
+        Matrix3d const R_w_b_lookat{LookAtRotationWorldBody(p_w_i, target_w, R_w_b_prev)};
         Matrix3d const R_w_b_i{R_w_b_lookat * RollAboutBodyX(time_ns_i)};
 
         p_w.push_back(p_w_i);
@@ -26,8 +29,9 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
         R_w_b_prev = R_w_b_i;
     }
 
-    // TODO CHECK THIS IS THE SAME DT AS FOUND IN TIMES VECTOR!
-    double const dt{1.0 / sample_rate_hz};
+    // TODO(Jack): Manually indexing into an array means we are probably doing something wrong. Is there really no
+    // better way to get the time increment here?
+    double const dt{static_cast<double>(time_ns[1] - time_ns[0]) / 1'000'000'000};
 
     std::map<uint64_t, Vector3d> omega_b;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {

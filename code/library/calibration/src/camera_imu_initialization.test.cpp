@@ -25,6 +25,6 @@ TEST(CalibrationCameraImuInitialization, TestEstimateGravity) {
 
     Vector3d const gravity_w{calibration::EstimateGravity(so3_co_w, imu_linear_acceleration, R_imu_co)};
 
-    Vector3d const gt_gravity_w{0.066929787601231625, -0.058423503100995429, 9.8062475657265065};
+    Vector3d const gt_gravity_w{0.066851263995672511, -0.058649771311345023, 9.8062467506853661};
     EXPECT_TRUE(gravity_w.isApprox(gt_gravity_w));
 }

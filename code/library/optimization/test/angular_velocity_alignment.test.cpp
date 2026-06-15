@@ -44,5 +44,5 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
     Array3d const gt_aa_imu_co{1.01824, -2.72506, -0.520739};
     EXPECT_TRUE(aa_imu_co.isApprox(gt_aa_imu_co, 1e-2));
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
-    EXPECT_NEAR(diagnostics.solver_summary.final_cost, 2.114551045675114, 1e-6);
+    EXPECT_NEAR(diagnostics.solver_summary.final_cost, 2.1115451244140173, 1e-6);
 }
