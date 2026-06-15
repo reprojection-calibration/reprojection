@@ -26,7 +26,7 @@ namespace reprojection::calibration {
  * for an initialization method. Assuming of course the translation is not too large :)
  *
  */
-Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation,
+Vector3d EstimateGravity(spline::CubicBSplineC3 const& so3_spline_w_co,
                          AccelerationMeasurements const& acceleration_imu, Matrix3d const& R_imu_co);
 
 VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data);

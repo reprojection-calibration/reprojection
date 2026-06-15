@@ -13,23 +13,21 @@ namespace reprojection::calibration {
 
 using namespace spline;
 
-Vector3d EstimateGravity(CubicBSplineC3 const& so3_co_w, AccelerationMeasurements const& acc_imu,
+Vector3d EstimateGravity(CubicBSplineC3 const& so3_spline_w_co, AccelerationMeasurements const& acc_imu,
                          Matrix3d const& R_imu_co) {
-    // Calculate the camera orientation required to transform each linear acceleration into the camera world frame.
-    PositionMeasurements aa_co_w;
+    PositionMeasurements aa_w_co;
     for (uint64_t const timestamp_ns : acc_imu | std::views::keys) {
-        auto const so3_i_co_w{EvaluateSpline<So3Spline>(so3_co_w, timestamp_ns, DerivativeOrder::Null)};
-        if (so3_i_co_w.has_value()) {
-            aa_co_w.insert({timestamp_ns, {so3_i_co_w.value()}});
+        auto const aa_w_co_i{EvaluateSpline<So3Spline>(so3_spline_w_co, timestamp_ns, DerivativeOrder::Null)};
+        if (aa_w_co_i.has_value()) {
+            aa_w_co.insert({timestamp_ns, {aa_w_co_i.value()}});
         }
     }
 
     // Transform the imu acceleration into the world frame and store it. This assumes zero translation between camera
     // and imu, of course not true but is acceptable approximation for small translations.
-    MatrixXd acceleration_w(std::size(aa_co_w), 3);
-    for (int i{0}; auto const& [timestamp_ns, so3_i_co_w] : aa_co_w) {
-        Matrix3d const R_co_w{geometry::Exp(so3_i_co_w.position)};
-        Matrix3d const R_w_co{R_co_w.inverse()};
+    MatrixXd acceleration_w(std::size(aa_w_co), 3);
+    for (int i{0}; auto const& [timestamp_ns, aa_w_co_i] : aa_w_co) {
+        Matrix3d const R_w_co{geometry::Exp(aa_w_co_i.position)};
         Matrix3d const R_co_imu{R_imu_co.inverse()};
 
         Vector3d const& acc_i_imu{acc_imu.at(timestamp_ns).acceleration};
