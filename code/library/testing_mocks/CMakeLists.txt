@@ -3,8 +3,8 @@ set(LIBRARY_NAME "testing_mocks")
 set(SRC_FILES
         src/data_generators.cpp
         src/mvg_helpers.cpp
-        src/new_sphere_trajectory.cpp
         src/noise_generation.cpp
+        src/trajectory.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
@@ -21,8 +21,8 @@ AddLibrary()
 
 set(TESTS
         src/mvg_helpers.test.cpp
-        src/new_sphere_trajectory.test.cpp
         src/noise_generation.test.cpp
+        src/trajectory.test.cpp
         test/data_generators.test.cpp
 )
 AddTests()

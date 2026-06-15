@@ -5,11 +5,11 @@
 #include "projection_functions/camera_model.hpp"
 #include "projection_functions/initialize_camera.hpp"
 #include "spline/spline_initialization.hpp"
-#include "testing_mocks/new_sphere_trajectory.hpp"
 
 #include "constants.hpp"
 #include "mvg_helpers.hpp"
 #include "noise_generation.hpp"
+#include "trajectory.hpp"
 
 namespace reprojection::testing_mocks {
 

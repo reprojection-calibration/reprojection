@@ -1,4 +1,4 @@
-#include "../include/testing_mocks/new_sphere_trajectory.hpp"
+#include "trajectory.hpp"
 
 #include "geometry/lie.hpp"
 

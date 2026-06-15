@@ -3,13 +3,13 @@
 
 #include <toml++/toml.hpp>
 
+#include "../../testing_mocks/src/trajectory.hpp"
 #include "application/reprojection_calibration.hpp"
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
 #include "testing_mocks/data_generators.hpp"
-#include "testing_mocks/new_sphere_trajectory.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
