@@ -72,7 +72,7 @@ int main() {
         database::InsertEntity(db, *imu_name, Entity::Imu);  // Unprotected optional access!!!
         database::InsertStep(db, *imu_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
 
-        auto const [imu_data, _1]{testing_mocks::GenerateImuData(duration_s, 100)};
+        auto const [imu_data, _1]{testing_mocks::GenerateImuData(duration_s, 20)};
         database::InsertImuData(db, *imu_name, imu_data);
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;

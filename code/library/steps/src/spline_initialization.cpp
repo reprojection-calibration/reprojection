@@ -11,8 +11,13 @@ namespace reprojection::steps {
 std::string SplineInitialization::HashInputs() const { return hashing::HashArguments(camera_info, targets, bundle); }
 
 spline::Se3Spline SplineInitialization::Compute() const {
+    Frames invert_frames;
+    for (auto const& [timestamp_ns, frame_i] : bundle.frames) {
+        invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.pose).inverse())}});
+    }
+
     // TODO(Jack): Parameterize frequency! Add to cache key probably?
-    spline::Se3Spline const spline{spline::InitializeSe3SplineState(bundle.frames, 100)};
+    spline::Se3Spline const spline{spline::InitializeSe3SplineState(invert_frames,10)};
 
     return spline;
 }
