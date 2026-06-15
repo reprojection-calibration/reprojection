@@ -16,12 +16,12 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
     std::vector<Vector3d> p_w;
     std::vector<Matrix3d> R_w_b;
     for (auto const time_ns_i : time_ns) {
-        Vector3d const p_w_i{PositionWorldBody(time_ns_i, origin_w, radius)};
+        Vector3d const p_w_i{PositionWorld(time_ns_i, origin_w, radius)};
 
         // NOTE(Jack): The "look at" rotation only really turns the y and z axes. The x-axis, which is our forward
         // direction remains pointing forward the entire time and therefore there is no roll effect. Because extrinsic
         // calibration requires that we excite all axes we manually add a roll about the x-axis here.
-        Matrix3d const R_w_b_lookat{LookAtRotationWorldBody(p_w_i, target_w, R_w_b_prev)};
+        Matrix3d const R_w_b_lookat{LookAtRotationBodyToWorld(p_w_i, target_w, R_w_b_prev)};
         Matrix3d const R_w_b_i{R_w_b_lookat * RollAboutBodyX(time_ns_i)};
 
         p_w.push_back(p_w_i);
@@ -88,7 +88,7 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
     return {frames, imu_measurements};
 }
 
-Vector3d PositionWorldBody(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius) {
+Vector3d PositionWorld(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius) {
     // TODO(Jack): Put all tracjectory parameters in one central location (?)
     constexpr double speed_factor{0.1};
 
@@ -108,72 +108,59 @@ Vector3d PositionWorldBody(uint64_t const timestamp_ns, Vector3d const& origin_w
     return origin_w + (R * local);
 }
 
-// TODO(Jack): Does this handle edge cases like the target and position being in the same coordinate plane?
-Matrix3d LookAtRotationWorldBody(Vector3d const& position_w, Vector3d const& target_w,
-                                 std::optional<Matrix3d> const& R_w_b_prev) {
+Matrix3d LookAtRotationBodyToWorld(Vector3d const& position_w, Vector3d const& target_w,
+                                   std::optional<Matrix3d> const& R_w_b_prev) {
     Vector3d const target_delta_w{target_w - position_w};
-
     if (target_delta_w.norm() < 1e-8) {
         return R_w_b_prev.value_or(Matrix3d::Identity());
     }
+    Vector3d const x_w_b_new{target_delta_w.normalized()};
 
-    Vector3d const x_b_w_new{target_delta_w.normalized()};
-
-    if (!R_w_b_prev.has_value()) {
-        //
-        // Initialize orientation from world_up.
-        //
+    if (not R_w_b_prev.has_value()) {
+        // No initial rotation provided means that we need to initialize it from scratch
 
         Vector3d world_up{0.0, 0.0, 1.0};
-
-        if (std::abs(x_b_w_new.dot(world_up)) > 0.95) {
+        if (std::abs(x_w_b_new.dot(world_up)) > 0.95) {
             world_up = Vector3d{0.0, 1.0, 0.0};
         }
 
-        Vector3d const y_b_w{world_up.cross(x_b_w_new).normalized()};
-
-        Vector3d const z_b_w{x_b_w_new.cross(y_b_w).normalized()};
+        Vector3d const y_w_b{world_up.cross(x_w_b_new).normalized()};
+        Vector3d const z_w_b{x_w_b_new.cross(y_w_b).normalized()};
 
         Matrix3d R_w_b;
-        R_w_b << x_b_w_new, y_b_w, z_b_w;
+        R_w_b << x_w_b_new, y_w_b, z_w_b;
 
         return R_w_b;
     } else {
-        //
-        // Propagate previous orientation using the smallest rotation
-        // that moves the previous forward axis onto the new forward axis.
-        //
+        // Propagate the previous orientation with the smallest possible rotation the moves the previous forward axis
+        // onto the new forward axis. This prevents sudden jumps in orientation.
 
         Vector3d const x_b_w_prev{R_w_b_prev->col(0)};
 
-        Vector3d const axis{x_b_w_prev.cross(x_b_w_new)};
-
+        Vector3d const axis{x_b_w_prev.cross(x_w_b_new)};
         double const sin_angle{axis.norm()};
+        double const cos_angle{std::clamp(x_b_w_prev.dot(x_w_b_new), -1.0, 1.0)};
 
-        double const cos_angle{std::clamp(x_b_w_prev.dot(x_b_w_new), -1.0, 1.0)};
+        // Check edge cases for degenerate motions.
+        if (sin_angle < 1e-8) {
+            if (cos_angle > 0.0) {
+                // No change case
+                return *R_w_b_prev;
+            } else if (cos_angle < 0.0) {
+                // 180 flip case
+                Vector3d axis_180{x_b_w_prev.cross(Vector3d::UnitZ())};
+                if (axis_180.norm() < 1e-8) {
+                    axis_180 = x_b_w_prev.cross(Vector3d::UnitY());
+                }
 
-        // No meaningful change.
-        if (sin_angle < 1e-8 && cos_angle > 0.0) {
-            return *R_w_b_prev;
-        }
+                Eigen::AngleAxisd const aa{M_PI, axis_180.normalized()};
 
-        // 180-degree flip case.
-        if (sin_angle < 1e-8 && cos_angle < 0.0) {
-            Vector3d axis_180{x_b_w_prev.cross(Vector3d::UnitZ())};
-
-            if (axis_180.norm() < 1e-8) {
-                axis_180 = x_b_w_prev.cross(Vector3d::UnitY());
+                return aa.toRotationMatrix() * (*R_w_b_prev);
             }
-
-            Eigen::AngleAxisd const aa{M_PI, axis_180.normalized()};
-
-            return aa.toRotationMatrix() * (*R_w_b_prev);
         }
 
         double const angle{std::atan2(sin_angle, cos_angle)};
-
         Eigen::AngleAxisd const aa{angle, axis.normalized()};
-
         Matrix3d const R_delta{aa.toRotationMatrix()};
 
         return R_delta * (*R_w_b_prev);
