@@ -13,7 +13,7 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
     std::vector<Matrix3d> R_w_b;
     std::optional<Matrix3d> R_w_b_prev;
     for (auto const time_ns_i : time_ns) {
-        Vector3d const p_w_i{TrajectoryPosition(time_ns_i, origin_w, radius)};
+        Vector3d const p_w_i{PositionWorldBody(time_ns_i, origin_w, radius)};
         Matrix3d const R_w_b_lookat{LookAtRotationWorldBody(p_w_i, target_w, R_w_b_prev)};
 
         double const t_s{static_cast<double>(time_ns_i) / 1e9};
@@ -72,7 +72,7 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
     return {frames, imu_measurements};
 }
 
-Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius) {
+Vector3d PositionWorldBody(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius) {
     const double timestamp_s{static_cast<double>(timestamp_ns) / 1e9};
     constexpr double speed_factor{0.1};
 
