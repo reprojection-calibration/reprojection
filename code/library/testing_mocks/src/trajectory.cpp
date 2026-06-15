@@ -89,11 +89,12 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
 }
 
 Vector3d PositionWorldBody(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius) {
-    const double timestamp_s{static_cast<double>(timestamp_ns) / 1e9};
+    // TODO(Jack): Put all tracjectory parameters in one central location (?)
     constexpr double speed_factor{0.1};
 
     // The main orbital rate - a speed_factor == 0.1 means that one full loop around the origin takes 10s.
     constexpr double orbit_rate{2.0 * M_PI * speed_factor};
+    const double timestamp_s{static_cast<double>(timestamp_ns) / 1e9};
     double const u{orbit_rate * timestamp_s};
 
     // The rate at which the orbital loops themselves rotate around the vertical axis - this prevents them from
