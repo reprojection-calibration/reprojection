@@ -33,8 +33,14 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
     // better way to get the time increment here?
     double const dt{static_cast<double>(time_ns[1] - time_ns[0]) / 1'000'000'000};
 
+    // NOTE(Jack): The raw trajectory is given in world coordinates therefore the numerical differentiation at first
+    // yields results in the world frame. In order to get the values into body frame values we need to rotate them. This
+    // applies to both the velocity and acceleration parts below.
+
     std::map<uint64_t, Vector3d> omega_b;
+    std::map<uint64_t, Vector3d> acc_w;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
+        // First derivative - https://en.wikipedia.org/wiki/Five-point_stencil
         Matrix3d const R_dot_w{(R_w_b[i - 2] - 8.0 * R_w_b[i - 1] + 8.0 * R_w_b[i + 1] - R_w_b[i + 2]) / (12.0 * dt)};
 
         Matrix3d const R_b_w{R_w_b[i].inverse()};
@@ -42,37 +48,41 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
         omega_hat_b = 0.5 * (omega_hat_b - omega_hat_b.transpose());
 
         omega_b.insert({time_ns[i], Vee(omega_hat_b)});
-    }
 
-    std::map<uint64_t, Vector3d> acc_w;
-    for (int i{2}; i < std::size(time_ns) - 2; ++i) {
+        // Second derivative - https://en.wikipedia.org/wiki/Five-point_stencil
         Vector3d const acc_w_i{(-p_w[i - 2] + 16 * p_w[i - 1] - 30 * p_w[i] + 16 * p_w[i + 1] - p_w[i + 2]) /
                                (12.0 * std::pow(dt, 2))};
         acc_w.insert({time_ns[i], acc_w_i});
     }
 
+    // NOTE(Jack): An IMU actually measures the specific force, not just the kinematic acceleration! This means for
+    // example that even when an IMU is stationary it measures the force of gravity. To simulate this we need to add
+    // gravity to the previously calculated kinematic world acceleration, and then we can rotate it into the body frame
+    // to get the body measure specific force.
     std::map<uint64_t, Vector3d> specific_force_b;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
-        Matrix3d const R_b_w{R_w_b[i].inverse()};
-
+        // TODO(Jack): This is another critical constant which is hardcoded here. There is nothing really wrong with
+        // that but we might want to centralize this somewhere which the other hardcoded trajectory parameters found in
+        // the code.
         Vector3d const gravity_w{0.0, 0.0, -9.81};
-        uint64_t const time_ns_i{time_ns[i]};
 
+        Matrix3d const R_b_w{R_w_b[i].inverse()};
+        uint64_t const time_ns_i{time_ns[i]};
         Vector3d const specific_force_b_i{R_b_w * (acc_w.at(time_ns_i) - gravity_w)};
+
         specific_force_b.insert({time_ns_i, specific_force_b_i});
     }
 
     Frames frames;
     ImuMeasurements imu_measurements;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
-        Vector6d se3;
-        se3 << geometry::Log(R_w_b[i]), p_w[i];
+        Vector6d se3_w_b;
+        se3_w_b << geometry::Log(R_w_b[i]), p_w[i];
 
         uint64_t const time_ns_i{time_ns[i]};
-        frames.insert({time_ns_i, {se3}});
+        frames.insert({time_ns_i, {se3_w_b}});
 
-        ImuMeasurement const imu_measurement_i{time_ns_i, {{omega_b.at(time_ns_i)}, {specific_force_b.at(time_ns_i)}}};
-        imu_measurements.insert(imu_measurement_i);
+        imu_measurements.insert({time_ns_i, {{omega_b.at(time_ns_i)}, {specific_force_b.at(time_ns_i)}}});
     }
 
     return {frames, imu_measurements};
