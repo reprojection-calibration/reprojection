@@ -14,6 +14,8 @@ namespace reprojection::optimization::cost_functions {
 class RigidBodyAngularVelocity {
    public:
     // TODO(Jack): Are we sure the coordinate frame naming and conventions/usage are actually correct?
+    // TODO(Jack): Are we sure that the derivative of the spline actually gives us the angular velocity in the camera
+    // optical frame?
     template <typename T>
     bool operator()(T const* const tf_imu_co_ptr, T const* const control_point_0_ptr,
                     T const* const control_point_1_ptr, T const* const control_point_2_ptr,
@@ -24,18 +26,12 @@ class RigidBodyAngularVelocity {
         for (int i{0}; i < spline::constants::order; ++i) {
             control_points.col(i) = Eigen::Map<Eigen::Vector<T, 6> const>(ptrs[i], 6, 1);
         }
-
-        Array3<T> const aa_co_w{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::Null>(
+        Array3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(
             control_points.template topRows<3>(), u_i_, delta_t_ns_)};
-
-        Vector3<T> const omega_cam_w{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(
-            control_points.template topRows<3>(), u_i_, delta_t_ns_)};
-
-        Array3<T> const omega_cam_imu{-geometry::Exp<T>(aa_co_w) * omega_cam_w};
 
         Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
         // TODO(Jack): Is it really appropriate to rotate points and vectors interchangeably here? At least the naming?
-        Vector3<T> const omega_imu{RotatePoint<T>(tf_imu_co.template topRows<3>(), omega_cam_imu)};
+        Vector3<T> const omega_imu{RotatePoint<T>(tf_imu_co.template topRows<3>(), omega_co)};
 
         residual[0] = T(omega_imu_[0]) - omega_imu[0];
         residual[1] = T(omega_imu_[1]) - omega_imu[1];
