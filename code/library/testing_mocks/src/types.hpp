@@ -4,9 +4,9 @@
 
 namespace reprojection::testing_mocks {
 
-struct Trajectory {
-    Vector3d origin_w;
-    Vector3d target_w;
+struct TrajectoryParams {
+    Vector3d origin_w;  // The center of the trajectory
+    Vector3d target_w;  // The "look at" point for all frames in the trajectory
     double radius;
 };
 

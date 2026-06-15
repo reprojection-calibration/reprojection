@@ -16,11 +16,11 @@ namespace reprojection::testing_mocks {
 // WARN(Jack): This be getting a little hacky/globally, but hey it's at least const :) But the reason we need this is
 // because we need to have the same trajectory geometry for both the mvg_generator and imu_generator. If the best way to
 // enforce this is via constants here is not clear. But for now it is a solution.
-Trajectory const trajectory{{1.5, 1.5, 1.5}, {0, 0, 0}, 1};
+TrajectoryParams const trajectory{{1.5, 1.5, 1.5}, {0, 0, 0}, 1};
 
 std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz) {
     auto const [frames, imu_data]{
-        Trajectory2(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
+        Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 
     // TODO(Jack): Do we need to invert the frames or anything like that? Also is this the right frequency to pass in?
     spline::Se3Spline const spline{spline::InitializeSe3SplineState(frames, sample_rate_hz)};
@@ -32,7 +32,7 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
                                                       double const duration_s, double const sample_rate_hz,
                                                       bool const flat) {
     auto const [frames, _]{
-        Trajectory2(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
+        Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 
     auto const camera{
         projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};

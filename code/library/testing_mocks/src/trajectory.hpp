@@ -6,7 +6,7 @@
 
 namespace reprojection::testing_mocks {
 
-std::pair<Frames, ImuMeasurements> Trajectory2(double const duration_s, double const sample_rate_hz,
+std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double const sample_rate_hz,
                                                Vector3d const& origin_w, Vector3d const& target_w, double const radius);
 
 Vector3d TrajectoryPosition(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius);
