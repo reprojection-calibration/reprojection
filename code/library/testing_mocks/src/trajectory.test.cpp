@@ -43,11 +43,25 @@ TEST(TestingMocksTrajectory, TestPositionWorld) {
 TEST(TestingMocksTrajectory, TestLookAtRotationWorldBody) {
     Vector3d const target_w{0, 0, 0};
 
+    // The zero displacement case
     Vector3d position_w{0, 0, 0};
     Matrix3d R_w_b{testing_mocks::LookAtRotationBodyToWorld(position_w, target_w, std::nullopt)};
     EXPECT_TRUE(R_w_b.isApprox(Matrix3d::Identity()));
 
-    // TOOD(Jack): Are there any other cases we can/should test here?
+    // The degenerate "looking at world up" case
+    position_w = Vector3d{0, 0, -1};
+    R_w_b = testing_mocks::LookAtRotationBodyToWorld(position_w, target_w, std::nullopt);
+    EXPECT_TRUE(geometry::Log<double>(R_w_b).isApproxToConstant(-1.2092, 1e-3));
+
+    // The "no change" same rotation as before case.
+    position_w = Vector3d{-1, 0, 0};
+    R_w_b = testing_mocks::LookAtRotationBodyToWorld(position_w, target_w, Matrix3d::Identity());
+    EXPECT_TRUE(R_w_b.isApprox(Matrix3d::Identity()));
+
+    // The "180 flip" case.
+    position_w = Vector3d{1, 0, 0};
+    R_w_b = testing_mocks::LookAtRotationBodyToWorld(position_w, target_w, Matrix3d::Identity());
+    EXPECT_TRUE(geometry::Log<double>(R_w_b).isApprox(Vector3d{0, -M_PI, 0}));
 }
 
 TEST(TestingMocksTrajectory, TestSampleTimes) {
