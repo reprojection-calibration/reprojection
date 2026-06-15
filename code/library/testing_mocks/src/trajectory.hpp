@@ -7,12 +7,12 @@
 namespace reprojection::testing_mocks {
 
 std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double const sample_rate_hz,
-                                               Vector3d const& origin_w, Vector3d const& target_w, double const radius);
+                                              Vector3d const& origin_w, Vector3d const& target_w, double const radius);
 
 Vector3d PositionWorld(uint64_t const timestamp_ns, Vector3d const& origin_w, double const radius);
 
 Matrix3d LookAtRotationBodyToWorld(Vector3d const& position_w, Vector3d const& target_w,
-                                 std::optional<Matrix3d> const& R_w_b_prev);
+                                   std::optional<Matrix3d> const& R_w_b_prev);
 
 Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const sample_rate_hz);
 

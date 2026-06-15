@@ -154,7 +154,7 @@ Matrix3d LookAtRotationBodyToWorld(Vector3d const& position_w, Vector3d const& t
                 // 180 flip case
                 Vector3d axis_180{x_b_w_prev.cross(Vector3d::UnitZ())};
                 if (axis_180.norm() < 1e-8) {
-                    axis_180 = x_b_w_prev.cross(Vector3d::UnitY());
+                    axis_180 = x_b_w_prev.cross(Vector3d::UnitY());  // LCOV_EXCL_LINE
                 }
 
                 Eigen::AngleAxisd const aa{M_PI, axis_180.normalized()};

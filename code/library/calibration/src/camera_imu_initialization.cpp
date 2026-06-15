@@ -40,7 +40,6 @@ Vector3d EstimateGravity(CubicBSplineC3 const& so3_co_w, AccelerationMeasurement
         i += 1;
     }
 
-
     Vector3d const net_acceleration_w{acceleration_w.colwise().mean()};
     double constexpr g{9.80665};
 
