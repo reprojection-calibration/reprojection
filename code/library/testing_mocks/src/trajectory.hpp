@@ -18,7 +18,7 @@ Eigen::Array<uint64_t, -1, 1> SampleTimes(double const duration_s, double const 
 
 
 
-Matrix3d RollAboutBodyX(double const t_s);
+Matrix3d RollAboutBodyX(uint64_t const timestamp_ns);
 
 inline Matrix3d RotY(double const theta) { return geometry::Exp<double>({0, theta, 0}); }
 
