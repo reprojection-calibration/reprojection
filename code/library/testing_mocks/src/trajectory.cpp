@@ -39,6 +39,10 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
 
     std::map<uint64_t, Vector3d> omega_b;
     std::map<uint64_t, Vector3d> acc_w;
+    // TODO(Jack): The number of poses/imu data produced by this method will be four less than the number of requested
+    // samples because for five point numerical differentiation we need two points to the right and left of the data
+    // point that we want to differentiate at. Honestly I think we need to change this so that the user does not realize
+    // this... If the user asks for 60 seconds at 1 Hz they should get 60 frames not 56, right?
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
         // First derivative - https://en.wikipedia.org/wiki/Five-point_stencil
         Matrix3d const R_dot_w{(R_w_b[i - 2] - 8.0 * R_w_b[i - 1] + 8.0 * R_w_b[i + 1] - R_w_b[i + 2]) / (12.0 * dt)};
