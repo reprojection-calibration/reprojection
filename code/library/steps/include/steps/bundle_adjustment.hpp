@@ -10,7 +10,7 @@ struct BundleAdjustment {
     CameraMeasurements targets_;
     OptimizationState initial_state_;
 
-    CalibrationStep step_type{CalibrationStep::BundleAdjustment};
+    static CalibrationStep StepType() { return CalibrationStep::BundleAdjustment; }
 
     std::string EntityId() const { return camera_info_.sensor_name; }
 

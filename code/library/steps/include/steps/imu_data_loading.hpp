@@ -10,7 +10,7 @@ struct ImuDataLoading {
     std::string cache_key_;
     ImuDataSourceSignature imu_data_source_;
 
-    CalibrationStep step_type{CalibrationStep::ImuDataLoading};
+    static CalibrationStep StepType() { return CalibrationStep::ImuDataLoading; }
 
     std::string EntityId() const { return sensor_name_; }
 

@@ -16,7 +16,7 @@ struct ImageLoading {
     std::string cache_key_;
     ImageSourceSignature image_source_;
 
-    CalibrationStep step_type{CalibrationStep::ImageLoading};
+    static CalibrationStep StepType() { return CalibrationStep::ImageLoading; }
 
     std::string EntityId() const { return sensor_name_; }
 

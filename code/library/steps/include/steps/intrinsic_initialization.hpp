@@ -9,7 +9,7 @@ struct IntrinsicInitialization {
     CameraInfo camera_info_;
     CameraMeasurements targets_;
 
-    CalibrationStep step_type{CalibrationStep::IntrinsicInitialization};
+    static CalibrationStep StepType() { return CalibrationStep::IntrinsicInitialization; }
 
     std::string EntityId() const { return camera_info_.sensor_name; }
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <toml++/toml.hpp>
-
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 #include "types/io.hpp"
@@ -14,7 +12,7 @@ struct FeatureExtraction {
     TargetInfo target_info_;
     bool show_extraction_;
 
-    CalibrationStep step_type{CalibrationStep::FeatureExtraction};
+    static CalibrationStep StepType() { return CalibrationStep::FeatureExtraction; }
 
     std::string EntityId() const { return sensor_name_; }
 

@@ -17,7 +17,7 @@ struct ExtrinsicInitialization {
     // we need the full spline.
     spline::Se3Spline spline_;
 
-    CalibrationStep step_type{CalibrationStep::ExtrinsicInitialization};
+    static CalibrationStep StepType() { return CalibrationStep::ExtrinsicInitialization; }
 
     std::string EntityId() const { return Extrinsic::EntityId(imu_name_, camera_name_); }
 
