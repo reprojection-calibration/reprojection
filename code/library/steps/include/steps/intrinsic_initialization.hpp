@@ -6,12 +6,12 @@
 namespace reprojection::steps {
 
 struct IntrinsicInitialization {
-    CameraInfo camera_info;
-    CameraMeasurements targets;
+    CameraInfo camera_info_;
+    CameraMeasurements targets_;
 
     CalibrationStep step_type{CalibrationStep::IntrinsicInitialization};
 
-    std::string EntityId() const { return camera_info.sensor_name; }
+    std::string EntityId() const { return camera_info_.sensor_name; }
 
     std::string HashInputs() const;
 

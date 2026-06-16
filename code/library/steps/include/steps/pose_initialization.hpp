@@ -6,13 +6,13 @@
 namespace reprojection::steps {
 
 struct PoseInitialization {
-    CameraInfo camera_info;
-    CameraMeasurements targets;
-    CameraState camera_state;
+    CameraInfo camera_info_;
+    CameraMeasurements targets_;
+    CameraState camera_state_;
 
     CalibrationStep step_type{CalibrationStep::PoseInitialization};
 
-    std::string EntityId() const { return camera_info.sensor_name; }
+    std::string EntityId() const { return camera_info_.sensor_name; }
 
     std::string HashInputs() const;
 

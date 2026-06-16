@@ -7,12 +7,12 @@
 
 namespace reprojection::steps {
 
-std::string IntrinsicInitialization::HashInputs() const { return hashing::HashArguments(camera_info, targets); }
+std::string IntrinsicInitialization::HashInputs() const { return hashing::HashArguments(camera_info_, targets_); }
 
 CameraState IntrinsicInitialization::Compute() const {
     // TODO(Jack): Confirm v and u are height and width in the correct order!
-    auto const intrinsics{calibration::InitializeIntrinsics(camera_info.camera_model, camera_info.bounds.v_max,
-                                                            camera_info.bounds.u_max, targets)};
+    auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
+                                                            camera_info_.bounds.u_max, targets_)};
 
     if (not intrinsics.has_value()) {
         throw std::runtime_error(
@@ -24,7 +24,7 @@ CameraState IntrinsicInitialization::Compute() const {
 
 CameraState IntrinsicInitialization::Load(SqlitePtr const db) const {
     auto const loaded_intrinsics{
-        database::ReadIntrinsics(db, camera_info.sensor_name, step_type, camera_info.camera_model)};
+        database::ReadIntrinsics(db, camera_info_.sensor_name, step_type, camera_info_.camera_model)};
 
     if (not loaded_intrinsics.has_value()) {
         throw std::runtime_error("We have no error handling strategy for failed IiStep::Load()");  // LCOV_EXCL_LINE
@@ -34,7 +34,7 @@ CameraState IntrinsicInitialization::Load(SqlitePtr const db) const {
 }
 
 void IntrinsicInitialization::Save(CameraState const& intrinsics, SqlitePtr const db) const {
-    database::InsertIntrinsics(db, camera_info.sensor_name, step_type, camera_info.camera_model, intrinsics);
+    database::InsertIntrinsics(db, camera_info_.sensor_name, step_type, camera_info_.camera_model, intrinsics);
 }
 
 }  // namespace reprojection::steps

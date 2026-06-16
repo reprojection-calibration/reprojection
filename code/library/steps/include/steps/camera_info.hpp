@@ -23,15 +23,15 @@ namespace reprojection::steps {
 // applications.
 
 struct CameraInfoStep {
-    std::string sensor_name;
-    CameraModel camera_model;
-    std::shared_ptr<EncodedImages> images;
+    std::string sensor_name_;
+    CameraModel camera_model_;
+    std::shared_ptr<EncodedImages> images_;
 
     CalibrationStep step_type{CalibrationStep::CameraInfo};
 
     CameraInfoStep(toml::table const& _sensor_config, std::shared_ptr<EncodedImages> const& _images);
 
-    std::string EntityId() const { return sensor_name; }
+    std::string EntityId() const { return sensor_name_; }
 
     std::string HashInputs() const;
 

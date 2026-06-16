@@ -8,11 +8,11 @@
 
 namespace reprojection::steps {
 
-std::string SplineInitialization::HashInputs() const { return hashing::HashArguments(camera_info, targets, bundle); }
+std::string SplineInitialization::HashInputs() const { return hashing::HashArguments(camera_info_, targets_, bundle_); }
 
 spline::Se3Spline SplineInitialization::Compute() const {
     Frames invert_frames;
-    for (auto const& [timestamp_ns, frame_i] : bundle.frames) {
+    for (auto const& [timestamp_ns, frame_i] : bundle_.frames) {
         invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.pose).inverse())}});
     }
 
@@ -38,7 +38,7 @@ void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const
     database::InsertTimeHandler(db, EntityId(), step_type, spline.GetTimeHandler());
 
     auto const [spline_poses,
-                errors]{optimization::ReprojectionErrorSpline(camera_info, targets, bundle.camera_state, spline)};
+                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, bundle_.camera_state, spline)};
     database::InsertPoses(db, EntityId(), step_type, spline_poses);
     database::InsertReprojectionErrors(db, EntityId(), step_type, errors);
 }

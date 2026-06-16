@@ -6,13 +6,13 @@
 namespace reprojection::steps {
 
 struct BundleAdjustment {
-    CameraInfo camera_info;
-    CameraMeasurements targets;
-    OptimizationState initial_state;
+    CameraInfo camera_info_;
+    CameraMeasurements targets_;
+    OptimizationState initial_state_;
 
     CalibrationStep step_type{CalibrationStep::BundleAdjustment};
 
-    std::string EntityId() const { return camera_info.sensor_name; }
+    std::string EntityId() const { return camera_info_.sensor_name; }
 
     std::string HashInputs() const;
 

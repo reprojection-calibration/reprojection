@@ -9,12 +9,12 @@
 namespace reprojection::steps {
 
 std::string ExtrinsicInitialization::HashInputs() const {
-    return hashing::HashArguments(imu_name, camera_name, imu_data, spline.ControlPoints(),
-                                  spline.GetTimeHandler().t0_ns_, spline.GetTimeHandler().delta_t_ns_);
+    return hashing::HashArguments(imu_name_, camera_name_, imu_data_, spline_.ControlPoints(),
+                                  spline_.GetTimeHandler().t0_ns_, spline_.GetTimeHandler().delta_t_ns_);
 }
 
 ImuCamExtrinsic ExtrinsicInitialization::Compute() const {
-    auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline, imu_data)};
+    auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline_, imu_data_)};
 
     // TODO(Jack): Should we do something with the diagnostics? There are several places now where we ignore the
     // returned optimization diagnostics but I am sure that a user would appreciate these in the database.
@@ -24,7 +24,7 @@ ImuCamExtrinsic ExtrinsicInitialization::Compute() const {
     // the translation to zero. If someone has an idea how to initialize the translation do tell!
     Array6d const tf_imu_co{aa_imu_co(0), aa_imu_co(1), aa_imu_co(2), 0, 0, 0};
 
-    return {Extrinsic{imu_name, camera_name, tf_imu_co}, gravity_w};
+    return {Extrinsic{imu_name_, camera_name_, tf_imu_co}, gravity_w};
 }
 
 ImuCamExtrinsic ExtrinsicInitialization::Load(SqlitePtr const db) const {
@@ -45,9 +45,9 @@ void ExtrinsicInitialization::Save(ImuCamExtrinsic const& extrinsic, SqlitePtr c
     // TODO(Jack): We save the imu errors here under the imu and not the extrinsic identity name! Is it hacky here that
     // we use a second sensor name and also write an additional step to the database outside of the sanctioned step
     // runner workflow?
-    ImuErrors const error{optimization::EvaluateImuError(imu_data, extrinsic, spline)};
-    database::InsertStep(db, imu_name, step_type, HashInputs());
-    database::InsertImuErrors(db, imu_name, step_type, error);
+    ImuErrors const error{optimization::EvaluateImuError(imu_data_, extrinsic, spline_)};
+    database::InsertStep(db, imu_name_, step_type, HashInputs());
+    database::InsertImuErrors(db, imu_name_, step_type, error);
 }
 
 }  // namespace reprojection::steps

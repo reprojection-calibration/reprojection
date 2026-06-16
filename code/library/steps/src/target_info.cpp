@@ -12,14 +12,14 @@ namespace reprojection::steps {
 
 std::string TargetInfoStep::HashInputs() const {
     std::ostringstream oss;
-    oss << target_config;
-    oss << sensor_name;
+    oss << target_config_;
+    oss << sensor_name_;
 
     return hashing::HashArguments(oss.str());
 }
 
 TargetInfo TargetInfoStep::Compute() const {
-    TargetInfo const target_info{config::ParseTargetConfig(*target_config.as_table())};
+    TargetInfo const target_info{config::ParseTargetConfig(*target_config_.as_table())};
 
     return target_info;
 }
