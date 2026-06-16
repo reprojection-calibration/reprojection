@@ -278,23 +278,20 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline_b_w};
     auto [result, cache_status]{RunStep<ImuCamExtrinsic>(step, db)};
 
-    // TODO(Jack): These should both be perfect zeros, but there is some problem in the data generation or something
-    // that gives us these non-zero results. But they are close so I am not too terrified.
-    Array6d const tf_imu_co_gt{-0.000126595, 1.33563e-06, -5.23691e-08, 0, 0, 0};
-    Array3d const gravity_w_gt{-0.000720566, 0.020664, 9.80663};
+    Array3d const gravity_w_gt{-5.4104203543938996e-05, 0.019931736220415951, 9.8066297444873474};
 
     EXPECT_EQ(result.tf.frame_a, imu_name);
     EXPECT_EQ(result.tf.frame_b, camera_name);
-    EXPECT_TRUE(result.tf.se3_a_b.isApprox(tf_imu_co_gt, 1e-4));
-    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt, 1e-4));
+    EXPECT_TRUE(result.tf.se3_a_b.isZero(1e-4));
+    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<ImuCamExtrinsic>(step, db);
     EXPECT_EQ(result.tf.frame_a, imu_name);
     EXPECT_EQ(result.tf.frame_b, camera_name);
-    EXPECT_TRUE(result.tf.se3_a_b.isApprox(tf_imu_co_gt, 1e-4));
-    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt, 1e-4));
+    EXPECT_TRUE(result.tf.se3_a_b.isZero(1e-4));
+    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
