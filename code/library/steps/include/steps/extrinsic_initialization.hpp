@@ -19,11 +19,10 @@ struct ExtrinsicInitialization {
 
     CalibrationStep step_type{CalibrationStep::ExtrinsicInitialization};
 
-    std::string EntityId() const { return "tf_" + imu_name_ + "_xxx_" + camera_name_; }
+    std::string EntityId() const { return Extrinsic::EntityId(imu_name_, camera_name_); }
 
     std::string HashInputs() const;
 
-    // TODO(Jack): Define types for extrinsics and gravity?
     ImuCamExtrinsic Compute() const;
 
     ImuCamExtrinsic Load(SqlitePtr const db) const;

@@ -83,6 +83,12 @@ struct Extrinsic {
     std::string frame_a;
     std::string frame_b;
     Array6d se3_a_b;
+
+    std::string EntityId() const { return EntityId(frame_a, frame_b); }
+
+    static std::string EntityId(std::string_view frame_a, std::string_view frame_b) {
+        return "tf_" + std::string(frame_a) + "_xxx_" + std::string(frame_b);
+    }
 };
 
 // TODO(Jack): Does the existence of this type and its naming make sense at all? Is the gravity term really so closely
