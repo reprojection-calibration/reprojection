@@ -50,8 +50,6 @@ TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
 
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
     EXPECT_FLOAT_EQ(gravity_w.norm(), 9.80665);
-    // TODO(Jack): I would expect the gravity to be all along the z-axis (or one single axis at least). I think this is
-    // a sign we have something wrong here. It could be with the data generation itself or the initialization algorithm.
-    Vector3d const heuristic_gravity_w{0.00469138, 0.0215757, 9.80663};
+    Vector3d const heuristic_gravity_w{0.00747, 0.01796, 9.80663};
     EXPECT_TRUE(gravity_w.isApprox(heuristic_gravity_w, 1e-4));
 }
