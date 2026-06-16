@@ -34,13 +34,13 @@ spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
 }
 
 void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const db) const {
-    database::InsertControlPoints(db, EntityId(), step_type, spline.ControlPoints());
-    database::InsertTimeHandler(db, EntityId(), step_type, spline.GetTimeHandler());
+    database::InsertControlPoints(db, EntityId(), StepType(), spline.ControlPoints());
+    database::InsertTimeHandler(db, EntityId(), StepType(), spline.GetTimeHandler());
 
     auto const [spline_poses,
                 errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, bundle_.camera_state, spline)};
-    database::InsertPoses(db, EntityId(), step_type, spline_poses);
-    database::InsertReprojectionErrors(db, EntityId(), step_type, errors);
+    database::InsertPoses(db, EntityId(), StepType(), spline_poses);
+    database::InsertReprojectionErrors(db, EntityId(), StepType(), errors);
 }
 
 }  // namespace reprojection::steps

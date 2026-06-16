@@ -28,7 +28,7 @@ concept IsStep = requires(Result const result, Step const step, SqlitePtr const 
 template <typename Result, typename Step>
     requires IsStep<Result, Step>
 std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
-    auto const cached_key{database::ReadCacheKey(db, step.EntityId(), step.step_type)};
+    auto const cached_key{database::ReadCacheKey(db, step.EntityId(), step.StepType())};
     std::string const new_key{step.HashInputs()};
 
     if (CacheHit(cached_key, new_key)) {
@@ -54,12 +54,12 @@ std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
     //
     // If there is a more clean way to express this logic, that would be a welcome addition. I think that the current
     // implementation can lead to problems in the future.
-    database::RemoveFromDb(db, step.EntityId(), step.step_type);
-    database::InsertStep(db, step.EntityId(), step.step_type, std::nullopt);
+    database::RemoveFromDb(db, step.EntityId(), step.StepType());
+    database::InsertStep(db, step.EntityId(), step.StepType(), std::nullopt);
 
     step.Save(result, db);
 
-    database::InsertStep(db, step.EntityId(), step.step_type, new_key);
+    database::InsertStep(db, step.EntityId(), step.StepType(), new_key);
 
     return {result, CacheStatus::CacheMiss};
 }
