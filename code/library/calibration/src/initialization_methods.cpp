@@ -11,7 +11,7 @@
 #include "optimization/bundle_adjustment.hpp"
 #include "projection_functions/initialize_camera.hpp"
 
-#include "camera_imu_initialization.hpp"
+#include "extrinsic_initialization.hpp"
 #include "intrinsic_initialization.hpp"
 #include "pose_initialization.hpp"
 #include "utilities.hpp"

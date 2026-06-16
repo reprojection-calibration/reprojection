@@ -1,7 +1,7 @@
 set(LIBRARY_NAME "calibration")
 
 set(SRC_FILES
-        src/camera_imu_initialization.cpp
+        src/extrinsic_initialization.cpp
         src/initialization_methods.cpp
         src/intrinsic_initialization.cpp
         src/parabola_line_initialization.cpp
@@ -30,7 +30,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        src/camera_imu_initialization.test.cpp
+        src/extrinsic_initialization.test.cpp
         src/intrinsic_initialization.test.cpp
         src/parabola_line_initialization.test.cpp
         src/utilities.test.cpp
