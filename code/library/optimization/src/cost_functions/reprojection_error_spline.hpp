@@ -34,7 +34,8 @@ class ReprojectionErrorSpline_T {
         }
 
         // Calculate the se3 pose and then return the standard reprojection error.
-        Array6<T> const tf_co_w{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
+        Array6<T> const tf_w_co{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
+        Array6<T> const tf_co_w{geometry::InverseTransform(tf_w_co)};
 
         return ReprojectionError_T<T_Model>(pixel_, point_w_, bounds_)
             .template operator()<T>(intrinsics_ptr, tf_co_w.data(), residual);
