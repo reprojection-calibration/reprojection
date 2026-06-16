@@ -52,7 +52,7 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
     // hardcoded for now.
     // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
     // timestamps which results in very small values in the omega matrix otherwise.
-    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(delta_t_ns, 1e8)};
+    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(delta_t_ns, 1e12)};
     Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, CubicBSplineC3Init::N, num_segments)};
 
     // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
