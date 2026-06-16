@@ -17,7 +17,7 @@ spline::Se3Spline SplineInitialization::Compute() const {
     }
 
     // TODO(Jack): Parameterize frequency! Add to cache key probably?
-    spline::Se3Spline const spline{spline::InitializeSe3SplineState(invert_frames,10)};
+    spline::Se3Spline const spline{spline::InitializeSe3SplineState(invert_frames, 100)};
 
     return spline;
 }
