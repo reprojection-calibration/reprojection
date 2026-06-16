@@ -40,18 +40,16 @@ TEST(CalibrationInitializationMethods, TestPoseInitialization) {
 }
 
 TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
-    auto [imu_data, spline]{testing_mocks::GenerateImuData(10, 50)};
+    auto [imu_data, spline_w_b]{testing_mocks::GenerateImuData(10, 50)};
 
-    auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline, imu_data)};
+    auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline_w_b, imu_data)};
     auto const [aa_imu_co, diagnostics]{rotation_result};
 
     // Heuristic! I wish it was really exactly the identity matrix, but it's a little off.
     EXPECT_TRUE(geometry::Exp<double>(aa_imu_co).isApprox(Matrix3d::Identity(), 1e-3));
 
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
-    EXPECT_EQ(gravity_w.norm(), 9.8066500000000012);
-    // TODO(Jack): I would expect the gravity to be all along the z-axis (or one single axis at least). I think this is
-    // a sign we have something wrong here. It could be with the data generation itself or the initialization algorithm.
-    Vector3d const heuristic_gravity_w{-0.21810377227268246, -3.9267490800174922, 8.9835102621192693};
-    EXPECT_TRUE(gravity_w.isApprox(heuristic_gravity_w));
+    EXPECT_FLOAT_EQ(gravity_w.norm(), 9.80665);
+    Vector3d const heuristic_gravity_w{0.00747, 0.01796, 9.80663};
+    EXPECT_TRUE(gravity_w.isApprox(heuristic_gravity_w, 1e-4));
 }

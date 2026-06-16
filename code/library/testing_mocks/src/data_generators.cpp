@@ -19,13 +19,13 @@ namespace reprojection::testing_mocks {
 TrajectoryParams const trajectory{{1.5, 1.5, 1.5}, {0, 0, 0}, 1};
 
 std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz) {
-    auto const [frames, imu_data]{
+    auto const [tf_w_b, imu_data]{
         Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 
-    // TODO(Jack): Do we need to invert the frames or anything like that? Also is this the right frequency to pass in?
-    spline::Se3Spline const spline{spline::InitializeSe3SplineState(frames, sample_rate_hz)};
+    // TODO(Jack): Is this the right frequency to pass in?
+    spline::Se3Spline const spline_w_b{spline::InitializeSe3SplineState(tf_w_b, sample_rate_hz)};
 
-    return {imu_data, spline};
+    return {imu_data, spline_w_b};
 }
 
 std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,
