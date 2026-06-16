@@ -25,8 +25,6 @@ namespace reprojection::calibration {
  * This is not possible because two sensors cannot be at the exact same location, but the resulting error is acceptable
  * for an initialization method. Assuming of course the translation is not too large :)
  *
- * Note that if there is no gravity present (ex. the imu prefilters out gravity) then a zero vector is returned. See the
- * return statement to understand this condition better, and assess long term if this is the right strategy.
  */
 Vector3d EstimateGravity(spline::CubicBSplineC3 const& camera_orientation,
                          AccelerationMeasurements const& acceleration_imu, Matrix3d const& R_imu_co);

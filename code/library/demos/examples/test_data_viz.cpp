@@ -3,13 +3,13 @@
 
 #include <toml++/toml.hpp>
 
+#include "../../testing_mocks/src/trajectory.hpp"
 #include "application/reprojection_calibration.hpp"
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
-#include "testing_mocks/imu_data_generator.hpp"
-#include "testing_mocks/mvg_data_generator.hpp"
+#include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
@@ -17,7 +17,7 @@ using namespace reprojection;
 int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
-    std::string const record_path{"/tmp/reprojection/code/test_data/testing_mocks.db3"};
+    std::string const record_path{"/tmp/reprojection/code/test_data/a1_testing_mocks.db3"};
     auto db{database::OpenCalibrationDatabase(record_path, true, false)};
 
     static constexpr std::string_view config_file{R"(
@@ -38,12 +38,12 @@ int main() {
     std::string const image_hash{""};
 
     try {
-        uint64_t const timespan_ns{10000000000};
         auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
 
+        double const duration_s{60};
         CameraInfo const camera_info{sensor_name, camera_model, testing_utilities::image_bounds};
         CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
-        auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 200, timespan_ns)};
+        auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, duration_s, 10)};
 
         // Camera stuff
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
@@ -64,7 +64,7 @@ int main() {
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "532eb1a35212026c31475ec9e2c68b6e0c701ac96ac9c40e615f648f3a6d8317");
+                             "3ccd159f7fb7c8af3cd58b51f175838609e13da980e00b4a38931c5933939750");
         database::InsertTargets(db, camera_info.sensor_name, targets);
 
         // Imu stuff
@@ -72,7 +72,7 @@ int main() {
         database::InsertEntity(db, *imu_name, Entity::Imu);  // Unprotected optional access!!!
         database::InsertStep(db, *imu_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
 
-        auto const [imu_data, _1]{testing_mocks::GenerateImuData(1000, timespan_ns)};
+        auto const [imu_data, _1]{testing_mocks::GenerateImuData(duration_s, 100)};
         database::InsertImuData(db, *imu_name, imu_data);
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;

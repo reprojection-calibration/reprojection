@@ -19,6 +19,7 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 set(TEST_LINK_LIBRARIES
+        spline # REQUIRED BECAUSE OF TESTING_MOCKS INTERFACE!
         testing_mocks
         testing_utilities
 )

@@ -1,30 +1,33 @@
-#include "testing_mocks/mvg_data_generator.hpp"
+#include "testing_mocks/data_generators.hpp"
 
 #include <gtest/gtest.h>
 
-#include "geometry/lie.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;
 
+TEST(TestingMocksImuDataGenerator, TestGenerateImuData) {
+    auto const [imu_data, trajectory]{testing_mocks::GenerateImuData(60, 3)};
+    EXPECT_EQ(std::size(imu_data), 176);
+    EXPECT_EQ(trajectory.Size(), 178);
+}
+
 // NOTE(Jack): All points for every frame project successfully. If not they should get masked out, but the
 // test data is engineered such that none get masked out which is why we can assert that .rows() = 25 for all
 // frames.
-// But don't forget that there might be an implementation error because when we set the view point and
-// sphere origin as {0,0,0} we get poses that do not make sense!
 TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const camera_info{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets, poses]{
-        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
+        testing_mocks::GenerateMvgData(camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 60, 1, true)};
 
-    EXPECT_EQ(std::size(targets), 50);
+    EXPECT_EQ(std::size(targets), 56);
     for (auto const& [_, target_i] : targets) {
         EXPECT_EQ(target_i.bundle.pixels.rows(), 25);
         EXPECT_EQ(target_i.bundle.points.rows(), 25);
         EXPECT_EQ(target_i.indices.rows(), 25);
     }
-    EXPECT_EQ(std::size(poses), 50);
+    EXPECT_EQ(std::size(poses), 56);
 }
 
 TEST(TestingMocksNoiseGeneration, TestAddGaussianNoise) {

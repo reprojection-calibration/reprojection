@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "geometry/lie.hpp"
-#include "testing_mocks/mvg_data_generator.hpp"
+#include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
@@ -13,7 +13,7 @@ using namespace reprojection;
 TEST(Pnp, TestPnp) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets, gt_frames]{
-        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 50, 1e9, false)};
+        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 60, 1, false)};
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle, sensor.bounds)};
@@ -33,7 +33,7 @@ TEST(Pnp, TestPnp) {
 TEST(Pnp, TestPnpFlat) {
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
     auto const [targets, gt_frames]{
-        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::unit_pinhole_intrinsics}, 50, 1e9, true)};
+        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::unit_pinhole_intrinsics}, 60, 1, true)};
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle)};

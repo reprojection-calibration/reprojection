@@ -4,10 +4,10 @@
 
 namespace reprojection::testing_mocks {
 
-struct CameraTrajectory {
-    Vector3d world_origin;
-    double sphere_radius;
-    Vector3d sphere_origin;
+struct TrajectoryParams {
+    Vector3d origin_w;  // The center of the trajectory
+    Vector3d target_w;  // The "look at" point for all frames in the trajectory
+    double radius;
 };
 
 }  // namespace reprojection::testing_mocks
