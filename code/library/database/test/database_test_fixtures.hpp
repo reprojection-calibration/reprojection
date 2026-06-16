@@ -25,6 +25,7 @@ using CalibrationStep = reprojection::CalibrationStep;
 using EncodedImages = reprojection::EncodedImages;
 using Entity = reprojection::Entity;
 using ExtractedTarget = reprojection::ExtractedTarget;
+using Extrinsic = reprojection::Extrinsic;
 using Frames = reprojection::Frames;
 using ImuErrors = reprojection::ImuErrors;
 using ImuMeasurements = reprojection::ImuMeasurements;
@@ -150,7 +151,5 @@ class ExtrinsicDatabaseFixture : public ::testing::Test {
     SqlitePtr db{nullptr};
     std::string imu_name{"/imu/polaris/123"};
     std::string camera_name{"/cam/retro/123"};
-    // TODO(Jack): This construction of the extrinsic id key is now replicated in at least three different places - copy
-    // and pasted.
-    std::string extrinsic_id{"tf_" + imu_name + "_xxx_" + camera_name};
+    std::string extrinsic_id{Extrinsic::EntityId(imu_name, camera_name)};
 };

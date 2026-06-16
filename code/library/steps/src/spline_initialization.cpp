@@ -8,11 +8,11 @@
 
 namespace reprojection::steps {
 
-std::string SplineInitialization::HashInputs() const { return hashing::HashArguments(camera_info, targets, bundle); }
+std::string SplineInitialization::HashInputs() const { return hashing::HashArguments(camera_info_, targets_, bundle_); }
 
 spline::Se3Spline SplineInitialization::Compute() const {
     Frames invert_frames;
-    for (auto const& [timestamp_ns, frame_i] : bundle.frames) {
+    for (auto const& [timestamp_ns, frame_i] : bundle_.frames) {
         invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.pose).inverse())}});
     }
 
@@ -34,13 +34,13 @@ spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
 }
 
 void SplineInitialization::Save(spline::Se3Spline const& spline, SqlitePtr const db) const {
-    database::InsertControlPoints(db, EntityId(), step_type, spline.ControlPoints());
-    database::InsertTimeHandler(db, EntityId(), step_type, spline.GetTimeHandler());
+    database::InsertControlPoints(db, EntityId(), StepType(), spline.ControlPoints());
+    database::InsertTimeHandler(db, EntityId(), StepType(), spline.GetTimeHandler());
 
     auto const [spline_poses,
-                errors]{optimization::ReprojectionErrorSpline(camera_info, targets, bundle.camera_state, spline)};
-    database::InsertPoses(db, EntityId(), step_type, spline_poses);
-    database::InsertReprojectionErrors(db, EntityId(), step_type, errors);
+                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, bundle_.camera_state, spline)};
+    database::InsertPoses(db, EntityId(), StepType(), spline_poses);
+    database::InsertReprojectionErrors(db, EntityId(), StepType(), errors);
 }
 
 }  // namespace reprojection::steps

@@ -164,7 +164,7 @@ TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
     EXPECT_EQ(std::size(result.frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    auto const poses{database::ReadPoses(db, camera_info.sensor_name, step.step_type)};
+    auto const poses{database::ReadPoses(db, camera_info.sensor_name, step.StepType())};
     EXPECT_EQ(std::size(poses), 56);
 
     // On rerun with the same inputs it will be a cache hit
@@ -205,7 +205,7 @@ TEST_F(CameraStepsFixture, TestPoseInitialization) {
 
     // Check that the proper amount of poses got written to the database.
     // TODO(Jack): We should also check that the reprojection errors got written!
-    auto poses{database::ReadPoses(db, camera_info.sensor_name, step.step_type)};
+    auto poses{database::ReadPoses(db, camera_info.sensor_name, step.StepType())};
     EXPECT_EQ(std::size(poses), 56);
 
     // On rerun with the same inputs it will be a cache hit
@@ -225,7 +225,7 @@ TEST_F(CameraStepsFixture, TestSplineInitialization) {
     EXPECT_EQ(result.Size(), 558);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    auto const control_points{database::ReadControlPoints(db, camera_info.sensor_name, step.step_type)};
+    auto const control_points{database::ReadControlPoints(db, camera_info.sensor_name, step.StepType())};
     EXPECT_EQ(control_points.cols(), 558);
 
     // On rerun with the same inputs it will be a cache hit
@@ -260,7 +260,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
 
     // TODO(Jack): This extrinsic entity id logic is copy and pasted from the step, is there a better way to unify
     // this and make the extrinsic entity id a first class concept?
-    std::string const extrinsic_id{"tf_" + imu_name + "_xxx_" + camera_name};
+    std::string const extrinsic_id{Extrinsic::EntityId(imu_name, camera_name)};
     database::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
 
     // NOTE(Jack): Normally the extrinsic initialization function will actually run against the camera frames which I

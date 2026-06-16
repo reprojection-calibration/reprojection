@@ -2,14 +2,12 @@
 
 #include <gtest/gtest.h>
 
-#include "steps/bundle_adjustment.hpp"
-
 using namespace reprojection;
 
 struct DummyStep {
     int result;
 
-    CalibrationStep step_type{CalibrationStep::PoseInitialization};
+    static CalibrationStep StepType() { return CalibrationStep::PoseInitialization; }
 
     std::string EntityId() const { return ""; }
 

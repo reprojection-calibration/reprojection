@@ -65,14 +65,14 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     steps::ImageLoading const image_loading{camera_name, image_source_signature, image_source};
     auto const [encoded_images,
                 image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.step_type),
+    log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.StepType()),
               ToString(image_loading_cache_status), encoded_images->size());
 
     steps::CameraInfoStep const camera_info_step{*config["camera"].as_table(), encoded_images};
     auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(camera_info_step, db)};
     log->info(
         "{{'step': '{}', 'cache_status': '{}', 'sensor_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
-        ToString(camera_info_step.step_type), ToString(ci_cache_status), camera_info.sensor_name,
+        ToString(camera_info_step.StepType()), ToString(ci_cache_status), camera_info.sensor_name,
         ToString(camera_info.camera_model), camera_info.bounds.v_max, camera_info.bounds.u_max);
 
     steps::TargetInfoStep const target_info_step{*config["target"].as_table(), camera_info.sensor_name};
@@ -80,7 +80,7 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     log->info(
         "{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height': {}, 'width': {}, 'unit_dimension': {}, "
         "'asymmetric': {}}}",
-        ToString(target_info_step.step_type), ToString(target_info_cache_status), ToString(target_info.target_type),
+        ToString(target_info_step.StepType()), ToString(target_info_cache_status), ToString(target_info.target_type),
         target_info.height, target_info.width, target_info.unit_dimension, target_info.asymmetric);
 
     // TODO(Jack): The loading and parsing of the app config belongs in its own step! Having this here is a hack for
@@ -95,24 +95,24 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     auto const [targets,
                 feature_extraction_cache_status]{steps::RunStep<CameraMeasurements>(feature_extraction_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}",
-              ToString(feature_extraction_step.step_type), ToString(feature_extraction_cache_status),
+              ToString(feature_extraction_step.StepType()), ToString(feature_extraction_cache_status),
               std::size(targets));
 
     steps::IntrinsicInitialization const ii_step{camera_info, targets};
     auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'intrinsics': {}}}", ToString(ii_step.step_type),
+    log->info("{{'step': '{}', 'cache_status': '{}', 'intrinsics': {}}}", ToString(ii_step.StepType()),
               ToString(ii_cache_status), camera_state.intrinsics);
 
     steps::PoseInitialization const pose_init_step{camera_info, targets, camera_state};
     auto const [initial_poses, pose_init_cache_status]{steps::RunStep<Frames>(pose_init_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}}}", ToString(pose_init_step.step_type),
+    log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}}}", ToString(pose_init_step.StepType()),
               ToString(pose_init_cache_status), std::size(initial_poses));
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
 
     steps::BundleAdjustment const ba_step{camera_info, targets, aligned_initial_state};
     auto const [optimized_state, ba_cache_status]{steps::RunStep<OptimizationState>(ba_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.step_type),
+    log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
 
     // TODO(Jack): This is a hack! At this moment this is meant for internal development only therefore we will not
@@ -125,26 +125,26 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
         if (imu_name) {
             std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
             database::InsertEntity(db, *imu_name, Entity::Imu);
-            database::InsertEntity(db, "tf_" + *imu_name + "_xxx_" + camera_info.sensor_name, Entity::Extrinsic);
+            database::InsertEntity(db, Extrinsic::EntityId(*imu_name, camera_info.sensor_name), Entity::Extrinsic);
 
             // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
             // source lambda! For now though this only works if we write the imu data seperately and manually trigger a
             // cache hit.
             steps::ImuDataLoading const imu_data_loading{*imu_name, "", {}};
             auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
-            log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.step_type),
+            log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.StepType()),
                       ToString(imu_data_loading_cache_status), std::size(imu_data));
 
             steps::SplineInitialization const spline_init_step{camera_info, targets, aligned_initial_state};
             auto const [spline_init, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
             log->info("{{'step': '{}', 'cache_status': '{}', 'num_control_points': {}}}",
-                      ToString(spline_init_step.step_type), ToString(spline_init_cache_status), spline_init.Size());
+                      ToString(spline_init_step.StepType()), ToString(spline_init_cache_status), spline_init.Size());
 
             steps::ExtrinsicInitialization const extrinsic_init_step{*imu_name, camera_info.sensor_name, imu_data,
                                                                      spline_init};
             auto const [extrinsic,
                         extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
-            log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.step_type),
+            log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
                       ToString(extrinsic_init_cache_status));
         }
     }

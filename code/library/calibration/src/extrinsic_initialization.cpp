@@ -1,4 +1,4 @@
-#include "camera_imu_initialization.hpp"
+#include "extrinsic_initialization.hpp"
 
 #include <ranges>
 
