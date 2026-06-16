@@ -27,7 +27,7 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
     VelocityMeasurements const omega_imu{ExtractAngularVelocity(imu_data)};
     auto const [aa_imu_co, diagnostics]{optimization::AngularVelocityAlignment(omega_imu, spline_w_b)};
 
-    EXPECT_TRUE(aa_imu_co.isZero(1e-3)); // Identity matrix
+    EXPECT_TRUE(aa_imu_co.isZero(1e-3));  // Identity matrix
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::CONVERGENCE);
     EXPECT_NEAR(diagnostics.solver_summary.final_cost, 0, 1e-6);
 }
