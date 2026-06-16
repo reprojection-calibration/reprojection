@@ -1,10 +1,9 @@
+#include "extrinsic_initialization.hpp"
+
 #include <gtest/gtest.h>
 
 #include "spline/spline_initialization.hpp"
 #include "testing_mocks/data_generators.hpp"
-#include "testing_utilities/constants.hpp"
-
-#include "extrinsic_initialization.hpp"
 
 using namespace reprojection;
 
