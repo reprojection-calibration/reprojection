@@ -1,9 +1,7 @@
-
 #include <ranges>
 
 #include <toml++/toml.hpp>
 
-#include "../../testing_mocks/src/trajectory.hpp"
 #include "application/reprojection_calibration.hpp"
 #include "config/config_parsing.hpp"
 #include "database/calibration_database.hpp"
