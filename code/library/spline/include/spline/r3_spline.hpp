@@ -11,9 +11,9 @@
 namespace reprojection::spline {
 
 struct R3Spline {
-    template <DerivativeOrder D>
+    template <DerivativeOrder Derivative>
     static VectorKd B(double const u_i) {
-        static int constexpr derivative_order{static_cast<int>(D)};
+        static int constexpr derivative_order{static_cast<int>(Derivative)};
 
         static VectorKd const p{polynomial_coefficients_.row(derivative_order)};
 
@@ -34,16 +34,16 @@ struct R3Spline {
     //
     // We pass the Eigen::Ref by const& itself due to information from this link:
     //      https://stackoverflow.com/questions/21132538/correct-usage-of-the-eigenref-class
-    template <typename T, DerivativeOrder D>
+    template <typename T, DerivativeOrder Derivative>
     static Vector3<T> Evaluate(Eigen::Ref<MatrixNK<T> const> const& P, double const u_i,
                                std::uint64_t const delta_t_ns) {
-        static int constexpr derivative_order{static_cast<int>(D)};
+        static int constexpr derivative_order{static_cast<int>(Derivative)};
 
         // TODO(Jack): Is this the right place to convert from ns to s space? Is there a fundamental problem with this
         // here or do we maybe introduce some rounding error or anything like that?
         double const delta_t_s{static_cast<double>(delta_t_ns) / 1'000'000'000};
 
-        return P * B<D>(u_i).template cast<T>() / std::pow(delta_t_s, derivative_order);
+        return P * B<Derivative>(u_i).template cast<T>() / std::pow(delta_t_s, derivative_order);
     }
 
     static inline MatrixKd const M_{BlendingMatrix(K)};
