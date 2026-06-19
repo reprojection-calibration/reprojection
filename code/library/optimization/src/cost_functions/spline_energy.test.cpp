@@ -5,6 +5,20 @@
 using namespace reprojection;
 using namespace reprojection::optimization::cost_functions;
 
+TEST(OptimizationCostFunctions, TestSplineEnergyResidual) {
+    spline::CoefficientBlock const omega{spline::BuildOmega(1, 1)};
+    SplineEnergy const cost_function{omega};
+
+    Array6d const control_point{Array6d::Zero()};
+
+    Eigen::Array<double, 24, 1> residual{-Eigen::Array<double, 24, 1>::Ones()};
+    bool const success{cost_function(control_point.data(), control_point.data(), control_point.data(),
+                                     control_point.data(), residual.data())};
+
+    EXPECT_TRUE(success);
+    EXPECT_TRUE(residual.isApproxToConstant(0));
+}
+
 TEST(OptimizationCostFunctions, TestSplineEnergyCreate) {
     ceres::CostFunction const* const cost_function{SplineEnergy::Create(1)};
 

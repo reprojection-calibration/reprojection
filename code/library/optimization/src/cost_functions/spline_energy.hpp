@@ -26,7 +26,7 @@ class SplineEnergy {
         Eigen::Vector<T, 12> const rotations{control_points.template topRows<3>().reshaped()};
         Eigen::Vector<T, 12> const translations{control_points.template bottomRows<3>().reshaped()};
 
-        Eigen::Vector<T, 24> residuals{Eigen::Map<Eigen::Vector<T, 24>>(residual_ptr, 24, 1)};
+        Eigen::Ref<Eigen::Vector<T, 24>> residuals{Eigen::Map<Eigen::Vector<T, 24>>(residual_ptr, 24, 1)};
 
         residuals.template topRows<12>() = omega_ * rotations;
         residuals.template bottomRows<12>() = omega_ * translations;
