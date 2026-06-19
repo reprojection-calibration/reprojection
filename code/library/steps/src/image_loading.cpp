@@ -15,7 +15,7 @@ auto const log{logging::Get("steps")};
 
 // TODO(Jack): The name of the class variable "cache_key" is misleading because it is not a cache key but really a
 // serialized data signature. We should fix this name to clarify its purpose and use.
-std::string ImageLoading::HashInputs() const { return hashing::HashArguments(cache_key_); }
+std::string ImageLoading::HashInputs() const { return hashing::HashArguments(serialized_data_signature_); }
 
 std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
     auto encoded_images = std::make_shared<EncodedImages>();
@@ -25,7 +25,7 @@ std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error("cv::imencode() failed for " + std::string(sensor_name_));  // LCOV_EXCL_LINE
+            throw std::runtime_error("cv::imencode() failed for " + std::string(camera_name_));  // LCOV_EXCL_LINE
         }
 
         encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});
@@ -33,7 +33,7 @@ std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
         ++num_images;
         if (num_images % 50 == 0) {
             log->debug("{{'step': '{}', 'stage': '{}', 'sensor_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
-                       ToString(StepType()), "Compute()", EntityId(), num_images);              // LCOV_EXCL_LINE
+                       ToString(StepType()), "Compute()", EntityId(), num_images);               // LCOV_EXCL_LINE
         }
     }
 

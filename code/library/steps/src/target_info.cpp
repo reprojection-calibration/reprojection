@@ -13,16 +13,11 @@ namespace reprojection::steps {
 std::string TargetInfoStep::HashInputs() const {
     std::ostringstream oss;
     oss << target_config_;
-    oss << sensor_name_;
 
-    return hashing::HashArguments(oss.str());
+    return hashing::HashArguments(oss.str(), sensor_name_);
 }
 
-TargetInfo TargetInfoStep::Compute() const {
-    TargetInfo const target_info{config::ParseTargetConfig(*target_config_.as_table())};
-
-    return target_info;
-}
+TargetInfo TargetInfoStep::Compute() const { return config::ParseTargetConfig(*target_config_.as_table()); }
 
 TargetInfo TargetInfoStep::Load(SqlitePtr const db) const {
     auto const target_info{database::ReadTargetInfo(db, EntityId())};

@@ -8,7 +8,7 @@ namespace reprojection::steps {
 struct PoseInitialization {
     CameraInfo camera_info_;
     CameraMeasurements targets_;
-    CameraState camera_state_;
+    CameraState intrinsics_;
 
     static CalibrationStep StepType() { return CalibrationStep::PoseInitialization; }
 
@@ -20,7 +20,7 @@ struct PoseInitialization {
 
     Frames Load(SqlitePtr const db) const;
 
-    void Save(Frames const& frames, SqlitePtr const db) const;
+    void Save(Frames const& initialized_poses, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

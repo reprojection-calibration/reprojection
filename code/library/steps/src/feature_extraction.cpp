@@ -9,17 +9,13 @@
 namespace reprojection::steps {
 
 std::string FeatureExtraction::HashInputs() const {
-    std::ostringstream oss;
-    oss << show_extraction_;
-
-    return hashing::HashArguments(target_info_, *images_, oss.str());
+    return hashing::HashArguments(target_info_, *images_, static_cast<uint64_t>(show_extraction_));
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!
 // NOTE(Jack): The unit tests and CI pipeline run headless which means that we cannot get the GUI show feature
 // extraction code path unit tested and covered.
 CameraMeasurements FeatureExtraction::Compute() const {
-    // TODO(Jack): Is it really appropriate to use a toml table here instead of a struct?
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info_)};
 
     CameraMeasurements extracted_targets;

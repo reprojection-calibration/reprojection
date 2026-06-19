@@ -33,7 +33,7 @@ class RigidBodyLinearAcceleration {
         auto const so3{control_points.template topRows<3>()};
         auto const r3{control_points.template bottomRows<3>()};
 
-        // TODO(Jack): What is the actual from of a_w?
+        // TODO(Jack): What is the actual form of a_w?
         // TODO(Jack): Edit naming to reflect the fact that the imu is actually measuring specific force and not the
         // motion acceleration.
         Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
@@ -49,12 +49,16 @@ class RigidBodyLinearAcceleration {
         residual[0] = T(acc_imu_[0]) - acc_imu[0];
         residual[1] = T(acc_imu_[1]) - acc_imu[1];
         residual[2] = T(acc_imu_[2]) - acc_imu[2];
-
+        // UNIT TEST!!!
+        // TODO USE GRAVITY CONSTANT!
+        residual[3] = T(9.80065 * 9.80065) -
+                      (gravity_w[0] * gravity_w[0] + gravity_w[1] * gravity_w[1] + gravity_w[2] * gravity_w[2]);
+        
         return true;
     }
 
     static ceres::CostFunction* Create(Vector3d const& acc_imu, double const u_i, uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<RigidBodyLinearAcceleration, 3, 6, 3, 6, 6, 6, 6>(
+        return new ceres::AutoDiffCostFunction<RigidBodyLinearAcceleration, 4, 6, 3, 6, 6, 6, 6>(
             new RigidBodyLinearAcceleration(acc_imu, u_i, delta_t_ns));
     }
 

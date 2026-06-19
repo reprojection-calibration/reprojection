@@ -9,9 +9,9 @@
 
 namespace reprojection::steps {
 
-CameraInfoStep::CameraInfoStep(toml::table const& _sensor_config, std::shared_ptr<EncodedImages> const& _images)
-    : images_{_images} {
-    std::tie(sensor_name_, camera_model_) = config::ParseCameraConfig(_sensor_config);
+CameraInfoStep::CameraInfoStep(toml::table const& sensor_config, std::shared_ptr<EncodedImages> const& images)
+    : images_{images} {
+    std::tie(sensor_name_, camera_model_) = config::ParseCameraConfig(sensor_config);
 }
 
 std::string CameraInfoStep::HashInputs() const { return hashing::HashArguments(sensor_name_, camera_model_, *images_); }

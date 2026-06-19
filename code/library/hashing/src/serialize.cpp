@@ -84,6 +84,22 @@ std::string Serialize(Frames const& data) {
     return oss.str();
 }
 
+std::string Serialize(ImuCamExtrinsic const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    oss << data.tf.frame_a;
+    oss << "|";
+    oss << data.tf.frame_b;
+    oss << "|";
+    SerializeEigenByRows(data.tf.se3_a_b, oss);
+    oss << "|";
+    SerializeEigenByRows(data.gravity, oss);
+    oss << "|";
+
+    return oss.str();
+}
+
 std::string Serialize(ImuMeasurements const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);

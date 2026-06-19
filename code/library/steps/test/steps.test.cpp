@@ -258,10 +258,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     std::string const camera_name{"/cam0/image_raw"};
     database::InsertEntity(db, camera_name, Entity::Camera);
 
-    // TODO(Jack): This extrinsic entity id logic is copy and pasted from the step, is there a better way to unify
-    // this and make the extrinsic entity id a first class concept?
-    std::string const extrinsic_id{Extrinsic::EntityId(imu_name, camera_name)};
-    database::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
+    database::InsertEntity(db, Extrinsic::EntityId(imu_name, camera_name), Entity::Extrinsic);
 
     // NOTE(Jack): Normally the extrinsic initialization function will actually run against the camera frames which I
     // think are inverted compared to the spline returned by the imu data generation function here. The proper way to
@@ -295,11 +292,18 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+// TODO ADD TEST FOR EXT OPT
+
 TEST(StepsSteps, TestImuDataLoading) {
     SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
     std::string const imu_name{"imu"};
 
-    // TODO(Jack): As we add more tests this should probable be packed into a test fixture.
+    // TODO(Jack): As we add more tests this should probably be packed into a test fixture.
     ImuMeasurements const gt_imu_data{{0, {Array3d::Ones(), Array3d::Ones()}}, {1, {Array3d::Ones(), Array3d::Ones()}}};
     ImuDataSourceSignature imu_data_source{
         [itr = std::cbegin(gt_imu_data),

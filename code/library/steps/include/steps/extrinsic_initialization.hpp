@@ -6,8 +6,6 @@
 
 namespace reprojection::steps {
 
-// TODO(Jack): Is it ok to consider gravity as part of the extrinsic calibration?
-
 struct ExtrinsicInitialization {
     std::string imu_name_;
     std::string camera_name_;

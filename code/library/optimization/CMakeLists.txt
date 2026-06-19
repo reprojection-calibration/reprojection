@@ -3,17 +3,19 @@ set(LIBRARY_NAME "optimization")
 set(SRC_FILES
         src/angular_velocity_alignment.cpp
         src/bundle_adjustment.cpp
-        src/camera_imu_calibration.cpp
+        src/extrinsic_optimization.cpp
         src/cost_functions/reprojection_error.cpp
         src/cost_functions/reprojection_error_spline.cpp
 )
 set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
+        database # REMOVE
         eigen_utilities
         geometry
         projection_functions
         spline
+        types
         types_internal
 )
 AddLibrary()
@@ -31,6 +33,6 @@ set(TESTS
         src/cost_functions/spline_energy.test.cpp
         test/angular_velocity_alignment.test.cpp
         test/bundle_adjustment.test.cpp
-        test/camera_imu_calibration.test.cpp
+        test/extrinsic_optimization.test.cpp
 )
 AddTests()

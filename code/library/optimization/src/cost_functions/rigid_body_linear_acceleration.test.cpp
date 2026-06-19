@@ -34,6 +34,6 @@ TEST(OptimizationCostFunctions, TestRigidBodyLinearAccelerationCreate) {
     EXPECT_EQ(cost_function->parameter_block_sizes()[3], 6);  // control point 2
     EXPECT_EQ(cost_function->parameter_block_sizes()[4], 6);  // control point 3
     EXPECT_EQ(cost_function->parameter_block_sizes()[5], 6);  // control point 4
-    EXPECT_EQ(cost_function->num_residuals(), 3);
+    EXPECT_EQ(cost_function->num_residuals(), 4);
     delete cost_function;
 }

@@ -6,7 +6,7 @@
 
 namespace reprojection::steps {
 
-std::string ImuDataLoading::HashInputs() const { return hashing::HashArguments(cache_key_); }
+std::string ImuDataLoading::HashInputs() const { return hashing::HashArguments(serialized_data_signature_); }
 
 ImuMeasurements ImuDataLoading::Compute() const {
     ImuMeasurements imu_data;

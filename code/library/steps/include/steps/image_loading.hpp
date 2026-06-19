@@ -12,13 +12,13 @@ namespace reprojection::steps {
 // and database visualization extremely consistent.
 
 struct ImageLoading {
-    std::string sensor_name_;
-    std::string cache_key_;
+    std::string camera_name_;
+    std::string serialized_data_signature_;
     ImageSourceSignature image_source_;
 
     static CalibrationStep StepType() { return CalibrationStep::ImageLoading; }
 
-    std::string EntityId() const { return sensor_name_; }
+    std::string EntityId() const { return camera_name_; }
 
     std::string HashInputs() const;
 
