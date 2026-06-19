@@ -15,6 +15,7 @@ static_assert(constants::states == 3, "This code was only written for a three di
 static_assert(constants::order == 4, "This code was only written for a order 4 spline (cubic b-spline).");
 static_assert(constants::degree == 3, "This code was only written for a cubic b-spline.");
 
+using CoefficientBlock = Eigen::Matrix<double, constants::num_coefficients, constants::num_coefficients>;
 template <typename T>
 using Matrix2NK = Eigen::Matrix<T, 2 * constants::states, constants::order>;
 // Matrix2NXd the full se3 state (size = 2 * constants::states) which is then split up into two MatrixNXd matrices as it
@@ -25,7 +26,6 @@ template <typename T>
 using MatrixNK = Eigen::Matrix<T, constants::states, constants::order>;
 using MatrixNKd = MatrixNK<double>;
 using MatrixNXd = Eigen::Matrix<double, constants::states, Eigen::Dynamic>;
-
 using VectorKd = Eigen::Vector<double, constants::order>;
 
 // For both the r3 and so3 spline we can evaluate either the position, velocity, or acceleration.

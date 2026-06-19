@@ -69,19 +69,9 @@ TEST(SplineSplineInitialization, TestVectorizeWeights) {
     EXPECT_FLOAT_EQ(w_1.block(0, 6, 3, 3).sum(), 3 * (2.0 / 3));  // Third block has all the 2/3 weights
 }
 
-TEST(SplineSplineInitialization, TestBuildOmega) {
-    MatrixXd const Q_1{CubicBSplineC3Init::BuildOmega(1, 1)};
-    EXPECT_EQ(Q_1.rows(), 12);
-    EXPECT_EQ(Q_1.cols(), 12);
-    EXPECT_FLOAT_EQ(Q_1.diagonal().sum(), 8);  // Heuristic!
-
-    MatrixXd const Q_100{CubicBSplineC3Init::BuildOmega(100, 1)};
-    EXPECT_FLOAT_EQ(Q_100.diagonal().sum(), 8e-6);
-}
-
 TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
     MatrixKd const blending_matrix{R3Spline::M_};
-    MatrixXd const blockified{CubicBSplineC3Init::BlockifyBlendingMatrix(blending_matrix)};
+    MatrixXd const blockified{BlockifyBlendingMatrix(blending_matrix)};
 
     EXPECT_EQ(blockified.rows(), 12);
     EXPECT_EQ(blockified.cols(), 12);

@@ -1,5 +1,7 @@
 #include "spline/spline_initialization.hpp"
 
+#include "spline/r3_spline.hpp"
+
 #include "cubic_spline_c3_init.hpp"
 #include "sparse_utilities.hpp"
 
@@ -31,6 +33,34 @@ std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames
     se3_control_points.bottomRows<constants::states>() = r3_control_points;
 
     return {se3_control_points, time_handler_a};
+}
+
+// NOTE(Jack): Lambda could also be called "stiffness", as it constrains the spline to have minimum energy and fit the
+// points stiffly. This is critical for cases where we want to interpolate more poses than we have initial data points.
+CoefficientBlock BuildOmega(std::uint64_t const delta_t_ns, double const lambda) {
+    // TODO(Jack): We should either use "K" or "order" throughout the entire code base. Having both is confusing!
+    int constexpr K{constants::order};
+
+    MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
+    // NOTE(Jack): This is a hilbert matrix, but is it just coincidentally so? Or is there a better name that better
+    // reflects its role in taking the matrix second derivative below?
+    static MatrixKd const hilbert_matrix{HilbertMatrix(7)};
+
+    // Take the second derivative
+    MatrixKd V_i{delta_t_ns * hilbert_matrix};
+    for (int i = 0; i < 2; i++) {
+        V_i = derivative_op.transpose() * V_i * derivative_op;
+    }
+
+    CoefficientBlock V{CoefficientBlock::Zero()};
+    for (int i = 0; i < constants::states; ++i) {
+        V.block(i * K, i * K, K, K) = V_i;
+    }
+
+    static CoefficientBlock const M{BlockifyBlendingMatrix(R3Spline::M_)};
+    CoefficientBlock const omega{M.transpose() * V * M};
+
+    return lambda * omega;
 }
 
 }  // namespace reprojection::spline

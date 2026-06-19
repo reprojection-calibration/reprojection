@@ -6,6 +6,7 @@
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
+#include "spline/spline_initialization.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
@@ -16,8 +17,6 @@ namespace reprojection::spline {
 
 std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
                                                           size_t const num_segments) {
-    using CoefficientBlock = CubicBSplineC3Init::CoefficientBlock;
-
     // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known
     // problem.
     uint64_t const t0_ns{std::cbegin(measurements)->first};
@@ -32,7 +31,7 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
     // hardcoded for now.
     // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
     // timestamps which results in very small values in the omega matrix otherwise.
-    CoefficientBlock const omega{CubicBSplineC3Init::BuildOmega(delta_t_ns, 1e12)};
+    CoefficientBlock const omega{BuildOmega(delta_t_ns, 1e12)};
     Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, CubicBSplineC3Init::N, num_segments)};
 
     // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
@@ -96,7 +95,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements 
         // combination with the hack described above, we should not get problems here. However, in reality this shows
         // that maybe we are not describing or capturing the problem well. A better solution here is welcome!
         auto const [u_i, i]{time_handler.SplinePosition(timestamp_ns, num_control_points).value()};
-        A.block(j * N, i * N, N, num_coefficients) = BlockifyWeights(u_i);
+        A.block(j * N, i * N, N, constants::num_coefficients) = BlockifyWeights(u_i);
 
         j += 1;
     }
@@ -127,35 +126,14 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double
     return sparse_weights;
 }
 
-// NOTE(Jack): Lambda could also be called "stiffness", as it constrains the spline to have minimum energy and fit the
-// points stiffly. This is critical for cases where we want to interpolate more poses than we have initial data points.
-CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns,
-                                                                    double const lambda) {
-    MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
-    // NOTE(Jack): This is a hilbert matrix, but is it just coincidentally so? Or is there a better name that better
-    // reflects its role in taking the matrix second derivative below?
-    static MatrixKd const hilbert_matrix{HilbertMatrix(7)};
+CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
+    // TODO(Jack): We should either use "K" or "order" throughout the entire code base. Having both is confusing!
+    int constexpr K{constants::order};
+    int constexpr N{constants::states};
 
-    // Take the second derivative
-    MatrixKd V_i{delta_t_ns * hilbert_matrix};
-    for (int i = 0; i < 2; i++) {
-        V_i = derivative_op.transpose() * V_i * derivative_op;
-    }
-
-    CoefficientBlock V{CoefficientBlock::Zero()};
-    for (int i = 0; i < N; ++i) {
-        V.block(i * K, i * K, K, K) = V_i;
-    }
-
-    static CoefficientBlock const M{BlockifyBlendingMatrix(R3Spline::M_)};
-    CoefficientBlock const omega{M.transpose() * V * M};
-
-    return lambda * omega;
-}
-
-CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
     auto build_block = [](Vector4d const& element) {
-        Eigen::Matrix<double, num_coefficients, N> X{Eigen::Matrix<double, num_coefficients, N>::Zero()};
+        Eigen::Matrix<double, constants::num_coefficients, N> X{
+            Eigen::Matrix<double, constants::num_coefficients, N>::Zero()};
         for (int i = 0; i < N; i++) {
             X.block(i * K, i, K, 1) = element;
         }
@@ -165,7 +143,7 @@ CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BlockifyBlendingMatrix(
 
     CoefficientBlock M{CoefficientBlock::Zero()};
     for (int i{0}; i < K; ++i) {
-        M.block(0, i * N, num_coefficients, N) = build_block(blending_matrix.row(i));
+        M.block(0, i * N, constants::num_coefficients, N) = build_block(blending_matrix.row(i));
     }
 
     return M;
