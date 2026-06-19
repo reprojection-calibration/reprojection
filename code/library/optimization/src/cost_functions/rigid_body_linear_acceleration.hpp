@@ -7,6 +7,7 @@
 #include "spline/so3_spline.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
+#include "types/physics_constants.hpp"
 
 #include "ceres_geometry.hpp"
 
@@ -49,11 +50,11 @@ class RigidBodyLinearAcceleration {
         residual[0] = T(acc_imu_[0]) - acc_imu[0];
         residual[1] = T(acc_imu_[1]) - acc_imu[1];
         residual[2] = T(acc_imu_[2]) - acc_imu[2];
-        // UNIT TEST!!!
+
         // TODO USE GRAVITY CONSTANT!
-        residual[3] = T(9.80065 * 9.80065) -
+        residual[3] = T(gravity * gravity) -
                       (gravity_w[0] * gravity_w[0] + gravity_w[1] * gravity_w[1] + gravity_w[2] * gravity_w[2]);
-        
+
         return true;
     }
 
