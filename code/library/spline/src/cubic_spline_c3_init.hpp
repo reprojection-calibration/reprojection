@@ -25,6 +25,9 @@
 
 namespace reprojection::spline {
 
+std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
+                                                          size_t const num_segments);
+
 struct CubicBSplineC3Init {
     static std::tuple<MatrixXd, VectorXd> BuildAb(PositionMeasurements const& positions, size_t const num_segments,
                                                   TimeHandler const& time_handler);

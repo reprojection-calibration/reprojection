@@ -9,7 +9,6 @@ namespace reprojection::spline {
 //  pure spline logic. Or maybe even in the optimization package?
 std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames, int const frequency);
 
-std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
-                                                          size_t const num_segments);
+
 
 }  // namespace reprojection::spline
