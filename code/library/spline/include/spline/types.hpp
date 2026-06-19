@@ -11,22 +11,22 @@ namespace reprojection::spline {
 // NOTE(Jack): We need to provide these templated types so that we can also use them for the parts where we need
 // to handle ceres autodiff Jet types too.
 
-static_assert(constants::states == 3, "This code was only written for a three dimensional state spline.");
-static_assert(constants::order == 4, "This code was only written for a order 4 spline (cubic b-spline).");
-static_assert(constants::degree == 3, "This code was only written for a cubic b-spline.");
+static_assert(N == 3, "This code was only written for a three dimensional state spline.");
+static_assert(K == 4, "This code was only written for a order 4 spline (cubic b-spline).");
+static_assert(D == 3, "This code was only written for a cubic b-spline.");
 
+using CoefficientBlock = Eigen::Matrix<double, KxN, KxN>;
 template <typename T>
-using Matrix2NK = Eigen::Matrix<T, 2 * constants::states, constants::order>;
-// Matrix2NXd the full se3 state (size = 2 * constants::states) which is then split up into two MatrixNXd matrices as it
+using Matrix2NK = Eigen::Matrix<T, 2 * N, K>;
+// Matrix2NXd the full se3 state (size = 2 * N) which is then split up into two MatrixNXd matrices as it
 // is passed to the separate rotation and translation splines.
-using Matrix2NXd = Eigen::Matrix<double, 2 * constants::states, Eigen::Dynamic>;
-using MatrixKd = Eigen::Matrix<double, constants::order, constants::order>;
+using Matrix2NXd = Eigen::Matrix<double, 2 * N, Eigen::Dynamic>;
+using MatrixKd = Eigen::Matrix<double, K, K>;
 template <typename T>
-using MatrixNK = Eigen::Matrix<T, constants::states, constants::order>;
+using MatrixNK = Eigen::Matrix<T, N, K>;
 using MatrixNKd = MatrixNK<double>;
-using MatrixNXd = Eigen::Matrix<double, constants::states, Eigen::Dynamic>;
-
-using VectorKd = Eigen::Vector<double, constants::order>;
+using MatrixNXd = Eigen::Matrix<double, N, Eigen::Dynamic>;
+using VectorKd = Eigen::Vector<double, K>;
 
 // For both the r3 and so3 spline we can evaluate either the position, velocity, or acceleration.
 enum class DerivativeOrder { Null = 0, First = 1, Second = 2 };

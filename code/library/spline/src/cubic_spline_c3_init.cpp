@@ -1,24 +1,81 @@
 #include "cubic_spline_c3_init.hpp"
 
+#include <Eigen/SparseCholesky>
 #include <ranges>
 
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
+#include "spline/spline_initialization.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
+#include "sparse_utilities.hpp"
+
 namespace reprojection::spline {
 
-std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements const& positions,
-                                                           size_t const num_segments, TimeHandler const& time_handler) {
+std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
+                                                          size_t const num_segments) {
+    // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known
+    // problem.
+    uint64_t const t0_ns{std::cbegin(measurements)->first};
+    uint64_t const tn_ns{std::crbegin(measurements)->first};  // Reverse iterator ("rbegin")!
+    uint64_t const delta_t_ns{(tn_ns - t0_ns) / num_segments};
+    TimeHandler const time_handler{t0_ns, delta_t_ns};
+
+    auto const [A, b]{CubicBSplineC3Init::BuildAb(measurements, num_segments, time_handler)};
+
+    // NOTE(Jack): At this time lambda here is hardcoded, it might make sense at some time in the future to parameterize
+    // this, but currently I see no scenario where we can really expect the user to parameterize it, so we leave it
+    // hardcoded for now.
+    // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
+    // timestamps which results in very small values in the omega matrix otherwise.
+    CoefficientBlock const omega{BuildOmega(delta_t_ns, 1e12)};
+    Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, N, num_segments)};
+
+    // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
+    // slow as hell and took about 55 seconds on my laptop to initialize the rotation and translation. But then I used a
+    // sparse solver and it cut the time down to about 600ms. Therefore I think we are on the right track here using
+    // sparse logic.
+    // WARN(Jack): In the documentation for the .sparseView() method it says "This method is typically used when
+    // prototyping to convert a quickly assembled dense Matrix D to a SparseMatrix S". That sentence implies it should
+    // only be used for prototyping, but it solved my problem (initialization time cut from 55s to 600ms) so honestly I
+    // am asking myself why I should refactor the entire initialization code to be "sparse by default" and not use dense
+    // matrices like we do during the problem construction. Maybe it would be nice to transfer all the code directly to
+    // work on the sparse representation, but at this time I see no benefit.
+    // TODO(Jack): We should actually build A as a sparse matrix so we can save space and avoid having all these manual
+    //  sparse constructions/sparse views.
+    Eigen::SparseMatrix<double> const A_n{
+        Eigen::SparseMatrix<double>(A.sparseView().transpose()) * Eigen::SparseMatrix<double>(A.sparseView()) + Q};
+    MatrixXd const b_n{A.transpose().sparseView() * b};
+
+    // See the section "Sparse solver concept" in
+    // https://libeigen.gitlab.io/eigen/docs-nightly/group__TopicSparseSystems.html
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+    solver.compute(A_n);
+    // TODO(Jack): We should refactor this entire init function to return optional!
+    if (solver.info() != Eigen::Success) {
+        throw std::runtime_error("Failed: solver.compute(A_n.sparseView());");  // LCOV_EXCL_LINE
+    }
+
+    VectorXd const x{solver.solve(b_n)};
+    if (solver.info() != Eigen::Success) {
+        throw std::runtime_error("Failed: solver.solve(b_n);");  // LCOV_EXCL_LINE
+    }
+
+    // TODO(Jack): Is there a better way to calculate the number of control points here than x.rows()/N?
+    return {Eigen::Map<MatrixNXd const>(x.data(), N, x.rows() / N), time_handler};
+}
+
+std::pair<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements const& positions,
+                                                          size_t const num_segments, TimeHandler const& time_handler) {
     // NOTE(Jack): For both measurement_dim and control_point_dim we are talking about the "vectorized" dimensions.
     // This means how many values are there when we stack all the individual vectors (i.e. measurements or
     // control points) into one big vector to be used in the Ax=b problem. There x is the control points vector of
     // length control_point_dim and b is the measurement vector of length measurement_dim.
     size_t const measurement_dim{std::size(positions) * N};
-    size_t const num_control_points{num_segments + constants::degree};
+    size_t const num_control_points{num_segments + D};
     size_t const control_point_dim{num_control_points * N};
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
@@ -38,7 +95,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements 
         // combination with the hack described above, we should not get problems here. However, in reality this shows
         // that maybe we are not describing or capturing the problem well. A better solution here is welcome!
         auto const [u_i, i]{time_handler.SplinePosition(timestamp_ns, num_control_points).value()};
-        A.block(j * N, i * N, N, num_coefficients) = BlockifyWeights(u_i);
+        A.block(j * N, i * N, N, KxN) = BlockifyWeights(u_i);
 
         j += 1;
     }
@@ -69,35 +126,9 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double
     return sparse_weights;
 }
 
-// NOTE(Jack): Lambda could also be called "stiffness", as it constrains the spline to have minimum energy and fit the
-// points stiffly. This is critical for cases where we want to interpolate more poses than we have initial data points.
-CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BuildOmega(std::uint64_t const delta_t_ns,
-                                                                    double const lambda) {
-    MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
-    // NOTE(Jack): This is a hilbert matrix, but is it just coincidentally so? Or is there a better name that better
-    // reflects its role in taking the matrix second derivative below?
-    static MatrixKd const hilbert_matrix{HilbertMatrix(7)};
-
-    // Take the second derivative
-    MatrixKd V_i{delta_t_ns * hilbert_matrix};
-    for (int i = 0; i < 2; i++) {
-        V_i = derivative_op.transpose() * V_i * derivative_op;
-    }
-
-    CoefficientBlock V{CoefficientBlock::Zero()};
-    for (int i = 0; i < N; ++i) {
-        V.block(i * K, i * K, K, K) = V_i;
-    }
-
-    static CoefficientBlock const M{BlockifyBlendingMatrix(R3Spline::M_)};
-    CoefficientBlock const omega{M.transpose() * V * M};
-
-    return lambda * omega;
-}
-
-CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
+CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
     auto build_block = [](Vector4d const& element) {
-        Eigen::Matrix<double, num_coefficients, N> X{Eigen::Matrix<double, num_coefficients, N>::Zero()};
+        Eigen::Matrix<double, KxN, N> X{Eigen::Matrix<double, KxN, N>::Zero()};
         for (int i = 0; i < N; i++) {
             X.block(i * K, i, K, 1) = element;
         }
@@ -107,18 +138,19 @@ CubicBSplineC3Init::CoefficientBlock CubicBSplineC3Init::BlockifyBlendingMatrix(
 
     CoefficientBlock M{CoefficientBlock::Zero()};
     for (int i{0}; i < K; ++i) {
-        M.block(0, i * N, num_coefficients, N) = build_block(blending_matrix.row(i));
+        M.block(0, i * N, KxN, N) = build_block(blending_matrix.row(i));
     }
 
     return M;
 }  // LCOV_EXCL_LINE
 
 MatrixXd DerivativeOperator(int const order) {
-    MatrixXd D{MatrixXd::Zero(order, order)};
+    MatrixXd derivative{MatrixXd::Zero(order, order)};
     // TODO(Jack): Why is this hardcoded to DerivativeOrder::First here?
-    D.diagonal(1) = PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
+    derivative.diagonal(1) =
+        PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
 
-    return D;
+    return derivative;
 }  // LCOV_EXCL_LINE
 
 MatrixXd HilbertMatrix(int const size) {

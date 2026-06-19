@@ -37,7 +37,7 @@ std::optional<Vector3d> EvaluateSpline(Eigen::Ref<MatrixNXd const> const& contro
     }
     auto const [u_i, i]{normalized_position.value()};
 
-    Eigen::Map<MatrixNKd const> const P{control_points.col(i).data(), constants::states, constants::order};
+    Eigen::Map<MatrixNKd const> const P{control_points.col(i).data(), N, K};
 
     if (derivative == DerivativeOrder::Null) {
         return T_Model::template Evaluate<double, DerivativeOrder::Null>(P, u_i, time_handler.delta_t_ns_);

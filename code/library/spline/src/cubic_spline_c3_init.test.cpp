@@ -10,6 +10,35 @@
 using namespace reprojection;
 using namespace reprojection::spline;
 
+// TODO(Jack): Because we cannot test t0_ns directly of the created spline we should test some evaluations to check
+// which times are invalid or not.
+
+// NOTE(Jack): In this test we do not get the exact start and end of the spline back like we might expect given the
+// perfect input data. This happens because we do not handle the end conditions in a principled manner. Please see the
+// implementation of CubicBSplineC3Init::BuildAb to understand this better. This is the reason why we get -2.0344...
+// instead if just -2 for example in the tests below.
+TEST(SplineSplineInitialization, TestInitializeSpline) {
+    PositionMeasurements const measurements{{5000, {{0, 0, 0}}},  //
+                                            {5100, {{1, 1, 1}}},
+                                            {5200, {{2, 2, 2}}}};
+
+    CubicBSplineC3 const one_segment_spline{spline::InitializeC3SplineState(measurements, 1)};
+    EXPECT_EQ(one_segment_spline.DeltaTNs(), 200);
+    EXPECT_EQ(one_segment_spline.Size(), 4);
+    // NOTE(Jack): At this point this and below are canary in the coal mine tests, to make sure nothing changes as we
+    // refactor. An unsolved problem is the time handling, and this is the reason why these values are not exact values
+    // on the integers, which given the test data they should be.
+    EXPECT_TRUE(one_segment_spline.ControlPoints().col(0).isApproxToConstant(-2.0352983526781605));
+    EXPECT_TRUE(one_segment_spline.ControlPoints().col(3).isApproxToConstant(4.0556013690136226));
+
+    CubicBSplineC3 const two_segment_spline{spline::InitializeC3SplineState(measurements, 2)};
+    EXPECT_EQ(two_segment_spline.DeltaTNs(), 100);
+    EXPECT_EQ(two_segment_spline.Size(), 5);
+    // See note above on canary coal mine.
+    EXPECT_TRUE(two_segment_spline.ControlPoints().col(0).isApproxToConstant(-1.0133995349092337));
+    EXPECT_TRUE(two_segment_spline.ControlPoints().col(4).isApproxToConstant(3.0268670943200862));
+}
+
 TEST(SplineSplineInitialization, TestBuildAb) {
     PositionMeasurements const measurements{{5000, {{0, 0, 0}}},  //
                                             {5100, {{1, 1, 1}}},
@@ -40,19 +69,9 @@ TEST(SplineSplineInitialization, TestVectorizeWeights) {
     EXPECT_FLOAT_EQ(w_1.block(0, 6, 3, 3).sum(), 3 * (2.0 / 3));  // Third block has all the 2/3 weights
 }
 
-TEST(SplineSplineInitialization, TestBuildOmega) {
-    MatrixXd const Q_1{CubicBSplineC3Init::BuildOmega(1, 1)};
-    EXPECT_EQ(Q_1.rows(), 12);
-    EXPECT_EQ(Q_1.cols(), 12);
-    EXPECT_FLOAT_EQ(Q_1.diagonal().sum(), 8);  // Heuristic!
-
-    MatrixXd const Q_100{CubicBSplineC3Init::BuildOmega(100, 1)};
-    EXPECT_FLOAT_EQ(Q_100.diagonal().sum(), 8e-6);
-}
-
 TEST(SplineSplineInitialization, TestVectorizeBlendingMatrix) {
     MatrixKd const blending_matrix{R3Spline::M_};
-    MatrixXd const blockified{CubicBSplineC3Init::BlockifyBlendingMatrix(blending_matrix)};
+    MatrixXd const blockified{BlockifyBlendingMatrix(blending_matrix)};
 
     EXPECT_EQ(blockified.rows(), 12);
     EXPECT_EQ(blockified.cols(), 12);
@@ -65,7 +84,7 @@ TEST(SplineSplineInitialization, TestDerivativeOperator) {
     EXPECT_TRUE(D3.diagonal(1).isApprox(Vector2d{1, 2}));
 
     // This is the version used by the cubic b-spline
-    MatrixKd const D4{DerivativeOperator(constants::order)};
+    MatrixKd const D4{DerivativeOperator(K)};
     EXPECT_TRUE(D4.diagonal(1).isApprox(Vector3d{1, 2, 3}));
 }
 

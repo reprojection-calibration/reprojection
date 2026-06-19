@@ -44,12 +44,11 @@ class Se3Spline {
         assert(0 <= u_i and u_i < 1);
         assert(delta_t_ns > 0);
 
-        constexpr auto D{DerivativeOrder::Null};
-        constexpr int N{constants::states};
+        constexpr auto derivative{DerivativeOrder::Null};
 
         Array6<T> pose;
-        pose.template head<N>() = So3Spline::Evaluate<T, D>(P.template topRows<N>(), u_i, delta_t_ns);
-        pose.template tail<N>() = R3Spline::Evaluate<T, D>(P.template bottomRows<N>(), u_i, delta_t_ns);
+        pose.template head<N>() = So3Spline::Evaluate<T, derivative>(P.template topRows<N>(), u_i, delta_t_ns);
+        pose.template tail<N>() = R3Spline::Evaluate<T, derivative>(P.template bottomRows<N>(), u_i, delta_t_ns);
 
         return pose;
     }

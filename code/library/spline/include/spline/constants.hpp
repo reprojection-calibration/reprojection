@@ -17,4 +17,31 @@ inline constexpr int order{4};           // (K) Number of control points require
 inline constexpr int degree{order - 1};  // (D) Polynomial degree (ex. order=4 --> degree=3, i.e. "cubic spline")
 inline constexpr int states{3};          // (N) Size of the state space for both R3 and so3 splines
 
+// NOTE(Jack): This is primarily used in the spline initialization logic. My initial intent was to keep higher level
+// terms like this confined to the private interface of the spline module. But then I needed the spline smoothness
+// function "omega" in the optimization which uses this constant value. Therefore, we made one central definition and
+// use it wherever needed. If the spline initialization logic one day gets made private again we can hide this too.
+/**
+ * \brief Length of a vectorized control point block (=12 for a cubic b-spline with 3D state space).
+ *
+ * NOTE(Jack): We are entering a mixed terminology space because in the context of splines the coefficients often
+ * refer to the values multiplied by the control points. Here however we are actually referring to the control
+ * points themselves as coefficients. And further in the code we refer to what we normally would call the spline
+ * coefficients as "weights". This is a confusing aspect that should be addressed if it causes problems.
+ */
+inline constexpr int num_coefficients{order * states};  // Number of control points coefficients for one spline segment
+
 }  // namespace reprojection::spline::constants
+
+namespace reprojection::spline {
+
+// NOTE(Jack): Here we define more "usable" (i.e. shorter) but still meaningful names for the spline values that we can
+// use in the code without making the code super verbose.
+
+inline constexpr int K{constants::order};
+inline constexpr int D{constants::degree};
+inline constexpr int N{constants::states};
+
+inline constexpr int KxN{constants::num_coefficients};
+
+}  // namespace reprojection::spline

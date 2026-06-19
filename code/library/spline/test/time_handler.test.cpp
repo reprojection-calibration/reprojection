@@ -21,19 +21,19 @@ TEST(SplineTimeHandler, TestTimeHandlerSplinePosition) {
     // t_ns is less than t0_ns.
     EXPECT_FALSE(time_handler.SplinePosition(0, 0));
 
-    // Anything with less than constants::order control points will fail.
+    // Anything with less than K control points will fail.
     EXPECT_FALSE(time_handler.SplinePosition(100, 0));
-    EXPECT_FALSE(time_handler.SplinePosition(100, spline::constants::order - 1));
+    EXPECT_FALSE(time_handler.SplinePosition(100, spline::K - 1));
 
-    // One valid time segment (constants::order control points) from 100 to 104 with 105 being again invalid.
-    EXPECT_TRUE(time_handler.SplinePosition(100, spline::constants::order));
-    EXPECT_TRUE(time_handler.SplinePosition(104, spline::constants::order));
-    EXPECT_FALSE(time_handler.SplinePosition(105, spline::constants::order));
+    // One valid time segment (K control points) from 100 to 104 with 105 being again invalid.
+    EXPECT_TRUE(time_handler.SplinePosition(100, spline::K));
+    EXPECT_TRUE(time_handler.SplinePosition(104, spline::K));
+    EXPECT_FALSE(time_handler.SplinePosition(105, spline::K));
 
-    // Two valid time segments (constants::order+1 control points) from 100 to 109 with 110 being again invalid.
-    EXPECT_TRUE(time_handler.SplinePosition(100, spline::constants::order + 1));
-    EXPECT_TRUE(time_handler.SplinePosition(109, spline::constants::order + 1));
-    EXPECT_FALSE(time_handler.SplinePosition(110, spline::constants::order + 1));
+    // Two valid time segments (K+1 control points) from 100 to 109 with 110 being again invalid.
+    EXPECT_TRUE(time_handler.SplinePosition(100, spline::K + 1));
+    EXPECT_TRUE(time_handler.SplinePosition(109, spline::K + 1));
+    EXPECT_FALSE(time_handler.SplinePosition(110, spline::K + 1));
 }
 
 TEST(SplineTimeHandler, TestNormalizedSegmentTime) {

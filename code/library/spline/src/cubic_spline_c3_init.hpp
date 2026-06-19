@@ -25,29 +25,15 @@
 
 namespace reprojection::spline {
 
+std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
+                                                          size_t const num_segments);
+
+// TODO(Jack): Do we really need this static class for the initialization? Maybe it helped organize things when we also
+// had the omega smoothing logic here, but now that is part of the public interface this struct does not help us
+// organize anything much better.
 struct CubicBSplineC3Init {
-    static std::tuple<MatrixXd, VectorXd> BuildAb(PositionMeasurements const& positions, size_t const num_segments,
-                                                  TimeHandler const& time_handler);
-
-    /**
-     * \brief How many control points are required to evaluate the spline (=3 for cubic spline).
-     */
-    static int constexpr K{constants::order};
-
-    /**
-     * \brief The size of the state space (=3 for both R3 and so3, translation and rotation).
-     */
-    static int constexpr N{constants::states};
-
-    /**
-     * \brief Length of a vectorized control point block (=12 for a cubic b-spline with 3D state space).
-     *
-     * NOTE(Jack): We are entering a mixed terminology space because in the context of splines the coefficients often
-     * refer to the values multiplied by the control points. Here however we are actually referring to the control
-     * points themselves as coefficients. And further in the code we refer to what we normally would call the spline
-     * coefficients as "weights". This is a confusing aspect that should be addressed if it causes problems.
-     */
-    static int constexpr num_coefficients{K * N};
+    static std::pair<MatrixXd, VectorXd> BuildAb(PositionMeasurements const& positions, size_t const num_segments,
+                                                 TimeHandler const& time_handler);
 
     /**
      * \brief A matrix used to hold the sparsified/diagonalized spline weights.
@@ -55,20 +41,15 @@ struct CubicBSplineC3Init {
      * A matrix of shape (N x num_coefficients) holding the sparsified/diagonalized spline weights can be directly
      * multiplied by a vectorized control points block (a vector with length=num_coefficients) to evaluate the spline.
      */
-    using ControlPointBlock = Eigen::Matrix<double, N, num_coefficients>;
+    using ControlPointBlock = Eigen::Matrix<double, N, KxN>;
 
-    using CoefficientBlock = Eigen::Matrix<double, num_coefficients, num_coefficients>;
-
-    // TODO(Jack): Is weights really the right term here? We are blockifying the entire B vector which combines both the
+    // TODO(Jack): Is weights really the right term here? We are blockifying the entire b vector which combines both the
     //  basis matrix contribution and the time weighting.
     static ControlPointBlock BlockifyWeights(double const u_i);
-
-    // https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
-    //      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
-    static CoefficientBlock BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
-
-    static CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix);
 };
+
+// TODO(Jack): Move all the functions that only have to do with the smoothing omega somewhere else?
+CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix);
 
 // For a discussion of the matrix derivative operator of a polynomial space please see the following links:
 //      (1) https://math.stackexchange.com/questions/4687306/derivative-as-a-matrix-mathbfd-dfrac-mathrmd-mathrmdx

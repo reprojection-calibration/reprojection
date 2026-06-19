@@ -34,7 +34,7 @@ std::optional<std::pair<double, int>> TimeHandler::SplinePosition(std::uint64_t 
 
     // From reference [1] - "At time t in [t_i, t_i+1) the value of p(t) only depends on the control points p_i,
     // p_i+1, ..., p_i+k-1" - See the start of the second paragraph in section 4.2 Matrix Representation.
-    if (num_control_points < static_cast<size_t>(i + constants::order)) {
+    if (num_control_points < static_cast<size_t>(i + K)) {
         return std::nullopt;
     }
 

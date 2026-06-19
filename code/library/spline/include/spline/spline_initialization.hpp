@@ -1,7 +1,6 @@
 
 #include "spline/spline_state.hpp"
 #include "types/calibration_types.hpp"
-#include "types/spline_types.hpp"
 
 namespace reprojection::spline {
 
@@ -9,7 +8,12 @@ namespace reprojection::spline {
 //  pure spline logic. Or maybe even in the optimization package?
 std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames, int const frequency);
 
-std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
-                                                          size_t const num_segments);
+// NOTE(Jack): This was originally intended just for the internal spline interpolation code. But it turns out we also
+// need the minimum energy constraint when we are doing the extrinsic optimization itself, otherwise the imu data camera
+// frames will get completely out of sync.
+
+// https://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch07.pdf
+//      "For smoothing splines, using a stiffer material corresponds to increasing lambda"
+CoefficientBlock BuildOmega(std::uint64_t const delta_t_ns, double const lambda);
 
 }  // namespace reprojection::spline

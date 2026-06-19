@@ -22,15 +22,14 @@ TEST(SplineSo3Spline, TestEvaluateValidity) {
     EXPECT_TRUE(EvaluateSpline<So3Spline>(one_segment_spline, 100, Null));
     EXPECT_FALSE(EvaluateSpline<So3Spline>(one_segment_spline, 105, Null));
 
-    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, constants::order + 1>::Zero(),
-                                            TimeHandler{100, 5}};
+    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, K + 1>::Zero(), TimeHandler{100, 5}};
     EXPECT_TRUE(EvaluateSpline<So3Spline>(two_segment_spline, 105, Null));
 }
 
 CubicBSplineC3 BuildSo3TestSpline() {
     MatrixNKd so3_control_points;
     so3_control_points.col(0) = (Vector3d::Zero());
-    for (int i{1}; i < constants::order; ++i) {
+    for (int i{1}; i < K; ++i) {
         // TODO(Jack): Evaluate if we can do any of the math directly in tangent space
         so3_control_points.col(i) =
             geometry::Log<double>(geometry::Exp<double>(so3_control_points.col(i - 1)) *
