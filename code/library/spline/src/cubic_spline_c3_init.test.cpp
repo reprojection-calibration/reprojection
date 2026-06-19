@@ -84,7 +84,7 @@ TEST(SplineSplineInitialization, TestDerivativeOperator) {
     EXPECT_TRUE(D3.diagonal(1).isApprox(Vector2d{1, 2}));
 
     // This is the version used by the cubic b-spline
-    MatrixKd const D4{DerivativeOperator(constants::order)};
+    MatrixKd const D4{DerivativeOperator(K)};
     EXPECT_TRUE(D4.diagonal(1).isApprox(Vector3d{1, 2, 3}));
 }
 

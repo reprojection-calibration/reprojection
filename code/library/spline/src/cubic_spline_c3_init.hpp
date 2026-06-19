@@ -32,15 +32,6 @@ struct CubicBSplineC3Init {
     static std::tuple<MatrixXd, VectorXd> BuildAb(PositionMeasurements const& positions, size_t const num_segments,
                                                   TimeHandler const& time_handler);
 
-    /**
-     * \brief How many control points are required to evaluate the spline (=3 for cubic spline).
-     */
-    static int constexpr K{constants::order};
-
-    /**
-     * \brief The size of the state space (=3 for both R3 and so3, translation and rotation).
-     */
-    static int constexpr N{constants::states};
 
     /**
      * \brief A matrix used to hold the sparsified/diagonalized spline weights.
@@ -48,7 +39,7 @@ struct CubicBSplineC3Init {
      * A matrix of shape (N x num_coefficients) holding the sparsified/diagonalized spline weights can be directly
      * multiplied by a vectorized control points block (a vector with length=num_coefficients) to evaluate the spline.
      */
-    using ControlPointBlock = Eigen::Matrix<double, N, constants::num_coefficients>;
+    using ControlPointBlock = Eigen::Matrix<double, N, KxN>;
 
     // TODO(Jack): Is weights really the right term here? We are blockifying the entire b vector which combines both the
     //  basis matrix contribution and the time weighting.

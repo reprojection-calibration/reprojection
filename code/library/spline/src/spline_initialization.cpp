@@ -13,8 +13,8 @@ std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames
     PositionMeasurements so3;
     PositionMeasurements r3;
     for (auto const& [timestamp_ns, frame_i] : frames) {
-        so3.insert({timestamp_ns, {frame_i.pose.topRows<constants::states>()}});
-        r3.insert({timestamp_ns, {frame_i.pose.bottomRows<constants::states>()}});
+        so3.insert({timestamp_ns, {frame_i.pose.topRows<N>()}});
+        r3.insert({timestamp_ns, {frame_i.pose.bottomRows<N>()}});
     }
 
     double const delta_t_s{(std::crbegin(frames)->first - std::cbegin(frames)->first) / 1e9};
@@ -28,9 +28,9 @@ std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames
             "During se3 spline initialization we somehow got two different time handlers!");  // LCOV_EXCL_LINE
     }
 
-    Matrix2NXd se3_control_points{2 * constants::states, so3_control_points.cols()};
-    se3_control_points.topRows<constants::states>() = so3_control_points;
-    se3_control_points.bottomRows<constants::states>() = r3_control_points;
+    Matrix2NXd se3_control_points{2 * N, so3_control_points.cols()};
+    se3_control_points.topRows<N>() = so3_control_points;
+    se3_control_points.bottomRows<N>() = r3_control_points;
 
     return {se3_control_points, time_handler_a};
 }
@@ -38,9 +38,6 @@ std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames
 // NOTE(Jack): Lambda could also be called "stiffness", as it constrains the spline to have minimum energy and fit the
 // points stiffly. This is critical for cases where we want to interpolate more poses than we have initial data points.
 CoefficientBlock BuildOmega(std::uint64_t const delta_t_ns, double const lambda) {
-    // TODO(Jack): We should either use "K" or "order" throughout the entire code base. Having both is confusing!
-    int constexpr K{constants::order};
-
     MatrixKd const derivative_op{DerivativeOperator(K) / delta_t_ns};
     // NOTE(Jack): This is a hilbert matrix, but is it just coincidentally so? Or is there a better name that better
     // reflects its role in taking the matrix second derivative below?
@@ -53,7 +50,7 @@ CoefficientBlock BuildOmega(std::uint64_t const delta_t_ns, double const lambda)
     }
 
     CoefficientBlock V{CoefficientBlock::Zero()};
-    for (int i = 0; i < constants::states; ++i) {
+    for (int i = 0; i < N; ++i) {
         V.block(i * K, i * K, K, K) = V_i;
     }
 

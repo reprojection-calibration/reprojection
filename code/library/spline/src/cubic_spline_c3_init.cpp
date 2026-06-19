@@ -32,7 +32,7 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
     // NOTE(Jack): The lambda that you need to use is very large, about e7/e8/e9 magnitude because we use nanoseconds
     // timestamps which results in very small values in the omega matrix otherwise.
     CoefficientBlock const omega{BuildOmega(delta_t_ns, 1e12)};
-    Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, CubicBSplineC3Init::N, num_segments)};
+    Eigen::SparseMatrix<double> const Q{DiagonalSparseMatrix(omega, N, num_segments)};
 
     // NOTE(Jack): When we first tried to apply this to larger spline initialization problems (ex. 2000 segments) it was
     // slow as hell and took about 55 seconds on my laptop to initialize the rotation and translation. But then I used a
@@ -65,7 +65,7 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
     }
 
     // TODO(Jack): Is there a better way to calculate the number of control points here than x.rows()/3?
-    return {Eigen::Map<MatrixNXd const>(x.data(), constants::states, x.rows() / constants::states), time_handler};
+    return {Eigen::Map<MatrixNXd const>(x.data(), N, x.rows() / N), time_handler};
 }
 
 std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements const& positions,
@@ -75,7 +75,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements 
     // control points) into one big vector to be used in the Ax=b problem. There x is the control points vector of
     // length control_point_dim and b is the measurement vector of length measurement_dim.
     size_t const measurement_dim{std::size(positions) * N};
-    size_t const num_control_points{num_segments + constants::degree};
+    size_t const num_control_points{num_segments + D};
     size_t const control_point_dim{num_control_points * N};
 
     MatrixXd A{MatrixXd::Zero(measurement_dim, control_point_dim)};
@@ -95,7 +95,7 @@ std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements 
         // combination with the hack described above, we should not get problems here. However, in reality this shows
         // that maybe we are not describing or capturing the problem well. A better solution here is welcome!
         auto const [u_i, i]{time_handler.SplinePosition(timestamp_ns, num_control_points).value()};
-        A.block(j * N, i * N, N, constants::num_coefficients) = BlockifyWeights(u_i);
+        A.block(j * N, i * N, N, KxN) = BlockifyWeights(u_i);
 
         j += 1;
     }
@@ -127,13 +127,9 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double
 }
 
 CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
-    // TODO(Jack): We should either use "K" or "order" throughout the entire code base. Having both is confusing!
-    int constexpr K{constants::order};
-    int constexpr N{constants::states};
-
     auto build_block = [](Vector4d const& element) {
-        Eigen::Matrix<double, constants::num_coefficients, N> X{
-            Eigen::Matrix<double, constants::num_coefficients, N>::Zero()};
+        Eigen::Matrix<double, KxN, N> X{
+            Eigen::Matrix<double, KxN, N>::Zero()};
         for (int i = 0; i < N; i++) {
             X.block(i * K, i, K, 1) = element;
         }
@@ -143,7 +139,7 @@ CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
 
     CoefficientBlock M{CoefficientBlock::Zero()};
     for (int i{0}; i < K; ++i) {
-        M.block(0, i * N, constants::num_coefficients, N) = build_block(blending_matrix.row(i));
+        M.block(0, i * N, KxN, N) = build_block(blending_matrix.row(i));
     }
 
     return M;

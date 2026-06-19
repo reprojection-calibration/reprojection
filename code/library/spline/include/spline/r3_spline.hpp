@@ -17,7 +17,7 @@ struct R3Spline {
 
         static VectorKd const p{polynomial_coefficients_.row(derivative_order)};
 
-        VectorKd const t{TimePolynomial(constants::order, u_i, derivative_order)};
+        VectorKd const t{TimePolynomial(K, u_i, derivative_order)};
         VectorKd const du{p.cwiseProduct(t)};
 
         return M_ * du;
@@ -46,10 +46,10 @@ struct R3Spline {
         return P * B<D>(u_i).template cast<T>() / std::pow(delta_t_s, derivative_order);
     }
 
-    static inline MatrixKd const M_{BlendingMatrix(constants::order)};
+    static inline MatrixKd const M_{BlendingMatrix(K)};
 
    private:
-    static inline MatrixKd const polynomial_coefficients_{PolynomialCoefficients(constants::order)};
+    static inline MatrixKd const polynomial_coefficients_{PolynomialCoefficients(K)};
 };
 
 }  // namespace reprojection::spline

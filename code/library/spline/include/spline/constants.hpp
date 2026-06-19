@@ -32,3 +32,16 @@ inline constexpr int states{3};          // (N) Size of the state space for both
 inline constexpr int num_coefficients{order * states};  // Number of control points coefficients for one spline segment
 
 }  // namespace reprojection::spline::constants
+
+namespace reprojection::spline {
+
+// NOTE(Jack): Here we define more "usable" (i.e. shorter) but still meaningful names for the spline values that we can
+// use in the code without making the code super verbose.
+
+inline constexpr int K{constants::order};
+inline constexpr int D{constants::degree};
+inline constexpr int N{constants::states};
+
+inline constexpr int KxN{constants::num_coefficients};
+
+}  // namespace reprojection::spline
