@@ -43,7 +43,7 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
     // only be used for prototyping, but it solved my problem (initialization time cut from 55s to 600ms) so honestly I
     // am asking myself why I should refactor the entire initialization code to be "sparse by default" and not use dense
     // matrices like we do during the problem construction. Maybe it would be nice to transfer all the code directly to
-    // work on the sparse representation, but at this time I see not benefit.
+    // work on the sparse representation, but at this time I see no benefit.
     // TODO(Jack): We should actually build A as a sparse matrix so we can save space and avoid having all these manual
     //  sparse constructions/sparse views.
     Eigen::SparseMatrix<double> const A_n{
@@ -64,12 +64,12 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
         throw std::runtime_error("Failed: solver.solve(b_n);");  // LCOV_EXCL_LINE
     }
 
-    // TODO(Jack): Is there a better way to calculate the number of control points here than x.rows()/3?
+    // TODO(Jack): Is there a better way to calculate the number of control points here than x.rows()/N?
     return {Eigen::Map<MatrixNXd const>(x.data(), N, x.rows() / N), time_handler};
 }
 
-std::tuple<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements const& positions,
-                                                           size_t const num_segments, TimeHandler const& time_handler) {
+std::pair<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements const& positions,
+                                                          size_t const num_segments, TimeHandler const& time_handler) {
     // NOTE(Jack): For both measurement_dim and control_point_dim we are talking about the "vectorized" dimensions.
     // This means how many values are there when we stack all the individual vectors (i.e. measurements or
     // control points) into one big vector to be used in the Ax=b problem. There x is the control points vector of
@@ -128,8 +128,7 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double
 
 CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
     auto build_block = [](Vector4d const& element) {
-        Eigen::Matrix<double, KxN, N> X{
-            Eigen::Matrix<double, KxN, N>::Zero()};
+        Eigen::Matrix<double, KxN, N> X{Eigen::Matrix<double, KxN, N>::Zero()};
         for (int i = 0; i < N; i++) {
             X.block(i * K, i, K, 1) = element;
         }
