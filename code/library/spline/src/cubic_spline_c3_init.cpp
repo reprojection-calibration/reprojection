@@ -145,11 +145,12 @@ CoefficientBlock BlockifyBlendingMatrix(MatrixKd const& blending_matrix) {
 }  // LCOV_EXCL_LINE
 
 MatrixXd DerivativeOperator(int const order) {
-    MatrixXd D{MatrixXd::Zero(order, order)};
+    MatrixXd derivative{MatrixXd::Zero(order, order)};
     // TODO(Jack): Why is this hardcoded to DerivativeOrder::First here?
-    D.diagonal(1) = PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
+    derivative.diagonal(1) =
+        PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
 
-    return D;
+    return derivative;
 }  // LCOV_EXCL_LINE
 
 MatrixXd HilbertMatrix(int const size) {

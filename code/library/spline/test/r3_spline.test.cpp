@@ -27,8 +27,7 @@ TEST(Spline_r3Spline, TestEvaluateValidity) {
                                           Null));  // Outside first time segment - invalid
 
     // Add one more control point than before to see that we can now do a valid evaluation in the second time segment
-    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, N, K + 1>::Zero(),
-                                            TimeHandler{100, 5}};
+    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, N, K + 1>::Zero(), TimeHandler{100, 5}};
     EXPECT_TRUE(EvaluateSpline<R3Spline>(two_segment_spline, 105, Null));
 }
 
@@ -58,8 +57,8 @@ TEST(Spline_r3Spline, TestEvaluate) {
 
     // Build a spline with one more control point and test the first position in the now valid second time segment.
     Eigen::Matrix<double, N, K + 1> const five_control_points{{0, 1, 2, 3, 4},  //
-                                                                                             {0, 1, 2, 3, 4},
-                                                                                             {0, 1, 2, 3, 4}};
+                                                              {0, 1, 2, 3, 4},
+                                                              {0, 1, 2, 3, 4}};
     CubicBSplineC3 const two_segment_spline{five_control_points, TimeHandler{reference_t_ns, delta_t_ns}};
 
     // t0_ns + delta_t_ns puts us right at the start of the second spline segment

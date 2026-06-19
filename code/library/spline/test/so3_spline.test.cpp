@@ -22,8 +22,7 @@ TEST(SplineSo3Spline, TestEvaluateValidity) {
     EXPECT_TRUE(EvaluateSpline<So3Spline>(one_segment_spline, 100, Null));
     EXPECT_FALSE(EvaluateSpline<So3Spline>(one_segment_spline, 105, Null));
 
-    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, K + 1>::Zero(),
-                                            TimeHandler{100, 5}};
+    CubicBSplineC3 const two_segment_spline{Eigen::Matrix<double, 3, K + 1>::Zero(), TimeHandler{100, 5}};
     EXPECT_TRUE(EvaluateSpline<So3Spline>(two_segment_spline, 105, Null));
 }
 
