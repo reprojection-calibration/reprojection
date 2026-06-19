@@ -12,8 +12,8 @@ TEST(OptimizationCostFunctions, TestSplineEnergyOptimization) {
     ceres::Problem problem{ceres_state.problem_options};
 
     ceres::CostFunction* const cost_function{SplineEnergy::Create(1)};
-
     spline::Matrix2NK<double> control_points{spline::Matrix2NK<double>::Zero()};
+    // Set one of the control points as an outlier which needs to be optimized back to the minimum energy location.
     control_points.col(1).array() += 1;
 
     problem.AddResidualBlock(cost_function, nullptr,
