@@ -80,10 +80,10 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 TEST(OptimizationExtrinsicOptimization, TestEvaluateImuError) {
     // TODO(Jack): Are we really sure that this test reflects the camera calibration case? In the camera calibration
     // case the trajectory is actually inversed (look at the mvg data generator). Lets try this on real data :)
-    auto const [imu_data, spline]{testing_mocks::GenerateImuData(10, 60)};
+    auto const [imu_data, spline_w_co]{testing_mocks::GenerateImuData(10, 20)};
 
-    ImuCamExtrinsic const extrinsic{Extrinsic{"imu", "cam", Array6d::Zero()}, {0,0,9.81}};
-    auto const errors{optimization::EvaluateImuError(imu_data, extrinsic, spline)};
+    ImuCamExtrinsic const extrinsic{Extrinsic{"imu", "cam", Array6d::Zero()}, {0, 0, 9.81}};
+    auto const errors{optimization::EvaluateImuError(imu_data, extrinsic, spline_w_co)};
 
     EXPECT_EQ(std::size(errors), 195);
     for (auto const& error : errors) {

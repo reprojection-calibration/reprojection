@@ -139,12 +139,12 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
 }  // LCOV_EXCL_LINE
 
 ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic const& extrinsic,
-                           spline::Se3Spline const& spline) {
+                           spline::Se3Spline const& spline_w_co) {
     ImuErrors imu_residuals;
 
     for (auto const timestamp_ns : imu_data | std::views::keys) {
         // TODO(Jack): This logic is now repeated several times... we are missing the point I think. How to fix!?
-        auto const normalized_position{spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.Size())};
+        auto const normalized_position{spline_w_co.GetTimeHandler().SplinePosition(timestamp_ns, spline_w_co.Size())};
         if (not normalized_position.has_value()) {
             continue;  // LCOV_EXCL_LINE
         }
@@ -153,17 +153,17 @@ ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic cons
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(extrinsic.tf.se3_a_b.data());
         for (int j{0}; j < 4; ++j) {
-            parameter_blocks.push_back(spline.ControlPoints().col(i + j).data());
+            parameter_blocks.push_back(spline_w_co.ControlPoints().col(i + j).data());
         }
         ceres::CostFunction const* const cost_function_1{cost_functions::RigidBodyAngularVelocity::Create(
-            imu_data.at(timestamp_ns).angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
+            imu_data.at(timestamp_ns).angular_velocity, u_i, spline_w_co.GetTimeHandler().delta_t_ns_)};
 
         Vector6d residual_i;
         cost_function_1->Evaluate(parameter_blocks.data(), residual_i.topRows<3>().data(), nullptr);
 
         parameter_blocks.insert(std::cbegin(parameter_blocks) + 1, extrinsic.gravity.data());
         ceres::CostFunction const* const cost_function_2{cost_functions::RigidBodyLinearAcceleration::Create(
-            imu_data.at(timestamp_ns).linear_acceleration, u_i, spline.GetTimeHandler().delta_t_ns_)};
+            imu_data.at(timestamp_ns).linear_acceleration, u_i, spline_w_co.GetTimeHandler().delta_t_ns_)};
 
         cost_function_2->Evaluate(parameter_blocks.data(), residual_i.bottomRows<3>().data(), nullptr);
 
