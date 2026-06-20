@@ -33,28 +33,26 @@ class RigidBodyLinearAcceleration {
         auto const so3{control_points.template topRows<3>()};
         auto const r3{control_points.template bottomRows<3>()};
 
-        // TODO(Jack): What is the actual form of a_w?
-        // TODO(Jack): Edit naming to reflect the fact that the imu is actually measuring specific force and not the
-        // motion acceleration.
-        Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
-        Vector3<T> const acc_co{R3Spline::Evaluate<T, Order::Second>(r3, u_i_, delta_t_ns_)};
-
         Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
         Vector3<T> const omega_co{So3Spline::Evaluate<T, Order::First>(so3, u_i_, delta_t_ns_)};
         Vector3<T> const alpha_co{So3Spline::Evaluate<T, Order::Second>(so3, u_i_, delta_t_ns_)};
+        Vector3<T> const acc_co{R3Spline::Evaluate<T, Order::Second>(r3, u_i_, delta_t_ns_)};
         Vector3<T> const acc_imu{TransformRigidBodyAcceleration<T>(tf_imu_co, omega_co, alpha_co, acc_co)};
 
+        // TODO(Jack): Is this really the right way to transform gravity into the IMU frame and then add it to our
+        // predicted/transformed camera accleration to get the specific force?
         Eigen::Map<Eigen::Vector<T, 3> const> aa_imu_co(tf_imu_co_ptr);  // Can we use tf_imu_co instead?
+        Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
         Eigen::Map<Eigen::Vector<T, 3> const> gravity_w(gravity_w_ptr);
         Vector3<T> const gravity_imu{geometry::Exp<T>(aa_imu_co) * geometry::Exp<T>(aa_w_co).inverse() * gravity_w};
 
+        // NOTE(Jack): Imus really measure specific force (i.e. acceleration plus gravity), but our naming throughout
+        // the code base does not reflect this/is not consistent.
         Vector3<T> const specific_force_imu{acc_imu + gravity_imu};
 
         residual[0] = T(acc_imu_[0]) - specific_force_imu[0];
         residual[1] = T(acc_imu_[1]) - specific_force_imu[1];
         residual[2] = T(acc_imu_[2]) - specific_force_imu[2];
-
-        // TODO USE GRAVITY CONSTANT!
         residual[3] = T(gravity * gravity) -
                       (gravity_w[0] * gravity_w[0] + gravity_w[1] * gravity_w[1] + gravity_w[2] * gravity_w[2]);
 
@@ -67,7 +65,6 @@ class RigidBodyLinearAcceleration {
     }
 
     Vector3d acc_imu_;
-
     double u_i_;
     uint64_t delta_t_ns_;
 };
