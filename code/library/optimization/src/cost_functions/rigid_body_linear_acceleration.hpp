@@ -38,17 +38,21 @@ class RigidBodyLinearAcceleration {
         // motion acceleration.
         Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
         Vector3<T> const acc_co{R3Spline::Evaluate<T, Order::Second>(r3, u_i_, delta_t_ns_)};
-        Eigen::Map<Eigen::Vector<T, 3> const> gravity_w(gravity_w_ptr);
-        Vector3<T> const acc_co_XXX{(geometry::Exp<T>(aa_w_co).inverse() * gravity_w) + acc_co};
 
         Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
         Vector3<T> const omega_co{So3Spline::Evaluate<T, Order::First>(so3, u_i_, delta_t_ns_)};
         Vector3<T> const alpha_co{So3Spline::Evaluate<T, Order::Second>(so3, u_i_, delta_t_ns_)};
-        Vector3<T> const acc_imu{TransformRigidBodyAcceleration<T>(tf_imu_co, omega_co, alpha_co, acc_co_XXX)};
+        Vector3<T> const acc_imu{TransformRigidBodyAcceleration<T>(tf_imu_co, omega_co, alpha_co, acc_co)};
 
-        residual[0] = T(acc_imu_[0]) - acc_imu[0];
-        residual[1] = T(acc_imu_[1]) - acc_imu[1];
-        residual[2] = T(acc_imu_[2]) - acc_imu[2];
+        Eigen::Map<Eigen::Vector<T, 3> const> aa_imu_co(tf_imu_co_ptr);  // Can we use tf_imu_co instead?
+        Eigen::Map<Eigen::Vector<T, 3> const> gravity_w(gravity_w_ptr);
+        Vector3<T> const gravity_imu{geometry::Exp<T>(aa_imu_co) * geometry::Exp<T>(aa_w_co).inverse() * gravity_w};
+
+        Vector3<T> const specific_force_imu{acc_imu + gravity_imu};
+
+        residual[0] = T(acc_imu_[0]) - specific_force_imu[0];
+        residual[1] = T(acc_imu_[1]) - specific_force_imu[1];
+        residual[2] = T(acc_imu_[2]) - specific_force_imu[2];
 
         // TODO USE GRAVITY CONSTANT!
         residual[3] = T(gravity * gravity) -
