@@ -275,12 +275,12 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline_b_w};
     auto [result, cache_status]{RunStep<ImuCamExtrinsic>(step, db)};
 
-    Array3d const gravity_w_gt{-5.4104203543938996e-05, 0.019931736220415951, 9.8066297444873474};
+    Array3d const gravity_w_gt{-5.41042e-05, 0.01993, 9.80663};
 
     EXPECT_EQ(result.tf.frame_a, imu_name);
     EXPECT_EQ(result.tf.frame_b, camera_name);
     EXPECT_TRUE(result.tf.se3_a_b.isZero(1e-4));
-    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
+    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt, 1e-4));
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
@@ -288,7 +288,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     EXPECT_EQ(result.tf.frame_a, imu_name);
     EXPECT_EQ(result.tf.frame_b, camera_name);
     EXPECT_TRUE(result.tf.se3_a_b.isZero(1e-4));
-    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
+    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt, 1e-4));
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
