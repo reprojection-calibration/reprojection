@@ -1,6 +1,7 @@
 #include "optimization/extrinsic_optimization.hpp"
 
 #include <ranges>
+#include <thread>
 
 #include "cost_functions/reprojection_error_spline.hpp"
 #include "cost_functions/rigid_body_angular_velocity.hpp"
@@ -85,8 +86,11 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
     // further optimize it here.
     problem.SetParameterBlockConstant(intrinsics_x.intrinsics.data());
 
-    ceres_state.solver_options.minimizer_progress_to_stdout = true;  // REMOVE
-    ceres_state.solver_options.num_threads = 10;                     // DO NOT HARDCODE
+    // TODO(Jack): This should be made a part of the configuration loading! Select a default value based on
+    // hardware_concurrency() but also let the user specify. If threads are not countable default to one.
+    unsigned int const hw_threads{std::thread::hardware_concurrency()};
+    ceres_state.solver_options.num_threads = hw_threads > 1 ? hw_threads - 1 : 1;
+
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
     std::cout << ceres_state.solver_summary.FullReport() << std::endl;  // REMOVE
 
