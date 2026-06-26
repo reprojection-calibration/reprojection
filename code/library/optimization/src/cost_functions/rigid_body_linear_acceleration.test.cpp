@@ -15,7 +15,7 @@ TEST(OptimizationCostFunctions, TestRigidBodyAngularVelocityGravityResidual) {
     Array3d const gravity_w{0, 0, -gravity};
     Array6d const control_point{Array6d::Zero()};
 
-    Array3d residual{-1, -1, -1};
+    Array4d residual{-1, -1, -1, -1};
     bool const success{cost_function(tf_imu_co.data(), gravity_w.data(), control_point.data(), control_point.data(),
                                      control_point.data(), control_point.data(), residual.data())};
     EXPECT_TRUE(success);
