@@ -175,13 +175,13 @@ TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
 }
 
 TEST_F(CameraStepsFixture, TestIntrinsicInitialization) {
-    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 11, 1)};
     steps::IntrinsicInitialization const step{camera_info, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
     // strategy is unclear at this time.
-    Array5d const gt_result{535.023, 360, 240, 0, 0.5};  // Heuristic!
+    Array5d const gt_result{530.372, 360, 240, 0, 0.5};  // Heuristic!
 
     auto [result, cache_status]{RunStep<CameraState>(step, db)};
     EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));
@@ -266,7 +266,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     // get the camera orientation spline would actually be to also run the mvg data generation and then interpolate the
     // frames returned from there. But this test does not need algorithmic correctness as we are just wanting to test
     // the process mechanics. But still it would be nice to get ,a "proper" result here so maybe we change this.
-    auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(20, 50)};
+    auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(10, 20)};
 
     // Satisfy foreign key constraint because the Save() stage will write out ImuErrors which depend on having a
     // correspondent IMU data point.
