@@ -8,6 +8,7 @@
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
+#include "types/physics_constants.hpp"
 
 using namespace reprojection;
 namespace tu = testing_utilities;
@@ -28,11 +29,13 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     spline::Se3Spline const initial_spline{spline::InitializeSe3SplineState(invert_frames, 100)};
 
     std::string const imu_name{"imu"};
-    ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Vector6d::Zero()}, Vector3d::Zero()};
+    ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Vector6d::Zero()},
+                                            Vector3d{0, 0, gravity}};
 
     auto const [optimized_spline, optimized_extrinsic]{optimization::ExtrinsicOptimization(
         imu_data, initial_spline, initial_extrinsic, camera_info, targets, {tu::pinhole_intrinsics})};
 
+    std::cout << optimized_extrinsic.tf.se3_a_b.transpose() << std::endl;
     std::cout << optimized_extrinsic.gravity.transpose() << std::endl;
 
     EXPECT_FALSE(true);
