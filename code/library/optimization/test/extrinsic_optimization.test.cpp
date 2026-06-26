@@ -12,6 +12,11 @@
 using namespace reprojection;
 namespace tu = testing_utilities;
 
+// NOTE(Jack): This test was SO slow in the Debug build which we used in the pipeline/CI for code coverage and testing
+// that we were forced to start using RelWithDebInfo as our build type instead. I think even with that build type the
+// code coverage works fine, but it did change the nature of some of the false positives which I then had to suppress.
+// Bottom line is that this was so slow that we had to find a work around to get it faster and changing the build type
+// seems ok... for now.
 TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     double const duration_s{10};
     CameraInfo const camera_info{"cam", CameraModel::Pinhole, tu::image_bounds};
