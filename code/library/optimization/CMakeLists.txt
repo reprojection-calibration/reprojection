@@ -10,12 +10,10 @@ set(SRC_FILES
 set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
-        database # REMOVE
         eigen_utilities
         geometry
         projection_functions
         spline
-        types
         types_internal
 )
 AddLibrary()

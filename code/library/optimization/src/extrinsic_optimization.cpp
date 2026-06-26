@@ -74,6 +74,7 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
         }
     }
 
+    // Smoothness/minimum energy constraint
     for (int i{0}; i < optimized_spline.Size() - 3; ++i) {
         ceres::CostFunction* const cost_function{cost_functions::SplineEnergy::Create(1)};
         problem.AddResidualBlock(cost_function, nullptr, optimized_spline.MutableControlPoints().col(i).data(),
@@ -92,7 +93,6 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
     ceres_state.solver_options.num_threads = hw_threads > 1 ? hw_threads - 1 : 1;
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
-    std::cout << ceres_state.solver_summary.FullReport() << std::endl;  // REMOVE
 
     return {optimized_spline, optimized_extrinsic};
 }
