@@ -158,8 +158,3 @@ Note that when displaying the target you should turn off any "auto blur" effect 
 example the GNOME Image Viewer, the default on Ubuntu, has "smooth images" settings which applies a blur that is
 intended to make the image more visually appealing. For calibration however this is problem because the feature
 extractor needs sharp exact corners.
-
-
- 
-
-
