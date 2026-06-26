@@ -8,37 +8,33 @@
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
-#include "types/physics_constants.hpp"
 
 using namespace reprojection;
 namespace tu = testing_utilities;
 
 TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
-    double const duration_s{60};
+    double const duration_s{10};
     CameraInfo const camera_info{"cam", CameraModel::Pinhole, tu::image_bounds};
 
-    auto const [targets, frames]{
+    auto const [targets, poses_co_w]{
         testing_mocks::GenerateMvgData(camera_info, CameraState{tu::pinhole_intrinsics}, duration_s, 10)};
-    auto const [imu_data, _]{testing_mocks::GenerateImuData(duration_s, 40)};
+    auto const [imu_data, _]{testing_mocks::GenerateImuData(duration_s, 20)};
 
-    Frames invert_frames;
-    for (auto const& [timestamp_ns, frame_i] : frames) {
-        invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.pose).inverse())}});
+    Frames poses_w_co;
+    for (auto const& [timestamp_ns, pose_co_w] : poses_co_w) {
+        poses_w_co.insert({timestamp_ns, {geometry::Log(geometry::Exp(pose_co_w.pose).inverse())}});
     }
+    spline::Se3Spline const spline_w_co{spline::InitializeSe3SplineState(poses_w_co, 50)};
 
-    spline::Se3Spline const initial_spline{spline::InitializeSe3SplineState(invert_frames, 100)};
+    ImuCamExtrinsic const initial_extrinsic{
+        {"imu", camera_info.sensor_name, Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}},
+        Vector3d{-0.212548, -0.293729, 9.79995}};
 
-    std::string const imu_name{"imu"};
-    ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Vector6d::Zero()},
-                                            Vector3d{0, 0, gravity}};
+    auto const [_1, optimized_extrinsic]{optimization::ExtrinsicOptimization(
+        imu_data, spline_w_co, initial_extrinsic, camera_info, targets, {tu::pinhole_intrinsics})};
 
-    auto const [optimized_spline, optimized_extrinsic]{optimization::ExtrinsicOptimization(
-        imu_data, initial_spline, initial_extrinsic, camera_info, targets, {tu::pinhole_intrinsics})};
-
-    std::cout << optimized_extrinsic.tf.se3_a_b.transpose() << std::endl;
-    std::cout << optimized_extrinsic.gravity.transpose() << std::endl;
-
-    EXPECT_FALSE(true);
+    EXPECT_TRUE(optimized_extrinsic.tf.se3_a_b.isApprox(initial_extrinsic.tf.se3_a_b, 1e-2));
+    EXPECT_TRUE(optimized_extrinsic.gravity.isApprox(initial_extrinsic.gravity, 1e-2));
 }
 
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
