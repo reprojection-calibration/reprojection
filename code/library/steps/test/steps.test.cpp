@@ -7,6 +7,7 @@
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_initialization.hpp"
+#include "steps/extrinsic_optimization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
@@ -292,12 +293,35 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-// TODO ADD TEST FOR EXT OPT
-// TODO ADD TEST FOR EXT OPT
-// TODO ADD TEST FOR EXT OPT
-// TODO ADD TEST FOR EXT OPT
-// TODO ADD TEST FOR EXT OPT
-// TODO ADD TEST FOR EXT OPT
+// TODO(Jack): We should use a test fixture to share the setup from TestExtrinsicInitialization above.
+TEST_F(CameraStepsFixture, TestExtrinsicOptimization) {
+    SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
+
+    std::string const imu_name{"/imu/polaris/123"};
+    database::InsertEntity(db, imu_name, Entity::Imu);
+    database::InsertEntity(db, Extrinsic::EntityId(imu_name, camera_info.sensor_name), Entity::Extrinsic);
+
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
+    SatisfyPoseForeignKeys(targets);
+
+    // NOTE(Jack): See note above in TestExtrinsicInitialization
+    auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(20, 50)};
+    database::InsertStep(db, imu_name, CalibrationStep::ImuDataLoading, "");
+    database::InsertImuData(db, imu_name, imu_data);
+
+    ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Array6d::Zero()}, Array3d::Zero()};
+
+    steps::ExtrinsicOptimization const step{camera_info, targets,    camera_state,
+                                            imu_data,    spline_b_w, initial_extrinsic};
+    auto [result, cache_status]{RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db)};
+
+    auto const [optimized_spline_b_w, optimized_extrinsic]{result};
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    // On rerun with the same inputs it will be a cache hit
+    std::tie(result, cache_status) = RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db);
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
 
 TEST(StepsSteps, TestImuDataLoading) {
     SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
