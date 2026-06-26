@@ -48,6 +48,8 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 
         // Sample target subset and initialize poses
         CameraInfo const camera_info{"", camera_model, {0, width, 0, height}};
+
+        // WARN(Jack): We should have a warning here that we are hardcoding that fact that we need at least ten frames!
         auto const target_subset{SampleMap(targets, 10)};
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
         Frames const initial_poses{PoseInitialization(camera_info, target_subset, {intrinsics_i})};

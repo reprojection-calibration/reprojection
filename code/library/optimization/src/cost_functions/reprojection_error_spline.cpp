@@ -24,8 +24,8 @@ ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const
     } else if (projection_type == CameraModel::UnifiedCameraModel) {
         return ReprojectionErrorSpline_T<UnifiedCameraModel>::Create(pixel, point_w, bounds, u_i, delta_t_ns);
     } else {
-        throw std::runtime_error(
-            "The requested camera model is not supported by the reprojection::optimization::Create() function.");  // LCOV_EXCL_LINE
+        throw std::runtime_error  // LCOV_EXCL_LINE
+            ("The requested camera model is not supported by the reprojection::optimization::Create() function.");  // LCOV_EXCL_LINE
     }
 }
 

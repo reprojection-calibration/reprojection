@@ -15,6 +15,7 @@
 
 namespace reprojection::spline {
 
+// TODO(Jack): Instead of using an assertion here should we use a factory and return std::optional instead?
 TimeHandler::TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns)
     : t0_ns_{t0_ns}, delta_t_ns_{delta_t_ns} {
     assert(delta_t_ns > 0);

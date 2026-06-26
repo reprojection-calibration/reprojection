@@ -33,8 +33,8 @@ void ImageViewer::HandleInput() {
     } else if (*key == KeyboardKey::SpaceBar) {  // LCOV_EXCL_LINE
         paused_ = not paused_;                   // LCOV_EXCL_LINE
     } else {
-        throw std::runtime_error{
-            "LIBRARY IMPLEMENTATION ERROR - unimplemented keyboard input handling"};  // LCOV_EXCL_LINE
+        throw std::runtime_error                                                       // LCOV_EXCL_LINE
+            {"LIBRARY IMPLEMENTATION ERROR - unimplemented keyboard input handling"};  // LCOV_EXCL_LINE
     }
 }
 

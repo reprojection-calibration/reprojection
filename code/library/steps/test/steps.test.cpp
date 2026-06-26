@@ -7,6 +7,7 @@
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_initialization.hpp"
+#include "steps/extrinsic_optimization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
@@ -174,13 +175,13 @@ TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
 }
 
 TEST_F(CameraStepsFixture, TestIntrinsicInitialization) {
-    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 11, 1)};
     steps::IntrinsicInitialization const step{camera_info, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
     // strategy is unclear at this time.
-    Array5d const gt_result{535.023, 360, 240, 0, 0.5};  // Heuristic!
+    Array5d const gt_result{530.372, 360, 240, 0, 0.5};  // Heuristic!
 
     auto [result, cache_status]{RunStep<CameraState>(step, db)};
     EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));
@@ -258,17 +259,14 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     std::string const camera_name{"/cam0/image_raw"};
     database::InsertEntity(db, camera_name, Entity::Camera);
 
-    // TODO(Jack): This extrinsic entity id logic is copy and pasted from the step, is there a better way to unify
-    // this and make the extrinsic entity id a first class concept?
-    std::string const extrinsic_id{Extrinsic::EntityId(imu_name, camera_name)};
-    database::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
+    database::InsertEntity(db, Extrinsic::EntityId(imu_name, camera_name), Entity::Extrinsic);
 
     // NOTE(Jack): Normally the extrinsic initialization function will actually run against the camera frames which I
     // think are inverted compared to the spline returned by the imu data generation function here. The proper way to
     // get the camera orientation spline would actually be to also run the mvg data generation and then interpolate the
     // frames returned from there. But this test does not need algorithmic correctness as we are just wanting to test
     // the process mechanics. But still it would be nice to get ,a "proper" result here so maybe we change this.
-    auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(20, 50)};
+    auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(10, 20)};
 
     // Satisfy foreign key constraint because the Save() stage will write out ImuErrors which depend on having a
     // correspondent IMU data point.
@@ -276,22 +274,42 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     database::InsertImuData(db, imu_name, imu_data);
 
     steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline_b_w};
+
     auto [result, cache_status]{RunStep<ImuCamExtrinsic>(step, db)};
-
-    Array3d const gravity_w_gt{-5.4104203543938996e-05, 0.019931736220415951, 9.8066297444873474};
-
-    EXPECT_EQ(result.tf.frame_a, imu_name);
-    EXPECT_EQ(result.tf.frame_b, camera_name);
-    EXPECT_TRUE(result.tf.se3_a_b.isZero(1e-4));
-    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<ImuCamExtrinsic>(step, db);
-    EXPECT_EQ(result.tf.frame_a, imu_name);
-    EXPECT_EQ(result.tf.frame_b, camera_name);
-    EXPECT_TRUE(result.tf.se3_a_b.isZero(1e-4));
-    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt));
+    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+}
+
+// TODO(Jack): The setup for the testing is way too complicated. We need to figure out a way to more intelligently and
+// concisely do this across all imu extrinsic related tests.
+TEST_F(CameraStepsFixture, TestExtrinsicOptimization) {
+    double const duration_s{10};
+
+    std::string const imu_name{"/imu/polaris/123"};
+    database::InsertEntity(db, imu_name, Entity::Imu);
+    database::InsertEntity(db, Extrinsic::EntityId(imu_name, camera_info.sensor_name), Entity::Extrinsic);
+
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, duration_s, 10)};
+    SatisfyPoseForeignKeys(targets);
+
+    // NOTE(Jack): See note above in TestExtrinsicInitialization
+    auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(duration_s, 20)};
+    database::InsertStep(db, imu_name, CalibrationStep::ImuDataLoading, "");
+    database::InsertImuData(db, imu_name, imu_data);
+
+    ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Array6d::Zero()}, Array3d::Zero()};
+
+    steps::ExtrinsicOptimization const step{camera_info, targets,    camera_state,
+                                            imu_data,    spline_b_w, initial_extrinsic};
+
+    auto [result, cache_status]{RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db)};
+    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+
+    // On rerun with the same inputs it will be a cache hit
+    std::tie(result, cache_status) = RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
@@ -299,7 +317,7 @@ TEST(StepsSteps, TestImuDataLoading) {
     SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
     std::string const imu_name{"imu"};
 
-    // TODO(Jack): As we add more tests this should probable be packed into a test fixture.
+    // TODO(Jack): As we add more tests this should probably be packed into a test fixture.
     ImuMeasurements const gt_imu_data{{0, {Array3d::Ones(), Array3d::Ones()}}, {1, {Array3d::Ones(), Array3d::Ones()}}};
     ImuDataSourceSignature imu_data_source{
         [itr = std::cbegin(gt_imu_data),

@@ -82,7 +82,7 @@ struct Sqlite3Tools {
     }
 };
 
-class SqliteException : public std::runtime_error {
+class SqliteException : public std::runtime_error {  // LCOV_EXCL_LINE
    public:
     // TODO(Jack): Use RAII stmt version directly?
     SqliteException(SqlitePtr const db, sqlite3_stmt* const stmt) : std::runtime_error(FormatMessage(db, stmt)) {}

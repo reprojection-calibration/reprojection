@@ -11,7 +11,7 @@
 using namespace reprojection;
 using namespace reprojection::optimization::cost_functions;
 
-TEST(OptimizationCostFunctions, TestCreate) {
+TEST(OptimizationCostFunctions, TestReprojectionErrorSplineCreate) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
     double const u_i{0};

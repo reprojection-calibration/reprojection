@@ -8,6 +8,7 @@
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_initialization.hpp"
+#include "steps/extrinsic_optimization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
@@ -142,10 +143,23 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
 
             steps::ExtrinsicInitialization const extrinsic_init_step{*imu_name, camera_info.sensor_name, imu_data,
                                                                      spline_init};
-            auto const [extrinsic,
+            auto const [extrinsic_init,
                         extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
             log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
                       ToString(extrinsic_init_cache_status));
+
+            std::cout << geometry::Exp(extrinsic_init.tf.se3_a_b).matrix() << std::endl;
+            std::cout << extrinsic_init.gravity.transpose() << std::endl;
+
+            steps::ExtrinsicOptimization const extrinsic_opt_step{
+                camera_info, targets, optimized_state.camera_state, imu_data, spline_init, extrinsic_init};
+            auto const [result, extrinsic_opt_cache_status]{
+                steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
+            log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.StepType()),
+                      ToString(extrinsic_opt_cache_status));
+
+            std::cout << geometry::Exp(result.second.tf.se3_a_b).matrix() << std::endl;
+            std::cout << result.second.gravity.transpose() << std::endl;
         }
     }
     // LCOV_EXCL_STOP

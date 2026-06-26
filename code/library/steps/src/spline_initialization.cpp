@@ -3,7 +3,7 @@
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
-#include "optimization/camera_imu_calibration.hpp"
+#include "optimization/extrinsic_optimization.hpp"
 #include "steps/spline_initialization.hpp"  // This should be the first header!
 
 namespace reprojection::steps {
@@ -23,8 +23,8 @@ spline::Se3Spline SplineInitialization::Compute() const {
 }
 
 spline::Se3Spline SplineInitialization::Load(SqlitePtr const db) const {
-    auto const control_points{database::ReadControlPoints(db, EntityId(), CalibrationStep::SplineInitialization)};
-    auto const time_handler{database::ReadTimeHandler(db, EntityId(), CalibrationStep::SplineInitialization)};
+    auto const control_points{database::ReadControlPoints(db, EntityId(), StepType())};
+    auto const time_handler{database::ReadTimeHandler(db, EntityId(), StepType())};
 
     if (not time_handler) {
         std::cout << "WE NEED AN ERROR STRATEGY! SplineInitialization::Load()" << std::endl;  // LCOV_EXCL_LINE

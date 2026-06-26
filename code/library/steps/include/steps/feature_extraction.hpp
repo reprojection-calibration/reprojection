@@ -7,14 +7,14 @@
 namespace reprojection::steps {
 
 struct FeatureExtraction {
-    std::string sensor_name_;
+    std::string camera_name_;
     std::shared_ptr<EncodedImages> images_;
     TargetInfo target_info_;
     bool show_extraction_;
 
     static CalibrationStep StepType() { return CalibrationStep::FeatureExtraction; }
 
-    std::string EntityId() const { return sensor_name_; }
+    std::string EntityId() const { return camera_name_; }
 
     std::string HashInputs() const;
 

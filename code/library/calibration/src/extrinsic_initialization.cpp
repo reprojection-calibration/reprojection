@@ -7,6 +7,7 @@
 #include "spline/spline_evaluation.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
+#include "types/physics_constants.hpp"
 #include "types/spline_types.hpp"
 
 namespace reprojection::calibration {
@@ -39,10 +40,9 @@ Vector3d EstimateGravity(CubicBSplineC3 const& so3_spline_w_co, AccelerationMeas
     }
 
     Vector3d const net_acceleration_w{acceleration_w.colwise().mean()};
-    double constexpr g{9.80665};
 
     // TODO(Jack): Should this be negative?
-    return g * net_acceleration_w.normalized();
+    return gravity * net_acceleration_w.normalized();
 }
 
 VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {

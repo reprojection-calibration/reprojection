@@ -24,8 +24,8 @@ std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames
     auto const [r3_control_points, time_handler_b]{InitializeC3SplineState(r3, num_segments)};
 
     if (time_handler_a != time_handler_b) {
-        throw std::runtime_error(
-            "During se3 spline initialization we somehow got two different time handlers!");  // LCOV_EXCL_LINE
+        throw std::runtime_error                                                               // LCOV_EXCL_LINE
+            ("During se3 spline initialization we somehow got two different time handlers!");  // LCOV_EXCL_LINE
     }
 
     Matrix2NXd se3_control_points{2 * N, so3_control_points.cols()};

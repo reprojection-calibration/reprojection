@@ -11,15 +11,15 @@ set -eoux pipefail
 # to develop the ros1 and ros2 applications, but introduced the requirement for this hack! There must be a better way to
 # do this....?
 lcov --capture \
-     --directory /buildroot/library-Debug \
-     --exclude /buildroot/library-Debug/database \
+     --directory /buildroot/library-RelWithDebInfo \
+     --exclude /buildroot/library-RelWithDebInfo/database \
+     --exclude '/opt/*' \
+     --exclude '/usr/*' \
+     --exclude '*.test.cpp' \
      --ignore-errors mismatch,mismatch \
      --output-file coverage.info \
      --rc geninfo_auto_base=1
 
-lcov --output-file coverage.filtered.info \
-     --remove coverage.info '/usr/*' '/opt/*' '*.test.cpp'
-
-genhtml coverage.filtered.info \
+genhtml coverage.info \
         --demangle-cpp \
         --output-directory /buildroot/coverage-report

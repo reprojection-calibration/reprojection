@@ -6,12 +6,18 @@
 
 namespace reprojection::optimization {
 
+// TODO(Jack): This has way too many arguments... is that just how it is? Or a sign that we are missing a clean
+// abstraction?
+std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
+    ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, ImuCamExtrinsic const& initial_extrinsic,
+    CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics);
+
 std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
                                                               CameraMeasurements const& targets,
                                                               CameraState const& camera_state,
                                                               spline::Se3Spline const& spline_w_co);
 
 ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic const& extrinsic,
-                           spline::Se3Spline const& spline);
+                           spline::Se3Spline const& spline_w_co);
 
 }  // namespace  reprojection::optimization

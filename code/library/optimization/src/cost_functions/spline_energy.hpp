@@ -42,7 +42,7 @@ class SplineEnergy {
 
     static ceres::CostFunction* Create(uint64_t const delta_t_ns) {
         // WARN(Jack): Do not hardcode lambda!?
-        spline::CoefficientBlock const omega{spline::BuildOmega(delta_t_ns, 1)};
+        spline::CoefficientBlock const omega{spline::BuildOmega(delta_t_ns, 1e3)};
 
         return new ceres::AutoDiffCostFunction<SplineEnergy, 24, 6, 6, 6, 6>(new SplineEnergy(omega));
     }

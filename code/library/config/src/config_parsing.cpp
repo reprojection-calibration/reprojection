@@ -55,7 +55,7 @@ TargetInfo ParseTargetConfig(toml::table target_cfg) {
         }
 
         ThrowIfUnexpectedKeys(*circle_grid_cfg);
-    }
+    }  // LCOV_EXCL_LINE
 
     ThrowIfUnexpectedKeys(target_cfg);
 

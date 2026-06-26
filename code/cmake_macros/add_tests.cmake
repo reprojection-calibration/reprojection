@@ -19,7 +19,7 @@ macro(AddTests)
                     ${TEST_LINK_LIBRARIES}
             )
 
-            if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+            if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
                 target_compile_options(${TEST_NAME} PRIVATE --coverage)
                 target_link_options(${TEST_NAME} PRIVATE --coverage)
             endif ()

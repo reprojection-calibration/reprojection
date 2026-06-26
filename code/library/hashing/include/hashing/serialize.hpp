@@ -32,6 +32,8 @@ std::string Serialize(EncodedImages const& data);
 
 std::string Serialize(Frames const& data);
 
+std::string Serialize(ImuCamExtrinsic const& data);
+
 std::string Serialize(ImuMeasurements const& data);
 
 std::string Serialize(OptimizationState const& data);
