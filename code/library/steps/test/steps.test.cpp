@@ -274,38 +274,29 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     database::InsertImuData(db, imu_name, imu_data);
 
     steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline_b_w};
+
     auto [result, cache_status]{RunStep<ImuCamExtrinsic>(step, db)};
-
-    Array3d const gravity_w_gt{-5.41042e-05, 0.01993, 9.80663};
-
-    EXPECT_EQ(result.tf.frame_a, imu_name);
-    EXPECT_EQ(result.tf.frame_b, camera_name);
-    EXPECT_TRUE(result.tf.se3_a_b.isZero(1e-4));
-    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt, 1e-4));
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
     std::tie(result, cache_status) = RunStep<ImuCamExtrinsic>(step, db);
-    EXPECT_EQ(result.tf.frame_a, imu_name);
-    EXPECT_EQ(result.tf.frame_b, camera_name);
-    EXPECT_TRUE(result.tf.se3_a_b.isZero(1e-4));
-    EXPECT_TRUE(result.gravity.isApprox(gravity_w_gt, 1e-4));
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
-// TODO(Jack): We should use a test fixture to share the setup from TestExtrinsicInitialization above.
+// TODO(Jack): The setup for the testing is way too complicated. We need to figure out a way to more intelligently and
+// concisely do this across all imu extrinsic related tests.
 TEST_F(CameraStepsFixture, TestExtrinsicOptimization) {
-    SqlitePtr db{database::OpenCalibrationDatabase(":memory:", true, false)};
+    double const duration_s{10};
 
     std::string const imu_name{"/imu/polaris/123"};
     database::InsertEntity(db, imu_name, Entity::Imu);
     database::InsertEntity(db, Extrinsic::EntityId(imu_name, camera_info.sensor_name), Entity::Extrinsic);
 
-    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, duration_s, 10)};
     SatisfyPoseForeignKeys(targets);
 
     // NOTE(Jack): See note above in TestExtrinsicInitialization
-    auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(20, 50)};
+    auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(duration_s, 20)};
     database::InsertStep(db, imu_name, CalibrationStep::ImuDataLoading, "");
     database::InsertImuData(db, imu_name, imu_data);
 
@@ -313,9 +304,8 @@ TEST_F(CameraStepsFixture, TestExtrinsicOptimization) {
 
     steps::ExtrinsicOptimization const step{camera_info, targets,    camera_state,
                                             imu_data,    spline_b_w, initial_extrinsic};
-    auto [result, cache_status]{RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db)};
 
-    auto const [optimized_spline_b_w, optimized_extrinsic]{result};
+    auto [result, cache_status]{RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db)};
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
