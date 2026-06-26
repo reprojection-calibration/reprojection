@@ -14,8 +14,8 @@ CameraState IntrinsicInitialization::Compute() const {
                                                             camera_info_.bounds.u_max, targets_)};
 
     if (not intrinsics.has_value()) {
-        throw std::runtime_error(
-            "We have no error handling strategy for failed IntrinsicInitializationStep::Compute()");  // LCOV_EXCL_LINE
+        throw std::runtime_error                                                                       // LCOV_EXCL_LINE
+            ("We have no error handling strategy for failed IntrinsicInitializationStep::Compute()");  // LCOV_EXCL_LINE
     }
 
     return CameraState{*intrinsics};

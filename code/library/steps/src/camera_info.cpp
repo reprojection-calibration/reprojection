@@ -18,8 +18,8 @@ std::string CameraInfoStep::HashInputs() const { return hashing::HashArguments(s
 
 CameraInfo CameraInfoStep::Compute() const {
     if (images_->size() == 0) {
-        throw std::runtime_error(
-            "we need an error handling strategy for no images to get camera info");  // LCOV_EXCL_LINE
+        throw std::runtime_error                                                      // LCOV_EXCL_LINE
+            ("we need an error handling strategy for no images to get camera info");  // LCOV_EXCL_LINE
     }
 
     // Arbitrarily check the size of the first image
@@ -27,8 +27,8 @@ CameraInfo CameraInfoStep::Compute() const {
 
     // TOD0(Jack): Is this check really needed? Is it possible that an empty image buffer makes it way here?
     if (img.empty()) {
-        throw std::runtime_error(
-            "we need an error handling strategy for empty image to get camera info");  // LCOV_EXCL_LINE
+        throw std::runtime_error                                                        // LCOV_EXCL_LINE
+            ("we need an error handling strategy for empty image to get camera info");  // LCOV_EXCL_LINE
     }
 
     CameraInfo const camera_info{EntityId(),
