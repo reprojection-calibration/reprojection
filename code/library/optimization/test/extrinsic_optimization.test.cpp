@@ -26,6 +26,14 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     }
     spline::Se3Spline const spline_w_co{spline::InitializeSe3SplineState(poses_w_co, 50)};
 
+    // TODO(Jack): These are heuristic values from running the optimization. We start the optimization here so it runs
+    // the test as fast as possible. Ideally the result would actually be the values that the test data was created with
+    // but there is some error here. Instead of getting exactly gravity back or just camera rotation matrix back with
+    // zero translation we get roughly these values back with some errors in all directions. This might be because there
+    // or is a problem with the test data creation or it might be the nature of the problem itself, for example how it
+    // optimizes the spline to have minimum energy. Constraints like that might introduce errors elsewhere as we do not
+    // handle the relative weighting between these things in any intelligent or principled manner. For now these test
+    // values are close enough and serve as the canary in the coal mine :)
     ImuCamExtrinsic const initial_extrinsic{
         {"imu", camera_info.sensor_name, Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}},
         Vector3d{-0.212548, -0.293729, 9.79995}};
