@@ -170,7 +170,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=Debug; \
+    export CMAKE_BUILD_TYPE=RelWithDebInfo; \
     cmake_build_install \
         "/buildroot/library-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/library"
