@@ -43,7 +43,7 @@ class RigidBodyLinearAcceleration {
 
         Vector3<T> const acc_w_co{R3Spline::Evaluate<T, Order::Second>(r3, u_i_, delta_t_ns_)};
         Vector3<T> const acc_co{R_co_w * acc_w_co};
-        
+
         Vector3<T> const acc_imu{TransformRigidBodyAcceleration<T>(tf_imu_co, omega_co, alpha_co, acc_co)};
 
         // TODO(Jack): Is this really the right way to transform gravity into the IMU frame and then add it to our

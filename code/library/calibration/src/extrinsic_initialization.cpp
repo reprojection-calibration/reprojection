@@ -7,9 +7,8 @@
 #include "spline/spline_evaluation.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
-#include "types/spline_types.hpp"
-
 #include "types/physics_constants.hpp"
+#include "types/spline_types.hpp"
 
 namespace reprojection::calibration {
 
