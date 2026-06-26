@@ -36,13 +36,19 @@ class RigidBodyLinearAcceleration {
         Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
         Vector3<T> const omega_co{So3Spline::Evaluate<T, Order::First>(so3, u_i_, delta_t_ns_)};
         Vector3<T> const alpha_co{So3Spline::Evaluate<T, Order::Second>(so3, u_i_, delta_t_ns_)};
-        Vector3<T> const acc_co{R3Spline::Evaluate<T, Order::Second>(r3, u_i_, delta_t_ns_)};
+
+        Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
+        Matrix3<T> const R_w_co{geometry::Exp<T>(aa_w_co)};
+        Matrix3<T> const R_co_w{R_w_co.transpose()};
+
+        Vector3<T> const acc_w_co{R3Spline::Evaluate<T, Order::Second>(r3, u_i_, delta_t_ns_)};
+        Vector3<T> const acc_co{R_co_w * acc_w_co};
+        
         Vector3<T> const acc_imu{TransformRigidBodyAcceleration<T>(tf_imu_co, omega_co, alpha_co, acc_co)};
 
         // TODO(Jack): Is this really the right way to transform gravity into the IMU frame and then add it to our
         // predicted/transformed camera accleration to get the specific force?
         Eigen::Map<Eigen::Vector<T, 3> const> aa_imu_co(tf_imu_co_ptr);  // Can we use tf_imu_co instead?
-        Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
         Eigen::Map<Eigen::Vector<T, 3> const> gravity_w(gravity_w_ptr);
         Vector3<T> const gravity_imu{geometry::Exp<T>(aa_imu_co) * geometry::Exp<T>(aa_w_co).inverse() * gravity_w};
 
