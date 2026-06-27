@@ -7,6 +7,9 @@
 
 namespace reprojection::config {
 
+// TODO(Jack): Should we return a variant here instead so we can specify the reason for the lack of parsing? Because if
+// the value is simply not present that is fine, but if the type is wrong then that is probably actually an error. We
+// need to think about how to more cleanly implement this, the current function does not do it right.
 template <typename T>
 std::optional<T> ExtractValue(std::string_view key, toml::table& cfg) {
     toml::node const* const node{cfg.get(key)};
