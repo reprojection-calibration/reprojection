@@ -4,7 +4,6 @@
 #include <thread>
 
 #include "config/config_loading.hpp"
-#include "config/config_validation.hpp"
 #include "logging/logging.hpp"
 
 #include "parsing_helpers.hpp"
@@ -26,20 +25,28 @@ std::optional<Config> Config::Load(std::filesystem::path const& path) {
         return std::nullopt;
     }
 
-    toml::table const toml_table{std::get<toml::table>(load_result)};
-    if (auto const error{ValidateCalibrationConfig(toml_table)}) {
-        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(error->type), error->msg);
+    toml::table config_table{std::get<toml::table>(load_result)};
+
+    auto const app_table{ExtractTable("application", config_table)};
+    if (not app_table) {
+        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
+                   "missing 'application' table");
+
+        return std::nullopt;
+    }
+    auto const app_result{Application::Parse(*app_table)};
+    if (std::holds_alternative<TomlErrorMsg>(app_result)) {
+        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(std::get<TomlErrorMsg>(app_result).type),
+                   std::get<TomlErrorMsg>(app_result).msg);
 
         return std::nullopt;
     }
 
-    // Now that we have validated the config we have a guarantee that the required_keys are present and therefore can
-    // access them directly.
-
-    auto const app_config{Application::Parse(*toml_table["application"].as_table())};
-
-    return std::nullopt;
+    return Config{std::get<Application>(app_result), {}, std::nullopt, {}};
 }
+
+Config::Config(Application const& _app, Camera const& _camera, std::optional<Imu> const& _imu, Target const& _target)
+    : app{_app}, camera{_camera}, imu{_imu}, target{_target} {}
 
 // TEST AND MOVE
 std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {

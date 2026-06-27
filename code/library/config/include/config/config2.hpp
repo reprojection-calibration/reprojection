@@ -15,10 +15,6 @@ namespace reprojection::config {
 struct Config {
     static std::optional<Config> Load(std::filesystem::path const& path);
 
-   private:
-    Config() = default;
-
-   public:
     struct Application {
         static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);
 
@@ -50,6 +46,10 @@ struct Config {
 
     Workflow QueryWorkflow() const { return imu.has_value() ? Workflow::CameraImu : Workflow::Camera; }
 
+   private:
+    Config(Application const& app, Camera const& camera, std::optional<Imu> const& imu, Target const& target);
+
+   public:
     Application app;
     Camera camera;
     std::optional<Imu> imu;
