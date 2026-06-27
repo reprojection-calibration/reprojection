@@ -10,6 +10,19 @@ namespace reprojection {
 
 // LCOV_EXCL_START
 
+enum class Workflow { Camera, CameraImu };
+
+inline Workflow ToWorkflow(std::string_view workflow) {
+    if (workflow == "camera") {
+        return Workflow::Camera;
+    } else if (workflow == "camera_imu") {
+        return Workflow::CameraImu;
+    } else {
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToWorkflow(): " +
+                                 std::string(workflow));
+    }
+}
+
 enum class Entity { Camera, Extrinsic, Imu, Target };
 
 inline std::string ToString(Entity const entity_id) {
