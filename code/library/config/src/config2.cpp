@@ -1,8 +1,13 @@
 #include "config/config2.hpp"
 
+#include <iostream>  // REMOVE
+#include <thread>
+
 #include "config/config_loading.hpp"
 #include "config/config_validation.hpp"
 #include "logging/logging.hpp"
+
+#include "parsing_helpers.hpp"
 
 namespace reprojection::config {
 
@@ -27,9 +32,42 @@ std::optional<Config> Config::Load(std::filesystem::path const& path) {
 
         return std::nullopt;
     }
-    auto const app_config { Config::Application::Load() }
 
-    return;
+    // Now that we have validated the config we have a guarantee that the required_keys are present and therefore can
+    // access them directly.
+
+    auto const app_config{Application::Parse(*toml_table["application"].as_table())};
+
+    return std::nullopt;
+}
+
+// TEST AND MOVE
+std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {
+    if (cfg.empty()) {
+        return std::nullopt;
+    }
+
+    std::ostringstream oss;
+    oss << "Unexpected keys";
+    for (const auto& [key, value] : cfg) {
+        oss << "  - " << key.str();
+    }
+
+    return oss.str();
+}
+
+std::variant<Config::Application, TomlErrorMsg> Config::Application::Parse(toml::table cfg) {
+    auto const show_extraction{ExtractValue<bool>("show_extraction", cfg)};
+    auto const threads{ExtractValue<int64_t>("threads", cfg)};
+
+    if (auto const result{UnexpectedKeys(cfg)}) {
+        return TomlErrorMsg{TomlError::UnknownKey, *result};
+    }
+
+    int const hw_threads{static_cast<int>(std::thread::hardware_concurrency())};
+
+    return Application{show_extraction ? *show_extraction : false,
+                       threads ? static_cast<int>(*threads) : std::max(1, hw_threads - 1)};
 }
 
 }  // namespace reprojection::config

@@ -3,9 +3,11 @@
 #include <array>
 #include <filesystem>
 #include <string>
+#include <variant>
 
 #include <toml++/toml.hpp>
 
+#include "types/config.hpp"
 #include "types/enums.hpp"
 
 namespace reprojection::config {
@@ -18,27 +20,27 @@ struct Config {
 
    public:
     struct Application {
-        static std::optional<Application> Load(toml::table cfg);
+        static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);
 
         bool show_extraction;
         int threads;
     };
 
     struct Camera {
-        static std::optional<Camera> Load(toml::table cfg);
+        static std::optional<Camera> Parse(toml::table cfg);
 
         std::string sensor_name;
         CameraModel camera_model;
     };
 
     struct Imu {
-        static std::optional<Imu> Load(toml::table cfg);
+        static std::optional<Imu> Parse(toml::table cfg);
 
         std::string sensor_name;
     };
 
     struct Target {
-        static std::optional<Target> Load(toml::table cfg);
+        static std::optional<Target> Parse(toml::table cfg);
 
         std::array<int, 2> size;
         TargetType target_type;
