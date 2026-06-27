@@ -5,6 +5,22 @@
 #include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;
+using TemporaryFile = testing_utilities::TemporaryFile;
+
+TEST(ConfigConfig2, TestConfigLoad) {
+    static constexpr std::string_view table_content{R"(
+        [application]
+        show_extraction = true
+        threads = 5
+    )"};
+    TemporaryFile const config_file{".toml", table_content};
+
+    auto result{config::Config::Load(config_file.Path())};
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->app.show_extraction, true);
+    EXPECT_EQ(result->app.threads, 5);
+}
 
 TEST(ConfigConfig2, TestConfigApplicationParse) {
     static constexpr std::string_view empty_table{R"(

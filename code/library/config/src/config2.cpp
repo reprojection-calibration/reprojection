@@ -16,6 +16,33 @@ auto const log{logging::Get("config")};
 
 }
 
+// TEST AND MOVE
+// TEST AND MOVE
+// TEST AND MOVE
+// TEST AND MOVE
+std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {
+    if (cfg.empty()) {
+        return std::nullopt;
+    }
+
+    std::ostringstream oss;
+    for (bool first{true}; auto const& [key, value] : cfg) {
+        if (first) {
+            oss << "{";
+            first = false;
+        } else {
+            oss << ", ";
+        }
+
+        oss << "'" << key.str() << "': ";
+        value.visit([&oss](auto const& v) { oss << v; });
+    }
+
+    oss << "}";
+
+    return oss.str();
+}
+
 std::optional<Config> Config::Load(std::filesystem::path const& path) {
     auto const load_result{LoadConfigFile(path)};
     if (std::holds_alternative<TomlErrorMsg>(load_result)) {
@@ -42,35 +69,17 @@ std::optional<Config> Config::Load(std::filesystem::path const& path) {
         return std::nullopt;
     }
 
+    if (auto const result{UnexpectedKeys(config_table)}) {
+        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::UnknownKey), *result);
+
+        return std::nullopt;
+    }
+
     return Config{std::get<Application>(app_result), {}, std::nullopt, {}};
 }
 
 Config::Config(Application const& _app, Camera const& _camera, std::optional<Imu> const& _imu, Target const& _target)
     : app{_app}, camera{_camera}, imu{_imu}, target{_target} {}
-
-// TEST AND MOVE
-std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {
-    if (cfg.empty()) {
-        return std::nullopt;
-    }
-
-    std::ostringstream oss;
-    for (bool first{true}; auto const& [key, value] : cfg) {
-        if (first) {
-            oss << "{";
-            first = false;
-        } else {
-            oss << ", ";
-        }
-
-        oss << "'" << key.str() << "': ";
-        value.visit([&oss](auto const& v) { oss << v; });
-    }
-
-    oss << "}";
-
-    return oss.str();
-}
 
 std::variant<Config::Application, TomlErrorMsg> Config::Application::Parse(toml::table cfg) {
     auto const show_extraction{ExtractValue<bool>("show_extraction", cfg)};
