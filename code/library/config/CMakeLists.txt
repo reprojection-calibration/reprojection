@@ -25,6 +25,7 @@ set(TEST_LINK_LIBRARIES
 set(TESTS
         src/enum_string_converters.test.cpp
         src/parse_ceres_solver_options.test.cpp
+        src/parsing_helpers.test.cpp
         src/toml_helpers.test.cpp
         test/config2.test.cpp
         test/config_loading.test.cpp

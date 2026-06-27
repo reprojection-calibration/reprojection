@@ -9,15 +9,21 @@ namespace reprojection::config {
 
 template <typename T>
 std::optional<T> ExtractValue(std::string_view key, toml::table& cfg) {
-    if (auto const node{cfg.get(key)}) {
-        T const value{node->as<T>()->get()};
-        cfg.erase(key);
-
-        return value;
-    } else {
+    toml::node const* const node{cfg.get(key)};
+    if (node == nullptr) {
         return std::nullopt;
     }
-}  // LCOV_EXCL_LINE
+
+    toml::value<T> const* const value_node{node->as<T>()};
+    if (value_node == nullptr) {
+        return std::nullopt;
+    }
+
+    T const value{value_node->get()};
+    cfg.erase(key);
+
+    return value;
+}
 
 inline std::optional<toml::table> ExtractTable(std::string_view key, toml::table& cfg) {
     auto const* const node{cfg.get(key)};
