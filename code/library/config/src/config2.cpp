@@ -69,13 +69,28 @@ std::optional<Config> Config::Load(std::filesystem::path const& path) {
         return std::nullopt;
     }
 
+    auto const camera_table{ExtractTable("camera", config_table)};
+    if (not camera_table) {
+        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
+                   "missing 'camera' table");
+
+        return std::nullopt;
+    }
+    auto const camera_result{Camera::Parse(*camera_table)};
+    if (std::holds_alternative<TomlErrorMsg>(camera_result)) {
+        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(std::get<TomlErrorMsg>(camera_result).type),
+                   std::get<TomlErrorMsg>(camera_result).msg);
+
+        return std::nullopt;
+    }
+
     if (auto const result{UnexpectedKeys(config_table)}) {
         log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::UnknownKey), *result);
 
         return std::nullopt;
     }
 
-    return Config{std::get<Application>(app_result), {}, std::nullopt, {}};
+    return Config{std::get<Application>(app_result), std::get<Camera>(camera_result), std::nullopt, {}};
 }
 
 Config::Config(Application const& _app, Camera const& _camera, std::optional<Imu> const& _imu, Target const& _target)

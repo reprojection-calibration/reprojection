@@ -12,6 +12,10 @@ TEST(ConfigConfig2, TestConfigLoad) {
         [application]
         show_extraction = true
         threads = 5
+
+        [camera]
+        sensor_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
     )"};
     TemporaryFile const config_file{".toml", table_content};
 
@@ -20,6 +24,8 @@ TEST(ConfigConfig2, TestConfigLoad) {
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->app.show_extraction, true);
     EXPECT_EQ(result->app.threads, 5);
+    EXPECT_EQ(result->camera.sensor_name, "/cam0/image_raw");
+    EXPECT_EQ(result->camera.camera_model, CameraModel::DoubleSphere);
 }
 
 TEST(ConfigConfig2, TestConfigApplicationParse) {
