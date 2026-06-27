@@ -42,3 +42,41 @@ TEST(ConfigConfig2, TestConfigApplicationParse) {
     EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
     EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
 }
+
+TEST(ConfigConfig2, TestConfigCameraParse) {
+    static constexpr std::string_view empty_table{R"(
+    )"};
+    toml::table toml{toml::parse(empty_table)};
+
+    // Parsing an empty table is an error for us here because the sensor name and camera model do not have sensible
+    // default values.
+    auto result{config::Config::Camera::Parse(toml)};
+    EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::MissingKey);
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'sensor_name': 'N/A', 'camera_model': 'N/A'}");
+
+    static constexpr std::string_view full_table{R"(
+        sensor_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+    )"};
+    toml = toml::parse(full_table);
+
+    // Parsing a full table lets us specify all values.
+    result = config::Config::Camera::Parse(toml);
+    EXPECT_TRUE(std::holds_alternative<config::Config::Camera>(result));
+    EXPECT_EQ(std::get<config::Config::Camera>(result).sensor_name, "/cam0/image_raw");
+    EXPECT_EQ(std::get<config::Config::Camera>(result).camera_model, CameraModel::DoubleSphere);
+
+    static constexpr std::string_view unwanted_keys_table{R"(
+        sensor_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+        key1 = "value1"
+        key2 = [1, 2]
+    )"};
+    toml = toml::parse(unwanted_keys_table);
+
+    result = config::Config::Camera::Parse(toml);
+    EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
+}

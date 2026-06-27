@@ -84,8 +84,11 @@ std::variant<Config::Camera, TomlErrorMsg> Config::Camera::Parse(toml::table cfg
     auto const camera_model{ExtractValue<std::string>("camera_model", cfg)};
 
     if (not sensor_name or not camera_model) {
-        // TODO ERROR MESSAGE!
-        return TomlErrorMsg{TomlError::MissingKey, ""};
+        std::string const error_msg{fmt::format("{{'sensor_name': '{}', 'camera_model': '{}'}}",
+                                                sensor_name ? *sensor_name : "N/A",
+                                                camera_model ? *camera_model : "N/A")};
+
+        return TomlErrorMsg{TomlError::MissingKey, error_msg};
     }
 
     if (auto const result{UnexpectedKeys(cfg)}) {
