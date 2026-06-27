@@ -12,11 +12,11 @@
 
 namespace reprojection::config {
 
-struct CalibrationConfig {
-    static CalibrationConfig Load(std::filesystem::path const& path);
+struct Config {
+    static Config Load(std::filesystem::path const& path);
 
    private:
-    CalibrationConfig() = default;
+    Config() = default;
 
    public:
     struct Application {
