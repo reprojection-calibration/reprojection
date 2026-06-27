@@ -12,6 +12,7 @@ set(SRC_FILES
 set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
+        logging
         tomlplusplus::tomlplusplus
         types
         types_internal
