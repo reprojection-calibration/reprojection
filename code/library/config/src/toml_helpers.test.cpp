@@ -18,7 +18,7 @@ TEST(ConfigTomlHelpers, TestValidateConfigKeys) {
     config::TomlKeys const required_keys{{"table", TomlType::Table}};
     auto result{ValidateConfigKeys(config, required_keys)};
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, TomlError::UnknownKey);
+    EXPECT_EQ(result->type, TomlError::UnknownKey);
 
     // If we explicitly allow unknown keys then it's no problem.
     result = ValidateConfigKeys(config, required_keys, {}, true);
@@ -44,12 +44,12 @@ TEST(ConfigTomlHelpers, TestValidateRequiredKeys) {
     required_keys = {{"table", TomlType::Table}, {"table.key1", TomlType::String}, {"table.key2", TomlType::String}};
     result = config::ValidateRequiredKeys(config, required_keys);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, TomlError::MissingKey);
+    EXPECT_EQ(result->type, TomlError::MissingKey);
 
     required_keys = {{"table", TomlType::Table}, {"table.key1", TomlType::Integer}};
     result = config::ValidateRequiredKeys(config, required_keys);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, TomlError::IncorrectType);
+    EXPECT_EQ(result->type, TomlError::IncorrectType);
 }
 
 TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
@@ -72,7 +72,7 @@ TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
 
     result = ValidatePossibleKeys(config, possible_keys, false);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, TomlError::UnknownKey);
+    EXPECT_EQ(result->type, TomlError::UnknownKey);
     result = ValidatePossibleKeys(config, possible_keys, true);
     EXPECT_FALSE(result.has_value());
 
@@ -87,10 +87,10 @@ TEST(ConfigTomlHelpers, TestGetValidatePossibleKeys) {
 
     result = ValidatePossibleKeys(config, possible_keys, false);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, TomlError::IncorrectType);
+    EXPECT_EQ(result->type, TomlError::IncorrectType);
     result = ValidatePossibleKeys(config, possible_keys, true);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result->error, TomlError::IncorrectType);
+    EXPECT_EQ(result->type, TomlError::IncorrectType);
 }
 
 TEST(ConfigTomlHelpers, TestGetTomlPaths) {

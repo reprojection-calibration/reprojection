@@ -47,5 +47,5 @@ TEST(ConfigValidateConfig, TestValidateCalibrationConfiginvalid_config) {
 
     auto const result{config::ValidateCalibrationConfig(toml)};
     ASSERT_TRUE(result.has_value());
-    ASSERT_EQ(result->error, TomlError::MissingKey);
+    ASSERT_EQ(result->type, TomlError::MissingKey);
 }

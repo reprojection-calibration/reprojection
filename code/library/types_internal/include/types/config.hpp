@@ -12,7 +12,7 @@ enum class TomlError {
 };
 
 struct TomlErrorMsg {
-    TomlError error;
+    TomlError type;
     std::string msg;
 };
 
