@@ -98,4 +98,20 @@ std::variant<Config::Camera, TomlErrorMsg> Config::Camera::Parse(toml::table cfg
     return Camera{*sensor_name, ToCameraModel(*camera_model)};
 }
 
+std::variant<Config::Imu, TomlErrorMsg> Config::Imu::Parse(toml::table cfg) {
+    auto const sensor_name{ExtractValue<std::string>("sensor_name", cfg)};
+
+    if (not sensor_name) {
+        std::string const error_msg{fmt::format("{{'sensor_name': '{}'}}", sensor_name ? *sensor_name : "N/A")};
+
+        return TomlErrorMsg{TomlError::MissingKey, error_msg};
+    }
+
+    if (auto const result{UnexpectedKeys(cfg)}) {
+        return TomlErrorMsg{TomlError::UnknownKey, *result};
+    }
+
+    return Imu{*sensor_name};
+}
+
 }  // namespace reprojection::config

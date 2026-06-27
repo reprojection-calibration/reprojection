@@ -34,13 +34,13 @@ struct Config {
     };
 
     struct Imu {
-        static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);
+        static std::variant<Imu, TomlErrorMsg> Parse(toml::table cfg);
 
         std::string sensor_name;
     };
 
     struct Target {
-        static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);
+        static std::variant<Target, TomlErrorMsg> Parse(toml::table cfg);
 
         std::array<int, 2> size;
         TargetType target_type;

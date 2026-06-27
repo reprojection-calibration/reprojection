@@ -80,3 +80,37 @@ TEST(ConfigConfig2, TestConfigCameraParse) {
     EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
     EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
 }
+
+
+TEST(ConfigConfig2, TestConfigImuParse) {
+    static constexpr std::string_view empty_table{R"(
+    )"};
+    toml::table toml{toml::parse(empty_table)};
+
+    auto result{config::Config::Imu::Parse(toml)};
+    EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::MissingKey);
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'sensor_name': 'N/A'}");
+
+    static constexpr std::string_view full_table{R"(
+        sensor_name = "/imu0"
+    )"};
+    toml = toml::parse(full_table);
+
+    // Parsing a full table lets us specify all values.
+    result = config::Config::Imu::Parse(toml);
+    EXPECT_TRUE(std::holds_alternative<config::Config::Imu>(result));
+    EXPECT_EQ(std::get<config::Config::Imu>(result).sensor_name, "/imu0");
+
+    static constexpr std::string_view unwanted_keys_table{R"(
+        sensor_name = "/imu0"
+        key1 = "value1"
+        key2 = [1, 2]
+    )"};
+    toml = toml::parse(unwanted_keys_table);
+
+    result = config::Config::Imu::Parse(toml);
+    EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
+}
