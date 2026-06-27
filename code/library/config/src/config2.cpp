@@ -1,6 +1,6 @@
 #include "config/config2.hpp"
 
-#include <iostream>  // REMOVE
+#include <format>
 #include <thread>
 
 #include "config/config_loading.hpp"
@@ -112,6 +112,38 @@ std::variant<Config::Imu, TomlErrorMsg> Config::Imu::Parse(toml::table cfg) {
     }
 
     return Imu{*sensor_name};
+}
+
+std::variant<Config::Target, TomlErrorMsg> Config::Target::Parse(toml::table cfg) {
+    auto const type{ExtractValue<std::string>("type", cfg)};
+    auto const pattern_size{ExtractArray<int, 2>("pattern_size", cfg)};
+
+    if (not type or not pattern_size) {
+        std::string const error_msg{
+            fmt::format("{{'type': '{}', 'pattern_size': '{}'}}", type ? *type : "N/A",
+                        pattern_size ? fmt::format("[{}, {}]", (*pattern_size)[0], (*pattern_size)[1]) : "N/A")};
+        return TomlErrorMsg{TomlError::MissingKey, error_msg};
+    }
+
+    // Optional value for all target types
+    auto const unit_dimension{ExtractValue<double>("unit_dimension", cfg)};
+
+    // Optional value only for circle grid targets
+    TargetType const target_type{ToTargetType(*type)};
+    std::optional<bool> asymmetric;
+    if (auto circle_grid_cfg{ExtractTable("circle_grid", cfg)}) {
+        asymmetric = ExtractValue<bool>("asymmetric", *circle_grid_cfg);
+
+        if (auto const result{UnexpectedKeys(*circle_grid_cfg)}) {
+            return TomlErrorMsg{TomlError::UnknownKey, *result};
+        }
+    }
+
+    if (auto const result{UnexpectedKeys(cfg)}) {
+        return TomlErrorMsg{TomlError::UnknownKey, *result};
+    }
+
+    return Target{target_type, *pattern_size, unit_dimension ? *unit_dimension : 1.0, asymmetric ? *asymmetric : false};
 }
 
 }  // namespace reprojection::config

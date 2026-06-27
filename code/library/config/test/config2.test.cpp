@@ -15,6 +15,7 @@ TEST(ConfigConfig2, TestConfigApplicationParse) {
     auto result{config::Config::Application::Parse(toml)};
     EXPECT_TRUE(std::holds_alternative<config::Config::Application>(result));
     EXPECT_EQ(std::get<config::Config::Application>(result).show_extraction, false);
+    // NOTE(Jack): We use greater than or equal here because we do not know how many threads a computer will have.
     EXPECT_GE(std::get<config::Config::Application>(result).threads, 1);
 
     static constexpr std::string_view full_table{R"(
@@ -32,6 +33,7 @@ TEST(ConfigConfig2, TestConfigApplicationParse) {
     static constexpr std::string_view unwanted_keys_table{R"(
         show_extraction = true
         threads = 5
+
         key1 = "value1"
         key2 = [1, 2]
     )"};
@@ -70,6 +72,7 @@ TEST(ConfigConfig2, TestConfigCameraParse) {
     static constexpr std::string_view unwanted_keys_table{R"(
         sensor_name = "/cam0/image_raw"
         camera_model = "double_sphere"
+
         key1 = "value1"
         key2 = [1, 2]
     )"};
@@ -80,7 +83,6 @@ TEST(ConfigConfig2, TestConfigCameraParse) {
     EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
     EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
 }
-
 
 TEST(ConfigConfig2, TestConfigImuParse) {
     static constexpr std::string_view empty_table{R"(
@@ -97,13 +99,13 @@ TEST(ConfigConfig2, TestConfigImuParse) {
     )"};
     toml = toml::parse(full_table);
 
-    // Parsing a full table lets us specify all values.
     result = config::Config::Imu::Parse(toml);
     EXPECT_TRUE(std::holds_alternative<config::Config::Imu>(result));
     EXPECT_EQ(std::get<config::Config::Imu>(result).sensor_name, "/imu0");
 
     static constexpr std::string_view unwanted_keys_table{R"(
         sensor_name = "/imu0"
+
         key1 = "value1"
         key2 = [1, 2]
     )"};
@@ -113,4 +115,76 @@ TEST(ConfigConfig2, TestConfigImuParse) {
     EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
     EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
     EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
+}
+
+TEST(ConfigConfig2, TestConfigTargetParse) {
+    static constexpr std::string_view empty_table{R"(
+    )"};
+    toml::table toml{toml::parse(empty_table)};
+
+    auto result{config::Config::Target::Parse(toml)};
+    EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::MissingKey);
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'type': 'N/A', 'pattern_size': 'N/A'}");
+
+    static constexpr std::string_view required_table{R"(
+        type = "checkerboard"
+        pattern_size = [3,4]
+    )"};
+    toml = toml::parse(required_table);
+
+    result = config::Config::Target::Parse(toml);
+    EXPECT_TRUE(std::holds_alternative<config::Config::Target>(result));
+    EXPECT_EQ(std::get<config::Config::Target>(result).target_type, TargetType::Checkerboard);
+    EXPECT_EQ(std::get<config::Config::Target>(result).size[0], 3);
+    EXPECT_EQ(std::get<config::Config::Target>(result).size[1], 4);
+    EXPECT_EQ(std::get<config::Config::Target>(result).unit_dimension, 1);
+    EXPECT_EQ(std::get<config::Config::Target>(result).asymmetric, false);
+
+    static constexpr std::string_view full_table{R"(
+        type = "circle_grid"
+        pattern_size = [3,4]
+        unit_dimension = 1.1
+
+        [circle_grid]
+        asymmetric = true
+    )"};
+    toml = toml::parse(full_table);
+
+    result = config::Config::Target::Parse(toml);
+    EXPECT_TRUE(std::holds_alternative<config::Config::Target>(result));
+    EXPECT_EQ(std::get<config::Config::Target>(result).target_type, TargetType::CircleGrid);
+    EXPECT_EQ(std::get<config::Config::Target>(result).unit_dimension, 1.1);
+    EXPECT_EQ(std::get<config::Config::Target>(result).asymmetric, true);
+
+    static constexpr std::string_view unwanted_keys_table{R"(
+        type = "checkerboard"
+        pattern_size = [3,4]
+
+        key1 = "value1"
+        key2 = [1, 2]
+    )"};
+    toml = toml::parse(unwanted_keys_table);
+
+    result = config::Config::Target::Parse(toml);
+    EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
+
+    static constexpr std::string_view unwanted_keys_table_2{R"(
+        type = "checkerboard"
+        pattern_size = [3,4]
+
+        [circle_grid]
+        asymmetric = true
+
+        key11 = "value1"
+        key22 = [1, 2]
+    )"};
+    toml = toml::parse(unwanted_keys_table_2);
+
+    result = config::Config::Target::Parse(toml);
+    EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key11': 'value1', 'key22': [ 1, 2 ]}");
 }
