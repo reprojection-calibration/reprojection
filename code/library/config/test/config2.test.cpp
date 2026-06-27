@@ -16,16 +16,29 @@ TEST(ConfigConfig2, TestConfigLoad) {
         [camera]
         sensor_name = "/cam0/image_raw"
         camera_model = "double_sphere"
+
+        [imu]
+        sensor_name = "/imu0"
+
+        [target]
+        type = "checkerboard"
+        pattern_size = [3,4]
     )"};
     TemporaryFile const config_file{".toml", table_content};
 
     auto result{config::Config::Load(config_file.Path())};
 
     ASSERT_TRUE(result.has_value());
+
     EXPECT_EQ(result->app.show_extraction, true);
     EXPECT_EQ(result->app.threads, 5);
     EXPECT_EQ(result->camera.sensor_name, "/cam0/image_raw");
     EXPECT_EQ(result->camera.camera_model, CameraModel::DoubleSphere);
+    ASSERT_TRUE(result->imu.has_value());
+    EXPECT_EQ(result->target.target_type, TargetType::Checkerboard);
+    EXPECT_EQ(result->target.size[0], 3);
+    EXPECT_EQ(result->target.size[1], 4);
+    EXPECT_EQ(result->imu->sensor_name, "/imu0");
 }
 
 TEST(ConfigConfig2, TestConfigApplicationParse) {

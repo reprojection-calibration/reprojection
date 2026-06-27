@@ -44,12 +44,21 @@ std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {
 }
 
 // TODO ADD CONSTRAINTS ON T
+// TODO(Jack): How do we handle the case of the imu table which is optional, therefore we do not want to log an error,
+// but it also might have errors that we do want to log? At this time (27.06.2026) this is not handled well at all...
 template <typename T>
 std::optional<T> ParseXxx(std::string_view table_name, toml::table& main_table) {
     auto const sub_table{ExtractTable(table_name, main_table)};
     if (not sub_table) {
-        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
-                   std::format("table '{}' not found", table_name));
+        // TODO(Jack): Hack to prevent the imu log showing up as an error when it is totally normal not to have an IMU
+        // table! we need real solution here.
+        if (table_name == "imu") {
+            log->debug("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
+                       std::format("table '{}' not found", table_name));
+        } else {
+            log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
+                       std::format("table '{}' not found", table_name));
+        }
 
         return std::nullopt;
     }
@@ -76,13 +85,23 @@ std::optional<Config> Config::Load(std::filesystem::path const& path) {
 
     toml::table config_table{std::get<toml::table>(load_result)};
 
-    auto const app{ParseXxx<Config::Application>("application", config_table)};
+    auto const app{ParseXxx<Application>("application", config_table)};
     if (not app) {
         return std::nullopt;
     }
 
-    auto const camera{ParseXxx<Config::Camera>("camera", config_table)};
+    auto const camera{ParseXxx<Camera>("camera", config_table)};
     if (not camera) {
+        return std::nullopt;
+    }
+
+    // TODO(Jack): How do we handle the case where there might really be an error with the imu table or it might just
+    // not be there because there is no imu data. Does our current code handle this well?
+    // Imu is not required which is why we do not return early if nullopt is returned here.
+    auto const imu{ParseXxx<Imu>("imu", config_table)};
+
+    auto const target{ParseXxx<Target>("target", config_table)};
+    if (not target) {
         return std::nullopt;
     }
 
@@ -92,7 +111,7 @@ std::optional<Config> Config::Load(std::filesystem::path const& path) {
         return std::nullopt;
     }
 
-    return Config{*app, *camera, std::nullopt, {}};
+    return Config{*app, *camera, imu, *target};
 }
 
 Config::Config(Application const& _app, Camera const& _camera, std::optional<Imu> const& _imu, Target const& _target)
