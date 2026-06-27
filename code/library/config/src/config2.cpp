@@ -48,10 +48,19 @@ std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {
     }
 
     std::ostringstream oss;
-    oss << "Unexpected keys";
-    for (const auto& [key, value] : cfg) {
-        oss << "  - " << key.str();
+    for (bool first{true}; auto const& [key, value] : cfg) {
+        if (first) {
+            oss << "{";
+            first = false;
+        } else {
+            oss << ", ";
+        }
+
+        oss << "'" << key.str() << "': ";
+        value.visit([&oss](auto const& v) { oss << v; });
     }
+
+    oss << "}";
 
     return oss.str();
 }
@@ -68,6 +77,22 @@ std::variant<Config::Application, TomlErrorMsg> Config::Application::Parse(toml:
 
     return Application{show_extraction ? *show_extraction : false,
                        threads ? static_cast<int>(*threads) : std::max(1, hw_threads - 1)};
+}
+
+std::variant<Config::Camera, TomlErrorMsg> Config::Camera::Parse(toml::table cfg) {
+    auto const sensor_name{ExtractValue<std::string>("sensor_name", cfg)};
+    auto const camera_model{ExtractValue<std::string>("camera_model", cfg)};
+
+    if (not sensor_name or not camera_model) {
+        // TODO ERROR MESSAGE!
+        return TomlErrorMsg{TomlError::MissingKey, ""};
+    }
+
+    if (auto const result{UnexpectedKeys(cfg)}) {
+        return TomlErrorMsg{TomlError::UnknownKey, *result};
+    }
+
+    return Camera{*sensor_name, ToCameraModel(*camera_model)};
 }
 
 }  // namespace reprojection::config

@@ -32,13 +32,13 @@ TEST(ConfigConfig2, TestConfigApplicationParse) {
     static constexpr std::string_view unwanted_keys_table{R"(
         show_extraction = true
         threads = 5
-        random1 = "bad1"
-        random2 = "bad2"
+        key1 = "value1"
+        key2 = [1, 2]
     )"};
     toml = toml::parse(unwanted_keys_table);
 
     result = config::Config::Application::Parse(toml);
     EXPECT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
     EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::UnknownKey);
-    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "Unexpected keys  - random1  - random2");
+    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
 }

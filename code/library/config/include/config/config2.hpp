@@ -27,20 +27,20 @@ struct Config {
     };
 
     struct Camera {
-        static std::optional<Camera> Parse(toml::table cfg);
+        static std::variant<Camera, TomlErrorMsg> Parse(toml::table cfg);
 
         std::string sensor_name;
         CameraModel camera_model;
     };
 
     struct Imu {
-        static std::optional<Imu> Parse(toml::table cfg);
+        static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);
 
         std::string sensor_name;
     };
 
     struct Target {
-        static std::optional<Target> Parse(toml::table cfg);
+        static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);
 
         std::array<int, 2> size;
         TargetType target_type;
