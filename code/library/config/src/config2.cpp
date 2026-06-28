@@ -149,9 +149,7 @@ std::variant<Config::Imu, TomlErrorMsg> Config::Imu::Parse(toml::table cfg) {
     auto const sensor_name{ExtractValue<std::string>("sensor_name", cfg)};
 
     if (not sensor_name) {
-        std::string const error_msg{fmt::format("{{'sensor_name': '{}'}}", sensor_name ? *sensor_name : "N/A")};
-
-        return TomlErrorMsg{TomlError::MissingKey, error_msg};
+        return TomlErrorMsg{TomlError::MissingKey, "{'sensor_name': 'N/A'}"};
     }
 
     if (auto const result{UnexpectedKeys(cfg)}) {

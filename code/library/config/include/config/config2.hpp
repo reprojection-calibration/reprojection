@@ -69,8 +69,6 @@ struct Config {
         bool asymmetric;
     };
 
-    Workflow QueryWorkflow() const { return imu.has_value() ? Workflow::CameraImu : Workflow::Camera; }
-
    private:
     Config(Application const& app, Camera const& camera, std::optional<Imu> const& imu, Target const& target);
 

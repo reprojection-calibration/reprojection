@@ -18,9 +18,7 @@
 #include "steps/target_info.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
-
 // cppcheck-suppress missingInclude
-#include "config/config2.hpp"
 #include "testing_utilities/generated/minimum_config.hpp"
 #include "types/io.hpp"
 
