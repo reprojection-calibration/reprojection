@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "config/config_parse.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace reprojection;
 

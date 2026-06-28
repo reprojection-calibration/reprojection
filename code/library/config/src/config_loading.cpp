@@ -1,4 +1,4 @@
-#include "../include/config/config_loading.hpp"
+#include "config/config_loading.hpp"
 
 #include <variant>
 

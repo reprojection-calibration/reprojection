@@ -3,7 +3,6 @@
 #include <format>
 #include <thread>
 
-
 #include "logging/logging.hpp"
 
 #include "parsing_helpers.hpp"
@@ -15,8 +14,6 @@ namespace {
 auto const log{logging::Get("config")};
 
 }
-
-
 
 std::optional<Config> Config::Parse(toml::table cfg) {
     auto const app{ParseSubtable<Application>(cfg)};
