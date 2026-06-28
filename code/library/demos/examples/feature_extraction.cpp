@@ -2,7 +2,7 @@
 
 #include "application/cli_utils.hpp"
 #include "application/image_source.hpp"
-#include "config/config2.hpp"
+#include "config/config_parse.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "image_viewer/image_viewer.hpp"
 

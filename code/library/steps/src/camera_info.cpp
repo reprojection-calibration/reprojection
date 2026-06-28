@@ -2,7 +2,7 @@
 
 #include <toml++/toml.h>
 
-#include "config/config2.hpp"
+#include "config/config_parse.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"

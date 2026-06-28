@@ -2,7 +2,7 @@
 
 #include <ranges>
 
-#include "config/config2.hpp"
+#include "config/config_parse.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"

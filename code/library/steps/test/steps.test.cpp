@@ -3,7 +3,7 @@
 #include <ranges>
 #include <string_view>
 
-#include "config/config2.hpp"
+#include "config/config_parse.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_initialization.hpp"

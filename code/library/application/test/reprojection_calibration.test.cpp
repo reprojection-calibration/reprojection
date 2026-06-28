@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "config/config2.hpp"
+#include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"

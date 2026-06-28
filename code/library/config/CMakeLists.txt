@@ -1,8 +1,8 @@
 set(LIBRARY_NAME "config")
 
 set(SRC_FILES
-        src/config2.cpp
         src/config_loading.cpp
+        src/config_parse.cpp
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen
@@ -18,7 +18,7 @@ set(TEST_LINK_LIBRARIES
 )
 set(TESTS
         src/parsing_helpers.test.cpp
-        test/config2.test.cpp
         test/config_loading.test.cpp
+        test/config_parse.test.cpp
 )
 AddTests()
