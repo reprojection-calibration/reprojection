@@ -2,6 +2,8 @@
 
 namespace reprojection::config {
 
+
+
 enum class TomlType {
     Array,
     Boolean,

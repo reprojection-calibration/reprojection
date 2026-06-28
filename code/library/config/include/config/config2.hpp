@@ -12,7 +12,6 @@
 
 namespace reprojection::config {
 
-// MOVE TO TYPES?
 enum class ConfigTable { Application, Camera, Imu, Target };
 
 inline std::string ToString(ConfigTable const config_table) {

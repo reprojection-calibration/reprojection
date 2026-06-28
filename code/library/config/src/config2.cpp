@@ -42,10 +42,18 @@ std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {
     return oss.str();
 }
 
-// TODO ADD CONSTRAINTS ON T
+template <typename T>
+concept IsConfigStruct = requires(toml::table& cfg) {
+    { cfg } -> std::same_as<toml::table&>;
+    { T::Parse(cfg) } -> std::same_as<std::variant<T, TomlErrorMsg>>;
+
+    { T::TableType() } -> std::same_as<ConfigTable>;
+};
+
 // TODO(Jack): How do we handle the case of the imu table which is optional, therefore we do not want to log an error,
 // but it also might have errors that we do want to log? At this time (27.06.2026) this is not handled well at all...
 template <typename T>
+    requires IsConfigStruct<T>
 std::optional<T> ParseXxx(toml::table& main_table) {
     std::string const table_name{ToString(T::TableType())};
 
