@@ -84,9 +84,6 @@ file
 from. That configuration file is used in all integration and smoke testing which mean it stays up to date. Please
 adapt this to your data and save your configuration file with your data.
 
-For a full list of the required and optional parameters please
-see [config_validation.cpp](code/library/config/src/config_validation.cpp) directly.
-
 > [!IMPORTANT]
 > For ROS1 and ROS2 data the `sensor_name` must match the image topic being calibrated exactly.
 
