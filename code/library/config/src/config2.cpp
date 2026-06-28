@@ -3,9 +3,9 @@
 #include <format>
 #include <thread>
 
-#include "config/config_loading.hpp"
 #include "logging/logging.hpp"
 
+#include "config_loading.hpp"
 #include "parsing_helpers.hpp"
 
 namespace reprojection::config {

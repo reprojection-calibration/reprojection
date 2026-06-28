@@ -1,4 +1,4 @@
-#include "config/config_loading.hpp"
+#include "config_loading.hpp"
 
 #include <gtest/gtest.h>
 
