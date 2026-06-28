@@ -17,6 +17,7 @@ std::optional<T> ExtractValue(std::string_view key, toml::table& cfg) {
         return std::nullopt;
     }
 
+    // TODO(Jack): As a temporary solution to not returning a variant here we can instead throw here if the type is bad.
     toml::value<T> const* const value_node{node->as<T>()};
     if (value_node == nullptr) {
         return std::nullopt;

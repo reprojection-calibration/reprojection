@@ -12,11 +12,31 @@
 
 namespace reprojection::config {
 
+// MOVE TO TYPES
+enum class ConfigTable { Application, Camera, Imu, Target };
+
+inline std::string ToString(ConfigTable const config_table) {
+    if (config_table == ConfigTable::Application) {
+        return "application";
+    } else if (config_table == ConfigTable::Camera) {
+        return "camera";
+    } else if (config_table == ConfigTable::Imu) {
+        return "imu";
+    } else if (config_table == ConfigTable::Target) {
+        return "target";
+    } else {
+        throw std::runtime_error(
+            "LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(ConfigTable)");
+    }
+}
+
 struct Config {
     static std::optional<Config> Load(std::filesystem::path const& path);
 
     struct Application {
         static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);
+
+        static ConfigTable TableType() { return ConfigTable::Application; }
 
         bool show_extraction;
         int threads;
@@ -25,6 +45,8 @@ struct Config {
     struct Camera {
         static std::variant<Camera, TomlErrorMsg> Parse(toml::table cfg);
 
+        static ConfigTable TableType() { return ConfigTable::Camera; }
+
         std::string sensor_name;
         CameraModel camera_model;
     };
@@ -32,11 +54,15 @@ struct Config {
     struct Imu {
         static std::variant<Imu, TomlErrorMsg> Parse(toml::table cfg);
 
+        static ConfigTable TableType() { return ConfigTable::Imu; }
+
         std::string sensor_name;
     };
 
     struct Target {
         static std::variant<Target, TomlErrorMsg> Parse(toml::table cfg);
+
+        static ConfigTable TableType() { return ConfigTable::Target; }
 
         TargetType target_type;
         std::array<int, 2> size;
