@@ -12,8 +12,8 @@ std::string ToString(ConfigTable const config_table) {
     } else if (config_table == ConfigTable::Target) {
         return "target";
     } else {
-        throw std::runtime_error(
-            "LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(ConfigTable)");
+        throw std::runtime_error                                                                       // LCOV_EXCL_LINE
+            ("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(ConfigTable)");  // LCOV_EXCL_LINE
     }
 }
 

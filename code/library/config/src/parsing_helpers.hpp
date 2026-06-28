@@ -106,10 +106,11 @@ std::optional<T> ParseSubtable(toml::table& main_table) {
 
     auto const parse_result{T::Parse(*sub_table)};
     if (std::holds_alternative<TomlErrorMsg>(parse_result)) {
-        xxx::log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(std::get<TomlErrorMsg>(parse_result).type),
-                        std::get<TomlErrorMsg>(parse_result).msg);
+        xxx::log->error("{{'toml_error': '{}', 'message': '{}'}}",            // LCOV_EXCL_LINE
+                        ToString(std::get<TomlErrorMsg>(parse_result).type),  // LCOV_EXCL_LINE
+                        std::get<TomlErrorMsg>(parse_result).msg);            // LCOV_EXCL_LINE
 
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 
     return std::get<T>(parse_result);
