@@ -37,7 +37,6 @@ std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {
         oss << "'" << key.str() << "': ";
         value.visit([&oss](auto const& v) { oss << v; });
     }
-
     oss << "}";
 
     return oss.str();
@@ -84,7 +83,6 @@ std::optional<Config> Config::Load(std::filesystem::path const& path) {
 
         return std::nullopt;
     }
-
     toml::table config_table{std::get<toml::table>(load_result)};
 
     auto const app{ParseXxx<Application>(config_table)};
