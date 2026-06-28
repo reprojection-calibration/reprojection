@@ -79,22 +79,13 @@ std::optional<T> ParseXxx(toml::table& main_table) {
     return std::get<T>(parse_result);
 }
 
-std::optional<Config> Config::Load(std::filesystem::path const& path) {
-    auto const load_result{LoadConfigFile(path)};
-    if (std::holds_alternative<TomlErrorMsg>(load_result)) {
-        TomlErrorMsg const error{std::get<TomlErrorMsg>(load_result)};
-        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(error.type), error.msg);
-
-        return std::nullopt;
-    }
-    toml::table config_table{std::get<toml::table>(load_result)};
-
-    auto const app{ParseXxx<Application>(config_table)};
+std::optional<Config> Config::Parse(toml::table cfg) {
+    auto const app{ParseXxx<Application>(cfg)};
     if (not app) {
         return std::nullopt;
     }
 
-    auto const camera{ParseXxx<Camera>(config_table)};
+    auto const camera{ParseXxx<Camera>(cfg)};
     if (not camera) {
         return std::nullopt;
     }
@@ -102,14 +93,14 @@ std::optional<Config> Config::Load(std::filesystem::path const& path) {
     // TODO(Jack): How do we handle the case where there might really be an error with the imu table or it might just
     // not be there because there is no imu data. Does our current code handle this well?
     // Imu is not required which is why we do not return early if nullopt is returned here.
-    auto const imu{ParseXxx<Imu>(config_table)};
+    auto const imu{ParseXxx<Imu>(cfg)};
 
-    auto const target{ParseXxx<Target>(config_table)};
+    auto const target{ParseXxx<Target>(cfg)};
     if (not target) {
         return std::nullopt;
     }
 
-    if (auto const result{UnexpectedKeys(config_table)}) {
+    if (auto const result{UnexpectedKeys(cfg)}) {
         log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::UnknownKey), *result);
 
         return std::nullopt;

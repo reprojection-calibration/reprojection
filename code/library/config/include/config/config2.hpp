@@ -30,7 +30,7 @@ inline std::string ToString(ConfigTable const config_table) {
 }
 
 struct Config {
-    static std::optional<Config> Load(std::filesystem::path const& path);
+    static std::optional<Config> Parse(toml::table cfg);
 
     struct Application {
         static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);

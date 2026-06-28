@@ -2,17 +2,14 @@
 
 #include <gtest/gtest.h>
 
-#include "testing_utilities/temporary_file.hpp"
-
 using namespace reprojection;
-using TemporaryFile = testing_utilities::TemporaryFile;
 
-TEST(ConfigConfig2, TestConfigLoad) {
+TEST(ConfigConfig2, TestConfigParse) {
     static constexpr std::string_view empty_table{R"(
     )"};
-    TemporaryFile const empty_config_file{".toml", empty_table};
+    toml::table const empty_toml{toml::parse(empty_table)};
 
-    auto result{config::Config::Load(empty_config_file.Path())};
+    auto result{config::Config::Parse(empty_toml)};
     EXPECT_FALSE(result.has_value());
 
     static constexpr std::string_view full_table{R"(
@@ -31,9 +28,9 @@ TEST(ConfigConfig2, TestConfigLoad) {
         type = "checkerboard"
         pattern_size = [3,4]
     )"};
-    TemporaryFile const full_config_file{".toml", full_table};
+    toml::table const full_toml{toml::parse(full_table)};
 
-    result = config::Config::Load(full_config_file.Path());
+    result = config::Config::Parse(full_toml);
     ASSERT_TRUE(result.has_value());
 
     EXPECT_EQ(result->app.show_extraction, true);

@@ -17,8 +17,8 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        test/config_loading.test.cpp
         src/parsing_helpers.test.cpp
         test/config2.test.cpp
+        test/config_loading.test.cpp
 )
 AddTests()
