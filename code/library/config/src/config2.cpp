@@ -59,15 +59,11 @@ std::optional<T> ParseXxx(toml::table& main_table) {
 
     auto const sub_table{ExtractTable(table_name, main_table)};
     if (not sub_table) {
+        std::string const msg{fmt::format("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
+                                          std::format("missing required table '{}'", table_name))};
         // TODO(Jack): Hack to prevent the imu log showing up as an error when it is totally normal not to have an IMU
-        // table! we need real solution here.
-        if (table_name == "imu") {
-            log->debug("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
-                       std::format("table '{}' not found", table_name));
-        } else {
-            log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
-                       std::format("table '{}' not found", table_name));
-        }
+        // table! We need real solution here.
+        T::TableType() == ConfigTable::Imu ? log->debug(msg) : log->error(msg);
 
         return std::nullopt;
     }

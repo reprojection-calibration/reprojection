@@ -8,7 +8,14 @@ using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
 TEST(ConfigConfig2, TestConfigLoad) {
-    static constexpr std::string_view table_content{R"(
+    static constexpr std::string_view empty_table{R"(
+    )"};
+    TemporaryFile const empty_config_file{".toml", empty_table};
+
+    auto result{config::Config::Load(empty_config_file.Path())};
+    EXPECT_FALSE(result.has_value());
+
+    static constexpr std::string_view full_table{R"(
         [application]
         show_extraction = true
         threads = 5
@@ -24,10 +31,9 @@ TEST(ConfigConfig2, TestConfigLoad) {
         type = "checkerboard"
         pattern_size = [3,4]
     )"};
-    TemporaryFile const config_file{".toml", table_content};
+    TemporaryFile const full_config_file{".toml", full_table};
 
-    auto result{config::Config::Load(config_file.Path())};
-
+    result = config::Config::Load(full_config_file.Path());
     ASSERT_TRUE(result.has_value());
 
     EXPECT_EQ(result->app.show_extraction, true);
