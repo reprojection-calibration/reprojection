@@ -124,7 +124,7 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     if (config.contains("imu")) {
         auto const result{config::Config::Imu::Parse(*config["imu"].as_table())};
         if (std::holds_alternative<TomlErrorMsg>(result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"}; // LCOV_EXCL_LINE
+            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
         }
 
         std::string const imu_name{std::get<config::Config::Imu>(result).sensor_name};
