@@ -16,7 +16,7 @@ CameraInfoStep::CameraInfoStep(toml::table const& sensor_config, std::shared_ptr
     // step. This means we can handle all the errors at one top level instead of throughout the code.
     auto const result{config::Config::Camera::Parse(sensor_config)};
     if (std::holds_alternative<TomlErrorMsg>(result)) {
-        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
     }
 
     sensor_name_ = std::get<config::Config::Camera>(result).sensor_name;

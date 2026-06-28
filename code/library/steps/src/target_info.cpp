@@ -19,7 +19,7 @@ std::string TargetInfoStep::HashInputs() const {
 TargetInfo TargetInfoStep::Compute() const {
     auto const result{config::Config::Target::Parse(*target_config_.as_table())};
     if (std::holds_alternative<TomlErrorMsg>(result)) {
-        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
     }
 
     // TODO(Jack): Here we see that the intermediate config::Config::Target type is little redundant because it is
