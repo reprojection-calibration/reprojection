@@ -3,6 +3,7 @@ set(LIBRARY_NAME "config")
 set(SRC_FILES
         src/config_loading.cpp
         src/config_parse.cpp
+        src/parsing_helpers.cpp
 )
 set(LINK_LIBRARIES
         Eigen3::Eigen

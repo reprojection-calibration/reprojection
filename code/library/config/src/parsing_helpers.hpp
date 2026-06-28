@@ -1,11 +1,21 @@
 #pragma once
 
-#include <stdexcept>
 #include <string_view>
 
 #include <toml++/toml.hpp>
 
+#include "config/enums.hpp"
+#include "logging/logging.hpp"
+#include "types/config.hpp"
+
 namespace reprojection::config {
+
+// TODO(Jack): Clion warning about unnamed namspaces in header files. Is this ok to do this at all? What is a good name?
+namespace xxx {
+
+auto const log{logging::Get("config")};
+
+}
 
 // TODO(Jack): Should we return a variant here instead so we can specify the reason for the lack of parsing? Because if
 // the value is simply not present that is fine, but if the type is wrong then that is probably actually an error. We
@@ -67,5 +77,46 @@ std::optional<std::array<T, N>> ExtractArray(std::string_view key, toml::table& 
 
     return result;
 }
+
+template <typename T>
+concept IsConfigStruct = requires(toml::table& cfg) {
+    { cfg } -> std::same_as<toml::table&>;
+    { T::Parse(cfg) } -> std::same_as<std::variant<T, TomlErrorMsg>>;
+
+    { T::TableType() } -> std::same_as<ConfigTable>;
+};
+
+// TODO(Jack): How do we handle the case of the imu table which is optional, therefore we do not want to log an error,
+// but it also might have errors that we do want to log? At this time (27.06.2026) this is not handled well at all...
+template <typename T>
+    requires IsConfigStruct<T>
+std::optional<T> ParseSubtable(toml::table& main_table) {
+    std::string const table_name{ToString(T::TableType())};
+
+    auto const sub_table{ExtractTable(table_name, main_table)};
+    if (not sub_table) {
+        std::string const msg{fmt::format("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::MissingKey),
+                                          std::format("missing required table '{}'", table_name))};
+        // TODO(Jack): Hack to prevent the imu log showing up as an error when it is totally normal not to have an IMU
+        // table! We need real solution here.
+        T::TableType() == ConfigTable::Imu ? xxx::log->debug(msg) : xxx::log->error(msg);
+
+        return std::nullopt;
+    }
+
+    auto const parse_result{T::Parse(*sub_table)};
+    if (std::holds_alternative<TomlErrorMsg>(parse_result)) {
+        xxx::log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(std::get<TomlErrorMsg>(parse_result).type),
+                        std::get<TomlErrorMsg>(parse_result).msg);
+
+        return std::nullopt;
+    }
+
+    return std::get<T>(parse_result);
+}
+
+std::string ToString(ConfigTable const config_table);
+
+std::optional<std::string> UnexpectedKeys(toml::table const& cfg);
 
 }  // namespace reprojection::config

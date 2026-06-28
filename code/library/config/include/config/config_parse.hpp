@@ -1,33 +1,16 @@
 #pragma once
 
 #include <array>
-#include <filesystem>
 #include <string>
 #include <variant>
 
 #include <toml++/toml.hpp>
 
+#include "config/enums.hpp"
 #include "types/config.hpp"
 #include "types/enums.hpp"
 
 namespace reprojection::config {
-
-enum class ConfigTable { Application, Camera, Imu, Target };
-
-inline std::string ToString(ConfigTable const config_table) {
-    if (config_table == ConfigTable::Application) {
-        return "application";
-    } else if (config_table == ConfigTable::Camera) {
-        return "camera";
-    } else if (config_table == ConfigTable::Imu) {
-        return "imu";
-    } else if (config_table == ConfigTable::Target) {
-        return "target";
-    } else {
-        throw std::runtime_error(
-            "LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(ConfigTable)");
-    }
-}
 
 struct Config {
     static std::optional<Config> Parse(toml::table cfg);
