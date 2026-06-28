@@ -2,8 +2,7 @@
 
 #include <toml++/toml.h>
 
-#include "config/config_parsing.hpp"
-#include "config/config_validation.hpp"
+#include "config/config_parse.hpp"
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
@@ -17,7 +16,18 @@ std::string TargetInfoStep::HashInputs() const {
     return hashing::HashArguments(oss.str(), sensor_name_);
 }
 
-TargetInfo TargetInfoStep::Compute() const { return config::ParseTargetConfig(*target_config_.as_table()); }
+TargetInfo TargetInfoStep::Compute() const {
+    auto const result{config::Config::Target::Parse(*target_config_.as_table())};
+    if (std::holds_alternative<TomlErrorMsg>(result)) {
+        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
+    }
+
+    // TODO(Jack): Here we see that the intermediate config::Config::Target type is little redundant because it is
+    // basically exactly the TargetInfo type. We should unify these into one single type.
+    auto const config{std::get<config::Config::Target>(result)};
+
+    return {config.target_type, config.size[0], config.size[1], config.unit_dimension, config.asymmetric};
+}
 
 TargetInfo TargetInfoStep::Load(SqlitePtr const db) const {
     auto const target_info{database::ReadTargetInfo(db, EntityId())};

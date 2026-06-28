@@ -2,7 +2,6 @@
 
 #include "application/cli_utils.hpp"
 #include "config/config_loading.hpp"
-#include "config/config_validation.hpp"
 #include "database/calibration_database.hpp"
 #include "logging/logging.hpp"
 
@@ -44,16 +43,12 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
     return path_config;
 }
 
-std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path) {
+std::optional<toml::table> LoadConfig(fs::path const& config_path) {
     auto const loaded_config{config::LoadConfigFile(config_path)};
     if (std::holds_alternative<TomlErrorMsg>(loaded_config)) {
         auto const error_msg{std::get<TomlErrorMsg>(loaded_config)};
-        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(error_msg.error), error_msg.msg);
-        return std::nullopt;
-    }
+        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(error_msg.type), error_msg.msg);
 
-    if (auto const error_msg{config::ValidateCalibrationConfig(std::get<toml::table>(loaded_config))}) {
-        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(error_msg->error), error_msg->msg);
         return std::nullopt;
     }
 

@@ -1,6 +1,5 @@
 #include "feature_extraction/target_extraction.hpp"
 
-#include "config/config_validation.hpp"
 #include "logging/logging.hpp"
 #include "types/calibration_types.hpp"
 #include "types/enums.hpp"
@@ -41,9 +40,9 @@ std::unique_ptr<TargetExtractor> CreateTargetExtractor(TargetInfo const& target_
     } else if (target_info.target_type == TargetType::Aprilgrid3) {
         return std::make_unique<Aprilgrid3Extractor>(pattern_size, target_info.unit_dimension);
     } else {
-        throw std::runtime_error(  // LCOV_EXCL_LINE
-            "LIBRARY IMPLEMENTATION ERROR - CreateTargetExtractor() invalid feature extractor type: " +  // LCOV_EXCL_LINE
-            ToString(target_info.target_type));  // LCOV_EXCL_LINE
+        throw std::runtime_error  // LCOV_EXCL_LINE
+            ("LIBRARY IMPLEMENTATION ERROR - CreateTargetExtractor() invalid feature extractor type: " +  // LCOV_EXCL_LINE
+             ToString(target_info.target_type));  // LCOV_EXCL_LINE
     }
 }
 

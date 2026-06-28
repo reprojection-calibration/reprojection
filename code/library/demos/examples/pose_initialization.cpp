@@ -4,14 +4,10 @@
 #include <toml++/toml.hpp>
 
 #include "application/reprojection_calibration.hpp"
-#include "config/config_parsing.hpp"
+#include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
-#include "database/database_read.hpp"  // REMOVE
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
-#include "steps/extrinsic_initialization.hpp"  // REMOVE
-#include "steps/spline_initialization.hpp"     // REMOVE
-#include "steps/step_runner.hpp"               // REMOVE
 
 using namespace reprojection;
 
@@ -43,13 +39,18 @@ int main() {
     // the database.
 
     try {
-        auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
-        CameraInfo const camera_info{sensor_name, camera_model, {0, 512, 0, 512}};
+        auto const cam_result{config::Config::Camera::Parse(*config["camera"].as_table())};
+        if (std::holds_alternative<TomlErrorMsg>(cam_result)) {
+            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+        }
+        CameraInfo const camera_info{std::get<config::Config::Camera>(cam_result).sensor_name,
+                                     std::get<config::Config::Camera>(cam_result).camera_model,
+                                     {0, 512, 0, 512}};
 
         // Camera stuff
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
 
-        database::InsertStep(db, sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
                              "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e");
@@ -59,10 +60,14 @@ int main() {
                              "5d87595c7c8f53d8c355f8b889374c6d1d1cd4bed1472da698725bd51777385a");
 
         // Imu stuff
-        auto const imu_name{config::ParseImuConfig(*config["imu"].as_table())};
-        database::InsertEntity(db, *imu_name, Entity::Imu);  // Unprotected optional access!!!
+        auto const imu_result{config::Config::Imu::Parse(*config["imu"].as_table())};
+        if (std::holds_alternative<TomlErrorMsg>(imu_result)) {
+            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+        }
+        database::InsertEntity(db, std::get<config::Config::Imu>(imu_result).sensor_name, Entity::Imu);
 
-        database::InsertStep(db, *imu_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
+        database::InsertStep(db, std::get<config::Config::Imu>(imu_result).sensor_name, CalibrationStep::ImuDataLoading,
+                             hashing::Sha256(""));
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }

@@ -2,7 +2,7 @@
 
 #include "application/cli_utils.hpp"
 #include "application/image_source.hpp"
-#include "config/config_parsing.hpp"
+#include "config/config_parse.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "image_viewer/image_viewer.hpp"
 
@@ -36,8 +36,17 @@ int main(int argc, char* argv[]) {
         image_feed = std::make_unique<application::VideoCapture>(0);
     }
 
-    toml::table const config{toml::parse_file(*config_file)};
-    TargetInfo const target_info{config::ParseTargetConfig(*config["target"].as_table())};
+    toml::table const config_table{toml::parse_file(*config_file)};
+
+    // TODO(Jack): This conversion logic is now at least repeated here and in the target info step exactly the same,
+    // this could be good place for a reusable config parsing function instead of copy and paste.
+    auto const result{config::Config::Target::Parse(*config_table["target"].as_table())};
+    if (std::holds_alternative<TomlErrorMsg>(result)) {
+        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+    }
+    auto const config{std::get<config::Config::Target>(result)};
+    TargetInfo const target_info{config.target_type, config.size[0], config.size[1], config.unit_dimension,
+                                 config.asymmetric};
 
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
 
