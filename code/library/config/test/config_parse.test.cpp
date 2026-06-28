@@ -4,14 +4,7 @@
 
 using namespace reprojection;
 
-TEST(ConfigConfig2, TestConfigParse) {
-    static constexpr std::string_view empty_table{R"(
-    )"};
-    toml::table const empty_toml{toml::parse(empty_table)};
-
-    auto result{config::Config::Parse(empty_toml)};
-    EXPECT_FALSE(result.has_value());
-
+TEST(ConfigConfigParse, TestConfigParse) {
     static constexpr std::string_view full_table{R"(
         [application]
         show_extraction = true
@@ -28,9 +21,9 @@ TEST(ConfigConfig2, TestConfigParse) {
         type = "checkerboard"
         pattern_size = [3,4]
     )"};
-    toml::table const full_toml{toml::parse(full_table)};
+    toml::table const full_config{toml::parse(full_table)};
 
-    result = config::Config::Parse(full_toml);
+    auto result{config::Config::Parse(full_config)};
     ASSERT_TRUE(result.has_value());
 
     EXPECT_EQ(result->app.show_extraction, true);
@@ -42,9 +35,53 @@ TEST(ConfigConfig2, TestConfigParse) {
     EXPECT_EQ(result->target.size[0], 3);
     EXPECT_EQ(result->target.size[1], 4);
     EXPECT_EQ(result->imu->sensor_name, "/imu0");
+
+    // Evaluate all the error conditions - remove application table
+    toml::table const no_application{[full_config]() {
+        toml::table temp{full_config};
+        temp.erase("application");
+
+        return temp;
+    }()};
+
+    result = config::Config::Parse(no_application);
+    EXPECT_FALSE(result.has_value());
+
+    // Remove camera table
+    toml::table const no_camera{[full_config]() {
+        toml::table temp{full_config};
+        temp.erase("camera");
+
+        return temp;
+    }()};
+
+    result = config::Config::Parse(no_camera);
+    EXPECT_FALSE(result.has_value());
+
+    // Remove target table
+    toml::table const no_target{[full_config]() {
+        toml::table temp{full_config};
+        temp.erase("target");
+
+        return temp;
+    }()};
+
+    result = config::Config::Parse(no_target);
+    EXPECT_FALSE(result.has_value());
+
+    // Last error condition - add an extra unwanted key
+    toml::table const extra_key{[full_config]() {
+        toml::table temp{full_config};
+        temp.insert("blah", 1.1);
+
+        return temp;
+    }()};
+
+    result = config::Config::Parse(extra_key);
+    EXPECT_FALSE(result.has_value());
 }
 
-TEST(ConfigConfig2, TestConfigApplicationParse) {
+TEST(ConfigConfigParse, TestConfigApplicationParse) {
     static constexpr std::string_view empty_table{R"(
     )"};
     toml::table toml{toml::parse(empty_table)};
@@ -83,7 +120,7 @@ TEST(ConfigConfig2, TestConfigApplicationParse) {
     EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
 }
 
-TEST(ConfigConfig2, TestConfigCameraParse) {
+TEST(ConfigConfigParse, TestConfigCameraParse) {
     static constexpr std::string_view empty_table{R"(
     )"};
     toml::table toml{toml::parse(empty_table)};
@@ -122,7 +159,7 @@ TEST(ConfigConfig2, TestConfigCameraParse) {
     EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
 }
 
-TEST(ConfigConfig2, TestConfigImuParse) {
+TEST(ConfigConfigParse, TestConfigImuParse) {
     static constexpr std::string_view empty_table{R"(
     )"};
     toml::table toml{toml::parse(empty_table)};
@@ -155,7 +192,7 @@ TEST(ConfigConfig2, TestConfigImuParse) {
     EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, "{'key1': 'value1', 'key2': [ 1, 2 ]}");
 }
 
-TEST(ConfigConfig2, TestConfigTargetParse) {
+TEST(ConfigConfigParse, TestConfigTargetParse) {
     static constexpr std::string_view empty_table{R"(
     )"};
     toml::table toml{toml::parse(empty_table)};
