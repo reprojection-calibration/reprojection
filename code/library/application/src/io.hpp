@@ -20,8 +20,6 @@ struct PathConfig {
 
 std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* const argv[]);
 
-std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path);
-
 std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path);
 
 }  // namespace reprojection::application

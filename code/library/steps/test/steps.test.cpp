@@ -3,7 +3,7 @@
 #include <ranges>
 #include <string_view>
 
-#include "config/config_parsing.hpp"
+#include "config/config2.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_initialization.hpp"
@@ -20,6 +20,7 @@
 #include "testing_utilities/constants.hpp"
 
 // cppcheck-suppress missingInclude
+#include "config/config2.hpp"
 #include "testing_utilities/generated/minimum_config.hpp"
 #include "types/io.hpp"
 
@@ -34,8 +35,14 @@ class CameraStepsFixture : public ::testing::Test {
 
         config = toml::parse(testing_utilities::minimum_config);
 
-        auto const [sensor_name, camera_model]{config::ParseCameraConfig(*config["camera"].as_table())};
-        camera_info = CameraInfo{sensor_name, camera_model, testing_utilities::image_bounds};
+        auto const result{config::Config::Camera::Parse(*config["camera"].as_table())};
+        if (std::holds_alternative<TomlErrorMsg>(result)) {
+            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+        }
+
+        camera_info =
+            CameraInfo{std::get<config::Config::Camera>(result).sensor_name,
+                       std::get<config::Config::Camera>(result).camera_model, testing_utilities::image_bounds};
 
         // WARN(Jack): Make sure all tests that use this are really a camera!!!
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
@@ -101,7 +108,14 @@ class ImageSourceFixture : public CameraStepsFixture {
 
         // TODO(Jack): This conversion logic is now at least repeated here and in the target info step exactly the same,
         // this could be good place for a reusable config parsing function instead of copy and paste.
-        target_info = config::ParseTargetConfig(*config["target"].as_table());
+        auto const result{config::Config::Target::Parse(*config["target"].as_table())};
+        if (std::holds_alternative<TomlErrorMsg>(result)) {
+            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+        }
+        auto const config{std::get<config::Config::Target>(result)};
+
+        target_info =
+            TargetInfo{config.target_type, config.size[0], config.size[1], config.unit_dimension, config.asymmetric};
     }
 
     std::shared_ptr<EncodedImages> encoded_images;

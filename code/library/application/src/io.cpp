@@ -1,8 +1,8 @@
 #include "io.hpp"
 
-#include "../../config/src/config_loading.hpp"
+
 #include "application/cli_utils.hpp"
-#include "config/config_validation.hpp"
+
 #include "database/calibration_database.hpp"
 #include "logging/logging.hpp"
 
@@ -42,25 +42,6 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
               path_config.data_path.string(), path_config.workspace_dir.string());
 
     return path_config;
-}
-
-std::optional<toml::table> LoadAndValidateConfig(fs::path const& config_path) {
-    auto const loaded_config{config::LoadConfigFile(config_path)};
-    if (std::holds_alternative<TomlErrorMsg>(loaded_config)) {
-        auto const error_msg{std::get<TomlErrorMsg>(loaded_config)};
-        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(error_msg.type), error_msg.msg);
-        return std::nullopt;
-    }
-
-    if (auto const error_msg{config::ValidateCalibrationConfig(std::get<toml::table>(loaded_config))}) {
-        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(error_msg->type), error_msg->msg);
-        return std::nullopt;
-    }
-
-    auto const config{std::get<toml::table>(loaded_config)};
-    log->info("{{'config_path': '{}', 'config': {}}}", config_path.string(), logging::ToOneLineJson(config));
-
-    return config;
 }
 
 std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path) {
