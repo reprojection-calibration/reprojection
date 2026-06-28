@@ -35,7 +35,7 @@ class CameraStepsFixture : public ::testing::Test {
 
         auto const result{config::Config::Camera::Parse(*config["camera"].as_table())};
         if (std::holds_alternative<TomlErrorMsg>(result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
         }
 
         camera_info =
@@ -108,7 +108,7 @@ class ImageSourceFixture : public CameraStepsFixture {
         // this could be good place for a reusable config parsing function instead of copy and paste.
         auto const result{config::Config::Target::Parse(*config["target"].as_table())};
         if (std::holds_alternative<TomlErrorMsg>(result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
+            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
         }
         auto const config{std::get<config::Config::Target>(result)};
 
