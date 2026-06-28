@@ -12,10 +12,9 @@ namespace reprojection::steps {
 
 CameraInfoStep::CameraInfoStep(toml::table const& sensor_config, std::shared_ptr<EncodedImages> const& images)
     : images_{images} {
-    auto const result{config::Config::Camera::Parse(sensor_config)};
-
     // TODO(Jack): Instead of parsing the config here inside of the steps themselves we should have one central parsing
     // step. This means we can handle all the errors at one top level instead of throughout the code.
+    auto const result{config::Config::Camera::Parse(sensor_config)};
     if (std::holds_alternative<TomlErrorMsg>(result)) {
         throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
     }

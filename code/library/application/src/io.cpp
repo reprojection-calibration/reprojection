@@ -1,7 +1,7 @@
 #include "io.hpp"
 
+#include "../../config/src/config_loading.hpp"
 #include "application/cli_utils.hpp"
-#include "config/config_loading.hpp"
 #include "config/config_validation.hpp"
 #include "database/calibration_database.hpp"
 #include "logging/logging.hpp"
