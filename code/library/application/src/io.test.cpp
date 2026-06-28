@@ -49,23 +49,14 @@ TEST(ApplicationIO, TestParseCommandLineInput) {
 TEST(ApplicationIO, TestHappyPath) {
     TemporaryFile const config_file{".toml", testing_utilities::minimum_config};
 
-    auto const result{application::LoadAndValidateConfig(config_file.Path())};
+    auto const result{application::LoadConfig(config_file.Path())};
     ASSERT_TRUE(result.has_value());
     toml::table const gt_result{toml::parse(testing_utilities::minimum_config)};
     EXPECT_EQ(*result, gt_result);
 }
 
 TEST(ApplicationIO, TestBadLoad) {
-    auto const result{application::LoadAndValidateConfig("nonexistent.toml")};
-    EXPECT_FALSE(result.has_value());
-}
-
-TEST(ApplicationIO, TestBadValidate) {
-    static constexpr std::string_view empty_config{R"(
-    )"};
-    TemporaryFile const config_file{".toml", empty_config};
-
-    auto const result{application::LoadAndValidateConfig(config_file.Path())};
+    auto const result{application::LoadConfig("nonexistent.toml")};
     EXPECT_FALSE(result.has_value());
 }
 

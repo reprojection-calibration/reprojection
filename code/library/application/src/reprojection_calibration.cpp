@@ -35,7 +35,7 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
         return std::nullopt;
     }
 
-    auto const config{LoadAndValidateConfig(paths->config_path)};
+    auto const config{LoadConfig(paths->config_path)};
     if (not config) {
         return std::nullopt;  // LCOV_EXCL_LINE
     }
