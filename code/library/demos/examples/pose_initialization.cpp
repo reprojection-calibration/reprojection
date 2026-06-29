@@ -39,13 +39,8 @@ int main() {
     // the database.
 
     try {
-        auto const cam_result{config::Config::Camera::Parse(*config["camera"].as_table())};
-        if (std::holds_alternative<TomlErrorMsg>(cam_result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
-        }
-        CameraInfo const camera_info{std::get<config::Config::Camera>(cam_result).sensor_name,
-                                     std::get<config::Config::Camera>(cam_result).camera_model,
-                                     {0, 512, 0, 512}};
+        auto const cam_cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
+        CameraInfo const camera_info{cam_cfg.sensor_name, cam_cfg.camera_model, {0, 512, 0, 512}};
 
         // Camera stuff
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
@@ -60,14 +55,12 @@ int main() {
                              "5d87595c7c8f53d8c355f8b889374c6d1d1cd4bed1472da698725bd51777385a");
 
         // Imu stuff
-        auto const imu_result{config::Config::Imu::Parse(*config["imu"].as_table())};
-        if (std::holds_alternative<TomlErrorMsg>(imu_result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
-        }
-        database::InsertEntity(db, std::get<config::Config::Imu>(imu_result).sensor_name, Entity::Imu);
+        if (auto const imu_cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
+            database::InsertEntity(db, imu_cfg->sensor_name, Entity::Imu);
 
-        database::InsertStep(db, std::get<config::Config::Imu>(imu_result).sensor_name, CalibrationStep::ImuDataLoading,
-                             hashing::Sha256(""));
+            database::InsertStep(db, imu_cfg->sensor_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
+        }
+
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }

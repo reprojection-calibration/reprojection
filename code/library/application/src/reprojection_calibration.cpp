@@ -116,18 +116,16 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
 
+    // REMOVE
+    return;
+
     // TODO(Jack): This is a hack! At this moment this is meant for internal development only therefore we will not
     // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
     // someone tried to use this from an application it will be impossible.
     // TODO(Jack): Remove code coverage exclusion!
     // LCOV_EXCL_START
-    if (config.contains("imu")) {
-        auto const result{config::Config::Imu::Parse(*config["imu"].as_table())};
-        if (std::holds_alternative<TomlErrorMsg>(result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
-        }
-
-        std::string const imu_name{std::get<config::Config::Imu>(result).sensor_name};
+    if (auto const cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
+        std::string const imu_name{cfg->sensor_name};
 
         std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
         database::InsertEntity(db, imu_name, Entity::Imu);

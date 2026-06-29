@@ -33,14 +33,9 @@ class CameraStepsFixture : public ::testing::Test {
 
         config = toml::parse(testing_utilities::minimum_config);
 
-        auto const result{config::Config::Camera::Parse(*config["camera"].as_table())};
-        if (std::holds_alternative<TomlErrorMsg>(result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
-        }
+        auto const cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
 
-        camera_info =
-            CameraInfo{std::get<config::Config::Camera>(result).sensor_name,
-                       std::get<config::Config::Camera>(result).camera_model, testing_utilities::image_bounds};
+        camera_info = CameraInfo{cfg.sensor_name, cfg.camera_model, testing_utilities::image_bounds};
 
         // WARN(Jack): Make sure all tests that use this are really a camera!!!
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
@@ -106,14 +101,9 @@ class ImageSourceFixture : public CameraStepsFixture {
 
         // TODO(Jack): This conversion logic is now at least repeated here and in the target info step exactly the same,
         // this could be good place for a reusable config parsing function instead of copy and paste.
-        auto const result{config::Config::Target::Parse(*config["target"].as_table())};
-        if (std::holds_alternative<TomlErrorMsg>(result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
-        }
-        auto const config{std::get<config::Config::Target>(result)};
+        auto const cfg{config::Config::Target::Parse(*config["target"].as_table())};
 
-        target_info =
-            TargetInfo{config.target_type, config.size[0], config.size[1], config.unit_dimension, config.asymmetric};
+        target_info = TargetInfo{cfg.target_type, cfg.size[0], cfg.size[1], cfg.unit_dimension, cfg.asymmetric};
     }
 
     std::shared_ptr<EncodedImages> encoded_images;

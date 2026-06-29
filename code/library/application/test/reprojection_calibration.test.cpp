@@ -53,14 +53,8 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     // as we can do here. I guess we could also use the MVG test data generator, but that will be for a future
     // contributor :)
 
-    auto const cam_result{config::Config::Camera::Parse(*config["camera"].as_table())};
-    if (std::holds_alternative<TomlErrorMsg>(cam_result)) {
-        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
-    }
-
-    CameraInfo const camera_info{std::get<config::Config::Camera>(cam_result).sensor_name,
-                                 std::get<config::Config::Camera>(cam_result).camera_model,
-                                 {0, 512, 0, 512}};
+    auto const cam_cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
+    CameraInfo const camera_info{cam_cfg.sensor_name, cam_cfg.camera_model, {0, 512, 0, 512}};
 
     database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
 
