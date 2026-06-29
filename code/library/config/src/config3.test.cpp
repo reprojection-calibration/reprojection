@@ -67,11 +67,12 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
 
 template <typename T>
 void OverrideIfPresent(toml::table const& table, std::string_view key, T& value) {
-    if (auto parsed = Optional<T>(table, key)) {
+    if (auto const parsed{Optional<T>(table, key)}) {
         value = *parsed;
     }
 }
 
+// TODO(Jack): Reject unexpected keys!
 struct Config {
     struct Application {
         static Application Parse(toml::table const& table) {
@@ -96,43 +97,27 @@ struct Config {
         CameraModel camera_model;
     };
 
+    struct Imu {
+        static std::optional<Imu> Parse(toml::table const& table) {
+            std::optional<Imu> config{};
+            OverrideIfPresent(table, "sensor_name", config->sensor_name);
+
+            return config;
+        }
+
+        std::string sensor_name;
+    };
+
     static Config Parse(toml::table const& table) {
         return Config{Application::Parse(OptionalTable(table, "application").value_or(toml::table{})),
-                      Camera::Parse(RequireTable(table, "camera"))};
+                      Camera::Parse(RequireTable(table, "camera")),
+                      Imu::Parse(OptionalTable(table, "imu").value_or(toml::table{}))};
     }
 
     Application application;
     Camera camera;
+    std::optional<Imu> imu;
 };
-
-using ParsedValue = std::variant<int64_t, double, bool, std::string, Config::Application>;
-
-using ParseFn = std::function<ParsedValue(toml::table const&)>;
-
-enum class TomlType {
-    Array,
-    Boolean,
-    FloatingPoint,
-    Integer,
-    String,
-    Table,
-};
-
-struct ConfigNode {
-    std::string key;
-    TomlType type;
-    bool required{false};
-    std::vector<ConfigNode> children{};
-    std::optional<ParseFn> parser{};
-};
-
-ConfigNode const app_spec{"application",
-                          TomlType::Table,
-                          false,
-                          {{"show_extraction", TomlType::Boolean}, {"threads", TomlType::Integer}},
-                          Config::Application::Parse};
-
-ConfigNode const config{"", TomlType::Table, true, {app_spec}};
 
 }  // namespace reprojection::config
 
@@ -142,9 +127,8 @@ using namespace std::string_view_literals;
 TEST(ConfigParsingHelpers, TestXxxx) {
     static constexpr std::string_view full_table{R"(
         [application]
-        show_extraction = false
-        threads = 1
-        unwanted_key = 1
+        show_extraction = true
+        threads = 10
 
         [camera]
         sensor_name = "/cam0/image_raw"
@@ -161,8 +145,16 @@ TEST(ConfigParsingHelpers, TestXxxx) {
 
     auto const result = config::Config::Parse(full_config);
 
-    std::cout << result.application.show_extraction << std::endl;
-    std::cout << result.application.threads << std::endl;
+    EXPECT_EQ(result.application.show_extraction, true);
+    EXPECT_EQ(result.application.threads, 10);
+    EXPECT_EQ(result.camera.sensor_name, "/cam0/image_raw");
+    EXPECT_EQ(result.camera.camera_model, CameraModel::DoubleSphere);
+    ASSERT_TRUE(result.imu.has_value());
+    EXPECT_EQ(result.imu->sensor_name, "/imu0");
+    // EXPECT_EQ(result.target.target_type, TargetType::Checkerboard);
+    // EXPECT_EQ(result.target.size[0], 3);
+    // EXPECT_EQ(result.target.size[1], 4);
+    // EXPECT_EQ(result.imu->sensor_name, "/imu0");
 
     EXPECT_EQ(1, 2);
 }
