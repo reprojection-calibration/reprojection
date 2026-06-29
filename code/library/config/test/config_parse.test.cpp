@@ -21,6 +21,7 @@ TEST(ConfigParsingHelpers, TestConfigParseFull) {
         type = "checkerboard"
         pattern_size = [3,4]
         unit_dimension = 0.5
+
         [target.circle_grid]
         asymmetric = true
     )"};
@@ -179,5 +180,62 @@ TEST(ConfigParsingHelpers, TestConfigImuParse) {
         toml::table const config{toml::parse(invalid_table)};
 
         EXPECT_THROW(config::Config::Imu::Parse(config), std::runtime_error);
+    }
+}
+
+TEST(ConfigParsingHelpers, TestConfigTargetParse) {
+    std::vector<std::string_view> const valid_tables{
+        R"(
+            type = "checkerboard"
+            pattern_size = [3,4]
+            unit_dimension = 0.5
+
+            [target.circle_grid]
+            asymmetric = true
+        )",
+        R"(
+            type = "checkerboard"
+            pattern_size = [3,4]
+            unit_dimension = 0.5
+        )",
+        R"(
+            type = "checkerboard"
+            pattern_size = [3,4]
+        )",
+    };
+
+    for (auto const& valid_table : valid_tables) {
+        toml::table const config{toml::parse(valid_table)};
+
+        EXPECT_NO_THROW(config::Config::Target::Parse(config));
+    }
+
+    std::vector<std::string_view> const invalid_tables{
+        R"()",
+        R"(
+            [target]
+        )",
+        R"(
+            type = "checkerboard"
+        )",
+        R"(
+            pattern_size = [3,4]
+        )",
+        R"(
+            type = 1,2
+            pattern_size = 2.1
+        )",
+        R"(
+            type = "checkerboard"
+            pattern_size = [3,4]
+
+            asymmetric = true
+        )",
+    };
+
+    for (auto const& invalid_table : invalid_tables) {
+        toml::table const config{toml::parse(invalid_table)};
+
+        EXPECT_THROW(config::Config::Target::Parse(config), std::runtime_error);
     }
 }
