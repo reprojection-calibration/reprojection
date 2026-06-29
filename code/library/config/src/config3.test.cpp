@@ -132,7 +132,7 @@ struct Config {
     };
 
     struct Imu {
-        // The table is not required, but we have no sensible defaults.
+        // The table is not required (we do not always have IMU data), but we have no sensible defaults.
         static std::optional<Imu> Parse(toml::table const& table) {
             auto const sensor_name{Optional<std::string>(table, "sensor_name")};
             if (not sensor_name) {
