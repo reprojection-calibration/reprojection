@@ -75,6 +75,7 @@ void OverrideIfPresent(toml::table const& table, std::string_view key, T& value)
 // TODO(Jack): Reject unexpected keys!
 struct Config {
     struct Application {
+        // The table is not required, but we have sensible defaults.
         static Application Parse(toml::table const& table) {
             Application config{};
             OverrideIfPresent(table, "show_extraction", config.show_extraction);
@@ -98,11 +99,14 @@ struct Config {
     };
 
     struct Imu {
+        // The table is not required, but we have no sensible defaults.
         static std::optional<Imu> Parse(toml::table const& table) {
-            std::optional<Imu> config{};
-            OverrideIfPresent(table, "sensor_name", config->sensor_name);
+            auto sensor_name{Optional<std::string>(table, "sensor_name")};
+            if (not sensor_name) {
+                return std::nullopt;
+            }
 
-            return config;
+            return Imu{*sensor_name};
         }
 
         std::string sensor_name;
