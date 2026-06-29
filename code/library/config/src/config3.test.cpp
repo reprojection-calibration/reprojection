@@ -2,6 +2,7 @@
 
 #include <spdlog/fmt/bundled/format.h>  // TODO REMOVE?
 
+#include <algorithm>
 #include <thread>
 
 #include <toml++/toml.hpp>
@@ -9,6 +10,18 @@
 #include "types/enums.hpp"
 
 namespace reprojection::config {
+
+void RejectUnexpectedKeys(toml::table const& table, std::initializer_list<std::string_view> allowed_keys,
+                          std::string_view table_name) {
+    for (auto const& [key, _] : table) {
+        bool const allowed =
+            std::ranges::any_of(allowed_keys, [&](std::string_view allowed_key) { return key.str() == allowed_key; });
+
+        if (!allowed) {
+            throw std::runtime_error(fmt::format("Unexpected key '{}.{}'.", table_name, key.str()));
+        }
+    }
+}
 
 template <typename T>
 std::optional<T> Optional(toml::table const& table, std::string_view key) {
@@ -110,6 +123,8 @@ struct Config {
     struct Application {
         // The table is not required, but we have sensible defaults.
         static Application Parse(toml::table const& table) {
+            RejectUnexpectedKeys(table, {"show_extraction", "threads"}, "application");
+
             Application config{};
             OverrideIfPresent(table, "show_extraction", config.show_extraction);
             OverrideIfPresent(table, "threads", config.threads);
@@ -123,6 +138,8 @@ struct Config {
 
     struct Camera {
         static Camera Parse(toml::table const& table) {
+            RejectUnexpectedKeys(table, {"sensor_name", "camera_model"}, "camera");
+
             return Camera{Require<std::string>(table, "sensor_name"),
                           ToCameraModel(Require<std::string>(table, "camera_model"))};
         }
@@ -134,6 +151,8 @@ struct Config {
     struct Imu {
         // The table is not required (we do not always have IMU data), but we have no sensible defaults.
         static std::optional<Imu> Parse(toml::table const& table) {
+            RejectUnexpectedKeys(table, {"sensor_name"}, "imu");
+
             auto const sensor_name{Optional<std::string>(table, "sensor_name")};
             if (not sensor_name) {
                 return std::nullopt;
@@ -147,6 +166,8 @@ struct Config {
 
     struct Target {
         static Target Parse(toml::table const& table) {
+            RejectUnexpectedKeys(table, {"type", "pattern_size", "unit_dimension", "circle_grid"}, "target");
+
             Target config{};
 
             // Required keys
@@ -156,6 +177,7 @@ struct Config {
             // Optional keys
             OverrideIfPresent(table, "unit_dimension", config.unit_dimension);
             if (auto const circle_grid{OptionalTable(table, "circle_grid")}) {
+                RejectUnexpectedKeys(*circle_grid, {"asymmetric"}, "target.circle_grid");
                 OverrideIfPresent(*circle_grid, "asymmetric", config.asymmetric);
             }
 
@@ -169,6 +191,8 @@ struct Config {
     };
 
     static Config Parse(toml::table const& table) {
+        RejectUnexpectedKeys(table, {"application", "camera", "imu", "target"}, "");
+
         return Config{Application::Parse(OptionalTable(table, "application").value_or(toml::table{})),
                       Camera::Parse(RequireTable(table, "camera")),
                       Imu::Parse(OptionalTable(table, "imu").value_or(toml::table{})),
