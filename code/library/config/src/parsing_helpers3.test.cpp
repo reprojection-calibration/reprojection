@@ -79,3 +79,19 @@ TEST(ConfigParsingHelpers3, TestOptional) {
     // Key exists but has the wrong type.
     EXPECT_THROW(config::Optional<std::string>(table, "table1"), std::runtime_error);
 }
+
+TEST(ConfigParsingHelpers3, TestRequire) {
+    static constexpr std::string_view table_content{R"(
+        key1 = "value1"
+
+        [table1]
+        key2 = "value2"
+    )"};
+    toml::table const table{toml::parse(table_content)};
+
+    // Key does not exist so we throw.
+    EXPECT_THROW(config::Require<std::string>(table, ""), std::runtime_error);
+
+    // Ket exists so we do not throw.
+    EXPECT_NO_THROW(config::Require<std::string>(table, "key1"));
+}
