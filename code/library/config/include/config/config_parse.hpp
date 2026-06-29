@@ -42,8 +42,6 @@ struct Config {
         bool asymmetric{false};
     };
 
-
-
     Application application;
     Camera camera;
     std::optional<Imu> imu;

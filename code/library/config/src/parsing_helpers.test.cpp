@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "parsing_helpers.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace reprojection;
 
