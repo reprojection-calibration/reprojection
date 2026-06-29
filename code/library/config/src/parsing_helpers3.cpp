@@ -30,8 +30,8 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
 void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
                           std::string_view table_name) {
     for (auto const& [key, _] : table) {
-        bool const allowed{
-            std::ranges::any_of(allowed_keys, [&](std::string_view allowed_key) { return key.str() == allowed_key; })};
+        bool const allowed{std::ranges::any_of(
+            allowed_keys, [&key](std::string_view allowed_key) { return key.str() == allowed_key; })};
 
         if (not allowed) {
             throw std::runtime_error(fmt::format("Unexpected key '{}.{}'", table_name, key.str()));
