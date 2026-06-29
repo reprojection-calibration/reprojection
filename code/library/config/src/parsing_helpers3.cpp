@@ -1,5 +1,7 @@
 #include "parsing_helpers3.hpp"
 
+#include <algorithm>
+
 namespace reprojection::config {
 
 std::optional<toml::table> OptionalTable(toml::table const& table, std::string_view key) {
@@ -25,13 +27,13 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
     return *child_table;
 }
 
-void RejectUnexpectedKeys(toml::table const& table, std::initializer_list<std::string_view> allowed_keys,
+void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
                           std::string_view table_name) {
     for (auto const& [key, _] : table) {
-        bool const allowed =
-            std::ranges::any_of(allowed_keys, [&](std::string_view allowed_key) { return key.str() == allowed_key; });
+        bool const allowed{
+            std::ranges::any_of(allowed_keys, [&](std::string_view allowed_key) { return key.str() == allowed_key; })};
 
-        if (!allowed) {
+        if (not allowed) {
             throw std::runtime_error(fmt::format("Unexpected key '{}.{}'.", table_name, key.str()));
         }
     }

@@ -2,8 +2,6 @@
 
 #include <spdlog/fmt/bundled/format.h>  // TODO(Jack): Why can we not just use <format>?
 
-#include <algorithm>
-
 #include <toml++/toml.hpp>
 
 #include "types/enums.hpp"
@@ -13,6 +11,9 @@ namespace reprojection::config {
 std::optional<toml::table> OptionalTable(toml::table const& table, std::string_view key);
 
 toml::table RequireTable(toml::table const& table, std::string_view key);
+
+void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
+                          std::string_view table_name);
 
 template <typename T>
 std::optional<T> Optional(toml::table const& table, std::string_view key) {
@@ -80,9 +81,5 @@ void OverrideIfPresent(toml::table const& table, std::string_view key, T& value)
         value = *parsed;
     }
 }
-
-// TODO JUST USE VECTOR?
-void RejectUnexpectedKeys(toml::table const& table, std::initializer_list<std::string_view> allowed_keys,
-                          std::string_view table_name);
 
 }  // namespace reprojection::config
