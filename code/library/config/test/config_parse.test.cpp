@@ -190,7 +190,7 @@ TEST(ConfigParsingHelpers, TestConfigTargetParse) {
             pattern_size = [3,4]
             unit_dimension = 0.5
 
-            [target.circle_grid]
+            [circle_grid]
             asymmetric = true
         )",
         R"(
@@ -222,8 +222,8 @@ TEST(ConfigParsingHelpers, TestConfigTargetParse) {
             pattern_size = [3,4]
         )",
         R"(
-            type = 1,2
-            pattern_size = 2.1
+            type = "wrong_type"
+            pattern_size = "wrong_type"
         )",
         R"(
             type = "checkerboard"
