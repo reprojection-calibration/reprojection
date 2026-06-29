@@ -151,3 +151,33 @@ TEST(ConfigParsingHelpers, TestConfigCameraParse) {
         EXPECT_THROW(config::Config::Camera::Parse(config), std::runtime_error);
     }
 }
+
+TEST(ConfigParsingHelpers, TestConfigImuParse) {
+    std::vector<std::string_view> const valid_tables{
+        R"()",
+        R"(
+            sensor_name = "/imu0"
+        )",
+    };
+
+    for (auto const& valid_table : valid_tables) {
+        toml::table const config{toml::parse(valid_table)};
+
+        EXPECT_NO_THROW(config::Config::Imu::Parse(config));
+    }
+
+    std::vector<std::string_view> const invalid_tables{
+        R"(
+            [imu]
+        )",
+        R"(
+            sensor_name = 1.2
+        )",
+    };
+
+    for (auto const& invalid_table : invalid_tables) {
+        toml::table const config{toml::parse(invalid_table)};
+
+        EXPECT_THROW(config::Config::Imu::Parse(config), std::runtime_error);
+    }
+}
