@@ -24,3 +24,19 @@ TEST(ConfigParsingHelpers3, TestOptionalTable) {
     // Key exists but is not a table
     EXPECT_THROW(config::OptionalTable(table, "key1"), std::runtime_error);
 }
+
+TEST(ConfigParsingHelpers3, TestRequiredTable) {
+    static constexpr std::string_view table_content{R"(
+        key1 = "value1"
+
+        [table1]
+        key2 = "value2"
+    )"};
+    toml::table const table{toml::parse(table_content)};
+
+    // Table does not exist so we throw
+    EXPECT_THROW(config::RequireTable(table, ""), std::runtime_error);
+
+    // Table exists so we do not throw
+    EXPECT_NO_THROW(config::RequireTable(table, "table1"));
+}
