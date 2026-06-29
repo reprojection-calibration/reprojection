@@ -2,61 +2,49 @@
 
 #include <array>
 #include <string>
-#include <variant>
+#include <thread>
 
 #include <toml++/toml.hpp>
 
-#include "config/enums.hpp"
-#include "types/config.hpp"
 #include "types/enums.hpp"
 
 namespace reprojection::config {
 
 struct Config {
-    static std::optional<Config> Parse(toml::table cfg);
+    static Config Parse(toml::table const& table);
 
     struct Application {
-        static std::variant<Application, TomlErrorMsg> Parse(toml::table cfg);
+        static Application Parse(toml::table const& table);
 
-        static ConfigTable TableType() { return ConfigTable::Application; }
-
-        bool show_extraction;
-        int threads;
+        bool show_extraction{false};
+        int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
     };
 
     struct Camera {
-        static std::variant<Camera, TomlErrorMsg> Parse(toml::table cfg);
-
-        static ConfigTable TableType() { return ConfigTable::Camera; }
+        static Camera Parse(toml::table const& table);
 
         std::string sensor_name;
         CameraModel camera_model;
     };
 
     struct Imu {
-        static std::variant<Imu, TomlErrorMsg> Parse(toml::table cfg);
-
-        static ConfigTable TableType() { return ConfigTable::Imu; }
+        static std::optional<Imu> Parse(toml::table const& table);
 
         std::string sensor_name;
     };
 
     struct Target {
-        static std::variant<Target, TomlErrorMsg> Parse(toml::table cfg);
-
-        static ConfigTable TableType() { return ConfigTable::Target; }
+        static Target Parse(toml::table const& table);
 
         TargetType target_type;
         std::array<int, 2> size;
-        double unit_dimension;
-        bool asymmetric;
+        double unit_dimension{1.0};
+        bool asymmetric{false};
     };
 
-   private:
-    Config(Application const& app, Camera const& camera, std::optional<Imu> const& imu, Target const& target);
 
-   public:
-    Application app;
+
+    Application application;
     Camera camera;
     std::optional<Imu> imu;
     Target target;

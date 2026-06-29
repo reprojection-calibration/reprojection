@@ -1,131 +1,65 @@
 #include "config/config_parse.hpp"
 
-#include <format>
-#include <thread>
-
-#include "logging/logging.hpp"
-
 #include "parsing_helpers.hpp"
 
 namespace reprojection::config {
 
-namespace {
+Config Config::Parse(toml::table const& table) {
+    RejectUnexpectedKeys(table, {"application", "camera", "imu", "target"}, "");
 
-auto const log{logging::Get("config")};
-
+    return Config{Application::Parse(OptionalTable(table, "application").value_or(toml::table{})),
+                  Camera::Parse(RequireTable(table, "camera")),
+                  Imu::Parse(OptionalTable(table, "imu").value_or(toml::table{})),
+                  Target::Parse(RequireTable(table, "target"))};
 }
 
-std::optional<Config> Config::Parse(toml::table cfg) {
-    auto const app{ParseSubtable<Application>(cfg)};
-    if (not app) {
-        return std::nullopt;
-    }
+// The table is not required, but we have sensible defaults.
+Config::Application Config::Application::Parse(toml::table const& table) {
+    RejectUnexpectedKeys(table, {"show_extraction", "threads"}, "application");
 
-    auto const camera{ParseSubtable<Camera>(cfg)};
-    if (not camera) {
-        return std::nullopt;
-    }
+    Application config{};
+    OverrideIfPresent(table, "show_extraction", config.show_extraction);
+    OverrideIfPresent(table, "threads", config.threads);
 
-    // TODO(Jack): How do we handle the case where there might really be an error with the imu table or it might just
-    // not be there because there is no imu data. Does our current code handle this well?
-    // Imu is not required which is why we do not return early if nullopt is returned here.
-    auto const imu{ParseSubtable<Imu>(cfg)};
-
-    auto const target{ParseSubtable<Target>(cfg)};
-    if (not target) {
-        return std::nullopt;
-    }
-
-    if (auto const result{UnexpectedKeys(cfg)}) {
-        log->error("{{'toml_error': '{}', 'message': '{}'}}", ToString(TomlError::UnknownKey), *result);
-
-        return std::nullopt;
-    }
-
-    return Config{*app, *camera, imu, *target};
+    return config;
 }
 
-Config::Config(Application const& _app, Camera const& _camera, std::optional<Imu> const& _imu, Target const& _target)
-    : app{_app}, camera{_camera}, imu{_imu}, target{_target} {}
+Config::Camera Config::Camera::Parse(toml::table const& table) {
+    RejectUnexpectedKeys(table, {"sensor_name", "camera_model"}, "camera");
 
-std::variant<Config::Application, TomlErrorMsg> Config::Application::Parse(toml::table cfg) {
-    auto const show_extraction{ExtractValue<bool>("show_extraction", cfg)};
-    auto const threads{ExtractValue<int64_t>("threads", cfg)};
-
-    if (auto const result{UnexpectedKeys(cfg)}) {
-        return TomlErrorMsg{TomlError::UnknownKey, *result};
-    }
-
-    int const hw_threads{static_cast<int>(std::thread::hardware_concurrency())};
-
-    return Application{show_extraction ? *show_extraction : false,
-                       threads ? static_cast<int>(*threads) : std::max(1, hw_threads - 1)};
+    return Camera{Require<std::string>(table, "sensor_name"),
+                  ToCameraModel(Require<std::string>(table, "camera_model"))};
 }
 
-std::variant<Config::Camera, TomlErrorMsg> Config::Camera::Parse(toml::table cfg) {
-    auto const sensor_name{ExtractValue<std::string>("sensor_name", cfg)};
-    auto const camera_model{ExtractValue<std::string>("camera_model", cfg)};
+// The table is not required (we do not always have IMU data), but we have no sensible defaults.
+std::optional<Config::Imu> Config::Imu::Parse(toml::table const& table) {
+    RejectUnexpectedKeys(table, {"sensor_name"}, "imu");
 
-    if (not sensor_name or not camera_model) {
-        std::string const error_msg{fmt::format("{{'sensor_name': '{}', 'camera_model': '{}'}}",
-                                                sensor_name ? *sensor_name : "N/A",
-                                                camera_model ? *camera_model : "N/A")};
-
-        return TomlErrorMsg{TomlError::MissingKey, error_msg};
-    }
-
-    if (auto const result{UnexpectedKeys(cfg)}) {
-        return TomlErrorMsg{TomlError::UnknownKey, *result};
-    }
-
-    return Camera{*sensor_name, ToCameraModel(*camera_model)};
-}
-
-std::variant<Config::Imu, TomlErrorMsg> Config::Imu::Parse(toml::table cfg) {
-    auto const sensor_name{ExtractValue<std::string>("sensor_name", cfg)};
-
+    auto const sensor_name{Optional<std::string>(table, "sensor_name")};
     if (not sensor_name) {
-        return TomlErrorMsg{TomlError::MissingKey, "{'sensor_name': 'N/A'}"};
-    }
-
-    if (auto const result{UnexpectedKeys(cfg)}) {
-        return TomlErrorMsg{TomlError::UnknownKey, *result};
+        return std::nullopt;
     }
 
     return Imu{*sensor_name};
 }
 
-std::variant<Config::Target, TomlErrorMsg> Config::Target::Parse(toml::table cfg) {
-    auto const type{ExtractValue<std::string>("type", cfg)};
-    auto const pattern_size{ExtractArray<int, 2>("pattern_size", cfg)};
+Config::Target Config::Target::Parse(toml::table const& table) {
+    RejectUnexpectedKeys(table, {"type", "pattern_size", "unit_dimension", "circle_grid"}, "target");
 
-    if (not type or not pattern_size) {
-        std::string const error_msg{
-            fmt::format("{{'type': '{}', 'pattern_size': '{}'}}", type ? *type : "N/A",
-                        pattern_size ? fmt::format("[{}, {}]", (*pattern_size)[0], (*pattern_size)[1]) : "N/A")};
+    Target config{};
 
-        return TomlErrorMsg{TomlError::MissingKey, error_msg};
+    // Required keys
+    config.target_type = ToTargetType(Require<std::string>(table, "type"));
+    config.size = RequireArray<int, 2>(table, "pattern_size");
+
+    // Optional keys
+    OverrideIfPresent(table, "unit_dimension", config.unit_dimension);
+    if (auto const circle_grid{OptionalTable(table, "circle_grid")}) {
+        RejectUnexpectedKeys(*circle_grid, {"asymmetric"}, "target.circle_grid");
+        OverrideIfPresent(*circle_grid, "asymmetric", config.asymmetric);
     }
 
-    // Optional value for all target types
-    auto const unit_dimension{ExtractValue<double>("unit_dimension", cfg)};
-
-    // Optional value only for circle grid targets
-    TargetType const target_type{ToTargetType(*type)};
-    std::optional<bool> asymmetric;
-    if (auto circle_grid_cfg{ExtractTable("circle_grid", cfg)}) {
-        asymmetric = ExtractValue<bool>("asymmetric", *circle_grid_cfg);
-
-        if (auto const result{UnexpectedKeys(*circle_grid_cfg)}) {
-            return TomlErrorMsg{TomlError::UnknownKey, *result};
-        }
-    }
-
-    if (auto const result{UnexpectedKeys(cfg)}) {
-        return TomlErrorMsg{TomlError::UnknownKey, *result};
-    }
-
-    return Target{target_type, *pattern_size, unit_dimension ? *unit_dimension : 1.0, asymmetric ? *asymmetric : false};
+    return config;
 }
 
 }  // namespace reprojection::config
