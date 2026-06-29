@@ -121,3 +121,20 @@ TEST(ConfigParsingHelpers3, TestRequireArray) {
     EXPECT_EQ(result[0], 1);
     EXPECT_EQ(result[1], 22);
 }
+
+TEST(ConfigParsingHelpers3, TestOverrideIfPresent) {
+    static constexpr std::string_view table_content{R"(
+        key1 = "value1"
+    )"};
+    toml::table const table{toml::parse(table_content)};
+
+    std::string value{"xyz"};
+
+    // Key is not present so we get no override.
+    config::OverrideIfPresent(table, "", value);
+    EXPECT_EQ(value, "xyz");
+
+    // Key is present so we get an override.
+    config::OverrideIfPresent(table, "key1", value);
+    EXPECT_EQ(value, "value1");
+}
