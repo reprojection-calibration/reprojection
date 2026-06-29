@@ -65,6 +65,39 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
     return *child_table;
 }
 
+template <typename T, size_t N>
+std::array<T, N> RequireArray(toml::table const& table, std::string_view key) {
+    toml::node const* node = table.get(key);
+
+    if (node == nullptr) {
+        throw std::runtime_error(fmt::format("Missing required array '{}'.", key));
+    }
+
+    toml::array const* array = node->as_array();
+
+    if (array == nullptr) {
+        throw std::runtime_error(fmt::format("Invalid type for key '{}'. Expected array.", key));
+    }
+
+    if (array->size() != N) {
+        throw std::runtime_error(
+            fmt::format("Invalid array size for key '{}'. Expected {}, got {}.", key, N, array->size()));
+    }
+
+    std::array<T, N> result{};
+    for (size_t i{0}; i < N; ++i) {
+        auto value = (*array)[i].template value<T>();
+
+        if (not value) {
+            throw std::runtime_error(fmt::format("Invalid type for key '{}[{}]'.", key, i));
+        }
+
+        result[i] = *value;
+    }
+
+    return result;
+}
+
 template <typename T>
 void OverrideIfPresent(toml::table const& table, std::string_view key, T& value) {
     if (auto const parsed{Optional<T>(table, key)}) {
@@ -101,7 +134,7 @@ struct Config {
     struct Imu {
         // The table is not required, but we have no sensible defaults.
         static std::optional<Imu> Parse(toml::table const& table) {
-            auto sensor_name{Optional<std::string>(table, "sensor_name")};
+            auto const sensor_name{Optional<std::string>(table, "sensor_name")};
             if (not sensor_name) {
                 return std::nullopt;
             }
@@ -112,15 +145,40 @@ struct Config {
         std::string sensor_name;
     };
 
+    struct Target {
+        static Target Parse(toml::table const& table) {
+            Target config{};
+
+            // Required keys
+            config.target_type = ToTargetType(Require<std::string>(table, "type"));
+            config.size = RequireArray<int, 2>(table, "pattern_size");
+
+            // Optional keys
+            OverrideIfPresent(table, "unit_dimension", config.unit_dimension);
+            if (auto const circle_grid{OptionalTable(table, "circle_grid")}) {
+                OverrideIfPresent(*circle_grid, "asymmetric", config.asymmetric);
+            }
+
+            return config;
+        }
+
+        TargetType target_type;
+        std::array<int, 2> size;
+        double unit_dimension{1.0};
+        bool asymmetric{false};
+    };
+
     static Config Parse(toml::table const& table) {
         return Config{Application::Parse(OptionalTable(table, "application").value_or(toml::table{})),
                       Camera::Parse(RequireTable(table, "camera")),
-                      Imu::Parse(OptionalTable(table, "imu").value_or(toml::table{}))};
+                      Imu::Parse(OptionalTable(table, "imu").value_or(toml::table{})),
+                      Target::Parse(RequireTable(table, "target"))};
     }
 
     Application application;
     Camera camera;
     std::optional<Imu> imu;
+    Target target;
 };
 
 }  // namespace reprojection::config
@@ -144,6 +202,9 @@ TEST(ConfigParsingHelpers, TestXxxx) {
         [target]
         type = "checkerboard"
         pattern_size = [3,4]
+
+        [target.circle_grid]
+        asymmetric = true
     )"};
     toml::table const full_config{toml::parse(full_table)};
 
@@ -155,10 +216,9 @@ TEST(ConfigParsingHelpers, TestXxxx) {
     EXPECT_EQ(result.camera.camera_model, CameraModel::DoubleSphere);
     ASSERT_TRUE(result.imu.has_value());
     EXPECT_EQ(result.imu->sensor_name, "/imu0");
-    // EXPECT_EQ(result.target.target_type, TargetType::Checkerboard);
-    // EXPECT_EQ(result.target.size[0], 3);
-    // EXPECT_EQ(result.target.size[1], 4);
-    // EXPECT_EQ(result.imu->sensor_name, "/imu0");
-
-    EXPECT_EQ(1, 2);
+    EXPECT_EQ(result.target.target_type, TargetType::Checkerboard);
+    EXPECT_EQ(result.target.size[0], 3);
+    EXPECT_EQ(result.target.size[1], 4);
+    EXPECT_EQ(result.target.unit_dimension, 1.0);
+    EXPECT_EQ(result.target.asymmetric, true);
 }
