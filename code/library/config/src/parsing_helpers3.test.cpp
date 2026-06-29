@@ -95,3 +95,29 @@ TEST(ConfigParsingHelpers3, TestRequire) {
     // Ket exists so we do not throw.
     EXPECT_NO_THROW(config::Require<std::string>(table, "key1"));
 }
+
+TEST(ConfigParsingHelpers3, TestRequireArray) {
+    static constexpr std::string_view table_content{R"(
+        key1 = [1, 22]
+        key2 = "value2"
+    )"};
+    toml::table const table{toml::parse(table_content)};
+
+    // Key does not exist so we throw.
+    // NOTE(Jack): We need to put it in an extra parenthesis because otherwise the gtest macro complains.
+    EXPECT_THROW((config::RequireArray<int, 2>(table, "")), std::runtime_error);
+
+    // Key is not of array type
+    EXPECT_THROW((config::RequireArray<int, 2>(table, "key2")), std::runtime_error);
+
+    // Requested array size does not match.
+    EXPECT_THROW((config::RequireArray<int, 10>(table, "key1")), std::runtime_error);
+
+    // Requested array type does not match.
+    EXPECT_THROW((config::RequireArray<std::string, 2>(table, "key1")), std::runtime_error);
+
+    // Happy path :)
+    auto const result{config::RequireArray<int, 2>(table, "key1")};
+    EXPECT_EQ(result[0], 1);
+    EXPECT_EQ(result[1], 22);
+}

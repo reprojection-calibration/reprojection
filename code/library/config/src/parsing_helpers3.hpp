@@ -33,8 +33,7 @@ std::optional<T> Optional(toml::table const& table, std::string_view key) {
 
 template <typename T>
 T Require(toml::table const& table, std::string_view key) {
-    auto const value = Optional<T>(table, key);
-
+    auto const value{Optional<T>(table, key)};
     if (not value) {
         throw std::runtime_error(fmt::format("Missing or invalid required key '{}'", key));
     }
@@ -44,27 +43,22 @@ T Require(toml::table const& table, std::string_view key) {
 
 template <typename T, size_t N>
 std::array<T, N> RequireArray(toml::table const& table, std::string_view key) {
-    toml::node const* node = table.get(key);
-
+    toml::node const* const node{table.get(key)};
     if (node == nullptr) {
         throw std::runtime_error(fmt::format("Missing required array '{}'", key));
     }
 
-    toml::array const* array = node->as_array();
-
+    toml::array const* const array{node->as_array()};
     if (array == nullptr) {
         throw std::runtime_error(fmt::format("Invalid type for key '{}' - Expected array", key));
-    }
-
-    if (array->size() != N) {
+    } else if (array->size() != N) {
         throw std::runtime_error(
             fmt::format("Invalid array size for key '{}'. Expected {}, got {}", key, N, array->size()));
     }
 
     std::array<T, N> result{};
     for (size_t i{0}; i < N; ++i) {
-        auto value = (*array)[i].template value<T>();
-
+        auto const value{(*array)[i].template value<T>()};
         if (not value) {
             throw std::runtime_error(fmt::format("Invalid type for key '{}[{}]'", key, i));
         }
