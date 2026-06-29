@@ -12,11 +12,20 @@ namespace reprojection::config {
 
 template <typename T>
 std::optional<T> Optional(toml::table const& table, std::string_view key) {
-    if (auto const value{table[key].template value<T>()}) {
-        return *value;
+    toml::node const* node = table.get(key);
+
+    if (node == nullptr) {
+        return std::nullopt;
     }
 
-    return std::nullopt;
+    auto value = node->template value<T>();
+
+    if (!value) {
+        // TODO(Jack): Print out actual type and value.
+        throw std::runtime_error(fmt::format("Invalid type for key '{}'.", key));
+    }
+
+    return *value;
 }
 
 template <typename T>
@@ -130,4 +139,30 @@ ConfigNode const config{"", TomlType::Table, true, {app_spec}};
 using namespace reprojection;
 using namespace std::string_view_literals;
 
-TEST(ConfigParsingHelpers, TestXxxx) { EXPECT_EQ(1, 2); }
+TEST(ConfigParsingHelpers, TestXxxx) {
+    static constexpr std::string_view full_table{R"(
+        [application]
+        show_extraction = false
+        threads = 1
+        unwanted_key = 1
+
+        [camera]
+        sensor_name = "/cam0/image_raw"
+        camera_model = "double_sphere"
+
+        [imu]
+        sensor_name = "/imu0"
+
+        [target]
+        type = "checkerboard"
+        pattern_size = [3,4]
+    )"};
+    toml::table const full_config{toml::parse(full_table)};
+
+    auto const result = config::Config::Parse(full_config);
+
+    std::cout << result.application.show_extraction << std::endl;
+    std::cout << result.application.threads << std::endl;
+
+    EXPECT_EQ(1, 2);
+}
