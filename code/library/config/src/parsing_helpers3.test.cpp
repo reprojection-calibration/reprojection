@@ -9,7 +9,6 @@ TEST(ConfigParsingHelpers3, TestOptionalTable) {
         key1 = "value1"
 
         [table1]
-        key2 = "value2"
     )"};
     toml::table const table{toml::parse(table_content)};
 
@@ -30,7 +29,6 @@ TEST(ConfigParsingHelpers3, TestRequiredTable) {
         key1 = "value1"
 
         [table1]
-        key2 = "value2"
     )"};
     toml::table const table{toml::parse(table_content)};
 
@@ -61,9 +59,7 @@ TEST(ConfigParsingHelpers3, TestRejectUnexpectedKeys) {
 TEST(ConfigParsingHelpers3, TestOptional) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
-
-        [table1]
-        key2 = "value2"
+        key2 = 1.2
     )"};
     toml::table const table{toml::parse(table_content)};
 
@@ -77,15 +73,12 @@ TEST(ConfigParsingHelpers3, TestOptional) {
     EXPECT_EQ(*result, "value1");
 
     // Key exists but has the wrong type.
-    EXPECT_THROW(config::Optional<std::string>(table, "table1"), std::runtime_error);
+    EXPECT_THROW(config::Optional<std::string>(table, "key2"), std::runtime_error);
 }
 
 TEST(ConfigParsingHelpers3, TestRequire) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
-
-        [table1]
-        key2 = "value2"
     )"};
     toml::table const table{toml::parse(table_content)};
 
