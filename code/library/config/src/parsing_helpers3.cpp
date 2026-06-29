@@ -12,7 +12,7 @@ std::optional<toml::table> OptionalTable(toml::table const& table, std::string_v
 
     toml::table const* const child_table{node->as_table()};
     if (child_table == nullptr) {
-        throw std::runtime_error(fmt::format("'{}' exists but is not a table.", key));
+        throw std::runtime_error(fmt::format("'{}' exists but is not a table", key));
     }
 
     return *child_table;
@@ -21,7 +21,7 @@ std::optional<toml::table> OptionalTable(toml::table const& table, std::string_v
 toml::table RequireTable(toml::table const& table, std::string_view key) {
     auto const child_table{OptionalTable(table, key)};
     if (not child_table) {
-        throw std::runtime_error(fmt::format("Missing required table '{}'.", key));
+        throw std::runtime_error(fmt::format("Missing required table '{}'", key));
     }
 
     return *child_table;
@@ -34,7 +34,7 @@ void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view
             std::ranges::any_of(allowed_keys, [&](std::string_view allowed_key) { return key.str() == allowed_key; })};
 
         if (not allowed) {
-            throw std::runtime_error(fmt::format("Unexpected key '{}.{}'.", table_name, key.str()));
+            throw std::runtime_error(fmt::format("Unexpected key '{}.{}'", table_name, key.str()));
         }
     }
 }
