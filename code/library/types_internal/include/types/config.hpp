@@ -2,6 +2,8 @@
 
 #include <string>
 
+// TODO(Jack): This code is essentially not used anywhere can we remove this if we refactor the toml loading?
+
 namespace reprojection {
 
 enum class TomlError {

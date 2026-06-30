@@ -17,16 +17,11 @@ std::string TargetInfoStep::HashInputs() const {
 }
 
 TargetInfo TargetInfoStep::Compute() const {
-    auto const result{config::Config::Target::Parse(*target_config_.as_table())};
-    if (std::holds_alternative<TomlErrorMsg>(result)) {
-        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};  // LCOV_EXCL_LINE
-    }
-
     // TODO(Jack): Here we see that the intermediate config::Config::Target type is little redundant because it is
     // basically exactly the TargetInfo type. We should unify these into one single type.
-    auto const config{std::get<config::Config::Target>(result)};
+    auto const cfg{config::Config::Target::Parse(*target_config_.as_table())};
 
-    return {config.target_type, config.size[0], config.size[1], config.unit_dimension, config.asymmetric};
+    return {cfg.target_type, cfg.size[0], cfg.size[1], cfg.unit_dimension, cfg.asymmetric};
 }
 
 TargetInfo TargetInfoStep::Load(SqlitePtr const db) const {

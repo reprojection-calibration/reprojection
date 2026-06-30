@@ -276,11 +276,11 @@ COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.db3 3d7d82fa27ae8e58aca0a1809aa060433bb73b8eb576102904d82f7ce2bfeed5; \
+      /data/ros1/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.db3 3d7d82fa27ae8e58aca0a1809aa060433bb73b8eb576102904d82f7ce2bfeed5; \
+      /data/ros2/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.db3 33fc780c48e68617edef7c3d1784cf544609d37822c98852e571ca06e67d2dce
+      /data/video_file/dataset-calib-imu4_512_16.db3 b81580d1ffe01df82b4347f8075a0c20f5f7778e31af901cc2dabd8982493094
 
 
 FROM apt-base-stage AS ros1-base-stage

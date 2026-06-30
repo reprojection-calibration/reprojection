@@ -40,13 +40,8 @@ int main(int argc, char* argv[]) {
 
     // TODO(Jack): This conversion logic is now at least repeated here and in the target info step exactly the same,
     // this could be good place for a reusable config parsing function instead of copy and paste.
-    auto const result{config::Config::Target::Parse(*config_table["target"].as_table())};
-    if (std::holds_alternative<TomlErrorMsg>(result)) {
-        throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
-    }
-    auto const config{std::get<config::Config::Target>(result)};
-    TargetInfo const target_info{config.target_type, config.size[0], config.size[1], config.unit_dimension,
-                                 config.asymmetric};
+    auto const cfg{config::Config::Target::Parse(*config_table["target"].as_table())};
+    TargetInfo const target_info{cfg.target_type, cfg.size[0], cfg.size[1], cfg.unit_dimension, cfg.asymmetric};
 
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
 

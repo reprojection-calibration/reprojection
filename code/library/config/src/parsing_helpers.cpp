@@ -1,43 +1,43 @@
 #include "parsing_helpers.hpp"
 
+#include <algorithm>
+#include <format>
+
 namespace reprojection::config {
 
-std::string ToString(ConfigTable const config_table) {
-    if (config_table == ConfigTable::Application) {
-        return "application";
-    } else if (config_table == ConfigTable::Camera) {
-        return "camera";
-    } else if (config_table == ConfigTable::Imu) {
-        return "imu";
-    } else if (config_table == ConfigTable::Target) {
-        return "target";
-    } else {
-        throw std::runtime_error                                                                       // LCOV_EXCL_LINE
-            ("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(ConfigTable)");  // LCOV_EXCL_LINE
-    }
-}
-
-// TODO(Jack): Test!
-std::optional<std::string> UnexpectedKeys(toml::table const& cfg) {
-    if (cfg.empty()) {
+std::optional<toml::table> OptionalTable(toml::table const& table, std::string_view key) {
+    toml::node const* const node{table.get(key)};
+    if (node == nullptr) {
         return std::nullopt;
     }
 
-    std::ostringstream oss;
-    for (bool first{true}; auto const& [key, value] : cfg) {
-        if (first) {
-            oss << "{";
-            first = false;
-        } else {
-            oss << ", ";
-        }
-
-        oss << "'" << key.str() << "': ";
-        value.visit([&oss](auto const& v) { oss << v; });
+    toml::table const* const child_table{node->as_table()};
+    if (child_table == nullptr) {
+        throw std::runtime_error(std::format("'{}' exists but is not a table", key));
     }
-    oss << "}";
 
-    return oss.str();
+    return *child_table;
+}
+
+toml::table RequireTable(toml::table const& table, std::string_view key) {
+    auto const child_table{OptionalTable(table, key)};
+    if (not child_table) {
+        throw std::runtime_error(std::format("Missing required table '{}'", key));
+    }
+
+    return *child_table;
+}
+
+void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
+                          std::string_view table_name) {
+    for (auto const& [key, _] : table) {
+        bool const allowed{std::ranges::any_of(
+            allowed_keys, [&key](std::string_view allowed_key) { return key.str() == allowed_key; })};
+
+        if (not allowed) {
+            throw std::runtime_error(std::format("Unexpected key '{}.{}'", table_name, key.str()));
+        }
+    }
 }
 
 }  // namespace reprojection::config

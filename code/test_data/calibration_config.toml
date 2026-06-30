@@ -6,5 +6,5 @@ sensor_name = "/cam0/image_raw"
 camera_model = "double_sphere"
 
 [target]
-pattern_size = [3,4]
+pattern_size = [6,4]
 type = "aprilgrid3"

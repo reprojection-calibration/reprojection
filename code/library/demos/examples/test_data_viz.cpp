@@ -36,15 +36,10 @@ int main() {
     std::string const image_hash{""};
 
     try {
-        auto const cam_result{config::Config::Camera::Parse(*config["camera"].as_table())};
-        if (std::holds_alternative<TomlErrorMsg>(cam_result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
-        }
+        auto const cam_cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
 
         double const duration_s{60};
-        CameraInfo const camera_info{std::get<config::Config::Camera>(cam_result).sensor_name,
-                                     std::get<config::Config::Camera>(cam_result).camera_model,
-                                     testing_utilities::image_bounds};
+        CameraInfo const camera_info{cam_cfg.sensor_name, cam_cfg.camera_model, testing_utilities::image_bounds};
         CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
         auto const [targets, camera_frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, duration_s, 10)};
 
@@ -71,16 +66,15 @@ int main() {
         database::InsertTargets(db, camera_info.sensor_name, targets);
 
         // Imu stuff
-        auto const imu_result{config::Config::Imu::Parse(*config["imu"].as_table())};
-        if (std::holds_alternative<TomlErrorMsg>(imu_result)) {
-            throw std::runtime_error{"WE NEED AN ERROR HANDLING STRATEGY!"};
-        }
-        database::InsertEntity(db, std::get<config::Config::Imu>(imu_result).sensor_name, Entity::Imu);
-        database::InsertStep(db, std::get<config::Config::Imu>(imu_result).sensor_name, CalibrationStep::ImuDataLoading,
-                             hashing::Sha256(""));
 
-        auto const [imu_data, _1]{testing_mocks::GenerateImuData(duration_s, 20)};
-        database::InsertImuData(db, std::get<config::Config::Imu>(imu_result).sensor_name, imu_data);
+        if (auto const imu_cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
+            database::InsertEntity(db, imu_cfg->sensor_name, Entity::Imu);
+            database::InsertStep(db, imu_cfg->sensor_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
+
+            auto const [imu_data, _1]{testing_mocks::GenerateImuData(duration_s, 20)};
+            database::InsertImuData(db, imu_cfg->sensor_name, imu_data);
+        }
+
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
