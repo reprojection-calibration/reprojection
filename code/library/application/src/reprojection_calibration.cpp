@@ -106,8 +106,8 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
     // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
     // someone tried to use this from an application it will be impossible.
     // TODO(Jack): Remove code coverage exclusion!
+    // LCOV_EXCL_START
     if (cfg.imu) {
-        // LCOV_EXCL_START
         std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
         database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);
         database::InsertEntity(db, Extrinsic::EntityId(cfg.imu->sensor_name, camera_info.sensor_name),
@@ -145,9 +145,8 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
 
         std::cout << geometry::Exp(extrinsic_opt_result.second.tf.se3_a_b).matrix() << std::endl;
         std::cout << extrinsic_opt_result.second.gravity.transpose() << std::endl;
-
-        // LCOV_EXCL_STOP
     }
+    // LCOV_EXCL_STOP
 }
 
 }  // namespace reprojection::application

@@ -13,7 +13,7 @@ config::Config ConfigParsing(toml::table const& cfg_table, SqlitePtr const db) {
     // we will just insert the entity ID no matter what. I think this is fine but let's think about it :)
     database::InsertEntity(db, cfg.camera.sensor_name, Entity::Camera);
     if (cfg.imu) {
-        database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);
+        database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);  // LCOV_EXCL_LINE REMOVE!!!
     }
 
     // TODO(Jack): Should we insert the config file into the database itself? Right now the application requires a
@@ -21,6 +21,6 @@ config::Config ConfigParsing(toml::table const& cfg_table, SqlitePtr const db) {
     // calibration using the stored config or even extract the stored config to debug the calibration more.
 
     return cfg;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::steps
