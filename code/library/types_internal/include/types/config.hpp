@@ -2,15 +2,7 @@
 
 #include <string>
 
-// REMOVE
-
-// REMOVE
-
-// REMOVE
-
-// REMOVE
-
-// REMOVE
+// TODO(Jack): This code is essentially not used anywhere can we remove this if we refactor the toml loading?
 
 namespace reprojection {
 
