@@ -4,6 +4,7 @@
 
 namespace reprojection::steps {
 
+// TODO(Jack): Is this really worth testing?
 config::Config ConfigParsing(toml::table const& cfg_table, SqlitePtr const db) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
 
