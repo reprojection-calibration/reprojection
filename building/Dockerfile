@@ -280,7 +280,7 @@ RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporar
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
       /data/ros2/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.db3 d80c3339afd23644f8baf774279cf2d3f9f67b7b3713f6cf678357a381540317
+      /data/video_file/dataset-calib-imu4_512_16.db3 b81580d1ffe01df82b4347f8075a0c20f5f7778e31af901cc2dabd8982493094
 
 
 FROM apt-base-stage AS ros1-base-stage
