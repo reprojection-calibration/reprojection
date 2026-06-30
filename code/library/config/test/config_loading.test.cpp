@@ -2,41 +2,42 @@
 
 #include <gtest/gtest.h>
 
+#include <format>
+
 #include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
 
 TEST(ConfigConfigLoading, TestLoadConfigFile) {
-    static constexpr std::string_view table_content{R"(
+    static constexpr std::string_view content{R"(
         [table]
-        key1 = "value1"
     )"};
-    TemporaryFile const config_file{".toml", table_content};
+    TemporaryFile const config_file{".toml", content};
 
-    auto result{config::LoadConfigFile(config_file.Path())};
-    EXPECT_TRUE(std::holds_alternative<toml::table>(result));
-
-    result = config::LoadConfigFile("bad.toml");
-    ASSERT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
-    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::FailedLoad);
-    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg,
-              "Error parsing file 'bad.toml' - File could not be opened for reading on line (0)");
+    EXPECT_NO_THROW(config::LoadConfigFile(config_file.Path()));
 }
 
-// Missing closing bracket for table header - tests the core tomlplusplus parsing error handling
 TEST(ConfigConfigLoading, TestLoadConfigFileBadToml) {
-    static constexpr std::string_view table_content{R"(
+    static constexpr std::string_view misformatted{R"(
         [table
-        key1 = "value1"
     )"};
-    TemporaryFile const config_file{".toml", table_content};
+    TemporaryFile const misformatted_config_file{".toml", misformatted};
 
-    auto result{config::LoadConfigFile(config_file.Path())};
-    ASSERT_TRUE(std::holds_alternative<TomlErrorMsg>(result));
+    // NOTE(Jack): Gtest does not provide us a direct way to check both that a function throws and what the value of the
+    // exception actually is. Therefore, we engineer that here ourselves but putting in a try catch block with a
+    // assertion inside the EXPECT_THROW assertion. A little hacky but it gets the job done.
+    EXPECT_THROW(
+        try { config::LoadConfigFile(misformatted_config_file.Path()); } catch (std::runtime_error const& e) {
+            // NOTE(Jack): We cannot hardcode the path file in the expected error message because that is random and
+            // changes every time.
+            std::string const error_msg{std::format(
+                "{{'file': '{}', 'line': 2, 'error': 'Error while parsing table header: expected ']', saw '\\n''}}",
+                misformatted_config_file.Path().string())};
+            EXPECT_EQ(std::string(e.what()), error_msg);
 
-    std::string const gt_result{"Error parsing file '" + config_file.Path().string() +
-                                "' - Error while parsing table header: expected ']', saw '\\n' on line (2)"};
-    EXPECT_EQ(std::get<TomlErrorMsg>(result).type, TomlError::FailedLoad);
-    EXPECT_EQ(std::get<TomlErrorMsg>(result).msg, gt_result);
+            // Rethrow so we satisfy the EXPECT_THROW assertion.
+            throw;
+        },
+        std::runtime_error);
 }

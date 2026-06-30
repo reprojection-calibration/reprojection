@@ -42,6 +42,5 @@ int main(int argc, char* argv[]) {
     application::Calibrate(app_args->config, image_source, "", app_args->db);
 
     std::cout << "The future is calibrated!\n";
-
     return EXIT_SUCCESS;
 }
