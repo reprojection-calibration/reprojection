@@ -6,7 +6,6 @@
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
-#include "types/config.hpp"
 
 namespace reprojection::steps {
 
