@@ -47,7 +47,7 @@ struct Config {
         bool asymmetric{false};
     };
 
-    // NOTE(Jack): At a high level there are three kinds of config "requirements":
+    // NOTE(Jack): At a high level there are three kinds of config "requirements"
     //
     //  1) required
     //  2) optional with default value
@@ -65,6 +65,8 @@ struct Config {
     // then that is the same as the user telling the pipeline to do a extrinsic calibration. If it is not present in the
     // config file then the user is only asking for a camera intrinsic calibration. Whether or not this is easy for the
     // user to understand, only time will tell :)
+    //
+    // Look at the config_parse.test.cpp for hands-on examples of what valid configs are and are not.
     Application application;
     Camera camera;
     std::optional<Imu> imu;
