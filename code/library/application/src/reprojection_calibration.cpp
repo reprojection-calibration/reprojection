@@ -113,48 +113,46 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
     // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
     // someone tried to use this from an application it will be impossible.
     // TODO(Jack): Remove code coverage exclusion!
-    // LCOV_EXCL_START
-    if (cfg_table.contains("imu")) {
-        if (auto const cfg{config::Config::Imu::Parse(*cfg_table["imu"].as_table())}) {
-            std::string const imu_name{cfg->sensor_name};
+    if (cfg.imu) {
+        // LCOV_EXCL_START
+        std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
+        database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);
+        database::InsertEntity(db, Extrinsic::EntityId(cfg.imu->sensor_name, camera_info.sensor_name),
+                               Entity::Extrinsic);
 
-            std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
-            database::InsertEntity(db, imu_name, Entity::Imu);
-            database::InsertEntity(db, Extrinsic::EntityId(imu_name, camera_info.sensor_name), Entity::Extrinsic);
+        // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
+        // source lambda! For now though this only works if we write the imu data seperately and manually trigger a
+        // cache hit.
+        steps::ImuDataLoading const imu_data_loading{cfg.imu->sensor_name, "", {}};
+        auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
+        log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.StepType()),
+                  ToString(imu_data_loading_cache_status), std::size(imu_data));
 
-            // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
-            // source lambda! For now though this only works if we write the imu data seperately and manually trigger a
-            // cache hit.
-            steps::ImuDataLoading const imu_data_loading{imu_name, "", {}};
-            auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
-            log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.StepType()),
-                      ToString(imu_data_loading_cache_status), std::size(imu_data));
+        steps::SplineInitialization const spline_init_step{camera_info, targets, aligned_initial_state};
+        auto const [spline_init, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
+        log->info("{{'step': '{}', 'cache_status': '{}', 'num_control_points': {}}}",
+                  ToString(spline_init_step.StepType()), ToString(spline_init_cache_status), spline_init.Size());
 
-            steps::SplineInitialization const spline_init_step{camera_info, targets, aligned_initial_state};
-            auto const [spline_init, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
-            log->info("{{'step': '{}', 'cache_status': '{}', 'num_control_points': {}}}",
-                      ToString(spline_init_step.StepType()), ToString(spline_init_cache_status), spline_init.Size());
+        steps::ExtrinsicInitialization const extrinsic_init_step{cfg.imu->sensor_name, camera_info.sensor_name,
+                                                                 imu_data, spline_init};
+        auto const [extrinsic_init,
+                    extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
+        log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
+                  ToString(extrinsic_init_cache_status));
 
-            steps::ExtrinsicInitialization const extrinsic_init_step{imu_name, camera_info.sensor_name, imu_data,
-                                                                     spline_init};
-            auto const [extrinsic_init,
-                        extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
-            log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
-                      ToString(extrinsic_init_cache_status));
+        std::cout << geometry::Exp(extrinsic_init.tf.se3_a_b).matrix() << std::endl;
+        std::cout << extrinsic_init.gravity.transpose() << std::endl;
 
-            std::cout << geometry::Exp(extrinsic_init.tf.se3_a_b).matrix() << std::endl;
-            std::cout << extrinsic_init.gravity.transpose() << std::endl;
+        steps::ExtrinsicOptimization const extrinsic_opt_step{camera_info, targets,     optimized_state.camera_state,
+                                                              imu_data,    spline_init, extrinsic_init};
+        auto const [extrinsic_opt_result, extrinsic_opt_cache_status]{
+            steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
+        log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.StepType()),
+                  ToString(extrinsic_opt_cache_status));
 
-            steps::ExtrinsicOptimization const extrinsic_opt_step{
-                camera_info, targets, optimized_state.camera_state, imu_data, spline_init, extrinsic_init};
-            auto const [extrinsic_opt_result, extrinsic_opt_cache_status]{
-                steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
-            log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.StepType()),
-                      ToString(extrinsic_opt_cache_status));
+        std::cout << geometry::Exp(extrinsic_opt_result.second.tf.se3_a_b).matrix() << std::endl;
+        std::cout << extrinsic_opt_result.second.gravity.transpose() << std::endl;
 
-            std::cout << geometry::Exp(extrinsic_opt_result.second.tf.se3_a_b).matrix() << std::endl;
-            std::cout << extrinsic_opt_result.second.gravity.transpose() << std::endl;
-        }
         // LCOV_EXCL_STOP
     }
 }
