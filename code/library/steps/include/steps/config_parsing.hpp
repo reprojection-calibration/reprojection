@@ -4,6 +4,6 @@
 
 namespace reprojection::steps {
 
-config::Config ConfigParsing(toml::table const& cfg_table);
+config::Config ConfigParsing(toml::table const& cfg_table, SqlitePtr const db);
 
 }
