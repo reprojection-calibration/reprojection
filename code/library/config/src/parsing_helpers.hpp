@@ -8,6 +8,10 @@
 
 namespace reprojection::config {
 
+// NOTE(Jack): I chose to throw errors everywhere because using variants and passing error messages around everywhere
+// was burdensome and made refactoring difficult. Because all these config errors are important enough that the program
+// needs to be killed when thrown and cannot be handled anyway, I think it is ok to use throwing here.
+
 std::optional<toml::table> OptionalTable(toml::table const& table, std::string_view key);
 
 toml::table RequireTable(toml::table const& table, std::string_view key);

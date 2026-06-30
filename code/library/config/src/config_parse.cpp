@@ -4,6 +4,12 @@
 
 namespace reprojection::config {
 
+// TODO(Jack): Should we define an enum and a ToString() method for the top level required tables? I see throughout the
+// code "application" or "camera" as strings copy and pasted a little too much for comfort.
+// TODO(Jack): Is there anyway for us to specify the config in a graph and then construct the parsing code automatically
+// from the graph? The current setup works but everytime we need to add a new parameter we will need to touch the code
+// at multiple places which is not so nice. Not a deal breaker but consider it!
+
 Config Config::Parse(toml::table const& table) {
     RejectUnexpectedKeys(table, {"application", "camera", "imu", "target"}, "");
 
@@ -43,6 +49,9 @@ std::optional<Config::Imu> Config::Imu::Parse(toml::table const& table) {
     return Imu{*sensor_name};
 }
 
+// TODO(Jack): The target config is essentially the exact same as the TargetInfo type, we need top unify these! I think
+// by doing that we can remove the target info step entirely from the calibration process because the entire description
+// is contained in the config file itself and can be loaded directly.
 Config::Target Config::Target::Parse(toml::table const& table) {
     RejectUnexpectedKeys(table, {"type", "pattern_size", "unit_dimension", "circle_grid"}, "target");
 
