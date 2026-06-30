@@ -9,19 +9,12 @@
 
 namespace reprojection::steps {
 
-std::string TargetInfoStep::HashInputs() const {
-    std::ostringstream oss;
-    oss << target_config_;
-
-    return hashing::HashArguments(oss.str(), sensor_name_);
-}
+std::string TargetInfoStep::HashInputs() const { return hashing::HashArguments(cfg_, sensor_name_); }
 
 TargetInfo TargetInfoStep::Compute() const {
     // TODO(Jack): Here we see that the intermediate config::Config::Target type is little redundant because it is
     // basically exactly the TargetInfo type. We should unify these into one single type.
-    auto const cfg{config::Config::Target::Parse(*target_config_.as_table())};
-
-    return {cfg.target_type, cfg.size[0], cfg.size[1], cfg.unit_dimension, cfg.asymmetric};
+    return {cfg_.target_type, cfg_.size[0], cfg_.size[1], cfg_.unit_dimension, cfg_.asymmetric};
 }
 
 TargetInfo TargetInfoStep::Load(SqlitePtr const db) const {

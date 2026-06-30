@@ -29,18 +29,14 @@ using namespace std::string_view_literals;
 class CameraStepsFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        db = database::OpenCalibrationDatabase(":memory:", true, false);
-
-        config = toml::parse(testing_utilities::minimum_config);
-
-        auto const cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
-
-        camera_info = CameraInfo{cfg.sensor_name, cfg.camera_model, testing_utilities::image_bounds};
+        db_ = database::OpenCalibrationDatabase(":memory:", true, false);
+        cfg_ = config::Config::Parse(toml::parse(testing_utilities::minimum_config));
+        camera_info_ = CameraInfo{cfg_.camera.sensor_name, cfg_.camera.camera_model, testing_utilities::image_bounds};
 
         // WARN(Jack): Make sure all tests that use this are really a camera!!!
-        database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo, "");
-        database::InsertCameraInfo(db, camera_info);
+        database::InsertEntity(db_, camera_info_.sensor_name, Entity::Camera);
+        database::InsertStep(db_, camera_info_.sensor_name, CalibrationStep::CameraInfo, "");
+        database::InsertCameraInfo(db_, camera_info_);
     }
 
     void SatisfyPoseForeignKeys(CameraMeasurements const& targets) {
@@ -55,16 +51,16 @@ class CameraStepsFixture : public ::testing::Test {
             return images;
         }()};
 
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, "");
-        database::InsertImages(db, camera_info.sensor_name, images);
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, "");
-        database::InsertTargets(db, camera_info.sensor_name, targets);
+        database::InsertStep(db_, camera_info_.sensor_name, CalibrationStep::ImageLoading, "");
+        database::InsertImages(db_, camera_info_.sensor_name, images);
+        database::InsertStep(db_, camera_info_.sensor_name, CalibrationStep::FeatureExtraction, "");
+        database::InsertTargets(db_, camera_info_.sensor_name, targets);
     }
 
-    SqlitePtr db;
-    CameraInfo camera_info;
-    CameraState camera_state{testing_utilities::double_sphere_intrinsics};
-    toml::table config;
+    SqlitePtr db_;
+    CameraInfo camera_info_;
+    CameraState camera_state_{testing_utilities::double_sphere_intrinsics};
+    config::Config cfg_;
 };
 
 class ImageSourceFixture : public CameraStepsFixture {
@@ -101,9 +97,8 @@ class ImageSourceFixture : public CameraStepsFixture {
 
         // TODO(Jack): This conversion logic is now at least repeated here and in the target info step exactly the same,
         // this could be good place for a reusable config parsing function instead of copy and paste.
-        auto const cfg{config::Config::Target::Parse(*config["target"].as_table())};
-
-        target_info = TargetInfo{cfg.target_type, cfg.size[0], cfg.size[1], cfg.unit_dimension, cfg.asymmetric};
+        target_info = TargetInfo{cfg_.target.target_type, cfg_.target.size[0], cfg_.target.size[1],
+                                 cfg_.target.unit_dimension, cfg_.target.asymmetric};
     }
 
     std::shared_ptr<EncodedImages> encoded_images;
@@ -112,28 +107,28 @@ class ImageSourceFixture : public CameraStepsFixture {
 };
 
 TEST_F(ImageSourceFixture, TestImageLoading) {
-    steps::ImageLoading const step{camera_info.sensor_name, "sha256-key", image_source};
+    steps::ImageLoading const step{camera_info_.sensor_name, "sha256-key", image_source};
 
-    auto [encoded_images, cache_status]{RunStep<std::shared_ptr<EncodedImages>>(step, db)};
+    auto [encoded_images, cache_status]{RunStep<std::shared_ptr<EncodedImages>>(step, db_)};
     EXPECT_EQ(std::size(*encoded_images), 2);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    std::tie(encoded_images, cache_status) = RunStep<std::shared_ptr<EncodedImages>>(step, db);
+    std::tie(encoded_images, cache_status) = RunStep<std::shared_ptr<EncodedImages>>(step, db_);
     EXPECT_EQ(std::size(*encoded_images), 2);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(ImageSourceFixture, TestCameraInfoStep) {
-    steps::CameraInfoStep const step{*config["camera"].as_table(), encoded_images};
+    steps::CameraInfoStep const step{cfg_.camera, encoded_images};
 
-    auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db)};
+    auto [camera_info, cache_status]{RunStep<CameraInfo>(step, db_)};
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
     EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
     EXPECT_EQ(camera_info.bounds.u_max, 20);
     EXPECT_EQ(camera_info.bounds.v_max, 10);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    std::tie(camera_info, cache_status) = RunStep<CameraInfo>(step, db);
+    std::tie(camera_info, cache_status) = RunStep<CameraInfo>(step, db_);
     EXPECT_EQ(camera_info.sensor_name, "/cam0/image_raw");
     EXPECT_EQ(camera_info.camera_model, CameraModel::DoubleSphere);
     EXPECT_EQ(camera_info.bounds.u_max, 20);
@@ -145,108 +140,108 @@ TEST_F(ImageSourceFixture, TestFeatureExtraction) {
     // NOTE(Jack): There are no foreign key constraints that need to be satisfied here because there are no actuall
     // extracted targets which get written to or loaded from the database.
 
-    steps::FeatureExtraction const step{camera_info.sensor_name, encoded_images, target_info, false};
+    steps::FeatureExtraction const step{camera_info_.sensor_name, encoded_images, target_info, false};
 
-    auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db)};
+    auto [extracted_targets, cache_status]{RunStep<CameraMeasurements>(step, db_)};
     EXPECT_EQ(std::size(extracted_targets), 0);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    std::tie(extracted_targets, cache_status) = RunStep<CameraMeasurements>(step, db);
+    std::tie(extracted_targets, cache_status) = RunStep<CameraMeasurements>(step, db_);
     EXPECT_EQ(std::size(extracted_targets), 0);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
-    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info_, camera_state_, 60, 1)};
 
     SatisfyPoseForeignKeys(targets);
 
-    steps::BundleAdjustment const step{camera_info, targets, {camera_state, gt_poses}};
+    steps::BundleAdjustment const step{camera_info_, targets, {camera_state_, gt_poses}};
 
-    auto [result, cache_status]{RunStep<OptimizationState>(step, db)};
+    auto [result, cache_status]{RunStep<OptimizationState>(step, db_)};
     EXPECT_EQ(std::size(result.frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    auto const poses{database::ReadPoses(db, camera_info.sensor_name, step.StepType())};
+    auto const poses{database::ReadPoses(db_, camera_info_.sensor_name, step.StepType())};
     EXPECT_EQ(std::size(poses), 56);
 
     // On rerun with the same inputs it will be a cache hit
-    std::tie(result, cache_status) = RunStep<OptimizationState>(step, db);
+    std::tie(result, cache_status) = RunStep<OptimizationState>(step, db_);
     EXPECT_EQ(std::size(result.frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(CameraStepsFixture, TestIntrinsicInitialization) {
-    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 11, 1)};
-    steps::IntrinsicInitialization const step{camera_info, targets};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info_, camera_state_, 11, 1)};
+    steps::IntrinsicInitialization const step{camera_info_, targets};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization
     // strategy is unclear at this time.
     Array5d const gt_result{530.372, 360, 240, 0, 0.5};  // Heuristic!
 
-    auto [result, cache_status]{RunStep<CameraState>(step, db)};
+    auto [result, cache_status]{RunStep<CameraState>(step, db_)};
     EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
-    std::tie(result, cache_status) = RunStep<CameraState>(step, db);
+    std::tie(result, cache_status) = RunStep<CameraState>(step, db_);
     EXPECT_TRUE(result.intrinsics.isApprox(gt_result, 1e-3));
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(CameraStepsFixture, TestPoseInitialization) {
-    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 60, 1)};
+    auto [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info_, camera_state_, 60, 1)};
 
     SatisfyPoseForeignKeys(targets);
 
-    steps::PoseInitialization const step{camera_info, targets, camera_state};
+    steps::PoseInitialization const step{camera_info_, targets, camera_state_};
 
-    auto [frames, cache_status]{RunStep<Frames>(step, db)};
+    auto [frames, cache_status]{RunStep<Frames>(step, db_)};
     EXPECT_EQ(std::size(frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // Check that the proper amount of poses got written to the database.
     // TODO(Jack): We should also check that the reprojection errors got written!
-    auto poses{database::ReadPoses(db, camera_info.sensor_name, step.StepType())};
+    auto poses{database::ReadPoses(db_, camera_info_.sensor_name, step.StepType())};
     EXPECT_EQ(std::size(poses), 56);
 
     // On rerun with the same inputs it will be a cache hit
-    std::tie(frames, cache_status) = RunStep<Frames>(step, db);
+    std::tie(frames, cache_status) = RunStep<Frames>(step, db_);
     EXPECT_EQ(std::size(frames), 56);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(CameraStepsFixture, TestSplineInitialization) {
-    auto const [targets, poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, 10, 1)};
+    auto const [targets, poses]{testing_mocks::GenerateMvgData(camera_info_, camera_state_, 10, 1)};
 
     SatisfyPoseForeignKeys(targets);
 
-    steps::SplineInitialization const step{camera_info, targets, {camera_state, poses}};
+    steps::SplineInitialization const step{camera_info_, targets, {camera_state_, poses}};
 
-    auto [result, cache_status]{RunStep<spline::Se3Spline>(step, db)};
+    auto [result, cache_status]{RunStep<spline::Se3Spline>(step, db_)};
     EXPECT_EQ(result.Size(), 558);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    auto const control_points{database::ReadControlPoints(db, camera_info.sensor_name, step.StepType())};
+    auto const control_points{database::ReadControlPoints(db_, camera_info_.sensor_name, step.StepType())};
     EXPECT_EQ(control_points.cols(), 558);
 
     // On rerun with the same inputs it will be a cache hit
-    std::tie(result, cache_status) = RunStep<spline::Se3Spline>(step, db);
+    std::tie(result, cache_status) = RunStep<spline::Se3Spline>(step, db_);
     EXPECT_EQ(result.Size(), 558);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 
 TEST_F(CameraStepsFixture, TestTargetInfoStep) {
-    steps::TargetInfoStep const step{*config["target"].as_table(), camera_info.sensor_name};
+    steps::TargetInfoStep const step{cfg_.target, camera_info_.sensor_name};
 
-    auto [target_info, cache_status]{RunStep<TargetInfo>(step, db)};
+    auto [target_info, cache_status]{RunStep<TargetInfo>(step, db_)};
     EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
     EXPECT_EQ(target_info.height, 6);
     EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
-    std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db);
+    std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db_);
     EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
     EXPECT_EQ(target_info.height, 6);
     EXPECT_EQ(target_info.width, 4);
@@ -291,27 +286,27 @@ TEST_F(CameraStepsFixture, TestExtrinsicOptimization) {
     double const duration_s{10};
 
     std::string const imu_name{"/imu/polaris/123"};
-    database::InsertEntity(db, imu_name, Entity::Imu);
-    database::InsertEntity(db, Extrinsic::EntityId(imu_name, camera_info.sensor_name), Entity::Extrinsic);
+    database::InsertEntity(db_, imu_name, Entity::Imu);
+    database::InsertEntity(db_, Extrinsic::EntityId(imu_name, camera_info_.sensor_name), Entity::Extrinsic);
 
-    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info, camera_state, duration_s, 10)};
+    auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info_, camera_state_, duration_s, 10)};
     SatisfyPoseForeignKeys(targets);
 
     // NOTE(Jack): See note above in TestExtrinsicInitialization
     auto const [imu_data, spline_b_w]{testing_mocks::GenerateImuData(duration_s, 20)};
-    database::InsertStep(db, imu_name, CalibrationStep::ImuDataLoading, "");
-    database::InsertImuData(db, imu_name, imu_data);
+    database::InsertStep(db_, imu_name, CalibrationStep::ImuDataLoading, "");
+    database::InsertImuData(db_, imu_name, imu_data);
 
-    ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info.sensor_name, Array6d::Zero()}, Array3d::Zero()};
+    ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info_.sensor_name, Array6d::Zero()}, Array3d::Zero()};
 
-    steps::ExtrinsicOptimization const step{camera_info, targets,    camera_state,
-                                            imu_data,    spline_b_w, initial_extrinsic};
+    steps::ExtrinsicOptimization const step{camera_info_, targets,    camera_state_,
+                                            imu_data,     spline_b_w, initial_extrinsic};
 
-    auto [result, cache_status]{RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db)};
+    auto [result, cache_status]{RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db_)};
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     // On rerun with the same inputs it will be a cache hit
-    std::tie(result, cache_status) = RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db);
+    std::tie(result, cache_status) = RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db_);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }
 

@@ -2,6 +2,8 @@
 
 #include <toml++/toml.hpp>
 
+#include "config/config_loading.hpp"
+#include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 #include "types/io.hpp"
@@ -23,15 +25,14 @@ namespace reprojection::steps {
 // applications.
 
 struct CameraInfoStep {
-    std::string sensor_name_;
-    CameraModel camera_model_;
+    // NOTE(Jack): If one day the Config::Camera starts to contain more information that is required to construct the
+    // camera info then do not pass and store the entire struct but just the parts we need.
+    config::Config::Camera cfg_;
     std::shared_ptr<EncodedImages> images_;
 
     static CalibrationStep StepType() { return CalibrationStep::CameraInfo; }
 
-    CameraInfoStep(toml::table const& sensor_config, std::shared_ptr<EncodedImages> const& _images);
-
-    std::string EntityId() const { return sensor_name_; }
+    std::string EntityId() const { return cfg_.sensor_name; }
 
     std::string HashInputs() const;
 

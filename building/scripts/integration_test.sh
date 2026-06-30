@@ -60,7 +60,7 @@ test_command "${APP} --data nonexistent.data" \
 # Running the program with a invalid config file (i.e. nonexistent, incomplete, invalid etc.) is an error.
 test_command "${APP} --config nonexistent.toml --data nonexistent.data" \
     1 \
-    "{'toml_error': 'failed_load', 'message': 'Error parsing file 'nonexistent.toml' - File could not be opened for reading on line (0)'}"
+    "{'file': 'nonexistent.toml', 'line': 0, 'error': 'File could not be opened for reading'}"
 
 test_command "${APP} --config /data/calibration_config.toml --data nonexistent.data" \
     1 \

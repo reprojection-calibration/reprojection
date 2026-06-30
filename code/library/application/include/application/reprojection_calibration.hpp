@@ -20,7 +20,7 @@ struct AppArgs {
 std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
-void Calibrate(toml::table const& config, ImageSourceSignature image_source, std::string const& image_source_signature,
-               SqlitePtr const db);
+void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
+               std::string const& image_source_signature, SqlitePtr const db);
 
 }  // namespace reprojection::application
