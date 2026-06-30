@@ -123,7 +123,6 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     // LCOV_EXCL_START
     if (config.contains("imu")) {
         if (auto const cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
-            std::cout << 123123 << std::endl;
             std::string const imu_name{cfg->sensor_name};
 
             std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
