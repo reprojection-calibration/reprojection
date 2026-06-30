@@ -118,16 +118,25 @@ std::string Serialize(ImuMeasurements const& data) {
 
 std::string Serialize(OptimizationState const& data) { return Serialize(data.camera_state) + Serialize(data.frames); }
 
-std::string Serialize(TargetInfo const& data) {
+// TODO(Jack): This is practically the exact same as the target info one! We need to combine the underlying type
+// representations. Have both config::Config::Target and TargetInfo is bad for business!
+std::string Serialize(config::Config::Target const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
     oss << ToString(data.target_type) << "|";
-    oss << data.height << "," << data.width << "|";
+    oss << data.size[0] << "," << data.size[1] << "|";
     oss << data.unit_dimension << "|";
     oss << data.asymmetric << "|";
 
     return oss.str();
+}
+
+std::string Serialize(TargetInfo const& data) {
+    config::Config::Target const data1{
+        data.target_type, {data.height, data.width}, data.unit_dimension, data.asymmetric};
+
+    return Serialize(data1);
 }
 
 // NOTE(Jack): It is kind of dumb this version exists because it does not really do anything, but we need it to work

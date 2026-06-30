@@ -10,6 +10,8 @@ set(INCLUDE_DIRECTORIES
 set(LINK_LIBRARIES
         ${OPENSSL_LIBRARIES}
         Eigen3::Eigen
+        config
+        tomlplusplus::tomlplusplus # REQUIRED BECAUSE OF CONFIG DEP - SHOULD TRY TO REMOVE
         types_internal
 )
 AddLibrary()

@@ -10,15 +10,9 @@
 
 namespace reprojection::steps {
 
-CameraInfoStep::CameraInfoStep(toml::table const& sensor_config, std::shared_ptr<EncodedImages> const& images)
-    : images_{images} {
-    auto const cfg{config::Config::Camera::Parse(sensor_config)};
-
-    sensor_name_ = cfg.sensor_name;
-    camera_model_ = cfg.camera_model;
+std::string CameraInfoStep::HashInputs() const {
+    return hashing::HashArguments(cfg_.sensor_name, cfg_.camera_model, *images_);
 }
-
-std::string CameraInfoStep::HashInputs() const { return hashing::HashArguments(sensor_name_, camera_model_, *images_); }
 
 CameraInfo CameraInfoStep::Compute() const {
     if (images_->size() == 0) {
@@ -36,7 +30,7 @@ CameraInfo CameraInfoStep::Compute() const {
     }
 
     CameraInfo const camera_info{EntityId(),
-                                 camera_model_,
+                                 cfg_.camera_model,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
     return camera_info;

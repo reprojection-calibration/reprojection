@@ -7,6 +7,7 @@
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
+#include "steps/config_parsing.hpp"
 #include "steps/extrinsic_initialization.hpp"
 #include "steps/extrinsic_optimization.hpp"
 #include "steps/feature_extraction.hpp"
@@ -51,32 +52,24 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 // TODO(Jack): Should we put image_source_signature and image_source into one object? They are 100% related. Or maybe
 // the entire "image source" concept needs to be reworked as it does not play nice with the database. See note in
 // update_feature_extraction_cache_key.py
-void Calibrate(toml::table const& config, ImageSourceSignature image_source, std::string const& image_source_signature,
-               SqlitePtr const db) {
-    // TODO(Jack): Add a config parsing step where all entities get written to the entity table.
-    // NOTE(Jack): The entity holds a special place in the calibration process in that it is not part of the regular
-    // cachable step workflow process. That is readily apparent by the foreign key dependency of the calibration step
-    // table on the entity ids found in the entity table. The most important implication of this is that the entity
-    // table needs a custom read/write step like object. And in addition to that, instead of pure "insert" semantics
-    // the entity use "insert or ignore" semantics because every time the calibration runs it will try to insert
-    // all the entities that are present. And if it is already present that is not an error!
-    std::string const camera_name{config["camera"]["sensor_name"].as_string()->get()};
-    database::InsertEntity(db, camera_name, Entity::Camera);
+void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
+               std::string const& image_source_signature, SqlitePtr const db) {
+    config::Config const cfg{steps::ConfigParsing(cfg_table, db)};
 
-    steps::ImageLoading const image_loading{camera_name, image_source_signature, image_source};
+    steps::ImageLoading const image_loading{cfg.camera.sensor_name, image_source_signature, image_source};
     auto const [encoded_images,
                 image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.StepType()),
               ToString(image_loading_cache_status), encoded_images->size());
 
-    steps::CameraInfoStep const camera_info_step{*config["camera"].as_table(), encoded_images};
+    steps::CameraInfoStep const camera_info_step{cfg.camera, encoded_images};
     auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(camera_info_step, db)};
     log->info(
         "{{'step': '{}', 'cache_status': '{}', 'sensor_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
         ToString(camera_info_step.StepType()), ToString(ci_cache_status), camera_info.sensor_name,
         ToString(camera_info.camera_model), camera_info.bounds.v_max, camera_info.bounds.u_max);
 
-    steps::TargetInfoStep const target_info_step{*config["target"].as_table(), camera_info.sensor_name};
+    steps::TargetInfoStep const target_info_step{cfg.target, camera_info.sensor_name};
     auto const [target_info, target_info_cache_status]{steps::RunStep<TargetInfo>(target_info_step, db)};
     log->info(
         "{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height': {}, 'width': {}, 'unit_dimension': {}, "
@@ -87,7 +80,7 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     // TODO(Jack): The loading and parsing of the app config belongs in its own step! Having this here is a hack for
     // now.
     bool show_extraction{true};
-    if (auto const node{config["application"]["show_extraction"]}) {
+    if (auto const node{cfg_table["application"]["show_extraction"]}) {
         show_extraction = node.as_boolean()->get();  // LCOV_EXCL_LINE
     }
 
@@ -121,8 +114,8 @@ void Calibrate(toml::table const& config, ImageSourceSignature image_source, std
     // someone tried to use this from an application it will be impossible.
     // TODO(Jack): Remove code coverage exclusion!
     // LCOV_EXCL_START
-    if (config.contains("imu")) {
-        if (auto const cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
+    if (cfg_table.contains("imu")) {
+        if (auto const cfg{config::Config::Imu::Parse(*cfg_table["imu"].as_table())}) {
             std::string const imu_name{cfg->sensor_name};
 
             std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
