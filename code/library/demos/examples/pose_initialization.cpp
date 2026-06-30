@@ -26,7 +26,7 @@ int main() {
             sensor_name = "/imu0"
 
             [target]
-            pattern_size = [6,6]
+            pattern_size = [6,4]
             type = "aprilgrid3"
             unit_dimension = 0.1
         )"};
@@ -52,7 +52,7 @@ int main() {
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "5d87595c7c8f53d8c355f8b889374c6d1d1cd4bed1472da698725bd51777385a");
+                             "068b7b43aa35c39d9e767c72b8136ec8e503e64ce3741011846b21427ae75399");
 
         // Imu stuff
         if (auto const imu_cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
