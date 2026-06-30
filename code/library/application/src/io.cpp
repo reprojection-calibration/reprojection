@@ -43,11 +43,20 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
     return path_config;
 }
 
-toml::table LoadConfig(fs::path const& cfg_path) {
-    auto const cfg{config::LoadConfigFile(cfg_path)};
-    log->info("{{'config_path': '{}', 'config': {}}}", cfg_path.string(), logging::ToOneLineJson(cfg));
+// TODO(Jack): This method is essentially a converter from the underlying code which throws exceptions to this top level
+// interface method which returns std:nullopt and logs instead.
+std::optional<toml::table> LoadConfig(fs::path const& cfg_path) {
+    std::optional<toml::table> cfg;
+    try {
+        cfg = config::LoadConfigFile(cfg_path);
+        log->info("{{'config_path': '{}', 'config': {}}}", cfg_path.string(), logging::ToOneLineJson(*cfg));
 
-    return cfg;
+        return cfg;
+    } catch (std::exception const& e) {
+        log->error(e.what());
+
+        return std::nullopt;
+    }
 }
 
 std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path) {
