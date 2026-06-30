@@ -1,15 +1,13 @@
 #pragma once
 
 #include <filesystem>
-#include <string>
-#include <variant>
 
 #include <toml++/toml.hpp>
 
-#include "types/config.hpp"
-
 namespace reprojection::config {
 
-toml::table LoadConfigFile(std::string const& file);
+namespace fs = std::filesystem;
+
+toml::table LoadConfigFile(fs::path const& cfg_path);
 
 }  // namespace reprojection::config
