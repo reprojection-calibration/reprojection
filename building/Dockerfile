@@ -110,7 +110,7 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
 # system or run without special permissions that docker cannot provide.
 COPY code/python_tooling /temporary/code/python_tooling
-COPY $REPROJECTION_SQL_DIR $REPROJECTION_SQL_PYTHON_DIR
+COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.db3
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
@@ -156,7 +156,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
@@ -204,7 +204,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
@@ -226,7 +226,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
@@ -374,7 +374,7 @@ FROM ros1-base-stage AS ros1-app-stage
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
-COPY $REPROJECTION_SQL_DIR $REPROJECTION_SQL_PYTHON_DIR
+COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 ENV APP_FLAVOR=ros1
 
@@ -393,7 +393,7 @@ FROM ros2-base-stage AS ros2-app-stage
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
-COPY $REPROJECTION_SQL_DIR $REPROJECTION_SQL_PYTHON_DIR
+COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 # TODO(Jack): Needed? Can we put this in the entrypoint script instead?
 ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
@@ -415,7 +415,7 @@ FROM base-stage AS video-file-app-stage
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
-COPY $REPROJECTION_SQL_DIR $REPROJECTION_SQL_PYTHON_DIR
+COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 ENV APP_FLAVOR=video-file
 
