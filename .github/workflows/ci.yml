@@ -172,6 +172,12 @@ jobs:
             --data ${{ matrix.applications.data }} \
             --workspace /data/
           
+          echo "ls data"
+          ls /data/
+          
+          echo "ls ${{ matrix.applications.data }}"
+          ls ${{ matrix.applications.data }}
+          
           [[ -f /data/dataset-calib-imu4_512_16.db3 ]] || {
             echo "Calibration database was not generated."
             exit 1
