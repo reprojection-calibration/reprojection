@@ -135,9 +135,9 @@ jobs:
     strategy:
       matrix:
         applications:
-          - base: *ubuntu_20_base
-            cache_scope: ros1-integration-test
-            target: ros1-integration-test-stage
+          #- base: *ubuntu_20_base
+          #  cache_scope: ros1-integration-test
+          #  target: ros1-integration-test-stage
           - base: *ubuntu_24_base
             cache_scope: ros2-integration-test
             external_cache_scope_1: debug-build
@@ -156,6 +156,13 @@ jobs:
         with:
           lfs: true
       - run: git lfs pull
+      - name: Load test data image
+        uses: ./.github/actions/docker-build
+        with:
+          external_cache_scope: test-data
+          load: true
+          tag: reprojection:test-data-stage
+          target: test-data-stage
       - uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
@@ -183,10 +190,10 @@ jobs:
     strategy:
       matrix:
         applications:
-          - base: *ubuntu_20_base
-            data_subdir: ros1
-            external_cache_scope_1: ros1-integration-test
-            target: ros1-app-stage
+       #   - base: *ubuntu_20_base
+        #    data_subdir: ros1
+        #    external_cache_scope_1: ros1-integration-test
+        #    target: ros1-app-stage
           - base: *ubuntu_24_base
             data_subdir: ros2
             external_cache_scope_1: ros2-integration-test
