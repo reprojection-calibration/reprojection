@@ -392,6 +392,10 @@ COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 
+# TODO(Jack): Hack to get around the symlink thing. Can we instead package the sql stuff directly into the python package?
+RUN rm -f /temporary/code/python_tooling/database/sql
+COPY code/sql /temporary/code/python_tooling/database/sql
+
 ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
 
 ENV APP_FLAVOR=ros2
