@@ -110,8 +110,19 @@ jobs:
         with:
           cache_scope: test-data
           context: .
-          load: true
           target: test-data-stage
+      - name: Extract test data from image.
+        run: |
+          mkdir --parents "${RUNNER_TEMP}/test-data"
+          
+          docker create --name test-data-container reprojection:test-data-stage
+          docker cp "test-data-container:/data/." "${RUNNER_TEMP}/test-data/"
+          docker rm test-data-container
+      - name: Upload test data.
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-data
+          path: ${{ runner.temp }}/test-data
 
   application-integration-tests:
     name: ${{ matrix.applications.target }}
