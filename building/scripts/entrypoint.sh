@@ -50,6 +50,8 @@ elif [[ -n "${data}" ]]; then
         exit 1
     fi
 else
+    # TODO(Jack): Should we check before this that both config and data are provided? This error message is a little m
+    # misleading as is.
     echo "(entrypoint.sh) Error: either --workspace or --data must be provided." >&2
     exit 1
 fi
