@@ -233,11 +233,13 @@ jobs:
           now="$(date +%s)"
           modified="$(stat -c %Y "${db}")"
           age_seconds="$((now - modified))"
+          echo "Database last modified: ${age_seconds}s"
           if (( age_seconds > 30 )); then
             echo "Calibration database was not recently updated."
-            echo "Age: ${age_seconds}s"
             exit 1
           fi
+          
+          ls ${RUNNER_TEMP}/data
           
           # Check that the two report files were created. 
           [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.pdf" ]] || {
