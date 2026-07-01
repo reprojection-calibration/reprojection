@@ -9,9 +9,6 @@ ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 SHELL ["/bin/bash", "-c"]
 WORKDIR /buildroot
 
-# TODO(Jack): Does this need to be in this low of a stage?
-ENV REPROJECTION_SQL_DIR=/temporary/code/python_tooling/database/sql
-
 
 FROM configuration-stage AS apt-base-stage
 
@@ -53,6 +50,9 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 
 FROM apt-base-stage AS base-stage
+
+ENV REPROJECTION_SQL_DIR=code/sql
+ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
 COPY --from=build-ceres-stage /opt/reprojection /opt/reprojection
 COPY --from=build-small-libraries-stage /opt/reprojection /opt/reprojection
@@ -110,7 +110,7 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
 # system or run without special permissions that docker cannot provide.
 COPY code/python_tooling /temporary/code/python_tooling
-COPY code/sql $REPROJECTION_SQL_DIR
+COPY $REPROJECTION_SQL_DIR $REPROJECTION_SQL_PYTHON_DIR
 
 ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.db3
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
@@ -374,7 +374,7 @@ FROM ros1-base-stage AS ros1-app-stage
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
-COPY code/sql $REPROJECTION_SQL_DIR
+COPY $REPROJECTION_SQL_DIR $REPROJECTION_SQL_PYTHON_DIR
 
 ENV APP_FLAVOR=ros1
 
@@ -393,7 +393,7 @@ FROM ros2-base-stage AS ros2-app-stage
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
-COPY code/sql $REPROJECTION_SQL_DIR
+COPY $REPROJECTION_SQL_DIR $REPROJECTION_SQL_PYTHON_DIR
 
 # TODO(Jack): Needed? Can we put this in the entrypoint script instead?
 ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
@@ -415,7 +415,7 @@ FROM base-stage AS video-file-app-stage
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
-COPY code/sql $REPROJECTION_SQL_DIR
+COPY $REPROJECTION_SQL_DIR $REPROJECTION_SQL_PYTHON_DIR
 
 ENV APP_FLAVOR=video-file
 
