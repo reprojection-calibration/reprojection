@@ -9,5 +9,6 @@ def sql_root():
 
     return Path(value)
 
+
 def load_sql(name):
     return (sql_root() / name).read_text(encoding="utf-8")
