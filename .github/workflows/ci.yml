@@ -170,9 +170,9 @@ jobs:
     strategy:
       matrix:
         applications:
-          #- base: *ubuntu_20_base
-          #  cache_scope: ros1-integration-test
-          #  target: ros1-integration-test-stage
+          - base: *ubuntu_20_base
+            cache_scope: ros1-integration-test
+            target: ros1-integration-test-stage
           - base: *ubuntu_24_base
             cache_scope: ros2-integration-test
             external_cache_scope_1: debug-build
@@ -251,10 +251,11 @@ jobs:
     strategy:
       matrix:
         applications:
-          #   - base: *ubuntu_20_base
-          #    data_subdir: ros1
-          #    external_cache_scope_1: ros1-integration-test
-          #    target: ros1-app-stage
+          - base: *ubuntu_20_base
+            data: dataset-calib-imu4_512_16.bag
+            data_artifact: test-data-ros1
+            external_cache_scope_1: ros1-integration-test
+            target: ros1-app-stage
           - base: *ubuntu_24_base
             data: dataset-calib-imu4_512_16/
             data_artifact: test-data-ros2
