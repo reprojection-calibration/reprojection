@@ -171,6 +171,21 @@ jobs:
             --config /data/calibration_config.toml \
             --data ${{ matrix.applications.data }} \
             --workspace /data/
+          
+          [[ -f /data/dataset-calib-imu4_512_16.db3 ]] || {
+            echo "Calibration database was not generated."
+            exit 1
+          }
+          
+          [[ -f /data/dataset-calib-imu4_512_16.pdf ]] || {
+            echo "PDF report was not generated."
+            exit 1
+          }
+      
+          [[ -f /data/dataset-calib-imu4_512_16.toml ]] || {
+            echo "TOML export was not generated."
+            exit 1
+          }
     strategy:
       matrix:
         applications:
