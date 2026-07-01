@@ -246,6 +246,7 @@ jobs:
             echo "PDF report was not generated."
             exit 1
           }
+          rm ${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.toml
           [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.toml" ]] || {
             echo "TOML export was not generated."
             exit 1
