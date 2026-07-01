@@ -113,18 +113,36 @@ jobs:
           load: true
           tag: reprojection:test-data-stage
           target: test-data-stage
-      - name: Extract test data from image.
+      - name: Extract entrypoint testing data.
         run: |
-          mkdir --parents "${RUNNER_TEMP}/test-data"
-          
           docker create --name test-data-container reprojection:test-data-stage
-          docker cp "test-data-container:/data/." "${RUNNER_TEMP}/test-data/"
+          
+          mkdir --parents "${RUNNER_TEMP}/test-data/ros1"
+          docker cp "test-data-container:/data/ros1/." \
+            "${RUNNER_TEMP}/test-data/ros1/"
+          
+          mkdir --parents "${RUNNER_TEMP}/test-data/ros2"
+          docker cp "test-data-container:/data/ros2/." \
+            "${RUNNER_TEMP}/test-data/ros2/"
+          
+          mkdir --parents "${RUNNER_TEMP}/test-data/video_file"
+          docker cp "test-data-container:/data/video_file/." \
+            "${RUNNER_TEMP}/test-data/video_file/"
+          
           docker rm test-data-container
-      - name: Upload test data.
-        uses: actions/upload-artifact@v4
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: test-data
-          path: ${{ runner.temp }}/test-data
+          name: test-data-ros1
+          path: ${{ runner.temp }}/test-data/ros1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-data-ros2
+          path: ${{ runner.temp }}/test-data/ros2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-data-video-file
+          path: ${{ runner.temp }}/test-data/video_file
 
   application-integration-tests:
     name: ${{ matrix.applications.target }}
