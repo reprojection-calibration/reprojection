@@ -62,7 +62,8 @@ An example command to run the video-file application is:
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
 
-To run the dashboard pass the workspace directory path, an example command is:
+This will output the calibration toml file and a report pdf to the workspace directory. To run the interactive dashboard
+for the calibration workspace run the following commend (use your workspace path!):
 
     ./building/local/run_dashboard.sh /home/user/data/
 
