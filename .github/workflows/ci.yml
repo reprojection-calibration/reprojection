@@ -156,14 +156,16 @@ jobs:
         with:
           lfs: true
       - run: git lfs pull
-      - name: Load test data image
+      - name: Load (already built) test data image
         uses: ./.github/actions/docker-build
         with:
+          context: .
           external_cache_scope: test-data
           load: true
           tag: reprojection:test-data-stage
           target: test-data-stage
-      - uses: ./.github/actions/docker-build
+      - name: Build application entrypoint image
+        uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
           context: .
