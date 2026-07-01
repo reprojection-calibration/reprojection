@@ -81,7 +81,8 @@ jobs:
         with:
           lfs: true
       - run: git lfs pull
-      - uses: ./.github/actions/docker-build
+      - name: Build dashboard smoke test image
+        uses: ./.github/actions/docker-build
         with:
           cache_scope: dashboard-smoke-test
           context: .
@@ -106,7 +107,7 @@ jobs:
         with:
           lfs: true
       - run: git lfs pull
-      - name: Download TUM test data.
+      - name: Download TUM test data
         uses: ./.github/actions/docker-build
         with:
           cache_scope: test-data
@@ -186,6 +187,7 @@ jobs:
     needs: [ application-integration-tests ]
     runs-on: ubuntu-latest
     steps:
+      # TODO(Jack): I do not think we need this git lfs pull step anymore.
       - uses: actions/checkout@v5
         with:
           lfs: true
