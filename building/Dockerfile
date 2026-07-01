@@ -389,11 +389,13 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM ros2-base-stage AS ros2-app-stage
 
+# TODO(Jack): Copy paste!
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 COPY code/sql $REPROJECTION_SQL_DIR
 
+# TODO(Jack): Needed? Can we put this in the entrypoint script instead?
 ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
 
 ENV APP_FLAVOR=ros2
@@ -409,6 +411,7 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM base-stage AS video-file-app-stage
 
+# TODO(Jack): Copy paste!
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling

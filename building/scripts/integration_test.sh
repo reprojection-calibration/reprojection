@@ -57,14 +57,22 @@ test_command "${APP} --data nonexistent.data" \
     1 \
     "Missing --config flag"
 
-# Running the program with a invalid config file (i.e. nonexistent, incomplete, invalid etc.) is an error.
 test_command "${APP} --config nonexistent.toml --data nonexistent.data" \
+    1 \
+    "Missing --workspace flag"
+
+# Running the program with a invalid config file (i.e. nonexistent, incomplete, invalid etc.) is an error.
+test_command "${APP} --config nonexistent.toml --data nonexistent.data --workspace nonexistent.workspace" \
     1 \
     "{'file': 'nonexistent.toml', 'line': 0, 'error': 'File could not be opened for reading'}"
 
-test_command "${APP} --config /data/calibration_config.toml --data nonexistent.data" \
+test_command "${APP} --config /data/calibration_config.toml --data nonexistent.data --workspace /tmp" \
     1 \
-    "{'workspace_dir': '', 'error_code': {'value': 2, 'message': 'No such file or directory'}}"
+    "{'data_path': 'nonexistent.data', 'fs::exists': false, 'error_code': {'value': 0, 'message': 'Success'}}"
+
+test_command "${APP} --config /data/calibration_config.toml --data ${DATA} --workspace nonexistent.workspace" \
+    1 \
+    "{'workspace_dir': 'nonexistent.workspace', 'error_code': {'value': 2, 'message': 'No such file or directory'}}"
 
 test_command "${APP} --config /data/calibration_config.toml --data ${DATA} --workspace /data" \
     0 \
