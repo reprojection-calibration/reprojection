@@ -31,11 +31,7 @@ TEST(ApplicationIO, TestParseCommandLineInput) {
 
     argc = 5;
     result = application::ParseCommandLineInput(argc, argv);
-    ASSERT_TRUE(result.has_value());
-
-    EXPECT_EQ(result->config_path, "tmp/config.toml");
-    EXPECT_EQ(result->data_path, "tmp/data.bag");
-    EXPECT_EQ(result->workspace_dir, "tmp");
+    EXPECT_FALSE(result.has_value());
 
     argc = 7;
     result = application::ParseCommandLineInput(argc, argv);

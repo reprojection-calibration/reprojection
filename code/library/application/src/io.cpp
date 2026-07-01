@@ -26,16 +26,13 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
         return std::nullopt;
     }
 
-    PathConfig path_config{*config_path, *data_path, ""};
+    auto const workspace_path{GetCommandOption(argv, argv + argc, "--workspace")};
+    if (not workspace_path) {
+        log->error("Missing --workspace flag");
+        return std::nullopt;
+    }
 
-    // If a workspace directory is provided use it, otherwise use the data_path. We support data path being either a
-    // file or a folder - in the case of a file we use the files directory, in the case of a folder we use the folder
-    // directly.
-    // TODO(Jack): Clean up this crazy ternary statement used to determine the workspace directory.
-    auto const workspace_dir{GetCommandOption(argv, argv + argc, "--workspace")};
-    path_config.workspace_dir = workspace_dir                             ? fs::path{*workspace_dir}
-                                : fs::is_directory(path_config.data_path) ? path_config.data_path
-                                                                          : path_config.data_path.parent_path();
+    PathConfig const path_config{*config_path, *data_path, *workspace_path};
 
     log->info("{{'config_path': '{}', 'data_path': '{}', 'workspace_dir': '{}'}}", path_config.config_path.string(),
               path_config.data_path.string(), path_config.workspace_dir.string());

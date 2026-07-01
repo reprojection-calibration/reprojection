@@ -22,8 +22,6 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 
     TemporaryFile const config_file{".toml", testing_utilities::minimum_config};
 
-    int const argc{5};
-
     char const arg0[]{"program"};
     char const arg1[]{"--config"};
     // NOTE(Jack): Guys sorry this got so complicated! But we need to pass the config files path to the parser here in
@@ -36,10 +34,13 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     // TemporaryFile gets created by the fs::temp_directory_path() call. This is ts=a little hacky and it might cause us
     // problems if the assumption turns out not to be true.
     char const arg4[]{"/tmp"};
-    char const* const argv[]{arg0, arg1, arg2.get(), arg3, arg4};
+    char const arg5[]{"--workspace"};
+    char const arg6[]{"/tmp"};
+    char const* const argv[]{arg0, arg1, arg2.get(), arg3, arg4, arg5, arg6};
 
+    int const argc{7};
     result = application::ParseArgs(argc, argv);
-    EXPECT_TRUE(result.has_value());
+    ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->data_path, "/tmp");  // Heuristic check of one of the values
 }
 
