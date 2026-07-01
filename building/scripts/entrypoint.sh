@@ -61,12 +61,14 @@ processed_args+=("--workspace" "$output_dir")
 case "${APP_FLAVOR}" in
   ros1)
     set +u
+    # shellcheck disable=SC1091
     source /opt/ros/noetic/setup.bash
     set -u
     /buildroot/reprojection-calibration-application "${processed_args[@]}"
     ;;
   ros2)
     set +u
+    # shellcheck disable=SC1091z
     source /opt/ros/jazzy/setup.bash
     set -u
     /buildroot/reprojection-calibration-application "${processed_args[@]}"

@@ -18,6 +18,7 @@ python3 -m pip install \
  dash \
  # TODO(Jack): We use this 2021 version of Kaleido because it does not require a google chrome installation for
  # rendering. Does this introduce any risks or problems for us?
+ # shellcheck disable=SC1097
  kaleido==0.2.1 \
  numpy \
  pandas \
