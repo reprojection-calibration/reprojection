@@ -5,6 +5,8 @@ from build_camera_toml import run_toml_export
 
 
 def main():
+    print("Running report generation!")
+
     parser = argparse.ArgumentParser(
         "Generate a calibration report PDF and camera intrinsics TOML from one or more calibration databases."
     )

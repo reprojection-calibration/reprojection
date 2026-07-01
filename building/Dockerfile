@@ -9,6 +9,9 @@ ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 SHELL ["/bin/bash", "-c"]
 WORKDIR /buildroot
 
+# TODO(Jack): Does this need to be in this low of a stage?
+ENV REPROJECTION_SQL_DIR=/temporary/code/python_tooling/database/sql
+
 
 FROM configuration-stage AS apt-base-stage
 
@@ -107,15 +110,7 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
 # system or run without special permissions that docker cannot provide.
 COPY code/python_tooling /temporary/code/python_tooling
-
-# TODO(Jack): We want to have a single source of truth for the sql files. Therefore we symlinked the `code/sql` directory
-# to the `code/python_tooling/database/sql` directory. Unfortunately in the dockerized python testing workflow this does not
-# work! Locally it works fine, but in the docker build we get the error "ModuleNotFoundError: No module named
-# 'database.sql'". This copy command copies the sql files over the symlinked directory in the python package and then the testing can
-# find the files no problem. This is technically acceptable because the "single source of truth" rule is only violated
-# here ephermally in the build process. But if there was just a way to make it work without this and simply with the
-# symlinks, like it works for local testing, that would be great.
-COPY code/sql /temporary/code/python_tooling/database/sql
+COPY code/sql $REPROJECTION_SQL_DIR
 
 ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.db3
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
@@ -375,6 +370,12 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM ros1-base-stage AS ros1-app-stage
 
+# TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
+COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
+COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+COPY code/sql $REPROJECTION_SQL_DIR
+
 ENV APP_FLAVOR=ros1
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
@@ -391,10 +392,7 @@ FROM ros2-base-stage AS ros2-app-stage
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
-
-# TODO(Jack): Hack to get around the symlink thing. Can we instead package the sql stuff directly into the python package?
-RUN rm -f /temporary/code/python_tooling/database/sql
-COPY code/sql /temporary/code/python_tooling/database/sql
+COPY code/sql $REPROJECTION_SQL_DIR
 
 ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
 
@@ -410,6 +408,11 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 
 FROM base-stage AS video-file-app-stage
+
+COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
+COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+COPY code/sql $REPROJECTION_SQL_DIR
 
 ENV APP_FLAVOR=video-file
 
