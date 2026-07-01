@@ -32,6 +32,22 @@ ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
 RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
     /temporary/${APT_INSTALL_GCC13}
 
+# NOTE(Jack): What is going on here? Let me explain :)
+#
+# We use an sqlite database for both the calibration process and the post-calibration report generation and dashboard
+# visualizations. To prevent code duplication we write our sql statements into text files in the `code/sql` folder. This
+# prevents us from having to write out the command in the source code in two places - a basic good design principle.
+#
+# The challenge however is how to deliver the sql statement files to both the libary and python visualization code?
+# These environmental variables here are the solution to that problem. The most important factor is that for the python
+# code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
+# your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
+# folder on the host system.
+#
+# For a deeper understanding please just look through the code. One little thing to note is that
+# REPROJECTION_SQL_PYTHON_DIR does not necesarily need to be located in the python package. They can be placed and
+# located anywhere on theb system. The current position inside the python_tooling package is just an artefact of the era
+# when I solved this problem with symlinking instead of environemental variables.
 ENV REPROJECTION_SQL_DIR=code/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
