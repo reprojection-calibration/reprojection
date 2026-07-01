@@ -24,11 +24,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 
     char const arg0[]{"program"};
     char const arg1[]{"--config"};
-    // NOTE(Jack): Guys sorry this got so complicated! But we need to pass the config files path to the parser here in
-    // as a char const[], just like how command line args are passed. Getting an actual allocated c style char array
-    // a fs::path is not trivial and therefore we have to do this messy stuff here. Can this be simplified?
-    auto arg2{std::make_unique<char[]>(std::strlen(config_file.Path().c_str()) + 1)};
-    std::strcpy(arg2.get(), config_file.Path().c_str());
+    std::string const arg2{config_file.Path().string()};
     char const arg3[]{"--data"};
     // TODO(Jack): We are implicitly relying on the fact that this directory exists because it is the folder where the
     // TemporaryFile gets created by the fs::temp_directory_path() call. This is ts=a little hacky and it might cause us
@@ -36,7 +32,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     char const arg4[]{"/tmp"};
     char const arg5[]{"--workspace"};
     char const arg6[]{"/tmp"};
-    char const* const argv[]{arg0, arg1, arg2.get(), arg3, arg4, arg5, arg6};
+    char const* const argv[]{arg0, arg1, arg2.c_str(), arg3, arg4, arg5, arg6};
 
     int const argc{7};
     result = application::ParseArgs(argc, argv);
