@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from business_logic.toml_conversions import toml_to_intrinsic_array
 from dashboard.tools.data_loading import refresh_database_list
 from database.sql_table_loading import (
@@ -27,7 +29,7 @@ def run_toml_export(workspace_dir):
             continue
 
         output_name = db_name.removesuffix(".db3") + ".toml"
-        output_path = workspace_dir / output_name
+        output_path = Path(workspace_dir) / output_name
         with open(output_path, "w") as f:
             f.write(result)
 

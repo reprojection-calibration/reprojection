@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import plotly.graph_objects as go
 from pdf_layout import build_two_column_pdf
@@ -62,7 +64,7 @@ def run_report_export(workspace_dir):
             camera_sections.append(camera_section_i)
 
         output_name = db_name.removesuffix(".db3") + ".pdf"
-        output_path = workspace_dir / output_name
+        output_path = Path(workspace_dir) / output_name
 
         print(f"\tAssembling pdf and saving to {output_path}")
         build_two_column_pdf(output_path=output_path, camera_sections=camera_sections)
