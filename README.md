@@ -62,13 +62,11 @@ An example command to run the video-file application is:
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
 
-To generate human-readable outputs run the dashboard and pass the workspace directory path, an example command is:
+To run the dashboard pass the workspace directory path, an example command is:
 
     ./building/local/run_dashboard.sh /home/user/data/
 
-This command will (1) export the calibrations and generate a pdf report from each database and (2) run the interactive
-dashboard. You will find the exported calibrations inside the workspace folder, and you can open the link shown in the
-terminal to access the interactive dashboard.
+Open the link shown in the terminal to access the interactive dashboard.
 
 ### Set the log level
 
@@ -143,7 +141,7 @@ increases.
 Trying to fit a line or circle to a row/col with just a couple noisy extracted features is not gonna work, these can be
 sensitive algorithms and noise matters. Therefore, please use a target with as many rows/cols as possible.
 
-I recommend at a bare minimum 6x6 for checkerboard and circle grid targets (10x10 an asymmetric circle grid) and 4x4 for
+I recommend at a bare minimum 6x6 for checkerboard and circle grid targets (10x10 an asymmetric circle grid) and 6x4 for
 an aprilgrid3 target. If it is possible given your camera and ability to display the targets please use more!
 
 ### Use a computer screen to display the calibration target
