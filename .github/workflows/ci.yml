@@ -208,20 +208,15 @@ jobs:
           load: true
           tag: reprojection:${{ matrix.applications.target }}
           target: ${{ matrix.applications.target }}
-      - name: Extract test data from test-data-stage
+      - name: Download smoke test data
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ matrix.applications.data_artifact }}
+          path: ${{ runner.temp }}/smoke_data
+      - name: Copy in configuration file
         run: |
-          mkdir --parents "${RUNNER_TEMP}/smoke-data"
-          
-          docker create --name test-data-container reprojection:test-data-stage
-          docker cp \
-            "test-data-container:/data/${{ matrix.applications.data_subdir }}/." \
-            "${RUNNER_TEMP}/smoke-data/"
-          docker rm test-data-container
-          
-          cp code/test_data/calibration_config.toml "${RUNNER_TEMP}/smoke-data/"
-          
-          # TODO REMOVE
-          ls "${RUNNER_TEMP}/smoke-data/"
+          cp code/test_data/calibration_config.toml "${RUNNER_TEMP}/smoke_data/"
+          ls -lah "${RUNNER_TEMP}/smoke_data"           # TODO REMOVE!!!
 
     strategy:
       matrix:
@@ -231,10 +226,12 @@ jobs:
         #    external_cache_scope_1: ros1-integration-test
         #    target: ros1-app-stage
           - base: *ubuntu_24_base
-            data_subdir: ros2
+            data: /data/dataset-calib-imu4_512_16/
+            data_artifact: test-data-ros2
             external_cache_scope_1: ros2-integration-test
             target: ros2-app-stage
           - base: *ubuntu_24_base
-            data_subdir: video_file
+            data: /data/dataset-calib-imu4_512_16.mp4
+            data_artifact: test-data-video-file
             external_cache_scope_1: video-file-integration-test
             target: video-file-app-stage
