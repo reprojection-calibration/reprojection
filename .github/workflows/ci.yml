@@ -111,6 +111,7 @@ jobs:
           cache_scope: test-data
           context: .
           load: true
+          tag: reprojection:test-data-stage
           target: test-data-stage
       - name: Extract test data from image.
         run: |
