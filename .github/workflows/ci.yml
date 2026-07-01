@@ -119,34 +119,34 @@ jobs:
         run: |
           docker create --name test-data-container reprojection:test-data-stage
           
-          mkdir --parents "${RUNNER_TEMP}/test-data/ros1"
+          mkdir --parents "${RUNNER_TEMP}/data/ros1"
           docker cp "test-data-container:/data/ros1/." \
-            "${RUNNER_TEMP}/test-data/ros1/"
+            "${RUNNER_TEMP}/data/ros1/"
           
-          mkdir --parents "${RUNNER_TEMP}/test-data/ros2"
+          mkdir --parents "${RUNNER_TEMP}/data/ros2"
           docker cp "test-data-container:/data/ros2/." \
-            "${RUNNER_TEMP}/test-data/ros2/"
+            "${RUNNER_TEMP}/data/ros2/"
           
-          mkdir --parents "${RUNNER_TEMP}/test-data/video_file"
+          mkdir --parents "${RUNNER_TEMP}/data/video_file"
           docker cp "test-data-container:/data/video_file/." \
-            "${RUNNER_TEMP}/test-data/video_file/"
+            "${RUNNER_TEMP}/data/video_file/"
           
           docker rm test-data-container
       - name: ROS1 upload
         uses: actions/upload-artifact@v7
         with:
           name: test-data-ros1
-          path: ${{ runner.temp }}/test-data/ros1
+          path: ${{ runner.temp }}/data/ros1
       - name: ROS2 upload
         uses: actions/upload-artifact@v7
         with:
           name: test-data-ros2
-          path: ${{ runner.temp }}/test-data/ros2
+          path: ${{ runner.temp }}/data/ros2
       - name: Video file upload
         uses: actions/upload-artifact@v7
         with:
           name: test-data-video-file
-          path: ${{ runner.temp }}/test-data/video_file
+          path: ${{ runner.temp }}/data/video_file
 
   application-integration-tests:
     name: ${{ matrix.applications.target }}
@@ -238,7 +238,6 @@ jobs:
             echo "Calibration database was not recently updated."
             exit 1
           fi
-          
           
           # Check that the two report files were created. 
           [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.pdf" ]] || {
