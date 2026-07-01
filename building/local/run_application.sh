@@ -20,7 +20,7 @@ case "${APP_TYPE}" in
     TAG="reprojection:video-file-app"
     ;;
   *)
-    echo "Unknown application type: ${APP_TYPE}"
+    echo "(run_application.sh) Error: '${APP_TYPE}' is not a recognized application type" >&2
     exit 1
     ;;
 esac
@@ -42,17 +42,9 @@ mount_path_arg() {
 
   local container_path="/data_mount${host_path}"
 
-  DOCKER_ARGS+=(--volume "${abs_path}:${container_path}")
+  DOCKER_ARGS+=(--mount "type=bind,source=${abs_path},target=${container_path}")
   APP_ARGS+=("${flag}" "${container_path}")
 }
-
-# TODO(Jack): There is an inconsistency that the library application will default to use the data's parent directory as
-# the "workspace", here however we are mounting exactly the file paths provided by the user which means that we MUST
-# specify the workspace, it is not optional. This in some sense contradicts my original intent when designing the
-# library but at the same time is a use case foreseen in the design.
-# TODO(Jack): The workspace arg is basically required (maybe not for ros2 cause the folder is passed there?), therefore
-# I think it makes sense that we check that here to prevent the user from dealing with an error from the application
-# that a database file cannot be opened.
 
 while [[ $# -gt 0 ]]; do
   case "${1}" in
