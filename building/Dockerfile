@@ -32,6 +32,25 @@ ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
 RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
     /temporary/${APT_INSTALL_GCC13}
 
+# NOTE(Jack): What is going on here? Let me explain :)
+#
+# We use an sqlite database for both the calibration process and the post-calibration report generation and dashboard
+# visualizations. To prevent code duplication we write our sql statements into text files in the `code/sql` folder. This
+# prevents us from having to write out the command in the source code in two places - a basic good design principle.
+#
+# The challenge however is how to deliver the sql statement files to both the libary and python visualization code?
+# These environmental variables here are the solution to that problem. The most important factor is that for the python
+# code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
+# your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
+# folder on the host system.
+#
+# For a deeper understanding please just look through the code. One little thing to note is that
+# REPROJECTION_SQL_PYTHON_DIR does not necesarily need to be located in the python package. They can be placed and
+# located anywhere on theb system. The current position inside the python_tooling package is just an artefact of the era
+# when I solved this problem with symlinking instead of environemental variables.
+ENV REPROJECTION_SQL_DIR=code/sql
+ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
+
 
 FROM apt-base-stage AS build-ceres-stage
 
@@ -107,15 +126,7 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
 # system or run without special permissions that docker cannot provide.
 COPY code/python_tooling /temporary/code/python_tooling
-
-# TODO(Jack): We want to have a single source of truth for the sql files. Therefore we symlinked the `code/sql` directory
-# to the `code/python_tooling/database/sql` directory. Unfortunately in the dockerized python testing workflow this does not
-# work! Locally it works fine, but in the docker build we get the error "ModuleNotFoundError: No module named
-# 'database.sql'". This copy command copies the sql files over the symlinked directory in the python package and then the testing can
-# find the files no problem. This is technically acceptable because the "single source of truth" rule is only violated
-# here ephermally in the build process. But if there was just a way to make it work without this and simply with the
-# symlinks, like it works for local testing, that would be great.
-COPY code/sql /temporary/code/python_tooling/database/sql
+COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.db3
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
@@ -126,10 +137,6 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_P
     --mount=type=bind,source=code/proto,target=/temporary/code/proto \
     --mount=type=bind,source=code/test_data,target=/temporary/code/test_data \
     /temporary/${BUILD_PYTHON_TOOLING}
-
-ARG INSTALL_GOOGLE_CHROME=building/install_scripts/install_google_chrome.sh
-RUN --mount=type=bind,source=${INSTALL_GOOGLE_CHROME},target=/temporary/${INSTALL_GOOGLE_CHROME} \
-    /temporary/${INSTALL_GOOGLE_CHROME}
 
 
 FROM python-tooling-stage AS dashboard-stage
@@ -165,7 +172,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
@@ -213,7 +220,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
@@ -235,7 +242,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=code/sql/,target=/temporary/code/sql \
+    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
     --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
@@ -379,6 +386,12 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM ros1-base-stage AS ros1-app-stage
 
+# TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
+COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
+COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
+
 ENV APP_FLAVOR=ros1
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
@@ -391,6 +404,15 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 
 FROM ros2-base-stage AS ros2-app-stage
+
+# TODO(Jack): Copy paste!
+COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
+COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
+
+# TODO(Jack): Needed? Can we put this in the entrypoint script instead?
+ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
 
 ENV APP_FLAVOR=ros2
 
@@ -405,6 +427,12 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM base-stage AS video-file-app-stage
 
+# TODO(Jack): Copy paste!
+COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
+COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
+
 ENV APP_FLAVOR=video-file
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
@@ -414,21 +442,3 @@ RUN set -eox pipefail; \
     ln /opt/reprojection/bin/application.calibration /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
-
-
-FROM ros1-app-stage AS ros1-app-smoke-test-stage
-
-COPY code/test_data/calibration_config.toml /data/calibration_config.toml
-COPY --from=test-data-stage /data/ros1 /data
-
-
-FROM ros2-app-stage AS ros2-app-smoke-test-stage
-
-COPY code/test_data/calibration_config.toml /data/calibration_config.toml
-COPY --from=test-data-stage /data/ros2 /data
-
-
-FROM video-file-app-stage AS video-file-app-smoke-test-stage
-
-COPY code/test_data/calibration_config.toml /data/calibration_config.toml
-COPY --from=test-data-stage /data/video_file /data

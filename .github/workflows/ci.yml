@@ -81,7 +81,8 @@ jobs:
         with:
           lfs: true
       - run: git lfs pull
-      - uses: ./.github/actions/docker-build
+      - name: Build dashboard smoke test image
+        uses: ./.github/actions/docker-build
         with:
           cache_scope: dashboard-smoke-test
           context: .
@@ -106,11 +107,46 @@ jobs:
         with:
           lfs: true
       - run: git lfs pull
-      - uses: ./.github/actions/docker-build
+      - name: Download TUM test data
+        uses: ./.github/actions/docker-build
         with:
           cache_scope: test-data
           context: .
+          load: true
+          tag: reprojection:test-data-stage
           target: test-data-stage
+      - name: Extract application entrypoint testing data.
+        run: |
+          docker create --name test-data-container reprojection:test-data-stage
+          
+          mkdir --parents "${RUNNER_TEMP}/data/ros1"
+          docker cp "test-data-container:/data/ros1/." \
+            "${RUNNER_TEMP}/data/ros1/"
+          
+          mkdir --parents "${RUNNER_TEMP}/data/ros2"
+          docker cp "test-data-container:/data/ros2/." \
+            "${RUNNER_TEMP}/data/ros2/"
+          
+          mkdir --parents "${RUNNER_TEMP}/data/video_file"
+          docker cp "test-data-container:/data/video_file/." \
+            "${RUNNER_TEMP}/data/video_file/"
+          
+          docker rm test-data-container
+      - name: ROS1 upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-data-ros1
+          path: ${{ runner.temp }}/data/ros1
+      - name: ROS2 upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-data-ros2
+          path: ${{ runner.temp }}/data/ros2
+      - name: Video file upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-data-video-file
+          path: ${{ runner.temp }}/data/video_file
 
   application-integration-tests:
     name: ${{ matrix.applications.target }}
@@ -151,11 +187,13 @@ jobs:
     needs: [ application-integration-tests ]
     runs-on: ubuntu-latest
     steps:
+      # TODO(Jack): I do not think we need this git lfs pull step anymore.
       - uses: actions/checkout@v5
         with:
           lfs: true
       - run: git lfs pull
-      - uses: ./.github/actions/docker-build
+      - name: Build application entrypoint image
+        uses: ./.github/actions/docker-build
         with:
           build-args: BASE_IMAGE=${{ matrix.applications.base }}
           context: .
@@ -164,25 +202,67 @@ jobs:
           load: true
           tag: reprojection:${{ matrix.applications.target }}
           target: ${{ matrix.applications.target }}
-      - name: Run application smoke test
+      - name: Download data
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ matrix.applications.data_artifact }}
+          path: ${{ runner.temp }}/data
+      - name: Copy in configuration file
+        run: |
+          cp code/test_data/calibration_config.toml "${RUNNER_TEMP}/data/"
+      - name: Run application
         run: |
           docker run --rm \
+            --volume "${RUNNER_TEMP}/data:/data" \
             reprojection:${{ matrix.applications.target }} \
             --config /data/calibration_config.toml \
-            --data ${{ matrix.applications.data }} \
-            --workspace /data/
+            --data /data/${{ matrix.applications.data }} \
+            --workspace /data
+      - name: Check outputs
+        run: |
+          # This is just a safety check because the database file actually is already present in the test data before  
+          # the application even runs.
+          db="${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.db3"
+          [[ -f "${db}" ]] || {
+          echo "Calibration database does not exist."
+            exit 1
+          }
+          
+          # This is a kinda hacky way to check that the database file was recently written too. If this is a reliable 
+          # way to check that the application really did what we want, I doubt it... but hey it's only a smoke test :)
+          now="$(date +%s)"
+          modified="$(stat -c %Y "${db}")"
+          age_seconds="$((now - modified))"
+          echo "Database last modified: ${age_seconds}s"
+          if (( age_seconds > 30 )); then
+            echo "Calibration database was not recently updated."
+            exit 1
+          fi
+          
+          # Check that the two report files were created. 
+          [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.pdf" ]] || {
+            echo "PDF report was not generated."
+            exit 1
+          }
+          [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.toml" ]] || {
+            echo "TOML export was not generated."
+            exit 1
+          }
     strategy:
       matrix:
         applications:
           - base: *ubuntu_20_base
-            data: /data/dataset-calib-imu4_512_16.bag
+            data: dataset-calib-imu4_512_16.bag
+            data_artifact: test-data-ros1
             external_cache_scope_1: ros1-integration-test
-            target: ros1-app-smoke-test-stage
+            target: ros1-app-stage
           - base: *ubuntu_24_base
-            data: /data/dataset-calib-imu4_512_16/
+            data: dataset-calib-imu4_512_16/
+            data_artifact: test-data-ros2
             external_cache_scope_1: ros2-integration-test
-            target: ros2-app-smoke-test-stage
+            target: ros2-app-stage
           - base: *ubuntu_24_base
-            data: /data/dataset-calib-imu4_512_16.mp4
+            data: dataset-calib-imu4_512_16.mp4
+            data_artifact: test-data-video-file
             external_cache_scope_1: video-file-integration-test
-            target: video-file-app-smoke-test-stage
+            target: video-file-app-stage

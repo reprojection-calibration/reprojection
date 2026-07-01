@@ -7,56 +7,60 @@ set(LIBRARY_NAME "database")
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
-        sql/calibration_steps_delete.sql
-        sql/calibration_steps_select.sql
-        sql/calibration_steps_table.sql
-        sql/calibration_steps_upsert.sql
-        sql/camera_info_insert.sql
-        sql/camera_info_select.sql
-        sql/camera_info_table.sql
-        sql/camera_intrinsics_insert.sql
-        sql/camera_intrinsics_select.sql
-        sql/camera_intrinsics_table.sql
-        sql/entity_insert_or_ignore.sql
-        sql/entity_table.sql
-        sql/extracted_target_insert.sql
-        sql/extracted_targets_select.sql
-        sql/extracted_targets_table.sql
-        sql/extrinsics_insert.sql
-        sql/extrinsics_select.sql
-        sql/extrinsics_table.sql
-        sql/gravity_insert.sql
-        sql/gravity_select.sql
-        sql/gravity_table.sql
-        sql/image_insert.sql
-        sql/images_select.sql
-        sql/images_table.sql
-        sql/imu_data_insert.sql
-        sql/imu_data_select.sql
-        sql/imu_data_table.sql
-        sql/imu_errors_insert.sql
-        sql/imu_errors_select.sql
-        sql/imu_errors_table.sql
-        sql/poses_insert.sql
-        sql/poses_select.sql
-        sql/poses_table.sql
-        sql/reprojection_error_insert.sql
-        sql/reprojection_error_table.sql
-        sql/spline_control_points_count.sql
-        sql/spline_control_points_insert.sql
-        sql/spline_control_points_select.sql
-        sql/spline_control_points_table.sql
-        sql/spline_time_handler_insert.sql
-        sql/spline_time_handler_select.sql
-        sql/spline_time_handler_table.sql
-        sql/target_info_insert.sql
-        sql/target_info_select.sql
-        sql/target_info_table.sql
+        calibration_steps_delete.sql
+        calibration_steps_select.sql
+        calibration_steps_table.sql
+        calibration_steps_upsert.sql
+        camera_info_insert.sql
+        camera_info_select.sql
+        camera_info_table.sql
+        camera_intrinsics_insert.sql
+        camera_intrinsics_select.sql
+        camera_intrinsics_table.sql
+        entity_insert_or_ignore.sql
+        entity_table.sql
+        extracted_target_insert.sql
+        extracted_targets_select.sql
+        extracted_targets_table.sql
+        extrinsics_insert.sql
+        extrinsics_select.sql
+        extrinsics_table.sql
+        gravity_insert.sql
+        gravity_select.sql
+        gravity_table.sql
+        image_insert.sql
+        images_select.sql
+        images_table.sql
+        imu_data_insert.sql
+        imu_data_select.sql
+        imu_data_table.sql
+        imu_errors_insert.sql
+        imu_errors_select.sql
+        imu_errors_table.sql
+        poses_insert.sql
+        poses_select.sql
+        poses_table.sql
+        reprojection_error_insert.sql
+        reprojection_error_table.sql
+        spline_control_points_count.sql
+        spline_control_points_insert.sql
+        spline_control_points_select.sql
+        spline_control_points_table.sql
+        spline_time_handler_insert.sql
+        spline_time_handler_select.sql
+        spline_time_handler_table.sql
+        target_info_insert.sql
+        target_info_select.sql
+        target_info_table.sql
 )
+
+set(SQL_DIR "$ENV{REPROJECTION_SQL_DIR}")
 
 foreach (sql ${SQL_FILES})
     get_filename_component(name ${sql} NAME_WE)
-    file(READ "../../${sql}" contents)
+    # TODO(Jack): Having to escape back three directories definitely looks a little hacky... but it gets the job done,
+    # at least in the clion dev toolchain process.
+    file(READ "../../../${SQL_DIR}/${sql}" contents)
 
     set(SQL_STRING_ENTRIES
             "${SQL_STRING_ENTRIES}constexpr char const* const ${name} = R\"sql(\n${contents}\n)sql\";\n")

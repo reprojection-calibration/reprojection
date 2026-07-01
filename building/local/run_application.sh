@@ -20,7 +20,7 @@ case "${APP_TYPE}" in
     TAG="reprojection:video-file-app"
     ;;
   *)
-    echo "Unknown application type: ${APP_TYPE}"
+    echo "(run_application.sh) Error: '${APP_TYPE}' is not a recognized application type" >&2
     exit 1
     ;;
 esac
@@ -31,7 +31,7 @@ APP_ARGS=()
 # NOTE(Jack): This function serves a very important role. The fundamental thing that we need to accomplish is to mount
 # the provided date/config/workspace files/folder to the docker container and at the same time pass those paths into the
 # docker for the application to consume. This function facilitates this. We keep it simple and instead of shortening the
-# provided host paths or anything like that we just prepend "/data_mount" to them so they are recognizable in the
+# provided host paths or anything like that we just prepend "/data/mount" to them so they are recognizable in the
 # container.
 mount_path_arg() {
   local flag="${1}"
@@ -40,19 +40,14 @@ mount_path_arg() {
   local abs_path
   abs_path="$(realpath "${host_path}")"
 
-  local container_path="/data_mount${host_path}"
+  local container_path="/data/mount${host_path}"
 
-  DOCKER_ARGS+=(--volume "${abs_path}:${container_path}")
+  # NOTE(Jack): We use --mount nad not --volume here because volume will actually create the path on the home disk if it
+  # does no already exist. Mount on the other hand will fail if the mounted thing does not exist on host. This protects
+  # us against some pretty basic but critical errors.
+  DOCKER_ARGS+=(--mount "type=bind,source=${abs_path},target=${container_path}")
   APP_ARGS+=("${flag}" "${container_path}")
 }
-
-# TODO(Jack): There is an inconsistency that the library application will default to use the data's parent directory as
-# the "workspace", here however we are mounting exactly the file paths provided by the user which means that we MUST
-# specify the workspace, it is not optional. This in some sense contradicts my original intent when designing the
-# library but at the same time is a use case foreseen in the design.
-# TODO(Jack): The workspace arg is basically required (maybe not for ros2 cause the folder is passed there?), therefore
-# I think it makes sense that we check that here to prevent the user from dealing with an error from the application
-# that a database file cannot be opened.
 
 while [[ $# -gt 0 ]]; do
   case "${1}" in
@@ -78,14 +73,15 @@ done
 # TODO(Jack): Is this safe or a bad practice?
 xhost +local:docker
 
+# TODO(Jack): Should we also use bind mounts for /dev and /tmp/.X11-unix like we do above for the mounted app args?
 docker run \
   --env DISPLAY="${DISPLAY}" \
   --env SPDLOG_LEVEL="${SPDLOG_LEVEL}" \
   --name reprojection-calibration-application \
   --rm \
   --user "$(id -u):$(id -g)" \
-  --volume /dev:/dev \
-  --volume /tmp/.X11-unix:/tmp/.X11-unix \
+  --volume /dev:/dev:ro \
+  --volume /tmp/.X11-unix:/tmp/.X11-unix:ro \
   "${DOCKER_ARGS[@]}" \
   "${TAG}" \
   "${APP_ARGS[@]}"
