@@ -13,12 +13,13 @@ python3.12 -m venv "${VENV_DIR}"
 
 # shellcheck disable=SC1091
 source "${VENV_DIR}/bin/activate"
-python3 -m pip install \
- build \
- dash \
+
  # TODO(Jack): We use this 2021 version of Kaleido because it does not require a google chrome installation for
  # rendering. Does this introduce any risks or problems for us?
  # shellcheck disable=SC1097
+python3 -m pip install \
+ build \
+ dash \
  kaleido==0.2.1 \
  numpy \
  pandas \

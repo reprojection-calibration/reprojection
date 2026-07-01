@@ -16,16 +16,16 @@ workspace=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --config)
-            processed_args+=("--config" "$2")
-            shift 2
-            ;;
-        --workspace)
-            workspace="$2"
+            processed_args+=("--config" "${2}")
             shift 2
             ;;
         --data)
-            data="$2"
-            processed_args+=("--data" "$data")
+            data="${2}"
+            processed_args+=("--data" "${data}")
+            shift 2
+            ;;
+        --workspace)
+            workspace="${2}"
             shift 2
             ;;
         *)
@@ -38,13 +38,13 @@ done
 # directly then we use that. If the workspace is not provided then we use the '--data' flag to derive the workspace
 # directory. If '--data' is itself a directory then we use it directly and if its a file then we get the directory the
 # file is in and use that.
-if [[ -n "$workspace" ]]; then
-    output_dir="$workspace"
-elif [[ -n "$data" ]]; then
-    if [[ -d "$data" ]]; then
-        output_dir="$data"
-    elif [[ -f "$data" ]]; then
-        output_dir="$(dirname "$data")"
+if [[ -n "${workspace}" ]]; then
+    output_dir="${workspace}"
+elif [[ -n "${data}" ]]; then
+    if [[ -d "${data}" ]]; then
+        output_dir="${data}"
+    elif [[ -f "${data}" ]]; then
+        output_dir="$(dirname "${data}")"
     else
         echo "(entrypoint.sh) Error: --data path '${data}' is neither an existing file nor an existing directory." >&2
         exit 1
@@ -54,8 +54,7 @@ else
     exit 1
 fi
 
-
-processed_args+=("--workspace" "$output_dir")
+processed_args+=("--workspace" "${output_dir}")
 
 # -- run the calibration -- #
 case "${APP_FLAVOR}" in
@@ -68,7 +67,7 @@ case "${APP_FLAVOR}" in
     ;;
   ros2)
     set +u
-    # shellcheck disable=SC1091z
+    # shellcheck disable=SC1091
     source /opt/ros/jazzy/setup.bash
     set -u
     /buildroot/reprojection-calibration-application "${processed_args[@]}"
