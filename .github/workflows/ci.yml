@@ -239,14 +239,12 @@ jobs:
             exit 1
           fi
           
-          ls ${RUNNER_TEMP}/data
           
           # Check that the two report files were created. 
           [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.pdf" ]] || {
             echo "PDF report was not generated."
             exit 1
           }
-          rm ${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.toml
           [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.toml" ]] || {
             echo "TOML export was not generated."
             exit 1
