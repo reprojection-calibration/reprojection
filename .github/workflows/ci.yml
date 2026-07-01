@@ -106,14 +106,15 @@ jobs:
         with:
           lfs: true
       - run: git lfs pull
-      - uses: ./.github/actions/docker-build
+      - name: Download TUM test data.
+        uses: ./.github/actions/docker-build
         with:
           cache_scope: test-data
           context: .
           load: true
           tag: reprojection:test-data-stage
           target: test-data-stage
-      - name: Extract entrypoint testing data.
+      - name: Extract application entrypoint testing data.
         run: |
           docker create --name test-data-container reprojection:test-data-stage
           
@@ -130,17 +131,17 @@ jobs:
             "${RUNNER_TEMP}/test-data/video_file/"
           
           docker rm test-data-container
-      - name: Upload ROS1 data
+      - name: ROS1 upload
         uses: actions/upload-artifact@v7
         with:
           name: test-data-ros1
           path: ${{ runner.temp }}/test-data/ros1
-      - name: Upload ROS2 data
+      - name: ROS2 upload
         uses: actions/upload-artifact@v7
         with:
           name: test-data-ros2
           path: ${{ runner.temp }}/test-data/ros2
-      - name: Upload video file data
+      - name: Video file upload
         uses: actions/upload-artifact@v7
         with:
           name: test-data-video-file
