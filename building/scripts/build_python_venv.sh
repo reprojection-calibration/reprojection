@@ -16,7 +16,9 @@ source "${VENV_DIR}/bin/activate"
 python3 -m pip install \
  build \
  dash \
- kaleido \
+ # TODO(Jack): We use this 2021 version of Kaleido because it does not require a google chrome installation for
+ # rendering. Does this introduce any risks or problems for us?
+ kaleido==0.2.1 \
  numpy \
  pandas \
  plotly \

@@ -127,10 +127,6 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_P
     --mount=type=bind,source=code/test_data,target=/temporary/code/test_data \
     /temporary/${BUILD_PYTHON_TOOLING}
 
-ARG INSTALL_GOOGLE_CHROME=building/install_scripts/install_google_chrome.sh
-RUN --mount=type=bind,source=${INSTALL_GOOGLE_CHROME},target=/temporary/${INSTALL_GOOGLE_CHROME} \
-    /temporary/${INSTALL_GOOGLE_CHROME}
-
 
 FROM python-tooling-stage AS dashboard-stage
 
