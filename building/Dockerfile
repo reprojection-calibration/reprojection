@@ -442,21 +442,3 @@ RUN set -eox pipefail; \
     ln /opt/reprojection/bin/application.calibration /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
-
-
-FROM ros1-app-stage AS ros1-app-smoke-test-stage
-
-COPY code/test_data/calibration_config.toml /data/calibration_config.toml
-COPY --from=test-data-stage /data/ros1 /data
-
-
-FROM ros2-app-stage AS ros2-app-smoke-test-stage
-
-COPY code/test_data/calibration_config.toml /data/calibration_config.toml
-COPY --from=test-data-stage /data/ros2 /data
-
-
-FROM video-file-app-stage AS video-file-app-smoke-test-stage
-
-COPY code/test_data/calibration_config.toml /data/calibration_config.toml
-COPY --from=test-data-stage /data/video_file /data
