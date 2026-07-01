@@ -84,8 +84,8 @@ docker run \
   --name reprojection-calibration-application \
   --rm \
   --user "$(id -u):$(id -g)" \
-  --volume /dev:/dev \
-  --volume /tmp/.X11-unix:/tmp/.X11-unix \
+  --volume /dev:/dev:ro \
+  --volume /tmp/.X11-unix:/tmp/.X11-unix:ro \
   "${DOCKER_ARGS[@]}" \
   "${TAG}" \
   "${APP_ARGS[@]}"
