@@ -55,6 +55,9 @@ The application requires four command line arguments:
 3) `--config` - The path to the calibration configuration
 4) `--workspace` - The path to a directory where output files can be written to
 
+> [!TIP]
+> If no workspace path is provided it will default to the data's directory.
+
 An example command to run the video-file application is:
 
     ./building/local/run_application.sh video-file \
