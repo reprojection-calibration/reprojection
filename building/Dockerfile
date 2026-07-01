@@ -32,6 +32,9 @@ ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
 RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
     /temporary/${APT_INSTALL_GCC13}
 
+ENV REPROJECTION_SQL_DIR=code/sql
+ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
+
 
 FROM apt-base-stage AS build-ceres-stage
 
@@ -50,9 +53,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 
 FROM apt-base-stage AS base-stage
-
-ENV REPROJECTION_SQL_DIR=code/sql
-ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
 COPY --from=build-ceres-stage /opt/reprojection /opt/reprojection
 COPY --from=build-small-libraries-stage /opt/reprojection /opt/reprojection
