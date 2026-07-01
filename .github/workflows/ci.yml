@@ -200,7 +200,7 @@ jobs:
           load: true
           tag: reprojection:${{ matrix.applications.target }}
           target: ${{ matrix.applications.target }}
-      - name: Download smoke test data
+      - name: Download data
         uses: actions/download-artifact@v7
         with:
           name: ${{ matrix.applications.data_artifact }}
@@ -208,8 +208,14 @@ jobs:
       - name: Copy in configuration file
         run: |
           cp code/test_data/calibration_config.toml "${RUNNER_TEMP}/smoke_data/"
-          ls -lah "${RUNNER_TEMP}/smoke_data"           # TODO REMOVE!!!
-
+      - name: Run application smoke test
+        run: |
+          docker run --rm \
+            --volume "${RUNNER_TEMP}/smoke_data:/data" \
+            reprojection:${{ matrix.applications.target }} \
+            --config /data/calibration_config.toml \
+            --data ${{ matrix.applications.data }} \
+            --workspace /data
     strategy:
       matrix:
         applications:
