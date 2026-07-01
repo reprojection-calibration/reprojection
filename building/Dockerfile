@@ -392,6 +392,12 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM ros2-base-stage AS ros2-app-stage
 
+COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
+COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+
+ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
+
 ENV APP_FLAVOR=ros2
 
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
