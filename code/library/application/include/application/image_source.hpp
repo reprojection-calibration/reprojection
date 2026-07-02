@@ -20,6 +20,8 @@ class VideoCapture final : public ImageSource {
    public:
     explicit VideoCapture(int const device_id);
 
+    // NOTE(Jack): We use the cv::VideoCapture api which supports both files (ex. mp4) but also folders with images in
+    // them. Look at the opencv docs for more information.
     explicit VideoCapture(std::string const& video_file);
 
     ~VideoCapture() override;
@@ -33,6 +35,5 @@ class VideoCapture final : public ImageSource {
 
     cv::VideoCapture cap_;
 };
-
 
 }  // namespace reprojection::application

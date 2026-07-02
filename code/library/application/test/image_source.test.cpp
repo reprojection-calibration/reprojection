@@ -42,7 +42,6 @@ TEST(ApplicationImageSource, VideoCaptureMp4) {
     std::filesystem::remove(folder + "video.mp4");
 }
 
-
 TEST(ApplicationImageSource, VideoCaptureFolder) {
     std::string const folder{"test/folder/feed/"};
     std::filesystem::create_directories(folder);
@@ -69,4 +68,3 @@ TEST(ApplicationImageSource, VideoCaptureFolder) {
 TEST(ApplicationImageSource, VideoCaptureError) {
     EXPECT_THROW(application::VideoCapture image_feed{"non_existent_video.mp4"}, std::runtime_error);
 }
-
