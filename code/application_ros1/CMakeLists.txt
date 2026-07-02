@@ -36,7 +36,7 @@ set(LINK_LIBRARIES
 
 set(LIBRARY_NAME ${PROJECT_NAME})
 set(SRC_FILES
-        src/image_loading.cpp
+        src/msg_parsing.cpp
         src/reprojection.cpp
 )
 AddLibrary()
@@ -44,7 +44,7 @@ AddLibrary()
 find_package(GTest REQUIRED)
 enable_testing()
 set(TESTS
-        src/image_loading.test.cpp
+        src/msg_parsing.test.cpp
         test/reprojection.test.cpp
 )
 AddTests()
