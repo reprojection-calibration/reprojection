@@ -65,8 +65,7 @@ int main() {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
 
-    ImageSampleSource empty_image_source{[]() { return std::nullopt; }};
-    application::Calibrate(config, {empty_image_source, ""}, std::nullopt, db);
+    application::Calibrate(config, {{}, ""}, application::ImuInput{{}, ""}, db);
 
     return EXIT_SUCCESS;
 }
