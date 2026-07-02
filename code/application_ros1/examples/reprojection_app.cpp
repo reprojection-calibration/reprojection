@@ -16,27 +16,45 @@ int main(int argc, char* argv[]) {
     if (not app_args) {
         return EXIT_FAILURE;
     }
+    application::Sensors const sensors{application::ParseSensors(app_args->config)};
 
-    // TODO(Jack): Should we use the generic templated key access function found in the library?
-    std::string const camera_topic{*app_args->config["camera"]["sensor_name"].value<std::string>()};
-
-    auto const reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, camera_topic)};
-    if (std::holds_alternative<ros1::BagError>(reader_result)) {
+    auto const image_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, sensors.camera_sensor)};
+    if (std::holds_alternative<ros1::BagError>(image_reader_result)) {
         // TODO(Jack): Should we use the libraries logging pattern here too?
-        std::cerr << std::get<ros1::BagError>(reader_result).message << "\n";
+        std::cerr << std::get<ros1::BagError>(image_reader_result).message << "\n";
         return EXIT_FAILURE;
     }
-    auto const& bag_reader{std::get<ros1::SingleTopicBagReader>(reader_result)};
+    auto const& image_bag_reader{std::get<ros1::SingleTopicBagReader>(image_reader_result)};
 
-    ros1::ImageSource image_source{bag_reader};
+    ros1::ImageSource image_source{image_bag_reader};
 
-    auto const data_signature{SerializeBagTopic(bag_reader)};
+    auto const data_signature{ros1::SerializeBagTopic(image_bag_reader)};
     if (not data_signature) {
         std::cerr << "Unable to calculate image data signature!\n";
         return EXIT_FAILURE;
     }
 
-    application::Calibrate(app_args->config, {image_source, *data_signature}, std::nullopt, app_args->db);
+    std::optional<application::ImuInput> imu_input{std::nullopt};
+    if (sensors.imu_sensor.has_value()) {
+        auto const imu_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, sensors.camera_sensor)};
+        if (std::holds_alternative<ros1::BagError>(imu_reader_result)) {
+            std::cerr << std::get<ros1::BagError>(imu_reader_result).message << "\n";
+            return EXIT_FAILURE;
+        }
+        auto const& imu_bag_reader{std::get<ros1::SingleTopicBagReader>(imu_reader_result)};
+
+        ros1::ImuSource imu_source{imu_bag_reader};
+
+        auto const imu_signature{ros1::SerializeBagTopic(imu_bag_reader)};
+        if (not imu_signature) {
+            std::cerr << "Unable to calculate image data signature!\n";
+            return EXIT_FAILURE;
+        }
+
+        imu_input = application::ImuInput{image_source, *imu_signature};
+    }
+
+    application::Calibrate(app_args->config, {image_source, *data_signature}, imu_input, app_args->db);
 
     std::cout << "The future is calibrated!\n";
 
