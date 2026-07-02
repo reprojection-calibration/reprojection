@@ -49,9 +49,20 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
     return AppArgs{paths->data_path, *config, *db};
 }
 
-// TODO(Jack): Should we put image_source_signature and image_source into one object? They are 100% related. Or maybe
-// the entire "image source" concept needs to be reworked as it does not play nice with the database. See note in
-// update_feature_extraction_cache_key.py
+// TODO(Jack): To be honest I do not like having this function because now we parse the entire config twice. Once on the
+// application side and once on the library side. It is not the end of the world but we should keep our eyes out for any
+// hints that we are missing the point.
+Sensors ParseSensors(toml::table const& cfg_table) {
+    config::Config const cfg{config::Config::Parse(cfg_table)};
+
+    std::optional<std::string> imu_name{std::nullopt};
+    if (cfg.imu) {
+        imu_name = cfg.imu->sensor_name;
+    }
+
+    return {cfg.camera.sensor_name, imu_name};
+}
+
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {
     config::Config const cfg{steps::ConfigParsing(cfg_table, db)};

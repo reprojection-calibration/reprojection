@@ -40,6 +40,14 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     EXPECT_EQ(result->data_path, "/tmp");  // Heuristic check of one of the values
 }
 
+TEST(ApplicationReprojectionCalibration, TestParseSensors) {
+    toml::table const config{toml::parse(testing_utilities::minimum_config)};
+
+    application::Sensors const sensors{application::ParseSensors(config)};
+    EXPECT_EQ(sensors.camera_sensor, "/cam0/image_raw");
+    EXPECT_FALSE(sensors.imu_sensor.has_value());
+}
+
 TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     toml::table const config{toml::parse(testing_utilities::minimum_config)};
 

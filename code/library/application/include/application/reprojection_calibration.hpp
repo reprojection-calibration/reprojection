@@ -17,6 +17,11 @@ struct AppArgs {
     SqlitePtr db;
 };
 
+struct Sensors {
+    std::string camera_sensor;
+    std::optional<std::string> imu_sensor;
+};
+
 struct ImageInput {
     ImageSampler source;
     std::string signature;
@@ -28,6 +33,8 @@ struct ImuInput {
 };
 
 std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
+
+Sensors ParseSensors(toml::table const& cfg_table);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
