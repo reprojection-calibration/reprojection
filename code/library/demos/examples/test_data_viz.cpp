@@ -33,7 +33,9 @@ int main() {
         )"};
     toml::table const config{toml::parse(config_file)};
 
-    std::string const image_hash{""};
+    // Because we do not really load any data from the image or imu sources we just hardcode any empty serialization
+    // signature.
+    std::string const empty{""};
 
     try {
         auto const cam_cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
@@ -46,7 +48,7 @@ int main() {
         // Camera stuff
         database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
 
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
+        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(empty));
         // Insert empty images to satisfy foreign key constraint.
         EncodedImages const images{[&targets]() {
             EncodedImages images;
@@ -62,14 +64,13 @@ int main() {
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "3ccd159f7fb7c8af3cd58b51f175838609e13da980e00b4a38931c5933939750");
+                             "8f3705f71e74c1ed847f7126050b1a16c5178d3a9c0024870c9b7c084d8db0ff");
         database::InsertTargets(db, camera_info.sensor_name, targets);
 
         // Imu stuff
-
         if (auto const imu_cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
             database::InsertEntity(db, imu_cfg->sensor_name, Entity::Imu);
-            database::InsertStep(db, imu_cfg->sensor_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
+            database::InsertStep(db, imu_cfg->sensor_name, CalibrationStep::ImuDataLoading, hashing::Sha256(empty));
 
             auto const [imu_data, _1]{testing_mocks::GenerateImuData(duration_s, 20)};
             database::InsertImuData(db, imu_cfg->sensor_name, imu_data);
@@ -79,9 +80,7 @@ int main() {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
 
-    // TODO(Jack): Also pass empty imu source!
-    ImageSampleSource empty_image_source{[]() { return std::nullopt; }};
-    application::Calibrate(config, {empty_image_source, image_hash}, std::nullopt, db);
+    application::Calibrate(config, {{}, empty}, application::ImuInput{{}, empty}, db);
 
     return EXIT_SUCCESS;
 }
