@@ -5,6 +5,7 @@
 #include <rclcpp/serialized_message.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 
 namespace reprojection::ros2 {
 
@@ -36,6 +37,23 @@ std::pair<uint64_t, cv::Mat> ToCvMat(rosbag2_storage::SerializedBagMessage const
     } else {
         throw std::runtime_error("Failure during ROS2 image deserialization given type: " + std::string(type));
     }
+}
+
+std::pair<uint64_t, std::array<double, 6>> ToImuArray(rosbag2_storage::SerializedBagMessage const& bag_msg) {
+    rclcpp::SerializedMessage const serialized_msg(*bag_msg.serialized_data);
+
+    // TODO(Jack): Do we need to put this into a try catch block?
+    rclcpp::Serialization<sensor_msgs::msg::Imu> serializer;
+    sensor_msgs::msg::Imu msg;
+    serializer.deserialize_message(&serialized_msg, &msg);
+
+    std::array<double, 6> const imu_data{
+        msg.angular_velocity.x,    msg.angular_velocity.y,    msg.angular_velocity.z,
+        msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z,
+    };
+    uint64_t const timestamp_ns{GetTimestampNs(msg.header)};
+
+    return {timestamp_ns, imu_data};
 }
 
 }  // namespace reprojection::ros2

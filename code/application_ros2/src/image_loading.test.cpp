@@ -9,7 +9,7 @@
 
 using namespace reprojection;
 
-TEST(Ros2Application, TestImageLoading) {
+TEST(Ros2Application, TestToCvMat) {
     ros2::ScopedBagPath const temp_bag;
     {
         // The write needs to go out of scope before we can read from it again.
@@ -43,4 +43,26 @@ TEST(Ros2Application, TestImageLoading) {
         EXPECT_EQ(img.rows, 1);
         EXPECT_EQ(img.cols, 1);
     }
+}
+
+TEST(Ros2Application, TestToImuArray) {
+    ros2::ScopedBagPath const temp_bag;
+    {
+        rosbag2_cpp::Writer writer;
+        writer.open(temp_bag.path);
+        writer.write(ros2::DummyImu(), "/imu_topic", rclcpp::Time(1));
+    }
+
+    rosbag2_cpp::Reader reader;
+    reader.open(std::string(temp_bag.path));
+
+    EXPECT_EQ(reader.get_metadata().message_count, 1);
+
+    auto const msg{reader.read_next()};
+    std::pair<uint64_t, std::array<double, 6>> result;
+    EXPECT_NO_THROW(result = ros2::ToImuArray(*msg));
+
+    auto const& [timestamp_ns, imu_data]{result};
+    EXPECT_EQ(timestamp_ns, 1);
+    EXPECT_EQ(imu_data, (std::array<double, 6>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}));
 }
