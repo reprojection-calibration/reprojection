@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 
     std::optional<application::ImuInput> imu_input{std::nullopt};
     if (sensors.imu_sensor.has_value()) {
-        auto const imu_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, sensors.camera_sensor)};
+        auto const imu_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, *sensors.imu_sensor)};
         if (std::holds_alternative<ros1::BagError>(imu_reader_result)) {
             std::cerr << std::get<ros1::BagError>(imu_reader_result).message << "\n";
             return EXIT_FAILURE;
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
-        imu_input = application::ImuInput{image_source, *imu_signature};
+        imu_input = application::ImuInput{imu_source, *imu_signature};
     }
 
     application::Calibrate(app_args->config, {image_source, *data_signature}, imu_input, app_args->db);
