@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include <application/reprojection_calibration.hpp>
-#include <toml++/impl/table.hpp>
 
 #include "application_ros2/reprojection.hpp"
 
@@ -9,7 +8,6 @@ using namespace reprojection;
 
 // TODO(Jack): What is a long term strategy to guarantee that these error messages stay consistent across all
 //  applications?
-// TODO(Jack): Should we use the generic templated toml key access function found in the library?
 
 int main(int argc, char* argv[]) {
     auto const app_args{application::ParseArgs(argc, argv)};
@@ -45,7 +43,5 @@ int main(int argc, char* argv[]) {
 
     application::Calibrate(app_args->config, {image_source, *data_signature}, std::nullopt, app_args->db);
 
-    std::cout << "The future is calibrated!\n";
-
-    return 0;
+    return EXIT_SUCCESS;
 }
