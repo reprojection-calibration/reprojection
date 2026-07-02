@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    application::Calibrate(app_args->config, image_source, *data_signature, app_args->db);
+    application::Calibrate(app_args->config, {image_source, *data_signature}, std::nullopt, app_args->db);
 
     std::cout << "The future is calibrated!\n";
 

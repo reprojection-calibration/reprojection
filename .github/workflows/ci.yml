@@ -220,6 +220,9 @@ jobs:
             --workspace /data
       - name: Check outputs
         run: |
+          # So the user sees something in the GHA web GUI even if the test passes. 
+          ls -lh "${RUNNER_TEMP}/data"
+          
           # This is just a safety check because the database file actually is already present in the test data before  
           # the application even runs.
           db="${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.db3"

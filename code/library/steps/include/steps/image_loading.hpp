@@ -14,7 +14,7 @@ namespace reprojection::steps {
 struct ImageLoading {
     std::string camera_name_;
     std::string serialized_data_signature_;
-    ImageSourceSignature image_source_;
+    ImageSampler image_source_;
 
     static CalibrationStep StepType() { return CalibrationStep::ImageLoading; }
 

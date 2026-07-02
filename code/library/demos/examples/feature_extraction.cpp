@@ -1,19 +1,23 @@
 #include <iostream>
 
 #include "application/cli_utils.hpp"
-#include "application/image_source.hpp"
 #include "config/config_parse.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "image_viewer/image_viewer.hpp"
+#include "video_capture/video_capture.hpp"
 
 // To get this working from CLion dev env I followed this link:
 // https://medium.com/@steffen.stautmeister/how-to-build-and-run-opencv-and-pytorch-c-with-cuda-support-in-docker-in-clion-6f485155deb8
 // After doing that my toolchain "Container Settings" were:
+//
 //      -e DISPLAY=:0.0 --entrypoint= -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev --privileged --rm
+//
+// You might also need to run `xhost +` from a terminal if it still cannot open the window. If that is really a long
+// term solution...?
 
 using namespace reprojection;
 
-// NOTE(Jack): The entire purpose of the demo is to show the featue extraction which is why the display is hardcoded
+// NOTE(Jack): The entire purpose of the demo is to show the feature extraction which is why the display is hardcoded
 // here and not controlled by a config file parameter.
 
 int main(int argc, char* argv[]) {
@@ -23,17 +27,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // If no folder is provided then default to webcam demo.
-    std::unique_ptr<application::ImageSource> image_feed;
-
-    if (auto const folder{application::GetCommandOption(argv, argv + argc, "--folder")}) {
-        image_feed = std::make_unique<application::ImageFolder>(*folder);
-    } else if (auto const file{application::GetCommandOption(argv, argv + argc, "--file")}) {
-        image_feed = std::make_unique<application::VideoCapture>(*file);
+    // TODO(Jack): Print out to the user that we support the opencv cv::VideoCapture API for input.
+    // TODO(Jack): Provide user option to select a different device instead of just the default zero device.
+    std::unique_ptr<video_capture::VideoCapture> image_feed;
+    if (auto const data{application::GetCommandOption(argv, argv + argc, "--data")}) {
+        image_feed = std::make_unique<video_capture::VideoCapture>(*data);
     } else {
-        std::cout << "Folder not provided! (--folder <folder_path>)! Defaulting to webcam demo." << std::endl;
-        // TODO(Jack): Provide user option to select a different device
-        image_feed = std::make_unique<application::VideoCapture>(0);
+        std::cout << "Defaulting to webcam demo." << std::endl;
+        image_feed = std::make_unique<video_capture::VideoCapture>(0);
     }
 
     toml::table const config_table{toml::parse_file(*config_file)};
@@ -44,7 +45,6 @@ int main(int argc, char* argv[]) {
     TargetInfo const target_info{cfg.target_type, cfg.size[0], cfg.size[1], cfg.unit_dimension, cfg.asymmetric};
 
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
-
     while (true) {
         cv::Mat const img{image_feed->GetImage()};
 

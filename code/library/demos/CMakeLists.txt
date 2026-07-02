@@ -25,6 +25,7 @@ set(LINK_LIBRARIES
         tomlplusplus::tomlplusplus
         types
         types_internal
+        video_capture
 )
 
 # NOTE(Jack): We have an unclear separation of what is an internal example application and what a external user facing
