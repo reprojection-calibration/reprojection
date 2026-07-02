@@ -17,9 +17,9 @@ using SqlitePtr = std::shared_ptr<sqlite3>;
 // the application might perform an unnecessary deserialization of the image just to pass it here. However, the cv::Mat
 // is such a standard type that the risk of passing encoded image buffers here directly just does not make sense. If we
 // benchmark it and notice a big slowdown than we can consider an optimization here.
-using ImageSampleSource = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
+using ImageSampler = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()>;
 
 // [omega_x, omega_y, omega_z, acc_x, acc_y, acc_z]
-using ImuSampleSource = std::function<std::optional<std::pair<uint64_t, std::array<double, 6>>>()>;
+using ImuSampler = std::function<std::optional<std::pair<uint64_t, std::array<double, 6>>>()>;
 
 }  // namespace reprojection

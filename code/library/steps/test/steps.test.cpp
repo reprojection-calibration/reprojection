@@ -102,7 +102,7 @@ class ImageSourceFixture : public CameraStepsFixture {
     }
 
     std::shared_ptr<EncodedImages> encoded_images;
-    ImageSampleSource image_source;
+    ImageSampler image_source;
     TargetInfo target_info;
 };
 
@@ -316,7 +316,7 @@ TEST(StepsSteps, TestImuDataLoading) {
 
     // TODO(Jack): As we add more tests this should probably be packed into a test fixture.
     ImuMeasurements const gt_imu_data{{0, {Array3d::Ones(), Array3d::Ones()}}, {1, {Array3d::Ones(), Array3d::Ones()}}};
-    ImuSampleSource imu_data_source{
+    ImuSampler imu_data_source{
         [itr = std::cbegin(gt_imu_data),
          end = std::cend(gt_imu_data)]() mutable -> std::optional<std::pair<uint64_t, std::array<double, 6>>> {
             if (itr != end) {

@@ -8,7 +8,7 @@ namespace reprojection::steps {
 struct ImuDataLoading {
     std::string imu_name_;
     std::string serialized_data_signature_;
-    ImuSampleSource imu_data_source_;
+    ImuSampler imu_data_source_;
 
     static CalibrationStep StepType() { return CalibrationStep::ImuDataLoading; }
 

@@ -18,12 +18,12 @@ struct AppArgs {
 };
 
 struct ImageInput {
-    ImageSampleSource source;
+    ImageSampler source;
     std::string signature;
 };
 
 struct ImuInput {
-    ImuSampleSource source;
+    ImuSampler source;
     std::string signature;
 };
 
