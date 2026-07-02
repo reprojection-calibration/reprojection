@@ -41,4 +41,14 @@ std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
     return std::nullopt;
 }
 
+ImuSource::ImuSource(SingleTopicBagReader& bag_reader) : bag_reader_{bag_reader} {}
+
+std::optional<std::pair<uint64_t, std::array<double, 6>>> ImuSource::operator()() {
+    if (auto const msg{bag_reader_.Next()}) {
+        return ros2::ToImuArray(*msg);
+    }
+
+    return std::nullopt;
+}
+
 }  // namespace reprojection::ros2
