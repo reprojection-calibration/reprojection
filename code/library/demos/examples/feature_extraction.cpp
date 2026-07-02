@@ -9,7 +9,11 @@
 // To get this working from CLion dev env I followed this link:
 // https://medium.com/@steffen.stautmeister/how-to-build-and-run-opencv-and-pytorch-c-with-cuda-support-in-docker-in-clion-6f485155deb8
 // After doing that my toolchain "Container Settings" were:
+//
 //      -e DISPLAY=:0.0 --entrypoint= -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev:/dev --privileged --rm
+//
+// You might also need to run `xhost +` from a terminal if it still cannot open the window. If that is really a long
+// term solution...?
 
 using namespace reprojection;
 
@@ -29,7 +33,7 @@ int main(int argc, char* argv[]) {
     if (auto const data{application::GetCommandOption(argv, argv + argc, "--data")}) {
         image_feed = std::make_unique<application::VideoCapture>(*data);
     } else {
-        std::cout << "Data path not provided! (--data <folder_path>)! Defaulting to webcam demo." << std::endl;
+        std::cout << "Defaulting to webcam demo." << std::endl;
         image_feed = std::make_unique<application::VideoCapture>(0);
     }
 
