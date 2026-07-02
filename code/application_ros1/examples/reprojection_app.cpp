@@ -57,9 +57,8 @@ int main(int argc, char* argv[]) {
         imu_input = application::ImuInput{imu_source, *imu_signature};
     }
 
+    // TODO(Jack): Should we put this in a try catch block and return EXIT_FAILURE?
     application::Calibrate(app_args->config, {image_source, *data_signature}, imu_input, app_args->db);
 
-    std::cout << "The future is calibrated!\n";
-
-    return 0;
+    return EXIT_SUCCESS;
 }
