@@ -97,9 +97,9 @@ Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& ta
 }  // LCOV_EXCL_LINE
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
-                                                                               ImuMeasurements const& imu_data) {
+                                                                               ImuMeasurements const& imu_data, int const num_threads) {
     auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
-    auto const [aa_imu_co, diagnostics]{optimization::AngularVelocityAlignment(imu_angular_velocity, spline)};
+    auto const [aa_imu_co, diagnostics]{optimization::AngularVelocityAlignment(imu_angular_velocity, spline, num_threads)};
 
     Matrix3d const R_imu_co{geometry::Exp<double>(aa_imu_co)};
     auto const imu_linear_acceleration{ExtractLinearAcceleration(imu_data)};

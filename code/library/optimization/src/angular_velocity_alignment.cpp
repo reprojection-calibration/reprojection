@@ -11,8 +11,10 @@ namespace reprojection::optimization {
 // rigid body angular velocity cost function requires the full control points because ceres does not allow parameter
 // aliasing (see comment at RigidBodyAngularVelocity::Create()).
 std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu,
-                                                        spline::Se3Spline spline) {
+                                                        spline::Se3Spline spline, int const num_threads) {
+    // TODO(Jack): We need a better more uniform way of parameterizing the ceres optimizations.
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
+    ceres_state.solver_options.num_threads = num_threads;
     ceres::Problem problem{ceres_state.problem_options};
 
     Array6d tf_imu_co{0, 0, 0, 0, 0, 0};

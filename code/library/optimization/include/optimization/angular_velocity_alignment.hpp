@@ -18,6 +18,6 @@ namespace reprojection::optimization {
  * solution will be degenerate.
  */
 std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu,
-                                                        spline::Se3Spline spline);
+                                                        spline::Se3Spline spline, int const num_threads);
 
 }  // namespace  reprojection::optimization

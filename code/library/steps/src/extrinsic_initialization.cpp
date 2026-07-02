@@ -14,7 +14,7 @@ std::string ExtrinsicInitialization::HashInputs() const {
 }
 
 ImuCamExtrinsic ExtrinsicInitialization::Compute() const {
-    auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline_, imu_data_)};
+    auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline_, imu_data_, num_threads_)};
 
     // TODO(Jack): Should we do something with the diagnostics? There are several places now where we ignore the
     // returned optimization diagnostics but I am sure that a user would appreciate these in the database.

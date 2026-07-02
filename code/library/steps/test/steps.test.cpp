@@ -270,7 +270,7 @@ TEST(StepsSteps, TestExtrinsicInitialization) {
     database::InsertStep(db, imu_name, CalibrationStep::ImuDataLoading, "");
     database::InsertImuData(db, imu_name, imu_data);
 
-    steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline_b_w};
+    steps::ExtrinsicInitialization const step{imu_name, camera_name, imu_data, spline_b_w, 1};
 
     auto [result, cache_status]{RunStep<ImuCamExtrinsic>(step, db)};
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);

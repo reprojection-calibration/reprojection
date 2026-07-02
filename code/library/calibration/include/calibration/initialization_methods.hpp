@@ -25,6 +25,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics);
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
-                                                                               ImuMeasurements const& imu_data);
+                                                                               ImuMeasurements const& imu_data,
+                                                                               int const num_threads);
 
 }  // namespace reprojection::calibration

@@ -127,7 +127,7 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
                   ToString(spline_init_step.StepType()), ToString(spline_init_cache_status), spline_init.Size());
 
         steps::ExtrinsicInitialization const extrinsic_init_step{cfg.imu->sensor_name, camera_info.sensor_name,
-                                                                 imu_data, spline_init};
+                                                                 imu_data, spline_init, cfg.application.threads};
         auto const [extrinsic_init,
                     extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
         log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
