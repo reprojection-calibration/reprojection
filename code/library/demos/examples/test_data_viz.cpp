@@ -79,8 +79,9 @@ int main() {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
 
+    // TODO(Jack): Also pass empty imu source!
     ImageSampleSource empty_image_source{[]() { return std::nullopt; }};
-    application::Calibrate(config, empty_image_source, image_hash, db);
+    application::Calibrate(config, {empty_image_source, image_hash}, std::nullopt, db);
 
     return EXIT_SUCCESS;
 }

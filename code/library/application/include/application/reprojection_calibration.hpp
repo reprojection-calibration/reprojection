@@ -17,10 +17,20 @@ struct AppArgs {
     SqlitePtr db;
 };
 
+struct ImageInput {
+    ImageSampleSource source;
+    std::string const& signature;
+};
+
+struct ImuInput {
+    ImuSampleSource source;
+    std::string const& signature;
+};
+
 std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
-void Calibrate(toml::table const& cfg_table, ImageSampleSource image_source,
-               std::string const& image_source_signature, SqlitePtr const db);
+void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
+               SqlitePtr const db);
 
 }  // namespace reprojection::application

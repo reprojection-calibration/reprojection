@@ -72,5 +72,6 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     // steps to manufacture a cache hit because if their inputs are empty they themselves will just pass through with no
     // problem. This might change in the future but for now it stands.
 
-    EXPECT_NO_THROW(application::Calibrate(config, {}, "", db));
+    // TODO(Jack): Also enable to trigger imu calibration!
+    EXPECT_NO_THROW(application::Calibrate(config, {{}, ""}, std::nullopt, db));
 }

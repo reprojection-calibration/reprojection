@@ -52,11 +52,11 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 // TODO(Jack): Should we put image_source_signature and image_source into one object? They are 100% related. Or maybe
 // the entire "image source" concept needs to be reworked as it does not play nice with the database. See note in
 // update_feature_extraction_cache_key.py
-void Calibrate(toml::table const& cfg_table, ImageSampleSource image_source,
-               std::string const& image_source_signature, SqlitePtr const db) {
+void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
+               SqlitePtr const db) {
     config::Config const cfg{steps::ConfigParsing(cfg_table, db)};
 
-    steps::ImageLoading const image_loading{cfg.camera.sensor_name, image_source_signature, image_source};
+    steps::ImageLoading const image_loading{cfg.camera.sensor_name, image_input.signature, image_input.source};
     auto const [encoded_images,
                 image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.StepType()),
@@ -106,8 +106,9 @@ void Calibrate(toml::table const& cfg_table, ImageSampleSource image_source,
     // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
     // someone tried to use this from an application it will be impossible.
     // TODO(Jack): Remove code coverage exclusion!
+    // TODO(Jack): Refactor imu/config logic here so there is some consistency check
     // LCOV_EXCL_START
-    if (cfg.imu) {
+    if (cfg.imu and imu_input.has_value()) {
         std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
         database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);
         database::InsertEntity(db, Extrinsic::EntityId(cfg.imu->sensor_name, camera_info.sensor_name),

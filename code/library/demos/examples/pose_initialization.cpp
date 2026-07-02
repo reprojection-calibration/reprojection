@@ -66,7 +66,7 @@ int main() {
     }
 
     ImageSampleSource empty_image_source{[]() { return std::nullopt; }};
-    application::Calibrate(config, empty_image_source, "", db);
+    application::Calibrate(config, {empty_image_source, ""}, std::nullopt, db);
 
     return EXIT_SUCCESS;
 }

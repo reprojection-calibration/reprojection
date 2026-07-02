@@ -29,17 +29,16 @@ int main(int argc, char* argv[]) {
     // the chrono library but then that meant the integration testing would not work because then the cache key would
     // change every time.
     int pseudo_timestamp{0};
-    ImageSampleSource image_source{
-        [&image_feed, &pseudo_timestamp]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
-            cv::Mat img{image_feed->GetImage()};
-            if (img.empty()) {
-                return std::nullopt;
-            }
+    ImageSampleSource image_source{[&image_feed, &pseudo_timestamp]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
+        cv::Mat img{image_feed->GetImage()};
+        if (img.empty()) {
+            return std::nullopt;
+        }
 
-            return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
-        }};
+        return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
+    }};
 
-    application::Calibrate(app_args->config, image_source, "", app_args->db);
+    application::Calibrate(app_args->config, {image_source, ""}, std::nullopt, app_args->db);
 
     std::cout << "The future is calibrated!\n";
     return EXIT_SUCCESS;
