@@ -1,3 +1,5 @@
+#include "msg_parsing.hpp"
+
 #include <gtest/gtest.h>
 
 #include <rosbag/bag.h>
@@ -5,7 +7,6 @@
 
 #include "application_ros1/bag_wrapper.hpp"
 
-#include "msg_parsing.hpp"
 #include "testing_utils.hpp"
 
 using namespace reprojection;
