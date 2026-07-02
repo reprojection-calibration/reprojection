@@ -48,7 +48,7 @@ ImuSource::ImuSource(SingleTopicBagReader const& reader) : itr_{reader.view->beg
 
 std::optional<std::pair<uint64_t, std::array<double, 6>>> ImuSource::operator()() {
     if (itr_ != end_) {
-        auto const data_i{ToCvMat(*itr_)};
+        auto const data_i{ToImuArray(*itr_)};
         itr_ = std::next(itr_);
 
         return data_i;
