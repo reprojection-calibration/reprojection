@@ -26,4 +26,4 @@ class VideoCapture {
     cv::VideoCapture cap_;
 };
 
-}  // namespace reprojection::application
+}  // namespace reprojection::video_capture

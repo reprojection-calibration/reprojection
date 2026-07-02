@@ -49,4 +49,4 @@ VideoCapture::VideoCapture(cv::VideoCapture const& cap) : cap_{cap} {
     }
 }
 
-}  // namespace reprojection::application
+}  // namespace reprojection::video_capture
