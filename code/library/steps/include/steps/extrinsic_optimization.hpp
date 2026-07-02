@@ -14,6 +14,7 @@ struct ExtrinsicOptimization {
     ImuMeasurements imu_data_;
     spline::Se3Spline spline_;
     ImuCamExtrinsic extrinsic_;
+    int  num_threads_;
 
     static CalibrationStep StepType() { return CalibrationStep::ExtrinsicOptimization; }
 

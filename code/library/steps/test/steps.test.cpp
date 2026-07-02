@@ -299,8 +299,8 @@ TEST_F(CameraStepsFixture, TestExtrinsicOptimization) {
 
     ImuCamExtrinsic const initial_extrinsic{{imu_name, camera_info_.sensor_name, Array6d::Zero()}, Array3d::Zero()};
 
-    steps::ExtrinsicOptimization const step{camera_info_, targets,    camera_state_,
-                                            imu_data,     spline_b_w, initial_extrinsic};
+    steps::ExtrinsicOptimization const step{camera_info_,      targets, camera_state_, imu_data, spline_b_w,
+                                            initial_extrinsic, 1};
 
     auto [result, cache_status]{RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(step, db_)};
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);

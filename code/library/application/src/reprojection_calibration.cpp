@@ -136,8 +136,9 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
         std::cout << geometry::Exp(extrinsic_init.tf.se3_a_b).matrix() << std::endl;
         std::cout << extrinsic_init.gravity.transpose() << std::endl;
 
-        steps::ExtrinsicOptimization const extrinsic_opt_step{camera_info, targets,     optimized_state.camera_state,
-                                                              imu_data,    spline_init, extrinsic_init};
+        steps::ExtrinsicOptimization const extrinsic_opt_step{
+            camera_info, targets,        optimized_state.camera_state, imu_data,
+            spline_init, extrinsic_init, cfg.application.threads};
         auto const [extrinsic_opt_result, extrinsic_opt_cache_status]{
             steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
         log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.StepType()),
