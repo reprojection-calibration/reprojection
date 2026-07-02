@@ -8,6 +8,7 @@ namespace reprojection::steps {
 struct IntrinsicInitialization {
     CameraInfo camera_info_;
     CameraMeasurements targets_;
+    int num_threads_;
 
     static CalibrationStep StepType() { return CalibrationStep::IntrinsicInitialization; }
 

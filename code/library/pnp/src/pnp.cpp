@@ -47,8 +47,9 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     CameraMeasurements const target{{timestamp_ns, {bundle, {}}}};
     OptimizationState const initial_state{CameraState{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
 
-    // TODO(Jack): The optimizer should be configured to keep the intrinsics constant here!
-    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, target, initial_state, true)};
+    // TODO(Jack): Should we configure the bundle adjustment here to use all the threads? I think the pnp is normally
+    // such a small problem that one thread is all we need.
+    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, target, initial_state, 1, true)};
     if (diagnostics.solver_summary.termination_type == ceres::CONVERGENCE) {
         return PoseWithCost{geometry::Exp(optimized_state.frames.at(timestamp_ns).pose),
                             diagnostics.solver_summary.final_cost};

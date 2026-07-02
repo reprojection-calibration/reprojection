@@ -13,7 +13,8 @@ std::string ExtrinsicOptimization::HashInputs() const {
 }
 
 std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization::Compute() const {
-    return optimization::ExtrinsicOptimization(imu_data_, spline_, extrinsic_, camera_info_, targets_, intrinsics_);
+    return optimization::ExtrinsicOptimization(imu_data_, spline_, extrinsic_, camera_info_, targets_, intrinsics_,
+                                               num_threads_);
 }
 
 std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization::Load(SqlitePtr const db) const {

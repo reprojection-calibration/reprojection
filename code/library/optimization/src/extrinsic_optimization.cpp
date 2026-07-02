@@ -13,9 +13,10 @@ namespace reprojection::optimization {
 
 std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
     ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, ImuCamExtrinsic const& initial_extrinsic,
-    CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics) {
+    CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics, int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY};
+    ceres_state.solver_options.num_threads = num_threads;
     ceres::Problem problem{ceres_state.problem_options};
 
     spline::Se3Spline optimized_spline{initial_spline};

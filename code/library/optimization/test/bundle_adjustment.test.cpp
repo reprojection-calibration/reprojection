@@ -20,7 +20,7 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
 
     // Solve
     OptimizationState const initial_state{gt_intrinsics, gt_frames};
-    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state)};
+    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state, 1)};
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     // Assert
@@ -55,7 +55,7 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     }
 
     OptimizationState const initial_state{gt_intrinsics, noisy_frames};
-    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state)};
+    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state, 1)};
 
     EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 

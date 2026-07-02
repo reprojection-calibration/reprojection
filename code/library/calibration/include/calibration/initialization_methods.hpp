@@ -20,11 +20,12 @@ namespace reprojection::calibration {
  * single frame reprojection error testing. Using multiple frames is the key innovation of this function.
  */
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
-                                            CameraMeasurements const& targets);
+                                            CameraMeasurements const& targets, int const num_threads);
 
 Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics);
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
-                                                                               ImuMeasurements const& imu_data);
+                                                                               ImuMeasurements const& imu_data,
+                                                                               int const num_threads);
 
 }  // namespace reprojection::calibration

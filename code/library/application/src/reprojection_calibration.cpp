@@ -85,7 +85,7 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
               ToString(feature_extraction_step.StepType()), ToString(feature_extraction_cache_status),
               std::size(targets));
 
-    steps::IntrinsicInitialization const ii_step{camera_info, targets};
+    steps::IntrinsicInitialization const ii_step{camera_info, targets, cfg.application.threads};
     auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'intrinsics': {}}}", ToString(ii_step.StepType()),
               ToString(ii_cache_status), camera_state.intrinsics);
@@ -97,7 +97,7 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
 
-    steps::BundleAdjustment const ba_step{camera_info, targets, aligned_initial_state};
+    steps::BundleAdjustment const ba_step{camera_info, targets, aligned_initial_state, cfg.application.threads};
     auto const [optimized_state, ba_cache_status]{steps::RunStep<OptimizationState>(ba_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
@@ -127,7 +127,7 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
                   ToString(spline_init_step.StepType()), ToString(spline_init_cache_status), spline_init.Size());
 
         steps::ExtrinsicInitialization const extrinsic_init_step{cfg.imu->sensor_name, camera_info.sensor_name,
-                                                                 imu_data, spline_init};
+                                                                 imu_data, spline_init, cfg.application.threads};
         auto const [extrinsic_init,
                     extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
         log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
@@ -136,8 +136,9 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
         std::cout << geometry::Exp(extrinsic_init.tf.se3_a_b).matrix() << std::endl;
         std::cout << extrinsic_init.gravity.transpose() << std::endl;
 
-        steps::ExtrinsicOptimization const extrinsic_opt_step{camera_info, targets,     optimized_state.camera_state,
-                                                              imu_data,    spline_init, extrinsic_init};
+        steps::ExtrinsicOptimization const extrinsic_opt_step{
+            camera_info, targets,        optimized_state.camera_state, imu_data,
+            spline_init, extrinsic_init, cfg.application.threads};
         auto const [extrinsic_opt_result, extrinsic_opt_cache_status]{
             steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
         log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.StepType()),

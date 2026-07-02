@@ -11,8 +11,9 @@ namespace reprojection::optimization {
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
 std::tuple<OptimizationState, CeresState> BundleAdjustment(CameraInfo const& sensor, CameraMeasurements const& targets,
                                                            OptimizationState const& initial_state,
-                                                           bool const constant_intrinsics) {
+                                                           int const num_threads, bool const constant_intrinsics) {
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
+    ceres_state.solver_options.num_threads = num_threads;
     ceres::Problem problem{ceres_state.problem_options};
 
     OptimizationState optimized_state{initial_state};

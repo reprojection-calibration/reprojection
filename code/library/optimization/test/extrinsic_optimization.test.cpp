@@ -42,7 +42,7 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
         Vector3d{-0.212548, -0.293729, 9.79995}};
 
     auto const [_1, optimized_extrinsic]{optimization::ExtrinsicOptimization(
-        imu_data, spline_w_co, initial_extrinsic, camera_info, targets, {tu::pinhole_intrinsics})};
+        imu_data, spline_w_co, initial_extrinsic, camera_info, targets, {tu::pinhole_intrinsics}, 1)};
 
     EXPECT_TRUE(optimized_extrinsic.tf.se3_a_b.isApprox(initial_extrinsic.tf.se3_a_b, 1e-2));
     EXPECT_TRUE(optimized_extrinsic.gravity.isApprox(initial_extrinsic.gravity, 1e-2));

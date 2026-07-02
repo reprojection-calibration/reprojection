@@ -14,6 +14,7 @@ struct ExtrinsicInitialization {
     // the spline. BUT we actually also want to save the ImuErrors to the database as a sort of diagnostic. To do that
     // we need the full spline.
     spline::Se3Spline spline_;
+    int const num_threads_;
 
     static CalibrationStep StepType() { return CalibrationStep::ExtrinsicInitialization; }
 

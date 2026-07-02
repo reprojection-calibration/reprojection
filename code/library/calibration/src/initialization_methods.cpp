@@ -28,7 +28,7 @@ auto const log{logging::Get("calibration")};
 // of targets sampled?
 //
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
-                                            CameraMeasurements const& targets) {
+                                            CameraMeasurements const& targets, int const num_threads) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
 
     // Generate gamma estimates
@@ -60,8 +60,8 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 
         // Do nonlinear refinement with the intrinsics constant
         OptimizationState const initial_state{{intrinsics_i}, initial_poses};
-        auto const [optimized_state,
-                    diagnostics]{optimization::BundleAdjustment(camera_info, target_subset, initial_state, true)};
+        auto const [optimized_state, diagnostics]{
+            optimization::BundleAdjustment(camera_info, target_subset, initial_state, num_threads, true)};
         cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
 
         log->debug("{{ 'idx': {}, 'gamma': {}, 'final_cost': {}, 'num_frames_used': {}}}", idx, gamma_i,
@@ -97,9 +97,11 @@ Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& ta
 }  // LCOV_EXCL_LINE
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
-                                                                               ImuMeasurements const& imu_data) {
+                                                                               ImuMeasurements const& imu_data,
+                                                                               int const num_threads) {
     auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
-    auto const [aa_imu_co, diagnostics]{optimization::AngularVelocityAlignment(imu_angular_velocity, spline)};
+    auto const [aa_imu_co,
+                diagnostics]{optimization::AngularVelocityAlignment(imu_angular_velocity, spline, num_threads)};
 
     Matrix3d const R_imu_co{geometry::Exp<double>(aa_imu_co)};
     auto const imu_linear_acceleration{ExtractLinearAcceleration(imu_data)};

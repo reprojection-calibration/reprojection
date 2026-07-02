@@ -10,7 +10,7 @@ namespace reprojection::optimization {
 // abstraction?
 std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
     ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, ImuCamExtrinsic const& initial_extrinsic,
-    CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics);
+    CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics, int const num_threads);
 
 std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
                                                               CameraMeasurements const& targets,

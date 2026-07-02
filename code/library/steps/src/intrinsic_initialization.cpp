@@ -11,7 +11,7 @@ std::string IntrinsicInitialization::HashInputs() const { return hashing::HashAr
 
 CameraState IntrinsicInitialization::Compute() const {
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
-                                                            camera_info_.bounds.u_max, targets_)};
+                                                            camera_info_.bounds.u_max, targets_, num_threads_)};
 
     if (not intrinsics.has_value()) {
         throw std::runtime_error                                                                       // LCOV_EXCL_LINE

@@ -12,7 +12,8 @@ std::string BundleAdjustment::HashInputs() const {
 }
 
 OptimizationState BundleAdjustment::Compute() const {
-    auto const [optimized_state, _]{optimization::BundleAdjustment(camera_info_, targets_, initial_state_)};
+    auto const [optimized_state,
+                _]{optimization::BundleAdjustment(camera_info_, targets_, initial_state_, num_threads_)};
 
     return optimized_state;
 }

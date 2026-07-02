@@ -16,7 +16,7 @@ TEST(CalibrationInitializationMethods, TestInitializeIntrinsics) {
     auto const [targets, _]{testing_mocks::GenerateMvgData(sensor, intrinsics, 10, 1)};
 
     auto const result{
-        calibration::InitializeIntrinsics(sensor.camera_model, sensor.bounds.v_max, sensor.bounds.u_max, targets)};
+        calibration::InitializeIntrinsics(sensor.camera_model, sensor.bounds.v_max, sensor.bounds.u_max, targets, 1)};
 
     ASSERT_TRUE(result.has_value());
 }
@@ -43,7 +43,7 @@ TEST(CalibrationInitializationMethods, TestPoseInitialization) {
 TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
     auto [imu_data, spline_w_b]{testing_mocks::GenerateImuData(10, 50)};
 
-    auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline_w_b, imu_data)};
+    auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline_w_b, imu_data, 1)};
     auto const [aa_imu_co, diagnostics]{rotation_result};
 
     // Heuristic! I wish it was really exactly the identity matrix, but it's a little off.
