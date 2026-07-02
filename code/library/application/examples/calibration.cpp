@@ -1,10 +1,8 @@
-#include <chrono>
 #include <filesystem>
 
 #include "application/image_source.hpp"
 #include "application/reprojection_calibration.hpp"
 
-namespace ch = std::chrono;
 namespace fs = std::filesystem;
 using namespace reprojection;
 
