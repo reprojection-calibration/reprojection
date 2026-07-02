@@ -12,24 +12,24 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    std::unique_ptr<application::ImageSource> const image_feed{
-        std::make_unique<application::VideoCapture>(app_args->data_path)};
+    auto const video_capture{std::make_unique<application::VideoCapture>(app_args->data_path)};
 
     // NOTE(Jack): We use a simple incremented timestamp here because we have no easily accessible time information from
     // the video file (at least I don't think we can get that). I had first planned to use a system timestamp using
     // the chrono library but then that meant the integration testing would not work because then the cache key would
     // change every time.
     int pseudo_timestamp{0};
-    ImageSampleSource image_source{[&image_feed, &pseudo_timestamp]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
-        cv::Mat img{image_feed->GetImage()};
-        if (img.empty()) {
-            return std::nullopt;
-        }
+    ImageSampleSource image_source{
+        [&video_capture, &pseudo_timestamp]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
+            cv::Mat img{video_capture->GetImage()};
+            if (img.empty()) {
+                return std::nullopt;
+            }
 
-        return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
-    }};
+            return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
+        }};
 
-    application::Calibrate(app_args->config, {image_source, image_feed->GetSignature()}, std::nullopt, app_args->db);
+    application::Calibrate(app_args->config, {image_source, video_capture->GetSignature()}, std::nullopt, app_args->db);
 
     std::cout << "The future is calibrated!\n";
 

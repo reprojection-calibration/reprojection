@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 
     // TODO(Jack): Print out to the user that we support the opencv cv::VideoCapture API for input.
     // TODO(Jack): Provide user option to select a different device instead of just the default zero device.
-    std::unique_ptr<application::ImageSource> image_feed;
+    std::unique_ptr<application::VideoCapture> image_feed;
     if (auto const data{application::GetCommandOption(argv, argv + argc, "--data")}) {
         image_feed = std::make_unique<application::VideoCapture>(*data);
     } else {

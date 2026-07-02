@@ -1,22 +1,12 @@
 #pragma once
 
 #include <string>
-#include <vector>
 
 #include <opencv2/opencv.hpp>
 
 namespace reprojection::application {
 
-class ImageSource {
-   public:
-    virtual ~ImageSource() = default;
-
-    virtual cv::Mat GetImage() = 0;
-
-    virtual std::string GetSignature() = 0;
-};
-
-class VideoCapture final : public ImageSource {
+class VideoCapture {
    public:
     explicit VideoCapture(int const device_id);
 
@@ -24,11 +14,11 @@ class VideoCapture final : public ImageSource {
     // them. Look at the opencv docs for more information.
     explicit VideoCapture(std::string const& video_file);
 
-    ~VideoCapture() override;
+    ~VideoCapture();
 
-    cv::Mat GetImage() override;
+    cv::Mat GetImage();
 
-    std::string GetSignature() override;
+    std::string GetSignature();
 
    private:
     explicit VideoCapture(cv::VideoCapture const& cap);
