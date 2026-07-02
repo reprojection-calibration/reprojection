@@ -113,9 +113,7 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
 
-
-    // TODO(Jack): Refactor imu/config logic here so there is some consistency check
-    // LCOV_EXCL_START
+    // TODO(Jack): Refactor imu/config logic here so there is some consistency check.
     if (cfg.imu.has_value() and imu_input.has_value()) {
         steps::ImuDataLoading const imu_data_loading{cfg.imu->sensor_name, imu_input->signature, imu_input->source};
         auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
@@ -131,26 +129,21 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
                                                                  imu_data, spline_init, cfg.application.threads};
         auto const [extrinsic_init,
                     extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
-        log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
-                  ToString(extrinsic_init_cache_status));
-
-        // TODO LOG THIS!
-        std::cout << geometry::Exp(extrinsic_init.tf.se3_a_b).matrix() << std::endl;
-        std::cout << extrinsic_init.gravity.transpose() << std::endl;
+        log->info("{{'step': '{}', 'cache_status': '{}', 'tf_imu_cam': {}, 'gravity': {}}}",
+                  ToString(extrinsic_init_step.StepType()), ToString(extrinsic_init_cache_status),
+                  extrinsic_init.tf.se3_a_b, extrinsic_init.gravity);
 
         steps::ExtrinsicOptimization const extrinsic_opt_step{
             camera_info, targets,        optimized_state.camera_state, imu_data,
             spline_init, extrinsic_init, cfg.application.threads};
         auto const [extrinsic_opt_result, extrinsic_opt_cache_status]{
             steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
-        log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.StepType()),
-                  ToString(extrinsic_opt_cache_status));
-
-        // TODO LOG THIS!
-        std::cout << geometry::Exp(extrinsic_opt_result.second.tf.se3_a_b).matrix() << std::endl;
-        std::cout << extrinsic_opt_result.second.gravity.transpose() << std::endl;
+        log->info("{{'step': '{}', 'cache_status': '{}', 'tf_imu_cam': {}, 'gravity': {}}}",
+                  ToString(extrinsic_opt_step.StepType()), ToString(extrinsic_opt_cache_status),
+                  extrinsic_opt_result.second.tf.se3_a_b, extrinsic_opt_result.second.gravity);
     }
-    // LCOV_EXCL_STOP
+
+    std::cout << "The future is calibrated!\n";
 }
 
 }  // namespace reprojection::application
