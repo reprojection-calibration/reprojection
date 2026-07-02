@@ -7,7 +7,6 @@ set(SRC_FILES
 set(LINK_LIBRARIES
         ${OpenCV_LIBS}
 )
-set(INSTALL_SO false)
 AddLibrary()
 
 set(TESTS
