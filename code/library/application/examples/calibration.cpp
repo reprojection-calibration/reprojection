@@ -19,15 +19,14 @@ int main(int argc, char* argv[]) {
     // the chrono library but then that meant the integration testing would not work because then the cache key would
     // change every time.
     int pseudo_timestamp{0};
-    ImageSampleSource image_source{
-        [&video_capture, &pseudo_timestamp]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
-            cv::Mat img{video_capture->GetImage()};
-            if (img.empty()) {
-                return std::nullopt;
-            }
+    ImageSampler image_source{[&video_capture, &pseudo_timestamp]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
+        cv::Mat img{video_capture->GetImage()};
+        if (img.empty()) {
+            return std::nullopt;
+        }
 
-            return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
-        }};
+        return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
+    }};
 
     application::Calibrate(app_args->config, {image_source, video_capture->GetSignature()}, std::nullopt, app_args->db);
 
