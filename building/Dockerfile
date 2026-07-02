@@ -289,6 +289,12 @@ RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporar
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
       /data/video_file/dataset-calib-imu4_512_16.db3 b81580d1ffe01df82b4347f8075a0c20f5f7778e31af901cc2dabd8982493094
 
+ARG REMOVE_IMU_TABLE_DATA=building/scripts/remove_imu_table_data.py
+RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE_IMU_TABLE_DATA} \
+    python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
+      /data/ros1/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
+    python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
+      /data/ros2/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc
 
 FROM apt-base-stage AS ros1-base-stage
 
