@@ -34,18 +34,5 @@ class VideoCapture final : public ImageSource {
     cv::VideoCapture cap_;
 };
 
-// TODO(Jack): I think the opencv video capture can also read files by default! We can probably remove this entirely.
-class ImageFolder final : public ImageSource {
-   public:
-    explicit ImageFolder(std::string const& image_folder);
-
-    cv::Mat GetImage() override;
-
-    std::string GetSignature() override;
-
-   private:
-    std::vector<std::string> image_files_;
-    std::size_t current_id_{0};
-};
 
 }  // namespace reprojection::application

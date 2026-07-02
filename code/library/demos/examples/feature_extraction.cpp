@@ -23,16 +23,13 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // If no folder is provided then default to webcam demo.
+    // TODO(Jack): Print out to the user that we support the opencv cv::VideoCapture API for input.
+    // TODO(Jack): Provide user option to select a different device instead of just the default zero device.
     std::unique_ptr<application::ImageSource> image_feed;
-
-    if (auto const folder{application::GetCommandOption(argv, argv + argc, "--folder")}) {
-        image_feed = std::make_unique<application::ImageFolder>(*folder);
-    } else if (auto const file{application::GetCommandOption(argv, argv + argc, "--file")}) {
-        image_feed = std::make_unique<application::VideoCapture>(*file);
+    if (auto const data{application::GetCommandOption(argv, argv + argc, "--data")}) {
+        image_feed = std::make_unique<application::VideoCapture>(*data);
     } else {
-        std::cout << "Folder not provided! (--folder <folder_path>)! Defaulting to webcam demo." << std::endl;
-        // TODO(Jack): Provide user option to select a different device
+        std::cout << "Data path not provided! (--data <folder_path>)! Defaulting to webcam demo." << std::endl;
         image_feed = std::make_unique<application::VideoCapture>(0);
     }
 
@@ -44,7 +41,6 @@ int main(int argc, char* argv[]) {
     TargetInfo const target_info{cfg.target_type, cfg.size[0], cfg.size[1], cfg.unit_dimension, cfg.asymmetric};
 
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info)};
-
     while (true) {
         cv::Mat const img{image_feed->GetImage()};
 

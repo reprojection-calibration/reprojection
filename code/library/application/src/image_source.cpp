@@ -50,35 +50,4 @@ VideoCapture::VideoCapture(cv::VideoCapture const& cap) : cap_{cap} {
     }
 }
 
-ImageFolder::ImageFolder(std::string const& image_folder) {
-    std::ranges::for_each(std::filesystem::directory_iterator(image_folder),
-                          [this](const auto& entry) { image_files_.push_back(entry.path()); });
-
-    std::sort(std::begin(image_files_), std::end(image_files_));
-}
-
-cv::Mat ImageFolder::GetImage() {
-    if (current_id_ >= std::size(image_files_)) {
-        // Out of images to load, return empty, is this a valid way to handle this condition? Should we use optional
-        // here to signal failure?
-        return cv::Mat();
-    }
-
-    cv::Mat const image{cv::imread(image_files_[current_id_])};
-    ++current_id_;
-
-    return image;
-}
-
-std::string ImageFolder::GetSignature() {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(3);
-
-    // TODO(Jack): We should use the name of all images files for the signature! Not just the first!
-    oss << std::size(image_files_) << "|";
-    oss << image_files_[0] << "|";
-
-    return oss.str();
-}
-
 }  // namespace reprojection::application

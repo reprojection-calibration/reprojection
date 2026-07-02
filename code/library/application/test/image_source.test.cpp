@@ -42,11 +42,8 @@ TEST(ApplicationImageSource, VideoCaptureMp4) {
     std::filesystem::remove(folder + "video.mp4");
 }
 
-TEST(ApplicationImageSource, VideoCaptureError) {
-    EXPECT_THROW(application::VideoCapture image_feed{"non_existent_video.mp4"}, std::runtime_error);
-}
 
-TEST(ApplicationImageSource, TestImageFolder) {
+TEST(ApplicationImageSource, VideoCaptureFolder) {
     std::string const folder{"test/folder/feed/"};
     std::filesystem::create_directories(folder);
 
@@ -55,9 +52,9 @@ TEST(ApplicationImageSource, TestImageFolder) {
     cv::imwrite(folder + "02.png", blank_image);
 
     // Load the folder and check that we get two frames
-    application::ImageFolder image_feed{folder};
+    application::VideoCapture image_feed{folder + "%02d.png"};
 
-    EXPECT_EQ(image_feed.GetSignature(), "2|test/folder/feed/01.png|");
+    EXPECT_EQ(image_feed.GetSignature(), "0.000|0.000|10.000|10.000|25.000|0.000|2.000|(1900.000, FFMPEG)|");
 
     cv::Mat loaded_image{image_feed.GetImage()};
     EXPECT_EQ(loaded_image.rows * loaded_image.cols, 100);
@@ -68,3 +65,8 @@ TEST(ApplicationImageSource, TestImageFolder) {
 
     std::filesystem::remove_all(folder);
 }
+
+TEST(ApplicationImageSource, VideoCaptureError) {
+    EXPECT_THROW(application::VideoCapture image_feed{"non_existent_video.mp4"}, std::runtime_error);
+}
+
