@@ -12,6 +12,8 @@ class ImageSource {
     virtual ~ImageSource() = default;
 
     virtual cv::Mat GetImage() = 0;
+
+    virtual std::string GetSignature() = 0;
 };
 
 class VideoCapture final : public ImageSource {
@@ -24,17 +26,22 @@ class VideoCapture final : public ImageSource {
 
     cv::Mat GetImage() override;
 
+    std::string GetSignature() override;
+
    private:
     explicit VideoCapture(cv::VideoCapture const& cap);
 
     cv::VideoCapture cap_;
 };
 
+// TODO(Jack): I think the opencv video capture can also read files by default! We can probably remove this entirely.
 class ImageFolder final : public ImageSource {
    public:
     explicit ImageFolder(std::string const& image_folder);
 
     cv::Mat GetImage() override;
+
+    std::string GetSignature() override;
 
    private:
     std::vector<std::string> image_files_;

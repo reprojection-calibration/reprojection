@@ -23,6 +23,26 @@ cv::Mat VideoCapture::GetImage() {
     return frame;
 }  // LCOV_EXCL_LINE
 
+std::string VideoCapture::GetSignature() {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    // WARN(Jack): Opencv itself warns that "Effective behavior depends from device driver and API Backend" for the
+    // .get() api used here. With that in mind I think it would be optimistic to expect for the signature to be the same
+    // on a different computer, but for a single computer the collection of following information should hopefully
+    // provide a unique signature which can be used to create the step cache key.
+    oss << cap_.get(cv::CAP_PROP_POS_MSEC) << "|";
+    oss << cap_.get(cv::CAP_PROP_POS_FRAMES) << "|";
+    oss << cap_.get(cv::CAP_PROP_FRAME_WIDTH) << "|";
+    oss << cap_.get(cv::CAP_PROP_FRAME_HEIGHT) << "|";
+    oss << cap_.get(cv::CAP_PROP_FPS) << "|";
+    oss << cap_.get(cv::CAP_PROP_FOURCC) << "|";
+    oss << cap_.get(cv::CAP_PROP_FRAME_COUNT) << "|";
+    oss << "(" << cap_.get(cv::CAP_PROP_BACKEND) << ", " << cap_.getBackendName() << ")" << "|";
+
+    return oss.str();
+}
+
 // Private constructor intended for internal use only.
 VideoCapture::VideoCapture(cv::VideoCapture const& cap) : cap_{cap} {
     if (not cap_.isOpened()) {
@@ -48,6 +68,17 @@ cv::Mat ImageFolder::GetImage() {
     ++current_id_;
 
     return image;
+}
+
+std::string ImageFolder::GetSignature() {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    // TODO(Jack): We should use the name of all images files for the signature! Not just the first!
+    oss << std::size(image_files_) << "|";
+    oss << image_files_[0] << "|";
+
+    return oss.str();
 }
 
 }  // namespace reprojection::application

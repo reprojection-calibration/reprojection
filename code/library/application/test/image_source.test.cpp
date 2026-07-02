@@ -30,6 +30,8 @@ TEST(ApplicationImageSource, VideoCaptureMp4) {
     // Load the video and test that we get two frames
     application::VideoCapture image_feed{folder + "video.mp4"};
 
+    EXPECT_EQ(image_feed.GetSignature(), "0.000|0.000|10.000|10.000|30.000|1983148141.000|2.000|(1900.000, FFMPEG)|");
+
     cv::Mat loaded_image{image_feed.GetImage()};
     EXPECT_EQ(loaded_image.rows * loaded_image.cols, 100);
     loaded_image = image_feed.GetImage();
@@ -54,6 +56,8 @@ TEST(ApplicationImageSource, TestImageFolder) {
 
     // Load the folder and check that we get two frames
     application::ImageFolder image_feed{folder};
+
+    EXPECT_EQ(image_feed.GetSignature(), "2|test/folder/feed/01.png|");
 
     cv::Mat loaded_image{image_feed.GetImage()};
     EXPECT_EQ(loaded_image.rows * loaded_image.cols, 100);

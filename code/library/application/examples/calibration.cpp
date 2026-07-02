@@ -14,13 +14,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    // TODO UPDATE TODO BELOW!
     // TODO(Jack): At this time we only support video files (ex. .mp4). It would be nice to also support video devices
     // (i.e. webcams) and potentially also folders of images (i.e. the entire VideoCapture api we expose). Whatever we
     // do we need to make sure to respect the semantics of application::ParseArgs() and unify it with the code in the
     // feature extraction demo. The application::ImageSource already brings us a lot of the way there I think
     // but it needs some more engineering to reach the above goals - for example how would we cache images or show live
     // feature extraction given the fact that we first write the images to the database and then do the extraction?
-    // TODO(Jack): Unify the application::ImageSource with the types ImageSourceSignature
+    // TODO(Jack): Unify the application::ImageSource with the types ImageSampleSource
     std::unique_ptr<application::ImageSource> const image_feed{
         std::make_unique<application::VideoCapture>(app_args->data_path)};
 
@@ -38,8 +39,9 @@ int main(int argc, char* argv[]) {
         return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
     }};
 
-    application::Calibrate(app_args->config, {image_source, ""}, std::nullopt, app_args->db);
+    application::Calibrate(app_args->config, {image_source, image_feed->GetSignature()}, std::nullopt, app_args->db);
 
     std::cout << "The future is calibrated!\n";
+
     return EXIT_SUCCESS;
 }
