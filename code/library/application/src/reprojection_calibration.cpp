@@ -113,10 +113,7 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
 
-    // TODO(Jack): This is a hack! At this moment this is meant for internal development only therefore we will not
-    // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
-    // someone tried to use this from an application it will be impossible.
-    // TODO(Jack): Remove code coverage exclusion!
+
     // TODO(Jack): Refactor imu/config logic here so there is some consistency check
     // LCOV_EXCL_START
     if (cfg.imu.has_value() and imu_input.has_value()) {
