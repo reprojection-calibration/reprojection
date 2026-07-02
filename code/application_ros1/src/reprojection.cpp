@@ -44,4 +44,17 @@ std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
     return std::nullopt;
 }
 
+ImuSource::ImuSource(SingleTopicBagReader const& reader) : itr_{reader.view->begin()}, end_{reader.view->end()} {}
+
+std::optional<std::pair<uint64_t, std::array<double, 6>>> ImuSource::operator()() {
+    if (itr_ != end_) {
+        auto const data_i{ToCvMat(*itr_)};
+        itr_ = std::next(itr_);
+
+        return data_i;
+    }
+
+    return std::nullopt;
+}
+
 }  // namespace reprojection::ros1

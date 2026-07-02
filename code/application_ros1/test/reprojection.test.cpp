@@ -8,6 +8,10 @@
 
 using namespace reprojection;
 
+// NOTE(Jack): Also testing this on the IMU data type would be redundant because there is no dependency on the actual
+// message type, therefore we just check for images.
+// TODO(Jack): Seeing the note above, is there any reason we should not just have this test use a int or some other
+// super simple type if there is no dependency on the message type at all?
 TEST(Ros1Reprojection, TestSerializeBagTopic) {
     ros1::ScopedBagPath const temp_bag;
     {

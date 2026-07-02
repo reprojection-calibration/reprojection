@@ -22,4 +22,15 @@ class ImageSource {
     rosbag::View::iterator end_;
 };
 
+class ImuSource {
+   public:
+    explicit ImuSource(SingleTopicBagReader const& reader);
+
+    std::optional<std::pair<uint64_t, std::array<double, 6>>> operator()();
+
+   private:
+    rosbag::View::iterator itr_;
+    rosbag::View::iterator end_;
+};
+
 }  // namespace reprojection::ros1

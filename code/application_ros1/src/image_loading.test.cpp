@@ -40,3 +40,26 @@ TEST(Ros1ImageLoading, TestRawAndCompressedToCvMat) {
 
     bag.close();
 }
+
+TEST(Ros1ImageLoading, TestToImuArray) {
+    ros1::ScopedBagPath const temp_bag;
+
+    rosbag::Bag bag;
+    bag.open(temp_bag.path, rosbag::bagmode::Write);
+    bag.write("/imu_topic", ros::Time(1), ros1::DummyImu());
+    bag.close();
+
+    bag.open(temp_bag.path, rosbag::bagmode::Read);
+    rosbag::View view(bag);
+    ASSERT_EQ(view.size(), 1);
+
+    auto const msg(std::begin(view));
+    std::pair<uint64_t, std::array<double, 6>> result;
+    EXPECT_NO_THROW(result = ros1::ToImuArray(*msg));
+
+    auto const& [timestamp_ns, imu_data]{result};
+    EXPECT_EQ(timestamp_ns, 1e9);
+    EXPECT_EQ(imu_data, (std::array<double, 6>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}));
+
+    bag.close();
+}
