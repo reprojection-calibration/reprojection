@@ -19,12 +19,12 @@ struct AppArgs {
 
 struct ImageInput {
     ImageSampleSource source;
-    std::string const& signature;
+    std::string signature;
 };
 
 struct ImuInput {
     ImuSampleSource source;
-    std::string const& signature;
+    std::string signature;
 };
 
 std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
