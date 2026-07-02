@@ -56,6 +56,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    // Camera-imu extrinsic and intrinsic case.
     application::Calibrate(app_args->config, {image_source, *image_data_signature},
                            application::ImuInput{imu_source, *imu_data_signature}, app_args->db);
 
