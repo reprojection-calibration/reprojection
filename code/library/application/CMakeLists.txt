@@ -25,6 +25,7 @@ set(LINK_LIBRARIES
         tomlplusplus::tomlplusplus
         types
         types_internal
+        video_capture
 )
 set(INSTALL_HEADERS ON)
 AddLibrary()

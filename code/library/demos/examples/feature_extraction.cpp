@@ -1,10 +1,10 @@
 #include <iostream>
 
 #include "application/cli_utils.hpp"
-#include "application/image_source.hpp"
 #include "config/config_parse.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "image_viewer/image_viewer.hpp"
+#include "video_capture/video_capture.hpp"
 
 // To get this working from CLion dev env I followed this link:
 // https://medium.com/@steffen.stautmeister/how-to-build-and-run-opencv-and-pytorch-c-with-cuda-support-in-docker-in-clion-6f485155deb8
@@ -17,7 +17,7 @@
 
 using namespace reprojection;
 
-// NOTE(Jack): The entire purpose of the demo is to show the featue extraction which is why the display is hardcoded
+// NOTE(Jack): The entire purpose of the demo is to show the feature extraction which is why the display is hardcoded
 // here and not controlled by a config file parameter.
 
 int main(int argc, char* argv[]) {
@@ -29,12 +29,12 @@ int main(int argc, char* argv[]) {
 
     // TODO(Jack): Print out to the user that we support the opencv cv::VideoCapture API for input.
     // TODO(Jack): Provide user option to select a different device instead of just the default zero device.
-    std::unique_ptr<application::VideoCapture> image_feed;
+    std::unique_ptr<video_capture::VideoCapture> image_feed;
     if (auto const data{application::GetCommandOption(argv, argv + argc, "--data")}) {
-        image_feed = std::make_unique<application::VideoCapture>(*data);
+        image_feed = std::make_unique<video_capture::VideoCapture>(*data);
     } else {
         std::cout << "Defaulting to webcam demo." << std::endl;
-        image_feed = std::make_unique<application::VideoCapture>(0);
+        image_feed = std::make_unique<video_capture::VideoCapture>(0);
     }
 
     toml::table const config_table{toml::parse_file(*config_file)};

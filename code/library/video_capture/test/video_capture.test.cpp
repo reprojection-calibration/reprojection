@@ -1,4 +1,4 @@
-#include "application/image_source.hpp"
+#include "video_capture/video_capture.hpp"
 
 #include <gtest/gtest.h>
 
@@ -28,7 +28,7 @@ TEST(ApplicationImageSource, VideoCaptureMp4) {
     writer.release();
 
     // Load the video and test that we get two frames
-    application::VideoCapture image_feed{folder + "video.mp4"};
+    video_capture::VideoCapture image_feed{folder + "video.mp4"};
 
     EXPECT_EQ(image_feed.GetSignature(), "0.000|0.000|10.000|10.000|30.000|1983148141.000|2.000|(1900.000, FFMPEG)|");
 
@@ -51,7 +51,7 @@ TEST(ApplicationImageSource, VideoCaptureFolder) {
     cv::imwrite(folder + "02.png", blank_image);
 
     // Load the folder and check that we get two frames
-    application::VideoCapture image_feed{folder + "%02d.png"};
+    video_capture::VideoCapture image_feed{folder + "%02d.png"};
 
     EXPECT_EQ(image_feed.GetSignature(), "0.000|0.000|10.000|10.000|25.000|0.000|2.000|(1900.000, FFMPEG)|");
 
@@ -66,5 +66,5 @@ TEST(ApplicationImageSource, VideoCaptureFolder) {
 }
 
 TEST(ApplicationImageSource, VideoCaptureError) {
-    EXPECT_THROW(application::VideoCapture image_feed{"non_existent_video.mp4"}, std::runtime_error);
+    EXPECT_THROW(video_capture::VideoCapture image_feed{"non_existent_video.mp4"}, std::runtime_error);
 }

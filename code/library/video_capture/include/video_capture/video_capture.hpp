@@ -4,7 +4,7 @@
 
 #include <opencv2/opencv.hpp>
 
-namespace reprojection::application {
+namespace reprojection::video_capture {
 
 class VideoCapture {
    public:

@@ -1,8 +1,8 @@
-#include "application/image_source.hpp"
+#include "video_capture/video_capture.hpp"
 
 #include <filesystem>
 
-namespace reprojection::application {
+namespace reprojection::video_capture {
 
 // NOTE(Jack): We literally cannot unit test this because there is no way to simulate a physical camera device.
 VideoCapture::VideoCapture(int const device_id)     // LCOV_EXCL_LINE
