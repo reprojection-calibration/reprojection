@@ -8,25 +8,24 @@
 //  to be compiled into the shared object for it to be recognized and used by fmt. Anyone who is more familiar can take
 //  a look if his becomes a problem.
 
-template <>
-struct fmt::formatter<Eigen::ArrayXd> {
-    char format_specifier = 'f';
-
-    constexpr auto parse(fmt::format_parse_context& ctx) {
-        auto it = ctx.begin(), end = ctx.end();
-        if (it != end && (*it != '}')) {
-            format_specifier = *it++;  // LCOV_EXCL_LINE
-        }
-        return it;
-    }
+template <typename Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
+struct fmt::formatter<Eigen::Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols>> {
+    constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
 
     template <typename FormatContext>
-    auto format(const Eigen::ArrayXd& arr, FormatContext& ctx) const {
-        std::string result;
-        for (int i = 0; i < arr.size(); ++i) {
-            if (i > 0) result += ", ";
-            result += fmt::format("{:.3f}", arr[i]);
+    auto format(Eigen::Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols> const& arr, FormatContext& ctx) const {
+        auto out{ctx.out()};
+
+        out = fmt::format_to(out, "[");
+        for (int i{0}; i < arr.size(); ++i) {
+            if (i > 0) {
+                out = fmt::format_to(out, ", ");
+            }
+
+            out = fmt::format_to(out, "{:.3f}", arr(i));
         }
-        return fmt::format_to(ctx.out(), "[{}]", result);
+        out = fmt::format_to(out, "]");
+
+        return out;
     }
 };
