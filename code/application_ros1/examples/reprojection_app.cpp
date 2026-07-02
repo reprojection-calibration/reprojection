@@ -28,37 +28,36 @@ int main(int argc, char* argv[]) {
 
     ros1::ImageSource image_source{image_bag_reader};
 
-    auto const data_signature{ros1::SerializeBagTopic(image_bag_reader)};
-    if (not data_signature) {
+    auto const image_data_signature{ros1::SerializeBagTopic(image_bag_reader)};
+    if (not image_data_signature) {
         std::cerr << "Unable to calculate image data signature!\n";
         return EXIT_FAILURE;
     }
 
-    // TODO HACKY HACKS FOR LIFE TIME PRESERVATION OF THE BAG READER
-    std::unique_ptr<std::variant<ros1::SingleTopicBagReader, ros1::BagError>> imu_reader_result;
-    std::optional<application::ImuInput> imu_input{std::nullopt};
-    if (sensors.imu_sensor.has_value()) {
-        imu_reader_result = std::make_unique<std::variant<ros1::SingleTopicBagReader, ros1::BagError>>(
-            ros1::SingleTopicBagReader::Create(app_args->data_path, *sensors.imu_sensor));
-        if (std::holds_alternative<ros1::BagError>(*imu_reader_result)) {
-            std::cerr << std::get<ros1::BagError>(*imu_reader_result).message << "\n";
-            return EXIT_FAILURE;
-        }
-        auto const& imu_bag_reader{std::get<ros1::SingleTopicBagReader>(*imu_reader_result)};
+    // Early execution and return for the camera only intrinsic only case.
+    if (not sensors.imu_sensor.has_value()) {
+        application::Calibrate(app_args->config, {image_source, *image_data_signature}, std::nullopt, app_args->db);
 
-        ros1::ImuSource imu_source{imu_bag_reader};
-
-        auto const imu_signature{ros1::SerializeBagTopic(imu_bag_reader)};
-        if (not imu_signature) {
-            std::cerr << "Unable to calculate image data signature!\n";
-            return EXIT_FAILURE;
-        }
-
-        imu_input = application::ImuInput{imu_source, *imu_signature};
+        return EXIT_SUCCESS;
     }
 
-    // TODO(Jack): Should we put this in a try catch block and return EXIT_FAILURE?
-    application::Calibrate(app_args->config, {image_source, *data_signature}, imu_input, app_args->db);
+    auto const imu_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, *sensors.imu_sensor)};
+    if (std::holds_alternative<ros1::BagError>(imu_reader_result)) {
+        std::cerr << std::get<ros1::BagError>(imu_reader_result).message << "\n";
+        return EXIT_FAILURE;
+    }
+    auto const& imu_bag_reader{std::get<ros1::SingleTopicBagReader>(imu_reader_result)};
+
+    ros1::ImuSource imu_source{imu_bag_reader};
+
+    auto const imu_data_signature{ros1::SerializeBagTopic(imu_bag_reader)};
+    if (not imu_data_signature) {
+        std::cerr << "Unable to calculate imu data signature!\n";
+        return EXIT_FAILURE;
+    }
+
+    application::Calibrate(app_args->config, {image_source, *image_data_signature},
+                           application::ImuInput{imu_source, *imu_data_signature}, app_args->db);
 
     return EXIT_SUCCESS;
 }
