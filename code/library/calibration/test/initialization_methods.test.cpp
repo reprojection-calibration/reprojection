@@ -16,7 +16,7 @@ TEST(CalibrationInitializationMethods, TestInitializeIntrinsics) {
     auto const [targets, _]{testing_mocks::GenerateMvgData(sensor, intrinsics, 10, 1)};
 
     auto const result{
-        calibration::InitializeIntrinsics(sensor.camera_model, sensor.bounds.v_max, sensor.bounds.u_max, targets)};
+        calibration::InitializeIntrinsics(sensor.camera_model, sensor.bounds.v_max, sensor.bounds.u_max, targets, 1)};
 
     ASSERT_TRUE(result.has_value());
 }

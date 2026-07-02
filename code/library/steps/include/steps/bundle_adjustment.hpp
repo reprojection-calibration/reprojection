@@ -9,6 +9,7 @@ struct BundleAdjustment {
     CameraInfo camera_info_;
     CameraMeasurements targets_;
     OptimizationState initial_state_;
+    int num_threads_;
 
     static CalibrationStep StepType() { return CalibrationStep::BundleAdjustment; }
 

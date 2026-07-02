@@ -156,7 +156,7 @@ TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
 
     SatisfyPoseForeignKeys(targets);
 
-    steps::BundleAdjustment const step{camera_info_, targets, {camera_state_, gt_poses}};
+    steps::BundleAdjustment const step{camera_info_, targets, {camera_state_, gt_poses}, 1};
 
     auto [result, cache_status]{RunStep<OptimizationState>(step, db_)};
     EXPECT_EQ(std::size(result.frames), 56);
@@ -173,7 +173,7 @@ TEST_F(CameraStepsFixture, TestBundleAdjustmentStep) {
 
 TEST_F(CameraStepsFixture, TestIntrinsicInitialization) {
     auto const [targets, gt_poses]{testing_mocks::GenerateMvgData(camera_info_, camera_state_, 11, 1)};
-    steps::IntrinsicInitialization const step{camera_info_, targets};
+    steps::IntrinsicInitialization const step{camera_info_, targets, 1};
 
     // NOTE(Jack): Of course it would be best to get the values found in testing_utilities::pinhole_intrinsics as the
     // result, because that is the ground-truth intrinsics. However, the correctness of the pinhole initialization

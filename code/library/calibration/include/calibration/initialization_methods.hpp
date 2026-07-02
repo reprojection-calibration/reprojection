@@ -20,7 +20,7 @@ namespace reprojection::calibration {
  * single frame reprojection error testing. Using multiple frames is the key innovation of this function.
  */
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
-                                            CameraMeasurements const& targets);
+                                            CameraMeasurements const& targets, int const num_threads);
 
 Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics);
 

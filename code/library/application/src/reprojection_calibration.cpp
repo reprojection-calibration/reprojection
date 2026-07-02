@@ -85,7 +85,7 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
               ToString(feature_extraction_step.StepType()), ToString(feature_extraction_cache_status),
               std::size(targets));
 
-    steps::IntrinsicInitialization const ii_step{camera_info, targets};
+    steps::IntrinsicInitialization const ii_step{camera_info, targets, cfg.application.threads};
     auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'intrinsics': {}}}", ToString(ii_step.StepType()),
               ToString(ii_cache_status), camera_state.intrinsics);
@@ -97,7 +97,7 @@ void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
 
     auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
 
-    steps::BundleAdjustment const ba_step{camera_info, targets, aligned_initial_state};
+    steps::BundleAdjustment const ba_step{camera_info, targets, aligned_initial_state, cfg.application.threads};
     auto const [optimized_state, ba_cache_status]{steps::RunStep<OptimizationState>(ba_step, db)};
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
