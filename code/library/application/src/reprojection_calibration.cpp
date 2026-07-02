@@ -119,16 +119,8 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
     // TODO(Jack): Remove code coverage exclusion!
     // TODO(Jack): Refactor imu/config logic here so there is some consistency check
     // LCOV_EXCL_START
-    if (cfg.imu and imu_input.has_value()) {
-        std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
-        database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);
-        database::InsertEntity(db, Extrinsic::EntityId(cfg.imu->sensor_name, camera_info.sensor_name),
-                               Entity::Extrinsic);
-
-        // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
-        // source lambda! For now though this only works if we write the imu data seperately and manually trigger a
-        // cache hit.
-        steps::ImuDataLoading const imu_data_loading{cfg.imu->sensor_name, "", {}};
+    if (cfg.imu.has_value() and imu_input.has_value()) {
+        steps::ImuDataLoading const imu_data_loading{cfg.imu->sensor_name, imu_input->signature, imu_input->source};
         auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
         log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.StepType()),
                   ToString(imu_data_loading_cache_status), std::size(imu_data));
@@ -145,6 +137,7 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
         log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
                   ToString(extrinsic_init_cache_status));
 
+        // TODO LOG THIS!
         std::cout << geometry::Exp(extrinsic_init.tf.se3_a_b).matrix() << std::endl;
         std::cout << extrinsic_init.gravity.transpose() << std::endl;
 
@@ -156,6 +149,7 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
         log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.StepType()),
                   ToString(extrinsic_opt_cache_status));
 
+        // TODO LOG THIS!
         std::cout << geometry::Exp(extrinsic_opt_result.second.tf.se3_a_b).matrix() << std::endl;
         std::cout << extrinsic_opt_result.second.gravity.transpose() << std::endl;
     }
