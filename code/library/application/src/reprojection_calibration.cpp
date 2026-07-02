@@ -52,7 +52,7 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 // TODO(Jack): Should we put image_source_signature and image_source into one object? They are 100% related. Or maybe
 // the entire "image source" concept needs to be reworked as it does not play nice with the database. See note in
 // update_feature_extraction_cache_key.py
-void Calibrate(toml::table const& cfg_table, ImageSourceSignature image_source,
+void Calibrate(toml::table const& cfg_table, ImageSampleSource image_source,
                std::string const& image_source_signature, SqlitePtr const db) {
     config::Config const cfg{steps::ConfigParsing(cfg_table, db)};
 

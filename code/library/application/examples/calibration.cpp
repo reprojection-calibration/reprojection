@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     // the chrono library but then that meant the integration testing would not work because then the cache key would
     // change every time.
     int pseudo_timestamp{0};
-    ImageSourceSignature image_source{
+    ImageSampleSource image_source{
         [&image_feed, &pseudo_timestamp]() -> std::optional<std::pair<uint64_t, cv::Mat>> {
             cv::Mat img{image_feed->GetImage()};
             if (img.empty()) {
