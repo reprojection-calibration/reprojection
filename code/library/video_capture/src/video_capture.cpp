@@ -1,6 +1,5 @@
 #include "application/image_source.hpp"
 
-#include <algorithm>
 #include <filesystem>
 
 namespace reprojection::application {

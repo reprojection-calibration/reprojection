@@ -2,7 +2,6 @@ set(LIBRARY_NAME "application")
 
 set(SRC_FILES
         src/cli_utils.cpp
-        src/image_source.cpp
         src/io.cpp
         src/reprojection_calibration.cpp
         src/utils.cpp
@@ -38,7 +37,6 @@ set(TESTS
         src/utils.test.cpp
         src/io.test.cpp
         test/cli_utils.test.cpp
-        test/image_source.test.cpp
         test/reprojection_calibration.test.cpp
 )
 AddTests()
