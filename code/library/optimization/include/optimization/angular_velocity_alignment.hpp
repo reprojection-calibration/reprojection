@@ -17,7 +17,7 @@ namespace reprojection::optimization {
  * Note that if not all axes of the camera-IMU motion have sufficient rotational velocity excitement then the returned
  * solution will be degenerate.
  */
-std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu,
-                                                        spline::Se3Spline spline, int const num_threads);
+std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu, spline::Se3Spline spline,
+                                                        int const num_threads);
 
 }  // namespace  reprojection::optimization

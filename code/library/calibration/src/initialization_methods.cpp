@@ -60,8 +60,8 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 
         // Do nonlinear refinement with the intrinsics constant
         OptimizationState const initial_state{{intrinsics_i}, initial_poses};
-        auto const [optimized_state,
-                    diagnostics]{optimization::BundleAdjustment(camera_info, target_subset, initial_state, num_threads, true)};
+        auto const [optimized_state, diagnostics]{
+            optimization::BundleAdjustment(camera_info, target_subset, initial_state, num_threads, true)};
         cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
 
         log->debug("{{ 'idx': {}, 'gamma': {}, 'final_cost': {}, 'num_frames_used': {}}}", idx, gamma_i,
