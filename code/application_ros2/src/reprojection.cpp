@@ -9,8 +9,8 @@ namespace reprojection::ros2 {
 
 std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     std::ostringstream oss;
-    oss << std::filesystem::path(data.reader->get_metadata().files[0].path).filename().c_str() << "|";
-    oss << data.topic << "|";
+    oss << std::filesystem::path(data.reader_->get_metadata().files[0].path).filename().c_str() << "|";
+    oss << data.topic_ << "|";
 
     int count{0};
     while (auto const msg{data.Next()}) {
@@ -35,7 +35,7 @@ ImageSource::ImageSource(SingleTopicBagReader& bag_reader) : bag_reader_{bag_rea
 
 std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
     if (auto const msg{bag_reader_.Next()}) {
-        return ros2::ToCvMat(*msg, bag_reader_.topic_type);
+        return ros2::ToCvMat(*msg, bag_reader_.topic_type_);
     }
 
     return std::nullopt;
