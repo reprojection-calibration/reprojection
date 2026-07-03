@@ -50,9 +50,13 @@ int main(int argc, char* argv[]) {
 
     ros1::ImuSource imu_source{imu_bag_reader};
 
+    // TODO(Jack): Right now the only way for the ROS1 app that we detect the bag does not contain the topic is here
+    // when we try to calculate the signature but find the topic is empty. We should not wait until this point! If the
+    // topic is not present then we should not even allow the construction of the SingleTopicBagReader like how we do in
+    // the ros2 app.
     auto const imu_data_signature{ros1::SerializeBagTopic(imu_bag_reader)};
     if (not imu_data_signature) {
-        std::cerr << "Unable to calculate imu data signature!\n";
+        std::cerr << "Unable to calculate imu data signature! Are you sure the topic is in the bag?\n";
         return EXIT_FAILURE;
     }
 

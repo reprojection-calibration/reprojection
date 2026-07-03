@@ -15,9 +15,9 @@ struct BagError {
 };
 
 struct SingleTopicBagReader {
-    std::string topic;
-    std::unique_ptr<rosbag::Bag> bag;
-    std::unique_ptr<rosbag::View> view;
+    std::string topic_;
+    std::unique_ptr<rosbag::Bag> bag_;
+    std::unique_ptr<rosbag::View> view_;
 
     static std::variant<SingleTopicBagReader, BagError> Create(std::string const& path, std::string const& topic) {
         try {
@@ -39,19 +39,19 @@ struct SingleTopicBagReader {
     SingleTopicBagReader& operator=(SingleTopicBagReader const&) = delete;
 
     ~SingleTopicBagReader() {
-        if (bag != nullptr) {
+        if (bag_ != nullptr) {
             // TODO(Jack): Can this throw? Do we need to worry about that?
-            bag->close();
+            bag_->close();
         }
     }
 
    private:
     // TODO(Jack): To be perfectly honest I am not 100% sure here about the RAII semantics/rule of 0/3/5, but the code
     //  works and does not segfault. When it does we can look closer :)
-    SingleTopicBagReader(std::string _topic, std::unique_ptr<rosbag::Bag> _bag)
-        : topic(std::move(_topic)),
-          bag(std::move(_bag)),
-          view(std::make_unique<rosbag::View>(*bag, rosbag::TopicQuery({topic}))) {}
+    SingleTopicBagReader(std::string_view topic, std::unique_ptr<rosbag::Bag> bag)
+        : topic_{topic},
+          bag_(std::move(bag)),
+          view_(std::make_unique<rosbag::View>(*bag_, rosbag::TopicQuery({topic_}))) {}
 };
 
 }  // namespace reprojection::ros1

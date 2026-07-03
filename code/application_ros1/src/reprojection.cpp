@@ -10,7 +10,7 @@
 namespace reprojection::ros1 {
 
 std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
-    if (data.view->size() == 0) {
+    if (data.view_->size() == 0) {
         return std::nullopt;
     }
 
@@ -20,10 +20,10 @@ std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     // NOTE(Jack): Underlying our use of this function is the assumption that the bag name, topic name, and the
     // collection of all message timestamps is sufficient to uniquely identify a data stream. Sounds logical right? I
     // think so.
-    oss << std::filesystem::path(data.bag->getFileName()).filename().c_str() << "|";
-    oss << data.topic << "|";
+    oss << std::filesystem::path(data.bag_->getFileName()).filename().c_str() << "|";
+    oss << data.topic_ << "|";
 
-    for (auto const& msg : *data.view) {
+    for (auto const& msg : *data.view_) {
         oss << msg.getTime().toSec() << ";";
     }
     oss << "|";
@@ -31,7 +31,7 @@ std::optional<std::string> SerializeBagTopic(SingleTopicBagReader const& data) {
     return oss.str();
 }
 
-ImageSource::ImageSource(SingleTopicBagReader const& reader) : itr_{reader.view->begin()}, end_{reader.view->end()} {}
+ImageSource::ImageSource(SingleTopicBagReader const& reader) : itr_{reader.view_->begin()}, end_{reader.view_->end()} {}
 
 std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
     if (itr_ != end_) {
@@ -44,7 +44,7 @@ std::optional<std::pair<uint64_t, cv::Mat>> ImageSource::operator()() {
     return std::nullopt;
 }
 
-ImuSource::ImuSource(SingleTopicBagReader const& reader) : itr_{reader.view->begin()}, end_{reader.view->end()} {}
+ImuSource::ImuSource(SingleTopicBagReader const& reader) : itr_{reader.view_->begin()}, end_{reader.view_->end()} {}
 
 std::optional<std::pair<uint64_t, std::array<double, 6>>> ImuSource::operator()() {
     if (itr_ != end_) {
