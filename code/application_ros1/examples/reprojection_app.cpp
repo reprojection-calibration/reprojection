@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
     // the ros2 app.
     auto const imu_data_signature{ros1::SerializeBagTopic(imu_bag_reader)};
     if (not imu_data_signature) {
-        std::cerr << "Unable to calculate imu data signature! Are you sure the topic is in the bag?\n";
+        std::cerr << "Unable to calculate imu data signature!\n";
         return EXIT_FAILURE;
     }
 

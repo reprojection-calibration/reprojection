@@ -24,7 +24,12 @@ struct SingleTopicBagReader {
             auto bag{std::make_unique<rosbag::Bag>()};
             bag->open(path, rosbag::bagmode::Read);
 
-            return SingleTopicBagReader{topic, std::move(bag)};
+            auto bag_reader{SingleTopicBagReader{topic, std::move(bag)}};
+            if (bag_reader.view_->size() == 0) {
+                return BagError{"Bag " + path + " does not contain requested topic " + topic};
+            }
+
+            return bag_reader;
         } catch (...) {
             // TODO(Jack): Instead of just swallowing the exception here we should use it to give the user some more
             // useful output.
