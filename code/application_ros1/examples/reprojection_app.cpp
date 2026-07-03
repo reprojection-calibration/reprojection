@@ -18,6 +18,8 @@ int main(int argc, char* argv[]) {
     }
     application::Sensors const sensors{application::ParseSensors(app_args->config)};
 
+    // TODO(Jack): Can we clean up the repeated logic for the image and imu construction? It is here and in the ros2
+    // app.
     auto const image_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, sensors.camera_sensor)};
     if (std::holds_alternative<ros1::BagError>(image_reader_result)) {
         // TODO(Jack): Should we use the libraries logging pattern here too?
