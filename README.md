@@ -59,7 +59,7 @@ Then open the link shown in the terminal.
 
 Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration
 file from. This file is used in all integration and smoke testing which mean it stays up to date. Please adapt this to
-your data and save your configuration file with your data.
+your data and save it near your data.
 
 > [!WARNING]
 > If you only intend to intrinsically calibrate a camera remove the `[imu]` table from the calibration file. Unused or
@@ -77,9 +77,7 @@ The following target types are supported:
     * [aprilgrid3 7x5](media/aprilgrid3_7x5.png)
     * [aprilgrid3 8x6](media/aprilgrid3_8x6.png)
 2) `checkerboard`
-3) `circle_grid`
-    1) asymmetric
-    2) symmetric
+3) `circle_grid` (symmetric or asymmetric)
 
 To generate Checkerboard or Circle Grid targets
 the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
