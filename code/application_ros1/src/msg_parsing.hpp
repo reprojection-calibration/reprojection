@@ -2,9 +2,9 @@
 
 #include <rosbag/message_instance.h>
 
-#include <opencv2/core/mat.hpp>
+#include <array>
 
-// TODO RENAME TOP LEVEL FILE --- NOT IMAGE SPECIFIC NOW!
+#include <opencv2/core/mat.hpp>
 
 namespace reprojection::ros1 {
 
