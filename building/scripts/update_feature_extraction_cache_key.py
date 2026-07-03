@@ -2,7 +2,7 @@ import sqlite3
 import sys
 
 # NOTE(Jack): We need to do this because the integration test dataset is the TUM dataset-calib-imu4 dataset which uses
-# Kalibr compatible Aprilgird2 boards which we do not support. Therefore we need to trick the process into thinking that
+# Kalibr compatible Aprilgrid boards which we do not support. Therefore we need to trick the process into thinking that
 # it has already extracted the features, which we did manually and stored inside dataset-calib-imu4_512_16.db3 long ago.
 #
 # The purpose of this little script is to manually write a feature extraction cache key so that we can trigger a cache

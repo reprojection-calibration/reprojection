@@ -1,5 +1,6 @@
 #pragma once
 
+#include <format>
 #include <memory>
 #include <string>
 #include <variant>
@@ -16,16 +17,16 @@ struct BagError {
 // TODO(Jack): Should we refactor to use optional and shared pointer instead if variant and mutable references/value
 // semantics?
 struct SingleTopicBagReader {
-    std::string topic;
-    std::string topic_type;
-    std::unique_ptr<rosbag2_cpp::Reader> reader;
+    std::string topic_;
+    std::string topic_type_;
+    std::unique_ptr<rosbag2_cpp::Reader> reader_;
 
     static std::variant<SingleTopicBagReader, BagError> Create(std::string const& path, std::string const& topic) {
         try {
             auto reader{std::make_unique<rosbag2_cpp::Reader>()};
 
             reader->open(path);
-            reader->set_filter(rosbag2_storage::StorageFilter{{topic}});
+            reader->set_filter(rosbag2_storage::StorageFilter{{topic}, {}});
 
             // NOTE(Jack): Technically there should only be one topic here I guess, but just to make sure ROS2 does not
             // surprise us we construct and then query the topic_type_map. It would be nice if we had an easier way to
@@ -35,19 +36,22 @@ struct SingleTopicBagReader {
                 topic_type_map[topic_i.name] = topic_i.type;
             }
 
+            // TODO(Jack): We should really use the loggin functionality from the library.
+            if (auto const it{topic_type_map.find(topic)}; it == std::cend(topic_type_map)) {
+                return BagError{std::format("Bag {} does not contain requested topic {}", path, topic)};
+            }
+
             return SingleTopicBagReader{topic, topic_type_map.at(topic), std::move(reader)};
-        } catch (...) {
-            // TODO(Jack): Instead of just swallowing the exception here we should use it to give the user some more
-            // useful output.
-            return BagError{"Error loading data: " + path};
+        } catch (std::exception const& e) {
+            return BagError{std::format("Bag {} loaded with error {}", path, e.what())};
         }
     }
 
     // TODO(Jack): Do we need to reset the reader after we run out? It seems like after we read through them all that
     //  we should reset back to the start so the next processing step can iterate over them.
     std::shared_ptr<rosbag2_storage::SerializedBagMessage> Next() const {
-        if (reader->has_next()) {
-            auto const msg{reader->read_next()};
+        if (reader_->has_next()) {
+            auto const msg{reader_->read_next()};
 
             return msg;
         }
@@ -55,7 +59,7 @@ struct SingleTopicBagReader {
         // NOTE(Jack): We want the capability to iterate through the images multiples times. However the ros2 bag reader
         // API provides us no explicit "rest back to start" functionality, therefore we instead the "seek" method to
         // bring us back to the start. If this is 100% foolproof I am still not sure, but it seems to work.
-        reader->seek(0);
+        reader_->seek(0);
 
         return nullptr;
     }
@@ -63,8 +67,9 @@ struct SingleTopicBagReader {
    private:
     // TODO(Jack): Clarify the move semantics here. There is likely no requirement for us to use move for the string
     // parameters right?
-    SingleTopicBagReader(std::string _topic, std::string _topic_type, std::unique_ptr<rosbag2_cpp::Reader> _reader)
-        : topic(std::move(_topic)), topic_type(std::move(_topic_type)), reader(std::move(_reader)) {}
+    SingleTopicBagReader(std::string_view topic, std::string_view topic_type,
+                         std::unique_ptr<rosbag2_cpp::Reader> reader)
+        : topic_{topic}, topic_type_{topic_type}, reader_{std::move(reader)} {}
 };
 
 }  // namespace reprojection::ros2

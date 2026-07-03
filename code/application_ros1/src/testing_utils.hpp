@@ -2,6 +2,7 @@
 
 #include <sensor_msgs/CompressedImage.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/Imu.h>
 
 #include <filesystem>
 #include <random>
@@ -46,6 +47,20 @@ inline sensor_msgs::CompressedImage DummyCompressedImage() {
     img_msg_comp.data = buffer;
 
     return img_msg_comp;
+}
+
+inline sensor_msgs::Imu DummyImu(ros::Time const& time = ros::Time(1)) {
+    sensor_msgs::Imu imu_msg;
+    imu_msg.header = DummyHeader(time);
+
+    imu_msg.angular_velocity.x = 1.0;
+    imu_msg.angular_velocity.y = 2.0;
+    imu_msg.angular_velocity.z = 3.0;
+    imu_msg.linear_acceleration.x = 4.0;
+    imu_msg.linear_acceleration.y = 5.0;
+    imu_msg.linear_acceleration.z = 6.0;
+
+    return imu_msg;
 }
 
 class ScopedBagPath {

@@ -8,6 +8,7 @@
 #include <rclcpp/time.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include <std_msgs/msg/header.hpp>
 
 namespace reprojection::ros2 {
@@ -52,6 +53,20 @@ inline sensor_msgs::msg::CompressedImage DummyCompressedImage() {
     img_msg_comp.data = buffer;
 
     return img_msg_comp;
+}
+
+inline sensor_msgs::msg::Imu DummyImu() {
+    sensor_msgs::msg::Imu imu_msg;
+    imu_msg.header = DummyHeader();
+
+    imu_msg.angular_velocity.x = 1.0;
+    imu_msg.angular_velocity.y = 2.0;
+    imu_msg.angular_velocity.z = 3.0;
+    imu_msg.linear_acceleration.x = 4.0;
+    imu_msg.linear_acceleration.y = 5.0;
+    imu_msg.linear_acceleration.z = 6.0;
+
+    return imu_msg;
 }
 
 // NOTE(Jack): For ROS2 the bag writer will actually create the bag inside a directory with its metdata file. Therefore,

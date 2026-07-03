@@ -49,9 +49,20 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
     return AppArgs{paths->data_path, *config, *db};
 }
 
-// TODO(Jack): Should we put image_source_signature and image_source into one object? They are 100% related. Or maybe
-// the entire "image source" concept needs to be reworked as it does not play nice with the database. See note in
-// update_feature_extraction_cache_key.py
+// TODO(Jack): To be honest I do not like having this function because now we parse the entire config twice. Once on the
+// application side and once on the library side. It is not the end of the world but we should keep our eyes out for any
+// hints that we are missing the point.
+Sensors ParseSensors(toml::table const& cfg_table) {
+    config::Config const cfg{config::Config::Parse(cfg_table)};
+
+    std::optional<std::string> imu_name{std::nullopt};
+    if (cfg.imu) {
+        imu_name = cfg.imu->sensor_name;
+    }
+
+    return {cfg.camera.sensor_name, imu_name};
+}
+
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {
     config::Config const cfg{steps::ConfigParsing(cfg_table, db)};
@@ -102,22 +113,14 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
 
-    // TODO(Jack): This is a hack! At this moment this is meant for internal development only therefore we will not
-    // expose an imu data lambda or add the IMU config sections to the config validation logic. This means that if
-    // someone tried to use this from an application it will be impossible.
-    // TODO(Jack): Remove code coverage exclusion!
-    // TODO(Jack): Refactor imu/config logic here so there is some consistency check
-    // LCOV_EXCL_START
-    if (cfg.imu and imu_input.has_value()) {
-        std::cout << "Doing an IMU calibration... development mode only!" << std::endl;
-        database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);
-        database::InsertEntity(db, Extrinsic::EntityId(cfg.imu->sensor_name, camera_info.sensor_name),
-                               Entity::Extrinsic);
+    if (cfg.imu.has_value() and imu_input.has_value()) {
+        // TODO(Jack): We need to refactor the top level application unit test so that it uses the test data - because
+        // without test data then we cannot run the imu component of the calibration at all in testing and therefore we
+        // have to suppress the code coverage which is not nice. This runs in the integration testing, but still... not
+        // nice.
 
-        // TODO(Jack): One day, when we are done hacking, we will pass in the real serialized data and imu data
-        // source lambda! For now though this only works if we write the imu data seperately and manually trigger a
-        // cache hit.
-        steps::ImuDataLoading const imu_data_loading{cfg.imu->sensor_name, "", {}};
+        // //LCOV_EXCL_START
+        steps::ImuDataLoading const imu_data_loading{cfg.imu->sensor_name, imu_input->signature, imu_input->source};
         auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
         log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.StepType()),
                   ToString(imu_data_loading_cache_status), std::size(imu_data));
@@ -131,24 +134,27 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
                                                                  imu_data, spline_init, cfg.application.threads};
         auto const [extrinsic_init,
                     extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
-        log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_init_step.StepType()),
-                  ToString(extrinsic_init_cache_status));
-
-        std::cout << geometry::Exp(extrinsic_init.tf.se3_a_b).matrix() << std::endl;
-        std::cout << extrinsic_init.gravity.transpose() << std::endl;
+        log->info("{{'step': '{}', 'cache_status': '{}', 'tf_imu_cam': {}, 'gravity': {}}}",
+                  ToString(extrinsic_init_step.StepType()), ToString(extrinsic_init_cache_status),
+                  extrinsic_init.tf.se3_a_b, extrinsic_init.gravity);
 
         steps::ExtrinsicOptimization const extrinsic_opt_step{
             camera_info, targets,        optimized_state.camera_state, imu_data,
             spline_init, extrinsic_init, cfg.application.threads};
         auto const [extrinsic_opt_result, extrinsic_opt_cache_status]{
             steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
-        log->info("{{'step': '{}', 'cache_status': '{}'}}", ToString(extrinsic_opt_step.StepType()),
-                  ToString(extrinsic_opt_cache_status));
-
-        std::cout << geometry::Exp(extrinsic_opt_result.second.tf.se3_a_b).matrix() << std::endl;
-        std::cout << extrinsic_opt_result.second.gravity.transpose() << std::endl;
+        log->info("{{'step': '{}', 'cache_status': '{}', 'tf_imu_cam': {}, 'gravity': {}}}",
+                  ToString(extrinsic_opt_step.StepType()), ToString(extrinsic_opt_cache_status),
+                  extrinsic_opt_result.second.tf.se3_a_b, extrinsic_opt_result.second.gravity);
+        // LCOV_EXCL_STOP
+    } else if (cfg.imu.has_value() or imu_input.has_value()) {
+        log->warn(
+            "{{'cfg_imu': {}, 'imu_input': {}, 'msg': 'Extrinsic calibration configured partially or incorrectly. "
+            "Remove the [imu] table from the configuration file to remove this warning.'}}",
+            cfg.imu.has_value(), imu_input.has_value());
     }
-    // LCOV_EXCL_STOP
+
+    std::cout << "The future is calibrated!\n";
 }
 
 }  // namespace reprojection::application

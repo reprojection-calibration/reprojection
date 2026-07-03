@@ -13,7 +13,9 @@ config::Config ConfigParsing(toml::table const& cfg_table, SqlitePtr const db) {
     // we will just insert the entity ID no matter what. I think this is fine but let's think about it :)
     database::InsertEntity(db, cfg.camera.sensor_name, Entity::Camera);
     if (cfg.imu) {
-        database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);  // LCOV_EXCL_LINE REMOVE!!!
+        database::InsertEntity(db, cfg.imu->sensor_name, Entity::Imu);
+        database::InsertEntity(db, Extrinsic::EntityId(cfg.imu->sensor_name, cfg.camera.sensor_name),
+                               Entity::Extrinsic);
     }
 
     // TODO(Jack): Should we insert the config file into the database itself? Right now the application requires a

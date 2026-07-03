@@ -36,8 +36,19 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 
     int const argc{7};
     result = application::ParseArgs(argc, argv);
+
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->data_path, "/tmp");  // Heuristic check of one of the values
+}
+
+TEST(ApplicationReprojectionCalibration, TestParseSensors) {
+    toml::table const config{toml::parse(testing_utilities::minimum_config)};
+
+    application::Sensors const sensors{application::ParseSensors(config)};
+
+    EXPECT_EQ(sensors.camera_sensor, "/cam0/image_raw");
+    ASSERT_TRUE(sensors.imu_sensor.has_value());
+    EXPECT_EQ(sensors.imu_sensor, "/imu0");
 }
 
 TEST(ApplicationReprojectionCalibration, TestCalibrate) {
@@ -68,10 +79,13 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     database::InsertIntrinsics(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
                                camera_info.camera_model, {Array5d::Zero()});
 
+    // WARN(Jack): I would really really like to also be able to exercise the imu calibration component here but it is
+    // not nearly as easy to generate cache hits for those steps with empty inputs/outputs. This requires some more
+    // investigation and until then we just need pass std::nullopt for the imu input.
     // NOTE(Jack): We do not need to do anything for the pose_initialization and bundle_adjustment
     // steps to manufacture a cache hit because if their inputs are empty they themselves will just pass through with no
     // problem. This might change in the future but for now it stands.
 
-    // TODO(Jack): Also enable to trigger imu calibration! Need to add IMU to the configuration used for that to happen!
-    EXPECT_NO_THROW(application::Calibrate(config, {{}, ""}, application::ImuInput{{}, ""}, db));
+    // TODO(Jack): Also enable to trigger imu calibration! See warning above.
+    EXPECT_NO_THROW(application::Calibrate(config, {{}, ""}, std::nullopt, db));
 }

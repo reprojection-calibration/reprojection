@@ -21,4 +21,14 @@ class ImageSource {
     SingleTopicBagReader& bag_reader_;
 };
 
+class ImuSource {
+   public:
+    explicit ImuSource(SingleTopicBagReader& bag_reader);
+
+    std::optional<std::pair<uint64_t, std::array<double, 6>>> operator()();
+
+   private:
+    SingleTopicBagReader& bag_reader_;
+};
+
 }  // namespace reprojection::ros2

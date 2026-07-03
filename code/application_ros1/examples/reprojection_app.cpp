@@ -16,29 +16,55 @@ int main(int argc, char* argv[]) {
     if (not app_args) {
         return EXIT_FAILURE;
     }
+    application::Sensors const sensors{application::ParseSensors(app_args->config)};
 
-    // TODO(Jack): Should we use the generic templated key access function found in the library?
-    std::string const camera_topic{*app_args->config["camera"]["sensor_name"].value<std::string>()};
-
-    auto const reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, camera_topic)};
-    if (std::holds_alternative<ros1::BagError>(reader_result)) {
+    // TODO(Jack): Can we clean up the repeated logic for the image and imu construction? It is here and in the ros2
+    // app.
+    auto const image_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, sensors.camera_sensor)};
+    if (std::holds_alternative<ros1::BagError>(image_reader_result)) {
         // TODO(Jack): Should we use the libraries logging pattern here too?
-        std::cerr << std::get<ros1::BagError>(reader_result).message << "\n";
+        std::cerr << std::get<ros1::BagError>(image_reader_result).message << "\n";
         return EXIT_FAILURE;
     }
-    auto const& bag_reader{std::get<ros1::SingleTopicBagReader>(reader_result)};
+    auto const& image_bag_reader{std::get<ros1::SingleTopicBagReader>(image_reader_result)};
 
-    ros1::ImageSource image_source{bag_reader};
+    ros1::ImageSource image_source{image_bag_reader};
 
-    auto const data_signature{SerializeBagTopic(bag_reader)};
-    if (not data_signature) {
+    auto const image_data_signature{ros1::SerializeBagTopic(image_bag_reader)};
+    if (not image_data_signature) {
         std::cerr << "Unable to calculate image data signature!\n";
         return EXIT_FAILURE;
     }
 
-    application::Calibrate(app_args->config, {image_source, *data_signature}, std::nullopt, app_args->db);
+    // Early execution and return for the camera only intrinsic only case.
+    if (not sensors.imu_sensor.has_value()) {
+        application::Calibrate(app_args->config, {image_source, *image_data_signature}, std::nullopt, app_args->db);
 
-    std::cout << "The future is calibrated!\n";
+        return EXIT_SUCCESS;
+    }
 
-    return 0;
+    auto const imu_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, *sensors.imu_sensor)};
+    if (std::holds_alternative<ros1::BagError>(imu_reader_result)) {
+        std::cerr << std::get<ros1::BagError>(imu_reader_result).message << "\n";
+        return EXIT_FAILURE;
+    }
+    auto const& imu_bag_reader{std::get<ros1::SingleTopicBagReader>(imu_reader_result)};
+
+    ros1::ImuSource imu_source{imu_bag_reader};
+
+    // TODO(Jack): Right now the only way for the ROS1 app that we detect the bag does not contain the topic is here
+    // when we try to calculate the signature but find the topic is empty. We should not wait until this point! If the
+    // topic is not present then we should not even allow the construction of the SingleTopicBagReader like how we do in
+    // the ros2 app.
+    auto const imu_data_signature{ros1::SerializeBagTopic(imu_bag_reader)};
+    if (not imu_data_signature) {
+        std::cerr << "Unable to calculate imu data signature!\n";
+        return EXIT_FAILURE;
+    }
+
+    // Camera-imu extrinsic and intrinsic case.
+    application::Calibrate(app_args->config, {image_source, *image_data_signature},
+                           application::ImuInput{imu_source, *imu_data_signature}, app_args->db);
+
+    return EXIT_SUCCESS;
 }
