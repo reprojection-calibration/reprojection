@@ -113,8 +113,13 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
     log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
               ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
 
-    // TODO(Jack): Refactor imu/config logic here so there is some consistency check.
     if (cfg.imu.has_value() and imu_input.has_value()) {
+        // TODO(Jack): We need to refactor the top level application unit test so that it uses the test data - because
+        // without test data then we cannot run the imu component of the calibration at all in testing and therefore we
+        // have to suppress the code coverage which is not nice. This runs in the integration testing, but still... not
+        // nice.
+
+        // //LCOV_EXCL_START
         steps::ImuDataLoading const imu_data_loading{cfg.imu->sensor_name, imu_input->signature, imu_input->source};
         auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
         log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.StepType()),
@@ -141,6 +146,7 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
         log->info("{{'step': '{}', 'cache_status': '{}', 'tf_imu_cam': {}, 'gravity': {}}}",
                   ToString(extrinsic_opt_step.StepType()), ToString(extrinsic_opt_cache_status),
                   extrinsic_opt_result.second.tf.se3_a_b, extrinsic_opt_result.second.gravity);
+        // LCOV_EXCL_STOP
     } else if (cfg.imu.has_value() or imu_input.has_value()) {
         log->warn(
             "{{'cfg_imu': {}, 'imu_input': {}, 'msg': 'Extrinsic calibration configured partially or incorrectly. "

@@ -27,7 +27,8 @@ struct ImageInput {
     std::string signature;
 };
 
-struct ImuInput {
+// TODO(Jack): Once we get the app running in unit testing with test imu data we can remove this coverage exclusion!
+struct ImuInput {  // LCOV_EXCL_LINE
     ImuSampler source;
     std::string signature;
 };
