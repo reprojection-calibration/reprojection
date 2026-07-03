@@ -1,7 +1,7 @@
 # Reprojection - The future is calibrated!
 
 This is an application for target-based intrinsic camera calibration and extrinsic camera-imu calibration. It is
-automatically compatible with ROS1 and ROS2 and is completely dockerized. 
+automatically compatible with ROS1 and ROS2 and is completely dockerized.
 
 ## Build
 
@@ -38,15 +38,15 @@ The application accepts four command line arguments:
 3) `--data` - The path to the calibration dataset
 4) `--workspace` - The path to a directory where output files can be written to
 
-> [!TIP]
-> If the `--workspace` argument is not provided it will default to the data's directory.
-
 An example command to run the `video-file` application is:
 
     ./building/local/run_application.sh video-file \
         --config /home/user/data/calibration_config.toml \
         --data /home/user/data/target_capture_1.mp4 \
         --workspace /home/user/data/
+
+> [!TIP]
+> If the `--workspace` argument is not provided it will default to the data's directory.
 
 This will output the calibration toml file and a report pdf to the workspace directory. To run the interactive dashboard
 run the following commend (use your workspace's path!):
@@ -58,14 +58,15 @@ Then open the link shown in the terminal.
 ## Configuration
 
 Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration
-file from. That configuration file is used in all integration and smoke testing which mean it stays up to date. Please
-adapt this to your data and save your configuration file with your data.
+file from. This file is used in all integration and smoke testing which mean it stays up to date. Please adapt this to
+your data and save your configuration file with your data.
 
 > [!WARNING]
-> If you only intend to intrinsically calibrate a camera remove the `[imu]` table from the calibration file.
+> If you only intend to intrinsically calibrate a camera remove the `[imu]` table from the calibration file. Unused or
+> invalid configuration keys are not permitted.
 
 > [!IMPORTANT]
-> For ROS1 and ROS2 data the `sensor_name` must match the image topic being calibrated exactly.
+> For the ROS applications the `sensor_name` must match the topic exactly.
 
 ## Calibration target types
 
