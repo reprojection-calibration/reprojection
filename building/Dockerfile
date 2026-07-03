@@ -280,6 +280,10 @@ COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros1/dataset-calib-imu4_
 COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros2/dataset-calib-imu4_512_16.db3
 COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib-imu4_512_16.db3
 
+# TODO(Jack): Even though I did not expect the cache key for the ROS1 and ROS2 feature extraction to be the exact same
+# (due to timestamp handling - double vs. int), they are the same. Also the removal of the IMU data is the same. That
+# means there is no reason to duplicate the process here. Is there any nice way to eliminate the duplication here that
+# is worth our time and effort?
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
@@ -292,9 +296,9 @@ RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporar
 ARG REMOVE_IMU_TABLE_DATA=building/scripts/remove_imu_table_data.py
 RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE_IMU_TABLE_DATA} \
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
-      /data/ros1/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
+      /data/ros1/dataset-calib-imu4_512_16.db3; \
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
-      /data/ros2/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc
+      /data/ros2/dataset-calib-imu4_512_16.db3
 
 FROM apt-base-stage AS ros1-base-stage
 
