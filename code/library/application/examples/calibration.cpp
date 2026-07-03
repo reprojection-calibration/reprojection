@@ -30,7 +30,5 @@ int main(int argc, char* argv[]) {
 
     application::Calibrate(app_args->config, {image_source, video_capture->GetSignature()}, std::nullopt, app_args->db);
 
-    std::cout << "The future is calibrated!\n";
-
     return EXIT_SUCCESS;
 }

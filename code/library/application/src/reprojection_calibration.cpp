@@ -141,6 +141,11 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
         log->info("{{'step': '{}', 'cache_status': '{}', 'tf_imu_cam': {}, 'gravity': {}}}",
                   ToString(extrinsic_opt_step.StepType()), ToString(extrinsic_opt_cache_status),
                   extrinsic_opt_result.second.tf.se3_a_b, extrinsic_opt_result.second.gravity);
+    } else if (cfg.imu.has_value() or imu_input.has_value()) {
+        log->warn(
+            "{{'cfg_imu': {}, 'imu_input': {}, 'msg': 'Extrinsic calibration configured partially or incorrectly. "
+            "Remove the [imu] table from the configuration file to remove this warning.'}}",
+            cfg.imu.has_value(), imu_input.has_value());
     }
 
     std::cout << "The future is calibrated!\n";
