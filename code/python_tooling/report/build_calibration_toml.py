@@ -12,9 +12,13 @@ from database.sql_table_loading import (
 )
 from database.types import CameraModel
 
-# TODO RENAME FILE CAUSE ITS NOT ONlY INTRINSICS NOW!
 
+log = logging.getLogger("reprojection")
 
+# TODO(Jack): The logic in this function is super hacky. We need to clean this up big time, in particular the flow
+# control regarding when we "continue" and when not. For example what if there is no camera calibration in a database
+# but there is an extrinsic calibration there is no reason we cannot export the extrinsic calibration. However in the
+# current version this is not allowed. It is just an ugly piece of code and needs some love.
 def run_toml_export(workspace_dir):
     # TODO(Jack): Using refresh_database_list here means that it is not really specific to the dashboard itself, maybe we
     # should move it to another location.
@@ -23,7 +27,7 @@ def run_toml_export(workspace_dir):
     for entry in db_list:
         db_name = entry["label"]
         db_path = entry["value"]
-        logging.info(
+        log.info(
             "Generating calibration toml for:\n%s",
             textwrap.indent(f"Name: {db_name}\nPath: {db_path}", "  "),
         )
@@ -31,7 +35,7 @@ def run_toml_export(workspace_dir):
         camera_info = load_camera_info_table(db_path)
         camera_intrinsics = load_camera_intrinsics_table(db_path)
         if camera_info is None or camera_intrinsics is None:
-            logging.info(
+            log.info(
                 "Skipping intrinsic toml export - no data:\n%s",
                 textwrap.indent(
                     f"camera_info: {'N/A' if camera_info is None else 'loaded'}\ncamera_intrinsics: {'N/A' if camera_intrinsics is None else 'loaded'}",
@@ -42,7 +46,7 @@ def run_toml_export(workspace_dir):
 
         cam_result = build_intrinsic_toml(camera_info, camera_intrinsics)
         if len(cam_result) == 0:
-            logging.info(f"No camera intrinsics exported for {db_name}")
+            log.info(f"No camera intrinsics exported for {db_name}")
             continue
 
         extrinsics = load_extrinsics_table(db_path)
@@ -59,7 +63,7 @@ def run_toml_export(workspace_dir):
                 f.write("\n")
                 f.write(extrinsic_result)
 
-        logging.info(
+        log.info(
             "Saving calibration toml:\n%s",
             textwrap.indent(f"Name: {output_name}\nPath: {output_path}", "  "),
         )
@@ -70,19 +74,19 @@ def build_intrinsic_toml(camera_info, camera_intrinsics):
     # step. This might change one day with the stereo or IMU calibration but that is future music :)
     refined_intrinsics = camera_intrinsics[
         camera_intrinsics["step_name"] == "bundle_adjustment"
-    ]
+        ]
 
     output = []
     for i, (_, sensor) in enumerate(camera_info.iterrows()):
         sensor_name = sensor["sensor_name"]
-        logging.info(f"Processing intrinsic {sensor_name}")
+        log.info(f"Processing intrinsic {sensor_name}")
 
         camera_intrinsic_row = refined_intrinsics[
             refined_intrinsics["sensor_name"] == sensor_name
-        ]
+            ]
 
         if camera_intrinsic_row.empty:
-            logging.warning(f"No intrinsics for sensor {sensor_name}")
+            log.warning(f"No intrinsics for sensor {sensor_name}")
             continue
 
         intrinsics_str = camera_intrinsic_row.iloc[0]["intrinsics"]
@@ -108,12 +112,12 @@ def build_extrinsic_toml(extrinsics):
     # intermediate rough initialization.
     optimized_extrinsics = extrinsics[
         extrinsics["step_name"] == ("extrinsic_optimization")
-    ]
+        ]
 
     output = []
     for i, (_, data) in enumerate(optimized_extrinsics.iterrows()):
         entity_id = data["entity_id"]
-        logging.info(f"Processing extrinsic {entity_id}")
+        log.info(f"Processing extrinsic {entity_id}")
 
         se3_a_b = data[["rx", "ry", "rz", "x", "y", "z"]].to_numpy().squeeze()
         tf_a_b = Se3ToMat(se3_a_b)
