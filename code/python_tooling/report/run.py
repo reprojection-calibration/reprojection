@@ -15,7 +15,7 @@ def configure_logging() -> None:
         force=True,
     )
 
-    # Our project gets INFO level loggin by default.
+    # Our project gets INFO level logging by default.
     logging.getLogger("reprojection").setLevel(logging.INFO)
 
 

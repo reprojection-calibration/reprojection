@@ -16,15 +16,15 @@ workspace=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --config)
-          config="$2"
+          config="${2}"
           shift 2
           ;;
         --data)
-          data="$2"
+          data="${2}"
           shift 2
           ;;
         --workspace)
-          workspace="$2"
+          workspace="${2}"
           shift 2
           ;;
         *)
