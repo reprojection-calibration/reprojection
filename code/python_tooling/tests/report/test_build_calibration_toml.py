@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-from report.build_calibration_toml import build_intrinsic_toml
+from report.build_calibration_toml import build_intrinsic_toml, build_extrinsic_toml
 
 
 class TestBuildCameraTomls(unittest.TestCase):
@@ -70,6 +70,47 @@ class TestBuildCameraTomls(unittest.TestCase):
         camera_model = 'double_sphere'
         intrinsics = [160.0, 256.0, 256.0, 0.0, 0.5]
         resolution = [720, 1080]
+        """
+
+        self.assertEqual(result, dedent(result_gt))
+
+    def test_build_extrinsic_toml(self):
+        extrinsic_data = {
+            "step_name": ["extrinsic_optimization", "extrinsic_optimization"],
+            "entity_id": ["extrinsic1", "extrinsic2"],
+            "frame_a": ["frame_a_1", "frame_a_2"],
+            "frame_b": ["frame_b_1", "frame_b_2"],
+            "rx": [1, 1],
+            "ry": [2, 2],
+            "rz": [3, 3],
+            "x": [4, 4],
+            "y": [5, 5],
+            "z": [6, 6],
+        }
+        extrinsic_table = pd.DataFrame(extrinsic_data)
+
+        result = build_extrinsic_toml(extrinsic_table)
+
+        result_gt = """\
+        [extrinsic0]
+        frame_a = 'frame_a_1'
+        frame_b = 'frame_b_1'
+        tf_a_b = [
+          [-0.694920557641, 0.713520990528, 0.0892928588619, 4],
+          [-0.192006972792, -0.303785044339, 0.933192353824, 5],
+          [0.692978167742, 0.631349699384, 0.34810747783, 6],
+          [0, 0, 0, 1]
+        ]
+        
+        [extrinsic1]
+        frame_a = 'frame_a_2'
+        frame_b = 'frame_b_2'
+        tf_a_b = [
+          [-0.694920557641, 0.713520990528, 0.0892928588619, 4],
+          [-0.192006972792, -0.303785044339, 0.933192353824, 5],
+          [0.692978167742, 0.631349699384, 0.34810747783, 6],
+          [0, 0, 0, 1]
+        ]
         """
 
         self.assertEqual(result, dedent(result_gt))
