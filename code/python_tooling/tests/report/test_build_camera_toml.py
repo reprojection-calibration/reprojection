@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-from report.build_camera_toml import build_camera_toml
+from report.build_camera_toml import build_intrinsic_toml
 
 
 class TestBuildCameraTomls(unittest.TestCase):
@@ -54,7 +54,7 @@ class TestBuildCameraTomls(unittest.TestCase):
         }
         camera_intrinsics_table = pd.DataFrame(camera_intrinsics_data)
 
-        result = build_camera_toml(camera_info_table, camera_intrinsics_table)
+        result = build_intrinsic_toml(camera_info_table, camera_intrinsics_table)
 
         result_gt = """\
         [cam0]

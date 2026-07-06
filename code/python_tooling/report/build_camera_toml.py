@@ -5,6 +5,7 @@ from dashboard.tools.data_loading import refresh_database_list
 from database.sql_table_loading import (
     load_camera_info_table,
     load_camera_intrinsics_table,
+    load_extrinsics_table,
 )
 from database.types import CameraModel
 
@@ -27,10 +28,9 @@ def run_toml_export(workspace_dir):
 
         camera_info = load_camera_info_table(db_path)
         camera_intrinsics = load_camera_intrinsics_table(db_path)
-
         if camera_info is None or camera_intrinsics is None:
             logging.info(
-                "Skipping camera calibration toml export - no data:\n%s",
+                "Skipping intrinsic toml export - no data:\n%s",
                 textwrap.indent(
                     f"camera_info: {'N/A' if camera_info is None else 'loaded'}\ncamera_intrinsics: {'N/A' if camera_intrinsics is None else 'loaded'}",
                     "  ",
@@ -38,10 +38,17 @@ def run_toml_export(workspace_dir):
             )
             continue
 
-        cam_result = build_camera_toml(camera_info, camera_intrinsics)
+        cam_result = build_intrinsic_toml(camera_info, camera_intrinsics)
         if len(cam_result) == 0:
-            logging.info(f"No camera camera calibrations exported for {db_name}")
+            logging.info(f"No camera intrinsics exported for {db_name}")
             continue
+
+        extrinsics = load_extrinsics_table(db_path)
+        if extrinsics is None:
+            logging.info("Skipping extrinsic toml export - no data.")
+            continue
+
+        extrinsic_result = build_extrinsic_toml(extrinsics)
 
         output_name = db_name.removesuffix(".db3") + ".toml"
         output_path = Path(workspace_dir) / output_name
@@ -54,13 +61,12 @@ def run_toml_export(workspace_dir):
         )
 
 
-def build_camera_toml(camera_info, camera_intrinsics):
+def build_intrinsic_toml(camera_info, camera_intrinsics):
     # NOTE(Jack): For now we only care about the "polished/final" intrinsics from the camera only nonlinear refinement
     # step. This might change one day with the stereo or IMU calibration but that is future music :)
     refined_intrinsics = camera_intrinsics[
         camera_intrinsics["step_name"] == "bundle_adjustment"
-    ]
-
+        ]
 
     output = []
     for i, sensor in camera_info.iterrows():
@@ -69,7 +75,7 @@ def build_camera_toml(camera_info, camera_intrinsics):
 
         camera_intrinsic_row = refined_intrinsics[
             refined_intrinsics["sensor_name"] == sensor_name
-        ]
+            ]
 
         if camera_intrinsic_row.empty:
             logging.warning(f"No intrinsics for sensor {sensor_name}")
@@ -90,5 +96,29 @@ def build_camera_toml(camera_info, camera_intrinsics):
         )
 
         output.append(toml_text)
+
+    return "\n".join(output)
+
+
+def build_extrinsic_toml(extrinsics):
+    # NOTE(Jack): Just like for the camera intrinsics we only want to give the user the final optimized version, not the
+    # intermediate rough initialization.
+    optimized_extrinsics = extrinsics[
+        extrinsics["step_name"] == ("extrinsic_optimization")
+        ]
+
+    output = []
+    for i, data in optimized_extrinsics.iterrows():
+        entity_id = data['entity_id']
+        logging.info(f"Processing extrinsic {entity_id}")
+
+        extrinsic_row = optimized_extrinsics[
+            optimized_extrinsics["entity_id"] == entity_id
+            ]
+
+        print(extrinsic_row)
+
+        se3_a_b = extrinsic_row[["rx", "ry", "rz", "x", "y", "z"]].to_numpy()
+        print(se3_a_b)
 
     return "\n".join(output)

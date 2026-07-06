@@ -11,10 +11,7 @@ import textwrap
 
 
 def log_sql_error(e):
-    logging.warning(
-        "SQL execution failed:\n%s",
-        textwrap.indent(str(e), "  "),
-    )
+    logging.debug("SQL execution failed:\n%s", textwrap.indent(str(e), "  "))
 
 
 def load_camera_info_table(db_path):
