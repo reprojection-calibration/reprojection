@@ -6,6 +6,16 @@ import pandas as pd
 from database.proto_parsing import parse_array_x2d_proto, parse_extracted_target_proto
 from database.sql_statement_loading import load_sql
 
+import logging
+import textwrap
+
+
+def log_sql_error(e):
+    logging.warning(
+        "SQL execution failed:\n%s",
+        textwrap.indent(str(e), "  "),
+    )
+
 
 def load_camera_info_table(db_path):
     if not os.path.isfile(db_path):
@@ -17,7 +27,7 @@ def load_camera_info_table(db_path):
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -33,7 +43,7 @@ def load_camera_intrinsics_table(db_path):
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -63,7 +73,7 @@ def load_extracted_targets_table(db_path):
 
             table["data"] = table["data"].apply(safe_parse)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -83,7 +93,7 @@ def load_images_table(db_path):
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -99,7 +109,7 @@ def load_imu_data_table(db_path):
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -115,7 +125,7 @@ def load_imu_errors_table(db_path):
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -131,7 +141,7 @@ def load_poses_table(db_path):
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -159,7 +169,7 @@ def load_reprojection_errors_table(db_path):
 
             table["data"] = table["data"].apply(safe_parse)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -175,7 +185,7 @@ def load_target_info_table(db_path):
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table

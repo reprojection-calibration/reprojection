@@ -8,6 +8,9 @@ from database.sql_table_loading import (
 )
 from database.types import CameraModel
 
+import logging
+import textwrap
+
 
 def run_toml_export(workspace_dir):
     # TODO(Jack): Using refresh_database_list here means that it is not really specific to the dashboard itself, maybe we
@@ -17,15 +20,27 @@ def run_toml_export(workspace_dir):
     for entry in db_list:
         db_name = entry["label"]
         db_path = entry["value"]
-        print(f"Generating calibration toml for database {db_name}")
+        logging.info(
+            "Generating calibration toml for:\n%s",
+            textwrap.indent(f"Name: {db_name}\nPath: {db_path}", "  "),
+        )
 
         camera_info = load_camera_info_table(db_path)
         camera_intrinsics = load_camera_intrinsics_table(db_path)
 
-        result = build_camera_toml(camera_info, camera_intrinsics)
+        if camera_info is None or camera_intrinsics is None:
+            logging.info(
+                "Skipping camera calibration toml export - no data:\n%s",
+                textwrap.indent(
+                    f"camera_info: {'N/A' if camera_info is None else 'loaded'}\ncamera_intrinsics: {'N/A' if camera_intrinsics is None else 'loaded'}",
+                    "  ",
+                ),
+            )
+            continue
 
+        result = build_camera_toml(camera_info, camera_intrinsics)
         if len(result) == 0:
-            print("\tNo camera intrinsics exported for", db_name, "\n")
+            logging.info(f"No camera camera calibrations exported for {db_name}")
             continue
 
         output_name = db_name.removesuffix(".db3") + ".toml"
@@ -33,7 +48,10 @@ def run_toml_export(workspace_dir):
         with open(output_path, "w") as f:
             f.write(result)
 
-        print(f"\tAssembled camera intrinsic toml and saving to {output_path}")
+        logging.info(
+            "Saving calibration toml:\n%s",
+            textwrap.indent(f"Name: {output_name}\nPath: {output_path}", "  "),
+        )
 
 
 def build_camera_toml(camera_info, camera_intrinsics):
@@ -43,10 +61,11 @@ def build_camera_toml(camera_info, camera_intrinsics):
         camera_intrinsics["step_name"] == "bundle_adjustment"
     ]
 
+
     output = []
     for i, sensor in camera_info.iterrows():
         sensor_name = sensor["sensor_name"]
-        print(f"\tProcessing sensor {sensor_name}")
+        logging.info(f"Processing sensor {sensor_name}")
 
         camera_intrinsic_row = refined_intrinsics[
             refined_intrinsics["sensor_name"] == sensor_name

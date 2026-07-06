@@ -3,8 +3,15 @@ import argparse
 from build_camera_report import run_report_export
 from build_camera_toml import run_toml_export
 
+import logging
+
 
 def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s:%(name)s: %(message)s",
+    )
+
     print("Running report generation!")
 
     parser = argparse.ArgumentParser(
