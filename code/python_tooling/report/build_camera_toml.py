@@ -17,7 +17,7 @@ def run_toml_export(workspace_dir):
     for entry in db_list:
         db_name = entry["label"]
         db_path = entry["value"]
-        print(f"Generating camera intrinsic toml for database {db_name}")
+        print(f"Generating calibration toml for database {db_name}")
 
         camera_info = load_camera_info_table(db_path)
         camera_intrinsics = load_camera_intrinsics_table(db_path)
