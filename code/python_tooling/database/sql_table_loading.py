@@ -79,6 +79,22 @@ def load_extracted_targets_table(db_path):
     return table
 
 
+def load_extrinsics_table(db_path):
+    if not os.path.isfile(db_path):
+        return None
+
+    sql_query = load_sql("extrinsics_select_all.sql")
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            table = pd.read_sql(sql_query, conn)
+    except Exception as e:
+        log_sql_error(e)
+        return None
+
+    return table
+
+
 # TODO(Jack): Make generic loading function for the basic case and use that to eliminate copy and paste!
 # WARN(Jack): We not actually decode the image data here in this function. if we one data get to the point where we do
 # want to visualize images in the dashboard then we need to look again here. For now we just assume all the image data

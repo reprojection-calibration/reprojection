@@ -6,6 +6,7 @@ from database.sql_table_loading import (
     load_camera_info_table,
     load_camera_intrinsics_table,
     load_extracted_targets_table,
+    load_extrinsics_table,
     load_images_table,
     load_imu_data_table,
     load_imu_errors_table,
@@ -54,6 +55,13 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
 
         table = load_extracted_targets_table(self.db_path)
         self.assertEqual(table.shape, (1758, 3))
+
+    def test_load_extrinsics_table(self):
+        table = load_extrinsics_table("nonexistent.db3")
+        self.assertIsNone(table)
+
+        table = load_extrinsics_table(self.db_path)
+        self.assertIsNone(table)
 
     def test_load_images_table(self):
         table = load_images_table("nonexistent.db3")
