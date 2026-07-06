@@ -59,7 +59,6 @@ def run_toml_export(workspace_dir):
                 f.write("\n")
                 f.write(extrinsic_result)
 
-
         logging.info(
             "Saving calibration toml:\n%s",
             textwrap.indent(f"Name: {output_name}\nPath: {output_path}", "  "),
