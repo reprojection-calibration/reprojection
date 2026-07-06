@@ -36,14 +36,15 @@ done
 
 # WARN(Jack): The following logic is what makes the '--workspace' flag optional. If a user provides the workspace
 # directly then we use that. If the workspace is not provided then we use the '--data' flag to derive the workspace
-# directory. If '--data' is itself a directory then we use it directly and if its a file then we get the directory the
-# file is in and use that.
+# directory.
 if [[ -n "${workspace}" ]]; then
     output_dir="${workspace}"
 elif [[ -n "${data}" ]]; then
     if [[ -d "${data}" ]]; then
-        output_dir="${data}"
+        output_dir="$(dirname "${data}")"
     elif [[ -f "${data}" ]]; then
+        # WARN(Jack): This takes the parent directory without checking if it exists. If the given directory is itself
+        # root this might cause us problems.
         output_dir="$(dirname "${data}")"
     else
         echo "(entrypoint.sh) Error: --data path '${data}' is neither an existing file nor an existing directory." >&2
