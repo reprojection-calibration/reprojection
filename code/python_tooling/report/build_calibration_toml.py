@@ -12,8 +12,8 @@ from database.sql_table_loading import (
 )
 from database.types import CameraModel
 
-
 log = logging.getLogger("reprojection")
+
 
 # TODO(Jack): The logic in this function is super hacky. We need to clean this up big time, in particular the flow
 # control regarding when we "continue" and when not. For example what if there is no camera calibration in a database
@@ -74,7 +74,7 @@ def build_intrinsic_toml(camera_info, camera_intrinsics):
     # step. This might change one day with the stereo or IMU calibration but that is future music :)
     refined_intrinsics = camera_intrinsics[
         camera_intrinsics["step_name"] == "bundle_adjustment"
-        ]
+    ]
 
     output = []
     for i, (_, sensor) in enumerate(camera_info.iterrows()):
@@ -83,7 +83,7 @@ def build_intrinsic_toml(camera_info, camera_intrinsics):
 
         camera_intrinsic_row = refined_intrinsics[
             refined_intrinsics["sensor_name"] == sensor_name
-            ]
+        ]
 
         if camera_intrinsic_row.empty:
             log.warning(f"No intrinsics for sensor {sensor_name}")
@@ -112,7 +112,7 @@ def build_extrinsic_toml(extrinsics):
     # intermediate rough initialization.
     optimized_extrinsics = extrinsics[
         extrinsics["step_name"] == ("extrinsic_optimization")
-        ]
+    ]
 
     output = []
     for i, (_, data) in enumerate(optimized_extrinsics.iterrows()):

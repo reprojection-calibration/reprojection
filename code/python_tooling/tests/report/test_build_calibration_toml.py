@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pandas as pd
 
-from report.build_calibration_toml import build_intrinsic_toml, build_extrinsic_toml
+from report.build_calibration_toml import build_extrinsic_toml, build_intrinsic_toml
 
 
 class TestBuildCameraTomls(unittest.TestCase):
