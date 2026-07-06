@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from database.geometry import InvertSe3
+from business_logic.geometry import InvertSe3
 
 
 class TestGeometry(unittest.TestCase):

@@ -1,13 +1,12 @@
+import logging
 import os
 import sqlite3
+import textwrap
 
 import pandas as pd
 
 from database.proto_parsing import parse_array_x2d_proto, parse_extracted_target_proto
 from database.sql_statement_loading import load_sql
-
-import logging
-import textwrap
 
 
 def log_sql_error(e):

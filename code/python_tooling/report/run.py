@@ -1,9 +1,8 @@
 import argparse
+import logging
 
 from build_camera_report import run_report_export
 from build_camera_toml import run_toml_export
-
-import logging
 
 
 def main():

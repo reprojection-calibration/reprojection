@@ -1,5 +1,8 @@
+import logging
+import textwrap
 from pathlib import Path
 
+from business_logic.geometry import Se3ToMat
 from business_logic.toml_conversions import toml_to_intrinsic_array
 from dashboard.tools.data_loading import refresh_database_list
 from database.sql_table_loading import (
@@ -9,8 +12,7 @@ from database.sql_table_loading import (
 )
 from database.types import CameraModel
 
-import logging
-import textwrap
+# TODO RENAME FILE CAUSE ITS NOT ONlY INTRINSICS NOW!
 
 
 def run_toml_export(workspace_dir):
@@ -44,16 +46,19 @@ def run_toml_export(workspace_dir):
             continue
 
         extrinsics = load_extrinsics_table(db_path)
-        if extrinsics is None:
-            logging.info("Skipping extrinsic toml export - no data.")
-            continue
-
-        extrinsic_result = build_extrinsic_toml(extrinsics)
+        extrinsic_result = None
+        if extrinsics is not None:
+            extrinsic_result = build_extrinsic_toml(extrinsics)
 
         output_name = db_name.removesuffix(".db3") + ".toml"
         output_path = Path(workspace_dir) / output_name
         with open(output_path, "w") as f:
             f.write(cam_result)
+
+            if extrinsic_result is not None:
+                f.write("\n")
+                f.write(extrinsic_result)
+
 
         logging.info(
             "Saving calibration toml:\n%s",
@@ -66,16 +71,16 @@ def build_intrinsic_toml(camera_info, camera_intrinsics):
     # step. This might change one day with the stereo or IMU calibration but that is future music :)
     refined_intrinsics = camera_intrinsics[
         camera_intrinsics["step_name"] == "bundle_adjustment"
-        ]
+    ]
 
     output = []
-    for i, sensor in camera_info.iterrows():
+    for i, (_, sensor) in enumerate(camera_info.iterrows()):
         sensor_name = sensor["sensor_name"]
-        logging.info(f"Processing sensor {sensor_name}")
+        logging.info(f"Processing intrinsic {sensor_name}")
 
         camera_intrinsic_row = refined_intrinsics[
             refined_intrinsics["sensor_name"] == sensor_name
-            ]
+        ]
 
         if camera_intrinsic_row.empty:
             logging.warning(f"No intrinsics for sensor {sensor_name}")
@@ -87,12 +92,11 @@ def build_intrinsic_toml(camera_info, camera_intrinsics):
 
         toml_text = (
             f"[cam{i}]\n"
-            f'sensor_id = "{sensor_name}"\n'
+            f"sensor_id = '{sensor_name}'\n"
             f"# https://github.com/reprojection-calibration/reprojection#camera-models\n"
-            f'camera_model = "{sensor["camera_model"]}"\n'
+            f"camera_model = '{sensor['camera_model']}'\n"
             f"intrinsics = {intrinsics_arr}\n"
-            f'resolution = [{int(sensor["height"])}, {int(sensor["width"])}]'
-            "\n"
+            f"resolution = [{int(sensor['height'])}, {int(sensor['width'])}]\n"
         )
 
         output.append(toml_text)
@@ -105,20 +109,30 @@ def build_extrinsic_toml(extrinsics):
     # intermediate rough initialization.
     optimized_extrinsics = extrinsics[
         extrinsics["step_name"] == ("extrinsic_optimization")
-        ]
+    ]
 
     output = []
-    for i, data in optimized_extrinsics.iterrows():
-        entity_id = data['entity_id']
+    for i, (_, data) in enumerate(optimized_extrinsics.iterrows()):
+        entity_id = data["entity_id"]
         logging.info(f"Processing extrinsic {entity_id}")
 
-        extrinsic_row = optimized_extrinsics[
-            optimized_extrinsics["entity_id"] == entity_id
-            ]
+        se3_a_b = data[["rx", "ry", "rz", "x", "y", "z"]].to_numpy().squeeze()
+        tf_a_b = Se3ToMat(se3_a_b)
 
-        print(extrinsic_row)
+        def format_toml_matrix(matrix, precision: int = 12) -> str:
+            rows = []
+            for row in matrix:
+                values = ", ".join(f"{float(value):.{precision}g}" for value in row)
+                rows.append(f"  [{values}]")
+            return "[\n" + ",\n".join(rows) + "\n]"
 
-        se3_a_b = extrinsic_row[["rx", "ry", "rz", "x", "y", "z"]].to_numpy()
-        print(se3_a_b)
+        toml_text = (
+            f"[extrinsic{i}]\n"
+            f"frame_a = '{data['frame_a']}'\n"
+            f"frame_b = '{data['frame_b']}'\n"
+            f"tf_a_b = {format_toml_matrix(tf_a_b)}\n"
+        )
+
+        output.append(toml_text)
 
     return "\n".join(output)
