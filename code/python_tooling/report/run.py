@@ -12,7 +12,7 @@ def main():
         format="%(levelname)s:%(name)s: %(message)s",
     )
 
-    print("Running report generation!")
+    logging.info("Running report generation!")
 
     parser = argparse.ArgumentParser(
         "Generate a calibration report PDF and camera intrinsics TOML from one or more calibration databases."

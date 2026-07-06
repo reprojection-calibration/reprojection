@@ -38,15 +38,15 @@ def run_toml_export(workspace_dir):
             )
             continue
 
-        result = build_camera_toml(camera_info, camera_intrinsics)
-        if len(result) == 0:
+        cam_result = build_camera_toml(camera_info, camera_intrinsics)
+        if len(cam_result) == 0:
             logging.info(f"No camera camera calibrations exported for {db_name}")
             continue
 
         output_name = db_name.removesuffix(".db3") + ".toml"
         output_path = Path(workspace_dir) / output_name
         with open(output_path, "w") as f:
-            f.write(result)
+            f.write(cam_result)
 
         logging.info(
             "Saving calibration toml:\n%s",
@@ -72,7 +72,7 @@ def build_camera_toml(camera_info, camera_intrinsics):
         ]
 
         if camera_intrinsic_row.empty:
-            print(f"\t\t No intrinsics for sensor {sensor_name}")
+            logging.warning(f"No intrinsics for sensor {sensor_name}")
             continue
 
         intrinsics_str = camera_intrinsic_row.iloc[0]["intrinsics"]
