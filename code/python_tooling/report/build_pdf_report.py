@@ -36,6 +36,7 @@ def run_report_export(workspace_dir):
         build_two_column_pdf(output_path=output_path, camera_sections=camera_sections)
 
 
+# TODO(Jack): It would really be in our best interest to get a unit test for this function.
 def build_camera_sections(db_path):
     camera_info = load_camera_info_table(db_path)
     extracted_targets = load_extracted_targets_table(db_path)
@@ -44,17 +45,19 @@ def build_camera_sections(db_path):
     # TODO(Jack): Honestly all we really need to construct the coverage map is the extracted targets. That contains
     # all the information we need. We should refactor this logic here to allow the creation of the most possible
     # figures using limited or partial databases.
-    if camera_info is None or extracted_targets is None or reprojection_errors is None:
+    if extracted_targets is None:
         log.info(
-            "Skipping pdf report export - missing data:\n%s",
-            textwrap.indent(
-                f"camera_info: {'N/A' if camera_info is None else 'loaded'}\nextracted_targets: {'N/A' if extracted_targets is None else 'loaded'}\nreprojection_errors: {'N/A' if reprojection_errors is None else 'loaded'}",
-                "  ",
-            ),
+            f"Skipping pdf report export - missing extracted target data: {db_path}."
         )
         return None
 
-    camera_info_map = camera_info.set_index("sensor_name").to_dict("index")
+    # If there is no camera info we just want an empty dict as this is technically a valid state for the coverage
+    # figure because it will just use the min and max values of the extracted feature to set the bounds.
+    camera_info_map = (
+        camera_info.set_index("sensor_name").to_dict("index")
+        if camera_info is not None
+        else {}
+    )
 
     camera_sections = []
     for sensor_name in extracted_targets["sensor_name"].unique():
@@ -63,7 +66,7 @@ def build_camera_sections(db_path):
         camera_info_i = camera_info_map.get(sensor_name)
         extracted_targets_i = extracted_targets[
             extracted_targets["sensor_name"] == sensor_name
-        ]
+            ]
         if extracted_targets_i.empty:
             # NOTE(Jack): This is unique here because if there are no targets then we cannot do anything at all so we
             # completely bypass the figure generation for this camera.
@@ -71,16 +74,24 @@ def build_camera_sections(db_path):
 
         coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
 
-        # We only want to show the final optimized result so we hardcode bundle_adjustment
-        reprojection_errors_i = reprojection_errors[
-            (reprojection_errors["sensor_name"] == sensor_name)
-            & (reprojection_errors["step_name"] == "bundle_adjustment")
-        ]
-        if reprojection_errors_i.empty or camera_info is None:
+        # TODO(Jack): This protecting and checking of data validity conditions everywhere is getting verbose and ugly!
+        # Should we instead iterate over the same data structure we use in the dashboard?
+        if reprojection_errors is None or reprojection_errors.empty:
             error_figure_i = None
         else:
-            error_figure_i = error_figure(
-                    camera_info_i, extracted_targets_i, reprojection_errors_i
+            # We only want to show the final optimized result so we hardcode bundle_adjustment
+            reprojection_errors_i = reprojection_errors[
+                (reprojection_errors["sensor_name"] == sensor_name)
+                & (reprojection_errors["step_name"] == "bundle_adjustment")
+                ]
+
+            if reprojection_errors_i.empty or camera_info_i is None:
+                error_figure_i = None
+            else:
+                error_figure_i = error_figure(
+                    camera_info_i,
+                    extracted_targets_i,
+                    reprojection_errors_i,
                 )
 
         camera_section_i = {
