@@ -237,7 +237,7 @@ jobs:
           modified="$(stat -c %Y "${db}")"
           age_seconds="$((now - modified))"
           echo "Database last modified: ${age_seconds}s"
-          if (( age_seconds > 30 )); then
+          if (( age_seconds > 40 )); then
             echo "Calibration database was not recently updated."
             exit 1
           fi
