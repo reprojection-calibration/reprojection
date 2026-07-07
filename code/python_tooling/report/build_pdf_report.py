@@ -130,12 +130,13 @@ def build_camera_sections(db_path):
                 (
                     {
                         "fig": delta_fig_,
-                        # TODO(Jack): Naming!
-                        "caption": "Measurement time delta timeseries.",
+                        # TODO(Jack): This caption and the histogram one is copied once here and in the IMU layout. This
+                        # will be hard to maintain! We should find a way to only write this in one place.
+                        "caption": "Measurement interval timeseries.",
                     },
                     {
                         "fig": histogram_fig_i,
-                        "caption": "Measurement time delta histogram.",
+                        "caption": "Measurement interval histogram.",
                     },
                 ),
             ],
@@ -169,12 +170,11 @@ def build_imu_sections(db_path):
                 (
                     {
                         "fig": delta_fig_,
-                        # TODO(Jack): Naming!
-                        "caption": "Measurement time delta timeseries.",
+                        "caption": "Measurement interval timeseries.",
                     },
                     {
                         "fig": histogram_fig_i,
-                        "caption": "Measurement time delta histogram.",
+                        "caption": "Measurement interval histogram.",
                     },
                 ),
             ],

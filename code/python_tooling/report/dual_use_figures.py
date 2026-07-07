@@ -119,9 +119,9 @@ def measurement_delta_time_figures(df, label="Measurement"):
     )
 
     delta_fig.update_layout(
-        title=f"{label} measurement delta time<br><sup>{subtitle}</sup>",
-        xaxis=dict(title="Measurement time [s]"),
-        yaxis=dict(title="Delta time [ms]"),
+        title=f"{label} measurement interval time<br><sup>{subtitle}</sup>",
+        xaxis=dict(title="Time [s]"),
+        yaxis=dict(title="Interval [ms]"),
         # NOTE(Jack): Using this second axis with a "paper" like coordinate system lets us hardcode the location of the
         # inlier/outlier points which saves us from having to calculate it each time. Not like that would be complex, it
         # is simply that this solution has fewer moving parts and code to maintain.
@@ -167,9 +167,9 @@ def measurement_delta_time_figures(df, label="Measurement"):
 
     histogram_fig.update_layout(
         title=f"{label} measurement interval histogram",
-        xaxis=dict(title="Inlier delta time [ms]"),
+        xaxis=dict(title="Inlier interval [ms]"),
         xaxis2=dict(
-            title="Outlier delta time [ms]",
+            title="Outlier interval [ms]",
             overlaying="x",
             side="top",
             showgrid=False,
