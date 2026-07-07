@@ -43,7 +43,7 @@ def run_report_export(workspace_dir):
         output_path = Path(workspace_dir) / output_name
 
         print(f"\tAssembling pdf and saving to {output_path}")
-        build_two_column_pdf(output_path=output_path, camera_sections=sections)
+        build_two_column_pdf(output_path, sections)
 
 
 # TODO(Jack): It would really be in our best interest to get a unit test for this function.
