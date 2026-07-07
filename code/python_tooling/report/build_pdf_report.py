@@ -42,7 +42,7 @@ def run_report_export(workspace_dir):
         output_name = db_name.removesuffix(".db3") + ".pdf"
         output_path = Path(workspace_dir) / output_name
 
-        print(f"\tAssembling pdf and saving to {output_path}")
+        log.info(f"Assembling pdf and saving to {output_path}")
         build_two_column_pdf(output_path, sections)
 
 
@@ -72,12 +72,12 @@ def build_camera_sections(db_path):
 
     camera_sections = []
     for sensor_name in extracted_targets["sensor_name"].unique():
-        print(f"\tProcessing sensor {sensor_name}")
+        log.info(f"Processing sensor {sensor_name}")
 
         camera_info_i = camera_info_map.get(sensor_name)
         extracted_targets_i = extracted_targets[
             extracted_targets["sensor_name"] == sensor_name
-            ]
+        ]
         if extracted_targets_i.empty:
             # NOTE(Jack): This is unique here because if there are no targets then we cannot do anything at all so we
             # completely bypass the figure generation for this camera.
@@ -94,7 +94,7 @@ def build_camera_sections(db_path):
             reprojection_errors_i = reprojection_errors[
                 (reprojection_errors["sensor_name"] == sensor_name)
                 & (reprojection_errors["step_name"] == "bundle_adjustment")
-                ]
+            ]
 
             if reprojection_errors_i.empty or camera_info_i is None:
                 error_figure_i = None
@@ -155,7 +155,7 @@ def build_imu_sections(db_path):
 
     imu_sections = []
     for sensor_name in imu_data["sensor_name"].unique():
-        print(f"\tProcessing sensor {sensor_name}")
+        log.info(f"Processing sensor {sensor_name}")
 
         imu_data_i = imu_data[imu_data["sensor_name"] == sensor_name]
         if imu_data_i.empty:
