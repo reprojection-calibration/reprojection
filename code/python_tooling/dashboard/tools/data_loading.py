@@ -11,7 +11,7 @@ def refresh_database_list(db_dir):
 
     result = []
     for file_name in sorted(os.listdir(db_dir)):
-        if not file_name.endswith(".db3"):
+        if not file_name.endswith(".calib.db3"):
             continue
 
         full_path = os.path.join(db_dir, file_name)
