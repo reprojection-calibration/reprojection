@@ -16,9 +16,9 @@ def imu_delta_time_figure(imu_df):
     # The first row has no previous measurement, so delta is NaN.
     rows = rows.dropna(subset=["delta_ms"])
 
-    fig = go.Figure()
 
-    fig.add_trace(
+    delta_fig = go.Figure()
+    delta_fig.add_trace(
         go.Scattergl(
             x=rows["time_s"],
             y=rows["delta_ms"],
@@ -26,12 +26,25 @@ def imu_delta_time_figure(imu_df):
             marker=dict(size=4, opacity=0.7),
         )
     )
-
-    fig.update_layout(
+    delta_fig.update_layout(
         title="IMU measurement delta time",
         xaxis=dict(title="Measurement time [s]"),
-        yaxis=dict(title="Delta time [ms]"),
+        yaxis=dict(title="Delta time [ms]" ),
         showlegend=False,
     )
 
-    return fig
+    histogram_fig = go.Figure()
+    histogram_fig.add_trace(
+        go.Histogram(
+            x=rows["delta_ms"],
+            nbinsx=100,
+        )
+    )
+    histogram_fig.update_layout(
+        title="IMU measurement interval histogram",
+        xaxis=dict(title="Delta time [ms]" ),
+        yaxis=dict(title="Frequency"),
+        showlegend=False,
+    )
+
+    return delta_fig, histogram_fig

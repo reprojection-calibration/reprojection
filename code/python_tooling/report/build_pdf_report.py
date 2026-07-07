@@ -144,20 +144,20 @@ def build_imu_sections(db_path):
         if imu_data_i.empty:
             continue
 
-        time_delta_figure_i = imu_delta_time_figure(imu_data_i)
+        delta_fig_, histogram_fig_i = imu_delta_time_figure(imu_data_i)
 
         imu_section_i = {
             "sensor_name": sensor_name,
             "rows": [
                 (
                     {
-                        "fig": time_delta_figure_i,
+                        "fig": delta_fig_,
                         # TODO(Jack): Naming!
-                        "caption": "Measurement time delta.",
+                        "caption": "Measurement time delta timeseries.",
                     },
                     {
-                        "fig": None,
-                        "caption": "",
+                        "fig": histogram_fig_i,
+                        "caption": "Measurement time delta histogram.",
                     },
                 ),
             ],
