@@ -44,11 +44,7 @@ def build_camera_sections(db_path):
     # TODO(Jack): Honestly all we really need to construct the coverage map is the extracted targets. That contains
     # all the information we need. We should refactor this logic here to allow the creation of the most possible
     # figures using limited or partial databases.
-    if (
-            camera_info is None
-            or extracted_targets is None
-            or reprojection_errors is None
-    ):
+    if camera_info is None or extracted_targets is None or reprojection_errors is None:
         log.info(
             "Skipping pdf report export - missing data:\n%s",
             textwrap.indent(
@@ -67,18 +63,25 @@ def build_camera_sections(db_path):
         camera_info_i = camera_info_map.get(sensor_name)
         extracted_targets_i = extracted_targets[
             extracted_targets["sensor_name"] == sensor_name
-            ]
+        ]
+        if extracted_targets_i.empty:
+            # NOTE(Jack): This is unique here because if there are no targets then we cannot do anything at all so we
+            # completely bypass the figure generation for this camera.
+            continue
+
         coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
 
+        # We only want to show the final optimized result so we hardcode bundle_adjustment
         reprojection_errors_i = reprojection_errors[
-            reprojection_errors["sensor_name"] == sensor_name
-            ]
-        error_figure_i = error_figure(
-            camera_info_i,
-            extracted_targets_i,
-            reprojection_errors_i,
-            "bundle_adjustment",
-        )
+            (reprojection_errors["sensor_name"] == sensor_name)
+            & (reprojection_errors["step_name"] == "bundle_adjustment")
+        ]
+        if reprojection_errors_i.empty or camera_info is None:
+            error_figure_i = None
+        else:
+            error_figure_i = error_figure(
+                    camera_info_i, extracted_targets_i, reprojection_errors_i
+                )
 
         camera_section_i = {
             "sensor_name": sensor_name,

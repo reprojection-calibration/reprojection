@@ -4,9 +4,9 @@ import plotly.graph_objects as go
 
 def coverage_figure(camera_info, extracted_target_df):
     assert not extracted_target_df.empty, "extracted_target_df is empty"
-    assert extracted_target_df["sensor_name"].nunique() == 1, (
-        f"Expected exactly one sensor_name, found: {extracted_target_df['sensor_name'].unique().tolist()}"
-    )
+    assert (
+        extracted_target_df["sensor_name"].nunique() == 1
+    ), f"Expected exactly one sensor_name, found: {extracted_target_df['sensor_name'].unique().tolist()}"
 
     all_x = []
     all_y = []
@@ -56,18 +56,18 @@ def coverage_figure(camera_info, extracted_target_df):
     return fig
 
 
-def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_name):
-    reprojection_error_df = reprojection_error_df[
-        reprojection_error_df["step_name"] == step_name
-        ]
+def error_figure(camera_info, extracted_target_df, reprojection_error_df):
+    assert not camera_info is None, "camera_info is required"
 
-    if reprojection_error_df.empty:
-        print(f"\t\tNo reprojection errors for {step_name}")
-        return None
-
+    assert not extracted_target_df.empty, "extracted_target_df is empty"
     assert (
-            camera_info is not None
-    ), "Camera info was `None` even thought we have reprojection errors... Is the database ok?"
+        extracted_target_df["sensor_name"].nunique() == 1
+    ), f"Expected exactly one sensor_name, found: {extracted_target_df['sensor_name'].unique().tolist()}"
+
+    assert not reprojection_error_df.empty, "reprojection_error_df is empty"
+    assert (
+        reprojection_error_df["sensor_name"].nunique() == 1
+    ), f"Expected exactly one sensor_name, found: {reprojection_error_df['sensor_name'].unique().tolist()}"
 
     rows = extracted_target_df.merge(
         reprojection_error_df,
@@ -95,8 +95,8 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_n
         # sure, but it gets the job done!
         pixel_vectors = pixels - image_center
         angles_i = (
-                np.degrees(np.arctan2(-pixel_vectors[:, 1], pixel_vectors[:, 0]))
-                + 270 % 360
+            np.degrees(np.arctan2(-pixel_vectors[:, 1], pixel_vectors[:, 0]))
+            + 270 % 360
         )
 
         error_magnitude_i = np.linalg.norm(errors, axis=1)
