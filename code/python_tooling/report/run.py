@@ -6,7 +6,7 @@ from build_camera_report import run_report_export
 
 
 def configure_logging() -> None:
-    LOG_FORMAT = "%(levelname)s:%(filename)s:%(lineno)d:%(funcName)s(): %(message)s"
+    LOG_FORMAT = "%(levelname)s:%(filename)s:%(lineno)d: %(message)s"
 
     # The root logger (used by everything else) gets WARNING level logging.
     logging.basicConfig(

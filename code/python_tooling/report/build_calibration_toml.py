@@ -36,7 +36,7 @@ def run_toml_export(workspace_dir):
         camera_intrinsics = load_camera_intrinsics_table(db_path)
         if camera_info is None or camera_intrinsics is None:
             log.info(
-                "Skipping intrinsic toml export - no data:\n%s",
+                "Skipping intrinsic toml export - missing data:\n%s",
                 textwrap.indent(
                     f"camera_info: {'N/A' if camera_info is None else 'loaded'}\ncamera_intrinsics: {'N/A' if camera_intrinsics is None else 'loaded'}",
                     "  ",
