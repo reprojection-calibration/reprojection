@@ -3,6 +3,7 @@ import textwrap
 from pathlib import Path
 
 from camera_figures import coverage_figure, error_figure
+from imu_figures import imu_delta_time_figure
 from pdf_layout import build_two_column_pdf
 
 from dashboard.tools.data_loading import refresh_database_list
@@ -10,6 +11,7 @@ from database.sql_table_loading import (
     load_camera_info_table,
     load_extracted_targets_table,
     load_reprojection_errors_table,
+    load_imu_data_table,
 )
 
 log = logging.getLogger("reprojection")
@@ -28,12 +30,20 @@ def run_report_export(workspace_dir):
 
         # ERROR(Jack): What do we do if this is None???
         camera_sections = build_camera_sections(db_path)
+        imu_sections = build_imu_sections(db_path)
+
+        sections = []
+        if camera_sections is not None:
+            sections.extend(camera_sections)
+        if imu_sections is not None:
+            sections.extend(imu_sections)
+
 
         output_name = db_name.removesuffix(".db3") + ".pdf"
         output_path = Path(workspace_dir) / output_name
 
         print(f"\tAssembling pdf and saving to {output_path}")
-        build_two_column_pdf(output_path=output_path, camera_sections=camera_sections)
+        build_two_column_pdf(output_path=output_path, camera_sections=sections)
 
 
 # TODO(Jack): It would really be in our best interest to get a unit test for this function.
@@ -47,7 +57,7 @@ def build_camera_sections(db_path):
     # figures using limited or partial databases.
     if extracted_targets is None:
         log.info(
-            f"Skipping pdf report export - missing extracted target data: {db_path}."
+            f"Skipping camera pdf report export - missing extracted target data: {db_path}."
         )
         return None
 
@@ -113,3 +123,47 @@ def build_camera_sections(db_path):
         camera_sections.append(camera_section_i)
 
     return camera_sections
+
+def build_imu_sections(db_path):
+    imu_data = load_imu_data_table(db_path)
+
+
+    if imu_data is None:
+        log.info(
+            f"Skipping IMU pdf report export - missing IMU data: {db_path}."
+        )
+        return None
+
+    imu_sections = []
+    for sensor_name in imu_data["sensor_name"].unique():
+        print(f"\tProcessing sensor {sensor_name}")
+
+        imu_data_i = imu_data[
+            imu_data["sensor_name"] == sensor_name
+            ]
+        if imu_data_i.empty:
+            continue
+
+        time_delta_figure_i = imu_delta_time_figure(imu_data_i)
+
+        imu_section_i = {
+            "sensor_name": sensor_name,
+            "rows": [
+                (
+                    {
+                        "fig": time_delta_figure_i,
+                        # TODO(Jack): Naming!
+                        "caption": "Measurement time delta.",
+                    },
+                    {
+                        "fig": None,
+                        "caption": "",
+                    },
+                ),
+            ],
+        }
+
+        imu_sections.append(imu_section_i)
+
+    return imu_sections
+
