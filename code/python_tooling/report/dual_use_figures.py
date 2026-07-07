@@ -66,7 +66,7 @@ def measurement_delta_time_figures(df, label="Measurement", outlier_sigma=6.0):
     outlier_mask = low_outlier_mask | high_outlier_mask
 
     #
-    # Summary statistics.
+    # Summary statistics for timeseries title only.
     #
     inlier_values = rows.loc[inlier_mask, "delta_ms"]
     outlier_values = rows.loc[outlier_mask, "delta_ms"]
@@ -75,7 +75,7 @@ def measurement_delta_time_figures(df, label="Measurement", outlier_sigma=6.0):
     outlier_stats = _format_stats("Outliers", outlier_values)
 
     #
-    # Axis range based on inliers.
+    # Timeseries axis range based on inliers.
     #
     if inlier_values.empty:
         display_min = delta_ms.min()
@@ -187,86 +187,24 @@ def measurement_delta_time_figures(df, label="Measurement", outlier_sigma=6.0):
     #
     # Histogram
     #
+    # Important: plot all data here, including outliers.
+    #
     histogram_fig = go.Figure()
 
     histogram_fig.add_trace(
         go.Histogram(
-            x=rows.loc[inlier_mask, "delta_ms"],
+            x=rows["delta_ms"],
             nbinsx=100,
-            name="Inliers",
+            name="All intervals",
         )
     )
 
-    bin_width = delta_span / 100.0
-
-    if low_outlier_count > 0:
-        low_values = rows.loc[low_outlier_mask, "delta_ms"]
-
-        histogram_fig.add_trace(
-            go.Bar(
-                x=[lower_edge_value],
-                y=[low_outlier_count],
-                width=[bin_width * 2.0],
-                name="Low outliers",
-                customdata=[
-                    [
-                        low_values.min(),
-                        low_values.max(),
-                        low_values.mean(),
-                        _mean_absolute_deviation(low_values),
-                    ]
-                ],
-                hovertemplate=(
-                    "Low outliers<br>"
-                    "Count: %{y}<br>"
-                    "Actual min [ms]: %{customdata[0]:.6f}<br>"
-                    "Actual max [ms]: %{customdata[1]:.6f}<br>"
-                    "Mean [ms]: %{customdata[2]:.6f}<br>"
-                    "Mean abs dev [ms]: %{customdata[3]:.6f}"
-                    "<extra></extra>"
-                ),
-            )
-        )
-
-    if high_outlier_count > 0:
-        high_values = rows.loc[high_outlier_mask, "delta_ms"]
-
-        histogram_fig.add_trace(
-            go.Bar(
-                x=[upper_edge_value],
-                y=[high_outlier_count],
-                width=[bin_width * 2.0],
-                name="High outliers",
-                customdata=[
-                    [
-                        high_values.min(),
-                        high_values.max(),
-                        high_values.mean(),
-                        _mean_absolute_deviation(high_values),
-                    ]
-                ],
-                hovertemplate=(
-                    "High outliers<br>"
-                    "Count: %{y}<br>"
-                    "Actual min [ms]: %{customdata[0]:.6f}<br>"
-                    "Actual max [ms]: %{customdata[1]:.6f}<br>"
-                    "Mean [ms]: %{customdata[2]:.6f}<br>"
-                    "Mean abs dev [ms]: %{customdata[3]:.6f}"
-                    "<extra></extra>"
-                ),
-            )
-        )
-
     histogram_fig.update_layout(
-        title=f"{label} measurement interval histogram<br><sup>{subtitle}</sup>",
-        xaxis=dict(
-            title="Delta time [ms]",
-            range=delta_range,
-        ),
+        title=f"{label} measurement interval histogram",
+        xaxis=dict(title="Delta time [ms]"),
         yaxis=dict(title="Frequency"),
-        barmode="overlay",
-        margin=dict(t=150),
-        showlegend=outlier_count > 0,
+        margin=dict(t=80),
+        showlegend=False,
     )
 
     return delta_fig, histogram_fig
