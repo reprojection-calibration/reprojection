@@ -106,7 +106,7 @@ def build_two_column_pdf(output_path, camera_sections, title="Calibration Report
     for section in camera_sections:
         elements.append(
             Paragraph(
-                f"Camera: {section['sensor_name']}",
+                f"Sensor: {section['sensor_name']}",
                 styles["Heading2"],
             )
         )

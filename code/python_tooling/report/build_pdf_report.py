@@ -3,15 +3,16 @@ import textwrap
 from pathlib import Path
 
 from camera_figures import coverage_figure, error_figure
-from imu_figures import imu_delta_time_figure
+from dual_use_figures import measurement_delta_time_figures
 from pdf_layout import build_two_column_pdf
 
 from dashboard.tools.data_loading import refresh_database_list
 from database.sql_table_loading import (
     load_camera_info_table,
     load_extracted_targets_table,
-    load_reprojection_errors_table,
+    load_images_table,
     load_imu_data_table,
+    load_reprojection_errors_table,
 )
 
 log = logging.getLogger("reprojection")
@@ -38,7 +39,6 @@ def run_report_export(workspace_dir):
         if imu_sections is not None:
             sections.extend(imu_sections)
 
-
         output_name = db_name.removesuffix(".db3") + ".pdf"
         output_path = Path(workspace_dir) / output_name
 
@@ -51,6 +51,7 @@ def build_camera_sections(db_path):
     camera_info = load_camera_info_table(db_path)
     extracted_targets = load_extracted_targets_table(db_path)
     reprojection_errors = load_reprojection_errors_table(db_path)
+    images = load_images_table(db_path)
 
     # TODO(Jack): Honestly all we really need to construct the coverage map is the extracted targets. That contains
     # all the information we need. We should refactor this logic here to allow the creation of the most possible
@@ -76,7 +77,7 @@ def build_camera_sections(db_path):
         camera_info_i = camera_info_map.get(sensor_name)
         extracted_targets_i = extracted_targets[
             extracted_targets["sensor_name"] == sensor_name
-            ]
+        ]
         if extracted_targets_i.empty:
             # NOTE(Jack): This is unique here because if there are no targets then we cannot do anything at all so we
             # completely bypass the figure generation for this camera.
@@ -93,7 +94,7 @@ def build_camera_sections(db_path):
             reprojection_errors_i = reprojection_errors[
                 (reprojection_errors["sensor_name"] == sensor_name)
                 & (reprojection_errors["step_name"] == "bundle_adjustment")
-                ]
+            ]
 
             if reprojection_errors_i.empty or camera_info_i is None:
                 error_figure_i = None
@@ -103,6 +104,15 @@ def build_camera_sections(db_path):
                     extracted_targets_i,
                     reprojection_errors_i,
                 )
+
+        if images is None or images.empty:
+            delta_fig_, histogram_fig_i = (None, None)
+        else:
+            images_i = images[(images["sensor_name"] == sensor_name)]
+
+            delta_fig_, histogram_fig_i = measurement_delta_time_figures(
+                images_i, "Camera"
+            )
 
         camera_section_i = {
             "sensor_name": sensor_name,
@@ -117,6 +127,17 @@ def build_camera_sections(db_path):
                         "caption": "Reprojection error magnitude.",
                     },
                 ),
+                (
+                    {
+                        "fig": delta_fig_,
+                        # TODO(Jack): Naming!
+                        "caption": "Measurement time delta timeseries.",
+                    },
+                    {
+                        "fig": histogram_fig_i,
+                        "caption": "Measurement time delta histogram.",
+                    },
+                ),
             ],
         }
 
@@ -124,27 +145,23 @@ def build_camera_sections(db_path):
 
     return camera_sections
 
+
 def build_imu_sections(db_path):
     imu_data = load_imu_data_table(db_path)
 
-
     if imu_data is None:
-        log.info(
-            f"Skipping IMU pdf report export - missing IMU data: {db_path}."
-        )
+        log.info(f"Skipping IMU pdf report export - missing IMU data: {db_path}.")
         return None
 
     imu_sections = []
     for sensor_name in imu_data["sensor_name"].unique():
         print(f"\tProcessing sensor {sensor_name}")
 
-        imu_data_i = imu_data[
-            imu_data["sensor_name"] == sensor_name
-            ]
+        imu_data_i = imu_data[imu_data["sensor_name"] == sensor_name]
         if imu_data_i.empty:
             continue
 
-        delta_fig_, histogram_fig_i = imu_delta_time_figure(imu_data_i)
+        delta_fig_, histogram_fig_i = measurement_delta_time_figures(imu_data_i, "IMU")
 
         imu_section_i = {
             "sensor_name": sensor_name,
@@ -166,4 +183,3 @@ def build_imu_sections(db_path):
         imu_sections.append(imu_section_i)
 
     return imu_sections
-
