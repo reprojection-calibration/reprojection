@@ -8,9 +8,11 @@ import pandas as pd
 from database.proto_parsing import parse_array_x2d_proto, parse_extracted_target_proto
 from database.sql_statement_loading import load_sql
 
+log = logging.getLogger("reprojection")
+
 
 def log_sql_error(e):
-    logging.debug("SQL execution failed:\n%s", textwrap.indent(str(e), "  "))
+    log.debug("SQL execution failed:\n%s", textwrap.indent(str(e), "  "))
 
 
 def load_camera_info_table(db_path):
