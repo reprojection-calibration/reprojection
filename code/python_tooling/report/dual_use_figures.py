@@ -91,7 +91,6 @@ def measurement_delta_time_figures(df, label="Measurement"):
                 mode="markers",
                 marker=dict(
                     size=8,
-                    opacity=0.95,
                     symbol="triangle-down",
                 ),
                 name="Low outliers",
@@ -110,7 +109,6 @@ def measurement_delta_time_figures(df, label="Measurement"):
                 mode="markers",
                 marker=dict(
                     size=8,
-                    opacity=0.95,
                     symbol="triangle-up",
                 ),
                 name="High outliers",
@@ -176,7 +174,6 @@ def measurement_delta_time_figures(df, label="Measurement"):
                 mode="markers",
                 marker=dict(
                     size=8,
-                    opacity=0.95,
                     symbol="triangle-down",
                 ),
                 name="Low outliers",
@@ -196,7 +193,6 @@ def measurement_delta_time_figures(df, label="Measurement"):
                 mode="markers",
                 marker=dict(
                     size=8,
-                    opacity=0.95,
                     symbol="triangle-up",
                 ),
                 name="High outliers",
