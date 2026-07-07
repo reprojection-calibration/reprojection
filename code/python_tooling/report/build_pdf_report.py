@@ -88,7 +88,7 @@ def run_report_export(workspace_dir):
 
             camera_sections.append(camera_section_i)
 
-        output_name = db_name.removesuffix(".db3") + ".calib.pdf"
+        output_name = db_name.removesuffix(".db3") + ".pdf"
         output_path = Path(workspace_dir) / output_name
 
         print(f"\tAssembling pdf and saving to {output_path}")

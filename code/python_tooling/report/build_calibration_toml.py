@@ -54,7 +54,7 @@ def run_toml_export(workspace_dir):
         if extrinsics is not None:
             extrinsic_result = build_extrinsic_toml(extrinsics)
 
-        output_name = db_name.removesuffix(".db3") + ".calib.toml"
+        output_name = db_name.removesuffix(".db3") + ".toml"
         output_path = Path(workspace_dir) / output_name
         with open(output_path, "w") as f:
             f.write(cam_result)

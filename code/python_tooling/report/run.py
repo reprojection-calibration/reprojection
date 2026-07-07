@@ -33,7 +33,7 @@ def main():
     )
     args = parser.parse_args()
 
-    #run_toml_export(args.workspace)
+    run_toml_export(args.workspace)
     run_report_export(args.workspace)
 
 
