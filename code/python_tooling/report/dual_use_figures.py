@@ -1,23 +1,23 @@
 import plotly.graph_objects as go
 
 
-def mean_absolute_deviation(values):
+def median_absolute_deviation(values):
     if values.empty:
-        return None
+        return 0
 
-    mean = values.mean()
+    median = values.median()
 
-    return (values - mean).abs().mean()
+    return (values - median).abs().median()
 
 
 def format_stats(name, values):
     if values.empty:
         return f"{name}: N/A"
 
-    mean = values.mean()
-    mad = mean_absolute_deviation(values)
+    median = values.median()
+    mad = median_absolute_deviation(values)
 
-    return f"{name}: mean={mean:.3f} ms, mean abs dev={mad:.3f} ms"
+    return f"{name}: median={median:.3f} ms, median absolute deviation={mad:.3f} ms"
 
 
 def measurement_delta_time_figures(df, label="Measurement"):
@@ -40,9 +40,9 @@ def measurement_delta_time_figures(df, label="Measurement"):
     rows = rows.dropna(subset=["delta_ms"])
 
     delta_ms = rows["delta_ms"]
-    median_delta = delta_ms.median()
-    mean_abs_dev = (delta_ms - median_delta).abs().median()
-    robust_sigma = 1.4826 * mean_abs_dev
+    mad = median_absolute_deviation(delta_ms)
+    # "For normally distributed data k is taken to be 1.4826" - https://en.wikipedia.org/wiki/Median_absolute_deviation
+    robust_sigma = 1.4826 * mad
 
     if robust_sigma < 1e-8:
         # If we are here then that means the data is basically exactly homogenous, and therefore we need to hardcode the
@@ -52,8 +52,10 @@ def measurement_delta_time_figures(df, label="Measurement"):
         focus_min = delta_ms.min() - 1
         focus_max = delta_ms.max() + 1
     else:
-        # TODO(Jack): Does this need to be configurable? For now hardcoding works :)
+        # TODO(Jack): Should the outlier sigma be configurable? Hard coded works for now...
+        median_delta = delta_ms.median()
         outlier_sigma = 6.0
+
         focus_min = median_delta - outlier_sigma * robust_sigma
         focus_max = median_delta + outlier_sigma * robust_sigma
 
@@ -62,9 +64,6 @@ def measurement_delta_time_figures(df, label="Measurement"):
 
     inlier_mask = ~(low_outlier_mask | high_outlier_mask)
     outlier_mask = low_outlier_mask | high_outlier_mask
-
-    inlier_values = rows.loc[inlier_mask, "delta_ms"]
-    outlier_values = rows.loc[outlier_mask, "delta_ms"]
 
     low_outlier_count = int(low_outlier_mask.sum())
     high_outlier_count = int(high_outlier_mask.sum())
@@ -109,8 +108,11 @@ def measurement_delta_time_figures(df, label="Measurement"):
         )
 
     outlier_count = low_outlier_count + high_outlier_count
+    inlier_values = rows.loc[inlier_mask, "delta_ms"]
+    outlier_values = rows.loc[outlier_mask, "delta_ms"]
     inlier_stats = format_stats("Inliers", inlier_values)
     outlier_stats = format_stats("Outliers", outlier_values)
+
     subtitle = (
         f"{outlier_count} outlier intervals shown at plot edges "
         f"({low_outlier_count} below, {high_outlier_count} above)<br>"
