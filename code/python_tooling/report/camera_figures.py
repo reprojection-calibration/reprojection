@@ -3,6 +3,11 @@ import plotly.graph_objects as go
 
 
 def coverage_figure(camera_info, extracted_target_df):
+    assert not extracted_target_df.empty, "extracted_target_df is empty"
+    assert extracted_target_df["sensor_name"].nunique() == 1, (
+        f"Expected exactly one sensor_name, found: {extracted_target_df['sensor_name'].unique().tolist()}"
+    )
+
     all_x = []
     all_y = []
     for row in extracted_target_df.itertuples():
@@ -24,6 +29,7 @@ def coverage_figure(camera_info, extracted_target_df):
         )
     )
 
+    # We can calculate a sensible default for the bounds even if the height and width are not given.
     if camera_info is not None:
         x_range = [0, camera_info["width"]]
         y_range = [camera_info["height"], 0]
