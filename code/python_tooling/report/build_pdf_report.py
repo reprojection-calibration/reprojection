@@ -29,10 +29,10 @@ def run_report_export(workspace_dir):
             textwrap.indent(f"Name: {db_name}\nPath: {db_path}", "  "),
         )
 
-        # ERROR(Jack): What do we do if this is None???
         camera_sections = build_camera_sections(db_path)
         imu_sections = build_imu_sections(db_path)
 
+        # TODO(Jack): If sections is empty does that become a problem for us?
         sections = []
         if camera_sections is not None:
             sections.extend(camera_sections)
@@ -77,7 +77,7 @@ def build_camera_sections(db_path):
         camera_info_i = camera_info_map.get(sensor_name)
         extracted_targets_i = extracted_targets[
             extracted_targets["sensor_name"] == sensor_name
-        ]
+            ]
         if extracted_targets_i.empty:
             # NOTE(Jack): This is unique here because if there are no targets then we cannot do anything at all so we
             # completely bypass the figure generation for this camera.
@@ -94,7 +94,7 @@ def build_camera_sections(db_path):
             reprojection_errors_i = reprojection_errors[
                 (reprojection_errors["sensor_name"] == sensor_name)
                 & (reprojection_errors["step_name"] == "bundle_adjustment")
-            ]
+                ]
 
             if reprojection_errors_i.empty or camera_info_i is None:
                 error_figure_i = None
