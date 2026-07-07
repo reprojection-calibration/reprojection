@@ -89,12 +89,8 @@ def measurement_delta_time_figures(df, label="Measurement"):
                 y=[0.02] * len(low_outliers),
                 yaxis="y2",
                 mode="markers",
-                marker=dict(
-                    size=8,
-                    symbol="triangle-down",
-                ),
+                marker=dict(size=8, symbol="triangle-down"),
                 name="Low outliers",
-                customdata=low_outliers["delta_ms"],
             )
         )
 
@@ -107,12 +103,8 @@ def measurement_delta_time_figures(df, label="Measurement"):
                 y=[0.98] * len(high_outliers),
                 yaxis="y2",
                 mode="markers",
-                marker=dict(
-                    size=8,
-                    symbol="triangle-up",
-                ),
+                marker=dict(size=8, symbol="triangle-up"),
                 name="High outliers",
-                customdata=high_outliers["delta_ms"],
             )
         )
 
@@ -126,41 +118,22 @@ def measurement_delta_time_figures(df, label="Measurement"):
         f"{outlier_stats}"
     )
 
-    # The timeseries plot only plots the inliers so we need to calculate the y-axis limits here.
-    delta_range = [
-        delta_ms.min() if inlier_values.empty else inlier_values.min(),
-        delta_ms.max() if inlier_values.empty else inlier_values.max(),
-    ]
-
     delta_fig.update_layout(
         title=f"{label} measurement delta time<br><sup>{subtitle}</sup>",
         xaxis=dict(title="Measurement time [s]"),
-        yaxis=dict(
-            title="Delta time [ms]",
-            range=delta_range,
-        ),
-        # Using this second axis with a "paper" like coordinate system lets us hardcode the location of the
+        yaxis=dict(title="Delta time [ms]"),
+        # NOTE(Jack): Using this second axis with a "paper" like coordinate system lets us hardcode the location of the
         # inlier/outlier points which saves us from having to calculate it each time. Not like that would be complex, it
         # is simply that this solution has fewer moving parts and code to maintain.
         yaxis2=dict(
-            overlaying="y",
-            range=[0, 1],
-            visible=False,
-            showgrid=False,
-            zeroline=False,
+            overlaying="y", range=[0, 1], visible=False, showgrid=False, zeroline=False
         ),
         margin=dict(t=150),
         showlegend=outlier_count > 0,
     )
 
     histogram_fig = go.Figure()
-    histogram_fig.add_trace(
-        go.Histogram(
-            x=inlier_values,
-            nbinsx=100,
-            name="Inliers",
-        )
-    )
+    histogram_fig.add_trace(go.Histogram(x=inlier_values, nbinsx=100, name="Inliers"))
 
     if low_outlier_count > 0:
         low_outliers = rows.loc[low_outlier_mask].copy()
@@ -172,12 +145,8 @@ def measurement_delta_time_figures(df, label="Measurement"):
                 xaxis="x2",
                 yaxis="y2",
                 mode="markers",
-                marker=dict(
-                    size=8,
-                    symbol="triangle-down",
-                ),
+                marker=dict(size=8, symbol="triangle-down"),
                 name="Low outliers",
-                customdata=low_outliers["delta_ms"],
             )
         )
 
@@ -191,20 +160,14 @@ def measurement_delta_time_figures(df, label="Measurement"):
                 xaxis="x2",
                 yaxis="y2",
                 mode="markers",
-                marker=dict(
-                    size=8,
-                    symbol="triangle-up",
-                ),
+                marker=dict(size=8, symbol="triangle-up"),
                 name="High outliers",
-                customdata=high_outliers["delta_ms"],
             )
         )
 
     histogram_fig.update_layout(
         title=f"{label} measurement interval histogram",
-        xaxis=dict(
-            title="Inlier delta time [ms]",
-        ),
+        xaxis=dict(title="Inlier delta time [ms]"),
         xaxis2=dict(
             title="Outlier delta time [ms]",
             overlaying="x",
@@ -212,15 +175,9 @@ def measurement_delta_time_figures(df, label="Measurement"):
             showgrid=False,
             zeroline=False,
         ),
-        yaxis=dict(
-            title="Frequency",
-        ),
+        yaxis=dict(title="Count"),
         yaxis2=dict(
-            overlaying="y",
-            range=[0, 1],
-            visible=False,
-            showgrid=False,
-            zeroline=False,
+            overlaying="y", range=[0, 1], visible=False, showgrid=False, zeroline=False
         ),
         showlegend=outlier_count > 0,
     )
