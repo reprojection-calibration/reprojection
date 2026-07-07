@@ -2,7 +2,7 @@ import argparse
 import logging
 
 from build_calibration_toml import run_toml_export
-from build_camera_report import run_report_export
+from build_pdf_report import run_report_export
 
 
 def configure_logging() -> None:
@@ -33,7 +33,7 @@ def main():
     )
     args = parser.parse_args()
 
-    run_toml_export(args.workspace)
+    #run_toml_export(args.workspace)
     run_report_export(args.workspace)
 
 

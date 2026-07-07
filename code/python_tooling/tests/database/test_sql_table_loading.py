@@ -32,7 +32,7 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.db_path = os.getenv(
-            "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3"
+            "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.calib.db3"
         )
 
     def test_load_camera_info_table(self):

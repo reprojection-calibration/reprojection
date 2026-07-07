@@ -16,7 +16,7 @@ class TestDataLoading(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.db_path = os.getenv(
-            "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.db3"
+            "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.calib.db3"
         )
 
     def test_refresh_database_list(self):
@@ -28,7 +28,7 @@ class TestDataLoading(unittest.TestCase):
         # and that the first database exists (not exactly which database it is).
         self.assertTrue(
             any(
-                item["label"] == "dataset-calib-imu4_512_16.db3"
+                item["label"] == "dataset-calib-imu4_512_16.calib.db3"
                 for item in database_list
             )
         )

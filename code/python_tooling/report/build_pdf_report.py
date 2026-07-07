@@ -22,7 +22,10 @@ def run_report_export(workspace_dir):
     for entry in db_list:
         db_name = entry["label"]
         db_path = entry["value"]
-        print(f"Generating pdf camera report for database {db_name}")
+        log.info(
+            "Generating pdf report for:\n%s",
+            textwrap.indent(f"Name: {db_name}\nPath: {db_path}", "  "),
+        )
 
         camera_info = load_camera_info_table(db_path)
         extracted_targets = load_extracted_targets_table(db_path)

@@ -3,7 +3,7 @@ import sys
 
 # NOTE(Jack): We need to do this because the integration test dataset is the TUM dataset-calib-imu4 dataset which uses
 # Kalibr compatible Aprilgrid boards which we do not support. Therefore we need to trick the process into thinking that
-# it has already extracted the features, which we did manually and stored inside dataset-calib-imu4_512_16.db3 long ago.
+# it has already extracted the features, which we did manually and stored inside dataset-calib-imu4_512_16.calib.db3 long ago.
 #
 # The purpose of this little script is to manually write a feature extraction cache key so that we can trigger a cache
 # hit and just load the features from the database instead of trying to calculate them from the images (remember we do

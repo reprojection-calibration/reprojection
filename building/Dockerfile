@@ -128,7 +128,7 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
 COPY code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
-ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.db3
+ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.calib.db3
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
 ARG PROTO_DIRECTORY=/temporary/code/proto
 
@@ -276,9 +276,9 @@ RUN --mount=type=bind,source=${CONVERT_TEST_DATA},target=/temporary/${CONVERT_TE
 # NOTE(Jack): I normally like to copy or mount files in the repository to `/temporary`. Consistently doing this means
 # that you could mount the repository to a docker container at `/temporary` and all scripts/paths etc. would work just
 # like they do when run during the build process. However here
-COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros1/dataset-calib-imu4_512_16.db3
-COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/ros2/dataset-calib-imu4_512_16.db3
-COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib-imu4_512_16.db3
+COPY code/test_data/dataset-calib-imu4_512_16.calib.db3 /data/ros1/dataset-calib-imu4_512_16.calib.db3
+COPY code/test_data/dataset-calib-imu4_512_16.calib.db3 /data/ros2/dataset-calib-imu4_512_16.calib.db3
+COPY code/test_data/dataset-calib-imu4_512_16.calib.db3 /data/video_file/dataset-calib-imu4_512_16.calib.db3
 
 # TODO(Jack): Even though I did not expect the cache key for the ROS1 and ROS2 feature extraction to be the exact same
 # (due to timestamp handling - double vs. int), they are the same. Also the removal of the IMU data is the same. That
@@ -287,18 +287,18 @@ COPY code/test_data/dataset-calib-imu4_512_16.db3 /data/video_file/dataset-calib
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
+      /data/ros1/dataset-calib-imu4_512_16.calib.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
+      /data/ros2/dataset-calib-imu4_512_16.calib.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.db3 b81580d1ffe01df82b4347f8075a0c20f5f7778e31af901cc2dabd8982493094
+      /data/video_file/dataset-calib-imu4_512_16.calib.db3 b81580d1ffe01df82b4347f8075a0c20f5f7778e31af901cc2dabd8982493094
 
 ARG REMOVE_IMU_TABLE_DATA=building/scripts/remove_imu_table_data.py
 RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE_IMU_TABLE_DATA} \
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
-      /data/ros1/dataset-calib-imu4_512_16.db3; \
+      /data/ros1/dataset-calib-imu4_512_16.calib.db3; \
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
-      /data/ros2/dataset-calib-imu4_512_16.db3
+      /data/ros2/dataset-calib-imu4_512_16.calib.db3
 
 FROM apt-base-stage AS ros1-base-stage
 
