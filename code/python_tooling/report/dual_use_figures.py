@@ -34,6 +34,7 @@ def measurement_delta_time_figures(df, label="Measurement"):
 
     rows["time_s"] = (rows["timestamp_ns"] - rows["timestamp_ns"].iloc[0]) * 1e-9
     rows["delta_ms"] = rows["timestamp_ns"].diff() * 1e-6
+
     # The first measurement has no previous value to calculate the time delta with which results in a NaN. This removes
     # that value.
     rows = rows.dropna(subset=["delta_ms"])
@@ -127,8 +128,7 @@ def measurement_delta_time_figures(df, label="Measurement"):
         f"{outlier_stats}"
     )
 
-    # The timeseries plot only plots the inliers so we need to calculate the y-axis limits here. The histogram plots all
-    # the data with no differentiation between inlier or outlier.
+    # The timeseries plot only plots the inliers so we need to calculate the y-axis limits here.
     delta_range = [
         delta_ms.min() if inlier_values.empty else inlier_values.min(),
         delta_ms.max() if inlier_values.empty else inlier_values.max(),
@@ -158,17 +158,75 @@ def measurement_delta_time_figures(df, label="Measurement"):
     histogram_fig = go.Figure()
     histogram_fig.add_trace(
         go.Histogram(
-            x=delta_ms,
+            x=inlier_values,
             nbinsx=100,
-            name="All intervals",
+            name="Inliers",
         )
     )
 
+    if low_outlier_count > 0:
+        low_outliers = rows.loc[low_outlier_mask].copy()
+
+        histogram_fig.add_trace(
+            go.Scatter(
+                x=low_outliers["delta_ms"],
+                y=[0.98] * len(low_outliers),
+                xaxis="x2",
+                yaxis="y2",
+                mode="markers",
+                marker=dict(
+                    size=8,
+                    opacity=0.95,
+                    symbol="triangle-down",
+                ),
+                name="Low outliers",
+                customdata=low_outliers["delta_ms"],
+            )
+        )
+
+    if high_outlier_count > 0:
+        high_outliers = rows.loc[high_outlier_mask].copy()
+
+        histogram_fig.add_trace(
+            go.Scatter(
+                x=high_outliers["delta_ms"],
+                y=[0.98] * len(high_outliers),
+                xaxis="x2",
+                yaxis="y2",
+                mode="markers",
+                marker=dict(
+                    size=8,
+                    opacity=0.95,
+                    symbol="triangle-up",
+                ),
+                name="High outliers",
+                customdata=high_outliers["delta_ms"],
+            )
+        )
+
     histogram_fig.update_layout(
         title=f"{label} measurement interval histogram",
-        xaxis=dict(title="Delta time [ms]"),
-        yaxis=dict(title="Frequency"),
-        showlegend=False,
+        xaxis=dict(
+            title="Inlier delta time [ms]",
+        ),
+        xaxis2=dict(
+            title="Outlier delta time [ms]",
+            overlaying="x",
+            side="top",
+            showgrid=False,
+            zeroline=False,
+        ),
+        yaxis=dict(
+            title="Frequency",
+        ),
+        yaxis2=dict(
+            overlaying="y",
+            range=[0, 1],
+            visible=False,
+            showgrid=False,
+            zeroline=False,
+        ),
+        showlegend=outlier_count > 0,
     )
 
     return delta_fig, histogram_fig
