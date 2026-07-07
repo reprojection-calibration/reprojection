@@ -6,7 +6,7 @@ from build_pdf_report import run_report_export
 
 
 def configure_logging():
-    LOG_FORMAT = "%(levelname)s:%(filename)s:%(lineno)d: %(message)s"
+    LOG_FORMAT = "%(levelname)s: %(filename)s: %(lineno)d: %(message)s"
 
     # The root logger (used by everything else) gets WARNING level logging.
     logging.basicConfig(
