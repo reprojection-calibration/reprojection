@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
+set -eou pipefail
 
 # TODO(Jack): Add some sort of usage or help dialogue that will print out if the appropriate args are not provided
 
@@ -40,7 +40,7 @@ mount_path_arg() {
   local abs_path
   abs_path="$(realpath "${host_path}")"
 
-  local container_path="/data/mount${host_path}"
+  local container_path="/data/mount${abs_path}"
 
   # NOTE(Jack): We use --mount nad not --volume here because volume will actually create the path on the home disk if it
   # does no already exist. Mount on the other hand will fail if the mounted thing does not exist on host. This protects
@@ -49,26 +49,50 @@ mount_path_arg() {
   APP_ARGS+=("${flag}" "${container_path}")
 }
 
+config=""
+data=""
+workspace=""
+
 while [[ $# -gt 0 ]]; do
   case "${1}" in
     --config)
-      mount_path_arg "${1}" "${2}"
+      config="${2}"
       shift 2
       ;;
     --data)
-      mount_path_arg "${1}" "${2}"
+      data="${2}"
       shift 2
       ;;
     --workspace)
-      mount_path_arg "${1}" "${2}"
+      workspace="${2}"
       shift 2
       ;;
     *)
-      echo "Unrecognized command line argument!"
+      echo "Error: unexpected argument '${1}'." >&2
       exit 1
       ;;
   esac
 done
+
+
+[[ -n "${config}" ]] || { echo "Error: missing --config flag." >&2; exit 1; }
+[[ -n "${data}" ]] || { echo "Error: missing --data flag." >&2; exit 1; }
+
+# NOTE(Jack): This is a convenience provided to the user. If they do not specify the workspace directory then the parent
+# directory of the data will automatically be used as the workspace. This logic here is at the outermost level of the
+# application calling logic and should not be considered a core part of the application API. It is nice but not
+# something core to the application itself.
+if [[ -z "${workspace}" ]]; then
+  workspace="$(dirname "$(realpath "${data}")")"
+fi
+
+[[ -f "${config}" ]] || { echo "Error: config does not exist: ${config}" >&2; exit 1; }
+[[ -e "${data}" ]] || { echo "Error: data does not exist: ${data}" >&2; exit 1; }
+[[ -d "${workspace}" ]] || { echo "Error: workspace does not exist: ${workspace}" >&2; exit 1; }
+
+mount_path_arg --config "${config}"
+mount_path_arg --data "${data}"
+mount_path_arg --workspace "${workspace}"
 
 # TODO(Jack): Is this safe or a bad practice?
 xhost +local:docker

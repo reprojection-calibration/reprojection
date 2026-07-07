@@ -1,5 +1,7 @@
+import logging
 import os
 import sqlite3
+import textwrap
 
 import pandas as pd
 
@@ -7,15 +9,21 @@ from database.proto_parsing import parse_array_x2d_proto, parse_extracted_target
 from database.sql_statement_loading import load_sql
 
 
+def log_sql_error(e):
+    logging.debug("SQL execution failed:\n%s", textwrap.indent(str(e), "  "))
+
+
 def load_camera_info_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("camera_info_select_all.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("camera_info_select_all.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -25,11 +33,13 @@ def load_camera_intrinsics_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("camera_intrinsics_select_all.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("camera_intrinsics_select_all.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -41,9 +51,11 @@ def load_extracted_targets_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("extracted_targets_select_all.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("extracted_targets_select_all.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
 
             if "data" not in table.columns:
                 raise KeyError("'data' column not found in query result")
@@ -57,7 +69,23 @@ def load_extracted_targets_table(db_path):
 
             table["data"] = table["data"].apply(safe_parse)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
+        return None
+
+    return table
+
+
+def load_extrinsics_table(db_path):
+    if not os.path.isfile(db_path):
+        return None
+
+    sql_query = load_sql("extrinsics_select_all.sql")
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            table = pd.read_sql(sql_query, conn)
+    except Exception as e:
+        log_sql_error(e)
         return None
 
     return table
@@ -71,11 +99,13 @@ def load_images_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("images_select_all_metadata_only.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("images_select_all_metadata_only.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -85,11 +115,13 @@ def load_imu_data_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("imu_data_select_all.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("imu_data_select_all.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -99,11 +131,13 @@ def load_imu_errors_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("imu_errors_select_all.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("imu_errors_select_all.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -113,11 +147,13 @@ def load_poses_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("poses_select_all.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("poses_select_all.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -127,9 +163,11 @@ def load_reprojection_errors_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("reprojection_error_select_all.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("reprojection_error_select_all.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
 
             if "data" not in table.columns:
                 raise KeyError("'data' column not found in query result")
@@ -143,7 +181,7 @@ def load_reprojection_errors_table(db_path):
 
             table["data"] = table["data"].apply(safe_parse)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table
@@ -153,11 +191,13 @@ def load_target_info_table(db_path):
     if not os.path.isfile(db_path):
         return None
 
+    sql_query = load_sql("target_info_select_all.sql")
+
     try:
         with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(load_sql("target_info_select_all.sql"), conn)
+            table = pd.read_sql(sql_query, conn)
     except Exception as e:
-        print(e)
+        log_sql_error(e)
         return None
 
     return table

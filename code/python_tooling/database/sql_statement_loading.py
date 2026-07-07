@@ -5,7 +5,7 @@ from pathlib import Path
 def sql_root():
     value = os.environ.get("REPROJECTION_SQL_PYTHON_DIR")
     if value is None:
-        raise RuntimeError("REPROJECTION_SQL_PYTHON_DIR is not set")
+        raise RuntimeError("REPROJECTION_SQL_PYTHON_DIR is not set!")
 
     return Path(value)
 
