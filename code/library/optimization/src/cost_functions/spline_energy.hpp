@@ -11,6 +11,12 @@ namespace reprojection::optimization::cost_functions {
 
 // cp = "control point"
 
+// TODO(Jack): When we first designed the spline interpolation code we designed it such that it only
+// interpolates one part of the full se3 spline at a time (i.e. rotation or translation). But this I think was
+// an arbitrary decision and now we know that we use the same code to initialize both the rotation and
+// orientation parts of the spline. That is why we see this logic repeated here in the operator() just like we see it
+// repeated in the spline initialization function. Maybe one day we can unite them and just make it a single 6d spline
+// that is initialized instead of two 3d ones that are then merged.
 class SplineEnergy {
    public:
     template <typename T>
@@ -18,17 +24,10 @@ class SplineEnergy {
                     T* const residual_ptr) const {
         auto const P{BuildP<T, 6>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
 
-        // TODO(Jack): When we first designed the spline interpolation code we designed it such that it only
-        // interpolates one part of the full se3 spline at a time (i.e. rotation or translation). But this I think was
-        // an arbitrary decision and now we know that we use the same code to initialize both the rotation and
-        // orientation parts of the spline. That is why we see this logic repeated here just like we see it repeated in
-        // the spline initialization function. Maybe one day we can unite them and just make it a single 6d spline that
-        // is initialized instead of two 3d ones that are then merged.
         Eigen::Vector<T, 12> const rotations{P.template topRows<3>().reshaped()};
         Eigen::Vector<T, 12> const translations{P.template bottomRows<3>().reshaped()};
 
         Eigen::Ref<Eigen::Vector<T, 24>> residuals{Eigen::Map<Eigen::Vector<T, 24>>(residual_ptr, 24, 1)};
-
         residuals.template topRows<12>() = omega_ * rotations;
         residuals.template bottomRows<12>() = omega_ * translations;
 
