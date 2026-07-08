@@ -18,11 +18,9 @@ namespace reprojection::optimization::cost_functions {
 class RigidBodyAngularVelocity {
    public:
     template <typename T>
-    bool operator()(T const* const tf_imu_co_ptr, T const* const control_point_0_ptr,
-                    T const* const control_point_1_ptr, T const* const control_point_2_ptr,
-                    T const* const control_point_3_ptr, T* const residual) const {
-        std::array<T const* const, spline::constants::order> const ptrs{control_point_0_ptr, control_point_1_ptr,
-                                                                        control_point_2_ptr, control_point_3_ptr};
+    bool operator()(T const* const tf_imu_co_ptr, T const* const cp_0_ptr, T const* const cp_1_ptr,
+                    T const* const cp_2_ptr, T const* const cp_3_ptr, T* const residual) const {
+        std::array<T const* const, spline::constants::order> const ptrs{cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr};
         spline::MatrixNK<T> control_points;
         for (int i{0}; i < spline::constants::order; ++i) {
             control_points.col(i) = Eigen::Map<Eigen::Vector<T, 3> const>(ptrs[i], 3, 1);
