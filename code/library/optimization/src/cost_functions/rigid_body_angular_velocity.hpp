@@ -19,7 +19,7 @@ class RigidBodyAngularVelocity {
    public:
     template <typename T>
     bool operator()(T const* const tf_imu_co_ptr, T const* const cp_0_ptr, T const* const cp_1_ptr,
-                    T const* const cp_2_ptr, T const* const cp_3_ptr, T* const residual) const {
+                    T const* const cp_2_ptr, T const* const cp_3_ptr, T* const residual_ptr) const {
         auto const P{BuildP<T, 3>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
 
         Array3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(P, u_i_, delta_t_ns_)};
@@ -27,9 +27,8 @@ class RigidBodyAngularVelocity {
         Eigen::Map<Eigen::Vector<T, 3> const> aa_imu_co(tf_imu_co_ptr);
         Vector3<T> const omega_imu{RotatePoint<T>(aa_imu_co, omega_co)};
 
-        residual[0] = T(omega_imu_[0]) - omega_imu[0];
-        residual[1] = T(omega_imu_[1]) - omega_imu[1];
-        residual[2] = T(omega_imu_[2]) - omega_imu[2];
+        Eigen::Map<Array3<T>> residual(residual_ptr);
+        residual = omega_imu_.template cast<T>() - omega_imu;
 
         return true;
     }
