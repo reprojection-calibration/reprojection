@@ -1,5 +1,7 @@
 #include "optimization/extrinsic_optimization.hpp"
 
+#include <ranges>
+
 #include "database/database_read.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
@@ -39,6 +41,30 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization::Load(Sqlite
     return {optimized_spline, optimized_extrinsic};
 }
 
+ImuMeasurements CalibrateImuData(std::pair<spline::Se3Spline, ImuCamExtrinsic> const& data,
+                                 ImuMeasurements const& imu_data) {
+    auto const& [spline_w_co, extrinsic]{data};
+
+    ImuMeasurements calibrated_imu_data;
+    for (auto const timestamp_ns : imu_data | std::views::keys) {
+        auto const se3_w_co{spline_w_co.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
+        if (not se3_w_co) {
+            continue;
+        }
+        Matrix3d const R_w_co{geometry::Exp<double>(se3_w_co->topRows<3>())};
+
+        Array6d const se3_imu_co{extrinsic.tf.se3_a_b};
+        Matrix3d const R_imu_co{geometry::Exp<double>(se3_imu_co.topRows<3>())};
+
+        Vector3d const gravity_imu{R_imu_co * R_w_co.transpose() * extrinsic.gravity.matrix()};
+
+        calibrated_imu_data[timestamp_ns] = imu_data.at(timestamp_ns);
+        calibrated_imu_data.at(timestamp_ns).linear_acceleration -= gravity_imu;
+    }
+
+    return calibrated_imu_data;
+}
+
 void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> const& data, SqlitePtr const db) const {
     auto const [optimized_spline, optimized_extrinsic]{data};
 
@@ -67,6 +93,10 @@ void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> c
     ImuErrors const imu_error{optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_spline)};
     database::InsertStep(db, imu_name, StepType(), HashInputs());
     database::InsertImuErrors(db, imu_name, StepType(), imu_error);
+
+    ImuMeasurements const calibrated_imu_data{CalibrateImuData(data, imu_data_)};
+    database::InsertEntity(db, "/imu0/calibrated", Entity::Imu);
+    database::InsertImuData(db, "/imu0/calibrated", calibrated_imu_data);
 }
 
 }  // namespace reprojection::steps
