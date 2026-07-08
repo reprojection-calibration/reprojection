@@ -45,7 +45,7 @@ template <typename T_Model>
 class ReprojectionError_T {
    public:
     template <typename T>
-    bool operator()(T const* const intrinsics_ptr, T const* const tf_co_w_ptr, T* const residual) const {
+    bool operator()(T const* const intrinsics_ptr, T const* const tf_co_w_ptr, T* const residual_ptr) const {
         Eigen::Map<Eigen::Vector<T, 6> const> tf_co_w(tf_co_w_ptr);
         Vector3<T> const point_co{TransformPoint<T>(tf_co_w, point_w_.cast<T>())};
 
@@ -55,8 +55,8 @@ class ReprojectionError_T {
         if (pixel.has_value()) {
             Array2<T> const& _pixel{pixel.value()};
 
-            residual[0] = T(pixel_[0]) - _pixel[0];
-            residual[1] = T(pixel_[1]) - _pixel[1];
+            Eigen::Map<Array2<T>> residual(residual_ptr);
+            residual = pixel_.template cast<T>() - _pixel;
         } else {
             // NOTE(Jack): TLDR is - instead of leaving the residual empty and returning false to signal cost
             // function evaluation failure we fill it with a large constant value and return true regardless.
@@ -95,8 +95,8 @@ class ReprojectionError_T {
             // successful optimization. For example for reprojection error I would expect that when it is successful the
             // error is under one pixel. So setting the residuals to 10 here clearly signals this is a failure
             // condition.
-            residual[0] = T(256);
-            residual[1] = T(256);
+            Eigen::Map<Array2<T>> residual(residual_ptr);
+            residual.setConstant(T(256));
         }
 
         return true;
@@ -107,7 +107,7 @@ class ReprojectionError_T {
             new ReprojectionError_T(pixel, point_w, bounds));
     }
 
-    Vector2d pixel_;
+    Array2d pixel_;
     Vector3d point_w_;
     ImageBounds bounds_;
 };

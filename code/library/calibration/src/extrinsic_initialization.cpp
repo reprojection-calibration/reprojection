@@ -42,7 +42,7 @@ Vector3d EstimateGravity(CubicBSplineC3 const& so3_spline_w_co, AccelerationMeas
     Vector3d const net_acceleration_w{acceleration_w.colwise().mean()};
 
     // TODO(Jack): Should this be negative?
-    return gravity * net_acceleration_w.normalized();
+    return kGravity * net_acceleration_w.normalized();
 }
 
 VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
