@@ -93,7 +93,7 @@ def make_two_column_row(left_cell, right_cell, column_width):
     )
 
 
-def build_two_column_pdf(output_path, camera_sections, title="Calibration Report"):
+def build_two_column_pdf(output_path, sections, title="Calibration Report"):
     doc = make_document(output_path)
     styles = getSampleStyleSheet()
     column_width = get_column_width(doc)
@@ -103,10 +103,10 @@ def build_two_column_pdf(output_path, camera_sections, title="Calibration Report
         Spacer(1, 16),
     ]
 
-    for section in camera_sections:
+    for section in sections:
         elements.append(
             Paragraph(
-                f"Camera: {section['sensor_name']}",
+                f"Sensor: {section['sensor_name']}",
                 styles["Heading2"],
             )
         )

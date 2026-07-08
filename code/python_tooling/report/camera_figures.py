@@ -1,76 +1,13 @@
-from pathlib import Path
-
 import numpy as np
 import plotly.graph_objects as go
-from pdf_layout import build_two_column_pdf
-
-from dashboard.tools.data_loading import refresh_database_list
-from database.sql_table_loading import (
-    load_camera_info_table,
-    load_extracted_targets_table,
-    load_reprojection_errors_table,
-)
-
-
-def run_report_export(workspace_dir):
-    db_list, _ = refresh_database_list(workspace_dir)
-
-    for entry in db_list:
-        db_name = entry["label"]
-        db_path = entry["value"]
-        print(f"Generating pdf camera report for database {db_name}")
-
-        camera_info_df = load_camera_info_table(db_path)
-        camera_info_map = camera_info_df.set_index("sensor_name").to_dict("index")
-        extracted_target_df = load_extracted_targets_table(db_path)
-        reprojection_error_df = load_reprojection_errors_table(db_path)
-
-        camera_sections = []
-        for sensor_name in extracted_target_df["sensor_name"].unique():
-            print(f"\tProcessing sensor {sensor_name}")
-
-            camera_info_i = camera_info_map.get(sensor_name)
-            extracted_targets_i = extracted_target_df[
-                extracted_target_df["sensor_name"] == sensor_name
-            ]
-            coverage_figure_i = coverage_figure(camera_info_i, extracted_targets_i)
-
-            reprojection_errors_i = reprojection_error_df[
-                reprojection_error_df["sensor_name"] == sensor_name
-            ]
-            error_figure_i = error_figure(
-                camera_info_i,
-                extracted_targets_i,
-                reprojection_errors_i,
-                "bundle_adjustment",
-            )
-
-            camera_section_i = {
-                "sensor_name": sensor_name,
-                "rows": [
-                    (
-                        {
-                            "fig": coverage_figure_i,
-                            "caption": "Extracted target pixel coverage.",
-                        },
-                        {
-                            "fig": error_figure_i,
-                            "caption": "Reprojection error magnitude.",
-                        },
-                    ),
-                ],
-            }
-
-            camera_sections.append(camera_section_i)
-
-        output_name = db_name.removesuffix(".db3") + ".pdf"
-        output_path = Path(workspace_dir) / output_name
-
-        print(f"\tAssembling pdf and saving to {output_path}")
-        build_two_column_pdf(output_path=output_path, camera_sections=camera_sections)
 
 
 def coverage_figure(camera_info, extracted_target_df):
+    assert not extracted_target_df.empty, "extracted_target_df is empty"
+    assert (
+        extracted_target_df["sensor_name"].nunique() == 1
+    ), f"Expected exactly one sensor_name, found: {extracted_target_df['sensor_name'].unique().tolist()}"
+
     all_x = []
     all_y = []
     for row in extracted_target_df.itertuples():
@@ -92,6 +29,7 @@ def coverage_figure(camera_info, extracted_target_df):
         )
     )
 
+    # We can calculate a sensible default for the bounds even if the height and width are not given.
     if camera_info is not None:
         x_range = [0, camera_info["width"]]
         y_range = [camera_info["height"], 0]
@@ -118,18 +56,18 @@ def coverage_figure(camera_info, extracted_target_df):
     return fig
 
 
-def error_figure(camera_info, extracted_target_df, reprojection_error_df, step_name):
-    reprojection_error_df = reprojection_error_df[
-        reprojection_error_df["step_name"] == step_name
-    ]
+def error_figure(camera_info, extracted_target_df, reprojection_error_df):
+    assert not camera_info is None, "camera_info is required"
 
-    if reprojection_error_df.empty:
-        print(f"\t\tNo reprojection errors for {step_name}")
-        return None
-
+    assert not extracted_target_df.empty, "extracted_target_df is empty"
     assert (
-        camera_info is not None
-    ), "Camera info was `None` even thought we have reprojection errors... Is the database ok?"
+        extracted_target_df["sensor_name"].nunique() == 1
+    ), f"Expected exactly one sensor_name, found: {extracted_target_df['sensor_name'].unique().tolist()}"
+
+    assert not reprojection_error_df.empty, "reprojection_error_df is empty"
+    assert (
+        reprojection_error_df["sensor_name"].nunique() == 1
+    ), f"Expected exactly one sensor_name, found: {reprojection_error_df['sensor_name'].unique().tolist()}"
 
     rows = extracted_target_df.merge(
         reprojection_error_df,

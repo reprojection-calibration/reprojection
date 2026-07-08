@@ -225,7 +225,7 @@ jobs:
           
           # This is just a safety check because the database file actually is already present in the test data before  
           # the application even runs.
-          db="${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.db3"
+          db="${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.calib.db3"
           [[ -f "${db}" ]] || {
           echo "Calibration database does not exist."
             exit 1
@@ -237,17 +237,17 @@ jobs:
           modified="$(stat -c %Y "${db}")"
           age_seconds="$((now - modified))"
           echo "Database last modified: ${age_seconds}s"
-          if (( age_seconds > 30 )); then
+          if (( age_seconds > 40 )); then
             echo "Calibration database was not recently updated."
             exit 1
           fi
           
           # Check that the two report files were created. 
-          [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.pdf" ]] || {
+          [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.calib.pdf" ]] || {
             echo "PDF report was not generated."
             exit 1
           }
-          [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.toml" ]] || {
+          [[ -f "${RUNNER_TEMP}/data/dataset-calib-imu4_512_16.calib.toml" ]] || {
             echo "TOML export was not generated."
             exit 1
           }

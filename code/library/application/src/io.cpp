@@ -79,7 +79,7 @@ std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& dat
                                                                : data_path.parent_path().filename().string()};
 
     // If the database already exists then open it, if it does not exist then create and open it.
-    fs::path const db_path{workspace_dir / (data_name + ".db3")};
+    fs::path const db_path{workspace_dir / (data_name + ".calib.db3")};
     bool const db_exists{fs::exists(db_path)};
     log->info("{{'db_path': '{}', 'exists': {}}}", db_path.string(), db_exists);
 

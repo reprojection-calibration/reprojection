@@ -2,11 +2,11 @@ import argparse
 import logging
 
 from build_calibration_toml import run_toml_export
-from build_camera_report import run_report_export
+from build_pdf_report import run_report_export
 
 
-def configure_logging() -> None:
-    LOG_FORMAT = "%(levelname)s:%(filename)s:%(lineno)d:%(funcName)s(): %(message)s"
+def configure_logging():
+    LOG_FORMAT = "%(levelname)s: %(filename)s: %(lineno)d: %(message)s"
 
     # The root logger (used by everything else) gets WARNING level logging.
     logging.basicConfig(
@@ -21,7 +21,9 @@ def configure_logging() -> None:
 
 def main():
     configure_logging()
-    logging.info("Running calibration report generation!")
+
+    log = logging.getLogger("reprojection")
+    log.info("Running calibration report generation!")
 
     parser = argparse.ArgumentParser(
         "Generate a calibration report PDF and TOML export from one or more calibration databases."
