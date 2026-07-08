@@ -27,7 +27,8 @@ class ReprojectionErrorSpline_T {
                     T const* const cp_2_ptr, T const* const cp_3_ptr, T* const residual_ptr) const {
         auto const P{BuildP<T, 6>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
 
-        // Calculate the se3 pose and then return the standard reprojection error.
+        // Evaluate the se3 pose from the spline and then return the normal reprojection error using the spline pose as
+        // the world to camera optical transform.
         Array6<T> const tf_w_co{spline::Se3Spline::EvaluatePose<T>(P, u_i_, delta_t_ns_)};
         Array6<T> const tf_co_w{geometry::InverseTransform(tf_w_co)};
 
