@@ -11,27 +11,27 @@
 
 namespace reprojection::optimization::cost_functions {
 
+// NOTE(Jack): We actually only need the rotation part of the spline to calculate the cost. However, ceres does not
+// allow us to partially reference/alias parameter blocks therefore when we use this function we usually pass in a
+// pointer to the entire control point. Here we ignore that fact and only map the first three values which are the
+// rotation component.
 class RigidBodyAngularVelocity {
    public:
-    // TODO(Jack): Are we sure the coordinate frame naming and conventions/usage are actually correct?
-    // TODO(Jack): Are we sure that the derivative of the spline actually gives us the angular velocity in the camera
-    // optical frame?
     template <typename T>
     bool operator()(T const* const tf_imu_co_ptr, T const* const control_point_0_ptr,
                     T const* const control_point_1_ptr, T const* const control_point_2_ptr,
                     T const* const control_point_3_ptr, T* const residual) const {
         std::array<T const* const, spline::constants::order> const ptrs{control_point_0_ptr, control_point_1_ptr,
                                                                         control_point_2_ptr, control_point_3_ptr};
-        spline::Matrix2NK<T> control_points;
+        spline::MatrixNK<T> control_points;
         for (int i{0}; i < spline::constants::order; ++i) {
-            control_points.col(i) = Eigen::Map<Eigen::Vector<T, 6> const>(ptrs[i], 6, 1);
+            control_points.col(i) = Eigen::Map<Eigen::Vector<T, 3> const>(ptrs[i], 3, 1);
         }
-        Array3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(
-            control_points.template topRows<3>(), u_i_, delta_t_ns_)};
+        Array3<T> const omega_co{
+            spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(control_points, u_i_, delta_t_ns_)};
 
-        Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
-        // TODO(Jack): Is it really appropriate to rotate points and vectors interchangeably here? At least the naming?
-        Vector3<T> const omega_imu{RotatePoint<T>(tf_imu_co.template topRows<3>(), omega_co)};
+        Eigen::Map<Eigen::Vector<T, 3> const> aa_imu_co(tf_imu_co_ptr);
+        Vector3<T> const omega_imu{RotatePoint<T>(aa_imu_co, omega_co)};
 
         residual[0] = T(omega_imu_[0]) - omega_imu[0];
         residual[1] = T(omega_imu_[1]) - omega_imu[1];
