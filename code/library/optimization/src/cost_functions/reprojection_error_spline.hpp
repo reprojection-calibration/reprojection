@@ -2,6 +2,7 @@
 
 #include <ceres/autodiff_cost_function.h>
 
+#include "cost_functions/utils.hpp"
 #include "projection_functions/projection_class_concept.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/types.hpp"
@@ -22,23 +23,16 @@ template <typename T_Model>
 class ReprojectionErrorSpline_T {
    public:
     template <typename T>
-    bool operator()(T const* const intrinsics_ptr, T const* const control_point_0_ptr,
-                    T const* const control_point_1_ptr, T const* const control_point_2_ptr,
-                    T const* const control_point_3_ptr, T* const residual) const {
-        // Map control point pointers into a usable control point matrix block.
-        std::array<T const* const, spline::constants::order> const ptrs{control_point_0_ptr, control_point_1_ptr,
-                                                                        control_point_2_ptr, control_point_3_ptr};
-        spline::Matrix2NK<T> control_points;
-        for (int i{0}; i < spline::constants::order; ++i) {
-            control_points.col(i) = Eigen::Map<Eigen::Vector<T, 6> const>(ptrs[i], 6, 1);
-        }
+    bool operator()(T const* const intrinsics_ptr, T const* const cp_0_ptr, T const* const cp_1_ptr,
+                    T const* const cp_2_ptr, T const* const cp_3_ptr, T* const residual_ptr) const {
+        auto const P{BuildP<T, 6>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
 
         // Calculate the se3 pose and then return the standard reprojection error.
-        Array6<T> const tf_w_co{spline::Se3Spline::EvaluatePose<T>(control_points, u_i_, delta_t_ns_)};
+        Array6<T> const tf_w_co{spline::Se3Spline::EvaluatePose<T>(P, u_i_, delta_t_ns_)};
         Array6<T> const tf_co_w{geometry::InverseTransform(tf_w_co)};
 
         return ReprojectionError_T<T_Model>(pixel_, point_w_, bounds_)
-            .template operator()<T>(intrinsics_ptr, tf_co_w.data(), residual);
+            .template operator()<T>(intrinsics_ptr, tf_co_w.data(), residual_ptr);
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point_w, ImageBounds const& bounds,
