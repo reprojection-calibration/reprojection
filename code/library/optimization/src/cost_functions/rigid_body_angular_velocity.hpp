@@ -2,12 +2,12 @@
 
 #include <ceres/autodiff_cost_function.h>
 
+#include "cost_functions/utils.hpp"
 #include "spline/so3_spline.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 #include "ceres_geometry.hpp"
-#include "utils.hpp"
 
 namespace reprojection::optimization::cost_functions {
 

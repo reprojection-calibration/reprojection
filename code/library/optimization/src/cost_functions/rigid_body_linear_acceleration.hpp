@@ -2,6 +2,7 @@
 
 #include <ceres/autodiff_cost_function.h>
 
+#include "cost_functions/utils.hpp"
 #include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
 #include "spline/so3_spline.hpp"
@@ -10,7 +11,6 @@
 #include "types/physics_constants.hpp"
 
 #include "ceres_geometry.hpp"
-#include "utils.hpp"
 
 namespace reprojection::optimization::cost_functions {
 

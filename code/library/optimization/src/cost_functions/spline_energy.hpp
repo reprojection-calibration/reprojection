@@ -2,11 +2,10 @@
 
 #include <ceres/autodiff_cost_function.h>
 
-#include "spline/constants.hpp"
+#include "cost_functions/utils.hpp"
 #include "spline/spline_initialization.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
-#include "utils.hpp"
 
 namespace reprojection::optimization::cost_functions {
 
