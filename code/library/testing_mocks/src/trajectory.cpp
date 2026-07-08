@@ -69,7 +69,7 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
         // TODO(Jack): This is another critical constant which is hardcoded here. There is nothing really wrong with
         // that but we might want to centralize this somewhere which the other hardcoded trajectory parameters found in
         // the code.
-        Vector3d const gravity_w{0.0, 0.0, -gravity};
+        Vector3d const gravity_w{0.0, 0.0, -kGravity};
 
         Matrix3d const R_b_w{R_w_b[i].inverse()};
         uint64_t const time_ns_i{time_ns[i]};

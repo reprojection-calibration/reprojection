@@ -12,7 +12,7 @@ TEST(OptimizationCostFunctions, TestRigidBodyAngularVelocityGravityResidual) {
     RigidBodyLinearAcceleration const cost_function{omega_imu, 0, 1};
 
     Array6d const tf_imu_co{Array6d::Zero()};
-    Array3d const gravity_w{0, 0, -gravity};
+    Array3d const gravity_w{0, 0, -kGravity};
     Array6d const control_point{Array6d::Zero()};
 
     Array4d residual{-1, -1, -1, -1};
@@ -21,7 +21,7 @@ TEST(OptimizationCostFunctions, TestRigidBodyAngularVelocityGravityResidual) {
     EXPECT_TRUE(success);
     EXPECT_FLOAT_EQ(residual[0], 0.0);
     EXPECT_FLOAT_EQ(residual[1], 0.0);
-    EXPECT_FLOAT_EQ(residual[2], gravity);
+    EXPECT_FLOAT_EQ(residual[2], kGravity);
     EXPECT_FLOAT_EQ(residual[3], 0);
 }
 

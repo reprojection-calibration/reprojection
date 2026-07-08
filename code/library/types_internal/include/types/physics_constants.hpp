@@ -2,6 +2,6 @@
 
 namespace reprojection {
 
-inline double constexpr gravity{9.80665};
+inline double constexpr kGravity{9.80665};
 
 }  // namespace reprojection

@@ -2,27 +2,14 @@
 
 #include <ceres/autodiff_cost_function.h>
 
-#include "spline/constants.hpp"
 #include "spline/so3_spline.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 #include "ceres_geometry.hpp"
+#include "utils.hpp"
 
 namespace reprojection::optimization::cost_functions {
-
-template <typename T, int N>
-Eigen::Matrix<T, N, spline::constants::order> BuildP(T const* const cp_0_ptr, T const* const cp_1_ptr,
-                                                     T const* const cp_2_ptr, T const* const cp_3_ptr) {
-    std::array<T const* const, spline::constants::order> const ptrs{cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr};
-
-    Eigen::Matrix<T, N, spline::constants::order> P;
-    for (int i{0}; i < spline::constants::order; ++i) {
-        P.col(i) = Eigen::Map<Eigen::Vector<T, N> const>(ptrs[i], N, 1);
-    }
-
-    return P;
-}
 
 // NOTE(Jack): We actually only need the rotation part of the spline to calculate the cost. However, ceres does not
 // allow us to partially reference/alias parameter blocks therefore when we use this function we usually pass in a
