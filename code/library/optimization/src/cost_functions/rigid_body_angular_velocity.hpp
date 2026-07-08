@@ -11,6 +11,19 @@
 
 namespace reprojection::optimization::cost_functions {
 
+template <typename T, int N>
+Eigen::Matrix<T, N, spline::constants::order> BuildP(T const* const cp_0_ptr, T const* const cp_1_ptr,
+                                                     T const* const cp_2_ptr, T const* const cp_3_ptr) {
+    std::array<T const* const, spline::constants::order> const ptrs{cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr};
+
+    Eigen::Matrix<T, N, spline::constants::order> P;
+    for (int i{0}; i < spline::constants::order; ++i) {
+        P.col(i) = Eigen::Map<Eigen::Vector<T, N> const>(ptrs[i], N, 1);
+    }
+
+    return P;
+}
+
 // NOTE(Jack): We actually only need the rotation part of the spline to calculate the cost. However, ceres does not
 // allow us to partially reference/alias parameter blocks therefore when we use this function we usually pass in a
 // pointer to the entire control point. Here we ignore that fact and only map the first three values which are the
@@ -20,13 +33,9 @@ class RigidBodyAngularVelocity {
     template <typename T>
     bool operator()(T const* const tf_imu_co_ptr, T const* const cp_0_ptr, T const* const cp_1_ptr,
                     T const* const cp_2_ptr, T const* const cp_3_ptr, T* const residual) const {
-        std::array<T const* const, spline::constants::order> const ptrs{cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr};
-        spline::MatrixNK<T> control_points;
-        for (int i{0}; i < spline::constants::order; ++i) {
-            control_points.col(i) = Eigen::Map<Eigen::Vector<T, 3> const>(ptrs[i], 3, 1);
-        }
-        Array3<T> const omega_co{
-            spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(control_points, u_i_, delta_t_ns_)};
+        auto const P{BuildP<T, 3>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
+
+        Array3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(P, u_i_, delta_t_ns_)};
 
         Eigen::Map<Eigen::Vector<T, 3> const> aa_imu_co(tf_imu_co_ptr);
         Vector3<T> const omega_imu{RotatePoint<T>(aa_imu_co, omega_co)};
