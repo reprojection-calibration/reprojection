@@ -93,8 +93,8 @@ class ReprojectionError_T {
             //
             // NOTE(Jack): The value of the residual here should be larger than the expected final residual given a
             // successful optimization. For example for reprojection error I would expect that when it is successful the
-            // error is under one pixel. So setting the residuals to 10 here clearly signals this is a failure
-            // condition.
+            // error is under one pixel. So setting the residuals to anything larger than one here clearly signals this
+            // is a failure condition.
             Eigen::Map<Array2<T>> residual(residual_ptr);
             residual.setConstant(T(256));
         }
