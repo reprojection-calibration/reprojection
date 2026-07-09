@@ -167,8 +167,7 @@ MatrixX3d Aprilgrid3Extractor::CornerPositions(ArrayX2i const& indices, double c
 // "quad" of an April Tag 3. In the tags designed for use in the Aprilgrid3 , the corners that we want to extract
 // and use are found on the outside of this black ring, at the intersection of the black ring and the corner
 // element. This intersection is designed to provide the characteristic checkerboard like intersection which can be
-// refined using the cv::cornerSubPix() function to provide nearly exact corner pixel coordinates. ADD , int const
-// num_bits
+// refined using the cv::cornerSubPix() function to provide nearly exact corner pixel coordinates.
 Matrix42d Aprilgrid3Extractor::EstimateExtractionCorners(Matrix3d const& H, int const sqrt_num_bits) {
     // NOTE(Jack): These corners have been reordered from how they are listed in the april tag documentation. The
     // current ordering matches our generated targets grid row/column indexing.

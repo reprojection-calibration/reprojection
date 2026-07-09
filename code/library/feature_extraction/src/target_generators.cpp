@@ -104,8 +104,8 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const num_bits, uint64_t const tag
 
 cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi const& code_matrix) {
     int const border_thickness_pixels{
-        4 * bit_size_pixels};  // Three mainly white rings and one black ring. This is an intrinsic property
-                               // of the tags in our proposed Aprilgrid3 design.
+        4 * bit_size_pixels};  // One outer white ring (with black corners), two consecutive black rings, and then the
+                               // inner white ring. This is an intrinsic property of the proposed aprilgrid3 design.
     int const num_bits{static_cast<int>(code_matrix.rows())};  // Could also use .cols(), should always be square matrix
 
     int const tag_size_pixels{2 * border_thickness_pixels + (num_bits * bit_size_pixels)};
@@ -115,12 +115,12 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi co
     // have constant thickness. cv::rectangle will round the corners of partially filled rectangles.
     {
         // Fill in the entire center black
-        cv::Point const top_left_corner{2 * bit_size_pixels, 2 * bit_size_pixels};
-        cv::Point const bottom_right_corner{(6 + num_bits) * bit_size_pixels - 1, (6 + num_bits) * bit_size_pixels - 1};
+        cv::Point const top_left_corner{bit_size_pixels, bit_size_pixels};
+        cv::Point const bottom_right_corner{(7 + num_bits) * bit_size_pixels - 1, (7 + num_bits) * bit_size_pixels - 1};
         cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (0), -1);
     }
     {
-        // Fill back in the center white - leaving a black rim one bit thick.
+        // Fill back in the center white - leaving a black rim two bits thick.
         cv::Point const top_left_corner{3 * bit_size_pixels, 3 * bit_size_pixels};
         cv::Point const bottom_right_corner{(5 + num_bits) * bit_size_pixels, (5 + num_bits) * bit_size_pixels};
         cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (255), -1);
@@ -128,11 +128,11 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi co
 
     {
         // Put in the corner sharpening elements.
-        cv::Mat const corner_element{cv::Mat::zeros(2 * bit_size_pixels, 2 * bit_size_pixels, CV_8UC1)};
+        cv::Mat const corner_element{cv::Mat::zeros(bit_size_pixels, bit_size_pixels, CV_8UC1)};
 
         // Put the corner sharpening element we just created into all four corners of the tag. We rotate the april tag
         // itself to save ourselves the annoying math of calculating the rectangle corner point locations.
-        cv::Rect const roi{cv::Rect(cv::Point{0, 0}, cv::Point{2 * bit_size_pixels, 2 * bit_size_pixels})};
+        cv::Rect const roi{cv::Rect(cv::Point{0, 0}, cv::Point{bit_size_pixels, bit_size_pixels})};
         for (int i{0}; i < 4; ++i) {
             corner_element.copyTo(april_tag(roi));
             cv::rotate(april_tag, april_tag, cv::ROTATE_90_CLOCKWISE);
