@@ -39,22 +39,19 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
     }
     std::sort(std::begin(gammas), std::end(gammas));
 
-    // Test a uniform sampling of the gamma estimates using small randomly sampled pose-only optimizations.
+    // Test a uniform sampling of the gamma estimates using a small pose-only optimizations.
     uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 500)};
+    auto const target_subset{SampleMap(targets, 15)};
     std::map<double, ArrayXd> cost_intrinsic_map;
     for (uint64_t i{0}; i < num_samples; ++i) {
         uint64_t const idx{i * std::size(gammas) / num_samples};
         double const gamma_i{gammas[idx]};
 
-        // Sample target subset and initialize poses
         CameraInfo const camera_info{"", camera_model, {0, width, 0, height}};
-
-        // WARN(Jack): We should have a warning here that we are hardcoding that fact that we need at least ten frames!
-        auto const target_subset{SampleMap(targets, 10)};
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
-        Frames const initial_poses{PoseInitialization(camera_info, target_subset, {intrinsics_i})};
 
-        if (std::size(initial_poses) == 0) {
+        Frames const initial_poses{PoseInitialization(camera_info, target_subset, {intrinsics_i})};
+        if (std::size(initial_poses) < 0.8 * std::size(target_subset)) {
             continue;  // LCOV_EXCL_LINE
         }
 
@@ -62,16 +59,18 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         OptimizationState const initial_state{{intrinsics_i}, initial_poses};
         auto const [optimized_state, diagnostics]{
             optimization::BundleAdjustment(camera_info, target_subset, initial_state, num_threads, true)};
-        cost_intrinsic_map[diagnostics.solver_summary.final_cost] = intrinsics_i;
 
-        log->debug("{{ 'idx': {}, 'gamma': {}, 'final_cost': {}, 'num_frames_used': {}}}", idx, gamma_i,
-                   diagnostics.solver_summary.final_cost, std::size(initial_poses));
+        double const mean_residual{diagnostics.solver_summary.final_cost / diagnostics.solver_summary.num_residuals};
+        cost_intrinsic_map[mean_residual] = intrinsics_i;
+
+        log->debug("{{ 'idx': {}, 'gamma': {}, 'mean_residual': {}, 'num_frames_used': {}}}", idx, gamma_i,
+                   mean_residual, std::size(initial_poses));
     }
 
     if (std::size(cost_intrinsic_map) == 0) {
         return std::nullopt;  // LCOV_EXCL_LINE
     } else {
-        // Take the intrinsic with the lowest final cost.
+        // Take the intrinsic with the lowest mean residual.
         return std::cbegin(cost_intrinsic_map)->second;
     }
 }
