@@ -68,7 +68,8 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
             ceres::CostFunction* const cost_function{
                 cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j), u_i,
                                        optimized_spline.GetTimeHandler().delta_t_ns_)};
-            problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0), intrinsics_x.intrinsics.data(),
+            // TODO(Jack): Should we also use robust loss here like we use for the stand alone bundle adjustment?
+            problem.AddResidualBlock(cost_function, nullptr, intrinsics_x.intrinsics.data(),
                                      optimized_spline.MutableControlPoints().col(i).data(),
                                      optimized_spline.MutableControlPoints().col(i + 1).data(),
                                      optimized_spline.MutableControlPoints().col(i + 2).data(),
