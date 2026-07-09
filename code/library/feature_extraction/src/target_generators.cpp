@@ -149,8 +149,8 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi co
         if (code_matrix(indices(0), indices(1))) {
             cv::Point const top_left_corner{(bit_size_pixels * indices(1)) + border_thickness_pixels,
                                             (bit_size_pixels * indices(0)) + border_thickness_pixels};
-            cv::Point const bottom_right_corner{top_left_corner.x + bit_size_pixels,
-                                                top_left_corner.y + bit_size_pixels};
+            cv::Point const bottom_right_corner{top_left_corner.x + bit_size_pixels - 1,
+                                                top_left_corner.y + bit_size_pixels - 1};
             cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (0), -1);
         }
     }
