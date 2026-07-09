@@ -172,8 +172,7 @@ Matrix42d Aprilgrid3Extractor::EstimateExtractionCorners(Matrix3d const& H, int 
     // NOTE(Jack): These corners have been reordered from how they are listed in the april tag documentation. The
     // current ordering matches our generated targets grid row/column indexing.
     Matrix42d const canonical_corners{{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
-    double const corner_offset_scale{(sqrt_num_bits / 2.0 + 2.0) / (sqrt_num_bits / 2.0 + 1.0)};
-
+    double const corner_offset_scale{((sqrt_num_bits / 2.0) + 3.0) / ((sqrt_num_bits / 2.0) + 1.0)};
     Matrix42d const extraction_corners{
         (H * (corner_offset_scale * canonical_corners).rowwise().homogeneous().transpose())
             .transpose()
@@ -191,8 +190,8 @@ Matrix42d Aprilgrid3Extractor::RefineCorners(cv::Mat const& image, Matrix42d con
     cv::Mat cv_view_extraction_corners(refined_extraction_corners.rows(), refined_extraction_corners.cols(), CV_32FC1,
                                        refined_extraction_corners.data());
 
-    cv::cornerSubPix(image, cv_view_extraction_corners, cv::Size(5, 5), cv::Size(-1, -1),
-                     cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
+    cv::cornerSubPix(image, cv_view_extraction_corners, cv::Size(7, 7), cv::Size(-1, -1),
+                     cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 1e-3));
 
     return refined_extraction_corners.cast<double>();
 }
