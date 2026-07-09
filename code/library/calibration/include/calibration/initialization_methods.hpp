@@ -22,7 +22,8 @@ namespace reprojection::calibration {
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             CameraMeasurements const& targets, int const num_threads);
 
-Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics);
+Frames PoseInitialization(CameraInfo const& camera_info, CameraMeasurements const& targets,
+                          CameraState const& intrinsics);
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
                                                                                ImuMeasurements const& imu_data,

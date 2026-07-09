@@ -31,7 +31,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
                                             CameraMeasurements const& targets, int const num_threads) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
 
-    // Generate gamma estimates
+    // Generate all gamma estimates and sort them in ascending order.
     std::vector<double> gammas;
     for (auto const& target : targets | std::views::values) {
         std::vector<double> const gammas_i{runner(target)};
@@ -39,23 +39,38 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
     }
     std::sort(std::begin(gammas), std::end(gammas));
 
-    // Test a uniform sampling of the gamma estimates using a small pose-only optimizations.
+    // Generate a subset of targets which we will use to test our intrinsic hypothesis with.
+    //
+    // TODO(Jack): Is 20 enough, too many, or too little?
+    // TODO(Jack): What if the set of selected targets has bad properties like too many outliers or other degnerate
+    // cases for a camera calibration bundle adjustment. How would the user be able to get around this point? We should
+    // offer the user the option to manually initialize the intrinsics.
+    auto const target_subset{SampleMap(targets, 20)};
+
+    // Sample the gammas evenly (this narrows down how many evaluations we need to do) and calculate the residual from a
+    // pose only bundle adjustment using intrinsics initialized from the gamma value. The gamme which produces the
+    // lowest residual will be our choice as the best initialization value.
+    //
+    // TODO(Jack): What is the maximum number of samples we need to take here. At time of writing (09.07.2026) 500 seems
+    // like a lot and could slow the process down on a slow computer. We need to do some testing I think.
     uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 500)};
-    auto const target_subset{SampleMap(targets, 15)};
     std::map<double, ArrayXd> cost_intrinsic_map;
     for (uint64_t i{0}; i < num_samples; ++i) {
         uint64_t const idx{i * std::size(gammas) / num_samples};
-        double const gamma_i{gammas[idx]};
 
+        double const gamma_i{gammas[idx]};
         CameraInfo const camera_info{"", camera_model, {0, width, 0, height}};
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
 
         Frames const initial_poses{PoseInitialization(camera_info, target_subset, {intrinsics_i})};
+        // TODO(Jack): Is the required success rate used in this condition enough, too much, or too little?
         if (std::size(initial_poses) < 0.8 * std::size(target_subset)) {
             continue;  // LCOV_EXCL_LINE
         }
 
-        // Do nonlinear refinement with the intrinsics constant
+        // Do a bundle adjustment with the intrinsics constant and calculate the mean residual. Our hope is that the
+        // intrinsic which will be the best initialization for the full optimization will produce the lowest mean
+        // residual here on a subset of targets.
         OptimizationState const initial_state{{intrinsics_i}, initial_poses};
         auto const [optimized_state, diagnostics]{
             optimization::BundleAdjustment(camera_info, target_subset, initial_state, num_threads, true)};
@@ -79,20 +94,20 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 // of the function is to unproject the pixels to 3d rays using a roughly initialized camera, then project these back to
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
-// TODO(Jack): This name is misleading because the process is not actually strictly linear!
-Frames PoseInitialization(CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics) {
+Frames PoseInitialization(CameraInfo const& camera_info, CameraMeasurements const& targets,
+                          CameraState const& intrinsics) {
     auto const camera{
-        projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
+        projection_functions::InitializeCamera(camera_info.camera_model, intrinsics.intrinsics, camera_info.bounds)};
 
-    Frames linear_solution;
+    Frames frames;
     for (auto const& [timestamp_ns, target_i] : targets) {
-        auto const pose{EstimatePoseViaPinholePnP(camera, target_i.bundle, sensor.bounds)};
+        auto const pose{EstimatePoseViaPinholePnP(camera, target_i.bundle, camera_info.bounds)};
         if (pose.has_value()) {
-            linear_solution[timestamp_ns] = *pose;
+            frames[timestamp_ns] = *pose;
         }
     }
 
-    return linear_solution;
+    return frames;
 }  // LCOV_EXCL_LINE
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
