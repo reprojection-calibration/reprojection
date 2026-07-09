@@ -112,7 +112,7 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df):
             theta=angles,
             mode="markers",
             marker={
-                "size": 5,
+                "size": 1.5,
             },
         )
     )
