@@ -1,7 +1,6 @@
 #include "optimization/angular_velocity_alignment.hpp"
 
 #include <ranges>
-#include <thread>
 
 #include "cost_functions/rigid_body_angular_velocity.hpp"
 
@@ -40,10 +39,6 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements con
             problem.SetParameterBlockConstant(spline.MutableControlPoints().col(i + j).data());
         }
     }
-
-    // TODO(Jack): Copy and pasted!
-    unsigned int const hw_threads{std::thread::hardware_concurrency()};
-    ceres_state.solver_options.num_threads = hw_threads > 1 ? hw_threads - 1 : 1;
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 

@@ -1,7 +1,6 @@
 #include "optimization/extrinsic_optimization.hpp"
 
 #include <ranges>
-#include <thread>
 
 #include "cost_functions/reprojection_error_spline.hpp"
 #include "cost_functions/rigid_body_angular_velocity.hpp"
@@ -87,12 +86,6 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
     // This was already solved for in the bundle adjustment step, therefore I do not think there is a good reason to
     // further optimize it here.
     problem.SetParameterBlockConstant(intrinsics_x.intrinsics.data());
-
-    // TODO(Jack): This should be made a part of the configuration loading! Select a default value based on
-    // hardware_concurrency() but also let the user specify. If threads are not countable default to one.
-    unsigned int const hw_threads{std::thread::hardware_concurrency()};
-    ceres_state.solver_options.num_threads = hw_threads > 1 ? hw_threads - 1 : 1;
-
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
     return {optimized_spline, optimized_extrinsic};
