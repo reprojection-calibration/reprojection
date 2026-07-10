@@ -3,6 +3,10 @@
 This is an application for target-based intrinsic camera calibration and extrinsic camera-imu calibration. It is
 automatically compatible with ROS1 and ROS2 and is completely dockerized.
 
+> [!WARNING]
+> The Aprilgrid3 has been updated to version two! Please find the new target files [here](media/targets). The previous
+> Aprilgrid3 version one is no longer compatible.
+
 ## Build
 
 Pull the git-lfs manged files - this includes a test database which is required by the dashboard unit tests.
@@ -73,9 +77,9 @@ your data and save it near your data.
 The following target types are supported:
 
 1) `aprilgrid3`
-    * [aprilgrid3 6x4](media/aprilgrid3_6x4.png)
-    * [aprilgrid3 7x5](media/aprilgrid3_7x5.png)
-    * [aprilgrid3 8x6](media/aprilgrid3_8x6.png)
+    * [aprilgrid3 6x4](media/targets/aprilgrid3_6x4_v2.png)
+    * [aprilgrid3 7x5](media/targets/aprilgrid3_7x5_v2.png)
+    * [aprilgrid3 8x6](media/targets/aprilgrid3_8x6_v2.png)
 2) `checkerboard`
 3) `circle_grid` (symmetric or asymmetric)
 
