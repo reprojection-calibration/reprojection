@@ -71,8 +71,8 @@ cv::Mat GenerateCircleGrid(cv::Size const& pattern_size, int const circle_radius
 cv::Mat Aprilgrid3Generation::GenerateBoard(int const num_bits, uint64_t const tag_family[], int const bit_size_pixels,
                                             cv::Size const& pattern_size) {
     int const april_tag_size_pixels{
-        (8 * bit_size_pixels) +
-        (static_cast<int>(std::sqrt(num_bits)) * bit_size_pixels)};  // Fixed border width plus dynamic data area size
+        (10 * bit_size_pixels) +
+        (static_cast<int>(std::sqrt(num_bits)) * bit_size_pixels)};  // Fixed border width plus data area size
 
     cv::Mat april_board{cv::Mat::zeros(pattern_size.height * april_tag_size_pixels,
                                        pattern_size.width * april_tag_size_pixels, CV_8UC1)};
@@ -103,36 +103,43 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const num_bits, uint64_t const tag
 }
 
 cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi const& code_matrix) {
-    int const border_thickness_pixels{
-        4 * bit_size_pixels};  // One outer white ring (with black corners), two consecutive black rings, and then the
-                               // inner white ring. This is an intrinsic property of the proposed aprilgrid3 design.
-    int const num_bits{static_cast<int>(code_matrix.rows())};  // Could also use .cols(), should always be square matrix
+    // The "border" is the entire tag area outside of the tag's data area. This consists of several alternating
+    // white/black rings (including corner sharpening elements). This is an intrinsic property of the tag as designed
+    // for the Aprilgrid3.
+    int const border_thickness_pixels{5 * bit_size_pixels};
+    // The tag's center data area contains n bits. Each little square in the center, either black or white, is one bit.
+    // Because our tags have a square data area (ex. 6x6), we can take the square root of the number of the total number
+    // of bits to get the tag's data area width. We need this information to build the tags of course :)
+    // NOTE(Jack): Could also use .cols(), should always be square matrix!
+    int const sqrt_num_bits{static_cast<int>(code_matrix.rows())};
 
-    int const tag_size_pixels{2 * border_thickness_pixels + (num_bits * bit_size_pixels)};
-    cv::Mat april_tag{255 * cv::Mat::ones(tag_size_pixels, tag_size_pixels, CV_8UC1)};  // Tags are square
+    int const tag_size_pixels{2 * border_thickness_pixels + (sqrt_num_bits * bit_size_pixels)};
+    cv::Mat april_tag{255 * cv::Mat::ones(tag_size_pixels, tag_size_pixels, CV_8UC1)};
 
     // Hacky way to draw the surrounding black edge rectangle - we cannot use cv::rectangle directly because we need to
     // have constant thickness. cv::rectangle will round the corners of partially filled rectangles.
     {
-        // Fill in the entire center black
-        cv::Point const top_left_corner{bit_size_pixels, bit_size_pixels};
-        cv::Point const bottom_right_corner{(7 + num_bits) * bit_size_pixels - 1, (7 + num_bits) * bit_size_pixels - 1};
+        // Fill the center area black.
+        cv::Point const top_left_corner{2 * bit_size_pixels, 2 * bit_size_pixels};
+        cv::Point const bottom_right_corner{tag_size_pixels - (2 * bit_size_pixels),
+                                            tag_size_pixels - (2 * bit_size_pixels)};
         cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (0), -1);
     }
     {
-        // Fill back in the center white - leaving a black rim two bits thick.
-        cv::Point const top_left_corner{3 * bit_size_pixels, 3 * bit_size_pixels};
-        cv::Point const bottom_right_corner{(5 + num_bits) * bit_size_pixels, (5 + num_bits) * bit_size_pixels};
+        // Fill in the middle of the center white - leaving a black rim.
+        cv::Point const top_left_corner{4 * bit_size_pixels, 4 * bit_size_pixels};
+        cv::Point const bottom_right_corner{tag_size_pixels - (4 * bit_size_pixels),
+                                            tag_size_pixels - (4 * bit_size_pixels)};
         cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (255), -1);
     }
 
     {
         // Put in the corner sharpening elements.
-        cv::Mat const corner_element{cv::Mat::zeros(bit_size_pixels, bit_size_pixels, CV_8UC1)};
+        cv::Mat const corner_element{cv::Mat::zeros(2 * bit_size_pixels, 2 * bit_size_pixels, CV_8UC1)};
 
         // Put the corner sharpening element we just created into all four corners of the tag. We rotate the april tag
         // itself to save ourselves the annoying math of calculating the rectangle corner point locations.
-        cv::Rect const roi{cv::Rect(cv::Point{0, 0}, cv::Point{bit_size_pixels, bit_size_pixels})};
+        cv::Rect const roi{cv::Rect(cv::Point{0, 0}, cv::Point{2 * bit_size_pixels, 2 * bit_size_pixels})};
         for (int i{0}; i < 4; ++i) {
             corner_element.copyTo(april_tag(roi));
             cv::rotate(april_tag, april_tag, cv::ROTATE_90_CLOCKWISE);
@@ -142,7 +149,7 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi co
     // Fill in all the bits of the data region
     // TODO(Jack): This logic is practically exactly the same as in the checkerboard generation... is there a practical
     // way to DRY ourselves here?
-    ArrayX2i const grid{eigen_utilities::GenerateGridIndices(num_bits, num_bits)};
+    ArrayX2i const grid{eigen_utilities::GenerateGridIndices(sqrt_num_bits, sqrt_num_bits)};
     for (Eigen::Index i{0}; i < grid.rows(); ++i) {
         Array2i const indices{grid.row(i)};
 
