@@ -31,7 +31,7 @@ std::optional<ExtractedTarget> CheckerboardExtractor::ExtractImplementation(cv::
         return std::nullopt;
     }
 
-    cv::cornerSubPix(image, corners, cv::Size(11, 11), cv::Size(-1, -1),
+    cv::cornerSubPix(image, corners, cv::Size(5, 5), cv::Size(-1, -1),
                      cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
 
     return ExtractedTarget{{ToEigen(corners), points_}, point_indices_};
@@ -191,8 +191,8 @@ Matrix42d Aprilgrid3Extractor::RefineCorners(cv::Mat const& image, Matrix42d con
     cv::Mat cv_view_extraction_corners(refined_extraction_corners.rows(), refined_extraction_corners.cols(), CV_32FC1,
                                        refined_extraction_corners.data());
 
-    cv::cornerSubPix(image, cv_view_extraction_corners, cv::Size(7, 7), cv::Size(-1, -1),
-                     cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 1e-3));
+    cv::cornerSubPix(image, cv_view_extraction_corners, cv::Size(5, 5), cv::Size(-1, -1),
+                     cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 1e-6));
 
     return refined_extraction_corners.cast<double>();
 }
