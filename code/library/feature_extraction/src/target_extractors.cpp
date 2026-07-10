@@ -207,7 +207,9 @@ ExtractedTarget Aprilgrid3Extractor::RemoveOutliers(MatrixX2d const& raw_corners
     // intelligent or theoretically justified/conventional value that would be appreciated.
     // NOTE(Jack): We only check that the delta is less than the threshold and not within an upper and lower bound
     // because lower deltas are ok (reflect a accurate extraction under our assumption).
-    ArrayXb const mask{delta < median + (2 * mad)};
+    // NOTE(Jack): We add an epsilon here for the case of perfect test data that it does not mask out values because the
+    // mad is a near float zero. This should have no impact on real data as it is so small. Hopefully...
+    ArrayXb const mask{delta < median + (2 * mad) + 1e-9};
     ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
     return target(valid_indices);
