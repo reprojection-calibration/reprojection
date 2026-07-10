@@ -47,6 +47,11 @@ std::optional<Eigen::Matrix<double, 3, N>> SolveForH(Eigen::Matrix<double, Eigen
     Eigen::JacobiSVD<MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
+    // WARN(Jack): This relative threshold multiplier was found heursitically by looking at one single dataset where I
+    // was having trouble with a failed DLT solve causing a crazy frame pose and messing up the rest of the
+    // optimization. If this value really applies everywhere I really do not know.
+    // TODO(Jack): Reading about this threshold it seems like most places default to the value of doubel::epsilon, but
+    // here we had to set the much large value of 5-5. Did we do something wrong? This fact really smells to me.
     double const relative_threshold{5e-5 * static_cast<double>(std::max(A.rows(), A.cols()))};
     svd.setThreshold(relative_threshold);
 
