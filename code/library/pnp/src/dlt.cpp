@@ -11,23 +11,26 @@ namespace reprojection::pnp {
 // number of correspondences is already check in the public facing interface, we do not check it again here.
 // NOTE(Jack): We probably mainly want only the pose, but we calculate K anyway as part of the process, so following the
 // "law of useful return", we return K too.
-std::tuple<Isometry3d, Array3d> Dlt23(Bundle const& bundle) {
+std::optional<std::tuple<Isometry3d, Array3d>> Dlt23(Bundle const& bundle) {
     auto const [normalized_pixels, tf_pixels]{NormalizeColumnWise(bundle.pixels)};
     auto const [normalized_points, tf_points]{NormalizeColumnWise(bundle.points)};
 
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA<4>(normalized_pixels, normalized_points)};
-    Matrix34d const P{SolveForH<4>(A)};
-    Matrix34d const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize
+    auto const P{SolveForH<4>(A)};
+    if (not P.has_value()) {
+        return std::nullopt;
+    }
+    Matrix34d const P_star{tf_pixels.inverse() * P.value() * tf_points};  //  Denormalize
 
     // Extract camera parameters
     auto const [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
     Vector3d const t{CalculateCameraCenter(P_star)};
 
-    return {ToIsometry3d(R, -R * t), eigen_utilities::FromK(K)};
+    return std::tuple{ToIsometry3d(R, -R * t), eigen_utilities::FromK(K)};
 }
 
 // WARN(Jack): Assumes that pixel coordinates are normalized ideal image coordinates, not pixel values.
-Isometry3d Dlt22(Bundle const& bundle) {
+std::optional<Isometry3d> Dlt22(Bundle const& bundle) {
     // ERROR(Jack): Always assumes we aligned with the Z dimension as the plane! CUTS OFF THE Z DIMENSION NO MATTER
     // WHAT!!!
     MatrixX2d const chopped_points{bundle.points(Eigen::all, {0, 1})};
@@ -37,8 +40,11 @@ Isometry3d Dlt22(Bundle const& bundle) {
     // that ok? Do we need to zero pad anything or simply check that we have at least five points? Or is it no problem
     // at all?
     auto const A{ConstructA<3>(bundle.pixels, normalized_points)};
-    Matrix3d const H{SolveForH<3>(A)};
-    Matrix3d const H_star{H * tf_points};  //  Denormalize
+    auto const H{SolveForH<3>(A)};
+    if (not H.has_value()) {
+        return std::nullopt;
+    }
+    Matrix3d const H_star{H.value() * tf_points};  //  Denormalize
 
     auto const [R, t]{DecomposeHIntoRt(H_star)};
 
