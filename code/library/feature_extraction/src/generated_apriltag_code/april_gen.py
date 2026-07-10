@@ -13,7 +13,6 @@ tag[0:2, 0:2] = "b"
 tag[0:2, -2:] = "b"
 tag[-2:, 0:2] = "b"
 tag[-2:, -2:] = "b"
-
 print(tag)
 
 tag_code = ["".join(item) for item in tag.astype(str)]
