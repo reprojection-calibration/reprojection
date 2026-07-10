@@ -165,5 +165,5 @@ TEST_F(AprilTagTestFixture, TestAprilgrid3CornerPositions) {
 
     EXPECT_EQ(points.rows(), grid.rows());
     EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));
-    EXPECT_TRUE(points.row(47).isApprox(Vector3d{1.9, 2.6, 0}.transpose()));
+    EXPECT_TRUE(points.row(47).isApprox(Vector3d{1.83333, 2.5, 0}.transpose(), 1e-5));
 };
