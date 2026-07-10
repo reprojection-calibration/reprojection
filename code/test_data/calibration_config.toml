@@ -9,5 +9,5 @@ camera_model = "double_sphere"
 sensor_name = "/imu0"
 
 [target]
-pattern_size = [6,4]
+pattern_size = [5,4]
 type = "aprilgrid3"

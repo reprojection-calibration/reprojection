@@ -237,13 +237,13 @@ TEST_F(CameraStepsFixture, TestTargetInfoStep) {
 
     auto [target_info, cache_status]{RunStep<TargetInfo>(step, db_)};
     EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
-    EXPECT_EQ(target_info.height, 6);
+    EXPECT_EQ(target_info.height, 5);
     EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
 
     std::tie(target_info, cache_status) = RunStep<TargetInfo>(step, db_);
     EXPECT_EQ(target_info.target_type, TargetType::Aprilgrid3);
-    EXPECT_EQ(target_info.height, 6);
+    EXPECT_EQ(target_info.height, 5);
     EXPECT_EQ(target_info.width, 4);
     EXPECT_EQ(cache_status, CacheStatus::CacheHit);
 }

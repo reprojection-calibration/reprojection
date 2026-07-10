@@ -33,9 +33,9 @@ TEST_F(AprilTagTestFixture, TestAprilTagDetectorDetectAprilTag) {
     EXPECT_EQ(detection.id, 0);
 
     // Center point
-    EXPECT_TRUE(detection.c.isApproxToConstant(71));
+    EXPECT_TRUE(detection.c.isApproxToConstant(80));
 
     // The four corner pixels in the apriltag native order.
-    Matrix42d gt_pixels{{30, 112}, {112, 112}, {112, 30}, {30, 30}};
+    Matrix42d const gt_pixels{{40, 120}, {120, 120}, {120, 40}, {40, 40}};
     EXPECT_TRUE(detection.p.isApprox(gt_pixels));
 }

@@ -31,7 +31,7 @@ std::optional<ExtractedTarget> CheckerboardExtractor::ExtractImplementation(cv::
         return std::nullopt;
     }
 
-    cv::cornerSubPix(image, corners, cv::Size(11, 11), cv::Size(-1, -1),
+    cv::cornerSubPix(image, corners, cv::Size(5, 5), cv::Size(-1, -1),
                      cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
 
     return ExtractedTarget{{ToEigen(corners), points_}, point_indices_};
@@ -84,10 +84,11 @@ std::optional<ExtractedTarget> CircleGridExtractor::ExtractImplementation(cv::Ma
 // NOTE(Jack): Use of the tagCustom36h11 and all settings are hardcoded here! This means no on can select another
 // family. Find a way to make this configurable if possible, but it will likely require recompilation, so it might not
 // really be feasible - there might also be no problem with hardcoding the tag family for most use cases.
+// TODO(Jack): Should we pass the number of threads from the application here? Does that speed things up?
 Aprilgrid3Extractor::Aprilgrid3Extractor(cv::Size const& pattern_size, const double unit_dimension)
     : TargetExtractor(pattern_size, unit_dimension),
       tag_family_{AprilTagFamily{tagCustom36h11_create(), tagCustom36h11_destroy}},
-      tag_detector_{AprilTagDetector{tag_family_, {2.0, 0.0, 1, false, false}}} {
+      tag_detector_{AprilTagDetector{tag_family_, {2.0, 0.0, 1, false, true}}} {
     point_indices_ = eigen_utilities::GenerateGridIndices(2 * pattern_size_.height, 2 * pattern_size_.width);
     points_ = CornerPositions(point_indices_, unit_dimension);
 }
@@ -148,10 +149,10 @@ ArrayXi Aprilgrid3Extractor::VisibleGeometry(cv::Size const& pattern_size,
 MatrixX3d Aprilgrid3Extractor::CornerPositions(ArrayX2i const& indices, double const unit_dimension) {
     MatrixX3d points{indices.rows(), 3};
     for (int i{0}; i < indices.rows(); ++i) {
-        // WARN(Jack): If we change the pattern (num_bits or design) then this 0.4 (4bits/10bits) will change! This
+        // WARN(Jack): If we change the pattern (num_bits or design) then this (1/3) (4bits/12bits) will change! This
         // function is currently assuming that Aprilgrid3 will be fixed forever using the custom 36h11 tag family.
-        points.row(i)(0) = AlternatingSum(indices.row(i)(0), unit_dimension, 0.4 * unit_dimension);
-        points.row(i)(1) = AlternatingSum(indices.row(i)(1), unit_dimension, 0.4 * unit_dimension);
+        points.row(i)(0) = AlternatingSum(indices.row(i)(0), unit_dimension, (1.0 / 3) * unit_dimension);
+        points.row(i)(1) = AlternatingSum(indices.row(i)(1), unit_dimension, (1.0 / 3) * unit_dimension);
     }
     points.col(2).setZero();
 
@@ -167,14 +168,12 @@ MatrixX3d Aprilgrid3Extractor::CornerPositions(ArrayX2i const& indices, double c
 // "quad" of an April Tag 3. In the tags designed for use in the Aprilgrid3 , the corners that we want to extract
 // and use are found on the outside of this black ring, at the intersection of the black ring and the corner
 // element. This intersection is designed to provide the characteristic checkerboard like intersection which can be
-// refined using the cv::cornerSubPix() function to provide nearly exact corner pixel coordinates. ADD , int const
-// num_bits
+// refined using the cv::cornerSubPix() function to provide nearly exact corner pixel coordinates.
 Matrix42d Aprilgrid3Extractor::EstimateExtractionCorners(Matrix3d const& H, int const sqrt_num_bits) {
     // NOTE(Jack): These corners have been reordered from how they are listed in the april tag documentation. The
     // current ordering matches our generated targets grid row/column indexing.
     Matrix42d const canonical_corners{{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
-    double const corner_offset_scale{(sqrt_num_bits / 2.0 + 2.0) / (sqrt_num_bits / 2.0 + 1.0)};
-
+    double const corner_offset_scale{((sqrt_num_bits / 2.0) + 3.0) / ((sqrt_num_bits / 2.0) + 1.0)};
     Matrix42d const extraction_corners{
         (H * (corner_offset_scale * canonical_corners).rowwise().homogeneous().transpose())
             .transpose()
@@ -192,8 +191,8 @@ Matrix42d Aprilgrid3Extractor::RefineCorners(cv::Mat const& image, Matrix42d con
     cv::Mat cv_view_extraction_corners(refined_extraction_corners.rows(), refined_extraction_corners.cols(), CV_32FC1,
                                        refined_extraction_corners.data());
 
-    cv::cornerSubPix(image, cv_view_extraction_corners, cv::Size(11, 11), cv::Size(-1, -1),
-                     cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
+    cv::cornerSubPix(image, cv_view_extraction_corners, cv::Size(5, 5), cv::Size(-1, -1),
+                     cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 1e-6));
 
     return refined_extraction_corners.cast<double>();
 }
@@ -204,11 +203,11 @@ ExtractedTarget Aprilgrid3Extractor::RemoveOutliers(MatrixX2d const& raw_corners
     double const median{eigen_utilities::Median(delta)};
     double const mad{eigen_utilities::Median((delta - median).abs())};
 
-    // TODO(Jack): The scalar multiple of the MAD is at this time (29.04.2026) completely arbitrary. If someone had an
-    // intelligent or theoretically justified/conventional value that would be appreciated.
     // NOTE(Jack): We only check that the delta is less than the threshold and not within an upper and lower bound
     // because lower deltas are ok (reflect a accurate extraction under our assumption).
-    ArrayXb const mask{delta < median + (2 * mad)};
+    // "For normally distributed data k is taken to be 1.4826" - https://en.wikipedia.org/wiki/Median_absolute_deviation
+    double const robust_threshold{median + 2 * 1.4826 * mad};
+    ArrayXb const mask{delta < std::max(robust_threshold, 1.0)};
     ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
     return target(valid_indices);

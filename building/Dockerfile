@@ -287,11 +287,11 @@ COPY code/test_data/dataset-calib-imu4_512_16.calib.db3 /data/video_file/dataset
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.calib.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
+      /data/ros1/dataset-calib-imu4_512_16.calib.db3 887cc46ff0cb7eebcb677cf92b11ffd92da4c6d03931625d95eea223620d9985; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.calib.db3 ad69955bb5a86463d3cde70f29784adde16ce8f09871d7461592894dbc41a4dc; \
+      /data/ros2/dataset-calib-imu4_512_16.calib.db3 887cc46ff0cb7eebcb677cf92b11ffd92da4c6d03931625d95eea223620d9985; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.calib.db3 b81580d1ffe01df82b4347f8075a0c20f5f7778e31af901cc2dabd8982493094
+      /data/video_file/dataset-calib-imu4_512_16.calib.db3 d80b5fd9b451bbd40232b48082f35aeaf2f708578c8557d9578a1aa1464797c4
 
 ARG REMOVE_IMU_TABLE_DATA=building/scripts/remove_imu_table_data.py
 RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE_IMU_TABLE_DATA} \

@@ -19,7 +19,7 @@ TEST(TargetExtractors, TestCheckerboardExtractor) {
     double const unit_dimension{0.5};
     auto const extractor{CheckerboardExtractor{pattern_size, unit_dimension}};
 
-    std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(image)};
+    auto const target{extractor.ExtractImplementation(image)};
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
@@ -48,7 +48,7 @@ TEST(TargetExtractors, TestCircleGridExtractor) {
     double const unit_dimension{0.5};
     auto const extractor{CircleGridExtractor{pattern_size, unit_dimension, asymmetric}};
 
-    std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(image)};
+    auto const target{extractor.ExtractImplementation(image)};
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
@@ -81,7 +81,7 @@ TEST(TargetExtractors, TestCircleGridExtractorAsymmetric) {
     double const unit_dimension{0.5};
     auto const extractor{CircleGridExtractor{pattern_size, unit_dimension, asymmetric}};
 
-    std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(image)};
+    auto const target{extractor.ExtractImplementation(image)};
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
@@ -108,23 +108,20 @@ TEST_F(AprilTagTestFixture, TestAprilgrid3Extractor) {
     double const unit_dimension{0.5};
     auto const extractor{Aprilgrid3Extractor{pattern_size, unit_dimension}};
 
-    std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(april_tag)};
+    auto const target{extractor.ExtractImplementation(april_tag)};
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
-    EXPECT_EQ(pixels.rows(), 4);  // One tag
-    Matrix42d const gt_pixels{{19.685731887817383, 19.685731887817383},
-                              {119.27910614013672, 19.819416046142578},
-                              {19.819417953491211, 119.27910614013672},
-                              {119.13014984130859, 119.13014984130859}};
-    EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-6));
+    EXPECT_EQ(pixels.rows(), 4);
+    MatrixX2d const gt_pixels{{19.5, 19.5}, {139.5, 19.5}, {19.5, 139.5}, {139.5, 139.5}};
+    EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-4));
 
     MatrixX3d const& points{target->bundle.points};
-    Eigen::Matrix<double, 4, 3> const gt_points{{0, 0, 0}, {0, 0.5, 0}, {0.5, 0, 0}, {0.5, 0.5, 0}};
+    MatrixX3d const gt_points{{0, 0, 0}, {0, 0.5, 0}, {0.5, 0, 0}, {0.5, 0.5, 0}};
     EXPECT_TRUE(points.isApprox(gt_points));
 
     ArrayX2i const& indices{target->indices};
-    Eigen::Array<int, 4, 2> const gt_indices{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+    ArrayX2i const gt_indices{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     EXPECT_TRUE(indices.isApprox(gt_indices));
 }
 
@@ -168,5 +165,5 @@ TEST_F(AprilTagTestFixture, TestAprilgrid3CornerPositions) {
 
     EXPECT_EQ(points.rows(), grid.rows());
     EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));
-    EXPECT_TRUE(points.row(47).isApprox(Vector3d{1.9, 2.6, 0}.transpose()));
+    EXPECT_TRUE(points.row(47).isApprox(Vector3d{1.83333, 2.5, 0}.transpose(), 1e-5));
 };

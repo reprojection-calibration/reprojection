@@ -71,8 +71,8 @@ cv::Mat GenerateCircleGrid(cv::Size const& pattern_size, int const circle_radius
 cv::Mat Aprilgrid3Generation::GenerateBoard(int const num_bits, uint64_t const tag_family[], int const bit_size_pixels,
                                             cv::Size const& pattern_size) {
     int const april_tag_size_pixels{
-        (8 * bit_size_pixels) +
-        (static_cast<int>(std::sqrt(num_bits)) * bit_size_pixels)};  // Fixed border width plus dynamic data area size
+        (10 * bit_size_pixels) +
+        (static_cast<int>(std::sqrt(num_bits)) * bit_size_pixels)};  // Fixed border width plus data area size
 
     cv::Mat april_board{cv::Mat::zeros(pattern_size.height * april_tag_size_pixels,
                                        pattern_size.width * april_tag_size_pixels, CV_8UC1)};
@@ -103,26 +103,33 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const num_bits, uint64_t const tag
 }
 
 cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi const& code_matrix) {
-    int const border_thickness_pixels{
-        4 * bit_size_pixels};  // Three mainly white rings and one black ring. This is an intrinsic property
-                               // of the tags in our proposed Aprilgrid3 design.
-    int const num_bits{static_cast<int>(code_matrix.rows())};  // Could also use .cols(), should always be square matrix
+    // The "border" is the entire tag area outside of the tag's data area. This consists of several alternating
+    // white/black rings (including corner sharpening elements). This is an intrinsic property of the tag as designed
+    // for the Aprilgrid3.
+    int const border_thickness_pixels{5 * bit_size_pixels};
+    // The tag's center data area contains n bits. Each little square in the center, either black or white, is one bit.
+    // Because our tags have a square data area (ex. 6x6), we can take the square root of the number of the total number
+    // of bits to get the tag's data area width. We need this information to build the tags of course :)
+    // NOTE(Jack): Could also use .cols(), should always be square matrix!
+    int const sqrt_num_bits{static_cast<int>(code_matrix.rows())};
 
-    int const tag_size_pixels{2 * border_thickness_pixels + (num_bits * bit_size_pixels)};
-    cv::Mat april_tag{255 * cv::Mat::ones(tag_size_pixels, tag_size_pixels, CV_8UC1)};  // Tags are square
+    int const tag_size_pixels{2 * border_thickness_pixels + (sqrt_num_bits * bit_size_pixels)};
+    cv::Mat april_tag{255 * cv::Mat::ones(tag_size_pixels, tag_size_pixels, CV_8UC1)};
 
     // Hacky way to draw the surrounding black edge rectangle - we cannot use cv::rectangle directly because we need to
     // have constant thickness. cv::rectangle will round the corners of partially filled rectangles.
     {
-        // Fill in the entire center black
+        // Fill the center area black.
         cv::Point const top_left_corner{2 * bit_size_pixels, 2 * bit_size_pixels};
-        cv::Point const bottom_right_corner{(6 + num_bits) * bit_size_pixels - 1, (6 + num_bits) * bit_size_pixels - 1};
+        cv::Point const bottom_right_corner{tag_size_pixels - (2 * bit_size_pixels) - 1,
+                                            tag_size_pixels - (2 * bit_size_pixels) - 1};
         cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (0), -1);
     }
     {
-        // Fill back in the center white - leaving a black rim one bit thick.
-        cv::Point const top_left_corner{3 * bit_size_pixels, 3 * bit_size_pixels};
-        cv::Point const bottom_right_corner{(5 + num_bits) * bit_size_pixels, (5 + num_bits) * bit_size_pixels};
+        // Fill in the middle of the center white - leaving a black rim.
+        cv::Point const top_left_corner{4 * bit_size_pixels, 4 * bit_size_pixels};
+        cv::Point const bottom_right_corner{tag_size_pixels - (4 * bit_size_pixels) - 1,
+                                            tag_size_pixels - (4 * bit_size_pixels) - 1};
         cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (255), -1);
     }
 
@@ -142,15 +149,15 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi co
     // Fill in all the bits of the data region
     // TODO(Jack): This logic is practically exactly the same as in the checkerboard generation... is there a practical
     // way to DRY ourselves here?
-    ArrayX2i const grid{eigen_utilities::GenerateGridIndices(num_bits, num_bits)};
+    ArrayX2i const grid{eigen_utilities::GenerateGridIndices(sqrt_num_bits, sqrt_num_bits)};
     for (Eigen::Index i{0}; i < grid.rows(); ++i) {
         Array2i const indices{grid.row(i)};
 
         if (code_matrix(indices(0), indices(1))) {
             cv::Point const top_left_corner{(bit_size_pixels * indices(1)) + border_thickness_pixels,
                                             (bit_size_pixels * indices(0)) + border_thickness_pixels};
-            cv::Point const bottom_right_corner{top_left_corner.x + bit_size_pixels,
-                                                top_left_corner.y + bit_size_pixels};
+            cv::Point const bottom_right_corner{top_left_corner.x + bit_size_pixels - 1,
+                                                top_left_corner.y + bit_size_pixels - 1};
             cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (0), -1);
         }
     }
