@@ -33,6 +33,15 @@ TEST(PnpDlt, TestDlt23) {
     }
 }
 
+TEST(PnpDlt, TestDlt23FailedDlt) {
+    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
+    // An empty bundle will cause the svd inside the DLT to fail.
+    Bundle const bundle{MatrixX2d(10, 2), MatrixX3d(10, 3)};
+
+    auto const dlt_result{pnp::Dlt23(bundle)};
+    EXPECT_FALSE(dlt_result.has_value());
+}
+
 TEST(PnpDlt, TestDlt22) {
     // Points must have Z=0 (flat = true) for Dlt22
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
@@ -50,4 +59,13 @@ TEST(PnpDlt, TestDlt22) {
                                                    << gt_tf_co_w.matrix();
         EXPECT_FLOAT_EQ(tf_co_w->linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
     }
+}
+
+TEST(PnpDlt, TestDlt22FailedDlt) {
+    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
+    // An empty bundle will cause the svd inside the DLT to fail.
+    Bundle const bundle{MatrixX2d(10, 2), MatrixX3d(10, 3)};
+
+    auto const tf_co_w{pnp::Dlt22(bundle)};
+    EXPECT_FALSE(tf_co_w.has_value());
 }
