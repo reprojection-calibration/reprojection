@@ -112,7 +112,6 @@ TEST_F(AprilTagTestFixture, TestAprilgrid3Extractor) {
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
-    std::cout << pixels << std::endl;
     EXPECT_EQ(pixels.rows(), 4);
     MatrixX2d const gt_pixels{{19.5, 19.5}, {139.5, 19.5}, {19.5, 139.5}, {139.5, 139.5}};
     EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-4));
