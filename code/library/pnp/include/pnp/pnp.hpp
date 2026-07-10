@@ -16,7 +16,6 @@ enum class PnpErrorCode {
     FailedDlt,
     FailedRefinement,
     InvalidDlt,
-
 };
 
 // TODO(Jack): Is it bad to use a using declaration here in the public API section?
