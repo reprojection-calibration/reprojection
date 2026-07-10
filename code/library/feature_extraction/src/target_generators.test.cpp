@@ -52,10 +52,10 @@ TEST_F(AprilTagTestFixture, TestGenerateAprilgrid3) {
 TEST_F(AprilTagTestFixture, TestGenerateAprilTag) {
     cv::Mat const april_tag{Aprilgrid3Generation::GenerateTag(bit_size_pixel_, code_matrix_0_)};
 
-    EXPECT_EQ(april_tag.rows, 140);
-    EXPECT_EQ(april_tag.cols, 140);
+    EXPECT_EQ(april_tag.rows, 160);
+    EXPECT_EQ(april_tag.cols, 160);
 
-    // Test the overrided function matches the original
+    // Test the override function matches the original
     cv::Mat const april_tag_1{Aprilgrid3Generation::GenerateTag(
         tag_family_handler_.tag_family->nbits, tag_family_handler_.tag_family->codes[0], bit_size_pixel_)};
 

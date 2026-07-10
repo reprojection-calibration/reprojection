@@ -121,15 +121,15 @@ cv::Mat Aprilgrid3Generation::GenerateTag(int const bit_size_pixels, MatrixXi co
     {
         // Fill the center area black.
         cv::Point const top_left_corner{2 * bit_size_pixels, 2 * bit_size_pixels};
-        cv::Point const bottom_right_corner{tag_size_pixels - (2 * bit_size_pixels),
-                                            tag_size_pixels - (2 * bit_size_pixels)};
+        cv::Point const bottom_right_corner{tag_size_pixels - (2 * bit_size_pixels) - 1,
+                                            tag_size_pixels - (2 * bit_size_pixels) - 1};
         cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (0), -1);
     }
     {
         // Fill in the middle of the center white - leaving a black rim.
         cv::Point const top_left_corner{4 * bit_size_pixels, 4 * bit_size_pixels};
-        cv::Point const bottom_right_corner{tag_size_pixels - (4 * bit_size_pixels),
-                                            tag_size_pixels - (4 * bit_size_pixels)};
+        cv::Point const bottom_right_corner{tag_size_pixels - (4 * bit_size_pixels) - 1,
+                                            tag_size_pixels - (4 * bit_size_pixels) - 1};
         cv::rectangle(april_tag, top_left_corner, bottom_right_corner, (255), -1);
     }
 
