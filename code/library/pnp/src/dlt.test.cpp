@@ -34,7 +34,6 @@ TEST(PnpDlt, TestDlt23) {
 }
 
 TEST(PnpDlt, TestDlt23FailedDlt) {
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
     // An empty bundle will cause the svd inside the DLT to fail.
     Bundle const bundle{MatrixX2d(10, 2), MatrixX3d(10, 3)};
 
@@ -62,7 +61,6 @@ TEST(PnpDlt, TestDlt22) {
 }
 
 TEST(PnpDlt, TestDlt22FailedDlt) {
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
     // An empty bundle will cause the svd inside the DLT to fail.
     Bundle const bundle{MatrixX2d(10, 2), MatrixX3d(10, 3)};
 

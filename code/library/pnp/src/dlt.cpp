@@ -42,7 +42,7 @@ std::optional<Isometry3d> Dlt22(Bundle const& bundle) {
     auto const A{ConstructA<3>(bundle.pixels, normalized_points)};
     auto const H{SolveForH<3>(A)};
     if (not H.has_value()) {
-        return std::nullopt; // LCOV_EXCL_LINE
+        return std::nullopt;
     }
     Matrix3d const H_star{H.value() * tf_points};  //  Denormalize
 

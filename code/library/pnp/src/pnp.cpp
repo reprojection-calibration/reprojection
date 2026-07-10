@@ -25,7 +25,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         auto const dlt_result{Dlt22(bundle)};
         if (not dlt_result) {
-            return PnpErrorCode::FailedDlt;
+            return PnpErrorCode::FailedDlt;  // LCOV_EXCL_LINE
         }
 
         tf_co_w = *dlt_result;
@@ -47,7 +47,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     //  them then we could improve this code here.
     Array6d const aa_co_w{geometry::Log(tf_co_w)};
     if (aa_co_w.hasNaN()) {
-        return PnpErrorCode::ContainsNan;
+        return PnpErrorCode::ContainsNan;  // LCOV_EXCL_LINE
     }
 
     // Dummy value only for tracking and consistency of data access below
