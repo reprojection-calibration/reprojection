@@ -203,13 +203,11 @@ ExtractedTarget Aprilgrid3Extractor::RemoveOutliers(MatrixX2d const& raw_corners
     double const median{eigen_utilities::Median(delta)};
     double const mad{eigen_utilities::Median((delta - median).abs())};
 
-    // TODO(Jack): The scalar multiple of the MAD is at this time (29.04.2026) completely arbitrary. If someone had an
-    // intelligent or theoretically justified/conventional value that would be appreciated.
     // NOTE(Jack): We only check that the delta is less than the threshold and not within an upper and lower bound
     // because lower deltas are ok (reflect a accurate extraction under our assumption).
-    // NOTE(Jack): We add an epsilon here for the case of perfect test data that it does not mask out values because the
-    // mad is a near float zero. This should have no impact on real data as it is so small. Hopefully...
-    ArrayXb const mask{delta < median + (2 * mad) + 1e-9};
+    // "For normally distributed data k is taken to be 1.4826" - https://en.wikipedia.org/wiki/Median_absolute_deviation
+    double const robust_threshold{median + 2 * 1.4826 * mad};
+    ArrayXb const mask{delta < std::max(robust_threshold, 1.0)};
     ArrayXi const valid_indices{eigen_utilities::MaskToRowId(mask)};
 
     return target(valid_indices);
