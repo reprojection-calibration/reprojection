@@ -61,9 +61,8 @@ TEST(Pnp, TestNotEnoughPoints) {
 }
 
 TEST(Pnp, TestForgetToPassBounds) {
-    MatrixX2d const pixels(10, 2);
-    MatrixX3d const points(10, 3);
-    pnp::PnpResult const pnp_result{pnp::Pnp({pixels, points})};
+    Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
+    pnp::PnpResult const pnp_result{pnp::Pnp(bundle)};
 
     ASSERT_TRUE(std::holds_alternative<pnp::PnpErrorCode>(pnp_result));
     pnp::PnpErrorCode const error_code{std::get<pnp::PnpErrorCode>(pnp_result)};
@@ -71,7 +70,7 @@ TEST(Pnp, TestForgetToPassBounds) {
 }
 
 TEST(Pnp, TestFailedDlt) {
-    Bundle const bundle{MatrixX2d(10, 2), MatrixX3d(10, 3)};
+    Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
     pnp::PnpResult const pnp_result{pnp::Pnp(bundle, testing_utilities::unit_image_bounds)};
 
     ASSERT_TRUE(std::holds_alternative<pnp::PnpErrorCode>(pnp_result));

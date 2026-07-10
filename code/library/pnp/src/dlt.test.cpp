@@ -35,7 +35,7 @@ TEST(PnpDlt, TestDlt23) {
 
 TEST(PnpDlt, TestDlt23FailedDlt) {
     // An empty bundle will cause the svd inside the DLT to fail.
-    Bundle const bundle{MatrixX2d(10, 2), MatrixX3d(10, 3)};
+    Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
 
     auto const dlt_result{pnp::Dlt23(bundle)};
     EXPECT_FALSE(dlt_result.has_value());
@@ -62,7 +62,7 @@ TEST(PnpDlt, TestDlt22) {
 
 TEST(PnpDlt, TestDlt22FailedDlt) {
     // An empty bundle will cause the svd inside the DLT to fail.
-    Bundle const bundle{MatrixX2d(10, 2), MatrixX3d(10, 3)};
+    Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
 
     auto const tf_co_w{pnp::Dlt22(bundle)};
     EXPECT_FALSE(tf_co_w.has_value());
