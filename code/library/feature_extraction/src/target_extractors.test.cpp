@@ -19,7 +19,7 @@ TEST(TargetExtractors, TestCheckerboardExtractor) {
     double const unit_dimension{0.5};
     auto const extractor{CheckerboardExtractor{pattern_size, unit_dimension}};
 
-    std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(image)};
+    auto const target{extractor.ExtractImplementation(image)};
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
@@ -48,7 +48,7 @@ TEST(TargetExtractors, TestCircleGridExtractor) {
     double const unit_dimension{0.5};
     auto const extractor{CircleGridExtractor{pattern_size, unit_dimension, asymmetric}};
 
-    std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(image)};
+    auto const target{extractor.ExtractImplementation(image)};
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
@@ -81,7 +81,7 @@ TEST(TargetExtractors, TestCircleGridExtractorAsymmetric) {
     double const unit_dimension{0.5};
     auto const extractor{CircleGridExtractor{pattern_size, unit_dimension, asymmetric}};
 
-    std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(image)};
+    auto const target{extractor.ExtractImplementation(image)};
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
@@ -108,7 +108,7 @@ TEST_F(AprilTagTestFixture, TestAprilgrid3Extractor) {
     double const unit_dimension{0.5};
     auto const extractor{Aprilgrid3Extractor{pattern_size, unit_dimension}};
 
-    std::optional<ExtractedTarget> const target{extractor.ExtractImplementation(april_tag)};
+    auto const target{extractor.ExtractImplementation(april_tag)};
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
