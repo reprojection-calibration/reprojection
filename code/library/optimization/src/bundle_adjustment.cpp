@@ -1,7 +1,8 @@
 #include "optimization/bundle_adjustment.hpp"
 
+#include <ceres/loss_function.h>
+
 #include <ranges>
-#include <thread>
 
 #include "cost_functions/reprojection_error.hpp"
 
@@ -24,7 +25,8 @@ std::tuple<OptimizationState, CeresState> BundleAdjustment(CameraInfo const& sen
             ceres::CostFunction* const cost_function{
                 cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j))};
 
-            problem.AddResidualBlock(cost_function, nullptr, optimized_state.camera_state.intrinsics.data(),
+            problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
+                                     optimized_state.camera_state.intrinsics.data(),
                                      optimized_state.frames.at(timestamp_ns).pose.data());
         }
     }
@@ -32,10 +34,6 @@ std::tuple<OptimizationState, CeresState> BundleAdjustment(CameraInfo const& sen
     if (constant_intrinsics) {
         problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
     }
-
-    // TODO(Jack): Copy and pasted!
-    unsigned int const hw_threads{std::thread::hardware_concurrency()};
-    ceres_state.solver_options.num_threads = hw_threads > 1 ? hw_threads - 1 : 1;
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 

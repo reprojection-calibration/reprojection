@@ -27,3 +27,30 @@ TEST(CalibrationUtilities, TestSortIntoRowsAndCols) {
     EXPECT_TRUE(cols[0].pixels.row(0).isApprox(target.bundle.pixels.row(0)));
     EXPECT_TRUE(cols[0].pixels.row(1).isApprox(target.bundle.pixels.row(3)));
 }
+
+TEST(CalibrationUtilities, TestSampleMap) {
+    using DummyMapT = std::map<int, double>;
+    DummyMapT input;
+
+    // Returns an empty map when the input map is empty.
+    DummyMapT result{calibration::SampleMap<DummyMapT>(input, 3)};
+    EXPECT_EQ(std::size(result), 0);
+
+    // Returns the input map when more samples are requested then are in the input map.
+    input.insert({1, 1.1});
+    result = calibration::SampleMap<DummyMapT>(input, 3);
+    EXPECT_EQ(std::size(result), 1);
+
+    // Returns the middle value when only one sample is requested.
+    input.insert({2, 2.1});
+    input.insert({3, 3.1});
+    result = calibration::SampleMap<DummyMapT>(input, 1);
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(result.at(2), 2.1);
+
+    // Happy path - select two values from a map with three.
+    result = calibration::SampleMap<DummyMapT>(input, 2);
+    EXPECT_EQ(std::size(result), 2);
+    EXPECT_EQ(result.at(1), 1.1);
+    EXPECT_EQ(result.at(3), 3.1);
+}

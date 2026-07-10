@@ -147,7 +147,7 @@ ENTRYPOINT ["/buildroot/entrypoint_dashboard.sh"]
 
 FROM dashboard-stage AS dashboard-smoke-test-stage
 
-HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://0.0.0.0:8050 || exit 1
+HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.0.1:8050 || exit 1
 
 
 # The code coverage solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example

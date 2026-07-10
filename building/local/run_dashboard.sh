@@ -21,11 +21,11 @@ xhost +local:docker
 
 docker run \
   --env DISPLAY="${DISPLAY}" \
+  --network=host \
   --name reprojection-calibration-dashboard \
-  --publish 8050:8050 \
   --rm \
   --user "$(id -u):$(id -g)" \
   --volume /dev:/dev \
-  --volume /tmp/.X11-unix:/tmp/.X11-unix \
+  --volume /tmp/.X11-unix:/tmp/.X11-unix:ro \
   "${DOCKER_ARGS[@]}" \
   reprojection:dashboard
