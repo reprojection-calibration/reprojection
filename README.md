@@ -4,8 +4,8 @@ This is an application for target-based intrinsic camera calibration and extrins
 automatically compatible with ROS1 and ROS2 and is completely dockerized.
 
 > [!WARNING]
-> The Aprilgrid3 has been updated to version two! Please find the new target files [here](media/targets). The previous
-> Aprilgrid3 version one is no longer compatible.
+> The Aprilgrid3 has been updated to version two (July 10, 2026)! Please find the new target files [here](media/targets). The previous
+> Aprilgrid3 version one is no longer compatible. (Remove this message on August 10, 2026)
 
 ## Build
 
