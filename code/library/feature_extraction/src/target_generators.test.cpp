@@ -43,12 +43,12 @@ TEST(TargetGenerators, TestGenerateCircleGridAsymmetric) {
 TEST_F(AprilTagTestFixture, TestGenerateAprilgrid3) {
     // NOTE(Jack): Remember opencv specifies the dimensions as (width, height), not the normal (heigh/width) or
     // (row/col) that we use in this project.
-    cv::Size const pattern_size{4, 3};
+    cv::Size const pattern_size{3, 4};
     cv::Mat const april_board{Aprilgrid3Generation::GenerateBoard(
         tag_family_handler_.tag_family->nbits, tag_family_handler_.tag_family->codes, bit_size_pixel_, pattern_size)};
 
-    EXPECT_EQ(april_board.rows, 480);
-    EXPECT_EQ(april_board.cols, 640);
+    EXPECT_EQ(april_board.rows, 640);
+    EXPECT_EQ(april_board.cols, 480);
 }
 
 TEST_F(AprilTagTestFixture, TestGenerateAprilTag) {
