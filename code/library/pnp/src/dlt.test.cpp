@@ -17,7 +17,10 @@ TEST(PnpDlt, TestDlt23) {
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 60, 1, false)};
 
     for (auto const& [timestamp_ns, target_i] : targets) {
-        auto const [tf_co_w, K_vec]{pnp::Dlt23(target_i.bundle)};
+        auto const dlt_result{pnp::Dlt23(target_i.bundle)};
+        ASSERT_TRUE(dlt_result.has_value());
+        auto const [tf_co_w, K_vec]{*dlt_result};
+
         Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
@@ -30,6 +33,14 @@ TEST(PnpDlt, TestDlt23) {
     }
 }
 
+TEST(PnpDlt, TestDlt23FailedDlt) {
+    // An empty bundle will cause the svd inside the DLT to fail.
+    Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
+
+    auto const dlt_result{pnp::Dlt23(bundle)};
+    EXPECT_FALSE(dlt_result.has_value());
+}
+
 TEST(PnpDlt, TestDlt22) {
     // Points must have Z=0 (flat = true) for Dlt22
     CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
@@ -38,11 +49,21 @@ TEST(PnpDlt, TestDlt22) {
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         auto const tf_co_w{pnp::Dlt22(target_i.bundle)};
+        ASSERT_TRUE(tf_co_w.has_value());
+
         Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
 
-        EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
-                                                  << tf_co_w.matrix() << "\nexpected result:\n"
-                                                  << gt_tf_co_w.matrix();
-        EXPECT_FLOAT_EQ(tf_co_w.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
+        EXPECT_TRUE(tf_co_w->isApprox(gt_tf_co_w)) << "Result:\n"
+                                                   << tf_co_w->matrix() << "\nexpected result:\n"
+                                                   << gt_tf_co_w.matrix();
+        EXPECT_FLOAT_EQ(tf_co_w->linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
     }
+}
+
+TEST(PnpDlt, TestDlt22FailedDlt) {
+    // An empty bundle will cause the svd inside the DLT to fail.
+    Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
+
+    auto const tf_co_w{pnp::Dlt22(bundle)};
+    EXPECT_FALSE(tf_co_w.has_value());
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iostream>
+#include <optional>
 
 #include "matrix_utilities.hpp"
 
@@ -41,9 +43,22 @@ Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(MatrixX2d const& pixels,
 // SolveForH suggests. It is used in Dlt22 to solve for the 3x3 H matrix and in Dlt23 to solve for the 3x4 P matrix. I
 // think P is a homography therefore SolveForH is a name that covers both use cases.
 template <int N>
-Eigen::Matrix<double, 3, N> SolveForH(Eigen::Matrix<double, Eigen::Dynamic, 3 * N> const& A) {
+std::optional<Eigen::Matrix<double, 3, N>> SolveForH(Eigen::Matrix<double, Eigen::Dynamic, 3 * N> const& A) {
     Eigen::JacobiSVD<MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+    // WARN(Jack): This relative threshold multiplier was found heursitically by looking at one single dataset where I
+    // was having trouble with a failed DLT solve causing a crazy frame pose and messing up the rest of the
+    // optimization. If this value really applies everywhere I really do not know.
+    // TODO(Jack): Reading about this threshold it seems like most places default to the value of doubel::epsilon, but
+    // here we had to set the much large value of 5-5. Did we do something wrong? This fact really smells to me.
+    double const relative_threshold{5e-5 * static_cast<double>(std::max(A.rows(), A.cols()))};
+    svd.setThreshold(relative_threshold);
+
+    constexpr int expected_rank{3 * N - 1};
+    if (svd.rank() < expected_rank) {
+        return std::nullopt;
+    }
 
     // TODO (Jack): There has to be a more expressive way to pack .col(3*N -1) into P and select the column using 3*N -1
     Eigen::Matrix<double, 3, N> H;

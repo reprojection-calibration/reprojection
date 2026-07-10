@@ -13,6 +13,7 @@ namespace reprojection::pnp {
 
 enum class PnpErrorCode {
     ContainsNan,
+    FailedDlt,
     FailedRefinement,
     InvalidDlt,
 };

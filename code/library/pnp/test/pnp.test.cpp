@@ -61,23 +61,19 @@ TEST(Pnp, TestNotEnoughPoints) {
 }
 
 TEST(Pnp, TestForgetToPassBounds) {
-    MatrixX2d const pixels(10, 2);
-    MatrixX3d const points(10, 3);
-    pnp::PnpResult const pnp_result{pnp::Pnp({pixels, points})};
+    Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
+    pnp::PnpResult const pnp_result{pnp::Pnp(bundle)};
 
     ASSERT_TRUE(std::holds_alternative<pnp::PnpErrorCode>(pnp_result));
     pnp::PnpErrorCode const error_code{std::get<pnp::PnpErrorCode>(pnp_result)};
     EXPECT_EQ(error_code, pnp::PnpErrorCode::InvalidDlt);
 }
 
-// WARN(Jack): I am not 100% sure this will always result in nan, but if you throw in total junk data it seems like to
-// DLT evaluation totally collapses.
-TEST(Pnp, TestNans) {
-    MatrixX2d const pixels(10, 2);
-    MatrixX3d const points(10, 3);
-    pnp::PnpResult const pnp_result{pnp::Pnp({pixels, points}, testing_utilities::unit_image_bounds)};
+TEST(Pnp, TestFailedDlt) {
+    Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
+    pnp::PnpResult const pnp_result{pnp::Pnp(bundle, testing_utilities::unit_image_bounds)};
 
     ASSERT_TRUE(std::holds_alternative<pnp::PnpErrorCode>(pnp_result));
     pnp::PnpErrorCode const error_code{std::get<pnp::PnpErrorCode>(pnp_result)};
-    EXPECT_EQ(error_code, pnp::PnpErrorCode::ContainsNan);
+    EXPECT_EQ(error_code, pnp::PnpErrorCode::FailedDlt);
 }
