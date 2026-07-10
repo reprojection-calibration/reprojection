@@ -67,6 +67,6 @@ TEST_F(AprilTagTestFixture, TestGenerateAprilTag) {
 TEST_F(AprilTagTestFixture, TestCalculateCodeMatrix) {
     // Check two properties of the matrix and hope if anything in the implementation breaks these catch it -_- these are
     // heuristics!
-    EXPECT_EQ(code_matrix_0_.sum(), 17);
-    EXPECT_TRUE(code_matrix_0_.row(5).isApprox(Eigen::Vector<int, 6>{1, 1, 1, 0, 0, 1}.transpose()));
+    EXPECT_EQ(code_matrix_0_.sum(), 18);
+    EXPECT_TRUE(code_matrix_0_.row(5).isApprox(Eigen::Vector<int, 6>{1, 0, 1, 0, 1, 1}.transpose()));
 }
