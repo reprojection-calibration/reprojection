@@ -112,20 +112,17 @@ TEST_F(AprilTagTestFixture, TestAprilgrid3Extractor) {
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
-    // NOTE(Jack): One of the corners (the 1,1 corner) gets filtered out by our MAD based outlier rejection. While this
-    // is not exactly as clean as getting all four corners back, it also is not a dealbreaker. It would be nice to
-    // understand why the original homography transformation has so much error that it gets eliminated by the outlier
-    // rejection, but I checked briefly and found no bug, the homography from the april detector is just the way it is.
-    EXPECT_EQ(pixels.rows(), 3);
-    MatrixX2d const gt_pixels{{9.5, 9.5}, {129.5, 9.5}, {9.5, 129.5}};
+    std::cout << pixels << std::endl;
+    EXPECT_EQ(pixels.rows(), 4);
+    MatrixX2d const gt_pixels{{19.5, 19.5}, {139.5, 19.5}, {19.5, 139.5}, {139.5, 139.5}};
     EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-4));
 
     MatrixX3d const& points{target->bundle.points};
-    MatrixX3d const gt_points{{0, 0, 0}, {0, 0.5, 0}, {0.5, 0, 0}};
+    MatrixX3d const gt_points{{0, 0, 0}, {0, 0.5, 0}, {0.5, 0, 0}, {0.5, 0.5, 0}};
     EXPECT_TRUE(points.isApprox(gt_points));
 
     ArrayX2i const& indices{target->indices};
-    ArrayX2i const gt_indices{{0, 0}, {0, 1}, {1, 0}};
+    ArrayX2i const gt_indices{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
     EXPECT_TRUE(indices.isApprox(gt_indices));
 }
 
