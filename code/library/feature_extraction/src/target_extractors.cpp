@@ -84,10 +84,11 @@ std::optional<ExtractedTarget> CircleGridExtractor::ExtractImplementation(cv::Ma
 // NOTE(Jack): Use of the tagCustom36h11 and all settings are hardcoded here! This means no on can select another
 // family. Find a way to make this configurable if possible, but it will likely require recompilation, so it might not
 // really be feasible - there might also be no problem with hardcoding the tag family for most use cases.
+// TODO(Jack): Should we pass the number of threads from the application here? Does that speed things up?
 Aprilgrid3Extractor::Aprilgrid3Extractor(cv::Size const& pattern_size, const double unit_dimension)
     : TargetExtractor(pattern_size, unit_dimension),
       tag_family_{AprilTagFamily{tagCustom36h11_create(), tagCustom36h11_destroy}},
-      tag_detector_{AprilTagDetector{tag_family_, {2.0, 0.0, 1, false, false}}} {
+      tag_detector_{AprilTagDetector{tag_family_, {2.0, 0.0, 1, false, true}}} {
     point_indices_ = eigen_utilities::GenerateGridIndices(2 * pattern_size_.height, 2 * pattern_size_.width);
     points_ = CornerPositions(point_indices_, unit_dimension);
 }
@@ -148,10 +149,10 @@ ArrayXi Aprilgrid3Extractor::VisibleGeometry(cv::Size const& pattern_size,
 MatrixX3d Aprilgrid3Extractor::CornerPositions(ArrayX2i const& indices, double const unit_dimension) {
     MatrixX3d points{indices.rows(), 3};
     for (int i{0}; i < indices.rows(); ++i) {
-        // WARN(Jack): If we change the pattern (num_bits or design) then this 0.4 (4bits/10bits) will change! This
+        // WARN(Jack): If we change the pattern (num_bits or design) then this (1/3) (4bits/12bits) will change! This
         // function is currently assuming that Aprilgrid3 will be fixed forever using the custom 36h11 tag family.
-        points.row(i)(0) = AlternatingSum(indices.row(i)(0), unit_dimension, 0.4 * unit_dimension);
-        points.row(i)(1) = AlternatingSum(indices.row(i)(1), unit_dimension, 0.4 * unit_dimension);
+        points.row(i)(0) = AlternatingSum(indices.row(i)(0), unit_dimension, (1.0 / 3) * unit_dimension);
+        points.row(i)(1) = AlternatingSum(indices.row(i)(1), unit_dimension, (1.0 / 3) * unit_dimension);
     }
     points.col(2).setZero();
 
