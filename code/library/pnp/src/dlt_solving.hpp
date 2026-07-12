@@ -44,8 +44,12 @@ Eigen::Matrix<double, Eigen::Dynamic, 3 * N> ConstructA(MatrixX2d const& pixels,
 // think P is a homography therefore SolveForH is a name that covers both use cases.
 template <int N>
 std::optional<Eigen::Matrix<double, 3, N>> SolveForH(Eigen::Matrix<double, Eigen::Dynamic, 3 * N> const& A) {
+    std::cout << 0 << std::endl;
+
     Eigen::JacobiSVD<MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+    std::cout << 1 << std::endl;
 
     // WARN(Jack): This relative threshold multiplier was found heursitically by looking at one single dataset where I
     // was having trouble with a failed DLT solve causing a crazy frame pose and messing up the rest of the
@@ -55,11 +59,16 @@ std::optional<Eigen::Matrix<double, 3, N>> SolveForH(Eigen::Matrix<double, Eigen
     double const relative_threshold{5e-5 * static_cast<double>(std::max(A.rows(), A.cols()))};
     svd.setThreshold(relative_threshold);
 
+    std::cout << 2 << std::endl;
+
     // TODO(Jack): Is less than the right condition to check here? What about enforcing actually equality?
     constexpr int expected_rank{3 * N - 1};
     if (svd.rank() < expected_rank) {
+        std::cout << 2.1 << std::endl;
         return std::nullopt;
     }
+
+    std::cout << 3 << std::endl;
 
     // TODO (Jack): There has to be a more expressive way to pack .col(3*N -1) into P and select the column using 3*N -1
     Eigen::Matrix<double, 3, N> H;
@@ -67,6 +76,8 @@ std::optional<Eigen::Matrix<double, 3, N>> SolveForH(Eigen::Matrix<double, Eigen
     H.row(0) = last_col.topRows<N>();
     H.row(1) = last_col.middleRows(N, N);
     H.row(2) = last_col.bottomRows<N>();
+
+    std::cout << 4 << std::endl;
 
     return H;
 }
