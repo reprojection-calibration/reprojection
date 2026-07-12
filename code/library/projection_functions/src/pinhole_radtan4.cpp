@@ -49,9 +49,14 @@ std::tuple<Array2d, Matrix2d> PinholeRadtan4::JacobianUpdate(Array4d const& dist
 
     // TODO(Jack): What would we do if the evaluation here was not successful? Is that even a worry we need to consider?
     // Right now we add an assertion so we can catch failures in debug builds.
+    // TODO(Jack): Under what circumstances would this ever not be successful? Are those relevant to us? And if so why
+    // do we not check this at all the other places we call evaluate?
     bool success{function->Evaluate(p_cam_ptr_ptr, distorted_p_cam_ptr, J_ptr_ptr)};
     assert(success);
     static_cast<void>(success);
+
+    // TODO(Jack): Should we use a smart pointer?!
+    delete function;
 
     Vector2d const distorted_p_cam{distorted_p_cam_ptr[0], distorted_p_cam_ptr[1]};
     Matrix2d const J{Eigen::Map<const Matrix2d>(J_ptr)};
