@@ -49,6 +49,13 @@ std::optional<Eigen::Matrix<double, 3, N>> SolveForH(Eigen::Matrix<double, Eigen
     Eigen::JacobiSVD<MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
+    std::cout << "sizeof(Eigen::Index): " << sizeof(Eigen::Index) << '\n';
+    std::cout << "sizeof(MatrixXd): " << sizeof(Eigen::MatrixXd) << '\n';
+    std::cout << "sizeof(JacobiSVD): " << sizeof(Eigen::JacobiSVD<Eigen::MatrixXd>) << '\n';
+    std::cout << "A rows/cols: " << A.rows() << ", " << A.cols() << '\n';
+    std::cout << "V rows/cols: " << svd.matrixV().rows() << ", " << svd.matrixV().cols() << '\n';
+    std::cout << "singular values size: " << svd.singularValues().size() << '\n';
+
     std::cout << 1 << std::endl;
 
     // WARN(Jack): This relative threshold multiplier was found heursitically by looking at one single dataset where I
