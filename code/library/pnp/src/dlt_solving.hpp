@@ -57,12 +57,15 @@ std::optional<Eigen::Matrix<double, 3, N>> SolveForH(Eigen::Matrix<double, Eigen
     // TODO(Jack): Reading about this threshold it seems like most places default to the value of doubel::epsilon, but
     // here we had to set the much large value of 5-5. Did we do something wrong? This fact really smells to me.
     double const relative_threshold{5e-5 * static_cast<double>(std::max(A.rows(), A.cols()))};
+    std::cout << "relative_threshold: " << relative_threshold << std::endl;
     svd.setThreshold(relative_threshold);
 
     std::cout << 2 << std::endl;
 
     // TODO(Jack): Is less than the right condition to check here? What about enforcing actually equality?
     constexpr int expected_rank{3 * N - 1};
+    std::cout << "expected_rank:" << expected_rank << std::endl;
+    std::cout << "svd.rank():" << svd.rank() << std::endl;
     if (svd.rank() < expected_rank) {
         std::cout << 2.1 << std::endl;
         return std::nullopt;
