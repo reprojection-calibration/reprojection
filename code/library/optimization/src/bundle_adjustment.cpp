@@ -60,6 +60,9 @@ ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurement
                 cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(i), points.row(i))};
 
             cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(i).data(), nullptr);
+
+            // TODO(Jack): Should we use a smart pointer instead?
+            delete cost_function;
         }
 
         residuals.insert({timestamp_ns, residuals_i});

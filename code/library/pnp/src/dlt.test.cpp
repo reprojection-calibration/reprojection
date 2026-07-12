@@ -34,7 +34,9 @@ TEST(PnpDlt, TestDlt23) {
 }
 
 TEST(PnpDlt, TestDlt23FailedDlt) {
-    // An empty bundle will cause the svd inside the DLT to fail.
+    // TODO(Jack): My original intention was to trigger an svd failure with this input data. But that did not work
+    // because we cannot normalize this data as it leads to a division by zero (I think that is the root cause). We
+    // should work to engineer test data that induces a rank deficieny and replace/augment this test.
     Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
 
     auto const dlt_result{pnp::Dlt23(bundle)};
@@ -61,7 +63,7 @@ TEST(PnpDlt, TestDlt22) {
 }
 
 TEST(PnpDlt, TestDlt22FailedDlt) {
-    // An empty bundle will cause the svd inside the DLT to fail.
+    // TODO(Jack): See note above in TestDlt23FailedDlt
     Bundle const bundle{MatrixX2d::Zero(10, 2), MatrixX3d::Zero(10, 3)};
 
     auto const tf_co_w{pnp::Dlt22(bundle)};

@@ -9,6 +9,7 @@ MatrixXd InterleaveRowWise(MatrixXd const& mat) {
     return interleaved_matrix;
 }
 
+// ERROR(Jack): This would not handle the case when the mean_magnitude is zero!
 std::tuple<MatrixXd, MatrixXd> NormalizeColumnWise(MatrixXd const& mat) {
     VectorXd const center{mat.colwise().mean()};
     double const mean_magnitude{((mat.rowwise() - center.transpose())).rowwise().norm().mean()};

@@ -15,6 +15,10 @@ namespace reprojection::application {
 // diverge. Not nice!
 // cppcheck-suppress passedByValue
 OptimizationState AlignRotations(OptimizationState state) {
+    if (std::empty(state.frames)) {
+        return state;
+    }
+
     Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.head<3>()};
     for (auto& frame_i : state.frames | std::views::values) {
         Vector3d so3_i{frame_i.pose.head<3>()};

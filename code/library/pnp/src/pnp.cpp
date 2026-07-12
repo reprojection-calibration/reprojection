@@ -46,8 +46,8 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     //  If we had a better theoretical algorithmic understanding of what causes these failures and how we can detect
     //  them then we could improve this code here.
     Array6d const aa_co_w{geometry::Log(tf_co_w)};
-    if (aa_co_w.hasNaN()) {
-        return PnpErrorCode::ContainsNan;  // LCOV_EXCL_LINE
+    if (not aa_co_w.allFinite()) {
+        return PnpErrorCode::NotAllFinite;  // LCOV_EXCL_LINE
     }
 
     // Dummy value only for tracking and consistency of data access below
