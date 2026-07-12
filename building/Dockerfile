@@ -168,6 +168,8 @@ HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.
 # to get past the problem.
 FROM base-stage AS debug-build-stage
 
+# TODO(Jack): Enable a sanitizer by default. This helped me find a lot of memory bugs and probably should be default!
+
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
