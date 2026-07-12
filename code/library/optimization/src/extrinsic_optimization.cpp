@@ -159,16 +159,18 @@ ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic cons
         ceres::CostFunction const* const cost_function_1{cost_functions::RigidBodyAngularVelocity::Create(
             imu_data.at(timestamp_ns).angular_velocity, u_i, spline_w_co.GetTimeHandler().delta_t_ns_)};
 
-        Vector6d residual_i;
+        // WARN(Jack): If we ever decide to remove the gravity residual then we need to remember to change this back to
+        // length 6 and also remove the .segment() logic below!
+        Array7d residual_i;
         cost_function_1->Evaluate(parameter_blocks.data(), residual_i.topRows<3>().data(), nullptr);
 
         parameter_blocks.insert(std::cbegin(parameter_blocks) + 1, extrinsic.gravity.data());
         ceres::CostFunction const* const cost_function_2{cost_functions::RigidBodyLinearAcceleration::Create(
             imu_data.at(timestamp_ns).linear_acceleration, u_i, spline_w_co.GetTimeHandler().delta_t_ns_)};
 
-        cost_function_2->Evaluate(parameter_blocks.data(), residual_i.bottomRows<3>().data(), nullptr);
+        cost_function_2->Evaluate(parameter_blocks.data(), residual_i.bottomRows<4>().data(), nullptr);
 
-        imu_residuals.insert({timestamp_ns, {residual_i.topRows<3>(), residual_i.bottomRows<3>()}});
+        imu_residuals.insert({timestamp_ns, {residual_i.topRows<3>(), residual_i.segment(3, 3)}});
     }
 
     return imu_residuals;
