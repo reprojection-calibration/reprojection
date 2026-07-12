@@ -120,6 +120,3 @@ Before running the application execute this command in the terminal:
       export SPDLOG_LEVEL=debug
 
 For a list of all log levels please see the official [spdlog](https://github.com/gabime/spdlog) documentation. 
-
-
-REMOVE
