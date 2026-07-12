@@ -131,6 +131,9 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
                                        spline_w_co.GetTimeHandler().delta_t_ns_)};
 
             cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(j).data(), nullptr);
+
+            // TODO(Jack): Should we use a smart pointer instead?
+            delete cost_function;
         }
 
         residuals.insert({timestamp_ns, residuals_i});
@@ -169,6 +172,10 @@ ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic cons
             imu_data.at(timestamp_ns).linear_acceleration, u_i, spline_w_co.GetTimeHandler().delta_t_ns_)};
 
         cost_function_2->Evaluate(parameter_blocks.data(), residual_i.bottomRows<4>().data(), nullptr);
+
+        // TODO(Jack): Should we use a smart pointer instead?
+        delete cost_function_1;
+        delete cost_function_2;
 
         imu_residuals.insert({timestamp_ns, {residual_i.topRows<3>(), residual_i.segment(3, 3)}});
     }
