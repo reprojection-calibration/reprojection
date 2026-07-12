@@ -55,6 +55,7 @@ std::optional<Eigen::Matrix<double, 3, N>> SolveForH(Eigen::Matrix<double, Eigen
     double const relative_threshold{5e-5 * static_cast<double>(std::max(A.rows(), A.cols()))};
     svd.setThreshold(relative_threshold);
 
+    // TODO(Jack): Is less than the right condition to check here? What about enforcing actually equality?
     constexpr int expected_rank{3 * N - 1};
     if (svd.rank() < expected_rank) {
         return std::nullopt;
