@@ -1,0 +1,6 @@
+(15.07.2026) - there might be a rounding error in the extracted target/image timestamps. As I was preparing the TUM test
+data for the benchmarking repository I noticed that all the timestamps have the last same three digits. For example for
+cam0 in dataset four the last three digits are "759". But if you look at our test database you see that the last three
+digits are NOT all the same. I went and checked the raw rosbags and found that the timestamps nanosecond place all end
+with 759 (for dataset four cam0), and therefore this leads me to believe that when we extracted the test database here
+there was a bug where the precision was not handled properly. Not critical, but it should be noted!
