@@ -9,7 +9,10 @@
 namespace reprojection::steps {
 
 std::string FeatureExtraction::HashInputs() const {
-    return hashing::HashArguments(target_info_, *images_, static_cast<uint64_t>(show_extraction_));
+    std::cout << "FeatureExtraction: "
+              << hashing::HashArguments(EntityId(), target_info_, *images_, static_cast<uint64_t>(show_extraction_))
+              << std::endl;
+    return hashing::HashArguments(EntityId(), target_info_, *images_, static_cast<uint64_t>(show_extraction_));
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!
