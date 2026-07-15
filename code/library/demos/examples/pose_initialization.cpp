@@ -52,7 +52,7 @@ int main() {
         database::InsertCameraInfo(db, camera_info);
 
         database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "4f7774755430cfbec0ce428fa8dfaf3d28a5a566d6d625af836274674ff48269");
+                             "875e2778a98a4edf3bfac18a86f6bc4e1ad50730a8dad0315ec71ea234ab6999");
 
         // Imu stuff
         if (auto const imu_cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
