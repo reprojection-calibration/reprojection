@@ -9,9 +9,6 @@
 namespace reprojection::steps {
 
 std::string FeatureExtraction::HashInputs() const {
-    std::cout << "FeatureExtraction: "
-              << hashing::HashArguments(EntityId(), target_info_, *images_, static_cast<uint64_t>(show_extraction_))
-              << std::endl;
     return hashing::HashArguments(EntityId(), target_info_, *images_, static_cast<uint64_t>(show_extraction_));
 }
 
