@@ -9,6 +9,11 @@
 namespace reprojection::steps {
 
 std::string FeatureExtraction::HashInputs() const {
+    // TODO(Jack): We should not strictly need the EntityId() here as part of they key because the target info and
+    // images_ should uniquely identify the feature extraction. However a problem arises when we have artifically
+    // triggered cache hits (for example in the benchmark testing) Where the images_ is empty and that means for the
+    // cache key is no longer unique across different cameras. To prevent this we added the EntityId(). If this is
+    // really a good way to solve this is unclear. But right now it solves our problem and does cause any new ones :)
     return hashing::HashArguments(EntityId(), target_info_, *images_, static_cast<uint64_t>(show_extraction_));
 }
 
