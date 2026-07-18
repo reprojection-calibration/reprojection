@@ -34,6 +34,7 @@ inline void ExecuteStatement(std::string_view sql, SqlitePtr const db) {
     ExecuteStatement(sql, [](sqlite3_stmt*) {}, db);
 }
 
+// Use case for batch execution in a single transaction
 // TODO(Jack): Can we use concepts here to enforce some properties on Container and Binder?
 template <typename Container, typename Binder>
 void BatchExecuteStatement(std::string_view sql, Container const& data, Binder&& binder, SqlitePtr const db) {
