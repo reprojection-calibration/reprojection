@@ -5,6 +5,6 @@
 
 namespace reprojection::database {
 
-void RemoveFromDb(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step);
+void RemoveFromDb(SqlitePtr const db, std::string_view entity_id, CalibrationStep const step);
 
 }  // namespace reprojection::database

@@ -1,6 +1,5 @@
 #include "database/database_remove.hpp"
 
-#include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
 
@@ -11,10 +10,10 @@
 
 namespace reprojection::database {
 
-void RemoveFromDb(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step) {
-    auto const binder{[step, sensor_name](sqlite3_stmt* const stmt) {
+void RemoveFromDb(SqlitePtr const db, std::string_view entity_id, CalibrationStep const step) {
+    auto const binder{[step, entity_id](sqlite3_stmt* const stmt) {
         Sqlite3Tools::Bind(stmt, 1, ToString(step));
-        Sqlite3Tools::Bind(stmt, 2, sensor_name);
+        Sqlite3Tools::Bind(stmt, 2, entity_id);
     }};
 
     ExecuteStatement(sql_statements::calibration_steps_delete, binder, db);
