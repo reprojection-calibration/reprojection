@@ -19,6 +19,7 @@ namespace reprojection::database {
 
 namespace utils {
 
+// TODO(Jack): Should this be named BindStepAndEntity?
 // TODO(Jack): Combine this one with the one in the database read file?
 void BindStepAndSensor(sqlite3_stmt* const stmt, CalibrationStep const step, std::string_view sensor_name) {
     Sqlite3Tools::Bind(stmt, 1, ToString(step));
@@ -152,15 +153,16 @@ void InsertPoses(SqlitePtr const db, std::string_view sensor_name, CalibrationSt
     BatchExecuteStatement(sql_statements::poses_insert, data, binder, db);
 }
 
-void InsertImuErrors(SqlitePtr const db, std::string_view sensor_name, CalibrationStep const step_name,
-                     ImuErrors const& data) {
-    auto const binder{[step_name, sensor_name](sqlite3_stmt* const stmt, auto const& data_i) {
+void InsertImuErrors(SqlitePtr const db, std::string_view entity_id, CalibrationStep const step_name,
+                     std::string_view imu_name, ImuErrors const& data) {
+    auto const binder{[step_name, entity_id, imu_name](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_error] = data_i;
 
-        utils::BindStepAndSensor(stmt, step_name, sensor_name);
-        Sqlite3Tools::Bind(stmt, 3, timestamp_ns);
-        utils::BindEigenColumn<Vector3d>(stmt, 4, imu_error.delta_angular_velocity);
-        utils::BindEigenColumn<Vector3d>(stmt, 7, imu_error.delta_linear_acceleration);
+        utils::BindStepAndSensor(stmt, step_name, entity_id);
+        Sqlite3Tools::Bind(stmt, 3, imu_name);
+        Sqlite3Tools::Bind(stmt, 4, timestamp_ns);
+        utils::BindEigenColumn<Vector3d>(stmt, 5, imu_error.delta_angular_velocity);
+        utils::BindEigenColumn<Vector3d>(stmt, 8, imu_error.delta_linear_acceleration);
     }};
 
     BatchExecuteStatement(sql_statements::imu_errors_insert, data, binder, db);
