@@ -167,13 +167,13 @@ TEST_F(CameraDatabaseFixture, TestTargets) {
 }
 
 TEST_F(ImuDatabaseFixture, TestImuMeasurements) {
-    ImuMeasurements result{database::ReadImuData(db, sensor_name)};
+    ImuMeasurements result{database::ReadImuData(db, imu_name)};
     EXPECT_EQ(std::size(result), 0);
 
     // As of writing (05.06.2026) there are not yet any foreign key constraints for writing IMU dat into the db.
     EXPECT_NO_THROW(InsertImuData());
 
-    result = database::ReadImuData(db, sensor_name);
+    result = database::ReadImuData(db, imu_name);
     EXPECT_EQ(std::size(result), 1);
     EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
 
@@ -185,7 +185,7 @@ TEST_F(ImuDatabaseFixture, TestImuMeasurements) {
 TEST_F(ImuDatabaseFixture, TestImuErrors) {
     auto const step_type{CalibrationStep::ExtrinsicInitialization};
 
-    ImuErrors result{database::ReadImuErrors(db, sensor_name, step_type)};
+    ImuErrors result{database::ReadImuErrors(db, imu_name, step_type)};
     EXPECT_EQ(std::size(result), 0);
 
     EXPECT_THROW(InsertImuError(step_type), std::runtime_error);
@@ -195,7 +195,7 @@ TEST_F(ImuDatabaseFixture, TestImuErrors) {
     InsertStep(step_type);
     EXPECT_NO_THROW(InsertImuError(step_type));
 
-    result = database::ReadImuErrors(db, sensor_name, step_type);
+    result = database::ReadImuErrors(db, imu_name, step_type);
     EXPECT_EQ(std::size(result), 1);
     EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
 

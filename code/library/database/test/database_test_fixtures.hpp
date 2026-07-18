@@ -108,26 +108,27 @@ class ImuDatabaseFixture : public ::testing::Test {
     void SetUp() override {
         db = db::OpenCalibrationDatabase(":memory:", true, false);
 
-        db::InsertEntity(db, sensor_name, Entity::Imu);
+        db::InsertEntity(db, imu_name, Entity::Imu);
     }
 
     void InsertStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
-        db::InsertStep(db, sensor_name, step_name, cache_key);
+        db::InsertStep(db, imu_name, step_name, cache_key);
     }
 
     void InsertImuData() const {
         InsertStep(CalibrationStep::ImuDataLoading);
 
-        db::InsertImuData(db, sensor_name, imu_data);
+        db::InsertImuData(db, imu_name, imu_data);
     }
 
     void InsertImuError(CalibrationStep const step_type) const {
-        db::InsertImuErrors(db, sensor_name, step_type, imu_errors);
+        db::InsertImuErrors(db, extrinsic_id, step_type, imu_name, imu_errors);
     }
 
     SqlitePtr db{nullptr};
     uint64_t timestamp_ns{0};
-    std::string sensor_name{"/imu/polaris/123"};
+    std::string imu_name{"/imu/polaris/123"};
+    std::string extrinsic_id{Extrinsic::EntityId(imu_name, "/cam/retro/123")};
 
     ImuMeasurements imu_data{{timestamp_ns, {{1, 2, 3}, {4, 5, 6}}}};
     ImuErrors imu_errors{{timestamp_ns, {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}}};
