@@ -68,6 +68,7 @@ struct Sqlite3Tools {
     }
 
     // TEST!
+    // ERROR!
     // WARN(Jack): Span is non-owning, therefore I think there is a real risk that in the long term we run into some
     // segfaults when people use this code.
     static std::span<const std::byte> SqliteBlob(sqlite3_stmt* const stmt, int const col) {
@@ -84,16 +85,15 @@ struct Sqlite3Tools {
 
 class SqliteException : public std::runtime_error {  // LCOV_EXCL_LINE
    public:
+    SqliteException(SqlitePtr const db, std::string_view sql) : std::runtime_error(FormatMessage(db, sql)) {}
+
+    // This version requires a constructed sqlite3_stmt and provides the additional functionality of expanding the bind
+    // arguments into the sql statement which helps understand better what is actually being executed.
     // TODO(Jack): Use RAII stmt version directly?
     SqliteException(SqlitePtr const db, sqlite3_stmt* const stmt) : std::runtime_error(FormatMessage(db, stmt)) {}
 
    private:
-    static std::string FormatMessage(SqlitePtr const db, sqlite3_stmt* const stmt) {
-        // TODO(Jack): Add RAII handler for expanded?
-        char* const expanded{sqlite3_expanded_sql(stmt)};
-        std::string const sql{expanded != nullptr ? std::string{expanded} : std::string{sqlite3_sql(stmt)}};
-        sqlite3_free(expanded);
-
+    static std::string FormatMessage(SqlitePtr const db, std::string_view sql) {
         return "\n[SQLite Exception]\n"
                "----------------------------------------\n"
                "SQL Query:\n" +
@@ -101,6 +101,15 @@ class SqliteException : public std::runtime_error {  // LCOV_EXCL_LINE
                + "Error Code : " + std::to_string(sqlite3_errcode(db.get())) + "\n"  //
                + "Error Msg  : " + std::string(sqlite3_errmsg(db.get())) + "\n" +
                "----------------------------------------";
+    }
+
+    static std::string FormatMessage(SqlitePtr const db, sqlite3_stmt* const stmt) {
+        // TODO(Jack): Add RAII handler for expanded?
+        char* const expanded{sqlite3_expanded_sql(stmt)};
+        std::string const sql{expanded != nullptr ? std::string{expanded} : std::string{sqlite3_sql(stmt)}};
+        sqlite3_free(expanded);
+
+        return FormatMessage(db, sql);
     }
 
     static std::string Indent(std::string_view text) {
