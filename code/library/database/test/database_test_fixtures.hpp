@@ -38,9 +38,9 @@ using TargetType = reprojection::TargetType;
 class CameraDatabaseFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        db = db::OpenCalibrationDatabase(":memory:", true, false);
+        db_ = db::OpenCalibrationDatabase(":memory:", true, false);
 
-        db::InsertEntity(db, sensor_name, Entity::Camera);
+        db::InsertEntity(db_, sensor_name_, Entity::Camera);
     }
 
     void InsertCameraInfo() const {
@@ -50,54 +50,54 @@ class CameraDatabaseFixture : public ::testing::Test {
         // depending on the context.
         InsertStep(CalibrationStep::CameraInfo);
 
-        db::InsertCameraInfo(db, camera_info);
+        db::InsertCameraInfo(db_, camera_info_);
     }
 
     void InsertImage() const {
         // NOTE(Jack): See note in InsertCameraInfo() above.
         InsertStep(CalibrationStep::ImageLoading);
 
-        db::InsertImages(db, sensor_name, EncodedImages{{timestamp_ns, {}}});
+        db::InsertImages(db_, sensor_name_, EncodedImages{{timestamp_ns_, {}}});
     }
 
     void InsertIntrinsic(CalibrationStep const step_type) const {
-        db::InsertIntrinsics(db, sensor_name, step_type, CameraModel::Pinhole, {tu::pinhole_intrinsics});
+        db::InsertIntrinsics(db_, sensor_name_, step_type, CameraModel::Pinhole, {tu::pinhole_intrinsics});
     }
 
     void InsertStep(CalibrationStep const step_type, std::string const& cache_key = "") const {
-        db::InsertStep(db, sensor_name, step_type, cache_key);
+        db::InsertStep(db_, sensor_name_, step_type, cache_key);
     }
 
     void InsertTarget() const {
         // NOTE(Jack): See note in InsertCameraInfo() above.
         InsertStep(CalibrationStep::FeatureExtraction);
 
-        db::InsertTargets(db, sensor_name, {{timestamp_ns, target}});
+        db::InsertTargets(db_, sensor_name_, {{timestamp_ns_, target_}});
     }
 
     void InsertTargetInfo() const {
         // NOTE(Jack): See note in InsertCameraInfo() above.
         InsertStep(CalibrationStep::TargetInfo);
 
-        db::InsertTargetInfo(db, sensor_name, target_info);
+        db::InsertTargetInfo(db_, sensor_name_, target_info_);
     }
 
     void InsertPose(CalibrationStep const step_name) const {
-        Frames const frames{{timestamp_ns, {pose}}};
+        Frames const frames{{timestamp_ns_, {pose_}}};
 
-        db::InsertPoses(db, sensor_name, step_name, frames);
+        db::InsertPoses(db_, sensor_name_, step_name, frames);
     }
 
-    SqlitePtr db{nullptr};
-    uint64_t timestamp_ns{0};
-    std::string sensor_name{"/cam/retro/123"};
+    SqlitePtr db_{nullptr};
+    uint64_t timestamp_ns_{0};
+    std::string sensor_name_{"/cam/retro/123"};
 
-    CameraInfo camera_info{sensor_name, CameraModel::Pinhole, tu::image_bounds};
-    Array6d pose{0, 1, 2, 3, 4, 5};
-    ExtractedTarget target{{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
-                            MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
-                           {{5, 6}, {2, 3}, {650, 600}}};
-    TargetInfo target_info{TargetType::Aprilgrid3, 8, 6, 0.1, false};
+    CameraInfo camera_info_{sensor_name_, CameraModel::Pinhole, tu::image_bounds};
+    Array6d pose_{0, 1, 2, 3, 4, 5};
+    ExtractedTarget target_{{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}, {200.24, 300.56}},
+                             MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}, {300.65, 200.56, 712.57}}},
+                            {{5, 6}, {2, 3}, {650, 600}}};
+    TargetInfo target_info_{TargetType::Aprilgrid3, 8, 6, 0.1, false};
 
     // All the data values - we store these as part of the fixture so we can compare the reread values to the
     // groundtruth stored here.
@@ -106,31 +106,31 @@ class CameraDatabaseFixture : public ::testing::Test {
 class ImuDatabaseFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        db = db::OpenCalibrationDatabase(":memory:", true, false);
+        db_ = db::OpenCalibrationDatabase(":memory:", true, false);
 
-        db::InsertEntity(db, imu_name, Entity::Imu);
-        db::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
+        db::InsertEntity(db_, imu_name_, Entity::Imu);
+        db::InsertEntity(db_, extrinsic_id_, Entity::Extrinsic);
     }
 
     void InsertImuData() const {
-        db::InsertStep(db, imu_name, CalibrationStep::ImuDataLoading, "");
+        db::InsertStep(db_, imu_name_, CalibrationStep::ImuDataLoading, "");
 
-        db::InsertImuData(db, imu_name, imu_data);
+        db::InsertImuData(db_, imu_name_, imu_data_);
     }
 
     void InsertImuError(CalibrationStep const step_type) const {
-        db::InsertStep(db, extrinsic_id, step_type, "");
+        db::InsertStep(db_, extrinsic_id_, step_type, "");
 
-        db::InsertImuErrors(db, extrinsic_id, step_type, imu_name, imu_errors);
+        db::InsertImuErrors(db_, extrinsic_id_, step_type, imu_name_, imu_errors_);
     }
 
-    SqlitePtr db{nullptr};
-    uint64_t timestamp_ns{0};
-    std::string imu_name{"/imu/polaris/123"};
-    std::string extrinsic_id{Extrinsic::EntityId(imu_name, "/cam/retro/123")};
+    SqlitePtr db_{nullptr};
+    uint64_t timestamp_ns_{0};
+    std::string imu_name_{"/imu/polaris/123"};
+    std::string extrinsic_id_{Extrinsic::EntityId(imu_name_, "/cam/retro/123")};
 
-    ImuMeasurements imu_data{{timestamp_ns, {{1, 2, 3}, {4, 5, 6}}}};
-    ImuErrors imu_errors{{timestamp_ns, {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}}};
+    ImuMeasurements imu_data_{{timestamp_ns_, {{1, 2, 3}, {4, 5, 6}}}};
+    ImuErrors imu_errors_{{timestamp_ns_, {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}}};
 };
 
 class ExtrinsicDatabaseFixture : public ::testing::Test {
