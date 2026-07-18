@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS imu_errors
 (
     step_name     TEXT    NOT NULL,
-    sensor_name   TEXT    NOT NULL,
+    entity_id   TEXT    NOT NULL,
     timestamp_ns  INTEGER NOT NULL,
     delta_omega_x REAL    NOT NULL,
     delta_omega_y REAL    NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS imu_errors
     delta_ay      REAL    NOT NULL,
     delta_az      REAL    NOT NULL,
 
-    FOREIGN KEY (step_name, sensor_name) REFERENCES calibration_steps (step_name, entity_id) ON DELETE CASCADE,
-    FOREIGN KEY (sensor_name, timestamp_ns) REFERENCES imu_data,
-    PRIMARY KEY (step_name, sensor_name, timestamp_ns)
+    FOREIGN KEY (step_name, entity_id) REFERENCES calibration_steps (step_name, entity_id) ON DELETE CASCADE,
+    FOREIGN KEY (timestamp_ns) REFERENCES imu_data,
+    PRIMARY KEY (step_name, entity_id, timestamp_ns)
 );

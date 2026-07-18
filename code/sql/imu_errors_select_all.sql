@@ -1,5 +1,5 @@
 SELECT step_name,
-       sensor_name,
+       entity_id,
        timestamp_ns,
        delta_omega_x,
        delta_omega_y,
