@@ -65,8 +65,7 @@ void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> c
     database::InsertGravity(db, EntityId(), StepType(), optimized_extrinsic.gravity);
 
     ImuErrors const imu_error{optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_spline)};
-    database::InsertStep(db, imu_name, StepType(), HashInputs());
-    database::InsertImuErrors(db, imu_name, StepType(), imu_error);
+    database::InsertImuErrors(db, EntityId(), StepType(),imu_name, imu_error);
 }
 
 }  // namespace reprojection::steps

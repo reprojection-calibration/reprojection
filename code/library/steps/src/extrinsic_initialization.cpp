@@ -46,7 +46,7 @@ void ExtrinsicInitialization::Save(ImuCamExtrinsic const& extrinsic, SqlitePtr c
     // we use a second sensor name and also write an additional step to the database outside of the sanctioned step
     // runner workflow?
     ImuErrors const error{optimization::EvaluateImuError(imu_data_, extrinsic, spline_)};
-    database::InsertImuErrors(db, EntityId(), StepType(), error);
+    database::InsertImuErrors(db, EntityId(), StepType(), imu_name_, error);
 }
 
 }  // namespace reprojection::steps

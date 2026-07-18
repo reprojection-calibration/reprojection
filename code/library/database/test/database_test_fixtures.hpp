@@ -109,19 +109,18 @@ class ImuDatabaseFixture : public ::testing::Test {
         db = db::OpenCalibrationDatabase(":memory:", true, false);
 
         db::InsertEntity(db, imu_name, Entity::Imu);
-    }
-
-    void InsertStep(CalibrationStep const step_name, std::string const& cache_key = "") const {
-        db::InsertStep(db, imu_name, step_name, cache_key);
+        db::InsertEntity(db, extrinsic_id, Entity::Extrinsic);
     }
 
     void InsertImuData() const {
-        InsertStep(CalibrationStep::ImuDataLoading);
+        db::InsertStep(db, imu_name, CalibrationStep::ImuDataLoading, "");
 
         db::InsertImuData(db, imu_name, imu_data);
     }
 
     void InsertImuError(CalibrationStep const step_type) const {
+        db::InsertStep(db, extrinsic_id, step_type, "");
+
         db::InsertImuErrors(db, extrinsic_id, step_type, imu_name, imu_errors);
     }
 

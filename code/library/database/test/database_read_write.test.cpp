@@ -192,10 +192,9 @@ TEST_F(ImuDatabaseFixture, TestImuErrors) {
 
     // Satisfy foreign key constraints.
     InsertImuData();
-    InsertStep(step_type);
     EXPECT_NO_THROW(InsertImuError(step_type));
 
-    result = database::ReadImuErrors(db, imu_name, step_type);
+    result = database::ReadImuErrors(db, extrinsic_id, step_type);
     EXPECT_EQ(std::size(result), 1);
     EXPECT_EQ(std::cbegin(result)->first, timestamp_ns);
 
