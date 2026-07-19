@@ -1,6 +1,7 @@
 #include "optimization/extrinsic_optimization.hpp"
 
 #include "database/database_read.hpp"
+#include "database/database_remove.hpp"
 #include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
 #include "steps/extrinsic_optimization.hpp"
@@ -48,10 +49,12 @@ void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> c
     std::string const imu_name{optimized_extrinsic.tf.frame_a};
     std::string const camera_name{optimized_extrinsic.tf.frame_b};
 
-    // ERROR(Jack): This is also unique here that we are inserting extra steps here in the save method! I do not think
-    // these steps and their outputs will get removed if the main step entity cache busts. This is a danger!
-    // TODO(Jack): Shoudl we automatically delete the non direct dependent rows if we run into this step here? It is a
-    // manual clean up but its better than nothing right?
+    // TODO(Jack): This is some hacking here! The problem is that the spline and reprojection errors are being saved
+    // here under the camera_name and not the EntityId() so we manually remove the step and insert the step here.
+    // Normally this is handled automatically by the step runner. This is a sign we are doing something wrong here -
+    // either the step runner abstraction is not complete or this step itself is doing too much. Regardless this should
+    // "work" for now and now leave outdated rows in the db, but we need to keep out eyes peeled and make sure.
+    database::RemoveFromDb(db, camera_name, StepType());
     database::InsertStep(db, camera_name, StepType(), HashInputs());
     database::InsertControlPoints(db, camera_name, StepType(), optimized_spline.ControlPoints());
     database::InsertTimeHandler(db, camera_name, StepType(), optimized_spline.GetTimeHandler());
@@ -65,7 +68,7 @@ void ExtrinsicOptimization::Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> c
     database::InsertGravity(db, EntityId(), StepType(), optimized_extrinsic.gravity);
 
     ImuErrors const imu_error{optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_spline)};
-    database::InsertImuErrors(db, EntityId(), StepType(),imu_name, imu_error);
+    database::InsertImuErrors(db, EntityId(), StepType(), imu_name, imu_error);
 }
 
 }  // namespace reprojection::steps
