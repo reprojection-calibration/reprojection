@@ -32,7 +32,7 @@ def update_timeseries(composite_id, step_name, raw_data):
     elif sensor_type == SensorType.Imu:
         try:
             data = raw_data[sensor_name]["measurements"]
-            # TODO(Jack): We need a more eloquent way to refeclt the fact that "imu_error" and step_name might not
+            # TODO(Jack): We need a more eloquent way to reflect the fact that "imu_error" and step_name might not
             # be present in the dict.
             error = raw_data[sensor_name].get("imu_error", {}).get(step_name)
         except KeyError:
