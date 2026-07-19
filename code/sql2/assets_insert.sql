@@ -1,3 +1,3 @@
-INSERT INTO assets (type, "index", sensor_name)
+INSERT INTO assets (type, "index", name)
 VALUES (?, ?, ?)
 RETURNING id;

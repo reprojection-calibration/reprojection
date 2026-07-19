@@ -1,4 +1,4 @@
-SELECT id, sensor_name
+SELECT id, name
 FROM assets
 WHERE type = ?
   AND "index" = ?;

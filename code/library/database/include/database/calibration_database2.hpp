@@ -16,6 +16,8 @@ namespace fs = std::filesystem;
 // directly as this type.
 struct AssetId {
     int64_t value;
+
+    friend constexpr bool operator==(AssetId const&, AssetId const&) = default;
 };
 
 enum class AssetType { Camera, Imu, Target };
@@ -92,8 +94,7 @@ class SqlStatement {
    public:
     SqlStatement(sqlite3* const db, char const* const sql) {
         if (sqlite3_prepare_v2(db, sql, -1, &stmt_, nullptr) != SQLITE_OK) {
-            // TODO(Jack): We should really query the db for the real error message!
-            throw std::runtime_error("SqlStatement() constructor failed.");
+            throw SqliteException(db, sql);
         }
     }
 
@@ -104,15 +105,13 @@ class SqlStatement {
 
 void Bind(sqlite3_stmt* const stmt, int const index, std::string_view value) {
     if (sqlite3_bind_text(stmt, index, std::string(value).c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK) {
-        // TODO(Jack): We should really query the db for the real error message!
-        throw std::runtime_error("sqlite3_bind_text() failed");
+        throw SqliteException(stmt);
     }
 }
 
 void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value) {
     if (sqlite3_bind_int64(stmt, index, value) != SQLITE_OK) {
-        // TODO(Jack): We should really query the db for the real error message!
-        throw std::runtime_error("sqlite3_bind_int64() failed");
+        throw SqliteException(stmt);
     }
 }
 
@@ -154,6 +153,29 @@ void ExecuteQuery(sqlite3* const db, std::string_view sql, Binder&& binder, RowF
     }
 }
 
+template <typename Binder>
+void ExecuteStatement(std::string_view sql, Binder&& binder, sqlite3* const db) {
+    SqlStatement stmt{db, std::string(sql).c_str()};
+
+    try {
+        binder(stmt.stmt_);
+    } catch (...) {
+        // TODO(Jack): It think it can very well be that any error thrown from bind is actually not 100% sqlite related,
+        //  but actually due a error in the user code. Therefore it might be a mistake here to throw away the thrown
+        //  error and replace it here with a database centric error. Think about also throwing the original error too!
+        throw SqliteException(db, stmt.stmt_);
+    }
+
+    if (sqlite3_step(stmt.stmt_) != SQLITE_DONE) {
+        throw SqliteException(db, stmt.stmt_);
+    }
+}
+
+// Used for cases that do not require dynamic binding - passes an empty lambda which is a no-op.
+inline void ExecuteStatement(std::string_view sql, sqlite3* const db) {
+    ExecuteStatement(sql, [](sqlite3_stmt*) {}, db);
+}
+
 std::optional<std::pair<AssetId, std::string>> ReadAssetId(sqlite3* const db, AssetType const type,
                                                            size_t const index) {
     auto const binder{[type, index](sqlite3_stmt* stmt) {
@@ -189,23 +211,49 @@ AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index,
 class CalibrationDatabase {
    public:
     // TODO(Jack): Should we make this private and instead use a factory?
-    CalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only = false);
-
-    AssetId GetOrCreateAsset(AssetType const type, size_t const index, std::string_view name) {
-        // TODO(Jack): Would it be prudent to also read the asset by the name instead and check there there is no
-        // type/index with a duplicated name?
-        auto const result{ReadAssetId(db_, type, index)};
-        if (result and result->second == name) {
+    CalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only = false) {
+        if (create and read_only) {
             throw std::runtime_error(
-                std::format("Asset of type {}, index {} and name {} already exists with a different name {}.",
-                            ToString(type), index, name, result->second));
-        } else if (result) {
-            return result->first;
+                "You requested to open a database object with both options 'create' and 'read_only' true. This is "
+                "an invalid combination as creating a database requires writing to it!");
+        }
+
+        // TODO(Jack): Consider using sqlite3_errcode for better terminal output https://sqlite.org/c3ref/errcode.html
+
+        int code;
+        if (create) {
+            code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+        } else if (read_only) {
+            code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READONLY, nullptr);
+        } else {
+            code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READWRITE, nullptr);
+        }
+
+        if (code != 0) {
+            throw std::runtime_error("Attempted to open database at path - " + db_path.string() +
+                                     " - but was unsuccessful");
+        }
+
+        if (not read_only) {
+            ExecuteStatement(sql_statements::assets_table, db_);
         }
     }
 
+    AssetId GetOrCreateAsset(AssetType const type, size_t const index, std::string_view name) {
+        auto const result{ReadAssetId(db_, type, index)};
+        if (result and result->second != name) {
+            throw std::runtime_error(
+                std::format("Asset of type '{}', index '{}' and name '{}' already exists - cannot change name '{}'.",
+                            ToString(type), index,  result->second, name));
+        } else if (result) {
+            return result->first;
+        }
+
+        return InsertAsset(db_, type, index, name);
+    }
+
    private:
-    sqlite3* db_;
+    sqlite3* db_{nullptr};
 };
 
 }  // namespace reprojection::database
