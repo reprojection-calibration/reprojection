@@ -75,7 +75,9 @@ configure_file(
 #####
 
 set(SQL2_FILES
-
+        assets_select.sql
+        assets_insert.sql
+        assets_table.sql
 )
 
 set(SQL2_DIR "code/sql2")
