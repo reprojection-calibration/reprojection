@@ -59,14 +59,12 @@ class TestBuildCameraTomls(unittest.TestCase):
         result_gt = """\
         [cam0]
         sensor_id = '/cam0/image_raw'
-        # https://github.com/reprojection-calibration/reprojection#camera-models
         camera_model = 'pinhole_radtan4'
         intrinsics = [160.0, 256.0, 256.0, 0.1, 0.2, 0.3, 0.4]
         resolution = [720, 1080]
         
         [cam1]
         sensor_id = '/cam1/image_raw'
-        # https://github.com/reprojection-calibration/reprojection#camera-models
         camera_model = 'double_sphere'
         intrinsics = [160.0, 256.0, 256.0, 0.0, 0.5]
         resolution = [720, 1080]
