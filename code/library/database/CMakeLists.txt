@@ -72,6 +72,30 @@ configure_file(
         @ONLY
 )
 
+#####
+
+set(SQL2_FILES
+
+)
+
+set(SQL2_DIR "code/sql2")
+
+foreach (sql ${SQL2_FILES})
+    get_filename_component(name ${sql} NAME_WE)
+    file(READ "../../../${SQL2_DIR}/${sql}" contents)
+
+    set(SQL_STRING_ENTRIES
+            "${SQL_STRING_ENTRIES}constexpr char const* const ${name} = R\"sql(\n${contents}\n)sql\";\n")
+endforeach ()
+
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql.hpp.in
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql2.hpp
+        @ONLY
+)
+
+#####
+
 # Protobuf logic adopted from https://stackoverflow.com/questions/20824194/cmake-with-google-protocol-buffers
 # TODO(Jack): Should we compile database_proto as static like in the example linked above?
 # TODO(Jack): Is there anyway to have the generated code go to the "generated/" folder? It would add some consistency
@@ -124,6 +148,7 @@ set(TESTS
         src/sqlite_wrappers.test.cpp
         src/toml_converters.test.cpp
         test/calibration_database.test.cpp
+        test/calibration_database2.test.cpp
         test/database_read_write.test.cpp
         test/database_remove.test.cpp
 )
