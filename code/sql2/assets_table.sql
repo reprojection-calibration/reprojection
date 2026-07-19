@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS assets
         type IN ('camera', 'imu', 'target')
         ),
     "index" INTEGER NOT NULL CHECK ("index" >= 0),
-    sensor_name TEXT    NOT NULL,
+    name TEXT    NOT NULL,
 
     UNIQUE (type, "index"),
-    UNIQUE (type, sensor_name)
+    UNIQUE (type, name)
 );
