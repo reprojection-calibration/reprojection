@@ -32,4 +32,6 @@ TEST(Yyy, TestGetOrCreateAsset) {
     EXPECT_THROW(db.GetOrCreateAsset(database::AssetType::Camera, 0, "/cam1/image_raw"), std::runtime_error);
     // Trying to create a new asset with an already existing name is also a no-go!
     EXPECT_THROW(db.GetOrCreateAsset(database::AssetType::Camera, 2, "/cam1/image_raw"), std::runtime_error);
+    // Even if the asset type changes you are still not allowed to reuse a name!
+    EXPECT_THROW(db.GetOrCreateAsset(database::AssetType::Imu, 2, "/cam1/image_raw"), std::runtime_error);
 }
