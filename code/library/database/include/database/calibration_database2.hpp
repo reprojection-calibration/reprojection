@@ -153,6 +153,12 @@ void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value) {
     }
 }
 
+static void BindNull(sqlite3_stmt* const stmt, int const index) {
+    if (sqlite3_bind_null(stmt, index) != SQLITE_OK) {
+        throw SqliteException(stmt);
+    }
+}
+
 bool StepRow(sqlite3_stmt* const stmt) {
     int const code{sqlite3_step(stmt)};
 
@@ -266,10 +272,13 @@ std::optional<std::pair<RunId, std::string>> ReadRunId(sqlite3* const db, Record
     return data;
 }
 
-std::optional<std::pair<StepId, std::string>> ReadStepId(sqlite3* const db, RunId const run_id, StepType type) {
-    auto const binder{[run_id, type](sqlite3_stmt* stmt) {
-        Bind(stmt, 1, run_id.value);
-        Bind(stmt, 2, ToString(type));
+std::optional<std::pair<StepId, std::string>> ReadStepId(sqlite3* const db,
+                                                         std::optional<RecordingId> const& recording_id,
+                                                         std::optional<RunId> const& run_id, StepType type) {
+    auto const binder{[recording_id, run_id, type](sqlite3_stmt* stmt) {
+        recording_id ? Bind(stmt, 1, recording_id->value) : BindNull(stmt, 1);
+        run_id ? Bind(stmt, 2, run_id->value) : BindNull(stmt, 2);
+        Bind(stmt, 3, ToString(type));
     }};
 
     std::optional<std::pair<StepId, std::string>> data;
@@ -325,11 +334,13 @@ RunId InsertRun(sqlite3* const db, RecordingId const recording_id, std::string_v
     return data;
 }  // LCOV_EXCL_LINE
 
-StepId InsertStep(sqlite3* const db, RunId const run_id, StepType const type, std::string_view cache_key) {
-    auto const binder{[run_id, type, cache_key](sqlite3_stmt* stmt) {
-        Bind(stmt, 1, run_id.value);
-        Bind(stmt, 2, ToString(type));
-        Bind(stmt, 3, cache_key);
+StepId InsertStep(sqlite3* const db, std::optional<RecordingId> const& recording_id, std::optional<RunId> const& run_id,
+                  StepType const type, std::string_view cache_key) {
+    auto const binder{[recording_id, run_id, type, cache_key](sqlite3_stmt* stmt) {
+        recording_id ? Bind(stmt, 1, recording_id->value) : BindNull(stmt, 1);
+        run_id ? Bind(stmt, 2, run_id->value) : BindNull(stmt, 2);
+        Bind(stmt, 3, ToString(type));
+        Bind(stmt, 4, cache_key);
     }};
 
     StepId data{-1};
@@ -342,18 +353,19 @@ StepId InsertStep(sqlite3* const db, RunId const run_id, StepType const type, st
 // NOTE(Jack): This is not strictly an upsert because we actually delete the entire row and then insert it again. We do
 // this to make sure that "cascade on delete" operations happen. Official upsert semantics never call delete and
 // therefore cannot be used here.
-StepId UpsertStep(sqlite3* const db, StepId const id, RunId const run_id, StepType const type,
-                  std::string_view cache_key) {
+StepId UpsertStep(sqlite3* const db, StepId const id, std::optional<RecordingId> const& recording_id,
+                  std::optional<RunId> const& run_id, StepType const type, std::string_view cache_key) {
     auto const binder1{[id](sqlite3_stmt* stmt) { Bind(stmt, 1, id.value); }};
 
     StepId data{-1};
     ExecuteStatement(sql_statements::steps_delete, binder1, db);
 
-    auto const binder2{[id, run_id, type, cache_key](sqlite3_stmt* stmt) {
+    auto const binder2{[id, recording_id, run_id, type, cache_key](sqlite3_stmt* stmt) {
         Bind(stmt, 1, id.value);
-        Bind(stmt, 2, run_id.value);
-        Bind(stmt, 3, ToString(type));
-        Bind(stmt, 4, cache_key);
+        recording_id ? Bind(stmt, 2, recording_id->value) : BindNull(stmt, 2);
+        run_id ? Bind(stmt, 3, run_id->value) : BindNull(stmt, 3);
+        Bind(stmt, 4, ToString(type));
+        Bind(stmt, 5, cache_key);
     }};
 
     // NOTE(Jack): Technically we know the id already so there is nothing that forces us to read it from the result of
@@ -448,15 +460,17 @@ class CalibrationDatabase {
     }
 
     // bool: was this a cache hit?
-    std::pair<StepId, bool> GetOrCreateStep(RunId const run_id, StepType const type, std::string_view cache_key) {
-        auto const result{ReadStepId(db_, run_id, type)};
+    std::pair<StepId, bool> GetOrCreateStep(std::optional<RecordingId> const& recording_id,
+                                            std::optional<RunId> const& run_id, StepType const type,
+                                            std::string_view cache_key) {
+        auto const result{ReadStepId(db_, recording_id, run_id, type)};
         if (result and result->second == cache_key) {
             return std::make_pair(result->first, true);
         } else if (result) {
-            return std::make_pair(UpsertStep(db_, result->first, run_id, type, cache_key), false);
+            return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type, cache_key), false);
         }
 
-        return std::make_pair(InsertStep(db_, run_id, type, cache_key), false);
+        return std::make_pair(InsertStep(db_, recording_id, run_id, type, cache_key), false);
     }
 
    private:

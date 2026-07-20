@@ -1,4 +1,5 @@
 SELECT id, cache_key
 FROM steps
-WHERE run_id = ?
+WHERE recording_id IS ?
+  AND run_id IS ?
   AND type = ?;

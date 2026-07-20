@@ -1,3 +1,3 @@
-INSERT INTO steps(    id,    run_id,    type,    cache_key)
-VALUES (?, ?, ?, ?)
+INSERT INTO steps (id, recording_id, run_id, type, cache_key)
+VALUES (?, ?, ?, ?, ?)
 RETURNING id;

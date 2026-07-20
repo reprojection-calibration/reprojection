@@ -76,37 +76,61 @@ TEST(Hhh, TestGetOrCreateRun) {
     EXPECT_THROW(db.GetOrCreateRun(database::RecordingId{10}, "[config]"), database::SqliteException);
 }
 
-TEST(Ddd, TestGetOrCreateStep) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+class GetOrCreateStepFixture : public ::testing::Test {
+   protected:
+    void SetUp() override { recording_id_ = db_.GetOrCreateRecording("recording.bag", "sha256-xxx"); }
 
-    // A step requires a run - satisfy foreign key constraints here.
-    database::RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
-    database::RunId run_id{db.GetOrCreateRun(recording_id, "[config]")};
+    TemporaryFile temp_file_{".db3"};
+    database::CalibrationDatabase db_{temp_file_.Path(), true};
+    database::RecordingId recording_id_{-1};
+};
 
+TEST_F(GetOrCreateStepFixture, TestSingleOwnerSemantics) {
     // Insert a new step - cache miss.
-    auto result{db.GetOrCreateStep(run_id, database::StepType::ImageLoading, "sha256-aaa")};
+    auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, database::StepType::ImageLoading, "sha256-aaa")};
     EXPECT_EQ(result.first, database::StepId{1});
     EXPECT_EQ(result.second, false);
 
     // Attempting to insert the same step again does nothing - cache hit.
-    result = db.GetOrCreateStep(run_id, database::StepType::ImageLoading, "sha256-aaa");
+    result = db_.GetOrCreateStep(recording_id_, std::nullopt, database::StepType::ImageLoading, "sha256-aaa");
     EXPECT_EQ(result.first, database::StepId{1});
     EXPECT_EQ(result.second, true);
 
     // Inserting the same step but with a new cache key will delete the old entry and insert a new one with the same id
     // - cache miss.
-    result = db.GetOrCreateStep(run_id, database::StepType::ImageLoading, "sha256-bbb");
+    result = db_.GetOrCreateStep(recording_id_, std::nullopt, database::StepType::ImageLoading, "sha256-bbb");
     EXPECT_EQ(result.first, database::StepId{1});
     EXPECT_EQ(result.second, false);
 
-    // Inserting the same step under a new run creates a new valid id.
-    run_id = db.GetOrCreateRun(recording_id, "[config1]");
-    result = db.GetOrCreateStep(run_id, database::StepType::ImageLoading, "sha256-bbb");
+    // Create a second recording.
+    recording_id_ = db_.GetOrCreateRecording("recording1.bag", "sha256-yyy");
+
+    // Inserting the same step under a new owner creates a new valid id - cache miss.
+    result = db_.GetOrCreateStep(recording_id_, std::nullopt, database::StepType::ImageLoading, "sha256-bbb");
     EXPECT_EQ(result.first, database::StepId{2});
     EXPECT_EQ(result.second, false);
 
-    // Attempting to insert a step under a nonexistent run is an error.
-    EXPECT_THROW(db.GetOrCreateStep(database::RunId(111), database::StepType::ImageLoading, "sha256-bbb"),
+    // Creating a step under a non-existent recording is an error.
+    EXPECT_THROW(
+        db_.GetOrCreateStep(database::RecordingId{111}, std::nullopt, database::StepType::ImageLoading, "sha256-aaa"),
+        database::SqliteException);
+}
+
+TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
+    // A step owned by a recording,
+    auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, database::StepType::ImageLoading, "sha256-aaa")};
+    EXPECT_EQ(result.first, database::StepId{1});
+    EXPECT_EQ(result.second, false);
+
+    // Create a run.
+    database::RunId const run_id{db_.GetOrCreateRun(recording_id_, "[config]")};
+
+    // The same exact step but under the run's ownership creates a new step entry.
+    result = db_.GetOrCreateStep(std::nullopt, run_id, database::StepType::ImageLoading, "sha256-aaa");
+    EXPECT_EQ(result.first, database::StepId{2});
+    EXPECT_EQ(result.second, false);
+
+    // A step can only have one owner, either a recording or a run - therefore this is an error.
+    EXPECT_THROW(db_.GetOrCreateStep(recording_id_, run_id, database::StepType::ImageLoading, "sha256-aaa"),
                  database::SqliteException);
 }
