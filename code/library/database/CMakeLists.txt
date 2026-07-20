@@ -84,6 +84,11 @@ set(SQL2_FILES
         runs_select.sql
         runs_insert.sql
         runs_table.sql
+        steps_delete.sql
+        steps_insert.sql
+        steps_insert_id.sql
+        steps_select.sql
+        steps_table.sql
 )
 
 set(SQL2_DIR "code/sql2")

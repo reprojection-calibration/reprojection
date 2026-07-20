@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS steps
 (
-    id          INTEGER PRIMARY KEY,
-    run_id      INTEGER NOT NULL,
-    type        TEXT    NOT NULL CHECK ( type IN ('bundle_adjustment',
+    id         INTEGER PRIMARY KEY,
+    run_id     INTEGER  NOT NULL,
+    type       TEXT     NOT NULL CHECK ( type IN ('bundle_adjustment',
                                                   'camera_info',
                                                   'extrinsic_initialization',
                                                   'extrinsic_optimization',
@@ -13,8 +13,9 @@ CREATE TABLE IF NOT EXISTS steps
                                                   'pose_initialization',
                                                   'spline_initialization',
                                                   'target_info')),
-    cache_key  TEXT NOT NULL,
+    cache_key  TEXT     NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (run_id) REFERENCES runs (id) ON DELETE CASCADE
+    FOREIGN KEY (run_id) REFERENCES runs (id) ON DELETE CASCADE,
+    UNIQUE (run_id, type)
 );

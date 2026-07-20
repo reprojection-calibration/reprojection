@@ -34,7 +34,19 @@ struct RunId {
     friend constexpr bool operator==(RunId const&, RunId const&) = default;
 };
 
+struct StepId {
+    int64_t value;
+
+    friend constexpr bool operator==(StepId const&, StepId const&) = default;
+};
+
 enum class AssetType { Camera, Imu, Target };
+
+enum class StepType {
+    FeatureExtraction,
+    ImageLoading,
+    ImuDataLoading,
+};
 
 std::string ToString(AssetType const data) {
     if (data == AssetType::Camera) {
@@ -44,7 +56,19 @@ std::string ToString(AssetType const data) {
     } else if (data == AssetType::Target) {
         return "target";
     } else {
-        throw std::runtime_error("Unknown AssetType - Library implementation error.");
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown AssetType");
+    }
+}
+
+inline std::string ToString(StepType const data) {
+    if (data == StepType::FeatureExtraction) {
+        return "feature_extraction";
+    } else if (data == StepType::ImageLoading) {
+        return "image_loading";
+    } else if (data == StepType::ImuDataLoading) {
+        return "imu_data_loading";
+    } else {
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown StepType");
     }
 }
 
@@ -235,7 +259,25 @@ std::optional<std::pair<RunId, std::string>> ReadRunId(sqlite3* const db, Record
         RunId const run_id{sqlite3_column_int64(stmt, 0)};
         std::string const config{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
 
+        // TODO(Jack): Should we do some parsing checking to check that the config is properly formatted?
         data = std::make_pair(run_id, config);
+    });
+
+    return data;
+}
+
+std::optional<std::pair<StepId, std::string>> ReadStepId(sqlite3* const db, RunId const run_id, StepType type) {
+    auto const binder{[run_id, type](sqlite3_stmt* stmt) {
+        Bind(stmt, 1, run_id.value);
+        Bind(stmt, 2, ToString(type));
+    }};
+
+    std::optional<std::pair<StepId, std::string>> data;
+    ExecuteQuery(db, sql_statements::steps_select, binder, [&data](sqlite3_stmt* const stmt) {
+        StepId const step_id{sqlite3_column_int64(stmt, 0)};
+        std::string const cache_key{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
+
+        data = std::make_pair(step_id, cache_key);
     });
 
     return data;
@@ -278,6 +320,46 @@ RunId InsertRun(sqlite3* const db, RecordingId const recording_id, std::string_v
 
     RunId data{-1};
     ExecuteQuery(db, sql_statements::runs_insert, binder,
+                 [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
+
+    return data;
+}  // LCOV_EXCL_LINE
+
+StepId InsertStep(sqlite3* const db, RunId const run_id, StepType const type, std::string_view cache_key) {
+    auto const binder{[run_id, type, cache_key](sqlite3_stmt* stmt) {
+        Bind(stmt, 1, run_id.value);
+        Bind(stmt, 2, ToString(type));
+        Bind(stmt, 3, cache_key);
+    }};
+
+    StepId data{-1};
+    ExecuteQuery(db, sql_statements::steps_insert, binder,
+                 [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
+
+    return data;
+}  // LCOV_EXCL_LINE
+
+// NOTE(Jack): This is not strictly an upsert because we actually delete the entire row and then insert it again. We do
+// this to make sure that "cascade on delete" operations happen. Official upsert semantics never call delete and
+// therefore cannot be used here.
+StepId UpsertStep(sqlite3* const db, StepId const id, RunId const run_id, StepType const type,
+                  std::string_view cache_key) {
+    auto const binder1{[id](sqlite3_stmt* stmt) { Bind(stmt, 1, id.value); }};
+
+    StepId data{-1};
+    ExecuteStatement(sql_statements::steps_delete, binder1, db);
+
+    auto const binder2{[id, run_id, type, cache_key](sqlite3_stmt* stmt) {
+        Bind(stmt, 1, id.value);
+        Bind(stmt, 2, run_id.value);
+        Bind(stmt, 3, ToString(type));
+        Bind(stmt, 4, cache_key);
+    }};
+
+    // NOTE(Jack): Technically we know the id already so there is nothing that forces us to read it from the result of
+    // this operation, but it is the pattern we use everywhere else and also its good to make sure what the database
+    // actually processes, not just what we hope it does.
+    ExecuteQuery(db, sql_statements::steps_insert_id, binder2,
                  [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
 
     return data;
@@ -362,6 +444,18 @@ class CalibrationDatabase {
         }
 
         return InsertRun(db_, recording_id, config_hash, config);
+    }
+
+    // bool: was this a cache hit?
+    std::pair<StepId, bool> GetOrCreateStep(RunId const run_id, StepType const type, std::string_view cache_key) {
+        auto const result{ReadStepId(db_, run_id, type)};
+        if (result and result->second == cache_key) {
+            return std::make_pair(result->first, true);
+        } else if (result) {
+            return std::make_pair(UpsertStep(db_, result->first, run_id, type, cache_key), false);
+        }
+
+        return std::make_pair(InsertStep(db_, run_id, type, cache_key), false);
     }
 
    private:
