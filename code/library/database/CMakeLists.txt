@@ -81,6 +81,9 @@ set(SQL2_FILES
         recordings_select.sql
         recordings_insert.sql
         recordings_table.sql
+        runs_select.sql
+        runs_insert.sql
+        runs_table.sql
 )
 
 set(SQL2_DIR "code/sql2")

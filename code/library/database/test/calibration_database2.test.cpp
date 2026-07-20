@@ -11,7 +11,6 @@ using TemporaryFile = testing_utilities::TemporaryFile;
 
 TEST(Yyy, TestGetOrCreateAsset) {
     TemporaryFile const temp_file{".db3"};
-
     auto db{database::CalibrationDatabase(temp_file.Path(), true)};
 
     // Repeated insert returns the same id with no problems.
@@ -38,7 +37,6 @@ TEST(Yyy, TestGetOrCreateAsset) {
 
 TEST(Ggg, TestGetOrCreateRecording) {
     TemporaryFile const temp_file{".db3"};
-
     auto db{database::CalibrationDatabase(temp_file.Path(), true)};
 
     // Repeated insert with matching name and hash is no problem!
@@ -55,4 +53,25 @@ TEST(Ggg, TestGetOrCreateRecording) {
     EXPECT_THROW(db.GetOrCreateRecording("recording1.bag", "sha256-zzz"), std::runtime_error);
     // Cannot insert two different recordings with the same hash.
     EXPECT_THROW(db.GetOrCreateRecording("recording2.bag", "sha256-yyy"), database::SqliteException);
+}
+
+TEST(Hhh, TestGetOrCreateRun) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+
+    // A run requires a recording - satisfy this foreign key constraint here.
+    database::RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
+
+    // Repeated insert is no problem.
+    database::RunId result{db.GetOrCreateRun(recording_id, "[config]")};
+    EXPECT_EQ(result, database::RunId{1});
+    result = db.GetOrCreateRun(recording_id, "[config]");
+    EXPECT_EQ(result, database::RunId{1});
+
+    // Changing the config creates a new run.
+    result = db.GetOrCreateRun(recording_id, "[config1]");
+    EXPECT_EQ(result, database::RunId{2});
+
+    // Trying to insert a run with a non-existent recording is an error.
+    EXPECT_THROW(db.GetOrCreateRun(database::RecordingId{10}, "[config]"), database::SqliteException);
 }

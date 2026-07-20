@@ -1,5 +1,7 @@
 #pragma once
 
+#include <google/protobuf/stubs/hash.h>
+#include <spdlog/fmt/bundled/base.h>
 #include <sqlite3.h>
 
 #include <filesystem>
@@ -24,6 +26,12 @@ struct RecordingId {
     int64_t value;
 
     friend constexpr bool operator==(RecordingId const&, RecordingId const&) = default;
+};
+
+struct RunId {
+    int64_t value;
+
+    friend constexpr bool operator==(RunId const&, RunId const&) = default;
 };
 
 enum class AssetType { Camera, Imu, Target };
@@ -215,6 +223,24 @@ std::optional<std::pair<RecordingId, std::string>> ReadRecordingId(sqlite3* cons
     return data;
 }
 
+std::optional<std::pair<RunId, std::string>> ReadRunId(sqlite3* const db, RecordingId const recording_id,
+                                                       std::string_view config_hash) {
+    auto const binder{[recording_id, config_hash](sqlite3_stmt* stmt) {
+        Bind(stmt, 1, recording_id.value);
+        Bind(stmt, 2, config_hash);
+    }};
+
+    std::optional<std::pair<RunId, std::string>> data;
+    ExecuteQuery(db, sql_statements::runs_select, binder, [&data](sqlite3_stmt* const stmt) {
+        RunId const run_id{sqlite3_column_int64(stmt, 0)};
+        std::string const config{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
+
+        data = std::make_pair(run_id, config);
+    });
+
+    return data;
+}
+
 AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index, std::string_view name) {
     auto const binder{[type, index, name](sqlite3_stmt* stmt) {
         Bind(stmt, 1, ToString(type));
@@ -237,6 +263,21 @@ RecordingId InsertRecording(sqlite3* const db, std::string_view name, std::strin
 
     RecordingId data{-1};
     ExecuteQuery(db, sql_statements::recordings_insert, binder,
+                 [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
+
+    return data;
+}  // LCOV_EXCL_LINE
+
+RunId InsertRun(sqlite3* const db, RecordingId const recording_id, std::string_view config_hash,
+                std::string_view config) {
+    auto const binder{[recording_id, config_hash, config](sqlite3_stmt* stmt) {
+        Bind(stmt, 1, recording_id.value);
+        Bind(stmt, 2, config_hash);
+        Bind(stmt, 3, config);
+    }};
+
+    RunId data{-1};
+    ExecuteQuery(db, sql_statements::runs_insert, binder,
                  [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
 
     return data;
@@ -271,7 +312,17 @@ class CalibrationDatabase {
         if (not read_only) {
             ExecuteStatement(sql_statements::assets_table, db_);
             ExecuteStatement(sql_statements::recordings_table, db_);
+            ExecuteStatement(sql_statements::runs_table, db_);
         }
+
+        // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For
+        // example a row in initial_camera_poses can only possibly exist if there is a corresponding entry in
+        // extracted_targets. And that row in the extracted_targets table can only possibly exist if there is a
+        // corresponding entry in the images table.
+        //
+        // That being said sqlite has the foreign key option off by default (https://sqlite.org/foreignkeys.html) so
+        // we need to manually turn it on here.
+        ExecuteStatement("PRAGMA foreign_keys = ON;", db_);
     }
 
     AssetId GetOrCreateAsset(AssetType const type, size_t const index, std::string_view name) {
@@ -297,6 +348,20 @@ class CalibrationDatabase {
         }
 
         return InsertRecording(db_, name, hash);
+    }
+
+    RunId GetOrCreateRun(RecordingId const recording_id, std::string_view config) {
+        // ERROR(Jack): Use a real hash functions!!!!
+        std::string const config_hash{config};
+
+        // NOTE(Jack): Unlike when the Asset/Recording logic, we add new runs if the config changes, that is why we
+        // don't have an error block here.
+        auto const result{ReadRunId(db_, recording_id, config_hash)};
+        if (result and result->second == config_hash) {
+            return result->first;
+        }
+
+        return InsertRun(db_, recording_id, config_hash, config);
     }
 
    private:
