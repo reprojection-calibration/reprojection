@@ -31,7 +31,28 @@ TEST(Yyy, TestGetOrCreateAsset) {
     // Trying to insert an asset with a different name at an already existing index is a no-go!
     EXPECT_THROW(db.GetOrCreateAsset(database::AssetType::Camera, 0, "/cam1/image_raw"), std::runtime_error);
     // Trying to create a new asset with an already existing name is also a no-go!
-    EXPECT_THROW(db.GetOrCreateAsset(database::AssetType::Camera, 2, "/cam1/image_raw"), std::runtime_error);
+    EXPECT_THROW(db.GetOrCreateAsset(database::AssetType::Camera, 2, "/cam1/image_raw"), database::SqliteException);
     // Even if the asset type changes you are still not allowed to reuse a name!
-    EXPECT_THROW(db.GetOrCreateAsset(database::AssetType::Imu, 2, "/cam1/image_raw"), std::runtime_error);
+    EXPECT_THROW(db.GetOrCreateAsset(database::AssetType::Imu, 2, "/cam1/image_raw"), database::SqliteException);
+}
+
+TEST(Ggg, TestGetOrCreateRecording) {
+    TemporaryFile const temp_file{".db3"};
+
+    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+
+    // Repeated insert with matching name and hash is no problem!
+    database::RecordingId result{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
+    EXPECT_EQ(result, database::RecordingId{1});
+    result = db.GetOrCreateRecording("recording.bag", "sha256-xxx");
+    EXPECT_EQ(result, database::RecordingId{1});
+
+    // Adding another recording with a unique name and hash is no problem.
+    result = db.GetOrCreateRecording("recording1.bag", "sha256-yyy");
+    EXPECT_EQ(result, database::RecordingId{2});
+
+    // Trying to insert an existing name with a different hash is a no-go!
+    EXPECT_THROW(db.GetOrCreateRecording("recording1.bag", "sha256-zzz"), std::runtime_error);
+    // Cannot insert two different recordings with the same hash.
+    EXPECT_THROW(db.GetOrCreateRecording("recording2.bag", "sha256-yyy"), database::SqliteException);
 }
