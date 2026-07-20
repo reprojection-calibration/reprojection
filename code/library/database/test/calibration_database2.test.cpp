@@ -135,25 +135,47 @@ TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
                  database::SqliteException);
 }
 
-TEST(Ddd, TestInsertImages) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+class ImagesFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        recording_id_ = db_.GetOrCreateRecording("recording.bag", "sha256-xxx");
+        auto const step{
+            db_.GetOrCreateStep(recording_id_, std::nullopt, database::StepType::ImageLoading, "sha256-bbb")};
+        step_id_ = step.first;
+        asset_id_ = db_.GetOrCreateAsset(database::AssetType::Camera, 0, "/cam0/image_raw");
+    }
 
-    // Satisfy the foreign key constraints. In words:
-    //      In order to add images we need a dataset (recording_id) that has been processed (step_id) for a specific
-    //      sensor (asset_id)
-    //
-    database::RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
-    auto const step{db.GetOrCreateStep(recording_id, std::nullopt, database::StepType::ImageLoading, "sha256-bbb")};
-    database::AssetId const asset_id{db.GetOrCreateAsset(database::AssetType::Camera, 0, "/cam0/image_raw")};
+    TemporaryFile temp_file_{".db3"};
+    database::CalibrationDatabase db_{temp_file_.Path(), true};
+    database::RecordingId recording_id_{-1};
+    database::StepId step_id_{-1};
+    database::AssetId asset_id_{-1};
+};
 
-    EncodedImages const images{{0, ImageBuffer{}}};
-    EXPECT_NO_THROW(db.InsertImages(step.first, asset_id, images));
+TEST_F(ImagesFixture, TestImagesInsert) {
+    EncodedImages const images{{123, ImageBuffer{}}};
+    EXPECT_NO_THROW(db_.ImagesInsert(step_id_, asset_id_, images));
 
     // Dual insertion is a violation of the uniqueness constraint.
-    EXPECT_THROW(db.InsertImages(step.first, asset_id, images), database::SqliteException);
+    EXPECT_THROW(db_.ImagesInsert(step_id_, asset_id_, images), database::SqliteException);
 
     // If step or asset ids are not valid this is an error.
-    EXPECT_THROW(db.InsertImages(database::StepId{111}, asset_id, images), database::SqliteException);
-    EXPECT_THROW(db.InsertImages(step.first, database::AssetId{111}, images), database::SqliteException);
+    EXPECT_THROW(db_.ImagesInsert(database::StepId{111}, asset_id_, images), database::SqliteException);
+    EXPECT_THROW(db_.ImagesInsert(step_id_, database::AssetId{111}, images), database::SqliteException);
+}
+
+TEST_F(ImagesFixture, TestImagesSelect) {
+    // We need first insert an image so we habe an image to select :)
+    EncodedImages const images{{123, ImageBuffer{}}};
+    db_.ImagesInsert(step_id_, asset_id_, images);
+
+    EncodedImages result{db_.ImagesSelect(step_id_, asset_id_)};
+    EXPECT_EQ(std::size(result), std::size(images));
+    EXPECT_EQ(std::size(result.at(123).data), std::size(images.at(123).data));
+
+    // If nonexistent data is requested this is not an error, it will just return an empty container.
+    EXPECT_NO_THROW(result = db_.ImagesSelect(database::StepId{111}, asset_id_));
+    EXPECT_EQ(std::size(result), 0);
+    EXPECT_NO_THROW(result = db_.ImagesSelect(step_id_, database::AssetId{111}));
+    EXPECT_EQ(std::size(result), 0);
 }

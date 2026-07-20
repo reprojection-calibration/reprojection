@@ -75,13 +75,14 @@ configure_file(
 #####
 
 set(SQL2_FILES
-        assets_select.sql
         assets_insert.sql
+        assets_select.sql
         assets_table.sql
         images_insert.sql
+        images_select.sql
         images_table.sql
-        recordings_select.sql
         recordings_insert.sql
+        recordings_select.sql
         recordings_table.sql
         runs_select.sql
         runs_insert.sql

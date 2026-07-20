@@ -245,6 +245,20 @@ void BatchExecuteStatement(std::string_view sql, Container const& data, Binder&&
     }
 }
 
+// TEST!
+// WARN(Jack): Span is non-owning, therefore I think there is a real risk that in the long term we run into some
+// segfaults when people use this code.
+static std::span<const std::byte> SqliteBlob(sqlite3_stmt* const stmt, int const col) {
+    auto const* const ptr{sqlite3_column_blob(stmt, col)};
+    int const size{sqlite3_column_bytes(stmt, col)};
+
+    if (not ptr || size <= 0) {
+        return {};
+    }
+
+    return {static_cast<std::byte const*>(ptr), static_cast<size_t>(size)};
+}
+
 std::optional<std::pair<AssetId, std::string>> ReadAssetId(sqlite3* const db, AssetType const type,
                                                            size_t const index) {
     auto const binder{[type, index](sqlite3_stmt* stmt) {
@@ -499,7 +513,7 @@ class CalibrationDatabase {
         return std::make_pair(InsertStep(db_, recording_id, run_id, type, cache_key), false);
     }
 
-    void InsertImages(StepId const step_id, AssetId const asset_id, EncodedImages const& data) {
+    void ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) {
         auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
             auto const& [timestamp_ns, buffer]{data_i};
 
@@ -515,6 +529,30 @@ class CalibrationDatabase {
         }};
 
         BatchExecuteStatement(sql_statements::images_insert, data, binder, db_);
+    }
+
+    EncodedImages ImagesSelect(StepId const step_id, AssetId const asset_id) {
+        EncodedImages images;
+
+        ExecuteQuery(
+            db_, sql_statements::images_select,
+            [step_id, asset_id](sqlite3_stmt* const stmt) {
+                Bind(stmt, 1, step_id.value);
+                Bind(stmt, 2, asset_id.value);
+            },
+            [&images](sqlite3_stmt* const stmt) {
+                uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+
+                auto const blob{SqliteBlob(stmt, 1)};
+                std::span<uchar const> blob_span{reinterpret_cast<uchar const*>(blob.data()), blob.size()};
+                std::vector<uchar> buffer(std::cbegin(blob_span), std::cend(blob_span));
+
+                // TODO(Jack): Should we represent empty images with std::optional? Currently this will load all images,
+                // and if the image is a null value it will just be a buffer with length zero.
+                images.insert({timestamp_ns, ImageBuffer{buffer}});
+            });
+
+        return images;
     }
 
    private:
