@@ -79,6 +79,7 @@ set(SQL2_FILES
         assets_select.sql
         assets_table.sql
         extracted_targets_insert.sql
+        extracted_targets_select.sql
         extracted_targets_table.sql
         images_insert.sql
         images_select.sql

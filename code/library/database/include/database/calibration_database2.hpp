@@ -547,7 +547,7 @@ class CalibrationDatabase {
     }
 
     EncodedImages ImagesSelect(StepId const step_id, AssetId const asset_id) {
-        EncodedImages images;
+        EncodedImages data;
 
         ExecuteQuery(
             db_, sql_statements::images_select,
@@ -555,7 +555,7 @@ class CalibrationDatabase {
                 Bind(stmt, 1, step_id.value);
                 Bind(stmt, 2, asset_id.value);
             },
-            [&images](sqlite3_stmt* const stmt) {
+            [&data](sqlite3_stmt* const stmt) {
                 uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
 
                 auto const blob{SqliteBlob(stmt, 1)};
@@ -564,10 +564,10 @@ class CalibrationDatabase {
 
                 // TODO(Jack): Should we represent empty images with std::optional? Currently this will load all images,
                 // and if the image is a null value it will just be a buffer with length zero.
-                images.insert({timestamp_ns, ImageBuffer{buffer}});
+                data.insert({timestamp_ns, ImageBuffer{buffer}});
             });
 
-        return images;
+        return data;
     }
 
     void ExtractedTargetsInsert(StepId const step_id, StepId const source_step_id, AssetId const asset_id,
@@ -592,6 +592,34 @@ class CalibrationDatabase {
         }};
 
         BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db_);
+    }
+
+    CameraMeasurements ExtractedTargetsSelect(StepId const step_id, AssetId const asset_id) {
+        CameraMeasurements data;
+
+        ExecuteQuery(
+            db_, sql_statements::extracted_targets_select,
+            [step_id, asset_id](sqlite3_stmt* const stmt) {
+                Bind(stmt, 1, step_id.value);
+                Bind(stmt, 2, asset_id.value);
+            },
+            [&data](sqlite3_stmt* const stmt) {
+                uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+
+                auto const blob{SqliteBlob(stmt, 1)};
+                protobuf_serialization::ExtractedTargetProto serialized;
+                serialized.ParseFromArray(std::data(blob), static_cast<int>(std::size(blob)));
+
+                auto const deserialized{Deserialize(serialized)};
+                if (not deserialized) {
+                    throw std::runtime_error(std::format(
+                        "ExtractedTargetProto.ParseFromArray()/Deserialize() failed: timestamp_ns '{}'", timestamp_ns));
+                }
+
+                data.insert({timestamp_ns, deserialized.value()});
+            });
+
+        return data;
     }
 
    private:

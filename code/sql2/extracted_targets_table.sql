@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS extracted_targets
 
     FOREIGN KEY (step_id) REFERENCES steps (id) ON DELETE CASCADE,
     FOREIGN KEY (source_step_id, asset_id, timestamp_ns) REFERENCES images (step_id, asset_id, timestamp_ns) ON DELETE CASCADE,
-    PRIMARY KEY (step_id, source_step_id, asset_id, timestamp_ns)
+    PRIMARY KEY (step_id, asset_id, timestamp_ns)
 );
