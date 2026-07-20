@@ -134,3 +134,26 @@ TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
     EXPECT_THROW(db_.GetOrCreateStep(recording_id_, run_id, database::StepType::ImageLoading, "sha256-aaa"),
                  database::SqliteException);
 }
+
+TEST(Ddd, TestInsertImages) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+
+    // Satisfy the foreign key constraints. In words:
+    //      In order to add images we need a dataset (recording_id) that has been processed (step_id) for a specific
+    //      sensor (asset_id)
+    //
+    database::RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
+    auto const step{db.GetOrCreateStep(recording_id, std::nullopt, database::StepType::ImageLoading, "sha256-bbb")};
+    database::AssetId const asset_id{db.GetOrCreateAsset(database::AssetType::Camera, 0, "/cam0/image_raw")};
+
+    EncodedImages const images{{0, ImageBuffer{}}};
+    EXPECT_NO_THROW(db.InsertImages(step.first, asset_id, images));
+
+    // Dual insertion is a violation of the uniqueness constraint.
+    EXPECT_THROW(db.InsertImages(step.first, asset_id, images), database::SqliteException);
+
+    // If step or asset ids are not valid this is an error.
+    EXPECT_THROW(db.InsertImages(database::StepId{111}, asset_id, images), database::SqliteException);
+    EXPECT_THROW(db.InsertImages(step.first, database::AssetId{111}, images), database::SqliteException);
+}

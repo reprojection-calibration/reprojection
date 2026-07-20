@@ -78,6 +78,8 @@ set(SQL2_FILES
         assets_select.sql
         assets_insert.sql
         assets_table.sql
+        images_insert.sql
+        images_table.sql
         recordings_select.sql
         recordings_insert.sql
         recordings_table.sql

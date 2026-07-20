@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS images
 (
-    artifact_id  INTEGER NOT NULL,
+    step_id      INTEGER NOT NULL,
     asset_id     INTEGER NOT NULL,
     timestamp_ns INTEGER NOT NULL,
-    data        BLOB,
+    data         BLOB,
 
-    FOREIGN KEY (artifact_id) REFERENCES artifacts (id) ON DELETE CASCADE,
-    FOREIGN KEY (asset_id) REFERENCES assets (id),
-    PRIMARY KEY (artifact_id, asset_id, timestamp_ns)
+    FOREIGN KEY (step_id) REFERENCES steps (id) ON DELETE CASCADE,
+    FOREIGN KEY (asset_id) REFERENCES assets (id) ON DELETE CASCADE,
+    PRIMARY KEY (step_id, asset_id, timestamp_ns)
 );

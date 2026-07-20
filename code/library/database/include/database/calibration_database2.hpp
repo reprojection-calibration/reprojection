@@ -1,7 +1,5 @@
 #pragma once
 
-#include <google/protobuf/stubs/hash.h>
-#include <spdlog/fmt/bundled/base.h>
 #include <sqlite3.h>
 
 #include <filesystem>
@@ -9,6 +7,7 @@
 #include <optional>
 
 #include "generated/sql2.hpp"
+#include "types/sensor_data_types.hpp"
 
 namespace reprojection::database {
 
@@ -159,6 +158,15 @@ static void BindNull(sqlite3_stmt* const stmt, int const index) {
     }
 }
 
+// NOTE(Jack): We use SQLITE_TRANSIENT here because the serialized buffers in the lambdas disappear when the lambda
+// is finished. Therefore, we want sql to make its own copy of the buffer when we call bind (i.e. SQLITE_TRANSIENT),
+// so that way the external lifetime management can be disregarded.
+static void BindBlob(sqlite3_stmt* const stmt, int const index, std::span<std::byte const> const& blob) {
+    if (sqlite3_bind_blob(stmt, index, std::data(blob), std::size(blob), SQLITE_TRANSIENT) != SQLITE_OK) {
+        throw SqliteException(stmt);
+    }
+}
+
 bool StepRow(sqlite3_stmt* const stmt) {
     int const code{sqlite3_step(stmt)};
 
@@ -218,6 +226,23 @@ void ExecuteStatement(std::string_view sql, Binder&& binder, sqlite3* const db) 
 // Used for cases that do not require dynamic binding - passes an empty lambda which is a no-op.
 inline void ExecuteStatement(std::string_view sql, sqlite3* const db) {
     ExecuteStatement(sql, [](sqlite3_stmt*) {}, db);
+}
+
+struct SqlTransaction {
+    explicit SqlTransaction(sqlite3* const db) : db_{db} { ExecuteStatement("BEGIN TRANSACTION", db_); }
+
+    ~SqlTransaction() { ExecuteStatement("END TRANSACTION", db_); }
+
+   private:
+    sqlite3* db_;
+};
+
+// TODO(Jack): Can we use concepts here to enforce some properties on Container and Binder?
+template <typename Container, typename Binder>
+void BatchExecuteStatement(std::string_view sql, Container const& data, Binder&& binder, sqlite3* const db) {
+    for (SqlTransaction const transaction{db}; auto const& data_i : data) {
+        ExecuteStatement(sql, [&](sqlite3_stmt* stmt) { binder(stmt, data_i); }, db);
+    }
 }
 
 std::optional<std::pair<AssetId, std::string>> ReadAssetId(sqlite3* const db, AssetType const type,
@@ -405,6 +430,7 @@ class CalibrationDatabase {
 
         if (not read_only) {
             ExecuteStatement(sql_statements::assets_table, db_);
+            ExecuteStatement(sql_statements::images_table, db_);
             ExecuteStatement(sql_statements::recordings_table, db_);
             ExecuteStatement(sql_statements::runs_table, db_);
             ExecuteStatement(sql_statements::steps_table, db_);
@@ -471,6 +497,24 @@ class CalibrationDatabase {
         }
 
         return std::make_pair(InsertStep(db_, recording_id, run_id, type, cache_key), false);
+    }
+
+    void InsertImages(StepId const step_id, AssetId const asset_id, EncodedImages const& data) {
+        auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
+            auto const& [timestamp_ns, buffer]{data_i};
+
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+            Bind(stmt, 3, timestamp_ns);
+
+            if (buffer.data.empty()) {
+                BindNull(stmt, 4);
+            } else {
+                BindBlob(stmt, 4, std::as_bytes(std::span{buffer.data}));
+            }
+        }};
+
+        BatchExecuteStatement(sql_statements::images_insert, data, binder, db_);
     }
 
    private:
