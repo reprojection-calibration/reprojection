@@ -395,6 +395,7 @@ class CalibrationDatabase {
             ExecuteStatement(sql_statements::assets_table, db_);
             ExecuteStatement(sql_statements::recordings_table, db_);
             ExecuteStatement(sql_statements::runs_table, db_);
+            ExecuteStatement(sql_statements::steps_table, db_);
         }
 
         // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For

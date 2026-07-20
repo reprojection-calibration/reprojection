@@ -75,3 +75,38 @@ TEST(Hhh, TestGetOrCreateRun) {
     // Trying to insert a run with a non-existent recording is an error.
     EXPECT_THROW(db.GetOrCreateRun(database::RecordingId{10}, "[config]"), database::SqliteException);
 }
+
+TEST(Ddd, TestGetOrCreateStep) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+
+    // A step requires a run - satisfy foreign key constraints here.
+    database::RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
+    database::RunId run_id{db.GetOrCreateRun(recording_id, "[config]")};
+
+    // Insert a new step - cache miss.
+    auto result{db.GetOrCreateStep(run_id, database::StepType::ImageLoading, "sha256-aaa")};
+    EXPECT_EQ(result.first, database::StepId{1});
+    EXPECT_EQ(result.second, false);
+
+    // Attempting to insert the same step again does nothing - cache hit.
+    result = db.GetOrCreateStep(run_id, database::StepType::ImageLoading, "sha256-aaa");
+    EXPECT_EQ(result.first, database::StepId{1});
+    EXPECT_EQ(result.second, true);
+
+    // Inserting the same step but with a new cache key will delete the old entry and insert a new one with the same id
+    // - cache miss.
+    result = db.GetOrCreateStep(run_id, database::StepType::ImageLoading, "sha256-bbb");
+    EXPECT_EQ(result.first, database::StepId{1});
+    EXPECT_EQ(result.second, false);
+
+    // Inserting the same step under a new run creates a new valid id.
+    run_id = db.GetOrCreateRun(recording_id, "[config1]");
+    result = db.GetOrCreateStep(run_id, database::StepType::ImageLoading, "sha256-bbb");
+    EXPECT_EQ(result.first, database::StepId{2});
+    EXPECT_EQ(result.second, false);
+
+    // Attempting to insert a step under a nonexistent run is an error.
+    EXPECT_THROW(db.GetOrCreateStep(database::RunId(111), database::StepType::ImageLoading, "sha256-bbb"),
+                 database::SqliteException);
+}
