@@ -153,7 +153,7 @@ class ImagesFixture : public ::testing::Test {
 };
 
 TEST_F(ImagesFixture, TestImagesInsert) {
-    EncodedImages const images{{123, ImageBuffer{}}};
+    EncodedImages const images{{0, ImageBuffer{}}};
     EXPECT_NO_THROW(db_.ImagesInsert(step_id_, asset_id_, images));
 
     // Dual insertion is a violation of the uniqueness constraint.
@@ -166,16 +166,53 @@ TEST_F(ImagesFixture, TestImagesInsert) {
 
 TEST_F(ImagesFixture, TestImagesSelect) {
     // We need first insert an image so we habe an image to select :)
-    EncodedImages const images{{123, ImageBuffer{}}};
+    EncodedImages const images{{0, ImageBuffer{}}};
     db_.ImagesInsert(step_id_, asset_id_, images);
 
     EncodedImages result{db_.ImagesSelect(step_id_, asset_id_)};
     EXPECT_EQ(std::size(result), std::size(images));
-    EXPECT_EQ(std::size(result.at(123).data), std::size(images.at(123).data));
+    EXPECT_EQ(std::size(result.at(0).data), std::size(images.at(0).data));
 
     // If nonexistent data is requested this is not an error, it will just return an empty container.
     EXPECT_NO_THROW(result = db_.ImagesSelect(database::StepId{111}, asset_id_));
     EXPECT_EQ(std::size(result), 0);
     EXPECT_NO_THROW(result = db_.ImagesSelect(step_id_, database::AssetId{111}));
     EXPECT_EQ(std::size(result), 0);
+}
+
+class ExtractedTargetsFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        recording_id_ = db_.GetOrCreateRecording("recording.bag", "sha256-xxx");
+        asset_id_ = db_.GetOrCreateAsset(database::AssetType::Camera, 0, "/cam0/image_raw");
+    }
+
+    TemporaryFile temp_file_{".db3"};
+    database::CalibrationDatabase db_{temp_file_.Path(), true};
+    database::RecordingId recording_id_{-1};
+    database::AssetId asset_id_{-1};
+};
+
+TEST_F(ExtractedTargetsFixture, TestExtractedTargetsInsert) {
+    // Each extracted target required a correspondent image
+    auto step{db_.GetOrCreateStep(recording_id_, std::nullopt, database::StepType::ImageLoading, "sha256-bbb")};
+    EncodedImages const images{{0, ImageBuffer{}}};
+    db_.ImagesInsert(step.first, asset_id_, images);
+    database::StepId const image_loading_step_id{step.first};
+
+    step = db_.GetOrCreateStep(recording_id_, std::nullopt, database::StepType::FeatureExtraction, "sha256-ccc");
+
+    CameraMeasurements extracted_targets{{0, ExtractedTarget{}}};
+    EXPECT_NO_THROW(db_.ExtractedTargetsInsert(step.first, image_loading_step_id, asset_id_, extracted_targets));
+
+    // If the current step or the source step do not exist its an error.
+    EXPECT_THROW(db_.ExtractedTargetsInsert(step.first, database::StepId{111}, asset_id_, extracted_targets),
+                 database::SqliteException);
+    EXPECT_THROW(db_.ExtractedTargetsInsert(database::StepId{111}, image_loading_step_id, asset_id_, extracted_targets),
+                 database::SqliteException);
+
+    // If there is not matching image we will throw.
+    extracted_targets = CameraMeasurements{{1, ExtractedTarget{}}};
+    EXPECT_THROW(db_.ExtractedTargetsInsert(step.first, image_loading_step_id, asset_id_, extracted_targets),
+                 database::SqliteException);
 }

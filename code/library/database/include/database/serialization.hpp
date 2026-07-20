@@ -8,6 +8,11 @@
 // cppcheck-suppress missingInclude
 #include "extracted_target.pb.h"
 
+// MAKE THIS FILE PRIVATE AGAIN!
+// MAKE THIS FILE PRIVATE AGAIN!
+// MAKE THIS FILE PRIVATE AGAIN!
+// MAKE THIS FILE PRIVATE AGAIN!
+
 namespace reprojection::database {
 
 protobuf_serialization::ArrayX2dProto Serialize(ArrayX2d const& data);

@@ -8,9 +8,9 @@
 #include <string>
 
 // cppcheck-suppress missingInclude
+#include "../include/database/serialization.hpp"
 #include "generated/sql.hpp"
 
-#include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 #include "statement_executor.hpp"
 #include "toml_converters.hpp"

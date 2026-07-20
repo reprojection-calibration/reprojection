@@ -3,10 +3,10 @@
 #include <sqlite3.h>
 
 // cppcheck-suppress missingInclude
+#include "../include/database/serialization.hpp"
 #include "generated/sql.hpp"
 
 #include "query_runner.hpp"
-#include "serialization.hpp"
 #include "sqlite3_helpers.hpp"
 #include "toml_converters.hpp"
 

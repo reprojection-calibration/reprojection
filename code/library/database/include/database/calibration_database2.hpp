@@ -6,6 +6,7 @@
 #include <format>
 #include <optional>
 
+#include "database/serialization.hpp"
 #include "generated/sql2.hpp"
 #include "types/sensor_data_types.hpp"
 
@@ -457,6 +458,7 @@ class CalibrationDatabase {
 
         if (not read_only) {
             ExecuteStatement(sql_statements::assets_table, db_);
+            ExecuteStatement(sql_statements::extracted_targets_table, db_);
             ExecuteStatement(sql_statements::images_table, db_);
             ExecuteStatement(sql_statements::recordings_table, db_);
             ExecuteStatement(sql_statements::runs_table, db_);
@@ -566,6 +568,30 @@ class CalibrationDatabase {
             });
 
         return images;
+    }
+
+    void ExtractedTargetsInsert(StepId const step_id, StepId const source_step_id, AssetId const asset_id,
+                                CameraMeasurements const& data) {
+        auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
+            auto const& [timestamp_ns, target]{data_i};
+
+            protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
+            std::string buffer;
+            if (not serialized.SerializeToString(&buffer)) {
+                throw std::runtime_error(
+                    std::format("ExtractedTargetProto.SerializeToString() failed: step_id '{}', source_step_id '{}', "
+                                "asset_id '{}', timestamp_ns '{}'",
+                                step_id.value, source_step_id.value, asset_id.value, timestamp_ns));
+            }
+
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, source_step_id.value);
+            Bind(stmt, 3, asset_id.value);
+            Bind(stmt, 4, timestamp_ns);
+            BindBlob(stmt, 5, std::as_bytes(std::span{buffer}));
+        }};
+
+        BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db_);
     }
 
    private:
