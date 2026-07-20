@@ -20,6 +20,12 @@ struct AssetId {
     friend constexpr bool operator==(AssetId const&, AssetId const&) = default;
 };
 
+struct RecordingId {
+    int64_t value;
+
+    friend constexpr bool operator==(RecordingId const&, RecordingId const&) = default;
+};
+
 enum class AssetType { Camera, Imu, Target };
 
 std::string ToString(AssetType const data) {
@@ -194,6 +200,21 @@ std::optional<std::pair<AssetId, std::string>> ReadAssetId(sqlite3* const db, As
     return data;
 }  // LCOV_EXCL_LINE
 
+// TODO(Jack): Should we define basic structs like Hash and Name? Passing around raw strings does not scale.
+std::optional<std::pair<RecordingId, std::string>> ReadRecordingId(sqlite3* const db, std::string_view name) {
+    auto const binder{[name](sqlite3_stmt* stmt) { Bind(stmt, 1, name); }};
+
+    std::optional<std::pair<RecordingId, std::string>> data;
+    ExecuteQuery(db, sql_statements::recordings_select, binder, [&data](sqlite3_stmt* const stmt) {
+        RecordingId const recording_id{sqlite3_column_int64(stmt, 0)};
+        std::string const hash{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
+
+        data = std::make_pair(recording_id, hash);
+    });
+
+    return data;
+}
+
 AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index, std::string_view name) {
     auto const binder{[type, index, name](sqlite3_stmt* stmt) {
         Bind(stmt, 1, ToString(type));
@@ -203,6 +224,19 @@ AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index,
 
     AssetId data{-1};
     ExecuteQuery(db, sql_statements::assets_insert, binder,
+                 [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
+
+    return data;
+}  // LCOV_EXCL_LINE
+
+RecordingId InsertRecording(sqlite3* const db, std::string_view name, std::string_view hash) {
+    auto const binder{[name, hash](sqlite3_stmt* stmt) {
+        Bind(stmt, 1, name);
+        Bind(stmt, 2, hash);
+    }};
+
+    RecordingId data{-1};
+    ExecuteQuery(db, sql_statements::recordings_insert, binder,
                  [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
 
     return data;
@@ -236,6 +270,7 @@ class CalibrationDatabase {
 
         if (not read_only) {
             ExecuteStatement(sql_statements::assets_table, db_);
+            ExecuteStatement(sql_statements::recordings_table, db_);
         }
     }
 
@@ -244,12 +279,24 @@ class CalibrationDatabase {
         if (result and result->second != name) {
             throw std::runtime_error(
                 std::format("Asset of type '{}', index '{}' and name '{}' already exists - cannot change name '{}'.",
-                            ToString(type), index,  result->second, name));
+                            ToString(type), index, result->second, name));
         } else if (result) {
             return result->first;
         }
 
         return InsertAsset(db_, type, index, name);
+    }
+
+    RecordingId GetOrCreateRecording(std::string_view name, std::string_view hash) {
+        auto const result{ReadRecordingId(db_, name)};
+        if (result and result->second != hash) {
+            throw std::runtime_error(std::format(
+                "Recording '{}' with hash '{}' already exists - cannot change hash '{}'.", name, result->second, hash));
+        } else if (result) {
+            return result->first;
+        }
+
+        return InsertRecording(db_, name, hash);
     }
 
    private:
