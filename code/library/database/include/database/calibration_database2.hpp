@@ -71,11 +71,14 @@ inline std::string ToString(StepType const data) {
     }
 }
 
+// TODO(Jack): Add nullptr checks!
 class SqliteException : public std::runtime_error {  // LCOV_EXCL_LINE
    public:
     SqliteException(sqlite3* const db, std::string_view sql) : std::runtime_error(FormatMessage(db, sql)) {}
 
     SqliteException(sqlite3* const db, sqlite3_stmt* const stmt) : std::runtime_error(FormatMessage(db, stmt)) {}
+
+    SqliteException(sqlite3* const db) : std::runtime_error(FormatMessage(db)) {}
 
     SqliteException(sqlite3_stmt* const stmt) : std::runtime_error(FormatMessage(stmt)) {}
 
@@ -95,6 +98,16 @@ class SqliteException : public std::runtime_error {  // LCOV_EXCL_LINE
         sqlite3_free(expanded);
 
         return FormatMessage(db, sql);
+    }
+
+    static std::string FormatMessage(sqlite3* const db) {
+        // TODO(Jack): Can we combine this with the full error message somehow so we do not need to copy and paste the
+        // formatting twice?
+        return "\n[SQLite Exception]\n"
+               "----------------------------------------\n"
+               "Error Code : " +
+               std::to_string(sqlite3_errcode(db)) + "\n" + "Error Msg  : " + std::string(sqlite3_errmsg(db)) + "\n" +
+               "----------------------------------------";
     }
 
     static std::string FormatMessage(sqlite3_stmt* const stmt) {
@@ -437,9 +450,9 @@ class CalibrationDatabase {
             code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READWRITE, nullptr);
         }
 
-        if (code != 0) {
-            throw std::runtime_error("Attempted to open database at path - " + db_path.string() +
-                                     " - but was unsuccessful");
+        if (code != SQLITE_OK) {
+            // TODO(Jack): Is it valid here to try to get an error message here from an improperly opened db pointer?
+            throw SqliteException(db_);
         }
 
         if (not read_only) {
