@@ -1,7 +1,8 @@
 set(LIBRARY_NAME "steps2")
 
 set(SRC_FILES
-    src/initialize_calibration.cpp
+        src/image_loading.cpp
+        src/initialize_calibration.cpp
 )
 
 set(LINK_LIBRARIES

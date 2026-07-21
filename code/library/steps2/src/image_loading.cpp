@@ -13,11 +13,21 @@ auto const log{logging::Get("steps")};
 
 }
 
-// TODO(Jack): The name of the class variable "cache_key" is misleading because it is not a cache key but really a
-// serialized data signature. We should fix this name to clarify its purpose and use.
-std::string ImageLoading::HashInputs() const { return hashing::HashArguments(serialized_data_signature_); }
+ImageLoading::ImageLoading(AssetId const camera_id, std::string_view serialized_image_sampler,
+                           ImageSampler const& image_sampler)
+    : camera_id_{camera_id},
+      cache_key_{hashing::HashArguments(serialized_image_sampler)},
+      image_sampler_{image_sampler} {}
 
-std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
+Hash ImageLoading::CacheKey(database::CalibrationDatabase& db) {
+    // NOTE(Jack): The image loading is unique in that it does not load anythign from the database but instead
+    // bootstraps directly from the user/application input.
+    static_cast<void>(db);
+
+    return cache_key_;
+}
+
+void ImageLoading::Execute(database::CalibrationDatabase& db, StepId const step_id) {
     auto encoded_images = std::make_shared<EncodedImages>();
     int num_images{0};
     while (auto const data{image_source_()}) {
@@ -37,15 +47,8 @@ std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
         }
     }
 
-    return encoded_images;
-}  // LCOV_EXCL_LINE
-
-std::shared_ptr<EncodedImages> ImageLoading::Load(SqlitePtr const db) const {
-    return std::make_shared<EncodedImages>(database::ReadImages(db, EntityId()));
+    db.ImagesInsert(step_id, camera_id_, encoded_images);
 }
 
-void ImageLoading::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
-    database::InsertImages(db, EntityId(), *encoded_images);
-}
 
 }  // namespace reprojection::steps

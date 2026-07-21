@@ -1,32 +1,27 @@
 #pragma once
 
-#include "types/calibration_types.hpp"
+#include "database/calibration_database.hpp"
+#include "types/database_types.hpp"
 #include "types/io.hpp"
 
 namespace reprojection::steps {
 
-// NOTE(Jack): I had originally planned to note store the images in the database because it would require more
-// reading/writing than just feeding the images directly into the feature extractor. However, given that the images will
-// be cached after the first execution there is really no argument not to do this. But it will lead to the database
-// getting large (even though we only store .png encoded blobs). The benefit is that it makes our downstream workflow
-// and database visualization extremely consistent.
+// NOTE(Jack): I had originally planned to not store the images in the database because it would require more
+// reading/writing than just feeding the images directly into the feature extractor. But it leads to the database
+// getting large. The benefit is that it makes our downstream workflow and database visualization extremely consistent.
 
 struct ImageLoading {
-    std::string camera_name_;
-    std::string serialized_data_signature_;
-    ImageSampler image_source_;
+    AssetId camera_id_;
+    Hash cache_key_;
+    ImageSampler image_sampler_;
 
-    static CalibrationStep StepType() { return CalibrationStep::ImageLoading; }
+    ImageLoading(AssetId const camera_id, std::string_view serialized_image_sampler, ImageSampler const& image_sampler);
 
-    std::string EntityId() const { return camera_name_; }
+    static StepType Type() { return StepType::ImageLoading; }
 
-    std::string HashInputs() const;
+    Hash CacheKey(database::CalibrationDatabase& db);
 
-    std::shared_ptr<EncodedImages> Compute() const;
-
-    std::shared_ptr<EncodedImages> Load(SqlitePtr const db) const;
-
-    void Save(std::shared_ptr<EncodedImages const> const images, SqlitePtr const db) const;
+    void Execute(database::CalibrationDatabase& db, StepId const step_id);
 };
 
 }  // namespace reprojection::steps
