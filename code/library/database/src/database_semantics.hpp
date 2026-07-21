@@ -23,8 +23,9 @@ std::optional<std::pair<RunId, std::string>> ReadRunId(sqlite3* const db, Record
 // TODO(Jack): Use real config type!
 RunId InsertRun(sqlite3* const db, RecordingId const recording_id, Hash const& config_hash, std::string_view config);
 
-std::optional<std::pair<StepId, Hash>> ReadStepId(sqlite3* const db, std::optional<RecordingId> const& recording_id,
-                                                  std::optional<RunId> const& run_id, StepType type);
+std::optional<std::pair<StepId, std::optional<Hash>>> ReadStepId(sqlite3* const db,
+                                                                 std::optional<RecordingId> const& recording_id,
+                                                                 std::optional<RunId> const& run_id, StepType type);
 
 StepId InsertStep(sqlite3* const db, std::optional<RecordingId> const& recording_id, std::optional<RunId> const& run_id,
                   StepType const type);

@@ -5,10 +5,6 @@
 namespace reprojection::steps {
 
 // TODO(Jack): Why do we really need to return this?
-struct StepResult {
-    StepId id;
-    CacheStatus cache_status;
-};
 
 struct StepOwner {
     static StepOwner Recording(RecordingId const id) { return StepOwner{id, std::nullopt}; }
@@ -34,25 +30,18 @@ concept IsRunnableStep = requires(T const& step, StepId const id, database::Cali
 
 template <typename T>
     requires IsRunnableStep<T>
-StepResult RunStep(StepOwner const owner, T const& step, database::CalibrationDatabase& db) {
+StepId RunStep(StepOwner const owner, T const& step, database::CalibrationDatabase& db) {
     Hash const cache_key{step.CacheKey(db)};
 
-    auto const step{db.PrepareStep(owner, step.Type(), cache_key)};
-    if (prepared.cache_hit) {
-        return {
-            .id = prepared.id,
-            .cache_status = CacheStatus::CacheHit,
-        };
+    auto const [step_id, cache_status]{db.GetOrCreateStep(owner.recording_id, owner.run_id, step.Type(), cache_key)};
+    if (cache_status == CacheStatus::CacheHit) {
+        return step_id;
     }
 
-    db.Transaction([&] {
-        step.Execute(db, prepared.id);
-        db.CompleteStep(prepared.id, cache_key);
-    });
+    // TODO(Jack): Should we put this inside a database transaction so in case of failure everything rolls back?
+    step.Execute(db, step_id);
+    db.StepCacheKeyUpdate(step_id, cache_key);
 
-    return {
-        .id = prepared.id,
-        .cache_status = CacheStatus::CacheMiss,
-    };
+    return step_id;
 }
 }  // namespace reprojection::steps

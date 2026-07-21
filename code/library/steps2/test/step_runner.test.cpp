@@ -4,57 +4,43 @@
 
 using namespace reprojection;
 
-struct DummyStep {
-    int result;
+struct ExampleStep {
+    static StepType Type() { return StepType::ImageLoading; }
 
-    static CalibrationStep StepType() { return CalibrationStep::PoseInitialization; }
-
-    std::string EntityId() const { return ""; }
-
-    std::string HashInputs() const { return std::to_string(result); };
-
-    int Compute() const { return result; }
-
-    int Load(SqlitePtr const db) const {
+    static Hash CacheKey(database::CalibrationDatabase& db) {
         (void)db;
 
-        // NOTE(Jack): We add 100 here so we can differentiate in the test if the returned result comes from the
-        // Compute() or Load() method.
-        return result + 100;
+        return "";
     }
 
-    void Save(int const data, SqlitePtr const db) const {
-        (void)data;
+    static void Execute(database::CalibrationDatabase& db, StepId const step_id) {
         (void)db;
+        (void)step_id;
+
+        return;
     }
 };
 
 // TODO(Jack): How can we write a test to test the cascading delete and step replacement logic?
-TEST(StepsStepRunner, TestStepRunnerWithDummyStep) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
+TEST(StepsStepRunner, TestExampleStep) {
+    auto db{database::CalibrationDatabase(":memory:", true)};
 
-    DummyStep step{2};
+    RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
+    auto owner{steps::StepOwner::Recording(recording_id)};
 
-    // TODO(Jack): We need to find a clean way to incorporate the entity into the step testing. For now we add it here
-    // manually and for all other setps.
-    database::InsertEntity(db, step.EntityId(), Entity::Camera);
+    ExampleStep step;
+    StepId result{RunStep<ExampleStep>(owner, step, db)};
+    EXPECT_EQ(result.value, 1);
 
-    auto [data, cache_status]{steps::RunStep<int>(step, db)};
-    EXPECT_EQ(data, 2);  // Result from DummyStep.Compute()
-    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+    // Rerunning the step should be a cache hit (but we can't see that here) and should return the same step ID
+    result = RunStep<ExampleStep>(owner, step, db);
+    EXPECT_EQ(result.value, 1);
 
-    // On rerun with the same inputs it will be a cache hit
-    std::tie(data, cache_status) = steps::RunStep<int>(step, db);
-    EXPECT_EQ(data, 102);  // Result from DummyStep.Load()
-    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+    // Now add another instance of the step owned by a run. Normally we probably would not have one step once owned by a
+    // recording and again by a run, but we do it here so we can see the step id increment.
+    RunId const run_id{db.GetOrCreateRun(recording_id, "")};
+    owner = steps::StepOwner::Run(run_id);
 
-    // Change the value to see that we get a cache miss again
-    step.result = 5;
-    std::tie(data, cache_status) = steps::RunStep<int>(step, db);
-    EXPECT_EQ(data, 5);  // Result from DummyStep.Compute()
-    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
-
-    std::tie(data, cache_status) = steps::RunStep<int>(step, db);
-    EXPECT_EQ(data, 105);  // Result from DummyStep.Load()
-    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+    result = RunStep<ExampleStep>(owner, step, db);
+    EXPECT_EQ(result.value, 2);
 }

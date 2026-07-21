@@ -107,7 +107,7 @@ std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(std::optiona
                                                                     std::optional<RunId> const& run_id,
                                                                     StepType const type, Hash cache_key) {
     auto const result{ReadStepId(db_, recording_id, run_id, type)};
-    if (result and result->second == cache_key) {
+    if (result and result->second.has_value() and result->second.value() == cache_key) {
         return std::make_pair(result->first, CacheStatus::CacheHit);
     } else if (result) {
         return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type), CacheStatus::CacheMiss);

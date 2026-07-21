@@ -35,6 +35,8 @@ struct Hash {
 
     Hash(char const* const value) : Hash{std::string_view{value}} {}
 
+    Hash() = default;
+
     std::string value;
 
     friend constexpr bool operator==(Hash const&, Hash const&) = default;

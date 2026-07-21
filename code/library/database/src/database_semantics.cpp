@@ -103,15 +103,16 @@ RunId InsertRun(sqlite3* const db, RecordingId const recording_id, Hash const& c
     return data;
 }
 
-std::optional<std::pair<StepId, Hash>> ReadStepId(sqlite3* const db, std::optional<RecordingId> const& recording_id,
-                                                  std::optional<RunId> const& run_id, StepType type) {
+std::optional<std::pair<StepId, std::optional<Hash>>> ReadStepId(sqlite3* const db,
+                                                                 std::optional<RecordingId> const& recording_id,
+                                                                 std::optional<RunId> const& run_id, StepType type) {
     auto const binder{[recording_id, run_id, type](sqlite3_stmt* stmt) {
         recording_id ? Bind(stmt, 1, recording_id->value) : BindNull(stmt, 1);
         run_id ? Bind(stmt, 2, run_id->value) : BindNull(stmt, 2);
         Bind(stmt, 3, ToString(type));
     }};
 
-    std::optional<std::pair<StepId, Hash>> data;
+    std::optional<std::pair<StepId, std::optional<Hash>>> data;
     ExecuteQuery(db, sql_statements::steps_select, binder, [&data](sqlite3_stmt* const stmt) {
         StepId const step_id{sqlite3_column_int64(stmt, 0)};
 
@@ -119,8 +120,6 @@ std::optional<std::pair<StepId, Hash>> ReadStepId(sqlite3* const db, std::option
         u_char const* const value{sqlite3_column_text(stmt, 1)};
         if (value) {
             cache_key.value = std::string(reinterpret_cast<char const*>(value));
-        } else {
-            cache_key = "6969";
         }
 
         data = std::make_pair(step_id, cache_key);
