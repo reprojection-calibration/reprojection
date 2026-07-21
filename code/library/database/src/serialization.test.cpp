@@ -1,4 +1,4 @@
-#include "../include/database/serialization.hpp"
+#include "serialization.hpp"
 
 #include <gtest/gtest.h>
 

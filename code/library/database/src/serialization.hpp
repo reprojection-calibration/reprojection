@@ -8,10 +8,6 @@
 // cppcheck-suppress missingInclude
 #include "extracted_target.pb.h"
 
-// MAKE THIS FILE PRIVATE AGAIN!
-// MAKE THIS FILE PRIVATE AGAIN!
-// MAKE THIS FILE PRIVATE AGAIN!
-// MAKE THIS FILE PRIVATE AGAIN!
 
 namespace reprojection::database {
 

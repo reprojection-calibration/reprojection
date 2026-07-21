@@ -7,74 +7,6 @@ set(LIBRARY_NAME "database")
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
-        calibration_steps_delete.sql
-        calibration_steps_select.sql
-        calibration_steps_table.sql
-        calibration_steps_upsert.sql
-        camera_info_insert.sql
-        camera_info_select.sql
-        camera_info_table.sql
-        camera_intrinsics_insert.sql
-        camera_intrinsics_select.sql
-        camera_intrinsics_table.sql
-        entity_insert_or_ignore.sql
-        entity_table.sql
-        extracted_target_insert.sql
-        extracted_targets_select.sql
-        extracted_targets_table.sql
-        extrinsics_insert.sql
-        extrinsics_select.sql
-        extrinsics_table.sql
-        gravity_insert.sql
-        gravity_select.sql
-        gravity_table.sql
-        image_insert.sql
-        images_select.sql
-        images_table.sql
-        imu_data_insert.sql
-        imu_data_select.sql
-        imu_data_table.sql
-        imu_errors_insert.sql
-        imu_errors_select.sql
-        imu_errors_table.sql
-        poses_insert.sql
-        poses_select.sql
-        poses_table.sql
-        reprojection_error_insert.sql
-        reprojection_error_table.sql
-        spline_control_points_count.sql
-        spline_control_points_insert.sql
-        spline_control_points_select.sql
-        spline_control_points_table.sql
-        spline_time_handler_insert.sql
-        spline_time_handler_select.sql
-        spline_time_handler_table.sql
-        target_info_insert.sql
-        target_info_select.sql
-        target_info_table.sql
-)
-
-set(SQL_DIR "$ENV{REPROJECTION_SQL_DIR}")
-
-foreach (sql ${SQL_FILES})
-    get_filename_component(name ${sql} NAME_WE)
-    # TODO(Jack): Having to escape back three directories definitely looks a little hacky... but it gets the job done,
-    # at least in the clion dev toolchain process.
-    file(READ "../../../${SQL_DIR}/${sql}" contents)
-
-    set(SQL_STRING_ENTRIES
-            "${SQL_STRING_ENTRIES}constexpr char const* const ${name} = R\"sql(\n${contents}\n)sql\";\n")
-endforeach ()
-
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql.hpp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql.hpp
-        @ONLY
-)
-
-#####
-
-set(SQL2_FILES
         assets_insert.sql
         assets_select.sql
         assets_table.sql
@@ -100,23 +32,23 @@ set(SQL2_FILES
         target_info_table.sql
 )
 
-set(SQL2_DIR "code/sql2")
+set(SQL_DIR "$ENV{REPROJECTION_SQL_DIR}")
 
-foreach (sql ${SQL2_FILES})
+foreach (sql ${SQL_FILES})
     get_filename_component(name ${sql} NAME_WE)
-    file(READ "../../../${SQL2_DIR}/${sql}" contents)
+    # TODO(Jack): Having to escape back three directories definitely looks a little hacky... but it gets the job done,
+    # at least in the clion dev toolchain process.
+    file(READ "../../../${SQL_DIR}/${sql}" contents)
 
-    set(SQL_STRING_ENTRIES2
-            "${SQL_STRING_ENTRIES2}constexpr char const* const ${name} = R\"sql(\n${contents}\n)sql\";\n")
+    set(SQL_STRING_ENTRIES
+            "${SQL_STRING_ENTRIES}constexpr char const* const ${name} = R\"sql(\n${contents}\n)sql\";\n")
 endforeach ()
 
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql2.hpp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql2.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql.hpp.in
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/sql.hpp
         @ONLY
 )
-
-#####
 
 # Protobuf logic adopted from https://stackoverflow.com/questions/20824194/cmake-with-google-protocol-buffers
 # TODO(Jack): Should we compile database_proto as static like in the example linked above?
@@ -130,11 +62,7 @@ protobuf_generate_cpp(proto_sources proto_headers
 
 set(SRC_FILES
         src/calibration_database.cpp
-        src/database_read.cpp
-        src/database_remove.cpp
-        src/database_write.cpp
         src/serialization.cpp
-        src/sqlite_wrappers.cpp
         src/toml_converters.cpp
 )
 set(SRC_FILES
@@ -163,15 +91,8 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        src/query_runner.test.cpp
         src/serialization.test.cpp
-        src/statement_executor.test.cpp
-        src/sqlite3_helpers.test.cpp
-        src/sqlite_wrappers.test.cpp
         src/toml_converters.test.cpp
         test/calibration_database.test.cpp
-        test/calibration_database2.test.cpp
-        test/database_read_write.test.cpp
-        test/database_remove.test.cpp
 )
 AddTests()

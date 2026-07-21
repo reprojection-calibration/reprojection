@@ -1,6 +1,0 @@
-#pragma once
-
-namespace reprojection::sql_statements {
-
-@SQL_STRING_ENTRIES2@
-}  // namespace reprojection::sql_statements
