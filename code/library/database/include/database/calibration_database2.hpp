@@ -47,6 +47,7 @@ enum class StepType {
     FeatureExtraction,
     ImageLoading,
     ImuDataLoading,
+    TargetInfo,
 };
 
 std::string ToString(AssetType const data) {
@@ -68,7 +69,9 @@ inline std::string ToString(StepType const data) {
         return "image_loading";
     } else if (data == StepType::ImuDataLoading) {
         return "imu_data_loading";
-    } else {
+    } else if (data == StepType::TargetInfo) {
+        return "target_info";
+    }else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown StepType");
     }
 }

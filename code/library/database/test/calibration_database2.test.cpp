@@ -228,7 +228,7 @@ TEST_F(ExtractedTargetsFixture, TestExtractedTargetsSelect) {
     CameraMeasurements extracted_targets{{0, ExtractedTarget{}}};
     db_.ExtractedTargetsInsert(extracted_targets_step_id_, image_loading_step_id_, asset_id_, extracted_targets);
 
-    CameraMeasurements  result{db_.ExtractedTargetsSelect(extracted_targets_step_id_, asset_id_)};
+    CameraMeasurements result{db_.ExtractedTargetsSelect(extracted_targets_step_id_, asset_id_)};
     EXPECT_EQ(std::size(result), std::size(extracted_targets));
     EXPECT_EQ(result.at(0).indices.size(), extracted_targets.at(0).indices.size());
 
@@ -237,4 +237,31 @@ TEST_F(ExtractedTargetsFixture, TestExtractedTargetsSelect) {
     EXPECT_EQ(std::size(result), 0);
     EXPECT_NO_THROW(result = db_.ExtractedTargetsSelect(extracted_targets_step_id_, database::AssetId{111}));
     EXPECT_EQ(std::size(result), 0);
+}
+
+TEST(Qqq, TestTargetInfo) {
+    TemporaryFile const temp_file{".db3"};
+    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+
+    // Satisfy foreign key constraints
+    database::RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "")};
+    database::RunId const run_id{db.GetOrCreateRun(recording_id, "")};
+    // NOTE(Jack): Target info is associated with the configuration file which is why we make it a child of the run_id
+    // and not the recording_id.
+    auto const step{db.GetOrCreateStep(std::nullopt, run_id, database::StepType::TargetInfo, "")};
+    database::AssetId const asset_id{db.GetOrCreateAsset(database::AssetType::Target, 0, "")};
+
+    TargetInfo const target_info{TargetType::Checkerboard, 6, 6, 0.1, 0};
+    EXPECT_NO_THROW(db.TargetInfoInsert(step.first, asset_id, target_info));
+
+    auto result{db.TargetInfoSelect(step.first, asset_id)};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->target_type, target_info.target_type);
+    EXPECT_EQ(result->height, target_info.height);
+
+    // If nonexistent data is requested this is not an error, it will just return an empty container.
+    EXPECT_NO_THROW(result = db.TargetInfoSelect(database::StepId{111}, asset_id));
+    EXPECT_FALSE(result.has_value());
+    EXPECT_NO_THROW(result = db.TargetInfoSelect(step.first, database::AssetId{111}));
+    EXPECT_FALSE(result.has_value());
 }
