@@ -114,11 +114,14 @@ std::optional<std::pair<StepId, Hash>> ReadStepId(sqlite3* const db, std::option
     std::optional<std::pair<StepId, Hash>> data;
     ExecuteQuery(db, sql_statements::steps_select, binder, [&data](sqlite3_stmt* const stmt) {
         StepId const step_id{sqlite3_column_int64(stmt, 0)};
-        // WARN(Jack): What if the cache key is null? For exampke when a step execution steps fails the cache key will
-        // never be written.
-        // TODO(Jack): I think we need to make this cache key read here into an optional value! Dereferencing this point
-        // is gonna cause us some pain.
-        Hash const cache_key{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
+
+        Hash cache_key;
+        u_char const* const value{sqlite3_column_text(stmt, 1)};
+        if (value) {
+            cache_key.value = std::string(reinterpret_cast<char const*>(value));
+        } else {
+            cache_key = "6969";
+        }
 
         data = std::make_pair(step_id, cache_key);
     });

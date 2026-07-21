@@ -79,41 +79,57 @@ class GetOrCreateStepFixture : public ::testing::Test {
 
     database::CalibrationDatabase db_{":memory:", true};
     RecordingId recording_id_{-1};
+    Hash const hash_a_{"sha256-aaa"};
 };
 
 TEST_F(GetOrCreateStepFixture, TestSingleOwnerSemantics) {
     // Insert a new step - cache miss.
-    auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-aaa")};
+    auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_)};
     EXPECT_EQ(result.first, StepId{1});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
+    // Until we "StepCacheKeyUpdate()" it will always be a cache miss.
+    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_);
+    EXPECT_EQ(result.first, StepId{1});
+    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
+
+    // Complete the step entry with the cache key - the cache key is not updated done in the GetOrCreateStep!
+    db_.StepCacheKeyUpdate(result.first, hash_a_);
+
     // Attempting to insert the same step again does nothing - cache hit.
-    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-aaa");
+    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_);
     EXPECT_EQ(result.first, StepId{1});
     EXPECT_EQ(result.second, CacheStatus::CacheHit);
 
     // Inserting the same step but with a new cache key will delete the old entry and insert a new one with the same id
     // - cache miss.
-    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-bbb");
+    Hash const hash_b{"sha256-bbb"};
+    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_b);
     EXPECT_EQ(result.first, StepId{1});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
+
+    db_.StepCacheKeyUpdate(result.first, hash_b);
+
+    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_b);
+    EXPECT_EQ(result.first, StepId{1});
+    EXPECT_EQ(result.second, CacheStatus::CacheHit);
 
     // Create a second recording.
     recording_id_ = db_.GetOrCreateRecording("recording1.bag", "sha256-yyy");
 
     // Inserting the same step under a new owner creates a new valid id - cache miss.
-    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-bbb");
+    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_);
     EXPECT_EQ(result.first, StepId{2});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
     // Creating a step under a non-existent recording is an error.
-    EXPECT_THROW(db_.GetOrCreateStep(RecordingId{111}, std::nullopt, StepType::ImageLoading, "sha256-aaa"),
+    EXPECT_THROW(db_.GetOrCreateStep(RecordingId{111}, std::nullopt, StepType::ImageLoading, hash_a_),
                  database::SqliteException);
 }
 
 TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
     // A step owned by a recording,
-    auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-aaa")};
+    auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_)};
     EXPECT_EQ(result.first, StepId{1});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
@@ -121,12 +137,12 @@ TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
     RunId const run_id{db_.GetOrCreateRun(recording_id_, "[config]")};
 
     // The same exact step but under the run's ownership creates a new step entry.
-    result = db_.GetOrCreateStep(std::nullopt, run_id, StepType::ImageLoading, "sha256-aaa");
+    result = db_.GetOrCreateStep(std::nullopt, run_id, StepType::ImageLoading, hash_a_);
     EXPECT_EQ(result.first, StepId{2});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
     // A step can only have one owner, either a recording or a run - therefore this is an error.
-    EXPECT_THROW(db_.GetOrCreateStep(recording_id_, run_id, StepType::ImageLoading, "sha256-aaa"),
+    EXPECT_THROW(db_.GetOrCreateStep(recording_id_, run_id, StepType::ImageLoading, hash_a_),
                  database::SqliteException);
 }
 
