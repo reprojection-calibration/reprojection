@@ -3,10 +3,8 @@
 #include <sqlite3.h>
 
 #include <filesystem>
-#include <format>
 #include <optional>
 
-#include "generated/sql.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 #include "types/sensor_data_types.hpp"
@@ -18,232 +16,32 @@ namespace fs = std::filesystem;
 class CalibrationDatabase {
    public:
     // TODO(Jack): Should we make this private and instead use a factory?
-    CalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only = false) {
-        if (create and read_only) {
-            throw std::runtime_error(
-                "You requested to open a database object with both options 'create' and 'read_only' true. This is "
-                "an invalid combination as creating a database requires writing to it!");
-        }
+    CalibrationDatabase(fs::path const& db_path, bool create, bool read_only = false);
 
-        // TODO(Jack): Consider using sqlite3_errcode for better terminal output https://sqlite.org/c3ref/errcode.html
+    AssetId GetOrCreateAsset(AssetType type, size_t index, std::string_view name);
 
-        int code;
-        if (create) {
-            code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
-        } else if (read_only) {
-            code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READONLY, nullptr);
-        } else {
-            code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READWRITE, nullptr);
-        }
+    RecordingId GetOrCreateRecording(std::string_view name, std::string_view hash);
 
-        if (code != SQLITE_OK) {
-            // TODO(Jack): Is it valid here to try to get an error message here from an improperly opened db pointer?
-            throw SqliteException(db_);
-        }
+    RunId GetOrCreateRun(RecordingId recording_id, std::string_view config);
 
-        if (not read_only) {
-            ExecuteStatement(sql_statements::assets_table, db_);
-            ExecuteStatement(sql_statements::extracted_targets_table, db_);
-            ExecuteStatement(sql_statements::images_table, db_);
-            ExecuteStatement(sql_statements::recordings_table, db_);
-            ExecuteStatement(sql_statements::runs_table, db_);
-            ExecuteStatement(sql_statements::steps_table, db_);
-            ExecuteStatement(sql_statements::target_info_table, db_);
-        }
-
-        // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For
-        // example a row in initial_camera_poses can only possibly exist if there is a corresponding entry in
-        // extracted_targets. And that row in the extracted_targets table can only possibly exist if there is a
-        // corresponding entry in the images table.
-        //
-        // That being said sqlite has the foreign key option off by default (https://sqlite.org/foreignkeys.html) so
-        // we need to manually turn it on here.
-        ExecuteStatement("PRAGMA foreign_keys = ON;", db_);
-    }
-
-    AssetId GetOrCreateAsset(AssetType const type, size_t const index, std::string_view name) {
-        auto const result{ReadAssetId(db_, type, index)};
-        if (result and result->second != name) {
-            throw std::runtime_error(
-                std::format("Asset of type '{}', index '{}' and name '{}' already exists - cannot change name '{}'.",
-                            ToString(type), index, result->second, name));
-        } else if (result) {
-            return result->first;
-        }
-
-        return InsertAsset(db_, type, index, name);
-    }
-
-    RecordingId GetOrCreateRecording(std::string_view name, std::string_view hash) {
-        auto const result{ReadRecordingId(db_, name)};
-        if (result and result->second != hash) {
-            throw std::runtime_error(std::format(
-                "Recording '{}' with hash '{}' already exists - cannot change hash '{}'.", name, result->second, hash));
-        } else if (result) {
-            return result->first;
-        }
-
-        return InsertRecording(db_, name, hash);
-    }
-
-    RunId GetOrCreateRun(RecordingId const recording_id, std::string_view config) {
-        // ERROR(Jack): Use a real hash functions!!!!
-        std::string const config_hash{config};
-
-        // NOTE(Jack): Unlike when the Asset/Recording logic, we add new runs if the config changes, that is why we
-        // don't have an error block here.
-        auto const result{ReadRunId(db_, recording_id, config_hash)};
-        if (result and result->second == config_hash) {
-            return result->first;
-        }
-
-        return InsertRun(db_, recording_id, config_hash, config);
-    }
-
-    // bool: was this a cache hit?
+    // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
+    // the same name. bool: was this a cache hit?
     std::pair<StepId, bool> GetOrCreateStep(std::optional<RecordingId> const& recording_id,
-                                            std::optional<RunId> const& run_id, StepType const type,
-                                            std::string_view cache_key) {
-        auto const result{ReadStepId(db_, recording_id, run_id, type)};
-        if (result and result->second == cache_key) {
-            return std::make_pair(result->first, true);
-        } else if (result) {
-            return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type, cache_key), false);
-        }
+                                            std::optional<RunId> const& run_id, StepType type,
+                                            std::string_view cache_key);
 
-        return std::make_pair(InsertStep(db_, recording_id, run_id, type, cache_key), false);
-    }
+    void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data);
 
-    void ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) {
-        auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
-            auto const& [timestamp_ns, buffer]{data_i};
+    EncodedImages ImagesSelect(StepId step_id, AssetId asset_id);
 
-            Bind(stmt, 1, step_id.value);
-            Bind(stmt, 2, asset_id.value);
-            Bind(stmt, 3, timestamp_ns);
+    void ExtractedTargetsInsert(StepId step_id, StepId source_step_id, AssetId asset_id,
+                                CameraMeasurements const& data);
 
-            if (buffer.data.empty()) {
-                BindNull(stmt, 4);
-            } else {
-                BindBlob(stmt, 4, std::as_bytes(std::span{buffer.data}));
-            }
-        }};
+    CameraMeasurements ExtractedTargetsSelect(StepId step_id, AssetId asset_id);
 
-        BatchExecuteStatement(sql_statements::images_insert, data, binder, db_);
-    }
+    void TargetInfoInsert(StepId step_id, AssetId asset_id, TargetInfo const& target_info);
 
-    EncodedImages ImagesSelect(StepId const step_id, AssetId const asset_id) {
-        EncodedImages data;
-
-        ExecuteQuery(
-            db_, sql_statements::images_select,
-            [step_id, asset_id](sqlite3_stmt* const stmt) {
-                Bind(stmt, 1, step_id.value);
-                Bind(stmt, 2, asset_id.value);
-            },
-            [&data](sqlite3_stmt* const stmt) {
-                uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
-
-                auto const blob{SqliteBlob(stmt, 1)};
-                std::span<uchar const> blob_span{reinterpret_cast<uchar const*>(blob.data()), blob.size()};
-                std::vector<uchar> buffer(std::cbegin(blob_span), std::cend(blob_span));
-
-                // TODO(Jack): Should we represent empty images with std::optional? Currently this will load all images,
-                // and if the image is a null value it will just be a buffer with length zero.
-                data.insert({timestamp_ns, ImageBuffer{buffer}});
-            });
-
-        return data;
-    }
-
-    void ExtractedTargetsInsert(StepId const step_id, StepId const source_step_id, AssetId const asset_id,
-                                CameraMeasurements const& data) {
-        auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
-            auto const& [timestamp_ns, target]{data_i};
-
-            protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
-            std::string buffer;
-            if (not serialized.SerializeToString(&buffer)) {
-                throw std::runtime_error(
-                    std::format("ExtractedTargetProto.SerializeToString() failed: step_id '{}', source_step_id '{}', "
-                                "asset_id '{}', timestamp_ns '{}'",
-                                step_id.value, source_step_id.value, asset_id.value, timestamp_ns));
-            }
-
-            Bind(stmt, 1, step_id.value);
-            Bind(stmt, 2, source_step_id.value);
-            Bind(stmt, 3, asset_id.value);
-            Bind(stmt, 4, timestamp_ns);
-            BindBlob(stmt, 5, std::as_bytes(std::span{buffer}));
-        }};
-
-        BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db_);
-    }
-
-    CameraMeasurements ExtractedTargetsSelect(StepId const step_id, AssetId const asset_id) {
-        CameraMeasurements data;
-
-        ExecuteQuery(
-            db_, sql_statements::extracted_targets_select,
-            [step_id, asset_id](sqlite3_stmt* const stmt) {
-                Bind(stmt, 1, step_id.value);
-                Bind(stmt, 2, asset_id.value);
-            },
-            [&data](sqlite3_stmt* const stmt) {
-                uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
-
-                auto const blob{SqliteBlob(stmt, 1)};
-                protobuf_serialization::ExtractedTargetProto serialized;
-                serialized.ParseFromArray(std::data(blob), static_cast<int>(std::size(blob)));
-
-                auto const deserialized{Deserialize(serialized)};
-                if (not deserialized) {
-                    throw std::runtime_error(std::format(
-                        "ExtractedTargetProto.ParseFromArray()/Deserialize() failed: timestamp_ns '{}'", timestamp_ns));
-                }
-
-                data.insert({timestamp_ns, deserialized.value()});
-            });
-
-        return data;
-    }
-
-    void TargetInfoInsert(StepId const step_id, AssetId const asset_id, TargetInfo const& target_info) {
-        auto const binder{[step_id, asset_id, target_info](sqlite3_stmt* const stmt) {
-            Bind(stmt, 1, step_id.value);
-            Bind(stmt, 2, asset_id.value);
-            Bind(stmt, 3, ToString(target_info.target_type));
-            Bind(stmt, 4, static_cast<int64_t>(target_info.height));
-            Bind(stmt, 5, static_cast<int64_t>(target_info.width));
-            Bind(stmt, 6, target_info.unit_dimension);
-            Bind(stmt, 7, static_cast<int64_t>(target_info.asymmetric));
-        }};
-
-        ExecuteStatement(sql_statements::target_info_insert, binder, db_);
-    }
-
-    std::optional<TargetInfo> TargetInfoSelect(StepId const step_id, AssetId const asset_id) {
-        std::optional<TargetInfo> target_info;
-
-        ExecuteQuery(
-            db_, sql_statements::target_info_select,
-            [step_id, asset_id](sqlite3_stmt* const stmt) {
-                Bind(stmt, 1, step_id.value);
-                Bind(stmt, 2, asset_id.value);
-            },
-            [&target_info](sqlite3_stmt* const stmt) {
-                TargetInfo result;
-                result.target_type = ToTargetType(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
-                result.height = sqlite3_column_int(stmt, 1);
-                result.width = sqlite3_column_int(stmt, 2);
-                result.unit_dimension = sqlite3_column_double(stmt, 3);
-                result.asymmetric = static_cast<bool>(sqlite3_column_int(stmt, 4));
-
-                target_info = result;
-            });
-
-        return target_info;
-    }
+    std::optional<TargetInfo> TargetInfoSelect(StepId step_id, AssetId asset_id);
 
    private:
     sqlite3* db_{nullptr};

@@ -4,7 +4,7 @@
 
 #include <span>
 
-#include "sqlite_exception.hpp"
+#include "database/sqlite_exception.hpp"
 
 namespace reprojection::database {
 
