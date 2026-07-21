@@ -54,12 +54,12 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
     ExecuteStatement("PRAGMA foreign_keys = ON;", db_);
 }
 
-AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const index, std::string_view name) {
+AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const index, Name const& name) {
     auto const result{ReadAssetId(db_, type, index)};
     if (result and result->second != name) {
         throw std::runtime_error(
             std::format("Asset of type '{}', index '{}' and name '{}' already exists - cannot change name '{}'.",
-                        ToString(type), index, result->second, name));
+                        ToString(type), index, result->second.value, name.value));
     } else if (result) {
         return result->first;
     }
@@ -67,11 +67,11 @@ AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const
     return InsertAsset(db_, type, index, name);
 }
 
-RecordingId CalibrationDatabase::GetOrCreateRecording(std::string_view name, std::string_view hash) {
+RecordingId CalibrationDatabase::GetOrCreateRecording(Name const& name, Hash const& hash) {
     auto const result{ReadRecordingId(db_, name)};
     if (result and result->second != hash) {
         throw std::runtime_error(std::format("Recording '{}' with hash '{}' already exists - cannot change hash '{}'.",
-                                             name, result->second, hash));
+                                             name.value, result->second.value, hash.value));
     } else if (result) {
         return result->first;
     }
@@ -80,13 +80,23 @@ RecordingId CalibrationDatabase::GetOrCreateRecording(std::string_view name, std
 }
 
 RunId CalibrationDatabase::GetOrCreateRun(RecordingId const recording_id, std::string_view config) {
-    // ERROR(Jack): Use a real hash functions!!!!
-    std::string const config_hash{config};
+    // BUG(Jack)
+    // BUG(Jack)
+    // BUG(Jack)
+    // BUG(Jack)
+    // ERROR(Jack): Use a real hash functions!!!! See BUG below!
+    Hash const config_hash{std::string(config)};
 
     // NOTE(Jack): Unlike when the Asset/Recording logic, we add new runs if the config changes, that is why we
     // don't have an error block here.
     auto const result{ReadRunId(db_, recording_id, config_hash)};
-    if (result and result->second == config_hash) {
+    // BUG(Jack)
+    // BUG(Jack)
+    // BUG(Jack)
+    // BUG(Jack)
+    // ERROR(Jack): We are comparing the actually loaded config to the provided hash value, if we actually used a hash
+    // function this would always be false! This is a landmine!
+    if (result and result->second == config_hash.value) {
         return result->first;
     }
 
@@ -96,7 +106,7 @@ RunId CalibrationDatabase::GetOrCreateRun(RecordingId const recording_id, std::s
 // bool: was this a cache hit?
 std::pair<StepId, bool> CalibrationDatabase::GetOrCreateStep(std::optional<RecordingId> const& recording_id,
                                                              std::optional<RunId> const& run_id, StepType const type,
-                                                             std::string_view cache_key) {
+                                                             Hash cache_key) {
     auto const result{ReadStepId(db_, recording_id, run_id, type)};
     if (result and result->second == cache_key) {
         return std::make_pair(result->first, true);

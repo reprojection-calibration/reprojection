@@ -30,6 +30,18 @@ struct StepId {
     friend constexpr bool operator==(StepId const&, StepId const&) = default;
 };
 
+struct Hash {
+    std::string value;
+
+    friend constexpr bool operator==(Hash const&, Hash const&) = default;
+};
+
+struct Name {
+    std::string value;
+
+    friend constexpr bool operator==(Name const&, Name const&) = default;
+};
+
 enum class AssetType { Camera, Imu, Target };
 
 inline std::string ToString(AssetType const data) {

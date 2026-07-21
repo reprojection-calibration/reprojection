@@ -18,17 +18,17 @@ class CalibrationDatabase {
     // TODO(Jack): Should we make this private and instead use a factory?
     CalibrationDatabase(fs::path const& db_path, bool create, bool read_only = false);
 
-    AssetId GetOrCreateAsset(AssetType type, size_t index, std::string_view name);
+    AssetId GetOrCreateAsset(AssetType type, size_t index, Name const& name);
 
-    RecordingId GetOrCreateRecording(std::string_view name, std::string_view hash);
+    RecordingId GetOrCreateRecording(Name const& name, Hash const& hash);
 
+    // TODO(Jack): Use config type here!
     RunId GetOrCreateRun(RecordingId recording_id, std::string_view config);
 
     // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
     // the same name. bool: was this a cache hit?
     std::pair<StepId, bool> GetOrCreateStep(std::optional<RecordingId> const& recording_id,
-                                            std::optional<RunId> const& run_id, StepType type,
-                                            std::string_view cache_key);
+                                            std::optional<RunId> const& run_id, StepType type, Hash cache_key);
 
     void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data);
 

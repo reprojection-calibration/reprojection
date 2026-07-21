@@ -11,17 +11,16 @@
 
 namespace reprojection::database {
 
-std::optional<std::pair<AssetId, std::string>> ReadAssetId(sqlite3* const db, AssetType const type,
-                                                           size_t const index) {
+std::optional<std::pair<AssetId, Name>> ReadAssetId(sqlite3* const db, AssetType const type, size_t const index) {
     auto const binder{[type, index](sqlite3_stmt* stmt) {
         Bind(stmt, 1, ToString(type));
         Bind(stmt, 2, index);
     }};
 
-    std::optional<std::pair<AssetId, std::string>> data;
+    std::optional<std::pair<AssetId, Name>> data;
     ExecuteQuery(db, sql_statements::assets_select, binder, [&data](sqlite3_stmt* const stmt) {
         AssetId const asset_id{sqlite3_column_int64(stmt, 0)};
-        std::string const name{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
+        Name const name{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
 
         data = std::make_pair(asset_id, name);
     });
@@ -29,11 +28,11 @@ std::optional<std::pair<AssetId, std::string>> ReadAssetId(sqlite3* const db, As
     return data;
 }
 
-AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index, std::string_view name) {
+AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index, Name const& name) {
     auto const binder{[type, index, name](sqlite3_stmt* stmt) {
         Bind(stmt, 1, ToString(type));
         Bind(stmt, 2, index);
-        Bind(stmt, 3, name);
+        Bind(stmt, 3, name.value);
     }};
 
     AssetId data{-1};
@@ -44,13 +43,13 @@ AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index,
 }
 
 // TODO(Jack): Should we define basic structs like Hash and Name? Passing around raw strings does not scale.
-std::optional<std::pair<RecordingId, std::string>> ReadRecordingId(sqlite3* const db, std::string_view name) {
-    auto const binder{[name](sqlite3_stmt* stmt) { Bind(stmt, 1, name); }};
+std::optional<std::pair<RecordingId, Hash>> ReadRecordingId(sqlite3* const db, Name const& name) {
+    auto const binder{[name](sqlite3_stmt* stmt) { Bind(stmt, 1, name.value); }};
 
-    std::optional<std::pair<RecordingId, std::string>> data;
+    std::optional<std::pair<RecordingId, Hash>> data;
     ExecuteQuery(db, sql_statements::recordings_select, binder, [&data](sqlite3_stmt* const stmt) {
         RecordingId const recording_id{sqlite3_column_int64(stmt, 0)};
-        std::string const hash{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
+        Hash const hash{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
 
         data = std::make_pair(recording_id, hash);
     });
@@ -58,10 +57,10 @@ std::optional<std::pair<RecordingId, std::string>> ReadRecordingId(sqlite3* cons
     return data;
 }
 
-RecordingId InsertRecording(sqlite3* const db, std::string_view name, std::string_view hash) {
+RecordingId InsertRecording(sqlite3* const db, Name const& name, Hash const& hash) {
     auto const binder{[name, hash](sqlite3_stmt* stmt) {
-        Bind(stmt, 1, name);
-        Bind(stmt, 2, hash);
+        Bind(stmt, 1, name.value);
+        Bind(stmt, 2, hash.value);
     }};
 
     RecordingId data{-1};
@@ -72,10 +71,10 @@ RecordingId InsertRecording(sqlite3* const db, std::string_view name, std::strin
 }
 
 std::optional<std::pair<RunId, std::string>> ReadRunId(sqlite3* const db, RecordingId const recording_id,
-                                                       std::string_view config_hash) {
+                                                       Hash const& config_hash) {
     auto const binder{[recording_id, config_hash](sqlite3_stmt* stmt) {
         Bind(stmt, 1, recording_id.value);
-        Bind(stmt, 2, config_hash);
+        Bind(stmt, 2, config_hash.value);
     }};
 
     std::optional<std::pair<RunId, std::string>> data;
@@ -90,11 +89,10 @@ std::optional<std::pair<RunId, std::string>> ReadRunId(sqlite3* const db, Record
     return data;
 }
 
-RunId InsertRun(sqlite3* const db, RecordingId const recording_id, std::string_view config_hash,
-                std::string_view config) {
+RunId InsertRun(sqlite3* const db, RecordingId const recording_id, Hash const& config_hash, std::string_view config) {
     auto const binder{[recording_id, config_hash, config](sqlite3_stmt* stmt) {
         Bind(stmt, 1, recording_id.value);
-        Bind(stmt, 2, config_hash);
+        Bind(stmt, 2, config_hash.value);
         Bind(stmt, 3, config);
     }};
 
@@ -105,19 +103,18 @@ RunId InsertRun(sqlite3* const db, RecordingId const recording_id, std::string_v
     return data;
 }
 
-std::optional<std::pair<StepId, std::string>> ReadStepId(sqlite3* const db,
-                                                         std::optional<RecordingId> const& recording_id,
-                                                         std::optional<RunId> const& run_id, StepType type) {
+std::optional<std::pair<StepId, Hash>> ReadStepId(sqlite3* const db, std::optional<RecordingId> const& recording_id,
+                                                  std::optional<RunId> const& run_id, StepType type) {
     auto const binder{[recording_id, run_id, type](sqlite3_stmt* stmt) {
         recording_id ? Bind(stmt, 1, recording_id->value) : BindNull(stmt, 1);
         run_id ? Bind(stmt, 2, run_id->value) : BindNull(stmt, 2);
         Bind(stmt, 3, ToString(type));
     }};
 
-    std::optional<std::pair<StepId, std::string>> data;
+    std::optional<std::pair<StepId, Hash>> data;
     ExecuteQuery(db, sql_statements::steps_select, binder, [&data](sqlite3_stmt* const stmt) {
         StepId const step_id{sqlite3_column_int64(stmt, 0)};
-        std::string const cache_key{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
+        Hash const cache_key{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
 
         data = std::make_pair(step_id, cache_key);
     });
@@ -126,12 +123,12 @@ std::optional<std::pair<StepId, std::string>> ReadStepId(sqlite3* const db,
 }
 
 StepId InsertStep(sqlite3* const db, std::optional<RecordingId> const& recording_id, std::optional<RunId> const& run_id,
-                  StepType const type, std::string_view cache_key) {
+                  StepType const type, Hash const& cache_key) {
     auto const binder{[recording_id, run_id, type, cache_key](sqlite3_stmt* stmt) {
         recording_id ? Bind(stmt, 1, recording_id->value) : BindNull(stmt, 1);
         run_id ? Bind(stmt, 2, run_id->value) : BindNull(stmt, 2);
         Bind(stmt, 3, ToString(type));
-        Bind(stmt, 4, cache_key);
+        Bind(stmt, 4, cache_key.value);
     }};
 
     StepId data{-1};
@@ -145,7 +142,7 @@ StepId InsertStep(sqlite3* const db, std::optional<RecordingId> const& recording
 // this to make sure that "cascade on delete" operations happen. Official upsert semantics never call delete and
 // therefore cannot be used here.
 StepId UpsertStep(sqlite3* const db, StepId const id, std::optional<RecordingId> const& recording_id,
-                  std::optional<RunId> const& run_id, StepType const type, std::string_view cache_key) {
+                  std::optional<RunId> const& run_id, StepType const type, Hash const& cache_key) {
     auto const binder1{[id](sqlite3_stmt* stmt) { Bind(stmt, 1, id.value); }};
 
     StepId data{-1};
@@ -156,7 +153,7 @@ StepId UpsertStep(sqlite3* const db, StepId const id, std::optional<RecordingId>
         recording_id ? Bind(stmt, 2, recording_id->value) : BindNull(stmt, 2);
         run_id ? Bind(stmt, 3, run_id->value) : BindNull(stmt, 3);
         Bind(stmt, 4, ToString(type));
-        Bind(stmt, 5, cache_key);
+        Bind(stmt, 5, cache_key.value);
     }};
 
     // NOTE(Jack): Technically we know the id already so there is nothing that forces us to read it from the result of
