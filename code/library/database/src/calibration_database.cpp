@@ -11,7 +11,7 @@
 
 namespace reprojection::database {
 
-CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only = false) {
+CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only) {
     if (create and read_only) {
         throw std::runtime_error(
             "You requested to open a database object with both options 'create' and 'read_only' true. This is "

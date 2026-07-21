@@ -1,5 +1,3 @@
-#pragma once
-
 #include "database/sqlite_exception.hpp"
 
 namespace reprojection::database {
