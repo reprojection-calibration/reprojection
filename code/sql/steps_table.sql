@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS steps
                                                     'pose_initialization',
                                                     'spline_initialization',
                                                     'target_info')),
-    cache_key    TEXT     NOT NULL,
+    cache_key    TEXT,
     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CHECK ((recording_id IS NOT NULL AND run_id IS NULL) OR

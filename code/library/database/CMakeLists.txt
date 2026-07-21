@@ -27,6 +27,7 @@ set(SQL_FILES
         steps_insert_id.sql
         steps_select.sql
         steps_table.sql
+        steps_update_cache_key.sql
         target_info_insert.sql
         target_info_select.sql
         target_info_table.sql

@@ -103,18 +103,28 @@ RunId CalibrationDatabase::GetOrCreateRun(RecordingId const recording_id, std::s
     return InsertRun(db_, recording_id, config_hash, config);
 }
 
-// bool: was this a cache hit?
-std::pair<StepId, bool> CalibrationDatabase::GetOrCreateStep(std::optional<RecordingId> const& recording_id,
-                                                             std::optional<RunId> const& run_id, StepType const type,
-                                                             Hash cache_key) {
+std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(std::optional<RecordingId> const& recording_id,
+                                                                    std::optional<RunId> const& run_id,
+                                                                    StepType const type, Hash cache_key) {
     auto const result{ReadStepId(db_, recording_id, run_id, type)};
     if (result and result->second == cache_key) {
-        return std::make_pair(result->first, true);
+        return std::make_pair(result->first, CacheStatus::CacheHit);
     } else if (result) {
-        return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type, cache_key), false);
+        return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type), CacheStatus::CacheMiss);
     }
 
-    return std::make_pair(InsertStep(db_, recording_id, run_id, type, cache_key), false);
+    return std::make_pair(InsertStep(db_, recording_id, run_id, type), CacheStatus::CacheMiss);
+}
+
+// TODO(Jack): How do we handle the case when we are asked to complete a step which does not exist? Throw? Does it
+// already do that?
+void CalibrationDatabase::StepCacheKeyUpdate(StepId const step_id, Hash const& cache_key) {
+    auto const binder{[step_id, cache_key](sqlite3_stmt* const stmt) {
+        Bind(stmt, 1, cache_key.value);
+        Bind(stmt, 2, step_id.value);
+    }};
+
+    ExecuteStatement(sql_statements::steps_update_cache_key, binder, db_);
 }
 
 void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) {

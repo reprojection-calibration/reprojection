@@ -27,8 +27,13 @@ class CalibrationDatabase {
 
     // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
     // the same name. bool: was this a cache hit?
-    std::pair<StepId, bool> GetOrCreateStep(std::optional<RecordingId> const& recording_id,
-                                            std::optional<RunId> const& run_id, StepType type, Hash cache_key);
+    std::pair<StepId, CacheStatus> GetOrCreateStep(std::optional<RecordingId> const& recording_id,
+                                                   std::optional<RunId> const& run_id, StepType type, Hash cache_key);
+
+    // NOTE(Jack): We need the step creation and cache key insertion to be separate because if the step execution fails
+    // we do not want stale/bad cache keys in the database. By splitting this up and implementing it carefully in the
+    // step running logic we can ensure a cache key only gets written if the execution was succesful.
+    void StepCacheKeyUpdate(StepId step_id, Hash const& cache_key);
 
     void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data);
 

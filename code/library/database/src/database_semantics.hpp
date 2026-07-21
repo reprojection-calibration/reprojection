@@ -27,12 +27,13 @@ std::optional<std::pair<StepId, Hash>> ReadStepId(sqlite3* const db, std::option
                                                   std::optional<RunId> const& run_id, StepType type);
 
 StepId InsertStep(sqlite3* const db, std::optional<RecordingId> const& recording_id, std::optional<RunId> const& run_id,
-                  StepType const type, Hash const& cache_key);
+                  StepType const type);
 
+// TODO(Jack): We need a way better name here!
 // NOTE(Jack): This is not strictly an upsert because we actually delete the entire row and then insert it again. We do
 // this to make sure that "cascade on delete" operations happen. Official upsert semantics never call delete and
 // therefore cannot be used here.
 StepId UpsertStep(sqlite3* const db, StepId const id, std::optional<RecordingId> const& recording_id,
-                  std::optional<RunId> const& run_id, StepType const type, Hash const& cache_key);
+                  std::optional<RunId> const& run_id, StepType const type);
 
 }  // namespace reprojection::database
