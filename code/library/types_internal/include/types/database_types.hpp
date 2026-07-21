@@ -43,7 +43,9 @@ struct Hash {
 };
 
 struct Name {
-    explicit Name(std::string_view _value) : value{_value} {}
+    Name(std::string const& _value) : value{_value} {}
+
+    Name(std::string_view _value) : value{_value} {}
 
     Name(char const* const value) : Name{std::string_view{value}} {}
 

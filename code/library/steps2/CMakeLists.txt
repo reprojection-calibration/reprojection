@@ -1,7 +1,7 @@
 set(LIBRARY_NAME "steps2")
 
 set(SRC_FILES
-    src/del.cpp
+    src/initialize_calibration.cpp
 )
 
 set(LINK_LIBRARIES
@@ -30,6 +30,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        test/initialize_calibration.test.cpp
         test/step_runner.test.cpp
 )
 AddTests()
