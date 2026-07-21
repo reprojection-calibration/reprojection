@@ -1,67 +1,58 @@
 #pragma once
 
-#include "database/database_read.hpp"
-#include "database/database_remove.hpp"
-#include "database/database_write.hpp"
+#include "database/calibration_database.hpp"
 
 namespace reprojection::steps {
 
-inline bool CacheHit(std::optional<std::string> const& loaded_key, std::string_view key) {
-    if (loaded_key.has_value() and loaded_key.value() == key) {
-        return true;
-    }
-
-    return false;
-}
-
-template <typename Result, typename Step>
-concept IsStep = requires(Result const result, Step const step, SqlitePtr const db) {
-    { step.StepType() } -> std::convertible_to<CalibrationStep>;
-    { step.EntityId() } -> std::same_as<std::string>;
-    { step.HashInputs() } -> std::same_as<std::string>;
-    { step.Compute() } -> std::same_as<Result>;
-    { step.Load(db) } -> std::same_as<Result>;
-    { step.Save(result, db) };
+// TODO(Jack): Why do we really need to return this?
+struct StepResult {
+    StepId id;
+    CacheStatus cache_status;
 };
 
-// TODO(Jack): Make private one day when the application is whole
-template <typename Result, typename Step>
-    requires IsStep<Result, Step>
-std::pair<Result, CacheStatus> RunStep(Step const& step, SqlitePtr const db) {
-    auto const cached_key{database::ReadCacheKey(db, step.EntityId(), step.StepType())};
-    std::string const new_key{step.HashInputs()};
+struct StepOwner {
+    static StepOwner Recording(RecordingId const id) { return StepOwner{id, std::nullopt}; }
 
-    if (CacheHit(cached_key, new_key)) {
-        return {step.Load(db), CacheStatus::CacheHit};
+    static StepOwner Run(RunId const id) { return StepOwner{std::nullopt, id}; }
+
+    std::optional<RecordingId> recording_id;
+    std::optional<RunId> run_id;
+
+   private:
+    StepOwner(std::optional<RecordingId> const& _recording_id, std::optional<RunId> const& _run_id)
+        : recording_id{_recording_id}, run_id{_run_id} {}
+};
+
+// TODO DO WE ALSO NEED TO ADD THE SAVE AND LOAD COMPONENTS?
+// TODO IF WE NEVER RETURN ANYTHING THEN WE DONT NEED TO LOAD WHEN WE CACHE HIT RIGHT?
+template <typename T>
+concept IsRunnableStep = requires(T const& step, StepId const id, database::CalibrationDatabase& db) {
+    { step.Type() } -> std::same_as<StepType>;
+    { step.CacheKey(db) } -> std::same_as<Hash>;
+    { step.Execute(db, id) } -> std::same_as<void>;
+};
+
+template <typename T>
+    requires IsRunnableStep<T>
+StepResult RunStep(StepOwner const owner, T const& step, database::CalibrationDatabase& db) {
+    Hash const cache_key{step.CacheKey(db)};
+
+    auto const step{db.PrepareStep(owner, step.Type(), cache_key)};
+    if (prepared.cache_hit) {
+        return {
+            .id = prepared.id,
+            .cache_status = CacheStatus::CacheHit,
+        };
     }
 
-    Result const result{step.Compute()};
+    db.Transaction([&] {
+        step.Execute(db, prepared.id);
+        db.CompleteStep(prepared.id, cache_key);
+    });
 
-    // NOTE(Jack): The cache key logic here looks a little messy, and I think a sign that we are doing something wrong.
-    // Combined with the underlying database logic it means I need to explain what's going on here. First of all if we
-    // are here this means that it was not a cache hit and we have a new result that we want to write to the db. The
-    // steps below are as follows:
-    //
-    // (1) In the first step here we RemoveFromDb() the step, and because we have ON DELETE CASCADE set
-    // for all dependent data, and PRAGMA foreign_keys = ON, this should mean that the step itself and all the data
-    // calculated in that step are removed.
-    // (2) Then we write the step to the db again, but with a null cache key, because we have a foreign key constraint
-    // that requires the step exists before we can Save() the data. The reason we leave it with a null key is that if
-    // the Save() fails for whatever reason, then the next run will show as a cache failure because the key is null.
-    // (3) Save the data - this can fail for whatever reason.
-    // (4) Add the cache key to the step (remember the calibration_steps table has "upsert" semantics). Now the step is
-    // actually cached.
-    //
-    // If there is a more clean way to express this logic, that would be a welcome addition. I think that the current
-    // implementation can lead to problems in the future.
-    database::RemoveFromDb(db, step.EntityId(), step.StepType());
-    database::InsertStep(db, step.EntityId(), step.StepType(), std::nullopt);
-
-    step.Save(result, db);
-
-    database::InsertStep(db, step.EntityId(), step.StepType(), new_key);
-
-    return {result, CacheStatus::CacheMiss};
+    return {
+        .id = prepared.id,
+        .cache_status = CacheStatus::CacheMiss,
+    };
 }
-
 }  // namespace reprojection::steps

@@ -1,12 +1,7 @@
 set(LIBRARY_NAME "steps2")
 
 set(SRC_FILES
-        src/config_parsing.cpp
-        src/feature_extraction.cpp
-        src/image_loading.cpp
-        src/imu_data_loading.cpp
-        src/target_info.cpp
-
+    src/del.cpp
 )
 
 set(LINK_LIBRARIES
@@ -36,6 +31,5 @@ set(TEST_LINK_LIBRARIES
 )
 set(TESTS
         test/step_runner.test.cpp
-        test/steps.test.cpp
 )
 AddTests()
