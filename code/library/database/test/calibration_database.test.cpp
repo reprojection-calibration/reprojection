@@ -5,15 +5,12 @@
 #include <string>
 
 #include "database/sqlite_exception.hpp"
-#include "testing_utilities/temporary_file.hpp"
 #include "types/database_types.hpp"
 
 using namespace reprojection;
-using TemporaryFile = testing_utilities::TemporaryFile;
 
 TEST(Yyy, TestGetOrCreateAsset) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+    auto db{database::CalibrationDatabase(":memory:", true)};
 
     // Repeated insert returns the same id with no problems.
     AssetId result{db.GetOrCreateAsset(AssetType::Camera, 0, "/cam0/image_raw")};
@@ -38,8 +35,7 @@ TEST(Yyy, TestGetOrCreateAsset) {
 }
 
 TEST(Ggg, TestGetOrCreateRecording) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+    auto db{database::CalibrationDatabase(":memory:", true)};
 
     // Repeated insert with matching name and hash is no problem!
     RecordingId result{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
@@ -58,8 +54,7 @@ TEST(Ggg, TestGetOrCreateRecording) {
 }
 
 TEST(Hhh, TestGetOrCreateRun) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+    auto db{database::CalibrationDatabase(":memory:", true)};
 
     // A run requires a recording - satisfy this foreign key constraint here.
     RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
@@ -82,8 +77,7 @@ class GetOrCreateStepFixture : public ::testing::Test {
    protected:
     void SetUp() override { recording_id_ = db_.GetOrCreateRecording("recording.bag", "sha256-xxx"); }
 
-    TemporaryFile temp_file_{".db3"};
-    database::CalibrationDatabase db_{temp_file_.Path(), true};
+    database::CalibrationDatabase db_{":memory:", true};
     RecordingId recording_id_{-1};
 };
 
@@ -91,18 +85,18 @@ TEST_F(GetOrCreateStepFixture, TestSingleOwnerSemantics) {
     // Insert a new step - cache miss.
     auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-aaa")};
     EXPECT_EQ(result.first, StepId{1});
-    EXPECT_EQ(result.second, false);
+    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
     // Attempting to insert the same step again does nothing - cache hit.
     result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-aaa");
     EXPECT_EQ(result.first, StepId{1});
-    EXPECT_EQ(result.second, true);
+    EXPECT_EQ(result.second, CacheStatus::CacheHit);
 
     // Inserting the same step but with a new cache key will delete the old entry and insert a new one with the same id
     // - cache miss.
     result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-bbb");
     EXPECT_EQ(result.first, StepId{1});
-    EXPECT_EQ(result.second, false);
+    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
     // Create a second recording.
     recording_id_ = db_.GetOrCreateRecording("recording1.bag", "sha256-yyy");
@@ -110,7 +104,7 @@ TEST_F(GetOrCreateStepFixture, TestSingleOwnerSemantics) {
     // Inserting the same step under a new owner creates a new valid id - cache miss.
     result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-bbb");
     EXPECT_EQ(result.first, StepId{2});
-    EXPECT_EQ(result.second, false);
+    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
     // Creating a step under a non-existent recording is an error.
     EXPECT_THROW(db_.GetOrCreateStep(RecordingId{111}, std::nullopt, StepType::ImageLoading, "sha256-aaa"),
@@ -121,7 +115,7 @@ TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
     // A step owned by a recording,
     auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-aaa")};
     EXPECT_EQ(result.first, StepId{1});
-    EXPECT_EQ(result.second, false);
+    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
     // Create a run.
     RunId const run_id{db_.GetOrCreateRun(recording_id_, "[config]")};
@@ -129,7 +123,7 @@ TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
     // The same exact step but under the run's ownership creates a new step entry.
     result = db_.GetOrCreateStep(std::nullopt, run_id, StepType::ImageLoading, "sha256-aaa");
     EXPECT_EQ(result.first, StepId{2});
-    EXPECT_EQ(result.second, false);
+    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
     // A step can only have one owner, either a recording or a run - therefore this is an error.
     EXPECT_THROW(db_.GetOrCreateStep(recording_id_, run_id, StepType::ImageLoading, "sha256-aaa"),
@@ -145,8 +139,7 @@ class ImagesFixture : public ::testing::Test {
         asset_id_ = db_.GetOrCreateAsset(AssetType::Camera, 0, "/cam0/image_raw");
     }
 
-    TemporaryFile temp_file_{".db3"};
-    database::CalibrationDatabase db_{temp_file_.Path(), true};
+    database::CalibrationDatabase db_{":memory:", true};
     RecordingId recording_id_{-1};
     StepId step_id_{-1};
     AssetId asset_id_{-1};
@@ -196,8 +189,7 @@ class ExtractedTargetsFixture : public ::testing::Test {
         extracted_targets_step_id_ = step.first;
     }
 
-    TemporaryFile temp_file_{".db3"};
-    database::CalibrationDatabase db_{temp_file_.Path(), true};
+    database::CalibrationDatabase db_{":memory:", true};
     AssetId asset_id_{-1};
     StepId image_loading_step_id_{-1};
     StepId extracted_targets_step_id_{-1};
@@ -238,8 +230,7 @@ TEST_F(ExtractedTargetsFixture, TestExtractedTargetsSelect) {
 }
 
 TEST(Qqq, TestTargetInfo) {
-    TemporaryFile const temp_file{".db3"};
-    auto db{database::CalibrationDatabase(temp_file.Path(), true)};
+    auto db{database::CalibrationDatabase(":memory:", true)};
 
     // Satisfy foreign key constraints
     RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "")};
