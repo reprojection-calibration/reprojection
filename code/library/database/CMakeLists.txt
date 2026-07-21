@@ -62,7 +62,10 @@ protobuf_generate_cpp(proto_sources proto_headers
 
 set(SRC_FILES
         src/calibration_database.cpp
+        src/database_semantics.cpp
         src/serialization.cpp
+        src/sqlite_helpers.cpp
+        src/sqlite_exception.cpp
         src/toml_converters.cpp
 )
 set(SRC_FILES
