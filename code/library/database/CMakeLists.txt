@@ -95,6 +95,9 @@ set(SQL2_FILES
         steps_insert_id.sql
         steps_select.sql
         steps_table.sql
+        target_info_insert.sql
+        target_info_select.sql
+        target_info_table.sql
 )
 
 set(SQL2_DIR "code/sql2")
@@ -103,12 +106,12 @@ foreach (sql ${SQL2_FILES})
     get_filename_component(name ${sql} NAME_WE)
     file(READ "../../../${SQL2_DIR}/${sql}" contents)
 
-    set(SQL_STRING_ENTRIES
-            "${SQL_STRING_ENTRIES}constexpr char const* const ${name} = R\"sql(\n${contents}\n)sql\";\n")
+    set(SQL_STRING_ENTRIES2
+            "${SQL_STRING_ENTRIES2}constexpr char const* const ${name} = R\"sql(\n${contents}\n)sql\";\n")
 endforeach ()
 
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql.hpp.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sql2.hpp.in
         ${CMAKE_CURRENT_BINARY_DIR}/generated/sql2.hpp
         @ONLY
 )

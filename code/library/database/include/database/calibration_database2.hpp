@@ -8,6 +8,7 @@
 
 #include "database/serialization.hpp"
 #include "generated/sql2.hpp"
+#include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
 
 namespace reprojection::database {
@@ -463,6 +464,7 @@ class CalibrationDatabase {
             ExecuteStatement(sql_statements::recordings_table, db_);
             ExecuteStatement(sql_statements::runs_table, db_);
             ExecuteStatement(sql_statements::steps_table, db_);
+            ExecuteStatement(sql_statements::target_info_table, db_);
         }
 
         // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For
@@ -620,6 +622,43 @@ class CalibrationDatabase {
             });
 
         return data;
+    }
+
+    void TargetInfoInsert(StepId const step_id, AssetId const asset_id, TargetInfo const& target_info) {
+        auto const binder{[step_id, asset_id, target_info](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+            Bind(stmt, 3, ToString(target_info.target_type));
+            Bind(stmt, 4, static_cast<int64_t>(target_info.height));
+            Bind(stmt, 5, static_cast<int64_t>(target_info.width));
+            Bind(stmt, 6, target_info.unit_dimension);
+            Bind(stmt, 7, static_cast<int64_t>(target_info.asymmetric));
+        }};
+
+        ExecuteStatement(sql_statements::target_info_insert, binder, db_);
+    }
+
+    std::optional<TargetInfo> TargetInfoSelect(StepId const step_id, AssetId const asset_id) {
+        std::optional<TargetInfo> target_info;
+
+        ExecuteQuery(
+            db_, sql_statements::target_info_select,
+            [step_id, asset_id](sqlite3_stmt* const stmt) {
+                Bind(stmt, 1, step_id.value);
+                Bind(stmt, 2, asset_id.value);
+            },
+            [&target_info](sqlite3_stmt* const stmt) {
+                TargetInfo result;
+                result.target_type = ToTargetType(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
+                result.height = sqlite3_column_int(stmt, 1);
+                result.width = sqlite3_column_int(stmt, 2);
+                result.unit_dimension = sqlite3_column_double(stmt, 3);
+                result.asymmetric = static_cast<bool>(sqlite3_column_int(stmt, 4));
+
+                target_info = result;
+            });
+
+        return target_info;
     }
 
    private:
