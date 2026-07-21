@@ -31,12 +31,20 @@ struct StepId {
 };
 
 struct Hash {
+    explicit Hash(std::string_view _value) : value{_value} {}
+
+    Hash(char const* const value) : Hash{std::string_view{value}} {}
+
     std::string value;
 
     friend constexpr bool operator==(Hash const&, Hash const&) = default;
 };
 
 struct Name {
+    explicit Name(std::string_view _value) : value{_value} {}
+
+    Name(char const* const value) : Name{std::string_view{value}} {}
+
     std::string value;
 
     friend constexpr bool operator==(Name const&, Name const&) = default;
