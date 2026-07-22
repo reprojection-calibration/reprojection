@@ -4,6 +4,8 @@
 
 #include <ranges>
 
+#include "steps/step_runner.hpp"
+
 using namespace reprojection;
 
 // TODO(Jack): We should define a global project constant for the hash of an empty string.
@@ -37,6 +39,25 @@ class ImageSamplerFixture : public ::testing::Test {
     std::shared_ptr<EncodedImages> encoded_images_;
     ImageSampler image_sampler_;
 };
+
+TEST_F(ImageSamplerFixture, TestImageLoadingStepRunner) {
+    auto db{database::CalibrationDatabase(":memory:", true)};
+
+    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
+    auto owner{steps::StepOwner::Recording(recording_id)};
+
+    AssetId const camera_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
+    steps::ImageLoading const step{camera_id, "", image_sampler_};
+
+    StepId const step_id{RunStep<steps::ImageLoading>(owner, step, db)};
+    EXPECT_EQ(step_id.value, 1);
+
+    auto const result{db.ImagesSelect(step_id, camera_id)};
+    EXPECT_EQ(std::size(result), std::size(*encoded_images_));
+    for (auto const timestamp_ns : *encoded_images_ | std::views::keys) {
+        EXPECT_EQ(std::size(result.at(timestamp_ns).data), std::size(encoded_images_->at(timestamp_ns).data));
+    }
+}
 
 TEST_F(ImageSamplerFixture, TestImageLoadingStep) {
     auto db{database::CalibrationDatabase(":memory:", true)};
