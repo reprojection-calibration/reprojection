@@ -11,17 +11,18 @@ namespace reprojection::steps {
 // getting large. The benefit is that it makes our downstream workflow and database visualization extremely consistent.
 
 struct ImageLoading {
-    AssetId camera_id_;
-    Hash cache_key_;
-    ImageSampler image_sampler_;
-
     ImageLoading(AssetId const camera_id, std::string_view serialized_image_sampler, ImageSampler const& image_sampler);
 
     static StepType Type() { return StepType::ImageLoading; }
 
-    Hash CacheKey(database::CalibrationDatabase& db);
+    Hash CacheKey(database::CalibrationDatabase& db) const;
 
-    void Execute(database::CalibrationDatabase& db, StepId const step_id);
+    void Execute(StepId const step_id, database::CalibrationDatabase& db) const;
+
+   private:
+    AssetId camera_id_;
+    Hash cache_key_;
+    ImageSampler image_sampler_;
 };
 
 }  // namespace reprojection::steps

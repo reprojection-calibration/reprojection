@@ -17,7 +17,7 @@ ImageLoading::ImageLoading(AssetId const camera_id, std::string_view serialized_
       cache_key_{hashing::HashArguments(serialized_image_sampler)},
       image_sampler_{image_sampler} {}
 
-Hash ImageLoading::CacheKey(database::CalibrationDatabase& db) {
+Hash ImageLoading::CacheKey(database::CalibrationDatabase& db) const {
     // NOTE(Jack): The image loading is unique in that it does not load anythign from the database but instead
     // bootstraps directly from the user/application input.
     static_cast<void>(db);
@@ -25,7 +25,7 @@ Hash ImageLoading::CacheKey(database::CalibrationDatabase& db) {
     return cache_key_;
 }
 
-void ImageLoading::Execute(database::CalibrationDatabase& db, StepId const step_id) {
+void ImageLoading::Execute( StepId const step_id, database::CalibrationDatabase& db) const {
     auto encoded_images = std::make_shared<EncodedImages>();
     int num_images{0};
     while (auto const data{image_sampler_()}) {

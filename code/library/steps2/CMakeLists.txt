@@ -31,6 +31,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        test/image_loading.test.cpp
         test/initialize_calibration.test.cpp
         test/step_runner.test.cpp
 )

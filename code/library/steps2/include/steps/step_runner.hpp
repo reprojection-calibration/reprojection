@@ -25,7 +25,7 @@ template <typename T>
 concept IsRunnableStep = requires(T const& step, StepId const id, database::CalibrationDatabase& db) {
     { step.Type() } -> std::same_as<StepType>;
     { step.CacheKey(db) } -> std::same_as<Hash>;
-    { step.Execute(db, id) } -> std::same_as<void>;
+    { step.Execute( id, db) } -> std::same_as<void>;
 };
 
 template <typename T>
@@ -39,7 +39,7 @@ StepId RunStep(StepOwner const owner, T const& step, database::CalibrationDataba
     }
 
     // TODO(Jack): Should we put this inside a database transaction so in case of failure everything rolls back?
-    step.Execute(db, step_id);
+    step.Execute( step_id, db);
     db.StepCacheKeyUpdate(step_id, cache_key);
 
     return step_id;
