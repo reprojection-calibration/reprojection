@@ -1,7 +1,5 @@
 #include "steps/image_loading.hpp"
 
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
 
@@ -30,25 +28,25 @@ Hash ImageLoading::CacheKey(database::CalibrationDatabase& db) {
 void ImageLoading::Execute(database::CalibrationDatabase& db, StepId const step_id) {
     auto encoded_images = std::make_shared<EncodedImages>();
     int num_images{0};
-    while (auto const data{image_source_()}) {
+    while (auto const data{image_sampler_()}) {
         auto const& [timestamp_ns, img]{*data};
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error("cv::imencode() failed for " + std::string(camera_name_));  // LCOV_EXCL_LINE
+            throw std::runtime_error(std::format("cv::imencode() failed for asset_id {} at timestamp_ns {}",
+                                                 camera_id_.value, timestamp_ns));  // LCOV_EXCL_LINE
         }
 
         encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});
 
         ++num_images;
         if (num_images % 50 == 0) {
-            log->debug("{{'step': '{}', 'stage': '{}', 'sensor_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
-                       ToString(StepType()), "Compute()", EntityId(), num_images);              // LCOV_EXCL_LINE
+            log->debug("{{'step': '{}', 'stage': '{}', 'asset_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
+                       ToString(StepType()), "Compute()", camera_id_.value, num_images);             // LCOV_EXCL_LINE
         }
     }
 
-    db.ImagesInsert(step_id, camera_id_, encoded_images);
+    db.ImagesInsert(step_id, camera_id_, *encoded_images);
 }
-
 
 }  // namespace reprojection::steps
