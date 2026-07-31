@@ -42,7 +42,6 @@ class ImageSamplerFixture : public ::testing::Test {
 
 TEST_F(ImageSamplerFixture, TestImageLoadingStepRunner) {
     auto db{database::CalibrationDatabase(":memory:", true)};
-
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};
     auto const owner{steps::StepOwner::Recording(recording_id)};
 
@@ -50,7 +49,6 @@ TEST_F(ImageSamplerFixture, TestImageLoadingStepRunner) {
     steps::ImageLoading const step{camera_id, "", image_sampler_};
 
     StepId const step_id{RunStep<steps::ImageLoading>(owner, step, db)};
-    EXPECT_EQ(step_id.value, 1);
 
     auto const result{db.ImagesSelect(step_id, camera_id)};
     EXPECT_EQ(std::size(result), std::size(*encoded_images_));

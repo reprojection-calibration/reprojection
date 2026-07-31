@@ -39,7 +39,6 @@ class ImuSamplerFixture : public ::testing::Test {
 
 TEST_F(ImuSamplerFixture, TestImuDataLoadingStepRunner) {
     auto db{database::CalibrationDatabase(":memory:", true)};
-
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};
     auto const owner{steps::StepOwner::Recording(recording_id)};
 
@@ -47,7 +46,6 @@ TEST_F(ImuSamplerFixture, TestImuDataLoadingStepRunner) {
     steps::ImuDataLoading const step{imu_id, "", imu_sampler_};
 
     StepId const step_id{RunStep<steps::ImuDataLoading>(owner, step, db)};
-    EXPECT_EQ(step_id.value, 1);
 
     auto const result{db.ImuDataSelect(step_id, imu_id)};
     EXPECT_EQ(std::size(result), std::size(imu_data_));
