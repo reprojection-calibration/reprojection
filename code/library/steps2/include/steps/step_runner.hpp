@@ -4,8 +4,6 @@
 
 namespace reprojection::steps {
 
-// TODO(Jack): Why do we really need to return this?
-
 struct StepOwner {
     static StepOwner Recording(RecordingId const id) { return StepOwner{id, std::nullopt}; }
 
@@ -19,8 +17,6 @@ struct StepOwner {
         : recording_id{_recording_id}, run_id{_run_id} {}
 };
 
-// TODO DO WE ALSO NEED TO ADD THE SAVE AND LOAD COMPONENTS?
-// TODO IF WE NEVER RETURN ANYTHING THEN WE DONT NEED TO LOAD WHEN WE CACHE HIT RIGHT?
 template <typename T>
 concept IsRunnableStep = requires(T const& step, StepId const id, database::CalibrationDatabase& db) {
     { step.Type() } -> std::same_as<StepType>;
@@ -28,6 +24,8 @@ concept IsRunnableStep = requires(T const& step, StepId const id, database::Cali
     { step.Execute(id, db) } -> std::same_as<void>;
 };
 
+// TODO(Jack): Do really need to return the StepId here? Should we also return the cache status, or should we not return
+// anything and just log here directly?
 template <typename T>
     requires IsRunnableStep<T>
 StepId RunStep(StepOwner const owner, T const& step, database::CalibrationDatabase& db) {
@@ -38,7 +36,7 @@ StepId RunStep(StepOwner const owner, T const& step, database::CalibrationDataba
         return step_id;
     }
 
-    // TODO(Jack): Should we put this inside a database transaction so in case of failure everything rolls back?
+    // TODO(Jack): Put this inside a database transaction so in case of failure everything rolls back!
     step.Execute(step_id, db);
     db.StepCacheKeyUpdate(step_id, cache_key);
 
