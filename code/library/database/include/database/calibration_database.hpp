@@ -18,12 +18,12 @@ class CalibrationDatabase {
     // TODO(Jack): Should we make this private and instead use a factory?
     CalibrationDatabase(fs::path const& db_path, bool create, bool read_only = false);
 
-    AssetId GetOrCreateAsset(AssetType type, size_t index, Name const& name);
+    AssetId GetOrCreateAsset(AssetType type, size_t index, Name const& name) const;
 
-    RecordingId GetOrCreateRecording(Name const& name, Hash const& hash);
+    RecordingId GetOrCreateRecording(Name const& name, Hash const& hash) const;
 
     // TODO(Jack): Use config type here!
-    RunId GetOrCreateRun(RecordingId recording_id, std::string_view config);
+    RunId GetOrCreateRun(RecordingId recording_id, std::string_view config) const;
 
     // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
     // the same name. bool: was this a cache hit?
@@ -35,22 +35,26 @@ class CalibrationDatabase {
     // step running logic we can ensure a cache key only gets written if the execution was succesful.
     void StepCacheKeyUpdate(StepId step_id, Hash const& cache_key);
 
-    void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data);
+    void CameraInfoInsert(StepId step_id, AssetId asset_id, CameraInfo const& camera_info) const;
 
-    EncodedImages ImagesSelect(StepId step_id, AssetId asset_id);
+    std::optional<CameraInfo> CameraInfoSelect(StepId step_id, AssetId asset_id) const;
 
-    void ImuDataInsert(StepId step_id, AssetId asset_id, ImuMeasurements const& data);
+    void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data) const;
 
-    ImuMeasurements ImuDataSelect(StepId step_id, AssetId asset_id);
+    EncodedImages ImagesSelect(StepId step_id, AssetId asset_id) const;
+
+    void ImuDataInsert(StepId step_id, AssetId asset_id, ImuMeasurements const& data) const;
+
+    ImuMeasurements ImuDataSelect(StepId step_id, AssetId asset_id) const;
 
     void ExtractedTargetsInsert(StepId step_id, StepId source_step_id, AssetId asset_id,
-                                CameraMeasurements const& data);
+                                CameraMeasurements const& data) const;
 
-    CameraMeasurements ExtractedTargetsSelect(StepId step_id, AssetId asset_id);
+    CameraMeasurements ExtractedTargetsSelect(StepId step_id, AssetId asset_id) const;
 
-    void TargetInfoInsert(StepId step_id, AssetId asset_id, TargetInfo const& target_info);
+    void TargetInfoInsert(StepId step_id, AssetId asset_id, TargetInfo const& target_info) const;
 
-    std::optional<TargetInfo> TargetInfoSelect(StepId step_id, AssetId asset_id);
+    std::optional<TargetInfo> TargetInfoSelect(StepId step_id, AssetId asset_id) const;
 
    private:
     sqlite3* db_{nullptr};

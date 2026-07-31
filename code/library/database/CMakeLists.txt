@@ -10,6 +10,9 @@ set(SQL_FILES
         assets_insert.sql
         assets_select.sql
         assets_table.sql
+        camera_info_insert.sql
+        camera_info_select.sql
+        camera_info_table.sql
         extracted_targets_insert.sql
         extracted_targets_select.sql
         extracted_targets_table.sql

@@ -36,6 +36,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
 
     if (not read_only) {
         ExecuteStatement(sql_statements::assets_table, db_);
+        ExecuteStatement(sql_statements::camera_info_table, db_);
         ExecuteStatement(sql_statements::extracted_targets_table, db_);
         ExecuteStatement(sql_statements::images_table, db_);
         ExecuteStatement(sql_statements::imu_data_table, db_);
@@ -55,7 +56,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
     ExecuteStatement("PRAGMA foreign_keys = ON;", db_);
 }
 
-AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const index, Name const& name) {
+AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const index, Name const& name) const {
     auto const result{ReadAssetId(db_, type, index)};
     if (result and result->second != name) {
         throw std::runtime_error(
@@ -68,7 +69,7 @@ AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const
     return InsertAsset(db_, type, index, name);
 }
 
-RecordingId CalibrationDatabase::GetOrCreateRecording(Name const& name, Hash const& hash) {
+RecordingId CalibrationDatabase::GetOrCreateRecording(Name const& name, Hash const& hash) const {
     auto const result{ReadRecordingId(db_, name)};
     if (result and result->second != hash) {
         throw std::runtime_error(std::format("Recording '{}' with hash '{}' already exists - cannot change hash '{}'.",
@@ -80,7 +81,7 @@ RecordingId CalibrationDatabase::GetOrCreateRecording(Name const& name, Hash con
     return InsertRecording(db_, name, hash);
 }
 
-RunId CalibrationDatabase::GetOrCreateRun(RecordingId const recording_id, std::string_view config) {
+RunId CalibrationDatabase::GetOrCreateRun(RecordingId const recording_id, std::string_view config) const {
     // BUG(Jack)
     // BUG(Jack)
     // BUG(Jack)
@@ -128,7 +129,43 @@ void CalibrationDatabase::StepCacheKeyUpdate(StepId const step_id, Hash const& c
     ExecuteStatement(sql_statements::steps_update_cache_key, binder, db_);
 }
 
-void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) {
+void CalibrationDatabase::CameraInfoInsert(StepId const step_id, AssetId const asset_id,
+                                           CameraInfo const& camera_info) const {
+    auto const binder{[step_id, asset_id, camera_info](sqlite3_stmt* const stmt) {
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, asset_id.value);
+        Bind(stmt, 3, ToString(camera_info.camera_model));
+        Bind(stmt, 4, static_cast<int64_t>(camera_info.bounds.v_max));
+        Bind(stmt, 5, static_cast<int64_t>(camera_info.bounds.u_max));
+    }};
+
+    ExecuteStatement(sql_statements::camera_info_insert, binder, db_);
+}
+
+std::optional<CameraInfo> CalibrationDatabase::CameraInfoSelect(StepId const step_id, AssetId const asset_id) const {
+    std::optional<CameraInfo> camera_info;
+
+    ExecuteQuery(
+        db_, sql_statements::camera_info_select,
+        [step_id, asset_id](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+        },
+        [&camera_info](sqlite3_stmt* const stmt) {
+            CameraInfo result;
+            result.camera_model = ToCameraModel(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
+            result.bounds.v_max = sqlite3_column_int(stmt, 1);
+            result.bounds.v_min = 0;
+            result.bounds.u_max = sqlite3_column_int(stmt, 2);
+            result.bounds.u_min = 0;
+
+            camera_info = result;
+        });
+
+    return camera_info;
+}
+
+void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) const {
     auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, buffer]{data_i};
 
@@ -146,7 +183,7 @@ void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset
     BatchExecuteStatement(sql_statements::images_insert, data, binder, db_);
 }
 
-EncodedImages CalibrationDatabase::ImagesSelect(StepId const step_id, AssetId const asset_id) {
+EncodedImages CalibrationDatabase::ImagesSelect(StepId const step_id, AssetId const asset_id) const {
     EncodedImages data;
 
     ExecuteQuery(
@@ -170,7 +207,7 @@ EncodedImages CalibrationDatabase::ImagesSelect(StepId const step_id, AssetId co
     return data;
 }
 
-void CalibrationDatabase::ImuDataInsert(StepId step_id, AssetId asset_id, ImuMeasurements const& data) {
+void CalibrationDatabase::ImuDataInsert(StepId step_id, AssetId asset_id, ImuMeasurements const& data) const {
     auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_data_i]{data_i};
 
@@ -185,7 +222,7 @@ void CalibrationDatabase::ImuDataInsert(StepId step_id, AssetId asset_id, ImuMea
     BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, db_);
 }
 
-ImuMeasurements CalibrationDatabase::ImuDataSelect(StepId const step_id, AssetId const asset_id) {
+ImuMeasurements CalibrationDatabase::ImuDataSelect(StepId const step_id, AssetId const asset_id) const {
     ImuMeasurements data;
 
     ExecuteQuery(
@@ -205,7 +242,7 @@ ImuMeasurements CalibrationDatabase::ImuDataSelect(StepId const step_id, AssetId
 }
 
 void CalibrationDatabase::ExtractedTargetsInsert(StepId const step_id, StepId const source_step_id,
-                                                 AssetId const asset_id, CameraMeasurements const& data) {
+                                                 AssetId const asset_id, CameraMeasurements const& data) const {
     auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, target]{data_i};
 
@@ -228,7 +265,7 @@ void CalibrationDatabase::ExtractedTargetsInsert(StepId const step_id, StepId co
     BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db_);
 }
 
-CameraMeasurements CalibrationDatabase::ExtractedTargetsSelect(StepId const step_id, AssetId const asset_id) {
+CameraMeasurements CalibrationDatabase::ExtractedTargetsSelect(StepId const step_id, AssetId const asset_id) const {
     CameraMeasurements data;
 
     ExecuteQuery(
@@ -257,7 +294,7 @@ CameraMeasurements CalibrationDatabase::ExtractedTargetsSelect(StepId const step
 }
 
 void CalibrationDatabase::TargetInfoInsert(StepId const step_id, AssetId const asset_id,
-                                           TargetInfo const& target_info) {
+                                           TargetInfo const& target_info) const {
     auto const binder{[step_id, asset_id, target_info](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
@@ -271,7 +308,7 @@ void CalibrationDatabase::TargetInfoInsert(StepId const step_id, AssetId const a
     ExecuteStatement(sql_statements::target_info_insert, binder, db_);
 }
 
-std::optional<TargetInfo> CalibrationDatabase::TargetInfoSelect(StepId const step_id, AssetId const asset_id) {
+std::optional<TargetInfo> CalibrationDatabase::TargetInfoSelect(StepId const step_id, AssetId const asset_id) const {
     std::optional<TargetInfo> target_info;
 
     ExecuteQuery(
