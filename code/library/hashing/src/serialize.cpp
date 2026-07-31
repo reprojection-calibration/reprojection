@@ -142,8 +142,5 @@ std::string Serialize(TargetInfo const& data) {
 // with the HashArguments() variadic template function.
 std::string Serialize(std::string_view data) { return std::string(data); }
 
-std::string Serialize(uint64_t const data) { return std::to_string(data); }
-
-std::string Serialize(int64_t const data) { return std::to_string(data); }
 
 }  // namespace reprojection::hashing
