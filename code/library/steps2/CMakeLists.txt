@@ -4,6 +4,7 @@ set(SRC_FILES
         src/image_loading.cpp
         src/imu_data_loading.cpp
         src/initialize_calibration.cpp
+        src/target_info.cpp
 )
 
 set(LINK_LIBRARIES
@@ -36,5 +37,6 @@ set(TESTS
         test/imu_data_loading.test.cpp
         test/initialize_calibration.test.cpp
         test/step_runner.test.cpp
+        test/target_info.test.cpp
 )
 AddTests()

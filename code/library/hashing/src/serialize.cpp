@@ -11,7 +11,6 @@ std::string Serialize(CameraInfo const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
-    oss << data.sensor_name << "|";
     oss << ToString(data.camera_model) << "|";
     oss << data.bounds.u_min << "," << data.bounds.u_max << "," << data.bounds.v_min << "," << data.bounds.v_max << "|";
 
@@ -144,5 +143,7 @@ std::string Serialize(TargetInfo const& data) {
 std::string Serialize(std::string_view data) { return std::string(data); }
 
 std::string Serialize(uint64_t const data) { return std::to_string(data); }
+
+std::string Serialize(int64_t const data) { return std::to_string(data); }
 
 }  // namespace reprojection::hashing
