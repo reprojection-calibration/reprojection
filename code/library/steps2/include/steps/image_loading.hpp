@@ -1,7 +1,6 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
-#include "types/database_types.hpp"
 #include "types/io.hpp"
 
 namespace reprojection::steps {

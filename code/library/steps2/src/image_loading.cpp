@@ -18,7 +18,7 @@ ImageLoading::ImageLoading(AssetId const camera_id, std::string_view serialized_
       image_sampler_{image_sampler} {}
 
 Hash ImageLoading::CacheKey(database::CalibrationDatabase& db) const {
-    // NOTE(Jack): The image loading is unique in that it does not load anythign from the database but instead
+    // NOTE(Jack): The image loading is unique in that it does not load anything from the database but instead
     // bootstraps directly from the user/application input.
     static_cast<void>(db);
 

@@ -189,6 +189,35 @@ TEST_F(ImagesFixture, TestImagesSelect) {
     EXPECT_EQ(std::size(result), 0);
 }
 
+TEST(Fff, Jjj) {
+    database::CalibrationDatabase db{":memory:", true};
+
+    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
+    auto const step{db.GetOrCreateStep(recording_id, std::nullopt, StepType::ImuDataLoading, "")};
+    AssetId const asset_id{db.GetOrCreateAsset(AssetType::Imu, 0, "")};
+
+    ImuMeasurements const imu_data{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
+
+    // TODO(Jack): This is a weakness of the current database design and I am not sure if it can be solved. The problem
+    // here for example is that we cannot enforce that the owner of the step is a recording, which for imu/image data is
+    // basically a requirement (instead of being owned by a run). We also cannot ensure that the step type is the
+    // ImuDataLoading type because we just pass in the step id here. These are not things which make the program
+    // incorrect, but it does feel like we are leaving something on the table with respect to unused
+    // information/constraints. Maybe we can use some post insertion consistency checks/logics to make sure the database
+    // is consistent with these constraints after each operation.
+    EXPECT_NO_THROW(db.ImuDataInsert(step.first, asset_id, imu_data));
+
+    auto result{db.ImuDataSelect(step.first, asset_id)};
+    EXPECT_EQ(std::size(result), std::size(imu_data));
+    EXPECT_TRUE(result.at(0).angular_velocity.isApprox(imu_data.at(0).angular_velocity));
+
+    // If nonexistent data is requested this is not an error, it will just return an empty container.
+    EXPECT_NO_THROW(result = db.ImuDataSelect(StepId{111}, asset_id));
+    EXPECT_EQ(std::size(result), 0);
+    EXPECT_NO_THROW(result = db.ImuDataSelect(step.first, AssetId{111}));
+    EXPECT_EQ(std::size(result), 0);
+}
+
 class ExtractedTargetsFixture : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -252,11 +281,11 @@ TEST(Qqq, TestTargetInfo) {
     RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "")};
     RunId const run_id{db.GetOrCreateRun(recording_id, "")};
     // NOTE(Jack): Target info is associated with the configuration file which is why we make it a child of the run_id
-    // and not the recording_id.
+    // and not the recording_id. - THIS COMMENT IS OUT OF DATE PARTIALLY!
     auto const step{db.GetOrCreateStep(std::nullopt, run_id, StepType::TargetInfo, "")};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Target, 0, "")};
 
-    TargetInfo const target_info{TargetType::Checkerboard, 6, 6, 0.1, 0};
+    TargetInfo const target_info{TargetType::Checkerboard, 6, 6, 0.1, false};
     EXPECT_NO_THROW(db.TargetInfoInsert(step.first, asset_id, target_info));
 
     auto result{db.TargetInfoSelect(step.first, asset_id)};
@@ -264,7 +293,6 @@ TEST(Qqq, TestTargetInfo) {
     EXPECT_EQ(result->target_type, target_info.target_type);
     EXPECT_EQ(result->height, target_info.height);
 
-    // If nonexistent data is requested this is not an error, it will just return an empty container.
     EXPECT_NO_THROW(result = db.TargetInfoSelect(StepId{111}, asset_id));
     EXPECT_FALSE(result.has_value());
     EXPECT_NO_THROW(result = db.TargetInfoSelect(step.first, AssetId{111}));

@@ -1,26 +1,23 @@
 #pragma once
 
-#include "types/calibration_types.hpp"
+#include "database/calibration_database.hpp"
 #include "types/io.hpp"
 
 namespace reprojection::steps {
 
 struct ImuDataLoading {
-    std::string imu_name_;
-    std::string serialized_data_signature_;
-    ImuSampler imu_data_source_;
+    ImuDataLoading(AssetId imu_id, std::string_view serialized_imu_sampler, ImageSampler const& imu_sampler);
 
-    static CalibrationStep StepType() { return CalibrationStep::ImuDataLoading; }
+    static StepType Type() { return StepType::ImuDataLoading; }
 
-    std::string EntityId() const { return imu_name_; }
+    Hash CacheKey(database::CalibrationDatabase& db) const;
 
-    std::string HashInputs() const;
+    void Execute(StepId step_id, database::CalibrationDatabase& db) const;
 
-    ImuMeasurements Compute() const;
-
-    ImuMeasurements Load(SqlitePtr const db) const;
-
-    void Save(ImuMeasurements const& imu_data, SqlitePtr const db) const;
+   private:
+    AssetId imu_id_;
+    Hash cache_key_;
+    ImuSampler imu_sampler_;
 };
 
 }  // namespace reprojection::steps

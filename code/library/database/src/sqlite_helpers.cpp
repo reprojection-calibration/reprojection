@@ -27,6 +27,16 @@ void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value) {
     }
 }
 
+ void Bind(sqlite3_stmt* const stmt, int const index, std::size_t const value) {
+    Bind(stmt, index, static_cast<int64_t>(value));
+}
+
+void Bind(sqlite3_stmt* const stmt, int const index, double const value) {
+    if (sqlite3_bind_double(stmt, index, value) != SQLITE_OK) {
+        throw SqliteException(stmt);
+    }
+}
+
 void BindNull(sqlite3_stmt* const stmt, int const index) {
     if (sqlite3_bind_null(stmt, index) != SQLITE_OK) {
         throw SqliteException(stmt);

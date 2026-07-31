@@ -2,6 +2,7 @@
 
 #include <sqlite3.h>
 
+#include <Eigen/Dense>
 #include <span>
 
 #include "database/sqlite_exception.hpp"
@@ -30,9 +31,31 @@ void Bind(sqlite3_stmt* const stmt, int const index, std::string_view value);
 
 void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value);
 
+void Bind(sqlite3_stmt* const stmt, int const index, std::size_t const value);
+
+void Bind(sqlite3_stmt* const stmt, int const index, double const value);
+
 void BindNull(sqlite3_stmt* const stmt, int const index);
 
 void BindBlob(sqlite3_stmt* const stmt, int const index, std::span<std::byte const> const& blob);
+
+template <typename T>
+    requires(T::ColsAtCompileTime == 1)
+void BindEigenColumn(sqlite3_stmt* const stmt, int const start_idx, Eigen::DenseBase<T> const& v) {
+    for (Eigen::Index i{0}; i < v.size(); ++i) {
+        Bind(stmt, start_idx + static_cast<int>(i), v.derived()(i));
+    }
+}
+
+template <int N>
+Eigen::Array<double, N, 1> ReadEigenColumn(sqlite3_stmt* const stmt, int const start_idx) {
+    Eigen::Array<double, N, 1> result;
+    for (int i{0}; i < N; ++i) {
+        result(i) = sqlite3_column_double(stmt, start_idx + i);
+    }
+
+    return result;
+}
 
 bool StepRow(sqlite3_stmt* const stmt);
 
@@ -91,7 +114,5 @@ void ExecuteQuery(sqlite3* const db, std::string_view sql, Binder&& binder, RowF
         std::throw_with_nested(SqliteException(db, stmt.stmt_));  // LCOV_EXCL_LINE
     }
 }
-
-
 
 }  // namespace reprojection::database

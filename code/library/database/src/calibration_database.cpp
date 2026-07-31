@@ -38,6 +38,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
         ExecuteStatement(sql_statements::assets_table, db_);
         ExecuteStatement(sql_statements::extracted_targets_table, db_);
         ExecuteStatement(sql_statements::images_table, db_);
+        ExecuteStatement(sql_statements::imu_data_table, db_);
         ExecuteStatement(sql_statements::recordings_table, db_);
         ExecuteStatement(sql_statements::runs_table, db_);
         ExecuteStatement(sql_statements::steps_table, db_);
@@ -164,6 +165,40 @@ EncodedImages CalibrationDatabase::ImagesSelect(StepId const step_id, AssetId co
             // TODO(Jack): Should we represent empty images with std::optional? Currently this will load all images,
             // and if the image is a null value it will just be a buffer with length zero.
             data.insert({timestamp_ns, ImageBuffer{buffer}});
+        });
+
+    return data;
+}
+
+void CalibrationDatabase::ImuDataInsert(StepId step_id, AssetId asset_id, ImuMeasurements const& data) {
+    auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, imu_data_i]{data_i};
+
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, asset_id.value);
+        Bind(stmt, 3, timestamp_ns);
+
+        BindEigenColumn<Vector3d>(stmt, 4, imu_data_i.angular_velocity);
+        BindEigenColumn<Vector3d>(stmt, 7, imu_data_i.linear_acceleration);
+    }};
+
+    BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, db_);
+}
+
+ImuMeasurements CalibrationDatabase::ImuDataSelect(StepId const step_id, AssetId const asset_id) {
+    ImuMeasurements data;
+
+    ExecuteQuery(
+        db_, sql_statements::imu_data_select,
+        [step_id, asset_id](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+        },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+            Array6d const imu_data_i{ReadEigenColumn<6>(stmt, 1)};
+
+            data.insert(ImuMeasurement{timestamp_ns, {imu_data_i.topRows<3>(), imu_data_i.bottomRows<3>()}});
         });
 
     return data;

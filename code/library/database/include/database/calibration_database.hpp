@@ -39,6 +39,10 @@ class CalibrationDatabase {
 
     EncodedImages ImagesSelect(StepId step_id, AssetId asset_id);
 
+    void ImuDataInsert(StepId step_id, AssetId asset_id, ImuMeasurements const& data);
+
+    ImuMeasurements ImuDataSelect(StepId step_id, AssetId asset_id);
+
     void ExtractedTargetsInsert(StepId step_id, StepId source_step_id, AssetId asset_id,
                                 CameraMeasurements const& data);
 

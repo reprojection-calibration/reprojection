@@ -6,11 +6,21 @@
 
 namespace reprojection::steps {
 
-std::string ImuDataLoading::HashInputs() const { return hashing::HashArguments(serialized_data_signature_); }
+ImuDataLoading::ImuDataLoading(AssetId const imu_id, std::string_view serialized_imu_sampler,
+                               ImageSampler const& imu_sampler)
+    : imu_id_{imu_id}, cache_key_{hashing::HashArguments(serialized_imu_sampler)}, imu_sampler_{imu_sampler} {}
 
-ImuMeasurements ImuDataLoading::Compute() const {
+Hash ImuDataLoading::CacheKey(database::CalibrationDatabase& db) const {
+    // NOTE(Jack): Just like the image loading the imu data loading does not load anything from the database but instead
+    // bootstraps directly from the user/application input.
+    static_cast<void>(db);
+
+    return cache_key_;
+}
+
+void ImuDataLoading::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
     ImuMeasurements imu_data;
-    while (auto const data{imu_data_source_()}) {
+    while (auto const data{imu_sampler_()}) {
         auto const& [timestamp_ns, data_i]{*data};
 
         Array3d const angular_velocity{data_i[0], data_i[1], data_i[2]};
@@ -19,13 +29,7 @@ ImuMeasurements ImuDataLoading::Compute() const {
         imu_data.insert({timestamp_ns, {angular_velocity, linear_acceleration}});
     }
 
-    return imu_data;
-}  // LCOV_EXCL_LINE
-
-ImuMeasurements ImuDataLoading::Load(SqlitePtr const db) const { return database::ReadImuData(db, EntityId()); }
-
-void ImuDataLoading::Save(ImuMeasurements const& imu_data, SqlitePtr const db) const {
-    database::InsertImuData(db, EntityId(), imu_data);
+    db.ImuDataInsert(step_id, imu_id_, imu_data);
 }
 
 }  // namespace reprojection::steps

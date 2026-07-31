@@ -16,6 +16,9 @@ set(SQL_FILES
         images_insert.sql
         images_select.sql
         images_table.sql
+        imu_data_insert.sql
+        imu_data_select.sql
+        imu_data_table.sql
         recordings_insert.sql
         recordings_select.sql
         recordings_table.sql
