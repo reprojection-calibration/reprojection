@@ -44,7 +44,7 @@ TEST_F(ImageSamplerFixture, TestImageLoadingStepRunner) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    auto owner{steps::StepOwner::Recording(recording_id)};
+    auto const owner{steps::StepOwner::Recording(recording_id)};
 
     AssetId const camera_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
     steps::ImageLoading const step{camera_id, "", image_sampler_};
