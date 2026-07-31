@@ -69,6 +69,7 @@ inline std::string ToString(AssetType const data) {
 }
 
 enum class StepType {
+    CameraInfo,
     FeatureExtraction,
     ImageLoading,
     ImuDataLoading,
@@ -76,7 +77,9 @@ enum class StepType {
 };
 
 inline std::string ToString(StepType const data) {
-    if (data == StepType::FeatureExtraction) {
+    if (data == StepType::CameraInfo) {
+        return "camera_info";
+    } else if (data == StepType::FeatureExtraction) {
         return "feature_extraction";
     } else if (data == StepType::ImageLoading) {
         return "image_loading";

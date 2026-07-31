@@ -146,6 +146,29 @@ TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
                  database::SqliteException);
 }
 
+TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
+    auto db{database::CalibrationDatabase(":memory:", true)};
+
+    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
+    RunId const run_id{db.GetOrCreateRun(recording_id, "")};
+    auto const step{db.GetOrCreateStep(std::nullopt, run_id, StepType::CameraInfo, "")};
+    AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
+
+    CameraInfo const camera_info{CameraModel::DoubleSphere, {0, 512, 0, 512}};
+    EXPECT_NO_THROW(db.CameraInfoInsert(step.first, asset_id, camera_info));
+
+    auto result{db.CameraInfoSelect(step.first, asset_id)};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->camera_model, camera_info.camera_model);
+    EXPECT_EQ(result->bounds.u_max, camera_info.bounds.u_max);
+    EXPECT_EQ(result->bounds.u_min,camera_info.bounds.u_min);
+
+    EXPECT_NO_THROW(result = db.CameraInfoSelect(StepId{111}, asset_id));
+    EXPECT_FALSE(result.has_value());
+    EXPECT_NO_THROW(result = db.CameraInfoSelect(step.first, AssetId{111}));
+    EXPECT_FALSE(result.has_value());
+}
+
 class ImagesFixture : public ::testing::Test {
    protected:
     void SetUp() override {
