@@ -6,7 +6,7 @@
 namespace reprojection::steps {
 
 struct ImuDataLoading {
-    ImuDataLoading(AssetId imu_id, std::string_view serialized_imu_sampler, ImageSampler const& imu_sampler);
+    ImuDataLoading(AssetId imu_id, std::string_view serialized_imu_sampler, ImuSampler const& imu_sampler);
 
     static StepType Type() { return StepType::ImuDataLoading; }
 

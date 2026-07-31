@@ -189,7 +189,7 @@ TEST_F(ImagesFixture, TestImagesSelect) {
     EXPECT_EQ(std::size(result), 0);
 }
 
-TEST(Fff, Jjj) {
+TEST(DatabaseCalibrationDatbase, TestImuData) {
     database::CalibrationDatabase db{":memory:", true};
 
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};
