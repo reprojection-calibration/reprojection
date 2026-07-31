@@ -241,6 +241,8 @@ ImuMeasurements CalibrationDatabase::ImuDataSelect(StepId const step_id, AssetId
     return data;
 }
 
+// NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship between
+// two data tables.
 void CalibrationDatabase::ExtractedTargetsInsert(StepId const step_id, StepId const source_step_id,
                                                  AssetId const asset_id, CameraMeasurements const& data) const {
     auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
