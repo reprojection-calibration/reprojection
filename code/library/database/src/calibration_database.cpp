@@ -130,10 +130,11 @@ std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(std::optiona
     if (cache_key_found and result->second.value() == cache_key) {
         return std::make_pair(result->first, CacheStatus::CacheHit);
     } else if (result) {
-        return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type), CacheStatus::CacheMiss);
+        return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type, cache_key), CacheStatus::CacheMiss);
     }
 
-    return std::make_pair(InsertStep(db_, recording_id, run_id, type), CacheStatus::CacheMiss);
+    std::cout << 1 << std::endl;
+    return std::make_pair(InsertStep(db_, recording_id, run_id, type, cache_key), CacheStatus::CacheMiss);
 }
 
 // TODO(Jack): How do we handle the case when we are asked to complete a step which does not exist? Throw? Does it

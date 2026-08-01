@@ -129,12 +129,12 @@ std::optional<std::pair<StepId, std::optional<Hash>>> ReadStepId(sqlite3* const 
 }
 
 StepId InsertStep(sqlite3* const db, std::optional<RecordingId> const& recording_id, std::optional<RunId> const& run_id,
-                  StepType const type) {
-    auto const binder{[recording_id, run_id, type](sqlite3_stmt* stmt) {
+                  StepType const type, Hash const& cache_key) {
+    auto const binder{[recording_id, run_id, type, cache_key](sqlite3_stmt* stmt) {
         recording_id ? Bind(stmt, 1, recording_id->value) : BindNull(stmt, 1);
         run_id ? Bind(stmt, 2, run_id->value) : BindNull(stmt, 2);
         Bind(stmt, 3, ToString(type));
-        BindNull(stmt, 4);
+        Bind(stmt, 4, cache_key.value);
     }};
 
     StepId data{-1};
@@ -149,18 +149,18 @@ StepId InsertStep(sqlite3* const db, std::optional<RecordingId> const& recording
 // this to make sure that "cascade on delete" operations happen. Official upsert semantics never call delete and
 // therefore cannot be used here.
 StepId UpsertStep(sqlite3* const db, StepId const id, std::optional<RecordingId> const& recording_id,
-                  std::optional<RunId> const& run_id, StepType const type) {
+                  std::optional<RunId> const& run_id, StepType const type, Hash const& cache_key) {
     auto const binder1{[id](sqlite3_stmt* stmt) { Bind(stmt, 1, id.value); }};
 
     StepId data{-1};
     ExecuteStatement(sql_statements::steps_delete, binder1, db);
 
-    auto const binder2{[id, recording_id, run_id, type](sqlite3_stmt* stmt) {
+    auto const binder2{[id, recording_id, run_id, type, cache_key](sqlite3_stmt* stmt) {
         Bind(stmt, 1, id.value);
         recording_id ? Bind(stmt, 2, recording_id->value) : BindNull(stmt, 2);
         run_id ? Bind(stmt, 3, run_id->value) : BindNull(stmt, 3);
         Bind(stmt, 4, ToString(type));
-        BindNull(stmt, 5);
+        Bind(stmt, 5, cache_key.value);
     }};
 
     // NOTE(Jack): Technically we know the id already so there is nothing that forces us to read it from the result of
