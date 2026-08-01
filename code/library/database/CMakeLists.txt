@@ -89,6 +89,7 @@ set(LINK_LIBRARIES
         Eigen3::Eigen
         SQLite::SQLite3
         geometry # Required because of spline interface
+        logging
         protobuf::libprotobuf
         spline
         tomlplusplus::tomlplusplus

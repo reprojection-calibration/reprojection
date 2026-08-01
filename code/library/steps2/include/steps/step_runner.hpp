@@ -4,6 +4,7 @@
 
 namespace reprojection::steps {
 
+// TODO(Jack): Where does this belong and do we really need this idea at all?
 struct StepOwner {
     static StepOwner Recording(RecordingId const id) { return StepOwner{id, std::nullopt}; }
 
@@ -24,8 +25,6 @@ concept IsRunnableStep = requires(T const& step, StepId const id, database::Cali
     { step.Execute(id, db) } -> std::same_as<void>;
 };
 
-// TODO(Jack): Do really need to return the StepId here? Should we also return the cache status, or should we not return
-// anything and just log here directly?
 template <typename T>
     requires IsRunnableStep<T>
 StepId RunStep(StepOwner const owner, T const& step, database::CalibrationDatabase& db) {

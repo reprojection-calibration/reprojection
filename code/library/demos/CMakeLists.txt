@@ -19,7 +19,7 @@ set(LINK_LIBRARIES
         pnp
         projection_functions
         spline
-        steps
+        steps2
         testing_mocks
         testing_utilities
         tomlplusplus::tomlplusplus

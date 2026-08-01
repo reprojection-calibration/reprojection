@@ -1,7 +1,16 @@
 #include "steps/initialize_calibration.hpp"
 
+#include "logging/logging.hpp"
+
 namespace reprojection::steps {
 
+namespace {
+
+auto const log{logging::Get("steps")};
+
+}
+
+// TODO(Jack): Why is this in the steps module and not the application module? This is not an actual official step.
 // TODO(Jack): This is at most capable of initializing a camera-imu extrinsic calibration. If we want a different
 // workflow (ex. stereo of multi-cam-imu then we need to refactor this).
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, database::CalibrationDatabase& db) {
@@ -26,6 +35,9 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, database:
     if (cfg.imu) {
         imu_id = db.GetOrCreateAsset(AssetType::Imu, 0, Name{cfg.imu->sensor_name});
     }
+
+    log->info("{{'recording_id': '{}', 'run_id': '{}', 'camera_id': {}, 'target_id': {}, 'imu_id': {}}}",
+              recording_id.value, run_id.value, camera_id.value, target_id.value, imu_id ? imu_id->value : -1);
 
     return {cfg, recording_id, run_id, camera_id, target_id, imu_id};
 }

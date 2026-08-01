@@ -4,12 +4,19 @@
 
 #include "database/sqlite_exception.hpp"
 #include "generated/sql.hpp"
+#include "logging/logging.hpp"
 
 #include "database_semantics.hpp"
 #include "serialization.hpp"
 #include "sqlite_helpers.hpp"
 
 namespace reprojection::database {
+
+namespace {
+
+auto const log{logging::Get("database")};
+
+}
 
 CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only) {
     if (create and read_only) {
@@ -111,9 +118,16 @@ RunId CalibrationDatabase::GetOrCreateRun(RecordingId const recording_id, std::s
 
 std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(std::optional<RecordingId> const& recording_id,
                                                                     std::optional<RunId> const& run_id,
-                                                                    StepType const type, Hash cache_key) {
+                                                                    StepType const type, Hash const& cache_key) {
     auto const result{ReadStepId(db_, recording_id, run_id, type)};
-    if (result and result->second.has_value() and result->second.value() == cache_key) {
+    bool const cache_key_found{result and result->second.has_value()};
+
+    log->debug(
+        "{{'recording_id': '{}', 'run_id': '{}', 'step_type': '{}', 'new_cache_key': '{}', 'loaded_cache_key': '{}'}}",
+        recording_id ? recording_id->value : -1, run_id ? run_id->value : -1, ToString(type), cache_key.value,
+        cache_key_found ? result->second->value : "N/A");
+
+    if (cache_key_found and result->second.value() == cache_key) {
         return std::make_pair(result->first, CacheStatus::CacheHit);
     } else if (result) {
         return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type), CacheStatus::CacheMiss);

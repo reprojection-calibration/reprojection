@@ -3,18 +3,15 @@
 #include <ranges>
 
 #include "config/config_parse.hpp"
-#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
-#include "steps/imu_data_loading.hpp"
 #include "steps/initialize_calibration.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 
 #include "io.hpp"
-#include "utils.hpp"
 
 namespace reprojection::application {
 
@@ -43,110 +40,29 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
     return AppArgs{paths->data_path, *config, *db};
 }
 
-// TODO(Jack): To be honest I do not like having this function because now we parse the entire config twice. Once on the
-// application side and once on the library side. It is not the end of the world but we should keep our eyes out for any
-// hints that we are missing the point.
-Sensors ParseSensors(toml::table const& cfg_table) {
-    config::Config const cfg{config::Config::Parse(cfg_table)};
-
-    std::optional<std::string> imu_name{std::nullopt};
-    if (cfg.imu) {
-        imu_name = cfg.imu->sensor_name;
-    }
-
-    return {cfg.camera.sensor_name, imu_name};
-}
-
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
-               SqlitePtr const db) {
-    config::Config const cfg{steps::ConfigParsing(cfg_table, db)};
+               database::CalibrationDatabase& db) {
+    steps::CalibrationContext const cfg{steps::InitializeCalibration(cfg_table, db)};
 
-    steps::ImageLoading const image_loading{cfg.camera.sensor_name, image_input.signature, image_input.source};
-    auto const [encoded_images,
-                image_loading_cache_status]{steps::RunStep<std::shared_ptr<EncodedImages>>(image_loading, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'encoded_images': {}}}", ToString(image_loading.StepType()),
-              ToString(image_loading_cache_status), encoded_images->size());
+    // TODO(Jack): Clarify the usage of owner! For now we make every stepped owned by the recording
+    auto const owner{steps::StepOwner::Recording(cfg.recording_id)};
 
-    steps::CameraInfoStep const camera_info_step{cfg.camera, encoded_images};
-    auto const [camera_info, ci_cache_status]{steps::RunStep<CameraInfo>(camera_info_step, db)};
-    log->info(
-        "{{'step': '{}', 'cache_status': '{}', 'sensor_name': {}, 'camera_model': '{}', 'height': {}, 'width': {}}}",
-        ToString(camera_info_step.StepType()), ToString(ci_cache_status), camera_info.sensor_name,
-        ToString(camera_info.camera_model), camera_info.bounds.v_max, camera_info.bounds.u_max);
+    steps::ImageLoading const image_loading_step{cfg.camera_id, image_input.signature, image_input.source};
+    StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(owner, image_loading_step, db)};
 
-    steps::TargetInfoStep const target_info_step{cfg.target, camera_info.sensor_name};
-    auto const [target_info, target_info_cache_status]{steps::RunStep<TargetInfo>(target_info_step, db)};
-    log->info(
-        "{{'step': '{}', 'cache_status': '{}', 'target_type': {}, 'height': {}, 'width': {}, 'unit_dimension': {}, "
-        "'asymmetric': {}}}",
-        ToString(target_info_step.StepType()), ToString(target_info_cache_status), ToString(target_info.target_type),
-        target_info.height, target_info.width, target_info.unit_dimension, target_info.asymmetric);
+    steps::CameraInfoStep const camera_info_step{cfg.camera_id, image_loading_id, cfg.config.camera.camera_model, db};
+    StepId const camera_info_id{RunStep<steps::CameraInfoStep>(owner, camera_info_step, db)};
 
-    steps::FeatureExtraction const feature_extraction_step{camera_info.sensor_name, encoded_images, target_info,
-                                                           cfg.application.show_extraction};
-    auto const [targets,
-                feature_extraction_cache_status]{steps::RunStep<CameraMeasurements>(feature_extraction_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'extracted_targets': {}}}",
-              ToString(feature_extraction_step.StepType()), ToString(feature_extraction_cache_status),
-              std::size(targets));
+    steps::TargetInfoStep const target_info_step{cfg.target_id, cfg.config.target};
+    StepId const target_info_id{RunStep<steps::TargetInfoStep>(owner, target_info_step, db)};
 
-    steps::IntrinsicInitialization const ii_step{camera_info, targets, cfg.application.threads};
-    auto const [camera_state, ii_cache_status]{steps::RunStep<CameraState>(ii_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'intrinsics': {}}}", ToString(ii_step.StepType()),
-              ToString(ii_cache_status), camera_state.intrinsics);
+    steps::FeatureExtraction const step{cfg.camera_id,  image_loading_id, cfg.config.application.show_extraction,
+                                        target_info_id, cfg.target_id,    db};
+    StepId const feature_extraction_id{RunStep<steps::FeatureExtraction>(owner, step, db)};
 
-    steps::PoseInitialization const pose_init_step{camera_info, targets, camera_state};
-    auto const [initial_poses, pose_init_cache_status]{steps::RunStep<Frames>(pose_init_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}}}", ToString(pose_init_step.StepType()),
-              ToString(pose_init_cache_status), std::size(initial_poses));
-
-    auto const aligned_initial_state{AlignRotations({camera_state, initial_poses})};
-
-    steps::BundleAdjustment const ba_step{camera_info, targets, aligned_initial_state, cfg.application.threads};
-    auto const [optimized_state, ba_cache_status]{steps::RunStep<OptimizationState>(ba_step, db)};
-    log->info("{{'step': '{}', 'cache_status': '{}', 'num_poses': {}, 'intrinsics': {}}}", ToString(ba_step.StepType()),
-              ToString(ba_cache_status), std::size(initial_poses), optimized_state.camera_state.intrinsics);
-
-    if (cfg.imu.has_value() and imu_input.has_value()) {
-        // TODO(Jack): We need to refactor the top level application unit test so that it uses the test data - because
-        // without test data then we cannot run the imu component of the calibration at all in testing and therefore we
-        // have to suppress the code coverage which is not nice. This runs in the integration testing, but still... not
-        // nice.
-
-        // //LCOV_EXCL_START
-        steps::ImuDataLoading const imu_data_loading{cfg.imu->sensor_name, imu_input->signature, imu_input->source};
-        auto const [imu_data, imu_data_loading_cache_status]{steps::RunStep<ImuMeasurements>(imu_data_loading, db)};
-        log->info("{{'step': '{}', 'cache_status': '{}', 'imu_data': {}}}", ToString(imu_data_loading.StepType()),
-                  ToString(imu_data_loading_cache_status), std::size(imu_data));
-
-        steps::SplineInitialization const spline_init_step{camera_info, targets, aligned_initial_state};
-        auto const [spline_init, spline_init_cache_status]{steps::RunStep<spline::Se3Spline>(spline_init_step, db)};
-        log->info("{{'step': '{}', 'cache_status': '{}', 'num_control_points': {}}}",
-                  ToString(spline_init_step.StepType()), ToString(spline_init_cache_status), spline_init.Size());
-
-        steps::ExtrinsicInitialization const extrinsic_init_step{cfg.imu->sensor_name, camera_info.sensor_name,
-                                                                 imu_data, spline_init, cfg.application.threads};
-        auto const [extrinsic_init,
-                    extrinsic_init_cache_status]{steps::RunStep<ImuCamExtrinsic>(extrinsic_init_step, db)};
-        log->info("{{'step': '{}', 'cache_status': '{}', 'tf_imu_cam': {}, 'gravity': {}}}",
-                  ToString(extrinsic_init_step.StepType()), ToString(extrinsic_init_cache_status),
-                  extrinsic_init.tf.se3_a_b, extrinsic_init.gravity);
-
-        steps::ExtrinsicOptimization const extrinsic_opt_step{
-            camera_info, targets,        optimized_state.camera_state, imu_data,
-            spline_init, extrinsic_init, cfg.application.threads};
-        auto const [extrinsic_opt_result, extrinsic_opt_cache_status]{
-            steps::RunStep<std::pair<spline::Se3Spline, ImuCamExtrinsic>>(extrinsic_opt_step, db)};
-        log->info("{{'step': '{}', 'cache_status': '{}', 'tf_imu_cam': {}, 'gravity': {}}}",
-                  ToString(extrinsic_opt_step.StepType()), ToString(extrinsic_opt_cache_status),
-                  extrinsic_opt_result.second.tf.se3_a_b, extrinsic_opt_result.second.gravity);
-        // LCOV_EXCL_STOP
-    } else if (cfg.imu.has_value() or imu_input.has_value()) {
-        log->warn(
-            "{{'cfg_imu': {}, 'imu_input': {}, 'msg': 'Extrinsic calibration configured partially or incorrectly. "
-            "Remove the [imu] table from the configuration file to remove this warning.'}}",
-            cfg.imu.has_value(), imu_input.has_value());
-    }
+    static_cast<void>(imu_input);
+    static_cast<void>(camera_info_id);
+    static_cast<void>(feature_extraction_id);
 
     std::cout << "The future is calibrated!\n";
 }

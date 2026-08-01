@@ -3,10 +3,10 @@
 
 #include <toml++/toml.hpp>
 
+#include "../../steps2/include/steps/initialize_calibration.hpp"
 #include "application/reprojection_calibration.hpp"
 #include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
-#include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
 
 using namespace reprojection;
@@ -15,7 +15,7 @@ int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.calib.db3"};
-    auto db{database::OpenCalibrationDatabase(record_path, false, false)};
+    auto db{database::CalibrationDatabase(record_path, false)};
 
     static constexpr std::string_view config_file{R"(
             [camera]
@@ -39,27 +39,17 @@ int main() {
     // the database.
 
     try {
-        auto const cam_cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
-        CameraInfo const camera_info{cam_cfg.sensor_name, cam_cfg.camera_model, {0, 512, 0, 512}};
+        steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
-        // Camera stuff
-        database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+        auto step_result{db.GetOrCreateStep(context.recording_id, std::nullopt, StepType::ImageLoading, Hash{hashing::Sha256("")})};
 
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
+        step_result = db.GetOrCreateStep(context.recording_id, std::nullopt, StepType::CameraInfo, "");
+        db.CameraInfoInsert(step_result.first, context.camera_id,
+                            CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
 
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
-                             "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e");
-        database::InsertCameraInfo(db, camera_info);
+        step_result = db.GetOrCreateStep(context.recording_id, std::nullopt, StepType::FeatureExtraction, "");
 
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "875e2778a98a4edf3bfac18a86f6bc4e1ad50730a8dad0315ec71ea234ab6999");
-
-        // Imu stuff
-        if (auto const imu_cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
-            database::InsertEntity(db, imu_cfg->sensor_name, Entity::Imu);
-
-            database::InsertStep(db, imu_cfg->sensor_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
-        }
+        // TODO(Jack): Add imu stuff!
 
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;

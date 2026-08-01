@@ -40,6 +40,6 @@ Sensors ParseSensors(toml::table const& cfg_table);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
-               SqlitePtr const db);
+               database::CalibrationDatabase& db);
 
 }  // namespace reprojection::application
