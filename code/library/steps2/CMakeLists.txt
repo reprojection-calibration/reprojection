@@ -35,6 +35,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        test/camera_info.test.cpp
         test/feature_extraction.test.cpp
         test/image_loading.test.cpp
         test/imu_data_loading.test.cpp
