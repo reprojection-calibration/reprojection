@@ -49,7 +49,7 @@ TEST_F(CameraInfoFixture, TestCameraInfoStep) {
     // Build the step and check that the type and hash function are correct.
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
     EXPECT_EQ(step.Type(), StepType::CameraInfo);
-    EXPECT_EQ(step.CacheKey(db_).value, "9b077a5c721520f1cbee0879eb92229c61e722ec9f0a79e3d750759785db8247");
+    EXPECT_EQ(step.CacheKey().value, "9b077a5c721520f1cbee0879eb92229c61e722ec9f0a79e3d750759785db8247");
 
     // Build the actual database step id and execute the step.
     auto const [step_id, _]{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::CameraInfo, "")};

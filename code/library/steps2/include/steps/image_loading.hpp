@@ -16,7 +16,7 @@ struct ImageLoading {
 
     static StepType Type() { return StepType::ImageLoading; }
 
-    Hash CacheKey(database::CalibrationDatabase& db) const;
+    Hash CacheKey() const;
 
     void Execute(StepId step_id, database::CalibrationDatabase& db) const;
 

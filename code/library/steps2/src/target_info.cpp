@@ -7,13 +7,7 @@ namespace reprojection::steps {
 TargetInfoStep::TargetInfoStep(AssetId target_id, config::Config::Target const& target)
     : target_id_{target_id}, target_{target} {}
 
-Hash TargetInfoStep::CacheKey(database::CalibrationDatabase& db) const {
-    // TODO(Jack): There are now several cases where we do not actually need the database (also in the image/imu
-    // loading), therefore are we sure there is no cleaner code to prevent us passing unused args?
-    static_cast<void>(db);
-
-    return hashing::HashArguments(target_id_.value, target_);
-}
+Hash TargetInfoStep::CacheKey() const { return hashing::HashArguments(target_id_.value, target_); }
 
 void TargetInfoStep::Execute(StepId step_id, database::CalibrationDatabase& db) const {
     TargetInfo const target_info{target_.target_type, target_.size[0], target_.size[1], target_.unit_dimension,

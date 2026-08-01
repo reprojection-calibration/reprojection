@@ -21,14 +21,14 @@ struct StepOwner {
 template <typename T>
 concept IsRunnableStep = requires(T const& step, StepId const id, database::CalibrationDatabase& db) {
     { step.Type() } -> std::same_as<StepType>;
-    { step.CacheKey(db) } -> std::same_as<Hash>;
+    { step.CacheKey() } -> std::same_as<Hash>;
     { step.Execute(id, db) } -> std::same_as<void>;
 };
 
 template <typename T>
     requires IsRunnableStep<T>
 StepId RunStep(StepOwner const owner, T const& step, database::CalibrationDatabase& db) {
-    Hash const cache_key{step.CacheKey(db)};
+    Hash const cache_key{step.CacheKey()};
 
     auto const [step_id, cache_status]{db.GetOrCreateStep(owner.recording_id, owner.run_id, step.Type(), cache_key)};
     if (cache_status == CacheStatus::CacheHit) {

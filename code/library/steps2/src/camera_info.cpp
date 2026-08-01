@@ -18,11 +18,7 @@ CameraInfoStep::CameraInfoStep(AssetId const camera_id, StepId const image_loadi
     }
 }
 
-Hash CameraInfoStep::CacheKey(database::CalibrationDatabase& db) const {
-    static_cast<void>(db);
-
-    return hashing::HashArguments(camera_model_, *images_);
-}
+Hash CameraInfoStep::CacheKey() const { return hashing::HashArguments(camera_model_, *images_); }
 
 void CameraInfoStep::Execute(StepId step_id, database::CalibrationDatabase& db) const {
     // Arbitrarily check the size of the first image - in the constructor we already checked to make sure that there is

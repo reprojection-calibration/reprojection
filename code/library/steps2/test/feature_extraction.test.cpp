@@ -50,12 +50,11 @@ TEST_F(FeatureExtractionFixture, TestFeatureExtractionStepRunner) {
     EXPECT_EQ(std::size(result), 0);
 }
 
-
 TEST_F(FeatureExtractionFixture, TestFeatureExtractionStep) {
     // Build the step and check that the type and hash function are correct.
     steps::FeatureExtraction const step{camera_id_, image_loading_id_, false, target_info_id_, target_id_, db_};
     EXPECT_EQ(step.Type(), StepType::FeatureExtraction);
-    EXPECT_EQ(step.CacheKey(db_).value, "cebb7a03270d515c4a1fe8be46ce42e546b3958e655f3af29197303d055e5b1a");
+    EXPECT_EQ(step.CacheKey().value, "cebb7a03270d515c4a1fe8be46ce42e546b3958e655f3af29197303d055e5b1a");
 
     // Build the actual database step id and execute the step.
     auto const [step_id, _]{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::FeatureExtraction, "")};

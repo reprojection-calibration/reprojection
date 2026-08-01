@@ -31,7 +31,7 @@ TEST(StepsTargetInfo, TestTargetInfoStep) {
 
     steps::TargetInfoStep const step{target_id, target};
     EXPECT_EQ(step.Type(), StepType::TargetInfo);
-    EXPECT_EQ(step.CacheKey(db).value, "03d5d5226dde69073fd8d1b0813738058bfb75bff151dfced9b636374ae0ff5b");
+    EXPECT_EQ(step.CacheKey().value, "03d5d5226dde69073fd8d1b0813738058bfb75bff151dfced9b636374ae0ff5b");
 
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};
     auto const [step_id, _]{db.GetOrCreateStep(recording_id, std::nullopt, StepType::TargetInfo, "")};

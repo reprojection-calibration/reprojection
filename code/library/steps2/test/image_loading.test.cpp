@@ -64,7 +64,7 @@ TEST_F(ImageSamplerFixture, TestImageLoadingStep) {
     // Build the step and check that the type and hash function are correct.
     steps::ImageLoading const step{camera_id, "", image_sampler_};
     EXPECT_EQ(step.Type(), StepType::ImageLoading);
-    EXPECT_EQ(step.CacheKey(db).value, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    EXPECT_EQ(step.CacheKey().value, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
     // Build the actual database step id and execute the step.
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};

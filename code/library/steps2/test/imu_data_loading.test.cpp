@@ -63,7 +63,7 @@ TEST_F(ImuSamplerFixture, TestImuDataLoadingStep) {
     // Build the step and check that the type and hash function are correct.
     steps::ImuDataLoading const step{imu_id, "", imu_sampler_};
     EXPECT_EQ(step.Type(), StepType::ImuDataLoading);
-    EXPECT_EQ(step.CacheKey(db).value, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    EXPECT_EQ(step.CacheKey().value, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
     // Build the actual database step id and execute the step.
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};

@@ -17,15 +17,9 @@ ImageLoading::ImageLoading(AssetId const camera_id, std::string_view serialized_
       cache_key_{hashing::HashArguments(serialized_image_sampler)},
       image_sampler_{image_sampler} {}
 
-Hash ImageLoading::CacheKey(database::CalibrationDatabase& db) const {
-    // NOTE(Jack): The image loading is unique in that it does not load anything from the database but instead
-    // bootstraps directly from the user/application input.
-    static_cast<void>(db);
+Hash ImageLoading::CacheKey() const { return cache_key_; }
 
-    return cache_key_;
-}
-
-void ImageLoading::Execute( StepId const step_id, database::CalibrationDatabase& db) const {
+void ImageLoading::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
     auto encoded_images = std::make_shared<EncodedImages>();
     int num_images{0};
     while (auto const data{image_sampler_()}) {
@@ -42,7 +36,7 @@ void ImageLoading::Execute( StepId const step_id, database::CalibrationDatabase&
         ++num_images;
         if (num_images % 50 == 0) {
             log->debug("{{'step': '{}', 'stage': '{}', 'asset_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
-                       ToString(StepType()), "Compute()", camera_id_.value, num_images);             // LCOV_EXCL_LINE
+                       ToString(StepType()), "Compute()", camera_id_.value, num_images);       // LCOV_EXCL_LINE
         }
     }
 

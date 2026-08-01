@@ -10,7 +10,7 @@ struct CameraInfoStep {
 
     static StepType Type() { return StepType::CameraInfo; }
 
-    Hash CacheKey(database::CalibrationDatabase& db) const;
+    Hash CacheKey() const;
 
     void Execute(StepId step_id, database::CalibrationDatabase& db) const;
 

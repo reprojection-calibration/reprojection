@@ -7,9 +7,7 @@ using namespace reprojection;
 struct ExampleStep {
     static StepType Type() { return StepType::ImageLoading; }
 
-    static Hash CacheKey(database::CalibrationDatabase& db) {
-        (void)db;
-
+    static Hash CacheKey() {
         return "";
     }
 

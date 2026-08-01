@@ -8,13 +8,7 @@ ImuDataLoading::ImuDataLoading(AssetId const imu_id, std::string_view serialized
                                ImuSampler const& imu_sampler)
     : imu_id_{imu_id}, cache_key_{hashing::HashArguments(serialized_imu_sampler)}, imu_sampler_{imu_sampler} {}
 
-Hash ImuDataLoading::CacheKey(database::CalibrationDatabase& db) const {
-    // NOTE(Jack): Just like the image loading the imu data loading does not load anything from the database but instead
-    // bootstraps directly from the user/application input.
-    static_cast<void>(db);
-
-    return cache_key_;
-}
+Hash ImuDataLoading::CacheKey() const { return cache_key_; }
 
 void ImuDataLoading::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
     ImuMeasurements imu_data;

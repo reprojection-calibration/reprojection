@@ -6,8 +6,9 @@
 
 namespace reprojection::steps {
 
-FeatureExtraction::FeatureExtraction(AssetId camera_id, StepId image_loading_id, bool show_extraction,
-                                     StepId target_info_id, AssetId target_id, database::CalibrationDatabase& db)
+FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image_loading_id, bool const show_extraction,
+                                     StepId const target_info_id, AssetId const target_id,
+                                     database::CalibrationDatabase& db)
     : camera_id_{camera_id}, image_loading_id_{image_loading_id}, show_extraction_{show_extraction} {
     auto const target_info_opt{db.TargetInfoSelect(target_info_id, target_id)};
     if (not target_info_opt) {
@@ -21,10 +22,7 @@ FeatureExtraction::FeatureExtraction(AssetId camera_id, StepId image_loading_id,
     images_ = std::make_shared<EncodedImages>(db.ImagesSelect(image_loading_id, camera_id));
 }
 
-Hash FeatureExtraction::CacheKey(database::CalibrationDatabase& db) const {
-    // TODO(Jack): Because we do all the loading in the constructor I think we can remove the db here entirely!
-    static_cast<void>(db);
-
+Hash FeatureExtraction::CacheKey() const {
     // TODO(Jack): We should not strictly need the camera_id_ here as part of they key because the target info and
     // images_ should uniquely identify the feature extraction. However a problem arises when we have artifically
     // triggered cache hits (for example in the benchmark testing) Where the images_ is empty and that means for the
@@ -36,7 +34,7 @@ Hash FeatureExtraction::CacheKey(database::CalibrationDatabase& db) const {
 // TODO(Jack): We really need to split the visualization logic from the core computation!
 // NOTE(Jack): The unit tests and CI pipeline run headless which means that we cannot get the GUI show feature
 // extraction code path unit tested and covered.
-void FeatureExtraction::Execute(StepId step_id, database::CalibrationDatabase& db) const {
+void FeatureExtraction::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info_)};
 
     CameraMeasurements extracted_targets;
