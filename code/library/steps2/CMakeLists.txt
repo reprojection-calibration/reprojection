@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "steps2")
 
 set(SRC_FILES
+        src/camera_info.cpp
         src/feature_extraction.cpp
         src/image_loading.cpp
         src/imu_data_loading.cpp
