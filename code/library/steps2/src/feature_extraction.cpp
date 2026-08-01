@@ -6,19 +6,19 @@
 
 namespace reprojection::steps {
 
-FeatureExtraction::FeatureExtraction(AssetId camera, StepId image_loading, bool show_extraction, StepId target_info,
-                                     AssetId target, database::CalibrationDatabase& db)
-    : camera_{camera}, image_loading_{image_loading}, show_extraction_{show_extraction} {
-    auto const target_info_opt{db.TargetInfoSelect(target_info, target)};
+FeatureExtraction::FeatureExtraction(AssetId camera_id, StepId image_loading_id, bool show_extraction,
+                                     StepId target_info_id, AssetId target_id, database::CalibrationDatabase& db)
+    : camera_id_{camera_id}, image_loading_id_{image_loading_id}, show_extraction_{show_extraction} {
+    auto const target_info_opt{db.TargetInfoSelect(target_info_id, target_id)};
     if (not target_info_opt) {
         throw std::runtime_error(
             std::format("Feature extraction step called with no valid target info in the database - "
                         "target info step id {}, target asset id {}",
-                        target_info.value, target.value));
+                        target_info_id.value, target_id.value));
     }
     target_info_ = *target_info_opt;
 
-    images_ = std::make_shared<EncodedImages>(db.ImagesSelect(image_loading, camera));
+    images_ = std::make_shared<EncodedImages>(db.ImagesSelect(image_loading_id, camera_id));
 }
 
 Hash FeatureExtraction::CacheKey(database::CalibrationDatabase& db) const {
@@ -30,7 +30,7 @@ Hash FeatureExtraction::CacheKey(database::CalibrationDatabase& db) const {
     // triggered cache hits (for example in the benchmark testing) Where the images_ is empty and that means for the
     // cache key is no longer unique across different cameras. To prevent this we added the EntityId(). If this is
     // really a good way to solve this is unclear. But right now it solves our problem and does cause any new ones :)
-    return hashing::HashArguments(camera_.value, show_extraction_, target_info_, *images_);
+    return hashing::HashArguments(camera_id_.value, show_extraction_, target_info_, *images_);
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!
@@ -72,7 +72,7 @@ void FeatureExtraction::Execute(StepId step_id, database::CalibrationDatabase& d
         }
     }
 
-    db.ExtractedTargetsInsert(step_id, image_loading_, camera_, extracted_targets);
+    db.ExtractedTargetsInsert(step_id, image_loading_id_, camera_id_, extracted_targets);
 }
 
 }  // namespace reprojection::steps

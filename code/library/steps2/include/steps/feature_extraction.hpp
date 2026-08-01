@@ -7,7 +7,7 @@
 namespace reprojection::steps {
 
 struct FeatureExtraction {
-    FeatureExtraction(AssetId camera, StepId image_loading, bool show_extraction, StepId target_info, AssetId target,
+    FeatureExtraction(AssetId camera_id, StepId image_loading_id, bool show_extraction, StepId target_info_id, AssetId target_id,
                       database::CalibrationDatabase& db);
 
     static StepType Type() { return StepType::FeatureExtraction; }
@@ -17,8 +17,8 @@ struct FeatureExtraction {
     void Execute(StepId step_id, database::CalibrationDatabase& db) const;
 
    private:
-    AssetId camera_;
-    StepId image_loading_;
+    AssetId camera_id_;
+    StepId image_loading_id_;
     bool show_extraction_;
     TargetInfo target_info_;
     std::shared_ptr<EncodedImages> images_;

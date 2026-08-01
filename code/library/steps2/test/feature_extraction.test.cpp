@@ -44,7 +44,7 @@ TEST_F(FeatureExtractionFixture, TestFeatureExtractionStepRunner) {
     steps::FeatureExtraction const step{camera_id_, image_loading_id_, false, target_info_id_, target_id_, db_};
     StepId const step_id{RunStep<steps::FeatureExtraction>(owner, step, db_)};
 
-    // TODO(Jack): This is kind of an anti climatic result but its not our responsibility to check that the feature
+    // TODO(Jack): This is kind of an anti climatic result but it's not our responsibility to check that the feature
     // extraction works here.
     auto const result{db_.ExtractedTargetsSelect(step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 0);
