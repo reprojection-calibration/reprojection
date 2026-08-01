@@ -5,6 +5,7 @@
 
 #include <toml++/toml.hpp>
 
+#include "database/calibration_database.hpp"
 #include "types/io.hpp"
 
 namespace reprojection::application {
@@ -14,7 +15,7 @@ namespace fs = std::filesystem;
 struct AppArgs {
     fs::path data_path;
     toml::table config;
-    SqlitePtr db;
+    database::CalibrationDatabase db;
 };
 
 struct Sensors {

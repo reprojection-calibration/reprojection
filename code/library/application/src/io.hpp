@@ -5,6 +5,7 @@
 
 #include <toml++/toml.hpp>
 
+#include "database/calibration_database.hpp"
 #include "types/io.hpp"
 
 namespace reprojection::application {
@@ -21,6 +22,6 @@ std::optional<PathConfig> ParseCommandLineInput(int const argc, char const* cons
 
 std::optional<toml::table> LoadConfig(fs::path const& cfg_path);
 
-std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path);
+std::optional<database::CalibrationDatabase> Open(fs::path const& workspace_dir, fs::path const& data_path);
 
 }  // namespace reprojection::application

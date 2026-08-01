@@ -56,7 +56,7 @@ std::optional<toml::table> LoadConfig(fs::path const& cfg_path) {
     }
 }
 
-std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& data_path) {
+std::optional<database::CalibrationDatabase> Open(fs::path const& workspace_dir, fs::path const& data_path) {
     if (std::error_code code; not fs::is_directory(workspace_dir, code)) {
         log->error("{{'workspace_dir': '{}', 'error_code': {{'value': {}, 'message': '{}'}}}}", workspace_dir.string(),
                    code.value(), code.message());
@@ -83,11 +83,7 @@ std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& dat
     bool const db_exists{fs::exists(db_path)};
     log->info("{{'db_path': '{}', 'exists': {}}}", db_path.string(), db_exists);
 
-    if (db_exists) {
-        return database::OpenCalibrationDatabase(db_path, false, false);
-    }
-
-    return database::OpenCalibrationDatabase(db_path, true, false);
+    return database::CalibrationDatabase(db_path, not db_exists);
 }
 
 }  // namespace reprojection::application

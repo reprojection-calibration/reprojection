@@ -13,7 +13,7 @@ struct ExampleStep {
         return "";
     }
 
-    static void Execute(database::CalibrationDatabase& db, StepId const step_id) {
+    static void Execute(StepId const step_id, database::CalibrationDatabase& db) {
         (void)db;
         (void)step_id;
 

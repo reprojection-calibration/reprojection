@@ -7,10 +7,10 @@
 using namespace reprojection;
 
 TEST(HashingSerialize, TestSerializeCameraInfo) {
-    CameraInfo const camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
 
     std::string const result{hashing::Serialize(camera_info)};
-    std::string const gt_result{"/cam/retro/123|pinhole|0.000,720.000,0.000,480.000|"};
+    std::string const gt_result{"pinhole|0.000,720.000,0.000,480.000|"};
 
     EXPECT_EQ(result, gt_result);
 }

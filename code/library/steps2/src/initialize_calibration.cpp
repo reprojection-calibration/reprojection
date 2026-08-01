@@ -2,6 +2,8 @@
 
 namespace reprojection::steps {
 
+// TODO(Jack): This is at most capable of initializing a camera-imu extrinsic calibration. If we want a different
+// workflow (ex. stereo of multi-cam-imu then we need to refactor this).
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, database::CalibrationDatabase& db) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
 

@@ -17,7 +17,7 @@ namespace tu = testing_utilities;
 // seems ok... for now.
 TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     double const duration_s{10};
-    CameraInfo const camera_info{"cam", CameraModel::Pinhole, tu::image_bounds};
+    CameraInfo const camera_info{CameraModel::Pinhole, tu::image_bounds};
 
     auto const [targets, poses_co_w]{
         testing_mocks::GenerateMvgData(camera_info, CameraState{tu::pinhole_intrinsics}, duration_s, 10)};
@@ -38,7 +38,7 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     // handle the relative weighting between these things in any intelligent or principled manner. For now these test
     // values are close enough and serve as the canary in the coal mine :)
     ImuCamExtrinsic const initial_extrinsic{
-        {"imu", camera_info.sensor_name, Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}},
+        {"imu", "cam", Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}},
         Vector3d{-0.212548, -0.293729, 9.79995}};
 
     auto const [_1, optimized_extrinsic]{optimization::ExtrinsicOptimization(
@@ -68,7 +68,7 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 
     uint64_t const timestamp_ns{0};
 
-    CameraInfo const sensor{"", CameraModel::Pinhole, tu::image_bounds};
+    CameraInfo const sensor{ CameraModel::Pinhole, tu::image_bounds};
     CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
     auto const camera_state{CameraState{tu::pinhole_intrinsics}};
 

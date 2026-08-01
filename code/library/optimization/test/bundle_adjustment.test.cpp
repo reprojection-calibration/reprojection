@@ -14,7 +14,7 @@ using namespace reprojection;
 // next case where we add some noisy so it actually does some iterations.
 TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     // Generate the data
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 60, 1, false)};
 
@@ -43,7 +43,7 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
 // Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
 // and intrinsic back.
 TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 60, 1, false)};
 
@@ -109,7 +109,7 @@ TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {
 
     uint64_t const timestamp_ns{0};  // Used to track the data frame in the maps
 
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
     OptimizationState const state{CameraState{testing_utilities::pinhole_intrinsics},
                                   {{timestamp_ns, {Array6d::Zero()}}}};

@@ -30,6 +30,8 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
     }
 
     if (code != SQLITE_OK) {
+        sqlite3_close_v2(db_);
+
         // TODO(Jack): Is it valid here to try to get an error message here from an improperly opened db pointer?
         throw SqliteException(db_);
     }
@@ -55,6 +57,8 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
     // we need to manually turn it on here.
     ExecuteStatement("PRAGMA foreign_keys = ON;", db_);
 }
+
+CalibrationDatabase::~CalibrationDatabase() { sqlite3_close_v2(db_); }
 
 AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const index, Name const& name) const {
     auto const result{ReadAssetId(db_, type, index)};

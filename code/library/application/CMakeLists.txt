@@ -21,7 +21,7 @@ set(LINK_LIBRARIES
         projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the pose_init public header interface.
         spdlog::spdlog
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
-        steps
+        steps2
         tomlplusplus::tomlplusplus
         types
         types_internal

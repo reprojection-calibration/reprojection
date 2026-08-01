@@ -12,7 +12,7 @@
 using namespace reprojection;
 
 TEST(PnpDlt, TestDlt23) {
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, intrinsics, 60, 1, false)};
 
@@ -45,7 +45,7 @@ TEST(PnpDlt, TestDlt23FailedDlt) {
 
 TEST(PnpDlt, TestDlt22) {
     // Points must have Z=0 (flat = true) for Dlt22
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
+    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::unit_image_bounds};
     auto const [targets, gt_frames]{
         testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::unit_pinhole_intrinsics}, 60, 1, true)};
 

@@ -98,6 +98,10 @@ set(LINK_LIBRARIES
 AddLibrary()
 
 
+set(TEST_LINK_LIBRARIES
+        testing_utilities
+)
+
 set(TESTS
         src/serialization.test.cpp
         src/toml_converters.test.cpp

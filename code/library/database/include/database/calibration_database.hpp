@@ -18,6 +18,8 @@ class CalibrationDatabase {
     // TODO(Jack): Should we make this private and instead use a factory?
     CalibrationDatabase(fs::path const& db_path, bool create, bool read_only = false);
 
+    ~CalibrationDatabase();
+
     AssetId GetOrCreateAsset(AssetType type, size_t index, Name const& name) const;
 
     RecordingId GetOrCreateRecording(Name const& name, Hash const& hash) const;
