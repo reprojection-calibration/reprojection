@@ -7,22 +7,21 @@
 namespace reprojection::steps {
 
 struct FeatureExtraction {
-    std::string camera_name_;
-    std::shared_ptr<EncodedImages> images_;
-    TargetInfo target_info_;
+    FeatureExtraction(AssetId camera, StepId image_loading, bool show_extraction, StepId target_info, AssetId target,
+                      database::CalibrationDatabase& db);
+
+    static StepType Type() { return StepType::FeatureExtraction; }
+
+    Hash CacheKey(database::CalibrationDatabase& db) const;
+
+    void Execute(StepId step_id, database::CalibrationDatabase& db) const;
+
+   private:
+    AssetId camera_;
+    StepId image_loading_;
     bool show_extraction_;
-
-    static CalibrationStep StepType() { return CalibrationStep::FeatureExtraction; }
-
-    std::string EntityId() const { return camera_name_; }
-
-    std::string HashInputs() const;
-
-    CameraMeasurements Compute() const;
-
-    CameraMeasurements Load(SqlitePtr const db) const;
-
-    void Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const;
+    TargetInfo target_info_;
+    std::shared_ptr<EncodedImages> images_;
 };
 
 }  // namespace reprojection::steps

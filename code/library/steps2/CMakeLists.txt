@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "steps2")
 
 set(SRC_FILES
+        src/feature_extraction.cpp
         src/image_loading.cpp
         src/imu_data_loading.cpp
         src/initialize_calibration.cpp
@@ -33,6 +34,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        test/feature_extraction.test.cpp
         test/image_loading.test.cpp
         test/imu_data_loading.test.cpp
         test/initialize_calibration.test.cpp

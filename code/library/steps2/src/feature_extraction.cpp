@@ -1,47 +1,59 @@
 #include "steps/feature_extraction.hpp"
 
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "hashing/hashing.hpp"
 #include "image_viewer/image_viewer.hpp"
 
 namespace reprojection::steps {
 
-std::string FeatureExtraction::HashInputs() const {
-    // TODO(Jack): We should not strictly need the EntityId() here as part of they key because the target info and
+FeatureExtraction::FeatureExtraction(AssetId camera, StepId image_loading, bool show_extraction, StepId target_info,
+                                     AssetId target, database::CalibrationDatabase& db)
+    : camera_{camera}, image_loading_{image_loading}, show_extraction_{show_extraction} {
+    auto const target_info_opt{db.TargetInfoSelect(target_info, target)};
+    if (not target_info_opt) {
+        throw std::runtime_error(
+            std::format("Feature extraction step called with no valid target info in the database - "
+                        "target info step id {}, target asset id {}",
+                        target_info.value, target.value));
+    }
+    target_info_ = *target_info_opt;
+
+    images_ = std::make_shared<EncodedImages>(db.ImagesSelect(image_loading, camera));
+}
+
+Hash FeatureExtraction::CacheKey(database::CalibrationDatabase& db) const {
+    // TODO(Jack): Because we do all the loading in the constructor I think we can remove the db here entirely!
+    static_cast<void>(db);
+
+    // TODO(Jack): We should not strictly need the camera_id_ here as part of they key because the target info and
     // images_ should uniquely identify the feature extraction. However a problem arises when we have artifically
     // triggered cache hits (for example in the benchmark testing) Where the images_ is empty and that means for the
     // cache key is no longer unique across different cameras. To prevent this we added the EntityId(). If this is
     // really a good way to solve this is unclear. But right now it solves our problem and does cause any new ones :)
-    return hashing::HashArguments(EntityId(), target_info_, *images_, static_cast<uint64_t>(show_extraction_));
+    return hashing::HashArguments(camera_.value, show_extraction_, target_info_, *images_);
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!
 // NOTE(Jack): The unit tests and CI pipeline run headless which means that we cannot get the GUI show feature
 // extraction code path unit tested and covered.
-CameraMeasurements FeatureExtraction::Compute() const {
+void FeatureExtraction::Execute(StepId step_id, database::CalibrationDatabase& db) const {
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info_)};
 
     CameraMeasurements extracted_targets;
     for (auto const& [timestamp_ns, buffer] : *images_) {
-        // TODO COPY AND PASTED FROM CAMERA INFO AND THE STEPS TEST!
         cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
         if (img.empty()) {
-            throw std::runtime_error                                                            // LCOV_EXCL_LINE
-                ("we need an error handling strategy for empty images in feature extraction");  // LCOV_EXCL_LINE
+            throw std::runtime_error("we need an error handling strategy for empty images in feature extraction");
         }
 
         std::optional<ExtractedTarget> const target{extractor->Extract(img)};
         if (target.has_value()) {
-            extracted_targets.insert({timestamp_ns, *target});  // LCOV_EXCL_LINE
+            extracted_targets.insert({timestamp_ns, *target});
         }
 
-        // NOTE(Jack): If we have an extracted target then draw the points and display. Otherwise, just display the
-        // image.
         if (show_extraction_) {
-            if (target.has_value()) {                          // LCOV_EXCL_LINE
-                feature_extraction::DrawTarget(*target, img);  // LCOV_EXCL_LINE
+            if (target.has_value()) {
+                feature_extraction::DrawTarget(*target, img);
             }
 
             // TODO(Jack): Here we are giving the GUI image displayer the possibility to end the feature extraction, is
@@ -49,23 +61,18 @@ CameraMeasurements FeatureExtraction::Compute() const {
             // TODO(Jack): Right now if the user requests showing the extraction but there is no available GUI we will
             // just crash here. We might want to wrap the window visualizer in a little class with a factory function,
             // and then log to the user a warning if they requested visualization but here is no gui device.
-            static image_viewer::ImageViewer viewer(                                              // LCOV_EXCL_LINE
-                std::make_unique<image_viewer::OpenCvGuiInterface>("Target Feature Extraction"),  // LCOV_EXCL_LINE
-                std::make_unique<image_viewer::OpenCvKeyboardInput>());                           // LCOV_EXCL_LINE
-            viewer.Show(img);                                                                     // LCOV_EXCL_LINE
-            if (viewer.ShouldQuit()) {                                                            // LCOV_EXCL_LINE
-                break;                                                                            // LCOV_EXCL_LINE
+            static image_viewer::ImageViewer viewer(
+                std::make_unique<image_viewer::OpenCvGuiInterface>("Target Feature Extraction"),
+                std::make_unique<image_viewer::OpenCvKeyboardInput>());
+
+            viewer.Show(img);
+            if (viewer.ShouldQuit()) {
+                break;
             }
         }
     }
 
-    return extracted_targets;
-}
-
-CameraMeasurements FeatureExtraction::Load(SqlitePtr const db) const { return database::ReadTargets(db, EntityId()); }
-
-void FeatureExtraction::Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const {
-    database::InsertTargets(db, EntityId(), extracted_targets);
+    db.ExtractedTargetsInsert(step_id, image_loading_, camera_, extracted_targets);
 }
 
 }  // namespace reprojection::steps
