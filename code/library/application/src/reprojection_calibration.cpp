@@ -44,21 +44,18 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
                database::CalibrationDatabase& db) {
     steps::CalibrationContext const cfg{steps::InitializeCalibration(cfg_table, db)};
 
-    // TODO(Jack): Clarify the usage of owner! For now we make every stepped owned by the recording
-    auto const owner{steps::StepOwner::Recording(cfg.recording_id)};
-
     steps::ImageLoading const image_loading_step{cfg.camera_id, image_input.signature, image_input.source};
-    StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(owner, image_loading_step, db)};
+    StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(image_loading_step, db)};
 
     steps::CameraInfoStep const camera_info_step{cfg.camera_id, image_loading_id, cfg.config.camera.camera_model, db};
-    StepId const camera_info_id{RunStep<steps::CameraInfoStep>(owner, camera_info_step, db)};
+    StepId const camera_info_id{RunStep<steps::CameraInfoStep>(camera_info_step, db)};
 
     steps::TargetInfoStep const target_info_step{cfg.target_id, cfg.config.target};
-    StepId const target_info_id{RunStep<steps::TargetInfoStep>(owner, target_info_step, db)};
+    StepId const target_info_id{RunStep<steps::TargetInfoStep>(target_info_step, db)};
 
     steps::FeatureExtraction const step{cfg.camera_id,  image_loading_id, cfg.config.application.show_extraction,
                                         target_info_id, cfg.target_id,    db};
-    StepId const feature_extraction_id{RunStep<steps::FeatureExtraction>(owner, step, db)};
+    StepId const feature_extraction_id{RunStep<steps::FeatureExtraction>(step, db)};
 
     static_cast<void>(imu_input);
     static_cast<void>(camera_info_id);

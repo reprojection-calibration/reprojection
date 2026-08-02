@@ -24,7 +24,7 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, database:
     // targets and imus below.
     // TODO(Jack): Refactor so user can pass in a target name if they like.
     AssetId const camera_id{db.GetOrCreateAsset(AssetType::Camera, 0, cfg.camera.sensor_name)};
-    AssetId const target_id{db.GetOrCreateAsset(AssetType::Target, 0, "calibration_target")};
+    AssetId const target_id{db.GetOrCreateAsset(AssetType::Target, 0, "aprilgrid")};
 
     std::optional<AssetId> imu_id;
     if (cfg.imu) {
