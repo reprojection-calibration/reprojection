@@ -41,18 +41,11 @@ int main() {
     try {
         steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
-        auto step_result{db.GetOrCreateStep(StepType::ImageLoading, "")};
-        db.StepCacheKeyUpdate(step_result.first, Hash{hashing::Sha256("")});
-
-        step_result = db.GetOrCreateStep(StepType::CameraInfo, "");
+        auto step_result = db.GetOrCreateStep(StepType::CameraInfo, "");
         db.CameraInfoInsert(step_result.first, context.camera_id,
                             CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
         db.StepCacheKeyUpdate(step_result.first,
-                              Hash{"a5b2be40806e78d54b0f40f5522101a6d724d9f7e57f7ccc5e70cff79555209c"});
-
-        step_result = db.GetOrCreateStep(StepType::FeatureExtraction, "");
-        db.StepCacheKeyUpdate(step_result.first,
-                              Hash{"0c15a974614a4057c769aaf308cd5617712efe9cf627eff39219db5450c29b4d"});
+                              Hash{"1cc994b3b1dfe158bed402f46b5de3c00e14bf2d8057f43dd3531eebea5390c5"});
 
         // TODO(Jack): Add imu stuff!
 
@@ -60,7 +53,12 @@ int main() {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
 
-    application::Calibrate(config, {{}, ""}, application::ImuInput{{}, ""}, db);
+    // NOTE(Jack): Because the step type and cache key need to be a unique pair for every step we cannot just use an
+    // empty string here because then we could not run this for both cam0 and cam1. If you want to run cam1 you need to
+    // update this and possibly write the cache key into the respective step.
+    std::string const image_signature{"cam0_image_signature"};
+
+    application::Calibrate(config, {{}, image_signature}, application::ImuInput{{}, ""}, db);
 
     return EXIT_SUCCESS;
 }
