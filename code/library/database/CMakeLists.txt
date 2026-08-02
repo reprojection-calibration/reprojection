@@ -28,9 +28,7 @@ set(SQL_FILES
         runs_select.sql
         runs_insert.sql
         runs_table.sql
-        steps_delete.sql
         steps_insert.sql
-        steps_insert_id.sql
         steps_select.sql
         steps_table.sql
         steps_update_cache_key.sql

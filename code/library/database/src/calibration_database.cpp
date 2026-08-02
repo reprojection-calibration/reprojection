@@ -116,30 +116,22 @@ RunId CalibrationDatabase::GetOrCreateRun(RecordingId const recording_id, std::s
     return InsertRun(db_, recording_id, config_hash, config);
 }
 
-std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(std::optional<RecordingId> const& recording_id,
-                                                                    std::optional<RunId> const& run_id,
-                                                                    StepType const type, Hash const& cache_key) {
-    auto const result{ReadStepId(db_, recording_id, run_id, type)};
-    bool const cache_key_found{result and result->second.has_value()};
+// TODO(Jack): The semantics are confusing because while the cache_key is passed here it is never written into the step,
+// it is only used to check for a cache hit or not. To actually write the cache key to the db you need to call
+// StepCacheKeyUpdate.
+std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(StepType const type, Hash const& cache_key) {
+    auto const result{ReadStepId(db_, type, cache_key)};
 
-    log->debug(
-        "{{'recording_id': '{}', 'run_id': '{}', 'step_type': '{}', 'new_cache_key': '{}', 'loaded_cache_key': '{}'}}",
-        recording_id ? recording_id->value : -1, run_id ? run_id->value : -1, ToString(type), cache_key.value,
-        cache_key_found ? result->second->value : "N/A");
-
-    if (cache_key_found and result->second.value() == cache_key) {
-        return std::make_pair(result->first, CacheStatus::CacheHit);
-    } else if (result) {
-        return std::make_pair(UpsertStep(db_, result->first, recording_id, run_id, type, cache_key), CacheStatus::CacheMiss);
+    if (result.has_value()) {
+        return std::make_pair(*result, CacheStatus::CacheHit);
     }
 
-    std::cout << 1 << std::endl;
-    return std::make_pair(InsertStep(db_, recording_id, run_id, type, cache_key), CacheStatus::CacheMiss);
+    return std::make_pair(InsertStep(db_, type), CacheStatus::CacheMiss);
 }
 
 // TODO(Jack): How do we handle the case when we are asked to complete a step which does not exist? Throw? Does it
 // already do that?
-void CalibrationDatabase::StepCacheKeyUpdate(StepId const step_id, Hash const& cache_key) {
+void CalibrationDatabase::StepCacheKeyUpdate(StepId const step_id, Hash const& cache_key) const {
     auto const binder{[step_id, cache_key](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, cache_key.value);
         Bind(stmt, 2, step_id.value);

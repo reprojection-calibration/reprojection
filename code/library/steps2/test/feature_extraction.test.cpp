@@ -19,13 +19,13 @@ class FeatureExtractionFixture : public ::testing::Test {
             std::make_shared<EncodedImages>(EncodedImages{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}})};
 
         // Insert the images into the database.
-        auto const [image_loading_id, _]{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "")};
+        auto const [image_loading_id, _]{db_.GetOrCreateStep(StepType::ImageLoading, "")};
         image_loading_id_ = image_loading_id;
         db_.ImagesInsert(image_loading_id_, camera_id_, *encoded_images);
 
         // Create the target and insert it into the database.
         TargetInfo const target_info{TargetType::Aprilgrid3, 6, 8, 0.1, false};
-        auto const [target_info_id, _1]{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::TargetInfo, "")};
+        auto const [target_info_id, _1]{db_.GetOrCreateStep(StepType::TargetInfo, "")};
         target_info_id_ = target_info_id;
         db_.TargetInfoInsert(target_info_id, target_id_, target_info);
     }
@@ -57,7 +57,7 @@ TEST_F(FeatureExtractionFixture, TestFeatureExtractionStep) {
     EXPECT_EQ(step.CacheKey().value, "cebb7a03270d515c4a1fe8be46ce42e546b3958e655f3af29197303d055e5b1a");
 
     // Build the actual database step id and execute the step.
-    auto const [step_id, _]{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::FeatureExtraction, "")};
+    auto const [step_id, _]{db_.GetOrCreateStep(StepType::FeatureExtraction, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
     auto const result{db_.ExtractedTargetsSelect(step_id, camera_id_)};

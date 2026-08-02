@@ -68,7 +68,7 @@ TEST_F(ImageSamplerFixture, TestImageLoadingStep) {
 
     // Build the actual database step id and execute the step.
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    auto const [step_id, _]{db.GetOrCreateStep(recording_id, std::nullopt, StepType::ImageLoading, "")};
+    auto const [step_id, _]{db.GetOrCreateStep(StepType::ImageLoading, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db));
 
     // Load the images and compare them to the known input.

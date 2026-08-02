@@ -73,85 +73,40 @@ TEST(Hhh, TestGetOrCreateRun) {
     EXPECT_THROW(db.GetOrCreateRun(RecordingId{10}, "[config]"), database::SqliteException);
 }
 
-class GetOrCreateStepFixture : public ::testing::Test {
-   protected:
-    void SetUp() override { recording_id_ = db_.GetOrCreateRecording("recording.bag", "sha256-xxx"); }
-
+TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {
     database::CalibrationDatabase db_{":memory:", true};
-    RecordingId recording_id_{-1};
-    Hash const hash_a_{"sha256-aaa"};
-};
+    Hash const hash_a{"sha256-aaa"};
 
-TEST_F(GetOrCreateStepFixture, TestSingleOwnerSemantics) {
     // Insert a new step - cache miss.
-    auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_)};
+    auto result{db_.GetOrCreateStep(StepType::ImageLoading, hash_a)};
     EXPECT_EQ(result.first, StepId{1});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
-    // Until we "StepCacheKeyUpdate()" it will always be a cache miss.
-    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_);
-    EXPECT_EQ(result.first, StepId{1});
+    // Until we "StepCacheKeyUpdate()" it will insert a new step and be a cache miss because there is no cache_key in
+    // the database yet.
+    result = db_.GetOrCreateStep(StepType::ImageLoading, hash_a);
+    EXPECT_EQ(result.first, StepId{2});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
-    // Complete the step entry with the cache key - the cache key is not updated done in the GetOrCreateStep!
-    db_.StepCacheKeyUpdate(result.first, hash_a_);
+    // Complete the second step entry with the cache key!
+    db_.StepCacheKeyUpdate(result.first, hash_a);
 
-    // Attempting to insert the same step again does nothing - cache hit.
-    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_);
-    EXPECT_EQ(result.first, StepId{1});
+    // Now that the cache key is there we get a cache hit.
+    result = db_.GetOrCreateStep(StepType::ImageLoading, hash_a);
+    EXPECT_EQ(result.first, StepId{2});
     EXPECT_EQ(result.second, CacheStatus::CacheHit);
 
-    // Inserting the same step but with a new cache key will delete the old entry and insert a new one with the same id
-    // - cache miss.
+    // Adding another ImageLoading step with a different cache key increments the step id and is a cache miss.
     Hash const hash_b{"sha256-bbb"};
-    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_b);
-    EXPECT_EQ(result.first, StepId{1});
+    result = db_.GetOrCreateStep(StepType::ImageLoading, hash_b);
+    EXPECT_EQ(result.first, StepId{3});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
-
-    db_.StepCacheKeyUpdate(result.first, hash_b);
-
-    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_b);
-    EXPECT_EQ(result.first, StepId{1});
-    EXPECT_EQ(result.second, CacheStatus::CacheHit);
-
-    // Create a second recording.
-    recording_id_ = db_.GetOrCreateRecording("recording1.bag", "sha256-yyy");
-
-    // Inserting the same step under a new owner creates a new valid id - cache miss.
-    result = db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_);
-    EXPECT_EQ(result.first, StepId{2});
-    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
-
-    // Creating a step under a non-existent recording is an error.
-    EXPECT_THROW(db_.GetOrCreateStep(RecordingId{111}, std::nullopt, StepType::ImageLoading, hash_a_),
-                 database::SqliteException);
-}
-
-TEST_F(GetOrCreateStepFixture, TestDualOwnerSemantics) {
-    // A step owned by a recording,
-    auto result{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, hash_a_)};
-    EXPECT_EQ(result.first, StepId{1});
-    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
-
-    // Create a run.
-    RunId const run_id{db_.GetOrCreateRun(recording_id_, "[config]")};
-
-    // The same exact step but under the run's ownership creates a new step entry.
-    result = db_.GetOrCreateStep(std::nullopt, run_id, StepType::ImageLoading, hash_a_);
-    EXPECT_EQ(result.first, StepId{2});
-    EXPECT_EQ(result.second, CacheStatus::CacheMiss);
-
-    // A step can only have one owner, either a recording or a run - therefore this is an error.
-    EXPECT_THROW(db_.GetOrCreateStep(recording_id_, run_id, StepType::ImageLoading, hash_a_),
-                 database::SqliteException);
 }
 
 TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
-    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    RunId const run_id{db.GetOrCreateRun(recording_id, "")};
-    auto const step{db.GetOrCreateStep(std::nullopt, run_id, StepType::CameraInfo, "")};
+    auto const step{db.GetOrCreateStep(StepType::CameraInfo, "")};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
 
     CameraInfo const camera_info{CameraModel::DoubleSphere, {0, 512, 0, 512}};
@@ -161,7 +116,7 @@ TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->camera_model, camera_info.camera_model);
     EXPECT_EQ(result->bounds.u_max, camera_info.bounds.u_max);
-    EXPECT_EQ(result->bounds.u_min,camera_info.bounds.u_min);
+    EXPECT_EQ(result->bounds.u_min, camera_info.bounds.u_min);
 
     EXPECT_NO_THROW(result = db.CameraInfoSelect(StepId{111}, asset_id));
     EXPECT_FALSE(result.has_value());
@@ -173,7 +128,7 @@ class ImagesFixture : public ::testing::Test {
    protected:
     void SetUp() override {
         recording_id_ = db_.GetOrCreateRecording("recording.bag", "sha256-xxx");
-        auto const step{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "sha256-bbb")};
+        auto const step{db_.GetOrCreateStep(StepType::ImageLoading, "sha256-bbb")};
         step_id_ = step.first;
         asset_id_ = db_.GetOrCreateAsset(AssetType::Camera, 0, "/cam0/image_raw");
     }
@@ -215,8 +170,7 @@ TEST_F(ImagesFixture, TestImagesSelect) {
 TEST(DatabaseCalibrationDatbase, TestImuData) {
     database::CalibrationDatabase db{":memory:", true};
 
-    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    auto const step{db.GetOrCreateStep(recording_id, std::nullopt, StepType::ImuDataLoading, "")};
+    auto const step{db.GetOrCreateStep(StepType::ImuDataLoading, "")};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Imu, 0, "")};
 
     ImuMeasurements const imu_data{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
@@ -244,16 +198,15 @@ TEST(DatabaseCalibrationDatbase, TestImuData) {
 class ExtractedTargetsFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        RecordingId const recording_id{db_.GetOrCreateRecording("recording.bag", "sha256-xxx")};
         asset_id_ = db_.GetOrCreateAsset(AssetType::Camera, 0, "/cam0/image_raw");
 
-        auto step{db_.GetOrCreateStep(recording_id, std::nullopt, StepType::ImageLoading, "sha256-bbb")};
+        auto step{db_.GetOrCreateStep(StepType::ImageLoading, "sha256-bbb")};
         image_loading_step_id_ = step.first;
         // Each extracted target required a correspondent image
         EncodedImages const images{{0, ImageBuffer{}}};
         db_.ImagesInsert(step.first, asset_id_, images);
 
-        step = db_.GetOrCreateStep(recording_id, std::nullopt, StepType::FeatureExtraction, "sha256-ccc");
+        step = db_.GetOrCreateStep(StepType::FeatureExtraction, "sha256-ccc");
         extracted_targets_step_id_ = step.first;
     }
 
@@ -301,11 +254,7 @@ TEST(Qqq, TestTargetInfo) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
     // Satisfy foreign key constraints
-    RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "")};
-    RunId const run_id{db.GetOrCreateRun(recording_id, "")};
-    // NOTE(Jack): Target info is associated with the configuration file which is why we make it a child of the run_id
-    // and not the recording_id. - THIS COMMENT IS OUT OF DATE PARTIALLY!
-    auto const step{db.GetOrCreateStep(std::nullopt, run_id, StepType::TargetInfo, "")};
+    auto const step{db.GetOrCreateStep(StepType::TargetInfo, "")};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Target, 0, "")};
 
     TargetInfo const target_info{TargetType::Checkerboard, 6, 6, 0.1, false};

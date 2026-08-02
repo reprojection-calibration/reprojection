@@ -67,7 +67,7 @@ TEST_F(ImuSamplerFixture, TestImuDataLoadingStep) {
 
     // Build the actual database step id and execute the step.
     RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    auto const [step_id, _]{db.GetOrCreateStep(recording_id, std::nullopt, StepType::ImuDataLoading, "")};
+    auto const [step_id, _]{db.GetOrCreateStep(StepType::ImuDataLoading, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db));
 
     // Load the result and check it's the same as the input

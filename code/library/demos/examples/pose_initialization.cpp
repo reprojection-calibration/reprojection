@@ -41,13 +41,13 @@ int main() {
     try {
         steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
-        auto step_result{db.GetOrCreateStep(context.recording_id, std::nullopt, StepType::ImageLoading, Hash{hashing::Sha256("")})};
+        auto step_result{db.GetOrCreateStep(StepType::ImageLoading, Hash{hashing::Sha256("")})};
 
-        step_result = db.GetOrCreateStep(context.recording_id, std::nullopt, StepType::CameraInfo, "");
+        step_result = db.GetOrCreateStep(StepType::CameraInfo, "");
         db.CameraInfoInsert(step_result.first, context.camera_id,
                             CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
 
-        step_result = db.GetOrCreateStep(context.recording_id, std::nullopt, StepType::FeatureExtraction, "");
+        step_result = db.GetOrCreateStep(StepType::FeatureExtraction, "");
 
         // TODO(Jack): Add imu stuff!
 

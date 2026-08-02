@@ -30,7 +30,7 @@ template <typename T>
 StepId RunStep(StepOwner const owner, T const& step, database::CalibrationDatabase& db) {
     Hash const cache_key{step.CacheKey()};
 
-    auto const [step_id, cache_status]{db.GetOrCreateStep(owner.recording_id, owner.run_id, step.Type(), cache_key)};
+    auto const [step_id, cache_status]{db.GetOrCreateStep(step.Type(), cache_key)};
     if (cache_status == CacheStatus::CacheHit) {
         return step_id;
     }

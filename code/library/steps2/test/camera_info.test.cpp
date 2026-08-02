@@ -19,7 +19,7 @@ class CameraInfoFixture : public ::testing::Test {
             std::make_shared<EncodedImages>(EncodedImages{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}})};
 
         // Insert the images into the database.
-        auto const [image_loading_id, _]{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::ImageLoading, "")};
+        auto const [image_loading_id, _]{db_.GetOrCreateStep(StepType::ImageLoading, "")};
         image_loading_id_ = image_loading_id;
         db_.ImagesInsert(image_loading_id_, camera_id_, *encoded_images);
     }
@@ -52,7 +52,7 @@ TEST_F(CameraInfoFixture, TestCameraInfoStep) {
     EXPECT_EQ(step.CacheKey().value, "9b077a5c721520f1cbee0879eb92229c61e722ec9f0a79e3d750759785db8247");
 
     // Build the actual database step id and execute the step.
-    auto const [step_id, _]{db_.GetOrCreateStep(recording_id_, std::nullopt, StepType::CameraInfo, "")};
+    auto const [step_id, _]{db_.GetOrCreateStep(StepType::CameraInfo, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
     auto const result{db_.CameraInfoSelect(step_id, camera_id_)};
