@@ -24,9 +24,6 @@ class CalibrationDatabase {
 
     RecordingId GetOrCreateRecording(Name const& name, Hash const& hash) const;
 
-    // TODO(Jack): Use config type here!
-    RunId GetOrCreateRun(RecordingId recording_id, std::string_view config) const;
-
     // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
     // the same name. bool: was this a cache hit?
     std::pair<StepId, CacheStatus> GetOrCreateStep(StepType type, Hash const& cache_key);

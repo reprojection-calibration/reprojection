@@ -17,15 +17,8 @@ std::optional<std::pair<RecordingId, Hash>> ReadRecordingId(sqlite3* const db, N
 
 RecordingId InsertRecording(sqlite3* const db, Name const& name, Hash const& hash);
 
-std::optional<std::pair<RunId, std::string>> ReadRunId(sqlite3* const db, RecordingId const recording_id,
-                                                       Hash const& config_hash);
-
-// TODO(Jack): Use real config type!
-RunId InsertRun(sqlite3* const db, RecordingId const recording_id, Hash const& config_hash, std::string_view config);
-
 std::optional<StepId> ReadStepId(sqlite3* db, StepType type, Hash const& cache_key);
 
 StepId InsertStep(sqlite3* db, StepType type);
-
 
 }  // namespace reprojection::database

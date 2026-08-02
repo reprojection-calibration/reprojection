@@ -70,39 +70,6 @@ RecordingId InsertRecording(sqlite3* const db, Name const& name, Hash const& has
     return data;
 }
 
-std::optional<std::pair<RunId, std::string>> ReadRunId(sqlite3* const db, RecordingId const recording_id,
-                                                       Hash const& config_hash) {
-    auto const binder{[recording_id, config_hash](sqlite3_stmt* stmt) {
-        Bind(stmt, 1, recording_id.value);
-        Bind(stmt, 2, config_hash.value);
-    }};
-
-    std::optional<std::pair<RunId, std::string>> data;
-    ExecuteQuery(db, sql_statements::runs_select, binder, [&data](sqlite3_stmt* const stmt) {
-        RunId const run_id{sqlite3_column_int64(stmt, 0)};
-        std::string const config{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
-
-        // TODO(Jack): Should we do some parsing checking to check that the config is properly formatted?
-        data = std::make_pair(run_id, config);
-    });
-
-    return data;
-}
-
-RunId InsertRun(sqlite3* const db, RecordingId const recording_id, Hash const& config_hash, std::string_view config) {
-    auto const binder{[recording_id, config_hash, config](sqlite3_stmt* stmt) {
-        Bind(stmt, 1, recording_id.value);
-        Bind(stmt, 2, config_hash.value);
-        Bind(stmt, 3, config);
-    }};
-
-    RunId data{-1};
-    ExecuteQuery(db, sql_statements::runs_insert, binder,
-                 [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
-
-    return data;
-}
-
 std::optional<StepId> ReadStepId(sqlite3* const db, StepType const type, Hash const& cache_key) {
     auto const binder{[type, cache_key](sqlite3_stmt* stmt) {
         Bind(stmt, 1, ToString(type));

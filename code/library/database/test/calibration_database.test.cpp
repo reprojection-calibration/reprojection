@@ -53,26 +53,6 @@ TEST(Ggg, TestGetOrCreateRecording) {
     EXPECT_THROW(db.GetOrCreateRecording("recording2.bag", "sha256-yyy"), database::SqliteException);
 }
 
-TEST(Hhh, TestGetOrCreateRun) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
-
-    // A run requires a recording - satisfy this foreign key constraint here.
-    RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
-
-    // Repeated insert is no problem.
-    RunId result{db.GetOrCreateRun(recording_id, "[config]")};
-    EXPECT_EQ(result, RunId{1});
-    result = db.GetOrCreateRun(recording_id, "[config]");
-    EXPECT_EQ(result, RunId{1});
-
-    // Changing the config creates a new run.
-    result = db.GetOrCreateRun(recording_id, "[config1]");
-    EXPECT_EQ(result, RunId{2});
-
-    // Trying to insert a run with a non-existent recording is an error.
-    EXPECT_THROW(db.GetOrCreateRun(RecordingId{10}, "[config]"), database::SqliteException);
-}
-
 TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {
     database::CalibrationDatabase db_{":memory:", true};
     Hash const hash_a{"sha256-aaa"};

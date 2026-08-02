@@ -25,9 +25,6 @@ set(SQL_FILES
         recordings_insert.sql
         recordings_select.sql
         recordings_table.sql
-        runs_select.sql
-        runs_insert.sql
-        runs_table.sql
         steps_insert.sql
         steps_select.sql
         steps_table.sql

@@ -50,7 +50,6 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
         ExecuteStatement(sql_statements::images_table, db_);
         ExecuteStatement(sql_statements::imu_data_table, db_);
         ExecuteStatement(sql_statements::recordings_table, db_);
-        ExecuteStatement(sql_statements::runs_table, db_);
         ExecuteStatement(sql_statements::steps_table, db_);
         ExecuteStatement(sql_statements::target_info_table, db_);
     }
@@ -90,30 +89,6 @@ RecordingId CalibrationDatabase::GetOrCreateRecording(Name const& name, Hash con
     }
 
     return InsertRecording(db_, name, hash);
-}
-
-RunId CalibrationDatabase::GetOrCreateRun(RecordingId const recording_id, std::string_view config) const {
-    // BUG(Jack)
-    // BUG(Jack)
-    // BUG(Jack)
-    // BUG(Jack)
-    // ERROR(Jack): Use a real hash functions!!!! See BUG below!
-    Hash const config_hash{std::string(config)};
-
-    // NOTE(Jack): Unlike when the Asset/Recording logic, we add new runs if the config changes, that is why we
-    // don't have an error block here.
-    auto const result{ReadRunId(db_, recording_id, config_hash)};
-    // BUG(Jack)
-    // BUG(Jack)
-    // BUG(Jack)
-    // BUG(Jack)
-    // ERROR(Jack): We are comparing the actually loaded config to the provided hash value, if we actually used a hash
-    // function this would always be false! This is a landmine!
-    if (result and result->second == config_hash.value) {
-        return result->first;
-    }
-
-    return InsertRun(db_, recording_id, config_hash, config);
 }
 
 // TODO(Jack): The semantics are confusing because while the cache_key is passed here it is never written into the step,
