@@ -10,7 +10,6 @@ struct CalibrationContext {
     config::Config config;
 
     RecordingId recording_id;
-    RunId run_id;
 
     AssetId camera_id;
     AssetId target_id;

@@ -15,7 +15,6 @@ TEST(StepsInitializeCalibration, TestHappyPath) {
 
     steps::CalibrationContext const result{steps::InitializeCalibration(cfg_table, db)};
     EXPECT_EQ(result.recording_id.value, 1);
-    EXPECT_EQ(result.run_id.value, 1);
     EXPECT_EQ(result.camera_id.value, 1);
     EXPECT_EQ(result.target_id.value, 2);
     ASSERT_TRUE(result.imu_id.has_value());

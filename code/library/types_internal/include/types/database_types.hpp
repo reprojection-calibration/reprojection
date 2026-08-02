@@ -18,11 +18,6 @@ struct RecordingId {
     friend constexpr bool operator==(RecordingId const&, RecordingId const&) = default;
 };
 
-struct RunId {
-    int64_t value;
-
-    friend constexpr bool operator==(RunId const&, RunId const&) = default;
-};
 
 struct StepId {
     int64_t value;

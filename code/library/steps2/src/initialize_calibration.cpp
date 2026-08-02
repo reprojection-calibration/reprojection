@@ -18,11 +18,6 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, database:
 
     // ERROR(Jack): Refactor the applications to pass a real recording name and hash here!
     RecordingId const recording_id{db.GetOrCreateRecording("todo_recording_name", "todo_recording_hash")};
-    // ERROR(Jack): Pass the actual config here!
-    // TODO(Jack): By passing the entire config here that means we will hash even non-calibration related things like if
-    // the feature extraction display. We should instead I think design a hashing function for the actual config::Config
-    // struct and pass that/use that here.
-    RunId const run_id{db.GetOrCreateRun(recording_id, "")};
 
     // TODO(Jack): We should refactor our config file so that it can load multiple cameras from one file and
     // automatically assign the index from the config file structure instead of harcoding it to 0 here. Same for the
@@ -36,10 +31,10 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, database:
         imu_id = db.GetOrCreateAsset(AssetType::Imu, 0, Name{cfg.imu->sensor_name});
     }
 
-    log->info("{{'recording_id': '{}', 'run_id': '{}', 'camera_id': {}, 'target_id': {}, 'imu_id': {}}}",
-              recording_id.value, run_id.value, camera_id.value, target_id.value, imu_id ? imu_id->value : -1);
+    log->info("{{'recording_id': '{}', 'assets': {{'camera_id': {}, 'target_id': {}, 'imu_id': {}}}}}",
+              recording_id.value, camera_id.value, target_id.value, imu_id ? imu_id->value : -1);
 
-    return {cfg, recording_id, run_id, camera_id, target_id, imu_id};
+    return {cfg, recording_id, camera_id, target_id, imu_id};
 }
 
 }  // namespace reprojection::steps
