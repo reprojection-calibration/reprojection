@@ -9,6 +9,7 @@
 #include "steps/image_loading.hpp"
 #include "steps/initialize_calibration.hpp"
 #include "steps/intrinsic_initialization.hpp"
+#include "steps/pose_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 
@@ -62,8 +63,12 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
                                                              camera_info_id, feature_extraction_id, db};
     StepId const intrinsic_init_id{RunStep<steps::IntrinsicInitialization>(intrinsic_init_step, db)};
 
+    steps::PoseInitialization const pose_init_step{cfg.camera_id, feature_extraction_id, camera_info_id,
+                                                   intrinsic_init_id, db};
+    StepId const pose_init_id{RunStep<steps::PoseInitialization>(pose_init_step, db)};
+
     static_cast<void>(imu_input);
-    static_cast<void>(intrinsic_init_id);
+    static_cast<void>(pose_init_id);
 
     std::cout << "The future is calibrated!\n";
 }

@@ -43,6 +43,9 @@ Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(target
 void PoseInitialization::Execute(StepId step_id, database::CalibrationDatabase& db) const {
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsics_)};
 
+    log->info("{{'step_id': '{}', 'asset_id': '{}', 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
+              camera_id_.value, std::size(targets_), std::size(camera_poses));
+
     db.CameraPosesInsert(step_id, targets_id_, camera_id_, camera_poses);
 }
 
