@@ -4,9 +4,11 @@
 
 #include "steps/step_runner.hpp"
 
+#include "test_fixture.hpp"
+
 using namespace reprojection;
 
-class CameraInfoFixture : public ::testing::Test {
+class CameraInfoTestFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         // Build the encoded images (cv::Mat -> serialized buffer)
@@ -15,26 +17,18 @@ class CameraInfoFixture : public ::testing::Test {
         if (not cv::imencode(".png", img, buffer)) {
             throw std::runtime_error("cv::imencode() failed");
         }
-        std::shared_ptr const encoded_images{
-            std::make_shared<EncodedImages>(EncodedImages{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}})};
+        EncodedImages const encoded_images{{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}}};
 
-        // Insert the images into the database.
-        auto const [image_loading_id, _]{db_.GetOrCreateStep(StepType::ImageLoading, "")};
-        image_loading_id_ = image_loading_id;
-        db_.ImagesInsert(image_loading_id_, camera_id_, *encoded_images);
+        image_loading_id_ = InsertImages(encoded_images);
     }
 
-    database::CalibrationDatabase db_{database::CalibrationDatabase(":memory:", true)};
-    RecordingId recording_id_{db_.GetOrCreateRecording("", "")};
-    AssetId camera_id_{db_.GetOrCreateAsset(AssetType::Camera, 0, "")};
-    StepId image_loading_id_{-1};
+    StepId image_loading_id_;
 };
 
-TEST_F(CameraInfoFixture, TestCameraInfoStepRunner) {
-    auto const owner{steps::StepOwner::Recording(recording_id_)};
+TEST_F(CameraInfoTestFixture, TestCameraInfoStepRunner) {
 
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
-    StepId const step_id{RunStep<steps::CameraInfoStep>(owner, step, db_)};
+    StepId const step_id{RunStep<steps::CameraInfoStep>(step, db_)};
 
     auto const result{db_.CameraInfoSelect(step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
@@ -45,7 +39,7 @@ TEST_F(CameraInfoFixture, TestCameraInfoStepRunner) {
     EXPECT_EQ(result->bounds.v_min, 0);
 }
 
-TEST_F(CameraInfoFixture, TestCameraInfoStep) {
+TEST_F(CameraInfoTestFixture, TestCameraInfoStep) {
     // Build the step and check that the type and hash function are correct.
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
     EXPECT_EQ(step.Type(), StepType::CameraInfo);
