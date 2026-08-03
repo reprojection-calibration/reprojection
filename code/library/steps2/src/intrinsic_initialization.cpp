@@ -2,8 +2,16 @@
 
 #include "calibration/initialization_methods.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
+#include "logging/logging.hpp"
 
 namespace reprojection::steps {
+
+namespace {
+
+auto const log{logging::Get("steps")};
+
+}
 
 IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int const num_threads,
                                                  StepId const camera_info_id, StepId const targets_id,
@@ -30,6 +38,9 @@ void IntrinsicInitialization::Execute(StepId const step_id, database::Calibratio
         throw std::runtime_error(
             "We have no error handling strategy for failed IntrinsicInitializationStep::Compute()");
     }
+
+    log->info("{{'step_id': '{}', 'asset_id': '{}', 'camera_model': '{}', 'intrinsic: {}}}}}", step_id.value,
+              camera_id_.value, ToString(camera_info_.camera_model), *intrinsics);
 
     db.IntrinsicInsert(step_id, camera_id_, camera_info_.camera_model, CameraState{*intrinsics});
 }

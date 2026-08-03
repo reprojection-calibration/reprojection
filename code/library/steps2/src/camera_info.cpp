@@ -40,7 +40,7 @@ void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase
     CameraInfo const camera_info{camera_model_,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
-    log->debug("{{'step_id': '{}', 'asset_id': '{}', 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
+    log->info("{{'step_id': '{}', 'asset_id': '{}', 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
               step_id.value, camera_id_.value, ToString(camera_model_), camera_info.bounds.v_max,
               camera_info.bounds.u_max);
 

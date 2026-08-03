@@ -20,7 +20,7 @@ void TargetInfoStep::Execute(StepId step_id, database::CalibrationDatabase& db) 
     TargetInfo const target_info{target_.target_type, target_.size[0], target_.size[1], target_.unit_dimension,
                                  target_.asymmetric};
 
-    log->debug(
+    log->info(
         "{{'step_id': '{}', 'asset_id': '{}', 'target_info': {{'target_type': {}, 'rows': {}, 'cols': {}, "
         "'unit_dimension': {}, 'asymmetric': {}}}}}}}",
         step_id.value, target_id_.value, ToString(target_info.target_type), target_info.height, target_info.width,

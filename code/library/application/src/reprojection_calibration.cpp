@@ -8,6 +8,7 @@
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/initialize_calibration.hpp"
+#include "steps/intrinsic_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 
@@ -53,13 +54,16 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
     steps::TargetInfoStep const target_info_step{cfg.target_id, cfg.config.target};
     StepId const target_info_id{RunStep<steps::TargetInfoStep>(target_info_step, db)};
 
-    steps::FeatureExtraction const step{cfg.camera_id,  image_loading_id, cfg.config.application.show_extraction,
-                                        target_info_id, cfg.target_id,    db};
-    StepId const feature_extraction_id{RunStep<steps::FeatureExtraction>(step, db)};
+    steps::FeatureExtraction const feature_extraction_step{
+        cfg.camera_id, image_loading_id, cfg.config.application.show_extraction, target_info_id, cfg.target_id, db};
+    StepId const feature_extraction_id{RunStep<steps::FeatureExtraction>(feature_extraction_step, db)};
+
+    steps::IntrinsicInitialization const intrinsic_init_step{cfg.camera_id, cfg.config.application.threads,
+                                                             camera_info_id, feature_extraction_id, db};
+    StepId const intrinsic_init_id{RunStep<steps::IntrinsicInitialization>(intrinsic_init_step, db)};
 
     static_cast<void>(imu_input);
-    static_cast<void>(camera_info_id);
-    static_cast<void>(feature_extraction_id);
+    static_cast<void>(intrinsic_init_id);
 
     std::cout << "The future is calibrated!\n";
 }
