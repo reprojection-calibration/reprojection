@@ -19,8 +19,11 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
     : camera_id_{camera_id}, num_threads_{num_threads} {
     auto const camera_info{db.CameraInfoSelect(camera_info_id, camera_id)};
     if (not camera_info) {
-        // TODO LOG ERROR!
-        std::terminate();
+        log->error(
+            "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
+            "empty.'}}",
+            camera_info_id.value, camera_id.value);
+        std::exit(1);
     }
     camera_info_ = *camera_info;
 
@@ -32,11 +35,11 @@ Hash IntrinsicInitialization::CacheKey() const { return hashing::HashArguments(c
 void IntrinsicInitialization::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
                                                             camera_info_.bounds.u_max, targets_, num_threads_)};
-
-    // TODO UNIFY ERROR HANDLING LOGGING!
     if (not intrinsics.has_value()) {
-        throw std::runtime_error(
-            "We have no error handling strategy for failed IntrinsicInitializationStep::Compute()");
+        log->error(
+            "{{'step_id': '{}', 'asset_id': '{}', 'msg': 'Failed to initialize intrinsics.'}}",
+            step_id.value, camera_id_.value);
+        std::exit(1);
     }
 
     log->info("{{'step_id': '{}', 'asset_id': '{}', 'camera_model': '{}', 'intrinsic: {}}}}}", step_id.value,

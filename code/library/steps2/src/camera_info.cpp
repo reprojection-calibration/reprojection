@@ -26,7 +26,7 @@ void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase
     if (std::size(*images_) == 0) {
         log->error("{{'step_id': '{}', 'asset_id': '{}', 'msg': 'No images loaded.'}}", step_id.value, camera_id_.value,
                    ToString(camera_model_));
-        std::terminate();
+        std::exit(1);
     }
 
     // Check the size of the first image to get the image dimensions.
@@ -34,7 +34,7 @@ void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase
     if (img.empty()) {
         log->error("{{'step_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to decode image but result was empty.'}}",
                    step_id.value, camera_id_.value, ToString(camera_model_));
-        std::terminate();
+        std::exit(1);
     }
 
     CameraInfo const camera_info{camera_model_,

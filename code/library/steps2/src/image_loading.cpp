@@ -27,16 +27,17 @@ void ImageLoading::Execute(StepId const step_id, database::CalibrationDatabase& 
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error(std::format("cv::imencode() failed for asset_id {} at timestamp_ns {}",
-                                                 camera_id_.value, timestamp_ns));  // LCOV_EXCL_LINE
+            log->error("{{'step_id': '{}', 'asset_id': '{}', 'msg': 'cv::imencode() failed at timestamp_ns {}.'}}",
+                       step_id.value, camera_id_.value, timestamp_ns);
+            std::exit(1);
         }
 
         encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});
 
         ++num_images;
         if (num_images % 50 == 0) {
-            log->debug("{{'step': '{}', 'stage': '{}', 'asset_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
-                       ToString(StepType()), "Compute()", camera_id_.value, num_images);       // LCOV_EXCL_LINE
+            log->debug("{{'step_id': '{}', 'asset_id': '{}', 'num_images': {}}}", step_id.value, camera_id_.value,
+                       num_images);
         }
     }
 
