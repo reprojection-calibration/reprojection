@@ -7,6 +7,7 @@ set(SRC_FILES
         src/imu_data_loading.cpp
         src/initialize_calibration.cpp
         src/intrinsic_initialization.cpp
+        src/pose_initialization.cpp
         src/target_info.cpp
 )
 
