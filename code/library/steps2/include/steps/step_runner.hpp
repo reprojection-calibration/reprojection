@@ -1,8 +1,15 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
+#include "logging/logging.hpp"
 
 namespace reprojection::steps {
+
+namespace {
+
+auto const log{logging::Get("steps")};
+
+}
 
 template <typename T>
 concept IsRunnableStep = requires(T const& step, StepId const id, database::CalibrationDatabase& db) {
@@ -15,8 +22,11 @@ template <typename T>
     requires IsRunnableStep<T>
 StepId RunStep(T const& step, database::CalibrationDatabase& db) {
     Hash const cache_key{step.CacheKey()};
-
     auto const [step_id, cache_status]{db.GetOrCreateStep(step.Type(), cache_key)};
+
+    log->info("{{'step_type': '{}', 'cache_status': '{}', 'step_id': {}, 'cache_key': '{}'}}", ToString(step.Type()),
+              ToString(cache_status), step_id.value, cache_key.value);
+
     if (cache_status == CacheStatus::CacheHit) {
         return step_id;
     }
