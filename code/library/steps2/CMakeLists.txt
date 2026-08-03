@@ -6,6 +6,7 @@ set(SRC_FILES
         src/image_loading.cpp
         src/imu_data_loading.cpp
         src/initialize_calibration.cpp
+        src/intrinsic_initialization.cpp
         src/target_info.cpp
 )
 
@@ -40,6 +41,7 @@ set(TESTS
         test/image_loading.test.cpp
         test/imu_data_loading.test.cpp
         test/initialize_calibration.test.cpp
+        test/intrinsic_initialization.test.cpp
         test/step_runner.test.cpp
         test/target_info.test.cpp
 )

@@ -31,7 +31,7 @@ void IntrinsicInitialization::Execute(StepId const step_id, database::Calibratio
             "We have no error handling strategy for failed IntrinsicInitializationStep::Compute()");
     }
 
-    // TODO WRITE TO DB!
+    db.IntrinsicInsert(step_id, camera_id_, camera_info_.camera_model, CameraState{*intrinsics});
 }
 
 }  // namespace reprojection::steps
