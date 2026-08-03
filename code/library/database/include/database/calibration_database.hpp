@@ -37,6 +37,10 @@ class CalibrationDatabase {
 
     std::optional<CameraInfo> CameraInfoSelect(StepId step_id, AssetId asset_id) const;
 
+    void CameraPosesInsert(StepId step_id, StepId source_step_id, AssetId asset_id, Frames const& camera_poses) const;
+
+    Frames CameraPosesSelect(StepId step_id, AssetId asset_id) const;
+
     void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data) const;
 
     EncodedImages ImagesSelect(StepId step_id, AssetId asset_id) const;
@@ -48,7 +52,7 @@ class CalibrationDatabase {
     void IntrinsicInsert(StepId step_id, AssetId asset_id, CameraModel camera_model, CameraState const& data) const;
 
     // TODO(Jack): Should this also return the camera_model? We have that information.
-    std::optional<CameraState>  IntrinsicSelect(StepId step_id, AssetId asset_id) const;
+    std::optional<CameraState> IntrinsicSelect(StepId step_id, AssetId asset_id) const;
 
     void ExtractedTargetsInsert(StepId step_id, StepId source_step_id, AssetId asset_id,
                                 CameraMeasurements const& data) const;

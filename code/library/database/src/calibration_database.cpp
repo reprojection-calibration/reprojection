@@ -47,6 +47,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
     if (not read_only) {
         ExecuteStatement(sql_statements::assets_table, db_);
         ExecuteStatement(sql_statements::camera_info_table, db_);
+        ExecuteStatement(sql_statements::camera_poses_table, db_);
         ExecuteStatement(sql_statements::extracted_targets_table, db_);
         ExecuteStatement(sql_statements::images_table, db_);
         ExecuteStatement(sql_statements::imu_data_table, db_);
@@ -151,6 +152,40 @@ std::optional<CameraInfo> CalibrationDatabase::CameraInfoSelect(StepId const ste
         });
 
     return camera_info;
+}
+
+void CalibrationDatabase::CameraPosesInsert(StepId const step_id, StepId source_step_id, AssetId const asset_id,
+                                            Frames const& camera_poses) const {
+    auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, frame] = data_i;
+
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, source_step_id.value);
+        Bind(stmt, 3, asset_id.value);
+        Bind(stmt, 4, timestamp_ns);
+        BindEigenColumn<Array6d>(stmt, 5, frame.pose);
+    }};
+
+    BatchExecuteStatement(sql_statements::camera_poses_insert, camera_poses, binder, db_);
+}
+
+Frames CalibrationDatabase::CameraPosesSelect(StepId step_id, AssetId asset_id) const {
+    Frames data;
+
+    ExecuteQuery(
+        db_, sql_statements::camera_poses_select,
+        [step_id, asset_id](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+        },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+            Array6d const loaded{ReadEigenColumn<6>(stmt, 1)};
+
+            data.insert(Frame{timestamp_ns, loaded});
+        });
+
+    return data;
 }
 
 void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) const {
