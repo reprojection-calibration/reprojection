@@ -13,6 +13,7 @@
 #include "steps/pose_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
+#include "steps/imu_data_loading.hpp"
 
 #include "io.hpp"
 
@@ -77,8 +78,14 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
                                                          db};
     StepId const bundle_adjustment_id{RunStep<steps::BundleAdjustment>(bundle_adjustment_step, db)};
 
-    static_cast<void>(imu_input);
     static_cast<void>(bundle_adjustment_id);
+
+    if (cfg.imu_id.has_value() and imu_input.has_value()) {
+        steps::ImuDataLoading const imu_data_loading_step{*cfg.imu_id, imu_input->signature, imu_input->source};
+        StepId const imu_data_loading_id{steps::RunStep<steps::ImuDataLoading>(imu_data_loading_step, db)};
+
+        static_cast<void>(imu_data_loading_id);
+    }
 
     std::cout << "The future is calibrated!\n";
 }
