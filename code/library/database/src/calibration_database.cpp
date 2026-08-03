@@ -241,6 +241,27 @@ void CalibrationDatabase::IntrinsicInsert(StepId const step_id, AssetId const as
     ExecuteStatement(sql_statements::intrinsics_insert, binder, db_);
 }
 
+std::optional<CameraState> CalibrationDatabase::IntrinsicSelect(StepId step_id, AssetId asset_id) const {
+    std::optional<CameraState> intrinsic;
+
+    ExecuteQuery(
+        db_, sql_statements::intrinsics_select,
+        [step_id, asset_id](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+        },
+        [&intrinsic](sqlite3_stmt* const stmt) {
+            CameraModel const camera_model{
+                ToCameraModel(std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0))))};
+
+            CameraState const result{
+                FromToml(camera_model, std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1))))};
+            intrinsic = result;
+        });
+
+    return intrinsic;
+}
+
 // NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship between
 // two data tables.
 void CalibrationDatabase::ExtractedTargetsInsert(StepId const step_id, StepId const source_step_id,

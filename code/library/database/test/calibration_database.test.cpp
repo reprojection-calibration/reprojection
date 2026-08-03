@@ -184,9 +184,18 @@ TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
     auto const step{db.GetOrCreateStep(StepType::IntrinsicInitialization, "")};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
 
-    EXPECT_NO_THROW(db.IntrinsicInsert(step.first, asset_id, CameraModel::Pinhole, CameraState{Array4d{1, 2, 3, 4}}));
+    CameraState const intrinsic{Array3d{1, 2, 3}};
 
+    EXPECT_NO_THROW(db.IntrinsicInsert(step.first, asset_id, CameraModel::Pinhole, intrinsic));
 
+    auto result{db.IntrinsicSelect(step.first, asset_id)};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(result->intrinsics.isApprox(intrinsic.intrinsics));
+
+    EXPECT_NO_THROW(result = db.IntrinsicSelect(StepId{111}, asset_id));
+    EXPECT_FALSE(result.has_value());
+    EXPECT_NO_THROW(result = db.IntrinsicSelect(step.first, AssetId{111}));
+    EXPECT_FALSE(result.has_value());
 }
 
 class ExtractedTargetsFixture : public ::testing::Test {
