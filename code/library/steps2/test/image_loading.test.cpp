@@ -6,11 +6,11 @@
 
 #include "steps/step_runner.hpp"
 
+#include "test_fixture.hpp"
+
 using namespace reprojection;
 
-// TODO(Jack): We should define a global project constant for the hash of an empty string.
-
-class ImageSamplerFixture : public ::testing::Test {
+class ImageLoadingFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         // Build the encoded images (cv::Mat -> serialized buffer)
@@ -40,39 +40,29 @@ class ImageSamplerFixture : public ::testing::Test {
     ImageSampler image_sampler_;
 };
 
-TEST_F(ImageSamplerFixture, TestImageLoadingStepRunner) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
-    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    auto const owner{steps::StepOwner::Recording(recording_id)};
+TEST_F(ImageLoadingFixture, TestImageLoadingStepRunner) {
+    steps::ImageLoading const step{camera_id_, "", image_sampler_};
+    StepId const step_id{RunStep<steps::ImageLoading>(step, db_)};
 
-    AssetId const camera_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
-    steps::ImageLoading const step{camera_id, "", image_sampler_};
-
-    StepId const step_id{RunStep<steps::ImageLoading>(owner, step, db)};
-
-    auto const result{db.ImagesSelect(step_id, camera_id)};
+    auto const result{db_.ImagesSelect(step_id, camera_id_)};
     EXPECT_EQ(std::size(result), std::size(*encoded_images_));
     for (auto const timestamp_ns : *encoded_images_ | std::views::keys) {
         EXPECT_EQ(std::size(result.at(timestamp_ns).data), std::size(encoded_images_->at(timestamp_ns).data));
     }
 }
 
-TEST_F(ImageSamplerFixture, TestImageLoadingStep) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
-    AssetId const camera_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
-
+TEST_F(ImageLoadingFixture, TestImageLoadingStep) {
     // Build the step and check that the type and hash function are correct.
-    steps::ImageLoading const step{camera_id, "", image_sampler_};
+    steps::ImageLoading const step{camera_id_, "", image_sampler_};
     EXPECT_EQ(step.Type(), StepType::ImageLoading);
     EXPECT_EQ(step.CacheKey().value, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
     // Build the actual database step id and execute the step.
-    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    auto const [step_id, _]{db.GetOrCreateStep(StepType::ImageLoading, "")};
-    EXPECT_NO_THROW(step.Execute(step_id, db));
+    StepId const step_id{db_.GetOrCreateStep(StepType::ImageLoading, "").first};
+    EXPECT_NO_THROW(step.Execute(step_id, db_));
 
     // Load the images and compare them to the known input.
-    auto const result{db.ImagesSelect(step_id, camera_id)};
+    auto const result{db_.ImagesSelect(step_id, camera_id_)};
     EXPECT_EQ(std::size(result), std::size(*encoded_images_));
     for (auto const timestamp_ns : *encoded_images_ | std::views::keys) {
         EXPECT_EQ(std::size(result.at(timestamp_ns).data), std::size(encoded_images_->at(timestamp_ns).data));
