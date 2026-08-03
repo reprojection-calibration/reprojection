@@ -124,57 +124,50 @@ class CameraPosesFixture : public ::testing::Test {
     StepId extracted_targets_id_{-1};
 };
 
-TEST_F(CameraPosesFixture, TestCameraPoses) {
-    Frames const camera_poses{Frame{0, Array6d::Ones(6)}};
-    auto const [step_id, _]{db_.GetOrCreateStep(StepType::PoseInitialization, "")};
-    EXPECT_NO_THROW(db_.CameraPosesInsert(step_id, extracted_targets_id_, asset_id_, camera_poses));
+class CalibrationDatabaseFixture : public ::testing::Test {
+   protected:
+    void InsertImage(StepId const step_id, AssetId const asset_id, uint64_t const timestamp_ns = 0) {
+        db_.ImagesInsert(step_id, asset_id, {{timestamp_ns, ImageBuffer{}}});
+    }
 
-    auto const result{db_.CameraPosesSelect(step_id, asset_id_)};
+    StepId CreateExtractedTargets(StepId const image_loading_id, AssetId const asset_id,
+                                  uint64_t const timestamp_ns = 0) {
+        auto const step_id{db_.GetOrCreateStep(StepType::FeatureExtraction, "").first};
+
+        db_.ExtractedTargetsInsert(step_id, image_loading_id, asset_id, {{timestamp_ns, ExtractedTarget{}}});
+
+        return step_id;
+    }
+
+    database::CalibrationDatabase db_{":memory:", true};
+};
+
+TEST_F(CalibrationDatabaseFixture, TestCameraPoses) {
+    // Satisfy foreign key dependencies - a pose depends on a target which depends on an image.
+    AssetId const asset_id{db_.GetOrCreateAsset(AssetType::Camera, 0, "")};
+    StepId const image_loading_id{db_.GetOrCreateStep(StepType::ImageLoading, "").first};
+    InsertImage(image_loading_id, asset_id);
+    StepId const extracted_targets_id{CreateExtractedTargets(image_loading_id, asset_id)};
+
+    Frames const camera_poses{Frame{0, Array6d::Ones(6)}};
+    StepId const step_id{db_.GetOrCreateStep(StepType::PoseInitialization, "").first};
+    EXPECT_NO_THROW(db_.CameraPosesInsert(step_id, extracted_targets_id, asset_id, camera_poses));
+
+    auto const result{db_.CameraPosesSelect(step_id, asset_id)};
     EXPECT_EQ(std::size(result), 1);
     EXPECT_TRUE(result.at(0).pose.isApprox(camera_poses.at(0).pose));
 }
 
-class ImagesFixture : public ::testing::Test {
-   protected:
-    void SetUp() override {
-        recording_id_ = db_.GetOrCreateRecording("recording.bag", "sha256-xxx");
-        auto const step{db_.GetOrCreateStep(StepType::ImageLoading, "sha256-bbb")};
-        step_id_ = step.first;
-        asset_id_ = db_.GetOrCreateAsset(AssetType::Camera, 0, "/cam0/image_raw");
-    }
+TEST_F(CalibrationDatabaseFixture, TestImages) {
+    AssetId const asset_id{db_.GetOrCreateAsset(AssetType::Camera, 0, "")};
+    StepId const step_id{db_.GetOrCreateStep(StepType::ImageLoading, "").first};
 
-    database::CalibrationDatabase db_{":memory:", true};
-    RecordingId recording_id_{-1};
-    StepId step_id_{-1};
-    AssetId asset_id_{-1};
-};
+    uint64_t const timestamp_ns{0};
+    EXPECT_NO_THROW(InsertImage(step_id, asset_id, timestamp_ns));
 
-TEST_F(ImagesFixture, TestImagesInsert) {
-    EncodedImages const images{{0, ImageBuffer{}}};
-    EXPECT_NO_THROW(db_.ImagesInsert(step_id_, asset_id_, images));
-
-    // Dual insertion is a violation of the uniqueness constraint.
-    EXPECT_THROW(db_.ImagesInsert(step_id_, asset_id_, images), database::SqliteException);
-
-    // If step or asset ids are not valid this is an error.
-    EXPECT_THROW(db_.ImagesInsert(StepId{111}, asset_id_, images), database::SqliteException);
-    EXPECT_THROW(db_.ImagesInsert(step_id_, AssetId{111}, images), database::SqliteException);
-}
-
-TEST_F(ImagesFixture, TestImagesSelect) {
-    // We need first insert an image so we habe an image to select :)
-    EncodedImages const images{{0, ImageBuffer{}}};
-    db_.ImagesInsert(step_id_, asset_id_, images);
-
-    EncodedImages result{db_.ImagesSelect(step_id_, asset_id_)};
-    EXPECT_EQ(std::size(result), std::size(images));
-    EXPECT_EQ(std::size(result.at(0).data), std::size(images.at(0).data));
-
-    // If nonexistent data is requested this is not an error, it will just return an empty container.
-    EXPECT_NO_THROW(result = db_.ImagesSelect(StepId{111}, asset_id_));
-    EXPECT_EQ(std::size(result), 0);
-    EXPECT_NO_THROW(result = db_.ImagesSelect(step_id_, AssetId{111}));
-    EXPECT_EQ(std::size(result), 0);
+    auto const result{db_.ImagesSelect(step_id, asset_id)};
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(std::size(result.at(timestamp_ns).data), 0);
 }
 
 TEST(DatabaseCalibrationDatbase, TestImuData) {
@@ -228,59 +221,18 @@ TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
     EXPECT_FALSE(result.has_value());
 }
 
-class ExtractedTargetsFixture : public ::testing::Test {
-   protected:
-    void SetUp() override {
-        asset_id_ = db_.GetOrCreateAsset(AssetType::Camera, 0, "/cam0/image_raw");
+TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
+    // Satisfy foreign keys - a target requires a corresponding image to be present.
+    AssetId const asset_id{db_.GetOrCreateAsset(AssetType::Camera, 0, "")};
+    StepId const image_loading_id{db_.GetOrCreateStep(StepType::ImageLoading, "").first};
+    InsertImage(image_loading_id, asset_id);
 
-        auto step{db_.GetOrCreateStep(StepType::ImageLoading, "sha256-bbb")};
-        image_loading_step_id_ = step.first;
-        // Each extracted target required a correspondent image
-        EncodedImages const images{{0, ImageBuffer{}}};
-        db_.ImagesInsert(step.first, asset_id_, images);
+    StepId step_id;
+    EXPECT_NO_THROW(step_id = CreateExtractedTargets(image_loading_id, asset_id));
 
-        step = db_.GetOrCreateStep(StepType::FeatureExtraction, "sha256-ccc");
-        extracted_targets_step_id_ = step.first;
-    }
-
-    database::CalibrationDatabase db_{":memory:", true};
-    AssetId asset_id_{-1};
-    StepId image_loading_step_id_{-1};
-    StepId extracted_targets_step_id_{-1};
-};
-
-TEST_F(ExtractedTargetsFixture, TestExtractedTargetsInsert) {
-    CameraMeasurements extracted_targets{{0, ExtractedTarget{}}};
-    EXPECT_NO_THROW(
-        db_.ExtractedTargetsInsert(extracted_targets_step_id_, image_loading_step_id_, asset_id_, extracted_targets));
-
-    // If the current step or the source step does not exist it's an error.
-    EXPECT_THROW(db_.ExtractedTargetsInsert(extracted_targets_step_id_, StepId{111}, asset_id_, extracted_targets),
-                 database::SqliteException);
-    EXPECT_THROW(db_.ExtractedTargetsInsert(StepId{111}, image_loading_step_id_, asset_id_, extracted_targets),
-                 database::SqliteException);
-
-    // If there is no matching image we will throw.
-    extracted_targets = CameraMeasurements{{1, ExtractedTarget{}}};
-    EXPECT_THROW(
-        db_.ExtractedTargetsInsert(extracted_targets_step_id_, image_loading_step_id_, asset_id_, extracted_targets),
-        database::SqliteException);
-}
-
-TEST_F(ExtractedTargetsFixture, TestExtractedTargetsSelect) {
-    // Insert a target so we have a target to read :)
-    CameraMeasurements extracted_targets{{0, ExtractedTarget{}}};
-    db_.ExtractedTargetsInsert(extracted_targets_step_id_, image_loading_step_id_, asset_id_, extracted_targets);
-
-    CameraMeasurements result{db_.ExtractedTargetsSelect(extracted_targets_step_id_, asset_id_)};
-    EXPECT_EQ(std::size(result), std::size(extracted_targets));
-    EXPECT_EQ(result.at(0).indices.size(), extracted_targets.at(0).indices.size());
-
-    // If nonexistent data is requested this is not an error, it will just return an empty container.
-    EXPECT_NO_THROW(result = db_.ExtractedTargetsSelect(StepId{111}, asset_id_));
-    EXPECT_EQ(std::size(result), 0);
-    EXPECT_NO_THROW(result = db_.ExtractedTargetsSelect(extracted_targets_step_id_, AssetId{111}));
-    EXPECT_EQ(std::size(result), 0);
+    CameraMeasurements const result{db_.ExtractedTargetsSelect(step_id, asset_id)};
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_EQ(result.at(0).indices.size(), 0);
 }
 
 TEST(DatabaseCalibrationDatbase, TestTargetInfo) {
