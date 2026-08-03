@@ -8,14 +8,12 @@ using namespace reprojection;
 
 TEST(StepsTargetInfo, TestTargetInfoStepRunner) {
     auto db{database::CalibrationDatabase(":memory:", true)};
-    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    auto const owner{steps::StepOwner::Recording(recording_id)};
 
     AssetId const target_id{db.GetOrCreateAsset(AssetType::Target, 0, "")};
     config::Config::Target const target{TargetType::Aprilgrid3, {1, 2}};
     steps::TargetInfoStep const step{target_id, target};
 
-    StepId const step_id{RunStep<steps::TargetInfoStep>(owner, step, db)};
+    StepId const step_id{RunStep<steps::TargetInfoStep>(step, db)};
 
     auto const result{db.TargetInfoSelect(step_id, target_id)};
     ASSERT_TRUE(result.has_value());
@@ -33,7 +31,6 @@ TEST(StepsTargetInfo, TestTargetInfoStep) {
     EXPECT_EQ(step.Type(), StepType::TargetInfo);
     EXPECT_EQ(step.CacheKey().value, "03d5d5226dde69073fd8d1b0813738058bfb75bff151dfced9b636374ae0ff5b");
 
-    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
     auto const [step_id, _]{db.GetOrCreateStep(StepType::TargetInfo, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db));
 
