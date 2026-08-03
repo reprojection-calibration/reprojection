@@ -38,6 +38,7 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        test/bundle_adjustment.test.cpp
         test/camera_info.test.cpp
         test/feature_extraction.test.cpp
         test/image_loading.test.cpp
