@@ -66,6 +66,8 @@ void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase& db
 
     db.CameraPosesInsert(step_id, targets_id_, camera_id_, optimized_state.frames);
     db.IntrinsicInsert(step_id, camera_id_, camera_info_.camera_model, optimized_state.camera_state);
+
+    // TODO(Jack): We need to calculate and insert the reprojection errors!
 }
 
 // WARN(Jack): This is a hack that we need to do so that the spline initialization does not have any massive

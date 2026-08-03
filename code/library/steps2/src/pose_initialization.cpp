@@ -47,6 +47,8 @@ void PoseInitialization::Execute(StepId step_id, database::CalibrationDatabase& 
               camera_id_.value, std::size(targets_), std::size(camera_poses));
 
     db.CameraPosesInsert(step_id, targets_id_, camera_id_, camera_poses);
+
+    // TODO(Jack): We need to calculate and insert the reprojection errors!
 }
 
 }  // namespace reprojection::steps
