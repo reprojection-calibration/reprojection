@@ -18,7 +18,6 @@ struct RecordingId {
     friend constexpr bool operator==(RecordingId const&, RecordingId const&) = default;
 };
 
-
 struct StepId {
     int64_t value;
 
@@ -69,6 +68,7 @@ enum class StepType {
     ImageLoading,
     ImuDataLoading,
     IntrinsicInitialization,
+    PoseInitialization,
     TargetInfo,
 };
 
@@ -81,8 +81,10 @@ inline std::string ToString(StepType const data) {
         return "image_loading";
     } else if (data == StepType::ImuDataLoading) {
         return "imu_data_loading";
-    }else if (data == StepType::IntrinsicInitialization) {
+    } else if (data == StepType::IntrinsicInitialization) {
         return "intrinsic_initialization";
+    } else if (data == StepType::PoseInitialization) {
+        return "pose_initialization";
     } else if (data == StepType::TargetInfo) {
         return "target_info";
     } else {

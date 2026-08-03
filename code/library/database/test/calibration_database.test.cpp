@@ -104,6 +104,36 @@ TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
     EXPECT_FALSE(result.has_value());
 }
 
+// TODO(Jack): There is a lot of copy and paste going on with the fixtures! This mainly comes from the foreign key
+// constraints of the extracted targets/camera poses/etc. Can we just use one single fixture for everything?
+class CameraPosesFixture : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        StepId const image_loading_step_id{db_.GetOrCreateStep(StepType::ImageLoading, "").first};
+        // Each extracted target required a correspondent image
+        EncodedImages const images{{0, ImageBuffer{}}};
+        db_.ImagesInsert(image_loading_step_id, asset_id_, images);
+
+        extracted_targets_id_ = db_.GetOrCreateStep(StepType::FeatureExtraction, "").first;
+        CameraMeasurements extracted_targets{{0, ExtractedTarget{}}};
+        db_.ExtractedTargetsInsert(extracted_targets_id_, image_loading_step_id, asset_id_, extracted_targets);
+    }
+
+    database::CalibrationDatabase db_{":memory:", true};
+    AssetId asset_id_{db_.GetOrCreateAsset(AssetType::Camera, 0, "")};
+    StepId extracted_targets_id_{-1};
+};
+
+TEST_F(CameraPosesFixture, TestCameraPoses) {
+    Frames const camera_poses{Frame{0, Array6d::Ones(6)}};
+    auto const [step_id, _]{db_.GetOrCreateStep(StepType::PoseInitialization, "")};
+    EXPECT_NO_THROW(db_.CameraPosesInsert(step_id, extracted_targets_id_, asset_id_, camera_poses));
+
+    auto const result{db_.CameraPosesSelect(step_id, asset_id_)};
+    EXPECT_EQ(std::size(result), 1);
+    EXPECT_TRUE(result.at(0).pose.isApprox(camera_poses.at(0).pose));
+}
+
 class ImagesFixture : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -230,7 +260,7 @@ TEST_F(ExtractedTargetsFixture, TestExtractedTargetsInsert) {
     EXPECT_THROW(db_.ExtractedTargetsInsert(StepId{111}, image_loading_step_id_, asset_id_, extracted_targets),
                  database::SqliteException);
 
-    // If there is not matching image we will throw.
+    // If there is no matching image we will throw.
     extracted_targets = CameraMeasurements{{1, ExtractedTarget{}}};
     EXPECT_THROW(
         db_.ExtractedTargetsInsert(extracted_targets_step_id_, image_loading_step_id_, asset_id_, extracted_targets),
