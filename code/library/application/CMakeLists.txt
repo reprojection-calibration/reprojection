@@ -4,7 +4,6 @@ set(SRC_FILES
         src/cli_utils.cpp
         src/io.cpp
         src/reprojection_calibration.cpp
-        src/utils.cpp
 )
 
 set(LINK_LIBRARIES
@@ -35,7 +34,6 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        src/utils.test.cpp
         src/io.test.cpp
         test/cli_utils.test.cpp
         test/reprojection_calibration.test.cpp

@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "steps2")
 
 set(SRC_FILES
+        src/bundle_adjustment.cpp
         src/camera_info.cpp
         src/feature_extraction.cpp
         src/image_loading.cpp

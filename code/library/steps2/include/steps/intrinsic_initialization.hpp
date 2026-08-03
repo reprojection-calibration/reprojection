@@ -1,12 +1,12 @@
 #pragma once
 
-#include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
 
 namespace reprojection::steps {
 
 struct IntrinsicInitialization {
-    IntrinsicInitialization(AssetId camera_id, int num_threads, StepId camera_info_id, StepId targets_id, database::CalibrationDatabase& db);
+    IntrinsicInitialization(AssetId camera_id, int num_threads, StepId camera_info_id, StepId targets_id,
+                            database::CalibrationDatabase& db);
 
     static StepType Type() { return StepType::IntrinsicInitialization; }
 

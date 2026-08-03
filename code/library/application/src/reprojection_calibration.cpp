@@ -67,6 +67,7 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
                                                    intrinsic_init_id, db};
     StepId const pose_init_id{RunStep<steps::PoseInitialization>(pose_init_step, db)};
 
+
     static_cast<void>(imu_input);
     static_cast<void>(pose_init_id);
 
