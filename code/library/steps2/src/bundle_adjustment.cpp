@@ -5,6 +5,7 @@
 #include <ranges>
 
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 
@@ -54,9 +55,14 @@ void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase& db
     auto const aligned_initial_state{AlignRotations({intrinsics_, camera_poses_})};
 
     auto const [optimized_state,
-                _]{optimization::BundleAdjustment(camera_info_, targets_, aligned_initial_state, num_threads_)};
+                debug]{optimization::BundleAdjustment(camera_info_, targets_, aligned_initial_state, num_threads_)};
 
-    // TODO LOG!
+    log->info(
+        "{{'step_id': '{}', 'asset_id': '{}', 'camera_model': '{}', 'intrinsic: {}, 'intial_cost': {:.2f}, "
+        "'final_cost': {:.2f}, 'num_successful_steps': {}, , 'num_unsuccessful_steps': {}}}}}",
+        step_id.value, camera_id_.value, ToString(camera_info_.camera_model), optimized_state.camera_state.intrinsics,
+        debug.solver_summary.initial_cost, debug.solver_summary.final_cost, debug.solver_summary.num_successful_steps,
+        debug.solver_summary.num_unsuccessful_steps);
 
     db.CameraPosesInsert(step_id, targets_id_, camera_id_, optimized_state.frames);
     db.IntrinsicInsert(step_id, camera_id_, camera_info_.camera_model, optimized_state.camera_state);

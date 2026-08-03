@@ -4,6 +4,7 @@
 
 #include "config/config_parse.hpp"
 #include "logging/logging.hpp"
+#include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
@@ -67,9 +68,17 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
                                                    intrinsic_init_id, db};
     StepId const pose_init_id{RunStep<steps::PoseInitialization>(pose_init_step, db)};
 
+    steps::BundleAdjustment const bundle_adjustment_step{cfg.camera_id,
+                                                         feature_extraction_id,
+                                                         cfg.config.application.threads,
+                                                         camera_info_id,
+                                                         intrinsic_init_id,
+                                                         pose_init_id,
+                                                         db};
+    StepId const bundle_adjustment_id{RunStep<steps::BundleAdjustment>(bundle_adjustment_step, db)};
 
     static_cast<void>(imu_input);
-    static_cast<void>(pose_init_id);
+    static_cast<void>(bundle_adjustment_id);
 
     std::cout << "The future is calibrated!\n";
 }
