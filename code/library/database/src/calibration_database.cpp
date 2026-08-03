@@ -9,6 +9,7 @@
 #include "database_semantics.hpp"
 #include "serialization.hpp"
 #include "sqlite_helpers.hpp"
+#include "toml_converters.hpp"
 
 namespace reprojection::database {
 
@@ -49,6 +50,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
         ExecuteStatement(sql_statements::extracted_targets_table, db_);
         ExecuteStatement(sql_statements::images_table, db_);
         ExecuteStatement(sql_statements::imu_data_table, db_);
+        ExecuteStatement(sql_statements::intrinsics_table, db_);
         ExecuteStatement(sql_statements::recordings_table, db_);
         ExecuteStatement(sql_statements::steps_table, db_);
         ExecuteStatement(sql_statements::target_info_table, db_);
@@ -225,6 +227,18 @@ ImuMeasurements CalibrationDatabase::ImuDataSelect(StepId const step_id, AssetId
         });
 
     return data;
+}
+
+void CalibrationDatabase::IntrinsicInsert(StepId const step_id, AssetId const asset_id, CameraModel const camera_model,
+                                          CameraState const& data) const {
+    auto const binder{[step_id, asset_id, camera_model, data](sqlite3_stmt* const stmt) {
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, asset_id.value);
+        Bind(stmt, 3, ToString(camera_model));
+        Bind(stmt, 4, ToToml(camera_model, data.intrinsics));
+    }};
+
+    ExecuteStatement(sql_statements::intrinsics_insert, binder, db_);
 }
 
 // NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship between

@@ -45,6 +45,8 @@ class CalibrationDatabase {
 
     ImuMeasurements ImuDataSelect(StepId step_id, AssetId asset_id) const;
 
+    void IntrinsicInsert(StepId step_id, AssetId asset_id, CameraModel camera_model, CameraState const& data) const;
+
     void ExtractedTargetsInsert(StepId step_id, StepId source_step_id, AssetId asset_id,
                                 CameraMeasurements const& data) const;
 

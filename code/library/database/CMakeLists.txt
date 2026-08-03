@@ -22,6 +22,9 @@ set(SQL_FILES
         imu_data_insert.sql
         imu_data_select.sql
         imu_data_table.sql
+        intrinsics_insert.sql
+        intrinsics_select.sql
+        intrinsics_table.sql
         recordings_insert.sql
         recordings_select.sql
         recordings_table.sql

@@ -9,7 +9,7 @@
 
 using namespace reprojection;
 
-TEST(Yyy, TestGetOrCreateAsset) {
+TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
     // Repeated insert returns the same id with no problems.
@@ -34,7 +34,7 @@ TEST(Yyy, TestGetOrCreateAsset) {
     EXPECT_THROW(db.GetOrCreateAsset(AssetType::Imu, 2, "/cam1/image_raw"), database::SqliteException);
 }
 
-TEST(Ggg, TestGetOrCreateRecording) {
+TEST(DatabaseCalibrationDatbase, TestGetOrCreateRecording) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
     // Repeated insert with matching name and hash is no problem!
@@ -175,6 +175,20 @@ TEST(DatabaseCalibrationDatbase, TestImuData) {
     EXPECT_EQ(std::size(result), 0);
 }
 
+TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
+    database::CalibrationDatabase db{":memory:", true};
+
+    // TODO(Jack): We absolutely need to add logic to the database that checks the owning step for a camera intrinsic is
+    // valid (ex. comes from a step which produces an intrinsic) and that the asset id is a camera. We need this kind of
+    // checks for all steps, not just here.
+    auto const step{db.GetOrCreateStep(StepType::IntrinsicInitialization, "")};
+    AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
+
+    EXPECT_NO_THROW(db.IntrinsicInsert(step.first, asset_id, CameraModel::Pinhole, CameraState{Array4d{1, 2, 3, 4}}));
+
+
+}
+
 class ExtractedTargetsFixture : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -230,7 +244,7 @@ TEST_F(ExtractedTargetsFixture, TestExtractedTargetsSelect) {
     EXPECT_EQ(std::size(result), 0);
 }
 
-TEST(Qqq, TestTargetInfo) {
+TEST(DatabaseCalibrationDatbase, TestTargetInfo) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
     // Satisfy foreign key constraints
