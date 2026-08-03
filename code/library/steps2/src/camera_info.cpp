@@ -1,8 +1,15 @@
 #include "steps/camera_info.hpp"
 
 #include "hashing/hashing.hpp"
+#include "logging/logging.hpp"
 
 namespace reprojection::steps {
+
+namespace {
+
+auto const log{logging::Get("steps")};
+
+}
 
 CameraInfoStep::CameraInfoStep(AssetId const camera_id, StepId const image_loading_id, CameraModel const camera_model,
                                database::CalibrationDatabase& db)
@@ -10,31 +17,32 @@ CameraInfoStep::CameraInfoStep(AssetId const camera_id, StepId const image_loadi
       camera_model_{camera_model},
       images_{std::make_shared<EncodedImages>(db.ImagesSelect(image_loading_id, camera_id))} {}
 
-Hash CameraInfoStep::CacheKey() const {
-    return hashing::HashArguments(camera_model_, *images_);
-}
+Hash CameraInfoStep::CacheKey() const { return hashing::HashArguments(camera_model_, *images_); }
 
 void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
-    // TODO(Jack): Is this really a good error handling strategy? What does this look like to the user/application side?
-    // Should this be checked in the constructor? Problem with that is that we cant artificially trigger a cache hit
-    // then.
+    // TODO(Jack): Should this be checked in the constructor? Problem with that is that we cant artificially trigger a
+    // cache hit then. But it seems like if we can already know this is a problem then that we should not let
+    // construction finish.
     if (std::size(*images_) == 0) {
-        throw std::runtime_error(
-            std::format("Camera info step called with no images loaded - "
-                        "step id {}, camera model {}",
-                        step_id.value, ToString(camera_model_)));
+        log->error("{{'step_id': '{}', 'asset_id': '{}', 'msg': 'No images loaded.'}}", step_id.value, camera_id_.value,
+                   ToString(camera_model_));
+        std::terminate();
     }
 
-    // Arbitrarily check the size of the first image - in the constructor we already checked to make sure that there is
-    // at least one image so this should be safe.
+    // Check the size of the first image to get the image dimensions.
     cv::Mat const img{cv::imdecode(images_->begin()->second.data, cv::IMREAD_COLOR)};
-    // TOD0(Jack): Can we have a more uniform and traceable error handling strategy? Here and in the constructor.
     if (img.empty()) {
-        throw std::runtime_error("Attempted to decode image in CameraInfoStep, result was empty! ");
+        log->error("{{'step_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to decode image but result was empty.'}}",
+                   step_id.value, camera_id_.value, ToString(camera_model_));
+        std::terminate();
     }
 
     CameraInfo const camera_info{camera_model_,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
+
+    log->info("{{'step_id': '{}', 'asset_id': '{}', 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
+              step_id.value, camera_id_.value, ToString(camera_model_), camera_info.bounds.v_max,
+              camera_info.bounds.u_max);
 
     db.CameraInfoInsert(step_id, camera_id_, camera_info);
 }

@@ -3,7 +3,7 @@
 
 #include <toml++/toml.hpp>
 
-#include "../../steps2/include/steps/initialize_calibration.hpp"
+#include "steps/initialize_calibration.hpp"
 #include "application/reprojection_calibration.hpp"
 #include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
@@ -37,15 +37,22 @@ int main() {
     // essentially what we are doing here in the following block. The reason that we put it into a try catch block is to
     // prevent the database throwing and killing the program when we run the program more than once without resetting
     // the database.
-
     try {
         steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
-        auto step_result = db.GetOrCreateStep(StepType::CameraInfo, "");
-        db.CameraInfoInsert(step_result.first, context.camera_id,
-                            CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
-        db.StepCacheKeyUpdate(step_result.first,
-                              Hash{"1cc994b3b1dfe158bed402f46b5de3c00e14bf2d8057f43dd3531eebea5390c5"});
+        // TODO(Jack): Should we also write the image loading and feature extraction keys here? Or should they be
+        // hardcoded into the db?
+
+        Hash const camera_info_cache_key{"1cc994b3b1dfe158bed402f46b5de3c00e14bf2d8057f43dd3531eebea5390c5"};
+        auto const step_result{db.GetOrCreateStep(StepType::CameraInfo, camera_info_cache_key)};
+
+        // NOTE(Jack): We only need to insert the camera info on the first pass when it's a cache miss. If we do it
+        // again on subsequent runs we will violate the unique constraint.
+        if (step_result.second == CacheStatus::CacheMiss) {
+            db.CameraInfoInsert(step_result.first, context.camera_id,
+                                CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
+            db.StepCacheKeyUpdate(step_result.first, camera_info_cache_key);
+        }
 
         // TODO(Jack): Add imu stuff!
 
