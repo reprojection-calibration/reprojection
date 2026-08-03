@@ -43,6 +43,7 @@ set(TESTS
         test/imu_data_loading.test.cpp
         test/initialize_calibration.test.cpp
         test/intrinsic_initialization.test.cpp
+        test/pose_initialization.test.cpp
         test/step_runner.test.cpp
         test/target_info.test.cpp
 )
