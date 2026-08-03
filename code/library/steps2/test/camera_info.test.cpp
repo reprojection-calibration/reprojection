@@ -11,6 +11,7 @@ using namespace reprojection;
 class CameraInfoTestFixture : public StepTestFixture {
    protected:
     void SetUp() override {
+        // TODO(Jack): This block of code is copy and pasted across multiple fixtures!
         // Build the encoded images (cv::Mat -> serialized buffer)
         cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
         std::vector<uchar> buffer;
@@ -18,7 +19,6 @@ class CameraInfoTestFixture : public StepTestFixture {
             throw std::runtime_error("cv::imencode() failed");
         }
         EncodedImages const encoded_images{{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}}};
-
         image_loading_id_ = InsertImages(encoded_images);
     }
 
