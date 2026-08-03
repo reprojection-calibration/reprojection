@@ -13,6 +13,9 @@ set(SQL_FILES
         camera_info_insert.sql
         camera_info_select.sql
         camera_info_table.sql
+        camera_poses_insert.sql
+        camera_poses_select.sql
+        camera_poses_table.sql
         extracted_targets_insert.sql
         extracted_targets_select.sql
         extracted_targets_table.sql
