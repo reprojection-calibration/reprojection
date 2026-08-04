@@ -7,9 +7,9 @@
 
 namespace reprojection::database {
 
-std::string ToToml(CameraModel const type, ArrayXd const& intrinsics);
+std::string ToToml(CameraModel type, ArrayXd const& intrinsics);
 
-ArrayXd FromToml(CameraModel const type, std::string const& json_str);
+ArrayXd FromToml(CameraModel type, std::string const& json_str);
 
 ArrayXd ReadPinholeValues(toml::parse_result const& tbl, ArrayXd intrinsics);
 
