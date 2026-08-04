@@ -40,6 +40,5 @@ set(INSTALL_EXAMPLES OFF)
 set(EXAMPLES
         examples/feature_extraction.cpp
         examples/pose_initialization.cpp
-        examples/test_data_viz.cpp
 )
 AddExamples()
