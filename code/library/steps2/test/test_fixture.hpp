@@ -16,7 +16,7 @@ class StepTestFixture : public ::testing::Test {
     }
 
     StepId InsertIntrinsics(CameraModel const model, CameraState const& intrinsics) {
-        auto const step_id{db_.GetOrCreateStep(StepType::IntrinsicInitialization, "").first};
+        auto const step_id{db_.GetOrCreateStep(StepType::IntrinsicInit, "").first};
         db_.IntrinsicInsert(step_id, camera_id_, model, intrinsics);
 
         return step_id;

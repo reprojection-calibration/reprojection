@@ -55,6 +55,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
         ExecuteStatement(sql_statements::imu_data_table, db_);
         ExecuteStatement(sql_statements::intrinsics_table, db_);
         ExecuteStatement(sql_statements::recordings_table, db_);
+        ExecuteStatement(sql_statements::spline_info_table, db_);
         ExecuteStatement(sql_statements::steps_table, db_);
         ExecuteStatement(sql_statements::target_info_table, db_);
     }

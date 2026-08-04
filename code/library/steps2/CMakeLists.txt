@@ -9,6 +9,7 @@ set(SRC_FILES
         src/initialize_calibration.cpp
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
+        src/spline_initialization.cpp
         src/target_info.cpp
 )
 
@@ -46,6 +47,7 @@ set(TESTS
         test/initialize_calibration.test.cpp
         test/intrinsic_initialization.test.cpp
         test/pose_initialization.test.cpp
+        test/spline_initialization.test.cpp
         test/step_runner.test.cpp
         test/target_info.test.cpp
 )
