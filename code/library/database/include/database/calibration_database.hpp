@@ -16,7 +16,7 @@ namespace reprojection::database {
 namespace fs = std::filesystem;
 
 // TODO UNIFY CODE WITH EXISTING EXTRINSIC TYPE
-struct Extrinsic2{
+struct Extrinsic2 {
     AssetId frame_a;
     AssetId frame_b;
     Array6d se3_a_b;
@@ -57,6 +57,10 @@ class CalibrationDatabase {
     void ExtrinsicInsert(StepId step_id, Extrinsic2 const& extrinsic) const;
 
     std::optional<Extrinsic2> ExtrinsicSelect(StepId step_id, AssetId asset_a_id, AssetId asset_b_id) const;
+
+    void GravityInsert(StepId step_id, Vector3d const& gravity) const;
+
+    std::optional<Vector3d> GravitySelect(StepId step_id) const;
 
     void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data) const;
 

@@ -52,6 +52,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
         ExecuteStatement(sql_statements::control_points_table, db_);
         ExecuteStatement(sql_statements::extracted_targets_table, db_);
         ExecuteStatement(sql_statements::extrinsics_table, db_);
+        ExecuteStatement(sql_statements::gravity_table, db_);
         ExecuteStatement(sql_statements::images_table, db_);
         ExecuteStatement(sql_statements::imu_data_table, db_);
         ExecuteStatement(sql_statements::intrinsics_table, db_);
@@ -263,6 +264,25 @@ std::optional<Extrinsic2> CalibrationDatabase::ExtrinsicSelect(StepId const step
     } else {
         return std::nullopt;
     }
+}
+
+void CalibrationDatabase::GravityInsert(StepId const step_id, Vector3d const& gravity) const {
+    auto const binder{[step_id, gravity](sqlite3_stmt* const stmt) {
+        Bind(stmt, 1, step_id.value);
+        BindEigenColumn<Vector3d>(stmt, 2, gravity);
+    }};
+
+    ExecuteStatement(sql_statements::gravity_insert, binder, db_);
+}
+
+std::optional<Vector3d> CalibrationDatabase::GravitySelect(StepId const step_id) const {
+    std::optional<Vector3d> gravity;
+
+    ExecuteQuery(
+        db_, sql_statements::gravity_select, [step_id](sqlite3_stmt* const stmt) { Bind(stmt, 1, step_id.value); },
+        [&gravity](sqlite3_stmt* const stmt) { gravity = ReadEigenColumn<3>(stmt, 0); });
+
+    return gravity;
 }
 
 void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) const {

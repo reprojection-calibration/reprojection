@@ -246,6 +246,19 @@ TEST(DatabaseCalibrationDatbase, TestExtrinsics) {
     EXPECT_TRUE(result->se3_a_b.isApprox(extrinsic_co_imu.se3_a_b));
 }
 
+TEST(DatabaseCalibrationDatbase, TestGravity) {
+    auto db{database::CalibrationDatabase(":memory:", true)};
+
+    StepId const step_id{db.GetOrCreateStep(StepType::ExtrinsicInit, "").first};
+
+    Vector3d const gravity{Vector3d::Random()};
+    EXPECT_NO_THROW(db.GravityInsert(step_id, gravity));
+
+    auto const result{db.GravitySelect(step_id)};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(result->isApprox(gravity));
+}
+
 TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
