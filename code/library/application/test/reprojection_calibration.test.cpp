@@ -6,12 +6,11 @@
 
 #include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
-#include "database/database_write.hpp"
-#include "hashing/hashing.hpp"
+#include "steps/initialize_calibration.hpp"
 // cppcheck-suppress missingInclude
+#include "hashing/hashing.hpp"
 #include "testing_utilities/generated/minimum_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
-#include "types/calibration_types.hpp"
 
 using namespace reprojection;
 using TemporaryFile = testing_utilities::TemporaryFile;
@@ -43,39 +42,36 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 
 TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     toml::table const config{toml::parse(testing_utilities::minimum_config)};
-
-    auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
+    auto db{database::CalibrationDatabase(":memory:", false)};
 
     // TODO(Jack): This test is a little sketchy because we are trying to induce cache hits to avoid actually having to
     // calculate anything. As a principle we do not want to use the checked in test database which means this is as much
     // as we can do here. I guess we could also use the MVG test data generator, but that will be for a future
     // contributor :)
 
-    auto const cam_cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
-    CameraInfo const camera_info{cam_cfg.sensor_name, cam_cfg.camera_model, {0, 512, 0, 512}};
+    steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
-    database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+    std::string const image_sampler_signature{""};
+    auto step{db.GetOrCreateStep(StepType::ImageLoading, "")};
+    db.StepCacheKeyUpdate(step.first, {hashing::HashArguments(image_sampler_signature)});
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::HashArguments(""));
+    CameraInfo const camera_info{context.config.camera.camera_model, {0, 512, 0, 512}};
+    step = db.GetOrCreateStep(StepType::CameraInfo, "");
+    db.CameraInfoInsert(step.first, context.camera_id, camera_info);
+    db.StepCacheKeyUpdate(step.first, hashing::HashArguments(context.config.camera.camera_model, EncodedImages{}));
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
-                         hashing::HashArguments(camera_info.sensor_name, camera_info.camera_model, EncodedImages{}));
-    database::InsertCameraInfo(db, camera_info);
+    step = db.GetOrCreateStep(StepType::IntrinsicInit, "");
+    db.IntrinsicInsert(step.first, context.camera_id, context.config.camera.camera_model,
+                       {Array5d{256, 256, 256, 0, 0.5}});
+    db.StepCacheKeyUpdate(step.first, hashing::HashArguments(camera_info, CameraMeasurements{}));
 
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction, hashing::HashArguments(""));
-
-    database::InsertStep(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
-                         hashing::HashArguments(camera_info, CameraMeasurements{}));
-    database::InsertIntrinsics(db, camera_info.sensor_name, CalibrationStep::IntrinsicInitialization,
-                               camera_info.camera_model, {Array5d::Zero()});
-
-    // WARN(Jack): I would really really like to also be able to exercise the imu calibration component here but it is
-    // not nearly as easy to generate cache hits for those steps with empty inputs/outputs. This requires some more
-    // investigation and until then we just need pass std::nullopt for the imu input.
-    // NOTE(Jack): We do not need to do anything for the pose_initialization and bundle_adjustment
-    // steps to manufacture a cache hit because if their inputs are empty they themselves will just pass through with no
-    // problem. This might change in the future but for now it stands.
+    // WARN(Jack): I would really really like to also be able to exercise the imu calibration component here but it
+    // is not nearly as easy to generate cache hits for those steps with empty inputs/outputs. This requires some
+    // more investigation and until then we just need pass std::nullopt for the imu input. NOTE(Jack): We do not
+    // need to do anything for the pose_initialization and bundle_adjustment steps to manufacture a cache hit
+    // because if their inputs are empty they themselves will just pass through with no problem. This might change
+    // in the future but for now it stands.
 
     // TODO(Jack): Also enable to trigger imu calibration! See warning above.
-    EXPECT_NO_THROW(application::Calibrate(config, {{}, ""}, std::nullopt, db));
+    EXPECT_NO_THROW(application::Calibrate(config, {{}, image_sampler_signature}, std::nullopt, db));
 }
