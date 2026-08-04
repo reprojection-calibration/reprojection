@@ -39,13 +39,10 @@ class ImuSamplerFixture : public ::testing::Test {
 
 TEST_F(ImuSamplerFixture, TestImuDataLoadingStepRunner) {
     auto db{database::CalibrationDatabase(":memory:", true)};
-    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
-    auto const owner{steps::StepOwner::Recording(recording_id)};
 
     AssetId const imu_id{db.GetOrCreateAsset(AssetType::Imu, 0, "")};
     steps::ImuDataLoading const step{imu_id, "", imu_sampler_};
-
-    StepId const step_id{RunStep<steps::ImuDataLoading>(owner, step, db)};
+    StepId const step_id{RunStep<steps::ImuDataLoading>(step, db)};
 
     auto const result{db.ImuDataSelect(step_id, imu_id)};
     EXPECT_EQ(std::size(result), std::size(imu_data_));
@@ -66,7 +63,6 @@ TEST_F(ImuSamplerFixture, TestImuDataLoadingStep) {
     EXPECT_EQ(step.CacheKey().value, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
     // Build the actual database step id and execute the step.
-    RecordingId const recording_id{db.GetOrCreateRecording("", "")};
     auto const [step_id, _]{db.GetOrCreateStep(StepType::ImuDataLoading, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db));
 

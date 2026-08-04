@@ -3,6 +3,7 @@ set(LIBRARY_NAME "steps2")
 set(SRC_FILES
         src/bundle_adjustment.cpp
         src/camera_info.cpp
+        src/extrinsic_init.cpp
         src/feature_extraction.cpp
         src/image_loading.cpp
         src/imu_data_loading.cpp
@@ -41,6 +42,7 @@ set(TEST_LINK_LIBRARIES
 set(TESTS
         test/bundle_adjustment.test.cpp
         test/camera_info.test.cpp
+        test/extrinsic_init.test.cpp
         test/feature_extraction.test.cpp
         test/image_loading.test.cpp
         test/imu_data_loading.test.cpp

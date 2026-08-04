@@ -266,6 +266,8 @@ std::optional<Extrinsic2> CalibrationDatabase::ExtrinsicSelect(StepId const step
     }
 }
 
+// TODO(Jack): Should gravity be assocaited with any asset or any other piece of information? Currently the way we store
+// it we have no idea about what frame its in or anything else besides which step it comes from.
 void CalibrationDatabase::GravityInsert(StepId const step_id, Vector3d const& gravity) const {
     auto const binder{[step_id, gravity](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
