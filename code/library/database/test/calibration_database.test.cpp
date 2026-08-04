@@ -229,17 +229,34 @@ TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
     EXPECT_EQ(result.at(0).indices.size(), 0);
 }
 
+TEST(DatabaseCalibrationDatbase, TestExtrinsics) {
+    auto db{database::CalibrationDatabase(":memory:", true)};
+
+    StepId const step_id{db.GetOrCreateStep(StepType::ExtrinsicInit, "").first};
+    AssetId const cam_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
+    AssetId const imu_id{db.GetOrCreateAsset(AssetType::Imu, 0, "")};
+
+    database::Extrinsic2 const extrinsic_co_imu{cam_id, imu_id, Array6d::Random()};
+    EXPECT_NO_THROW(db.ExtrinsicInsert(step_id, extrinsic_co_imu));
+
+    auto const result{db.ExtrinsicSelect(step_id, cam_id, imu_id)};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->frame_a, cam_id);
+    EXPECT_EQ(result->frame_b, imu_id);
+    EXPECT_TRUE(result->se3_a_b.isApprox(extrinsic_co_imu.se3_a_b));
+}
+
 TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
     // Satisfy foreign key constraints
-    auto const step{db.GetOrCreateStep(StepType::SplineInit, "")};
+    StepId const step_id{db.GetOrCreateStep(StepType::SplineInit, "").first};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
 
     spline::TimeHandler const time_handler{0, 1};
-    EXPECT_NO_THROW(db.SplineInfoInsert(step.first, asset_id, time_handler));
+    EXPECT_NO_THROW(db.SplineInfoInsert(step_id, asset_id, time_handler));
 
-    auto result{db.SplineInfoSelect(step.first, asset_id)};
+    auto result{db.SplineInfoSelect(step_id, asset_id)};
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->t0_ns_, time_handler.t0_ns_);
     EXPECT_EQ(result->delta_t_ns_, time_handler.delta_t_ns_);

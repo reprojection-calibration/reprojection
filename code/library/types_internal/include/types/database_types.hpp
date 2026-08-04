@@ -65,6 +65,7 @@ inline std::string ToString(AssetType const data) {
 enum class StepType {
     BundleAdjustment,
     CameraInfo,
+    ExtrinsicInit,
     FeatureExtraction,
     ImageLoading,
     ImuDataLoading,
@@ -79,6 +80,8 @@ inline std::string ToString(StepType const data) {
         return "bundle_adjustment";
     } else if (data == StepType::CameraInfo) {
         return "camera_info";
+    } else if (data == StepType::ExtrinsicInit) {
+        return "extrinsic_initialization";
     } else if (data == StepType::FeatureExtraction) {
         return "feature_extraction";
     } else if (data == StepType::ImageLoading) {

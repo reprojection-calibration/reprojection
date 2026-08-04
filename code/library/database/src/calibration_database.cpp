@@ -51,6 +51,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
         ExecuteStatement(sql_statements::camera_poses_table, db_);
         ExecuteStatement(sql_statements::control_points_table, db_);
         ExecuteStatement(sql_statements::extracted_targets_table, db_);
+        ExecuteStatement(sql_statements::extrinsics_table, db_);
         ExecuteStatement(sql_statements::images_table, db_);
         ExecuteStatement(sql_statements::imu_data_table, db_);
         ExecuteStatement(sql_statements::intrinsics_table, db_);
@@ -231,6 +232,37 @@ spline::Matrix2NXd CalibrationDatabase::ControlPointsSelect(StepId const step_id
     }
 
     return control_points;
+}
+
+void CalibrationDatabase::ExtrinsicInsert(StepId step_id, Extrinsic2 const& extrinsic) const {
+    auto const binder{[step_id, extrinsic](sqlite3_stmt* const stmt) {
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, extrinsic.frame_a.value);
+        Bind(stmt, 3, extrinsic.frame_b.value);
+        BindEigenColumn(stmt, 4, extrinsic.se3_a_b);
+    }};
+
+    ExecuteStatement(sql_statements::extrinsics_insert, binder, db_);
+}
+
+std::optional<Extrinsic2> CalibrationDatabase::ExtrinsicSelect(StepId const step_id, AssetId const asset_a_id,
+                                                               AssetId const asset_b_id) const {
+    std::optional<Array6d> se3_a_b;
+
+    ExecuteQuery(
+        db_, sql_statements::extrinsics_select,
+        [step_id, asset_a_id, asset_b_id](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_a_id.value);
+            Bind(stmt, 3, asset_b_id.value);
+        },
+        [&se3_a_b](sqlite3_stmt* const stmt) { se3_a_b = ReadEigenColumn<6>(stmt, 1); });
+
+    if (se3_a_b) {
+        return Extrinsic2{asset_a_id, asset_b_id, *se3_a_b};
+    } else {
+        return std::nullopt;
+    }
 }
 
 void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) const {
