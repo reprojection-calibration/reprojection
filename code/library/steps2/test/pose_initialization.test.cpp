@@ -41,10 +41,10 @@ TEST_F(PoseInitializationFixture, TestPoseInitializationStepRunner) {
 
 TEST_F(PoseInitializationFixture, TestPoseInitializationStep) {
     steps::PoseInitialization const step{camera_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
-    EXPECT_EQ(step.Type(), StepType::PoseInitialization);
+    EXPECT_EQ(step.Type(), StepType::PoseInit);
     EXPECT_EQ(step.CacheKey().value, "723245d956786cad6abadb69629b5bccc8db6596c0864a6c77380c9f818351a1");
 
-    auto const [step_id, _]{db_.GetOrCreateStep(StepType::PoseInitialization, "")};
+    auto const [step_id, _]{db_.GetOrCreateStep(StepType::PoseInit, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
     auto const result{db_.CameraPosesSelect(step_id, camera_id_)};

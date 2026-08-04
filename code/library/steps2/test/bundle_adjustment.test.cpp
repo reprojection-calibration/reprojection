@@ -33,7 +33,7 @@ class BundleAdjustmentFixture : public StepTestFixture {
     StepId camera_info_id_;
     StepId targets_id_;
     StepId intrinsics_id_;
-    StepId pose_init_id_{db_.GetOrCreateStep(StepType::PoseInitialization, "").first};
+    StepId pose_init_id_{db_.GetOrCreateStep(StepType::PoseInit, "").first};
 };
 
 TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStepRunner) {

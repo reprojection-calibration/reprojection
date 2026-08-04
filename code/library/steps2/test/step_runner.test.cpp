@@ -7,9 +7,7 @@ using namespace reprojection;
 struct ExampleStep {
     static StepType Type() { return StepType::ImageLoading; }
 
-    static Hash CacheKey() {
-        return "";
-    }
+    static Hash CacheKey() { return ""; }
 
     static void Execute(StepId const step_id, database::CalibrationDatabase& db) {
         (void)db;
@@ -19,26 +17,18 @@ struct ExampleStep {
     }
 };
 
-// TODO(Jack): How can we write a test to test the cascading delete and step replacement logic?
 TEST(StepsStepRunner, TestExampleStep) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 
-    RecordingId const recording_id{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
-    auto owner{steps::StepOwner::Recording(recording_id)};
-
     ExampleStep step;
-    StepId result{RunStep<ExampleStep>(owner, step, db)};
+    StepId result{steps::RunStep<ExampleStep>(step, db)};
     EXPECT_EQ(result.value, 1);
 
     // Rerunning the step should be a cache hit (but we can't see that here) and should return the same step ID
-    result = RunStep<ExampleStep>(owner, step, db);
+    result = steps::RunStep<ExampleStep>(step, db);
     EXPECT_EQ(result.value, 1);
 
-    // Now add another instance of the step owned by a run. Normally we probably would not have one step once owned by a
-    // recording and again by a run, but we do it here so we can see the step id increment.
-    RunId const run_id{db.GetOrCreateRun(recording_id, "")};
-    owner = steps::StepOwner::Run(run_id);
-
-    result = RunStep<ExampleStep>(owner, step, db);
-    EXPECT_EQ(result.value, 2);
+    // TODO(Jack): Is there a way to run the step again and get another step id out of it? Right now the cache key is
+    // hardcoded and a static method which means we cannot easily change it to trigger a cache miss and new step
+    // creation.
 }
