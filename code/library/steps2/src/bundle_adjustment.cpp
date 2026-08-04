@@ -1,5 +1,3 @@
-
-
 #include "optimization/bundle_adjustment.hpp"
 
 #include <ranges>

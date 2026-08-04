@@ -6,6 +6,7 @@
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
+#include "steps/extrinsic_init.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
@@ -83,13 +84,16 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
 
     if (cfg.imu_id.has_value() and imu_input.has_value()) {
         steps::ImuDataLoading const imu_data_loading_step{*cfg.imu_id, imu_input->signature, imu_input->source};
-        StepId const imu_data_loading_id{steps::RunStep<steps::ImuDataLoading>(imu_data_loading_step, db)};
+        StepId const imu_data_id{steps::RunStep<steps::ImuDataLoading>(imu_data_loading_step, db)};
 
         steps::SplineInitialization const spline_init_step{cfg.camera_id, bundle_adjustment_id, db};
         StepId const spline_init_id{steps::RunStep<steps::SplineInitialization>(spline_init_step, db)};
 
-        static_cast<void>(imu_data_loading_id);
-        static_cast<void>(spline_init_id);
+        steps::ExtrinsicInit const extrinsic_init_step{
+            cfg.camera_id, spline_init_id, *cfg.imu_id, imu_data_id, cfg.config.application.threads, db};
+        StepId const extrinsic_init_id{steps::RunStep<steps::ExtrinsicInit>(extrinsic_init_step, db)};
+
+        static_cast<void>(extrinsic_init_id);
     }
 
     std::cout << "The future is calibrated!\n";

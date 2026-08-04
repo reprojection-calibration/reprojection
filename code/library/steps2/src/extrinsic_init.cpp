@@ -2,6 +2,7 @@
 
 #include "calibration/initialization_methods.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::steps {
@@ -12,8 +13,8 @@ auto const log{logging::Get("steps")};
 
 }
 
-ExtrinsicInit::ExtrinsicInit(AssetId camera_id, StepId spline_id, AssetId imu_id, StepId imu_data_id, int num_threads,
-                             database::CalibrationDatabase const& db)
+ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, AssetId const imu_id,
+                             StepId const imu_data_id, int num_threads, database::CalibrationDatabase const& db)
     : camera_id_{camera_id},
       imu_id_{imu_id},
       imu_data_{db.ImuDataSelect(imu_data_id, imu_id)},
@@ -38,18 +39,23 @@ Hash ExtrinsicInit::CacheKey() const {
                                   spline_->GetTimeHandler().delta_t_ns_);
 }
 
-void ExtrinsicInit::Execute(StepId step_id, database::CalibrationDatabase& db) const {
+void ExtrinsicInit::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
     auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(*spline_, imu_data_, num_threads_)};
 
     // TODO(Jack): Should we do something with the diagnostics? There are several places now where we ignore the
     // returned optimization diagnostics but I am sure that a user would appreciate these in the database.
     auto const [aa_imu_co, _]{rotation_result};
-
     // NOTE(Jack): In the cam-imu extrinsic initialization process we can only initialize the rotation so we just set
     // the translation to zero. If someone has an idea how to initialize the translation do tell!
     Array6d const tf_imu_co{aa_imu_co(0), aa_imu_co(1), aa_imu_co(2), 0, 0, 0};
-
     database::Extrinsic2 const extrinsic{imu_id_, camera_id_, tf_imu_co};
+
+    // TODO(Jack): For some reason our format function does not work with the original matrix/vector type so we manually
+    // convert it to an array here.
+    Array3d const gravity_w_fmt{gravity_w[0], gravity_w[1], gravity_w[2]};
+    log->info("{{'step_id': {}, 'extrinsic': {{'asset_id_a': {}, 'asset_id_b' {}, 'se3_a_b' {}}}, 'gravity': {}}}",
+              step_id.value, extrinsic.frame_a.value, extrinsic.frame_b.value, extrinsic.se3_a_b, gravity_w_fmt);
+
     db.ExtrinsicInsert(step_id, extrinsic);
     db.GravityInsert(step_id, gravity_w);
 }

@@ -24,8 +24,8 @@ StepId RunStep(T const& step, database::CalibrationDatabase& db) {
     Hash const cache_key{step.CacheKey()};
     auto const [step_id, cache_status]{db.GetOrCreateStep(step.Type(), cache_key)};
 
-    log->info("{{'step_type': '{}', 'cache_status': '{}', 'step_id': {}}}", ToString(step.Type()),
-              ToString(cache_status), step_id.value);
+    log->info("{{'cache_status': '{}', 'step_id': {:2}, 'step_type': '{}'}}", ToString(cache_status), step_id.value,
+              ToString(step.Type()));
 
     if (cache_status == CacheStatus::CacheHit) {
         return step_id;
