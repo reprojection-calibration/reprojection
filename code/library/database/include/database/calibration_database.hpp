@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <optional>
 
+#include "spline/time_handler.hpp"
 #include "spline/types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
@@ -63,6 +64,10 @@ class CalibrationDatabase {
                                 CameraMeasurements const& data) const;
 
     CameraMeasurements ExtractedTargetsSelect(StepId step_id, AssetId asset_id) const;
+
+    void SplineInfoInsert(StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler) const;
+
+    std::optional<spline::TimeHandler> SplineInfoSelect(StepId step_id, AssetId asset_id) const;
 
     void TargetInfoInsert(StepId step_id, AssetId asset_id, TargetInfo const& target_info) const;
 

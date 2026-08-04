@@ -229,6 +229,22 @@ TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
     EXPECT_EQ(result.at(0).indices.size(), 0);
 }
 
+TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
+    auto db{database::CalibrationDatabase(":memory:", true)};
+
+    // Satisfy foreign key constraints
+    auto const step{db.GetOrCreateStep(StepType::SplineInit, "")};
+    AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
+
+    spline::TimeHandler const time_handler{0, 1};
+    EXPECT_NO_THROW(db.SplineInfoInsert(step.first, asset_id, time_handler));
+
+    auto result{db.SplineInfoSelect(step.first, asset_id)};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->t0_ns_, time_handler.t0_ns_);
+    EXPECT_EQ(result->delta_t_ns_, time_handler.delta_t_ns_);
+}
+
 TEST(DatabaseCalibrationDatbase, TestTargetInfo) {
     auto db{database::CalibrationDatabase(":memory:", true)};
 

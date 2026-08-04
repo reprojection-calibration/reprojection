@@ -34,6 +34,9 @@ set(SQL_FILES
         recordings_insert.sql
         recordings_select.sql
         recordings_table.sql
+        spline_info_insert.sql
+        spline_info_select.sql
+        spline_info_table.sql
         steps_insert.sql
         steps_select.sql
         steps_table.sql

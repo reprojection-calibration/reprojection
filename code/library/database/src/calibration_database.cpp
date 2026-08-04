@@ -395,6 +395,47 @@ CameraMeasurements CalibrationDatabase::ExtractedTargetsSelect(StepId const step
     return data;
 }
 
+void CalibrationDatabase::SplineInfoInsert(StepId step_id, AssetId asset_id,
+                                           spline::TimeHandler const& time_handler) const {
+    auto const binder{[step_id, asset_id, time_handler](sqlite3_stmt* const stmt) {
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, asset_id.value);
+        // TODO(Jack): At this time we only support (and therefore hardcode) pose splines. In the future we will add the
+        // bias splines for the imu and this will actually become relevant.
+        Bind(stmt, 3, "pose");
+        Bind(stmt, 4, time_handler.t0_ns_);
+        Bind(stmt, 5, time_handler.delta_t_ns_);
+    }};
+
+    ExecuteStatement(sql_statements::spline_info_insert, binder, db_);
+}
+
+// TODO(Jack): Does adding a real SplineInfo struct make sense? Would that simplify some of the complexity we had while
+// trying to unify the spline representations?
+// TODO(Jack): At this point we made this function/concept over generic by talking about "spline info" but actually only
+// really using the time handler. Once we add a bias spline one day we will need to refactor this code (see below).
+std::optional<spline::TimeHandler> CalibrationDatabase::SplineInfoSelect(StepId const step_id,
+                                                                         AssetId const asset_id) const {
+    std::optional<spline::TimeHandler> time_handler;
+
+    ExecuteQuery(
+        db_, sql_statements::spline_info_select,
+        [step_id, asset_id](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+        },
+        [&time_handler](sqlite3_stmt* const stmt) {
+            // WARN(Jack): We ignore the spline_type in column 0 for now but once we fully adapt the spline_type concept
+            // when we hopefully introduce bias splines we need to add this back!
+            uint64_t const t0_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 1))};
+            uint64_t const delta_t_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 2))};
+
+            time_handler = spline::TimeHandler{t0_ns, delta_t_ns};
+        });
+
+    return time_handler;
+}
+
 void CalibrationDatabase::TargetInfoInsert(StepId const step_id, AssetId const asset_id,
                                            TargetInfo const& target_info) const {
     auto const binder{[step_id, asset_id, target_info](sqlite3_stmt* const stmt) {
