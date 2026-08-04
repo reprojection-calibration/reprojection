@@ -239,7 +239,7 @@ void CalibrationDatabase::ExtrinsicInsert(StepId step_id, Extrinsic2 const& extr
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, extrinsic.frame_a.value);
         Bind(stmt, 3, extrinsic.frame_b.value);
-        BindEigenColumn(stmt, 4, extrinsic.se3_a_b);
+        BindEigenColumn<Array6d>(stmt, 4, extrinsic.se3_a_b);
     }};
 
     ExecuteStatement(sql_statements::extrinsics_insert, binder, db_);
@@ -256,7 +256,7 @@ std::optional<Extrinsic2> CalibrationDatabase::ExtrinsicSelect(StepId const step
             Bind(stmt, 2, asset_a_id.value);
             Bind(stmt, 3, asset_b_id.value);
         },
-        [&se3_a_b](sqlite3_stmt* const stmt) { se3_a_b = ReadEigenColumn<6>(stmt, 1); });
+        [&se3_a_b](sqlite3_stmt* const stmt) { se3_a_b = ReadEigenColumn<6>(stmt, 0); });
 
     if (se3_a_b) {
         return Extrinsic2{asset_a_id, asset_b_id, *se3_a_b};
