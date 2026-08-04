@@ -12,16 +12,18 @@
 
 namespace reprojection::optimization {
 
-std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
-    ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, ImuCamExtrinsic const& initial_extrinsic,
-    CameraInfo const& sensor, CameraMeasurements const& targets, CameraState const& intrinsics, int const num_threads) {
+std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
+    ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
+    Vector3d const& initial_gravity, CameraInfo const& sensor, CameraMeasurements const& targets,
+    CameraState const& intrinsics, int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY};
     ceres_state.solver_options.num_threads = num_threads;
     ceres::Problem problem{ceres_state.problem_options};
 
     spline::Se3Spline optimized_spline{initial_spline};
-    ImuCamExtrinsic optimized_extrinsic{initial_extrinsic};
+    Extrinsic optimized_extrinsic{initial_extrinsic};
+    Vector3d optimized_gravity{initial_gravity};
 
     // Imu residuals
     for (auto const timestamp_ns : imu_data | std::views::keys) {
@@ -36,7 +38,7 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
         // only uses the top three rows of all. Is there a better design?
         ceres::CostFunction* const gyroscope_cost_function{cost_functions::RigidBodyAngularVelocity::Create(
             imu_data.at(timestamp_ns).angular_velocity, u_i, optimized_spline.GetTimeHandler().delta_t_ns_)};
-        problem.AddResidualBlock(gyroscope_cost_function, nullptr, optimized_extrinsic.tf.se3_a_b.data(),
+        problem.AddResidualBlock(gyroscope_cost_function, nullptr, optimized_extrinsic.se3_a_b.data(),
                                  optimized_spline.MutableControlPoints().col(i).data(),
                                  optimized_spline.MutableControlPoints().col(i + 1).data(),
                                  optimized_spline.MutableControlPoints().col(i + 2).data(),
@@ -44,9 +46,8 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
 
         ceres::CostFunction* const accelerometer_cost_function{cost_functions::RigidBodyLinearAcceleration::Create(
             imu_data.at(timestamp_ns).linear_acceleration, u_i, optimized_spline.GetTimeHandler().delta_t_ns_)};
-        problem.AddResidualBlock(accelerometer_cost_function, nullptr, optimized_extrinsic.tf.se3_a_b.data(),
-                                 optimized_extrinsic.gravity.data(),
-                                 optimized_spline.MutableControlPoints().col(i).data(),
+        problem.AddResidualBlock(accelerometer_cost_function, nullptr, optimized_extrinsic.se3_a_b.data(),
+                                 optimized_gravity.data(), optimized_spline.MutableControlPoints().col(i).data(),
                                  optimized_spline.MutableControlPoints().col(i + 1).data(),
                                  optimized_spline.MutableControlPoints().col(i + 2).data(),
                                  optimized_spline.MutableControlPoints().col(i + 3).data());
@@ -91,7 +92,7 @@ std::pair<spline::Se3Spline, ImuCamExtrinsic> ExtrinsicOptimization(
     problem.SetParameterBlockConstant(intrinsics_x.intrinsics.data());
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    return {optimized_spline, optimized_extrinsic};
+    return {optimized_spline, optimized_extrinsic, optimized_gravity};
 }
 
 std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
@@ -142,7 +143,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
     return {tf_co_w, residuals};
 }  // LCOV_EXCL_LINE
 
-ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic const& extrinsic,
+ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
                            spline::Se3Spline const& spline_w_co) {
     ImuErrors imu_residuals;
 
@@ -155,7 +156,7 @@ ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic cons
         auto const [u_i, i]{normalized_position.value()};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(extrinsic.tf.se3_a_b.data());
+        parameter_blocks.push_back(extrinsic.se3_a_b.data());
         for (int j{0}; j < 4; ++j) {
             parameter_blocks.push_back(spline_w_co.ControlPoints().col(i + j).data());
         }
@@ -167,7 +168,7 @@ ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, ImuCamExtrinsic cons
         Array7d residual_i;
         cost_function_1->Evaluate(parameter_blocks.data(), residual_i.topRows<3>().data(), nullptr);
 
-        parameter_blocks.insert(std::cbegin(parameter_blocks) + 1, extrinsic.gravity.data());
+        parameter_blocks.insert(std::cbegin(parameter_blocks) + 1, gravity.data());
         ceres::CostFunction const* const cost_function_2{cost_functions::RigidBodyLinearAcceleration::Create(
             imu_data.at(timestamp_ns).linear_acceleration, u_i, spline_w_co.GetTimeHandler().delta_t_ns_)};
 

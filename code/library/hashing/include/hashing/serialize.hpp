@@ -31,9 +31,9 @@ std::string Serialize(Eigen::Matrix<double, 6, -1> const& data);
 // TODO(Jack): Test!
 std::string Serialize(EncodedImages const& data);
 
-std::string Serialize(Frames const& data);
+std::string Serialize(Extrinsic const& data);
 
-std::string Serialize(ImuCamExtrinsic const& data);
+std::string Serialize(Frames const& data);
 
 std::string Serialize(ImuMeasurements const& data);
 

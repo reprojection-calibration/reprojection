@@ -55,20 +55,20 @@ TEST(HashingSerialize, TestSerializeEncodedImages) {
     EXPECT_EQ(result, gt_result);
 }
 
+TEST(HashingSerialize, TestSerializeExtrinsic) {
+    Extrinsic const data{AssetId{1}, AssetId{2}, Array6d::Ones()};
+
+    std::string const result{hashing::Serialize(data)};
+    std::string const gt_result{"1|2|1.000;1.000;1.000;1.000;1.000;1.000;|"};
+
+    EXPECT_EQ(result, gt_result);
+}
+
 TEST(HashingSerialize, TestSerializeFrames) {
     Frames const frames{{0, {Array6d::Ones()}}, {1, {2 * Array6d::Ones()}}};
 
     std::string const result{hashing::Serialize(frames)};
     std::string const gt_result{"0|1.000;1.000;1.000;1.000;1.000;1.000;|1|2.000;2.000;2.000;2.000;2.000;2.000;|"};
-
-    EXPECT_EQ(result, gt_result);
-}
-
-TEST(HashingSerialize, TestSerializeImuCamExtrinsic) {
-    ImuCamExtrinsic const extrinsic{{"imu", "cam", Array6d::Ones()}, Array3d::Ones()};
-
-    std::string const result{hashing::Serialize(extrinsic)};
-    std::string const gt_result{"imu|cam|1.000;1.000;1.000;1.000;1.000;1.000;|1.000;1.000;1.000;|"};
 
     EXPECT_EQ(result, gt_result);
 }

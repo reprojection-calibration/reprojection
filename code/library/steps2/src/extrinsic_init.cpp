@@ -47,7 +47,7 @@ void ExtrinsicInit::Execute(StepId const step_id, database::CalibrationDatabase&
     // NOTE(Jack): In the cam-imu extrinsic initialization process we can only initialize the rotation so we just set
     // the translation to zero. If someone has an idea how to initialize the translation do tell!
     Array6d const tf_imu_co{aa_imu_co(0), aa_imu_co(1), aa_imu_co(2), 0, 0, 0};
-    database::Extrinsic2 const extrinsic{imu_id_, camera_id_, tf_imu_co};
+    Extrinsic const extrinsic{imu_id_, camera_id_, tf_imu_co};
 
     // TODO(Jack): For some reason our format function does not work with the original matrix/vector type so we manually
     // convert it to an array here.

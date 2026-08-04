@@ -6,6 +6,8 @@
 
 namespace reprojection {
 
+// TODO(Jack): Should we assert that all the ids need to be great than or equal to 1?
+
 struct AssetId {
     int64_t value;
 

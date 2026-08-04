@@ -82,7 +82,7 @@ Hash ExtrinsicOptimization::CacheKey() const {
 
 void ExtrinsicOptimization::Execute(StepId step_id, database::CalibrationDatabase& db) const {
     std::pair<spline::Se3Spline, ImuCamExtrinsic> xxx = optimization::ExtrinsicOptimization(
-        imu_data_, *spline_, extrinsic_, camera_info_, targets_, intrinsics_, num_threads_);
+        imu_data_, *spline_, extrinsic_, TODO, camera_info_, targets_, intrinsics_, num_threads_);
 }
 
 }  // namespace reprojection::steps

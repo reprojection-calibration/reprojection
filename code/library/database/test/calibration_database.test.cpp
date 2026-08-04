@@ -236,7 +236,7 @@ TEST(DatabaseCalibrationDatbase, TestExtrinsics) {
     AssetId const cam_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
     AssetId const imu_id{db.GetOrCreateAsset(AssetType::Imu, 0, "")};
 
-    database::Extrinsic2 const extrinsic_co_imu{cam_id, imu_id, Array6d::Random()};
+    Extrinsic const extrinsic_co_imu{cam_id, imu_id, Array6d::Random()};
     EXPECT_NO_THROW(db.ExtrinsicInsert(step_id, extrinsic_co_imu));
 
     auto const result{db.ExtrinsicSelect(step_id, cam_id, imu_id)};

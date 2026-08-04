@@ -235,7 +235,7 @@ spline::Matrix2NXd CalibrationDatabase::ControlPointsSelect(StepId const step_id
     return control_points;
 }
 
-void CalibrationDatabase::ExtrinsicInsert(StepId step_id, Extrinsic2 const& extrinsic) const {
+void CalibrationDatabase::ExtrinsicInsert(StepId step_id, Extrinsic const& extrinsic) const {
     auto const binder{[step_id, extrinsic](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, extrinsic.frame_a.value);
@@ -246,7 +246,7 @@ void CalibrationDatabase::ExtrinsicInsert(StepId step_id, Extrinsic2 const& extr
     ExecuteStatement(sql_statements::extrinsics_insert, binder, db_);
 }
 
-std::optional<Extrinsic2> CalibrationDatabase::ExtrinsicSelect(StepId const step_id, AssetId const asset_a_id,
+std::optional<Extrinsic> CalibrationDatabase::ExtrinsicSelect(StepId const step_id, AssetId const asset_a_id,
                                                                AssetId const asset_b_id) const {
     std::optional<Array6d> se3_a_b;
 
@@ -260,7 +260,7 @@ std::optional<Extrinsic2> CalibrationDatabase::ExtrinsicSelect(StepId const step
         [&se3_a_b](sqlite3_stmt* const stmt) { se3_a_b = ReadEigenColumn<6>(stmt, 0); });
 
     if (se3_a_b) {
-        return Extrinsic2{asset_a_id, asset_b_id, *se3_a_b};
+        return Extrinsic{asset_a_id, asset_b_id, *se3_a_b};
     } else {
         return std::nullopt;
     }
