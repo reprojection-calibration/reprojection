@@ -7,7 +7,7 @@ using namespace reprojection;
 struct ExampleStep {
     static StepType Type() { return StepType::ImageLoading; }
 
-    static Hash CacheKey() { return ""; }
+     Hash CacheKey() const { return cache_key_; }
 
     static void Execute(StepId const step_id, database::CalibrationDatabase& db) {
         (void)db;
@@ -15,6 +15,9 @@ struct ExampleStep {
 
         return;
     }
+
+    // We only have this here for the testing purpose below so we can change it manually and trigger a cache miss!
+    Hash cache_key_{""};
 };
 
 TEST(StepsStepRunner, TestExampleStep) {
@@ -28,7 +31,8 @@ TEST(StepsStepRunner, TestExampleStep) {
     result = steps::RunStep<ExampleStep>(step, db);
     EXPECT_EQ(result.value, 1);
 
-    // TODO(Jack): Is there a way to run the step again and get another step id out of it? Right now the cache key is
-    // hardcoded and a static method which means we cannot easily change it to trigger a cache miss and new step
-    // creation.
+    // Change the cache key so we get a cache miss and a new step is created.
+    step.cache_key_ = Hash{"1"};
+    result = steps::RunStep<ExampleStep>(step, db);
+    EXPECT_EQ(result.value, 2);
 }
