@@ -12,6 +12,7 @@ auto const log{logging::Get("steps")};
 
 }
 
+// TODO(Jack): This constructor, and all other steps constructors like this are in dire need of a refactor!
 ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId const imu_id, StepId const targets_id,
                                              StepId const imu_data_id, int const num_threads,
                                              StepId const camera_info_id, StepId const intrinsic_id,
@@ -81,8 +82,13 @@ Hash ExtrinsicOptimization::CacheKey() const {
 }
 
 void ExtrinsicOptimization::Execute(StepId step_id, database::CalibrationDatabase& db) const {
-    std::pair<spline::Se3Spline, ImuCamExtrinsic> xxx = optimization::ExtrinsicOptimization(
-        imu_data_, *spline_, extrinsic_, TODO, camera_info_, targets_, intrinsics_, num_threads_);
+    auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
+        imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsics_, num_threads_)};
+
+    db.SplineInfoInsert(step_id, camera_id_, optimized_spline.GetTimeHandler());
+    db.ControlPointsInsert(step_id, camera_id_, optimized_spline.ControlPoints());
+    db.ExtrinsicInsert(step_id, optimized_extrinsic);
+    db.GravityInsert(step_id, optimized_gravity);
 }
 
 }  // namespace reprojection::steps
