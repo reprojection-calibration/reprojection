@@ -9,7 +9,7 @@ struct PoseInitialization {
     PoseInitialization(AssetId camera_id, StepId targets_id, StepId camera_info_id, StepId intrinsics_id,
                        database::CalibrationDatabase& db);
 
-    static StepType Type() { return StepType::PoseInitialization; }
+    static StepType Type() { return StepType::PoseInit; }
 
     Hash CacheKey() const;
 

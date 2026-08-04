@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <optional>
 
+#include "spline/types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 #include "types/sensor_data_types.hpp"
@@ -40,6 +41,10 @@ class CalibrationDatabase {
     void CameraPosesInsert(StepId step_id, StepId source_step_id, AssetId asset_id, Frames const& camera_poses) const;
 
     Frames CameraPosesSelect(StepId step_id, AssetId asset_id) const;
+
+    void ControlPointsInsert(StepId step_id, AssetId asset_id, spline::Matrix2NXd const& data) const;
+
+    spline::Matrix2NXd ControlPointsSelect(StepId step_id, AssetId asset_id) const;
 
     void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data) const;
 

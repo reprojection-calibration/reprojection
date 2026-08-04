@@ -68,8 +68,9 @@ enum class StepType {
     FeatureExtraction,
     ImageLoading,
     ImuDataLoading,
-    IntrinsicInitialization,
-    PoseInitialization,
+    IntrinsicInit,
+    PoseInit,
+    SplineInit,
     TargetInfo,
 };
 
@@ -84,10 +85,12 @@ inline std::string ToString(StepType const data) {
         return "image_loading";
     } else if (data == StepType::ImuDataLoading) {
         return "imu_data_loading";
-    } else if (data == StepType::IntrinsicInitialization) {
+    } else if (data == StepType::IntrinsicInit) {
         return "intrinsic_initialization";
-    } else if (data == StepType::PoseInitialization) {
+    } else if (data == StepType::PoseInit) {
         return "pose_initialization";
+    } else if (data == StepType::SplineInit) {
+        return "spline_initialization";
     } else if (data == StepType::TargetInfo) {
         return "target_info";
     } else {

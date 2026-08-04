@@ -104,26 +104,6 @@ TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
     EXPECT_FALSE(result.has_value());
 }
 
-// TODO(Jack): There is a lot of copy and paste going on with the fixtures! This mainly comes from the foreign key
-// constraints of the extracted targets/camera poses/etc. Can we just use one single fixture for everything?
-class CameraPosesFixture : public ::testing::Test {
-   protected:
-    void SetUp() override {
-        StepId const image_loading_step_id{db_.GetOrCreateStep(StepType::ImageLoading, "").first};
-        // Each extracted target required a correspondent image
-        EncodedImages const images{{0, ImageBuffer{}}};
-        db_.ImagesInsert(image_loading_step_id, asset_id_, images);
-
-        extracted_targets_id_ = db_.GetOrCreateStep(StepType::FeatureExtraction, "").first;
-        CameraMeasurements extracted_targets{{0, ExtractedTarget{}}};
-        db_.ExtractedTargetsInsert(extracted_targets_id_, image_loading_step_id, asset_id_, extracted_targets);
-    }
-
-    database::CalibrationDatabase db_{":memory:", true};
-    AssetId asset_id_{db_.GetOrCreateAsset(AssetType::Camera, 0, "")};
-    StepId extracted_targets_id_{-1};
-};
-
 class CalibrationDatabaseFixture : public ::testing::Test {
    protected:
     void InsertImage(StepId const step_id, AssetId const asset_id, uint64_t const timestamp_ns = 0) {
@@ -150,12 +130,26 @@ TEST_F(CalibrationDatabaseFixture, TestCameraPoses) {
     StepId const extracted_targets_id{CreateExtractedTargets(image_loading_id, asset_id)};
 
     Frames const camera_poses{Frame{0, Array6d::Ones(6)}};
-    StepId const step_id{db_.GetOrCreateStep(StepType::PoseInitialization, "").first};
+    StepId const step_id{db_.GetOrCreateStep(StepType::PoseInit, "").first};
     EXPECT_NO_THROW(db_.CameraPosesInsert(step_id, extracted_targets_id, asset_id, camera_poses));
 
     auto const result{db_.CameraPosesSelect(step_id, asset_id)};
     EXPECT_EQ(std::size(result), 1);
     EXPECT_TRUE(result.at(0).pose.isApprox(camera_poses.at(0).pose));
+}
+
+TEST(DatabaseCalibrationDatbase, TestControlPoints) {
+    database::CalibrationDatabase db{":memory:", true};
+
+    StepId const step_id{db.GetOrCreateStep(StepType::SplineInit, "").first};
+    AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
+
+    spline::Matrix2NXd const control_points{spline::Matrix2NXd::Random(6, 3)};
+
+    EXPECT_NO_THROW(db.ControlPointsInsert(step_id, asset_id, control_points));
+
+    auto const result{db.ControlPointsSelect(step_id, asset_id)};
+    EXPECT_TRUE(result.isApprox(control_points));
 }
 
 TEST_F(CalibrationDatabaseFixture, TestImages) {
@@ -204,7 +198,7 @@ TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
     // TODO(Jack): We absolutely need to add logic to the database that checks the owning step for a camera intrinsic is
     // valid (ex. comes from a step which produces an intrinsic) and that the asset id is a camera. We need this kind of
     // checks for all steps, not just here.
-    auto const step{db.GetOrCreateStep(StepType::IntrinsicInitialization, "")};
+    auto const step{db.GetOrCreateStep(StepType::IntrinsicInit, "")};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
 
     CameraState const intrinsic{Array3d{1, 2, 3}};

@@ -1,6 +1,7 @@
 #include "database/calibration_database.hpp"
 
 #include <format>
+#include <ranges>
 
 #include "database/sqlite_exception.hpp"
 #include "generated/sql.hpp"
@@ -48,6 +49,7 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
         ExecuteStatement(sql_statements::assets_table, db_);
         ExecuteStatement(sql_statements::camera_info_table, db_);
         ExecuteStatement(sql_statements::camera_poses_table, db_);
+        ExecuteStatement(sql_statements::control_points_table, db_);
         ExecuteStatement(sql_statements::extracted_targets_table, db_);
         ExecuteStatement(sql_statements::images_table, db_);
         ExecuteStatement(sql_statements::imu_data_table, db_);
@@ -186,6 +188,48 @@ Frames CalibrationDatabase::CameraPosesSelect(StepId step_id, AssetId asset_id) 
         });
 
     return data;
+}
+
+void CalibrationDatabase::ControlPointsInsert(StepId const step_id, AssetId const asset_id,
+                                              spline::Matrix2NXd const& data) const {
+    // NOTE(Jack): This lets use treat the columns of the eigen matrix like a regular type that we can iterate over.
+    // This is required to be compatible with BatchExecuteStatement().
+    auto indexed_control_point_columns{[](auto const& control_points) {
+        return std::views::iota(0, static_cast<int>(control_points.cols())) |
+               std::views::transform(
+                   [&control_points](int const i) { return std::pair{i, Array6d{control_points.col(i)}}; });
+    }};
+
+    auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [i, control_point]{data_i};
+
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, asset_id.value);
+        Bind(stmt, 3, static_cast<int64_t>(i));
+        BindEigenColumn<Array6d>(stmt, 4, control_point);
+    }};
+
+    BatchExecuteStatement(sql_statements::control_points_insert, indexed_control_point_columns(data), binder, db_);
+}
+
+spline::Matrix2NXd CalibrationDatabase::ControlPointsSelect(StepId const step_id, AssetId const asset_id) const {
+    std::vector<Eigen::Matrix<double, 6, 1>> points;
+    ExecuteQuery(
+        db_, sql_statements::control_points_select,
+        [step_id, asset_id](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+        },
+        [&points](sqlite3_stmt* stmt) { points.emplace_back(ReadEigenColumn<6>(stmt, 1)); });
+
+    // NOTE(Jack): This only works because in the sql statement we load them ordered by the idx (ex. ORDER BY idx ASC).
+    // If we did not do that then we would need to use the idx itself to place the control points in the right column.
+    spline::Matrix2NXd control_points(6, std::size(points));
+    for (size_t i{0}; i < std::size(points); ++i) {
+        control_points.col(i) = points[i];
+    }
+
+    return control_points;
 }
 
 void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) const {

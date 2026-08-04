@@ -8,7 +8,7 @@ struct IntrinsicInitialization {
     IntrinsicInitialization(AssetId camera_id, int num_threads, StepId camera_info_id, StepId targets_id,
                             database::CalibrationDatabase& db);
 
-    static StepType Type() { return StepType::IntrinsicInitialization; }
+    static StepType Type() { return StepType::IntrinsicInit; }
 
     Hash CacheKey() const;
 
