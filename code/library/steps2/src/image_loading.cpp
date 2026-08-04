@@ -41,6 +41,9 @@ void ImageLoading::Execute(StepId const step_id, database::CalibrationDatabase& 
         }
     }
 
+    log->info("{{'step_id': {}, 'imu_id': {}, 'num_images': {}}}", step_id.value, camera_id_.value,
+              std::size(*encoded_images));
+
     db.ImagesInsert(step_id, camera_id_, *encoded_images);
 }
 

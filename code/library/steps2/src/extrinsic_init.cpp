@@ -42,8 +42,7 @@ Hash ExtrinsicInit::CacheKey() const {
 void ExtrinsicInit::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
     auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(*spline_, imu_data_, num_threads_)};
 
-    // TODO(Jack): Should we do something with the diagnostics? There are several places now where we ignore the
-    // returned optimization diagnostics but I am sure that a user would appreciate these in the database.
+    // TODO(Jack): We should log these diagnostics like we did for the bundle adjustment!
     auto const [aa_imu_co, _]{rotation_result};
     // NOTE(Jack): In the cam-imu extrinsic initialization process we can only initialize the rotation so we just set
     // the translation to zero. If someone has an idea how to initialize the translation do tell!
