@@ -58,8 +58,8 @@ void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase& db
                 debug]{optimization::BundleAdjustment(camera_info_, targets_, aligned_initial_state, num_threads_)};
 
     log->info(
-        "{{'step_id': '{}', 'asset_id': '{}', 'camera_model': '{}', 'intrinsic: {}, 'intial_cost': {:.2f}, "
-        "'final_cost': {:.2f}, 'num_successful_steps': {}, , 'num_unsuccessful_steps': {}}}}}",
+        "{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {{'intial_cost': "
+        "{:.2f}, 'final_cost': {:.2f}, 'num_successful_steps': {}, 'num_unsuccessful_steps': {}}}}}}}",
         step_id.value, camera_id_.value, ToString(camera_info_.camera_model), optimized_state.camera_state.intrinsics,
         debug.solver_summary.initial_cost, debug.solver_summary.final_cost, debug.solver_summary.num_successful_steps,
         debug.solver_summary.num_unsuccessful_steps);

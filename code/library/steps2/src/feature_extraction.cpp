@@ -49,7 +49,7 @@ void FeatureExtraction::Execute(StepId const step_id, database::CalibrationDatab
         cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
         if (img.empty()) {
             log->error(
-                "{{'step_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to decode image but result was empty.'}}",
+                "{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",
                 step_id.value, camera_id_.value);
         }
 

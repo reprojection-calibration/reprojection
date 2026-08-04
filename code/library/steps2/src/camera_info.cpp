@@ -24,7 +24,7 @@ void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase
     // cache hit then. But it seems like if we can already know this is a problem then that we should not let
     // construction finish.
     if (std::size(*images_) == 0) {
-        log->error("{{'step_id': '{}', 'asset_id': '{}', 'msg': 'No images loaded.'}}", step_id.value, camera_id_.value,
+        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'No images loaded.'}}", step_id.value, camera_id_.value,
                    ToString(camera_model_));
         std::exit(1);
     }
@@ -32,7 +32,7 @@ void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase
     // Check the size of the first image to get the image dimensions.
     cv::Mat const img{cv::imdecode(images_->begin()->second.data, cv::IMREAD_COLOR)};
     if (img.empty()) {
-        log->error("{{'step_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to decode image but result was empty.'}}",
+        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",
                    step_id.value, camera_id_.value, ToString(camera_model_));
         std::exit(1);
     }
@@ -40,7 +40,7 @@ void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase
     CameraInfo const camera_info{camera_model_,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
-    log->info("{{'step_id': '{}', 'asset_id': '{}', 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
+    log->info("{{'step_id': {}, 'asset_id': {}, 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
               step_id.value, camera_id_.value, ToString(camera_model_), camera_info.bounds.v_max,
               camera_info.bounds.u_max);
 

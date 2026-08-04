@@ -27,7 +27,7 @@ void ImageLoading::Execute(StepId const step_id, database::CalibrationDatabase& 
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", img, buffer)) {
-            log->error("{{'step_id': '{}', 'asset_id': '{}', 'msg': 'cv::imencode() failed at timestamp_ns {}.'}}",
+            log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'cv::imencode() failed at timestamp_ns {}.'}}",
                        step_id.value, camera_id_.value, timestamp_ns);
             std::exit(1);
         }
@@ -36,7 +36,7 @@ void ImageLoading::Execute(StepId const step_id, database::CalibrationDatabase& 
 
         ++num_images;
         if (num_images % 50 == 0) {
-            log->debug("{{'step_id': '{}', 'asset_id': '{}', 'num_images': {}}}", step_id.value, camera_id_.value,
+            log->debug("{{'step_id': {}, 'asset_id': {}, 'num_images': {}}}", step_id.value, camera_id_.value,
                        num_images);
         }
     }

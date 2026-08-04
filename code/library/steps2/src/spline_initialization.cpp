@@ -2,10 +2,17 @@
 
 #include "geometry/lie.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/logging.hpp"
 #include "spline/se3_spline.hpp"
 #include "steps/spline_initialization.hpp"
 
 namespace reprojection::steps {
+
+namespace {
+
+auto const log{logging::Get("steps")};
+
+}
 
 SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const camera_poses_id,
                                            database::CalibrationDatabase const& db)
@@ -24,6 +31,13 @@ void SplineInitialization::Execute(StepId const step_id, database::CalibrationDa
 
     // TODO(Jack): Parameterize frequency! Add to cache key probably?
     spline::Se3Spline const spline{spline::InitializeSe3SplineState(invert_frames, 100)};
+
+    // TODO(Jack): Should we print out the time handler in more practical units than nanoseconds?
+    log->info(
+        "{{'step_id': {}, 'asset_id': {}, 'num_control_points': {}, 'time_handler': {{'t0_ns': {}, 'delta_t_ns': "
+        "{}}}}}",
+        step_id.value, camera_id_.value, spline.Size(), spline.GetTimeHandler().t0_ns_,
+        spline.GetTimeHandler().delta_t_ns_);
 
     db.ControlPointsInsert(step_id, camera_id_, spline.ControlPoints());
     db.SplineInfoInsert(step_id, camera_id_, spline.GetTimeHandler());
