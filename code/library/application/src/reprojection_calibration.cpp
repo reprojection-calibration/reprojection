@@ -8,12 +8,13 @@
 #include "steps/camera_info.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
+#include "steps/imu_data_loading.hpp"
 #include "steps/initialize_calibration.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
+#include "steps/spline_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
-#include "steps/imu_data_loading.hpp"
 
 #include "io.hpp"
 
@@ -84,7 +85,11 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
         steps::ImuDataLoading const imu_data_loading_step{*cfg.imu_id, imu_input->signature, imu_input->source};
         StepId const imu_data_loading_id{steps::RunStep<steps::ImuDataLoading>(imu_data_loading_step, db)};
 
+        steps::SplineInitialization const spline_init_step{cfg.camera_id, bundle_adjustment_id, db};
+        StepId const spline_init_id{steps::RunStep<steps::SplineInitialization>(spline_init_step, db)};
+
         static_cast<void>(imu_data_loading_id);
+        static_cast<void>(spline_init_id);
     }
 
     std::cout << "The future is calibrated!\n";
