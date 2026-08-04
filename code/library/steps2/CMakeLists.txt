@@ -4,6 +4,7 @@ set(SRC_FILES
         src/bundle_adjustment.cpp
         src/camera_info.cpp
         src/extrinsic_init.cpp
+        src/extrinsic_optimization.cpp
         src/feature_extraction.cpp
         src/image_loading.cpp
         src/imu_data_loading.cpp

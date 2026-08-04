@@ -5,7 +5,7 @@
 namespace reprojection::steps {
 
 struct BundleAdjustment {
-    BundleAdjustment(AssetId camera_id, StepId targets_id, int num_threads, StepId camera_info_id, StepId intrinsics_id,
+    BundleAdjustment(AssetId camera_id, StepId targets_id, int num_threads, StepId camera_info_id, StepId intrinsic_id,
                      StepId camera_poses_id, database::CalibrationDatabase& db);
 
     static StepType Type() { return StepType::BundleAdjustment; }

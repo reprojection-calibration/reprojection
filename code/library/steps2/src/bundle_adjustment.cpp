@@ -16,8 +16,8 @@ auto const log{logging::Get("steps")};
 }
 
 BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId targets_id, int const num_threads,
-                                   StepId const camera_info_id, StepId const intrinsics_id,
-                                   StepId const camera_poses_id, database::CalibrationDatabase& db)
+                                   StepId const camera_info_id, StepId const intrinsic_id, StepId const camera_poses_id,
+                                   database::CalibrationDatabase& db)
     : camera_id_{camera_id},
       targets_id_{targets_id},
       num_threads_{num_threads},
@@ -35,14 +35,15 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId targets_id, i
     }
     camera_info_ = *camera_info;
 
-    auto const intrinsics{db.IntrinsicSelect(intrinsics_id, camera_id)};
+    auto const intrinsics{db.IntrinsicSelect(intrinsic_id, camera_id)};
     if (not intrinsics) {
-        log->error(
-            "{{'intrinsics_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to intrinsics but result was empty.'}}",
-            intrinsics_id.value, camera_id.value);
+        log->error("{{'intrinsic_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to intrinsics but result was empty.'}}",
+                   intrinsic_id.value, camera_id.value);
         std::exit(1);
     }
     intrinsics_ = *intrinsics;
+
+
 }
 
 Hash BundleAdjustment::CacheKey() const {
