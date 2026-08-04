@@ -1,5 +1,7 @@
 #include "steps/initialize_calibration.hpp"
 
+#include <optional>
+
 #include "logging/logging.hpp"
 
 namespace reprojection::steps {
