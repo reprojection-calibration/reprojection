@@ -30,7 +30,9 @@ conn.execute(
     WHERE id = ?
       AND type = 'feature_extraction';
     """,
-    (4, new_cache),
+    # TODO(Jack): This is hacky to hardcode the step id here! This needs to be the step id of the feature extraction
+    # step already found in the database! Hack city.
+    (new_cache, 4),
 )
 conn.commit()
 conn.close()
