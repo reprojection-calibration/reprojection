@@ -24,12 +24,9 @@ std::string Serialize(CameraMeasurements const& data) {
     for (auto const& [timestamp_ns, target] : data) {
         oss << timestamp_ns << "|";
 
-        SerializeEigenByRows(target.bundle.pixels, oss);
-        oss << "|";
-        SerializeEigenByRows(target.bundle.points, oss);
-        oss << "|";
-        SerializeEigenByRows(target.indices, oss);
-        oss << "|";
+        oss << Serialize(target.bundle.pixels) << "|";
+        oss << Serialize(target.bundle.points) << "|";
+        oss << Serialize(target.indices) << "|";
     }
 
     return oss.str();
@@ -41,20 +38,7 @@ std::string Serialize(CameraState const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
-    SerializeEigenByRows(data.intrinsics, oss);
-    oss << "|";
-
-    return oss.str();
-}
-
-std::string Serialize(Eigen::Matrix<double, 6, -1> const& data) {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(3);
-
-    for (int i{0}; i < data.cols(); ++i) {
-        SerializeEigenByRows(data.col(i), oss);
-        oss << "|";
-    }
+    oss << Serialize(data.intrinsics) << "|";
 
     return oss.str();
 }
@@ -74,12 +58,9 @@ std::string Serialize(Extrinsic const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
-    oss << data.frame_a.value;
-    oss << "|";
-    oss << data.frame_b.value;
-    oss << "|";
-    SerializeEigenByRows(data.se3_a_b, oss);
-    oss << "|";
+    oss << data.frame_a.value << "|";
+    oss << data.frame_b.value << "|";
+    oss << Serialize(data.se3_a_b) << "|";
 
     return oss.str();
 }
@@ -90,14 +71,11 @@ std::string Serialize(Frames const& data) {
 
     for (auto const& [timestamp_ns, frame] : data) {
         oss << timestamp_ns << "|";
-        SerializeEigenByRows(frame.pose, oss);
-        oss << "|";
+        oss << Serialize(frame.pose) << "|";
     }
 
     return oss.str();
 }
-
-
 
 std::string Serialize(ImuMeasurements const& data) {
     std::ostringstream oss;
@@ -106,10 +84,8 @@ std::string Serialize(ImuMeasurements const& data) {
     for (auto const& [timestamp_ns, data_i] : data) {
         oss << timestamp_ns << "|";
 
-        SerializeEigenByRows(data_i.angular_velocity, oss);
-        oss << "|";
-        SerializeEigenByRows(data_i.linear_acceleration, oss);
-        oss << "|";
+        oss << Serialize(data_i.angular_velocity) << "|";
+        oss << Serialize(data_i.linear_acceleration) << "|";
     }
 
     return oss.str();
@@ -141,6 +117,5 @@ std::string Serialize(TargetInfo const& data) {
 // NOTE(Jack): It is kind of dumb this version exists because it does not really do anything, but we need it to work
 // with the HashArguments() variadic template function.
 std::string Serialize(std::string_view data) { return std::string(data); }
-
 
 }  // namespace reprojection::hashing

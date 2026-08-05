@@ -43,7 +43,7 @@ TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
 TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStep) {
     steps::ExtrinsicInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
-    EXPECT_EQ(step.CacheKey().value, "596415c19c4ed24a0b140c3f2b2c86864fb657515d9499701e84fc4f0c0b5de2");
+    EXPECT_EQ(step.CacheKey().value, "d78f7d0b3bf9ef156ed4b8c9c31eaf1fcefb3174b239d1b5e471de80c488bc05");
 
     // Build the actual database step id and execute the step.
     StepId const step_id{db_.GetOrCreateStep(StepType::ExtrinsicInit, "").first};

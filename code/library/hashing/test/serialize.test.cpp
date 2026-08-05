@@ -42,7 +42,7 @@ TEST(HashingSerialize, TestSerializeControlPointMatrix) {
     Eigen::Matrix<double, 6, 2> const control_points{{1, 2}, {3, 4}, {5, 6}, {1, 2}, {3, 4}, {5, 6}};
 
     std::string const result{hashing::Serialize(control_points)};
-    std::string const gt_result{"1.000;3.000;5.000;1.000;3.000;5.000;|2.000;4.000;6.000;2.000;4.000;6.000;|"};
+    std::string const gt_result{"1.000,2.000;3.000,4.000;5.000,6.000;1.000,2.000;3.000,4.000;5.000,6.000;"};
 
     EXPECT_EQ(result, gt_result);
 }
