@@ -42,8 +42,6 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId targets_id, i
         std::exit(1);
     }
     intrinsics_ = *intrinsics;
-
-
 }
 
 Hash BundleAdjustment::CacheKey() const {
@@ -51,10 +49,11 @@ Hash BundleAdjustment::CacheKey() const {
 }
 
 void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
-    auto const aligned_initial_state{AlignRotations({intrinsics_, camera_poses_})};
+    auto const aligned_camera_poses{AlignRotations(camera_poses_)};
+    OptimizationState const initial_state{intrinsics_, aligned_camera_poses};
 
     auto const [optimized_state,
-                debug]{optimization::BundleAdjustment(camera_info_, targets_, aligned_initial_state, num_threads_)};
+                debug]{optimization::BundleAdjustment(camera_info_, targets_, initial_state, num_threads_)};
 
     log->info(
         "{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {{'intial_cost': "
@@ -77,13 +76,13 @@ void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase con
 // optimization. This means that what we are doing here and what we are visualizing in the database are starting to
 // diverge. Not nice!
 // cppcheck-suppress passedByValue
-OptimizationState AlignRotations(OptimizationState state) {
-    if (std::empty(state.frames)) {
-        return state;
+Frames AlignRotations(Frames data) {
+    if (std::empty(data)) {
+        return data;
     }
 
-    Vector3d so3_i_1{std::cbegin(state.frames)->second.pose.head<3>()};
-    for (auto& frame_i : state.frames | std::views::values) {
+    Vector3d so3_i_1{std::cbegin(data)->second.pose.head<3>()};
+    for (auto& frame_i : data | std::views::values) {
         Vector3d so3_i{frame_i.pose.head<3>()};
         double const dp{so3_i_1.dot(so3_i)};
 
@@ -95,7 +94,7 @@ OptimizationState AlignRotations(OptimizationState state) {
         so3_i_1 = so3_i;
     }
 
-    return state;
+    return data;
 }
 
 }  // namespace reprojection::steps

@@ -67,9 +67,9 @@ TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStep) {
 TEST(StepsBundleAdjustment, TestAlignRotations) {
     Vector6d const pose_1{1, 0, 0, 0, 0, 0};
     Vector6d const pose_2{-1 * pose_1};
-    OptimizationState const input{{}, {Frame{1, pose_1}, Frame{2, pose_2}}};
+    Frames const input{Frame{1, pose_1}, Frame{2, pose_2}};
 
-    OptimizationState const output{steps::AlignRotations(input)};
+    Frames const output{steps::AlignRotations(input)};
 
-    EXPECT_TRUE(output.frames.at(1).pose.isApprox(output.frames.at(2).pose));
+    EXPECT_TRUE(output.at(1).pose.isApprox(output.at(2).pose));
 }

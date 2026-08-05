@@ -26,6 +26,6 @@ struct BundleAdjustment {
     Frames camera_poses_;
 };
 
-OptimizationState AlignRotations(OptimizationState state);
+Frames AlignRotations(Frames data);
 
 }  // namespace reprojection::steps
