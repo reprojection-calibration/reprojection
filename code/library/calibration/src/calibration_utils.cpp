@@ -7,7 +7,6 @@ namespace reprojection::calibration {
 // WARN(Jack): This is a hack that we need to do so that the spline initialization does not have any massive
 // discontinuities or sudden jumps. But there is some bigger problem here that we are missing and need to solve long
 // term.
-// cppcheck-suppress passedByValue
 Frames AlignRotations(Frames data) {
     if (std::empty(data)) {
         return data;

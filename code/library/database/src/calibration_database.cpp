@@ -4,6 +4,7 @@
 #include <ranges>
 
 #include "database/sqlite_exception.hpp"
+// cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 #include "logging/logging.hpp"
 

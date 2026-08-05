@@ -29,7 +29,7 @@ struct StepId {
 struct Hash {
     explicit Hash(std::string_view _value) : value{_value} {}
 
-    Hash(char const* const value) : Hash{std::string_view{value}} {}
+    explicit Hash(char const* const value) : Hash{std::string_view{value}} {}
 
     Hash() = default;
 
@@ -39,11 +39,11 @@ struct Hash {
 };
 
 struct Name {
-    Name(std::string const& _value) : value{_value} {}
+    explicit Name(std::string const& _value) : value{_value} {}
 
-    Name(std::string_view _value) : value{_value} {}
+    explicit Name(std::string_view _value) : value{_value} {}
 
-    Name(char const* const value) : Name{std::string_view{value}} {}
+    explicit Name(char const* const value) : Name{std::string_view{value}} {}
 
     std::string value;
 

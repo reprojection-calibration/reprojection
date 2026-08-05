@@ -12,9 +12,9 @@ class SqliteException : public std::runtime_error {
 
     SqliteException(sqlite3* const db, sqlite3_stmt* const stmt);
 
-    SqliteException(sqlite3* const db);
+    explicit SqliteException(sqlite3* const db);
 
-    SqliteException(sqlite3_stmt* const stmt);
+    explicit SqliteException(sqlite3_stmt* const stmt);
 
    private:
     static std::string FormatMessage(sqlite3* const db, std::string_view sql);

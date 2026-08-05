@@ -1,9 +1,8 @@
-
-
 #include "database_semantics.hpp"
 
 #include <sqlite3.h>
 
+// cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 #include "types/database_types.hpp"
 

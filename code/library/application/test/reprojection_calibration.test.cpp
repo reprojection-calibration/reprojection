@@ -6,9 +6,9 @@
 
 #include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
+#include "hashing/hashing.hpp"
 #include "steps/initialize_calibration.hpp"
 // cppcheck-suppress missingInclude
-#include "hashing/hashing.hpp"
 #include "testing_utilities/generated/minimum_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
