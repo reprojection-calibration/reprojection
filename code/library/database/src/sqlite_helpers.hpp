@@ -70,15 +70,15 @@ void ExecuteStatement(std::string_view sql, Binder&& binder, sqlite3* const db) 
 
     try {
         binder(stmt.stmt_);
-    } catch (...) {
+    } catch (...) {  // LCOV_EXCL_LINE
         // TODO(Jack): It think it can very well be that any error thrown from bind is actually not 100% sqlite related,
         //  but actually due a error in the user code. Therefore it might be a mistake here to throw away the thrown
         //  error and replace it here with a database centric error. Think about also throwing the original error too!
-        throw SqliteException(db, stmt.stmt_);
+        throw SqliteException(db, stmt.stmt_);  // LCOV_EXCL_LINE
     }
 
     if (sqlite3_step(stmt.stmt_) != SQLITE_DONE) {
-        throw SqliteException(db, stmt.stmt_);
+        throw SqliteException(db, stmt.stmt_);  // LCOV_EXCL_LINE
     }
 }
 

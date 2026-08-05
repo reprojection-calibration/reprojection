@@ -33,7 +33,7 @@ std::string SqliteException::FormatMessage(sqlite3* const db, std::optional<std:
     message += "----------------------------------------";
 
     return message;
-}
+}  // LCOV_EXCL_LINE
 
 std::string SqliteException::ExpandedSql(sqlite3_stmt* const stmt) {
     char* const expanded{sqlite3_expanded_sql(stmt)};
@@ -41,7 +41,7 @@ std::string SqliteException::ExpandedSql(sqlite3_stmt* const stmt) {
     sqlite3_free(expanded);
 
     return sql;
-}
+}  // LCOV_EXCL_LINE
 
 std::string SqliteException::Indent(std::string_view text) {
     std::string result;
@@ -56,6 +56,6 @@ std::string SqliteException::Indent(std::string_view text) {
     }
 
     return result;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::database

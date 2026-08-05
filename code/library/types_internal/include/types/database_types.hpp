@@ -68,7 +68,7 @@ inline std::string ToString(AssetType const data) {
     } else if (data == AssetType::Target) {
         return "target";
     } else {
-        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown AssetType");
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown AssetType");  // LCOV_EXCL_LINE
     }
 }
 
@@ -94,7 +94,7 @@ inline std::string ToString(StepType const data) {
     } else if (data == StepType::ExtrinsicInit) {
         return "extrinsic_initialization";
     } else if (data == StepType::ExtrinsicOptimization) {
-        return "extrinsic_optimization";
+        return "extrinsic_optimization";  // LCOV_EXCL_LINE
     } else if (data == StepType::FeatureExtraction) {
         return "feature_extraction";
     } else if (data == StepType::ImageLoading) {
@@ -110,7 +110,7 @@ inline std::string ToString(StepType const data) {
     } else if (data == StepType::TargetInfo) {
         return "target_info";
     } else {
-        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown StepType");
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown StepType");  // LCOV_EXCL_LINE
     }
 }
 

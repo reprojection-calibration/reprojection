@@ -5,7 +5,7 @@ namespace reprojection::database {
 
 SqlStatement::SqlStatement(sqlite3* const db, char const* const sql) {
     if (sqlite3_prepare_v2(db, sql, -1, &stmt_, nullptr) != SQLITE_OK) {
-        throw SqliteException(db, sql);
+        throw SqliteException(db, sql);  // LCOV_EXCL_LINE
     }
 }
 
@@ -17,13 +17,13 @@ SqlTransaction::~SqlTransaction() { ExecuteStatement("END TRANSACTION", db_); }
 
 void Bind(sqlite3_stmt* const stmt, int const index, std::string_view value) {
     if (sqlite3_bind_text(stmt, index, std::string(value).c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK) {
-        throw SqliteException(stmt);
+        throw SqliteException(stmt);  // LCOV_EXCL_LINE
     }
 }
 
 void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value) {
     if (sqlite3_bind_int64(stmt, index, value) != SQLITE_OK) {
-        throw SqliteException(stmt);
+        throw SqliteException(stmt);  // LCOV_EXCL_LINE
     }
 }
 
@@ -33,13 +33,13 @@ void Bind(sqlite3_stmt* const stmt, int const index, std::size_t const value) {
 
 void Bind(sqlite3_stmt* const stmt, int const index, double const value) {
     if (sqlite3_bind_double(stmt, index, value) != SQLITE_OK) {
-        throw SqliteException(stmt);
+        throw SqliteException(stmt);  // LCOV_EXCL_LINE
     }
 }
 
 void BindNull(sqlite3_stmt* const stmt, int const index) {
     if (sqlite3_bind_null(stmt, index) != SQLITE_OK) {
-        throw SqliteException(stmt);
+        throw SqliteException(stmt);  // LCOV_EXCL_LINE
     }
 }
 
@@ -48,7 +48,7 @@ void BindNull(sqlite3_stmt* const stmt, int const index) {
 // so that way the external lifetime management can be disregarded.
 void BindBlob(sqlite3_stmt* const stmt, int const index, std::span<std::byte const> const& blob) {
     if (sqlite3_bind_blob(stmt, index, std::data(blob), std::size(blob), SQLITE_TRANSIENT) != SQLITE_OK) {
-        throw SqliteException(stmt);
+        throw SqliteException(stmt);  // LCOV_EXCL_LINE
     }
 }
 

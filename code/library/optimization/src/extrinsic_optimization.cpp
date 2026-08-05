@@ -107,7 +107,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
     for (auto const timestamp_ns : targets | std::views::keys) {
         auto const tf_w_co_i{spline_w_co.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
         if (not tf_w_co_i) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
         Array6d const tf_co_w_i{geometry::InverseTransform<double>(*tf_w_co_i)};
         tf_co_w.insert({timestamp_ns, {tf_co_w_i}});
