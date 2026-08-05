@@ -14,7 +14,7 @@
 
 namespace reprojection::database {
 
-SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only) {
+SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool const create, bool const read_only) {
     if (create and read_only) {
         throw std::runtime_error(
             "You requested to open a database object with both options 'create' and 'read_only' true. This is "
@@ -66,8 +66,8 @@ SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bo
     // we need to manually turn it on here.
     ExecuteStatement("PRAGMA foreign_keys = ON;", db);
 
-    // NOTE(Jack): This lambda here is our way of ensuring (at least I hope so), the proper closure/destruction of the
-    // db. Noe that every place that we create a SqlitePtr we need to pass this lambda which is a little hacky,
+    // WARN(Jack): This lambda here is our way of ensuring (at least I hope so), the proper closure/destruction of the
+    // db. Note that every place that we create a SqlitePtr we need to pass this lambda which is a little hacky.
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
 }
 

@@ -12,9 +12,7 @@
 
 namespace reprojection::database {
 
-namespace fs = std::filesystem;
-
-SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool create, bool read_only = false);
+SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool create, bool read_only = false);
 
 AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
 

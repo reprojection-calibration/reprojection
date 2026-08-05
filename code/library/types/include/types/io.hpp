@@ -10,6 +10,8 @@
 
 namespace reprojection {
 
+// NOTE(Jack): We purposely choose this type as the public interface because it lets us use libsqlite3 as the common
+// interface and lets us hide our custom database interaction logic/code entirely from the user application space.
 using SqlitePtr = std::shared_ptr<sqlite3>;
 
 // NOTE(Jack): We choose to use the cv::Mat as the datatype interface for third party applications. But technically we

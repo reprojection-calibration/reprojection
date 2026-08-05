@@ -5,7 +5,6 @@
 
 #include <toml++/toml.hpp>
 
-#include "database/calibration_database.hpp"
 #include "types/io.hpp"
 
 namespace reprojection::application {
