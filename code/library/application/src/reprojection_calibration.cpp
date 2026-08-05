@@ -82,8 +82,8 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
         cfg.camera_id, targets_id, cfg.config.application.threads, camera_info_id, intrinsic_init_id, pose_init_id, db};
     StepId const bundle_adjustment_id{RunStep<steps::BundleAdjustment>(bundle_adjustment_step, db)};
 
-    static_cast<void>(bundle_adjustment_id);
-
+    // TODO(Jack): We need to get this running in the unit testing even just with empty data!
+    // LCOV_EXCL_START
     if (cfg.imu_id.has_value() and imu_input.has_value()) {
         steps::ImuDataLoading const imu_data_loading_step{*cfg.imu_id, imu_input->signature, imu_input->source};
         StepId const imu_data_id{steps::RunStep<steps::ImuDataLoading>(imu_data_loading_step, db)};
@@ -107,7 +107,8 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
 
         static_cast<void>(extrinsic_optimization_id);
     }
-
+    // LCOV_EXCL_STOP
+    
     std::cout << "The future is calibrated!\n";
 }
 

@@ -34,9 +34,8 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     }
 
     if (code != SQLITE_OK) {
-        sqlite3_close_v2(db);
-
         // TODO(Jack): Is it valid here to try to get an error message here from an improperly opened db pointer?
+        // TODO(Jack): Do we need to close the database here?
         throw SqliteException(db);
     }
 

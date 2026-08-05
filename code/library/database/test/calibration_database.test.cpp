@@ -9,6 +9,15 @@
 
 using namespace reprojection;
 
+TEST(DatabaseCalibrationDatbase, TestOpenCalibrationDatabase) {
+    // Cannot create a read only database because it requires writing to it to create it!
+    EXPECT_THROW(auto db{database::OpenCalibrationDatabase(":memory:", true, true)}, std::runtime_error);
+
+    // Happy paths
+    EXPECT_NO_THROW(auto db{database::OpenCalibrationDatabase(":memory:", true)});
+    EXPECT_NO_THROW(auto db{database::OpenCalibrationDatabase(":memory:", false, true)});
+}
+
 TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
