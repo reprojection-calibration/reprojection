@@ -10,17 +10,19 @@
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 #include "types/sensor_data_types.hpp"
+#include "types/io.hpp"
 
 namespace reprojection::database {
 
 namespace fs = std::filesystem;
 
+SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool create, bool read_only = false);
+
+
+
 class CalibrationDatabase {
    public:
-    // TODO(Jack): Should we make this private and instead use a factory?
-    CalibrationDatabase(fs::path const& db_path, bool create, bool read_only = false);
 
-    ~CalibrationDatabase();
 
     AssetId GetOrCreateAsset(AssetType type, size_t index, Name const& name) const;
 

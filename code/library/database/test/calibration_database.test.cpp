@@ -10,7 +10,7 @@
 using namespace reprojection;
 
 TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Repeated insert returns the same id with no problems.
     AssetId result{db.GetOrCreateAsset(AssetType::Camera, 0, "/cam0/image_raw")};
@@ -31,7 +31,7 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
 }
 
 TEST(DatabaseCalibrationDatbase, TestGetOrCreateRecording) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Repeated insert with matching name and hash is no problem!
     RecordingId result{db.GetOrCreateRecording("recording.bag", "sha256-xxx")};
@@ -50,7 +50,7 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateRecording) {
 }
 
 TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {
-    database::CalibrationDatabase db_{":memory:", true};
+    database::OpenCalibrationDatabase db_{":memory:", true};
     Hash const hash_a{"sha256-aaa"};
 
     // Insert a new step - cache miss.
@@ -80,7 +80,7 @@ TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {
 }
 
 TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     auto const step{db.GetOrCreateStep(StepType::CameraInfo, "")};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
@@ -115,7 +115,7 @@ class CalibrationDatabaseFixture : public ::testing::Test {
         return step_id;
     }
 
-    database::CalibrationDatabase db_{":memory:", true};
+    database::OpenCalibrationDatabase db_{":memory:", true};
 };
 
 TEST_F(CalibrationDatabaseFixture, TestCameraPoses) {
@@ -135,7 +135,7 @@ TEST_F(CalibrationDatabaseFixture, TestCameraPoses) {
 }
 
 TEST(DatabaseCalibrationDatbase, TestControlPoints) {
-    database::CalibrationDatabase db{":memory:", true};
+    database::OpenCalibrationDatabase db{":memory:", true};
 
     StepId const step_id{db.GetOrCreateStep(StepType::SplineInit, "").first};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
@@ -161,7 +161,7 @@ TEST_F(CalibrationDatabaseFixture, TestImages) {
 }
 
 TEST(DatabaseCalibrationDatbase, TestImuData) {
-    database::CalibrationDatabase db{":memory:", true};
+    database::OpenCalibrationDatabase db{":memory:", true};
 
     auto const step{db.GetOrCreateStep(StepType::ImuDataLoading, "")};
     AssetId const asset_id{db.GetOrCreateAsset(AssetType::Imu, 0, "")};
@@ -189,7 +189,7 @@ TEST(DatabaseCalibrationDatbase, TestImuData) {
 }
 
 TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
-    database::CalibrationDatabase db{":memory:", true};
+    database::OpenCalibrationDatabase db{":memory:", true};
 
     // TODO(Jack): We absolutely need to add logic to the database that checks the owning step for a camera intrinsic is
     // valid (ex. comes from a step which produces an intrinsic) and that the asset id is a camera. We need this kind of
@@ -226,7 +226,7 @@ TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
 }
 
 TEST(DatabaseCalibrationDatbase, TestExtrinsics) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     StepId const step_id{db.GetOrCreateStep(StepType::ExtrinsicInit, "").first};
     AssetId const cam_id{db.GetOrCreateAsset(AssetType::Camera, 0, "")};
@@ -243,7 +243,7 @@ TEST(DatabaseCalibrationDatbase, TestExtrinsics) {
 }
 
 TEST(DatabaseCalibrationDatbase, TestGravity) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     StepId const step_id{db.GetOrCreateStep(StepType::ExtrinsicInit, "").first};
 
@@ -256,7 +256,7 @@ TEST(DatabaseCalibrationDatbase, TestGravity) {
 }
 
 TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Satisfy foreign key constraints
     StepId const step_id{db.GetOrCreateStep(StepType::SplineInit, "").first};
@@ -272,7 +272,7 @@ TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
 }
 
 TEST(DatabaseCalibrationDatbase, TestTargetInfo) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Satisfy foreign key constraints
     auto const step{db.GetOrCreateStep(StepType::TargetInfo, "")};

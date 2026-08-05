@@ -6,7 +6,6 @@
 #include "database/sqlite_exception.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
-#include "logging/logging.hpp"
 
 #include "database_semantics.hpp"
 #include "serialization.hpp"
@@ -15,13 +14,7 @@
 
 namespace reprojection::database {
 
-namespace {
-
-auto const log{logging::Get("database")};
-
-}
-
-CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only) {
+SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bool const read_only) {
     if (create and read_only) {
         throw std::runtime_error(
             "You requested to open a database object with both options 'create' and 'read_only' true. This is "
@@ -30,37 +23,38 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
 
     // TODO(Jack): Consider using sqlite3_errcode for better terminal output https://sqlite.org/c3ref/errcode.html
 
+    sqlite3* db{nullptr};
     int code;
     if (create) {
-        code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+        code = sqlite3_open_v2(db_path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
     } else if (read_only) {
-        code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READONLY, nullptr);
+        code = sqlite3_open_v2(db_path.c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
     } else {
-        code = sqlite3_open_v2(db_path.c_str(), &db_, SQLITE_OPEN_READWRITE, nullptr);
+        code = sqlite3_open_v2(db_path.c_str(), &db, SQLITE_OPEN_READWRITE, nullptr);
     }
 
     if (code != SQLITE_OK) {
-        sqlite3_close_v2(db_);
+        sqlite3_close_v2(db);
 
         // TODO(Jack): Is it valid here to try to get an error message here from an improperly opened db pointer?
-        throw SqliteException(db_);
+        throw SqliteException(db);
     }
 
     if (not read_only) {
-        ExecuteStatement(sql_statements::assets_table, db_);
-        ExecuteStatement(sql_statements::camera_info_table, db_);
-        ExecuteStatement(sql_statements::camera_poses_table, db_);
-        ExecuteStatement(sql_statements::control_points_table, db_);
-        ExecuteStatement(sql_statements::extracted_targets_table, db_);
-        ExecuteStatement(sql_statements::extrinsics_table, db_);
-        ExecuteStatement(sql_statements::gravity_table, db_);
-        ExecuteStatement(sql_statements::images_table, db_);
-        ExecuteStatement(sql_statements::imu_data_table, db_);
-        ExecuteStatement(sql_statements::intrinsics_table, db_);
-        ExecuteStatement(sql_statements::recordings_table, db_);
-        ExecuteStatement(sql_statements::spline_info_table, db_);
-        ExecuteStatement(sql_statements::steps_table, db_);
-        ExecuteStatement(sql_statements::target_info_table, db_);
+        ExecuteStatement(sql_statements::assets_table, db);
+        ExecuteStatement(sql_statements::camera_info_table, db);
+        ExecuteStatement(sql_statements::camera_poses_table, db);
+        ExecuteStatement(sql_statements::control_points_table, db);
+        ExecuteStatement(sql_statements::extracted_targets_table, db);
+        ExecuteStatement(sql_statements::extrinsics_table, db);
+        ExecuteStatement(sql_statements::gravity_table, db);
+        ExecuteStatement(sql_statements::images_table, db);
+        ExecuteStatement(sql_statements::imu_data_table, db);
+        ExecuteStatement(sql_statements::intrinsics_table, db);
+        ExecuteStatement(sql_statements::recordings_table, db);
+        ExecuteStatement(sql_statements::spline_info_table, db);
+        ExecuteStatement(sql_statements::steps_table, db);
+        ExecuteStatement(sql_statements::target_info_table, db);
     }
 
     // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For
@@ -70,10 +64,12 @@ CalibrationDatabase::CalibrationDatabase(fs::path const& db_path, bool const cre
     //
     // That being said sqlite has the foreign key option off by default (https://sqlite.org/foreignkeys.html) so
     // we need to manually turn it on here.
-    ExecuteStatement("PRAGMA foreign_keys = ON;", db_);
-}
+    ExecuteStatement("PRAGMA foreign_keys = ON;", db);
 
-CalibrationDatabase::~CalibrationDatabase() { sqlite3_close_v2(db_); }
+    // NOTE(Jack): This lambda here is our way of ensuring (at least I hope so), the proper closure/destruction of the
+    // db. Noe that every place that we create a SqlitePtr we need to pass this lambda which is a little hacky,
+    return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
+}
 
 AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const index, Name const& name) const {
     auto const result{ReadAssetId(db_, type, index)};
