@@ -39,7 +39,7 @@ Hash ExtrinsicInit::CacheKey() const {
                                   spline_->GetTimeHandler().delta_t_ns_);
 }
 
-void ExtrinsicInit::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
+void ExtrinsicInit::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
     auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(*spline_, imu_data_, num_threads_)};
 
     // TODO(Jack): We should log these diagnostics like we did for the bundle adjustment!

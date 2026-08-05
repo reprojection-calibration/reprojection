@@ -2,6 +2,8 @@
 
 #include "database/calibration_database.hpp"
 #include "spline/se3_spline.hpp"
+#include "types/calibration_types.hpp"
+#include "types/database_types.hpp"
 
 namespace reprojection::steps {
 
@@ -14,7 +16,7 @@ struct ExtrinsicOptimization {
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase& db) const;
+    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
 
    private:
     AssetId camera_id_;

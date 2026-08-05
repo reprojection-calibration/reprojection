@@ -102,7 +102,7 @@ RecordingId CalibrationDatabase::GetOrCreateRecording(Name const& name, Hash con
 // TODO(Jack): The semantics are confusing because while the cache_key is passed here it is never written into the step,
 // it is only used to check for a cache hit or not. To actually write the cache key to the db you need to call
 // StepCacheKeyUpdate.
-std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(StepType const type, Hash const& cache_key) {
+std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(StepType const type, Hash const& cache_key) const {
     auto const result{ReadStepId(db_, type, cache_key)};
 
     if (result.has_value()) {
@@ -247,7 +247,7 @@ void CalibrationDatabase::ExtrinsicInsert(StepId step_id, Extrinsic const& extri
 }
 
 std::optional<Extrinsic> CalibrationDatabase::ExtrinsicSelect(StepId const step_id, AssetId const asset_a_id,
-                                                               AssetId const asset_b_id) const {
+                                                              AssetId const asset_b_id) const {
     std::optional<Array6d> se3_a_b;
 
     ExecuteQuery(

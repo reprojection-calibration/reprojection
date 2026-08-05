@@ -20,7 +20,7 @@ SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const
 
 Hash SplineInitialization::CacheKey() const { return hashing::HashArguments(camera_poses_); }
 
-void SplineInitialization::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
+void SplineInitialization::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
     // NOTE(Jack): We normally store our frames so that they transform a world point to the camera optical frame (ex.
     // bundle adjustment optimizes that directly). But the spline needs the inverse of that for its cumulative rotation
     // formulation to work and for the linear acceleration to be calculated in the desired frame by default.

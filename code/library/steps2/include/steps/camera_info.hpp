@@ -1,18 +1,20 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
+#include "types/calibration_types.hpp"
+#include "types/database_types.hpp"
 
 namespace reprojection::steps {
 
 struct CameraInfoStep {
     CameraInfoStep(AssetId camera_id, StepId image_loading_id, CameraModel camera_model,
-                   database::CalibrationDatabase& db);
+                   database::CalibrationDatabase const& db);
 
     static StepType Type() { return StepType::CameraInfo; }
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase& db) const;
+    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
 
    private:
     AssetId camera_id_;

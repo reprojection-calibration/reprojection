@@ -12,7 +12,7 @@ struct TargetInfoStep {
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase& db) const;
+    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
 
    private:
     AssetId target_id_;

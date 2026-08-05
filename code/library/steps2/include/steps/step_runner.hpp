@@ -12,7 +12,7 @@ auto const log{logging::Get("steps")};
 }
 
 template <typename T>
-concept IsRunnableStep = requires(T const& step, StepId const id, database::CalibrationDatabase& db) {
+concept IsRunnableStep = requires(T const& step, StepId const id, database::CalibrationDatabase const& db) {
     { step.Type() } -> std::same_as<StepType>;
     { step.CacheKey() } -> std::same_as<Hash>;
     { step.Execute(id, db) } -> std::same_as<void>;
@@ -20,7 +20,7 @@ concept IsRunnableStep = requires(T const& step, StepId const id, database::Cali
 
 template <typename T>
     requires IsRunnableStep<T>
-StepId RunStep(T const& step, database::CalibrationDatabase& db) {
+StepId RunStep(T const& step, database::CalibrationDatabase const& db) {
     Hash const cache_key{step.CacheKey()};
     auto const [step_id, cache_status]{db.GetOrCreateStep(step.Type(), cache_key)};
 

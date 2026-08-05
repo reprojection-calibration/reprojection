@@ -17,7 +17,7 @@ auto const log{logging::Get("steps")};
 
 BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId targets_id, int const num_threads,
                                    StepId const camera_info_id, StepId const intrinsic_id, StepId const camera_poses_id,
-                                   database::CalibrationDatabase& db)
+                                   database::CalibrationDatabase const& db)
     : camera_id_{camera_id},
       targets_id_{targets_id},
       num_threads_{num_threads},
@@ -50,7 +50,7 @@ Hash BundleAdjustment::CacheKey() const {
     return hashing::HashArguments(camera_info_, targets_, intrinsics_, camera_poses_);
 }
 
-void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase& db) const {
+void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
     auto const aligned_initial_state{AlignRotations({intrinsics_, camera_poses_})};
 
     auto const [optimized_state,

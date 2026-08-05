@@ -6,13 +6,13 @@ namespace reprojection::steps {
 
 struct IntrinsicInitialization {
     IntrinsicInitialization(AssetId camera_id, int num_threads, StepId camera_info_id, StepId targets_id,
-                            database::CalibrationDatabase& db);
+                            database::CalibrationDatabase const& db);
 
     static StepType Type() { return StepType::IntrinsicInit; }
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase& db) const;
+    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
 
    private:
     AssetId camera_id_;

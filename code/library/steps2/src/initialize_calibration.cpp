@@ -15,7 +15,7 @@ auto const log{logging::Get("steps")};
 // TODO(Jack): Why is this in the steps module and not the application module? This is not an actual official step.
 // TODO(Jack): This is at most capable of initializing a camera-imu extrinsic calibration. If we want a different
 // workflow (ex. stereo of multi-cam-imu then we need to refactor this).
-CalibrationContext InitializeCalibration(toml::table const& cfg_table, database::CalibrationDatabase& db) {
+CalibrationContext InitializeCalibration(toml::table const& cfg_table, database::CalibrationDatabase const& db) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
 
     // ERROR(Jack): Refactor the applications to pass a real recording name and hash here!

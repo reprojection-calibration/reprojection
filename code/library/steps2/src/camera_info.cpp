@@ -12,14 +12,14 @@ auto const log{logging::Get("steps")};
 }
 
 CameraInfoStep::CameraInfoStep(AssetId const camera_id, StepId const image_loading_id, CameraModel const camera_model,
-                               database::CalibrationDatabase& db)
+                               database::CalibrationDatabase const& db)
     : camera_id_{camera_id},
       camera_model_{camera_model},
       images_{std::make_shared<EncodedImages>(db.ImagesSelect(image_loading_id, camera_id))} {}
 
 Hash CameraInfoStep::CacheKey() const { return hashing::HashArguments(camera_model_, *images_); }
 
-void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
+void CameraInfoStep::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
     // TODO(Jack): Should this be checked in the constructor? Problem with that is that we cant artificially trigger a
     // cache hit then. But it seems like if we can already know this is a problem then that we should not let
     // construction finish.

@@ -17,7 +17,7 @@ ImuDataLoading::ImuDataLoading(AssetId const imu_id, std::string_view serialized
 
 Hash ImuDataLoading::CacheKey() const { return cache_key_; }
 
-void ImuDataLoading::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
+void ImuDataLoading::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
     ImuMeasurements imu_data;
     while (auto const data{imu_sampler_()}) {
         auto const& [timestamp_ns, data_i]{*data};

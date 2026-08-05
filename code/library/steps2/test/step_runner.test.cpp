@@ -9,7 +9,7 @@ struct ExampleStep {
 
      Hash CacheKey() const { return cache_key_; }
 
-    static void Execute(StepId const step_id, database::CalibrationDatabase& db) {
+    static void Execute(StepId const step_id, database::CalibrationDatabase const& db) {
         (void)db;
         (void)step_id;
 

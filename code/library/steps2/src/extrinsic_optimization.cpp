@@ -81,7 +81,7 @@ Hash ExtrinsicOptimization::CacheKey() const {
                                   spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_);
 }
 
-void ExtrinsicOptimization::Execute(StepId step_id, database::CalibrationDatabase& db) const {
+void ExtrinsicOptimization::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
     auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsics_, num_threads_)};
 

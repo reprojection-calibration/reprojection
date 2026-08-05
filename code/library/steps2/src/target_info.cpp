@@ -16,7 +16,7 @@ TargetInfoStep::TargetInfoStep(AssetId target_id, config::Config::Target const& 
 
 Hash TargetInfoStep::CacheKey() const { return hashing::HashArguments(target_id_.value, target_); }
 
-void TargetInfoStep::Execute(StepId step_id, database::CalibrationDatabase& db) const {
+void TargetInfoStep::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
     TargetInfo const target_info{target_.target_type, target_.size[0], target_.size[1], target_.unit_dimension,
                                  target_.asymmetric};
 

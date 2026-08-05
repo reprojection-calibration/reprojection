@@ -14,7 +14,7 @@ auto const log{logging::Get("steps")};
 }
 
 PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, StepId camera_info_id,
-                                       StepId intrinsics_id, database::CalibrationDatabase& db)
+                                       StepId intrinsics_id, database::CalibrationDatabase const& db)
     : camera_id_{camera_id}, targets_id_{targets_id}, targets_{db.ExtractedTargetsSelect(targets_id, camera_id)} {
     // TODO(Jack): Copy and pasted practically verbatim from the intrinsic init. Also copy and pasted almost identically
     // below. Seems like this is a good place for a templated helper function.
@@ -40,7 +40,7 @@ PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, Ste
 
 Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(targets_, camera_info_, intrinsics_); }
 
-void PoseInitialization::Execute(StepId step_id, database::CalibrationDatabase& db) const {
+void PoseInitialization::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsics_)};
 
     log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,

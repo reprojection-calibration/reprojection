@@ -15,7 +15,7 @@ auto const log{logging::Get("steps")};
 
 FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image_loading_id, bool const show_extraction,
                                      StepId const target_info_id, AssetId const target_id,
-                                     database::CalibrationDatabase& db)
+                                     database::CalibrationDatabase const& db)
     : camera_id_{camera_id}, image_loading_id_{image_loading_id}, show_extraction_{show_extraction} {
     auto const target_info_opt{db.TargetInfoSelect(target_info_id, target_id)};
     if (not target_info_opt) {
@@ -41,7 +41,7 @@ Hash FeatureExtraction::CacheKey() const {
 // TODO(Jack): We really need to split the visualization logic from the core computation!
 // NOTE(Jack): The unit tests and CI pipeline run headless which means that we cannot get the GUI show feature
 // extraction code path unit tested and covered.
-void FeatureExtraction::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
+void FeatureExtraction::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info_)};
 
     CameraMeasurements extracted_targets;

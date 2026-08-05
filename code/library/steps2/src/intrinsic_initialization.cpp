@@ -15,7 +15,7 @@ auto const log{logging::Get("steps")};
 
 IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int const num_threads,
                                                  StepId const camera_info_id, StepId const targets_id,
-                                                 database::CalibrationDatabase& db)
+                                                 database::CalibrationDatabase const& db)
     : camera_id_{camera_id}, num_threads_{num_threads} {
     auto const camera_info{db.CameraInfoSelect(camera_info_id, camera_id)};
     if (not camera_info) {
@@ -32,7 +32,7 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
 
 Hash IntrinsicInitialization::CacheKey() const { return hashing::HashArguments(camera_info_, targets_); }
 
-void IntrinsicInitialization::Execute(StepId const step_id, database::CalibrationDatabase& db) const {
+void IntrinsicInitialization::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
                                                             camera_info_.bounds.u_max, targets_, num_threads_)};
     if (not intrinsics.has_value()) {

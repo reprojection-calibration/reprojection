@@ -47,7 +47,7 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 }
 
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
-               database::CalibrationDatabase& db) {
+               database::CalibrationDatabase const& db) {
     steps::CalibrationContext const cfg{steps::InitializeCalibration(cfg_table, db)};
 
     steps::ImageLoading const image_loading_step{cfg.camera_id, image_input.signature, image_input.source};

@@ -34,12 +34,10 @@ struct ImuInput {  // LCOV_EXCL_LINE
     std::string signature;
 };
 
-std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
-
 Sensors ParseSensors(toml::table const& cfg_table);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
-               database::CalibrationDatabase& db);
+               database::CalibrationDatabase const& db);
 
 }  // namespace reprojection::application
