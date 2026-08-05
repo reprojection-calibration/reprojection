@@ -6,6 +6,7 @@
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_init.hpp"
+#include "steps/extrinsic_optimization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
@@ -54,23 +55,17 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
 
     steps::FeatureExtraction const feature_extraction_step{
         cfg.camera_id, image_loading_id, cfg.config.application.show_extraction, target_info_id, cfg.target_id, db};
-    StepId const feature_extraction_id{RunStep<steps::FeatureExtraction>(feature_extraction_step, db)};
+    StepId const targets_id{RunStep<steps::FeatureExtraction>(feature_extraction_step, db)};
 
     steps::IntrinsicInitialization const intrinsic_init_step{cfg.camera_id, cfg.config.application.threads,
-                                                             camera_info_id, feature_extraction_id, db};
+                                                             camera_info_id, targets_id, db};
     StepId const intrinsic_init_id{RunStep<steps::IntrinsicInitialization>(intrinsic_init_step, db)};
 
-    steps::PoseInitialization const pose_init_step{cfg.camera_id, feature_extraction_id, camera_info_id,
-                                                   intrinsic_init_id, db};
+    steps::PoseInitialization const pose_init_step{cfg.camera_id, targets_id, camera_info_id, intrinsic_init_id, db};
     StepId const pose_init_id{RunStep<steps::PoseInitialization>(pose_init_step, db)};
 
-    steps::BundleAdjustment const bundle_adjustment_step{cfg.camera_id,
-                                                         feature_extraction_id,
-                                                         cfg.config.application.threads,
-                                                         camera_info_id,
-                                                         intrinsic_init_id,
-                                                         pose_init_id,
-                                                         db};
+    steps::BundleAdjustment const bundle_adjustment_step{
+        cfg.camera_id, targets_id, cfg.config.application.threads, camera_info_id, intrinsic_init_id, pose_init_id, db};
     StepId const bundle_adjustment_id{RunStep<steps::BundleAdjustment>(bundle_adjustment_step, db)};
 
     static_cast<void>(bundle_adjustment_id);
@@ -86,7 +81,13 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
             cfg.camera_id, spline_init_id, *cfg.imu_id, imu_data_id, cfg.config.application.threads, db};
         StepId const extrinsic_init_id{steps::RunStep<steps::ExtrinsicInit>(extrinsic_init_step, db)};
 
-        static_cast<void>(extrinsic_init_id);
+        steps::ExtrinsicOptimization const extrinsic_optimization_step{
+            cfg.camera_id,  *cfg.imu_id,          targets_id,     imu_data_id,       cfg.config.application.threads,
+            camera_info_id, bundle_adjustment_id, spline_init_id, extrinsic_init_id, db};
+        StepId const extrinsic_optimization_id{
+            steps::RunStep<steps::ExtrinsicOptimization>(extrinsic_optimization_step, db)};
+
+        static_cast<void>(extrinsic_optimization_id);
     }
 
     std::cout << "The future is calibrated!\n";

@@ -1,8 +1,11 @@
 #include "optimization/extrinsic_optimization.hpp"
 
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "steps/extrinsic_optimization.hpp"
+
+// TODO(Jack): unit test this step!
 
 namespace reprojection::steps {
 
@@ -12,11 +15,11 @@ auto const log{logging::Get("steps")};
 
 }
 
-// TODO(Jack): This constructor, and all other steps constructors like this are in dire need of a refactor!
+// TODO(Jack): This constructor, and all other step constructors like this are in dire need of a refactor!
 ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId const imu_id, StepId const targets_id,
                                              StepId const imu_data_id, int const num_threads,
                                              StepId const camera_info_id, StepId const intrinsic_id,
-                                             StepId const spline_id, StepId const extrinsic_id, StepId const gravity_id,
+                                             StepId const spline_id, StepId const extrinsic_init_id,
                                              database::CalibrationDatabase const& db)
     : camera_id_{camera_id},
       imu_id_{imu_id},
@@ -57,20 +60,21 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
     auto const control_points{db.ControlPointsSelect(spline_id, camera_id)};
     spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
 
-    auto const extrinsic{db.ExtrinsicSelect(extrinsic_id, imu_id_, camera_id_)};
+    auto const extrinsic{db.ExtrinsicSelect(extrinsic_init_id, imu_id_, camera_id_)};
     if (not extrinsic) {
         log->error(
-            "{{'extrinsic_id': '{}', 'imu_id': '{}', 'camera_id': '{}', 'msg': 'Attempted to load extrinsic but result "
+            "{{'extrinsic_init_id': '{}', 'imu_id': '{}', 'camera_id': '{}', 'msg': 'Attempted to load extrinsic but "
+            "result "
             "was empty.'}}",
-            extrinsic_id.value, imu_id.value, camera_id.value);
+            extrinsic_init_id.value, imu_id.value, camera_id.value);
         std::exit(1);
     }
     extrinsic_ = *extrinsic;
 
-    auto const gravity{db.GravitySelect(gravity_id)};
+    auto const gravity{db.GravitySelect(extrinsic_init_id)};
     if (not gravity) {
-        log->error("{{'gravity_id': '{}', 'msg': 'Attempted to load gravity but result was empty.'}}",
-                   gravity_id.value);
+        log->error("{{'extrinsic_init_id': '{}', 'msg': 'Attempted to load gravity but result was empty.'}}",
+                   extrinsic_init_id.value);
         std::exit(1);
     }
     gravity_ = *gravity;
@@ -84,6 +88,12 @@ Hash ExtrinsicOptimization::CacheKey() const {
 void ExtrinsicOptimization::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
     auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsics_, num_threads_)};
+
+    // TODO(Jack): We also need a way to log the final and initial costs!
+    Array3d const optimized_gravity_fmt{optimized_gravity[0], optimized_gravity[1], optimized_gravity[2]};
+    log->info("{{'step_id': {}, 'extrinsic': {{'asset_id_a': {}, 'asset_id_b' {}, 'se3_a_b' {}}}, 'gravity': {}}}",
+              step_id.value, optimized_extrinsic.frame_a.value, optimized_extrinsic.frame_b.value,
+              optimized_extrinsic.se3_a_b, optimized_gravity_fmt);
 
     db.SplineInfoInsert(step_id, camera_id_, optimized_spline.GetTimeHandler());
     db.ControlPointsInsert(step_id, camera_id_, optimized_spline.ControlPoints());

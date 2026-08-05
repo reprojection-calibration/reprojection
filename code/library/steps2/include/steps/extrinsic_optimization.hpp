@@ -9,8 +9,8 @@ namespace reprojection::steps {
 
 struct ExtrinsicOptimization {
     ExtrinsicOptimization(AssetId camera_id, AssetId imu_id, StepId targets_id, StepId imu_data_id, int num_threads,
-                          StepId camera_info_id, StepId intrinsic_id, StepId spline_id, StepId extrinsic_id,
-                          StepId gravity_id, database::CalibrationDatabase const& db);
+                          StepId camera_info_id, StepId intrinsic_id, StepId spline_id, StepId extrinsic_init_id,
+                          database::CalibrationDatabase const& db);
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }
 
