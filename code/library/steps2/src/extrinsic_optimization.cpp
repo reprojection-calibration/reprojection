@@ -82,7 +82,8 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
 
 Hash ExtrinsicOptimization::CacheKey() const {
     return hashing::HashArguments(camera_info_, targets_, intrinsics_, imu_data_, spline_->ControlPoints(),
-                                  spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_);
+                                  spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_,
+                                  gravity_);
 }
 
 void ExtrinsicOptimization::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
