@@ -55,8 +55,7 @@ add_subdirectory(calibration)
 add_subdirectory(video_capture)
 add_subdirectory(feature_extraction)
 add_subdirectory(image_viewer)
-#TODO RENAME TO STEPS AND REMOVE THE OG STEPS FOLDER!
-add_subdirectory(steps2)
+add_subdirectory(steps)
 add_subdirectory(application)
 add_subdirectory(demos)
 
