@@ -31,7 +31,7 @@ TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStepRunner) {
     steps::IntrinsicInitialization const step{camera_id_, 1, camera_info_id_, targets_id_, db_};
     StepId const step_id{RunStep<steps::IntrinsicInitialization>(step, db_)};
 
-    auto const result{db_.IntrinsicSelect(step_id, camera_id_)};
+    auto const result{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
     Array5d const gt_result{530.372, 360, 240, 0, 0.5};  // Heuristic!
     EXPECT_TRUE(result->intrinsics.isApprox(gt_result, 1e-3));
@@ -42,10 +42,10 @@ TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStep) {
     EXPECT_EQ(step.Type(), StepType::IntrinsicInit);
     EXPECT_EQ(step.CacheKey().value, "5f0399afd6e6b0ba1e282ed54d1dab16219d7a1eb4ecec30a237fd6eee95f348");
 
-    auto const [step_id, _]{db_.GetOrCreateStep(StepType::IntrinsicInit, "")};
+    auto const [step_id, _]{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
-    auto const result{db_.IntrinsicSelect(step_id, camera_id_)};
+    auto const result{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
     Array5d const gt_result{530.372, 360, 240, 0, 0.5};  // Heuristic!
     EXPECT_TRUE(result->intrinsics.isApprox(gt_result, 1e-3));

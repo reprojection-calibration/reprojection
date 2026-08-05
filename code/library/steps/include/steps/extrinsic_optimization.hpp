@@ -10,13 +10,13 @@ namespace reprojection::steps {
 struct ExtrinsicOptimization {
     ExtrinsicOptimization(AssetId camera_id, AssetId imu_id, StepId targets_id, StepId imu_data_id, int num_threads,
                           StepId camera_info_id, StepId intrinsic_id, StepId spline_id, StepId extrinsic_init_id,
-                          database::CalibrationDatabase const& db);
+                          SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
+    void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
     AssetId camera_id_;

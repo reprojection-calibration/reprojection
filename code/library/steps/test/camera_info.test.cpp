@@ -29,7 +29,7 @@ TEST_F(CameraInfoTestFixture, TestCameraInfoStepRunner) {
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
     StepId const step_id{RunStep<steps::CameraInfoStep>(step, db_)};
 
-    auto const result{db_.CameraInfoSelect(step_id, camera_id_)};
+    auto const result{database::CameraInfoSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->camera_model, CameraModel::DoubleSphere);
     EXPECT_EQ(result->bounds.u_max, 20);
@@ -45,10 +45,10 @@ TEST_F(CameraInfoTestFixture, TestCameraInfoStep) {
     EXPECT_EQ(step.CacheKey().value, "9b077a5c721520f1cbee0879eb92229c61e722ec9f0a79e3d750759785db8247");
 
     // Build the actual database step id and execute the step.
-    auto const [step_id, _]{db_.GetOrCreateStep(StepType::CameraInfo, "")};
+    auto const [step_id, _]{database::GetOrCreateStep(db_.get(), StepType::CameraInfo, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
-    auto const result{db_.CameraInfoSelect(step_id, camera_id_)};
+    auto const result{database::CameraInfoSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->camera_model, CameraModel::DoubleSphere);
     EXPECT_EQ(result->bounds.u_max, 20);

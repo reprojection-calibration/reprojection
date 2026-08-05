@@ -15,7 +15,7 @@ int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.calib.db3"};
-    auto db{database::CalibrationDatabase(record_path, false)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     static constexpr std::string_view config_file{R"(
             [camera]
@@ -44,14 +44,14 @@ int main() {
         // hardcoded into the db?
 
         Hash const camera_info_cache_key{"1cc994b3b1dfe158bed402f46b5de3c00e14bf2d8057f43dd3531eebea5390c5"};
-        auto const step_result{db.GetOrCreateStep(StepType::CameraInfo, camera_info_cache_key)};
+        auto const step_result{database::GetOrCreateStep(db.get(), StepType::CameraInfo, camera_info_cache_key)};
 
         // NOTE(Jack): We only need to insert the camera info on the first pass when it's a cache miss. If we do it
         // again on subsequent runs we will violate the unique constraint.
         if (step_result.second == CacheStatus::CacheMiss) {
-            db.CameraInfoInsert(step_result.first, context.camera_id,
-                                CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
-            db.StepCacheKeyUpdate(step_result.first, camera_info_cache_key);
+            database::CameraInfoInsert(db.get(), step_result.first, context.camera_id,
+                                       CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
+            database::StepCacheKeyUpdate(db.get(), step_result.first, camera_info_cache_key);
         }
 
         // TODO(Jack): Add imu stuff!

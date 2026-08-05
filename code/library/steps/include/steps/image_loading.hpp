@@ -18,7 +18,7 @@ struct ImageLoading {
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
+    void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
     AssetId camera_id_;

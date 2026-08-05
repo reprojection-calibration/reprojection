@@ -18,15 +18,15 @@ auto const log{logging::Get("steps")};
 
 BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId targets_id, int const num_threads,
                                    StepId const camera_info_id, StepId const intrinsic_id, StepId const camera_poses_id,
-                                   database::CalibrationDatabase const& db)
+                                   SqlitePtr const db)
     : camera_id_{camera_id},
       targets_id_{targets_id},
       num_threads_{num_threads},
-      targets_{db.ExtractedTargetsSelect(targets_id, camera_id)},
-      camera_poses_{db.CameraPosesSelect(camera_poses_id, camera_id)} {
+      targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)},
+      camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)} {
     // TODO(Jack): Copy and pasted practically verbatim from the intrinsic init. Also copy and pasted almost identically
     // below. Seems like this is a good place for a templated helper function.
-    auto const camera_info{db.CameraInfoSelect(camera_info_id, camera_id)};
+    auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)};
     if (not camera_info) {
         log->error(
             "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
@@ -36,7 +36,7 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId targets_id, i
     }
     camera_info_ = *camera_info;
 
-    auto const intrinsics{db.IntrinsicSelect(intrinsic_id, camera_id)};
+    auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)};
     if (not intrinsics) {
         log->error("{{'intrinsic_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to intrinsics but result was empty.'}}",
                    intrinsic_id.value, camera_id.value);
@@ -49,7 +49,7 @@ Hash BundleAdjustment::CacheKey() const {
     return hashing::HashArguments(camera_info_, targets_, intrinsics_, camera_poses_);
 }
 
-void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
+void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
     OptimizationState const initial_state{intrinsics_, aligned_camera_poses};
 
@@ -63,8 +63,8 @@ void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase con
         debug.solver_summary.initial_cost, debug.solver_summary.final_cost, debug.solver_summary.num_successful_steps,
         debug.solver_summary.num_unsuccessful_steps);
 
-    db.CameraPosesInsert(step_id, targets_id_, camera_id_, optimized_state.frames);
-    db.IntrinsicInsert(step_id, camera_id_, camera_info_.camera_model, optimized_state.camera_state);
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, optimized_state.frames);
+    database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, optimized_state.camera_state);
 
     // TODO(Jack): We need to calculate and insert the reprojection errors!
 }

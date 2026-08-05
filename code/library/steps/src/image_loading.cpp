@@ -19,7 +19,7 @@ ImageLoading::ImageLoading(AssetId const camera_id, std::string_view serialized_
 
 Hash ImageLoading::CacheKey() const { return cache_key_; }
 
-void ImageLoading::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
+void ImageLoading::Execute(StepId const step_id, SqlitePtr const db) const {
     auto encoded_images = std::make_shared<EncodedImages>();
     int num_images{0};
     while (auto const data{image_sampler_()}) {
@@ -44,7 +44,7 @@ void ImageLoading::Execute(StepId const step_id, database::CalibrationDatabase c
     log->info("{{'step_id': {}, 'imu_id': {}, 'num_images': {}}}", step_id.value, camera_id_.value,
               std::size(*encoded_images));
 
-    db.ImagesInsert(step_id, camera_id_, *encoded_images);
+    database::ImagesInsert(db.get(), step_id, camera_id_, *encoded_images);
 }
 
 }  // namespace reprojection::steps

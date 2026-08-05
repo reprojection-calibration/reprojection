@@ -9,13 +9,13 @@ namespace reprojection::steps {
 
 struct ExtrinsicInit {
     ExtrinsicInit(AssetId camera_id, StepId spline_id, AssetId imu_id, StepId imu_data_id, int num_threads,
-                  database::CalibrationDatabase const& db);
+                  SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicInit; }
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
+    void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
     AssetId camera_id_;

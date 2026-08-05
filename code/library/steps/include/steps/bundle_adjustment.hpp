@@ -3,18 +3,19 @@
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
+#include "types/io.hpp"
 
 namespace reprojection::steps {
 
 struct BundleAdjustment {
     BundleAdjustment(AssetId camera_id, StepId targets_id, int num_threads, StepId camera_info_id, StepId intrinsic_id,
-                     StepId camera_poses_id, database::CalibrationDatabase const& db);
+                     StepId camera_poses_id, SqlitePtr db);
 
     static StepType Type() { return StepType::BundleAdjustment; }
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
+    void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
     AssetId camera_id_;

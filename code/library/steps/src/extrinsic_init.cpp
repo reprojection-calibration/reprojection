@@ -14,14 +14,14 @@ auto const log{logging::Get("steps")};
 }
 
 ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, AssetId const imu_id,
-                             StepId const imu_data_id, int num_threads, database::CalibrationDatabase const& db)
+                             StepId const imu_data_id, int num_threads, SqlitePtr const db)
     : camera_id_{camera_id},
       imu_id_{imu_id},
-      imu_data_{db.ImuDataSelect(imu_data_id, imu_id)},
+      imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
       num_threads_{num_threads} {
     // TODO(Jack): Copy and pasted practically verbatim from the intrinsic init. Also copy and pasted almost identically
     // below. Seems like this is a good place for a templated helper function.
-    auto const time_handler{db.SplineInfoSelect(spline_id, camera_id)};
+    auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)};
     if (not time_handler) {
         log->error(
             "{{'spline_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to spline time handler but result was "
@@ -30,7 +30,7 @@ ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, As
         std::exit(1);
     }
 
-    auto const control_points{db.ControlPointsSelect(spline_id, camera_id)};
+    auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
     spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
 }
 
@@ -39,7 +39,7 @@ Hash ExtrinsicInit::CacheKey() const {
                                   spline_->GetTimeHandler().delta_t_ns_);
 }
 
-void ExtrinsicInit::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
+void ExtrinsicInit::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(*spline_, imu_data_, num_threads_)};
 
     // TODO(Jack): We should log these diagnostics like we did for the bundle adjustment!
@@ -55,8 +55,8 @@ void ExtrinsicInit::Execute(StepId const step_id, database::CalibrationDatabase 
     log->info("{{'step_id': {}, 'extrinsic': {{'asset_id_a': {}, 'asset_id_b' {}, 'se3_a_b' {}}}, 'gravity': {}}}",
               step_id.value, extrinsic.frame_a.value, extrinsic.frame_b.value, extrinsic.se3_a_b, gravity_w_fmt);
 
-    db.ExtrinsicInsert(step_id, extrinsic);
-    db.GravityInsert(step_id, gravity_w);
+    database::ExtrinsicInsert(db.get(), step_id, extrinsic);
+    database::GravityInsert(db.get(), step_id, gravity_w);
 }
 
 }  // namespace reprojection::steps

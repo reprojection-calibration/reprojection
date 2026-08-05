@@ -9,7 +9,7 @@ struct ExampleStep {
 
     Hash CacheKey() const { return cache_key_; }
 
-    static void Execute(StepId const step_id, database::CalibrationDatabase const& db) {
+    static void Execute(StepId const step_id, SqlitePtr const db) {
         (void)db;
         (void)step_id;
 
@@ -21,7 +21,7 @@ struct ExampleStep {
 };
 
 TEST(StepsStepRunner, TestExampleStep) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     ExampleStep step;
     StepId result{steps::RunStep<ExampleStep>(step, db)};

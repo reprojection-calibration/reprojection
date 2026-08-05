@@ -15,9 +15,9 @@ auto const log{logging::Get("steps")};
 
 IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int const num_threads,
                                                  StepId const camera_info_id, StepId const targets_id,
-                                                 database::CalibrationDatabase const& db)
+                                                 SqlitePtr const db)
     : camera_id_{camera_id}, num_threads_{num_threads} {
-    auto const camera_info{db.CameraInfoSelect(camera_info_id, camera_id)};
+    auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)};
     if (not camera_info) {
         log->error(
             "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
@@ -27,12 +27,12 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
     }
     camera_info_ = *camera_info;
 
-    targets_ = db.ExtractedTargetsSelect(targets_id, camera_id);
+    targets_ = database::ExtractedTargetsSelect(db.get(), targets_id, camera_id);
 }
 
 Hash IntrinsicInitialization::CacheKey() const { return hashing::HashArguments(camera_info_, targets_); }
 
-void IntrinsicInitialization::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
+void IntrinsicInitialization::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
                                                             camera_info_.bounds.u_max, targets_, num_threads_)};
     if (not intrinsics.has_value()) {
@@ -44,7 +44,7 @@ void IntrinsicInitialization::Execute(StepId const step_id, database::Calibratio
     log->info("{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}}}}}", step_id.value,
               camera_id_.value, ToString(camera_info_.camera_model), *intrinsics);
 
-    db.IntrinsicInsert(step_id, camera_id_, camera_info_.camera_model, CameraState{*intrinsics});
+    database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, CameraState{*intrinsics});
 }
 
 }  // namespace reprojection::steps

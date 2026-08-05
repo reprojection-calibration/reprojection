@@ -55,7 +55,7 @@ Sensors ParseSensors(toml::table const& cfg_table) {
 }
 
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
-               database::CalibrationDatabase const& db) {
+               SqlitePtr const db) {
     steps::CalibrationContext const cfg{steps::InitializeCalibration(cfg_table, db)};
 
     steps::ImageLoading const image_loading_step{cfg.camera_id, image_input.signature, image_input.source};

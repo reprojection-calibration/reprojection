@@ -14,11 +14,13 @@ auto const log{logging::Get("steps")};
 }
 
 PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, StepId camera_info_id,
-                                       StepId intrinsics_id, database::CalibrationDatabase const& db)
-    : camera_id_{camera_id}, targets_id_{targets_id}, targets_{db.ExtractedTargetsSelect(targets_id, camera_id)} {
+                                       StepId intrinsics_id, SqlitePtr const db)
+    : camera_id_{camera_id},
+      targets_id_{targets_id},
+      targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)} {
     // TODO(Jack): Copy and pasted practically verbatim from the intrinsic init. Also copy and pasted almost identically
     // below. Seems like this is a good place for a templated helper function.
-    auto const camera_info{db.CameraInfoSelect(camera_info_id, camera_id)};
+    auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)};
     if (not camera_info) {
         log->error(
             "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
@@ -28,7 +30,7 @@ PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, Ste
     }
     camera_info_ = *camera_info;
 
-    auto const intrinsics{db.IntrinsicSelect(intrinsics_id, camera_id)};
+    auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)};
     if (not intrinsics) {
         log->error(
             "{{'intrinsics_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to intrinsics but result was empty.'}}",
@@ -40,13 +42,13 @@ PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, Ste
 
 Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(targets_, camera_info_, intrinsics_); }
 
-void PoseInitialization::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
+void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsics_)};
 
     log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
               camera_id_.value, std::size(targets_), std::size(camera_poses));
 
-    db.CameraPosesInsert(step_id, targets_id_, camera_id_, camera_poses);
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, camera_poses);
 
     // TODO(Jack): We need to calculate and insert the reprojection errors!
 }

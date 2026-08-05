@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 struct AppArgs {
     fs::path data_path;
     toml::table config;
-    database::CalibrationDatabase db;
+    SqlitePtr db;
 };
 
 struct Sensors {
@@ -40,6 +40,6 @@ Sensors ParseSensors(toml::table const& cfg_table);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
-               database::CalibrationDatabase const& db);
+               SqlitePtr db);
 
 }  // namespace reprojection::application

@@ -38,13 +38,13 @@ class ImuSamplerFixture : public ::testing::Test {
 };
 
 TEST_F(ImuSamplerFixture, TestImuDataLoadingStepRunner) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
-    AssetId const imu_id{db.GetOrCreateAsset(AssetType::Imu, 0, "")};
+    AssetId const imu_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
     steps::ImuDataLoading const step{imu_id, "", imu_sampler_};
     StepId const step_id{RunStep<steps::ImuDataLoading>(step, db)};
 
-    auto const result{db.ImuDataSelect(step_id, imu_id)};
+    auto const result{database::ImuDataSelect(db.get(), step_id, imu_id)};
     EXPECT_EQ(std::size(result), std::size(imu_data_));
     for (auto const timestamp_ns : imu_data_ | std::views::keys) {
         EXPECT_TRUE(result.at(timestamp_ns).angular_velocity.isApprox(imu_data_.at(timestamp_ns).angular_velocity));
@@ -54,8 +54,9 @@ TEST_F(ImuSamplerFixture, TestImuDataLoadingStepRunner) {
 }
 
 TEST_F(ImuSamplerFixture, TestImuDataLoadingStep) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
-    AssetId const imu_id{db.GetOrCreateAsset(AssetType::Imu, 0, "")};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+
+    AssetId const imu_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
 
     // Build the step and check that the type and hash function are correct.
     steps::ImuDataLoading const step{imu_id, "", imu_sampler_};
@@ -63,11 +64,11 @@ TEST_F(ImuSamplerFixture, TestImuDataLoadingStep) {
     EXPECT_EQ(step.CacheKey().value, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
     // Build the actual database step id and execute the step.
-    auto const [step_id, _]{db.GetOrCreateStep(StepType::ImuDataLoading, "")};
+    auto const [step_id, _]{database::GetOrCreateStep(db.get(), StepType::ImuDataLoading, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db));
 
     // Load the result and check it's the same as the input
-    auto const result{db.ImuDataSelect(step_id, imu_id)};
+    auto const result{database::ImuDataSelect(db.get(), step_id, imu_id)};
     EXPECT_EQ(std::size(result), std::size(imu_data_));
     for (auto const timestamp_ns : imu_data_ | std::views::keys) {
         EXPECT_TRUE(result.at(timestamp_ns).angular_velocity.isApprox(imu_data_.at(timestamp_ns).angular_velocity));

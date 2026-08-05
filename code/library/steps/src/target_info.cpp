@@ -16,7 +16,7 @@ TargetInfoStep::TargetInfoStep(AssetId target_id, config::Config::Target const& 
 
 Hash TargetInfoStep::CacheKey() const { return hashing::HashArguments(target_id_.value, target_); }
 
-void TargetInfoStep::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
+void TargetInfoStep::Execute(StepId step_id, SqlitePtr const db) const {
     TargetInfo const target_info{target_.target_type, target_.size[0], target_.size[1], target_.unit_dimension,
                                  target_.asymmetric};
 
@@ -26,7 +26,7 @@ void TargetInfoStep::Execute(StepId step_id, database::CalibrationDatabase const
         step_id.value, target_id_.value, ToString(target_info.target_type), target_info.height, target_info.width,
         target_info.unit_dimension, target_info.asymmetric);
 
-    db.TargetInfoInsert(step_id, target_id_, target_info);
+    database::TargetInfoInsert(db.get(), step_id, target_id_, target_info);
 }
 
 }  // namespace reprojection::steps

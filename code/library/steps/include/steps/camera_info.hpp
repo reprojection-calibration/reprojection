@@ -7,14 +7,13 @@
 namespace reprojection::steps {
 
 struct CameraInfoStep {
-    CameraInfoStep(AssetId camera_id, StepId image_loading_id, CameraModel camera_model,
-                   database::CalibrationDatabase const& db);
+    CameraInfoStep(AssetId camera_id, StepId image_loading_id, CameraModel camera_model, SqlitePtr db);
 
     static StepType Type() { return StepType::CameraInfo; }
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
+    void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
     AssetId camera_id_;

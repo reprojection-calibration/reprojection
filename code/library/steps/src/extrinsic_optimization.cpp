@@ -19,16 +19,15 @@ auto const log{logging::Get("steps")};
 ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId const imu_id, StepId const targets_id,
                                              StepId const imu_data_id, int const num_threads,
                                              StepId const camera_info_id, StepId const intrinsic_id,
-                                             StepId const spline_id, StepId const extrinsic_init_id,
-                                             database::CalibrationDatabase const& db)
+                                             StepId const spline_id, StepId const extrinsic_init_id, SqlitePtr const db)
     : camera_id_{camera_id},
       imu_id_{imu_id},
-      targets_{db.ExtractedTargetsSelect(targets_id, camera_id)},
-      imu_data_{db.ImuDataSelect(imu_data_id, imu_id)},
+      targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)},
+      imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
       num_threads_{num_threads} {
     // TODO(Jack): Copy and pasted practically verbatim from the intrinsic init. Also copy and pasted almost identically
     // below. Seems like this is a good place for a templated helper function.
-    auto const camera_info{db.CameraInfoSelect(camera_info_id, camera_id)};
+    auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)};
     if (not camera_info) {
         log->error(
             "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
@@ -38,7 +37,7 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
     }
     camera_info_ = *camera_info;
 
-    auto const intrinsics{db.IntrinsicSelect(intrinsic_id, camera_id)};
+    auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)};
     if (not intrinsics) {
         log->error("{{'intrinsic_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to intrinsics but result was empty.'}}",
                    intrinsic_id.value, camera_id.value);
@@ -48,7 +47,7 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
 
     // TODO(Jack): Make these two functions private and provide one public helper that just loads the spline entirely.
     // This logic is repeated here and in the extrinsic init constructor.
-    auto const time_handler{db.SplineInfoSelect(spline_id, camera_id)};
+    auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)};
     if (not time_handler) {
         log->error(
             "{{'spline_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to spline time handler but result was "
@@ -57,10 +56,10 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
         std::exit(1);
     }
 
-    auto const control_points{db.ControlPointsSelect(spline_id, camera_id)};
+    auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
     spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
 
-    auto const extrinsic{db.ExtrinsicSelect(extrinsic_init_id, imu_id_, camera_id_)};
+    auto const extrinsic{database::ExtrinsicSelect(db.get(), extrinsic_init_id, imu_id_, camera_id_)};
     if (not extrinsic) {
         log->error(
             "{{'extrinsic_init_id': '{}', 'imu_id': '{}', 'camera_id': '{}', 'msg': 'Attempted to load extrinsic but "
@@ -71,7 +70,7 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
     }
     extrinsic_ = *extrinsic;
 
-    auto const gravity{db.GravitySelect(extrinsic_init_id)};
+    auto const gravity{database::GravitySelect(db.get(), extrinsic_init_id)};
     if (not gravity) {
         log->error("{{'extrinsic_init_id': '{}', 'msg': 'Attempted to load gravity but result was empty.'}}",
                    extrinsic_init_id.value);
@@ -86,7 +85,7 @@ Hash ExtrinsicOptimization::CacheKey() const {
                                   gravity_);
 }
 
-void ExtrinsicOptimization::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
+void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
     auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsics_, num_threads_)};
 
@@ -96,10 +95,10 @@ void ExtrinsicOptimization::Execute(StepId step_id, database::CalibrationDatabas
               step_id.value, optimized_extrinsic.frame_a.value, optimized_extrinsic.frame_b.value,
               optimized_extrinsic.se3_a_b, optimized_gravity_fmt);
 
-    db.SplineInfoInsert(step_id, camera_id_, optimized_spline.GetTimeHandler());
-    db.ControlPointsInsert(step_id, camera_id_, optimized_spline.ControlPoints());
-    db.ExtrinsicInsert(step_id, optimized_extrinsic);
-    db.GravityInsert(step_id, optimized_gravity);
+    database::SplineInfoInsert(db.get(), step_id, camera_id_, optimized_spline.GetTimeHandler());
+    database::ControlPointsInsert(db.get(), step_id, camera_id_, optimized_spline.ControlPoints());
+    database::ExtrinsicInsert(db.get(), step_id, optimized_extrinsic);
+    database::GravityInsert(db.get(), step_id, optimized_gravity);
 }
 
 }  // namespace reprojection::steps

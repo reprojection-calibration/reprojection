@@ -52,7 +52,7 @@ TEST(ApplicationReprojectionCalibration, TestParseSensors) {
 
 TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     toml::table const config{toml::parse(testing_utilities::minimum_config)};
-    auto db{database::CalibrationDatabase(":memory:", false)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // TODO(Jack): This test is a little sketchy because we are trying to induce cache hits to avoid actually having to
     // calculate anything. As a principle we do not want to use the checked in test database which means this is as much
@@ -62,18 +62,19 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
     std::string const image_sampler_signature{""};
-    auto step{db.GetOrCreateStep(StepType::ImageLoading, "")};
-    db.StepCacheKeyUpdate(step.first, {hashing::HashArguments(image_sampler_signature)});
+    auto step{database::GetOrCreateStep(db.get(), StepType::ImageLoading, "")};
+    database::StepCacheKeyUpdate(db.get(), step.first, {hashing::HashArguments(image_sampler_signature)});
 
     CameraInfo const camera_info{context.config.camera.camera_model, {0, 512, 0, 512}};
-    step = db.GetOrCreateStep(StepType::CameraInfo, "");
-    db.CameraInfoInsert(step.first, context.camera_id, camera_info);
-    db.StepCacheKeyUpdate(step.first, hashing::HashArguments(context.config.camera.camera_model, EncodedImages{}));
+    step = database::GetOrCreateStep(db.get(), StepType::CameraInfo, "");
+    database::CameraInfoInsert(db.get(), step.first, context.camera_id, camera_info);
+    database::StepCacheKeyUpdate(db.get(), step.first,
+                                 hashing::HashArguments(context.config.camera.camera_model, EncodedImages{}));
 
-    step = db.GetOrCreateStep(StepType::IntrinsicInit, "");
-    db.IntrinsicInsert(step.first, context.camera_id, context.config.camera.camera_model,
-                       {Array5d{256, 256, 256, 0, 0.5}});
-    db.StepCacheKeyUpdate(step.first, hashing::HashArguments(camera_info, CameraMeasurements{}));
+    step = database::GetOrCreateStep(db.get(), StepType::IntrinsicInit, "");
+    database::IntrinsicInsert(db.get(), step.first, context.camera_id, context.config.camera.camera_model,
+                              {Array5d{256, 256, 256, 0, 0.5}});
+    database::StepCacheKeyUpdate(db.get(), step.first, hashing::HashArguments(camera_info, CameraMeasurements{}));
 
     // WARN(Jack): I would really really like to also be able to exercise the imu calibration component here but it
     // is not nearly as easy to generate cache hits for those steps with empty inputs/outputs. This requires some

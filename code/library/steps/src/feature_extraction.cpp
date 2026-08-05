@@ -14,10 +14,9 @@ auto const log{logging::Get("steps")};
 }
 
 FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image_loading_id, bool const show_extraction,
-                                     StepId const target_info_id, AssetId const target_id,
-                                     database::CalibrationDatabase const& db)
+                                     StepId const target_info_id, AssetId const target_id, SqlitePtr const db)
     : camera_id_{camera_id}, image_loading_id_{image_loading_id}, show_extraction_{show_extraction} {
-    auto const target_info_opt{db.TargetInfoSelect(target_info_id, target_id)};
+    auto const target_info_opt{database::TargetInfoSelect(db.get(), target_info_id, target_id)};
     if (not target_info_opt) {
         log->error(
             "{{'target_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load target info but result was "
@@ -26,7 +25,7 @@ FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image
     }
     target_info_ = *target_info_opt;
 
-    images_ = std::make_shared<EncodedImages>(db.ImagesSelect(image_loading_id, camera_id));
+    images_ = std::make_shared<EncodedImages>(database::ImagesSelect(db.get(), image_loading_id, camera_id));
 }
 
 Hash FeatureExtraction::CacheKey() const {
@@ -41,7 +40,7 @@ Hash FeatureExtraction::CacheKey() const {
 // TODO(Jack): We really need to split the visualization logic from the core computation!
 // NOTE(Jack): The unit tests and CI pipeline run headless which means that we cannot get the GUI show feature
 // extraction code path unit tested and covered.
-void FeatureExtraction::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
+void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info_)};
 
     CameraMeasurements extracted_targets;
@@ -78,7 +77,7 @@ void FeatureExtraction::Execute(StepId const step_id, database::CalibrationDatab
         }
     }
 
-    db.ExtractedTargetsInsert(step_id, image_loading_id_, camera_id_, extracted_targets);
+    database::ExtractedTargetsInsert(db.get(), step_id, image_loading_id_, camera_id_, extracted_targets);
 }
 
 }  // namespace reprojection::steps

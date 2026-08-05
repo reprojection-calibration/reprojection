@@ -15,13 +15,12 @@ auto const log{logging::Get("steps")};
 
 }
 
-SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const camera_poses_id,
-                                           database::CalibrationDatabase const& db)
-    : camera_id_{camera_id}, camera_poses_{db.CameraPosesSelect(camera_poses_id, camera_id)} {}
+SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const camera_poses_id, SqlitePtr const db)
+    : camera_id_{camera_id}, camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)} {}
 
 Hash SplineInitialization::CacheKey() const { return hashing::HashArguments(camera_poses_); }
 
-void SplineInitialization::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
+void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
 
     // NOTE(Jack): We normally store our frames so that they transform a world point to the camera optical frame (ex.
@@ -42,8 +41,8 @@ void SplineInitialization::Execute(StepId const step_id, database::CalibrationDa
         step_id.value, camera_id_.value, spline.Size(), spline.GetTimeHandler().t0_ns_,
         spline.GetTimeHandler().delta_t_ns_);
 
-    db.ControlPointsInsert(step_id, camera_id_, spline.ControlPoints());
-    db.SplineInfoInsert(step_id, camera_id_, spline.GetTimeHandler());
+    database::ControlPointsInsert(db.get(), step_id, camera_id_, spline.ControlPoints());
+    database::SplineInfoInsert(db.get(), step_id, camera_id_, spline.GetTimeHandler());
 }
 
 }  // namespace reprojection::steps

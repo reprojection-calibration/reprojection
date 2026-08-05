@@ -17,6 +17,6 @@ struct CalibrationContext {
 };
 
 // TODO(Jack): Should the recording_id be passed in here instead of created inside?
-CalibrationContext InitializeCalibration(toml::table const& cfg_table, database::CalibrationDatabase const& db);
+CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr db);
 
 }  // namespace reprojection::steps

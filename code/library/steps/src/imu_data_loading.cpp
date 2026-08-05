@@ -17,7 +17,7 @@ ImuDataLoading::ImuDataLoading(AssetId const imu_id, std::string_view serialized
 
 Hash ImuDataLoading::CacheKey() const { return cache_key_; }
 
-void ImuDataLoading::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
+void ImuDataLoading::Execute(StepId const step_id, SqlitePtr const db) const {
     ImuMeasurements imu_data;
     while (auto const data{imu_sampler_()}) {
         auto const& [timestamp_ns, data_i]{*data};
@@ -30,7 +30,7 @@ void ImuDataLoading::Execute(StepId const step_id, database::CalibrationDatabase
 
     log->info("{{'step_id': {}, 'imu_id': {}, 'num_imu_data': {}}}", step_id.value, imu_id_.value, std::size(imu_data));
 
-    db.ImuDataInsert(step_id, imu_id_, imu_data);
+    database::ImuDataInsert(db.get(), step_id, imu_id_, imu_data);
 }
 
 }  // namespace reprojection::steps

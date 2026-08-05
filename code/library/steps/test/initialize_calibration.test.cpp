@@ -11,7 +11,7 @@ using namespace reprojection;
 // logically too!
 
 TEST(StepsInitializeCalibration, TestHappyPath) {
-    auto db{database::CalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
     toml::table const cfg_table{toml::parse(testing_utilities::minimum_config)};
 
     steps::CalibrationContext const result{steps::InitializeCalibration(cfg_table, db)};

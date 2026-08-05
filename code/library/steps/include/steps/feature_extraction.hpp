@@ -8,13 +8,13 @@ namespace reprojection::steps {
 
 struct FeatureExtraction {
     FeatureExtraction(AssetId camera_id, StepId image_loading_id, bool show_extraction, StepId target_info_id,
-                      AssetId target_id, database::CalibrationDatabase const& db);
+                      AssetId target_id, SqlitePtr db);
 
     static StepType Type() { return StepType::FeatureExtraction; }
 
     Hash CacheKey() const;
 
-    void Execute(StepId step_id, database::CalibrationDatabase const& db) const;
+    void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
     AssetId camera_id_;
