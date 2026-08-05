@@ -27,9 +27,14 @@ struct StepId {
 };
 
 struct Hash {
-    explicit Hash(std::string_view _value) : value{_value} {}
+    // NOTE(Jack): It is just way easier to let this auto convert that we allow the Name and Hash constructors to not be
+    // explicit.
+    //
+    // cppcheck-suppress noExplicitConstructor
+    Hash(std::string_view _value) : value{_value} {}
 
-    explicit Hash(char const* const value) : Hash{std::string_view{value}} {}
+    // cppcheck-suppress noExplicitConstructor
+    Hash(char const* const value) : Hash{std::string_view{value}} {}
 
     Hash() = default;
 
@@ -39,11 +44,14 @@ struct Hash {
 };
 
 struct Name {
-    explicit Name(std::string const& _value) : value{_value} {}
+    // cppcheck-suppress noExplicitConstructor
+    Name(std::string const& _value) : value{_value} {}
 
-    explicit Name(std::string_view _value) : value{_value} {}
+    // cppcheck-suppress noExplicitConstructor
+    Name(std::string_view _value) : value{_value} {}
 
-    explicit Name(char const* const value) : Name{std::string_view{value}} {}
+    // cppcheck-suppress noExplicitConstructor
+    Name(char const* const value) : Name{std::string_view{value}} {}
 
     std::string value;
 
