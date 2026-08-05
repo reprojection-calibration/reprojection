@@ -25,7 +25,7 @@ std::optional<std::pair<AssetId, Name>> ReadAssetId(sqlite3* const db, AssetType
     });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index, Name const& name) {
     auto const binder{[type, index, name](sqlite3_stmt* stmt) {

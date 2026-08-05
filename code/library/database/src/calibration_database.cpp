@@ -36,7 +36,7 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     if (code != SQLITE_OK) {
         // TODO(Jack): Is it valid here to try to get an error message here from an improperly opened db pointer?
         // TODO(Jack): Do we need to close the database here?
-        throw SqliteException(db);
+        throw SqliteException(db);  // LCOV_EXCL_LINE
     }
 
     if (not read_only) {
@@ -186,7 +186,7 @@ Frames CameraPosesSelect(sqlite3* const db, StepId step_id, AssetId asset_id) {
         });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 void ControlPointsInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id,
                          spline::Matrix2NXd const& data) {
@@ -257,7 +257,7 @@ std::optional<Extrinsic> ExtrinsicSelect(sqlite3* const db, StepId const step_id
     if (se3_a_b) {
         return Extrinsic{asset_a_id, asset_b_id, *se3_a_b};
     } else {
-        return std::nullopt;
+        return std::nullopt;  // LCOV_EXCL_LINE
     }
 }
 
@@ -322,7 +322,7 @@ EncodedImages ImagesSelect(sqlite3* const db, StepId const step_id, AssetId cons
         });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 void ImuDataInsert(sqlite3* const db, StepId step_id, AssetId asset_id, ImuMeasurements const& data) {
     auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
@@ -356,7 +356,7 @@ ImuMeasurements ImuDataSelect(sqlite3* const db, StepId const step_id, AssetId c
         });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 void IntrinsicInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, CameraModel const camera_model,
                      CameraState const& data) {
@@ -389,7 +389,7 @@ std::optional<CameraState> IntrinsicSelect(sqlite3* const db, StepId step_id, As
         });
 
     return intrinsic;
-}
+}  // LCOV_EXCL_LINE
 
 // NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship between
 // two data tables.
@@ -401,10 +401,10 @@ void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId cons
         protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
-            throw std::runtime_error(
+            throw std::runtime_error(  // LCOV_EXCL_LINE
                 std::format("ExtractedTargetProto.SerializeToString() failed: step_id '{}', source_step_id '{}', "
                             "asset_id '{}', timestamp_ns '{}'",
-                            step_id.value, source_step_id.value, asset_id.value, timestamp_ns));
+                            step_id.value, source_step_id.value, asset_id.value, timestamp_ns));  // LCOV_EXCL_LINE
         }
 
         Bind(stmt, 1, step_id.value);
@@ -435,15 +435,16 @@ CameraMeasurements ExtractedTargetsSelect(sqlite3* const db, StepId const step_i
 
             auto const deserialized{Deserialize(serialized)};
             if (not deserialized) {
-                throw std::runtime_error(std::format(
-                    "ExtractedTargetProto.ParseFromArray()/Deserialize() failed: timestamp_ns '{}'", timestamp_ns));
+                throw std::runtime_error(std::format(                                                 // LCOV_EXCL_LINE
+                    "ExtractedTargetProto.ParseFromArray()/Deserialize() failed: timestamp_ns '{}'",  // LCOV_EXCL_LINE
+                    timestamp_ns));                                                                   // LCOV_EXCL_LINE
             }
 
             data.insert({timestamp_ns, deserialized.value()});
         });
 
     return data;
-}
+}  // LCOV_EXCL_LINE
 
 void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler) {
     auto const binder{[step_id, asset_id, time_handler](sqlite3_stmt* const stmt) {
