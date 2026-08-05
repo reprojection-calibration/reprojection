@@ -67,6 +67,12 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=${SOURCE_INSTALL_SMALL_LIBRARIES},target=/temporary/${SOURCE_INSTALL_SMALL_LIBRARIES} \
     /temporary/${SOURCE_INSTALL_SMALL_LIBRARIES}
 
+# NOTE(Jack): We have to use a fixed version of sqlite from source because the default version installed on ubunut 20 \
+# (i.e. the ROS1 app) does not support the "RETURNING id" syntax we use
+ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
+    /temporary/${SOURCE_INSTALL_SQLITE}
+
 
 FROM apt-base-stage AS base-stage
 

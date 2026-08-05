@@ -7,7 +7,6 @@ apt-get install --no-install-recommends --yes \
     libgtest-dev \
     libopencv-dev \
     libprotobuf-dev \
-    libsqlite3-dev \
     libssl-dev \
     protobuf-compiler
 
