@@ -3,11 +3,11 @@
 
 #include <toml++/toml.hpp>
 
-#include "steps/initialize_calibration.hpp"
 #include "application/reprojection_calibration.hpp"
 #include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
+#include "steps/initialize_calibration.hpp"
 
 using namespace reprojection;
 

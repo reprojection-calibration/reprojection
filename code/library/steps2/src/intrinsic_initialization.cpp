@@ -36,9 +36,8 @@ void IntrinsicInitialization::Execute(StepId const step_id, database::Calibratio
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
                                                             camera_info_.bounds.u_max, targets_, num_threads_)};
     if (not intrinsics.has_value()) {
-        log->error(
-            "{{'step_id': {}, 'asset_id': {}, 'msg': 'Failed to initialize intrinsics.'}}",
-            step_id.value, camera_id_.value);
+        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'Failed to initialize intrinsics.'}}", step_id.value,
+                   camera_id_.value);
         std::exit(1);
     }
 

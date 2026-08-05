@@ -26,7 +26,6 @@ class CameraInfoTestFixture : public StepTestFixture {
 };
 
 TEST_F(CameraInfoTestFixture, TestCameraInfoStepRunner) {
-
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
     StepId const step_id{RunStep<steps::CameraInfoStep>(step, db_)};
 

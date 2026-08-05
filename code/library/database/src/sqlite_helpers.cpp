@@ -27,7 +27,7 @@ void Bind(sqlite3_stmt* const stmt, int const index, int64_t const value) {
     }
 }
 
- void Bind(sqlite3_stmt* const stmt, int const index, std::size_t const value) {
+void Bind(sqlite3_stmt* const stmt, int const index, std::size_t const value) {
     Bind(stmt, index, static_cast<int64_t>(value));
 }
 

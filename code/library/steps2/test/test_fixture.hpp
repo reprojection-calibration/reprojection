@@ -46,4 +46,3 @@ class StepTestFixture : public ::testing::Test {
     database::CalibrationDatabase db_{":memory:", true};
     AssetId camera_id_{db_.GetOrCreateAsset(AssetType::Camera, 0, "")};
 };
-

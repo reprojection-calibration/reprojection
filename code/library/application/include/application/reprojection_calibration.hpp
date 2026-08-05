@@ -34,7 +34,6 @@ struct ImuInput {  // LCOV_EXCL_LINE
     std::string signature;
 };
 
-
 std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
