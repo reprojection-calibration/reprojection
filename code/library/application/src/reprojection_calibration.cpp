@@ -108,7 +108,7 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
         static_cast<void>(extrinsic_optimization_id);
     }
     // LCOV_EXCL_STOP
-    
+
     std::cout << "The future is calibrated!\n";
 }
 
