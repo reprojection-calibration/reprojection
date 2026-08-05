@@ -1,6 +1,7 @@
 set(LIBRARY_NAME "calibration")
 
 set(SRC_FILES
+        src/calibration_utils.cpp
         src/extrinsic_initialization.cpp
         src/initialization_methods.cpp
         src/intrinsic_initialization.cpp
@@ -35,6 +36,7 @@ set(TESTS
         src/parabola_line_initialization.test.cpp
         src/utilities.test.cpp
         src/vanishing_point_initialization.test.cpp
+        test/calibration_utils.test.cpp
         test/initialization_methods.test.cpp
 )
 AddTests()

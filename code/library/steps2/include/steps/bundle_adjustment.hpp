@@ -26,6 +26,4 @@ struct BundleAdjustment {
     Frames camera_poses_;
 };
 
-Frames AlignRotations(Frames data);
-
 }  // namespace reprojection::steps

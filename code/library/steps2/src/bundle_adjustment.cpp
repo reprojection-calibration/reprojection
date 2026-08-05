@@ -2,6 +2,7 @@
 
 #include <ranges>
 
+#include "calibration/calibration_utils.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
@@ -49,7 +50,7 @@ Hash BundleAdjustment::CacheKey() const {
 }
 
 void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase const& db) const {
-    auto const aligned_camera_poses{AlignRotations(camera_poses_)};
+    auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
     OptimizationState const initial_state{intrinsics_, aligned_camera_poses};
 
     auto const [optimized_state,
@@ -66,35 +67,6 @@ void BundleAdjustment::Execute(StepId step_id, database::CalibrationDatabase con
     db.IntrinsicInsert(step_id, camera_id_, camera_info_.camera_model, optimized_state.camera_state);
 
     // TODO(Jack): We need to calculate and insert the reprojection errors!
-}
-
-// WARN(Jack): This is a hack that we need to do so that the spline initialization does not have any massive
-// discontinuities or sudden jumps. But there is some bigger problem here that we are missing and need to solve long
-// term.
-// WARN(Jack): Also note that we do not save aligned_initial_state to the database, we save plain old initial_state and
-// use that to calculate the reprojection errors, but use aligned_initial_state to initialize the nonlinear
-// optimization. This means that what we are doing here and what we are visualizing in the database are starting to
-// diverge. Not nice!
-// cppcheck-suppress passedByValue
-Frames AlignRotations(Frames data) {
-    if (std::empty(data)) {
-        return data;
-    }
-
-    Vector3d so3_i_1{std::cbegin(data)->second.pose.head<3>()};
-    for (auto& frame_i : data | std::views::values) {
-        Vector3d so3_i{frame_i.pose.head<3>()};
-        double const dp{so3_i_1.dot(so3_i)};
-
-        if (dp < 0) {
-            so3_i *= -1.0;
-        }
-        frame_i.pose.head<3>() = so3_i;
-
-        so3_i_1 = so3_i;
-    }
-
-    return data;
 }
 
 }  // namespace reprojection::steps

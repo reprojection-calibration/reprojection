@@ -63,13 +63,3 @@ TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStep) {
     ASSERT_TRUE(result2.has_value());
     EXPECT_TRUE(result2->intrinsics.isApprox(testing_utilities::double_sphere_intrinsics));
 }
-
-TEST(StepsBundleAdjustment, TestAlignRotations) {
-    Vector6d const pose_1{1, 0, 0, 0, 0, 0};
-    Vector6d const pose_2{-1 * pose_1};
-    Frames const input{Frame{1, pose_1}, Frame{2, pose_2}};
-
-    Frames const output{steps::AlignRotations(input)};
-
-    EXPECT_TRUE(output.at(1).pose.isApprox(output.at(2).pose));
-}
