@@ -34,7 +34,8 @@ struct ImuInput {  // LCOV_EXCL_LINE
     std::string signature;
 };
 
-Sensors ParseSensors(toml::table const& cfg_table);
+
+std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,

@@ -3,7 +3,6 @@
 #include <ranges>
 
 #include "config/config_parse.hpp"
-#include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_init.hpp"
@@ -20,12 +19,6 @@
 #include "io.hpp"
 
 namespace reprojection::application {
-
-namespace {
-
-auto const log{logging::Get("application")};
-
-}
 
 std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
     auto const paths{ParseCommandLineInput(argc, argv)};
