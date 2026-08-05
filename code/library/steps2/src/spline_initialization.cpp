@@ -1,5 +1,6 @@
 #include "spline/spline_initialization.hpp"
 
+#include "calibration/calibration_utils.hpp"
 #include "geometry/lie.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
@@ -21,11 +22,13 @@ SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const
 Hash SplineInitialization::CacheKey() const { return hashing::HashArguments(camera_poses_); }
 
 void SplineInitialization::Execute(StepId const step_id, database::CalibrationDatabase const& db) const {
+    auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
+
     // NOTE(Jack): We normally store our frames so that they transform a world point to the camera optical frame (ex.
     // bundle adjustment optimizes that directly). But the spline needs the inverse of that for its cumulative rotation
     // formulation to work and for the linear acceleration to be calculated in the desired frame by default.
     Frames invert_frames;
-    for (auto const& [timestamp_ns, frame_i] : camera_poses_) {
+    for (auto const& [timestamp_ns, frame_i] : aligned_camera_poses) {
         invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.pose).inverse())}});
     }
 
