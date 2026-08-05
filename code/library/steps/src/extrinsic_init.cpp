@@ -23,11 +23,11 @@ ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, As
     // below. Seems like this is a good place for a templated helper function.
     auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)};
     if (not time_handler) {
-        log->error(
+        log->error(  // LCOV_EXCL_LINE
             "{{'spline_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to spline time handler but result was "
             "empty.'}}",
             spline_id.value, camera_id.value);
-        std::exit(1);
+        std::exit(1);  // LCOV_EXCL_LINE
     }
 
     auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};

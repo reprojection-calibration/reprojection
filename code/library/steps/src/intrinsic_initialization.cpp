@@ -19,11 +19,11 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
     : camera_id_{camera_id}, num_threads_{num_threads} {
     auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)};
     if (not camera_info) {
-        log->error(
+        log->error(  // LCOV_EXCL_LINE
             "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
             "empty.'}}",
             camera_info_id.value, camera_id.value);
-        std::exit(1);
+        std::exit(1);  // LCOV_EXCL_LINE
     }
     camera_info_ = *camera_info;
 
@@ -36,9 +36,9 @@ void IntrinsicInitialization::Execute(StepId const step_id, SqlitePtr const db) 
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
                                                             camera_info_.bounds.u_max, targets_, num_threads_)};
     if (not intrinsics.has_value()) {
-        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'Failed to initialize intrinsics.'}}", step_id.value,
-                   camera_id_.value);
-        std::exit(1);
+        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'Failed to initialize intrinsics.'}}",  // LCOV_EXCL_LINE
+                   step_id.value, camera_id_.value);                                                // LCOV_EXCL_LINE
+        std::exit(1);                                                                               // LCOV_EXCL_LINE
     }
 
     log->info("{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}}}}}", step_id.value,

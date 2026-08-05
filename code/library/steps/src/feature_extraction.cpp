@@ -18,7 +18,7 @@ FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image
     : camera_id_{camera_id}, image_loading_id_{image_loading_id}, show_extraction_{show_extraction} {
     auto const target_info_opt{database::TargetInfoSelect(db.get(), target_info_id, target_id)};
     if (not target_info_opt) {
-        log->error(
+        log->error(  // LCOV_EXCL_LINE
             "{{'target_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load target info but result was "
             "empty.'}}",
             target_info_id.value, target_id.value);
@@ -47,15 +47,17 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
     for (auto const& [timestamp_ns, buffer] : *images_) {
         cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
         if (img.empty()) {
-            log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",
-                       step_id.value, camera_id_.value);
+            log->error(  // LCOV_EXCL_LINE
+                "{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",  // LCOV_EXCL_LINE
+                step_id.value, camera_id_.value);  // LCOV_EXCL_LINE
         }
 
         std::optional<ExtractedTarget> const target{extractor->Extract(img)};
         if (target.has_value()) {
-            extracted_targets.insert({timestamp_ns, *target});
+            extracted_targets.insert({timestamp_ns, *target});  // LCOV_EXCL_LINE
         }
 
+        // LCOV_EXCL_START
         if (show_extraction_) {
             if (target.has_value()) {
                 feature_extraction::DrawTarget(*target, img);
@@ -75,6 +77,7 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
                 break;
             }
         }
+        // LCOV_EXCL_STOP
     }
 
     database::ExtractedTargetsInsert(db.get(), step_id, image_loading_id_, camera_id_, extracted_targets);

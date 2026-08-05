@@ -24,17 +24,18 @@ void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {
     // cache hit then. But it seems like if we can already know this is a problem then that we should not let
     // construction finish.
     if (std::size(*images_) == 0) {
-        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'No images loaded.'}}", step_id.value, camera_id_.value,
-                   ToString(camera_model_));
-        std::exit(1);
+        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'No images loaded.'}}", step_id.value,  // LCOV_EXCL_LINE
+                   camera_id_.value, ToString(camera_model_));                                      // LCOV_EXCL_LINE
+        std::exit(1);                                                                               // LCOV_EXCL_LINE
     }
 
     // Check the size of the first image to get the image dimensions.
     cv::Mat const img{cv::imdecode(images_->begin()->second.data, cv::IMREAD_COLOR)};
     if (img.empty()) {
-        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",
-                   step_id.value, camera_id_.value, ToString(camera_model_));
-        std::exit(1);
+        log->error(  // LCOV_EXCL_LINE
+            "{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",
+            step_id.value, camera_id_.value, ToString(camera_model_));  // LCOV_EXCL_LINE
+        std::exit(1);                                                   // LCOV_EXCL_LINE
     }
 
     CameraInfo const camera_info{camera_model_,
