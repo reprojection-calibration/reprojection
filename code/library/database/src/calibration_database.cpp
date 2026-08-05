@@ -71,8 +71,8 @@ SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool const create, bo
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
 }
 
-AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const index, Name const& name) const {
-    auto const result{ReadAssetId(db_, type, index)};
+AssetId GetOrCreateAsset(sqlite3* const db, AssetType const type, size_t const index, Name const& name) {
+    auto const result{ReadAssetId(db, type, index)};
     if (result and result->second != name) {
         throw std::runtime_error(
             std::format("Asset of type '{}', index '{}' and name '{}' already exists - cannot change name '{}'.",
@@ -81,11 +81,11 @@ AssetId CalibrationDatabase::GetOrCreateAsset(AssetType const type, size_t const
         return result->first;
     }
 
-    return InsertAsset(db_, type, index, name);
+    return InsertAsset(db, type, index, name);
 }
 
-RecordingId CalibrationDatabase::GetOrCreateRecording(Name const& name, Hash const& hash) const {
-    auto const result{ReadRecordingId(db_, name)};
+RecordingId GetOrCreateRecording(sqlite3* const db, Name const& name, Hash const& hash) {
+    auto const result{ReadRecordingId(db, name)};
     if (result and result->second != hash) {
         throw std::runtime_error(std::format("Recording '{}' with hash '{}' already exists - cannot change hash '{}'.",
                                              name.value, result->second.value, hash.value));
@@ -93,35 +93,34 @@ RecordingId CalibrationDatabase::GetOrCreateRecording(Name const& name, Hash con
         return result->first;
     }
 
-    return InsertRecording(db_, name, hash);
+    return InsertRecording(db, name, hash);
 }
 
 // TODO(Jack): The semantics are confusing because while the cache_key is passed here it is never written into the step,
 // it is only used to check for a cache hit or not. To actually write the cache key to the db you need to call
 // StepCacheKeyUpdate.
-std::pair<StepId, CacheStatus> CalibrationDatabase::GetOrCreateStep(StepType const type, Hash const& cache_key) const {
-    auto const result{ReadStepId(db_, type, cache_key)};
+std::pair<StepId, CacheStatus> GetOrCreateStep(sqlite3* const db, StepType const type, Hash const& cache_key) {
+    auto const result{ReadStepId(db, type, cache_key)};
 
     if (result.has_value()) {
         return std::make_pair(*result, CacheStatus::CacheHit);
     }
 
-    return std::make_pair(InsertStep(db_, type), CacheStatus::CacheMiss);
+    return std::make_pair(InsertStep(db, type), CacheStatus::CacheMiss);
 }
 
 // TODO(Jack): How do we handle the case when we are asked to complete a step which does not exist? Throw? Does it
 // already do that?
-void CalibrationDatabase::StepCacheKeyUpdate(StepId const step_id, Hash const& cache_key) const {
+void StepCacheKeyUpdate(sqlite3* const db, StepId const step_id, Hash const& cache_key) {
     auto const binder{[step_id, cache_key](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, cache_key.value);
         Bind(stmt, 2, step_id.value);
     }};
 
-    ExecuteStatement(sql_statements::steps_update_cache_key, binder, db_);
+    ExecuteStatement(sql_statements::steps_update_cache_key, binder, db);
 }
 
-void CalibrationDatabase::CameraInfoInsert(StepId const step_id, AssetId const asset_id,
-                                           CameraInfo const& camera_info) const {
+void CameraInfoInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, CameraInfo const& camera_info) {
     auto const binder{[step_id, asset_id, camera_info](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
@@ -130,14 +129,14 @@ void CalibrationDatabase::CameraInfoInsert(StepId const step_id, AssetId const a
         Bind(stmt, 5, static_cast<int64_t>(camera_info.bounds.u_max));
     }};
 
-    ExecuteStatement(sql_statements::camera_info_insert, binder, db_);
+    ExecuteStatement(sql_statements::camera_info_insert, binder, db);
 }
 
-std::optional<CameraInfo> CalibrationDatabase::CameraInfoSelect(StepId const step_id, AssetId const asset_id) const {
+std::optional<CameraInfo> CameraInfoSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     std::optional<CameraInfo> camera_info;
 
     ExecuteQuery(
-        db_, sql_statements::camera_info_select,
+        db, sql_statements::camera_info_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);
@@ -156,8 +155,8 @@ std::optional<CameraInfo> CalibrationDatabase::CameraInfoSelect(StepId const ste
     return camera_info;
 }
 
-void CalibrationDatabase::CameraPosesInsert(StepId const step_id, StepId source_step_id, AssetId const asset_id,
-                                            Frames const& camera_poses) const {
+void CameraPosesInsert(sqlite3* const db, StepId const step_id, StepId source_step_id, AssetId const asset_id,
+                       Frames const& camera_poses) {
     auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, frame] = data_i;
 
@@ -168,14 +167,14 @@ void CalibrationDatabase::CameraPosesInsert(StepId const step_id, StepId source_
         BindEigenColumn<Array6d>(stmt, 5, frame.pose);
     }};
 
-    BatchExecuteStatement(sql_statements::camera_poses_insert, camera_poses, binder, db_);
+    BatchExecuteStatement(sql_statements::camera_poses_insert, camera_poses, binder, db);
 }
 
-Frames CalibrationDatabase::CameraPosesSelect(StepId step_id, AssetId asset_id) const {
+Frames CameraPosesSelect(sqlite3* const db, StepId step_id, AssetId asset_id) {
     Frames data;
 
     ExecuteQuery(
-        db_, sql_statements::camera_poses_select,
+        db, sql_statements::camera_poses_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);
@@ -190,8 +189,8 @@ Frames CalibrationDatabase::CameraPosesSelect(StepId step_id, AssetId asset_id) 
     return data;
 }
 
-void CalibrationDatabase::ControlPointsInsert(StepId const step_id, AssetId const asset_id,
-                                              spline::Matrix2NXd const& data) const {
+void ControlPointsInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id,
+                         spline::Matrix2NXd const& data) {
     // NOTE(Jack): This lets use treat the columns of the eigen matrix like a regular type that we can iterate over.
     // This is required to be compatible with BatchExecuteStatement().
     auto indexed_control_point_columns{[](auto const& control_points) {
@@ -209,13 +208,13 @@ void CalibrationDatabase::ControlPointsInsert(StepId const step_id, AssetId cons
         BindEigenColumn<Array6d>(stmt, 4, control_point);
     }};
 
-    BatchExecuteStatement(sql_statements::control_points_insert, indexed_control_point_columns(data), binder, db_);
+    BatchExecuteStatement(sql_statements::control_points_insert, indexed_control_point_columns(data), binder, db);
 }
 
-spline::Matrix2NXd CalibrationDatabase::ControlPointsSelect(StepId const step_id, AssetId const asset_id) const {
+spline::Matrix2NXd ControlPointsSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     std::vector<Eigen::Matrix<double, 6, 1>> points;
     ExecuteQuery(
-        db_, sql_statements::control_points_select,
+        db, sql_statements::control_points_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);
@@ -232,7 +231,7 @@ spline::Matrix2NXd CalibrationDatabase::ControlPointsSelect(StepId const step_id
     return control_points;
 }
 
-void CalibrationDatabase::ExtrinsicInsert(StepId step_id, Extrinsic const& extrinsic) const {
+void ExtrinsicInsert(sqlite3* const db, StepId step_id, Extrinsic const& extrinsic) {
     auto const binder{[step_id, extrinsic](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, extrinsic.frame_a.value);
@@ -240,15 +239,15 @@ void CalibrationDatabase::ExtrinsicInsert(StepId step_id, Extrinsic const& extri
         BindEigenColumn<Array6d>(stmt, 4, extrinsic.se3_a_b);
     }};
 
-    ExecuteStatement(sql_statements::extrinsics_insert, binder, db_);
+    ExecuteStatement(sql_statements::extrinsics_insert, binder, db);
 }
 
-std::optional<Extrinsic> CalibrationDatabase::ExtrinsicSelect(StepId const step_id, AssetId const asset_a_id,
-                                                              AssetId const asset_b_id) const {
+std::optional<Extrinsic> ExtrinsicSelect(sqlite3* const db, StepId const step_id, AssetId const asset_a_id,
+                                         AssetId const asset_b_id) {
     std::optional<Array6d> se3_a_b;
 
     ExecuteQuery(
-        db_, sql_statements::extrinsics_select,
+        db, sql_statements::extrinsics_select,
         [step_id, asset_a_id, asset_b_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_a_id.value);
@@ -265,26 +264,26 @@ std::optional<Extrinsic> CalibrationDatabase::ExtrinsicSelect(StepId const step_
 
 // TODO(Jack): Should gravity be assocaited with any asset or any other piece of information? Currently the way we store
 // it we have no idea about what frame its in or anything else besides which step it comes from.
-void CalibrationDatabase::GravityInsert(StepId const step_id, Vector3d const& gravity) const {
+void GravityInsert(sqlite3* const db, StepId const step_id, Vector3d const& gravity) {
     auto const binder{[step_id, gravity](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         BindEigenColumn<Vector3d>(stmt, 2, gravity);
     }};
 
-    ExecuteStatement(sql_statements::gravity_insert, binder, db_);
+    ExecuteStatement(sql_statements::gravity_insert, binder, db);
 }
 
-std::optional<Vector3d> CalibrationDatabase::GravitySelect(StepId const step_id) const {
+std::optional<Vector3d> GravitySelect(sqlite3* const db, StepId const step_id) {
     std::optional<Vector3d> gravity;
 
     ExecuteQuery(
-        db_, sql_statements::gravity_select, [step_id](sqlite3_stmt* const stmt) { Bind(stmt, 1, step_id.value); },
+        db, sql_statements::gravity_select, [step_id](sqlite3_stmt* const stmt) { Bind(stmt, 1, step_id.value); },
         [&gravity](sqlite3_stmt* const stmt) { gravity = ReadEigenColumn<3>(stmt, 0); });
 
     return gravity;
 }
 
-void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset_id, EncodedImages const& data) const {
+void ImagesInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, EncodedImages const& data) {
     auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, buffer]{data_i};
 
@@ -299,14 +298,14 @@ void CalibrationDatabase::ImagesInsert(StepId const step_id, AssetId const asset
         }
     }};
 
-    BatchExecuteStatement(sql_statements::images_insert, data, binder, db_);
+    BatchExecuteStatement(sql_statements::images_insert, data, binder, db);
 }
 
-EncodedImages CalibrationDatabase::ImagesSelect(StepId const step_id, AssetId const asset_id) const {
+EncodedImages ImagesSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     EncodedImages data;
 
     ExecuteQuery(
-        db_, sql_statements::images_select,
+        db, sql_statements::images_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);
@@ -326,7 +325,7 @@ EncodedImages CalibrationDatabase::ImagesSelect(StepId const step_id, AssetId co
     return data;
 }
 
-void CalibrationDatabase::ImuDataInsert(StepId step_id, AssetId asset_id, ImuMeasurements const& data) const {
+void ImuDataInsert(sqlite3* const db, StepId step_id, AssetId asset_id, ImuMeasurements const& data) {
     auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_data_i]{data_i};
 
@@ -338,14 +337,14 @@ void CalibrationDatabase::ImuDataInsert(StepId step_id, AssetId asset_id, ImuMea
         BindEigenColumn<Vector3d>(stmt, 7, imu_data_i.linear_acceleration);
     }};
 
-    BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, db_);
+    BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, db);
 }
 
-ImuMeasurements CalibrationDatabase::ImuDataSelect(StepId const step_id, AssetId const asset_id) const {
+ImuMeasurements ImuDataSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     ImuMeasurements data;
 
     ExecuteQuery(
-        db_, sql_statements::imu_data_select,
+        db, sql_statements::imu_data_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);
@@ -360,8 +359,8 @@ ImuMeasurements CalibrationDatabase::ImuDataSelect(StepId const step_id, AssetId
     return data;
 }
 
-void CalibrationDatabase::IntrinsicInsert(StepId const step_id, AssetId const asset_id, CameraModel const camera_model,
-                                          CameraState const& data) const {
+void IntrinsicInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, CameraModel const camera_model,
+                     CameraState const& data) {
     auto const binder{[step_id, asset_id, camera_model, data](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
@@ -369,14 +368,14 @@ void CalibrationDatabase::IntrinsicInsert(StepId const step_id, AssetId const as
         Bind(stmt, 4, ToToml(camera_model, data.intrinsics));
     }};
 
-    ExecuteStatement(sql_statements::intrinsics_insert, binder, db_);
+    ExecuteStatement(sql_statements::intrinsics_insert, binder, db);
 }
 
-std::optional<CameraState> CalibrationDatabase::IntrinsicSelect(StepId step_id, AssetId asset_id) const {
+std::optional<CameraState> IntrinsicSelect(sqlite3* const db, StepId step_id, AssetId asset_id) {
     std::optional<CameraState> intrinsic;
 
     ExecuteQuery(
-        db_, sql_statements::intrinsics_select,
+        db, sql_statements::intrinsics_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);
@@ -395,8 +394,8 @@ std::optional<CameraState> CalibrationDatabase::IntrinsicSelect(StepId step_id, 
 
 // NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship between
 // two data tables.
-void CalibrationDatabase::ExtractedTargetsInsert(StepId const step_id, StepId const source_step_id,
-                                                 AssetId const asset_id, CameraMeasurements const& data) const {
+void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
+                            AssetId const asset_id, CameraMeasurements const& data) {
     auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, target]{data_i};
 
@@ -416,14 +415,14 @@ void CalibrationDatabase::ExtractedTargetsInsert(StepId const step_id, StepId co
         BindBlob(stmt, 5, std::as_bytes(std::span{buffer}));
     }};
 
-    BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db_);
+    BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db);
 }
 
-CameraMeasurements CalibrationDatabase::ExtractedTargetsSelect(StepId const step_id, AssetId const asset_id) const {
+CameraMeasurements ExtractedTargetsSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     CameraMeasurements data;
 
     ExecuteQuery(
-        db_, sql_statements::extracted_targets_select,
+        db, sql_statements::extracted_targets_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);
@@ -447,8 +446,7 @@ CameraMeasurements CalibrationDatabase::ExtractedTargetsSelect(StepId const step
     return data;
 }
 
-void CalibrationDatabase::SplineInfoInsert(StepId step_id, AssetId asset_id,
-                                           spline::TimeHandler const& time_handler) const {
+void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler) {
     auto const binder{[step_id, asset_id, time_handler](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
@@ -459,19 +457,18 @@ void CalibrationDatabase::SplineInfoInsert(StepId step_id, AssetId asset_id,
         Bind(stmt, 5, time_handler.delta_t_ns_);
     }};
 
-    ExecuteStatement(sql_statements::spline_info_insert, binder, db_);
+    ExecuteStatement(sql_statements::spline_info_insert, binder, db);
 }
 
 // TODO(Jack): Does adding a real SplineInfo struct make sense? Would that simplify some of the complexity we had while
 // trying to unify the spline representations?
 // TODO(Jack): At this point we made this function/concept over generic by talking about "spline info" but actually only
 // really using the time handler. Once we add a bias spline one day we will need to refactor this code (see below).
-std::optional<spline::TimeHandler> CalibrationDatabase::SplineInfoSelect(StepId const step_id,
-                                                                         AssetId const asset_id) const {
+std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     std::optional<spline::TimeHandler> time_handler;
 
     ExecuteQuery(
-        db_, sql_statements::spline_info_select,
+        db, sql_statements::spline_info_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);
@@ -488,8 +485,7 @@ std::optional<spline::TimeHandler> CalibrationDatabase::SplineInfoSelect(StepId 
     return time_handler;
 }
 
-void CalibrationDatabase::TargetInfoInsert(StepId const step_id, AssetId const asset_id,
-                                           TargetInfo const& target_info) const {
+void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, TargetInfo const& target_info) {
     auto const binder{[step_id, asset_id, target_info](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
@@ -500,14 +496,14 @@ void CalibrationDatabase::TargetInfoInsert(StepId const step_id, AssetId const a
         Bind(stmt, 7, static_cast<int64_t>(target_info.asymmetric));
     }};
 
-    ExecuteStatement(sql_statements::target_info_insert, binder, db_);
+    ExecuteStatement(sql_statements::target_info_insert, binder, db);
 }
 
-std::optional<TargetInfo> CalibrationDatabase::TargetInfoSelect(StepId const step_id, AssetId const asset_id) const {
+std::optional<TargetInfo> TargetInfoSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     std::optional<TargetInfo> target_info;
 
     ExecuteQuery(
-        db_, sql_statements::target_info_select,
+        db, sql_statements::target_info_select,
         [step_id, asset_id](sqlite3_stmt* const stmt) {
             Bind(stmt, 1, step_id.value);
             Bind(stmt, 2, asset_id.value);

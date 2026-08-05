@@ -1,7 +1,5 @@
 #pragma once
 
-#include <sqlite3.h>
-
 #include <filesystem>
 #include <optional>
 
@@ -9,8 +7,8 @@
 #include "spline/types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
-#include "types/sensor_data_types.hpp"
 #include "types/io.hpp"
+#include "types/sensor_data_types.hpp"
 
 namespace reprojection::database {
 
@@ -18,73 +16,64 @@ namespace fs = std::filesystem;
 
 SqlitePtr OpenCalibrationDatabase(fs::path const& db_path, bool create, bool read_only = false);
 
+AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
 
+RecordingId GetOrCreateRecording(sqlite3* db, Name const& name, Hash const& hash);
 
-class CalibrationDatabase {
-   public:
+// TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
+// the same name. bool: was this a cache hit?
+std::pair<StepId, CacheStatus> GetOrCreateStep(sqlite3* db, StepType type, Hash const& cache_key);
 
+// NOTE(Jack): We need the step creation and cache key insertion to be separate because if the step execution fails
+// we do not want stale/bad cache keys in the database. By splitting this up and implementing it carefully in the
+// step running logic we can ensure a cache key only gets written if the execution was succesful.
+void StepCacheKeyUpdate(sqlite3* db, StepId step_id, Hash const& cache_key);
 
-    AssetId GetOrCreateAsset(AssetType type, size_t index, Name const& name) const;
+void CameraInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraInfo const& camera_info);
 
-    RecordingId GetOrCreateRecording(Name const& name, Hash const& hash) const;
+std::optional<CameraInfo> CameraInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-    // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
-    // the same name. bool: was this a cache hit?
-    std::pair<StepId, CacheStatus> GetOrCreateStep(StepType type, Hash const& cache_key) const;
+void CameraPosesInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
+                       Frames const& camera_poses);
 
-    // NOTE(Jack): We need the step creation and cache key insertion to be separate because if the step execution fails
-    // we do not want stale/bad cache keys in the database. By splitting this up and implementing it carefully in the
-    // step running logic we can ensure a cache key only gets written if the execution was succesful.
-    void StepCacheKeyUpdate(StepId step_id, Hash const& cache_key) const;
+Frames CameraPosesSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-    void CameraInfoInsert(StepId step_id, AssetId asset_id, CameraInfo const& camera_info) const;
+void ControlPointsInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::Matrix2NXd const& data);
 
-    std::optional<CameraInfo> CameraInfoSelect(StepId step_id, AssetId asset_id) const;
+spline::Matrix2NXd ControlPointsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-    void CameraPosesInsert(StepId step_id, StepId source_step_id, AssetId asset_id, Frames const& camera_poses) const;
+void ExtrinsicInsert(sqlite3* db, StepId step_id, Extrinsic const& extrinsic);
 
-    Frames CameraPosesSelect(StepId step_id, AssetId asset_id) const;
+std::optional<Extrinsic> ExtrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_a_id, AssetId asset_b_id);
 
-    void ControlPointsInsert(StepId step_id, AssetId asset_id, spline::Matrix2NXd const& data) const;
+void GravityInsert(sqlite3* db, StepId step_id, Vector3d const& gravity);
 
-    spline::Matrix2NXd ControlPointsSelect(StepId step_id, AssetId asset_id) const;
+std::optional<Vector3d> GravitySelect(sqlite3* db, StepId step_id);
 
-    void ExtrinsicInsert(StepId step_id, Extrinsic const& extrinsic) const;
+void ImagesInsert(sqlite3* db, StepId step_id, AssetId asset_id, EncodedImages const& data);
 
-    std::optional<Extrinsic> ExtrinsicSelect(StepId step_id, AssetId asset_a_id, AssetId asset_b_id) const;
+EncodedImages ImagesSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-    void GravityInsert(StepId step_id, Vector3d const& gravity) const;
+void ImuDataInsert(sqlite3* db, StepId step_id, AssetId asset_id, ImuMeasurements const& data);
 
-    std::optional<Vector3d> GravitySelect(StepId step_id) const;
+ImuMeasurements ImuDataSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-    void ImagesInsert(StepId step_id, AssetId asset_id, EncodedImages const& data) const;
+void IntrinsicInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraModel camera_model, CameraState const& data);
 
-    EncodedImages ImagesSelect(StepId step_id, AssetId asset_id) const;
+// TODO(Jack): Should this also return the camera_model? We have that information.
+std::optional<CameraState> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-    void ImuDataInsert(StepId step_id, AssetId asset_id, ImuMeasurements const& data) const;
+void ExtractedTargetsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
+                            CameraMeasurements const& data);
 
-    ImuMeasurements ImuDataSelect(StepId step_id, AssetId asset_id) const;
+CameraMeasurements ExtractedTargetsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-    void IntrinsicInsert(StepId step_id, AssetId asset_id, CameraModel camera_model, CameraState const& data) const;
+void SplineInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler);
 
-    // TODO(Jack): Should this also return the camera_model? We have that information.
-    std::optional<CameraState> IntrinsicSelect(StepId step_id, AssetId asset_id) const;
+std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-    void ExtractedTargetsInsert(StepId step_id, StepId source_step_id, AssetId asset_id,
-                                CameraMeasurements const& data) const;
+void TargetInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, TargetInfo const& target_info);
 
-    CameraMeasurements ExtractedTargetsSelect(StepId step_id, AssetId asset_id) const;
-
-    void SplineInfoInsert(StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler) const;
-
-    std::optional<spline::TimeHandler> SplineInfoSelect(StepId step_id, AssetId asset_id) const;
-
-    void TargetInfoInsert(StepId step_id, AssetId asset_id, TargetInfo const& target_info) const;
-
-    std::optional<TargetInfo> TargetInfoSelect(StepId step_id, AssetId asset_id) const;
-
-   private:
-    sqlite3* db_{nullptr};
-};
+std::optional<TargetInfo> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 }  // namespace reprojection::database
