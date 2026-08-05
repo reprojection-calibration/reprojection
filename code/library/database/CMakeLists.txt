@@ -120,5 +120,6 @@ set(TESTS
         src/serialization.test.cpp
         src/toml_converters.test.cpp
         test/calibration_database.test.cpp
+        test/sqlite_exception.test.cpp
 )
 AddTests()
