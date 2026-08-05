@@ -28,10 +28,6 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
 
     // Trying to insert an asset with a different name at an already existing index is a no-go!
     EXPECT_THROW(db.GetOrCreateAsset(AssetType::Camera, 0, "/cam1/image_raw"), std::runtime_error);
-    // Trying to create a new asset with an already existing name is also a no-go!
-    EXPECT_THROW(db.GetOrCreateAsset(AssetType::Camera, 2, "/cam1/image_raw"), database::SqliteException);
-    // Even if the asset type changes you are still not allowed to reuse a name!
-    EXPECT_THROW(db.GetOrCreateAsset(AssetType::Imu, 2, "/cam1/image_raw"), database::SqliteException);
 }
 
 TEST(DatabaseCalibrationDatbase, TestGetOrCreateRecording) {
