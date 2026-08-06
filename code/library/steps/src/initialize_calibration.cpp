@@ -34,8 +34,9 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
         imu_id = database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, Name{cfg.imu->sensor_name});
     }
 
-    log->info("{{'recording_id': '{}', 'assets': {{'camera_id': {}, 'target_id': {}, 'imu_id': {}}}}}",
-              recording_id.value, camera_id.value, target_id.value, imu_id ? imu_id->value : -1);
+    log->info("{{'recording_id': '{}', 'assets': {{'camera_id': {}, 'target_id': {}, 'imu_id': {}}}, 'config': {}}}",
+              recording_id.value, camera_id.value, target_id.value, imu_id ? imu_id->value : -1,
+              logging::ToOneLineJson(cfg_table));
 
     return {cfg, recording_id, camera_id, target_id, imu_id};
 }

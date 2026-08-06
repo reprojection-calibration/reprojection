@@ -21,8 +21,6 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
             "an invalid combination as creating a database requires writing to it!");
     }
 
-    // TODO(Jack): Consider using sqlite3_errcode for better terminal output https://sqlite.org/c3ref/errcode.html
-
     sqlite3* db{nullptr};
     int code;
     if (create) {
