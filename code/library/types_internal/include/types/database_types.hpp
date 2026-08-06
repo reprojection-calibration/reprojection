@@ -6,8 +6,6 @@
 
 namespace reprojection {
 
-// TODO(Jack): Should we assert that all the ids need to be great than or equal to 1?
-
 struct AssetId {
     int64_t value;
 
@@ -79,7 +77,7 @@ inline std::string ToString(WorkflowType const data) {
         return "cam";
     } else if (data == WorkflowType::CamImu) {
         return "cam_imu";
-    }else {
+    } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown WorkflowType");  // LCOV_EXCL_LINE
     }
 }

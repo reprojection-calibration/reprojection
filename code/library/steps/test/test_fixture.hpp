@@ -45,5 +45,5 @@ class StepTestFixture : public ::testing::Test {
 
     SqlitePtr db_{database::OpenCalibrationDatabase(":memory:", true)};
     AssetId camera_id_{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
-    WorkflowId  workflow_id_{database::GetOrCreateWorkflow(db_.get(), WorkflowType::Cam, {camera_id_})};
+    WorkflowId workflow_id_{database::GetOrCreateWorkflow(db_.get(), WorkflowType::Cam, {camera_id_})};
 };
