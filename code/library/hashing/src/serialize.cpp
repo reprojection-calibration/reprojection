@@ -118,4 +118,14 @@ std::string Serialize(TargetInfo const& data) {
 // with the HashArguments() variadic template function.
 std::string Serialize(std::string_view data) { return std::string(data); }
 
+std::string Serialize(std::vector<AssetId> const& data) {
+    std::ostringstream oss;
+
+    for (auto const data_i : data) {
+        oss << data_i.value << "|";
+    }
+
+    return oss.str();
+}
+
 }  // namespace reprojection::hashing

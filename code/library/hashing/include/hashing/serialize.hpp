@@ -37,6 +37,8 @@ std::string Serialize(config::Config::Target const& data);
 // TODO(Jack): Can we write one single generic method for all the types that have a default std::to_string method?
 std::string Serialize(std::string_view data);
 
+std::string Serialize(std::vector<AssetId> const& data);
+
 template <typename T>
 concept Stringifiable = requires(T const value) {
     { std::to_string(value) } -> std::same_as<std::string>;

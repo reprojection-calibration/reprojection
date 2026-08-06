@@ -90,3 +90,12 @@ TEST(HashingSerialize, TestSerializeConfigTarget) {
 
     EXPECT_EQ(result, gt_result);
 }
+
+TEST(HashingSerialize, TestAssetsVector) {
+    std::vector<AssetId> const data{{0}, {1}, {5}};
+
+    std::string const result{hashing::Serialize(data)};
+    std::string const gt_result{"0|1|5|"};
+
+    EXPECT_EQ(result, gt_result);
+}
