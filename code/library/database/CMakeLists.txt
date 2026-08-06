@@ -7,6 +7,7 @@ set(LIBRARY_NAME "database")
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
+        assets_delete.sql
         assets_insert.sql
         assets_select.sql
         assets_table.sql
@@ -47,6 +48,8 @@ set(SQL_FILES
         target_info_insert.sql
         target_info_select.sql
         target_info_table.sql
+        workflow_assets_insert.sql
+        workflow_assets_table.sql
         workflows_insert.sql
         workflows_select.sql
         workflows_table.sql

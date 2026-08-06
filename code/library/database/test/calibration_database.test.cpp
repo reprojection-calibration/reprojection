@@ -59,6 +59,26 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateWorkflow) {
                  database::SqliteException);
 }
 
+TEST(DatabaseCalibrationDatbase, TestAssetWorkflowState) {
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+
+    AssetId cam_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
+    EXPECT_EQ(cam_id, AssetId{1});
+    AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "")};
+    EXPECT_EQ(target_id, AssetId{2});
+
+    // Here we only add the target (should not happen in a real workflow), not the camera
+    database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {target_id});
+
+    // The camera asset does not belong to any workflow so it gets deleted.
+    database::DeleteUnusedAssets(db.get());
+
+    // Insert the same exact camera asset that we did at the start - normally this would just return the original asset
+    // with ID = 1, but because it got deleted in the previous step it actually creates a new asset now with ID = 3.
+    cam_id = database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "");
+    EXPECT_EQ(cam_id, AssetId{3});
+}
+
 TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
     Hash const hash_a{"sha256-aaa"};

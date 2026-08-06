@@ -12,11 +12,11 @@
 
 namespace reprojection::database {
 
-
-
 SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool create, bool read_only = false);
 
 AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
+
+void DeleteUnusedAssets(sqlite3* const db);
 
 WorkflowId GetOrCreateWorkflow(sqlite3* db, WorkflowType type, std::vector<AssetId> const& assets);
 
@@ -75,5 +75,7 @@ std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* db, StepId step_id,
 void TargetInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, TargetInfo const& target_info);
 
 std::optional<TargetInfo> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+
+void WorkflowAssetsInsert(sqlite3* db, WorkflowId workflow_id, std::vector<AssetId> const& asset_ids);
 
 }  // namespace reprojection::database

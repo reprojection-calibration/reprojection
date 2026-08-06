@@ -52,6 +52,7 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
         ExecuteStatement(sql_statements::spline_info_table, db);
         ExecuteStatement(sql_statements::steps_table, db);
         ExecuteStatement(sql_statements::target_info_table, db);
+        ExecuteStatement(sql_statements::workflow_assets_table, db);
         ExecuteStatement(sql_statements::workflows_table, db);
     }
 
@@ -82,6 +83,8 @@ AssetId GetOrCreateAsset(sqlite3* const db, AssetType const type, size_t const i
     return InsertAsset(db, type, index, name);
 }
 
+void DeleteUnusedAssets(sqlite3* const db) { ExecuteStatement(sql_statements::assets_delete, db); }
+
 WorkflowId GetOrCreateWorkflow(sqlite3* const db, WorkflowType const type, std::vector<AssetId> const& assets) {
     // NOTE(Jack): We do not hash the signature so that way it remains humand readable in the database. It is a small
     // and important piece of information so this just makes sense.
@@ -93,12 +96,18 @@ WorkflowId GetOrCreateWorkflow(sqlite3* const db, WorkflowType const type, std::
     // way to do it we should!
     std::string const signature{hashing::Serialize(assets)};
 
-    auto const result{ReadWorkflowId(db, type, signature)};
-    if (result.has_value()) {
-        return *result;
+    WorkflowId id;
+    if (auto const result{ReadWorkflowId(db, type, signature)}) {
+        id = *result;
+    } else {
+        id = InsertWorkflowId(db, type, signature);
     }
 
-    return InsertWorkflowId(db, type, signature);
+    // NOTE(Jack): This is a unique component of the workflow creation that we do not find in the step or asset
+    // "GetOrCreate" methods.
+    WorkflowAssetsInsert(db, id, assets);
+
+    return id;
 }
 
 // TODO(Jack): The semantics are confusing because while the cache_key is passed here it is never written into the
@@ -528,6 +537,15 @@ std::optional<TargetInfo> TargetInfoSelect(sqlite3* const db, StepId const step_
         });
 
     return target_info;
+}
+
+void WorkflowAssetsInsert(sqlite3* const db, WorkflowId const workflow_id, std::vector<AssetId> const& asset_ids) {
+    auto const binder{[workflow_id](sqlite3_stmt* const stmt, auto const& asset_id) {
+        Bind(stmt, 1, workflow_id.value);
+        Bind(stmt, 2, asset_id.value);
+    }};
+
+    BatchExecuteStatement(sql_statements::workflow_assets_insert, asset_ids, binder, db);
 }
 
 }  // namespace reprojection::database
