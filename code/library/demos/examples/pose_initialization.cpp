@@ -38,6 +38,7 @@ int main() {
     // prevent the database throwing and killing the program when we run the program more than once without resetting
     // the database.
     try {
+        // TODO(Jack): Call this here is bad! We need to manually create the calibration workflow.
         steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
         // TODO(Jack): Should we also write the image loading and feature extraction keys here? Or should they be
