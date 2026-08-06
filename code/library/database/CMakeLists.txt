@@ -38,6 +38,9 @@ set(SQL_FILES
         intrinsics_insert.sql
         intrinsics_select.sql
         intrinsics_table.sql
+        reprojection_errors_insert.sql
+        reprojection_errors_select.sql
+        reprojection_errors_table.sql
         spline_info_insert.sql
         spline_info_select.sql
         spline_info_table.sql

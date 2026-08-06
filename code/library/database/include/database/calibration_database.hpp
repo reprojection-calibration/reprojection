@@ -20,6 +20,10 @@ void DeleteUnusedAssets(sqlite3* const db);
 
 WorkflowId GetOrCreateWorkflow(sqlite3* db, WorkflowType type, std::vector<AssetId> const& assets);
 
+void WorkflowAssetsInsert(sqlite3* db, WorkflowId workflow_id, std::vector<AssetId> const& asset_ids);
+
+void WorkflowStepUpsert(sqlite3* db, WorkflowId workflow_id, StepType step_type, StepId step_id);
+
 // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
 // the same name. bool: was this a cache hit?
 std::pair<StepId, CacheStatus> GetOrCreateStep(sqlite3* db, StepType type, Hash const& cache_key);
@@ -42,6 +46,11 @@ void ControlPointsInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::
 
 spline::Matrix2NXd ControlPointsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
+void ExtractedTargetsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
+                            CameraMeasurements const& data);
+
+CameraMeasurements ExtractedTargetsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+
 void ExtrinsicInsert(sqlite3* db, StepId step_id, Extrinsic const& extrinsic);
 
 std::optional<Extrinsic> ExtrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_a_id, AssetId asset_b_id);
@@ -63,10 +72,8 @@ void IntrinsicInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraModel 
 // TODO(Jack): Should this also return the camera_model? We have that information.
 std::optional<CameraState> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-void ExtractedTargetsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
-                            CameraMeasurements const& data);
-
-CameraMeasurements ExtractedTargetsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
+                              ReprojectionErrors const& data);
 
 void SplineInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler);
 
@@ -75,9 +82,5 @@ std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* db, StepId step_id,
 void TargetInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, TargetInfo const& target_info);
 
 std::optional<TargetInfo> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
-
-void WorkflowAssetsInsert(sqlite3* db, WorkflowId workflow_id, std::vector<AssetId> const& asset_ids);
-
-void WorkflowStepUpsert(sqlite3* db, WorkflowId workflow_id, StepType step_type, StepId step_id);
 
 }  // namespace reprojection::database

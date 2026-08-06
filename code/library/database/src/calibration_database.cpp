@@ -49,6 +49,7 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
         ExecuteStatement(sql_statements::images_table, db);
         ExecuteStatement(sql_statements::imu_data_table, db);
         ExecuteStatement(sql_statements::intrinsics_table, db);
+        ExecuteStatement(sql_statements::reprojection_errors_table, db);
         ExecuteStatement(sql_statements::spline_info_table, db);
         ExecuteStatement(sql_statements::steps_table, db);
         ExecuteStatement(sql_statements::target_info_table, db);
@@ -71,7 +72,9 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     ExecuteStatement("PRAGMA foreign_keys = ON;", db);
 
     // WARN(Jack): This lambda here is our way of ensuring (at least I hope so), the proper closure/destruction of the
-    // db. Note that every place that we create a SqlitePtr we need to pass this lambda which is a little hacky.
+    // db. Note that every place that we create a SqlitePtr we need to pass this lambda which is a little hacky. But
+    // hopefully this function is the only function we ever use to open a calibration database and therefore it won't be
+    // a problem.
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
 }
 
@@ -113,6 +116,30 @@ WorkflowId GetOrCreateWorkflow(sqlite3* const db, WorkflowType const type, std::
     WorkflowAssetsInsert(db, id, assets);
 
     return id;
+}
+
+void WorkflowAssetsInsert(sqlite3* const db, WorkflowId const workflow_id, std::vector<AssetId> const& asset_ids) {
+    auto const binder{[workflow_id](sqlite3_stmt* const stmt, auto const& asset_id) {
+        Bind(stmt, 1, workflow_id.value);
+        Bind(stmt, 2, asset_id.value);
+    }};
+
+    BatchExecuteStatement(sql_statements::workflow_assets_insert, asset_ids, binder, db);
+}
+
+void WorkflowStepUpsert(sqlite3* const db, WorkflowId const workflow_id, StepType const step_type,
+                        StepId const step_id) {
+    auto const binder{[workflow_id, step_type, step_id](sqlite3_stmt* const stmt) {
+        // NOTE(Jack): Including the step type here enforces our constraint that a workflow can only have one of each
+        // kind of step. This might get annoying for certain things like reprojection error calculation steps which now
+        // will all need unique step types. But unless we combine those with their originating steps like we had in v1
+        // that was always going to be a problem.
+        Bind(stmt, 1, workflow_id.value);
+        Bind(stmt, 2, ToString(step_type));
+        Bind(stmt, 3, step_id.value);
+    }};
+
+    ExecuteStatement(sql_statements::workflow_steps_upsert, binder, db);
 }
 
 // TODO(Jack): The semantics are confusing because while the cache_key is passed here it is never written into the
@@ -249,6 +276,62 @@ spline::Matrix2NXd ControlPointsSelect(sqlite3* const db, StepId const step_id, 
 
     return control_points;
 }
+
+// NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship
+// between two data tables.
+void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
+                            AssetId const asset_id, CameraMeasurements const& data) {
+    auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, target]{data_i};
+
+        protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
+        std::string buffer;
+        if (not serialized.SerializeToString(&buffer)) {
+            throw std::runtime_error(  // LCOV_EXCL_LINE
+                std::format("ExtractedTargetProto.SerializeToString() failed: step_id '{}', source_step_id '{}', "
+                            "asset_id '{}', timestamp_ns '{}'",
+                            step_id.value, source_step_id.value, asset_id.value, timestamp_ns));  // LCOV_EXCL_LINE
+        }
+
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, source_step_id.value);
+        Bind(stmt, 3, asset_id.value);
+        Bind(stmt, 4, timestamp_ns);
+        BindBlob(stmt, 5, std::as_bytes(std::span{buffer}));
+    }};
+
+    BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db);
+}
+
+CameraMeasurements ExtractedTargetsSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
+    CameraMeasurements data;
+
+    ExecuteQuery(
+        db, sql_statements::extracted_targets_select,
+        [step_id, asset_id](sqlite3_stmt* const stmt) {
+            Bind(stmt, 1, step_id.value);
+            Bind(stmt, 2, asset_id.value);
+        },
+        [&data](sqlite3_stmt* const stmt) {
+            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
+
+            auto const blob{SqliteBlob(stmt, 1)};
+            protobuf_serialization::ExtractedTargetProto serialized;
+            serialized.ParseFromArray(std::data(blob), static_cast<int>(std::size(blob)));
+
+            auto const deserialized{Deserialize(serialized)};
+            if (not deserialized) {
+                throw std::runtime_error(std::format(  // LCOV_EXCL_LINE
+                    "ExtractedTargetProto.ParseFromArray()/Deserialize() failed: "
+                    "timestamp_ns '{}'",  // LCOV_EXCL_LINE
+                    timestamp_ns));       // LCOV_EXCL_LINE
+            }
+
+            data.insert({timestamp_ns, deserialized.value()});
+        });
+
+    return data;
+}  // LCOV_EXCL_LINE
 
 void ExtrinsicInsert(sqlite3* const db, StepId step_id, Extrinsic const& extrinsic) {
     auto const binder{[step_id, extrinsic](sqlite3_stmt* const stmt) {
@@ -411,61 +494,10 @@ std::optional<CameraState> IntrinsicSelect(sqlite3* const db, StepId step_id, As
     return intrinsic;
 }  // LCOV_EXCL_LINE
 
-// NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship
-// between two data tables.
-void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
-                            AssetId const asset_id, CameraMeasurements const& data) {
-    auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
-        auto const& [timestamp_ns, target]{data_i};
+void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
+                              ReprojectionErrors const& data) {
 
-        protobuf_serialization::ExtractedTargetProto const serialized{Serialize(target)};
-        std::string buffer;
-        if (not serialized.SerializeToString(&buffer)) {
-            throw std::runtime_error(  // LCOV_EXCL_LINE
-                std::format("ExtractedTargetProto.SerializeToString() failed: step_id '{}', source_step_id '{}', "
-                            "asset_id '{}', timestamp_ns '{}'",
-                            step_id.value, source_step_id.value, asset_id.value, timestamp_ns));  // LCOV_EXCL_LINE
-        }
-
-        Bind(stmt, 1, step_id.value);
-        Bind(stmt, 2, source_step_id.value);
-        Bind(stmt, 3, asset_id.value);
-        Bind(stmt, 4, timestamp_ns);
-        BindBlob(stmt, 5, std::as_bytes(std::span{buffer}));
-    }};
-
-    BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db);
 }
-
-CameraMeasurements ExtractedTargetsSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
-    CameraMeasurements data;
-
-    ExecuteQuery(
-        db, sql_statements::extracted_targets_select,
-        [step_id, asset_id](sqlite3_stmt* const stmt) {
-            Bind(stmt, 1, step_id.value);
-            Bind(stmt, 2, asset_id.value);
-        },
-        [&data](sqlite3_stmt* const stmt) {
-            uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
-
-            auto const blob{SqliteBlob(stmt, 1)};
-            protobuf_serialization::ExtractedTargetProto serialized;
-            serialized.ParseFromArray(std::data(blob), static_cast<int>(std::size(blob)));
-
-            auto const deserialized{Deserialize(serialized)};
-            if (not deserialized) {
-                throw std::runtime_error(std::format(  // LCOV_EXCL_LINE
-                    "ExtractedTargetProto.ParseFromArray()/Deserialize() failed: "
-                    "timestamp_ns '{}'",  // LCOV_EXCL_LINE
-                    timestamp_ns));       // LCOV_EXCL_LINE
-            }
-
-            data.insert({timestamp_ns, deserialized.value()});
-        });
-
-    return data;
-}  // LCOV_EXCL_LINE
 
 void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler) {
     auto const binder{[step_id, asset_id, time_handler](sqlite3_stmt* const stmt) {
@@ -544,28 +576,6 @@ std::optional<TargetInfo> TargetInfoSelect(sqlite3* const db, StepId const step_
     return target_info;
 }
 
-void WorkflowAssetsInsert(sqlite3* const db, WorkflowId const workflow_id, std::vector<AssetId> const& asset_ids) {
-    auto const binder{[workflow_id](sqlite3_stmt* const stmt, auto const& asset_id) {
-        Bind(stmt, 1, workflow_id.value);
-        Bind(stmt, 2, asset_id.value);
-    }};
 
-    BatchExecuteStatement(sql_statements::workflow_assets_insert, asset_ids, binder, db);
-}
-
-void WorkflowStepUpsert(sqlite3* const db, WorkflowId const workflow_id, StepType const step_type,
-                        StepId const step_id) {
-    auto const binder{[workflow_id, step_type, step_id](sqlite3_stmt* const stmt) {
-        // NOTE(Jack): Including the step type here enforces our constraint that a workflow can only have one of each
-        // kind of step. This might get annoying for certain things like reprojection error calculation steps which now
-        // will all need unique step types. But unless we combine those with their originating steps like we had in v1
-        // that was always going to be a problem.
-        Bind(stmt, 1, workflow_id.value);
-        Bind(stmt, 2, ToString(step_type));
-        Bind(stmt, 3, step_id.value);
-    }};
-
-    ExecuteStatement(sql_statements::workflow_steps_upsert, binder, db);
-}
 
 }  // namespace reprojection::database
