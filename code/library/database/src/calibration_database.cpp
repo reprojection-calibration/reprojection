@@ -53,7 +53,12 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
         ExecuteStatement(sql_statements::steps_table, db);
         ExecuteStatement(sql_statements::target_info_table, db);
         ExecuteStatement(sql_statements::workflow_assets_table, db);
+        ExecuteStatement(sql_statements::workflow_steps_table, db);
         ExecuteStatement(sql_statements::workflows_table, db);
+
+        // This trigger enforces that when a step becomes unreferenced (i.e. it does not belong to any workflow) it gets
+        // deleted. This should keep the database clean.
+        ExecuteStatement(sql_statements::steps_delete_trigger, db);
     }
 
     // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For
@@ -546,6 +551,21 @@ void WorkflowAssetsInsert(sqlite3* const db, WorkflowId const workflow_id, std::
     }};
 
     BatchExecuteStatement(sql_statements::workflow_assets_insert, asset_ids, binder, db);
+}
+
+void WorkflowStepUpsert(sqlite3* const db, WorkflowId const workflow_id, StepType const step_type,
+                        StepId const step_id) {
+    auto const binder{[workflow_id, step_type, step_id](sqlite3_stmt* const stmt) {
+        // NOTE(Jack): Including the step type here enforces our constraint that a workflow can only have one of each
+        // kind of step. This might get annoying for certain things like reprojection error calculation steps which now
+        // will all need unique step types. But unless we combine those with their originating steps like we had in v1
+        // that was always going to be a problem.
+        Bind(stmt, 1, workflow_id.value);
+        Bind(stmt, 2, ToString(step_type));
+        Bind(stmt, 3, step_id.value);
+    }};
+
+    ExecuteStatement(sql_statements::workflow_steps_upsert, binder, db);
 }
 
 }  // namespace reprojection::database

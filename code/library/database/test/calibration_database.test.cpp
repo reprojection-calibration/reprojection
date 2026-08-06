@@ -79,6 +79,40 @@ TEST(DatabaseCalibrationDatbase, TestAssetWorkflowState) {
     EXPECT_EQ(cam_id, AssetId{3});
 }
 
+TEST(DatabaseCalibrationDatbase, TestStepWorkflowState) {
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+
+    AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
+    auto const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {asset_id})};
+
+    // Create and finalize a step
+    auto step_id{database::GetOrCreateStep(db.get(), StepType::CameraInfo, "").first};
+    database::StepCacheKeyUpdate(db.get(), step_id, "");
+    EXPECT_EQ(step_id, StepId{1});
+
+    // Add that step to the workflow
+    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, StepType::CameraInfo, step_id));
+
+    // Check that after adding it to the workflow its still there and with the same id (confirms it did not accidentally
+    // get removed or something).
+    step_id = database::GetOrCreateStep(db.get(), StepType::CameraInfo, "").first;
+    EXPECT_EQ(step_id, StepId{1});
+
+    // Now add another step of the same type, simulating running the calibration again but with a cache busted step.
+    step_id = database::GetOrCreateStep(db.get(), StepType::CameraInfo, "x").first;
+    database::StepCacheKeyUpdate(db.get(), step_id, "x");
+    EXPECT_EQ(step_id, StepId{2});
+
+    // Upsert the workflow now which removes the old step and replaces it with the new step id. Because of the "remove
+    // unused steps" trigger the database has it should remove the first step.
+    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, StepType::CameraInfo, step_id));
+
+    // If the first step hadn't been removed this should be a cache hit, but because it got removed this is a new step
+    // with a new id.
+    step_id = database::GetOrCreateStep(db.get(), StepType::CameraInfo, "").first;
+    EXPECT_EQ(step_id, StepId{3});
+}
+
 TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {
     auto const db{database::OpenCalibrationDatabase(":memory:", true)};
     Hash const hash_a{"sha256-aaa"};

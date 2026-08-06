@@ -78,4 +78,6 @@ std::optional<TargetInfo> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId 
 
 void WorkflowAssetsInsert(sqlite3* db, WorkflowId workflow_id, std::vector<AssetId> const& asset_ids);
 
+void WorkflowStepUpsert(sqlite3* db, WorkflowId workflow_id, StepType step_type, StepId step_id);
+
 }  // namespace reprojection::database

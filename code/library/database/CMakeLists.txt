@@ -41,6 +41,7 @@ set(SQL_FILES
         spline_info_insert.sql
         spline_info_select.sql
         spline_info_table.sql
+        steps_delete_trigger.sql
         steps_insert.sql
         steps_select.sql
         steps_table.sql
@@ -50,6 +51,8 @@ set(SQL_FILES
         target_info_table.sql
         workflow_assets_insert.sql
         workflow_assets_table.sql
+        workflow_steps_table.sql
+        workflow_steps_upsert.sql
         workflows_insert.sql
         workflows_select.sql
         workflows_table.sql
