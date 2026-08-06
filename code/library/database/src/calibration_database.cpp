@@ -86,7 +86,11 @@ WorkflowId GetOrCreateWorkflow(sqlite3* const db, WorkflowType const type, std::
     // NOTE(Jack): We do not hash the signature so that way it remains humand readable in the database. It is a small
     // and important piece of information so this just makes sense.
     // TODO(Jack): Is there a better way of uniquely identifying the workflow than creating this string of the assets
-    // here? I am not sure how this will scale to multisensor cases but that is still future music.
+    // here? I am not sure how this will scale to multisensor cases but that is still future music. The main problem I
+    // have is that this leaves information/constraints on the table. For example for each workflow type there is a
+    // specific asset requirements (i.e. cam-imu requires a cam, target and imu), but right now that is not enforced
+    // anywhere at the database level. Not doing this offers some flexibility and simplicity, but if there was a nice
+    // way to do it we should!
     std::string const signature{hashing::Serialize(assets)};
 
     auto const result{ReadWorkflowId(db, type, signature)};
