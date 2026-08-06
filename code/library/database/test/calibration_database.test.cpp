@@ -39,23 +39,24 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
     EXPECT_THROW(database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "/cam1/image_raw"), std::runtime_error);
 }
 
-TEST(DatabaseCalibrationDatbase, TestGetOrCreateRecording) {
+TEST(DatabaseCalibrationDatbase, TestGetOrCreateWorkflow) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Repeated insert with matching name and hash is no problem!
-    RecordingId result{database::GetOrCreateRecording(db.get(), "recording.bag", "sha256-xxx")};
-    EXPECT_EQ(result, RecordingId{1});
-    result = database::GetOrCreateRecording(db.get(), "recording.bag", "sha256-xxx");
-    EXPECT_EQ(result, RecordingId{1});
+    WorkflowId result{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {AssetId{1}})};
+    EXPECT_EQ(result, WorkflowId{1});
 
-    // Adding another recording with a unique name and hash is no problem.
-    result = database::GetOrCreateRecording(db.get(), "recording1.bag", "sha256-yyy");
-    EXPECT_EQ(result, RecordingId{2});
+    // Return the ID if you try to insert the same workflow again.
+    result = database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {AssetId{1}});
+    EXPECT_EQ(result, WorkflowId{1});
 
-    // Trying to insert an existing name with a different hash is a no-go!
-    EXPECT_THROW(database::GetOrCreateRecording(db.get(), "recording1.bag", "sha256-zzz"), std::runtime_error);
-    // Cannot insert two different recordings with the same hash.
-    EXPECT_THROW(database::GetOrCreateRecording(db.get(), "recording2.bag", "sha256-yyy"), database::SqliteException);
+    // Inserting another workflow increments the workflow counter.
+    result = database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {AssetId{1}, AssetId{2}});
+    EXPECT_EQ(result, WorkflowId{2});
+
+    // Only one workflow entry is allowed for any single asset signature.
+    EXPECT_THROW(database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {AssetId{1}}),
+                 database::SqliteException);
 }
 
 TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {

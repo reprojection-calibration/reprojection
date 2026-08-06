@@ -12,11 +12,13 @@
 
 namespace reprojection::database {
 
+
+
 SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool create, bool read_only = false);
 
 AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
 
-RecordingId GetOrCreateRecording(sqlite3* db, Name const& name, Hash const& hash);
+WorkflowId GetOrCreateWorkflow(sqlite3* db, WorkflowType type, std::vector<AssetId> const& assets);
 
 // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
 // the same name. bool: was this a cache hit?

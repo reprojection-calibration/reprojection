@@ -9,14 +9,13 @@ namespace reprojection::steps {
 struct CalibrationContext {
     config::Config config;
 
-    RecordingId recording_id;
+    WorkflowId workflow_id;
 
     AssetId camera_id;
     AssetId target_id;
     std::optional<AssetId> imu_id;
 };
 
-// TODO(Jack): Should the recording_id be passed in here instead of created inside?
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr db);
 
 }  // namespace reprojection::steps

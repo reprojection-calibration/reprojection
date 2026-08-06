@@ -14,10 +14,10 @@ struct AssetId {
     friend constexpr bool operator==(AssetId const&, AssetId const&) = default;
 };
 
-struct RecordingId {
+struct WorkflowId {
     int64_t value;
 
-    friend constexpr bool operator==(RecordingId const&, RecordingId const&) = default;
+    friend constexpr bool operator==(WorkflowId const&, WorkflowId const&) = default;
 };
 
 struct StepId {
@@ -69,6 +69,18 @@ inline std::string ToString(AssetType const data) {
         return "target";
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown AssetType");  // LCOV_EXCL_LINE
+    }
+}
+
+enum class WorkflowType { Cam, CamImu };
+
+inline std::string ToString(WorkflowType const data) {
+    if (data == WorkflowType::Cam) {
+        return "cam";
+    } else if (data == WorkflowType::CamImu) {
+        return "cam_imu";
+    }else {
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown WorkflowType");  // LCOV_EXCL_LINE
     }
 }
 

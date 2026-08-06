@@ -37,9 +37,6 @@ set(SQL_FILES
         intrinsics_insert.sql
         intrinsics_select.sql
         intrinsics_table.sql
-        recordings_insert.sql
-        recordings_select.sql
-        recordings_table.sql
         spline_info_insert.sql
         spline_info_select.sql
         spline_info_table.sql
@@ -50,6 +47,9 @@ set(SQL_FILES
         target_info_insert.sql
         target_info_select.sql
         target_info_table.sql
+        workflows_insert.sql
+        workflows_select.sql
+        workflows_table.sql
 )
 
 set(SQL_DIR "$ENV{REPROJECTION_SQL_DIR}")
@@ -101,6 +101,8 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         Eigen3::Eigen
         SQLite::SQLite3
+        config # Required because of hashing
+        hashing # Only used to serialize the asset vector in workflow creation
         geometry # Required because of spline interface
         logging
         protobuf::libprotobuf

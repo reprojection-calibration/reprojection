@@ -12,10 +12,9 @@ std::optional<std::pair<AssetId, Name>> ReadAssetId(sqlite3* const db, AssetType
 
 AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index, Name const& name);
 
-// TODO(Jack): Should we define basic structs like Hash and Name? Passing around raw strings does not scale.
-std::optional<std::pair<RecordingId, Hash>> ReadRecordingId(sqlite3* const db, Name const& name);
+std::optional<WorkflowId> ReadWorkflowId(sqlite3* db, WorkflowType type, std::string_view signature);
 
-RecordingId InsertRecording(sqlite3* const db, Name const& name, Hash const& hash);
+WorkflowId InsertWorkflowId(sqlite3* db, WorkflowType type, std::string_view signature);
 
 std::optional<StepId> ReadStepId(sqlite3* db, StepType type, Hash const& cache_key);
 

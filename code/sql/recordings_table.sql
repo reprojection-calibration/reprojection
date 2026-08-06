@@ -1,6 +1,0 @@
-CREATE TABLE IF NOT EXISTS recordings
-(
-    id   INTEGER PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    hash TEXT NOT NULL UNIQUE
-);

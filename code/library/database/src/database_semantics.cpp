@@ -41,29 +41,32 @@ AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index,
     return data;
 }
 
-// TODO(Jack): Should we define basic structs like Hash and Name? Passing around raw strings does not scale.
-std::optional<std::pair<RecordingId, Hash>> ReadRecordingId(sqlite3* const db, Name const& name) {
-    auto const binder{[name](sqlite3_stmt* stmt) { Bind(stmt, 1, name.value); }};
+// TODO(Jack): This is nearly identical to ReadStepId(). Any useful way to reduce copy paste?
+std::optional<WorkflowId> ReadWorkflowId(sqlite3* db, WorkflowType type, std::string_view signature) {
+    auto const binder{[type, signature](sqlite3_stmt* stmt) {
+        Bind(stmt, 1, ToString(type));
+        Bind(stmt, 2, signature);
+    }};
 
-    std::optional<std::pair<RecordingId, Hash>> data;
-    ExecuteQuery(db, sql_statements::recordings_select, binder, [&data](sqlite3_stmt* const stmt) {
-        RecordingId const recording_id{sqlite3_column_int64(stmt, 0)};
-        Hash const hash{std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1)))};
+    std::optional<WorkflowId> data;
+    ExecuteQuery(db, sql_statements::workflows_select, binder, [&data](sqlite3_stmt* const stmt) {
+        WorkflowId const workflow_id{sqlite3_column_int64(stmt, 0)};
 
-        data = std::make_pair(recording_id, hash);
+        data = workflow_id;
     });
 
     return data;
 }
 
-RecordingId InsertRecording(sqlite3* const db, Name const& name, Hash const& hash) {
-    auto const binder{[name, hash](sqlite3_stmt* stmt) {
-        Bind(stmt, 1, name.value);
-        Bind(stmt, 2, hash.value);
+// TODO(Jack): This is very similar to InsertStep(). Any useful way to reduce copy paste?
+WorkflowId InsertWorkflowId(sqlite3* db, WorkflowType type, std::string_view signature) {
+    auto const binder{[type, signature](sqlite3_stmt* stmt) {
+        Bind(stmt, 1, ToString(type));
+        Bind(stmt, 2, signature);
     }};
 
-    RecordingId data{-1};
-    ExecuteQuery(db, sql_statements::recordings_insert, binder,
+    WorkflowId data{-1};
+    ExecuteQuery(db, sql_statements::workflows_insert, binder,
                  [&data](sqlite3_stmt* const stmt) { data.value = sqlite3_column_int64(stmt, 0); });
 
     return data;

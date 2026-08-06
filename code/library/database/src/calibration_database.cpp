@@ -6,6 +6,7 @@
 #include "database/sqlite_exception.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
+#include "hashing/serialize.hpp"
 
 #include "database_semantics.hpp"
 #include "serialization.hpp"
@@ -48,10 +49,10 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
         ExecuteStatement(sql_statements::images_table, db);
         ExecuteStatement(sql_statements::imu_data_table, db);
         ExecuteStatement(sql_statements::intrinsics_table, db);
-        ExecuteStatement(sql_statements::recordings_table, db);
         ExecuteStatement(sql_statements::spline_info_table, db);
         ExecuteStatement(sql_statements::steps_table, db);
         ExecuteStatement(sql_statements::target_info_table, db);
+        ExecuteStatement(sql_statements::workflows_table, db);
     }
 
     // NOTE(Jack): We use the foreign key constraint between some tables to enforce data consistency. For
@@ -81,24 +82,26 @@ AssetId GetOrCreateAsset(sqlite3* const db, AssetType const type, size_t const i
     return InsertAsset(db, type, index, name);
 }
 
-RecordingId GetOrCreateRecording(sqlite3* const db, Name const& name, Hash const& hash) {
-    auto const result{ReadRecordingId(db, name)};
-    if (result and result->second != hash) {
-        throw std::runtime_error(std::format("Recording '{}' with hash '{}' already exists - cannot change hash '{}'.",
-                                             name.value, result->second.value, hash.value));
-    } else if (result) {
-        return result->first;
+WorkflowId GetOrCreateWorkflow(sqlite3* const db, WorkflowType const type, std::vector<AssetId> const& assets) {
+    // NOTE(Jack): We do not hash the signature so that way it remains humand readable in the database. It is a small
+    // and important piece of information so this just makes sense.
+    // TODO(Jack): Is there a better way of uniquely identifying the workflow than creating this string of the assets
+    // here? I am not sure how this will scale to multisensor cases but that is still future music.
+    std::string const signature{hashing::Serialize(assets)};
+
+    auto const result{ReadWorkflowId(db, type, signature)};
+    if (result.has_value()) {
+        return *result;
     }
 
-    return InsertRecording(db, name, hash);
+    return InsertWorkflowId(db, type, signature);
 }
 
-// TODO(Jack): The semantics are confusing because while the cache_key is passed here it is never written into the step,
-// it is only used to check for a cache hit or not. To actually write the cache key to the db you need to call
+// TODO(Jack): The semantics are confusing because while the cache_key is passed here it is never written into the
+// step, it is only used to check for a cache hit or not. To actually write the cache key to the db you need to call
 // StepCacheKeyUpdate.
 std::pair<StepId, CacheStatus> GetOrCreateStep(sqlite3* const db, StepType const type, Hash const& cache_key) {
     auto const result{ReadStepId(db, type, cache_key)};
-
     if (result.has_value()) {
         return std::make_pair(*result, CacheStatus::CacheHit);
     }
@@ -218,8 +221,9 @@ spline::Matrix2NXd ControlPointsSelect(sqlite3* const db, StepId const step_id, 
         },
         [&points](sqlite3_stmt* stmt) { points.emplace_back(ReadEigenColumn<6>(stmt, 1)); });
 
-    // NOTE(Jack): This only works because in the sql statement we load them ordered by the idx (ex. ORDER BY idx ASC).
-    // If we did not do that then we would need to use the idx itself to place the control points in the right column.
+    // NOTE(Jack): This only works because in the sql statement we load them ordered by the idx (ex. ORDER BY idx
+    // ASC). If we did not do that then we would need to use the idx itself to place the control points in the right
+    // column.
     spline::Matrix2NXd control_points(6, std::size(points));
     for (size_t i{0}; i < std::size(points); ++i) {
         control_points.col(i) = points[i];
@@ -259,8 +263,8 @@ std::optional<Extrinsic> ExtrinsicSelect(sqlite3* const db, StepId const step_id
     }
 }
 
-// TODO(Jack): Should gravity be assocaited with any asset or any other piece of information? Currently the way we store
-// it we have no idea about what frame its in or anything else besides which step it comes from.
+// TODO(Jack): Should gravity be assocaited with any asset or any other piece of information? Currently the way we
+// store it we have no idea about what frame its in or anything else besides which step it comes from.
 void GravityInsert(sqlite3* const db, StepId const step_id, Vector3d const& gravity) {
     auto const binder{[step_id, gravity](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
@@ -389,8 +393,8 @@ std::optional<CameraState> IntrinsicSelect(sqlite3* const db, StepId step_id, As
     return intrinsic;
 }  // LCOV_EXCL_LINE
 
-// NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship between
-// two data tables.
+// NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship
+// between two data tables.
 void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
                             AssetId const asset_id, CameraMeasurements const& data) {
     auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
@@ -433,9 +437,10 @@ CameraMeasurements ExtractedTargetsSelect(sqlite3* const db, StepId const step_i
 
             auto const deserialized{Deserialize(serialized)};
             if (not deserialized) {
-                throw std::runtime_error(std::format(                                                 // LCOV_EXCL_LINE
-                    "ExtractedTargetProto.ParseFromArray()/Deserialize() failed: timestamp_ns '{}'",  // LCOV_EXCL_LINE
-                    timestamp_ns));                                                                   // LCOV_EXCL_LINE
+                throw std::runtime_error(std::format(  // LCOV_EXCL_LINE
+                    "ExtractedTargetProto.ParseFromArray()/Deserialize() failed: "
+                    "timestamp_ns '{}'",  // LCOV_EXCL_LINE
+                    timestamp_ns));       // LCOV_EXCL_LINE
             }
 
             data.insert({timestamp_ns, deserialized.value()});
@@ -448,8 +453,8 @@ void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, splin
     auto const binder{[step_id, asset_id, time_handler](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
-        // TODO(Jack): At this time we only support (and therefore hardcode) pose splines. In the future we will add the
-        // bias splines for the imu and this will actually become relevant.
+        // TODO(Jack): At this time we only support (and therefore hardcode) pose splines. In the future we will add
+        // the bias splines for the imu and this will actually become relevant.
         Bind(stmt, 3, "pose");
         Bind(stmt, 4, time_handler.t0_ns_);
         Bind(stmt, 5, time_handler.delta_t_ns_);
@@ -458,10 +463,11 @@ void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, splin
     ExecuteStatement(sql_statements::spline_info_insert, binder, db);
 }
 
-// TODO(Jack): Does adding a real SplineInfo struct make sense? Would that simplify some of the complexity we had while
-// trying to unify the spline representations?
-// TODO(Jack): At this point we made this function/concept over generic by talking about "spline info" but actually only
-// really using the time handler. Once we add a bias spline one day we will need to refactor this code (see below).
+// TODO(Jack): Does adding a real SplineInfo struct make sense? Would that simplify some of the complexity we had
+// while trying to unify the spline representations?
+// TODO(Jack): At this point we made this function/concept over generic by talking about "spline info" but actually
+// only really using the time handler. Once we add a bias spline one day we will need to refactor this code (see
+// below).
 std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     std::optional<spline::TimeHandler> time_handler;
 
@@ -472,8 +478,8 @@ std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* const db, StepId co
             Bind(stmt, 2, asset_id.value);
         },
         [&time_handler](sqlite3_stmt* const stmt) {
-            // WARN(Jack): We ignore the spline_type in column 0 for now but once we fully adapt the spline_type concept
-            // when we hopefully introduce bias splines we need to add this back!
+            // WARN(Jack): We ignore the spline_type in column 0 for now but once we fully adapt the spline_type
+            // concept when we hopefully introduce bias splines we need to add this back!
             uint64_t const t0_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 1))};
             uint64_t const delta_t_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 2))};
 

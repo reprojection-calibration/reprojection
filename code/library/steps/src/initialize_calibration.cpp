@@ -18,10 +18,6 @@ auto const log{logging::Get("steps")};
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr const db) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
 
-    // ERROR(Jack): Refactor the applications to pass a real recording name and hash here!
-    RecordingId const recording_id{
-        database::GetOrCreateRecording(db.get(), "todo_recording_name", "todo_recording_hash")};
-
     // TODO(Jack): We should refactor our config file so that it can load multiple cameras from one file and
     // automatically assign the index from the config file structure instead of harcoding it to 0 here. Same for the
     // targets and imus below.
@@ -29,16 +25,26 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
     AssetId const camera_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, cfg.camera.sensor_name)};
     AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "aprilgrid")};
 
+    // TODO(Jack): Right now the workflow creation/parameterization here is extremely manual and hardcoded for our two
+    // sensor cam/cam-imu only case, but we don't need to complicate things till later when we need a more generic
+    // config parsing and workflow creation.
+    database::WorkflowType workflow_type{database::WorkflowType::Cam};
+    std::vector<AssetId> workflow_assets{camera_id, target_id};
+
     std::optional<AssetId> imu_id;
     if (cfg.imu) {
         imu_id = database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, Name{cfg.imu->sensor_name});
+        workflow_type = database::WorkflowType::CamImu;
+        workflow_assets.push_back(*imu_id);
     }
 
-    log->info("{{'recording_id': '{}', 'assets': {{'camera_id': {}, 'target_id': {}, 'imu_id': {}}}, 'config': {}}}",
-              recording_id.value, camera_id.value, target_id.value, imu_id ? imu_id->value : -1,
+    WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), workflow_type, workflow_assets)};
+
+    log->info("{{'workflow_id': '{}', 'assets': {{'camera_id': {}, 'target_id': {}, 'imu_id': {}}}, 'config': {}}}",
+              workflow_id.value, camera_id.value, target_id.value, imu_id ? imu_id->value : -1,
               logging::ToOneLineJson(cfg_table));
 
-    return {cfg, recording_id, camera_id, target_id, imu_id};
+    return {cfg, workflow_id, camera_id, target_id, imu_id};
 }
 
 }  // namespace reprojection::steps
