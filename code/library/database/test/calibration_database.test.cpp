@@ -322,6 +322,23 @@ TEST(DatabaseCalibrationDatbase, TestGravity) {
     EXPECT_TRUE(result->isApprox(gravity));
 }
 
+TEST_F(CalibrationDatabaseFixture, TestReprojectionErrors) {
+    // Use a common timestamp across image, target and reprojection error to make sure the foreign key constraint is
+    // met.
+    int const timestamp_ns{0};
+
+    // Satisfy foreign keys - a target requires a corresponding image to be present.
+    AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
+    StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
+    InsertImage(image_loading_id, asset_id, timestamp_ns);
+    StepId const targets_id{CreateExtractedTargets(image_loading_id, asset_id, timestamp_ns)};
+
+    ReprojectionErrors const data{{timestamp_ns, ArrayX2d{}}};
+
+    StepId const reprojection_error_id{database::GetOrCreateStep(db_.get(), StepType::RePoseInit, "").first};
+    EXPECT_NO_THROW(database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, targets_id, asset_id, data));
+}
+
 TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 

@@ -494,9 +494,28 @@ std::optional<CameraState> IntrinsicSelect(sqlite3* const db, StepId step_id, As
     return intrinsic;
 }  // LCOV_EXCL_LINE
 
-void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
-                              ReprojectionErrors const& data) {
+void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
+                              AssetId const asset_id, ReprojectionErrors const& data) {
+    auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, reprojection_error] = data_i;
 
+        protobuf_serialization::ArrayX2dProto const serialized{Serialize(reprojection_error)};
+        std::string buffer;
+        if (not serialized.SerializeToString(&buffer)) {
+            throw std::runtime_error(  // LCOV_EXCL_LINE
+                std::format("ArrayX2dProto.SerializeToString() failed: step_id '{}', source_step_id '{}', "
+                            "asset_id '{}', timestamp_ns '{}'",
+                            step_id.value, source_step_id.value, asset_id.value, timestamp_ns));  // LCOV_EXCL_LINE
+        }
+
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, source_step_id.value);
+        Bind(stmt, 3, asset_id.value);
+        Bind(stmt, 4, timestamp_ns);
+        BindBlob(stmt, 5, std::as_bytes(std::span{buffer}));
+    }};
+
+    BatchExecuteStatement(sql_statements::reprojection_errors_insert, data, binder, db);
 }
 
 void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler) {
@@ -575,7 +594,5 @@ std::optional<TargetInfo> TargetInfoSelect(sqlite3* const db, StepId const step_
 
     return target_info;
 }
-
-
 
 }  // namespace reprojection::database

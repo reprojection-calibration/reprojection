@@ -92,6 +92,16 @@ enum class StepType {
     ImuDataLoading,
     IntrinsicInit,
     PoseInit,
+    // TODO(Jack): This name is confusing and  we are trying to do too much. The fundamental question
+    // is how do we represent something like the reprojection error which can be calculated at multiple different
+    // places. At first I just calculated the error in the relevant step so it could be assigned that steps type, but
+    // now I decided to have a step dedicated to reprojection error calculation itself which means that the step type is
+    // actually a parameter that we need to set here with these values so we can properly track which step it related
+    // to. Not pretty! I cannot really think of a better way to do this at this time (06.08.2026).
+    //
+    // "re" = "reprojection error"
+    ReBundleAdjustment,
+    RePoseInit,
     SplineInit,
     TargetInfo,
 };
@@ -115,6 +125,10 @@ inline std::string ToString(StepType const data) {
         return "intrinsic_initialization";
     } else if (data == StepType::PoseInit) {
         return "pose_initialization";
+    } else if (data == StepType::ReBundleAdjustment) {
+        return "re_bundle_adjustment";
+    } else if (data == StepType::RePoseInit) {
+        return "re_pose_initialization";
     } else if (data == StepType::SplineInit) {
         return "spline_initialization";
     } else if (data == StepType::TargetInfo) {
