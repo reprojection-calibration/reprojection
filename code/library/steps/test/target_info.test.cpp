@@ -7,15 +7,20 @@
 using namespace reprojection;
 
 TEST(StepsTargetInfo, TestTargetInfoStepRunner) {
+    // Set up database and foreign key constraints.
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
+    AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "")};
+    WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {asset_id})};
 
-    AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "")};
+    // Construct calibration artifact.
     config::Config::Target const target{TargetType::Aprilgrid3, {1, 2}};
-    steps::TargetInfoStep const step{target_id, target};
 
-    StepId const step_id{RunStep<steps::TargetInfoStep>(step, db)};
+    // Execute step.
+    steps::TargetInfoStep const step{asset_id, target};
+    StepId const step_id{RunStep<steps::TargetInfoStep>(workflow_id, step, db)};
 
-    auto const result{database::TargetInfoSelect(db.get(), step_id, target_id)};
+    // Compare reloaded artifact against original artifact.
+    auto const result{database::TargetInfoSelect(db.get(), step_id, asset_id)};
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->target_type, TargetType::Aprilgrid3);
     EXPECT_EQ(result->height, target.size[0]);
@@ -24,8 +29,8 @@ TEST(StepsTargetInfo, TestTargetInfoStepRunner) {
 
 TEST(StepsTargetInfo, TestTargetInfoStep) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
-
     AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "")};
+
     config::Config::Target const target{TargetType::Aprilgrid3, {1, 2}};
 
     steps::TargetInfoStep const step{target_id, target};

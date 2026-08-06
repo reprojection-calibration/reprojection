@@ -23,16 +23,19 @@ struct ExampleStep {
 TEST(StepsStepRunner, TestExampleStep) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
+    AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
+    WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {asset_id})};
+
     ExampleStep step;
-    StepId result{steps::RunStep<ExampleStep>(step, db)};
+    StepId result{steps::RunStep<ExampleStep>(workflow_id, step, db)};
     EXPECT_EQ(result.value, 1);
 
     // Rerunning the step should be a cache hit (but we can't see that here) and should return the same step ID
-    result = steps::RunStep<ExampleStep>(step, db);
+    result = steps::RunStep<ExampleStep>(workflow_id, step, db);
     EXPECT_EQ(result.value, 1);
 
     // Change the cache key so we get a cache miss and a new step is created.
     step.cache_key_ = Hash{"1"};
-    result = steps::RunStep<ExampleStep>(step, db);
+    result = steps::RunStep<ExampleStep>(workflow_id, step, db);
     EXPECT_EQ(result.value, 2);
 }

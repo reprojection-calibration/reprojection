@@ -38,7 +38,7 @@ class BundleAdjustmentFixture : public StepTestFixture {
 
 TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStepRunner) {
     steps::BundleAdjustment const step{camera_id_, targets_id_, 1, camera_info_id_, intrinsics_id_, pose_init_id_, db_};
-    StepId const step_id{RunStep<steps::BundleAdjustment>(step, db_)};
+    StepId const step_id{RunStep<steps::BundleAdjustment>(workflow_id_, step, db_)};
 
     auto const result{database::CameraPosesSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 7);

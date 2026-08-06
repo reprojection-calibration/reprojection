@@ -33,7 +33,7 @@ class PoseInitializationFixture : public StepTestFixture {
 
 TEST_F(PoseInitializationFixture, TestPoseInitializationStepRunner) {
     steps::PoseInitialization const step{camera_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
-    StepId const step_id{RunStep<steps::PoseInitialization>(step, db_)};
+    StepId const step_id{RunStep<steps::PoseInitialization>(workflow_id_, step, db_)};
 
     auto const result{database::CameraPosesSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 7);

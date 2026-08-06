@@ -28,8 +28,9 @@ class ExtrinsicInitFixture : public ::testing::Test {
 };
 
 TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
+    WorkflowId const workflow_id{database::GetOrCreateWorkflow(db_.get(), WorkflowType::CamImu, {camera_id_, imu_id_})};
     steps::ExtrinsicInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
-    StepId const step_id{RunStep<steps::ExtrinsicInit>(step, db_)};
+    StepId const step_id{RunStep<steps::ExtrinsicInit>(workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, camera_id_)};
     ASSERT_TRUE(result.has_value());

@@ -27,7 +27,7 @@ class SplineInitFixture : public StepTestFixture {
 
 TEST_F(SplineInitFixture, TestSplineInitStepRunner) {
     steps::SplineInitialization const step{camera_id_, pose_init_id_, db_};
-    StepId const step_id{RunStep<steps::SplineInitialization>(step, db_)};
+    StepId const step_id{RunStep<steps::SplineInitialization>(workflow_id_, step, db_)};
 
     auto const result{database::ControlPointsSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 3978);  // Heuristic

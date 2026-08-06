@@ -29,7 +29,7 @@ class IntrinsicInitializationFixture : public StepTestFixture {
 
 TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStepRunner) {
     steps::IntrinsicInitialization const step{camera_id_, 1, camera_info_id_, targets_id_, db_};
-    StepId const step_id{RunStep<steps::IntrinsicInitialization>(step, db_)};
+    StepId const step_id{RunStep<steps::IntrinsicInitialization>(workflow_id_, step, db_)};
 
     auto const result{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());

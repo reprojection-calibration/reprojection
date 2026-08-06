@@ -32,7 +32,7 @@ class FeatureExtractionTestFixture : public StepTestFixture {
 
 TEST_F(FeatureExtractionTestFixture, TestFeatureExtractionStepRunner) {
     steps::FeatureExtraction const step{camera_id_, image_loading_id_, false, target_info_id_, target_id_, db_};
-    StepId const step_id{RunStep<steps::FeatureExtraction>(step, db_)};
+    StepId const step_id{RunStep<steps::FeatureExtraction>(workflow_id_, step, db_)};
 
     // TODO(Jack): This is kind of an anti climatic result but it's not our responsibility to check that the feature
     // extraction works here.

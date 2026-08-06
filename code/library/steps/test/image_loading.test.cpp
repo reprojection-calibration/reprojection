@@ -42,7 +42,7 @@ class ImageLoadingFixture : public StepTestFixture {
 
 TEST_F(ImageLoadingFixture, TestImageLoadingStepRunner) {
     steps::ImageLoading const step{camera_id_, "", image_sampler_};
-    StepId const step_id{RunStep<steps::ImageLoading>(step, db_)};
+    StepId const step_id{RunStep<steps::ImageLoading>(workflow_id_, step, db_)};
 
     auto const result{database::ImagesSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), std::size(*encoded_images_));

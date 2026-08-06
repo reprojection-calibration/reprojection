@@ -27,7 +27,7 @@ class CameraInfoTestFixture : public StepTestFixture {
 
 TEST_F(CameraInfoTestFixture, TestCameraInfoStepRunner) {
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
-    StepId const step_id{RunStep<steps::CameraInfoStep>(step, db_)};
+    StepId const step_id{RunStep<steps::CameraInfoStep>(workflow_id_, step, db_)};
 
     auto const result{database::CameraInfoSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
