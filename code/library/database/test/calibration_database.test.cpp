@@ -41,21 +41,23 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
 
 TEST(DatabaseCalibrationDatbase, TestGetOrCreateWorkflow) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
+    AssetId const asset_id_1{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
 
     // Repeated insert with matching name and hash is no problem!
-    WorkflowId result{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {AssetId{1}})};
+    WorkflowId result{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {asset_id_1})};
     EXPECT_EQ(result, WorkflowId{1});
 
     // Return the ID if you try to insert the same workflow again.
-    result = database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {AssetId{1}});
+    result = database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {asset_id_1});
     EXPECT_EQ(result, WorkflowId{1});
 
     // Inserting another workflow increments the workflow counter.
-    result = database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {AssetId{1}, AssetId{2}});
+    AssetId const asset_id_2{database::GetOrCreateAsset(db.get(), AssetType::Camera, 1, "")};
+    result = database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {asset_id_1, asset_id_2});
     EXPECT_EQ(result, WorkflowId{2});
 
     // Only one workflow entry is allowed for any single asset signature.
-    EXPECT_THROW(database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {AssetId{1}}),
+    EXPECT_THROW(database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {asset_id_1}),
                  database::SqliteException);
 }
 
