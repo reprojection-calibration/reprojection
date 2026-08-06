@@ -15,7 +15,7 @@ int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.calib.db3"};
-    auto db{database::OpenCalibrationDatabase(":memory:", false)};
+    auto db{database::OpenCalibrationDatabase(record_path, false)};
 
     static constexpr std::string_view config_file{R"(
             [camera]
@@ -53,9 +53,6 @@ int main() {
                                        CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
             database::StepCacheKeyUpdate(db.get(), step_result.first, camera_info_cache_key);
         }
-
-        // TODO(Jack): Add imu stuff!
-
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
