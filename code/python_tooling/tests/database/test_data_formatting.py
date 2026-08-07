@@ -18,25 +18,22 @@ class TestDataFormatting(unittest.TestCase):
         db = {
             "workflows": pd.DataFrame(
                 [
-                    {"id": 1, "type": "cam", "signature": "1|3|"},
-                    {"id": 2, "type": "cam_imu", "signature": "2|3|4|"},
+                    {"id": 1, "type": "cam", "signature": "1|"},
+                    {"id": 2, "type": "cam", "signature": "2|4|"},
                 ]
             ),
             "assets": pd.DataFrame(
                 [
                     {"type": "camera", "index": 0, "id": 1, "name": "/cam0/image_raw"},
                     {"type": "camera", "index": 1, "id": 2, "name": "/cam1/image_raw"},
-                    {"type": "target", "index": 0, "id": 3, "name": "aprilgrid"},
-                    {"type": "imu", "index": 0, "id": 4, "name": "/imu0"},
+                    {"type": "imu", "index": 0, "id": 3, "name": "/imu0"},
                 ]
             ),
             "workflow_assets": pd.DataFrame(
                 [
                     {"workflow_id": 1, "asset_id": 1},
-                    {"workflow_id": 1, "asset_id": 3},
                     {"workflow_id": 2, "asset_id": 2},
                     {"workflow_id": 2, "asset_id": 3},
-                    {"workflow_id": 2, "asset_id": 4},
                 ]
             ),
             "workflow_steps": pd.DataFrame(
@@ -50,13 +47,20 @@ class TestDataFormatting(unittest.TestCase):
 
         workflows = parse_workflows(db)
 
-        def workflow_assert(workflow, id, type, signature, num_assets, num_steps):
+        def workflow_assert(workflow, id, type, signature, assets, steps):
             self.assertEqual(workflow.id, id)
             self.assertEqual(workflow.type, type)
             self.assertEqual(workflow.signature, signature)
-            self.assertEqual(len(workflow.assets), num_assets)
-            self.assertEqual(len(workflow.steps), num_steps)
+            self.assertEqual(list(workflow.assets), assets)
+            self.assertEqual(list(workflow.steps), steps)
 
-        self.assertEqual(len(workflows), 2)
-        workflow_assert(workflows[0], 1, "cam", "1|3|", 2, 1)
-        workflow_assert(workflows[1], 2, "cam_imu", "2|3|4|", 3, 2)
+        self.assertEqual(len(workflows), 2)\
+        # One asset and one step
+        workflow_assert(workflows[0], 1, "cam", "1|",
+                        [{'id': 1, 'index': 0, 'name': '/cam0/image_raw', 'type': 'camera'}],
+                        [{'step_id': 1, 'type': 'image_loading'}])
+        # Two assets and two steps
+        workflow_assert(workflows[1], 2, "cam", "2|4|",
+                        [{'id': 2, 'index': 1, 'name': '/cam1/image_raw', 'type': 'camera'},
+                         {'id': 3, 'index': 0, 'name': '/imu0', 'type': 'imu'}],
+                        [{'step_id': 2, 'type': 'image_loading'}, {'type': 'imu_data_loading', 'step_id': 3}])
