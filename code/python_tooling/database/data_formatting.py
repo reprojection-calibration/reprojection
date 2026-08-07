@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 # TODO(Jack): Does it not make more sense to store the dictionary time keys as strings to prevent any problems with
 #  dash/json serialization?
 
@@ -10,7 +11,7 @@ class Workflow:
     type: str
     signature: str
     assets: list[dict]
-    steps: list[dict]
+    steps: dict[str, int]
 
 
 def parse_workflows(db):
@@ -26,8 +27,8 @@ def parse_workflows(db):
         steps = (
             db["workflow_steps"]
             .loc[db["workflow_steps"]["workflow_id"] == workflow_id]
-            .drop(columns="workflow_id")
-            .to_dict("records")
+            .set_index("type")["step_id"]
+            .to_dict()
         )
 
         workflows.append(
@@ -41,3 +42,5 @@ def parse_workflows(db):
         )
 
     return workflows
+
+#def process_workflow(db, workflow):
