@@ -54,7 +54,7 @@ CameraMeasurements ExtractedTargetsSelect(sqlite3* db, StepId step_id, AssetId a
 
 void ExtrinsicInsert(sqlite3* db, StepId step_id, Extrinsic const& extrinsic);
 
-std::optional<Extrinsic> ExtrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_a_id, AssetId asset_b_id);
+std::expected<Extrinsic, std::string> ExtrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_a_id, AssetId asset_b_id);
 
 void GravityInsert(sqlite3* db, StepId step_id, Vector3d const& gravity);
 

@@ -307,11 +307,16 @@ TEST(DatabaseCalibrationDatbase, TestExtrinsics) {
     Extrinsic const extrinsic_co_imu{cam_id, imu_id, Array6d::Random()};
     EXPECT_NO_THROW(database::ExtrinsicInsert(db.get(), step_id, extrinsic_co_imu));
 
-    auto const result{database::ExtrinsicSelect(db.get(), step_id, cam_id, imu_id)};
+    auto result{database::ExtrinsicSelect(db.get(), step_id, cam_id, imu_id)};
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->frame_a, cam_id);
     EXPECT_EQ(result->frame_b, imu_id);
     EXPECT_TRUE(result->se3_a_b.isApprox(extrinsic_co_imu.se3_a_b));
+
+    // Check the error message.
+    result = database::ExtrinsicSelect(db.get(), step_id, cam_id, AssetId{-1});
+    EXPECT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), "{'database::': 'ExtrinsicSelect', 'step_id': 1, 'asset_a_id': 1, 'asset_b_id': -1}");
 }
 
 TEST(DatabaseCalibrationDatbase, TestGravity) {

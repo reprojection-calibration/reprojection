@@ -350,9 +350,9 @@ void ExtrinsicInsert(sqlite3* const db, StepId step_id, Extrinsic const& extrins
     ExecuteStatement(sql_statements::extrinsics_insert, binder, db);
 }
 
-std::optional<Extrinsic> ExtrinsicSelect(sqlite3* const db, StepId const step_id, AssetId const asset_a_id,
-                                         AssetId const asset_b_id) {
-    std::optional<Array6d> se3_a_b;
+std::expected<Extrinsic, std::string> ExtrinsicSelect(sqlite3* const db, StepId const step_id, AssetId const asset_a_id,
+                                                      AssetId const asset_b_id) {
+    std::optional<Array6d> se3_a_b{std::nullopt};
 
     ExecuteQuery(
         db, sql_statements::extrinsics_select,
@@ -366,7 +366,8 @@ std::optional<Extrinsic> ExtrinsicSelect(sqlite3* const db, StepId const step_id
     if (se3_a_b) {
         return Extrinsic{asset_a_id, asset_b_id, *se3_a_b};
     } else {
-        return std::nullopt;  // LCOV_EXCL_LINE
+        return std::unexpected(std::format("{{'database::': '{}', 'step_id': {}, 'asset_a_id': {}, 'asset_b_id': {}}}",
+                                           "ExtrinsicSelect", step_id.value, asset_a_id.value, asset_b_id.value));
     }
 }
 

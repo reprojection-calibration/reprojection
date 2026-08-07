@@ -54,16 +54,12 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
     auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
     spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
 
-    auto const extrinsic{database::ExtrinsicSelect(db.get(), extrinsic_init_id, imu_id_, camera_id_)};
-    if (not extrinsic) {
-        log->error(
-            "{{'extrinsic_init_id': '{}', 'imu_id': '{}', 'camera_id': '{}', 'msg': 'Attempted to load extrinsic but "
-            "result "
-            "was empty.'}}",
-            extrinsic_init_id.value, imu_id.value, camera_id.value);
-        std::exit(1);
+    if (auto const extrinsic{database::ExtrinsicSelect(db.get(), extrinsic_init_id, imu_id_, camera_id_)}) {
+        extrinsic_ = *extrinsic;
+    } else {
+        log->error("{}", extrinsic.error());
+        std::exit(1);  // LCOV_EXCL_LINE
     }
-    extrinsic_ = *extrinsic;
 
     auto const gravity{database::GravitySelect(db.get(), extrinsic_init_id)};
     if (not gravity) {
