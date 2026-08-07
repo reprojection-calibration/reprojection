@@ -1,110 +1,37 @@
 import os
 import sqlite3
 import unittest
+from tempfile import NamedTemporaryFile
 
-from database.sql_table_loading import (
-    load_camera_info_table,
-    load_camera_intrinsics_table,
-    load_extracted_targets_table,
-    load_extrinsics_table,
-    load_images_table,
-    load_imu_data_table,
-    load_imu_errors_table,
-    load_poses_table,
-    load_reprojection_errors_table,
-    load_target_info_table,
-)
+from database.sql_table_loading import load_table, load_table_blob
+from database.sql_statement_loading import load_sql
 
 
-def execute_sql(sql_statement, db_path):
+def execute_sql(db_path, sql_query_file):
     conn = sqlite3.connect(db_path)
 
     cursor = conn.cursor()
-    cursor.execute(sql_statement)
+    cursor.execute(sql_query_file)
     conn.commit()
 
     conn.close()
 
 
 class TestDatabaseSqlTableLoading(unittest.TestCase):
-    # NOTE(Jack): This is a preemptive attempt to make it possible to execute the test locally or in the docker. Let's
-    # see if this works or we just end up removing it later :)
-    @classmethod
-    def setUpClass(self):
-        self.db_path = os.getenv(
-            "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.calib.db3"
-        )
+    def test_load_table(self):
+        self.assertRaises(FileNotFoundError, load_table, "nonexistent.db3", "nonexistent.sql")
 
-    def test_load_camera_info_table(self):
-        table = load_camera_info_table("nonexistent.db3")
-        self.assertIsNone(table)
+        with NamedTemporaryFile(suffix=".db3") as tmp:
+            # Create a table so that we can load it
+            workflows_table = load_sql("workflows_table.sql")
+            execute_sql(tmp.name, workflows_table)
 
-        table = load_camera_info_table(self.db_path)
-        self.assertIsNone(table)
+            # Load the table
+            table = load_table(tmp.name, "workflows_select_all.sql")
 
-    def test_load_camera_intrinsics_table(self):
-        table = load_camera_intrinsics_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_camera_intrinsics_table(self.db_path)
-        self.assertIsNone(table)
-
-    def test_load_extracted_targets_table(self):
-        table = load_extracted_targets_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_extracted_targets_table(self.db_path)
-        self.assertEqual(table.shape, (1758, 3))
-
-    def test_load_extrinsics_table(self):
-        table = load_extrinsics_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_extrinsics_table(self.db_path)
-        self.assertIsNone(table)
-
-    def test_load_images_table(self):
-        table = load_images_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_images_table(self.db_path)
-        self.assertEqual(table.shape, (1758, 2))
-
-    def test_load_imu_data_table(self):
-        table = load_imu_data_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_imu_data_table(self.db_path)
-        self.assertEqual(table.shape, (8770, 8))
-
-    def test_load_imu_errors_table(self):
-        table = load_imu_errors_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_imu_errors_table(self.db_path)
-        self.assertIsNone(table)
-
-    def test_load_poses_table(self):
-        table = load_poses_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        # Checked in test database has an empty pose table.
-        table = load_poses_table(self.db_path)
-        self.assertIsNone(table)
-
-    def test_load_reprojection_errors_table(self):
-        table = load_reprojection_errors_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_reprojection_errors_table(self.db_path)
-        self.assertIsNone(table)
-
-    def test_load_target_info_table(self):
-        table = load_target_info_table("nonexistent.db3")
-        self.assertIsNone(table)
-
-        table = load_target_info_table(self.db_path)
-        self.assertIsNone(table)
+            # Assert some of its properties
+            self.assertTrue(table.empty)
+            self.assertEqual(list(table.columns), ["id", "type", "signature"])
 
 
 if __name__ == "__main__":
