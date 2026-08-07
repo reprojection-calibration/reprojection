@@ -19,7 +19,8 @@ def load_table(db_path, sql_query_file):
     try:
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
-    except Exception as e:
+    except Exception:
+        log.exception(f"Failed to load SQL table. db_path='{db_path}', query_file='{sql_query_file}'")
         return None
 
     return table
@@ -27,7 +28,6 @@ def load_table(db_path, sql_query_file):
 
 def load_table_blob(db_path, sql_query_file, parser, blob_column_id='data'):
     table = load_table(db_path, sql_query_file)
-
     if table is None:
         return None
     elif blob_column_id not in table.columns:
