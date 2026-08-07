@@ -164,6 +164,11 @@ TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
     EXPECT_FALSE(result.has_value());
     EXPECT_NO_THROW(result = database::CameraInfoSelect(db.get(), step.first, AssetId{111}));
     EXPECT_FALSE(result.has_value());
+
+    // Query a nonexistent camera info so we can check the error message.
+    result = database::CameraInfoSelect(db.get(), step.first, AssetId{-1});
+    EXPECT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), "{'database::': 'CameraInfoSelect', 'step_id': 1, 'asset_id': -1}");
 }
 
 class CalibrationDatabaseFixture : public ::testing::Test {

@@ -17,15 +17,12 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
                                                  StepId const camera_info_id, StepId const targets_id,
                                                  SqlitePtr const db)
     : camera_id_{camera_id}, num_threads_{num_threads} {
-    auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)};
-    if (not camera_info) {
-        log->error(  // LCOV_EXCL_LINE
-            "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
-            "empty.'}}",
-            camera_info_id.value, camera_id.value);
+    if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
+        camera_info_ = *camera_info;
+    } else {
+        log->error("{}", camera_info.error());
         std::exit(1);  // LCOV_EXCL_LINE
     }
-    camera_info_ = *camera_info;
 
     targets_ = database::ExtractedTargetsSelect(db.get(), targets_id, camera_id);
 }

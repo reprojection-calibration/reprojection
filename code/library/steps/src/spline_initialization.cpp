@@ -23,16 +23,12 @@ SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const
       camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)},
       targets_id_{targets_id},
       targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)} {
-    // TODO(Jack): This logic is not copy and pasted in TOOOO many constructors! We need to fix this!
-    auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)};
-    if (not camera_info) {
-        log->error(  // LCOV_EXCL_LINE
-            "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
-            "empty.'}}",
-            camera_info_id.value, camera_id.value);
+    if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
+        camera_info_ = *camera_info;
+    } else {
+        log->error("{}", camera_info.error());
         std::exit(1);  // LCOV_EXCL_LINE
     }
-    camera_info_ = *camera_info;
 
     auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)};
     if (not intrinsics) {

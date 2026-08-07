@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
 project(application_ros1)
 
 # NOTE(Jack): We cannot enforce c++ 20 here because noetic and its boosts dependency are quite old and apparently not

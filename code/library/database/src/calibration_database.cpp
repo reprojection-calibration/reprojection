@@ -177,8 +177,9 @@ void CameraInfoInsert(sqlite3* const db, StepId const step_id, AssetId const ass
     ExecuteStatement(sql_statements::camera_info_insert, binder, db);
 }
 
-std::optional<CameraInfo> CameraInfoSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
-    std::optional<CameraInfo> camera_info;
+std::expected<CameraInfo, std::string> CameraInfoSelect(sqlite3* const db, StepId const step_id,
+                                                        AssetId const asset_id) {
+    std::optional<CameraInfo> camera_info{std::nullopt};
 
     ExecuteQuery(
         db, sql_statements::camera_info_select,
@@ -197,7 +198,12 @@ std::optional<CameraInfo> CameraInfoSelect(sqlite3* const db, StepId const step_
             camera_info = result;
         });
 
-    return camera_info;
+    if (camera_info) {
+        return *camera_info;
+    } else {
+        return std::unexpected(std::format("{{'database::': '{}', 'step_id': {}, 'asset_id': {}}}", "CameraInfoSelect",
+                                           step_id.value, asset_id.value));
+    }
 }
 
 void CameraPosesInsert(sqlite3* const db, StepId const step_id, StepId source_step_id, AssetId const asset_id,

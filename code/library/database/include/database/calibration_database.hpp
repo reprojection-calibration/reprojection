@@ -9,6 +9,7 @@
 #include "types/database_types.hpp"
 #include "types/io.hpp"
 #include "types/sensor_data_types.hpp"
+#include <expected>
 
 namespace reprojection::database {
 
@@ -35,7 +36,7 @@ void StepCacheKeyUpdate(sqlite3* db, StepId step_id, Hash const& cache_key);
 
 void CameraInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraInfo const& camera_info);
 
-std::optional<CameraInfo> CameraInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+std::expected<CameraInfo, std::string> CameraInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 void CameraPosesInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
                        Frames const& camera_poses);

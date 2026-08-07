@@ -51,6 +51,21 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
 ENV REPROJECTION_SQL_DIR=code/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
+# MORE TO FILE!
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends \
+        ca-certificates \
+        gpg \
+        wget && \
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc \
+        | gpg --dearmor \
+        > /usr/share/keyrings/kitware-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main" \
+        > /etc/apt/sources.list.d/kitware.list && \
+    apt-get update && \
+    apt-get install --yes --no-install-recommends cmake && \
+    rm -rf /var/lib/apt/lists/*
+
 
 FROM apt-base-stage AS build-ceres-stage
 
@@ -309,6 +324,9 @@ RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE
       /data/ros2/dataset-calib-imu4_512_16.calib.db3
 
 FROM apt-base-stage AS ros1-base-stage
+
+
+
 
 ENV ROS_HOME=/tmp/.ros
 
