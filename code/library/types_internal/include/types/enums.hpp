@@ -26,53 +26,6 @@ inline std::string ToString(Entity const entity_id) {
     }
 }
 
-// WARN(Jack): If tou add a step here but forget to add it to the ToString() function below you will get really cryptic
-// errors from the sql database because it does no rethrow the error properly.
-// TODO(Jack): It is honestly not so nice that we need to specify the steps here and once again in the sql database, and
-// maybe once again in the python tooling. Is there any way for us to centrally store this with that repetition.
-enum class CalibrationStep {
-    BundleAdjustment,
-    CameraInfo,
-    ExtrinsicInitialization,
-    ExtrinsicOptimization,
-    FeatureExtraction,
-    ImageLoading,
-    ImuDataLoading,
-    IntrinsicInitialization,
-    PoseInitialization,
-    SplineInitialization,
-    TargetInfo
-};
-
-inline std::string ToString(CalibrationStep const step_name) {
-    if (step_name == CalibrationStep::BundleAdjustment) {
-        return "bundle_adjustment";
-    } else if (step_name == CalibrationStep::CameraInfo) {
-        return "camera_info";
-    } else if (step_name == CalibrationStep::ExtrinsicInitialization) {
-        return "extrinsic_initialization";
-    } else if (step_name == CalibrationStep::ExtrinsicOptimization) {
-        return "extrinsic_optimization";
-    } else if (step_name == CalibrationStep::FeatureExtraction) {
-        return "feature_extraction";
-    } else if (step_name == CalibrationStep::ImageLoading) {
-        return "image_loading";
-    } else if (step_name == CalibrationStep::ImuDataLoading) {
-        return "imu_data_loading";
-    } else if (step_name == CalibrationStep::IntrinsicInitialization) {
-        return "intrinsic_initialization";
-    } else if (step_name == CalibrationStep::PoseInitialization) {
-        return "pose_initialization";
-    } else if (step_name == CalibrationStep::SplineInitialization) {
-        return "spline_initialization";
-    } else if (step_name == CalibrationStep::TargetInfo) {
-        return "target_info";
-    } else {
-        throw std::runtime_error(
-            "LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToString(CalibrationStep)");
-    }
-}
-
 // ERROR(Jack): The intrinsic size information is currently coded in two separate places! Once here in the enum and one
 // again in each projection class! This will be a pain point going forward if we do not find a solution here to
 // eliminate the manual and far apart duplication.
