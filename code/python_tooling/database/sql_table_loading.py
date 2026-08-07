@@ -19,13 +19,15 @@ def load_table(db_path, sql_query_file):
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
     except Exception as err:
-        log.warning(f"Failed to load SQL table. db_path='{db_path}', query_file='{sql_query_file}', error='{err}'")
+        log.warning(
+            f"Failed to load SQL table. db_path='{db_path}', query_file='{sql_query_file}', error='{err}'"
+        )
         return None
 
     return table
 
 
-def load_table_blob(db_path, sql_query_file, parser, blob_column_id='data'):
+def load_table_blob(db_path, sql_query_file, parser, blob_column_id="data"):
     table = load_table(db_path, sql_query_file)
     if table is None:
         return None
@@ -41,13 +43,26 @@ def load_calibration_database(db_path):
     db = {}
 
     # Tables that do not require blob parsing.
-    for table_name in ("camera_info", "camera_poses", "images_timestamps", "imu_data", "imu_errors", "target_info",
-                       "workflow_assets", "workflow_steps", "workflows"):
+    for table_name in (
+        "assets",
+        "camera_info",
+        "camera_poses",
+        "images_timestamps",
+        "imu_data",
+        "imu_errors",
+        "target_info",
+        "workflow_assets",
+        "workflow_steps",
+        "workflows",
+    ):
         if (table := load_table(db_path, table_name + "_select_all.sql")) is not None:
             db[table_name] = table
 
     # Tables that do require blob parsing.
-    blob_tables = {"extracted_targets": parse_extracted_target_proto, "reprojection_errors": parse_array_x2d_proto}
+    blob_tables = {
+        "extracted_targets": parse_extracted_target_proto,
+        "reprojection_errors": parse_array_x2d_proto,
+    }
     for table_name, parser in blob_tables.items():
         table = load_table_blob(db_path, f"{table_name}_select_all.sql", parser)
         if table is not None:

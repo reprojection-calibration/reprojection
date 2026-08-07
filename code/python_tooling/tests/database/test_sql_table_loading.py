@@ -3,7 +3,11 @@ import sqlite3
 import unittest
 from tempfile import NamedTemporaryFile
 
-from database.sql_table_loading import load_table, load_table_blob, load_calibration_database
+from database.sql_table_loading import (
+    load_table,
+    load_table_blob,
+    load_calibration_database,
+)
 from database.sql_statement_loading import load_sql
 
 
@@ -19,7 +23,9 @@ def execute_sql(db_path, sql_query_file):
 
 class TestDatabaseSqlTableLoading(unittest.TestCase):
     def test_load_table(self):
-        self.assertRaises(FileNotFoundError, load_table, "nonexistent.db3", "nonexistent.sql")
+        self.assertRaises(
+            FileNotFoundError, load_table, "nonexistent.db3", "nonexistent.sql"
+        )
 
         with NamedTemporaryFile(suffix=".db3") as tmp:
             # Create a table so that we can load it.
@@ -40,15 +46,25 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
             execute_sql(tmp.name, extracted_targets_table)
 
             # Try to load the table with an improperly specified blob column id.
-            self.assertRaises(KeyError, load_table_blob, tmp.name, "extracted_targets_select_all.sql",
-                              lambda value: value, "xyz")
+            self.assertRaises(
+                KeyError,
+                load_table_blob,
+                tmp.name,
+                "extracted_targets_select_all.sql",
+                lambda value: value,
+                "xyz",
+            )
 
             # Load the table.
-            table = load_table_blob(tmp.name, "extracted_targets_select_all.sql", lambda value: value)
+            table = load_table_blob(
+                tmp.name, "extracted_targets_select_all.sql", lambda value: value
+            )
 
             # Assert some of its properties.
             self.assertTrue(table.empty)
-            self.assertEqual(list(table.columns), ['step_id', 'asset_id', 'timestamp_ns', 'data'])
+            self.assertEqual(
+                list(table.columns), ["step_id", "asset_id", "timestamp_ns", "data"]
+            )
 
     def test_load_calibration_database(self):
         with NamedTemporaryFile(suffix=".db3") as tmp:
@@ -58,7 +74,9 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
 
             db = load_calibration_database(tmp.name)
 
-            self.assertEqual(list(db.keys()), ['workflow_assets', 'workflow_steps', 'workflows'])
+            self.assertEqual(
+                list(db.keys()), ["workflow_assets", "workflow_steps", "workflows"]
+            )
 
 
 if __name__ == "__main__":

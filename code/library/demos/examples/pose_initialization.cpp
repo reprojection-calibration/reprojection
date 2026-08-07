@@ -22,9 +22,6 @@ int main() {
             sensor_name = "/cam0/image_raw"
             camera_model = "double_sphere"
 
-            [imu]
-            sensor_name = "/imu0"
-
             [target]
             pattern_size = [6,4]
             type = "aprilgrid3"
