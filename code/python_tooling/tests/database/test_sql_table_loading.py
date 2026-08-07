@@ -3,12 +3,12 @@ import sqlite3
 import unittest
 from tempfile import NamedTemporaryFile
 
+from database.sql_statement_loading import load_sql
 from database.sql_table_loading import (
+    load_calibration_database,
     load_table,
     load_table_blob,
-    load_calibration_database,
 )
-from database.sql_statement_loading import load_sql
 
 
 def execute_sql(db_path, sql_query_file):

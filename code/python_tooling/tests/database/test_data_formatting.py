@@ -58,5 +58,5 @@ class TestDataFormatting(unittest.TestCase):
             self.assertEqual(len(workflow.steps), num_steps)
 
         self.assertEqual(len(workflows), 2)
-        workflow_assert(workflows[0], 1, 'cam', '1|3|', 2, 1)
-        workflow_assert(workflows[1], 2, 'cam_imu', '2|3|4|', 3, 2)
+        workflow_assert(workflows[0], 1, "cam", "1|3|", 2, 1)
+        workflow_assert(workflows[1], 2, "cam_imu", "2|3|4|", 3, 2)
