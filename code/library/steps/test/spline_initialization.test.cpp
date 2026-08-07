@@ -14,19 +14,25 @@ class SplineInitFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
+        camera_info_id_ = InsertCameraInfo(camera_info);
 
         auto const [targets, poses]{
             testing_mocks::GenerateMvgData(camera_info, {testing_utilities::double_sphere_intrinsics}, 11, 1)};
-        StepId const targets_id{InsertExtractedTargets(targets)};
+        targets_id_ = InsertExtractedTargets(targets);
 
-        database::CameraPosesInsert(db_.get(), pose_init_id_, targets_id, camera_id_, poses);
+        database::CameraPosesInsert(db_.get(), pose_init_id_, targets_id_, camera_id_, poses);
     }
 
+    StepId camera_info_id_;
     StepId pose_init_id_{database::GetOrCreateStep(db_.get(), StepType::PoseInit, "").first};
+    StepId targets_id_;
+    StepId intrinsics_id_{
+        InsertIntrinsics(CameraModel::DoubleSphere, CameraState{testing_utilities::double_sphere_intrinsics})};
 };
 
 TEST_F(SplineInitFixture, TestSplineInitStepRunner) {
-    steps::SplineInitialization const step{camera_id_, pose_init_id_, db_};
+    steps::SplineInitialization const step{camera_id_,      pose_init_id_,  targets_id_,
+                                           camera_info_id_, intrinsics_id_, db_};
     StepId const step_id{RunStep<steps::SplineInitialization>(workflow_id_, step, db_)};
 
     auto const result{database::ControlPointsSelect(db_.get(), step_id, camera_id_)};
@@ -39,9 +45,10 @@ TEST_F(SplineInitFixture, TestSplineInitStepRunner) {
 }
 
 TEST_F(SplineInitFixture, TestSplineInitStep) {
-    steps::SplineInitialization const step{camera_id_, pose_init_id_, db_};
+    steps::SplineInitialization const step{camera_id_,      pose_init_id_,  targets_id_,
+                                           camera_info_id_, intrinsics_id_, db_};
     EXPECT_EQ(step.Type(), StepType::SplineInit);
-    EXPECT_EQ(step.CacheKey().value, "776b337c347bf1d642eb9510f89b2a27d488633466521e8b489c137aa33bac68");
+    EXPECT_EQ(step.CacheKey().value, "46d20a41437bc2c70b8497e5d0cebef0fcfb8bed7854b6e4ac1f1664ef006d02");
 
     auto const [step_id, _]{database::GetOrCreateStep(db_.get(), StepType::SplineInit, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
