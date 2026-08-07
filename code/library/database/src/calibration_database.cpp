@@ -484,8 +484,8 @@ void IntrinsicInsert(sqlite3* const db, StepId const step_id, AssetId const asse
     ExecuteStatement(sql_statements::intrinsics_insert, binder, db);
 }
 
-std::optional<CameraState> IntrinsicSelect(sqlite3* const db, StepId step_id, AssetId asset_id) {
-    std::optional<CameraState> intrinsic;
+std::expected<CameraState, std::string> IntrinsicSelect(sqlite3* const db, StepId step_id, AssetId asset_id) {
+    std::optional<CameraState> intrinsic{std::nullopt};
 
     ExecuteQuery(
         db, sql_statements::intrinsics_select,
@@ -502,7 +502,12 @@ std::optional<CameraState> IntrinsicSelect(sqlite3* const db, StepId step_id, As
             intrinsic = result;
         });
 
-    return intrinsic;
+    if (intrinsic) {
+        return *intrinsic;
+    } else {
+        return std::unexpected(std::format("{{'database::': '{}', 'step_id': {}, 'asset_id': {}}}", "IntrinsicSelect",
+                                           step_id.value, asset_id.value));
+    }
 }  // LCOV_EXCL_LINE
 
 void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
@@ -548,8 +553,9 @@ void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, splin
 // TODO(Jack): At this point we made this function/concept over generic by talking about "spline info" but actually
 // only really using the time handler. Once we add a bias spline one day we will need to refactor this code (see
 // below).
-std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
-    std::optional<spline::TimeHandler> time_handler;
+std::expected<spline::TimeHandler, std::string> SplineInfoSelect(sqlite3* const db, StepId const step_id,
+                                                                 AssetId const asset_id) {
+    std::optional<spline::TimeHandler> time_handler{std::nullopt};
 
     ExecuteQuery(
         db, sql_statements::spline_info_select,
@@ -566,7 +572,12 @@ std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* const db, StepId co
             time_handler = spline::TimeHandler{t0_ns, delta_t_ns};
         });
 
-    return time_handler;
+    if (time_handler) {
+        return *time_handler;
+    } else {
+        return std::unexpected(std::format("{{'database::': '{}', 'step_id': {}, 'asset_id': {}}}", "SplineInfoSelect",
+                                           step_id.value, asset_id.value));
+    }
 }
 
 void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, TargetInfo const& target_info) {
@@ -583,8 +594,9 @@ void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const ass
     ExecuteStatement(sql_statements::target_info_insert, binder, db);
 }
 
-std::optional<TargetInfo> TargetInfoSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
-    std::optional<TargetInfo> target_info;
+std::expected<TargetInfo, std::string> TargetInfoSelect(sqlite3* const db, StepId const step_id,
+                                                        AssetId const asset_id) {
+    std::optional<TargetInfo> target_info{std::nullopt};
 
     ExecuteQuery(
         db, sql_statements::target_info_select,
@@ -603,7 +615,12 @@ std::optional<TargetInfo> TargetInfoSelect(sqlite3* const db, StepId const step_
             target_info = result;
         });
 
-    return target_info;
+    if (target_info) {
+        return *target_info;
+    } else {
+        return std::unexpected(std::format("{{'database::': '{}', 'step_id': {}, 'asset_id': {}}}", "TargetInfoSelect",
+                                           step_id.value, asset_id.value));
+    }
 }
 
 }  // namespace reprojection::database

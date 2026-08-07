@@ -26,14 +26,12 @@ PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, Ste
         std::exit(1);  // LCOV_EXCL_LINE
     }
 
-    auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)};
-    if (not intrinsics) {
-        log->error(  // LCOV_EXCL_LINE
-            "{{'intrinsics_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to intrinsics but result was empty.'}}",
-            intrinsics_id.value, camera_id.value);
+    if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)}) {
+        intrinsics_ = *intrinsics;
+    } else {
+        log->error("{}", intrinsics.error());
         std::exit(1);  // LCOV_EXCL_LINE
     }
-    intrinsics_ = *intrinsics;
 }
 
 Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(targets_, camera_info_, intrinsics_); }

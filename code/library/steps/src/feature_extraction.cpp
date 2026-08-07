@@ -15,17 +15,16 @@ auto const log{logging::Get("steps")};
 
 FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image_loading_id, bool const show_extraction,
                                      StepId const target_info_id, AssetId const target_id, SqlitePtr const db)
-    : camera_id_{camera_id}, image_loading_id_{image_loading_id}, show_extraction_{show_extraction} {
-    auto const target_info_opt{database::TargetInfoSelect(db.get(), target_info_id, target_id)};
-    if (not target_info_opt) {
-        log->error(  // LCOV_EXCL_LINE
-            "{{'target_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load target info but result was "
-            "empty.'}}",
-            target_info_id.value, target_id.value);
+    : camera_id_{camera_id},
+      image_loading_id_{image_loading_id},
+      show_extraction_{show_extraction},
+      images_{std::make_shared<EncodedImages>(database::ImagesSelect(db.get(), image_loading_id, camera_id))} {
+    if (auto const target_info{database::TargetInfoSelect(db.get(), target_info_id, target_id)}) {
+        target_info_ = *target_info;
+    } else {
+        log->error("{}", target_info.error());
+        std::exit(1);  // LCOV_EXCL_LINE
     }
-    target_info_ = *target_info_opt;
-
-    images_ = std::make_shared<EncodedImages>(database::ImagesSelect(db.get(), image_loading_id, camera_id));
 }
 
 Hash FeatureExtraction::CacheKey() const {

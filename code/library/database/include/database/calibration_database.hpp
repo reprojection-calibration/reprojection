@@ -1,5 +1,6 @@
 #pragma once
 
+#include <expected>
 #include <filesystem>
 #include <optional>
 
@@ -9,7 +10,6 @@
 #include "types/database_types.hpp"
 #include "types/io.hpp"
 #include "types/sensor_data_types.hpp"
-#include <expected>
 
 namespace reprojection::database {
 
@@ -54,7 +54,8 @@ CameraMeasurements ExtractedTargetsSelect(sqlite3* db, StepId step_id, AssetId a
 
 void ExtrinsicInsert(sqlite3* db, StepId step_id, Extrinsic const& extrinsic);
 
-std::expected<Extrinsic, std::string> ExtrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_a_id, AssetId asset_b_id);
+std::expected<Extrinsic, std::string> ExtrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_a_id,
+                                                      AssetId asset_b_id);
 
 void GravityInsert(sqlite3* db, StepId step_id, Vector3d const& gravity);
 
@@ -71,17 +72,17 @@ ImuMeasurements ImuDataSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 void IntrinsicInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraModel camera_model, CameraState const& data);
 
 // TODO(Jack): Should this also return the camera_model? We have that information.
-std::optional<CameraState> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+std::expected<CameraState, std::string> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
                               ReprojectionErrors const& data);
 
 void SplineInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler);
 
-std::optional<spline::TimeHandler> SplineInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+std::expected<spline::TimeHandler, std::string> SplineInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 void TargetInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, TargetInfo const& target_info);
 
-std::optional<TargetInfo> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+std::expected<TargetInfo, std::string> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 }  // namespace reprojection::database

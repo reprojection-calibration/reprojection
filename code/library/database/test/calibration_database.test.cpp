@@ -277,10 +277,10 @@ TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
     ASSERT_TRUE(result.has_value());
     EXPECT_TRUE(result->intrinsics.isApprox(intrinsic.intrinsics));
 
-    EXPECT_NO_THROW(result = database::IntrinsicSelect(db.get(), StepId{111}, asset_id));
+    // Check error message.
+    result = database::IntrinsicSelect(db.get(), step.first, AssetId{-1});
     EXPECT_FALSE(result.has_value());
-    EXPECT_NO_THROW(result = database::IntrinsicSelect(db.get(), step.first, AssetId{111}));
-    EXPECT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), "{'database::': 'IntrinsicSelect', 'step_id': 1, 'asset_id': -1}");
 }
 
 TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
@@ -368,25 +368,30 @@ TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->t0_ns_, time_handler.t0_ns_);
     EXPECT_EQ(result->delta_t_ns_, time_handler.delta_t_ns_);
+
+    // Check the error message.
+    result = database::SplineInfoSelect(db.get(), step_id, AssetId{-1});
+    EXPECT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), "{'database::': 'SplineInfoSelect', 'step_id': 1, 'asset_id': -1}");
 }
 
 TEST(DatabaseCalibrationDatbase, TestTargetInfo) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // Satisfy foreign key constraints
-    auto const step{database::GetOrCreateStep(db.get(), StepType::TargetInfo, "")};
+    auto const step_id{database::GetOrCreateStep(db.get(), StepType::TargetInfo, "").first};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "")};
 
     TargetInfo const target_info{TargetType::Checkerboard, 6, 6, 0.1, false};
-    EXPECT_NO_THROW(database::TargetInfoInsert(db.get(), step.first, asset_id, target_info));
+    EXPECT_NO_THROW(database::TargetInfoInsert(db.get(), step_id, asset_id, target_info));
 
-    auto result{database::TargetInfoSelect(db.get(), step.first, asset_id)};
+    auto result{database::TargetInfoSelect(db.get(), step_id, asset_id)};
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->target_type, target_info.target_type);
     EXPECT_EQ(result->height, target_info.height);
 
-    EXPECT_NO_THROW(result = database::TargetInfoSelect(db.get(), StepId{111}, asset_id));
+    // Check the error message.
+    result = database::TargetInfoSelect(db.get(), step_id, AssetId{-1});
     EXPECT_FALSE(result.has_value());
-    EXPECT_NO_THROW(result = database::TargetInfoSelect(db.get(), step.first, AssetId{111}));
-    EXPECT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), "{'database::': 'TargetInfoSelect', 'step_id': 1, 'asset_id': -1}");
 }

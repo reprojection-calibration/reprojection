@@ -20,8 +20,8 @@ struct FeatureExtraction {
     AssetId camera_id_;
     StepId image_loading_id_;
     bool show_extraction_;
-    TargetInfo target_info_;
     std::shared_ptr<EncodedImages> images_;
+    TargetInfo target_info_;
 };
 
 }  // namespace reprojection::steps

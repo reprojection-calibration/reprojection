@@ -32,27 +32,21 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
         std::exit(1);  // LCOV_EXCL_LINE
     }
 
-    auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)};
-    if (not intrinsics) {
-        log->error("{{'intrinsic_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to intrinsics but result was empty.'}}",
-                   intrinsic_id.value, camera_id.value);
-        std::exit(1);
-    }
-    intrinsics_ = *intrinsics;
-
-    // TODO(Jack): Make these two functions private and provide one public helper that just loads the spline entirely.
-    // This logic is repeated here and in the extrinsic init constructor.
-    auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)};
-    if (not time_handler) {
-        log->error(
-            "{{'spline_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to spline time handler but result was "
-            "empty.'}}",
-            spline_id.value, camera_id.value);
-        std::exit(1);
+    if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)}) {
+        intrinsics_ = *intrinsics;
+    } else {
+        log->error("{}", intrinsics.error());
+        std::exit(1);  // LCOV_EXCL_LINE
     }
 
-    auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
-    spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
+    if (auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)}) {
+        auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
+
+        spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
+    } else {
+        log->error("{}", time_handler.error());
+        std::exit(1);  // LCOV_EXCL_LINE
+    }
 
     if (auto const extrinsic{database::ExtrinsicSelect(db.get(), extrinsic_init_id, imu_id_, camera_id_)}) {
         extrinsic_ = *extrinsic;

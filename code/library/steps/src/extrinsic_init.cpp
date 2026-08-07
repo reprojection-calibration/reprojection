@@ -19,19 +19,14 @@ ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, As
       imu_id_{imu_id},
       imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
       num_threads_{num_threads} {
-    // TODO(Jack): Copy and pasted practically verbatim from the intrinsic init. Also copy and pasted almost identically
-    // below. Seems like this is a good place for a templated helper function.
-    auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)};
-    if (not time_handler) {
-        log->error(  // LCOV_EXCL_LINE
-            "{{'spline_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to spline time handler but result was "
-            "empty.'}}",
-            spline_id.value, camera_id.value);
+    if (auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)}) {
+        auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
+
+        spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
+    } else {
+        log->error("{}", time_handler.error());
         std::exit(1);  // LCOV_EXCL_LINE
     }
-
-    auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
-    spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
 }
 
 Hash ExtrinsicInit::CacheKey() const {
