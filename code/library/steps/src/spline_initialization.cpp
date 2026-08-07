@@ -4,6 +4,7 @@
 #include "geometry/lie.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
+#include "optimization/extrinsic_optimization.hpp"
 #include "spline/se3_spline.hpp"
 #include "steps/spline_initialization.hpp"
 
@@ -15,10 +16,37 @@ auto const log{logging::Get("steps")};
 
 }
 
-SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const camera_poses_id, SqlitePtr const db)
-    : camera_id_{camera_id}, camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)} {}
+SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const camera_poses_id,
+                                           StepId const targets_id, StepId const camera_info_id,
+                                           StepId const intrinsics_id, SqlitePtr const db)
+    : camera_id_{camera_id},
+      camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)},
+      targets_id_{targets_id},
+      targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)} {
+    // TODO(Jack): This logic is not copy and pasted in TOOOO many constructors! We need to fix this!
+    auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)};
+    if (not camera_info) {
+        log->error(  // LCOV_EXCL_LINE
+            "{{'camera_info_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to load camera info but result was "
+            "empty.'}}",
+            camera_info_id.value, camera_id.value);
+        std::exit(1);  // LCOV_EXCL_LINE
+    }
+    camera_info_ = *camera_info;
 
-Hash SplineInitialization::CacheKey() const { return hashing::HashArguments(camera_poses_); }
+    auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)};
+    if (not intrinsics) {
+        log->error(  // LCOV_EXCL_LINE
+            "{{'intrinsics_id': '{}', 'asset_id': '{}', 'msg': 'Attempted to intrinsics but result was empty.'}}",
+            intrinsics_id.value, camera_id.value);
+        std::exit(1);  // LCOV_EXCL_LINE
+    }
+    intrinsics_ = *intrinsics;
+}
+
+Hash SplineInitialization::CacheKey() const {
+    return hashing::HashArguments(camera_poses_, targets_, camera_info_, intrinsics_);
+}
 
 void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
@@ -43,6 +71,12 @@ void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) con
 
     database::ControlPointsInsert(db.get(), step_id, camera_id_, spline.ControlPoints());
     database::SplineInfoInsert(db.get(), step_id, camera_id_, spline.GetTimeHandler());
+
+    // Diagnostic output
+    auto const [spline_poses,
+                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsics_, spline)};
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
 }
 
 }  // namespace reprojection::steps

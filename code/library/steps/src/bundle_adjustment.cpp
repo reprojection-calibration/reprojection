@@ -16,7 +16,7 @@ auto const log{logging::Get("steps")};
 
 }
 
-BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId targets_id, int const num_threads,
+BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets_id, int const num_threads,
                                    StepId const camera_info_id, StepId const intrinsic_id, StepId const camera_poses_id,
                                    SqlitePtr const db)
     : camera_id_{camera_id},
@@ -67,8 +67,9 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, optimized_state.frames);
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, optimized_state.camera_state);
 
-    ReprojectionErrors const error{optimization::ReprojectionError(camera_info_, targets_, optimized_state)};
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, error);
+    // Diagnostic output
+    ReprojectionErrors const errors{optimization::ReprojectionError(camera_info_, targets_, optimized_state)};
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
 }
 
 }  // namespace reprojection::steps

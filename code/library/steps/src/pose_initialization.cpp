@@ -51,9 +51,10 @@ void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
 
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, camera_poses);
 
+    // Diagnostic output
     OptimizationState const state{intrinsics_, camera_poses};
-    ReprojectionErrors const error{optimization::ReprojectionError(camera_info_, targets_, state)};
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, error);
+    ReprojectionErrors const errors{optimization::ReprojectionError(camera_info_, targets_, state)};
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
 }
 
 }  // namespace reprojection::steps
