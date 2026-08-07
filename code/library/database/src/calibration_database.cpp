@@ -382,14 +382,18 @@ void GravityInsert(sqlite3* const db, StepId const step_id, Vector3d const& grav
     ExecuteStatement(sql_statements::gravity_insert, binder, db);
 }
 
-std::optional<Vector3d> GravitySelect(sqlite3* const db, StepId const step_id) {
+std::expected<Vector3d, std::string> GravitySelect(sqlite3* const db, StepId const step_id) {
     std::optional<Vector3d> gravity;
 
     ExecuteQuery(
         db, sql_statements::gravity_select, [step_id](sqlite3_stmt* const stmt) { Bind(stmt, 1, step_id.value); },
         [&gravity](sqlite3_stmt* const stmt) { gravity = ReadEigenColumn<3>(stmt, 0); });
 
-    return gravity;
+    if (gravity) {
+        return *gravity;
+    } else {
+        return std::unexpected(std::format("{{'database::': '{}', 'step_id': {}}}", "GravitySelect", step_id.value));
+    }
 }
 
 void ImagesInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, EncodedImages const& data) {

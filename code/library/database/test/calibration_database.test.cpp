@@ -327,9 +327,14 @@ TEST(DatabaseCalibrationDatbase, TestGravity) {
     Vector3d const gravity{Vector3d::Random()};
     EXPECT_NO_THROW(database::GravityInsert(db.get(), step_id, gravity));
 
-    auto const result{database::GravitySelect(db.get(), step_id)};
+    auto result{database::GravitySelect(db.get(), step_id)};
     ASSERT_TRUE(result.has_value());
     EXPECT_TRUE(result->isApprox(gravity));
+
+    // Check the error message.
+    result = database::GravitySelect(db.get(), StepId{-1});
+    EXPECT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), "{'database::': 'GravitySelect', 'step_id': -1}");
 }
 
 TEST_F(CalibrationDatabaseFixture, TestReprojectionErrors) {

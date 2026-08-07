@@ -58,7 +58,7 @@ std::expected<Extrinsic, std::string> ExtrinsicSelect(sqlite3* db, StepId step_i
 
 void GravityInsert(sqlite3* db, StepId step_id, Vector3d const& gravity);
 
-std::optional<Vector3d> GravitySelect(sqlite3* db, StepId step_id);
+std::expected<Vector3d, std::string> GravitySelect(sqlite3* db, StepId step_id);
 
 void ImagesInsert(sqlite3* db, StepId step_id, AssetId asset_id, EncodedImages const& data);
 

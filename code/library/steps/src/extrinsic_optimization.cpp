@@ -61,13 +61,12 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
         std::exit(1);  // LCOV_EXCL_LINE
     }
 
-    auto const gravity{database::GravitySelect(db.get(), extrinsic_init_id)};
-    if (not gravity) {
-        log->error("{{'extrinsic_init_id': '{}', 'msg': 'Attempted to load gravity but result was empty.'}}",
-                   extrinsic_init_id.value);
-        std::exit(1);
+    if (auto const gravity{database::GravitySelect(db.get(), extrinsic_init_id)}) {
+        gravity_ = *gravity;
+    } else {
+        log->error("{}", gravity.error());
+        std::exit(1);  // LCOV_EXCL_LINE
     }
-    gravity_ = *gravity;
 }
 
 Hash ExtrinsicOptimization::CacheKey() const {
