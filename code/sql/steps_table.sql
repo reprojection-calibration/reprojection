@@ -10,8 +10,6 @@ CREATE TABLE IF NOT EXISTS steps
                                                   'imu_data_loading',
                                                   'intrinsic_initialization',
                                                   'pose_initialization',
-                                                  're_bundle_adjustment',
-                                                  're_pose_initialization',
                                                   'spline_initialization',
                                                   'target_info')),
     cache_key  TEXT,
