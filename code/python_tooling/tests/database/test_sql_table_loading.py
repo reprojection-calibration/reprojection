@@ -3,7 +3,7 @@ import sqlite3
 import unittest
 from tempfile import NamedTemporaryFile
 
-from database.sql_table_loading import load_table, load_table_blob
+from database.sql_table_loading import load_table, load_table_blob, load_calibration_database
 from database.sql_statement_loading import load_sql
 
 
@@ -50,5 +50,16 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
             self.assertTrue(table.empty)
             self.assertEqual(list(table.columns), ['step_id', 'asset_id', 'timestamp_ns', 'data'])
 
-        if __name__ == "__main__":
-            unittest.main()
+    def test_load_calibration_database(self):
+        with NamedTemporaryFile(suffix=".db3") as tmp:
+            execute_sql(tmp.name, load_sql("workflow_assets_table.sql"))
+            execute_sql(tmp.name, load_sql("workflow_steps_table.sql"))
+            execute_sql(tmp.name, load_sql("workflows_table.sql"))
+
+            db = load_calibration_database(tmp.name)
+
+            self.assertEqual(list(db.keys()), ['workflow_assets', 'workflow_steps', 'workflows'])
+
+
+if __name__ == "__main__":
+    unittest.main()
