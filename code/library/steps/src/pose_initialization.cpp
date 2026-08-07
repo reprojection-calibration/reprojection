@@ -4,6 +4,7 @@
 #include "calibration/initialization_methods.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
+#include "optimization/bundle_adjustment.hpp"
 
 namespace reprojection::steps {
 
@@ -50,7 +51,9 @@ void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
 
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, camera_poses);
 
-    // TODO(Jack): We need to calculate and insert the reprojection errors!
+    OptimizationState const state{intrinsics_, camera_poses};
+    ReprojectionErrors const error{optimization::ReprojectionError(camera_info_, targets_, state)};
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, error);
 }
 
 }  // namespace reprojection::steps

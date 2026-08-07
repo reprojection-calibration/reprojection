@@ -67,7 +67,8 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, optimized_state.frames);
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, optimized_state.camera_state);
 
-    // TODO(Jack): We need to calculate and insert the reprojection errors!
+    ReprojectionErrors const error{optimization::ReprojectionError(camera_info_, targets_, optimized_state)};
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, error);
 }
 
 }  // namespace reprojection::steps
