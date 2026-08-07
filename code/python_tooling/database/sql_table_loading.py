@@ -41,7 +41,8 @@ def load_calibration_database(db_path):
     db = {}
 
     # Tables that do not require blob parsing.
-    for table_name in ("workflow_assets", "workflow_steps", "workflows"):
+    for table_name in ("camera_info", "camera_poses", "images_timestamps", "imu_data", "imu_errors", "target_info",
+                       "workflow_assets", "workflow_steps", "workflows"):
         if (table := load_table(db_path, table_name + "_select_all.sql")) is not None:
             db[table_name] = table
 
@@ -53,19 +54,3 @@ def load_calibration_database(db_path):
             db[table_name] = table
 
     return db
-
-    #
-
-    # def safe_parse(blob):
-    #    try:
-    #        return parse_extracted_target_proto(blob)
-    #    except Exception as e:
-    #        print(f"Failed to parse blob: {e}")
-    #        return None
-
-    # def safe_parse(blob):
-    #    try:
-    #        return parse_array_x2d_proto(blob)
-    #    except Exception as e:
-    #        print(f"Failed to parse blob: {e}")
-    #        return None
