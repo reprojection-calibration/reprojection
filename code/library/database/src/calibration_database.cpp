@@ -48,6 +48,7 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
         ExecuteStatement(sql_statements::gravity_table, db);
         ExecuteStatement(sql_statements::images_table, db);
         ExecuteStatement(sql_statements::imu_data_table, db);
+        ExecuteStatement(sql_statements::imu_errors_table, db);
         ExecuteStatement(sql_statements::intrinsics_table, db);
         ExecuteStatement(sql_statements::reprojection_errors_table, db);
         ExecuteStatement(sql_statements::spline_info_table, db);
@@ -471,6 +472,22 @@ ImuMeasurements ImuDataSelect(sqlite3* const db, StepId const step_id, AssetId c
 
     return data;
 }  // LCOV_EXCL_LINE
+
+void ImuErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id, ImuErrors const& data) {
+    auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [timestamp_ns, imu_error_i]{data_i};
+
+        Bind(stmt, 1, step_id.value);
+        Bind(stmt, 2, source_step_id.value);
+        Bind(stmt, 3, asset_id.value);
+        Bind(stmt, 4, timestamp_ns);
+
+        BindEigenColumn<Vector3d>(stmt, 5, imu_error_i.delta_angular_velocity);
+        BindEigenColumn<Vector3d>(stmt, 8, imu_error_i.delta_linear_acceleration);
+    }};
+
+    BatchExecuteStatement(sql_statements::imu_errors_insert, data, binder, db);
+}
 
 void IntrinsicInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, CameraModel const camera_model,
                      CameraState const& data) {

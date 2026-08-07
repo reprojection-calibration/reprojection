@@ -4,6 +4,7 @@
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
+#include "optimization/extrinsic_optimization.hpp"
 
 namespace reprojection::steps {
 
@@ -52,6 +53,11 @@ void ExtrinsicInit::Execute(StepId const step_id, SqlitePtr const db) const {
 
     database::ExtrinsicInsert(db.get(), step_id, extrinsic);
     database::GravityInsert(db.get(), step_id, gravity_w);
+
+    // Diagnostic output.
+    ImuErrors const error{optimization::EvaluateImuError(imu_data_, extrinsic, gravity_w, *spline_)};
+    database::InsertStep(db, imu_name_, StepType(), HashInputs());
+    database::InsertImuErrors(db, imu_name_, StepType(), error);
 }
 
 }  // namespace reprojection::steps

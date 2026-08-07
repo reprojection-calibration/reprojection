@@ -35,6 +35,8 @@ set(SQL_FILES
         imu_data_insert.sql
         imu_data_select.sql
         imu_data_table.sql
+        imu_errors_insert.sql
+        imu_errors_table.sql
         intrinsics_insert.sql
         intrinsics_select.sql
         intrinsics_table.sql
