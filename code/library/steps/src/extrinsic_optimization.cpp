@@ -22,7 +22,9 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
                                              StepId const spline_id, StepId const extrinsic_init_id, SqlitePtr const db)
     : camera_id_{camera_id},
       imu_id_{imu_id},
+      targets_id_{targets_id},
       targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)},
+      imu_data_id_{imu_data_id},
       imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
       num_threads_{num_threads} {
     if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
@@ -83,6 +85,17 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
     database::ControlPointsInsert(db.get(), step_id, camera_id_, optimized_spline.ControlPoints());
     database::ExtrinsicInsert(db.get(), step_id, optimized_extrinsic);
     database::GravityInsert(db.get(), step_id, optimized_gravity);
+
+    // Diagnostic output - reprojection errors
+    auto const [spline_poses, reprojection_errors]{
+        optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsics_, optimized_spline)};
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, reprojection_errors);
+
+    // Diagnostic output - imu errors
+    ImuErrors const imu_errors{
+        optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_gravity, *spline_)};
+    database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, imu_errors);
 }
 
 }  // namespace reprojection::steps

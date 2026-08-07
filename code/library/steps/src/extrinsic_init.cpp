@@ -18,6 +18,7 @@ ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, As
                              StepId const imu_data_id, int num_threads, SqlitePtr const db)
     : camera_id_{camera_id},
       imu_id_{imu_id},
+      imu_data_id_{imu_data_id},
       imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
       num_threads_{num_threads} {
     if (auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)}) {
@@ -55,9 +56,8 @@ void ExtrinsicInit::Execute(StepId const step_id, SqlitePtr const db) const {
     database::GravityInsert(db.get(), step_id, gravity_w);
 
     // Diagnostic output.
-    ImuErrors const error{optimization::EvaluateImuError(imu_data_, extrinsic, gravity_w, *spline_)};
-    database::InsertStep(db, imu_name_, StepType(), HashInputs());
-    database::InsertImuErrors(db, imu_name_, StepType(), error);
+    ImuErrors const errors{optimization::EvaluateImuError(imu_data_, extrinsic, gravity_w, *spline_)};
+    database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, errors);
 }
 
 }  // namespace reprojection::steps

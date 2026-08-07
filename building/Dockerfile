@@ -51,7 +51,9 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
 ENV REPROJECTION_SQL_DIR=code/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
-# MORE TO FILE!
+# TODO(Jack): Move to file!
+# NOTE(Jack): We use c++23 which requires at least CMake 3.20 or higher. Ubuntu 20.04 installs 3.16 by default so we
+# need to manually install it here.
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends \
         ca-certificates \

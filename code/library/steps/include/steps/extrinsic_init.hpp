@@ -20,11 +20,13 @@ struct ExtrinsicInit {
    private:
     AssetId camera_id_;
     // NOTE(Jack): To actually just initialize the cam-imu extrinsics we actually only need the orientation component of
-    // the spline. Assuming we decide to calculate reprojection errors in another step we need to refactor this!
+    // the spline, but its easier to construct the entire spline as this fits better with out existing code semantics.
     // TODO(Jack): Are there any problems with having this be a unique pointer? Is there any reason not just to give
     // spline a default constructor?
     std::unique_ptr<spline::Se3Spline> spline_;
     AssetId imu_id_;
+    // NOTE(Jack): We only need to store this so we can use it when we save the imu error diagnostics.
+    StepId imu_data_id_;
     ImuMeasurements imu_data_;
     int num_threads_;
 };
