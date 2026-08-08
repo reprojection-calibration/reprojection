@@ -44,16 +44,16 @@ def load_calibration_database(db_path):
 
     # Tables that do not require blob parsing.
     for table_name in (
-        "assets",
-        "camera_info",
-        "camera_poses",
-        "images_timestamps",
-        "imu_data",
-        "imu_errors",
-        "target_info",
-        "workflow_assets",
-        "workflow_steps",
-        "workflows",
+            "assets",
+            "camera_info",
+            "camera_poses",
+            "images_timestamps",
+            "imu_data",
+            "imu_errors",
+            "target_info",
+            "workflow_assets",
+            "workflow_steps",
+            "workflows",
     ):
         if (table := load_table(db_path, table_name + "_select_all.sql")) is not None:
             db[table_name] = table
@@ -68,16 +68,21 @@ def load_calibration_database(db_path):
         if table is not None:
             db[table_name] = table
 
-    # Convert some tables to multindex on step_id and asset_id.
+    # Explicitly keep the IDs as columns in the "single row" tables.
     for table_name in (
-        "camera_info",
-        "camera_poses",
-        "extracted_targets",
-        "images_timestamps",
-        "reprojection_errors",
-        "target_info",
+            "camera_info",
+            "target_info",
     ):
-        if table_name in db:
-            db[table_name] = db[table_name].set_index(["step_id", "asset_id"])
+        db[table_name] = db[table_name].set_index(["step_id", "asset_id"], drop=False)
+
+    # For the "multi row" tables the ID is automatically preserved in the table. If we also set drop=False here then it
+    # would be repeated twice which would not be so nice. 
+    for table_name in (
+            "camera_poses",
+            "extracted_targets",
+            "images_timestamps",
+            "reprojection_errors",
+    ):
+        db[table_name] = db[table_name].set_index(["step_id", "asset_id"])
 
     return db
