@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+
 # TODO(Jack): Does it not make more sense to store the dictionary time keys as strings to prevent any problems with
 #  dash/json serialization?
 
@@ -56,6 +57,9 @@ def parse_workflows(db):
 
 # Extract all the rows from a specific table for a single asset that are from a step in the given workflow.
 def all_step_rows(table, workflow, asset_id):
+    if table is None or table.empty:
+        return pd.DataFrame()
+
     mask = table.index.get_level_values("step_id").isin(workflow.steps.values())
     mask &= table.index.get_level_values("asset_id") == asset_id
 
@@ -105,9 +109,10 @@ def process_workflow(db, workflow):
     }
 
     for table_name, asset_type in multi_tables.items():
+        table = db.get(table_name)
         asset = workflow.assets.get(asset_type)
 
-        if asset is None:
+        if table is None or asset is None:
             continue
 
         workflow_data[table_name] = all_step_rows(
