@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from business_logic.geometry import InvertSe3
+from database.types import SensorType, TargetType
 
 # TODO(Jack): Does it not make more sense to store the dictionary time keys as strings to prevent any problems with
 #  dash/json serialization?
@@ -122,3 +124,146 @@ def process_workflow(db, workflow):
         )
 
     return workflow_data
+
+
+def to_legacy_data(workflow, workflow_data):
+    data = {}
+
+    camera = workflow.assets.get("camera")
+    imu = workflow.assets.get("imu")
+
+    # step_id -> step type
+    step_types = {step_id: step_type for step_type, step_id in workflow.steps.items()}
+
+    if camera is not None:
+        camera_name = camera["name"]
+
+        data[camera_name] = {
+            "type": SensorType.Camera,
+            "measurements": {
+                "images": {},
+            },
+        }
+
+        # Images
+        table = workflow_data.get("images_timestamps")
+        if table is not None and not table.empty:
+            for _, row in table.iterrows():
+                timestamp_ns = int(row["timestamp_ns"])
+                data[camera_name]["measurements"]["images"][timestamp_ns] = None
+
+        # Camera info
+        camera_info = workflow_data.get("camera_info")
+        if camera_info is not None and not camera_info.empty:
+            data[camera_name]["camera_info"] = {
+                "camera_model": camera_info["camera_model"],
+                "height": camera_info["height"],
+                "width": camera_info["width"],
+            }
+
+        # Target info
+        #
+        # NOTE: The legacy format stores target_info under the camera even
+        # though the new schema correctly models the target as its own asset.
+        target_info = workflow_data.get("target_info")
+        if target_info is not None and not target_info.empty:
+            data[camera_name]["target_info"] = {
+                "target_type": TargetType(target_info["target_type"]),
+                "height": target_info["height"],
+                "width": target_info["width"],
+                "unit_dimension": target_info["unit_dimension"],
+                "asymmetric": bool(target_info["asymmetric"]),
+            }
+
+        # Extracted targets
+        table = workflow_data.get("extracted_targets")
+        if table is not None and not table.empty:
+            targets = {}
+
+            for _, row in table.iterrows():
+                timestamp_ns = int(row["timestamp_ns"])
+                target = row["data"]
+
+                targets[timestamp_ns] = {
+                    "pixels": target["pixels"],
+                    "points": target["points"],
+                    "indices": target["indices"],
+                }
+
+            data[camera_name]["measurements"]["targets"] = targets
+
+        # Camera poses
+        table = workflow_data.get("camera_poses")
+        if table is not None and not table.empty:
+            poses = {}
+
+            for (step_id, _), row in table.iterrows():
+                step_type = step_types[step_id]
+                timestamp_ns = int(row["timestamp_ns"])
+
+                pose_co_w = row.iloc[-6:].tolist()
+                pose_w_co = InvertSe3(pose_co_w)
+
+                poses.setdefault(step_type, {})[timestamp_ns] = pose_w_co
+
+            data[camera_name]["poses"] = poses
+
+        # Reprojection errors
+        table = workflow_data.get("reprojection_errors")
+        if table is not None and not table.empty:
+            reprojection_errors = {}
+
+            for (step_id, _), row in table.iterrows():
+                step_type = step_types[step_id]
+                timestamp_ns = int(row["timestamp_ns"])
+
+                reprojection_errors.setdefault(step_type, {})[timestamp_ns] = row[
+                    "data"
+                ]
+
+            data[camera_name]["reprojection_error"] = reprojection_errors
+
+    if imu is not None:
+        imu_name = imu["name"]
+
+        data[imu_name] = {
+            "type": SensorType.Imu,
+            "measurements": {},
+        }
+
+        # IMU measurements
+        table = workflow_data.get("imu_data")
+        if table is not None and not table.empty:
+            for _, row in table.iterrows():
+                timestamp_ns = int(row["timestamp_ns"])
+
+                data[imu_name]["measurements"][timestamp_ns] = [
+                    row["omega_x"],
+                    row["omega_y"],
+                    row["omega_z"],
+                    row["ax"],
+                    row["ay"],
+                    row["az"],
+                ]
+
+        # IMU errors
+        table = workflow_data.get("imu_errors")
+        if table is not None and not table.empty:
+            imu_errors = {}
+
+            for (step_id, _), row in table.iterrows():
+                step_type = step_types[step_id]
+                timestamp_ns = int(row["timestamp_ns"])
+
+                imu_errors.setdefault(step_type, {})[timestamp_ns] = [
+                    row["omega_x"],
+                    row["omega_y"],
+                    row["omega_z"],
+                    row["ax"],
+                    row["ay"],
+                    row["az"],
+                ]
+
+            data[imu_name]["imu_error"] = imu_errors
+
+    return data

@@ -1,12 +1,12 @@
 import os
+import sqlite3
 import unittest
 from tempfile import NamedTemporaryFile
 
 import pandas as pd
-import sqlite3
-from database.sql_statement_loading import load_sql
 
 from database.data_formatting import parse_workflows, process_workflow
+from database.sql_statement_loading import load_sql
 from database.sql_table_loading import load_calibration_database
 
 
@@ -98,13 +98,6 @@ def construct_test_db(db_path):
 
 
 class TestDataFormatting(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        # TODO REMOVE - WE WANT ZERO DEP ON THE TEST DATA!
-        self.db_path = os.getenv(
-            "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.calib.db3"
-        )
-
     def test_parse_workflows(self):
         with NamedTemporaryFile(suffix=".db3") as tmp:
             construct_test_db(tmp.name)
