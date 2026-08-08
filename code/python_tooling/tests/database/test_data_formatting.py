@@ -3,7 +3,8 @@ import unittest
 
 import pandas as pd
 
-from database.data_formatting import parse_workflows
+from database.data_formatting import parse_workflows, process_workflow
+from database.sql_table_loading import load_calibration_database
 
 
 class TestDataFormatting(unittest.TestCase):
@@ -51,16 +52,33 @@ class TestDataFormatting(unittest.TestCase):
             self.assertEqual(workflow.id, id)
             self.assertEqual(workflow.type, type)
             self.assertEqual(workflow.signature, signature)
-            self.assertEqual(list(workflow.assets), assets)
+            self.assertEqual(workflow.assets, assets)
             self.assertEqual(workflow.steps, steps)
 
-        self.assertEqual(len(workflows), 2)\
-        # One asset and one step
-        workflow_assert(workflows[0], 1, "cam", "1|",
-                        [{'id': 1, 'index': 0, 'name': '/cam0/image_raw', 'type': 'camera'}],
-                        {'image_loading': 1})
+        self.assertEqual(len(workflows), 2)  # One asset and one step
+        workflow_assert(
+            workflows[0],
+            1,
+            "cam",
+            "1|",
+            {"camera": {"id": 1, "index": 0, "name": "/cam0/image_raw"}},
+            {"image_loading": 1},
+        )
         # Two assets and two steps
-        workflow_assert(workflows[1], 2, "cam", "2|4|",
-                        [{'id': 2, 'index': 1, 'name': '/cam1/image_raw', 'type': 'camera'},
-                         {'id': 3, 'index': 0, 'name': '/imu0', 'type': 'imu'}],
-                        {'image_loading': 2, 'imu_data_loading': 3})
+        workflow_assert(
+            workflows[1],
+            2,
+            "cam",
+            "2|4|",
+            {
+                "camera": {"id": 2, "index": 1, "name": "/cam1/image_raw"},
+                "imu": {"id": 3, "index": 0, "name": "/imu0"},
+            },
+            {"image_loading": 2, "imu_data_loading": 3},
+        )
+
+    def test_process_workflow(self):
+        db = load_calibration_database(self.db_path)
+        workflows = parse_workflows(db)
+
+        process_workflow(db, workflows[0])

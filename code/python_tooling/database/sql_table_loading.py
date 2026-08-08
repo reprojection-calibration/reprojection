@@ -68,4 +68,16 @@ def load_calibration_database(db_path):
         if table is not None:
             db[table_name] = table
 
+    # Convert some tables to multindex on step_id and asset_id.
+    for table_name in (
+        "camera_info",
+        "camera_poses",
+        "extracted_targets",
+        "images_timestamps",
+        "reprojection_errors",
+        "target_info",
+    ):
+        if table_name in db:
+            db[table_name] = db[table_name].set_index(["step_id", "asset_id"])
+
     return db

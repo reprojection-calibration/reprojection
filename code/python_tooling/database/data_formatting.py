@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import pandas as pd
 
 # TODO(Jack): Does it not make more sense to store the dictionary time keys as strings to prevent any problems with
 #  dash/json serialization?
@@ -53,8 +54,54 @@ def parse_workflows(db):
     return workflows
 
 
-def process_workflow(db, workflow):
-    db["camera_info"] = db["camera_info"].set_index(["step_id", "asset_id"])
-    row = db["camera_info"].loc[(workflow.steps["camera_info"], workflow.assets["camera"]["id"])]
+# Extract all the rows from a specific table for a single asset that are from a step in the given workflow.
+def all_step_rows(table, workflow, asset_id):
+    mask = table.index.get_level_values("step_id").isin(workflow.steps.values())
+    mask &= table.index.get_level_values("asset_id") == asset_id
 
-    print(row)
+    return table.loc[mask]
+
+
+def row_or_empty(table, step_id, asset_id):
+    if table is None or table.empty:
+        return pd.DataFrame()
+
+    try:
+        row = table.loc[(step_id, asset_id)]
+    except KeyError:
+        return pd.DataFrame()
+
+    return row
+
+
+def process_workflow(db, workflow):
+    camera_id = workflow.assets["camera"]["id"]
+    target_id = workflow.assets["target"]["id"]
+
+    workflow_data = {}
+
+    single_tables = {
+        "camera_info": (workflow.steps["camera_info"], camera_id),
+        "target_info": (workflow.steps["target_info"], target_id),
+    }
+
+    for table_name, (step_id, asset_id) in single_tables.items():
+        workflow_data[table_name] = row_or_empty(
+            db[table_name],
+            step_id,
+            asset_id,
+        )
+
+    multi_tables = {
+        "camera_poses": camera_id,
+        "extracted_targets": camera_id,
+        "images_timestamps": camera_id,
+        "reprojection_errors": camera_id,
+    }
+
+    for table_name, asset_id in multi_tables.items():
+        workflow_data[table_name] = all_step_rows(
+            db[table_name],
+            workflow,
+            asset_id,
+        )
