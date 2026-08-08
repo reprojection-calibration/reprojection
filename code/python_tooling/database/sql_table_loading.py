@@ -44,16 +44,16 @@ def load_calibration_database(db_path):
 
     # Tables that do not require blob parsing.
     for table_name in (
-            "assets",
-            "camera_info",
-            "camera_poses",
-            "images_timestamps",
-            "imu_data",
-            "imu_errors",
-            "target_info",
-            "workflow_assets",
-            "workflow_steps",
-            "workflows",
+        "assets",
+        "camera_info",
+        "camera_poses",
+        "images_timestamps",
+        "imu_data",
+        "imu_errors",
+        "target_info",
+        "workflow_assets",
+        "workflow_steps",
+        "workflows",
     ):
         if (table := load_table(db_path, table_name + "_select_all.sql")) is not None:
             db[table_name] = table
@@ -70,19 +70,28 @@ def load_calibration_database(db_path):
 
     # Explicitly keep the IDs as columns in the "single row" tables.
     for table_name in (
-            "camera_info",
-            "target_info",
+        "camera_info",
+        "target_info",
     ):
+        if table_name not in db:
+            continue
+
         db[table_name] = db[table_name].set_index(["step_id", "asset_id"], drop=False)
 
-    # For the "multi row" tables the ID is automatically preserved in the table. If we also set drop=False here then it
-    # would be repeated twice which would not be so nice. 
+    # For the "multi row" tables the ID is automatically preserved in the table even when using a multindex like we do
+    # here. If we also set drop=False here then it would be repeated twice which would not be so nice - that is why we
+    # treat the single row and multi row tables separately.
     for table_name in (
-            "camera_poses",
-            "extracted_targets",
-            "images_timestamps",
-            "reprojection_errors",
+        "camera_poses",
+        "extracted_targets",
+        "images_timestamps",
+        "imu_data",
+        "imu_errors",
+        "reprojection_errors",
     ):
+        if table_name not in db:
+            continue
+
         db[table_name] = db[table_name].set_index(["step_id", "asset_id"])
 
     return db

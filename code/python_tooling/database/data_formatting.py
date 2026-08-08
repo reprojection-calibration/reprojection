@@ -77,31 +77,43 @@ def row_or_empty(table, step_id, asset_id):
 def process_workflow(db, workflow):
     workflow_data = {}
 
-    # TODO(Jack): This a hard requirement then that every workflow has a camera and a target. Is there a way to avoid this?
-    camera_id = workflow.assets["camera"]["id"]
-    target_id = workflow.assets["target"]["id"]
-
     single_tables = {
-        "camera_info": (workflow.steps["camera_info"], camera_id),
-        "target_info": (workflow.steps["target_info"], target_id),
+        "camera_info": ("camera_info", "camera"),
+        "target_info": ("target_info", "target"),
     }
-    for table_name, (step_id, asset_id) in single_tables.items():
+
+    for table_name, (step_type, asset_type) in single_tables.items():
+        step_id = workflow.steps.get(step_type)
+        asset = workflow.assets.get(asset_type)
+
+        if step_id is None or asset is None:
+            continue
+
         workflow_data[table_name] = row_or_empty(
             db[table_name],
             step_id,
-            asset_id,
+            asset["id"],
         )
 
-    # NOTE(Jack): Hardcodes that we only load camera asset tables. Makes sense for now.
-    for table_name in (
-        "camera_poses",
-        "extracted_targets",
-        "images_timestamps",
-        "reprojection_errors",
-    ):
+    multi_tables = {
+        "camera_poses": "camera",
+        "extracted_targets": "camera",
+        "images_timestamps": "camera",
+        "imu_data": "imu",
+        "imu_errors": "imu",
+        "reprojection_errors": "camera",
+    }
+
+    for table_name, asset_type in multi_tables.items():
+        asset = workflow.assets.get(asset_type)
+
+        if asset is None:
+            continue
+
         workflow_data[table_name] = all_step_rows(
             db[table_name],
             workflow,
-            camera_id,
+            asset["id"],
         )
-        print(workflow_data)
+
+    return workflow_data
