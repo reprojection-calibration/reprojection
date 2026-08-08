@@ -1,10 +1,64 @@
 import os
 import unittest
+from tempfile import NamedTemporaryFile
 
 import pandas as pd
+import sqlite3
+from database.sql_statement_loading import load_sql
 
 from database.data_formatting import parse_workflows, process_workflow
 from database.sql_table_loading import load_calibration_database
+
+
+# Copy and pasted
+def execute_sql(db_path, sql_query, params=()):
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.execute(sql_query, params)
+        row = cursor.fetchone()
+
+    # Because we use "RETURNING id" in some of our sql we need to try to consume the row otherwise the statement will
+    # never finish.
+    return row[0] if row is not None else None
+
+
+def construct_test_db(db_path):
+    # Enable foreign keys.
+    execute_sql(db_path, "PRAGMA foreign_keys = ON;")
+
+    # Metadata/workflow tables.
+    execute_sql(db_path, load_sql("assets_table.sql"))
+    execute_sql(db_path, load_sql("steps_table.sql"))
+    execute_sql(db_path, load_sql("workflow_assets_table.sql"))
+    execute_sql(db_path, load_sql("workflow_steps_table.sql"))
+    execute_sql(db_path, load_sql("workflows_table.sql"))
+
+    # Calibration artifact tables (only use a subset here to keep things simple).
+    # execute_sql(db_path, load_sql("imu_data_table.sql"))
+    # execute_sql(db_path, load_sql("images_table.sql"))
+
+    # Make two workflows - one camera intrinsic and one camera-imu extrinsic calibration.
+    cam_workflow_id = execute_sql(db_path, load_sql("workflows_insert.sql"), ("cam", "cam_signature"))
+    cam_imu_workflow_id = execute_sql(db_path, load_sql("workflows_insert.sql"), ("cam_imu", "cam_imu_signature"))
+
+    # Setup metadata/workflows - this does not reflect at all what actual calibration workflows would look like.
+    camera_id = execute_sql(db_path, load_sql("assets_insert.sql"), ("camera", 0, ""))
+    imu_id = execute_sql(db_path, load_sql("assets_insert.sql"), ("imu", 0, ""))
+
+    # Add the assets to the workflows - note the camera belongs to both workflows.
+    execute_sql(db_path, load_sql("workflow_assets_insert.sql"), (cam_workflow_id, camera_id))
+    execute_sql(db_path, load_sql("workflow_assets_insert.sql"), (cam_imu_workflow_id, camera_id))
+    execute_sql(db_path, load_sql("workflow_assets_insert.sql"), (cam_imu_workflow_id, imu_id))
+
+    # Add two example steps to the database.
+    image_loading_id = execute_sql(db_path, load_sql("steps_insert.sql"), ("image_loading", ""))
+    imu_data_loading_id = execute_sql(db_path, load_sql("steps_insert.sql"), ("imu_data_loading", ""))
+
+    # Add the steps to the workflows - note the image_loading belongs to both workflows.
+    execute_sql(db_path, load_sql("workflow_steps_upsert.sql"), (cam_workflow_id, "image_loading", image_loading_id))
+    execute_sql(db_path, load_sql("workflow_steps_upsert.sql"),
+                (cam_imu_workflow_id, "image_loading", image_loading_id))
+    execute_sql(db_path, load_sql("workflow_steps_upsert.sql"),
+                (cam_imu_workflow_id, "imu_data_loading", imu_data_loading_id))
 
 
 class TestDataFormatting(unittest.TestCase):
@@ -16,35 +70,9 @@ class TestDataFormatting(unittest.TestCase):
         )
 
     def test_parse_workflows(self):
-        db = {
-            "workflows": pd.DataFrame(
-                [
-                    {"id": 1, "type": "cam", "signature": "1|"},
-                    {"id": 2, "type": "cam", "signature": "2|4|"},
-                ]
-            ),
-            "assets": pd.DataFrame(
-                [
-                    {"type": "camera", "index": 0, "id": 1, "name": "/cam0/image_raw"},
-                    {"type": "camera", "index": 1, "id": 2, "name": "/cam1/image_raw"},
-                    {"type": "imu", "index": 0, "id": 3, "name": "/imu0"},
-                ]
-            ),
-            "workflow_assets": pd.DataFrame(
-                [
-                    {"workflow_id": 1, "asset_id": 1},
-                    {"workflow_id": 2, "asset_id": 2},
-                    {"workflow_id": 2, "asset_id": 3},
-                ]
-            ),
-            "workflow_steps": pd.DataFrame(
-                [
-                    {"workflow_id": 1, "type": "image_loading", "step_id": 1},
-                    {"workflow_id": 2, "type": "image_loading", "step_id": 2},
-                    {"workflow_id": 2, "type": "imu_data_loading", "step_id": 3},
-                ]
-            ),
-        }
+        with NamedTemporaryFile(suffix=".db3") as tmp:
+            construct_test_db(tmp.name)
+            db = load_calibration_database(tmp.name)
 
         workflows = parse_workflows(db)
 
@@ -60,21 +88,21 @@ class TestDataFormatting(unittest.TestCase):
             workflows[0],
             1,
             "cam",
-            "1|",
-            {"camera": {"id": 1, "index": 0, "name": "/cam0/image_raw"}},
+            "cam_signature",
+            {"camera": {"id": 1, "index": 0, "name": ""}},
             {"image_loading": 1},
         )
         # Two assets and two steps
         workflow_assert(
             workflows[1],
             2,
-            "cam",
-            "2|4|",
+            "cam_imu",
+            "cam_imu_signature",
             {
-                "camera": {"id": 2, "index": 1, "name": "/cam1/image_raw"},
-                "imu": {"id": 3, "index": 0, "name": "/imu0"},
+                "camera": {"id": 1, "index": 0, "name": ""},
+                "imu": {"id": 2, "index": 0, "name": ""},
             },
-            {"image_loading": 2, "imu_data_loading": 3},
+            {"image_loading": 1, "imu_data_loading": 2},
         )
 
     def test_process_workflow(self):
