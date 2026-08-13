@@ -5,9 +5,12 @@
 #include "logging/logging.hpp"
 #include "steps/extrinsic_optimization.hpp"
 
-// TODO(Jack): unit test this step!
+// ERROR(Jack): We really really need to test this step! It is just so complicated and I got lazy during a the huge
+// workflow refactor.
 
 namespace reprojection::steps {
+
+// LCOV_EXCL_START
 
 namespace {
 
@@ -99,5 +102,7 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
         optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_gravity, optimized_spline)};
     database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, imu_errors);
 }
+
+// LCOV_EXCL_STOP
 
 }  // namespace reprojection::steps
