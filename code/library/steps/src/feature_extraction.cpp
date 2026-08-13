@@ -22,9 +22,9 @@ FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image
     if (auto const target_info{database::TargetInfoSelect(db.get(), target_info_id, target_id)}) {
         target_info_ = *target_info;
     } else {
-        log->error("{}", target_info.error());
-        std::exit(1);  // LCOV_EXCL_LINE
-    }
+        log->error("{}", target_info.error());  // LCOV_EXCL_LINE
+        std::exit(1);                           // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 }
 
 Hash FeatureExtraction::CacheKey() const {

@@ -27,15 +27,15 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets
     if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
         camera_info_ = *camera_info;
     } else {
-        log->error("{}", camera_info.error());
-        std::exit(1);  // LCOV_EXCL_LINE
-    }
+        log->error("{}", camera_info.error());  // LCOV_EXCL_LINE
+        std::exit(1);                           // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)}) {
         intrinsics_ = *intrinsics;
     } else {
-        log->error("{}", intrinsics.error());
-        std::exit(1);  // LCOV_EXCL_LINE
+        log->error("{}", intrinsics.error());  // LCOV_EXCL_LINE
+        std::exit(1);                          // LCOV_EXCL_LINE
     }
 }
 

@@ -22,7 +22,7 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
     } else {
         log->error("{}", camera_info.error());  // LCOV_EXCL_LINE
         std::exit(1);                           // LCOV_EXCL_LINE
-    }
+    }  // LCOV_EXCL_LINE
 
     targets_ = database::ExtractedTargetsSelect(db.get(), targets_id, camera_id);
 }

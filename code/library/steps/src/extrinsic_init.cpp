@@ -26,9 +26,9 @@ ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, As
 
         spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
     } else {
-        log->error("{}", time_handler.error());
-        std::exit(1);  // LCOV_EXCL_LINE
-    }
+        log->error("{}", time_handler.error());  // LCOV_EXCL_LINE
+        std::exit(1);                            // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 }
 
 Hash ExtrinsicInit::CacheKey() const {
