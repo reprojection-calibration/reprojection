@@ -68,7 +68,8 @@ def run_toml_export(workspace_dir):
 def build_intrinsic_toml(workflow, workflow_data):
     camera = workflow.assets.get("camera")
     camera_info = workflow_data.get("camera_info")
-    camera_intrinsics = workflow_data.get("camera_intrinsics")
+    camera_intrinsics = workflow_data.get("intrinsics")
+
 
     if camera is None or camera_info is None or camera_intrinsics is None:
         return ""
@@ -76,12 +77,20 @@ def build_intrinsic_toml(workflow, workflow_data):
     if camera_info.empty or camera_intrinsics.empty:
         return ""
 
+    bundle_adjustment_step_id = workflow.steps.get("bundle_adjustment")
+    if bundle_adjustment_step_id is None:
+        return ""
+
     sensor_name = camera["name"]
+    asset_id = camera["id"]
+
     log.info(f"Processing intrinsic {sensor_name}")
 
-    camera_intrinsic_row = camera_intrinsics.iloc[0]
+    camera_intrinsic_row = camera_intrinsics.loc[
+        (bundle_adjustment_step_id, asset_id)
+    ]
 
-    intrinsics_str = camera_intrinsic_row["intrinsics"]
+    intrinsics_str = camera_intrinsic_row["data"]
     camera_model = CameraModel(camera_info["camera_model"])
     intrinsics_arr = toml_to_intrinsic_array(intrinsics_str, camera_model)
 

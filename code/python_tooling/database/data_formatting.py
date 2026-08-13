@@ -107,6 +107,7 @@ def process_workflow(db, workflow):
         "images_timestamps": "camera",
         "imu_data": "imu",
         "imu_errors": "imu",
+        "intrinsics": "camera",
         "reprojection_errors": "camera",
     }
 

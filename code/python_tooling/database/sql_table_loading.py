@@ -50,6 +50,7 @@ def load_calibration_database(db_path):
         "images_timestamps",
         "imu_data",
         "imu_errors",
+        "intrinsics",
         "target_info",
         "workflow_assets",
         "workflow_steps",
@@ -87,6 +88,7 @@ def load_calibration_database(db_path):
         "images_timestamps",
         "imu_data",
         "imu_errors",
+        "intrinsics",
         "reprojection_errors",
     ):
         if table_name not in db:
