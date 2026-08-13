@@ -94,7 +94,7 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
 
     // Diagnostic output - imu errors
     ImuErrors const imu_errors{
-        optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_gravity, *spline_)};
+        optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_gravity, optimized_spline)};
     database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, imu_errors);
 }
 
