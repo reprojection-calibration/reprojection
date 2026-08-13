@@ -4,9 +4,6 @@ import plotly.graph_objects as go
 
 def coverage_figure(camera_info, extracted_target_df):
     assert not extracted_target_df.empty, "extracted_target_df is empty"
-    assert (
-        extracted_target_df["sensor_name"].nunique() == 1
-    ), f"Expected exactly one sensor_name, found: {extracted_target_df['sensor_name'].unique().tolist()}"
 
     all_x = []
     all_y = []
@@ -58,20 +55,12 @@ def coverage_figure(camera_info, extracted_target_df):
 
 def error_figure(camera_info, extracted_target_df, reprojection_error_df):
     assert not camera_info is None, "camera_info is required"
-
     assert not extracted_target_df.empty, "extracted_target_df is empty"
-    assert (
-        extracted_target_df["sensor_name"].nunique() == 1
-    ), f"Expected exactly one sensor_name, found: {extracted_target_df['sensor_name'].unique().tolist()}"
-
     assert not reprojection_error_df.empty, "reprojection_error_df is empty"
-    assert (
-        reprojection_error_df["sensor_name"].nunique() == 1
-    ), f"Expected exactly one sensor_name, found: {reprojection_error_df['sensor_name'].unique().tolist()}"
 
     rows = extracted_target_df.merge(
         reprojection_error_df,
-        on=["sensor_name", "timestamp_ns"],
+        on="timestamp_ns",
         suffixes=("_target", "_error"),
     )
 
