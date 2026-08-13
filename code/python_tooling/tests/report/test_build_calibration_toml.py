@@ -45,7 +45,7 @@ class TestBuildCameraTomls(unittest.TestCase):
                     "step_id": 2,
                     "asset_id": 1,
                     "camera_model": "pinhole_radtan4",
-                    "intrinsics": """
+                    "data": """
                             cx = 256.0
                             cy = 256.0
                             f = 160.0
@@ -60,13 +60,13 @@ class TestBuildCameraTomls(unittest.TestCase):
 
         raw_data = {
             "camera_info": camera_info,
-            "camera_intrinsics": camera_intrinsics,
+            "intrinsics": camera_intrinsics,
         }
 
         result = build_intrinsic_toml(workflow, raw_data)
 
         result_gt = """\
-        [cam0]
+        [workflow1.cam0]
         sensor_id = '/cam0/image_raw'
         camera_model = 'pinhole_radtan4'
         intrinsics = [160.0, 256.0, 256.0, 0.1, 0.2, 0.3, 0.4]
@@ -118,7 +118,7 @@ class TestBuildCameraTomls(unittest.TestCase):
         result = build_extrinsic_toml(workflow, raw_data)
 
         result_gt = """\
-        [extrinsic0]
+        [workflow3.extrinsic0]
         frame_a = 'frame_a_1'
         frame_b = 'frame_b_1'
         tf_a_b = [

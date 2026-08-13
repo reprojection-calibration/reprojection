@@ -89,6 +89,7 @@ def build_intrinsic_toml(workflow, workflow_data):
 
     log.info(f"Processing intrinsic {sensor_name}")
 
+    # TODO(Jack): What if there is no bundle adjustment intrinsic?
     camera_intrinsic_row = camera_intrinsics.loc[(bundle_adjustment_step_id, asset_id)]
 
     intrinsics_str = camera_intrinsic_row["data"]
