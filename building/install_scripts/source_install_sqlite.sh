@@ -2,12 +2,15 @@
 
 set -eoux pipefail
 
+# We need to source install sqlite because the apt available on ubuntu 20.04 (used by the ROS1 app) does not support the
+# "RETURNING id;" syntax we use a lot.
+
 # NOTE(Jack): Sqlite has a weird complicated build process (at least compared to simple cmake workflows). Therefore we
 # need to download this special preprocessed file (amalgamation?). Plead read the official docs to understand this if
 # you are.
 
 # NOTE(Jack): Version 3.45.1 was the version by default on my ubuntu 24 version when I checked (05.08.2026) and supports
-# the syntax we require (eg. the 'RETURNING id' syntax)
+# the syntax we require (eg. the 'RETURNING id' syntax).
 file_name="sqlite-autoconf-3450100.tar.gz"
 wget "https://www.sqlite.org/2024/${file_name}"
 

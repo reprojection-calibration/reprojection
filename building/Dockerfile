@@ -20,8 +20,8 @@ ARG APT_INSTALL_LIBRARY_DEPS=building/install_scripts/apt_install_library_deps.s
 RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT_INSTALL_LIBRARY_DEPS} \
     /temporary/${APT_INSTALL_LIBRARY_DEPS}
 
-# NOTE(Jack): We use c++ 20 in the library and we want to support source builds on ubuntu 20 (for ROS Noble) and on
-# ubuntu 24 (ROS 2 and all other development). The default gcc on ubuntu 24 is gcc13 (which supports full c++ 20 by
+# NOTE(Jack): We use c++ 23 in the library and we want to support source builds on ubuntu 20 (for ROS Noble) and on
+# ubuntu 24 (ROS 2 and all other development). The default gcc on ubuntu 24 is gcc13 (which supports full c++ 23 by
 # default) so we also install gcc13 and set it as the primary compiler on ubuntu 20 and 22.
 # WARN(Jack): Code coverage does not work ubuntu 20 and 22! There is some problem with gcov which can be fixed easily in
 # the apt_install_gcc13.sh script, but there is a more complicated problem that has to do with perl packages and other
@@ -31,6 +31,10 @@ RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT
 ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
 RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
     /temporary/${APT_INSTALL_GCC13}
+
+ARG APT_INSTALL_CMAKE=building/install_scripts/apt_install_cmake.sh
+RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTALL_CMAKE} \
+    /temporary/${APT_INSTALL_CMAKE}
 
 # NOTE(Jack): What is going on here? Let me explain :)
 #
@@ -51,23 +55,6 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
 ENV REPROJECTION_SQL_DIR=code/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
-# TODO(Jack): Move to file!
-# NOTE(Jack): We use c++23 which requires at least CMake 3.20 or higher. Ubuntu 20.04 installs 3.16 by default so we
-# need to manually install it here.
-RUN apt-get update && \
-    apt-get install --yes --no-install-recommends \
-        ca-certificates \
-        gpg \
-        wget && \
-    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc \
-        | gpg --dearmor \
-        > /usr/share/keyrings/kitware-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main" \
-        > /etc/apt/sources.list.d/kitware.list && \
-    apt-get update && \
-    apt-get install --yes --no-install-recommends cmake && \
-    rm -rf /var/lib/apt/lists/*
-
 
 FROM apt-base-stage AS build-ceres-stage
 
@@ -84,8 +71,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=${SOURCE_INSTALL_SMALL_LIBRARIES},target=/temporary/${SOURCE_INSTALL_SMALL_LIBRARIES} \
     /temporary/${SOURCE_INSTALL_SMALL_LIBRARIES}
 
-# NOTE(Jack): We have to use a fixed version of sqlite from source because the default version installed on ubunut 20 \
-# (i.e. the ROS1 app) does not support the "RETURNING id" syntax we use
 ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
     /temporary/${SOURCE_INSTALL_SQLITE}
@@ -141,6 +126,10 @@ RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV}
 ARG APT_INSTALL_PYTHON_VENV_DEPS=building/install_scripts/apt_install_python_venv_deps.sh
 RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_VENV_DEPS},target=/temporary/${APT_INSTALL_PYTHON_VENV_DEPS} \
     /temporary/${APT_INSTALL_PYTHON_VENV_DEPS}
+
+ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
+    /temporary/${SOURCE_INSTALL_SQLITE}
 
 ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
