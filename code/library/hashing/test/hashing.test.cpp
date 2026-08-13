@@ -15,7 +15,7 @@ TEST(CachingHashing, TestHash) {
 class HashingFixture : public ::testing::Test {
    protected:
     // cppcheck-suppress-begin unusedStructMember
-    CameraInfo camera_info{"/cam/retro/123", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
     ExtractedTarget target{
         Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}}, MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}}},
         {{5, 6}, {2, 3}}};
@@ -27,22 +27,22 @@ class HashingFixture : public ::testing::Test {
 };
 
 TEST_F(HashingFixture, FocalLengthInitialization) {
-    std::string const result{hashing::HashArguments(camera_info, camera_measurements)};
-    std::string const gt_result{"f4fa69df1a139cf559ab0e423312ecbcb1afe1fff9fffe0782da63a7c22e1b51"};
+    Hash const result{hashing::HashArguments(camera_info, camera_measurements)};
+    Hash const gt_result{"430782805bd5d77fa692e90432f3d6ae6cc997c75896ada95d1db828601f3e17"};
 
     EXPECT_EQ(result, gt_result);
 }
 
 TEST_F(HashingFixture, PoseInitialization) {
-    std::string const result{hashing::HashArguments(camera_info, camera_measurements, camera_state)};
-    std::string const gt_result{"c78e49018ab68ffc6b2ce19cc210aaba72ac7729ce5385ef9a231a34af2032fe"};
+    Hash const result{hashing::HashArguments(camera_info, camera_measurements, camera_state)};
+    Hash const gt_result{"f1e08743677a82f725c0f7c5125bbf3819121e1c0ce6222106abaae5d71726c9"};
 
     EXPECT_EQ(result, gt_result);
 }
 
 TEST_F(HashingFixture, BundleAdjustment) {
-    std::string const result{hashing::HashArguments(camera_info, camera_measurements, optimization_state)};
-    std::string const gt_result{"b45889d48b71fc02fd39a3d8f9a41a909d6e98627d491596a63b2e24b2dca5b8"};
+    Hash const result{hashing::HashArguments(camera_info, camera_measurements, optimization_state)};
+    Hash const gt_result{"27ef005062911d3fcdb3bf1b0b8d8bb6f5900f0b05b994ce409e1573903b1e1d"};
 
     EXPECT_EQ(result, gt_result);
 }

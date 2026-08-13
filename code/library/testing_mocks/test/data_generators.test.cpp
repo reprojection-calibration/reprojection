@@ -17,7 +17,7 @@ TEST(TestingMocksImuDataGenerator, TestGenerateImuData) {
 // test data is engineered such that none get masked out which is why we can assert that .rows() = 25 for all
 // frames.
 TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
-    CameraInfo const camera_info{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets, poses]{
         testing_mocks::GenerateMvgData(camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 60, 1, true)};
 

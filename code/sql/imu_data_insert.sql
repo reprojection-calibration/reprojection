@@ -1,2 +1,3 @@
-INSERT INTO imu_data (step_name, sensor_name, timestamp_ns, omega_x, omega_y, omega_z, ax, ay, az)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO imu_data (step_id, asset_id, timestamp_ns, omega_x, omega_y, omega_z, ax, ay, az)
+VALUES (?, ?, ?, ?, ?,?,?,?,?);
+

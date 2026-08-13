@@ -1,3 +1,4 @@
 SELECT camera_model, height, width
 FROM camera_info
-WHERE sensor_name = ?
+WHERE step_id = ?
+  AND asset_id = ?;

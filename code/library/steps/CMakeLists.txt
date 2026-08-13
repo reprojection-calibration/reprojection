@@ -3,17 +3,16 @@ set(LIBRARY_NAME "steps")
 set(SRC_FILES
         src/bundle_adjustment.cpp
         src/camera_info.cpp
-        src/config_parsing.cpp
-        src/extrinsic_initialization.cpp
+        src/extrinsic_init.cpp
         src/extrinsic_optimization.cpp
         src/feature_extraction.cpp
         src/image_loading.cpp
         src/imu_data_loading.cpp
+        src/initialize_calibration.cpp
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
         src/spline_initialization.cpp
         src/target_info.cpp
-
 )
 
 set(LINK_LIBRARIES
@@ -42,7 +41,17 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
+        test/bundle_adjustment.test.cpp
+        test/camera_info.test.cpp
+        test/extrinsic_init.test.cpp
+        test/feature_extraction.test.cpp
+        test/image_loading.test.cpp
+        test/imu_data_loading.test.cpp
+        test/initialize_calibration.test.cpp
+        test/intrinsic_initialization.test.cpp
+        test/pose_initialization.test.cpp
+        test/spline_initialization.test.cpp
         test/step_runner.test.cpp
-        test/steps.test.cpp
+        test/target_info.test.cpp
 )
 AddTests()

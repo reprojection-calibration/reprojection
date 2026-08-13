@@ -1,46 +1,27 @@
 #pragma once
 
-#include <toml++/toml.hpp>
-
-#include "config/config_loading.hpp"
-#include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
-#include "types/io.hpp"
+#include "types/database_types.hpp"
 
 namespace reprojection::steps {
 
-// NOTE(Jack): The CameraInfoStep and FeatureExtractionStep are unique because they need to iterate over the input
-// images. Because there are many possible data interfaces with different ways to iterate over them, we chose to use
-// dependency injection via a lambda to represent this. That means that any application that wants to call either step
-// must provide a lambda which essentially lets us iterate over the images from a single sensor. So far this seems like
-// the right abstraction, but I could image that one day this could be made a little more formal because for a new
-// engineer figuring out how to implement the lambda could be tricky. But that is future music!
-// NOTE(Jack): Also because we want a way to determine if we have a cache hit or not BEFORE we iterate over and
-// serialize the entire dataset, we ask for the CameraInfoStep and FeatureExtractionStep that the user passes in a cache
-// key/serialized blob that uniquely represents the image data. In ROS for example you can do this by iterating over the
-// still serialized messages and summing up the timestamps, or something like that, to create a serialized string which
-// uniquely identifies that stream. Depending on each application to do that is not a very strong strategy, and it could
-// be that we one day formalize the requirements and cache key construction process for the image data fed from
-// applications.
-
 struct CameraInfoStep {
-    // NOTE(Jack): If one day the Config::Camera starts to contain more information that is required to construct the
-    // camera info then do not pass and store the entire struct but just the parts we need.
-    config::Config::Camera cfg_;
+    CameraInfoStep(AssetId camera_id, StepId image_loading_id, CameraModel camera_model, SqlitePtr db);
+
+    static StepType Type() { return StepType::CameraInfo; }
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    AssetId camera_id_;
+    CameraModel camera_model_;
+    // TODO(Jack): It is way overkill to load all the images here just to get the size of the first one. We need a
+    // better iamge handling pipeline across the image loading/feature extraction/camera info. We need an entirely new
+    // concept.
     std::shared_ptr<EncodedImages> images_;
-
-    static CalibrationStep StepType() { return CalibrationStep::CameraInfo; }
-
-    std::string EntityId() const { return cfg_.sensor_name; }
-
-    std::string HashInputs() const;
-
-    CameraInfo Compute() const;
-
-    CameraInfo Load(SqlitePtr const db) const;
-
-    void Save(CameraInfo const& camera_info, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

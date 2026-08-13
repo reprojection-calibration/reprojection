@@ -54,7 +54,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     uint64_t const timestamp_ns{0};
 
     // Format data into required format for the nonlinear optimization
-    CameraInfo const sensor{"", CameraModel::Pinhole, bounds.value()};
+    CameraInfo const sensor{CameraModel::Pinhole, bounds.value()};
     CameraMeasurements const target{{timestamp_ns, {bundle, {}}}};
     OptimizationState const initial_state{CameraState{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
 

@@ -83,11 +83,7 @@ std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& dat
     bool const db_exists{fs::exists(db_path)};
     log->info("{{'db_path': '{}', 'exists': {}}}", db_path.string(), db_exists);
 
-    if (db_exists) {
-        return database::OpenCalibrationDatabase(db_path, false, false);
-    }
-
-    return database::OpenCalibrationDatabase(db_path, true, false);
+    return database::OpenCalibrationDatabase(db_path, not db_exists);
 }
 
 }  // namespace reprojection::application

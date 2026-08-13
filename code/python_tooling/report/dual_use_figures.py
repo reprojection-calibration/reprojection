@@ -22,13 +22,7 @@ def format_stats(name, values):
 
 def measurement_delta_time_figures(df, label="Measurement"):
     assert not df.empty, "df is empty"
-    assert "sensor_name" in df.columns, "Missing column: sensor_name"
     assert "timestamp_ns" in df.columns, "Missing column: timestamp_ns"
-
-    assert df["sensor_name"].nunique() == 1, (
-        f"Expected exactly one sensor_name, "
-        f"found: {df['sensor_name'].unique().tolist()}"
-    )
 
     rows = df.sort_values("timestamp_ns").copy()
 

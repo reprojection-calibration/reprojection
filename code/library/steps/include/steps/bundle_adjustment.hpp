@@ -2,26 +2,29 @@
 
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
+#include "types/database_types.hpp"
+#include "types/io.hpp"
 
 namespace reprojection::steps {
 
 struct BundleAdjustment {
-    CameraInfo camera_info_;
-    CameraMeasurements targets_;
-    OptimizationState initial_state_;
+    BundleAdjustment(AssetId camera_id, StepId targets_id, int num_threads, StepId camera_info_id, StepId intrinsic_id,
+                     StepId camera_poses_id, SqlitePtr db);
+
+    static StepType Type() { return StepType::BundleAdjustment; }
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    AssetId camera_id_;
+    StepId targets_id_;
     int num_threads_;
-
-    static CalibrationStep StepType() { return CalibrationStep::BundleAdjustment; }
-
-    std::string EntityId() const { return camera_info_.sensor_name; }
-
-    std::string HashInputs() const;
-
-    OptimizationState Compute() const;
-
-    OptimizationState Load(SqlitePtr const db) const;
-
-    void Save(OptimizationState const& optimized_state, SqlitePtr const db) const;
+    CameraMeasurements targets_;
+    CameraInfo camera_info_;
+    CameraState intrinsics_;
+    Frames camera_poses_;
 };
 
 }  // namespace reprojection::steps

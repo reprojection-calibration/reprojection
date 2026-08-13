@@ -1,6 +1,3 @@
-SELECT ax,
-       ay,
-       az
+SELECT gx, gy, gz
 FROM gravity
-WHERE step_name = ?
-  AND entity_id = ?
+WHERE step_id = ?;

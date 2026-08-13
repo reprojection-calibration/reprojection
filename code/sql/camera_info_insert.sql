@@ -1,2 +1,2 @@
-INSERT INTO camera_info (step_name, sensor_name, camera_model, height, width)
+INSERT INTO camera_info (step_id, asset_id, camera_model, height, width)
 VALUES (?, ?, ?, ?, ?);

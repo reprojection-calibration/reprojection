@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.16.3)
+cmake_minimum_required(VERSION 3.20)
 project(
         reprojection
         VERSION 0.0.1
         LANGUAGES C CXX
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Werror -Wall -Wextra -Wpedantic)
@@ -42,6 +42,7 @@ add_subdirectory(types)
 add_subdirectory(testing_utilities)
 add_subdirectory(config)
 add_subdirectory(hashing)
+add_subdirectory(logging)
 add_subdirectory(database)
 add_subdirectory(eigen_utilities)
 add_subdirectory(geometry)
@@ -53,7 +54,6 @@ add_subdirectory(pnp)
 add_subdirectory(calibration)
 add_subdirectory(video_capture)
 add_subdirectory(feature_extraction)
-add_subdirectory(logging)
 add_subdirectory(image_viewer)
 add_subdirectory(steps)
 add_subdirectory(application)

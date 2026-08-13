@@ -4,57 +4,38 @@
 
 using namespace reprojection;
 
-struct DummyStep {
-    int result;
+struct ExampleStep {
+    static StepType Type() { return StepType::ImageLoading; }
 
-    static CalibrationStep StepType() { return CalibrationStep::PoseInitialization; }
+    Hash CacheKey() const { return cache_key_; }
 
-    std::string EntityId() const { return ""; }
-
-    std::string HashInputs() const { return std::to_string(result); };
-
-    int Compute() const { return result; }
-
-    int Load(SqlitePtr const db) const {
+    static void Execute(StepId const step_id, SqlitePtr const db) {
         (void)db;
+        (void)step_id;
 
-        // NOTE(Jack): We add 100 here so we can differentiate in the test if the returned result comes from the
-        // Compute() or Load() method.
-        return result + 100;
+        return;
     }
 
-    void Save(int const data, SqlitePtr const db) const {
-        (void)data;
-        (void)db;
-    }
+    // We only have this here for the testing purpose below so we can change it manually and trigger a cache miss!
+    Hash cache_key_{""};
 };
 
-// TODO(Jack): How can we write a test to test the cascading delete and step replacement logic?
-TEST(StepsStepRunner, TestStepRunnerWithDummyStep) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true, false)};
+TEST(StepsStepRunner, TestExampleStep) {
+    auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
-    DummyStep step{2};
+    AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
+    WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {asset_id})};
 
-    // TODO(Jack): We need to find a clean way to incorporate the entity into the step testing. For now we add it here
-    // manually and for all other setps.
-    database::InsertEntity(db, step.EntityId(), Entity::Camera);
+    ExampleStep step;
+    StepId result{steps::RunStep<ExampleStep>(workflow_id, step, db)};
+    EXPECT_EQ(result.value, 1);
 
-    auto [data, cache_status]{steps::RunStep<int>(step, db)};
-    EXPECT_EQ(data, 2);  // Result from DummyStep.Compute()
-    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
+    // Rerunning the step should be a cache hit (but we can't see that here) and should return the same step ID
+    result = steps::RunStep<ExampleStep>(workflow_id, step, db);
+    EXPECT_EQ(result.value, 1);
 
-    // On rerun with the same inputs it will be a cache hit
-    std::tie(data, cache_status) = steps::RunStep<int>(step, db);
-    EXPECT_EQ(data, 102);  // Result from DummyStep.Load()
-    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
-
-    // Change the value to see that we get a cache miss again
-    step.result = 5;
-    std::tie(data, cache_status) = steps::RunStep<int>(step, db);
-    EXPECT_EQ(data, 5);  // Result from DummyStep.Compute()
-    EXPECT_EQ(cache_status, CacheStatus::CacheMiss);
-
-    std::tie(data, cache_status) = steps::RunStep<int>(step, db);
-    EXPECT_EQ(data, 105);  // Result from DummyStep.Load()
-    EXPECT_EQ(cache_status, CacheStatus::CacheHit);
+    // Change the cache key so we get a cache miss and a new step is created.
+    step.cache_key_ = Hash{"1"};
+    result = steps::RunStep<ExampleStep>(workflow_id, step, db);
+    EXPECT_EQ(result.value, 2);
 }

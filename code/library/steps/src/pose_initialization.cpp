@@ -1,29 +1,53 @@
+
 #include "steps/pose_initialization.hpp"
 
 #include "calibration/initialization_methods.hpp"
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
-#include "optimization/bundle_adjustment.hpp"  // REQUIRED BECAUSE OF ReprojectionResiduals()
+#include "logging/logging.hpp"
+#include "optimization/bundle_adjustment.hpp"
 
 namespace reprojection::steps {
 
-std::string PoseInitialization::HashInputs() const {
-    return hashing::HashArguments(camera_info_, targets_, intrinsics_);
+namespace {
+
+auto const log{logging::Get("steps")};
+
 }
 
-Frames PoseInitialization::Compute() const {
-    return calibration::PoseInitialization(camera_info_, targets_, intrinsics_);
+PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, StepId camera_info_id,
+                                       StepId intrinsics_id, SqlitePtr const db)
+    : camera_id_{camera_id},
+      targets_id_{targets_id},
+      targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)} {
+    if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
+        camera_info_ = *camera_info;
+    } else {
+        log->error("{}", camera_info.error());  // LCOV_EXCL_LINE
+        std::exit(1);                           // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
+
+    if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)}) {
+        intrinsics_ = *intrinsics;
+    } else {
+        log->error("{}", intrinsics.error());  // LCOV_EXCL_LINE
+        std::exit(1);                          // LCOV_EXCL_LINE
+    }
 }
 
-Frames PoseInitialization::Load(SqlitePtr const db) const { return database::ReadPoses(db, EntityId(), StepType()); }
+Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(targets_, camera_info_, intrinsics_); }
 
-void PoseInitialization::Save(Frames const& initialized_poses, SqlitePtr const db) const {
-    database::InsertPoses(db, EntityId(), StepType(), initialized_poses);
+void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
+    Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsics_)};
 
-    OptimizationState const state{intrinsics_, initialized_poses};
-    ReprojectionErrors const error{optimization::ReprojectionError(camera_info_, targets_, state)};
-    database::InsertReprojectionErrors(db, EntityId(), StepType(), error);
+    log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
+              camera_id_.value, std::size(targets_), std::size(camera_poses));
+
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, camera_poses);
+
+    // Diagnostic output
+    OptimizationState const state{intrinsics_, camera_poses};
+    ReprojectionErrors const errors{optimization::ReprojectionError(camera_info_, targets_, state)};
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
 }
 
 }  // namespace reprojection::steps

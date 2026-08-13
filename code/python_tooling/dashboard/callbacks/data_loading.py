@@ -5,6 +5,7 @@ from dashboard.tools.data_loading import (
     load_database,
     refresh_database_list,
     refresh_sensor_list,
+    refresh_workflow_list,
 )
 
 
@@ -19,12 +20,22 @@ def refresh_database_list_callback(db_dir, _):
 
 
 @app.callback(
+    Output("workflow-selection-dropdown", "options"),
+    Output("workflow-selection-dropdown", "value"),
+    Input("database-selection-dropdown", "value"),
+)
+def refresh_workflow_list_callback(db_file):
+    return refresh_workflow_list(db_file)
+
+
+@app.callback(
     Output("raw-data-store", "data"),
     Output("metadata-store", "data"),
     Input("database-selection-dropdown", "value"),
+    Input("workflow-selection-dropdown", "value"),
 )
-def load_database_callback(db_file):
-    return load_database(db_file)
+def load_database_callback(db_file, workflow_id):
+    return load_database(db_file, workflow_id)
 
 
 @app.callback(

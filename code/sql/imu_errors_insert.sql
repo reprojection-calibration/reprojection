@@ -1,3 +1,2 @@
-INSERT INTO imu_errors (step_name, sensor_name, timestamp_ns, delta_omega_x, delta_omega_y, delta_omega_z, delta_ax,
-                        delta_ay, delta_az)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO imu_errors (step_id, source_step_id, asset_id, timestamp_ns, omega_x, omega_y, omega_z, ax, ay, az)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

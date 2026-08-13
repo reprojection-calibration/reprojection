@@ -1,7 +1,6 @@
 import logging
 import os
 import sqlite3
-import textwrap
 
 import pandas as pd
 
@@ -11,195 +10,90 @@ from database.sql_statement_loading import load_sql
 log = logging.getLogger("reprojection")
 
 
-def log_sql_error(e):
-    log.debug("SQL execution failed:\n%s", textwrap.indent(str(e), "  "))
-
-
-def load_camera_info_table(db_path):
+def load_table(db_path, sql_query_file):
     if not os.path.isfile(db_path):
-        return None
+        raise FileNotFoundError(f"Database file does not exist: {db_path}")
 
-    sql_query = load_sql("camera_info_select_all.sql")
-
+    sql_query = load_sql(sql_query_file)
     try:
         with sqlite3.connect(db_path) as conn:
             table = pd.read_sql(sql_query, conn)
-    except Exception as e:
-        log_sql_error(e)
+    except Exception as err:
+        log.warning(
+            f"Failed to load SQL table. db_path='{db_path}', query_file='{sql_query_file}', error='{err}'"
+        )
         return None
 
     return table
 
 
-def load_camera_intrinsics_table(db_path):
-    if not os.path.isfile(db_path):
+def load_table_blob(db_path, sql_query_file, parser, blob_column_id="data"):
+    table = load_table(db_path, sql_query_file)
+    if table is None:
         return None
+    elif blob_column_id not in table.columns:
+        raise KeyError("Column '{}' not found in query result.", blob_column_id)
 
-    sql_query = load_sql("camera_intrinsics_select_all.sql")
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
-    except Exception as e:
-        log_sql_error(e)
-        return None
+    table["data"] = table["data"].apply(parser)
 
     return table
 
 
-# TODO(Jack): This function is very similar to load_reprojection_errors_table(), can we eliminate copy and paste? One big
-#  difference is that the extracted targets do not have the "type" identifier in their table.
-def load_extracted_targets_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
+def load_calibration_database(db_path):
+    db = {}
 
-    sql_query = load_sql("extracted_targets_select_all.sql")
+    # Tables that do not require blob parsing.
+    for table_name in (
+        "assets",
+        "camera_info",
+        "camera_poses",
+        "images_timestamps",
+        "imu_data",
+        "imu_errors",
+        "intrinsics",
+        "target_info",
+        "workflow_assets",
+        "workflow_steps",
+        "workflows",
+    ):
+        if (table := load_table(db_path, table_name + "_select_all.sql")) is not None:
+            db[table_name] = table
 
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
+    # Tables that do require blob parsing.
+    blob_tables = {
+        "extracted_targets": parse_extracted_target_proto,
+        "reprojection_errors": parse_array_x2d_proto,
+    }
+    for table_name, parser in blob_tables.items():
+        table = load_table_blob(db_path, f"{table_name}_select_all.sql", parser)
+        if table is not None:
+            db[table_name] = table
 
-            if "data" not in table.columns:
-                raise KeyError("'data' column not found in query result")
+    # Explicitly keep the IDs as columns in the "single row" tables.
+    for table_name in (
+        "camera_info",
+        "target_info",
+    ):
+        if table_name not in db:
+            continue
 
-            def safe_parse(blob):
-                try:
-                    return parse_extracted_target_proto(blob)
-                except Exception as e:
-                    print(f"Failed to parse blob: {e}")
-                    return None
+        db[table_name] = db[table_name].set_index(["step_id", "asset_id"], drop=False)
 
-            table["data"] = table["data"].apply(safe_parse)
-    except Exception as e:
-        log_sql_error(e)
-        return None
+    # For the "multi row" tables the ID is automatically preserved in the table even when using a multindex like we do
+    # here. If we also set drop=False here then it would be repeated twice which would not be so nice - that is why we
+    # treat the single row and multi row tables separately.
+    for table_name in (
+        "camera_poses",
+        "extracted_targets",
+        "images_timestamps",
+        "imu_data",
+        "imu_errors",
+        "intrinsics",
+        "reprojection_errors",
+    ):
+        if table_name not in db:
+            continue
 
-    return table
+        db[table_name] = db[table_name].set_index(["step_id", "asset_id"])
 
-
-def load_extrinsics_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
-
-    sql_query = load_sql("extrinsics_select_all.sql")
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
-    except Exception as e:
-        log_sql_error(e)
-        return None
-
-    return table
-
-
-# TODO(Jack): Make generic loading function for the basic case and use that to eliminate copy and paste!
-# WARN(Jack): We not actually decode the image data here in this function. if we one data get to the point where we do
-# want to visualize images in the dashboard then we need to look again here. For now we just assume all the image data
-# is null.
-def load_images_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
-
-    sql_query = load_sql("images_select_all_metadata_only.sql")
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
-    except Exception as e:
-        log_sql_error(e)
-        return None
-
-    return table
-
-
-def load_imu_data_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
-
-    sql_query = load_sql("imu_data_select_all.sql")
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
-    except Exception as e:
-        log_sql_error(e)
-        return None
-
-    return table
-
-
-def load_imu_errors_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
-
-    sql_query = load_sql("imu_errors_select_all.sql")
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
-    except Exception as e:
-        log_sql_error(e)
-        return None
-
-    return table
-
-
-def load_poses_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
-
-    sql_query = load_sql("poses_select_all.sql")
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
-    except Exception as e:
-        log_sql_error(e)
-        return None
-
-    return table
-
-
-def load_reprojection_errors_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
-
-    sql_query = load_sql("reprojection_error_select_all.sql")
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
-
-            if "data" not in table.columns:
-                raise KeyError("'data' column not found in query result")
-
-            def safe_parse(blob):
-                try:
-                    return parse_array_x2d_proto(blob)
-                except Exception as e:
-                    print(f"Failed to parse blob: {e}")
-                    return None
-
-            table["data"] = table["data"].apply(safe_parse)
-    except Exception as e:
-        log_sql_error(e)
-        return None
-
-    return table
-
-
-def load_target_info_table(db_path):
-    if not os.path.isfile(db_path):
-        return None
-
-    sql_query = load_sql("target_info_select_all.sql")
-
-    try:
-        with sqlite3.connect(db_path) as conn:
-            table = pd.read_sql(sql_query, conn)
-    except Exception as e:
-        log_sql_error(e)
-        return None
-
-    return table
+    return db

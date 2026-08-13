@@ -17,7 +17,7 @@ namespace tu = testing_utilities;
 // seems ok... for now.
 TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     double const duration_s{10};
-    CameraInfo const camera_info{"cam", CameraModel::Pinhole, tu::image_bounds};
+    CameraInfo const camera_info{CameraModel::Pinhole, tu::image_bounds};
 
     auto const [targets, poses_co_w]{
         testing_mocks::GenerateMvgData(camera_info, CameraState{tu::pinhole_intrinsics}, duration_s, 10)};
@@ -37,15 +37,15 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     // optimizes the spline to have minimum energy. Constraints like that might introduce errors elsewhere as we do not
     // handle the relative weighting between these things in any intelligent or principled manner. For now these test
     // values are close enough and serve as the canary in the coal mine :)
-    ImuCamExtrinsic const initial_extrinsic{
-        {"imu", camera_info.sensor_name, Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}},
-        Vector3d{-0.212548, -0.293729, 9.79995}};
+    Extrinsic const initial_extrinsic{AssetId{1}, AssetId{2},
+                                      Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}};
+    Vector3d const initial_gravity{Vector3d{-0.212548, -0.293729, 9.79995}};
 
-    auto const [_1, optimized_extrinsic]{optimization::ExtrinsicOptimization(
-        imu_data, spline_w_co, initial_extrinsic, camera_info, targets, {tu::pinhole_intrinsics}, 1)};
+    auto const [_1, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
+        imu_data, spline_w_co, initial_extrinsic, initial_gravity, camera_info, targets, {tu::pinhole_intrinsics}, 1)};
 
-    EXPECT_TRUE(optimized_extrinsic.tf.se3_a_b.isApprox(initial_extrinsic.tf.se3_a_b, 1e-2));
-    EXPECT_TRUE(optimized_extrinsic.gravity.isApprox(initial_extrinsic.gravity, 1e-2));
+    EXPECT_TRUE(optimized_extrinsic.se3_a_b.isApprox(initial_extrinsic.se3_a_b, 1e-2));
+    EXPECT_TRUE(optimized_gravity.isApprox(initial_gravity, 1e-2));
 }
 
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
@@ -68,7 +68,7 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 
     uint64_t const timestamp_ns{0};
 
-    CameraInfo const sensor{"", CameraModel::Pinhole, tu::image_bounds};
+    CameraInfo const sensor{CameraModel::Pinhole, tu::image_bounds};
     CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
     auto const camera_state{CameraState{tu::pinhole_intrinsics}};
 
@@ -90,8 +90,11 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 TEST(OptimizationExtrinsicOptimization, TestEvaluateImuError) {
     auto const [imu_data, spline_w_co]{testing_mocks::GenerateImuData(10, 20)};
 
-    ImuCamExtrinsic const extrinsic{Extrinsic{"imu", "cam", Array6d::Zero()}, {0, 0, 9.81}};
-    auto const errors{optimization::EvaluateImuError(imu_data, extrinsic, spline_w_co)};
+    // TODO(Jack): I am getting the sneaking suspicion that because the functions here do not actually use the assetid
+    // we need to rethink passing the entire extrinsic struct.
+    Extrinsic const extrinsic{AssetId{1}, AssetId{2}, Array6d::Zero()};
+    Vector3d const gravity{0, 0, 9.81};
+    auto const errors{optimization::EvaluateImuError(imu_data, extrinsic, gravity, spline_w_co)};
 
     EXPECT_EQ(std::size(errors), 195);
     for (auto const& error : errors) {

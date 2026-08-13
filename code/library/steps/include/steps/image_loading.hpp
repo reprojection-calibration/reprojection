@@ -1,32 +1,29 @@
 #pragma once
 
-#include "types/calibration_types.hpp"
+#include "database/calibration_database.hpp"
 #include "types/io.hpp"
 
 namespace reprojection::steps {
 
-// NOTE(Jack): I had originally planned to note store the images in the database because it would require more
-// reading/writing than just feeding the images directly into the feature extractor. However, given that the images will
-// be cached after the first execution there is really no argument not to do this. But it will lead to the database
-// getting large (even though we only store .png encoded blobs). The benefit is that it makes our downstream workflow
-// and database visualization extremely consistent.
+// NOTE(Jack): I had originally planned to not store the images in the database because it would require more
+// reading/writing than just feeding the images directly into the feature extractor. But it leads to the database
+// getting large. The benefit is that it makes our downstream workflow and database visualization extremely consistent.
+// TODO(Jack): We really need to find a way for the feature extractor to process the image stream itself and not also
+// write the images to the db!
 
 struct ImageLoading {
-    std::string camera_name_;
-    std::string serialized_data_signature_;
-    ImageSampler image_source_;
+    ImageLoading(AssetId camera_id, std::string_view serialized_image_sampler, ImageSampler const& image_sampler);
 
-    static CalibrationStep StepType() { return CalibrationStep::ImageLoading; }
+    static StepType Type() { return StepType::ImageLoading; }
 
-    std::string EntityId() const { return camera_name_; }
+    Hash CacheKey() const;
 
-    std::string HashInputs() const;
+    void Execute(StepId step_id, SqlitePtr db) const;
 
-    std::shared_ptr<EncodedImages> Compute() const;
-
-    std::shared_ptr<EncodedImages> Load(SqlitePtr const db) const;
-
-    void Save(std::shared_ptr<EncodedImages const> const images, SqlitePtr const db) const;
+   private:
+    AssetId camera_id_;
+    Hash cache_key_;
+    ImageSampler image_sampler_;
 };
 
 }  // namespace reprojection::steps

@@ -6,8 +6,8 @@
 #include "application/reprojection_calibration.hpp"
 #include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
-#include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
+#include "steps/initialize_calibration.hpp"
 
 using namespace reprojection;
 
@@ -15,7 +15,7 @@ int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.calib.db3"};
-    auto db{database::OpenCalibrationDatabase(record_path, false, false)};
+    auto db{database::OpenCalibrationDatabase(record_path, false)};
 
     static constexpr std::string_view config_file{R"(
             [camera]
@@ -37,35 +37,33 @@ int main() {
     // essentially what we are doing here in the following block. The reason that we put it into a try catch block is to
     // prevent the database throwing and killing the program when we run the program more than once without resetting
     // the database.
-
     try {
-        auto const cam_cfg{config::Config::Camera::Parse(*config["camera"].as_table())};
-        CameraInfo const camera_info{cam_cfg.sensor_name, cam_cfg.camera_model, {0, 512, 0, 512}};
+        // TODO(Jack): Call this here is bad! We need to manually create the calibration workflow.
+        steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
-        // Camera stuff
-        database::InsertEntity(db, camera_info.sensor_name, Entity::Camera);
+        // TODO(Jack): Should we also write the image loading and feature extraction keys here? Or should they be
+        // hardcoded into the db?
 
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::ImageLoading, hashing::Sha256(""));
+        Hash const camera_info_cache_key{"1cc994b3b1dfe158bed402f46b5de3c00e14bf2d8057f43dd3531eebea5390c5"};
+        auto const step_result{database::GetOrCreateStep(db.get(), StepType::CameraInfo, camera_info_cache_key)};
 
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::CameraInfo,
-                             "1cfeafb06f588d676b115f0ffdb0f601bdfef2e3e604b5ac331a97363e9a993e");
-        database::InsertCameraInfo(db, camera_info);
-
-        database::InsertStep(db, camera_info.sensor_name, CalibrationStep::FeatureExtraction,
-                             "875e2778a98a4edf3bfac18a86f6bc4e1ad50730a8dad0315ec71ea234ab6999");
-
-        // Imu stuff
-        if (auto const imu_cfg{config::Config::Imu::Parse(*config["imu"].as_table())}) {
-            database::InsertEntity(db, imu_cfg->sensor_name, Entity::Imu);
-
-            database::InsertStep(db, imu_cfg->sensor_name, CalibrationStep::ImuDataLoading, hashing::Sha256(""));
+        // NOTE(Jack): We only need to insert the camera info on the first pass when it's a cache miss. If we do it
+        // again on subsequent runs we will violate the unique constraint.
+        if (step_result.second == CacheStatus::CacheMiss) {
+            database::CameraInfoInsert(db.get(), step_result.first, context.camera_id,
+                                       CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
+            database::StepCacheKeyUpdate(db.get(), step_result.first, camera_info_cache_key);
         }
-
     } catch (...) {
         std::cerr << "\nDatabase setup threw exception.\n" << std::endl;
     }
 
-    application::Calibrate(config, {{}, ""}, application::ImuInput{{}, ""}, db);
+    // NOTE(Jack): Because the step type and cache key need to be a unique pair for every step we cannot just use an
+    // empty string here because then we could not run this for both cam0 and cam1. If you want to run cam1 you need to
+    // update this and possibly write the cache key into the respective step.
+    std::string const image_signature{"cam0_image_signature"};
+
+    application::Calibrate(config, {{}, image_signature}, application::ImuInput{{}, ""}, db);
 
     return EXIT_SUCCESS;
 }

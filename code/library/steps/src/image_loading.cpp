@@ -1,7 +1,5 @@
 #include "steps/image_loading.hpp"
 
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
 
@@ -13,39 +11,41 @@ auto const log{logging::Get("steps")};
 
 }
 
-// TODO(Jack): The name of the class variable "cache_key" is misleading because it is not a cache key but really a
-// serialized data signature. We should fix this name to clarify its purpose and use.
-std::string ImageLoading::HashInputs() const { return hashing::HashArguments(serialized_data_signature_); }
+ImageLoading::ImageLoading(AssetId const camera_id, std::string_view serialized_image_sampler,
+                           ImageSampler const& image_sampler)
+    : camera_id_{camera_id},
+      cache_key_{hashing::HashArguments(serialized_image_sampler)},
+      image_sampler_{image_sampler} {}
 
-std::shared_ptr<EncodedImages> ImageLoading::Compute() const {
+Hash ImageLoading::CacheKey() const { return cache_key_; }
+
+void ImageLoading::Execute(StepId const step_id, SqlitePtr const db) const {
     auto encoded_images = std::make_shared<EncodedImages>();
     int num_images{0};
-    while (auto const data{image_source_()}) {
+    while (auto const data{image_sampler_()}) {
         auto const& [timestamp_ns, img]{*data};
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error("cv::imencode() failed for " + std::string(camera_name_));  // LCOV_EXCL_LINE
+            log->error(  // LCOV_EXCL_LINE
+                "{{'step_id': {}, 'asset_id': {}, 'msg': 'cv::imencode() failed at timestamp_ns {}.'}}",  // LCOV_EXCL_LINE
+                step_id.value, camera_id_.value, timestamp_ns);  // LCOV_EXCL_LINE
+            std::exit(1);                                        // LCOV_EXCL_LINE
         }
 
         encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});
 
         ++num_images;
         if (num_images % 50 == 0) {
-            log->debug("{{'step': '{}', 'stage': '{}', 'sensor_id': '{}', 'num_images': {}}}",  // LCOV_EXCL_LINE
-                       ToString(StepType()), "Compute()", EntityId(), num_images);              // LCOV_EXCL_LINE
+            log->debug("{{'step_id': {}, 'asset_id': {}, 'num_images': {}}}", step_id.value,  // LCOV_EXCL_LINE
+                       camera_id_.value, num_images);                                         // LCOV_EXCL_LINE
         }
     }
 
-    return encoded_images;
-}  // LCOV_EXCL_LINE
+    log->info("{{'step_id': {}, 'imu_id': {}, 'num_images': {}}}", step_id.value, camera_id_.value,
+              std::size(*encoded_images));
 
-std::shared_ptr<EncodedImages> ImageLoading::Load(SqlitePtr const db) const {
-    return std::make_shared<EncodedImages>(database::ReadImages(db, EntityId()));
-}
-
-void ImageLoading::Save(std::shared_ptr<EncodedImages const> const encoded_images, SqlitePtr const db) const {
-    database::InsertImages(db, EntityId(), *encoded_images);
+    database::ImagesInsert(db.get(), step_id, camera_id_, *encoded_images);
 }
 
 }  // namespace reprojection::steps

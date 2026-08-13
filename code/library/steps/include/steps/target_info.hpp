@@ -1,30 +1,22 @@
 #pragma once
 
-#include <toml++/toml.hpp>
-
-#include "config/config_loading.hpp"
 #include "config/config_parse.hpp"
-#include "types/calibration_types.hpp"
-#include "types/io.hpp"
+#include "database/calibration_database.hpp"
 
 namespace reprojection::steps {
 
 struct TargetInfoStep {
-    config::Config::Target cfg_;
-    // TODO(Jack): Is this really associated with a sensor or just an entity?
-    std::string sensor_name_;
+    TargetInfoStep(AssetId target_id, config::Config::Target const& target);
 
-    static CalibrationStep StepType() { return CalibrationStep::TargetInfo; };
+    static StepType Type() { return StepType::TargetInfo; }
 
-    std::string EntityId() const { return sensor_name_; }
+    Hash CacheKey() const;
 
-    std::string HashInputs() const;
+    void Execute(StepId step_id, SqlitePtr db) const;
 
-    TargetInfo Compute() const;
-
-    TargetInfo Load(SqlitePtr const db) const;
-
-    void Save(TargetInfo const& target_info, SqlitePtr const db) const;
+   private:
+    AssetId target_id_;
+    config::Config::Target target_;
 };
 
 }  // namespace reprojection::steps

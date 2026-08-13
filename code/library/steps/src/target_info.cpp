@@ -1,34 +1,32 @@
 #include "steps/target_info.hpp"
 
-#include <toml++/toml.h>
-
-#include "config/config_parse.hpp"
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/logging.hpp"
 
 namespace reprojection::steps {
 
-std::string TargetInfoStep::HashInputs() const { return hashing::HashArguments(cfg_, sensor_name_); }
+namespace {
 
-TargetInfo TargetInfoStep::Compute() const {
-    // TODO(Jack): Here we see that the intermediate config::Config::Target type is little redundant because it is
-    // basically exactly the TargetInfo type. We should unify these into one single type.
-    return {cfg_.target_type, cfg_.size[0], cfg_.size[1], cfg_.unit_dimension, cfg_.asymmetric};
+auto const log{logging::Get("steps")};
+
 }
 
-TargetInfo TargetInfoStep::Load(SqlitePtr const db) const {
-    auto const target_info{database::ReadTargetInfo(db, EntityId())};
+TargetInfoStep::TargetInfoStep(AssetId target_id, config::Config::Target const& target)
+    : target_id_{target_id}, target_{target} {}
 
-    if (not target_info) {
-        throw std::runtime_error("we need a consistent error handling strategy!!!");  // LCOV_EXCL_LINE
-    }
+Hash TargetInfoStep::CacheKey() const { return hashing::HashArguments(target_id_.value, target_); }
 
-    return *target_info;
-}
+void TargetInfoStep::Execute(StepId step_id, SqlitePtr const db) const {
+    TargetInfo const target_info{target_.target_type, target_.size[0], target_.size[1], target_.unit_dimension,
+                                 target_.asymmetric};
 
-void TargetInfoStep::Save(TargetInfo const& target_info, SqlitePtr const db) const {
-    database::InsertTargetInfo(db, EntityId(), target_info);
+    log->info(
+        "{{'step_id': {}, 'asset_id': {}, 'target_info': {{'target_type': {}, 'rows': {}, 'cols': {}, "
+        "'unit_dimension': {}, 'asymmetric': {}}}}}}}",
+        step_id.value, target_id_.value, ToString(target_info.target_type), target_info.height, target_info.width,
+        target_info.unit_dimension, target_info.asymmetric);
+
+    database::TargetInfoInsert(db.get(), step_id, target_id_, target_info);
 }
 
 }  // namespace reprojection::steps

@@ -2,7 +2,8 @@ import os
 from enum import Enum
 
 from database.calculate_metadata import count_data
-from database.data_formatting import load_data
+from database.data_formatting import parse_workflows, process_workflow, to_legacy_data
+from database.sql_table_loading import load_calibration_database
 
 
 def refresh_database_list(db_dir):
@@ -28,8 +29,42 @@ def refresh_database_list(db_dir):
     return result, result[0]["value"] if result else ""
 
 
-def load_database(db_file):
-    raw_data = load_data(db_file)
+def refresh_workflow_list(db_file):
+    if db_file is None or not os.path.isfile(db_file):
+        return [], ""
+
+    db = load_calibration_database(db_file)
+    workflows = parse_workflows(db)
+
+    result = [
+        {
+            "label": f"{workflow.type} ({workflow.signature})",
+            "value": workflow.id,
+        }
+        for workflow in workflows
+    ]
+
+    return result, result[0]["value"] if result else ""
+
+
+def load_database(db_file, workflow_id):
+    if db_file is None or workflow_id is None:
+        return {}, {}
+
+    db = load_calibration_database(db_file)
+    workflows = parse_workflows(db)
+
+    workflow = next(
+        (workflow for workflow in workflows if workflow.id == workflow_id),
+        None,
+    )
+
+    if workflow is None:
+        return {}, {}
+
+    workflow_data = process_workflow(db, workflow)
+
+    raw_data = to_legacy_data(workflow, workflow_data)
     metadata = count_data(raw_data)
 
     return raw_data, metadata

@@ -1,26 +1,23 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
-#include "types/calibration_types.hpp"
 
 namespace reprojection::steps {
 
 struct IntrinsicInitialization {
+    IntrinsicInitialization(AssetId camera_id, int num_threads, StepId camera_info_id, StepId targets_id, SqlitePtr db);
+
+    static StepType Type() { return StepType::IntrinsicInit; }
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    AssetId camera_id_;
+    int num_threads_;
     CameraInfo camera_info_;
     CameraMeasurements targets_;
-    int num_threads_;
-
-    static CalibrationStep StepType() { return CalibrationStep::IntrinsicInitialization; }
-
-    std::string EntityId() const { return camera_info_.sensor_name; }
-
-    std::string HashInputs() const;
-
-    CameraState Compute() const;
-
-    CameraState Load(SqlitePtr const db) const;
-
-    void Save(CameraState const& frames, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

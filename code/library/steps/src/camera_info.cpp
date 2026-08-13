@@ -1,52 +1,51 @@
 #include "steps/camera_info.hpp"
 
-#include <toml++/toml.h>
-
-#include "config/config_parse.hpp"
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/logging.hpp"
 
 namespace reprojection::steps {
 
-std::string CameraInfoStep::HashInputs() const {
-    return hashing::HashArguments(cfg_.sensor_name, cfg_.camera_model, *images_);
+namespace {
+
+auto const log{logging::Get("steps")};
+
 }
 
-CameraInfo CameraInfoStep::Compute() const {
-    if (images_->size() == 0) {
-        throw std::runtime_error                                                      // LCOV_EXCL_LINE
-            ("we need an error handling strategy for no images to get camera info");  // LCOV_EXCL_LINE
+CameraInfoStep::CameraInfoStep(AssetId const camera_id, StepId const image_loading_id, CameraModel const camera_model,
+                               SqlitePtr const db)
+    : camera_id_{camera_id},
+      camera_model_{camera_model},
+      images_{std::make_shared<EncodedImages>(database::ImagesSelect(db.get(), image_loading_id, camera_id))} {}
+
+Hash CameraInfoStep::CacheKey() const { return hashing::HashArguments(camera_model_, *images_); }
+
+void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {
+    // TODO(Jack): Should this be checked in the constructor? Problem with that is that we cant artificially trigger a
+    // cache hit then. But it seems like if we can already know this is a problem then that we should not let
+    // construction finish.
+    if (std::size(*images_) == 0) {
+        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'No images loaded.'}}", step_id.value,  // LCOV_EXCL_LINE
+                   camera_id_.value, ToString(camera_model_));                                      // LCOV_EXCL_LINE
+        std::exit(1);                                                                               // LCOV_EXCL_LINE
     }
 
-    // Arbitrarily check the size of the first image
+    // Check the size of the first image to get the image dimensions.
     cv::Mat const img{cv::imdecode(images_->begin()->second.data, cv::IMREAD_COLOR)};
-
-    // TOD0(Jack): Is this check really needed? Is it possible that an empty image buffer makes it way here?
     if (img.empty()) {
-        throw std::runtime_error                                                        // LCOV_EXCL_LINE
-            ("we need an error handling strategy for empty image to get camera info");  // LCOV_EXCL_LINE
+        log->error(  // LCOV_EXCL_LINE
+            "{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",
+            step_id.value, camera_id_.value, ToString(camera_model_));  // LCOV_EXCL_LINE
+        std::exit(1);                                                   // LCOV_EXCL_LINE
     }
 
-    CameraInfo const camera_info{EntityId(),
-                                 cfg_.camera_model,
+    CameraInfo const camera_info{camera_model_,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
-    return camera_info;
-}
+    log->info("{{'step_id': {}, 'asset_id': {}, 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
+              step_id.value, camera_id_.value, ToString(camera_model_), camera_info.bounds.v_max,
+              camera_info.bounds.u_max);
 
-CameraInfo CameraInfoStep::Load(SqlitePtr const db) const {
-    auto const camera_info{database::ReadCameraInfo(db, EntityId())};
-
-    if (not camera_info) {
-        throw std::runtime_error("we need a consistent error handling strategy!!!");  // LCOV_EXCL_LINE
-    }
-
-    return *camera_info;
-}
-
-void CameraInfoStep::Save(CameraInfo const& camera_info, SqlitePtr const db) const {
-    database::InsertCameraInfo(db, camera_info);
+    database::CameraInfoInsert(db.get(), step_id, camera_id_, camera_info);
 }
 
 }  // namespace reprojection::steps

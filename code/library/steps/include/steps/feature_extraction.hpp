@@ -2,27 +2,26 @@
 
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
-#include "types/io.hpp"
+#include "types/database_types.hpp"
 
 namespace reprojection::steps {
 
 struct FeatureExtraction {
-    std::string camera_name_;
+    FeatureExtraction(AssetId camera_id, StepId image_loading_id, bool show_extraction, StepId target_info_id,
+                      AssetId target_id, SqlitePtr db);
+
+    static StepType Type() { return StepType::FeatureExtraction; }
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    AssetId camera_id_;
+    StepId image_loading_id_;
+    bool show_extraction_;
     std::shared_ptr<EncodedImages> images_;
     TargetInfo target_info_;
-    bool show_extraction_;
-
-    static CalibrationStep StepType() { return CalibrationStep::FeatureExtraction; }
-
-    std::string EntityId() const { return camera_name_; }
-
-    std::string HashInputs() const;
-
-    CameraMeasurements Compute() const;
-
-    CameraMeasurements Load(SqlitePtr const db) const;
-
-    void Save(CameraMeasurements const& extracted_targets, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

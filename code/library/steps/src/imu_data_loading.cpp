@@ -1,16 +1,25 @@
 #include "steps/imu_data_loading.hpp"
 
-#include "database/database_read.hpp"
-#include "database/database_write.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/logging.hpp"
 
 namespace reprojection::steps {
 
-std::string ImuDataLoading::HashInputs() const { return hashing::HashArguments(serialized_data_signature_); }
+namespace {
 
-ImuMeasurements ImuDataLoading::Compute() const {
+auto const log{logging::Get("steps")};
+
+}
+
+ImuDataLoading::ImuDataLoading(AssetId const imu_id, std::string_view serialized_imu_sampler,
+                               ImuSampler const& imu_sampler)
+    : imu_id_{imu_id}, cache_key_{hashing::HashArguments(serialized_imu_sampler)}, imu_sampler_{imu_sampler} {}
+
+Hash ImuDataLoading::CacheKey() const { return cache_key_; }
+
+void ImuDataLoading::Execute(StepId const step_id, SqlitePtr const db) const {
     ImuMeasurements imu_data;
-    while (auto const data{imu_data_source_()}) {
+    while (auto const data{imu_sampler_()}) {
         auto const& [timestamp_ns, data_i]{*data};
 
         Array3d const angular_velocity{data_i[0], data_i[1], data_i[2]};
@@ -19,13 +28,9 @@ ImuMeasurements ImuDataLoading::Compute() const {
         imu_data.insert({timestamp_ns, {angular_velocity, linear_acceleration}});
     }
 
-    return imu_data;
-}  // LCOV_EXCL_LINE
+    log->info("{{'step_id': {}, 'imu_id': {}, 'num_imu_data': {}}}", step_id.value, imu_id_.value, std::size(imu_data));
 
-ImuMeasurements ImuDataLoading::Load(SqlitePtr const db) const { return database::ReadImuData(db, EntityId()); }
-
-void ImuDataLoading::Save(ImuMeasurements const& imu_data, SqlitePtr const db) const {
-    database::InsertImuData(db, EntityId(), imu_data);
+    database::ImuDataInsert(db.get(), step_id, imu_id_, imu_data);
 }
 
 }  // namespace reprojection::steps

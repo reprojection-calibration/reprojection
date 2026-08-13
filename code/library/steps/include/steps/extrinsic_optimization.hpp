@@ -3,30 +3,36 @@
 #include "database/calibration_database.hpp"
 #include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
+#include "types/database_types.hpp"
 
 namespace reprojection::steps {
 
 struct ExtrinsicOptimization {
-    CameraInfo camera_info_;
+    ExtrinsicOptimization(AssetId camera_id, AssetId imu_id, StepId targets_id, StepId imu_data_id, int num_threads,
+                          StepId camera_info_id, StepId intrinsic_id, StepId spline_id, StepId extrinsic_init_id,
+                          SqlitePtr db);
+
+    static StepType Type() { return StepType::ExtrinsicOptimization; }
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    AssetId camera_id_;
+    AssetId imu_id_;
+    StepId targets_id_;
     CameraMeasurements targets_;
-    CameraState intrinsics_;
-
+    StepId imu_data_id_;
     ImuMeasurements imu_data_;
-    spline::Se3Spline spline_;
-    ImuCamExtrinsic extrinsic_;
     int num_threads_;
-
-    static CalibrationStep StepType() { return CalibrationStep::ExtrinsicOptimization; }
-
-    std::string EntityId() const { return extrinsic_.tf.EntityId(); }
-
-    std::string HashInputs() const;
-
-    std::pair<spline::Se3Spline, ImuCamExtrinsic> Compute() const;
-
-    std::pair<spline::Se3Spline, ImuCamExtrinsic> Load(SqlitePtr const db) const;
-
-    void Save(std::pair<spline::Se3Spline, ImuCamExtrinsic> const& data, SqlitePtr const db) const;
+    CameraInfo camera_info_;
+    CameraState intrinsics_;
+    std::unique_ptr<spline::Se3Spline> spline_;
+    // TODO(Jack): Does it make sense to combine extrinsic and gravity into one type?
+    // TODO(Jack): Should we name this to reflect its the initial guess?
+    Extrinsic extrinsic_;
+    Vector3d gravity_;
 };
 
 }  // namespace reprojection::steps

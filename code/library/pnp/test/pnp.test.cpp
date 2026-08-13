@@ -11,7 +11,7 @@ using namespace reprojection;
 // TODO(Jack): Test all functions with noisy data!
 
 TEST(Pnp, TestPnp) {
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets, gt_frames]{
         testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 60, 1, false)};
 
@@ -31,7 +31,7 @@ TEST(Pnp, TestPnp) {
 }
 
 TEST(Pnp, TestPnpFlat) {
-    CameraInfo const sensor{"", CameraModel::Pinhole, testing_utilities::unit_image_bounds};
+    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::unit_image_bounds};
     auto const [targets, gt_frames]{
         testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::unit_pinhole_intrinsics}, 60, 1, true)};
 

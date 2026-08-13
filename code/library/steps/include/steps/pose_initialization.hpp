@@ -2,25 +2,25 @@
 
 #include "database/calibration_database.hpp"
 #include "types/calibration_types.hpp"
+#include "types/database_types.hpp"
 
 namespace reprojection::steps {
 
 struct PoseInitialization {
-    CameraInfo camera_info_;
+    PoseInitialization(AssetId camera_id, StepId targets_id, StepId camera_info_id, StepId intrinsics_id, SqlitePtr db);
+
+    static StepType Type() { return StepType::PoseInit; }
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    AssetId camera_id_;
+    StepId targets_id_;
     CameraMeasurements targets_;
+    CameraInfo camera_info_;
     CameraState intrinsics_;
-
-    static CalibrationStep StepType() { return CalibrationStep::PoseInitialization; }
-
-    std::string EntityId() const { return camera_info_.sensor_name; }
-
-    std::string HashInputs() const;
-
-    Frames Compute() const;
-
-    Frames Load(SqlitePtr const db) const;
-
-    void Save(Frames const& initialized_poses, SqlitePtr const db) const;
 };
 
 }  // namespace reprojection::steps

@@ -7,19 +7,20 @@ set(LIBRARY_NAME "database")
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
-        calibration_steps_delete.sql
-        calibration_steps_select.sql
-        calibration_steps_table.sql
-        calibration_steps_upsert.sql
+        assets_delete.sql
+        assets_insert.sql
+        assets_select.sql
+        assets_table.sql
         camera_info_insert.sql
         camera_info_select.sql
         camera_info_table.sql
-        camera_intrinsics_insert.sql
-        camera_intrinsics_select.sql
-        camera_intrinsics_table.sql
-        entity_insert_or_ignore.sql
-        entity_table.sql
-        extracted_target_insert.sql
+        camera_poses_insert.sql
+        camera_poses_select.sql
+        camera_poses_table.sql
+        control_points_insert.sql
+        control_points_select.sql
+        control_points_table.sql
+        extracted_targets_insert.sql
         extracted_targets_select.sql
         extracted_targets_table.sql
         extrinsics_insert.sql
@@ -28,30 +29,37 @@ set(SQL_FILES
         gravity_insert.sql
         gravity_select.sql
         gravity_table.sql
-        image_insert.sql
+        images_insert.sql
         images_select.sql
         images_table.sql
         imu_data_insert.sql
         imu_data_select.sql
         imu_data_table.sql
         imu_errors_insert.sql
-        imu_errors_select.sql
         imu_errors_table.sql
-        poses_insert.sql
-        poses_select.sql
-        poses_table.sql
-        reprojection_error_insert.sql
-        reprojection_error_table.sql
-        spline_control_points_count.sql
-        spline_control_points_insert.sql
-        spline_control_points_select.sql
-        spline_control_points_table.sql
-        spline_time_handler_insert.sql
-        spline_time_handler_select.sql
-        spline_time_handler_table.sql
+        intrinsics_insert.sql
+        intrinsics_select.sql
+        intrinsics_table.sql
+        reprojection_errors_insert.sql
+        reprojection_errors_table.sql
+        spline_info_insert.sql
+        spline_info_select.sql
+        spline_info_table.sql
+        steps_delete_trigger.sql
+        steps_insert.sql
+        steps_select.sql
+        steps_table.sql
+        steps_update_cache_key.sql
         target_info_insert.sql
         target_info_select.sql
         target_info_table.sql
+        workflow_assets_insert.sql
+        workflow_assets_table.sql
+        workflow_steps_table.sql
+        workflow_steps_upsert.sql
+        workflows_insert.sql
+        workflows_select.sql
+        workflows_table.sql
 )
 
 set(SQL_DIR "$ENV{REPROJECTION_SQL_DIR}")
@@ -84,11 +92,10 @@ protobuf_generate_cpp(proto_sources proto_headers
 
 set(SRC_FILES
         src/calibration_database.cpp
-        src/database_read.cpp
-        src/database_remove.cpp
-        src/database_write.cpp
+        src/database_semantics.cpp
         src/serialization.cpp
-        src/sqlite_wrappers.cpp
+        src/sqlite_helpers.cpp
+        src/sqlite_exception.cpp
         src/toml_converters.cpp
 )
 set(SRC_FILES
@@ -104,7 +111,10 @@ set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         Eigen3::Eigen
         SQLite::SQLite3
+        config # Required because of hashing
+        hashing # Only used to serialize the asset vector in workflow creation
         geometry # Required because of spline interface
+        logging
         protobuf::libprotobuf
         spline
         tomlplusplus::tomlplusplus
@@ -113,18 +123,15 @@ set(LINK_LIBRARIES
 )
 AddLibrary()
 
+
 set(TEST_LINK_LIBRARIES
         testing_utilities
 )
+
 set(TESTS
-        src/query_runner.test.cpp
         src/serialization.test.cpp
-        src/statement_executor.test.cpp
-        src/sqlite3_helpers.test.cpp
-        src/sqlite_wrappers.test.cpp
         src/toml_converters.test.cpp
         test/calibration_database.test.cpp
-        test/database_read_write.test.cpp
-        test/database_remove.test.cpp
+        test/sqlite_exception.test.cpp
 )
 AddTests()

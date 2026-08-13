@@ -38,6 +38,7 @@ struct Config {
         std::string sensor_name;
     };
 
+    // TODO(Jack): We need to replace this with the target info type itself! It is a complete copy.
     struct Target {
         static Target Parse(toml::table const& table);
 

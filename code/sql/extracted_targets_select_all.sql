@@ -1,3 +1,2 @@
-SELECT sensor_name, timestamp_ns, data
-FROM extracted_targets
-ORDER BY timestamp_ns;
+SELECT step_id, asset_id, timestamp_ns, data
+FROM extracted_targets;

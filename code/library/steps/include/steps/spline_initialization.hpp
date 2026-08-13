@@ -1,29 +1,29 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
-#include "spline/se3_spline.hpp"
-#include "types/calibration_types.hpp"
 
 namespace reprojection::steps {
 
 struct SplineInitialization {
-    // These members are only needed to calculate the reprojection error - they are not actually used for the spline
-    // initialization/interpolation.
-    CameraInfo camera_info_;
+    SplineInitialization(AssetId camera_id, StepId camera_poses_id, StepId targets_id, StepId camera_info_id,
+                         StepId intrinsics_id, SqlitePtr db);
+
+    static StepType Type() { return StepType::SplineInit; }
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    AssetId camera_id_;
+    Frames camera_poses_;
+    // NOTE(Jack): These are only needed for the reprojection error calculation. They are not needed for the spline
+    // initialization at all. But we do the diagnostic calculations in the spline init/other steps directly to avoid
+    // creating dedicated diagnostic calculation steps - even if it means passing some unexpected information in.
+    StepId targets_id_;
     CameraMeasurements targets_;
-    OptimizationState bundle_;
-
-    static CalibrationStep StepType() { return CalibrationStep::SplineInitialization; }
-
-    std::string EntityId() const { return camera_info_.sensor_name; }
-
-    std::string HashInputs() const;
-
-    spline::Se3Spline Compute() const;
-
-    spline::Se3Spline Load(SqlitePtr const db) const;
-
-    void Save(spline::Se3Spline const& spline, SqlitePtr const db) const;
+    CameraInfo camera_info_;
+    CameraState intrinsics_;
 };
 
 }  // namespace reprojection::steps

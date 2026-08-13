@@ -5,11 +5,11 @@ from pathlib import Path
 from business_logic.geometry import Se3ToMat
 from business_logic.toml_conversions import toml_to_intrinsic_array
 from dashboard.tools.data_loading import refresh_database_list
-from database.sql_table_loading import (
-    load_camera_info_table,
-    load_camera_intrinsics_table,
-    load_extrinsics_table,
+from database.data_formatting import (
+    parse_workflows,
+    process_workflow,
 )
+from database.sql_table_loading import load_calibration_database
 from database.types import CameraModel
 
 log = logging.getLogger("reprojection")
@@ -32,36 +32,36 @@ def run_toml_export(workspace_dir):
             textwrap.indent(f"Name: {db_name}\nPath: {db_path}", "  "),
         )
 
-        camera_info = load_camera_info_table(db_path)
-        camera_intrinsics = load_camera_intrinsics_table(db_path)
-        if camera_info is None or camera_intrinsics is None:
-            log.info(
-                "Skipping intrinsic toml export - missing data:\n%s",
-                textwrap.indent(
-                    f"camera_info: {'N/A' if camera_info is None else 'loaded'}\ncamera_intrinsics: {'N/A' if camera_intrinsics is None else 'loaded'}",
-                    "  ",
-                ),
-            )
-            continue
+        db = load_calibration_database(db_path)
+        workflows = parse_workflows(db)
 
-        cam_result = build_intrinsic_toml(camera_info, camera_intrinsics)
-        if len(cam_result) == 0:
-            log.info(f"No camera intrinsics exported for {db_name}")
-            continue
+        output = []
 
-        extrinsics = load_extrinsics_table(db_path)
-        extrinsic_result = None
-        if extrinsics is not None:
-            extrinsic_result = build_extrinsic_toml(extrinsics)
+        for workflow in workflows:
+            # TODO(Jack): Do we need a better way to handle multiple workflows in one file? Yes!
+            workflow_output = f"[workflow{workflow.id}]\n" f"type = '{workflow.type}'\n"
+            output.append(workflow_output)
+
+            workflow_data = process_workflow(db, workflow)
+
+            if workflow.type in ("cam", "cam_imu"):
+                cam_result = build_intrinsic_toml(workflow, workflow_data)
+                if len(cam_result) != 0:
+                    output.append(cam_result)
+
+            if workflow.type == "cam_imu":
+                extrinsic_result = build_extrinsic_toml(workflow, workflow_data)
+                if extrinsic_result is not None:
+                    output.append(extrinsic_result)
+
+        if len(output) == 0:
+            log.info(f"No calibration data exported for {db_name}")
+            continue
 
         output_name = db_name.removesuffix(".db3") + ".toml"
         output_path = Path(workspace_dir) / output_name
         with open(output_path, "w") as f:
-            f.write(cam_result)
-
-            if extrinsic_result is not None:
-                f.write("\n")
-                f.write(extrinsic_result)
+            f.write("\n".join(output))
 
         log.info(
             "Saving calibration toml:\n%s",
@@ -69,73 +69,72 @@ def run_toml_export(workspace_dir):
         )
 
 
-def build_intrinsic_toml(camera_info, camera_intrinsics):
-    # NOTE(Jack): For now we only care about the "polished/final" intrinsics from the camera only nonlinear refinement
-    # step. This might change one day with the stereo or IMU calibration but that is future music :)
-    refined_intrinsics = camera_intrinsics[
-        camera_intrinsics["step_name"] == "bundle_adjustment"
-    ]
+def build_intrinsic_toml(workflow, workflow_data):
+    camera = workflow.assets.get("camera")
+    camera_info = workflow_data.get("camera_info")
+    camera_intrinsics = workflow_data.get("intrinsics")
 
-    output = []
-    for i, (_, sensor) in enumerate(camera_info.iterrows()):
-        sensor_name = sensor["sensor_name"]
-        log.info(f"Processing intrinsic {sensor_name}")
+    if camera is None or camera_info is None or camera_intrinsics is None:
+        return ""
 
-        camera_intrinsic_row = refined_intrinsics[
-            refined_intrinsics["sensor_name"] == sensor_name
-        ]
+    if camera_info.empty or camera_intrinsics.empty:
+        return ""
 
-        if camera_intrinsic_row.empty:
-            log.warning(f"No intrinsics for sensor {sensor_name}")
-            continue
+    bundle_adjustment_step_id = workflow.steps.get("bundle_adjustment")
+    if bundle_adjustment_step_id is None:
+        return ""
 
-        intrinsics_str = camera_intrinsic_row.iloc[0]["intrinsics"]
-        camera_model = CameraModel(sensor["camera_model"])
-        intrinsics_arr = toml_to_intrinsic_array(intrinsics_str, camera_model)
+    sensor_name = camera["name"]
+    asset_id = camera["id"]
 
-        toml_text = (
-            f"[cam{i}]\n"
-            f"sensor_id = '{sensor_name}'\n"
-            f"# https://github.com/reprojection-calibration/reprojection#camera-models\n"
-            f"camera_model = '{sensor['camera_model']}'\n"
-            f"intrinsics = {intrinsics_arr}\n"
-            f"resolution = [{int(sensor['height'])}, {int(sensor['width'])}]\n"
-        )
+    log.info(f"Processing intrinsic {sensor_name}")
 
-        output.append(toml_text)
+    # TODO(Jack): What if there is no bundle adjustment intrinsic?
+    camera_intrinsic_row = camera_intrinsics.loc[(bundle_adjustment_step_id, asset_id)]
 
-    return "\n".join(output)
+    intrinsics_str = camera_intrinsic_row["data"]
+    camera_model = CameraModel(camera_info["camera_model"])
+    intrinsics_arr = toml_to_intrinsic_array(intrinsics_str, camera_model)
+
+    camera_index = camera["index"]
+
+    return (
+        f"[workflow{workflow.id}.cam{camera_index}]\n"
+        f"sensor_id = '{sensor_name}'\n"
+        f"camera_model = '{camera_info['camera_model']}'\n"
+        f"intrinsics = {intrinsics_arr}\n"
+        f"resolution = [{int(camera_info['height'])}, {int(camera_info['width'])}]\n"
+    )
 
 
-def build_extrinsic_toml(extrinsics):
-    # NOTE(Jack): Just like for the camera intrinsics we only want to give the user the final optimized version, not the
-    # intermediate rough initialization.
-    optimized_extrinsics = extrinsics[
-        extrinsics["step_name"] == ("extrinsic_optimization")
-    ]
+def build_extrinsic_toml(workflow, workflow_data):
+    extrinsics = workflow_data.get("extrinsics")
+    if extrinsics is None or extrinsics.empty:
+        return None
 
-    output = []
-    for i, (_, data) in enumerate(optimized_extrinsics.iterrows()):
-        entity_id = data["entity_id"]
-        log.info(f"Processing extrinsic {entity_id}")
+    camera = workflow.assets.get("camera")
+    imu = workflow.assets.get("imu")
 
-        se3_a_b = data[["rx", "ry", "rz", "x", "y", "z"]].to_numpy().squeeze()
-        tf_a_b = Se3ToMat(se3_a_b)
+    if camera is None or imu is None:
+        return None
 
-        def format_toml_matrix(matrix, precision: int = 12) -> str:
-            rows = []
-            for row in matrix:
-                values = ", ".join(f"{float(value):.{precision}g}" for value in row)
-                rows.append(f"  [{values}]")
-            return "[\n" + ",\n".join(rows) + "\n]"
+    data = extrinsics.iloc[0]
 
-        toml_text = (
-            f"[extrinsic{i}]\n"
-            f"frame_a = '{data['frame_a']}'\n"
-            f"frame_b = '{data['frame_b']}'\n"
-            f"tf_a_b = {format_toml_matrix(tf_a_b)}\n"
-        )
+    log.info(f"Processing extrinsic {camera['name']} -> {imu['name']}")
 
-        output.append(toml_text)
+    se3_a_b = data[["rx", "ry", "rz", "x", "y", "z"]].to_numpy().squeeze()
+    tf_a_b = Se3ToMat(se3_a_b)
 
-    return "\n".join(output)
+    def format_toml_matrix(matrix, precision: int = 12) -> str:
+        rows = []
+        for row in matrix:
+            values = ", ".join(f"{float(value):.{precision}g}" for value in row)
+            rows.append(f"  [{values}]")
+        return "[\n" + ",\n".join(rows) + "\n]"
+
+    return (
+        f"[workflow{workflow.id}.extrinsic0]\n"
+        f"frame_a = '{camera['name']}'\n"
+        f"frame_b = '{imu['name']}'\n"
+        f"tf_a_b = {format_toml_matrix(tf_a_b)}\n"
+    )

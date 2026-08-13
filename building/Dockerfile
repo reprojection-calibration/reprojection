@@ -20,8 +20,8 @@ ARG APT_INSTALL_LIBRARY_DEPS=building/install_scripts/apt_install_library_deps.s
 RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT_INSTALL_LIBRARY_DEPS} \
     /temporary/${APT_INSTALL_LIBRARY_DEPS}
 
-# NOTE(Jack): We use c++ 20 in the library and we want to support source builds on ubuntu 20 (for ROS Noble) and on
-# ubuntu 24 (ROS 2 and all other development). The default gcc on ubuntu 24 is gcc13 (which supports full c++ 20 by
+# NOTE(Jack): We use c++ 23 in the library and we want to support source builds on ubuntu 20 (for ROS Noble) and on
+# ubuntu 24 (ROS 2 and all other development). The default gcc on ubuntu 24 is gcc13 (which supports full c++ 23 by
 # default) so we also install gcc13 and set it as the primary compiler on ubuntu 20 and 22.
 # WARN(Jack): Code coverage does not work ubuntu 20 and 22! There is some problem with gcov which can be fixed easily in
 # the apt_install_gcc13.sh script, but there is a more complicated problem that has to do with perl packages and other
@@ -31,6 +31,10 @@ RUN --mount=type=bind,source=${APT_INSTALL_LIBRARY_DEPS},target=/temporary/${APT
 ARG APT_INSTALL_GCC13=building/install_scripts/apt_install_gcc13.sh
 RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTALL_GCC13} \
     /temporary/${APT_INSTALL_GCC13}
+
+ARG APT_INSTALL_CMAKE=building/install_scripts/apt_install_cmake.sh
+RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTALL_CMAKE} \
+    /temporary/${APT_INSTALL_CMAKE}
 
 # NOTE(Jack): What is going on here? Let me explain :)
 #
@@ -66,6 +70,10 @@ ARG SOURCE_INSTALL_SMALL_LIBRARIES=building/install_scripts/source_install_small
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_SMALL_LIBRARIES},target=/temporary/${SOURCE_INSTALL_SMALL_LIBRARIES} \
     /temporary/${SOURCE_INSTALL_SMALL_LIBRARIES}
+
+ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
+    /temporary/${SOURCE_INSTALL_SQLITE}
 
 
 FROM apt-base-stage AS base-stage
@@ -118,6 +126,10 @@ RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV}
 ARG APT_INSTALL_PYTHON_VENV_DEPS=building/install_scripts/apt_install_python_venv_deps.sh
 RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_VENV_DEPS},target=/temporary/${APT_INSTALL_PYTHON_VENV_DEPS} \
     /temporary/${APT_INSTALL_PYTHON_VENV_DEPS}
+
+ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
+    /temporary/${SOURCE_INSTALL_SQLITE}
 
 ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
@@ -289,11 +301,11 @@ COPY code/test_data/dataset-calib-imu4_512_16.calib.db3 /data/video_file/dataset
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.calib.db3 b4f32956ddcdf35b9b66c6fa8cb20b40ab28e90d60855adfa9fdc0d4b03f1169; \
+      /data/ros1/dataset-calib-imu4_512_16.calib.db3 a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.calib.db3 b4f32956ddcdf35b9b66c6fa8cb20b40ab28e90d60855adfa9fdc0d4b03f1169; \
+      /data/ros2/dataset-calib-imu4_512_16.calib.db3 a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.calib.db3 73d0b6ebafa36105ed8db9dbce71438e3b4b3a38bd45e60f2aaa737bc5776f65
+      /data/video_file/dataset-calib-imu4_512_16.calib.db3 422e7fddf519b1bf04a1140d44c604cc1c1d07927ad0610e610a2671a8fcec72
 
 ARG REMOVE_IMU_TABLE_DATA=building/scripts/remove_imu_table_data.py
 RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE_IMU_TABLE_DATA} \

@@ -7,6 +7,8 @@
 #include "types/sensor_data_types.hpp"
 #include "types/stamped_templates.hpp"
 
+#include "database_types.hpp"
+
 // TODO(Jack): Make sure the names here to conflict logically with other types.
 
 namespace reprojection {
@@ -27,7 +29,6 @@ struct ImageBounds {
 };
 
 struct CameraInfo {
-    std::string sensor_name;
     CameraModel camera_model;
     ImageBounds bounds;
 };
@@ -80,24 +81,9 @@ using ImuError = StampedData<ImuErrorState>;
 using ImuErrors = StampedMap<ImuError>;
 
 struct Extrinsic {
-    std::string frame_a;
-    std::string frame_b;
+    AssetId frame_a;
+    AssetId frame_b;
     Array6d se3_a_b;
-
-    std::string EntityId() const { return EntityId(frame_a, frame_b); }
-
-    static std::string EntityId(std::string_view frame_a, std::string_view frame_b) {
-        return "tf_" + std::string(frame_a) + "_xxx_" + std::string(frame_b);
-    }
-};
-
-// TODO(Jack): Does the existence of this type and its naming make sense at all? Is the gravity term really so closely
-// related to the extrinsic calibration that this makes sense?
-struct ImuCamExtrinsic {
-    Extrinsic tf;
-    // TODO(Jack): Does it matter what frame this gravity is in? Or is it implied/true that its always in the world
-    // frame? Or does that not matter at all...?
-    Array3d gravity;
 };
 
 }  // namespace reprojection

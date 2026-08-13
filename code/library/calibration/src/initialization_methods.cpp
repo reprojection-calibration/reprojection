@@ -59,7 +59,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         uint64_t const idx{i * std::size(gammas) / num_samples};
 
         double const gamma_i{gammas[idx]};
-        CameraInfo const camera_info{"", camera_model, {0, width, 0, height}};
+        CameraInfo const camera_info{camera_model, {0, width, 0, height}};
         ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
 
         Frames const initial_poses{PoseInitialization(camera_info, target_subset, {intrinsics_i})};

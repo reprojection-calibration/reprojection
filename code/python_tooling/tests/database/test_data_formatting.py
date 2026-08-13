@@ -1,279 +1,97 @@
-import os
 import unittest
+from tempfile import NamedTemporaryFile
 
 import pandas as pd
 
-from database.data_formatting import (
-    load_data,
-    process_camera_info_table,
-    process_extracted_targets_table,
-    process_images_table,
-    process_imu_data_table,
-    process_imu_errors_table,
-    process_poses_table,
-    process_reprojection_error_table,
-    process_target_info_table,
-)
-from database.sql_table_loading import (
-    load_extracted_targets_table,
-    load_images_table,
-    load_imu_data_table,
-)
-from database.types import SensorType, TargetType
+from database.data_formatting import parse_workflows, process_workflow
+from database.sql_table_loading import load_calibration_database
+from tests.test_fixture import construct_test_db
 
 
 class TestDataFormatting(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.db_path = os.getenv(
-            "DB_PATH", "/temporary/code/test_data/dataset-calib-imu4_512_16.calib.db3"
+    def test_parse_workflows(self):
+        with NamedTemporaryFile(suffix=".db3") as tmp:
+            construct_test_db(tmp.name)
+            db = load_calibration_database(tmp.name)
+
+        workflows = parse_workflows(db)
+
+        def workflow_assert(workflow, id, type, signature, assets, steps):
+            self.assertEqual(workflow.id, id)
+            self.assertEqual(workflow.type, type)
+            self.assertEqual(workflow.signature, signature)
+            self.assertEqual(workflow.assets, assets)
+            self.assertEqual(workflow.steps, steps)
+
+        self.assertEqual(len(workflows), 2)
+        workflow_assert(
+            workflows[0],
+            1,
+            "cam",
+            "cam_signature",
+            {"camera": {"id": 1, "index": 0, "name": ""}},
+            {"image_loading": 1},
         )
-
-    def test_load_data(self):
-        data = load_data("nonexistent.db3")
-        self.assertIsNone(data)
-
-        data = load_data(self.db_path)
-
-        self.assertEqual(len(data), 3)
-        self.assertEqual(
-            list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw", "/imu0"]
-        )
-
-    def test_process_camera_info_table(self):
-        data = process_camera_info_table(None, None)
-        self.assertIsNone(data)
-
-        camera_info_data = {
-            "sensor_name": ["/cam0/image_raw", "/cam1/image_raw"],
-            "camera_model": ["pinhole_radtan4", "double_sphere"],
-            "height": [720, 720],
-            "width": [1080, 1080],
-        }
-        table = pd.DataFrame(camera_info_data)
-
-        self.assertRaises(KeyError, process_poses_table, table, {})
-
-        images_table = load_images_table(self.db_path)
-        data = process_images_table(images_table)
-
-        process_camera_info_table(table, data)
-
-        def check(data):
-            self.assertTrue("camera_info" in data)
-            self.assertTrue("camera_model" in data["camera_info"])
-            self.assertTrue("height" in data["camera_info"])
-            self.assertEqual(data["camera_info"]["height"], 720)
-            self.assertTrue("width" in data["camera_info"])
-            self.assertEqual(data["camera_info"]["width"], 1080)
-
-        check(data["/cam0/image_raw"])
-        check(data["/cam1/image_raw"])
-
-    def test_process_extracted_targets_table(self):
-        data = process_extracted_targets_table(None, None)
-        self.assertIsNone(data)
-
-        # Loading the targets into an empty dictionary throws an error because it depends on process_images_table having
-        # partially filled the table already.
-        table = load_extracted_targets_table(self.db_path)
-        self.assertRaises(KeyError, process_extracted_targets_table, table, {})
-
-        # Load the images table into the data matrix - now we can run process_extracted_targets_table to fill out the
-        # data dictionary with the extracted targets.
-        images_table = load_images_table(self.db_path)
-        data = process_images_table(images_table)
-
-        process_extracted_targets_table(table, data)
-
-        def check(data):
-            self.assertTrue("measurements" in data)
-            self.assertTrue("targets" in data["measurements"])
-            self.assertEqual(len(data["measurements"]["targets"]), 879)
-
-        check(data["/cam0/image_raw"])
-        check(data["/cam1/image_raw"])
-
-    def test_process_images_table(self):
-        data = process_images_table(None)
-        self.assertIsNone(data)
-
-        table = load_images_table(self.db_path)
-        data = process_images_table(table)
-
-        self.assertEqual(len(data), 2)
-        self.assertEqual(list(data.keys()), ["/cam0/image_raw", "/cam1/image_raw"])
-
-        def check(data):
-            self.assertTrue("type" in data)
-            self.assertTrue(SensorType.Camera in data["type"])
-
-            self.assertTrue("measurements" in data)
-            self.assertTrue("images" in data["measurements"])
-            self.assertEqual(len(data["measurements"]["images"]), 879)
-
-        check(data["/cam0/image_raw"])
-        check(data["/cam1/image_raw"])
-
-    def test_process_imu_data_table(self):
-        data = process_imu_data_table(None)
-        self.assertIsNone(data)
-
-        table = load_imu_data_table(self.db_path)
-        data = process_imu_data_table(table)
-
-        self.assertEqual(len(data), 1)
-        self.assertEqual(list(data.keys()), ["/imu0"])
-
-        self.assertTrue("type" in data["/imu0"])
-        self.assertTrue(SensorType.Imu in data["/imu0"]["type"])
-
-        self.assertTrue("measurements" in data["/imu0"])
-        self.assertEqual(len(data["/imu0"]["measurements"]), 8770)
-
-    def test_process_imu_errors_table(self):
-        data = process_imu_errors_table(None, {})
-        self.assertIsNone(data)
-
-        imu_errors_data = {
-            "step_name": ["extrinsic_initialization"],
-            "sensor_name": ["/imu0"],
-            "timestamp_ns": ["1520528314236489759"],
-            "delta_omega_x": [0.1],
-            "delta_omega_y": [0.2],
-            "delta_omega_z": [0.3],
-            "delta_ax": [0.4],
-            "delta_ay": [0.5],
-            "delta_az": [0.6],
-        }
-        table = pd.DataFrame(imu_errors_data)
-
-        # No imu data yet present in data so foreign key constraint not met
-        self.assertRaises(KeyError, process_imu_errors_table, table, {})
-
-        imu_table = load_imu_data_table(self.db_path)
-        data = process_imu_data_table(imu_table)
-
-        process_imu_errors_table(table, data)
-
-        self.assertTrue("imu_error" in data["/imu0"])
-        self.assertTrue("extrinsic_initialization" in data["/imu0"]["imu_error"])
-        self.assertEqual(len(data["/imu0"]["imu_error"]["extrinsic_initialization"]), 1)
-
-    # TODO(Jack): The following two tests are good examples how our testing is hard to read! For both tests we need to
-    #  create relatively complicated state setups to check the foreign key constraints, and we do it all right in the
-    #  middle of the test. We need to find a way to streamline this for all tests!
-    def test_process_poses_table(self):
-        data = process_poses_table(None, {})
-        self.assertIsNone(data)
-
-        # Pose loading has no timestamp foreign key requirements so we can use any random timestamps here.
-        pose_data = {
-            "step_name": ["pose_initialization", "pose_initialization"],
-            "sensor_name": ["/cam0/image_raw", "/cam0/image_raw"],
-            "timestamp_ns": [0, 1],
-            "rx": [0, 0],
-            "ry": [0, 0],
-            "rz": [0, 0],
-            "x": [0, 0],
-            "y": [0, 0],
-            "z": [0, 0],
-        }
-        table = pd.DataFrame(pose_data)
-
-        self.assertRaises(KeyError, process_poses_table, table, {})
-
-        images_table = load_images_table(self.db_path)
-        data = process_images_table(images_table)
-
-        process_poses_table(table, data)
-
-        self.assertTrue("poses" in data["/cam0/image_raw"])
-        self.assertTrue("pose_initialization" in data["/cam0/image_raw"]["poses"])
-        self.assertEqual(
-            len(data["/cam0/image_raw"]["poses"]["pose_initialization"]), 2
-        )
-
-    def test_process_reprojection_error_table(self):
-        data = process_reprojection_error_table(None, {})
-        self.assertIsNone(data)
-
-        reprojection_data = {
-            "step_name": ["pose_initialization", "pose_initialization"],
-            "sensor_name": ["/cam0/image_raw", "/cam0/image_raw"],
-            "timestamp_ns": [1520528314264184064, 1520528314314184960],
-            "data": [{}, {}],
-        }
-        table = pd.DataFrame(reprojection_data)
-
-        self.assertRaises(KeyError, process_reprojection_error_table, table, {})
-
-        images_table = load_images_table(self.db_path)
-        data = process_images_table(images_table)
-
-        pose_data = {
-            "step_name": ["pose_initialization", "pose_initialization"],
-            "sensor_name": ["/cam0/image_raw", "/cam0/image_raw"],
-            "timestamp_ns": [1520528314264184064, 1520528314314184960],
-            "rx": [0, 0],
-            "ry": [0, 0],
-            "rz": [0, 0],
-            "x": [0, 0],
-            "y": [0, 0],
-            "z": [0, 0],
-        }
-        pose_table = pd.DataFrame(pose_data)
-        process_poses_table(pose_table, data)
-
-        process_reprojection_error_table(table, data)
-
-        self.assertTrue("poses" in data["/cam0/image_raw"])
-        self.assertTrue(
-            "pose_initialization" in data["/cam0/image_raw"]["reprojection_error"]
-        )
-        self.assertEqual(
-            len(data["/cam0/image_raw"]["reprojection_error"]["pose_initialization"]),
+        workflow_assert(
+            workflows[1],
             2,
+            "cam_imu",
+            "cam_imu_signature",
+            {
+                "camera": {"id": 1, "index": 0, "name": ""},
+                "imu": {"id": 2, "index": 0, "name": ""},
+            },
+            {"image_loading": 1, "imu_data_loading": 2},
         )
 
-    def test_process_target_info_table(self):
-        data = process_target_info_table(None, None)
-        self.assertIsNone(data)
+    def test_process_workflow(self):
+        with NamedTemporaryFile(suffix=".db3") as tmp:
+            construct_test_db(tmp.name)
+            db = load_calibration_database(tmp.name)
 
-        camera_info_data = {
-            "sensor_name": ["/cam0/image_raw", "/cam1/image_raw"],
-            "target_type": ["aprilgrid3", "checkerboard"],
-            "height": [5, 5],
-            "width": [6, 6],
-            "unit_dimension": [0.1, 0.1],
-            "asymmetric": [0, 0],
+        workflows = parse_workflows(db)
+
+        expected = {
+            "images_timestamps": pd.DataFrame(
+                [
+                    {
+                        "step_id": 1,
+                        "asset_id": 1,
+                        "timestamp_ns": 0,
+                    }
+                ]
+            ).set_index(["step_id", "asset_id"]),
+            "imu_data": pd.DataFrame(
+                [
+                    {
+                        "step_id": 2,
+                        "asset_id": 2,
+                        "timestamp_ns": 0,
+                        "omega_x": 1.0,
+                        "omega_y": 1.0,
+                        "omega_z": 1.0,
+                        "ax": 2.0,
+                        "ay": 2.0,
+                        "az": 2.0,
+                    }
+                ]
+            ).set_index(["step_id", "asset_id"]),
         }
-        table = pd.DataFrame(camera_info_data)
 
-        self.assertRaises(KeyError, process_poses_table, table, {})
+        workflow_data_0 = process_workflow(db, workflows[0])
+        self.assertEqual(len(workflow_data_0), 1)
+        pd.testing.assert_frame_equal(
+            workflow_data_0["images_timestamps"],
+            expected["images_timestamps"],
+        )
 
-        images_table = load_images_table(self.db_path)
-        data = process_images_table(images_table)
-
-        process_target_info_table(table, data)
-
-        def check(data, target_type):
-            self.assertTrue("target_info" in data)
-
-            self.assertTrue("target_type" in data["target_info"])
-            self.assertEqual(data["target_info"]["target_type"], target_type)
-
-            self.assertTrue("height" in data["target_info"])
-            self.assertEqual(data["target_info"]["height"], 5)
-
-            self.assertTrue("width" in data["target_info"])
-            self.assertEqual(data["target_info"]["width"], 6)
-
-            self.assertTrue("unit_dimension" in data["target_info"])
-            self.assertEqual(data["target_info"]["unit_dimension"], 0.1)
-
-            self.assertTrue("asymmetric" in data["target_info"])
-            self.assertEqual(data["target_info"]["asymmetric"], False)
-
-        check(data["/cam0/image_raw"], TargetType.Aprilgrid3)
-        check(data["/cam1/image_raw"], TargetType.Checkerboard)
+        workflow_data_1 = process_workflow(db, workflows[1])
+        self.assertEqual(len(workflow_data_1), 2)
+        pd.testing.assert_frame_equal(
+            workflow_data_1["images_timestamps"],
+            expected["images_timestamps"],
+        )
+        pd.testing.assert_frame_equal(
+            workflow_data_1["imu_data"],
+            expected["imu_data"],
+        )

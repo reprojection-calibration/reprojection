@@ -3,10 +3,6 @@
 This is an application for target-based intrinsic camera calibration and extrinsic camera-imu calibration. It is
 automatically compatible with ROS1 and ROS2 and is completely dockerized.
 
-> [!CAUTION]
-> The Aprilgrid3 has been updated to version two (July 10, 2026)! Please find the new target files [here](media/targets). The previous
-> Aprilgrid3 version one is no longer compatible. (Remove this message on August 10, 2026!)
-
 ## Build
 
 Pull the git-lfs manged files - this includes a test database which is required by the dashboard unit tests.
@@ -107,8 +103,8 @@ The following camera models are supported:
 3) `pinhole_radtan4` - [f, cx, cy, k1, k2, p1, p2]
 4) `unified_camera_model` - [f cx, cy, xi]
 
-All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please
-see this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity)
+All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please see this
+excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity)
 from [Tangram Vision](https://www.tangramvision.com/) for an explanation.
 
 ## Tips, Tricks, and Warnings
