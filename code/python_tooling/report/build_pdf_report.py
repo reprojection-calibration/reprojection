@@ -37,9 +37,20 @@ def run_report_export(workspace_dir):
             camera_section = build_camera_section(workflow, workflow_data)
             imu_section = build_imu_section(workflow, workflow_data)
 
+            # TODO(Jack): We need a more eloquent way of distinguishing the different workflows in the pdf report! But
+            #  for now we just add the workflow id and type into the the sections "sensor name" heading. Not pretty or
+            #  simple to understand, but it works for me.
             if camera_section is not None:
+                camera_section["sensor_name"] = (
+                    f"{camera_section['sensor_name']} "
+                    f"(workflow {workflow.id}: {workflow.type})"
+                )
                 sections.append(camera_section)
             if imu_section is not None:
+                imu_section["sensor_name"] = (
+                    f"{imu_section['sensor_name']} "
+                    f"(workflow {workflow.id}: {workflow.type})"
+                )
                 sections.append(imu_section)
 
         output_name = db_name.removesuffix(".db3") + ".pdf"

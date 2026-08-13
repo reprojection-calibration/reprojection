@@ -38,6 +38,10 @@ def run_toml_export(workspace_dir):
         output = []
 
         for workflow in workflows:
+            # TODO(Jack): Do we need a better way to handle multiple workflows in one file? Yes!
+            workflow_output = f"[workflow{workflow.id}]\n" f"type = '{workflow.type}'\n"
+            output.append(workflow_output)
+
             workflow_data = process_workflow(db, workflow)
 
             if workflow.type in ("cam", "cam_imu"):
@@ -70,7 +74,6 @@ def build_intrinsic_toml(workflow, workflow_data):
     camera_info = workflow_data.get("camera_info")
     camera_intrinsics = workflow_data.get("intrinsics")
 
-
     if camera is None or camera_info is None or camera_intrinsics is None:
         return ""
 
@@ -86,9 +89,7 @@ def build_intrinsic_toml(workflow, workflow_data):
 
     log.info(f"Processing intrinsic {sensor_name}")
 
-    camera_intrinsic_row = camera_intrinsics.loc[
-        (bundle_adjustment_step_id, asset_id)
-    ]
+    camera_intrinsic_row = camera_intrinsics.loc[(bundle_adjustment_step_id, asset_id)]
 
     intrinsics_str = camera_intrinsic_row["data"]
     camera_model = CameraModel(camera_info["camera_model"])
@@ -97,7 +98,7 @@ def build_intrinsic_toml(workflow, workflow_data):
     camera_index = camera["index"]
 
     return (
-        f"[cam{camera_index}]\n"
+        f"[workflow{workflow.id}.cam{camera_index}]\n"
         f"sensor_id = '{sensor_name}'\n"
         f"camera_model = '{camera_info['camera_model']}'\n"
         f"intrinsics = {intrinsics_arr}\n"
@@ -131,7 +132,7 @@ def build_extrinsic_toml(workflow, workflow_data):
         return "[\n" + ",\n".join(rows) + "\n]"
 
     return (
-        "[extrinsic0]\n"
+        f"[workflow{workflow.id}.extrinsic0]\n"
         f"frame_a = '{camera['name']}'\n"
         f"frame_b = '{imu['name']}'\n"
         f"tf_a_b = {format_toml_matrix(tf_a_b)}\n"
