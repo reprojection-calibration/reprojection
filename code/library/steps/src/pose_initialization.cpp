@@ -24,7 +24,7 @@ PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, Ste
     } else {
         log->error("{}", camera_info.error());  // LCOV_EXCL_LINE
         std::exit(1);                           // LCOV_EXCL_LINE
-    } // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)}) {
         intrinsics_ = *intrinsics;
