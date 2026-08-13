@@ -1,7 +1,5 @@
 #include "config/config_parse.hpp"
 
-#include <spdlog/fmt/bundled/base.h>
-
 #include "parsing_helpers.hpp"
 
 namespace reprojection::config {
