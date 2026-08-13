@@ -316,9 +316,6 @@ RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE
 
 FROM apt-base-stage AS ros1-base-stage
 
-
-
-
 ENV ROS_HOME=/tmp/.ros
 
 # TODO(jack): We put a hard condition in both he ROS1 and ROS2 install scripts that the ubuntu version is either 20.04
