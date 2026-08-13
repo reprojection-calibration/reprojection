@@ -55,11 +55,7 @@ def load_database(db_file, workflow_id):
     workflows = parse_workflows(db)
 
     workflow = next(
-        (
-            workflow
-            for workflow in workflows
-            if workflow.id == workflow_id
-        ),
+        (workflow for workflow in workflows if workflow.id == workflow_id),
         None,
     )
 

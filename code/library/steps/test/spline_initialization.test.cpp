@@ -26,6 +26,7 @@ class SplineInitFixture : public StepTestFixture {
     StepId camera_info_id_;
     StepId pose_init_id_{database::GetOrCreateStep(db_.get(), StepType::PoseInit, "").first};
     StepId targets_id_;
+    // cppcheck-suppress unusedStructMember
     StepId intrinsics_id_{
         InsertIntrinsics(CameraModel::DoubleSphere, CameraState{testing_utilities::double_sphere_intrinsics})};
 };
