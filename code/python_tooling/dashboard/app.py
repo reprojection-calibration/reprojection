@@ -63,6 +63,19 @@ app.layout = html.Div(
                         ),
                         html.Div(
                             [
+                                html.Label("Select Workflow"),
+                                dcc.Dropdown(
+                                    id="workflow-selection-dropdown",
+                                    options=[],
+                                    value=None,
+                                    placeholder="Choose workflow...",
+                                    clearable=False,
+                                ),
+                            ],
+                            style={"flex": "2", "minWidth": "200px"},
+                        ),
+                        html.Div(
+                            [
                                 html.Label("Select Sensor"),
                                 dcc.Dropdown(
                                     id="sensor-selection-dropdown",

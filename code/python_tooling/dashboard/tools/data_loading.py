@@ -29,11 +29,43 @@ def refresh_database_list(db_dir):
     return result, result[0]["value"] if result else ""
 
 
-def load_database(db_file):
+def refresh_workflow_list(db_file):
+    if db_file is None or not os.path.isfile(db_file):
+        return [], ""
+
     db = load_calibration_database(db_file)
     workflows = parse_workflows(db)
-    # ERROR(Jack): Hardcoded to only use the first workflow! Should make configurable!
-    workflow = workflows[0]
+
+    result = [
+        {
+            "label": f"{workflow.type} ({workflow.signature})",
+            "value": workflow.id,
+        }
+        for workflow in workflows
+    ]
+
+    return result, result[0]["value"] if result else ""
+
+
+def load_database(db_file, workflow_id):
+    if db_file is None or workflow_id is None:
+        return {}, {}
+
+    db = load_calibration_database(db_file)
+    workflows = parse_workflows(db)
+
+    workflow = next(
+        (
+            workflow
+            for workflow in workflows
+            if workflow.id == workflow_id
+        ),
+        None,
+    )
+
+    if workflow is None:
+        return {}, {}
+
     workflow_data = process_workflow(db, workflow)
 
     raw_data = to_legacy_data(workflow, workflow_data)
