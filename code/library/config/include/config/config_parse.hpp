@@ -28,8 +28,9 @@ struct Config {
     struct Camera {
         static Camera Parse(toml::table const& table);
 
-        std::string sensor_name;
         CameraModel camera_model;
+        int index;
+        std::string sensor_name;
     };
 
     struct Imu {
