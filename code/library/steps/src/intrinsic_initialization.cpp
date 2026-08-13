@@ -20,8 +20,8 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
     if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
         camera_info_ = *camera_info;
     } else {
-        log->error("{}", camera_info.error());
-        std::exit(1);  // LCOV_EXCL_LINE
+        log->error("{}", camera_info.error());  // LCOV_EXCL_LINE
+        std::exit(1);                           // LCOV_EXCL_LINE
     }
 
     targets_ = database::ExtractedTargetsSelect(db.get(), targets_id, camera_id);

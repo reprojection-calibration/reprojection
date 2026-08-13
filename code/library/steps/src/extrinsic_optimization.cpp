@@ -15,7 +15,6 @@ auto const log{logging::Get("steps")};
 
 }
 
-// TODO(Jack): This constructor, and all other step constructors like this are in dire need of a refactor!
 ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId const imu_id, StepId const targets_id,
                                              StepId const imu_data_id, int const num_threads,
                                              StepId const camera_info_id, StepId const intrinsic_id,
@@ -27,6 +26,9 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
       imu_data_id_{imu_data_id},
       imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
       num_threads_{num_threads} {
+    // TODO(Jack): Is there not a better "looking" way to load values from the databases? Nothing technically wrong
+    // here, I think the higher level problem is that the extrinsic optimization depends on so much information that we
+    // need load so many things regardless of how it looks/works.
     if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
         camera_info_ = *camera_info;
     } else {
