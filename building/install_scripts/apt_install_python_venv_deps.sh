@@ -10,7 +10,6 @@ apt-get install --no-install-recommends --yes \
     liblzma-dev \
     libncursesw5-dev \
     libreadline-dev \
-    libsqlite3-dev \
     libxmlsec1-dev \
     libxml2-dev \
     tk-dev

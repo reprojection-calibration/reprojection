@@ -1,4 +1,4 @@
-set(LIBRARY_NAME "steps2")
+set(LIBRARY_NAME "steps")
 
 set(SRC_FILES
         src/bundle_adjustment.cpp
