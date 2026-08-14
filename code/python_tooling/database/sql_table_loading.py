@@ -99,9 +99,10 @@ def load_calibration_database(db_path):
 
     # WARN(Jack): The extrinsics table is unique because it has two assets not just a single one. We need to figure a
     # canonical robust way to handle this.
-    db["extrinsics"] = db["extrinsics"].set_index(
-        ["step_id"],
-        drop=False,
-    )
+    if "exintrinsics" in db:
+        db["extrinsics"] = db["extrinsics"].set_index(
+            ["step_id"],
+            drop=False,
+        )
 
     return db

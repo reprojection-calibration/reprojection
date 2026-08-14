@@ -101,6 +101,8 @@ class TestBuildCameraTomls(unittest.TestCase):
             [
                 {
                     "step_id": 5,
+                    "asset_a_id": 1,
+                    "asset_b_id": 2,
                     "rx": 1,
                     "ry": 2,
                     "rz": 3,
