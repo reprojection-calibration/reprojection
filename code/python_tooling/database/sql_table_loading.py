@@ -47,6 +47,7 @@ def load_calibration_database(db_path):
         "assets",
         "camera_info",
         "camera_poses",
+        "extrinsics",
         "images_timestamps",
         "imu_data",
         "imu_errors",
@@ -95,5 +96,12 @@ def load_calibration_database(db_path):
             continue
 
         db[table_name] = db[table_name].set_index(["step_id", "asset_id"])
+
+    # WARN(Jack): The extrinsics table is unique because it has two assets not just a single one. We need to figure a
+    # canonical robust way to handle this.
+    db["extrinsics"] = db["extrinsics"].set_index(
+        ["step_id"],
+        drop=False,
+    )
 
     return db
