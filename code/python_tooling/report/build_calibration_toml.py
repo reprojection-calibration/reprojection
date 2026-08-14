@@ -38,7 +38,7 @@ def run_toml_export(workspace_dir):
         output = []
 
         for workflow in workflows:
-            # TODO(Jack): Do we need a better way to handle multiple workflows in one file? Yes!
+            # TODO(Jack): Do we need a better way to handle multiple workflows in one file?
             workflow_output = f"[workflow{workflow.id}]\n" f"type = '{workflow.type}'\n"
             output.append(workflow_output)
 
@@ -108,19 +108,25 @@ def build_intrinsic_toml(workflow, workflow_data):
 
 
 def build_extrinsic_toml(workflow, workflow_data):
+    # TODO(Jack): The workflow assets is a dict indexed by the asset type which means we are limited to workflows with
+    # at most one of each asset type. This will not scale!
     extrinsics = workflow_data.get("extrinsics")
     if extrinsics is None or extrinsics.empty:
         return None
 
-    camera = workflow.assets.get("camera")
-    imu = workflow.assets.get("imu")
-
-    if camera is None or imu is None:
-        return None
-
     data = extrinsics.iloc[0]
 
-    log.info(f"Processing extrinsic {camera['name']} -> {imu['name']}")
+    # TODO(Jack): We need this because the extrinsic itself contains which assets it relates so we retrieve those and
+    # then convert those to the sensor names using the workflow assets.
+    def asset_by_id(workflow, asset_id):
+        return next(
+            asset for asset in workflow.assets.values() if asset["id"] == asset_id
+        )
+
+    frame_a = asset_by_id(workflow, data["asset_a_id"])
+    frame_b = asset_by_id(workflow, data["asset_b_id"])
+
+    log.info(f"Processing extrinsic {frame_b['name']} -> {frame_a['name']}")
 
     se3_a_b = data[["rx", "ry", "rz", "x", "y", "z"]].to_numpy().squeeze()
     tf_a_b = Se3ToMat(se3_a_b)
@@ -134,7 +140,7 @@ def build_extrinsic_toml(workflow, workflow_data):
 
     return (
         f"[workflow{workflow.id}.extrinsic0]\n"
-        f"frame_a = '{camera['name']}'\n"
-        f"frame_b = '{imu['name']}'\n"
+        f"frame_a = '{frame_a['name']}'\n"
+        f"frame_b = '{frame_b['name']}'\n"
         f"tf_a_b = {format_toml_matrix(tf_a_b)}\n"
     )

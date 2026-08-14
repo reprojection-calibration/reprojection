@@ -68,8 +68,9 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     CameraInfo const camera_info{context.config.camera.camera_model, {0, 512, 0, 512}};
     step = database::GetOrCreateStep(db.get(), StepType::CameraInfo, "");
     database::CameraInfoInsert(db.get(), step.first, context.camera_id, camera_info);
-    database::StepCacheKeyUpdate(db.get(), step.first,
-                                 hashing::HashArguments(context.config.camera.camera_model, EncodedImages{}));
+    database::StepCacheKeyUpdate(
+        db.get(), step.first,
+        hashing::HashArguments(context.camera_id.value, context.config.camera.camera_model, EncodedImages{}));
 
     step = database::GetOrCreateStep(db.get(), StepType::IntrinsicInit, "");
     database::IntrinsicInsert(db.get(), step.first, context.camera_id, context.config.camera.camera_model,

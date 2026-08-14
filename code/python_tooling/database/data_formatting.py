@@ -80,6 +80,17 @@ def row_or_empty(table, step_id, asset_id):
     return row
 
 
+# Used for selecting all rows from a table just given a step id. This is useful for example when selecting the
+# extrinsics which has two assets not just a single one we know ahead of time.
+def step_rows(table, step_id):
+    if table is None or table.empty:
+        return pd.DataFrame()
+
+    mask = table.index.get_level_values("step_id") == step_id
+
+    return table.loc[mask]
+
+
 def process_workflow(db, workflow):
     workflow_data = {}
 
@@ -122,6 +133,17 @@ def process_workflow(db, workflow):
             db[table_name],
             workflow,
             asset["id"],
+        )
+
+    # NOTE(Jack): Extrinsics are unique because they belong to a pair of assets. Here we use the logic that there
+    # can only be one extrinsic for any workflow sensor pair. If this is bulletproof I am not sure.
+    extrinsic_step_id = workflow.steps.get("extrinsic_optimization")
+    extrinsics = db.get("extrinsics")
+
+    if extrinsic_step_id is not None and extrinsics is not None:
+        workflow_data["extrinsics"] = step_rows(
+            extrinsics,
+            extrinsic_step_id,
         )
 
     return workflow_data

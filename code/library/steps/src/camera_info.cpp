@@ -17,7 +17,10 @@ CameraInfoStep::CameraInfoStep(AssetId const camera_id, StepId const image_loadi
       camera_model_{camera_model},
       images_{std::make_shared<EncodedImages>(database::ImagesSelect(db.get(), image_loading_id, camera_id))} {}
 
-Hash CameraInfoStep::CacheKey() const { return hashing::HashArguments(camera_model_, *images_); }
+Hash CameraInfoStep::CacheKey() const {
+    // NOTE(Jack): See FeatureExtraction::CacheKey() comment as to why we need the camera asset id.
+    return hashing::HashArguments(camera_id_.value, camera_model_, *images_);
+}
 
 void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {
     // TODO(Jack): Should this be checked in the constructor? Problem with that is that we cant artificially trigger a
