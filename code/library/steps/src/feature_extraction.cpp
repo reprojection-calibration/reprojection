@@ -30,9 +30,10 @@ FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image
 Hash FeatureExtraction::CacheKey() const {
     // TODO(Jack): We should not strictly need the camera_id_ here as part of they key because the target info and
     // images_ should uniquely identify the feature extraction. However a problem arises when we have artifically
-    // triggered cache hits (for example in the benchmark testing) Where the images_ is empty and that means for the
-    // cache key is no longer unique across different cameras. To prevent this we added the EntityId(). If this is
-    // really a good way to solve this is unclear. But right now it solves our problem and does cause any new ones :)
+    // triggered cache hits (for example in the benchmark testing) Where the images_ are empty and that causes the
+    // cache key to no longer be unique across different cameras. To prevent this we added the asset id. If this is
+    // really a good way to solve this is unclear. The problem I see is that the asset id is not some universal
+    // "forever" identifier, and therefore its use here seems like it might causes problems down the line.
     return hashing::HashArguments(camera_id_.value, show_extraction_, target_info_, *images_);
 }
 
