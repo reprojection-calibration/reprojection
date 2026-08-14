@@ -141,8 +141,6 @@ def process_workflow(db, workflow):
     extrinsics = db.get("extrinsics")
 
     if extrinsic_step_id is not None and extrinsics is not None:
-
-        print(extrinsic_step_id)
         workflow_data["extrinsics"] = step_rows(
             extrinsics,
             extrinsic_step_id,
