@@ -18,12 +18,10 @@ auto const log{logging::Get("steps")};
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr const db) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
 
-    // TODO(Jack): We should refactor our config file so that it can load multiple cameras from one file and
-    // automatically assign the index from the config file structure instead of harcoding it to 0 here. Same for the
-    // targets and imus below.
     // TODO(Jack): Refactor so user can pass in a target name if they like.
-    AssetId const camera_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, cfg.camera.sensor_name)};
-    AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "aprilgrid")};
+    AssetId const camera_id{
+        database::GetOrCreateAsset(db.get(), AssetType::Camera, cfg.camera.index, cfg.camera.sensor_name)};
+    AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "target")};
 
     // TODO(Jack): Right now the workflow creation/parameterization here is extremely manual and hardcoded for our two
     // sensor cam/cam-imu only case, but we don't need to complicate things till later when we need a more generic
