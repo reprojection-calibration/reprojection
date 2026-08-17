@@ -12,9 +12,10 @@ VENV_DIR=${VENV_DIR:-~/.reprojection_venv}
 source "${VENV_DIR}/bin/activate"
 
 # TODO(Jack): I would have liked to have the protobuf definition as an integrated part of the package (ex. in setup.py)
-#  but I could not get grpc_tools recognized in the setup.py script. Possibly to do with the fact that setup.py does not
+# but I could not get grpc_tools recognized in the setup.py script. Possibly to do with the fact that setup.py does not
 # have access to all the packages in the venv. But this is speculation and needs more research.
 python3 -m grpc_tools.protoc -I "${PROTO_DIRECTORY}" --python_out="${PACKAGE_DIRECTORY}/generated" "${PROTO_DIRECTORY}"/*.proto
 
+# NOTE(Jack): We do an editable install so we can develop locally.
 python3 -m pip install --editable "${PACKAGE_DIRECTORY}"
 python3 -m unittest discover --start-directory "${PACKAGE_DIRECTORY}" --verbose

@@ -224,7 +224,15 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 
 FROM base-stage AS development-stage
 
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
+# TODO(Jack): We install python3-pybind11 and not in the base dependencies because we do not need to build all library
+# verions with the bindings - and there are some source install issues (I think), that make it easier just to install
+# this here and the python-binding stage only. We need a better easier to maintain solution than this...
+RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb python3-pybind11; rm --force --recursive /var/lib/apt/lists/*
+
+# TODO(Jack): How to manage deps which are needed by the python binding testing! See todo above.
+RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes python3-numpy; rm --force --recursive /var/lib/apt/lists/*
+
+
 
 
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
@@ -264,6 +272,21 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
             -DREPROJECTION_INSTALL_EXAMPLES=ON; \
         cmake_install \
             /temporary/code/library
+
+FROM base-stage AS python-binding-stage
+
+ARG APT_INSTALL_PYTHON_BINDING_DEPS=building/install_scripts/apt_install_python_binding_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_BINDING_DEPS},target=/temporary/${APT_INSTALL_PYTHON_BINDING_DEPS} \
+    /temporary/${APT_INSTALL_PYTHON_BINDING_DEPS}
+
+
+RUN --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
+    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
+    set -eoux pipefail; \
+    python3 -m build --wheel --outdir /buildroot/wheels -Ccmake.define.BUILD_PYTHON_BINDINGS=ON /temporary/code/library/projection_functions
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force

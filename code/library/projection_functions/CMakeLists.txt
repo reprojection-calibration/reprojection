@@ -28,3 +28,42 @@ set(TESTS
         test/unified_camera_model.test.cpp
 )
 AddTests()
+
+# NOTE(Jack): We only support the bindings on ubuntu 24.04. We only need them to work with the dashboard image and there
+# were problems with the source install version of things and the pybind library which is why we limit this. Is that
+# still a problem?
+
+option(BUILD_PYTHON_BINDINGS OFF)
+if (BUILD_PYTHON_BINDINGS)
+    set(PYBIND11_FINDPYTHON ON)
+    find_package(pybind11 CONFIG REQUIRED)
+
+    # TODO(Jack): This current install process will install the entire library. I would prefer it would only install the
+    # part actually needed by the projection_functions. Maybe we can use components to solve this?
+    pybind11_add_module(projection_function_python_binding src/python_bindings.cpp)
+    target_link_libraries(
+            projection_function_python_binding
+            PRIVATE
+            ${LIBRARY_NAME}
+            ${LINK_LIBRARIES}
+    )
+
+    set_target_properties(
+            projection_function_python_binding
+            PROPERTIES
+            INSTALL_RPATH "$ORIGIN/lib"
+    )
+
+    # TODO(Jack): What is the proper install destination? Does this work ?
+    install(
+            TARGETS projection_function_python_binding
+            DESTINATION .
+    )
+
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(
+            NAME projection_function_python_binding_unit_test
+            COMMAND
+                ${Python3_EXECUTABLE} -m unittest discover --start-directory ${CMAKE_CURRENT_SOURCE_DIR}/src --verbose
+    )
+endif ()
