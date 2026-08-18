@@ -9,7 +9,7 @@ option(ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 endif ()
 
@@ -35,9 +35,9 @@ find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
 include(CTest)
-if(BUILD_TESTING)
+if (BUILD_TESTING)
     find_package(GTest REQUIRED)
-endif()
+endif ()
 
 add_subdirectory(types_internal)
 add_subdirectory(types)
