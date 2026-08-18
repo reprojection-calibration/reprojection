@@ -8,13 +8,12 @@ set(SRC_FILES
         src/cost_functions/reprojection_error_spline.cpp
 )
 set(LINK_LIBRARIES
-        Ceres::ceres
-        Eigen3::Eigen
-        eigen_utilities
         geometry
         projection_functions
-        spline
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        spline
 )
 AddLibrary()
 
