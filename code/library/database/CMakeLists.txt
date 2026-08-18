@@ -108,12 +108,7 @@ set(INCLUDE_DIRECTORIES
         ${OpenCV_INCLUDE_DIRS}
 )
 set(LINK_LIBRARIES
-        ${OpenCV_LIBS}
-        Eigen3::Eigen
-        config # Required because of hashing
-        hashing # Only used to serialize the asset vector in workflow creation
-        geometry # Required because of spline interface
-        logging
+        hashing
         protobuf::libprotobuf
         tomlplusplus::tomlplusplus
         types_internal
