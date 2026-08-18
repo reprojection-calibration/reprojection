@@ -8,9 +8,6 @@ set(SRC_FILES
         src/unified_camera_model.cpp
 )
 set(LINK_LIBRARIES
-        Eigen3::Eigen
-        eigen_utilities
-        ${OpenCV_LIBS}
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES
