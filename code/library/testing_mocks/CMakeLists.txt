@@ -7,14 +7,15 @@ set(SRC_FILES
         src/trajectory.cpp
 )
 set(LINK_LIBRARIES
-        Ceres::ceres
-        Eigen3::Eigen
         eigen_utilities
         geometry
         projection_functions
-        spline
         testing_utilities
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        spline
+
 )
 set(INSTALL_SO OFF)
 AddLibrary()
