@@ -4,9 +4,11 @@ set(SRC_FILES
         src/lie.cpp
 )
 set(LINK_LIBRARIES
-        Ceres::ceres
         Eigen3::Eigen
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        Ceres::ceres
 )
 AddLibrary()
 
