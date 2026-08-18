@@ -5,7 +5,7 @@ set(LINK_LIBRARIES
         ${apriltag_LIBRARIES}
         Ceres::ceres
         Eigen3::Eigen
-        SQLite::SQLite3
+        SQLite3::SQLite3
         application
         calibration
         config
