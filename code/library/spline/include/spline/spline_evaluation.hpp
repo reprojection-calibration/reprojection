@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 #include "spline/spline_evaluation_concept.hpp"
 #include "spline/spline_state.hpp"
