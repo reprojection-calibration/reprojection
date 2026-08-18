@@ -7,11 +7,11 @@ set(SRC_FILES
         src/plane_utilities.cpp
         src/pnp.cpp
 )
-set(LINK_LIBRARIES
-        Ceres::ceres
+set(PRIVATE_LINK_LIBRARIES
+        # NOTE(Jack): We use raw eigen functions so much in this library that it seems wrong to depend on the transitive
+        # eigen inclusion from types_internal or any other library.
         Eigen3::Eigen
         eigen_utilities
-        geometry
         optimization
         projection_functions
         types_internal

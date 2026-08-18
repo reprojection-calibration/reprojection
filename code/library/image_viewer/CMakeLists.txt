@@ -7,7 +7,7 @@ set(SRC_FILES
 set(INCLUDE_DIRECTORIES
         ${OpenCV_INCLUDE_DIRS}
 )
-set(LINK_LIBRARIES
+set(PUBLIC_LINK_LIBRARIES
         ${OpenCV_LIBS}
 )
 AddLibrary()

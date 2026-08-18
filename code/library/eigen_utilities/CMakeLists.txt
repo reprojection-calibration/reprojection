@@ -5,8 +5,7 @@ set(SRC_FILES
         src/grid.cpp
         src/statistics.cpp
 )
-set(LINK_LIBRARIES
-        Eigen3::Eigen
+set(PRIVATE_LINK_LIBRARIES
         types_internal
 )
 AddLibrary()

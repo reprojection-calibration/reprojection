@@ -5,7 +5,7 @@ set(SRC_FILES
         src/logging.cpp
 )
 
-set(LINK_LIBRARIES
+set(PUBLIC_LINK_LIBRARIES
         Eigen3::Eigen
         spdlog::spdlog
         tomlplusplus::tomlplusplus

@@ -6,30 +6,26 @@ set(SRC_FILES
         src/reprojection_calibration.cpp
 )
 
-set(LINK_LIBRARIES
-        ${OpenCV_LIBS}
-        Eigen3::Eigen
-        SQLite::SQLite3
-        calibration
+set(PRIVATE_LINK_LIBRARIES
+        SQLite3::SQLite3
         config
         database
-        geometry # Required due to database write dependency on spline
-        hashing
         logging
-        optimization
-        projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the pose_init public header interface.
-        spdlog::spdlog
-        spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
         steps
-        tomlplusplus::tomlplusplus
-        types
         types_internal
         video_capture
 )
+set(PUBLIC_LINK_LIBRARIES
+        ${OpenCV_LIBS}
+        tomlplusplus::tomlplusplus
+        types
+)
+
 set(INSTALL_HEADERS ON)
 AddLibrary()
 
 set(TEST_LINK_LIBRARIES
+        hashing
         testing_mocks
         testing_utilities
 )
@@ -39,8 +35,6 @@ set(TESTS
         test/reprojection_calibration.test.cpp
 )
 AddTests()
-
-
 
 set(EXAMPLES
         examples/calibration.cpp

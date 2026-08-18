@@ -4,7 +4,7 @@ set(SRC_FILES
         src/video_capture.cpp
 )
 
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         ${OpenCV_LIBS}
 )
 AddLibrary()

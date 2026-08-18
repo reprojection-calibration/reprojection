@@ -3,6 +3,7 @@
 #include <ranges>
 
 #include "calibration/calibration_utils.hpp"
+#include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"

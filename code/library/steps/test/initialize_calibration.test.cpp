@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "database/calibration_database.hpp"
 // cppcheck-suppress missingInclude
 #include "testing_utilities/generated/minimum_config.hpp"
 

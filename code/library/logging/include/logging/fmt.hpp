@@ -5,8 +5,8 @@
 #include <Eigen/Dense>
 
 // TODO(Jack): I am honestly not 100% sure the best practices for such an adapter struct. All I know is that this needs
-//  to be compiled into the shared object for it to be recognized and used by fmt. Anyone who is more familiar can take
-//  a look if his becomes a problem.
+// to be compiled into the shared object for it to be recognized and used by fmt. Anyone who is more familiar can take
+// a look if his becomes a problem.
 
 template <typename Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
 struct fmt::formatter<Eigen::Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols>> {

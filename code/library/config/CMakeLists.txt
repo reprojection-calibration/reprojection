@@ -5,10 +5,11 @@ set(SRC_FILES
         src/config_parse.cpp
         src/parsing_helpers.cpp
 )
-set(LINK_LIBRARIES
-        Eigen3::Eigen
-        tomlplusplus::tomlplusplus
+set(PRIVATE_LINK_LIBRARIES
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        tomlplusplus::tomlplusplus
 )
 AddLibrary()
 

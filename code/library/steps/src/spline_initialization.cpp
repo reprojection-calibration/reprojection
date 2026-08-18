@@ -1,6 +1,7 @@
 #include "spline/spline_initialization.hpp"
 
 #include "calibration/calibration_utils.hpp"
+#include "database/calibration_database.hpp"
 #include "geometry/lie.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"

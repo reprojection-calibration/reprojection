@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include "geometry/lie.hpp"
 #include "spline/utilities.hpp"
 #include "types/eigen_types.hpp"

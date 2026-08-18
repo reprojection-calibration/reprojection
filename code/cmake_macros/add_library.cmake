@@ -10,8 +10,14 @@ macro(AddLibrary)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
             ${INCLUDE_DIRECTORIES}
     )
-    target_link_libraries(${LIBRARY_NAME} PRIVATE
-            ${LINK_LIBRARIES}
+    # NOTE(Jack): A simple rule is that if a package's header is found in a libraries public headers (ex. is found in a
+    # header located in include/geometry for example), then that package needs to be added in the PUBLIC_LINK_LIBRARIES.
+    # If the package's headers are only included in files found in src/ or test/ then that package needs to be added to
+    # PRIVATE_LINK_LIBRARIES. This is a nice feature because the public libraries automatically propagate dependencies
+    # which prevents us from having to include every library every time.
+    target_link_libraries(${LIBRARY_NAME}
+            PRIVATE ${PRIVATE_LINK_LIBRARIES}
+            PUBLIC ${PUBLIC_LINK_LIBRARIES}
     )
 
     # Install headers default OFF - The entire library should only expose its functionality through the smallest
@@ -21,7 +27,7 @@ macro(AddLibrary)
     # install the headers for a library just set set(INSTALL_HEADERS ON) in its cmakelists.
     if (NOT DEFINED INSTALL_HEADERS)
         set(INSTALL_HEADERS OFF)
-    endif()
+    endif ()
 
     # Install shared libs default ON - The application functions we export will depend on basically all the shared libs
     # we have. The one obvious exception here is any lib intended only for internal testing purposes (i.e.
@@ -29,13 +35,13 @@ macro(AddLibrary)
     # can call set(INSTALL_SO OFF) in its cmakelists.
     if (NOT DEFINED INSTALL_SO)
         set(INSTALL_SO ON)
-    endif()
+    endif ()
 
     if (INSTALL_HEADERS)
         install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
                 DESTINATION include/${PROJECT_NAME}
         )
-    endif()
+    endif ()
 
     if (INSTALL_SO)
         install(TARGETS ${LIBRARY_NAME}
@@ -43,7 +49,7 @@ macro(AddLibrary)
                 LIBRARY DESTINATION lib
                 ARCHIVE DESTINATION lib
         )
-    endif()
+    endif ()
 
     if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         target_compile_options(${LIBRARY_NAME} PRIVATE --coverage)

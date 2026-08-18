@@ -15,24 +15,20 @@ set(SRC_FILES
         src/target_info.cpp
 )
 
-set(LINK_LIBRARIES
-        ${OpenCV_LIBS}
-        Ceres::ceres
-        Eigen3::Eigen
-        SQLite::SQLite3
+set(PRIVATE_LINK_LIBRARIES
         calibration
-        config
-        database
         feature_extraction
-        geometry
         hashing
         image_viewer
-        logging
         optimization
-        spline
         types
-        tomlplusplus::tomlplusplus
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        config
+        database
+        logging
+        spline
 )
 AddLibrary()
 

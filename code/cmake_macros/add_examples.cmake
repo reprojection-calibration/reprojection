@@ -16,7 +16,7 @@ macro(AddExamples)
             )
         endif ()
         target_link_libraries(${EXAMPLE_NAME}
-                ${LINK_LIBRARIES}
+                ${PRIVATE_LINK_LIBRARIES}
         )
 
         if (NOT DEFINED INSTALL_EXAMPLES)

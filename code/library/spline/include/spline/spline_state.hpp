@@ -1,9 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 
-#include "spline/constants.hpp"
 #include "spline/time_handler.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"

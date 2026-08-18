@@ -10,19 +10,17 @@ set(SRC_FILES
         src/utilities.cpp
         src/vanishing_point_initialization.cpp
 )
-set(LINK_LIBRARIES
-        Ceres::ceres
-        Eigen3::Eigen
+set(PRIVATE_LINK_LIBRARIES
         eigen_utilities
         geometry
         logging
         optimization
         pnp
         projection_functions
-        spdlog::spdlog
-        spline
-        tomlplusplus::tomlplusplus
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        spline
 )
 AddLibrary()
 

@@ -11,16 +11,14 @@ set(SRC_FILES
 set(INCLUDE_DIRECTORIES
         ${OpenCV_INCLUDE_DIRS}
 )
-set(LINK_LIBRARIES
-        ${OpenCV_LIBS}
+set(PRIVATE_LINK_LIBRARIES
         apriltag::apriltag
-        Eigen3::Eigen
-        config
         eigen_utilities
         logging
-        tomlplusplus::tomlplusplus
-        types
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        ${OpenCV_LIBS}
 )
 AddLibrary()
 

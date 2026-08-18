@@ -7,12 +7,12 @@ set(SRC_FILES
 set(INCLUDE_DIRECTORIES
         ${OPENSSL_INCLUDE_DIRS}
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         ${OPENSSL_LIBRARIES}
-        Eigen3::Eigen
-        config
-        tomlplusplus::tomlplusplus # REQUIRED BECAUSE OF CONFIG DEP - SHOULD TRY TO REMOVE
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        config
 )
 AddLibrary()
 

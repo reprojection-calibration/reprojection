@@ -15,7 +15,7 @@ macro(AddTests)
             target_link_libraries(${TEST_NAME} PRIVATE
                     GTest::gtest_main
                     ${LIBRARY_NAME}
-                    ${LINK_LIBRARIES}
+                    ${PRIVATE_LINK_LIBRARIES}
                     ${TEST_LINK_LIBRARIES}
             )
 

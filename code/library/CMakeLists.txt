@@ -32,10 +32,10 @@ find_package(apriltag REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
-find_package(GTest REQUIRED)
-# TODO(Jack): We should have a more coherent cmake compliant testing strategy across the project. An if statement
-# wrapping the code inside the AddExample macro is not exactly the most modern solution I think.
-enable_testing()
+include(CTest)
+if(BUILD_TESTING)
+    find_package(GTest REQUIRED)
+endif()
 
 add_subdirectory(types_internal)
 add_subdirectory(types)
