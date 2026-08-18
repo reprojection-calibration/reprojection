@@ -1,8 +1,8 @@
 #include "steps/camera_info.hpp"
 
+#include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
-#include "database/calibration_database.hpp"
 
 namespace reprojection::steps {
 
