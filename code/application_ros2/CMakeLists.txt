@@ -26,7 +26,7 @@ find_package(tomlplusplus REQUIRED)
 set(INCLUDE_DIRECTORIES
         ${sensor_msgs_INCLUDE_DIRS}
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         cv_bridge::cv_bridge
         rclcpp::rclcpp
         rosbag2_cpp::rosbag2_cpp

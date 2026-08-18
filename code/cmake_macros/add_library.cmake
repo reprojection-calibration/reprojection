@@ -10,6 +10,11 @@ macro(AddLibrary)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
             ${INCLUDE_DIRECTORIES}
     )
+    # NOTE(Jack): A simple rule is that if a package's header is found in a libraries public headers (ex. is found in a
+    # header located in include/geometry for example), then that package needs to be added in the PUBLIC_LINK_LIBRARIES.
+    # If the package's headers are only included in files found in src/ or test/ then that package needs to be added to
+    # PRIVATE_LINK_LIBRARIES. This is a nice feature because the public libraries automatically propagate dependencies
+    # which prevents us from having to include every library every time.
     target_link_libraries(${LIBRARY_NAME}
             PRIVATE ${PRIVATE_LINK_LIBRARIES}
             PUBLIC ${PUBLIC_LINK_LIBRARIES}

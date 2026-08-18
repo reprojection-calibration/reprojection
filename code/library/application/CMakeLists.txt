@@ -36,8 +36,6 @@ set(TESTS
 )
 AddTests()
 
-
-
 set(EXAMPLES
         examples/calibration.cpp
 )

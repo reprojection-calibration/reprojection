@@ -26,7 +26,7 @@ set(INCLUDE_DIRECTORIES
         ${cv_bridge_INCLUDE_DIRS}
         ${std_msgs_INCLUDE_DIRS}
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         ${cv_bridge_LIBRARIES}
         ${rosbag_LIBRARIES}
         ${std_msgs_LIBRARIES}
