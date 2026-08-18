@@ -181,6 +181,8 @@ HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.
 FROM base-stage AS debug-build-stage
 
 # TODO(Jack): Enable a sanitizer by default. This helped me find a lot of memory bugs and probably should be default!
+# NOTE(Jack): We have to use RelWithDebInfo here because Debug runs soooo slow with some tests that do optimizations
+# using ceres autodiff.
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
@@ -192,6 +194,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=ON; \
     export CMAKE_BUILD_TYPE=RelWithDebInfo; \
+    export ENABLE_COVERAGE=ON; \
     cmake_build_install \
         "/buildroot/library-${CMAKE_BUILD_TYPE}" \
         "/temporary/code/library"

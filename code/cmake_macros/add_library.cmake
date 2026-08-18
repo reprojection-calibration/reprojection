@@ -51,7 +51,7 @@ macro(AddLibrary)
         )
     endif ()
 
-    if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    if (ENABLE_COVERAGE)
         target_compile_options(${LIBRARY_NAME} PRIVATE --coverage)
         target_link_options(${LIBRARY_NAME} PRIVATE --coverage)
     endif ()

@@ -4,7 +4,9 @@ set -eoux pipefail
 
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
 BUILD_TESTING=${BUILD_TESTING:-OFF}
+ENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF}
 INSTALL_EXAMPLES=${INSTALL_EXAMPLES:-OFF}
+
 
 clone_repo() {
     local repo=$1
@@ -31,6 +33,7 @@ cmake_build_install() {
         -DBUILD_TESTING="${BUILD_TESTING}" \
         -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
         -DCMAKE_INSTALL_PREFIX="/opt/reprojection" \
+        -DENABLE_COVERAGE="${ENABLE_COVERAGE}" \
         -DINSTALL_EXAMPLES="${INSTALL_EXAMPLES}" \
         -GNinja \
         "$@"

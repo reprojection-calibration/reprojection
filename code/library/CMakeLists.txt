@@ -5,6 +5,8 @@ project(
         LANGUAGES C CXX
 )
 
+option(ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
