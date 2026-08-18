@@ -7,6 +7,7 @@
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
+#include "database/calibration_database.hpp"
 
 namespace reprojection::steps {
 

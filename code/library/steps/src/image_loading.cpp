@@ -1,5 +1,6 @@
 #include "steps/image_loading.hpp"
 
+#include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
 

@@ -1,5 +1,6 @@
 #include "steps/feature_extraction.hpp"
 
+#include "database/calibration_database.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "hashing/hashing.hpp"
 #include "image_viewer/image_viewer.hpp"

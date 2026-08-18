@@ -1,5 +1,6 @@
 #include "steps/target_info.hpp"
 
+#include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
 

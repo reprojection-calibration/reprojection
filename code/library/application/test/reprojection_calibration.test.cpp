@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "config/config_parse.hpp"
+#include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "steps/initialize_calibration.hpp"
 // cppcheck-suppress missingInclude

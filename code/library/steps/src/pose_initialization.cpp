@@ -2,6 +2,7 @@
 #include "steps/pose_initialization.hpp"
 
 #include "calibration/initialization_methods.hpp"
+#include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
 #include "optimization/bundle_adjustment.hpp"

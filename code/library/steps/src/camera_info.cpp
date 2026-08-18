@@ -2,6 +2,7 @@
 
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
+#include "database/calibration_database.hpp"
 
 namespace reprojection::steps {
 

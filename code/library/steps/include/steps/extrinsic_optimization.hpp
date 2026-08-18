@@ -1,9 +1,9 @@
 #pragma once
 
-#include "database/calibration_database.hpp"
 #include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
+#include "types/io.hpp"
 
 namespace reprojection::steps {
 

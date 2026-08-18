@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 // cppcheck-suppress missingInclude
+#include "database/calibration_database.hpp"
 #include "testing_utilities/generated/minimum_config.hpp"
 
 using namespace reprojection;

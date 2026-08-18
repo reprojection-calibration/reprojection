@@ -2,6 +2,7 @@
 
 #include <optional>
 
+#include "database/calibration_database.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::steps {
