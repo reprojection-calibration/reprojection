@@ -110,16 +110,18 @@ set(INCLUDE_DIRECTORIES
 set(LINK_LIBRARIES
         ${OpenCV_LIBS}
         Eigen3::Eigen
-        SQLite3::SQLite3
         config # Required because of hashing
         hashing # Only used to serialize the asset vector in workflow creation
         geometry # Required because of spline interface
         logging
         protobuf::libprotobuf
-        spline
         tomlplusplus::tomlplusplus
-        types
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        SQLite3::SQLite3
+        spline
+        types
 )
 AddLibrary()
 

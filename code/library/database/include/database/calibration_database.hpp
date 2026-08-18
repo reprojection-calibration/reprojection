@@ -2,7 +2,6 @@
 
 #include <expected>
 #include <filesystem>
-#include <optional>
 
 #include "spline/time_handler.hpp"
 #include "spline/types.hpp"

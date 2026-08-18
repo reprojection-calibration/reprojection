@@ -6,6 +6,7 @@ target_include_directories(${LIBRARY_NAME} INTERFACE
         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 
+# See note in types_internal as to why we have this here.
 target_compile_options(${LIBRARY_NAME} INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-enum-enum-conversion>
 )
