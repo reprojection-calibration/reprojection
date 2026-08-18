@@ -7,26 +7,26 @@ set(SRC_FILES
 )
 
 set(LINK_LIBRARIES
-        ${OpenCV_LIBS}
         Eigen3::Eigen
         SQLite3::SQLite3
-        calibration
         config
         database
-        hashing
         logging
-        optimization
-        spdlog::spdlog
         steps
-        tomlplusplus::tomlplusplus
-        types
         types_internal
         video_capture
 )
+set(PUBLIC_LINK_LIBRARIES
+        ${OpenCV_LIBS}
+        tomlplusplus::tomlplusplus
+        types
+)
+
 set(INSTALL_HEADERS ON)
 AddLibrary()
 
 set(TEST_LINK_LIBRARIES
+        hashing
         testing_mocks
         testing_utilities
 )
