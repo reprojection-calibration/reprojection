@@ -20,9 +20,11 @@ set(LINK_LIBRARIES
         pnp
         projection_functions
         spdlog::spdlog
-        spline
         tomlplusplus::tomlplusplus
         types_internal
+)
+set(PUBLIC_LINK_LIBRARIES
+        spline
 )
 AddLibrary()
 
