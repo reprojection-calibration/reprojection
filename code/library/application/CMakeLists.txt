@@ -7,7 +7,6 @@ set(SRC_FILES
 )
 
 set(LINK_LIBRARIES
-        Eigen3::Eigen
         SQLite3::SQLite3
         config
         database

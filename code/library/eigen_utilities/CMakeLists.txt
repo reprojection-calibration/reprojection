@@ -6,7 +6,6 @@ set(SRC_FILES
         src/statistics.cpp
 )
 set(LINK_LIBRARIES
-        Eigen3::Eigen
         types_internal
 )
 AddLibrary()

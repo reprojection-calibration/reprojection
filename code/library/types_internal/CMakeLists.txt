@@ -7,6 +7,10 @@ target_include_directories(${LIBRARY_NAME} INTERFACE
         ${OpenCV_INCLUDE_DIRS}
 )
 
+target_link_libraries(${LIBRARY_NAME} INTERFACE
+        Eigen3::Eigen
+)
+
 # WARN(Jack): For some reason once we included the opencv include dirs about we started getting compiler errors about an
 # enum conversion at some place inside the opencv source code. Therefore we suppress that error for this target. I
 # cannot say if this is the real problem or this is the real solution yet.
