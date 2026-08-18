@@ -7,7 +7,7 @@ set(SRC_FILES
         src/cost_functions/reprojection_error.cpp
         src/cost_functions/reprojection_error_spline.cpp
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         geometry
         projection_functions
         types_internal

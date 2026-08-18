@@ -8,7 +8,7 @@ set(SRC_FILES
         src/time_handler.cpp
         src/utilities.cpp
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         # NOTE(Jack): We use raw eigen functions so much in this library that it seems wrong to depend on the transitive
         # eigen inclusion from types_internal or any other library.
         Eigen3::Eigen

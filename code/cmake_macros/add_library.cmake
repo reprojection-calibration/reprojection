@@ -11,7 +11,7 @@ macro(AddLibrary)
             ${INCLUDE_DIRECTORIES}
     )
     target_link_libraries(${LIBRARY_NAME}
-            PRIVATE ${LINK_LIBRARIES}
+            PRIVATE ${PRIVATE_LINK_LIBRARIES}
             PUBLIC ${PUBLIC_LINK_LIBRARIES}
     )
 

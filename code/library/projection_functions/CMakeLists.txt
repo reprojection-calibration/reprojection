@@ -7,7 +7,7 @@ set(SRC_FILES
         src/pinhole_radtan4.cpp
         src/unified_camera_model.cpp
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES

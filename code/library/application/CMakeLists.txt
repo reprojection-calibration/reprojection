@@ -6,7 +6,7 @@ set(SRC_FILES
         src/reprojection_calibration.cpp
 )
 
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         SQLite3::SQLite3
         config
         database

@@ -10,7 +10,7 @@ set(SRC_FILES
         src/utilities.cpp
         src/vanishing_point_initialization.cpp
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         eigen_utilities
         geometry
         logging

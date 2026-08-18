@@ -6,7 +6,7 @@ set(SRC_FILES
         src/noise_generation.cpp
         src/trajectory.cpp
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         eigen_utilities
         geometry
         projection_functions

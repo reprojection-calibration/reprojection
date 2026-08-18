@@ -15,7 +15,7 @@ set(SRC_FILES
         src/target_info.cpp
 )
 
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         calibration
         feature_extraction
         hashing

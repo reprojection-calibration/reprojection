@@ -5,7 +5,7 @@ set(SRC_FILES
         src/config_parse.cpp
         src/parsing_helpers.cpp
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES

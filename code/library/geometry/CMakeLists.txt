@@ -3,7 +3,7 @@ set(LIBRARY_NAME "geometry")
 set(SRC_FILES
         src/lie.cpp
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         Eigen3::Eigen
         types_internal
 )

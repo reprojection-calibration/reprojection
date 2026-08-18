@@ -107,7 +107,7 @@ set(INCLUDE_DIRECTORIES
         ${CMAKE_BINARY_DIR}/database # Generated sql header files are found here
         ${OpenCV_INCLUDE_DIRS}
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         hashing
         protobuf::libprotobuf
         tomlplusplus::tomlplusplus

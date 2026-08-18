@@ -11,7 +11,7 @@ set(SRC_FILES
 set(INCLUDE_DIRECTORIES
         ${OpenCV_INCLUDE_DIRS}
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         apriltag::apriltag
         eigen_utilities
         logging

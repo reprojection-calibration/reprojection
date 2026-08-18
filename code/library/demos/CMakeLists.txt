@@ -1,6 +1,6 @@
 set(LIBRARY_NAME "demos")
 
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         ${OpenCV_LIBS}
         ${apriltag_LIBRARIES}
         Ceres::ceres

@@ -7,7 +7,7 @@ set(SRC_FILES
 set(INCLUDE_DIRECTORIES
         ${OPENSSL_INCLUDE_DIRS}
 )
-set(LINK_LIBRARIES
+set(PRIVATE_LINK_LIBRARIES
         ${OPENSSL_LIBRARIES}
         types_internal
 )
