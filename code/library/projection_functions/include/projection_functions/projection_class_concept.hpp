@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optional>
-#include <type_traits>
 
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
