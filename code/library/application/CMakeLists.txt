@@ -13,11 +13,9 @@ set(LINK_LIBRARIES
         calibration
         config
         database
-        geometry # Required due to database write dependency on spline
         hashing
         logging
         optimization
-        projection_functions # Introduced due to adding EstimatePoseViaPinholePnP to the pose_init public header interface.
         spdlog::spdlog
         spline # Required because of the EstimateCameraImuRotationAndGravity() interface!
         steps

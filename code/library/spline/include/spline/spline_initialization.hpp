@@ -1,3 +1,4 @@
+#pragma once
 
 #include "spline/spline_state.hpp"
 #include "types/calibration_types.hpp"

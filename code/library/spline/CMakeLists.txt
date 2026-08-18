@@ -11,6 +11,8 @@ set(SRC_FILES
 set(LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
+)
+set(PUBLIC_LINK_LIBRARIES
         geometry
         types_internal
 )

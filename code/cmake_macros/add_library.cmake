@@ -13,6 +13,9 @@ macro(AddLibrary)
     target_link_libraries(${LIBRARY_NAME} PRIVATE
             ${LINK_LIBRARIES}
     )
+    target_link_libraries(${LIBRARY_NAME} PUBLIC
+            ${PUBLIC_LINK_LIBRARIES}
+    )
 
     # Install headers default OFF - The entire library should only expose its functionality through the smallest
     # possible source code interface. At time of writing this is achieved by building all the functionality external
