@@ -2,12 +2,6 @@
 
 set -eoux pipefail
 
-CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
-BUILD_TESTING=${BUILD_TESTING:-OFF}
-ENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF}
-INSTALL_EXAMPLES=${INSTALL_EXAMPLES:-OFF}
-
-
 clone_repo() {
     local repo=$1
     local branch=$2
@@ -24,28 +18,54 @@ download_and_extract() {
     tar -xf "$dest/$(basename "$url")" -C "$dest"
 }
 
-cmake_build_install() {
-    local build_dir=$1
-    local source_dir=$2
-    shift 2
+# NOTE(Jack): We want control over when we build/install/test so we have three different functions. The only annoying
+# thing is then keeping track of the build directory. Therefore we have this helper here which given the source
+# directory will always return a directory in /buildroot named the same way. A little round abouty but it gets the job
+# done!
+cmake_build_dir() {
+    local source_dir="${1}"
+    local source_name
+    source_name="$(basename "${source_dir}")"
 
+    # NOTE(Jack): That this is the only way to return a value from a bash function is insane...
+    printf '/buildroot/build-%s\n' "${source_name}"
+}
+
+cmake_build() {
+    local source_dir="${1}"
+    shift
+
+    local build_dir
+    build_dir="$(cmake_build_dir "${source_dir}")"
+
+    # NOTE(Jack): Later -D arguments override earlier ones!
     cmake -B "${build_dir}" -S "${source_dir}" \
-        -DBUILD_TESTING="${BUILD_TESTING}" \
-        -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
-        -DCMAKE_INSTALL_PREFIX="/opt/reprojection" \
-        -DENABLE_COVERAGE="${ENABLE_COVERAGE}" \
-        -DINSTALL_EXAMPLES="${INSTALL_EXAMPLES}" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DBUILD_TESTING=OFF \
         -GNinja \
         "$@"
 
     cmake --build "${build_dir}"
+}
 
-    if [[ "${BUILD_TESTING}" == "ON" ]]; then
-      # NOTE(Jack): The --test-dir option is not supported under cmake version 3.20 - ubuntu 20 defaults to 3.16 - so we just
-      # do it manually here.
-      cd "${build_dir}"
-      ctest --output-on-failure --progress
-    fi
+cmake_install() {
+    local source_dir="${1}"
+    shift
+
+    local build_dir
+    build_dir="$(cmake_build_dir "${source_dir}")"
 
     cmake --install "${build_dir}"
+}
+
+cmake_test() {
+    local source_dir="${1}"
+    shift
+
+    local build_dir
+    build_dir="$(cmake_build_dir "${source_dir}")"
+
+    cd "${build_dir}"
+    ctest --output-on-failure --progress
 }

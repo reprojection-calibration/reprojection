@@ -11,17 +11,18 @@ clone_repo \
     https://github.com/eigen-mirror/${name}.git \
     3.4.0 \
     "${buildroot}/${name}"
-cmake_build_install \
-    "${buildroot}/${name}-${CMAKE_BUILD_TYPE}" \
+cmake_build \
+    "${buildroot}/${name}"
+cmake_install \
     "${buildroot}/${name}"
 
 name="ceres-solver-2.2.0"
 download_and_extract \
     http://ceres-solver.org/${name}.tar.gz \
     "${buildroot}"
-cmake_build_install \
-    "${buildroot}/${name}-${CMAKE_BUILD_TYPE}" \
+cmake_build \
     "${buildroot}/${name}" \
     -DBUILD_BENCHMARKS=OFF \
-    -DBUILD_EXAMPLES=OFF \
-    -DCMAKE_PREFIX_PATH="/opt/reprojection"
+    -DBUILD_EXAMPLES=OFF
+cmake_install \
+    "${buildroot}/${name}"

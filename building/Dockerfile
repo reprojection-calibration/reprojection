@@ -72,14 +72,15 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     /temporary/${SOURCE_INSTALL_SMALL_LIBRARIES}
 
 ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
-    /temporary/${SOURCE_INSTALL_SQLITE}
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
+      /temporary/${SOURCE_INSTALL_SQLITE}
 
 
 FROM apt-base-stage AS base-stage
 
-COPY --from=build-ceres-stage /opt/reprojection /opt/reprojection
-COPY --from=build-small-libraries-stage /opt/reprojection /opt/reprojection
+COPY --from=build-ceres-stage /usr/local /usr/local
+COPY --from=build-small-libraries-stage /usr/local /usr/local
 
 
 FROM configuration-stage AS code-checks-stage
@@ -128,8 +129,9 @@ RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_VENV_DEPS},target=/temporary/$
     /temporary/${APT_INSTALL_PYTHON_VENV_DEPS}
 
 ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
-    /temporary/${SOURCE_INSTALL_SQLITE}
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
+      /temporary/${SOURCE_INSTALL_SQLITE}
 
 ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
@@ -187,14 +189,15 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-    set -eoux pipefail; \
-        source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=ON; \
-        export CMAKE_BUILD_TYPE=RelWithDebInfo; \
-        export ENABLE_COVERAGE=ON; \
-        cmake_build_install \
-            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-            "/temporary/code/library"
+      set -eoux pipefail; \
+      source /temporary/${SOURCE_INSTALL_UTILS}; \
+      cmake_build \
+        /temporary/code/library \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DBUILD_TESTING=ON \
+        -DENABLE_COVERAGE=ON; \
+      cmake_test \
+        /temporary/code/library
 
 
 FROM debug-build-stage AS code-coverage-stage
@@ -236,11 +239,11 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         set -eoux pipefail; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=OFF; \
-        export CMAKE_BUILD_TYPE=Release; \
-        cmake_build_install \
-            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-            "/temporary/code/library"
+        cmake_build \
+            /temporary/code/library \
+            -DCMAKE_INSTALL_PREFIX=/opt/reprojection; \
+        cmake_install \
+          /temporary/code/library
 
 # TODO(Jack): This is terrible... What we have here is basically completely copy pasted from library-release-build-stage
 # except that here we set INSTALL_EXAMPLES=ON. This all comes from the fact that we have no real packaging solution and
@@ -255,12 +258,12 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         set -eoux pipefail; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=OFF; \
-        export CMAKE_BUILD_TYPE=Release; \
-        export INSTALL_EXAMPLES=ON; \
-        cmake_build_install \
-            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-            "/temporary/code/library"
+        cmake_build \
+            /temporary/code/library \
+            -DCMAKE_INSTALL_PREFIX=/opt/reprojection \
+            -DINSTALL_EXAMPLES=ON; \
+        cmake_install \
+            /temporary/code/library
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
@@ -310,7 +313,7 @@ RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE
       /data/ros2/dataset-calib-imu4_512_16.calib.db3
 
 
-FROM apt-base-stage AS ros1-base-stage
+FROM base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
 
@@ -324,7 +327,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
 COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 
 
-FROM apt-base-stage AS ros2-base-stage
+FROM base-stage AS ros2-base-stage
 
 ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
@@ -341,10 +344,13 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         set -eox pipefail; \
         source /opt/ros/noetic/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=ON; \
-        export CMAKE_BUILD_TYPE=Release; \
-        cmake_build_install \
-            "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
+        cmake_build \
+            "/temporary/code/application_ros1" \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_INSTALL_PREFIX=/opt/reprojection; \
+        cmake_test \
+            "/temporary/code/application_ros1"; \
+        cmake_install \
             "/temporary/code/application_ros1"
 
 
@@ -356,12 +362,14 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         set -eox pipefail; \
         source /opt/ros/jazzy/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=ON; \
-        export CMAKE_BUILD_TYPE=Release; \
-        cmake_build_install \
-            "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
+        cmake_build \
+            "/temporary/code/application_ros2" \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_INSTALL_PREFIX=/opt/reprojection; \
+        cmake_test \
+            "/temporary/code/application_ros2"; \
+        cmake_install \
             "/temporary/code/application_ros2"
-
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
@@ -407,24 +415,25 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM ros1-base-stage AS ros1-app-stage
 
+ENV APP=/opt/reprojection/bin/application_ros1.reprojection_app
+ENV APP_FLAVOR=ros1
+
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
-ENV APP_FLAVOR=ros1
-
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
-
-RUN set -eox pipefail; \
-    ln /opt/reprojection/bin/application_ros1.reprojection_app /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 
 FROM ros2-base-stage AS ros2-app-stage
+
+ENV APP=/opt/reprojection/bin/application_ros2.reprojection_app
+ENV APP_FLAVOR=ros2
 
 # TODO(Jack): Copy paste!
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
@@ -435,18 +444,16 @@ COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 # TODO(Jack): Needed? Can we put this in the entrypoint script instead?
 ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
 
-ENV APP_FLAVOR=ros2
-
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
-
-RUN set -eox pipefail; \
-    ln /opt/reprojection/bin/application_ros2.reprojection_app /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 
 FROM base-stage AS video-file-app-stage
+
+ENV APP=/opt/reprojection/bin/application.calibration
+ENV APP_FLAVOR=video-file
 
 # TODO(Jack): Copy paste!
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
@@ -454,12 +461,7 @@ COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.repro
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
-ENV APP_FLAVOR=video-file
-
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
-
-RUN set -eox pipefail; \
-    ln /opt/reprojection/bin/application.calibration /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
