@@ -4,7 +4,7 @@ set -eoux pipefail
 
 # Adopted from https://github.com/svnscha/cpp-coverage-example
 
-# NOTE(Jack): We have to manually exclude the /buildroot/library-Debug/database here below because protobuf
+# NOTE(Jack): We have to manually exclude the <>/library-*/database here below because protobuf
 # causes some problem that makes the coverage tool think that its a source code directory that needs to be checked. This
 # only started happening after we refactored the protobuf code to compile directly as source code instead of as a
 # separate independent library target. This made the library installation logic more simple and uniform when starting

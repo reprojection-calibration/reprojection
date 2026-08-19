@@ -25,8 +25,6 @@ cmake_build_install() {
 
     local build_dir="${source_dir}-${build_type}"
 
-    # TODO CHANGE TO /USR/LOCAL
-
     # NOTE(Jack): Later -D arguments override earlier ones!
     cmake -B "${build_dir}" -S "${source_dir}" \
         -DCMAKE_BUILD_TYPE="${build_type}" \
