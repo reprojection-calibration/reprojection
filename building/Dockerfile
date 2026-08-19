@@ -195,7 +195,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         /temporary/code/library \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING=ON \
-        -DENABLE_COVERAGE=ON; \
+        -DREPROJECTION_ENABLE_COVERAGE=ON; \
       cmake_test \
         /temporary/code/library
 
@@ -284,7 +284,7 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         set -eoux pipefail; \
-        python3 -m build --wheel --outdir /buildroot/wheels -Ccmake.define.BUILD_PYTHON_BINDINGS=ON /temporary/code/library/projection_functions
+        python3 -m build --wheel --outdir /buildroot/wheels -Ccmake.define.BUILD_PYTHON_BINDINGS=ON -Ccmake.define.BUILD_TESTING=OFF /temporary/code/library/projection_functions
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
