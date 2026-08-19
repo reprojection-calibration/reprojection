@@ -2,6 +2,7 @@
 
 set -eou pipefail
 
+APP=${APP:-unset}
 APP_FLAVOR=${APP_FLAVOR:-unset}
 # TODO(Jack): I am really not sure if this is the right thing to do, but if we do not do this then we get a warning
 # message in the terminal when trying to display the feature extraction that this variable was not set and is being
@@ -51,17 +52,17 @@ case "${APP_FLAVOR}" in
     # shellcheck disable=SC1091
     source /opt/ros/noetic/setup.bash
     set -u
-    /buildroot/reprojection-calibration-application "${app_args[@]}"
+    "${APP}" "${app_args[@]}"
     ;;
   ros2)
     set +u
     # shellcheck disable=SC1091
     source /opt/ros/jazzy/setup.bash
     set -u
-    /buildroot/reprojection-calibration-application "${app_args[@]}"
+    "${APP}" "${app_args[@]}"
     ;;
   video-file)
-    /buildroot/reprojection-calibration-application "${app_args[@]}"
+    "${APP}" "${app_args[@]}"
     ;;
   *)
     echo "Unknown APP_FLAVOR: ${APP_FLAVOR}" >&2

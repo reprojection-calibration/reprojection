@@ -415,6 +415,7 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM ros1-base-stage AS ros1-app-stage
 
+ENV APP=/opt/reprojection/bin/application_ros1.reprojection_app
 ENV APP_FLAVOR=ros1
 
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
@@ -426,14 +427,12 @@ COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
 
-RUN set -eox pipefail; \
-    ln /opt/reprojection/bin/application_ros1.reprojection_app /buildroot/reprojection-calibration-application
-
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 
 FROM ros2-base-stage AS ros2-app-stage
 
+ENV APP=/opt/reprojection/bin/application_ros2.reprojection_app
 ENV APP_FLAVOR=ros2
 
 # TODO(Jack): Copy paste!
@@ -448,14 +447,12 @@ ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
 
-RUN set -eox pipefail; \
-    ln /opt/reprojection/bin/application_ros2.reprojection_app /buildroot/reprojection-calibration-application
-
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 
 FROM base-stage AS video-file-app-stage
 
+ENV APP=/opt/reprojection/bin/application.calibration
 ENV APP_FLAVOR=video-file
 
 # TODO(Jack): Copy paste!
@@ -466,8 +463,5 @@ COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
-
-RUN set -eox pipefail; \
-    ln /opt/reprojection/bin/application.calibration /buildroot/reprojection-calibration-application
 
 ENTRYPOINT ["/buildroot/entrypoint.sh"]
