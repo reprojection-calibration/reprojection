@@ -4,13 +4,9 @@ set -eoux pipefail
 
 VENV_DIR=${VENV_DIR:-~/.reprojection_venv}
 
-# TODO(Jack): We need to install a specific version of sqlite manually from source so that we can support modern syntax.
-# The current installation script installs it to the /opt/reprojection path because of how we copy source install deps
-# into subsequent docker stages. Can we engineer this instead so that here sqlite is just installed into the default
-# location so we do not need to specify these things here manually?
-export CPPFLAGS="-I/opt/reprojection/include"
-export LDFLAGS="-L/opt/reprojection/lib -Wl,-rpath,/opt/reprojection/lib"
-export PKG_CONFIG_PATH="/opt/reprojection/lib/pkgconfig"
+# NOTE(Jack): We need to do this so our source installed sqlite can be properly discovered. If there is a better way
+# I am not sure, but works fine for me :)
+ldconfig
 
 # shellcheck disable=SC1090
 source ~/.bash_profile

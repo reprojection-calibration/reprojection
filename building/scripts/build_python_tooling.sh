@@ -8,10 +8,6 @@ PACKAGE_DIRECTORY=${PACKAGE_DIRECTORY:-code/python_tooling}
 PROTO_DIRECTORY=${PROTO_DIRECTORY:-code/resources/proto}
 VENV_DIR=${VENV_DIR:-~/.reprojection_venv}
 
-# We need to export DB_PATH as an environmental because it is actually used internally by the python testing to get the
-# correct database path.
-export DB_PATH=${DB_PATH:-code/test_data/dataset-calib-imu4_512_16.calib.db3}
-
 # shellcheck disable=SC1091
 source "${VENV_DIR}/bin/activate"
 
