@@ -261,7 +261,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         cmake_build \
             /temporary/code/library \
             -DCMAKE_INSTALL_PREFIX=/opt/reprojection \
-            -DINSTALL_EXAMPLES=ON; \
+            -DREPROJECTION_INSTALL_EXAMPLES=ON; \
         cmake_install \
             /temporary/code/library
 
