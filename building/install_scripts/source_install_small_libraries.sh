@@ -4,9 +4,7 @@ set -eoux pipefail
 
 source /temporary/building/install_scripts/source_install_utils.sh
 
-build_type=Release
 buildroot="/buildroot"
-
 
 name="apriltag"
 clone_repo \
