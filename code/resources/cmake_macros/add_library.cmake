@@ -27,7 +27,7 @@ macro(AddLibrary)
         set(REPROJECTION_INSTALL_HEADERS OFF)
     endif ()
 
-    if (INSTALL_HEADERS)
+    if (REPROJECTION_INSTALL_HEADERS)
         install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
                 DESTINATION include/${PROJECT_NAME}
         )
