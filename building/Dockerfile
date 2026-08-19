@@ -195,7 +195,9 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         /temporary/code/library \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING=ON \
-        -DENABLE_COVERAGE=ON
+        -DENABLE_COVERAGE=ON; \
+      cmake_test \
+        /temporary/code/library
 
 
 FROM debug-build-stage AS code-coverage-stage
