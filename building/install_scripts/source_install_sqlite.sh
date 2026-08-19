@@ -24,6 +24,6 @@ cd "${buildroot}/${name}"
 
 # NOTE(Jack): Got some linking error with gdal during the library compilation so we added this flag.
 CFLAGS="-DSQLITE_ENABLE_COLUMN_METADATA" \
-  ./configure --prefix "/opt/reprojection"
+  ./configure --prefix "/usr/local"
 make --jobs="$(nproc)"
 make install

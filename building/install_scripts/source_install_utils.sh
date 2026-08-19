@@ -2,12 +2,6 @@
 
 set -eoux pipefail
 
-CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
-BUILD_TESTING=${BUILD_TESTING:-OFF}
-ENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF}
-INSTALL_EXAMPLES=${INSTALL_EXAMPLES:-OFF}
-
-
 clone_repo() {
     local repo=$1
     local branch=$2
@@ -25,27 +19,29 @@ download_and_extract() {
 }
 
 cmake_build_install() {
-    local build_dir=$1
-    local source_dir=$2
+    local source_dir="$1"
+    local build_type="$2"
     shift 2
 
+    local build_dir="${source_dir}-${build_type}"
+
+    # TODO CHANGE TO /USR/LOCAL
+
+    # NOTE(Jack): Later -D arguments override earlier ones!
     cmake -B "${build_dir}" -S "${source_dir}" \
-        -DBUILD_TESTING="${BUILD_TESTING}" \
-        -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
-        -DCMAKE_INSTALL_PREFIX="/opt/reprojection" \
-        -DENABLE_COVERAGE="${ENABLE_COVERAGE}" \
-        -DINSTALL_EXAMPLES="${INSTALL_EXAMPLES}" \
+        -DCMAKE_BUILD_TYPE="${build_type}" \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DBUILD_TESTING=OFF \
         -GNinja \
         "$@"
 
     cmake --build "${build_dir}"
-
-    if [[ "${BUILD_TESTING}" == "ON" ]]; then
-      # NOTE(Jack): The --test-dir option is not supported under cmake version 3.20 - ubuntu 20 defaults to 3.16 - so we just
-      # do it manually here.
-      cd "${build_dir}"
-      ctest --output-on-failure --progress
-    fi
-
     cmake --install "${build_dir}"
+}
+
+cmake_test() {
+    local build_dir="$1"
+
+    cd "${build_dir}"
+    ctest --output-on-failure --progress
 }

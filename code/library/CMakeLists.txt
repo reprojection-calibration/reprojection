@@ -22,7 +22,7 @@ include(../resources/cmake_macros/add_tests.cmake)
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/opt/reprojection/eigen;/opt/reprojection")
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/usr/local/eigen;/usr/local")
 
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)

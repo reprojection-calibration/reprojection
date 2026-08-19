@@ -4,7 +4,9 @@ set -eoux pipefail
 
 source /temporary/building/install_scripts/source_install_utils.sh
 
+build_type=Release
 buildroot="/buildroot"
+
 
 name="apriltag"
 clone_repo \
@@ -12,8 +14,8 @@ clone_repo \
     v3.4.5 \
     "${buildroot}/${name}"
 cmake_build_install \
-    "${buildroot}/${name}-${CMAKE_BUILD_TYPE}" \
     "${buildroot}/${name}" \
+    "${build_type}" \
     -DBUILD_EXAMPLES=OFF \
     -DBUILD_PYTHON_WRAPPER=OFF
 
@@ -23,8 +25,8 @@ clone_repo \
     v1.17.0 \
     "${buildroot}/${name}"
 cmake_build_install \
-    "${buildroot}/${name}-${CMAKE_BUILD_TYPE}" \
     "${buildroot}/${name}" \
+    "${build_type}" \
     -DBUILD_SHARED_LIBS=ON
 
 name="tomlplusplus"
@@ -33,5 +35,5 @@ clone_repo \
     v3.4.0 \
     "${buildroot}/${name}"
 cmake_build_install \
-    "${buildroot}/${name}-${CMAKE_BUILD_TYPE}" \
-    "${buildroot}/${name}"
+    "${buildroot}/${name}" \
+    "${build_type}"

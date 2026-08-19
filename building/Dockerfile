@@ -79,8 +79,8 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 
 FROM apt-base-stage AS base-stage
 
-COPY --from=build-ceres-stage /opt/reprojection /opt/reprojection
-COPY --from=build-small-libraries-stage /opt/reprojection /opt/reprojection
+COPY --from=build-ceres-stage /usr/local /usr/local
+COPY --from=build-small-libraries-stage /usr/local /usr/local
 
 
 FROM configuration-stage AS code-checks-stage
