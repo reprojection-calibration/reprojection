@@ -313,7 +313,7 @@ RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE
       /data/ros2/dataset-calib-imu4_512_16.calib.db3
 
 
-FROM apt-base-stage AS ros1-base-stage
+FROM base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
 
@@ -327,7 +327,7 @@ RUN --mount=type=bind,source=${INSTALL_ROS1},target=/temporary/${INSTALL_ROS1} \
 COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 
 
-FROM apt-base-stage AS ros2-base-stage
+FROM base-stage AS ros2-base-stage
 
 ARG INSTALL_ROS2=building/install_scripts/install_ros2.sh
 RUN --mount=type=bind,source=${INSTALL_ROS2},target=/temporary/${INSTALL_ROS2} \
@@ -344,10 +344,11 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         set -eox pipefail; \
         source /opt/ros/noetic/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=ON; \
-        export CMAKE_BUILD_TYPE=Release; \
-        cmake_build_install \
-            "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
+        cmake_build \
+            "/temporary/code/application_ros1" \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_INSTALL_PREFIX=/opt/reprojection; \
+        cmake_install \
             "/temporary/code/application_ros1"
 
 
@@ -361,7 +362,8 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
             "/temporary/code/application_ros2" \
-            -DBUILD_TESTING=ON; \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_INSTALL_PREFIX=/opt/reprojection; \
         cmake_install \
             "/temporary/code/application_ros2"
 
@@ -409,13 +411,13 @@ RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION
 
 FROM ros1-base-stage AS ros1-app-stage
 
+ENV APP_FLAVOR=ros1
+
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
-
-ENV APP_FLAVOR=ros1
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
@@ -428,6 +430,8 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM ros2-base-stage AS ros2-app-stage
 
+ENV APP_FLAVOR=ros2
+
 # TODO(Jack): Copy paste!
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
@@ -436,8 +440,6 @@ COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 # TODO(Jack): Needed? Can we put this in the entrypoint script instead?
 ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
-
-ENV APP_FLAVOR=ros2
 
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
@@ -450,13 +452,13 @@ ENTRYPOINT ["/buildroot/entrypoint.sh"]
 
 FROM base-stage AS video-file-app-stage
 
+ENV APP_FLAVOR=video-file
+
 # TODO(Jack): Copy paste!
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
 COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
-
-ENV APP_FLAVOR=video-file
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
