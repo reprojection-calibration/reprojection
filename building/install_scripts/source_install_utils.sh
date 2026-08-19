@@ -19,15 +19,17 @@ download_and_extract() {
 }
 
 cmake_build_install() {
-    local source_dir="$1"
-    local build_type="$2"
-    shift 2
+    local source_dir="${1}"
+    shift 1
 
-    local build_dir="${source_dir}-${build_type}"
+    local source_name
+    source_name="$(basename "${source_dir}")"
+
+    local build_dir="/buildroot/build-${source_name}"
 
     # NOTE(Jack): Later -D arguments override earlier ones!
     cmake -B "${build_dir}" -S "${source_dir}" \
-        -DCMAKE_BUILD_TYPE="${build_type}" \
+        -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DBUILD_TESTING=OFF \
         -GNinja \

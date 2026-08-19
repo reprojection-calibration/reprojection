@@ -15,7 +15,6 @@ clone_repo \
     "${buildroot}/${name}"
 cmake_build_install \
     "${buildroot}/${name}" \
-    "${build_type}" \
     -DBUILD_EXAMPLES=OFF \
     -DBUILD_PYTHON_WRAPPER=OFF
 
@@ -26,7 +25,6 @@ clone_repo \
     "${buildroot}/${name}"
 cmake_build_install \
     "${buildroot}/${name}" \
-    "${build_type}" \
     -DBUILD_SHARED_LIBS=ON
 
 name="tomlplusplus"
@@ -35,5 +33,4 @@ clone_repo \
     v3.4.0 \
     "${buildroot}/${name}"
 cmake_build_install \
-    "${buildroot}/${name}" \
-    "${build_type}"
+    "${buildroot}/${name}"

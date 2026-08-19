@@ -13,8 +13,7 @@ clone_repo \
     3.4.0 \
     "${buildroot}/${name}"
 cmake_build_install \
-    "${buildroot}/${name}" \
-    "${build_type}"
+    "${buildroot}/${name}"
 
 name="ceres-solver-2.2.0"
 download_and_extract \
@@ -22,6 +21,5 @@ download_and_extract \
     "${buildroot}"
 cmake_build_install \
     "${buildroot}/${name}" \
-    "${build_type}" \
     -DBUILD_BENCHMARKS=OFF \
     -DBUILD_EXAMPLES=OFF

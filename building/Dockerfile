@@ -194,7 +194,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
       source /temporary/${SOURCE_INSTALL_UTILS}; \
       cmake_build_install \
         /temporary/code/library \
-        RelWithDebInfo \
         -DCMAKE_INSTALL_PREFIX=/opt/reprojection \
         -DBUILD_TESTING=ON \
         -DENABLE_COVERAGE=ON
