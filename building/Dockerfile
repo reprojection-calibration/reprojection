@@ -72,8 +72,9 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     /temporary/${SOURCE_INSTALL_SMALL_LIBRARIES}
 
 ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
-    /temporary/${SOURCE_INSTALL_SQLITE}
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
+      /temporary/${SOURCE_INSTALL_SQLITE}
 
 
 FROM apt-base-stage AS base-stage
@@ -128,8 +129,9 @@ RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_VENV_DEPS},target=/temporary/$
     /temporary/${APT_INSTALL_PYTHON_VENV_DEPS}
 
 ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
-    /temporary/${SOURCE_INSTALL_SQLITE}
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
+      /temporary/${SOURCE_INSTALL_SQLITE}
 
 ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
