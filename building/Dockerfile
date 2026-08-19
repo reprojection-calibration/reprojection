@@ -249,7 +249,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 # the duplication.
 FROM base-stage AS release-build-stage
 
-
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
@@ -310,6 +309,7 @@ RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
       /data/ros2/dataset-calib-imu4_512_16.calib.db3
 
+
 FROM apt-base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
@@ -361,6 +361,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         cmake_build_install \
             "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
             "/temporary/code/application_ros2"
+
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
