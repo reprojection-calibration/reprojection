@@ -57,7 +57,7 @@ Then open the link shown in the terminal.
 
 ## Configuration
 
-Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration
+Please use [calibration_config.toml](code/resources/test_data/calibration_config.toml) as the example to build your configuration
 file from. This file is used in all integration and smoke testing which mean it stays up to date. Please adapt this to
 your data and save it near your data.
 

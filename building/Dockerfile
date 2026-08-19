@@ -52,7 +52,7 @@ RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTAL
 # REPROJECTION_SQL_PYTHON_DIR does not necesarily need to be located in the python package. They can be placed and
 # located anywhere on theb system. The current position inside the python_tooling package is just an artefact of the era
 # when I solved this problem with symlinking instead of environemental variables.
-ENV REPROJECTION_SQL_DIR=code/sql
+ENV REPROJECTION_SQL_DIR=code/resources/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
 

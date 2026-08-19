@@ -1,7 +1,7 @@
 set(LIBRARY_NAME "testing_utilities")
 
 # WARN(Jack): You need to rerun the cmake generation if you want changes to the config file to make it into the library!
-file(READ "../../test_data/calibration_config.toml" contents)
+file(READ "../../resources/test_data/calibration_config.toml" contents)
 set(TOML_CONFIG "static constexpr std::string_view minimum_config = R\"toml(${contents})toml\";")
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/include/testing_utilities/minimum_config.hpp.in

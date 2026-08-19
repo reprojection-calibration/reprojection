@@ -7,9 +7,9 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 endif ()
 
-include(../cmake_macros/add_examples.cmake)
-include(../cmake_macros/add_library.cmake)
-include(../cmake_macros/add_tests.cmake)
+include(../resources/cmake_macros/add_examples.cmake)
+include(../resources/cmake_macros/add_library.cmake)
+include(../resources/cmake_macros/add_tests.cmake)
 
 # Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")

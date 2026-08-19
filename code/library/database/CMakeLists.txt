@@ -87,7 +87,7 @@ configure_file(
 # TODO(Jack): This path here scares me because now we are hardcoding a relative path to an asset that exists outside
 # of the cmake package. This smells! See path above about sql files too.
 protobuf_generate_cpp(proto_sources proto_headers
-        "../../proto/extracted_target.proto"
+        "../../resources/proto/extracted_target.proto"
 )
 
 set(SRC_FILES

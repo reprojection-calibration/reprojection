@@ -14,9 +14,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif ()
 
 # Helper macros to prevent insane copy and paste in all subdirectories
-include(../cmake_macros/add_examples.cmake)
-include(../cmake_macros/add_library.cmake)
-include(../cmake_macros/add_tests.cmake)
+include(../resources/cmake_macros/add_examples.cmake)
+include(../resources/cmake_macros/add_library.cmake)
+include(../resources/cmake_macros/add_tests.cmake)
 
 # Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
