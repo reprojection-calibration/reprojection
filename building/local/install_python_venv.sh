@@ -29,8 +29,8 @@ sudo apt-get install --no-install-recommends --yes \
 "${script_folder}/../scripts/build_python_venv.sh"
 
 PACKAGE_DIRECTORY="${script_folder}/../../code/python_tooling" \
-PROTO_DIRECTORY="${script_folder}/../../code/proto" \
-REPROJECTION_SQL_PYTHON_DIR="${script_folder}/../../code/sql" \
+PROTO_DIRECTORY="${script_folder}/../../code/resources/proto" \
+REPROJECTION_SQL_PYTHON_DIR="${script_folder}/../../code/resources/sql" \
 VENV_DIR="${HOME}/.reprojection_venv" \
   "${script_folder}/../scripts/build_python_tooling.sh"
 

@@ -280,13 +280,11 @@ RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_BINDING_DEPS},target=/temporar
     /temporary/${APT_INSTALL_PYTHON_BINDING_DEPS}
 
 
-RUN --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
-    --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
+RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-    set -eoux pipefail; \
-    python3 -m build --wheel --outdir /buildroot/wheels -Ccmake.define.BUILD_PYTHON_BINDINGS=ON /temporary/code/library/projection_functions
+        set -eoux pipefail; \
+        python3 -m build --wheel --outdir /buildroot/wheels -Ccmake.define.BUILD_PYTHON_BINDINGS=ON /temporary/code/library/projection_functions
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force

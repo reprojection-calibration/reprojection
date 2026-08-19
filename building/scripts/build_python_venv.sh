@@ -4,9 +4,14 @@ set -eoux pipefail
 
 VENV_DIR=${VENV_DIR:-${HOME}/.reprojection_venv}
 
+# WARN(Jack): If sqlite is already in the linker cache then we do not need to run ldconfig! Because ldconfig requires
+# sudo to run on the local host this protects us. However it does assume sqlite is already installed on the system. Is
+# there a better way to do this?
 # NOTE(Jack): We need to do this so our source installed sqlite can be properly discovered. If there is a better way
 # I am not sure, but works fine for me :)
-ldconfig
+if ! ldconfig -p | grep 'libsqlite3\.so'; then
+  ldconfig
+fi
 
 # shellcheck disable=SC1090
 source ~/.bash_profile
