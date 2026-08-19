@@ -185,19 +185,17 @@ FROM base-stage AS debug-build-stage
 # using ceres autodiff.
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     set -eoux pipefail; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=RelWithDebInfo; \
-    export ENABLE_COVERAGE=ON; \
-    cmake_build_install \
-        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/library"
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=ON; \
+        export CMAKE_BUILD_TYPE=RelWithDebInfo; \
+        export ENABLE_COVERAGE=ON; \
+        cmake_build_install \
+            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/library"
 
 
 FROM debug-build-stage AS code-coverage-stage
@@ -339,31 +337,31 @@ COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 FROM ros1-base-stage AS ros1-release-build-stage
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
-    set -eox pipefail; \
-    source /opt/ros/noetic/setup.bash; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=Release; \
-    cmake_build_install \
-        "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/application_ros1"
+        set -eox pipefail; \
+        source /opt/ros/noetic/setup.bash; \
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=ON; \
+        export CMAKE_BUILD_TYPE=Release; \
+        cmake_build_install \
+            "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/application_ros1"
 
 
 FROM ros2-base-stage AS ros2-release-build-stage
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
-    set -eox pipefail; \
-    source /opt/ros/jazzy/setup.bash; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=Release; \
-    cmake_build_install \
-        "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/application_ros2"
+        set -eox pipefail; \
+        source /opt/ros/jazzy/setup.bash; \
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=ON; \
+        export CMAKE_BUILD_TYPE=Release; \
+        cmake_build_install \
+            "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/application_ros2"
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
