@@ -140,14 +140,13 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
 COPY code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
-ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.calib.db3
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
 ARG PROTO_DIRECTORY=/temporary/code/proto
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
-    --mount=type=bind,source=code/proto,target=/temporary/code/proto \
-    --mount=type=bind,source=code/test_data,target=/temporary/code/test_data \
+    --mount=type=bind,source=code/resources/proto,target=/temporary/code/resources/proto \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     /temporary/${BUILD_PYTHON_TOOLING}
 
 
