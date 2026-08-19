@@ -234,11 +234,9 @@ RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends 
 FROM base-stage AS library-release-build-stage
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     set -eoux pipefail; \
     source /temporary/${SOURCE_INSTALL_UTILS}; \
     export BUILD_TESTING=OFF; \
