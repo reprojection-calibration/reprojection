@@ -348,9 +348,9 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
             "/temporary/code/application_ros1" \
             -DBUILD_TESTING=ON \
             -DCMAKE_INSTALL_PREFIX=/opt/reprojection; \
-        cmake_install \
-            "/temporary/code/application_ros1"; \
         cmake_test \
+            "/temporary/code/application_ros1"; \
+        cmake_install \
             "/temporary/code/application_ros1"
 
 
@@ -366,9 +366,9 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
             "/temporary/code/application_ros2" \
             -DBUILD_TESTING=ON \
             -DCMAKE_INSTALL_PREFIX=/opt/reprojection; \
-        cmake_install \
-            "/temporary/code/application_ros2"; \
         cmake_test \
+            "/temporary/code/application_ros2"; \
+        cmake_install \
             "/temporary/code/application_ros2"
 
 FROM ros1-base-stage AS ros1-integration-test-stage
