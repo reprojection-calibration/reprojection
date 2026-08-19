@@ -41,29 +41,30 @@ if (BUILD_PYTHON_BINDINGS)
     # TODO(Jack): This current install process will install the entire library. I would prefer it would only install the
     # part actually needed by the projection_functions. Maybe we can use components to solve this?
     pybind11_add_module(projection_function_python_binding src/python_bindings.cpp)
-    target_link_libraries(
-            projection_function_python_binding
+    target_link_libraries(projection_function_python_binding
             PRIVATE
             ${LIBRARY_NAME}
-            ${LINK_LIBRARIES}
+            ${PRIVATE_LINK_LIBRARIES}
     )
 
-    set_target_properties(
-            projection_function_python_binding
+    set_target_properties(projection_function_python_binding
             PROPERTIES
             INSTALL_RPATH "$ORIGIN/lib"
     )
 
     # TODO(Jack): What is the proper install destination? Does this work ?
     install(
-            TARGETS projection_function_python_binding
-            DESTINATION .
+            TARGETS
+            projection_function_python_binding
+            DESTINATION
+            .
     )
 
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     add_test(
-            NAME projection_function_python_binding_unit_test
+            NAME
+            projection_function_python_binding_unit_test
             COMMAND
-                ${Python3_EXECUTABLE} -m unittest discover --start-directory ${CMAKE_CURRENT_SOURCE_DIR}/src --verbose
+            ${Python3_EXECUTABLE} -m unittest discover --start-directory ${CMAKE_CURRENT_SOURCE_DIR}/src --verbose
     )
 endif ()

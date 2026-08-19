@@ -1,5 +1,5 @@
 macro(AddTests)
-    if(BUILD_TESTING)
+    if (BUILD_TESTING)
         foreach (TEST IN LISTS TESTS)
             get_filename_component(TEST_NAME ${TEST} NAME_WLE)
             set(TEST_NAME ${LIBRARY_NAME}.${TEST_NAME})
@@ -26,5 +26,5 @@ macro(AddTests)
 
             gtest_discover_tests(${TEST_NAME})
         endforeach ()
-    endif()
+    endif ()
 endmacro()

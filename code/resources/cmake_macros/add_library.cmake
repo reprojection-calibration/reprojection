@@ -17,9 +17,9 @@ macro(AddLibrary)
     # which prevents us from having to include every library every time.
     target_link_libraries(${LIBRARY_NAME}
             PRIVATE
-                ${PRIVATE_LINK_LIBRARIES}
+            ${PRIVATE_LINK_LIBRARIES}
             PUBLIC
-                ${PUBLIC_LINK_LIBRARIES}
+            ${PUBLIC_LINK_LIBRARIES}
     )
 
     # We only want to expose the libraries functionality through the smallest possible source code interface, therefore
@@ -49,7 +49,7 @@ macro(AddLibrary)
                 LIBRARY DESTINATION lib
                 ARCHIVE DESTINATION lib
         )
-    endif()
+    endif ()
 
     if (ENABLE_COVERAGE)
         target_compile_options(${LIBRARY_NAME} PRIVATE --coverage)
