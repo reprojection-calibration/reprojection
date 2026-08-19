@@ -25,7 +25,6 @@ macro(AddExamples)
 
         if (REPROJECTION_INSTALL_EXAMPLES)
             install(TARGETS ${EXAMPLE_NAME}
-                    EXPORT reprojectionTargets
                     RUNTIME DESTINATION bin
             )
         endif ()
