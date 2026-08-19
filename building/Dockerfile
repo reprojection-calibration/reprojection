@@ -151,6 +151,7 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
 
 # TODO(Jack): This logic here is repeated once here and in the local venv install script. Not a deal breaker, but again
 # goes to show how cool it would be if we could just build the venv here once and then copy it to the host.
+# TODO(Jack): Should we copy and install specifically the wheel whose name we know and want?
 COPY --from=python-binding-stage /buildroot/wheels /buildroot/wheels
 RUN set -eoux pipefail; \
     VENV_DIR=${VENV_DIR:-~/.reprojection_venv}; \
