@@ -237,13 +237,13 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-    set -eoux pipefail; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=OFF; \
-    export CMAKE_BUILD_TYPE=Release; \
-    cmake_build_install \
-        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/library"
+        set -eoux pipefail; \
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=OFF; \
+        export CMAKE_BUILD_TYPE=Release; \
+        cmake_build_install \
+            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/library"
 
 # TODO(Jack): This is terrible... What we have here is basically completely copy pasted from library-release-build-stage
 # except that here we set INSTALL_EXAMPLES=ON. This all comes from the fact that we have no real packaging solution and
@@ -254,19 +254,17 @@ FROM base-stage AS release-build-stage
 
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
-    set -eoux pipefail; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=OFF; \
-    export CMAKE_BUILD_TYPE=Release; \
-    export INSTALL_EXAMPLES=ON; \
-    cmake_build_install \
-        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/library"
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
+        set -eoux pipefail; \
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=OFF; \
+        export CMAKE_BUILD_TYPE=Release; \
+        export INSTALL_EXAMPLES=ON; \
+        cmake_build_install \
+            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/library"
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
