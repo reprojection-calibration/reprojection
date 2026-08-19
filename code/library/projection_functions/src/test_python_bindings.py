@@ -1,12 +1,11 @@
 import unittest
-from projection_function_python_binding import ImageBounds, DoubleSphereCamera
+
 import numpy as np
+from projection_function_python_binding import DoubleSphereCamera, ImageBounds
 
+# TODO(Jack): Run black and isort on this file in CI!
 
-# TODO(Jack): We need to use isort and black on this file!
-
-
-class TestStringMethods(unittest.TestCase):
+class TestPythonBinding(unittest.TestCase):
     def test_image_bounds(self):
         bounds = ImageBounds(1, 2, 3, 4)
         self.assertEqual(bounds.u_min, 1)
@@ -36,5 +35,5 @@ class TestStringMethods(unittest.TestCase):
         self.assertTrue(mask.all())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
