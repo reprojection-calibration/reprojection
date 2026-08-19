@@ -9,11 +9,11 @@ configure_file(
         @ONLY
 )
 
-
 set(SRC_FILES
         src/temporary_file.cpp
 )
-set(INSTALL_SO OFF)
+
+set(REPROJECTION_INSTALL_TARGET OFF)
 AddLibrary()
 
 # NOTE(Jack): We cannot put generated code on the host filesystem because or docker philosophy says that we never put an

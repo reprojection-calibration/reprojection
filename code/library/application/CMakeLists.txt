@@ -21,7 +21,7 @@ set(PUBLIC_LINK_LIBRARIES
         types
 )
 
-set(INSTALL_HEADERS ON)
+set(REPROJECTION_INSTALL_HEADERS ON)
 AddLibrary()
 
 set(TEST_LINK_LIBRARIES
@@ -39,4 +39,5 @@ AddTests()
 set(EXAMPLES
         examples/calibration.cpp
 )
+
 AddExamples()

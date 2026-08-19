@@ -19,13 +19,12 @@ macro(AddExamples)
                 ${PRIVATE_LINK_LIBRARIES}
         )
 
-        if (NOT DEFINED INSTALL_EXAMPLES)
-            set(INSTALL_EXAMPLES OFF)
+        if (NOT DEFINED REPROJECTION_INSTALL_EXAMPLES)
+            set(REPROJECTION_INSTALL_EXAMPLES OFF)
         endif ()
 
-        if (INSTALL_EXAMPLES)
+        if (REPROJECTION_INSTALL_EXAMPLES)
             install(TARGETS ${EXAMPLE_NAME}
-                    EXPORT reprojectionTargets
                     RUNTIME DESTINATION bin
             )
         endif ()
