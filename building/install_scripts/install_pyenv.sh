@@ -7,6 +7,8 @@ set -eoux pipefail
 # WARN(Jack): This logic here essentially is hardcoding the assumption that the user has installed pyenv on their system
 # using this script. If a user has already installed pyenv and added it to something else than the .bash_profile then
 # they will need to manually source that. But for our workflow it is internally consistent and works.
+
+# shellcheck disable=SC1090
 [[ -f ~/.bash_profile ]] && source ~/.bash_profile
 if command -v pyenv >/dev/null 2>&1; then
     echo "Early exit - pyenv is already installed."
