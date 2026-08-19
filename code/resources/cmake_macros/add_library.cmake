@@ -20,21 +20,11 @@ macro(AddLibrary)
             PUBLIC ${PUBLIC_LINK_LIBRARIES}
     )
 
-    # Install headers default OFF - The entire library should only expose its functionality through the smallest
-    # possible source code interface. At time of writing this is achieved by building all the functionality external
-    # users could need into the application library. Therefore we only export the headers for the application package.
-    # It would be that we also export headers for some types or other utility functions but that is it. If you want to
-    # install the headers for a library just set set(INSTALL_HEADERS ON) in its cmakelists.
-    if (NOT DEFINED INSTALL_HEADERS)
-        set(INSTALL_HEADERS OFF)
-    endif ()
-
-    # Install shared libs default ON - The application functions we export will depend on basically all the shared libs
-    # we have. The one obvious exception here is any lib intended only for internal testing purposes (i.e.
-    # testing_mocks/testing_utilities). Therefore this is default on, and if we do not want the library install than we
-    # can call set(INSTALL_SO OFF) in its cmakelists.
-    if (NOT DEFINED INSTALL_SO)
-        set(INSTALL_SO ON)
+    # We only want to expose the libraries functionality through the smallest possible source code interface, therefore
+    # we set this to default OFF and only turn it on exactly when needed. As of time of writing (19.08.2026) we only
+    # install the "application" and public "types" includes.
+    if (NOT DEFINED REPROJECTION_INSTALL_HEADERS)
+        set(REPROJECTION_INSTALL_HEADERS OFF)
     endif ()
 
     if (INSTALL_HEADERS)
@@ -43,13 +33,30 @@ macro(AddLibrary)
         )
     endif ()
 
-    if (INSTALL_SO)
-        install(TARGETS ${LIBRARY_NAME}
-                EXPORT reprojectionTargets
-                LIBRARY DESTINATION lib
-                ARCHIVE DESTINATION lib
-        )
+    # Because we build the project as a a bundle of shared libraries we need to install almost all of them (not
+    # including test helpers), but only need to export a small subset that the consuming applications actually need to
+    # know about. Just like the includes install right now we only export the "application" and public "types" targets.
+    if (NOT DEFINED REPROJECTION_INSTALL_TARGET)
+        set(REPROJECTION_INSTALL_TARGET ON)
     endif ()
+    if (NOT DEFINED REPROJECTION_EXPORT_TARGET)
+        set(REPROJECTION_EXPORT_TARGET OFF)
+    endif ()
+
+    if (REPROJECTION_INSTALL_TARGET)
+        if (REPROJECTION_EXPORT_TARGET)
+            install(TARGETS ${LIBRARY_NAME}
+                    EXPORT reprojectionTargets
+                    LIBRARY DESTINATION lib
+                    ARCHIVE DESTINATION lib
+            )
+        else()
+            install(TARGETS ${LIBRARY_NAME}
+                    LIBRARY DESTINATION lib
+                    ARCHIVE DESTINATION lib
+            )
+        endif()
+    endif()
 
     if (ENABLE_COVERAGE)
         target_compile_options(${LIBRARY_NAME} PRIVATE --coverage)
