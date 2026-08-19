@@ -11,9 +11,8 @@ set -eoux pipefail
 # to develop the ros1 and ros2 applications, but introduced the requirement for this hack! There must be a better way to
 # do this....?
 lcov --capture \
-     --directory /buildroot/library-RelWithDebInfo \
-     --exclude /buildroot/library-RelWithDebInfo/database \
-     --exclude '/opt/*' \
+     --directory /buildroot/build-library \
+     --exclude /buildroot/build-library/database \
      --exclude '/usr/*' \
      --exclude '*.test.cpp' \
      --ignore-errors mismatch,mismatch \
