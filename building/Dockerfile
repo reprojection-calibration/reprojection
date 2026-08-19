@@ -239,11 +239,11 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         set -eoux pipefail; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=OFF; \
-        export CMAKE_BUILD_TYPE=Release; \
-        cmake_build_install \
-            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-            "/temporary/code/library"
+        cmake_build \
+            /temporary/code/library \
+            -DCMAKE_INSTALL_PREFIX=/opt/reprojection; \
+        cmake_install \
+          /temporary/code/library
 
 # TODO(Jack): This is terrible... What we have here is basically completely copy pasted from library-release-build-stage
 # except that here we set INSTALL_EXAMPLES=ON. This all comes from the fact that we have no real packaging solution and
@@ -258,12 +258,12 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         set -eoux pipefail; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=OFF; \
-        export CMAKE_BUILD_TYPE=Release; \
-        export INSTALL_EXAMPLES=ON; \
-        cmake_build_install \
-            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-            "/temporary/code/library"
+        cmake_build \
+            /temporary/code/library \
+            -DCMAKE_INSTALL_PREFIX=/opt/reprojection \
+            -DINSTALL_EXAMPLES=ON; \
+        cmake_install \
+            /temporary/code/library
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
@@ -359,12 +359,11 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         set -eox pipefail; \
         source /opt/ros/jazzy/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
-        export BUILD_TESTING=ON; \
-        export CMAKE_BUILD_TYPE=Release; \
-        cmake_build_install \
-            "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
+        cmake_build \
+            "/temporary/code/application_ros2" \
+            -DBUILD_TESTING=ON; \
+        cmake_install \
             "/temporary/code/application_ros2"
-
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 
