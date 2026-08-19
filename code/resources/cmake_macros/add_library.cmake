@@ -43,6 +43,7 @@ macro(AddLibrary)
     endif ()
 
     if (REPROJECTION_INSTALL_TARGET)
+        # TODO(Jack): Use GNU install dirs here and for the includes.
         install(TARGETS ${LIBRARY_NAME}
                 EXPORT reprojectionTargets
                 LIBRARY DESTINATION lib
