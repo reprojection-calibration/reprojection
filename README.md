@@ -1,4 +1,4 @@
-# Reprojection - The future is calibrated!
+# The future is calibrated!
 
 This is an application for target-based intrinsic camera calibration and extrinsic camera-imu calibration. It is
 automatically compatible with ROS1 and ROS2 and is completely dockerized.
