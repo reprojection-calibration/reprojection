@@ -111,6 +111,18 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_CHECKS_PYTHON}
 
+FROM base-stage AS python-binding-stage
+
+ARG APT_INSTALL_PYTHON_BINDING_DEPS=building/install_scripts/apt_install_python_binding_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_BINDING_DEPS},target=/temporary/${APT_INSTALL_PYTHON_BINDING_DEPS} \
+    /temporary/${APT_INSTALL_PYTHON_BINDING_DEPS}
+
+
+RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
+        set -eoux pipefail; \
+        python3 -m build --wheel --outdir /buildroot/wheels -Ccmake.define.BUILD_PYTHON_BINDINGS=ON -Ccmake.define.BUILD_TESTING=OFF /temporary/code/library/projection_functions
 
 FROM apt-base-stage AS python-tooling-stage
 
@@ -136,6 +148,13 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
     /temporary/${BUILD_PYTHON_VENV}
+
+# TODO(Jack): This logic here is repeated once here and in the local venv install script. Not a deal breaker, but again
+# goes to show how cool it would be if we could just build the venv here once and then copy it to the host.
+COPY --from=python-binding-stage /buildroot/wheels /buildroot/wheels
+RUN set -eoux pipefail; \
+    VENV_DIR=${VENV_DIR:-~/.reprojection_venv}; \
+    "${VENV_DIR}/bin/python3" -m pip install --force-reinstall /buildroot/wheels/*.whl
 
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
 # system or run without special permissions that docker cannot provide.
@@ -272,19 +291,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
             -DREPROJECTION_INSTALL_EXAMPLES=ON; \
         cmake_install \
             /temporary/code/library
-
-FROM base-stage AS python-binding-stage
-
-ARG APT_INSTALL_PYTHON_BINDING_DEPS=building/install_scripts/apt_install_python_binding_deps.sh
-RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_BINDING_DEPS},target=/temporary/${APT_INSTALL_PYTHON_BINDING_DEPS} \
-    /temporary/${APT_INSTALL_PYTHON_BINDING_DEPS}
-
-
-RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
-    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        set -eoux pipefail; \
-        python3 -m build --wheel --outdir /buildroot/wheels -Ccmake.define.BUILD_PYTHON_BINDINGS=ON -Ccmake.define.BUILD_TESTING=OFF /temporary/code/library/projection_functions
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
