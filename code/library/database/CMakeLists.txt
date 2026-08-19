@@ -1,7 +1,7 @@
 set(LIBRARY_NAME "database")
 
 # NOTE(Jack): Because we want one single source of truth for both the library and python tooling we store the sql files
-# under `code/sql`, outside of the cmake package. Therefore just like for the proto files below we need to backspace two
+# under `code/resources/sql`, outside of the cmake package. Therefore just like for the proto files below we need to backspace two
 # directories "../../${sql}" to get to the actual file. If this is a bad design to hardcode reference paths outisde of
 # the package we will find out one day in the future!
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will

@@ -39,7 +39,7 @@ RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTAL
 # NOTE(Jack): What is going on here? Let me explain :)
 #
 # We use an sqlite database for both the calibration process and the post-calibration report generation and dashboard
-# visualizations. To prevent code duplication we write our sql statements into text files in the `code/sql` folder. This
+# visualizations. To prevent code duplication we write our sql statements into text files in the `code/resources/sql` folder. This
 # prevents us from having to write out the command in the source code in two places - a basic good design principle.
 #
 # The challenge however is how to deliver the sql statement files to both the libary and python visualization code?
@@ -141,7 +141,7 @@ COPY code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
-ARG PROTO_DIRECTORY=/temporary/code/proto
+ARG PROTO_DIRECTORY=/temporary/code/resources/proto
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
