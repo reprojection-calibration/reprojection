@@ -39,4 +39,6 @@ AddTests()
 set(EXAMPLES
         examples/calibration.cpp
 )
+
+set(REPROJECTION_INSTALL_EXAMPLES ON)
 AddExamples()
