@@ -16,8 +16,10 @@ macro(AddLibrary)
     # PRIVATE_LINK_LIBRARIES. This is a nice feature because the public libraries automatically propagate dependencies
     # which prevents us from having to include every library every time.
     target_link_libraries(${LIBRARY_NAME}
-            PRIVATE ${PRIVATE_LINK_LIBRARIES}
-            PUBLIC ${PUBLIC_LINK_LIBRARIES}
+            PRIVATE
+                ${PRIVATE_LINK_LIBRARIES}
+            PUBLIC
+                ${PUBLIC_LINK_LIBRARIES}
     )
 
     # We only want to expose the libraries functionality through the smallest possible source code interface, therefore
@@ -39,23 +41,13 @@ macro(AddLibrary)
     if (NOT DEFINED REPROJECTION_INSTALL_TARGET)
         set(REPROJECTION_INSTALL_TARGET ON)
     endif ()
-    if (NOT DEFINED REPROJECTION_EXPORT_TARGET)
-        set(REPROJECTION_EXPORT_TARGET OFF)
-    endif ()
 
     if (REPROJECTION_INSTALL_TARGET)
-        if (REPROJECTION_EXPORT_TARGET)
-            install(TARGETS ${LIBRARY_NAME}
-                    EXPORT reprojectionTargets
-                    LIBRARY DESTINATION lib
-                    ARCHIVE DESTINATION lib
-            )
-        else()
-            install(TARGETS ${LIBRARY_NAME}
-                    LIBRARY DESTINATION lib
-                    ARCHIVE DESTINATION lib
-            )
-        endif()
+        install(TARGETS ${LIBRARY_NAME}
+                EXPORT reprojectionTargets
+                LIBRARY DESTINATION lib
+                ARCHIVE DESTINATION lib
+        )
     endif()
 
     if (ENABLE_COVERAGE)

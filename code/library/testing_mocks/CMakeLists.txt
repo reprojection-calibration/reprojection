@@ -17,7 +17,8 @@ set(PUBLIC_LINK_LIBRARIES
         spline
 
 )
-set(INSTALL_SO OFF)
+
+set(REPROJECTION_INSTALL_TARGET OFF)
 AddLibrary()
 
 set(TESTS
