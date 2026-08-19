@@ -181,7 +181,6 @@ HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.
 # to get past the problem.
 FROM base-stage AS debug-build-stage
 
-# TODO(Jack): There is not reason to install here other than our cmake_build_install helper does it by default.
 # TODO(Jack): Enable a sanitizer by default. This helped me find a lot of memory bugs and probably should be default!
 # NOTE(Jack): We have to use RelWithDebInfo here because Debug runs soooo slow with some tests that do optimizations
 # using ceres autodiff.
@@ -192,10 +191,9 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
       set -eoux pipefail; \
       source /temporary/${SOURCE_INSTALL_UTILS}; \
-      cmake_build_install \
+      cmake_build \
         /temporary/code/library \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-        -DCMAKE_INSTALL_PREFIX=/opt/reprojection \
         -DBUILD_TESTING=ON \
         -DENABLE_COVERAGE=ON
 

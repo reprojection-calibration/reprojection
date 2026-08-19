@@ -18,14 +18,25 @@ download_and_extract() {
     tar -xf "$dest/$(basename "$url")" -C "$dest"
 }
 
-cmake_build_install() {
+# NOTE(Jack): We want control over when we build/install/test so we have three different functions. The only annoying
+# thing is then keeping track of the build directory. Therefore we have this helper here which given the source
+# directory will always return a directory in /buildroot named the same way. A little round abouty but it gets the job
+# done!
+cmake_build_dir() {
     local source_dir="${1}"
-    shift 1
-
     local source_name
     source_name="$(basename "${source_dir}")"
 
-    local build_dir="/buildroot/build-${source_name}"
+    # NOTE(Jack): That this is the only way to return a value from a bash function is insane...
+    printf '/buildroot/build-%s\n' "${source_name}"
+}
+
+cmake_build() {
+    local source_dir="${1}"
+    shift
+
+    local build_dir
+    build_dir="$(cmake_build_dir "${source_dir}")"
 
     # NOTE(Jack): Later -D arguments override earlier ones!
     cmake -B "${build_dir}" -S "${source_dir}" \
@@ -36,11 +47,24 @@ cmake_build_install() {
         "$@"
 
     cmake --build "${build_dir}"
+}
+
+cmake_install() {
+    local source_dir="${1}"
+    shift
+
+    local build_dir
+    build_dir="$(cmake_build_dir "${source_dir}")"
+
     cmake --install "${build_dir}"
 }
 
 cmake_test() {
-    local build_dir="$1"
+    local source_dir="${1}"
+    shift
+
+    local build_dir
+    build_dir="$(cmake_build_dir "${source_dir}")"
 
     cd "${build_dir}"
     ctest --output-on-failure --progress
