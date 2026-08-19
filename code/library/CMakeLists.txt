@@ -5,16 +5,18 @@ project(
         LANGUAGES C CXX
 )
 
+option(ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 endif ()
 
 # Helper macros to prevent insane copy and paste in all subdirectories
-include(../cmake_macros/add_examples.cmake)
-include(../cmake_macros/add_library.cmake)
-include(../cmake_macros/add_tests.cmake)
+include(../resources/cmake_macros/add_examples.cmake)
+include(../resources/cmake_macros/add_library.cmake)
+include(../resources/cmake_macros/add_tests.cmake)
 
 # Adopted from https://runebook.dev/en/docs/cmake/prop_tgt/build_rpath_use_origin
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
@@ -33,9 +35,9 @@ find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
 include(CTest)
-if(BUILD_TESTING)
+if (BUILD_TESTING)
     find_package(GTest REQUIRED)
-endif()
+endif ()
 
 add_subdirectory(types_internal)
 add_subdirectory(types)

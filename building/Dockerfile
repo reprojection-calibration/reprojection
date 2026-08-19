@@ -39,7 +39,7 @@ RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTAL
 # NOTE(Jack): What is going on here? Let me explain :)
 #
 # We use an sqlite database for both the calibration process and the post-calibration report generation and dashboard
-# visualizations. To prevent code duplication we write our sql statements into text files in the `code/sql` folder. This
+# visualizations. To prevent code duplication we write our sql statements into text files in the `code/resources/sql` folder. This
 # prevents us from having to write out the command in the source code in two places - a basic good design principle.
 #
 # The challenge however is how to deliver the sql statement files to both the libary and python visualization code?
@@ -52,7 +52,7 @@ RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTAL
 # REPROJECTION_SQL_PYTHON_DIR does not necesarily need to be located in the python package. They can be placed and
 # located anywhere on theb system. The current position inside the python_tooling package is just an artefact of the era
 # when I solved this problem with symlinking instead of environemental variables.
-ENV REPROJECTION_SQL_DIR=code/sql
+ENV REPROJECTION_SQL_DIR=code/resources/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
 
@@ -140,14 +140,13 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
 COPY code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
-ARG DB_PATH=/temporary/code/test_data/dataset-calib-imu4_512_16.calib.db3
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
-ARG PROTO_DIRECTORY=/temporary/code/proto
+ARG PROTO_DIRECTORY=/temporary/code/resources/proto
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
-    --mount=type=bind,source=code/proto,target=/temporary/code/proto \
-    --mount=type=bind,source=code/test_data,target=/temporary/code/test_data \
+    --mount=type=bind,source=code/resources/proto,target=/temporary/code/resources/proto \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     /temporary/${BUILD_PYTHON_TOOLING}
 
 
@@ -181,20 +180,21 @@ HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.
 FROM base-stage AS debug-build-stage
 
 # TODO(Jack): Enable a sanitizer by default. This helped me find a lot of memory bugs and probably should be default!
+# NOTE(Jack): We have to use RelWithDebInfo here because Debug runs soooo slow with some tests that do optimizations
+# using ceres autodiff.
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     set -eoux pipefail; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=RelWithDebInfo; \
-    cmake_build_install \
-        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/library"
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=ON; \
+        export CMAKE_BUILD_TYPE=RelWithDebInfo; \
+        export ENABLE_COVERAGE=ON; \
+        cmake_build_install \
+            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/library"
 
 
 FROM debug-build-stage AS code-coverage-stage
@@ -231,18 +231,16 @@ RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends 
 FROM base-stage AS library-release-build-stage
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
-    set -eoux pipefail; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=OFF; \
-    export CMAKE_BUILD_TYPE=Release; \
-    cmake_build_install \
-        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/library"
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
+        set -eoux pipefail; \
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=OFF; \
+        export CMAKE_BUILD_TYPE=Release; \
+        cmake_build_install \
+            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/library"
 
 # TODO(Jack): This is terrible... What we have here is basically completely copy pasted from library-release-build-stage
 # except that here we set INSTALL_EXAMPLES=ON. This all comes from the fact that we have no real packaging solution and
@@ -251,21 +249,18 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 # the duplication.
 FROM base-stage AS release-build-stage
 
-
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
-    --mount=type=bind,source=code/proto/,target=/temporary/code/proto \
-    --mount=type=bind,source=${REPROJECTION_SQL_DIR},target=/temporary/${REPROJECTION_SQL_DIR} \
-    --mount=type=bind,source=code/test_data/,target=/temporary/code/test_data \
-    set -eoux pipefail; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=OFF; \
-    export CMAKE_BUILD_TYPE=Release; \
-    export INSTALL_EXAMPLES=ON; \
-    cmake_build_install \
-        "/buildroot/library-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/library"
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
+        set -eoux pipefail; \
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=OFF; \
+        export CMAKE_BUILD_TYPE=Release; \
+        export INSTALL_EXAMPLES=ON; \
+        cmake_build_install \
+            "/buildroot/library-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/library"
 
 
 # NOTE(Jack): We isolate the data download here so that under no circumstance is it possible to bust the cash and force
@@ -314,6 +309,7 @@ RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
       /data/ros2/dataset-calib-imu4_512_16.calib.db3
 
+
 FROM apt-base-stage AS ros1-base-stage
 
 ENV ROS_HOME=/tmp/.ros
@@ -340,31 +336,32 @@ COPY --from=library-release-build-stage /opt/reprojection /opt/reprojection
 FROM ros1-base-stage AS ros1-release-build-stage
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
-    set -eox pipefail; \
-    source /opt/ros/noetic/setup.bash; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=Release; \
-    cmake_build_install \
-        "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/application_ros1"
+        set -eox pipefail; \
+        source /opt/ros/noetic/setup.bash; \
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=ON; \
+        export CMAKE_BUILD_TYPE=Release; \
+        cmake_build_install \
+            "/buildroot/application_ros1-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/application_ros1"
 
 
 FROM ros2-base-stage AS ros2-release-build-stage
 
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/cmake_macros/,target=/temporary/code/cmake_macros \
+    --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
-    set -eox pipefail; \
-    source /opt/ros/jazzy/setup.bash; \
-    source /temporary/${SOURCE_INSTALL_UTILS}; \
-    export BUILD_TESTING=ON; \
-    export CMAKE_BUILD_TYPE=Release; \
-    cmake_build_install \
-        "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
-        "/temporary/code/application_ros2"
+        set -eox pipefail; \
+        source /opt/ros/jazzy/setup.bash; \
+        source /temporary/${SOURCE_INSTALL_UTILS}; \
+        export BUILD_TESTING=ON; \
+        export CMAKE_BUILD_TYPE=Release; \
+        cmake_build_install \
+            "/buildroot/application_ros2-${CMAKE_BUILD_TYPE}" \
+            "/temporary/code/application_ros2"
+
 
 FROM ros1-base-stage AS ros1-integration-test-stage
 

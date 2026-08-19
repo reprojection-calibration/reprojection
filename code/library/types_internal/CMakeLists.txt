@@ -1,5 +1,9 @@
 set(LIBRARY_NAME "types_internal")
 
+# TODO(Jack): For some reason as an interface package we need to add it to every single library we want to use it - the
+# transitive dependency mechanism of a PUBLIC_LINK_LIBRARY does not work here, or at least it did not on my first try.
+# Is there a more eloquent way to solve this?
+
 # Header only package, therefore "INTERFACE" and we do not use the default cmake macros that we use for all the others.
 add_library(${LIBRARY_NAME} INTERFACE)
 target_include_directories(${LIBRARY_NAME} INTERFACE
