@@ -1,15 +1,18 @@
 # NOTE(Jack): These might look unused but they need to be imported here so that the callbacks can be registered with the
 # Dash instance. Please see the answer here
 # https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
-import callbacks.data_loading
-import callbacks.extracted_targets
-import callbacks.metadata
-import callbacks.populate_sensor_panel
-import callbacks.slider
-import callbacks.timeseries_6d_figures
 from dash import dcc, html
 
 from dashboard.server import app
+
+from .callbacks import (
+    data_loading,
+    extracted_targets,
+    metadata,
+    populate_sensor_panel,
+    slider,
+    timeseries_6d_figures,
+)
 
 # TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
 
