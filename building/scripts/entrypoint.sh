@@ -71,6 +71,7 @@ case "${APP_FLAVOR}" in
 esac
 
 # -- run the report generation -- #
+# shellcheck disable=SC1091
 source /buildroot/.reprojection_venv/bin/activate
 
 python3 -m report.run --workspace "${workspace}"
