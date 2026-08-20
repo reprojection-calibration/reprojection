@@ -5,17 +5,9 @@ automatically compatible with ROS1 and ROS2 and is completely dockerized.
 
 ## Build
 
-Pull the git-lfs manged files - this includes a test database which is required by the dashboard unit tests.
-
-    git lfs pull
-
 There are three applications - `ros1`, `ros2`, and `video-file`, build the one you need.
 
-    # ROS1
-    ./building/local/build_image.sh --stage ros1-app
-
-    # ROS2
-    ./building/local/build_image.sh --stage ros2-app
+An example command to build the `video-file` application is:
 
     # Video file
     ./building/local/build_image.sh --stage video-file-app
@@ -115,4 +107,11 @@ Before running the application execute this command in the terminal:
 
       export SPDLOG_LEVEL=debug
 
-For a list of all log levels please see the official [spdlog](https://github.com/gabime/spdlog) documentation. 
+For a list of all log levels please see the official [spdlog](https://github.com/gabime/spdlog) documentation.
+
+## Developers
+
+Pull the git-lfs manged files - this includes a test database which has already extracted targets (used Kalibr)
+from a TUM-VIO calibration sequence.
+
+    git lfs pull

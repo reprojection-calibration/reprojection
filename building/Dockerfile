@@ -150,7 +150,9 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
     /temporary/${BUILD_PYTHON_VENV}
 
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
-# system or run without special permissions that docker cannot provide.
+# system or run without special permissions that docker cannot provide. We copy it to the temporary directory so that
+# the scripts will work if we run this with a local mount of the code into the live container. This is a contradiction
+# because we copy the files in so they are not temporary.
 COPY code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
