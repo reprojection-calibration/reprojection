@@ -28,9 +28,12 @@ sudo apt-get install --no-install-recommends --yes \
 
 "${script_folder}/../scripts/build_python_venv.sh"
 
+# TODO(Jack): I would like to be able to run the tests here but the bindings are not installed yet! This is the core of
+# our python installation problems.
 PACKAGE_DIRECTORY="${script_folder}/../../code/python_tooling" \
 PROTO_DIRECTORY="${script_folder}/../../code/resources/proto" \
 REPROJECTION_SQL_PYTHON_DIR="${script_folder}/../../code/resources/sql" \
+RUN_TESTS=0 \
 VENV_DIR="${HOME}/.reprojection_venv" \
   "${script_folder}/../scripts/build_python_tooling.sh"
 
