@@ -20,13 +20,8 @@ WORKDIR /buildroot
 # code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
 # your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
 # folder on the host system.
-#
-# For a deeper understanding please just look through the code. One little thing to note is that
-# REPROJECTION_SQL_PYTHON_DIR does not necesarily need to be located in the python package. They can be placed and
-# located anywhere on theb system. The current position inside the python_tooling package is just an artefact of the era
-# when I solved this problem with symlinking instead of environemental variables.
 ENV REPROJECTION_SQL_DIR=code/resources/sql
-ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
+ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/${REPROJECTION_SQL_DIR}
 
 # TODO(Jack): Is it a bad idea to use /root as the home? In general should we be using a user?
 ENV HOME=/root
