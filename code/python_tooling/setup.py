@@ -11,6 +11,8 @@ setup(
     packages=[
         "business_logic",
         "dashboard",
+        "dashboard.tools",
+        "dashboard.callbacks",
         "database",
         "generated",
         "report",

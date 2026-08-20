@@ -2,9 +2,9 @@ import logging
 import textwrap
 from pathlib import Path
 
-from camera_figures import coverage_figure, error_figure
-from dual_use_figures import measurement_delta_time_figures
-from pdf_layout import build_two_column_pdf
+from .camera_figures import coverage_figure, error_figure
+from .dual_use_figures import measurement_delta_time_figures
+from .pdf_layout import build_two_column_pdf
 
 from dashboard.tools.data_loading import refresh_database_list
 from database.data_formatting import (
