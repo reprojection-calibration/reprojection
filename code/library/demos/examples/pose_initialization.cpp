@@ -44,7 +44,7 @@ int main() {
         // TODO(Jack): Should we also write the image loading and feature extraction keys here? Or should they be
         // hardcoded into the db?
 
-        Hash const camera_info_cache_key{"1cc994b3b1dfe158bed402f46b5de3c00e14bf2d8057f43dd3531eebea5390c5"};
+        Hash const camera_info_cache_key{"a9af3e877da0c5e5d457c51a4302f3e4c2c8891cf7d16a5f5f7c1e547d542e47"};
         auto const step_result{database::GetOrCreateStep(db.get(), StepType::CameraInfo, camera_info_cache_key)};
 
         // NOTE(Jack): We only need to insert the camera info on the first pass when it's a cache miss. If we do it
