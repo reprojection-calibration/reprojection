@@ -130,6 +130,9 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
           --wheel \
           /temporary/code/library/projection_functions
 
+
+# TODO(Jack): This should just inherit from the configuration-stage, there is no reason we need 99% of the apt deps
+# that we currently get here.
 FROM apt-base-stage AS build-python-env-stage
 
 # NOTE(Jack): We specify the PYENV_ROOT and VENV_DIR to prevent them from being their default values which will see
