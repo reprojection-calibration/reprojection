@@ -36,11 +36,11 @@ venv_dir="${HOME}/.reprojection_venv"
 
 # TODO(Jack): I would like to be able to run the tests here but the bindings are not installed yet! This is the core of
 # our python installation problems.
+EDITABLE_INSTALL=1 \
 PACKAGE_DIRECTORY="${project_root}/code/python_tooling" \
 PROTO_DIRECTORY="${project_root}/code/resources/proto" \
 REPROJECTION_SQL_PYTHON_DIR="${project_root}/code/resources/sql" \
 RUN_TESTS=0 \
-EDITABLE=1 \
 VENV_DIR="${venv_dir}" \
   "${project_root}/building/scripts/build_python_tooling.sh"
 

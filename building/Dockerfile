@@ -189,14 +189,14 @@ FROM dashboard-stage AS dashboard-smoke-test-stage
 HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.0.1:8050 || exit 1
 
 
+# NOTE(Jack): The report stage has no python binding dependecy which makes it easier to deploy in all application
+# release apps.
 FROM build-python-env-stage AS report-stage
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
     --mount=type=bind,source=code/resources/proto,target=/temporary/code/resources/proto \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        set -eoux pipefail; \
-        export REPROJECTION_PYTHON_TOOLING_PACKAGES=business_logic,dashboard.tools,database,generated,report; \
         RUN_TESTS=0 /temporary/${BUILD_PYTHON_TOOLING}
 
 
