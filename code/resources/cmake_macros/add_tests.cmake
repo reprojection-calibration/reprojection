@@ -19,13 +19,9 @@ macro(AddTests)
                     ${TEST_LINK_LIBRARIES}
             )
 
-            if (NOT DEFINED REPROJECTION_ENABLE_COVERAGE)
-                set(REPROJECTION_ENABLE_COVERAGE OFF)
-            endif ()
-
             if (REPROJECTION_ENABLE_COVERAGE)
-                target_compile_options(${LIBRARY_NAME} PRIVATE --coverage)
-                target_link_options(${LIBRARY_NAME} PRIVATE --coverage)
+                target_compile_options(${TEST_NAME} PRIVATE --coverage)
+                target_link_options(${TEST_NAME} PRIVATE --coverage)
             endif ()
 
             gtest_discover_tests(${TEST_NAME})
