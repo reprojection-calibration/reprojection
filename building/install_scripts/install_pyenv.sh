@@ -15,7 +15,6 @@ if command -v pyenv >/dev/null 2>&1; then
     exit 0
 fi
 
-# Defaults to $HOME if this is empty
 PYENV_ROOT=${PYENV_ROOT:-"${HOME}/.pyenv"}
 
 wget -qO- https://pyenv.run | bash
