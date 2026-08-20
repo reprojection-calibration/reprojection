@@ -124,8 +124,8 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
         set -eoux pipefail; \
         python3 \
           -m build \
-          -Ccmake.define.REPROJECTION_BUILD_PYTHON_BINDINGS=ON  \
           -Ccmake.define.BUILD_TESTING=OFF  \
+          -Ccmake.define.REPROJECTION_BUILD_PYTHON_BINDINGS=ON  \
           --outdir /buildroot/wheels  \
           --wheel \
           /temporary/code/library/projection_functions
@@ -268,9 +268,8 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 
 FROM base-stage AS development-stage
 
-# TODO(Jack): We install python3-pybind11 and not in the base dependencies because we do not need to build all library
-# verions with the bindings - and there are some source install issues (I think), that make it easier just to install
-# this here and the python-binding stage only. We need a better easier to maintain solution than this...
+# TODO(Jack): We install python3-numpy/pybind11 so that we can build and test the bindings in the clion dev environment.
+# Do these installs belong directly in the apt dependencies instead?
 RUN set -eoux pipefail;  \
     apt-get update;  \
     apt-get install --no-install-recommends --yes  \
