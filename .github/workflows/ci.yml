@@ -57,7 +57,7 @@ jobs:
           external_cache_scope: debug-build
           target: code-coverage-assertion-stage
 
-  python-tooling:
+  build-python-env:
     needs: code-checks-python
     runs-on: ubuntu-latest
     steps:
@@ -69,12 +69,12 @@ jobs:
       - run: git lfs pull
       - uses: ./.github/actions/docker-build
         with:
-          cache_scope: python-tooling
+          cache_scope: build-python-env
           context: .
-          target: python-tooling-stage
+          target: build-python-env-stage
 
   dashboard-smoke-test:
-    needs: python-tooling
+    needs: build-python-env
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -86,7 +86,7 @@ jobs:
         with:
           cache_scope: dashboard-smoke-test
           context: .
-          external_cache_scope: python-tooling
+          external_cache_scope: build-python-env
           load: true
           tag: reprojection:dashboard-smoke-test-stage
           target: dashboard-smoke-test-stage
