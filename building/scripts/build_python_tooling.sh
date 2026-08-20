@@ -14,7 +14,7 @@ RUN_TESTS=${RUN_TESTS:-1}
 # run all scripts from the project root directory and everything works like it does in the dockerized environment.
 PACKAGE_DIRECTORY=${PACKAGE_DIRECTORY:-code/python_tooling}
 PROTO_DIRECTORY=${PROTO_DIRECTORY:-code/resources/proto}
-VENV_DIR=${VENV_DIR:-~/.reprojection_venv}
+VENV_DIR=${VENV_DIR:-"${HOME}"/.reprojection_venv}
 
 # shellcheck disable=SC1091
 source "${VENV_DIR}/bin/activate"
