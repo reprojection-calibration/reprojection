@@ -9,6 +9,7 @@ set -eoux pipefail
 # turn them off completely. As long as the dashboard is always being built in CI we can sleep ok, but we should still
 # probably keep one eye open!
 RUN_TESTS=${RUN_TESTS:-1}
+EDITABLE=${EDITABLE:-0}
 
 # NOTE(Jack): We should set the default values of the environmental variables here and in all places so that a user could
 # run all scripts from the project root directory and everything works like it does in the dockerized environment.
@@ -24,7 +25,12 @@ source "${VENV_DIR}/bin/activate"
 # have access to all the packages in the venv. But this is speculation and needs more research.
 python3 -m grpc_tools.protoc -I "${PROTO_DIRECTORY}" --python_out="${PACKAGE_DIRECTORY}/generated" "${PROTO_DIRECTORY}"/*.proto
 
-python3 -m pip install "${PACKAGE_DIRECTORY}"
+# When we install this locally for local development we want it to be editable.
+if [[ "${EDITABLE}" == "1" ]]; then
+    python3 -m pip install --editable "${PACKAGE_DIRECTORY}"
+else
+    python3 -m pip install "${PACKAGE_DIRECTORY}"
+fi
 
 if [[ "${RUN_TESTS}" == "1" ]]; then
     python3 -m unittest discover --start-directory "${PACKAGE_DIRECTORY}" --verbose
