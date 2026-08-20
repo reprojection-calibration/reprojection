@@ -31,13 +31,15 @@ sudo apt-get install --no-install-recommends --yes \
 
 "${script_folder}/../scripts/build_python_venv.sh"
 
+venv_dir="${HOME}/.reprojection_venv"
+
 # TODO(Jack): I would like to be able to run the tests here but the bindings are not installed yet! This is the core of
 # our python installation problems.
 PACKAGE_DIRECTORY="${script_folder}/../../code/python_tooling" \
 PROTO_DIRECTORY="${script_folder}/../../code/resources/proto" \
 REPROJECTION_SQL_PYTHON_DIR="${script_folder}/../../code/resources/sql" \
 RUN_TESTS=0 \
-VENV_DIR="${HOME}/.reprojection_venv" \
+VENV_DIR="${venv_dir}" \
   "${script_folder}/../scripts/build_python_tooling.sh"
 
 
@@ -55,6 +57,6 @@ container_id=$(docker create reprojection:python-binding)
 docker cp "${container_id}:/buildroot/wheels/." ./wheels/
 docker rm "${container_id}"
 
-"${HOME}/.reprojection_venv/bin/python3" -m pip install --force-reinstall ./wheels/*.whl
+"${venv_dir}/bin/python3" -m pip install --force-reinstall ./wheels/*.whl
 
-echo "Run 'source ~/.reprojection_venv/bin/activate' to source the environment"
+echo "Run 'source ${venv_dir}/bin/activate' to source the environment"

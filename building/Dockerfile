@@ -9,6 +9,32 @@ ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 SHELL ["/bin/bash", "-c"]
 WORKDIR /buildroot
 
+# NOTE(Jack): What is going on here? Let me explain :)
+#
+# We use an sqlite database for both the calibration process and the post-calibration report generation and dashboard
+# visualizations. To prevent code duplication we write our sql statements into text files in the `code/resources/sql` folder. This
+# prevents us from having to write out the command in the source code in two places - a basic good design principle.
+#
+# The challenge however is how to deliver the sql statement files to both the libary and python visualization code?
+# These environmental variables here are the solution to that problem. The most important factor is that for the python
+# code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
+# your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
+# folder on the host system.
+#
+# For a deeper understanding please just look through the code. One little thing to note is that
+# REPROJECTION_SQL_PYTHON_DIR does not necesarily need to be located in the python package. They can be placed and
+# located anywhere on theb system. The current position inside the python_tooling package is just an artefact of the era
+# when I solved this problem with symlinking instead of environemental variables.
+ENV REPROJECTION_SQL_DIR=code/resources/sql
+ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
+
+# NOTE(Jack): We specify the PYENV_ROOT and VENV_DIR to prevent them from being their default values which will see
+# them both be put in the $HOME directory. This locatio cause us a lot of permissions issues when trying to create the
+# dashboard release stage so we moved them to non permission limited locations like you see here.
+ENV HOME=/root
+ENV PYENV_ROOT="${HOME}/.pyenv"
+ENV VENV_DIR="${HOME}/.reprojection_venv"
+
 
 FROM configuration-stage AS apt-base-stage
 
@@ -35,25 +61,6 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
 ARG APT_INSTALL_CMAKE=building/install_scripts/apt_install_cmake.sh
 RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTALL_CMAKE} \
     /temporary/${APT_INSTALL_CMAKE}
-
-# NOTE(Jack): What is going on here? Let me explain :)
-#
-# We use an sqlite database for both the calibration process and the post-calibration report generation and dashboard
-# visualizations. To prevent code duplication we write our sql statements into text files in the `code/resources/sql` folder. This
-# prevents us from having to write out the command in the source code in two places - a basic good design principle.
-#
-# The challenge however is how to deliver the sql statement files to both the libary and python visualization code?
-# These environmental variables here are the solution to that problem. The most important factor is that for the python
-# code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
-# your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
-# folder on the host system.
-#
-# For a deeper understanding please just look through the code. One little thing to note is that
-# REPROJECTION_SQL_PYTHON_DIR does not necesarily need to be located in the python package. They can be placed and
-# located anywhere on theb system. The current position inside the python_tooling package is just an artefact of the era
-# when I solved this problem with symlinking instead of environemental variables.
-ENV REPROJECTION_SQL_DIR=code/resources/sql
-ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
 
 FROM apt-base-stage AS build-ceres-stage
@@ -135,12 +142,6 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
 # that we currently get here.
 FROM apt-base-stage AS build-python-env-stage
 
-# NOTE(Jack): We specify the PYENV_ROOT and VENV_DIR to prevent them from being their default values which will see
-# them both be put in the $HOME directory. This locatio cause us a lot of permissions issues when trying to create the
-# dashboard release stage so we moved them to non permission limited locations like you see here.
-ENV PYENV_ROOT="/opt/pyenv"
-ENV VENV_DIR=/buildroot/.reprojection_venv
-
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
     /temporary/${INSTALL_PYENV}
@@ -178,7 +179,6 @@ FROM build-python-env-stage AS dashboard-stage
 # TODO(Jack): Should we copy and install specifically the wheel whose name we know and want?
 COPY --from=python-binding-stage /buildroot/wheels /buildroot/wheels
 RUN set -eoux pipefail; \
-    VENV_DIR=${VENV_DIR:-~/.reprojection_venv}; \
     "${VENV_DIR}/bin/python3" -m pip install --force-reinstall /buildroot/wheels/*.whl
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
@@ -472,8 +472,8 @@ ENV APP=/opt/reprojection/bin/application_ros1.reprojection_app
 ENV APP_FLAVOR=ros1
 
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
-COPY --from=report-stage /opt/pyenv /opt/pyenv
-COPY --from=report-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
@@ -487,13 +487,9 @@ FROM ros2-base-stage AS ros2-app-stage
 ENV APP=/opt/reprojection/bin/application_ros2.reprojection_app
 ENV APP_FLAVOR=ros2
 
-# TODO(Jack): Copy paste!
-COPY --from=report-stage /opt/pyenv /opt/pyenv
-COPY --from=report-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
-
-# TODO(Jack): Needed? Can we put this in the entrypoint script instead?
-ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
 
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
@@ -506,9 +502,8 @@ FROM base-stage AS video-file-app-stage
 ENV APP=/opt/reprojection/bin/application.calibration
 ENV APP_FLAVOR=video-file
 
-# TODO(Jack): Copy paste!
-COPY --from=report-stage /opt/pyenv /opt/pyenv
-COPY --from=report-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
+COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection

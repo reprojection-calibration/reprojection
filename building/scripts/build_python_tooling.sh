@@ -12,9 +12,9 @@ RUN_TESTS=${RUN_TESTS:-1}
 
 # NOTE(Jack): We should set the default values of the environmental variables here and in all places so that a user could
 # run all scripts from the project root directory and everything works like it does in the dockerized environment.
-PACKAGE_DIRECTORY=${PACKAGE_DIRECTORY:-code/python_tooling}
-PROTO_DIRECTORY=${PROTO_DIRECTORY:-code/resources/proto}
-VENV_DIR=${VENV_DIR:-"${HOME}"/.reprojection_venv}
+PACKAGE_DIRECTORY="${PACKAGE_DIRECTORY:-code/python_tooling}"
+PROTO_DIRECTORY="${PROTO_DIRECTORY:-code/resources/proto}"
+VENV_DIR="${VENV_DIR:-${HOME}/.reprojection_venv}"
 
 # shellcheck disable=SC1091
 source "${VENV_DIR}/bin/activate"
