@@ -271,10 +271,13 @@ FROM base-stage AS development-stage
 # TODO(Jack): We install python3-pybind11 and not in the base dependencies because we do not need to build all library
 # verions with the bindings - and there are some source install issues (I think), that make it easier just to install
 # this here and the python-binding stage only. We need a better easier to maintain solution than this...
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb python3-pybind11; rm --force --recursive /var/lib/apt/lists/*
-
-# TODO(Jack): How to manage deps which are needed by the python binding testing! See todo above.
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes python3-numpy; rm --force --recursive /var/lib/apt/lists/*
+RUN set -eoux pipefail;  \
+    apt-get update;  \
+    apt-get install --no-install-recommends --yes  \
+        gdb  \
+        python3-numpy  \
+        python3-pybind11;  \
+    rm --force --recursive /var/lib/apt/lists/*
 
 
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
