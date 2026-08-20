@@ -8,7 +8,7 @@ class TestBindingImport(unittest.TestCase):
         bounds = ImageBounds(1, 2, 3, 4)
         self.assertEqual(bounds.u_min, 1)
         self.assertEqual(bounds.u_max, 2)
-        self.assertEqual(bounds.v_min, 3)
+        self.assertEqual(bounds.v_min, 3333)
         self.assertEqual(bounds.v_max, 4)
 
 
