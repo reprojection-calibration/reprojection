@@ -33,8 +33,11 @@ AddTests()
 # were problems with the source install version of things and the pybind library which is why we limit this. Is that
 # still a problem?
 
-option(BUILD_PYTHON_BINDINGS OFF)
-if (BUILD_PYTHON_BINDINGS)
+if (NOT DEFINED REPROJECTION_BUILD_PYTHON_BINDINGS)
+    set(REPROJECTION_BUILD_PYTHON_BINDINGS OFF)
+endif ()
+
+if (REPROJECTION_BUILD_PYTHON_BINDINGS)
     set(PYBIND11_FINDPYTHON ON)
     find_package(pybind11 CONFIG REQUIRED)
 
