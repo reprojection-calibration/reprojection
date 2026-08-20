@@ -28,9 +28,7 @@ WORKDIR /buildroot
 ENV REPROJECTION_SQL_DIR=code/resources/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
-# NOTE(Jack): We specify the PYENV_ROOT and VENV_DIR to prevent them from being their default values which will see
-# them both be put in the $HOME directory. This locatio cause us a lot of permissions issues when trying to create the
-# dashboard release stage so we moved them to non permission limited locations like you see here.
+# TODO(Jack): Is it a bad idea to use /root as the home? In general should we be using a user?
 ENV HOME=/root
 ENV PYENV_ROOT="${HOME}/.pyenv"
 ENV VENV_DIR="${HOME}/.reprojection_venv"
