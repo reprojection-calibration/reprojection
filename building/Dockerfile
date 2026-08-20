@@ -239,6 +239,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         /temporary/code/library \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING=ON \
+        -DREPROJECTION_BUILD_PYTHON_BINDINGS=ON \
         -DREPROJECTION_ENABLE_COVERAGE=ON; \
       cmake_test \
         /temporary/code/library
@@ -273,9 +274,7 @@ FROM base-stage AS development-stage
 RUN set -eoux pipefail;  \
     apt-get update;  \
     apt-get install --no-install-recommends --yes  \
-        gdb  \
-        python3-numpy  \
-        python3-pybind11;  \
+        gdb; \
     rm --force --recursive /var/lib/apt/lists/*
 
 

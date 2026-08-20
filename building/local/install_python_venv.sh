@@ -22,8 +22,11 @@ sudo "${script_folder}/../install_scripts/apt_install_python_venv_deps.sh"
 # supports the "RETURNING" syntax - here we assume that a user is running a modern enough version of ubuntu that the
 # apt version is good enough - this will not scale, but I do not really want to source install a different sqlite on the
 # users system.
+# NOTE(Jack): In the docker workflow libgoogle-glog-dev is installed in the base-stage and is as of now the only dep of
+# the bindings which needs to be explicitly installed here (its handled in the base-stage in the dockerized workflow).
 sudo apt-get update
 sudo apt-get install --no-install-recommends --yes \
+  libgoogle-glog-dev \
   sqlite3
 
 "${script_folder}/../scripts/build_python_venv.sh"

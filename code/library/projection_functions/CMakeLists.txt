@@ -50,6 +50,13 @@ if (REPROJECTION_BUILD_PYTHON_BINDINGS)
             ${PRIVATE_LINK_LIBRARIES}
     )
 
+    # This suppresses an elevated warning from pybind11/Eigen
+    target_compile_options(
+            projection_function_python_binding
+            PRIVATE
+            -Wno-maybe-uninitialized
+    )
+
     set_target_properties(projection_function_python_binding
             PROPERTIES
             INSTALL_RPATH "$ORIGIN/lib"
