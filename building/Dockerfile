@@ -451,7 +451,6 @@ ENV APP_FLAVOR=ros1
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
-COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
@@ -468,7 +467,6 @@ ENV APP_FLAVOR=ros2
 # TODO(Jack): Copy paste!
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
-COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 # TODO(Jack): Needed? Can we put this in the entrypoint script instead?
@@ -488,7 +486,6 @@ ENV APP_FLAVOR=video-file
 # TODO(Jack): Copy paste!
 COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
 COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
-COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
