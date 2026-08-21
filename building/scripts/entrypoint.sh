@@ -71,10 +71,7 @@ case "${APP_FLAVOR}" in
 esac
 
 # -- run the report generation -- #
-# TODO(Jack): Do we need to specify full path for the python interpreter?
-# TODO(Jack): Do we need to specify the PYTHONPATH here? Why can we not just activate the venv or something like that,
-# is that package not installed there?
-PYTHONPATH=/temporary/code/python_tooling \
-/buildroot/.reprojection_venv/bin/python \
-  /temporary/code/python_tooling/report/run.py \
-  --workspace "${workspace}"
+# shellcheck disable=SC1091
+source "${VENV_DIR}/bin/activate"
+
+python3 -m report.run --workspace "${workspace}"

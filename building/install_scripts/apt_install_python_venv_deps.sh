@@ -13,4 +13,6 @@ apt-get install --no-install-recommends --yes \
     libxmlsec1-dev \
     libxml2-dev \
     tk-dev
-rm --force --recursive /var/lib/apt/lists/*
+
+# TODO(Jack): We do not run the "rm --force --recursive /var/lib/apt/lists/*" part here because this script is
+# intended to also locally run on the users system if they want to install the python venv.

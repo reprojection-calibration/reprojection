@@ -9,6 +9,25 @@ ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 SHELL ["/bin/bash", "-c"]
 WORKDIR /buildroot
 
+# NOTE(Jack): What is going on here? Let me explain :)
+#
+# We use an sqlite database for both the calibration process and the post-calibration report generation and dashboard
+# visualizations. To prevent code duplication we write our sql statements into text files in the `code/resources/sql` folder. This
+# prevents us from having to write out the command in the source code in two places - a basic good design principle.
+#
+# The challenge however is how to deliver the sql statement files to both the libary and python visualization code?
+# These environmental variables here are the solution to that problem. The most important factor is that for the python
+# code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
+# your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
+# folder on the host system.
+ENV REPROJECTION_SQL_DIR=code/resources/sql
+ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/${REPROJECTION_SQL_DIR}
+
+# TODO(Jack): Is it a bad idea to use /root as the home? In general should we be using a user?
+ENV HOME=/root
+ENV PYENV_ROOT="${HOME}/.pyenv"
+ENV VENV_DIR="${HOME}/.reprojection_venv"
+
 
 FROM configuration-stage AS apt-base-stage
 
@@ -35,25 +54,6 @@ RUN --mount=type=bind,source=${APT_INSTALL_GCC13},target=/temporary/${APT_INSTAL
 ARG APT_INSTALL_CMAKE=building/install_scripts/apt_install_cmake.sh
 RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTALL_CMAKE} \
     /temporary/${APT_INSTALL_CMAKE}
-
-# NOTE(Jack): What is going on here? Let me explain :)
-#
-# We use an sqlite database for both the calibration process and the post-calibration report generation and dashboard
-# visualizations. To prevent code duplication we write our sql statements into text files in the `code/resources/sql` folder. This
-# prevents us from having to write out the command in the source code in two places - a basic good design principle.
-#
-# The challenge however is how to deliver the sql statement files to both the libary and python visualization code?
-# These environmental variables here are the solution to that problem. The most important factor is that for the python
-# code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
-# your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
-# folder on the host system.
-#
-# For a deeper understanding please just look through the code. One little thing to note is that
-# REPROJECTION_SQL_PYTHON_DIR does not necesarily need to be located in the python package. They can be placed and
-# located anywhere on theb system. The current position inside the python_tooling package is just an artefact of the era
-# when I solved this problem with symlinking instead of environemental variables.
-ENV REPROJECTION_SQL_DIR=code/resources/sql
-ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/code/python_tooling/database/sql
 
 
 FROM apt-base-stage AS build-ceres-stage
@@ -111,14 +111,29 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
     --mount=type=bind,source=code/,target=/temporary/code \
     /temporary/${CODE_CHECKS_PYTHON}
 
+FROM base-stage AS python-binding-stage
 
-FROM apt-base-stage AS python-tooling-stage
+ARG APT_INSTALL_PYTHON_BINDING_DEPS=building/install_scripts/apt_install_python_binding_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_BINDING_DEPS},target=/temporary/${APT_INSTALL_PYTHON_BINDING_DEPS} \
+    /temporary/${APT_INSTALL_PYTHON_BINDING_DEPS}
 
-# NOTE(Jack): We specify the PYENV_ROOT and VENV_DIR to prevent them from being their default values which will see
-# them both be put in the $HOME directory. This locatio cause us a lot of permissions issues when trying to create the
-# dashboard release stage so we moved them to non permission limited locations like you see here.
-ENV PYENV_ROOT="/opt/pyenv"
-ENV VENV_DIR=/buildroot/.reprojection_venv
+
+RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
+        set -eoux pipefail; \
+        python3 \
+          -m build \
+          -Ccmake.define.BUILD_TESTING=OFF  \
+          -Ccmake.define.REPROJECTION_BUILD_PYTHON_BINDINGS=ON  \
+          --outdir /buildroot/wheels  \
+          --wheel \
+          /temporary/code/library/projection_functions
+
+
+# TODO(Jack): This should just inherit from the configuration-stage, there is no reason we need 99% of the apt deps
+# that we currently get here.
+FROM apt-base-stage AS build-python-env-stage
 
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
@@ -138,21 +153,32 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTH
     /temporary/${BUILD_PYTHON_VENV}
 
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
-# system or run without special permissions that docker cannot provide.
+# system or run without special permissions that docker cannot provide. We copy it to the temporary directory so that
+# the scripts will work if we run this with a local mount of the code into the live container. This is a contradiction
+# because we copy the files in so they are not temporary.
 COPY code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
 ARG PROTO_DIRECTORY=/temporary/code/resources/proto
 
+
+# WARN(Jack): Right now the dashboard is only built and tested on ubuntu 24. It would be nice if we could make the
+# python tooling and binding pipeline generic enough that it worked on any distro
+FROM build-python-env-stage AS dashboard-stage
+
+# TODO(Jack): This logic here is repeated once here and in the local venv install script. Not a deal breaker, but again
+# goes to show how cool it would be if we could just build the venv here once and then copy it to the host.
+# TODO(Jack): Should we copy and install specifically the wheel whose name we know and want?
+COPY --from=python-binding-stage /buildroot/wheels /buildroot/wheels
+RUN set -eoux pipefail; \
+    "${VENV_DIR}/bin/python3" -m pip install --force-reinstall /buildroot/wheels/*.whl
+
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
     --mount=type=bind,source=code/resources/proto,target=/temporary/code/resources/proto \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-    /temporary/${BUILD_PYTHON_TOOLING}
-
-
-FROM python-tooling-stage AS dashboard-stage
+    RUN_TESTS=1 /temporary/${BUILD_PYTHON_TOOLING}
 
 COPY building/scripts/entrypoint_dashboard.sh /buildroot/entrypoint_dashboard.sh
 
@@ -161,6 +187,17 @@ ENTRYPOINT ["/buildroot/entrypoint_dashboard.sh"]
 FROM dashboard-stage AS dashboard-smoke-test-stage
 
 HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.0.1:8050 || exit 1
+
+
+# NOTE(Jack): The report stage has no python binding dependecy which makes it easier to deploy in all application
+# release apps.
+FROM build-python-env-stage AS report-stage
+
+ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
+RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
+    --mount=type=bind,source=code/resources/proto,target=/temporary/code/resources/proto \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
+        RUN_TESTS=0 /temporary/${BUILD_PYTHON_TOOLING}
 
 
 # The code coverage solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example
@@ -195,7 +232,8 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
         /temporary/code/library \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING=ON \
-        -DENABLE_COVERAGE=ON; \
+        -DREPROJECTION_BUILD_PYTHON_BINDINGS=ON \
+        -DREPROJECTION_ENABLE_COVERAGE=ON; \
       cmake_test \
         /temporary/code/library
 
@@ -224,7 +262,13 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 
 FROM base-stage AS development-stage
 
-RUN set -eoux pipefail; apt-get update; apt-get install --no-install-recommends --yes gdb; rm --force --recursive /var/lib/apt/lists/*
+# TODO(Jack): We install python3-numpy/pybind11 so that we can build and test the bindings in the clion dev environment.
+# Do these installs belong directly in the apt dependencies instead?
+RUN set -eoux pipefail;  \
+    apt-get update;  \
+    apt-get install --no-install-recommends --yes  \
+        gdb; \
+    rm --force --recursive /var/lib/apt/lists/*
 
 
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
@@ -421,9 +465,8 @@ ENV APP=/opt/reprojection/bin/application_ros1.reprojection_app
 ENV APP_FLAVOR=ros1
 
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
-COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
-COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
-COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
@@ -437,14 +480,9 @@ FROM ros2-base-stage AS ros2-app-stage
 ENV APP=/opt/reprojection/bin/application_ros2.reprojection_app
 ENV APP_FLAVOR=ros2
 
-# TODO(Jack): Copy paste!
-COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
-COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
-COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
-
-# TODO(Jack): Needed? Can we put this in the entrypoint script instead?
-ENV PATH="/buildroot/.reprojection_venv/bin:${PATH}"
 
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 COPY building/scripts/entrypoint.sh /buildroot/entrypoint.sh
@@ -457,10 +495,8 @@ FROM base-stage AS video-file-app-stage
 ENV APP=/opt/reprojection/bin/application.calibration
 ENV APP_FLAVOR=video-file
 
-# TODO(Jack): Copy paste!
-COPY --from=python-tooling-stage /opt/pyenv /opt/pyenv
-COPY --from=python-tooling-stage /buildroot/.reprojection_venv /buildroot/.reprojection_venv
-COPY --from=python-tooling-stage /temporary/code/python_tooling /temporary/code/python_tooling
+COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection

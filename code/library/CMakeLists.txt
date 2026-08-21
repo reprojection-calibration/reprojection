@@ -5,7 +5,7 @@ project(
         LANGUAGES C CXX
 )
 
-option(ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
+option(REPROJECTION_ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

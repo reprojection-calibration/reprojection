@@ -1,5 +1,5 @@
 macro(AddTests)
-    if(BUILD_TESTING)
+    if (BUILD_TESTING)
         foreach (TEST IN LISTS TESTS)
             get_filename_component(TEST_NAME ${TEST} NAME_WLE)
             set(TEST_NAME ${LIBRARY_NAME}.${TEST_NAME})
@@ -19,12 +19,12 @@ macro(AddTests)
                     ${TEST_LINK_LIBRARIES}
             )
 
-            if (ENABLE_COVERAGE)
+            if (REPROJECTION_ENABLE_COVERAGE)
                 target_compile_options(${TEST_NAME} PRIVATE --coverage)
                 target_link_options(${TEST_NAME} PRIVATE --coverage)
             endif ()
 
             gtest_discover_tests(${TEST_NAME})
         endforeach ()
-    endif()
+    endif ()
 endmacro()

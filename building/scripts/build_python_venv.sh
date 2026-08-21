@@ -2,15 +2,15 @@
 
 set -eoux pipefail
 
-VENV_DIR=${VENV_DIR:-~/.reprojection_venv}
+VENV_DIR=${VENV_DIR:-${HOME}/.reprojection_venv}
 
-# NOTE(Jack): We need to do this so our source installed sqlite can be properly discovered. If there is a better way
-# I am not sure, but works fine for me :)
-ldconfig
+# TODO(Jack): For some reason if we do not do this then sqlite (which we kinda source install) can be found/linked
+# against. I thought I had solved this with ldconfig but I guess not - this gets the job done on 20.04 and 24.04
+export LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib"
 
 # shellcheck disable=SC1090
 source ~/.bash_profile
-pyenv install 3.12
+pyenv install --skip-existing 3.12
 pyenv shell 3.12
 
 python3.12 -m venv "${VENV_DIR}"

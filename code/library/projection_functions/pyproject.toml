@@ -1,0 +1,12 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "projection_function_python_binding"
+version = "0.0.0"
+
+# Because we keep this config file in the projection_function sub folder we need to point it to where the top level
+# cmakelists is otherwise it will not know the full structure.
+[tool.scikit-build]
+cmake.source-dir = ".."
