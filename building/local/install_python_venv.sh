@@ -32,8 +32,8 @@ sudo apt-get install --no-install-recommends --yes \
 reprojection_venv="${HOME}/.venv-reprojection"
 
 # TODO(Jack): Copy and pasted from a docker image stage
-python -m venv ${reprojection_venv}; \
-${reprojection_venv}/bin/python \
+python -m venv "${reprojection_venv}"
+"${reprojection_venv}/bin/python" \
   -m pip install -r "${project_root}/building/scripts/requirements-reprojection-env.txt"
 
 # TODO(Jack): I would like to be able to run the tests here but the bindings are not installed yet! This is the core of
