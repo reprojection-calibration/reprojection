@@ -25,6 +25,7 @@ ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/${REPROJECTION_SQL_DIR}
 
 # TODO(Jack): Is it a bad idea to use /root as the home? In general should we be using a user?
 ENV HOME=/root
+# REMOVE
 ENV PYENV_ROOT="${HOME}/.pyenv"
 ENV VENV_DIR="${HOME}/.reprojection_venv"
 
@@ -55,6 +56,9 @@ ARG APT_INSTALL_CMAKE=building/install_scripts/apt_install_cmake.sh
 RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTALL_CMAKE} \
     /temporary/${APT_INSTALL_CMAKE}
 
+ARG APT_INSTALL_PYENV_DEPS=building/install_scripts/apt_install_pyenv_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_PYENV_DEPS},target=/temporary/${APT_INSTALL_PYENV_DEPS} \
+    /temporary/${APT_INSTALL_PYENV_DEPS}
 
 FROM apt-base-stage AS build-ceres-stage
 
@@ -82,6 +86,11 @@ FROM apt-base-stage AS base-stage
 COPY --from=build-ceres-stage /usr/local /usr/local
 COPY --from=build-small-libraries-stage /usr/local /usr/local
 
+ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
+ENV PATH=${PYENV_ROOT}/bin:${PATH}
+RUN curl -fsSL https://pyenv.run | bash
+RUN pyenv install 3.12
+RUN pyenv global 3.12
 
 FROM configuration-stage AS code-checks-stage
 
@@ -113,16 +122,17 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
 
 FROM base-stage AS python-binding-stage
 
-ARG APT_INSTALL_PYTHON_BINDING_DEPS=building/install_scripts/apt_install_python_binding_deps.sh
-RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_BINDING_DEPS},target=/temporary/${APT_INSTALL_PYTHON_BINDING_DEPS} \
-    /temporary/${APT_INSTALL_PYTHON_BINDING_DEPS}
+RUN --mount=type=bind,source=building/scripts/requirements-binding-build-env.txt,target=/temporary/building/scripts/requirements-binding-build-env.txt \
+    set -eoux pipefail; \
+    python -m venv .venv-binding-build; \
+    /buildroot/.venv-binding-build/bin/python -m pip install -r /temporary/building/scripts/requirements-binding-build-env.txt
 
-
+# TODO(Jack): I wish we could also run the binding c++ side unit tests here but we do not.
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         set -eoux pipefail; \
-        python3 \
+        /buildroot/.venv-binding-build/bin/python \
           -m build \
           -Ccmake.define.BUILD_TESTING=OFF  \
           -Ccmake.define.REPROJECTION_BUILD_PYTHON_BINDINGS=ON  \
@@ -134,14 +144,6 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
 # TODO(Jack): This should just inherit from the configuration-stage, there is no reason we need 99% of the apt deps
 # that we currently get here.
 FROM apt-base-stage AS build-python-env-stage
-
-ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
-RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
-    /temporary/${INSTALL_PYENV}
-
-ARG APT_INSTALL_PYTHON_VENV_DEPS=building/install_scripts/apt_install_python_venv_deps.sh
-RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_VENV_DEPS},target=/temporary/${APT_INSTALL_PYTHON_VENV_DEPS} \
-    /temporary/${APT_INSTALL_PYTHON_VENV_DEPS}
 
 ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
