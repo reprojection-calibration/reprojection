@@ -6,7 +6,7 @@ FROM ${BASE_IMAGE} AS configuration-stage
 ARG DEBIAN_FRONTEND=noninteractive
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
 WORKDIR /buildroot
 
 # NOTE(Jack): What is going on here? Let me explain :)
@@ -85,18 +85,20 @@ COPY --from=build-small-libraries-stage /usr/local /usr/local
 # the dashboard for example we get 'permission denied' errors from the python environment.
 ENV PYENV_ROOT="/opt/.pyenv"
 ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
-RUN curl -fsSL https://pyenv.run | bash
-RUN pyenv install 3.12
-RUN pyenv global 3.12
 
-ENV REPROJECTION_VENV=/buildroot/.venv-reprojection
+ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
+RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
+    /temporary/${INSTALL_PYENV}; \
+    pyenv global 3.12
 
 ARG BINDING_BUILD_VENV=/buildroot/.venv-binding-build
 RUN --mount=type=bind,source=building/scripts/requirements-binding-build-env.txt,target=/temporary/building/scripts/requirements-binding-build-env.txt \
-    set -eoux pipefail; \
     python -m venv ${BINDING_BUILD_VENV}; \
     ${BINDING_BUILD_VENV}/bin/python \
       -m pip install -r /temporary/building/scripts/requirements-binding-build-env.txt
+
+ENV REPROJECTION_VENV=/buildroot/.venv-reprojection
+
 
 FROM configuration-stage AS code-checks-stage
 
@@ -132,7 +134,6 @@ FROM base-stage AS python-binding-stage
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        set -eoux pipefail; \
         ${BINDING_BUILD_VENV}/bin/python \
           -m build \
           -Ccmake.define.BUILD_TESTING=OFF  \
@@ -146,7 +147,6 @@ FROM base-stage AS python-tooling-base-stage
 
 
 RUN --mount=type=bind,source=building/scripts/requirements-reprojection-env.txt,target=/temporary/building/scripts/requirements-reprojection-env.txt \
-    set -eoux pipefail; \
     python -m venv ${REPROJECTION_VENV}; \
     ${REPROJECTION_VENV}/bin/python \
       -m pip install -r /temporary/building/scripts/requirements-reprojection-env.txt
@@ -224,7 +224,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-      set -eoux pipefail; \
       source ${BINDING_BUILD_VENV}/bin/activate; \
       source /temporary/${SOURCE_INSTALL_UTILS}; \
       cmake_build \
@@ -262,8 +261,7 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 
 FROM base-stage AS development-stage
 
-RUN set -eoux pipefail;  \
-    apt-get update;  \
+RUN apt-get update;  \
     apt-get install --no-install-recommends --yes  \
         gdb; \
     rm --force --recursive /var/lib/apt/lists/*
@@ -287,7 +285,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        set -eoux pipefail; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
             /temporary/code/library \
@@ -306,7 +303,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        set -eoux pipefail; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
             /temporary/code/library \
@@ -391,7 +387,6 @@ FROM ros1-base-stage AS ros1-release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
-        set -eox pipefail; \
         source /opt/ros/noetic/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
@@ -410,7 +405,6 @@ FROM ros2-base-stage AS ros2-release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
-        set -eox pipefail; \
         source /opt/ros/jazzy/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
@@ -431,7 +425,6 @@ COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    set -eox pipefail; \
     source /opt/ros/noetic/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
@@ -446,7 +439,6 @@ COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    set -eox pipefail; \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
