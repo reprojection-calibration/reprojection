@@ -18,9 +18,4 @@ apt-get install --no-install-recommends --yes \
     libgoogle-glog-dev \
     libsuitesparse-dev
 
-# Required to build and test the python bindings within the library/cmake project itself
-apt-get install --no-install-recommends --yes  \
-    python3-numpy  \
-    python3-pybind11
-
 rm --force --recursive /var/lib/apt/lists/*

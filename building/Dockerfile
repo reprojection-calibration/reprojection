@@ -89,6 +89,15 @@ RUN curl -fsSL https://pyenv.run | bash
 RUN pyenv install 3.12
 RUN pyenv global 3.12
 
+ENV REPROJECTION_VENV=/buildroot/.venv-reprojection
+
+ARG BINDING_BUILD_VENV=/buildroot/.venv-binding-build
+RUN --mount=type=bind,source=building/scripts/requirements-binding-build-env.txt,target=/temporary/building/scripts/requirements-binding-build-env.txt \
+    set -eoux pipefail; \
+    python -m venv ${BINDING_BUILD_VENV}; \
+    ${BINDING_BUILD_VENV}/bin/python \
+      -m pip install -r /temporary/building/scripts/requirements-binding-build-env.txt
+
 FROM configuration-stage AS code-checks-stage
 
 ARG APT_INSTALL_CODE_CHECK_DEPS=building/install_scripts/apt_install_code_check_deps.sh
@@ -119,14 +128,6 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
 
 FROM base-stage AS python-binding-stage
 
-ARG BINDING_BUILD_VENV=/buildroot/.venv-binding-build
-
-RUN --mount=type=bind,source=building/scripts/requirements-binding-build-env.txt,target=/temporary/building/scripts/requirements-binding-build-env.txt \
-    set -eoux pipefail; \
-    python -m venv ${BINDING_BUILD_VENV}; \
-    ${BINDING_BUILD_VENV}/bin/python \
-      -m pip install -r /temporary/building/scripts/requirements-binding-build-env.txt
-
 # TODO(Jack): I wish we could also run the binding c++ side unit tests here but we do not.
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
@@ -143,7 +144,6 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
 
 FROM base-stage AS python-tooling-base-stage
 
-ENV REPROJECTION_VENV=/buildroot/.venv-reprojection
 
 RUN --mount=type=bind,source=building/scripts/requirements-reprojection-env.txt,target=/temporary/building/scripts/requirements-reprojection-env.txt \
     set -eoux pipefail; \
@@ -225,13 +225,15 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
       set -eoux pipefail; \
+      source ${BINDING_BUILD_VENV}/bin/activate; \
       source /temporary/${SOURCE_INSTALL_UTILS}; \
       cmake_build \
         /temporary/code/library \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING=ON \
         -DREPROJECTION_BUILD_PYTHON_BINDINGS=ON \
-        -DREPROJECTION_ENABLE_COVERAGE=ON; \
+        -DREPROJECTION_ENABLE_COVERAGE=ON \
+        -Dpybind11_DIR="$(python -m pybind11 --cmakedir)"; \
       cmake_test \
         /temporary/code/library
 
