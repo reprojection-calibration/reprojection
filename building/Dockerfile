@@ -146,7 +146,6 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
 
 FROM base-stage AS python-tooling-base-stage
 
-
 RUN --mount=type=bind,source=building/scripts/requirements-reprojection-env.txt,target=/temporary/building/scripts/requirements-reprojection-env.txt \
     python -m venv ${REPROJECTION_VENV}; \
     ${REPROJECTION_VENV}/bin/python \
@@ -407,6 +406,7 @@ FROM ros2-base-stage AS ros2-release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
+        set +u; \
         source /opt/ros/jazzy/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
@@ -442,6 +442,7 @@ COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    set +u; \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
