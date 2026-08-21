@@ -125,7 +125,8 @@ FROM base-stage AS python-binding-stage
 RUN --mount=type=bind,source=building/scripts/requirements-binding-build-env.txt,target=/temporary/building/scripts/requirements-binding-build-env.txt \
     set -eoux pipefail; \
     python -m venv .venv-binding-build; \
-    /buildroot/.venv-binding-build/bin/python -m pip install -r /temporary/building/scripts/requirements-binding-build-env.txt
+    /buildroot/.venv-binding-build/bin/python \
+      -m pip install -r /temporary/building/scripts/requirements-binding-build-env.txt
 
 # TODO(Jack): I wish we could also run the binding c++ side unit tests here but we do not.
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
@@ -141,18 +142,13 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
           /temporary/code/library/projection_functions
 
 
-# TODO(Jack): This should just inherit from the configuration-stage, there is no reason we need 99% of the apt deps
-# that we currently get here.
-FROM apt-base-stage AS build-python-env-stage
+FROM base-stage AS build-python-env-stage
 
-ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
-      /temporary/${SOURCE_INSTALL_SQLITE}
-
-ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
-RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
-    /temporary/${BUILD_PYTHON_VENV}
+RUN --mount=type=bind,source=building/scripts/requirements-reprojection-env.txt,target=/temporary/building/scripts/requirements-reprojection-env.txt \
+    set -eoux pipefail; \
+    python -m venv .venv-reprojection; \
+    /buildroot/.venv-reprojection/bin/python \
+      -m pip install -r /temporary/building/scripts/requirements-reprojection-env.txt
 
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
 # system or run without special permissions that docker cannot provide. We copy it to the temporary directory so that
@@ -172,9 +168,8 @@ FROM build-python-env-stage AS dashboard-stage
 # TODO(Jack): This logic here is repeated once here and in the local venv install script. Not a deal breaker, but again
 # goes to show how cool it would be if we could just build the venv here once and then copy it to the host.
 # TODO(Jack): Should we copy and install specifically the wheel whose name we know and want?
-COPY --from=python-binding-stage /buildroot/wheels /buildroot/wheels
-RUN set -eoux pipefail; \
-    "${VENV_DIR}/bin/python3" -m pip install --force-reinstall /buildroot/wheels/*.whl
+RUN --mount=type=bind,from=python-binding-stage,source=/buildroot/wheels,target=/temporary/wheels \
+    python -m pip install /temporary/wheels/*.whl
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
