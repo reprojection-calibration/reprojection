@@ -2,9 +2,18 @@
 
 set -eoux pipefail
 
-curl -fsSL https://pyenv.run | bash
+# NOTE(Jack): Because a developer might also run this script locally where they may or may not have already have
+# either of the following things installed we put these in if else blocks.
 
-# TODO(Jack): For some reason if we do not do this then sqlite (which we kinda source install) can be found/linked
-# against. I thought I had solved this with ldconfig but I guess not - this gets the job done on 20.04 and 24.04
-LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib" \
-  pyenv install 3.12
+if command -v pyenv >/dev/null 2>&1; then
+  echo "pyenv is already installed."
+else
+  curl -fsSL https://pyenv.run | bash
+fi
+
+if pyenv versions --bare | grep -q '^3\.12'; then
+  echo "Python 3.12 is already installed."
+else
+  LDFLAGS="-L/usr/local/lib -Wl,-rpath,/usr/local/lib" \
+    pyenv install 3.12
+fi
