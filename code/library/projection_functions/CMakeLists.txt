@@ -38,6 +38,14 @@ if (NOT DEFINED REPROJECTION_BUILD_PYTHON_BINDINGS)
 endif ()
 
 if (REPROJECTION_BUILD_PYTHON_BINDINGS)
+    # TODO(Jack): CLion docker/cmake toolchains do not allow us to evaluate variables which means that if we wanted to
+    # pass pybind11_DIR via the regular -D... cmake method every developer would need to have the massive absolute path
+    # to pybind in the venv. Therefore to avoid this we set PYBIND11_DIR as environmental variable in the
+    # development-stage (which unfortunately we have to hardcode).
+    if(DEFINED ENV{PYBIND11_DIR})
+        set(pybind11_DIR "$ENV{PYBIND11_DIR}")
+    endif()
+
     set(PYBIND11_FINDPYTHON ON)
     find_package(pybind11 CONFIG REQUIRED)
 

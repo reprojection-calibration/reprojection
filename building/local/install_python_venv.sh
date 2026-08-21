@@ -9,15 +9,14 @@ set -eou pipefail
 #   3) Apt installs system packages (requires sudo)
 #   4) Creates a directory "wheels/" and copies a python wheel into it
 
-script_folder="$(dirname "$(realpath -s "$0")")"
-project_root="${script_folder}/../.."
+project_root="$(dirname "$(realpath -s "$0")")/../.."
 
 "${project_root}/building/install_scripts/install_pyenv.sh"
 
 # NOTE(Jack): Apt installing system packages requires sudo. The reason we do not run the entire local install script as
 # sudo is because we don't need too, and then number two it changes the HOME path to /root which the daily user does
 # not own.
-sudo "${project_root}/building/install_scripts/apt_install_python_venv_deps.sh"
+sudo "${project_root}/building/install_scripts/apt_install_pyenv_deps.sh"
 
 # NOTE(Jack): In the docker workflow we source build sqlite3 because we need to ensure that we have a version that
 # supports the "RETURNING" syntax - here we assume that a user is running a modern enough version of ubuntu that the
@@ -30,9 +29,12 @@ sudo apt-get install --no-install-recommends --yes \
   libgoogle-glog-dev \
   sqlite3
 
-"${project_root}/building/scripts/build_python_venv.sh"
+reprojection_venv="${HOME}/.venv-reprojection"
 
-venv_dir="${HOME}/.reprojection_venv"
+# TODO(Jack): Copy and pasted from a docker image stage
+python -m venv "${reprojection_venv}"
+"${reprojection_venv}/bin/python" \
+  -m pip install -r "${project_root}/building/scripts/requirements-reprojection-env.txt"
 
 # TODO(Jack): I would like to be able to run the tests here but the bindings are not installed yet! This is the core of
 # our python installation problems.
@@ -41,7 +43,7 @@ PACKAGE_DIRECTORY="${project_root}/code/python_tooling" \
 PROTO_DIRECTORY="${project_root}/code/resources/proto" \
 REPROJECTION_SQL_PYTHON_DIR="${project_root}/code/resources/sql" \
 RUN_TESTS=0 \
-VENV_DIR="${venv_dir}" \
+REPROJECTION_VENV="${reprojection_venv}" \
   "${project_root}/building/scripts/build_python_tooling.sh"
 
 
@@ -59,6 +61,6 @@ container_id=$(docker create reprojection:python-binding)
 docker cp "${container_id}:/buildroot/wheels/." ./wheels/
 docker rm "${container_id}"
 
-"${venv_dir}/bin/python3" -m pip install --force-reinstall ./wheels/*.whl
+"${reprojection_venv}/bin/python" -m pip install --force-reinstall ./wheels/*.whl
 
-echo "Run 'source ${venv_dir}/bin/activate' to source the environment"
+echo "Run 'source ${reprojection_venv}/bin/activate' to source the environment"

@@ -6,7 +6,8 @@ FROM ${BASE_IMAGE} AS configuration-stage
 ARG DEBIAN_FRONTEND=noninteractive
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 
-SHELL ["/bin/bash", "-c"]
+# Note that -euo pipefail restores sanity to bash scripts. Google it!
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 WORKDIR /buildroot
 
 # NOTE(Jack): What is going on here? Let me explain :)
@@ -22,11 +23,6 @@ WORKDIR /buildroot
 # folder on the host system.
 ENV REPROJECTION_SQL_DIR=code/resources/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/${REPROJECTION_SQL_DIR}
-
-# TODO(Jack): Is it a bad idea to use /root as the home? In general should we be using a user?
-ENV HOME=/root
-ENV PYENV_ROOT="${HOME}/.pyenv"
-ENV VENV_DIR="${HOME}/.reprojection_venv"
 
 
 FROM configuration-stage AS apt-base-stage
@@ -55,6 +51,9 @@ ARG APT_INSTALL_CMAKE=building/install_scripts/apt_install_cmake.sh
 RUN --mount=type=bind,source=${APT_INSTALL_CMAKE},target=/temporary/${APT_INSTALL_CMAKE} \
     /temporary/${APT_INSTALL_CMAKE}
 
+ARG APT_INSTALL_PYENV_DEPS=building/install_scripts/apt_install_pyenv_deps.sh
+RUN --mount=type=bind,source=${APT_INSTALL_PYENV_DEPS},target=/temporary/${APT_INSTALL_PYENV_DEPS} \
+    /temporary/${APT_INSTALL_PYENV_DEPS}
 
 FROM apt-base-stage AS build-ceres-stage
 
@@ -81,6 +80,25 @@ FROM apt-base-stage AS base-stage
 
 COPY --from=build-ceres-stage /usr/local /usr/local
 COPY --from=build-small-libraries-stage /usr/local /usr/local
+
+# TODO(Jack): We cannot install to the default $HOME directory (pyenv's default) because in our current userless setup
+# that defaults to /root. This is fine during the build process but the second that we actually want to run the
+# the dashboard for example we get 'permission denied' errors from the python environment.
+ENV PYENV_ROOT="/opt/.pyenv"
+ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
+
+ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
+RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
+    /temporary/${INSTALL_PYENV}; \
+    pyenv global 3.12
+
+ARG BINDING_BUILD_VENV=/buildroot/.venv-binding-build
+RUN --mount=type=bind,source=building/scripts/requirements-binding-build-env.txt,target=/temporary/building/scripts/requirements-binding-build-env.txt \
+    python -m venv ${BINDING_BUILD_VENV}; \
+    ${BINDING_BUILD_VENV}/bin/python \
+      -m pip install -r /temporary/building/scripts/requirements-binding-build-env.txt
+
+ENV REPROJECTION_VENV=/buildroot/.venv-reprojection
 
 
 FROM configuration-stage AS code-checks-stage
@@ -113,16 +131,11 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
 
 FROM base-stage AS python-binding-stage
 
-ARG APT_INSTALL_PYTHON_BINDING_DEPS=building/install_scripts/apt_install_python_binding_deps.sh
-RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_BINDING_DEPS},target=/temporary/${APT_INSTALL_PYTHON_BINDING_DEPS} \
-    /temporary/${APT_INSTALL_PYTHON_BINDING_DEPS}
-
-
+# TODO(Jack): I wish we could also run the binding c++ side unit tests here but we do not.
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        set -eoux pipefail; \
-        python3 \
+        ${BINDING_BUILD_VENV}/bin/python \
           -m build \
           -Ccmake.define.BUILD_TESTING=OFF  \
           -Ccmake.define.REPROJECTION_BUILD_PYTHON_BINDINGS=ON  \
@@ -131,26 +144,12 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
           /temporary/code/library/projection_functions
 
 
-# TODO(Jack): This should just inherit from the configuration-stage, there is no reason we need 99% of the apt deps
-# that we currently get here.
-FROM apt-base-stage AS build-python-env-stage
+FROM base-stage AS python-tooling-base-stage
 
-ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
-RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
-    /temporary/${INSTALL_PYENV}
-
-ARG APT_INSTALL_PYTHON_VENV_DEPS=building/install_scripts/apt_install_python_venv_deps.sh
-RUN --mount=type=bind,source=${APT_INSTALL_PYTHON_VENV_DEPS},target=/temporary/${APT_INSTALL_PYTHON_VENV_DEPS} \
-    /temporary/${APT_INSTALL_PYTHON_VENV_DEPS}
-
-ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
-      /temporary/${SOURCE_INSTALL_SQLITE}
-
-ARG BUILD_PYTHON_VENV=building/scripts/build_python_venv.sh
-RUN --mount=type=bind,source=${BUILD_PYTHON_VENV},target=/temporary/${BUILD_PYTHON_VENV} \
-    /temporary/${BUILD_PYTHON_VENV}
+RUN --mount=type=bind,source=building/scripts/requirements-reprojection-env.txt,target=/temporary/building/scripts/requirements-reprojection-env.txt \
+    python -m venv ${REPROJECTION_VENV}; \
+    ${REPROJECTION_VENV}/bin/python \
+      -m pip install -r /temporary/building/scripts/requirements-reprojection-env.txt
 
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
 # system or run without special permissions that docker cannot provide. We copy it to the temporary directory so that
@@ -165,14 +164,12 @@ ARG PROTO_DIRECTORY=/temporary/code/resources/proto
 
 # WARN(Jack): Right now the dashboard is only built and tested on ubuntu 24. It would be nice if we could make the
 # python tooling and binding pipeline generic enough that it worked on any distro
-FROM build-python-env-stage AS dashboard-stage
+FROM python-tooling-base-stage AS dashboard-stage
 
-# TODO(Jack): This logic here is repeated once here and in the local venv install script. Not a deal breaker, but again
-# goes to show how cool it would be if we could just build the venv here once and then copy it to the host.
-# TODO(Jack): Should we copy and install specifically the wheel whose name we know and want?
-COPY --from=python-binding-stage /buildroot/wheels /buildroot/wheels
-RUN set -eoux pipefail; \
-    "${VENV_DIR}/bin/python3" -m pip install --force-reinstall /buildroot/wheels/*.whl
+# Install the python binding wheel into the python tooling venv.
+RUN --mount=type=bind,from=python-binding-stage,source=/buildroot/wheels,target=/temporary/wheels \
+    ${REPROJECTION_VENV}/bin/python \
+      -m pip install /temporary/wheels/*.whl
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
@@ -184,6 +181,7 @@ COPY building/scripts/entrypoint_dashboard.sh /buildroot/entrypoint_dashboard.sh
 
 ENTRYPOINT ["/buildroot/entrypoint_dashboard.sh"]
 
+
 FROM dashboard-stage AS dashboard-smoke-test-stage
 
 HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.0.1:8050 || exit 1
@@ -191,7 +189,7 @@ HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.
 
 # NOTE(Jack): The report stage has no python binding dependecy which makes it easier to deploy in all application
 # release apps.
-FROM build-python-env-stage AS report-stage
+FROM python-tooling-base-stage AS report-stage
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
@@ -226,14 +224,15 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-      set -eoux pipefail; \
+      source ${BINDING_BUILD_VENV}/bin/activate; \
       source /temporary/${SOURCE_INSTALL_UTILS}; \
       cmake_build \
         /temporary/code/library \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING=ON \
         -DREPROJECTION_BUILD_PYTHON_BINDINGS=ON \
-        -DREPROJECTION_ENABLE_COVERAGE=ON; \
+        -DREPROJECTION_ENABLE_COVERAGE=ON \
+        -Dpybind11_DIR="$(python -m pybind11 --cmakedir)"; \
       cmake_test \
         /temporary/code/library
 
@@ -262,13 +261,18 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 
 FROM base-stage AS development-stage
 
-# TODO(Jack): We install python3-numpy/pybind11 so that we can build and test the bindings in the clion dev environment.
-# Do these installs belong directly in the apt dependencies instead?
-RUN set -eoux pipefail;  \
-    apt-get update;  \
+RUN apt-get update;  \
     apt-get install --no-install-recommends --yes  \
         gdb; \
     rm --force --recursive /var/lib/apt/lists/*
+
+# TODO(Jack): I wish we could do something like 'pyenv set global ${BINDING_BUILD_VENV}' but I could not get that to
+# work.
+ENV PATH="${BINDING_BUILD_VENV}/bin:${PATH}"
+# TODO(Jack): I wish we could call something like '$(python -m pybind11 --cmakedir' instead of hardcoding it here or
+# be able to call that directly in the CLion dev toolchain but it does not allow us to evaluate expressions in the cmake
+# configuration, so our best option is to export this as an environmental variable here.
+ENV PYBIND11_DIR=/buildroot/.venv-binding-build/lib/python3.12/site-packages/pybind11/share/cmake/pybind11
 
 
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
@@ -281,7 +285,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        set -eoux pipefail; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
             /temporary/code/library \
@@ -300,7 +303,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        set -eoux pipefail; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
             /temporary/code/library \
@@ -385,7 +387,7 @@ FROM ros1-base-stage AS ros1-release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
-        set -eox pipefail; \
+        set +u; \
         source /opt/ros/noetic/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
@@ -404,7 +406,7 @@ FROM ros2-base-stage AS ros2-release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros2/,target=/temporary/code/application_ros2 \
-        set -eox pipefail; \
+        set +u; \
         source /opt/ros/jazzy/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
@@ -425,7 +427,7 @@ COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    set -eox pipefail; \
+    set +u; \
     source /opt/ros/noetic/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
@@ -440,7 +442,7 @@ COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
-    set -eox pipefail; \
+    set +u; \
     source /opt/ros/jazzy/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros2.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16/"; \
@@ -466,7 +468,7 @@ ENV APP_FLAVOR=ros1
 
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
 COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
+COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
@@ -481,7 +483,7 @@ ENV APP=/opt/reprojection/bin/application_ros2.reprojection_app
 ENV APP_FLAVOR=ros2
 
 COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
+COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
@@ -496,7 +498,7 @@ ENV APP=/opt/reprojection/bin/application.calibration
 ENV APP_FLAVOR=video-file
 
 COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
+COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
