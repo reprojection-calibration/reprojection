@@ -18,7 +18,7 @@ PROTO_DIRECTORY="${PROTO_DIRECTORY:-code/resources/proto}"
 VENV_DIR="${VENV_DIR:-${HOME}/.reprojection_venv}"
 
 # shellcheck disable=SC1091
-source "${VENV_DIR}/bin/activate"
+source "${REPROJECTION_VENV}/bin/activate"
 
 # TODO(Jack): I would have liked to have the protobuf definition as an integrated part of the package (ex. in setup.py)
 # but I could not get grpc_tools recognized in the setup.py script. Possibly to do with the fact that setup.py does not

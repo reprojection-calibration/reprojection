@@ -25,9 +25,6 @@ ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/${REPROJECTION_SQL_DIR}
 
 # TODO(Jack): Is it a bad idea to use /root as the home? In general should we be using a user?
 ENV HOME=/root
-# REMOVE
-ENV PYENV_ROOT="${HOME}/.pyenv"
-ENV VENV_DIR="${HOME}/.reprojection_venv"
 
 
 FROM configuration-stage AS apt-base-stage
@@ -86,8 +83,8 @@ FROM apt-base-stage AS base-stage
 COPY --from=build-ceres-stage /usr/local /usr/local
 COPY --from=build-small-libraries-stage /usr/local /usr/local
 
+ENV PYENV_ROOT="${HOME}/.pyenv"
 ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
-ENV PATH=${PYENV_ROOT}/bin:${PATH}
 RUN curl -fsSL https://pyenv.run | bash
 RUN pyenv install 3.12
 RUN pyenv global 3.12
@@ -142,12 +139,14 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
           /temporary/code/library/projection_functions
 
 
-FROM base-stage AS build-python-env-stage
+FROM base-stage AS python-tooling-base-stage
+
+ENV REPROJECTION_VENV=/buildroot/.venv-reprojection
 
 RUN --mount=type=bind,source=building/scripts/requirements-reprojection-env.txt,target=/temporary/building/scripts/requirements-reprojection-env.txt \
     set -eoux pipefail; \
-    python -m venv .venv-reprojection; \
-    /buildroot/.venv-reprojection/bin/python \
+    python -m venv ${REPROJECTION_VENV}; \
+    ${REPROJECTION_VENV}/bin/python \
       -m pip install -r /temporary/building/scripts/requirements-reprojection-env.txt
 
 # Copy the code directly in because python has a lot of inplace build artefacts that are hard to keep off the local
@@ -163,13 +162,12 @@ ARG PROTO_DIRECTORY=/temporary/code/resources/proto
 
 # WARN(Jack): Right now the dashboard is only built and tested on ubuntu 24. It would be nice if we could make the
 # python tooling and binding pipeline generic enough that it worked on any distro
-FROM build-python-env-stage AS dashboard-stage
+FROM python-tooling-base-stage AS dashboard-stage
 
-# TODO(Jack): This logic here is repeated once here and in the local venv install script. Not a deal breaker, but again
-# goes to show how cool it would be if we could just build the venv here once and then copy it to the host.
-# TODO(Jack): Should we copy and install specifically the wheel whose name we know and want?
+# Install the python binding wheel into the python tooling venv.
 RUN --mount=type=bind,from=python-binding-stage,source=/buildroot/wheels,target=/temporary/wheels \
-    python -m pip install /temporary/wheels/*.whl
+    ${REPROJECTION_VENV}/bin/python \
+      -m pip install /temporary/wheels/*.whl
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
@@ -181,6 +179,7 @@ COPY building/scripts/entrypoint_dashboard.sh /buildroot/entrypoint_dashboard.sh
 
 ENTRYPOINT ["/buildroot/entrypoint_dashboard.sh"]
 
+
 FROM dashboard-stage AS dashboard-smoke-test-stage
 
 HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.0.1:8050 || exit 1
@@ -188,7 +187,7 @@ HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.
 
 # NOTE(Jack): The report stage has no python binding dependecy which makes it easier to deploy in all application
 # release apps.
-FROM build-python-env-stage AS report-stage
+FROM python-tooling-base-stage AS report-stage
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
