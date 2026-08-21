@@ -6,7 +6,8 @@ FROM ${BASE_IMAGE} AS configuration-stage
 ARG DEBIAN_FRONTEND=noninteractive
 ARG SOURCE_INSTALL_UTILS=building/install_scripts/source_install_utils.sh
 
-SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
+# Note that -euo pipefail restores sanity to bash scripts. Google it!
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 WORKDIR /buildroot
 
 # NOTE(Jack): What is going on here? Let me explain :)
@@ -387,6 +388,7 @@ FROM ros1-base-stage AS ros1-release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/resources/cmake_macros/,target=/temporary/code/resources/cmake_macros \
     --mount=type=bind,source=code/application_ros1/,target=/temporary/code/application_ros1 \
+        set +u; \
         source /opt/ros/noetic/setup.bash; \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
@@ -425,6 +427,7 @@ COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \
+    set +u; \
     source /opt/ros/noetic/setup.bash; \
     export APP="/opt/reprojection/bin/application_ros1.reprojection_app"; \
     export DATA="/data/dataset-calib-imu4_512_16.bag"; \
