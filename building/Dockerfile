@@ -262,13 +262,19 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 
 FROM base-stage AS development-stage
 
-# TODO(Jack): We install python3-numpy/pybind11 so that we can build and test the bindings in the clion dev environment.
-# Do these installs belong directly in the apt dependencies instead?
 RUN set -eoux pipefail;  \
     apt-get update;  \
     apt-get install --no-install-recommends --yes  \
         gdb; \
     rm --force --recursive /var/lib/apt/lists/*
+
+# TODO(Jack): I wish we could do something like 'pyenv set global ${BINDING_BUILD_VENV}' but I could not get that to
+# work.
+ENV PATH="${BINDING_BUILD_VENV}/bin:${PATH}"
+# TODO(Jack): I wish we could call something like '$(python -m pybind11 --cmakedir' instead of hardcoding it here or
+# be able to call that directly in the CLion dev toolchain but it does not allow us to evaluate expressions in the cmake
+# configuration, so our best option is to export this as an environmental variable here.
+ENV PYBIND11_DIR=/buildroot/.venv-binding-build/lib/python3.12/site-packages/pybind11/share/cmake/pybind11
 
 
 # NOTE(Jack): In the CI pipeline and for local development we often need debugging and code coverage, therefore we do
