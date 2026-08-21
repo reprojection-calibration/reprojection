@@ -72,6 +72,6 @@ esac
 
 # -- run the report generation -- #
 # shellcheck disable=SC1091
-source "${VENV_DIR}/bin/activate"
+source "${REPROJECTION_VENV}/bin/activate"
 
 python3 -m report.run --workspace "${workspace}"

@@ -23,9 +23,6 @@ WORKDIR /buildroot
 ENV REPROJECTION_SQL_DIR=code/resources/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/${REPROJECTION_SQL_DIR}
 
-# TODO(Jack): Is it a bad idea to use /root as the home? In general should we be using a user?
-ENV HOME=/root
-
 
 FROM configuration-stage AS apt-base-stage
 
@@ -83,7 +80,10 @@ FROM apt-base-stage AS base-stage
 COPY --from=build-ceres-stage /usr/local /usr/local
 COPY --from=build-small-libraries-stage /usr/local /usr/local
 
-ENV PYENV_ROOT="${HOME}/.pyenv"
+# TODO(Jack): We cannot install to the default $HOME directory (pyenv's default) because in our current userless setup
+# that defaults to /root. This is fine during the build process but the second that we actually want to run the
+# the dashboard for example we get 'permission denied' errors from the python environment.
+ENV PYENV_ROOT="/opt/.pyenv"
 ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
 RUN curl -fsSL https://pyenv.run | bash
 RUN pyenv install 3.12
@@ -119,10 +119,12 @@ RUN --mount=type=bind,source=${CODE_CHECKS_PYTHON},target=/temporary/${CODE_CHEC
 
 FROM base-stage AS python-binding-stage
 
+ARG BINDING_BUILD_VENV=/buildroot/.venv-binding-build
+
 RUN --mount=type=bind,source=building/scripts/requirements-binding-build-env.txt,target=/temporary/building/scripts/requirements-binding-build-env.txt \
     set -eoux pipefail; \
-    python -m venv .venv-binding-build; \
-    /buildroot/.venv-binding-build/bin/python \
+    python -m venv ${BINDING_BUILD_VENV}; \
+    ${BINDING_BUILD_VENV}/bin/python \
       -m pip install -r /temporary/building/scripts/requirements-binding-build-env.txt
 
 # TODO(Jack): I wish we could also run the binding c++ side unit tests here but we do not.
@@ -130,7 +132,7 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         set -eoux pipefail; \
-        /buildroot/.venv-binding-build/bin/python \
+        ${BINDING_BUILD_VENV}/bin/python \
           -m build \
           -Ccmake.define.BUILD_TESTING=OFF  \
           -Ccmake.define.REPROJECTION_BUILD_PYTHON_BINDINGS=ON  \
@@ -462,7 +464,7 @@ ENV APP_FLAVOR=ros1
 
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
 COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
+COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
@@ -477,7 +479,7 @@ ENV APP=/opt/reprojection/bin/application_ros2.reprojection_app
 ENV APP_FLAVOR=ros2
 
 COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
+COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
@@ -492,7 +494,7 @@ ENV APP=/opt/reprojection/bin/application.calibration
 ENV APP_FLAVOR=video-file
 
 COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${VENV_DIR} ${VENV_DIR}
+COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection

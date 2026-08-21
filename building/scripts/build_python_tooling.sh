@@ -15,7 +15,7 @@ EDITABLE_INSTALL=${EDITABLE_INSTALL:-0}
 # run all scripts from the project root directory and everything works like it does in the dockerized environment.
 PACKAGE_DIRECTORY="${PACKAGE_DIRECTORY:-code/python_tooling}"
 PROTO_DIRECTORY="${PROTO_DIRECTORY:-code/resources/proto}"
-VENV_DIR="${VENV_DIR:-${HOME}/.reprojection_venv}"
+REPROJECTION_VENV="${REPROJECTION_VENV:-${HOME}/.venv-reprojection}"
 
 # shellcheck disable=SC1091
 source "${REPROJECTION_VENV}/bin/activate"
