@@ -3,6 +3,7 @@
 #include <ceres/ceres.h>
 
 #include "projection_functions/pinhole.hpp"
+#include "projection_functions/spherical_projection.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {
@@ -21,45 +22,11 @@ struct DoubleSphere {
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
-        T const& x{P_co[0]};
-        T const& y{P_co[1]};
-        T const& z{P_co[2]};
+        T const beta{1};   // Removes any ellipsoidal shape.
+        Eigen::Array<T, 6, 1> const spherical_projection_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2),
+                                                                    intrinsics(3), intrinsics(4), beta);
 
-        T const xx{x * x};
-        T const yy{y * y};
-        T const r2{xx + yy};
-        T const d1{ceres::sqrt(r2 + z * z)};
-
-        T const& xi{intrinsics[3]};
-        T const& alpha{intrinsics[4]};
-
-        if (not ValidProjection(z, xi, alpha, d1)) {
-            return std::nullopt;
-        }
-
-        T const wz{xi * d1 + z};  // wz = "weighted z"
-        T const d2{ceres::sqrt(r2 + wz * wz)};
-
-        T const z_star{(alpha * d2) + (1.0 - alpha) * wz};
-        Array3<T> const P_star{x, y, z_star};
-
-        return Pinhole::Project<T>(intrinsics.template head<3>(), bounds, P_star);
-    }
-
-    // TODO(Jack): There is absolutely no reason why this needs to be templated! There is no need to get the ceres jet
-    //  autdiff gradients in here. This function should just accept double type and the jets should be cast to double in
-    //  the projection function below.,
-    template <typename T>
-    static bool ValidProjection(T const z, T const xi, T const alpha, T const d1) {
-        T const w1{alpha <= 0.5 ? alpha / (1.0 - alpha) : (1.0 - alpha) / alpha};  // (Eqn. 45)
-        T const w2{(w1 + xi) / ceres::sqrt(2.0 * w1 * xi + xi * xi + 1.0)};        // (Eqn. 44)
-
-        // (Eqn. 43)
-        if (z > -w2 * d1) {
-            return true;
-        } else {
-            return false;
-        }
+        return SphericalProjection<T>(spherical_projection_intrinsics, bounds, P_co);
     }
 
     static std::optional<Array3d> Unproject(Eigen::Array<double, Size, 1> const& intrinsics, ImageBounds const& bounds,

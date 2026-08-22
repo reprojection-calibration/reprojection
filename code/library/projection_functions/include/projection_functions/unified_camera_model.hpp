@@ -11,12 +11,11 @@ namespace reprojection::projection_functions {
 
 /**
  * \ingroup projection_classes
- * \brief Implemented as a degenerate case of the DoubleSphere model (xi=1, alpha=0).
+ * \brief
  */
 struct UnifiedCameraModel {
     static int constexpr Size{4};
 
-    // TODO(Jack): The UCM model is so similar to double sphere, then why is the initialization strategy so different?
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
         return {gamma, 0.5 * width, 0.5 * height, 1};
     }
@@ -24,11 +23,14 @@ struct UnifiedCameraModel {
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
-        T const alpha{0};  // Set alpha to zero - make ds equivalent to ucm by collapsing the second sphere in ds
-        Eigen::Array<T, DoubleSphere::Size, 1> const ds_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2),
-                                                                   intrinsics(3), alpha);
+        // TODO(Jack): Should we add a set of factory functions to construct the proper intrinsic depending on which
+        // projection we want.
+        T const alpha{0};
+        T const beta{1};
+        Eigen::Array<T, 6, 1> const spherical_projection_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2),
+                                                                    intrinsics(3), alpha, beta);
 
-        return DoubleSphere::Project<T>(ds_intrinsics, bounds, P_co);
+        return SphericalProjection<T>(spherical_projection_intrinsics, bounds, P_co);
     }
 
     static std::optional<Array3d> Unproject(Eigen::Array<double, Size, 1> const& intrinsics, ImageBounds const& bounds,
