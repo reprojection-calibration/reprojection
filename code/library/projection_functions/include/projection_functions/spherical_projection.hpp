@@ -39,8 +39,8 @@ static std::optional<Array2<T>> SphericalProjection(Eigen::Array<T, 6, 1> const&
     T const r2{xx + yy};
     T const d1{ceres::sqrt(r2 + z * z)};
 
-    T const& xi{intrinsics[3]};
-    T const& alpha{intrinsics[4]};
+    T const& alpha{intrinsics[3]};
+    T const& xi{intrinsics[4]};
     T const& beta{intrinsics[5]};
 
     // TODO(Jack): Account for beta and ucm and eucm, what are their valid projection regions?!?!

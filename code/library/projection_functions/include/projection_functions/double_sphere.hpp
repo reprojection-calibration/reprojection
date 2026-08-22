@@ -22,9 +22,9 @@ struct DoubleSphere {
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
-        T const beta{1};   // Removes any ellipsoidal shape.
+        T const beta{1};
         Eigen::Array<T, 6, 1> const spherical_projection_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2),
-                                                                    intrinsics(3), intrinsics(4), beta);
+                                                                    intrinsics(4), intrinsics(3), beta);
 
         return SphericalProjection<T>(spherical_projection_intrinsics, bounds, P_co);
     }
