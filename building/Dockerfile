@@ -87,6 +87,12 @@ COPY --from=build-small-libraries-stage /usr/local /usr/local
 ENV PYENV_ROOT="/opt/.pyenv"
 ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
 
+# NOTE(Jack): Here we set python 3.12 as the global python version so that way we are consistent across all base images
+# regardless of the application. This is why we needed to add '${PYENV_ROOT}/shims' to the PATH, because that is how
+# pyenv controls which python is dispatched (https://stackoverflow.com/questions/2116142/what-is-a-shim). The reason
+# that we set the global python version here and not in the pyenv installation script is because developers might run
+# the INSTALL_PYENV script locally as part of the python tooling venv installation, and we do not want to change a
+# users local system property like their global version :)
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
     /temporary/${INSTALL_PYENV}; \
@@ -144,7 +150,7 @@ RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
           /temporary/code/library/projection_functions
 
 
-FROM base-stage AS python-tooling-base-stage
+FROM base-stage AS python-tooling-stage
 
 RUN --mount=type=bind,source=building/scripts/requirements-reprojection-env.txt,target=/temporary/building/scripts/requirements-reprojection-env.txt \
     python -m venv ${REPROJECTION_VENV}; \
@@ -161,11 +167,6 @@ COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
 ARG PROTO_DIRECTORY=/temporary/code/resources/proto
 
-
-# WARN(Jack): Right now the dashboard is only built and tested on ubuntu 24. It would be nice if we could make the
-# python tooling and binding pipeline generic enough that it worked on any distro
-FROM python-tooling-base-stage AS dashboard-stage
-
 # Install the python binding wheel into the python tooling venv.
 RUN --mount=type=bind,from=python-binding-stage,source=/buildroot/wheels,target=/temporary/wheels \
     ${REPROJECTION_VENV}/bin/python \
@@ -177,6 +178,9 @@ RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_P
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     RUN_TESTS=1 /temporary/${BUILD_PYTHON_TOOLING}
 
+
+FROM python-tooling-stage AS dashboard-stage
+
 COPY building/scripts/entrypoint_dashboard.sh /buildroot/entrypoint_dashboard.sh
 
 ENTRYPOINT ["/buildroot/entrypoint_dashboard.sh"]
@@ -185,17 +189,6 @@ ENTRYPOINT ["/buildroot/entrypoint_dashboard.sh"]
 FROM dashboard-stage AS dashboard-smoke-test-stage
 
 HEALTHCHECK --interval=1s --timeout=5s --retries=5 CMD curl --fail http://127.0.0.1:8050 || exit 1
-
-
-# NOTE(Jack): The report stage has no python binding dependecy which makes it easier to deploy in all application
-# release apps.
-FROM python-tooling-base-stage AS report-stage
-
-ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
-RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
-    --mount=type=bind,source=code/resources/proto,target=/temporary/code/resources/proto \
-    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
-        RUN_TESTS=0 /temporary/${BUILD_PYTHON_TOOLING}
 
 
 # The code coverage solution here was adopted from https://github.com/reprojection-calibration/cpp-coverage-example
@@ -467,8 +460,8 @@ ENV APP=/opt/reprojection/bin/application_ros1.reprojection_app
 ENV APP_FLAVOR=ros1
 
 # TODO(Jack): These four lines are copy and pasted now in all three release stages, is there anyway to simplify that?
-COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
+COPY --from=python-tooling-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=python-tooling-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros1-release-build-stage /opt/reprojection /opt/reprojection
@@ -482,8 +475,8 @@ FROM ros2-base-stage AS ros2-app-stage
 ENV APP=/opt/reprojection/bin/application_ros2.reprojection_app
 ENV APP_FLAVOR=ros2
 
-COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
+COPY --from=python-tooling-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=python-tooling-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=ros2-release-build-stage /opt/reprojection /opt/reprojection
@@ -497,8 +490,8 @@ FROM base-stage AS video-file-app-stage
 ENV APP=/opt/reprojection/bin/application.calibration
 ENV APP_FLAVOR=video-file
 
-COPY --from=report-stage ${PYENV_ROOT} ${PYENV_ROOT}
-COPY --from=report-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
+COPY --from=python-tooling-stage ${PYENV_ROOT} ${PYENV_ROOT}
+COPY --from=python-tooling-stage ${REPROJECTION_VENV} ${REPROJECTION_VENV}
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
