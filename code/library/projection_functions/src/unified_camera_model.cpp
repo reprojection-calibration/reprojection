@@ -6,8 +6,8 @@ namespace reprojection::projection_functions {
 //  the ucm projection function for more context.
 std::optional<Array3d> UnifiedCameraModel::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
                                                      ImageBounds const& bounds, Array2d const& pixel) {
-    double const alpha{0};
-    Array5d const ds_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), intrinsics(3), alpha);
+    double const xi{0};
+    Array5d const ds_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), xi, intrinsics(3));
 
     return DoubleSphere::Unproject(ds_intrinsics, bounds, pixel);
 }

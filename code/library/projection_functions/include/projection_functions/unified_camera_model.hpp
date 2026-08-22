@@ -17,18 +17,16 @@ struct UnifiedCameraModel {
     static int constexpr Size{4};
 
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return {gamma, 0.5 * width, 0.5 * height, 1};
+        return {gamma, 0.5 * width, 0.5 * height, 0.5};
     }
 
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
-        // TODO(Jack): Should we add a set of factory functions to construct the proper intrinsic depending on which
-        // projection we want.
-        T const alpha{0};
+        T const xi{0};
         T const beta{1};
         Eigen::Array<T, 6, 1> const spherical_projection_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2),
-                                                                    intrinsics(3), alpha, beta);
+                                                                    intrinsics(3), xi, beta);
 
         return SphericalProjection<T>(spherical_projection_intrinsics, bounds, P_co);
     }
