@@ -6,7 +6,7 @@ set -eoux pipefail
 # either of the following things installed we put these in if else blocks.
 
 if ! command -v pyenv >/dev/null 2>&1; then
-    wget -qO- https://pyenv.run | bash
+    curl -fsSL https://pyenv.run | bash
 fi
 
 if ! pyenv versions --bare | grep -q '^3\.12'; then

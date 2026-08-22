@@ -87,6 +87,12 @@ COPY --from=build-small-libraries-stage /usr/local /usr/local
 ENV PYENV_ROOT="/opt/.pyenv"
 ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
 
+# NOTE(Jack): Here we set python 3.12 as the global python version so that way we are consistent across all base images
+# regardless of the application. This is why we needed to add '${PYENV_ROOT}/shims' to the PATH, because that is how
+# pyenv controls which python is dispatched (https://stackoverflow.com/questions/2116142/what-is-a-shim). The reason
+# that we set the global python version here and not in the pyenv installation script is because developers might run
+# the INSTALL_PYENV script locally as part of the python tooling venv installation, and we do not want to change a
+# users local system property like their global version :)
 ARG INSTALL_PYENV=building/install_scripts/install_pyenv.sh
 RUN --mount=type=bind,source=${INSTALL_PYENV},target=/temporary/${INSTALL_PYENV} \
     /temporary/${INSTALL_PYENV}; \
