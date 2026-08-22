@@ -107,6 +107,8 @@ Please add the following entry to your configuration file:
 
 ## Camera Models
 
+// TODO UPDATE TO REFLECT NEW SPHERICAL PROJECTION!!!!
+
 The following camera models are supported:
 
 1) `double_sphere` - [f, cx, cy, xi, alpha]
