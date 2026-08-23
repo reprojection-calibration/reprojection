@@ -51,4 +51,7 @@ static std::optional<Array2<T>> SphericalProjection(Eigen::Array<T, 6, 1> const&
     return Pinhole::Project<T>(intrinsics.template head<3>(), bounds, P_star);
 }
 
+std::optional<Array3d> SphericalUnprojection(Eigen::Array<double, 6, 1> const& intrinsics, ImageBounds const& bounds,
+                                             Array2d const& pixel);
+
 }  // namespace reprojection::projection_functions
