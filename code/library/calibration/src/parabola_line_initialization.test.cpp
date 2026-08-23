@@ -26,10 +26,13 @@ std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3
         points_co.row(i) = line.pointAt(i);
     }
 
-    // Project the four points to pixels using the ucm camera model with xi=1 (i.e. parabola case) and a focal
+    // Project the four points to pixels using the ucm camera model with alpha=0.5 (i.e. parabola case) and a focal
     // length/gamma of 600
+    // NOTE(Jack): We use the alternative UCM representation described in equation (7) from
+    // https://cvg.cit.tum.de/_media/spezial/bib/usenko18double-sphere.pdf. An alpha = 0.5 corresponds to a xi=1 and a
+    // gamma value of 1200 corresponds to focal length of 600.
     Array2d const principal_point{360, 240};
-    Array4d const intrinsics{600, principal_point[0], principal_point[1], 1};
+    Array4d const intrinsics{600, principal_point[0], principal_point[1], 0.5};
     auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
     // ERROR
     // ERROR
@@ -44,24 +47,24 @@ std::tuple<MatrixX2d, Vector2d> LinearTestPixels(Vector3d const& origin, Vector3
 
 TEST(CalibrationParabolaLineInitialization, TestParabolaLineInitialization) {
     auto [pixels, principal_point]{LinearTestPixels({150, 150, 600}, {-10, 5, 0})};
-    auto f{calibration::ParabolaLineInitialization(principal_point, pixels)};
-    ASSERT_TRUE(f.has_value());
-    EXPECT_FLOAT_EQ(f.value(), 600);
+    auto gamma{calibration::ParabolaLineInitialization(principal_point, pixels)};
+    ASSERT_TRUE(gamma.has_value());
+    EXPECT_FLOAT_EQ(gamma.value(), 1200);
 
     std::tie(pixels, principal_point) = LinearTestPixels({-150, -150, 600}, {5, -10, -10});
-    f = calibration::ParabolaLineInitialization(principal_point, pixels);
-    ASSERT_TRUE(f.has_value());
-    EXPECT_FLOAT_EQ(f.value(), 600);
+    gamma = calibration::ParabolaLineInitialization(principal_point, pixels);
+    ASSERT_TRUE(gamma.has_value());
+    EXPECT_FLOAT_EQ(gamma.value(), 1200);
 
     std::tie(pixels, principal_point) = LinearTestPixels({150, -150, 600}, {-5, -10, -10});
-    f = calibration::ParabolaLineInitialization(principal_point, pixels);
-    ASSERT_TRUE(f.has_value());
-    EXPECT_FLOAT_EQ(f.value(), 600);
+    gamma = calibration::ParabolaLineInitialization(principal_point, pixels);
+    ASSERT_TRUE(gamma.has_value());
+    EXPECT_FLOAT_EQ(gamma.value(), 1200);
 
     std::tie(pixels, principal_point) = LinearTestPixels({-150, 150, 600}, {-5, -10, 10});
-    f = calibration::ParabolaLineInitialization(principal_point, pixels);
-    ASSERT_TRUE(f.has_value());
-    EXPECT_FLOAT_EQ(f.value(), 600);
+    gamma = calibration::ParabolaLineInitialization(principal_point, pixels);
+    ASSERT_TRUE(gamma.has_value());
+    EXPECT_FLOAT_EQ(gamma.value(), 1200);
 }
 
 TEST(CalibrationParabolaLineInitialization, TestRadialLines) {

@@ -2,9 +2,11 @@ set(LIBRARY_NAME "projection_functions")
 
 set(SRC_FILES
         src/double_sphere.cpp
+        src/extended_unified_camera_model.cpp
         src/initialize_camera.cpp
         src/pinhole.cpp
         src/pinhole_radtan4.cpp
+        src/spherical_projections.cpp
         src/unified_camera_model.cpp
 )
 set(PRIVATE_LINK_LIBRARIES
@@ -21,6 +23,7 @@ set(TEST_LINK_LIBRARIES
 set(TESTS
         test/camera_model.test.cpp
         test/double_sphere.test.cpp
+        test/extended_unified_camera_model.test.cpp
         test/image_bounds.test.cpp
         test/initialize_camera.test.cpp
         test/pinhole.test.cpp
@@ -42,9 +45,9 @@ if (REPROJECTION_BUILD_PYTHON_BINDINGS)
     # pass pybind11_DIR via the regular -D... cmake method every developer would need to have the massive absolute path
     # to pybind in the venv. Therefore to avoid this we set PYBIND11_DIR as environmental variable in the
     # development-stage (which unfortunately we have to hardcode).
-    if(DEFINED ENV{PYBIND11_DIR})
+    if (DEFINED ENV{PYBIND11_DIR})
         set(pybind11_DIR "$ENV{PYBIND11_DIR}")
-    endif()
+    endif ()
 
     set(PYBIND11_FINDPYTHON ON)
     find_package(pybind11 CONFIG REQUIRED)

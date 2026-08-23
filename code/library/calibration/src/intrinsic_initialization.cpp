@@ -18,7 +18,8 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
                                                                                   double const height,
                                                                                   double const width) {
     CandidateGenerator runner;
-    if (camera_model == CameraModel::DoubleSphere or camera_model == CameraModel::UnifiedCameraModel) {
+    if (camera_model == CameraModel::DoubleSphere or camera_model == CameraModel::ExtendedUnifiedCameraModel or
+        camera_model == CameraModel::UnifiedCameraModel) {
         runner = [height, width](ExtractedTarget const& target) {
             return EstimateCandidatesParabolaLine(target, height / 2, width / 2);
         };
@@ -33,6 +34,8 @@ std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrateg
     IntrinsicsInitializer initializer;
     if (camera_model == CameraModel::DoubleSphere) {
         initializer = projection_functions::DoubleSphere::Initialize;
+    } else if (camera_model == CameraModel::ExtendedUnifiedCameraModel) {
+        initializer = projection_functions::ExtendedUnifiedCameraModel::Initialize;
     } else if (camera_model == CameraModel::Pinhole) {
         initializer = projection_functions::Pinhole::Initialize;
     } else if (camera_model == CameraModel::PinholeRadtan4) {

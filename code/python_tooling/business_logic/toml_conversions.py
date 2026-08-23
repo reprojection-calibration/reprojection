@@ -13,6 +13,9 @@ def toml_to_intrinsic_array(intrinsics_str, camera_model):
     if camera_model == CameraModel.DoubleSphere:
         ds = [intrinsics_toml["xi"], intrinsics_toml["alpha"]]
         intrinsics.extend(ds)
+    elif camera_model == CameraModel.ExtendedUnifiedCameraModel:
+        ds = [intrinsics_toml["alpha"], intrinsics_toml["beta"]]
+        intrinsics.extend(ds)
     elif camera_model == CameraModel.Pinhole:
         pass
     elif camera_model == CameraModel.PinholeRadtan4:
@@ -24,7 +27,7 @@ def toml_to_intrinsic_array(intrinsics_str, camera_model):
         ]
         intrinsics.extend(radtan4)
     elif camera_model == CameraModel.UnifiedCameraModel:
-        ucm = [intrinsics_toml["xi"]]
+        ucm = [intrinsics_toml["alpha"]]
         intrinsics.extend(ucm)
     else:
         raise ValueError(

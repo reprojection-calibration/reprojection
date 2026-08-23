@@ -9,19 +9,20 @@
 
 using namespace reprojection;
 
-Array4d const intrinsics{600, 360, 240, 0.1};
+Array4d const intrinsics{600, 360, 240, 0.5};
 MatrixX2d const gt_pixels{{intrinsics[1], intrinsics[2]},
-                          {37.598189013469323, intrinsics[2]},
-                          {682.31472984876814, intrinsics[2]},
-                          {intrinsics[1], 23.33548267325537},
-                          {intrinsics[1], 456.57545045050017}};
+                          {27.6192, intrinsics[2]},
+                          {692.302, intrinsics[2]},
+                          {intrinsics[1], 8.90112},
+                          {intrinsics[1], 471.009}};
 
 TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelProject) {
     auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
 
     auto const [pixels, mask](camera.Project(testing_utilities::gt_points));
+
     ASSERT_TRUE(mask.all());
-    EXPECT_TRUE(pixels.isApprox(gt_pixels));
+    EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-3));
 }
 
 // TODO(Jack): Add a test for invalid unprojection
@@ -33,13 +34,13 @@ TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelUnproject) {
     MatrixX3d normalized_gt_points{testing_utilities::gt_points};
     normalized_gt_points.rowwise().normalize();
 
-    EXPECT_TRUE(rays.isApprox(normalized_gt_points));
+    EXPECT_TRUE(rays.isApprox(normalized_gt_points, 1e-3));
     EXPECT_TRUE(mask.all());
 }
 
 TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelIntialize) {
     Array4d const result{projection_functions::UnifiedCameraModel::Initialize(1200, 480, 720)};
-    Array4d const gt_result{1200, 360, 240, 1};
+    Array4d const gt_result{1200, 360, 240, 0.5};
 
     EXPECT_TRUE(result.isApprox(gt_result));
 }

@@ -2,14 +2,14 @@
 
 namespace reprojection::projection_functions {
 
-// TODO(Jack): A continuation of my theory that UCM and DS are practically the same exact same! Could be wrong... see
-//  the ucm projection function for more context.
 std::optional<Array3d> UnifiedCameraModel::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
                                                      ImageBounds const& bounds, Array2d const& pixel) {
-    double const alpha{0};
-    Array5d const ds_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), intrinsics(3), alpha);
+    double const xi{0};
+    double const beta{1};
+    Eigen::Array<double, 6, 1> const spherical_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), intrinsics(3),
+                                                          xi, beta);
 
-    return DoubleSphere::Unproject(ds_intrinsics, bounds, pixel);
+    return SphericalUnprojection(spherical_intrinsics, bounds, pixel);
 }
 
 }  // namespace reprojection::projection_functions

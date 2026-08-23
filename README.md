@@ -110,13 +110,19 @@ Please add the following entry to your configuration file:
 The following camera models are supported:
 
 1) `double_sphere` - [f, cx, cy, xi, alpha]
-2) `pinhole` - [f, cx, cy]
-3) `pinhole_radtan4` - [f, cx, cy, k1, k2, p1, p2]
-4) `unified_camera_model` - [f cx, cy, xi]
+2) `extended_unified_camera_model` - [x, cx, cy, alpha, beta]
+3) `pinhole` - [f, cx, cy]
+4) `pinhole_radtan4` - [f, cx, cy, k1, k2, p1, p2]
+5) `unified_camera_model` - [f cx, cy, alpha] - see note below on the Usenko Et al. reformulation.
 
 All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please see this
 excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity)
 from [Tangram Vision](https://www.tangramvision.com/) for an explanation.
+
+We follow the intrinsic parameter conventions from this paper "The Double Sphere Camera Model, Usenko Et al. 2018". Note
+that for the "unified camera model" we use the Usenko Et al. proposed numerically stable formulation, and not the
+original formulation from "Single view point omnidirectional camera calibration from planar grids, Mei Et al. 2007". The
+conversion from one to the other is found in Usenko Et al. section 2.2.
 
 ## Tips, Tricks, and Warnings
 

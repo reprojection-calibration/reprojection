@@ -1,6 +1,7 @@
 #include "cost_functions/reprojection_error.hpp"
 
 #include "projection_functions/double_sphere.hpp"
+#include "projection_functions/extended_unified_camera_model.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/unified_camera_model.hpp"
@@ -12,6 +13,8 @@ ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const
                             Vector3d const& point_w) {
     if (projection_type == CameraModel::DoubleSphere) {
         return ReprojectionError_T<projection_functions::DoubleSphere>::Create(pixel, point_w, bounds);
+    } else if (projection_type == CameraModel::ExtendedUnifiedCameraModel) {
+        return ReprojectionError_T<projection_functions::ExtendedUnifiedCameraModel>::Create(pixel, point_w, bounds);
     } else if (projection_type == CameraModel::Pinhole) {
         return ReprojectionError_T<projection_functions::Pinhole>::Create(pixel, point_w, bounds);
     } else if (projection_type == CameraModel::PinholeRadtan4) {

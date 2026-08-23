@@ -18,7 +18,7 @@ class FocalLengthInitFixture : public ::testing::Test {
         // initialization case that would otherwise resul tin no successful gamma estimate below.
         target_points.leftCols<2>().array() -= 3;
 
-        Array4d const ucm_intrinsics{600, width / 2, height / 2, 1};
+        Array4d const ucm_intrinsics{600, width / 2, height / 2, 0.5};
         auto const camera{projection_functions::UcmCamera(ucm_intrinsics, testing_utilities::image_bounds)};
         auto const [pixels, mask]{camera.Project(target_points)};
 
@@ -51,6 +51,11 @@ TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
     EXPECT_TRUE(ds_intrinsics.isApprox(gt_ds_intrinsics));
 
     // Now we run the other methods too, mainly to get full test coverage, not because we need to.
+    std::tie(runner, initialization) =
+        calibration::SelectInitializationStrategy(CameraModel::ExtendedUnifiedCameraModel, height, width);
+    std::vector<double> const eucm_gammas{runner(target)};
+    EXPECT_EQ(std::size(eucm_gammas), 3);
+
     std::tie(runner, initialization) = calibration::SelectInitializationStrategy(CameraModel::Pinhole, height, width);
     std::vector<double> const pinhole_gammas{runner(target)};
     EXPECT_EQ(std::size(pinhole_gammas), 6);
@@ -72,8 +77,8 @@ TEST_F(FocalLengthInitFixture, TestEstimateCandidatesParabolaLine) {
     auto const result{calibration::EstimateCandidatesParabolaLine(target, width / 2, height / 2)};
 
     EXPECT_EQ(std::size(result), 4);  // Arbitrary number of successful initializations
-    for (auto const f_i : result) {
-        EXPECT_FLOAT_EQ(f_i, 600);
+    for (auto const gamma_i : result) {
+        EXPECT_FLOAT_EQ(gamma_i, 1200);
     }
 }
 
