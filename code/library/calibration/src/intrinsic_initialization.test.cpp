@@ -52,7 +52,7 @@ TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
 
     // Now we run the other methods too, mainly to get full test coverage, not because we need to.
     std::tie(runner, initialization) =
-    calibration::SelectInitializationStrategy(CameraModel::ExtendedUnifiedCameraModel, height, width);
+        calibration::SelectInitializationStrategy(CameraModel::ExtendedUnifiedCameraModel, height, width);
     std::vector<double> const eucm_gammas{runner(target)};
     EXPECT_EQ(std::size(eucm_gammas), 3);
 
