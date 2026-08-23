@@ -25,10 +25,10 @@ struct UnifiedCameraModel {
                                             Array3<T> const& P_co) {
         T const xi{0};
         T const beta{1};
-        Eigen::Array<T, 6, 1> const spherical_projection_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2),
-                                                                    intrinsics(3), xi, beta);
+        Eigen::Array<T, 6, 1> const spherical_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), intrinsics(3), xi,
+                                                         beta);
 
-        return SphericalProjection<T>(spherical_projection_intrinsics, bounds, P_co);
+        return SphericalProjection<T>(spherical_intrinsics, bounds, P_co);
     }
 
     static std::optional<Array3d> Unproject(Eigen::Array<double, Size, 1> const& intrinsics, ImageBounds const& bounds,

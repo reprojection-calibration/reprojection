@@ -7,6 +7,21 @@
 
 namespace reprojection::projection_functions {
 
+// NOTE(Jack): In "The Double Sphere Camera Model, Usenko Et al. 2018" they formulate the UCM, EUCM and double sphere
+// camera models so clearly that we are able to implement all three of them using nearly the same exact code. THe basic
+// idea is that the three camera models build off of each other. The UCM uses a sphere parameterized by alpha (or xi
+// depending on notation, but we use the alpha parameterization), the EUCM turns that sphere into an ellipsoid, and the
+// double sphere adds a second sphere around the UCMs first sphere. The following code implements this idea. Then
+// important thing to understand, which I admit is a little confusing, is that you turn the generic "spherical
+// projection" code into one of the above three camera models by selectively passing the parameters.
+//
+//  1) UCM - xi=0 and beta=1 - alpha is free
+//  2) EUCM - xi=0 - alpha and beta are free
+//  3) double sphere - beta=1 - alpha and xi are free
+//
+// If you look at the Project() function of each of these camera models you will see how their camera model specific
+// intrinsics are fit into the spherical intrinsics to achieve the desired camera model.
+
 template <typename T>
 static bool ValidSphericalProjection(T const z, T const xi, T const alpha, T const d1) {
     T const w1{alpha <= 0.5 ? alpha / (1.0 - alpha) : (1.0 - alpha) / alpha};  // (Eqn. 45)
