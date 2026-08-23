@@ -3,7 +3,7 @@
 #include <ceres/ceres.h>
 
 #include "projection_functions/pinhole.hpp"
-#include "projection_functions/spherical_projection.hpp"
+#include "projection_functions/spherical_projections.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::projection_functions {

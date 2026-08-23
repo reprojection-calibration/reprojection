@@ -7,12 +7,8 @@
 
 namespace reprojection::projection_functions {
 
-// TODO(Jack): Rename to valid sphereical projection?
-// TODO(Jack): There is absolutely no reason why this needs to be templated! There is no need to get the ceres jet
-//  autdiff gradients in here. This function should just accept double type and the jets should be cast to double in
-//  the projection function below.,
 template <typename T>
-static bool ValidProjection(T const z, T const xi, T const alpha, T const d1) {
+static bool ValidSphericalProjection(T const z, T const xi, T const alpha, T const d1) {
     T const w1{alpha <= 0.5 ? alpha / (1.0 - alpha) : (1.0 - alpha) / alpha};  // (Eqn. 45)
     T const w2{(w1 + xi) / ceres::sqrt(2.0 * w1 * xi + xi * xi + 1.0)};        // (Eqn. 44)
 
@@ -26,7 +22,6 @@ static bool ValidProjection(T const z, T const xi, T const alpha, T const d1) {
 
 // TODO(Jack): Do we have a better name for this? Spherical projection is a little misleading as sometimes we have two
 // spheres and sometimes one sphere, and sometimes no spheres but actually an elipsoid.
-// f, cx, xy, xi, alpha, beta
 template <typename T>
 static std::optional<Array2<T>> SphericalProjection(Eigen::Array<T, 6, 1> const& intrinsics, ImageBounds const& bounds,
                                                     Array3<T> const& P_co) {
@@ -34,24 +29,23 @@ static std::optional<Array2<T>> SphericalProjection(Eigen::Array<T, 6, 1> const&
     T const& y{P_co[1]};
     T const& z{P_co[2]};
 
-    T const xx{x * x};
-    T const yy{y * y};
-    T const r2{xx + yy};
-    T const d1{ceres::sqrt(r2 + z * z)};
-
     T const& alpha{intrinsics[3]};
     T const& xi{intrinsics[4]};
     T const& beta{intrinsics[5]};
 
-    // TODO(Jack): Account for beta and ucm and eucm, what are their valid projection regions?!?!
-    if (not ValidProjection(z, xi, alpha, d1)) {
+    T const xx{x * x};
+    T const yy{y * y};
+    T const r2{xx + yy};
+
+    T const d1{ceres::sqrt((beta * r2) + (z * z))};
+    if (not ValidSphericalProjection(z, xi, alpha, d1)) {
         return std::nullopt;
     }
 
-    T const wz{xi * d1 + z};  // wz = "weighted z"
-    T const d2{ceres::sqrt(beta * r2 + wz * wz)};
-
+    T const wz{(xi * d1) + z};  // wz==z for for ucm end eucm
+    T const d2{ceres::sqrt((beta * r2) + (wz * wz))};
     T const z_star{(alpha * d2) + (1.0 - alpha) * wz};
+
     Array3<T> const P_star{x, y, z_star};
 
     return Pinhole::Project<T>(intrinsics.template head<3>(), bounds, P_star);
