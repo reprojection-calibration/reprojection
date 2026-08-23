@@ -57,7 +57,7 @@ static std::optional<Array2<T>> SphericalProjection(Eigen::Array<T, 6, 1> const&
         return std::nullopt;
     }
 
-    T const wz{(xi * d1) + z};  // wz==z for for ucm end eucm
+    T const wz{(xi * d1) + z};  // wz==z for for ucm and eucm
     T const d2{ceres::sqrt((beta * r2) + (wz * wz))};
     T const z_star{(alpha * d2) + (1.0 - alpha) * wz};
 
