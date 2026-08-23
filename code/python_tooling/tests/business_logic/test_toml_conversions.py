@@ -17,6 +17,16 @@ class TestTomlConversions(unittest.TestCase):
         self.assertEqual(result, [160.0, 256.0, 256.0, 0.0, 0.5])
 
         toml_str = """\
+            alpha = 0.5
+            beta = 0.0
+            cx = 256.0
+            cy = 256.0
+            f = 160.0
+            """
+        result = toml_to_intrinsic_array(toml_str, CameraModel.ExtendedUnfiedCameraModel)
+        self.assertEqual(result, [160.0, 256.0, 256.0, 0.5, 0.0])
+
+        toml_str = """\
             cx = 256.0
             cy = 256.0
             f = 160.0
@@ -37,10 +47,10 @@ class TestTomlConversions(unittest.TestCase):
         self.assertEqual(result, [160.0, 256.0, 256.0, 0.1, 0.2, 0.3, 0.4])
 
         toml_str = """\
+            alpha = 0.0
             cx = 256.0
             cy = 256.0
             f = 160.0
-            xi = 0.0
             """
         result = toml_to_intrinsic_array(toml_str, CameraModel.UnifiedCameraModel)
         self.assertEqual(result, [160.0, 256.0, 256.0, 0.0])

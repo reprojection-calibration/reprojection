@@ -9,6 +9,8 @@ std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const&
                                          ImageBounds const& bounds) {
     if (model == CameraModel::DoubleSphere) {
         return MakeCamera<DoubleSphere>(intrinsics, bounds);
+    }else if (model == CameraModel::ExtendedUnifiedCameraModel) {
+        return MakeCamera<ExtendedUnifiedCameraModel>(intrinsics, bounds);
     } else if (model == CameraModel::Pinhole) {
         return MakeCamera<Pinhole>(intrinsics, bounds);
     } else if (model == CameraModel::PinholeRadtan4) {

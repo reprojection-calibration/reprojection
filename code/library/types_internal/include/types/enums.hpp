@@ -26,20 +26,20 @@ inline std::string ToString(Entity const entity_id) {
     }
 }
 
-// ERROR(Jack): The intrinsic size information is currently coded in two separate places! Once here in the enum and one
-// again in each projection class! This will be a pain point going forward if we do not find a solution here to
-// eliminate the manual and far apart duplication.
 enum class CameraModel {
-    DoubleSphere = 5,  //
-    Pinhole = 3,
-    PinholeRadtan4 = 7,
-    UnifiedCameraModel = 4,
+    DoubleSphere,  //
+    ExtendedUnifiedCameraModel,
+    Pinhole,
+    PinholeRadtan4,
+    UnifiedCameraModel,
 };
 
 // TODO(Jack): Is this the right place to put functions like this? What about testing?
 inline std::string ToString(CameraModel const camera_model) {
     if (camera_model == CameraModel::DoubleSphere) {
         return "double_sphere";
+    } else if (camera_model == CameraModel::ExtendedUnifiedCameraModel) {
+        return "extended_unified_camera_model";
     } else if (camera_model == CameraModel::Pinhole) {
         return "pinhole";
     } else if (camera_model == CameraModel::PinholeRadtan4) {
@@ -54,6 +54,8 @@ inline std::string ToString(CameraModel const camera_model) {
 inline CameraModel ToCameraModel(std::string_view camera_model) {
     if (camera_model == "double_sphere") {
         return CameraModel::DoubleSphere;
+    } else if (camera_model == "extended_unified_camera_model") {
+        return CameraModel::ExtendedUnifiedCameraModel;
     } else if (camera_model == "pinhole") {
         return CameraModel::Pinhole;
     } else if (camera_model == "pinhole_radtan4") {

@@ -11,6 +11,9 @@ std::string ToToml(CameraModel const type, ArrayXd const& intrinsics) {
     if (type == CameraModel::DoubleSphere) {
         tbl.insert("xi", intrinsics[3]);
         tbl.insert("alpha", intrinsics[4]);
+    } else if (type == CameraModel::ExtendedUnifiedCameraModel) {
+        tbl.insert("alpha", intrinsics[3]);
+        tbl.insert("beta", intrinsics[4]);
     } else if (type == CameraModel::Pinhole) {
         // Do nothing because tbl is already initialized with pinhole intrinsics - but keep here so we can still count
         // on the else block below to throw if we have an unaccounted for camera model.
@@ -20,7 +23,7 @@ std::string ToToml(CameraModel const type, ArrayXd const& intrinsics) {
         tbl.insert("p1", intrinsics[5]);
         tbl.insert("p2", intrinsics[6]);
     } else if (type == CameraModel::UnifiedCameraModel) {
-        tbl.insert("xi", intrinsics[3]);
+        tbl.insert("alpha", intrinsics[3]);
     } else {
         throw std::runtime_error("Implement ToToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE
     }
@@ -38,6 +41,15 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         intrinsics = ReadPinholeValues(tbl, intrinsics);
         intrinsics[3] = tbl["xi"].value<double>().value();
         intrinsics[4] = tbl["alpha"].value<double>().value();
+
+        return intrinsics;
+    } else if (type == CameraModel::ExtendedUnifiedCameraModel) {
+        auto tbl = toml::parse(toml_str);
+        ArrayXd intrinsics(5);
+
+        intrinsics = ReadPinholeValues(tbl, intrinsics);
+        intrinsics[3] = tbl["alpha"].value<double>().value();
+        intrinsics[4] = tbl["beta"].value<double>().value();
 
         return intrinsics;
     } else if (type == CameraModel::Pinhole) {
@@ -63,7 +75,7 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         ArrayXd intrinsics(4);
 
         intrinsics = ReadPinholeValues(tbl, intrinsics);
-        intrinsics[3] = tbl["xi"].value<double>().value();
+        intrinsics[3] = tbl["alpha"].value<double>().value();
 
         return intrinsics;
     } else {

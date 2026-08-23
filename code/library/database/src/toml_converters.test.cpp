@@ -8,8 +8,16 @@ using namespace reprojection;
 
 std::string const pinhole_toml{"cx = 360.0\ncy = 240.0\nf = 600.0"};
 std::string const ds_toml{"alpha = 0.20000000000000001\n" + pinhole_toml + "\nxi = 0.10000000000000001"};
+std::string const eucm_toml{"alpha = 5.0\nbeta = 6.0\n" + pinhole_toml};
 std::string const pinhole_radtan4_toml{pinhole_toml + "\nk1 = 1.0\nk2 = 2.0\np1 = 3.0\np2 = 4.0"};
-std::string const ucm_toml{pinhole_toml + "\nxi = 5.0"};
+std::string const ucm_toml{"alpha = 5.0\n" + pinhole_toml};
+
+Array5d const eucm_intrinsics{[]() {
+    Array5d data;
+    data << testing_utilities::pinhole_intrinsics, 5, 6;
+
+    return data;
+}()};
 
 // NOTE(Jack): This lambda initialization maybe looks a little ugly but this is the only direct way to define this
 // global here. We could also do this inside a test fixture, but I think that adds accidental complexity. Our solution
@@ -35,6 +43,9 @@ TEST(DatabaseTomlConverters, TestToToml) {
     std::string result{database::ToToml(CameraModel::DoubleSphere, testing_utilities::double_sphere_intrinsics)};
     EXPECT_EQ(result, ds_toml);
 
+    std::string result3 = database::ToToml(CameraModel::ExtendedUnifiedCameraModel, eucm_intrinsics);
+    EXPECT_EQ(result3, eucm_toml);
+
     result = database::ToToml(CameraModel::Pinhole, testing_utilities::pinhole_intrinsics);
     EXPECT_EQ(result, pinhole_toml);
 
@@ -48,6 +59,9 @@ TEST(DatabaseTomlConverters, TestToToml) {
 TEST(DatabaseTomlConverters, TestFromToml) {
     Array5d const ds_result{database::FromToml(CameraModel::DoubleSphere, ds_toml)};
     EXPECT_TRUE(ds_result.isApprox(testing_utilities::double_sphere_intrinsics));
+
+    Array5d const eucm_result{database::FromToml(CameraModel::ExtendedUnifiedCameraModel, eucm_toml)};
+    EXPECT_TRUE(eucm_result.isApprox(eucm_intrinsics));
 
     Array3d const pinhole_result{database::FromToml(CameraModel::Pinhole, pinhole_toml)};
     EXPECT_TRUE(pinhole_result.isApprox(testing_utilities::pinhole_intrinsics));
