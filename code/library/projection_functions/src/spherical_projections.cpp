@@ -9,7 +9,7 @@ std::optional<Array3d> SphericalUnprojection(Eigen::Array<double, 6, 1> const& i
                                              Array2d const& pixel) {
     auto const ray{Pinhole::Unproject(intrinsics.head<3>(), bounds, pixel)};
     if (not ray) {
-        return std::nullopt;
+        return std::nullopt; // LCOV_EXCL_LINE
     }
 
     double const& mx{ray.value()[0]};
