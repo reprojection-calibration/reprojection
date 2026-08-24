@@ -10,8 +10,7 @@ TEST(ProjectionFunctionsInitializeCamera, TestInitializeCamera) {
     auto camera_ptr{projection_functions::InitializeCamera(CameraModel::DoubleSphere, Array5d::Zero(), bounds)};
     EXPECT_TRUE(camera_ptr);
 
-    camera_ptr =
-        projection_functions::InitializeCamera(CameraModel::Eucm, Array5d::Zero(), bounds);
+    camera_ptr = projection_functions::InitializeCamera(CameraModel::Eucm, Array5d::Zero(), bounds);
     EXPECT_TRUE(camera_ptr);
 
     camera_ptr = projection_functions::InitializeCamera(CameraModel::Pinhole, Array3d::Zero(), bounds);

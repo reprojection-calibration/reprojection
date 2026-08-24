@@ -7,8 +7,9 @@ namespace reprojection::projection_functions {
 
 /**
  * \ingroup projection_classes
- * \brief Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957). Please note that we
- * use the "numerically stable" formulation described in section 2.2 and not the original Met et al. implementation.
+ * \brief Unified camera model. Implemented following "The Double Sphere Camera Model"
+ * (https://arxiv.org/pdf/1807.08957). Please note that we use the "numerically stable" formulation described in
+ * section 2.2 and NOT the original Met et al. implementation.
  */
 struct Ucm {
     static int constexpr Size{4};
