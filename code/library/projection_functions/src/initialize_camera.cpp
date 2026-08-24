@@ -15,8 +15,8 @@ std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const&
         return MakeCamera<Pinhole>(intrinsics, bounds);
     } else if (model == CameraModel::PinholeRadtan4) {
         return MakeCamera<PinholeRadtan4>(intrinsics, bounds);
-    } else if (model == CameraModel::UnifiedCameraModel) {
-        return MakeCamera<UnifiedCameraModel>(intrinsics, bounds);
+    } else if (model == CameraModel::Ucm) {
+        return MakeCamera<Ucm>(intrinsics, bounds);
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - invalid camera model");  // LCOV_EXCL_LINE
     }

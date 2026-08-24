@@ -52,7 +52,7 @@ TEST(DatabaseTomlConverters, TestToToml) {
     result = database::ToToml(CameraModel::PinholeRadtan4, pinhole_radtan4_intrinsics);
     EXPECT_EQ(result, pinhole_radtan4_toml);
 
-    result = database::ToToml(CameraModel::UnifiedCameraModel, ucm_intrinsics);
+    result = database::ToToml(CameraModel::Ucm, ucm_intrinsics);
     EXPECT_EQ(result, ucm_toml);
 }
 
@@ -69,6 +69,6 @@ TEST(DatabaseTomlConverters, TestFromToml) {
     Array7d const pinhole_radtan4_result{database::FromToml(CameraModel::PinholeRadtan4, pinhole_radtan4_toml)};
     EXPECT_TRUE(pinhole_radtan4_result.isApprox(pinhole_radtan4_intrinsics));
 
-    Array4d const ucm_result{database::FromToml(CameraModel::UnifiedCameraModel, ucm_toml)};
+    Array4d const ucm_result{database::FromToml(CameraModel::Ucm, ucm_toml)};
     EXPECT_TRUE(ucm_result.isApprox(ucm_intrinsics));
 }

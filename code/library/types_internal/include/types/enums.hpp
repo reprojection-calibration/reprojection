@@ -31,7 +31,7 @@ enum class CameraModel {
     Eucm,
     Pinhole,
     PinholeRadtan4,
-    UnifiedCameraModel,
+    Ucm,
 };
 
 // TODO(Jack): Is this the right place to put functions like this? What about testing?
@@ -44,8 +44,8 @@ inline std::string ToString(CameraModel const camera_model) {
         return "pinhole";
     } else if (camera_model == CameraModel::PinholeRadtan4) {
         return "pinhole_radtan4";
-    } else if (camera_model == CameraModel::UnifiedCameraModel) {
-        return "unified_camera_model";
+    } else if (camera_model == CameraModel::Ucm) {
+        return "ucm";
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR -Unrecognized argument passed to ToString(CameraModel)");
     }
@@ -60,8 +60,8 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
         return CameraModel::Pinhole;
     } else if (camera_model == "pinhole_radtan4") {
         return CameraModel::PinholeRadtan4;
-    } else if (camera_model == "unified_camera_model") {
-        return CameraModel::UnifiedCameraModel;
+    } else if (camera_model == "ucm") {
+        return CameraModel::Ucm;
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToCameraModel(): " +
                                  std::string(camera_model));

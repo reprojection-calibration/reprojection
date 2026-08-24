@@ -4,7 +4,7 @@
 #include "projection_functions/eucm.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
-#include "projection_functions/unified_camera_model.hpp"
+#include "projection_functions/ucm.hpp"
 #include "types/calibration_types.hpp"
 
 namespace reprojection::optimization::cost_functions {
@@ -19,8 +19,8 @@ ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const
         return ReprojectionError_T<projection_functions::Pinhole>::Create(pixel, point_w, bounds);
     } else if (projection_type == CameraModel::PinholeRadtan4) {
         return ReprojectionError_T<projection_functions::PinholeRadtan4>::Create(pixel, point_w, bounds);
-    } else if (projection_type == CameraModel::UnifiedCameraModel) {
-        return ReprojectionError_T<projection_functions::UnifiedCameraModel>::Create(pixel, point_w, bounds);
+    } else if (projection_type == CameraModel::Ucm) {
+        return ReprojectionError_T<projection_functions::Ucm>::Create(pixel, point_w, bounds);
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - ReprojectionError_T - Create()");  // LCOV_EXCL_LINE
     }

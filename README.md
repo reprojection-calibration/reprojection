@@ -113,7 +113,7 @@ The following camera models are supported:
 2) `eucm` - [x, cx, cy, alpha, beta]
 3) `pinhole` - [f, cx, cy]
 4) `pinhole_radtan4` - [f, cx, cy, k1, k2, p1, p2]
-5) `unified_camera_model` - [f cx, cy, alpha] - see note below on the Usenko Et al. reformulation.
+5) `ucm` - [f cx, cy, alpha] - see note below on the Usenko Et al. reformulation.
 
 All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please see this
 excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity)

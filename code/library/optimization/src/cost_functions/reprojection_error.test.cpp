@@ -6,7 +6,7 @@
 #include "projection_functions/eucm.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
-#include "projection_functions/unified_camera_model.hpp"
+#include "projection_functions/ucm.hpp"
 #include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
@@ -58,9 +58,9 @@ TEST(OptimizationCostFunctions, TestReprojectionErrorCreate) {
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
-    cost_function = Create(CameraModel::UnifiedCameraModel, testing_utilities::image_bounds, pixel, point);
+    cost_function = Create(CameraModel::Ucm, testing_utilities::image_bounds, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::UnifiedCameraModel::Size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::Ucm::Size);
     EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;

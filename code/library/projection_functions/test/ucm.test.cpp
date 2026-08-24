@@ -1,4 +1,4 @@
-#include "projection_functions/unified_camera_model.hpp"
+#include "projection_functions/ucm.hpp"
 
 #include <gtest/gtest.h>
 
@@ -16,7 +16,7 @@ MatrixX2d const gt_pixels{{intrinsics[1], intrinsics[2]},
                           {intrinsics[1], 8.90112},
                           {intrinsics[1], 471.009}};
 
-TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelProject) {
+TEST(ProjectionFunctionsUcm, TestUcmProject) {
     auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
 
     auto const [pixels, mask](camera.Project(testing_utilities::gt_points));
@@ -26,7 +26,7 @@ TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelProject) {
 }
 
 // TODO(Jack): Add a test for invalid unprojection
-TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelUnproject) {
+TEST(ProjectionFunctionsUcm, TestUcmUnproject) {
     auto const camera{projection_functions::UcmCamera(intrinsics, testing_utilities::image_bounds)};
     auto const [rays, mask]{camera.Unproject(gt_pixels)};
 
@@ -38,8 +38,8 @@ TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelUnproject) {
     EXPECT_TRUE(mask.all());
 }
 
-TEST(ProjectionFunctionsUnifiedCameraModel, TestUnifiedCameraModelIntialize) {
-    Array4d const result{projection_functions::UnifiedCameraModel::Initialize(1200, 480, 720)};
+TEST(ProjectionFunctionsUcm, TestUcmIntialize) {
+    Array4d const result{projection_functions::Ucm::Initialize(1200, 480, 720)};
     Array4d const gt_result{1200, 360, 240, 0.5};
 
     EXPECT_TRUE(result.isApprox(gt_result));

@@ -13,7 +13,7 @@ namespace reprojection::projection_functions {
  * \ingroup projection_classes
  * \brief
  */
-struct UnifiedCameraModel {
+struct Ucm {
     static int constexpr Size{4};
 
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {

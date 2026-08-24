@@ -7,7 +7,7 @@ set(SRC_FILES
         src/pinhole.cpp
         src/pinhole_radtan4.cpp
         src/spherical_projections.cpp
-        src/unified_camera_model.cpp
+        src/ucm.cpp
 )
 set(PRIVATE_LINK_LIBRARIES
         types_internal
@@ -28,7 +28,7 @@ set(TESTS
         test/initialize_camera.test.cpp
         test/pinhole.test.cpp
         test/pinhole_radtan4.test.cpp
-        test/unified_camera_model.test.cpp
+        test/ucm.test.cpp
 )
 AddTests()
 

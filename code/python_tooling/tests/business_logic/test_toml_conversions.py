@@ -54,5 +54,5 @@ class TestTomlConversions(unittest.TestCase):
             cy = 256.0
             f = 160.0
             """
-        result = toml_to_intrinsic_array(toml_str, CameraModel.UnifiedCameraModel)
+        result = toml_to_intrinsic_array(toml_str, CameraModel.Ucm)
         self.assertEqual(result, [160.0, 256.0, 256.0, 0.0])

@@ -17,4 +17,4 @@ class CameraModel(str, Enum):
     Eucm = "eucm"
     Pinhole = "pinhole"
     PinholeRadtan4 = "pinhole_radtan4"
-    UnifiedCameraModel = "unified_camera_model"
+    Ucm = "ucm"

@@ -66,7 +66,7 @@ TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
     EXPECT_EQ(std::size(phrt4_gammas), 6);
 
     std::tie(runner, initialization) =
-        calibration::SelectInitializationStrategy(CameraModel::UnifiedCameraModel, height, width);
+        calibration::SelectInitializationStrategy(CameraModel::Ucm, height, width);
     std::vector<double> const ucm_gammas{runner(target)};
     EXPECT_EQ(std::size(ucm_gammas), 3);
 }

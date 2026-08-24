@@ -22,7 +22,7 @@ std::string ToToml(CameraModel const type, ArrayXd const& intrinsics) {
         tbl.insert("k2", intrinsics[4]);
         tbl.insert("p1", intrinsics[5]);
         tbl.insert("p2", intrinsics[6]);
-    } else if (type == CameraModel::UnifiedCameraModel) {
+    } else if (type == CameraModel::Ucm) {
         tbl.insert("alpha", intrinsics[3]);
     } else {
         throw std::runtime_error("Implement ToToml(CameraModel) for other camera models!");  // LCOV_EXCL_LINE
@@ -70,7 +70,7 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         intrinsics[6] = tbl["p2"].value<double>().value();
 
         return intrinsics;
-    } else if (type == CameraModel::UnifiedCameraModel) {
+    } else if (type == CameraModel::Ucm) {
         auto tbl = toml::parse(toml_str);
         ArrayXd intrinsics(4);
 

@@ -1,8 +1,8 @@
-#include "projection_functions/unified_camera_model.hpp"
+#include "projection_functions/ucm.hpp"
 
 namespace reprojection::projection_functions {
 
-std::optional<Array3d> UnifiedCameraModel::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
+std::optional<Array3d> Ucm::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
                                                      ImageBounds const& bounds, Array2d const& pixel) {
     double const xi{0};
     double const beta{1};

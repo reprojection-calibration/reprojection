@@ -26,7 +26,7 @@ def toml_to_intrinsic_array(intrinsics_str, camera_model):
             intrinsics_toml["p2"],
         ]
         intrinsics.extend(radtan4)
-    elif camera_model == CameraModel.UnifiedCameraModel:
+    elif camera_model == CameraModel.Ucm:
         ucm = [intrinsics_toml["alpha"]]
         intrinsics.extend(ucm)
     else:
