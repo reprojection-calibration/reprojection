@@ -10,8 +10,7 @@ TEST(ProjectionFunctionsInitializeCamera, TestInitializeCamera) {
     auto camera_ptr{projection_functions::InitializeCamera(CameraModel::DoubleSphere, Array5d::Zero(), bounds)};
     EXPECT_TRUE(camera_ptr);
 
-    camera_ptr =
-        projection_functions::InitializeCamera(CameraModel::ExtendedUnifiedCameraModel, Array5d::Zero(), bounds);
+    camera_ptr = projection_functions::InitializeCamera(CameraModel::Eucm, Array5d::Zero(), bounds);
     EXPECT_TRUE(camera_ptr);
 
     camera_ptr = projection_functions::InitializeCamera(CameraModel::Pinhole, Array3d::Zero(), bounds);
@@ -20,6 +19,6 @@ TEST(ProjectionFunctionsInitializeCamera, TestInitializeCamera) {
     camera_ptr = projection_functions::InitializeCamera(CameraModel::PinholeRadtan4, Array7d::Zero(), bounds);
     EXPECT_TRUE(camera_ptr);
 
-    camera_ptr = projection_functions::InitializeCamera(CameraModel::UnifiedCameraModel, Array4d::Zero(), bounds);
+    camera_ptr = projection_functions::InitializeCamera(CameraModel::Ucm, Array4d::Zero(), bounds);
     EXPECT_TRUE(camera_ptr);
 }

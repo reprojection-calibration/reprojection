@@ -43,7 +43,7 @@ TEST(DatabaseTomlConverters, TestToToml) {
     std::string result{database::ToToml(CameraModel::DoubleSphere, testing_utilities::double_sphere_intrinsics)};
     EXPECT_EQ(result, ds_toml);
 
-    std::string result3 = database::ToToml(CameraModel::ExtendedUnifiedCameraModel, eucm_intrinsics);
+    std::string result3 = database::ToToml(CameraModel::Eucm, eucm_intrinsics);
     EXPECT_EQ(result3, eucm_toml);
 
     result = database::ToToml(CameraModel::Pinhole, testing_utilities::pinhole_intrinsics);
@@ -52,7 +52,7 @@ TEST(DatabaseTomlConverters, TestToToml) {
     result = database::ToToml(CameraModel::PinholeRadtan4, pinhole_radtan4_intrinsics);
     EXPECT_EQ(result, pinhole_radtan4_toml);
 
-    result = database::ToToml(CameraModel::UnifiedCameraModel, ucm_intrinsics);
+    result = database::ToToml(CameraModel::Ucm, ucm_intrinsics);
     EXPECT_EQ(result, ucm_toml);
 }
 
@@ -60,7 +60,7 @@ TEST(DatabaseTomlConverters, TestFromToml) {
     Array5d const ds_result{database::FromToml(CameraModel::DoubleSphere, ds_toml)};
     EXPECT_TRUE(ds_result.isApprox(testing_utilities::double_sphere_intrinsics));
 
-    Array5d const eucm_result{database::FromToml(CameraModel::ExtendedUnifiedCameraModel, eucm_toml)};
+    Array5d const eucm_result{database::FromToml(CameraModel::Eucm, eucm_toml)};
     EXPECT_TRUE(eucm_result.isApprox(eucm_intrinsics));
 
     Array3d const pinhole_result{database::FromToml(CameraModel::Pinhole, pinhole_toml)};
@@ -69,6 +69,6 @@ TEST(DatabaseTomlConverters, TestFromToml) {
     Array7d const pinhole_radtan4_result{database::FromToml(CameraModel::PinholeRadtan4, pinhole_radtan4_toml)};
     EXPECT_TRUE(pinhole_radtan4_result.isApprox(pinhole_radtan4_intrinsics));
 
-    Array4d const ucm_result{database::FromToml(CameraModel::UnifiedCameraModel, ucm_toml)};
+    Array4d const ucm_result{database::FromToml(CameraModel::Ucm, ucm_toml)};
     EXPECT_TRUE(ucm_result.isApprox(ucm_intrinsics));
 }

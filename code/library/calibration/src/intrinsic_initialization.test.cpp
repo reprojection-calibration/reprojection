@@ -51,8 +51,7 @@ TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
     EXPECT_TRUE(ds_intrinsics.isApprox(gt_ds_intrinsics));
 
     // Now we run the other methods too, mainly to get full test coverage, not because we need to.
-    std::tie(runner, initialization) =
-        calibration::SelectInitializationStrategy(CameraModel::ExtendedUnifiedCameraModel, height, width);
+    std::tie(runner, initialization) = calibration::SelectInitializationStrategy(CameraModel::Eucm, height, width);
     std::vector<double> const eucm_gammas{runner(target)};
     EXPECT_EQ(std::size(eucm_gammas), 3);
 
@@ -65,8 +64,7 @@ TEST_F(FocalLengthInitFixture, TestSelectInitializationStrategy) {
     std::vector<double> const phrt4_gammas{runner(target)};
     EXPECT_EQ(std::size(phrt4_gammas), 6);
 
-    std::tie(runner, initialization) =
-        calibration::SelectInitializationStrategy(CameraModel::UnifiedCameraModel, height, width);
+    std::tie(runner, initialization) = calibration::SelectInitializationStrategy(CameraModel::Ucm, height, width);
     std::vector<double> const ucm_gammas{runner(target)};
     EXPECT_EQ(std::size(ucm_gammas), 3);
 }

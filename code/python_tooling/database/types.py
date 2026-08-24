@@ -14,7 +14,7 @@ class TargetType(str, Enum):
 
 class CameraModel(str, Enum):
     DoubleSphere = "double_sphere"
-    ExtendedUnifiedCameraModel = "extended_unified_camera_model"
+    Eucm = "eucm"
     Pinhole = "pinhole"
     PinholeRadtan4 = "pinhole_radtan4"
-    UnifiedCameraModel = "unified_camera_model"
+    Ucm = "ucm"

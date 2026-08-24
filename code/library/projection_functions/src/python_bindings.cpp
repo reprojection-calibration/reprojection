@@ -31,9 +31,10 @@ void BindCameras(py::module_& module) {
     py::class_<Camera>(module, "Camera").def("Project", &Camera::Project).def("Unproject", &Camera::Unproject);
 
     BindCamera<DoubleSphere>(module, "DoubleSphereCamera");
+    BindCamera<Eucm>(module, "EucmCamera");
     BindCamera<Pinhole>(module, "PinholeCamera");
     BindCamera<PinholeRadtan4>(module, "PinholeRadtan4Camera");
-    BindCamera<UnifiedCameraModel>(module, "UcmCamera");
+    BindCamera<Ucm>(module, "UcmCamera");
 }
 
 }  // namespace reprojection::projection_functions

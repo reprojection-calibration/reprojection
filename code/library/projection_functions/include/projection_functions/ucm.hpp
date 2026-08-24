@@ -7,21 +7,24 @@ namespace reprojection::projection_functions {
 
 /**
  * \ingroup projection_classes
- * \brief
+ * \brief Unified camera model. Implemented following "The Double Sphere Camera Model"
+ * (https://arxiv.org/pdf/1807.08957). Please note that we use the "numerically stable" formulation described in
+ * section 2.2 and NOT the original Met et al. implementation.
  */
-struct ExtendedUnifiedCameraModel {
-    static int constexpr Size{5};
+struct Ucm {
+    static int constexpr Size{4};
 
     static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return {gamma, 0.5 * width, 0.5 * height, 0.5, 1};
+        return {gamma, 0.5 * width, 0.5 * height, 0.5};
     }
 
     template <typename T>
     static std::optional<Array2<T>> Project(Eigen::Array<T, Size, 1> const& intrinsics, ImageBounds const& bounds,
                                             Array3<T> const& P_co) {
         T const xi{0};
+        T const beta{1};
         Eigen::Array<T, 6, 1> const spherical_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), intrinsics(3), xi,
-                                                         intrinsics(4));
+                                                         beta);
 
         return SphericalProjection<T>(spherical_intrinsics, bounds, P_co);
     }

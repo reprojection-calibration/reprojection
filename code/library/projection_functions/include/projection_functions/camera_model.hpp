@@ -1,11 +1,11 @@
 #pragma once
 
 #include "projection_functions/double_sphere.hpp"
-#include "projection_functions/extended_unified_camera_model.hpp"
+#include "projection_functions/eucm.hpp"
 #include "projection_functions/pinhole.hpp"
 #include "projection_functions/pinhole_radtan4.hpp"
 #include "projection_functions/projection_class_concept.hpp"
-#include "projection_functions/unified_camera_model.hpp"
+#include "projection_functions/ucm.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -98,9 +98,9 @@ class Camera_T : public Camera {
 };
 
 using DoubleSphereCamera = Camera_T<DoubleSphere>;
-using EucmCamera = Camera_T<ExtendedUnifiedCameraModel>;
+using EucmCamera = Camera_T<Eucm>;
 using PinholeCamera = Camera_T<Pinhole>;
 using PinholeRadtan4Camera = Camera_T<PinholeRadtan4>;
-using UcmCamera = Camera_T<UnifiedCameraModel>;
+using UcmCamera = Camera_T<Ucm>;
 
 }  // namespace reprojection::projection_functions

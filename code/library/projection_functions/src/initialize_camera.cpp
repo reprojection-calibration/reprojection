@@ -9,14 +9,14 @@ std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const&
                                          ImageBounds const& bounds) {
     if (model == CameraModel::DoubleSphere) {
         return MakeCamera<DoubleSphere>(intrinsics, bounds);
-    } else if (model == CameraModel::ExtendedUnifiedCameraModel) {
-        return MakeCamera<ExtendedUnifiedCameraModel>(intrinsics, bounds);
+    } else if (model == CameraModel::Eucm) {
+        return MakeCamera<Eucm>(intrinsics, bounds);
     } else if (model == CameraModel::Pinhole) {
         return MakeCamera<Pinhole>(intrinsics, bounds);
     } else if (model == CameraModel::PinholeRadtan4) {
         return MakeCamera<PinholeRadtan4>(intrinsics, bounds);
-    } else if (model == CameraModel::UnifiedCameraModel) {
-        return MakeCamera<UnifiedCameraModel>(intrinsics, bounds);
+    } else if (model == CameraModel::Ucm) {
+        return MakeCamera<Ucm>(intrinsics, bounds);
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - invalid camera model");  // LCOV_EXCL_LINE
     }
