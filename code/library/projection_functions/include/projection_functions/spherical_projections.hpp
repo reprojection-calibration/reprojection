@@ -25,7 +25,7 @@ namespace reprojection::projection_functions {
 template <typename T>
 static bool ValidSphericalProjection(T const z, T const xi, T const alpha, T const d1) {
     T const w1{alpha <= 0.5 ? alpha / (1.0 - alpha) : (1.0 - alpha) / alpha};  // (Eqn. 45)
-    T const w2{(w1 + xi) / ceres::sqrt(2.0 * w1 * xi + xi * xi + 1.0)};        // (Eqn. 44)
+    T const w2{(w1 + xi) / ceres::sqrt((2.0 * w1 * xi) + (xi * xi) + 1.0)};    // (Eqn. 44)
 
     // (Eqn. 43)
     if (z > -w2 * d1) {
