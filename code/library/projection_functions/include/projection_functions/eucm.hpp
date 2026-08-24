@@ -7,7 +7,7 @@ namespace reprojection::projection_functions {
 
 /**
  * \ingroup projection_classes
- * \brief
+ * \brief Implemented following "The Double Sphere Camera Model" (https://arxiv.org/pdf/1807.08957)
  */
 struct Eucm {
     static int constexpr Size{5};
