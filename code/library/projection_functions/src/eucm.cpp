@@ -1,8 +1,8 @@
-#include "projection_functions/extended_unified_camera_model.hpp"
+#include "projection_functions/eucm.hpp"
 
 namespace reprojection::projection_functions {
 
-std::optional<Array3d> ExtendedUnifiedCameraModel::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
+std::optional<Array3d> Eucm::Unproject(Eigen::Array<double, Size, 1> const& intrinsics,
                                                              ImageBounds const& bounds, Array2d const& pixel) {
     double const xi{0};
     Eigen::Array<double, 6, 1> const spherical_intrinsics(intrinsics(0), intrinsics(1), intrinsics(2), intrinsics(3),

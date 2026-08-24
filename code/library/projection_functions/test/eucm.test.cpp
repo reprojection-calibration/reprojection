@@ -1,4 +1,4 @@
-#include "projection_functions/extended_unified_camera_model.hpp"
+#include "projection_functions/eucm.hpp"
 
 #include <gtest/gtest.h>
 
@@ -16,7 +16,7 @@ MatrixX2d const gt_pixels{{intrinsics[1], intrinsics[2]},
                           {intrinsics[1], 0.381868},
                           {intrinsics[1], 479.519}};
 
-TEST(ProjectionFunctionsExtendedUnifiedCameraModel, TestExtendedUnifiedCameraModelProject) {
+TEST(ProjectionFunctionsEucm, TestEucmProject) {
     auto const camera{projection_functions::EucmCamera(intrinsics, testing_utilities::image_bounds)};
 
     auto const [pixels, mask](camera.Project(testing_utilities::gt_points));
@@ -25,7 +25,7 @@ TEST(ProjectionFunctionsExtendedUnifiedCameraModel, TestExtendedUnifiedCameraMod
     EXPECT_TRUE(pixels.isApprox(gt_pixels, 1e-3));
 }
 
-TEST(ProjectionFunctionsExtendedUnifiedCameraModel, TestExtendedUnifiedCameraModelUnproject) {
+TEST(ProjectionFunctionsEucm, TestEucmUnproject) {
     auto const camera{projection_functions::EucmCamera(intrinsics, testing_utilities::image_bounds)};
     auto const [rays, mask]{camera.Unproject(gt_pixels)};
 
@@ -37,8 +37,8 @@ TEST(ProjectionFunctionsExtendedUnifiedCameraModel, TestExtendedUnifiedCameraMod
     EXPECT_TRUE(mask.all());
 }
 
-TEST(ProjectionFunctionsExtendedUnifiedCameraModel, TestExtendedUnifiedCameraModelIntialize) {
-    Array5d const result{projection_functions::ExtendedUnifiedCameraModel::Initialize(1200, 480, 720)};
+TEST(ProjectionFunctionsEucm, TestEucmIntialize) {
+    Array5d const result{projection_functions::Eucm::Initialize(1200, 480, 720)};
     Array5d const gt_result{1200, 360, 240, 0.5, 1};
 
     EXPECT_TRUE(result.isApprox(gt_result));

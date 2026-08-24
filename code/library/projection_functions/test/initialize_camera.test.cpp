@@ -11,7 +11,7 @@ TEST(ProjectionFunctionsInitializeCamera, TestInitializeCamera) {
     EXPECT_TRUE(camera_ptr);
 
     camera_ptr =
-        projection_functions::InitializeCamera(CameraModel::ExtendedUnifiedCameraModel, Array5d::Zero(), bounds);
+        projection_functions::InitializeCamera(CameraModel::Eucm, Array5d::Zero(), bounds);
     EXPECT_TRUE(camera_ptr);
 
     camera_ptr = projection_functions::InitializeCamera(CameraModel::Pinhole, Array3d::Zero(), bounds);

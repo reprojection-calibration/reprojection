@@ -11,7 +11,7 @@ std::string ToToml(CameraModel const type, ArrayXd const& intrinsics) {
     if (type == CameraModel::DoubleSphere) {
         tbl.insert("xi", intrinsics[3]);
         tbl.insert("alpha", intrinsics[4]);
-    } else if (type == CameraModel::ExtendedUnifiedCameraModel) {
+    } else if (type == CameraModel::Eucm) {
         tbl.insert("alpha", intrinsics[3]);
         tbl.insert("beta", intrinsics[4]);
     } else if (type == CameraModel::Pinhole) {
@@ -43,7 +43,7 @@ ArrayXd FromToml(CameraModel const type, std::string const& toml_str) {
         intrinsics[4] = tbl["alpha"].value<double>().value();
 
         return intrinsics;
-    } else if (type == CameraModel::ExtendedUnifiedCameraModel) {
+    } else if (type == CameraModel::Eucm) {
         auto tbl = toml::parse(toml_str);
         ArrayXd intrinsics(5);
 

@@ -13,7 +13,7 @@ def toml_to_intrinsic_array(intrinsics_str, camera_model):
     if camera_model == CameraModel.DoubleSphere:
         ds = [intrinsics_toml["xi"], intrinsics_toml["alpha"]]
         intrinsics.extend(ds)
-    elif camera_model == CameraModel.ExtendedUnifiedCameraModel:
+    elif camera_model == CameraModel.Eucm:
         ds = [intrinsics_toml["alpha"], intrinsics_toml["beta"]]
         intrinsics.extend(ds)
     elif camera_model == CameraModel.Pinhole:

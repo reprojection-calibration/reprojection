@@ -28,7 +28,7 @@ inline std::string ToString(Entity const entity_id) {
 
 enum class CameraModel {
     DoubleSphere,  //
-    ExtendedUnifiedCameraModel,
+    Eucm,
     Pinhole,
     PinholeRadtan4,
     UnifiedCameraModel,
@@ -38,8 +38,8 @@ enum class CameraModel {
 inline std::string ToString(CameraModel const camera_model) {
     if (camera_model == CameraModel::DoubleSphere) {
         return "double_sphere";
-    } else if (camera_model == CameraModel::ExtendedUnifiedCameraModel) {
-        return "extended_unified_camera_model";
+    } else if (camera_model == CameraModel::Eucm) {
+        return "eucm";
     } else if (camera_model == CameraModel::Pinhole) {
         return "pinhole";
     } else if (camera_model == CameraModel::PinholeRadtan4) {
@@ -54,8 +54,8 @@ inline std::string ToString(CameraModel const camera_model) {
 inline CameraModel ToCameraModel(std::string_view camera_model) {
     if (camera_model == "double_sphere") {
         return CameraModel::DoubleSphere;
-    } else if (camera_model == "extended_unified_camera_model") {
-        return CameraModel::ExtendedUnifiedCameraModel;
+    } else if (camera_model == "eucm") {
+        return CameraModel::Eucm;
     } else if (camera_model == "pinhole") {
         return CameraModel::Pinhole;
     } else if (camera_model == "pinhole_radtan4") {

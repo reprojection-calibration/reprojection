@@ -110,7 +110,7 @@ Please add the following entry to your configuration file:
 The following camera models are supported:
 
 1) `double_sphere` - [f, cx, cy, xi, alpha]
-2) `extended_unified_camera_model` - [x, cx, cy, alpha, beta]
+2) `eucm` - [x, cx, cy, alpha, beta]
 3) `pinhole` - [f, cx, cy]
 4) `pinhole_radtan4` - [f, cx, cy, k1, k2, p1, p2]
 5) `unified_camera_model` - [f cx, cy, alpha] - see note below on the Usenko Et al. reformulation.
