@@ -31,6 +31,7 @@ void BindCameras(py::module_& module) {
     py::class_<Camera>(module, "Camera").def("Project", &Camera::Project).def("Unproject", &Camera::Unproject);
 
     BindCamera<DoubleSphere>(module, "DoubleSphereCamera");
+    BindCamera<ExtendedUnifiedCameraModel>(module, "EucmCamera");
     BindCamera<Pinhole>(module, "PinholeCamera");
     BindCamera<PinholeRadtan4>(module, "PinholeRadtan4Camera");
     BindCamera<UnifiedCameraModel>(module, "UcmCamera");
