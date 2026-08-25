@@ -93,7 +93,7 @@ TEST(DatabaseCalibrationDatbase, TestStepWorkflowState) {
     EXPECT_EQ(step_id, StepId{1});
 
     // Add that step to the workflow
-    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, StepType::CameraInfo, step_id));
+    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, step_id, StepType::CameraInfo));
 
     // Check that after adding it to the workflow its still there and with the same id (confirms it did not accidentally
     // get removed or something).
@@ -107,7 +107,7 @@ TEST(DatabaseCalibrationDatbase, TestStepWorkflowState) {
 
     // Upsert the workflow now which removes the old step and replaces it with the new step id. Because of the "remove
     // unused steps" trigger the database has it should remove the first step.
-    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, StepType::CameraInfo, step_id));
+    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, step_id, StepType::CameraInfo));
 
     // If the first step hadn't been removed this should be a cache hit, but because it got removed this is a new step
     // with a new id.

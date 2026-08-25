@@ -1,5 +1,6 @@
 #include "database/calibration_database.hpp"
 
+#include <algorithm>
 #include <format>
 #include <ranges>
 
@@ -136,16 +137,22 @@ void WorkflowAssetsInsert(sqlite3* const db, WorkflowId const workflow_id, std::
     BatchExecuteStatement(sql_statements::workflow_assets_insert, asset_ids, binder, db);
 }
 
-void WorkflowStepUpsert(sqlite3* const db, WorkflowId const workflow_id, StepType const step_type,
-                        StepId const step_id) {
-    auto const binder{[workflow_id, step_type, step_id](sqlite3_stmt* const stmt) {
+void WorkflowStepUpsert(sqlite3* const db, WorkflowId const workflow_id, StepId const step_id, StepType const step_type,
+                        std::vector<AssetId> asset_ids) {
+    // TODO(Jack): Put into function so we can use elsewhere?
+    std::sort(std::begin(asset_ids), std::end(asset_ids),
+              [](AssetId const& a, AssetId const& b) { return a.value > b.value; });
+    std::string const asset_group_signature{hashing::Serialize(asset_ids)};
+
+    auto const binder{[workflow_id, step_id, step_type, asset_group_signature](sqlite3_stmt* const stmt) {
         // NOTE(Jack): Including the step type here enforces our constraint that a workflow can only have one of each
         // kind of step. This might get annoying for certain things like reprojection error calculation steps which now
         // will all need unique step types. But unless we combine those with their originating steps like we had in v1
         // that was always going to be a problem.
         Bind(stmt, 1, workflow_id.value);
-        Bind(stmt, 2, ToString(step_type));
-        Bind(stmt, 3, step_id.value);
+        Bind(stmt, 2, step_id.value);
+        Bind(stmt, 3, ToString(step_type));
+        Bind(stmt, 4, asset_group_signature);
     }};
 
     ExecuteStatement(sql_statements::workflow_steps_upsert, binder, db);

@@ -25,7 +25,8 @@ WorkflowId GetOrCreateWorkflow(sqlite3* db, WorkflowType type, std::vector<Asset
 
 void WorkflowAssetsInsert(sqlite3* db, WorkflowId workflow_id, std::vector<AssetId> const& asset_ids);
 
-void WorkflowStepUpsert(sqlite3* db, WorkflowId workflow_id, StepType step_type, StepId step_id);
+void WorkflowStepUpsert(sqlite3* db, WorkflowId workflow_id, StepId step_id, StepType step_type,
+                        std::vector<AssetId>  asset_ids);
 
 // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
 // the same name. bool: was this a cache hit?
