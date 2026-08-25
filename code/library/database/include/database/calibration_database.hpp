@@ -18,9 +18,6 @@ void AssetGroupInsert(sqlite3* db, std::vector<AssetId> const& asset_ids);
 
 AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
 
-// TODO(Jack): This is not used anywhere except for testing, can we/should we remove it?
-void DeleteUnusedAssets(sqlite3* db);
-
 WorkflowId GetOrCreateWorkflow(sqlite3* db, WorkflowType type, std::vector<AssetId> const& assets);
 
 void WorkflowAssetsInsert(sqlite3* db, WorkflowId workflow_id, std::vector<AssetId> const& asset_ids);

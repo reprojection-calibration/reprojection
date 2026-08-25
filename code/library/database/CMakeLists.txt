@@ -9,7 +9,6 @@ set(LIBRARY_NAME "database")
 set(SQL_FILES
         asset_groups_insert.sql
         asset_groups_table.sql
-        assets_delete.sql
         assets_insert.sql
         assets_select.sql
         assets_table.sql

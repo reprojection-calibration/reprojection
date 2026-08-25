@@ -81,6 +81,9 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
 }
 
+// TODO(Jack): In what file does this belong?
+// NOTE(Jack): We do not hash the signature so that way it remains human readable in the database. It is a small
+// and important piece of information so this just makes sense.
 std::string AssetGroupSignature(std::vector<AssetId> asset_ids) {
     std::sort(std::begin(asset_ids), std::end(asset_ids),
               [](AssetId const& a, AssetId const& b) { return a.value > b.value; });
@@ -107,18 +110,8 @@ AssetId GetOrCreateAsset(sqlite3* const db, AssetType const type, size_t const i
     return InsertAsset(db, type, index, name);
 }
 
-void DeleteUnusedAssets(sqlite3* const db) { ExecuteStatement(sql_statements::assets_delete, db); }
-
 WorkflowId GetOrCreateWorkflow(sqlite3* const db, WorkflowType const type, std::vector<AssetId> const& assets) {
-    // NOTE(Jack): We do not hash the signature so that way it remains humand readable in the database. It is a small
-    // and important piece of information so this just makes sense.
-    // TODO(Jack): Is there a better way of uniquely identifying the workflow than creating this string of the assets
-    // here? I am not sure how this will scale to multisensor cases but that is still future music. The main problem I
-    // have is that this leaves information/constraints on the table. For example for each workflow type there is a
-    // specific asset requirements (i.e. cam-imu requires a cam, target and imu), but right now that is not enforced
-    // anywhere at the database level. Not doing this offers some flexibility and simplicity, but if there was a nice
-    // way to do it we should!
-    std::string const signature{hashing::Serialize(assets)};
+    std::string const signature{AssetGroupSignature(assets)};
 
     WorkflowId id;
     if (auto const result{ReadWorkflowId(db, type, signature)}) {
