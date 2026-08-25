@@ -11,6 +11,8 @@ using namespace reprojection;
 class FeatureExtractionTestFixture : public StepTestFixture {
    protected:
     void SetUp() override {
+        StepTestFixture::SetUp();
+
         // TODO(Jack): This block of code is copy and pasted across multiple fixtures!
         cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
         std::vector<uchar> buffer;

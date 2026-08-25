@@ -13,6 +13,8 @@ using namespace reprojection;
 class ImageLoadingFixture : public StepTestFixture {
    protected:
     void SetUp() override {
+        StepTestFixture::SetUp();
+
         // Build the encoded images (cv::Mat -> serialized buffer)
         cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
         std::vector<uchar> buffer;

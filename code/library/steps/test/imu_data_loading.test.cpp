@@ -40,6 +40,7 @@ class ImuSamplerFixture : public ::testing::Test {
 TEST_F(ImuSamplerFixture, TestImuDataLoadingStepRunner) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
     AssetId const imu_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
+    database::AssetGroupInsert(db.get(), {imu_id});
     WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {imu_id})};
 
     steps::ImuDataLoading const step{imu_id, "", imu_sampler_};

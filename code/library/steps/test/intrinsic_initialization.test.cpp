@@ -15,6 +15,8 @@ using namespace reprojection;
 class IntrinsicInitializationFixture : public StepTestFixture {
    protected:
     void SetUp() override {
+        StepTestFixture::SetUp();
+
         CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
         camera_info_id_ = InsertCameraInfo(camera_info);
 

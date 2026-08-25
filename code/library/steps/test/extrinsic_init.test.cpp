@@ -13,6 +13,8 @@ using namespace reprojection;
 class ExtrinsicInitFixture : public ::testing::Test {
    protected:
     void SetUp() override {
+        database::AssetGroupInsert(db_.get(), {camera_id_, imu_id_});
+
         auto const [imu_data, spline]{testing_mocks::GenerateImuData(11, 5)};
 
         database::ImuDataInsert(db_.get(), imu_data_id_, imu_id_, imu_data);

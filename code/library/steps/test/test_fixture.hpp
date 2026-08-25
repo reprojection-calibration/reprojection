@@ -8,6 +8,11 @@ using namespace reprojection;
 
 class StepTestFixture : public ::testing::Test {
    protected:
+    void SetUp() override {
+        database::AssetGroupInsert(db_.get(), {camera_id_});
+        workflow_id_ = database::GetOrCreateWorkflow(db_.get(), WorkflowType::Cam, {camera_id_});
+    }
+
     StepId InsertCameraInfo(CameraInfo const& camera_info) {
         auto const step_id{database::GetOrCreateStep(db_.get(), StepType::CameraInfo, "").first};
         database::CameraInfoInsert(db_.get(), step_id, camera_id_, camera_info);
@@ -45,5 +50,5 @@ class StepTestFixture : public ::testing::Test {
 
     SqlitePtr db_{database::OpenCalibrationDatabase(":memory:", true)};
     AssetId camera_id_{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
-    WorkflowId workflow_id_{database::GetOrCreateWorkflow(db_.get(), WorkflowType::Cam, {camera_id_})};
+    WorkflowId workflow_id_;
 };
