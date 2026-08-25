@@ -16,7 +16,8 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool cre
 
 AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
 
-void DeleteUnusedAssets(sqlite3* const db);
+// TODO(Jack): This is not used anywhere except for testing, can we/should we remove it?
+void DeleteUnusedAssets(sqlite3* db);
 
 WorkflowId GetOrCreateWorkflow(sqlite3* db, WorkflowType type, std::vector<AssetId> const& assets);
 
