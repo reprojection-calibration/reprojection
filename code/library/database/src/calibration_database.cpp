@@ -86,7 +86,7 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
 // and important piece of information so this just makes sense.
 std::string AssetGroupSignature(std::vector<AssetId> asset_ids) {
     std::sort(std::begin(asset_ids), std::end(asset_ids),
-              [](AssetId const& a, AssetId const& b) { return a.value > b.value; });
+              [](AssetId const& a, AssetId const& b) { return a.value < b.value; });
 
     return hashing::Serialize(asset_ids);
 }

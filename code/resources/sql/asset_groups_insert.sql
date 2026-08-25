@@ -1,2 +1,3 @@
 INSERT INTO asset_groups (signature)
-VALUES (?);
+VALUES (?)
+ON CONFLICT(signature) DO NOTHING;
