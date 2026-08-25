@@ -15,5 +15,6 @@ CREATE TABLE IF NOT EXISTS steps
     cache_key  TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    UNIQUE (id, type),
     UNIQUE (type, cache_key)
 );
