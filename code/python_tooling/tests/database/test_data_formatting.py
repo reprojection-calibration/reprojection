@@ -16,10 +16,10 @@ class TestDataFormatting(unittest.TestCase):
 
         workflows = parse_workflows(db)
 
-        def workflow_assert(workflow, id, type, signature, assets, steps):
+        def workflow_assert(workflow, id, type, asset_group_signature, assets, steps):
             self.assertEqual(workflow.id, id)
             self.assertEqual(workflow.type, type)
-            self.assertEqual(workflow.signature, signature)
+            self.assertEqual(workflow.asset_group_signature, asset_group_signature)
             self.assertEqual(workflow.assets, assets)
             self.assertEqual(workflow.steps, steps)
 

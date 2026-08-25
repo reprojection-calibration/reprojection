@@ -61,17 +61,17 @@ def construct_test_db(db_path):
     execute_sql(
         db_path,
         load_sql("workflow_steps_upsert.sql"),
-        (cam_workflow_id, "image_loading", image_loading_id),
+        (cam_workflow_id, image_loading_id, "image_loading", ""),
     )
     execute_sql(
         db_path,
         load_sql("workflow_steps_upsert.sql"),
-        (cam_imu_workflow_id, "image_loading", image_loading_id),
+        (cam_imu_workflow_id, image_loading_id, "image_loading", ""),
     )
     execute_sql(
         db_path,
         load_sql("workflow_steps_upsert.sql"),
-        (cam_imu_workflow_id, "imu_data_loading", imu_data_loading_id),
+        (cam_imu_workflow_id, imu_data_loading_id, "imu_data_loading", ""),
     )
 
     # Calibration artifact tables (only use a subset here to keep things simple).

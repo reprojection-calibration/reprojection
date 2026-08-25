@@ -13,7 +13,7 @@ from database.types import SensorType, TargetType
 class Workflow:
     id: int
     type: str
-    signature: str
+    asset_group_signature: str
     assets: dict[str, dict]
     steps: dict[str, int]
 
@@ -48,7 +48,7 @@ def parse_workflows(db):
             Workflow(
                 id=workflow_id,
                 type=workflow_row["type"],
-                signature=workflow_row["signature"],
+                asset_group_signature=workflow_row["asset_group_signature"],
                 assets=assets,
                 steps=steps,
             )
