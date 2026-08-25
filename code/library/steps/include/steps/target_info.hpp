@@ -11,6 +11,8 @@ struct TargetInfoStep {
 
     static StepType Type() { return StepType::TargetInfo; }
 
+    std::vector<AssetId> Assets() const { return {target_id_}; }
+
     Hash CacheKey() const;
 
     void Execute(StepId step_id, SqlitePtr db) const;

@@ -7,6 +7,8 @@ using namespace reprojection;
 struct ExampleStep {
     static StepType Type() { return StepType::ImageLoading; }
 
+    std::vector<AssetId> Assets() const { return {asset_id_}; }
+
     Hash CacheKey() const { return cache_key_; }
 
     static void Execute(StepId const step_id, SqlitePtr const db) {
@@ -16,6 +18,8 @@ struct ExampleStep {
         return;
     }
 
+    // We need to be able to associate this step with its' asset group.
+    AssetId asset_id_;
     // We only have this here for the testing purpose below so we can change it manually and trigger a cache miss!
     Hash cache_key_{""};
 };
@@ -24,9 +28,10 @@ TEST(StepsStepRunner, TestExampleStep) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
+    database::AssetGroupInsert(db.get(), {asset_id});
     WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {asset_id})};
 
-    ExampleStep step;
+    ExampleStep step{asset_id};
     StepId result{steps::RunStep<ExampleStep>(workflow_id, step, db)};
     EXPECT_EQ(result.value, 1);
 

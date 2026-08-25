@@ -10,6 +10,8 @@ struct ImuDataLoading {
 
     static StepType Type() { return StepType::ImuDataLoading; }
 
+    std::vector<AssetId> Assets() const { return {imu_id_}; }
+
     Hash CacheKey() const;
 
     void Execute(StepId step_id, SqlitePtr db) const;

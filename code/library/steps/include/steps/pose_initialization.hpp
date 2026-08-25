@@ -11,6 +11,8 @@ struct PoseInitialization {
 
     static StepType Type() { return StepType::PoseInit; }
 
+    std::vector<AssetId> Assets() const { return {camera_id_}; }
+
     Hash CacheKey() const;
 
     void Execute(StepId step_id, SqlitePtr db) const;
