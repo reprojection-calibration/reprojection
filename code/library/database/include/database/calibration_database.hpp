@@ -14,7 +14,7 @@ namespace reprojection::database {
 
 SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool create, bool read_only = false);
 
-void AssetGroupInsert(sqlite3* db, std::vector<AssetId> const& asset_group_ids);
+void AssetGroupInsert(sqlite3* db, std::vector<AssetId> const& asset_ids);
 
 AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
 
@@ -26,7 +26,7 @@ WorkflowId GetOrCreateWorkflow(sqlite3* db, WorkflowType type, std::vector<Asset
 void WorkflowAssetsInsert(sqlite3* db, WorkflowId workflow_id, std::vector<AssetId> const& asset_ids);
 
 void WorkflowStepUpsert(sqlite3* db, WorkflowId workflow_id, StepId step_id, StepType step_type,
-                        std::vector<AssetId>  asset_ids);
+                        std::vector<AssetId> const& asset_ids);
 
 // TODO(Jack): The semantics of this step method are so different from the others that we should probably not use
 // the same name. bool: was this a cache hit?

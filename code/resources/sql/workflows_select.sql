@@ -1,4 +1,4 @@
 SELECT id
 FROM workflows
 WHERE type = ?
-  AND signature = ?;
+  AND asset_group_signature = ?;

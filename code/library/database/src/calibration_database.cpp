@@ -81,9 +81,15 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
 }
 
-void AssetGroupInsert(sqlite3* const db, std::vector<AssetId> const& asset_group_ids) {
-    auto const binder{
-        [asset_group_ids](sqlite3_stmt* const stmt) { Bind(stmt, 1, hashing::Serialize(asset_group_ids)); }};
+std::string AssetGroupSignature(std::vector<AssetId> asset_ids) {
+    std::sort(std::begin(asset_ids), std::end(asset_ids),
+              [](AssetId const& a, AssetId const& b) { return a.value > b.value; });
+
+    return hashing::Serialize(asset_ids);
+}
+
+void AssetGroupInsert(sqlite3* const db, std::vector<AssetId> const& asset_ids) {
+    auto const binder{[asset_ids](sqlite3_stmt* const stmt) { Bind(stmt, 1, AssetGroupSignature(asset_ids)); }};
 
     ExecuteStatement(sql_statements::asset_groups_insert, binder, db);
 }
@@ -138,21 +144,12 @@ void WorkflowAssetsInsert(sqlite3* const db, WorkflowId const workflow_id, std::
 }
 
 void WorkflowStepUpsert(sqlite3* const db, WorkflowId const workflow_id, StepId const step_id, StepType const step_type,
-                        std::vector<AssetId> asset_ids) {
-    // TODO(Jack): Put into function so we can use elsewhere?
-    std::sort(std::begin(asset_ids), std::end(asset_ids),
-              [](AssetId const& a, AssetId const& b) { return a.value > b.value; });
-    std::string const asset_group_signature{hashing::Serialize(asset_ids)};
-
-    auto const binder{[workflow_id, step_id, step_type, asset_group_signature](sqlite3_stmt* const stmt) {
-        // NOTE(Jack): Including the step type here enforces our constraint that a workflow can only have one of each
-        // kind of step. This might get annoying for certain things like reprojection error calculation steps which now
-        // will all need unique step types. But unless we combine those with their originating steps like we had in v1
-        // that was always going to be a problem.
+                        std::vector<AssetId> const& asset_ids) {
+    auto const binder{[workflow_id, step_id, step_type, asset_ids](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, workflow_id.value);
         Bind(stmt, 2, step_id.value);
         Bind(stmt, 3, ToString(step_type));
-        Bind(stmt, 4, asset_group_signature);
+        Bind(stmt, 4, AssetGroupSignature(asset_ids));
     }};
 
     ExecuteStatement(sql_statements::workflow_steps_upsert, binder, db);
