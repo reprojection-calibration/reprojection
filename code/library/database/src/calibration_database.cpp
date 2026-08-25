@@ -39,6 +39,7 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     }
 
     if (not read_only) {
+        ExecuteStatement(sql_statements::asset_groups_table, db);
         ExecuteStatement(sql_statements::assets_table, db);
         ExecuteStatement(sql_statements::camera_info_table, db);
         ExecuteStatement(sql_statements::camera_poses_table, db);
@@ -77,6 +78,13 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     // hopefully this function is the only function we ever use to open a calibration database and therefore it won't be
     // a problem.
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
+}
+
+void AssetGroupInsert(sqlite3* const db, std::vector<AssetId> const& asset_group_ids) {
+    auto const binder{
+        [asset_group_ids](sqlite3_stmt* const stmt) { Bind(stmt, 1, hashing::Serialize(asset_group_ids)); }};
+
+    ExecuteStatement(sql_statements::asset_groups_insert, binder, db);
 }
 
 AssetId GetOrCreateAsset(sqlite3* const db, AssetType const type, size_t const index, Name const& name) {

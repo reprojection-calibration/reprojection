@@ -14,6 +14,8 @@ namespace reprojection::database {
 
 SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool create, bool read_only = false);
 
+void AssetGroupInsert(sqlite3* db, std::vector<AssetId> const& asset_group_ids);
+
 AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
 
 // TODO(Jack): This is not used anywhere except for testing, can we/should we remove it?
