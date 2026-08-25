@@ -1,4 +1,5 @@
 CREATE TABLE IF NOT EXISTS asset_groups
 (
-    signature TEXT PRIMARY KEY
+    signature TEXT PRIMARY KEY,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
