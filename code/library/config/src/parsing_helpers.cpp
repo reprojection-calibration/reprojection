@@ -29,15 +29,23 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
 }
 
 void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
-                          std::string_view table_name) {
+                          std::vector<std::string_view> const& indexed_keys, std::string_view table_name) {
     for (auto const& [key, _] : table) {
-        bool const allowed{std::ranges::any_of(
-            allowed_keys, [&key](std::string_view allowed_key) { return key.str() == allowed_key; })};
+        bool const allowed{
+            std::ranges::contains(allowed_keys, key.str()) or
+            std::ranges::any_of(indexed_keys, [&](std::string_view base) { return IsIndexedKey(key.str(), base); })};
 
         if (not allowed) {
             throw std::runtime_error(std::format("Unexpected key '{}.{}'", table_name, key.str()));
         }
     }
+}
+
+// Convenience override because for most cases (i.e. anything but the top level table 26.08.2026) the set of indexable
+// keys is empty.
+void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
+                          std::string_view table_name) {
+    return RejectUnexpectedKeys(table, allowed_keys, {}, table_name);
 }
 
 // TODO(Jack): Should we use an expected or variant or optional to return the index value from here?

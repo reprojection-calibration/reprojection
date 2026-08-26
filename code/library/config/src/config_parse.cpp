@@ -11,7 +11,9 @@ namespace reprojection::config {
 // at multiple places which is not so nice. Not a deal breaker but consider it!
 
 Config Config::Parse(toml::table const& table) {
-    RejectUnexpectedKeys(table, {"application", "camera", "imu", "target"}, "");
+    // TODO(Jack): One day it can be that we allow multiple imus and targets, but for now "cam" is the only indexable
+    // top level table.
+    RejectUnexpectedKeys(table, {"application", "imu", "target"}, {"cam"}, "");
 
     return Config{Application::Parse(OptionalTable(table, "application").value_or(toml::table{})),
                   Camera::Parse(RequireTable(table, "camera")),

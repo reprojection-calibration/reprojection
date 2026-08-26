@@ -17,6 +17,9 @@ std::optional<toml::table> OptionalTable(toml::table const& table, std::string_v
 toml::table RequireTable(toml::table const& table, std::string_view key);
 
 void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
+                          std::vector<std::string_view> const& indexed_keys, std::string_view table_name);
+
+void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
                           std::string_view table_name);
 
 template <typename T>
