@@ -93,4 +93,11 @@ std::optional<ExtractedTarget> Deserialize(protobuf_serialization::ExtractedTarg
     return target;
 }
 
+std::string AssetGroupSignature(std::vector<AssetId> asset_ids) {
+    std::sort(std::begin(asset_ids), std::end(asset_ids),
+              [](AssetId const& a, AssetId const& b) { return a.value < b.value; });
+
+    return hashing::Serialize(asset_ids);
+}
+
 }  // namespace reprojection::database

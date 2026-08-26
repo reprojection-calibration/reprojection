@@ -6,6 +6,9 @@
 
 // TODO(Jack): How can we point cppcheck to the generated protobuf cpp files?
 // cppcheck-suppress missingInclude
+#include "hashing/serialize.hpp"
+#include "types/database_types.hpp"
+
 #include "extracted_target.pb.h"
 
 namespace reprojection::database {
@@ -22,5 +25,10 @@ std::optional<ExtractedTarget> Deserialize(protobuf_serialization::ExtractedTarg
 inline bool ValidateDimensions(int const rows, int const cols, size_t const data_size) {
     return (static_cast<size_t>(rows) * static_cast<size_t>(cols)) == data_size;
 }
+
+
+// NOTE(Jack): We do not hash the signature so that way it remains human readable in the database. It is a small
+// and important piece of information so this just makes sense.
+std::string AssetGroupSignature(std::vector<AssetId> asset_ids);
 
 }  // namespace reprojection::database

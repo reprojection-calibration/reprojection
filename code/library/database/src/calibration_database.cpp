@@ -7,7 +7,6 @@
 #include "database/sqlite_exception.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
-#include "hashing/serialize.hpp"
 
 #include "database_semantics.hpp"
 #include "serialization.hpp"
@@ -81,15 +80,7 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
 }
 
-// TODO(Jack): In what file does this belong?
-// NOTE(Jack): We do not hash the signature so that way it remains human readable in the database. It is a small
-// and important piece of information so this just makes sense.
-std::string AssetGroupSignature(std::vector<AssetId> asset_ids) {
-    std::sort(std::begin(asset_ids), std::end(asset_ids),
-              [](AssetId const& a, AssetId const& b) { return a.value < b.value; });
 
-    return hashing::Serialize(asset_ids);
-}
 
 void AssetGroupInsert(sqlite3* const db, std::vector<AssetId> const& asset_ids) {
     auto const binder{[asset_ids](sqlite3_stmt* const stmt) { Bind(stmt, 1, AssetGroupSignature(asset_ids)); }};
