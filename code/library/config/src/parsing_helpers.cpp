@@ -28,6 +28,23 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
     return *child_table;
 }
 
+// TODO(Jack): Should we use an expected or variant or optional to return the index value from here?
+std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base) {
+    if (key == base or not key.starts_with(base)) {
+        return std::nullopt;
+    }
+
+    std::string const suffix{key.substr(std::size(base))};
+
+    bool const all_digits{
+        std::ranges::all_of(suffix, [](char const c) { return std::isdigit(static_cast<unsigned char>(c)); })};
+    if (std::empty(suffix) or not all_digits) {
+        return std::nullopt;
+    }
+
+    return std::stoi(suffix);
+}
+
 void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
                           std::vector<std::string_view> const& indexed_keys, std::string_view table_name) {
     for (auto const& [key, _] : table) {
@@ -48,23 +65,6 @@ void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view
 void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
                           std::string_view table_name) {
     return RejectUnexpectedKeys(table, allowed_keys, {}, table_name);
-}
-
-// TODO(Jack): Should we use an expected or variant or optional to return the index value from here?
-std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base) {
-    if (key == base or not key.starts_with(base)) {
-        return std::nullopt;
-    }
-
-    std::string const suffix{key.substr(std::size(base))};
-
-    bool const all_digits{
-        std::ranges::all_of(suffix, [](char const c) { return std::isdigit(static_cast<unsigned char>(c)); })};
-    if (std::empty(suffix) or not all_digits) {
-        return std::nullopt;
-    }
-
-    return std::stoi(suffix);
 }
 
 }  // namespace reprojection::config

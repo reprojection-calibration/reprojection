@@ -16,6 +16,28 @@ std::optional<toml::table> OptionalTable(toml::table const& table, std::string_v
 
 toml::table RequireTable(toml::table const& table, std::string_view key);
 
+std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base);
+
+// TODO ADD CONCEPT THAT PARSE METHOD IS REQUIRED?
+template <typename T>
+std::vector<T> RequireIndexedTables(toml::table const& table, std::string_view base) {
+    std::vector<T> result;
+    for (auto const& [key, value] : table) {
+        std::optional const index{IndexedKeyIndex(key.str(), base)};
+        if (not index) {
+            continue;
+        }
+
+        result.push_back(T::Parse(RequireTable(table, key), *index));
+    }
+
+    if (std::empty(result)) {
+        throw std::runtime_error(std::format("Missing required table(s) '{}'", base));
+    }
+
+    return result;
+}
+
 void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
                           std::vector<std::string_view> const& indexed_keys, std::string_view table_name);
 
@@ -82,7 +104,5 @@ void OverrideIfPresent(toml::table const& table, std::string_view key, T& value)
         value = *parsed;
     }
 }
-
-std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base);
 
 }  // namespace reprojection::config

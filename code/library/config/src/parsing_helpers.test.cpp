@@ -39,6 +39,60 @@ TEST(ConfigParsingHelpers, TestRequiredTable) {
     EXPECT_NO_THROW(config::RequireTable(table, "table1"));
 }
 
+TEST(ConfigParsingHelpers, TestIndexedKeyIndex) {
+    std::string const base{"cam"};
+    std::string key{"cam"};
+
+    // A key without an index is not allowed.
+    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
+
+    // Bad suffix! Not all digits.
+    key = "cam0_dev";
+    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
+
+    // Mismatched base.
+    key = "CAM";
+    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
+
+    key = "cam0";
+    std::optional result{config::IndexedKeyIndex(key, base)};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, 0);
+
+    key = "cam55";
+    result = config::IndexedKeyIndex(key, base);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, 55);
+}
+
+TEST(ConfigParsingHelpers, TestRequireIndexedTables) {
+    static constexpr std::string_view table_content{R"(
+        [example0]
+
+        [example4]
+    )"};
+    toml::table const table{toml::parse(table_content)};
+
+    // Dummy example struct so we do not need to parse a real Config type.
+    struct Example {
+        static Example Parse(toml::table const& table, int const index) {
+            static_cast<void>(table);
+
+            return Example{index};
+        }
+
+        int index_;
+    };
+
+    auto const result{config::RequireIndexedTables<Example>(table, "example")};
+    EXPECT_EQ(std::size(result), 2);
+    EXPECT_EQ(result[0].index_, 0);
+    EXPECT_EQ(result[1].index_, 4);
+
+    // Requires at least one parsed indexed table.
+    EXPECT_THROW(config::RequireIndexedTables<Example>(table, "xyz"), std::runtime_error);
+}
+
 TEST(ConfigParsingHelpers, TestRejectUnexpectedKeys) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
@@ -134,30 +188,4 @@ TEST(ConfigParsingHelpers, TestOverrideIfPresent) {
     // Key is present so we get an override.
     config::OverrideIfPresent(table, "key1", value);
     EXPECT_EQ(value, "value1");
-}
-
-TEST(ConfigParsingHelpers, TestIndexedKeyIndex) {
-    std::string const base{"cam"};
-    std::string key{"cam"};
-
-    // A key without an index is not allowed.
-    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
-
-    // Bad suffix! Not all digits.
-    key = "cam0_dev";
-    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
-
-    // Mismatched base.
-    key = "CAM";
-    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
-
-    key = "cam0";
-    std::optional result{config::IndexedKeyIndex(key, base)};
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(*result, 0);
-
-    key = "cam55";
-    result = config::IndexedKeyIndex(key, base);
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(*result, 55);
 }
