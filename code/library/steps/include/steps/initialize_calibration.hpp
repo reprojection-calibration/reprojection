@@ -18,4 +18,6 @@ struct CalibrationContext {
 
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr db);
 
+WorkflowType DetermineWorkflowType(config::Config const& cfg);
+
 }  // namespace reprojection::steps

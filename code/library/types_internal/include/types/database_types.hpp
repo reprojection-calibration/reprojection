@@ -69,13 +69,15 @@ inline std::string ToString(AssetType const data) {
     }
 }
 
-enum class WorkflowType { Cam, CamImu };
+enum class WorkflowType { Cam, CamImu, MultiCam };
 
 inline std::string ToString(WorkflowType const data) {
     if (data == WorkflowType::Cam) {
         return "cam";
     } else if (data == WorkflowType::CamImu) {
         return "cam_imu";
+    } else if (data == WorkflowType::MultiCam) {
+        return "multi_cam";
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown WorkflowType");  // LCOV_EXCL_LINE
     }

@@ -55,4 +55,26 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
     return {cfg, workflow_id, camera_id, target_id, imu_id};
 }
 
+WorkflowType DetermineWorkflowType(config::Config const& cfg) {
+    std::size_t const num_cams{cfg.cameras.size()};
+
+    if (cfg.imu) {
+        if (num_cams == 1) {
+            return WorkflowType::CamImu;
+        }
+
+        throw std::runtime_error(
+            std::format("Camera-IMU calibration currently requires exactly one camera, got {}", num_cams));
+    }
+
+    if (num_cams == 1) {
+        return WorkflowType::Cam;
+    } else if (num_cams == 2) {
+        return WorkflowType::MultiCam;
+    }
+
+    throw std::runtime_error(
+        std::format("Multi-camera calibration currently supports exactly two cameras, got {}", num_cams));
+}
+
 }  // namespace reprojection::steps
