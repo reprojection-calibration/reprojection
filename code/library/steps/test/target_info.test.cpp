@@ -36,6 +36,7 @@ TEST(StepsTargetInfo, TestTargetInfoStep) {
 
     steps::TargetInfoStep const step{target_id, target};
     EXPECT_EQ(step.Type(), StepType::TargetInfo);
+    EXPECT_EQ(step.Assets(), std::vector{target_id});
     EXPECT_EQ(step.CacheKey().value, "03d5d5226dde69073fd8d1b0813738058bfb75bff151dfced9b636374ae0ff5b");
 
     auto const [step_id, _]{database::GetOrCreateStep(db.get(), StepType::TargetInfo, "")};

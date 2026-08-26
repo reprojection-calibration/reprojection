@@ -1,6 +1,5 @@
 #include "database/calibration_database.hpp"
 
-#include <algorithm>
 #include <format>
 #include <ranges>
 

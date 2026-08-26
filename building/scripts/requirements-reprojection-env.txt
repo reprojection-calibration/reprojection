@@ -1,3 +1,4 @@
+# NOTE(Jack): Environment package snapshot from Jack's laptop venv built on 26.08.2026.
 annotated-types==0.8.0
 blinker==1.9.0
 build==1.5.0
@@ -14,6 +15,7 @@ importlib_metadata==9.0.0
 itsdangerous==2.2.0
 janus==2.0.0
 Jinja2==3.1.6
+# NOTE(Jack): We use this ancient version of kaleido because it does not require a google chrome install.
 kaleido==0.2.1
 MarkupSafe==3.0.3
 narwhals==2.25.0

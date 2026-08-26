@@ -1,5 +1,7 @@
 #include "serialization.hpp"
 
+#include <algorithm>
+
 #include "hashing/serialize.hpp"
 #include "types/eigen_types.hpp"
 

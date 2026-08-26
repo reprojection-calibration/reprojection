@@ -51,6 +51,7 @@ TEST_F(SplineInitFixture, TestSplineInitStep) {
     steps::SplineInitialization const step{camera_id_,      pose_init_id_,  targets_id_,
                                            camera_info_id_, intrinsics_id_, db_};
     EXPECT_EQ(step.Type(), StepType::SplineInit);
+    EXPECT_EQ(step.Assets(), std::vector{camera_id_});
     EXPECT_EQ(step.CacheKey().value, "46d20a41437bc2c70b8497e5d0cebef0fcfb8bed7854b6e4ac1f1664ef006d02");
 
     auto const [step_id, _]{database::GetOrCreateStep(db_.get(), StepType::SplineInit, "")};
