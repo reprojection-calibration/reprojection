@@ -1,8 +1,12 @@
 [application]
 show_extraction = false
 
-[camera]
+[cam]
 sensor_name = "/cam0/image_raw"
+camera_model = "double_sphere"
+
+[cam1]
+sensor_name = "/cam1/image_raw"
 camera_model = "double_sphere"
 
 [imu]
