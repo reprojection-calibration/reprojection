@@ -13,7 +13,7 @@ struct ExtrinsicInit {
 
     static StepType Type() { return StepType::ExtrinsicInit; }
 
-    std::vector<AssetId> Assets() const { return {camera_id_, imu_id_}; }
+    std::vector<AssetId> Assets() const { return {camera_id_, imu_id_}; }  // LCOV_EXCL_LINE
 
     Hash CacheKey() const;
 

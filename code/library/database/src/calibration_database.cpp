@@ -80,8 +80,6 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
 }
 
-
-
 void AssetGroupInsert(sqlite3* const db, std::vector<AssetId> const& asset_ids) {
     auto const binder{[asset_ids](sqlite3_stmt* const stmt) { Bind(stmt, 1, AssetGroupSignature(asset_ids)); }};
 

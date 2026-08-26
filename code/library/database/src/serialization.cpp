@@ -1,5 +1,6 @@
 #include "serialization.hpp"
 
+#include "hashing/serialize.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection::database {
@@ -93,10 +94,18 @@ std::optional<ExtractedTarget> Deserialize(protobuf_serialization::ExtractedTarg
     return target;
 }
 
+// TODO(Jack): Can we confirm that the asset ids will stay the same once a calibration database is opened for a given
+// dataset? What if the user messes with the config and swaps the index order of something? We need to recognize if that
+// happens and wipe the existing databases assets and asset groups.
 std::string AssetGroupSignature(std::vector<AssetId> asset_ids) {
+    // NOTE(Jack): This function takes all the assets ids, sorts them, and converts them into a serialized string. It is
+    // a pretty simple logic but gets the job done to make a consistent application side signature based on the provided
+    // assets.
     std::sort(std::begin(asset_ids), std::end(asset_ids),
               [](AssetId const& a, AssetId const& b) { return a.value < b.value; });
 
+    // NOTE(Jack): We do not hash the signature so that way it remains human readable in the database. It is a small
+    // and important piece of information so this just makes sense.
     return hashing::Serialize(asset_ids);
 }
 

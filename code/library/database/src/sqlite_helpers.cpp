@@ -60,8 +60,7 @@ bool StepRow(sqlite3_stmt* const stmt) {
     } else if (code == SQLITE_DONE) {
         return false;
     } else {
-        // TODO(Jack): We should really query the db for the real error message! Can we do this with just the stmt?
-        throw std::runtime_error("SQLite step row failed");
+        throw SqliteException(stmt);  // LCOV_EXCL_LINE
     }
 }
 

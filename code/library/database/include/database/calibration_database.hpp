@@ -14,6 +14,30 @@ namespace reprojection::database {
 
 SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool create, bool read_only = false);
 
+// TODO(Jack): An "asset group" is a unique and still unfinished idea within the calibration database idea. The basic
+// motivation came from us needing to disambiguate steps and workflows among themselves. In any given database we might
+// want multiple different workflows of the same type (i.e.  mono cam or stereo cam-cam or cam-imu calibration) but for
+// different sets of sensors. If we only typed the workflows based on their type then we would only be allowed one of
+// each workflow type - not good! For steps we also want to be able to have multiple types of each step within each
+// workflow. For example in a stereo calibration we will have at least two image loading steps, where each step is
+// itself unique based on its cache key, but is only unique within the workflow based on its asset group. I considered
+// using the cache key for workflow level step disambiguation also, but I couldn't convince myself it was a good idea.
+//
+// When a calibration is initialized from a configuration file using steps::InitializeCalibration() it is that functions
+// responsibility to correctly initialize all the asset groups, because before any workflow or workflow step can be
+// created it needs to be able to satisfy a foreign constraint on an asset group. To understand how an asset group
+// signature is written please see the database::AssetGroupSignature() function.
+//
+// Why is it unfinished? As of now (26.08.2026) there are several things I do not like about it:
+//      1) The asset group is entirely specified by application logic. There is no database constraints that enforce the
+//         asset group id is made up of actually existing assets, or its format in general. I understand some things the
+//         application code needs to control, but the lack of database constraints on the topic scares me.
+//      2) Assets groups can only be added - if they are unused or somehow changed this is not possible to represent. We
+//         should remove any asset group which is not used by at least one workflow step.
+//      3) Somehow the asset group id and the step cache key feel a tiny bit like they are duplicating information. Both
+//         are use to disambiguate steps, with the asset group id more focused on the high level workflow semantics, and
+//         the step cache key more at the low level algorithm and data, but it still seems like maybe there is some
+//         possibility to reduce some redundancy, but I am not really sure that it is possible or even needed.
 void AssetGroupInsert(sqlite3* db, std::vector<AssetId> const& asset_ids);
 
 AssetId GetOrCreateAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
