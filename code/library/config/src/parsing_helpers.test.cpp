@@ -4,7 +4,7 @@
 
 using namespace reprojection;
 
-TEST(ConfigParsingHelpers3, TestOptionalTable) {
+TEST(ConfigParsingHelpers, TestOptionalTable) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
 
@@ -24,7 +24,7 @@ TEST(ConfigParsingHelpers3, TestOptionalTable) {
     EXPECT_THROW(config::OptionalTable(table, "key1"), std::runtime_error);
 }
 
-TEST(ConfigParsingHelpers3, TestRequiredTable) {
+TEST(ConfigParsingHelpers, TestRequiredTable) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
 
@@ -39,7 +39,7 @@ TEST(ConfigParsingHelpers3, TestRequiredTable) {
     EXPECT_NO_THROW(config::RequireTable(table, "table1"));
 }
 
-TEST(ConfigParsingHelpers3, TestRejectUnexpectedKeys) {
+TEST(ConfigParsingHelpers, TestRejectUnexpectedKeys) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
 
@@ -56,7 +56,7 @@ TEST(ConfigParsingHelpers3, TestRejectUnexpectedKeys) {
     EXPECT_NO_THROW(config::RejectUnexpectedKeys(table, {"key1", "table1"}, ""));
 }
 
-TEST(ConfigParsingHelpers3, TestOptional) {
+TEST(ConfigParsingHelpers, TestOptional) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
         key2 = 1.2
@@ -76,7 +76,7 @@ TEST(ConfigParsingHelpers3, TestOptional) {
     EXPECT_THROW(config::Optional<std::string>(table, "key2"), std::runtime_error);
 }
 
-TEST(ConfigParsingHelpers3, TestRequire) {
+TEST(ConfigParsingHelpers, TestRequire) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
     )"};
@@ -89,7 +89,7 @@ TEST(ConfigParsingHelpers3, TestRequire) {
     EXPECT_NO_THROW(config::Require<std::string>(table, "key1"));
 }
 
-TEST(ConfigParsingHelpers3, TestRequireArray) {
+TEST(ConfigParsingHelpers, TestRequireArray) {
     static constexpr std::string_view table_content{R"(
         key1 = [1, 22]
         key2 = "value2"
@@ -115,7 +115,7 @@ TEST(ConfigParsingHelpers3, TestRequireArray) {
     EXPECT_EQ(result[1], 22);
 }
 
-TEST(ConfigParsingHelpers3, TestOverrideIfPresent) {
+TEST(ConfigParsingHelpers, TestOverrideIfPresent) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
     )"};
@@ -130,4 +130,26 @@ TEST(ConfigParsingHelpers3, TestOverrideIfPresent) {
     // Key is present so we get an override.
     config::OverrideIfPresent(table, "key1", value);
     EXPECT_EQ(value, "value1");
+}
+
+TEST(ConfigParsingHelpers, TestIsIndexedKey) {
+    std::string key{"cam"};
+    std::string const base{"cam"};
+
+    // A key without an index, if it matches the base, is considered to have a default index of 0.
+    EXPECT_TRUE(config::IsIndexedKey(key, base));
+
+    key = "cam0";
+    EXPECT_TRUE(config::IsIndexedKey(key, base));
+
+    key = "cam55";
+    EXPECT_TRUE(config::IsIndexedKey(key, base));
+
+    // Bad suffix! Not all digits.
+    key = "cam0_dev";
+    EXPECT_FALSE(config::IsIndexedKey(key, base));
+
+    // Mismatched base.
+    key = "CAM";
+    EXPECT_FALSE(config::IsIndexedKey(key, base));
 }
