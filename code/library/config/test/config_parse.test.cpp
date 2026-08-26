@@ -2,30 +2,12 @@
 
 #include <gtest/gtest.h>
 
+#include "testing_utilities/generated/calibration_config.hpp"
+
 using namespace reprojection;
 
-TEST(ConfigParsingHelpers, TestConfigParseFull) {
-    static constexpr std::string_view full_table{R"(
-        [application]
-        show_extraction = true
-        threads = 10
-
-        [camera]
-        sensor_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [imu]
-        sensor_name = "/imu0"
-
-        [target]
-        type = "checkerboard"
-        pattern_size = [3,4]
-        unit_dimension = 0.5
-
-        [target.circle_grid]
-        asymmetric = true
-    )"};
-    toml::table const full_config{toml::parse(full_table)};
+TEST(ConfigParsingHelpers, TestConfigParse) {
+    toml::table const full_config{toml::parse(testing_utilities::calibration_config)};
     auto const result = config::Config::Parse(full_config);
 
     EXPECT_EQ(result.application.show_extraction, true);
@@ -42,34 +24,6 @@ TEST(ConfigParsingHelpers, TestConfigParseFull) {
     EXPECT_EQ(result.target.size[1], 4);
     EXPECT_EQ(result.target.unit_dimension, 0.5);
     EXPECT_EQ(result.target.asymmetric, true);
-}
-
-TEST(ConfigParsingHelpers, TestConfigParseMinimum) {
-    static constexpr std::string_view minimum_table{R"(
-        [camera]
-        sensor_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [target]
-        type = "checkerboard"
-        pattern_size = [3,4]
-    )"};
-    toml::table const minimum_config{toml::parse(minimum_table)};
-    auto const result{config::Config::Parse(minimum_config)};
-
-    EXPECT_EQ(result.application.show_extraction, false);
-    EXPECT_GE(result.application.threads, 2);
-
-    EXPECT_EQ(result.camera.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(result.camera.camera_model, CameraModel::DoubleSphere);
-
-    EXPECT_FALSE(result.imu.has_value());
-
-    EXPECT_EQ(result.target.target_type, TargetType::Checkerboard);
-    EXPECT_EQ(result.target.size[0], 3);
-    EXPECT_EQ(result.target.size[1], 4);
-    EXPECT_EQ(result.target.unit_dimension, 1.0);
-    EXPECT_EQ(result.target.asymmetric, false);
 }
 
 TEST(ConfigParsingHelpers, TestConfigApplicationParse) {

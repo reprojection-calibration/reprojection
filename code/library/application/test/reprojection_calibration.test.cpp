@@ -9,7 +9,7 @@
 #include "hashing/hashing.hpp"
 #include "steps/initialize_calibration.hpp"
 // cppcheck-suppress missingInclude
-#include "testing_utilities/generated/minimum_config.hpp"
+#include "testing_utilities/generated/calibration_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;
@@ -19,7 +19,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
     auto result{application::ParseArgs(1, nullptr)};
     EXPECT_FALSE(result.has_value());
 
-    TemporaryFile const config_file{".toml", testing_utilities::minimum_config};
+    TemporaryFile const config_file{".toml", testing_utilities::calibration_config};
 
     char const arg0[]{"program"};
     char const arg1[]{"--config"};
@@ -41,7 +41,7 @@ TEST(ApplicationReprojectionCalibration, TestParseArgs) {
 }
 
 TEST(ApplicationReprojectionCalibration, TestParseSensors) {
-    toml::table const config{toml::parse(testing_utilities::minimum_config)};
+    toml::table const config{toml::parse(testing_utilities::calibration_config)};
 
     application::Sensors const sensors{application::ParseSensors(config)};
 
@@ -51,7 +51,7 @@ TEST(ApplicationReprojectionCalibration, TestParseSensors) {
 }
 
 TEST(ApplicationReprojectionCalibration, TestCalibrate) {
-    toml::table const config{toml::parse(testing_utilities::minimum_config)};
+    toml::table const config{toml::parse(testing_utilities::calibration_config)};
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     // TODO(Jack): This test is a little sketchy because we are trying to induce cache hits to avoid actually having to

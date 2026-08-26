@@ -4,7 +4,7 @@
 
 #include "database/calibration_database.hpp"
 // cppcheck-suppress missingInclude
-#include "testing_utilities/generated/minimum_config.hpp"
+#include "testing_utilities/generated/calibration_config.hpp"
 
 using namespace reprojection;
 
@@ -13,7 +13,7 @@ using namespace reprojection;
 
 TEST(StepsInitializeCalibration, TestHappyPath) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
-    toml::table const cfg_table{toml::parse(testing_utilities::minimum_config)};
+    toml::table const cfg_table{toml::parse(testing_utilities::calibration_config)};
 
     steps::CalibrationContext const result{steps::InitializeCalibration(cfg_table, db)};
     EXPECT_EQ(result.workflow_id.value, 1);

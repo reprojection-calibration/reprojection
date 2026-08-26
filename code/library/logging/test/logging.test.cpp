@@ -3,12 +3,12 @@
 #include <gtest/gtest.h>
 
 // cppcheck-suppress missingInclude
-#include "testing_utilities/generated/minimum_config.hpp"
+#include "testing_utilities/generated/calibration_config.hpp"
 
 using namespace reprojection;
 
 TEST(LoggingLogging, TestToOneLineJson) {
-    toml::table const toml{toml::parse(testing_utilities::minimum_config)};
+    toml::table const toml{toml::parse(testing_utilities::calibration_config)};
 
     std::string const result{logging::ToOneLineJson(toml)};
 
