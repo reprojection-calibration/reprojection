@@ -136,24 +136,28 @@ TEST(ConfigParsingHelpers, TestOverrideIfPresent) {
     EXPECT_EQ(value, "value1");
 }
 
-TEST(ConfigParsingHelpers, TestIsIndexedKey) {
+TEST(ConfigParsingHelpers, TestIndexedKeyIndex) {
     std::string const base{"cam"};
     std::string key{"cam"};
 
     // A key without an index is not allowed.
-    EXPECT_FALSE(config::IsIndexedKey(key, base));
-
-    key = "cam0";
-    EXPECT_TRUE(config::IsIndexedKey(key, base));
-
-    key = "cam55";
-    EXPECT_TRUE(config::IsIndexedKey(key, base));
+    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
 
     // Bad suffix! Not all digits.
     key = "cam0_dev";
-    EXPECT_FALSE(config::IsIndexedKey(key, base));
+    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
 
     // Mismatched base.
     key = "CAM";
-    EXPECT_FALSE(config::IsIndexedKey(key, base));
+    EXPECT_FALSE(config::IndexedKeyIndex(key, base));
+
+    key = "cam0";
+    std::optional result{config::IndexedKeyIndex(key, base)};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, 0);
+
+    key = "cam55";
+    result = config::IndexedKeyIndex(key, base);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, 55);
 }

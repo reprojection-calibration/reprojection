@@ -83,6 +83,6 @@ void OverrideIfPresent(toml::table const& table, std::string_view key, T& value)
     }
 }
 
-bool IsIndexedKey(std::string_view key, std::string_view base);
+std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base);
 
 }  // namespace reprojection::config

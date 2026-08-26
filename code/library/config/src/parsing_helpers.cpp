@@ -31,9 +31,11 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
 void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
                           std::vector<std::string_view> const& indexed_keys, std::string_view table_name) {
     for (auto const& [key, _] : table) {
-        bool const allowed{
-            std::ranges::contains(allowed_keys, key.str()) or
-            std::ranges::any_of(indexed_keys, [&](std::string_view base) { return IsIndexedKey(key.str(), base); })};
+        bool const allowed{std::ranges::contains(allowed_keys, key.str()) or
+                           std::ranges::any_of(indexed_keys, [&](std::string_view base) {
+                               // Use IndexedKeyIndex() optional as boolean, do not worry about actual index value.
+                               return IndexedKeyIndex(key.str(), base).has_value();
+                           })};
 
         if (not allowed) {
             throw std::runtime_error(std::format("Unexpected key '{}.{}'", table_name, key.str()));
@@ -49,16 +51,20 @@ void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view
 }
 
 // TODO(Jack): Should we use an expected or variant or optional to return the index value from here?
-bool IsIndexedKey(std::string_view key, std::string_view base) {
+std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base) {
     if (key == base or not key.starts_with(base)) {
-        return false;
+        return std::nullopt;
     }
 
-    std::string_view const suffix{key.substr(std::size(base))};
+    std::string const suffix{key.substr(std::size(base))};
+
     bool const all_digits{
         std::ranges::all_of(suffix, [](char const c) { return std::isdigit(static_cast<unsigned char>(c)); })};
+    if (std::empty(suffix) or not all_digits) {
+        return std::nullopt;
+    }
 
-    return all_digits and not std::empty(suffix);
+    return std::stoi(suffix);
 }
 
 }  // namespace reprojection::config
