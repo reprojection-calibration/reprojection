@@ -50,10 +50,7 @@ void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view
 
 // TODO(Jack): Should we use an expected or variant or optional to return the index value from here?
 bool IsIndexedKey(std::string_view key, std::string_view base) {
-    if (key == base) {
-        // Accepts key="cam" and base="cam" - equivalent to index=0 I guess?
-        return true;
-    } else if (not key.starts_with(base)) {
+    if (key == base or not key.starts_with(base)) {
         return false;
     }
 

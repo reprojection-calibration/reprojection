@@ -137,11 +137,11 @@ TEST(ConfigParsingHelpers, TestOverrideIfPresent) {
 }
 
 TEST(ConfigParsingHelpers, TestIsIndexedKey) {
-    std::string key{"cam"};
     std::string const base{"cam"};
+    std::string key{"cam"};
 
-    // A key without an index, if it matches the base, is considered to have a default index of 0.
-    EXPECT_TRUE(config::IsIndexedKey(key, base));
+    // A key without an index is not allowed.
+    EXPECT_FALSE(config::IsIndexedKey(key, base));
 
     key = "cam0";
     EXPECT_TRUE(config::IsIndexedKey(key, base));
