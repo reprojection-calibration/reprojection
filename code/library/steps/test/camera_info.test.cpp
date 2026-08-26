@@ -11,6 +11,8 @@ using namespace reprojection;
 class CameraInfoTestFixture : public StepTestFixture {
    protected:
     void SetUp() override {
+        StepTestFixture::SetUp();
+
         // TODO(Jack): This block of code is copy and pasted across multiple fixtures!
         // Build the encoded images (cv::Mat -> serialized buffer)
         cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
@@ -42,6 +44,7 @@ TEST_F(CameraInfoTestFixture, TestCameraInfoStep) {
     // Build the step and check that the type and hash function are correct.
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
     EXPECT_EQ(step.Type(), StepType::CameraInfo);
+    EXPECT_EQ(step.Assets(), std::vector{camera_id_});
     EXPECT_EQ(step.CacheKey().value, "9a845e2b13b28d7676c58c24d20b68ce5b427d855d0fc06b136a682e881ed75f");
 
     // Build the actual database step id and execute the step.

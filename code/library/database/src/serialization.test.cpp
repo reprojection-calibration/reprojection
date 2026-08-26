@@ -71,3 +71,11 @@ TEST(DatabaseSerialization, TestExtractedTargetDeserializationEmpty) {
     EXPECT_EQ(deserialized_opt->bundle.points.size(), 0);
     EXPECT_EQ(deserialized_opt->indices.size(), 0);
 }
+
+TEST(DatabaseSerialization, TestAssetGroupSignature) {
+    std::vector<AssetId> const asset_ids{AssetId{4}, AssetId{2}, AssetId{8}, AssetId{7}};
+    std::string const result{database::AssetGroupSignature(asset_ids)};
+
+    std::string const gt_result{"2|4|7|8|"};
+    EXPECT_EQ(result, gt_result);
+}

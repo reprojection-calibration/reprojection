@@ -16,6 +16,7 @@ auto const log{logging::Get("steps")};
 template <typename T>
 concept IsRunnableStep = requires(T const& step, StepId const id, SqlitePtr const db) {
     { step.Type() } -> std::same_as<StepType>;
+    { step.Assets() } -> std::same_as<std::vector<AssetId>>;
     { step.CacheKey() } -> std::same_as<Hash>;
     { step.Execute(id, db) } -> std::same_as<void>;
 };
@@ -27,7 +28,7 @@ StepId RunStep(WorkflowId const workflow_id, T const& step, SqlitePtr const db) 
     auto const [step_id, cache_status]{database::GetOrCreateStep(db.get(), step.Type(), cache_key)};
 
     // Regardless if it is a cache hit or miss we need to add it to the assigned workflow.
-    database::WorkflowStepUpsert(db.get(), workflow_id, step.Type(), step_id);
+    database::WorkflowStepUpsert(db.get(), workflow_id, step_id, step.Type(), step.Assets());
 
     log->info("{{'cache_status': '{}', 'step_id': {:2}, 'step_type': '{}'}}", ToString(cache_status), step_id.value,
               ToString(step.Type()));

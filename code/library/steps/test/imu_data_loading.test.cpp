@@ -40,6 +40,7 @@ class ImuSamplerFixture : public ::testing::Test {
 TEST_F(ImuSamplerFixture, TestImuDataLoadingStepRunner) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
     AssetId const imu_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
+    database::AssetGroupInsert(db.get(), {imu_id});
     WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {imu_id})};
 
     steps::ImuDataLoading const step{imu_id, "", imu_sampler_};
@@ -62,6 +63,7 @@ TEST_F(ImuSamplerFixture, TestImuDataLoadingStep) {
     // Build the step and check that the type and hash function are correct.
     steps::ImuDataLoading const step{imu_id, "", imu_sampler_};
     EXPECT_EQ(step.Type(), StepType::ImuDataLoading);
+    EXPECT_EQ(step.Assets(), std::vector{imu_id});
     EXPECT_EQ(step.CacheKey().value, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
     // Build the actual database step id and execute the step.

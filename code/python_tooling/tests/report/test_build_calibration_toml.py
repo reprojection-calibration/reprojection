@@ -15,7 +15,7 @@ class TestBuildCameraTomls(unittest.TestCase):
         workflow = Workflow(
             id=1,
             type="cam",
-            signature="cam0",
+            asset_group_signature="cam0",
             assets={
                 "camera": {
                     "id": 1,
@@ -79,7 +79,7 @@ class TestBuildCameraTomls(unittest.TestCase):
         workflow = Workflow(
             id=3,
             type="cam_imu",
-            signature="cam0_imu0",
+            asset_group_signature="cam0_imu0",
             assets={
                 "camera": {
                     "id": 1,

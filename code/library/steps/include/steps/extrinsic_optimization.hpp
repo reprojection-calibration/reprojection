@@ -14,6 +14,8 @@ struct ExtrinsicOptimization {
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }
 
+    std::vector<AssetId> Assets() const { return {camera_id_, imu_id_}; }  // LCOV_EXCL_LINE
+
     Hash CacheKey() const;
 
     void Execute(StepId step_id, SqlitePtr db) const;

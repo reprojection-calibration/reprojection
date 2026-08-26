@@ -15,6 +15,8 @@ using namespace reprojection;
 class BundleAdjustmentFixture : public StepTestFixture {
    protected:
     void SetUp() override {
+        StepTestFixture::SetUp();
+
         CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
         camera_info_id_ = InsertCameraInfo(camera_info);
 
@@ -51,6 +53,7 @@ TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStepRunner) {
 TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStep) {
     steps::BundleAdjustment const step{camera_id_, targets_id_, 1, camera_info_id_, intrinsics_id_, pose_init_id_, db_};
     EXPECT_EQ(step.Type(), StepType::BundleAdjustment);
+    EXPECT_EQ(step.Assets(), std::vector{camera_id_});
     EXPECT_EQ(step.CacheKey().value, "0dae470cd3c711a1692153ee4ccf969c5e4ccb5da30dbb0df40e2fdac600dc8e");
 
     auto const [step_id, _]{database::GetOrCreateStep(db_.get(), StepType::BundleAdjustment, "")};

@@ -12,6 +12,11 @@ struct BundleAdjustment {
 
     static StepType Type() { return StepType::BundleAdjustment; }
 
+    // TODO(Jack): Because we load the targets here it seems like we should also have the target assert ID here, but as
+    // we do not strictly need it to load the targets, we do not force ourselves to use it. Are we missing the proper
+    // abstraction?
+    std::vector<AssetId> Assets() const { return {camera_id_}; }
+
     Hash CacheKey() const;
 
     void Execute(StepId step_id, SqlitePtr db) const;

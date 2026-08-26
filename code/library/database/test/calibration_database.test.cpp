@@ -42,6 +42,7 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
 TEST(DatabaseCalibrationDatbase, TestGetOrCreateWorkflow) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
     AssetId const asset_id_1{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
+    database::AssetGroupInsert(db.get(), {asset_id_1});
 
     // Repeated insert with matching name and hash is no problem!
     WorkflowId result{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {asset_id_1})};
@@ -53,12 +54,15 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateWorkflow) {
 
     // Inserting another workflow increments the workflow counter.
     AssetId const asset_id_2{database::GetOrCreateAsset(db.get(), AssetType::Camera, 1, "")};
+    database::AssetGroupInsert(db.get(), {asset_id_1, asset_id_2});
+
     result = database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {asset_id_1, asset_id_2});
     EXPECT_EQ(result, WorkflowId{2});
 
-    // Only one workflow entry is allowed for any single asset signature.
-    EXPECT_THROW(database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {asset_id_1}),
-                 database::SqliteException);
+    // Add the same asset(s) but to another workflow type. I am still debating if we should make the asset group UNIQUE
+    // in an of its itself, but for now the only uniqueness constraint is on the workflow type AND asset group.
+    result = database::GetOrCreateWorkflow(db.get(), WorkflowType::CamImu, {asset_id_1});
+    EXPECT_EQ(result, WorkflowId{3});
 }
 
 TEST(DatabaseCalibrationDatbase, TestAssetWorkflowState) {
@@ -69,22 +73,15 @@ TEST(DatabaseCalibrationDatbase, TestAssetWorkflowState) {
     AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "")};
     EXPECT_EQ(target_id, AssetId{2});
 
-    // Here we only add the target (should not happen in a real workflow), not the camera
-    database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {target_id});
-
-    // The camera asset does not belong to any workflow so it gets deleted.
-    database::DeleteUnusedAssets(db.get());
-
-    // Insert the same exact camera asset that we did at the start - normally this would just return the original asset
-    // with ID = 1, but because it got deleted in the previous step it actually creates a new asset now with ID = 3.
     cam_id = database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "");
-    EXPECT_EQ(cam_id, AssetId{3});
+    EXPECT_EQ(cam_id, AssetId{1});
 }
 
 TEST(DatabaseCalibrationDatbase, TestStepWorkflowState) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
+    database::AssetGroupInsert(db.get(), {asset_id});
     auto const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, {asset_id})};
 
     // Create and finalize a step
@@ -93,7 +90,7 @@ TEST(DatabaseCalibrationDatbase, TestStepWorkflowState) {
     EXPECT_EQ(step_id, StepId{1});
 
     // Add that step to the workflow
-    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, StepType::CameraInfo, step_id));
+    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, step_id, StepType::CameraInfo, {asset_id}));
 
     // Check that after adding it to the workflow its still there and with the same id (confirms it did not accidentally
     // get removed or something).
@@ -107,7 +104,7 @@ TEST(DatabaseCalibrationDatbase, TestStepWorkflowState) {
 
     // Upsert the workflow now which removes the old step and replaces it with the new step id. Because of the "remove
     // unused steps" trigger the database has it should remove the first step.
-    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, StepType::CameraInfo, step_id));
+    EXPECT_NO_THROW(database::WorkflowStepUpsert(db.get(), workflow_id, step_id, StepType::CameraInfo, {asset_id}));
 
     // If the first step hadn't been removed this should be a cache hit, but because it got removed this is a new step
     // with a new id.

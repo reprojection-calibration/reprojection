@@ -12,6 +12,10 @@ struct FeatureExtraction {
 
     static StepType Type() { return StepType::FeatureExtraction; }
 
+    // TODO(Jack): We do no strictly need the target asset ID after the constructor is done, so we do not have it as a
+    // class member, so we do not write it here with the camera assed ID. Is that ok or are we missing the point?
+    std::vector<AssetId> Assets() const { return {camera_id_}; }
+
     Hash CacheKey() const;
 
     void Execute(StepId step_id, SqlitePtr db) const;

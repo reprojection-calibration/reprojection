@@ -38,7 +38,7 @@ def refresh_workflow_list(db_file):
 
     result = [
         {
-            "label": f"{workflow.type} ({workflow.signature})",
+            "label": f"{workflow.type} ({workflow.asset_group_signature})",
             "value": workflow.id,
         }
         for workflow in workflows

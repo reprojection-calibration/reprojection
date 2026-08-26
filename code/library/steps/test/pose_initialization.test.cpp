@@ -15,6 +15,8 @@ using namespace reprojection;
 class PoseInitializationFixture : public StepTestFixture {
    protected:
     void SetUp() override {
+        StepTestFixture::SetUp();
+
         CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
         camera_info_id_ = InsertCameraInfo(camera_info);
 
@@ -42,6 +44,7 @@ TEST_F(PoseInitializationFixture, TestPoseInitializationStepRunner) {
 TEST_F(PoseInitializationFixture, TestPoseInitializationStep) {
     steps::PoseInitialization const step{camera_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
     EXPECT_EQ(step.Type(), StepType::PoseInit);
+    EXPECT_EQ(step.Assets(), std::vector{camera_id_});
     EXPECT_EQ(step.CacheKey().value, "723245d956786cad6abadb69629b5bccc8db6596c0864a6c77380c9f818351a1");
 
     auto const [step_id, _]{database::GetOrCreateStep(db_.get(), StepType::PoseInit, "")};

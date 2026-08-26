@@ -13,6 +13,8 @@ using namespace reprojection;
 class ExtrinsicInitFixture : public ::testing::Test {
    protected:
     void SetUp() override {
+        database::AssetGroupInsert(db_.get(), {camera_id_, imu_id_});
+
         auto const [imu_data, spline]{testing_mocks::GenerateImuData(11, 5)};
 
         database::ImuDataInsert(db_.get(), imu_data_id_, imu_id_, imu_data);
@@ -44,6 +46,8 @@ TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
 TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStep) {
     steps::ExtrinsicInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
+    std::vector const gt_assets{camera_id_, imu_id_};
+    EXPECT_EQ(step.Assets(), gt_assets);
     EXPECT_EQ(step.CacheKey().value, "d78f7d0b3bf9ef156ed4b8c9c31eaf1fcefb3174b239d1b5e471de80c488bc05");
 
     // Build the actual database step id and execute the step.

@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "types/algorithm_types.hpp"
+#include "types/database_types.hpp"
 
 // TODO(Jack): How can we point cppcheck to the generated protobuf cpp files?
 // cppcheck-suppress missingInclude
@@ -22,5 +23,7 @@ std::optional<ExtractedTarget> Deserialize(protobuf_serialization::ExtractedTarg
 inline bool ValidateDimensions(int const rows, int const cols, size_t const data_size) {
     return (static_cast<size_t>(rows) * static_cast<size_t>(cols)) == data_size;
 }
+
+std::string AssetGroupSignature(std::vector<AssetId> asset_ids);
 
 }  // namespace reprojection::database

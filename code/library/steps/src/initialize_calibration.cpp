@@ -22,7 +22,10 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
     // TODO(Jack): Refactor so user can pass in a target name if they like.
     AssetId const camera_id{
         database::GetOrCreateAsset(db.get(), AssetType::Camera, cfg.camera.index, cfg.camera.sensor_name)};
+    database::AssetGroupInsert(db.get(), {camera_id});
+
     AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "target")};
+    database::AssetGroupInsert(db.get(), {target_id});
 
     // TODO(Jack): Right now the workflow creation/parameterization here is extremely manual and hardcoded for our two
     // sensor cam/cam-imu only case, but we don't need to complicate things till later when we need a more generic
@@ -33,10 +36,14 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
     std::optional<AssetId> imu_id;
     if (cfg.imu) {
         imu_id = database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, Name{cfg.imu->sensor_name});
+        database::AssetGroupInsert(db.get(), {*imu_id});
+        database::AssetGroupInsert(db.get(), {*imu_id, camera_id});
+
         workflow_type = WorkflowType::CamImu;
         workflow_assets.push_back(*imu_id);
     }
 
+    database::AssetGroupInsert(db.get(), {workflow_assets});
     WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), workflow_type, workflow_assets)};
 
     log->info(

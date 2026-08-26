@@ -36,7 +36,9 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
 
             # Assert some of its properties.
             self.assertTrue(table.empty)
-            self.assertEqual(list(table.columns), ["id", "type", "signature"])
+            self.assertEqual(
+                list(table.columns), ["id", "type", "asset_group_signature"]
+            )
 
     def test_load_table_blob(self):
         with NamedTemporaryFile(suffix=".db3") as tmp:

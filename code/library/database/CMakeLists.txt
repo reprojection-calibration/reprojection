@@ -7,7 +7,8 @@ set(LIBRARY_NAME "database")
 # WARN(Jack): If you change something in an .sql file you NEED to reload the cmake project! Otherwise the change will
 # not be reflected in the generated header file.
 set(SQL_FILES
-        assets_delete.sql
+        asset_groups_insert.sql
+        asset_groups_table.sql
         assets_insert.sql
         assets_select.sql
         assets_table.sql

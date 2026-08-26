@@ -6,7 +6,6 @@
 #include "database/sqlite_exception.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
-#include "hashing/serialize.hpp"
 
 #include "database_semantics.hpp"
 #include "serialization.hpp"
@@ -39,6 +38,7 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     }
 
     if (not read_only) {
+        ExecuteStatement(sql_statements::asset_groups_table, db);
         ExecuteStatement(sql_statements::assets_table, db);
         ExecuteStatement(sql_statements::camera_info_table, db);
         ExecuteStatement(sql_statements::camera_poses_table, db);
@@ -79,6 +79,12 @@ SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool con
     return SqlitePtr{db, [](sqlite3* const db) { sqlite3_close_v2(db); }};
 }
 
+void AssetGroupInsert(sqlite3* const db, std::vector<AssetId> const& asset_ids) {
+    auto const binder{[asset_ids](sqlite3_stmt* const stmt) { Bind(stmt, 1, AssetGroupSignature(asset_ids)); }};
+
+    ExecuteStatement(sql_statements::asset_groups_insert, binder, db);
+}
+
 AssetId GetOrCreateAsset(sqlite3* const db, AssetType const type, size_t const index, Name const& name) {
     auto const result{ReadAssetId(db, type, index)};
     if (result and result->second != name) {
@@ -92,18 +98,8 @@ AssetId GetOrCreateAsset(sqlite3* const db, AssetType const type, size_t const i
     return InsertAsset(db, type, index, name);
 }
 
-void DeleteUnusedAssets(sqlite3* const db) { ExecuteStatement(sql_statements::assets_delete, db); }
-
 WorkflowId GetOrCreateWorkflow(sqlite3* const db, WorkflowType const type, std::vector<AssetId> const& assets) {
-    // NOTE(Jack): We do not hash the signature so that way it remains humand readable in the database. It is a small
-    // and important piece of information so this just makes sense.
-    // TODO(Jack): Is there a better way of uniquely identifying the workflow than creating this string of the assets
-    // here? I am not sure how this will scale to multisensor cases but that is still future music. The main problem I
-    // have is that this leaves information/constraints on the table. For example for each workflow type there is a
-    // specific asset requirements (i.e. cam-imu requires a cam, target and imu), but right now that is not enforced
-    // anywhere at the database level. Not doing this offers some flexibility and simplicity, but if there was a nice
-    // way to do it we should!
-    std::string const signature{hashing::Serialize(assets)};
+    std::string const signature{AssetGroupSignature(assets)};
 
     WorkflowId id;
     if (auto const result{ReadWorkflowId(db, type, signature)}) {
@@ -128,16 +124,13 @@ void WorkflowAssetsInsert(sqlite3* const db, WorkflowId const workflow_id, std::
     BatchExecuteStatement(sql_statements::workflow_assets_insert, asset_ids, binder, db);
 }
 
-void WorkflowStepUpsert(sqlite3* const db, WorkflowId const workflow_id, StepType const step_type,
-                        StepId const step_id) {
-    auto const binder{[workflow_id, step_type, step_id](sqlite3_stmt* const stmt) {
-        // NOTE(Jack): Including the step type here enforces our constraint that a workflow can only have one of each
-        // kind of step. This might get annoying for certain things like reprojection error calculation steps which now
-        // will all need unique step types. But unless we combine those with their originating steps like we had in v1
-        // that was always going to be a problem.
+void WorkflowStepUpsert(sqlite3* const db, WorkflowId const workflow_id, StepId const step_id, StepType const step_type,
+                        std::vector<AssetId> const& asset_ids) {
+    auto const binder{[workflow_id, step_id, step_type, asset_ids](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, workflow_id.value);
-        Bind(stmt, 2, ToString(step_type));
-        Bind(stmt, 3, step_id.value);
+        Bind(stmt, 2, step_id.value);
+        Bind(stmt, 3, ToString(step_type));
+        Bind(stmt, 4, AssetGroupSignature(asset_ids));
     }};
 
     ExecuteStatement(sql_statements::workflow_steps_upsert, binder, db);
