@@ -36,4 +36,7 @@ WorkflowType DetermineWorkflowType(config::Config const& cfg);
 
 CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr const db);
 
+// TODO(Jack): Is there a simple way to test this without some huge database setup and implicit behavior checking?
+void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const& assets, SqlitePtr const db);
+
 }  // namespace reprojection::steps

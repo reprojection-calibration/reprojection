@@ -88,21 +88,37 @@ CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr c
         AssetId const camera_id{
             database::GetOrCreateAsset(db.get(), AssetType::Camera, camera.index, camera.sensor_name)};
         assets.cameras.push_back(camera_id);
-
-        database::AssetGroupInsert(db.get(), {camera_id});
     }
 
     // Add the target.
     assets.target = database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "target");
-    database::AssetGroupInsert(db.get(), {assets.target});
 
     // Add the imu if it exists.
     if (cfg.imu) {
         assets.imu = database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, Name{cfg.imu->sensor_name});
-        database::AssetGroupInsert(db.get(), {*assets.imu});
     }
 
     return assets;
+}
+
+// NAMING!
+void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const& assets, SqlitePtr const db) {
+    // The workflow asset group contains all the assets in one.
+    database::AssetGroupInsert(db.get(), assets.All());
+
+    // Each individual asset is also added - most steps are just owned by one single asset.
+    // TODO(Jack): Here we see the problem of the naming - "asset groups" would lead the normal person to believe there
+    // is probably at least two or more assets in any group, but that is not true! We need a name that reflects better
+    // it is simple a unique asset based identifier for worklow components.
+    for (auto const& asset : assets.All()) {
+        database::AssetGroupInsert(db.get(), {asset});
+    }
+
+    // Now execute any special rules that exist depending on the workflow type.
+    if (workflow_type == WorkflowType::CamImu) {
+        // WARN(Jack): We are hardcoding here that the imu will always be calibrated to the first camera.
+        database::AssetGroupInsert(db.get(), {assets.cameras.at(0), *assets.imu});
+    }
 }
 
 }  // namespace reprojection::steps
