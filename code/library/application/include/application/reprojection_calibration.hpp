@@ -18,8 +18,8 @@ struct AppArgs {
 };
 
 struct Sensors {
-    std::string camera_sensor;
-    std::optional<std::string> imu_sensor;
+    std::vector<std::string> camera_names;
+    std::optional<std::string> imu_name;
 };
 
 struct ImageInput {

@@ -43,15 +43,22 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
 // TODO(Jack): To be honest I do not like having this function because now we parse the entire config twice. Once on the
 // application side and once on the library side. It is not the end of the world but we should keep our eyes out for any
 // hints that we are missing the point.
+// TODO(Jack): Should we actually make this a constructor/factory of Sensors? Might just be a better way to organize
+// things?
 Sensors ParseSensors(toml::table const& cfg_table) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
+
+    std::vector<std::string> camera_names;
+    for (auto const& camera : cfg.cameras) {
+        camera_names.push_back(camera.sensor_name);
+    }
 
     std::optional<std::string> imu_name{std::nullopt};
     if (cfg.imu) {
         imu_name = cfg.imu->sensor_name;
     }
 
-    return {cfg.camera.sensor_name, imu_name};
+    return Sensors{camera_names, imu_name};
 }
 
 void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
