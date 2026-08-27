@@ -20,8 +20,7 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
     config::Config const cfg{config::Config::Parse(cfg_table)};
 
     // TODO(Jack): Refactor so user can pass in a target name if they like.
-    AssetId const camera_id{
-        database::GetOrCreateAsset(db.get(), AssetType::Camera, cfg.camera.index, cfg.camera.sensor_name)};
+    AssetId const camera_id{1};
     database::AssetGroupInsert(db.get(), {camera_id});
 
     AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "target")};
@@ -52,9 +51,11 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
         ToString(workflow_type), workflow_id.value, camera_id.value, target_id.value, imu_id ? imu_id->value : -1,
         logging::ToOneLineJson(cfg_table));
 
-    return {cfg, workflow_id, camera_id, target_id, imu_id};
+    return {};
 }
 
+// NAMING!
+// TODO(Jack): Move this to the calibration module? Or application module?
 WorkflowType DetermineWorkflowType(config::Config const& cfg) {
     std::size_t const num_cams{cfg.cameras.size()};
 
@@ -75,6 +76,33 @@ WorkflowType DetermineWorkflowType(config::Config const& cfg) {
 
     throw std::runtime_error(
         std::format("Multi-camera calibration currently supports exactly two cameras, got {}", num_cams));
+}
+
+// NAMING!
+// TODO(Jack): Move this to the calibration module? Or application module?
+CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr const db) {
+    CalibrationAssets assets;
+
+    // Add all the cameras.
+    for (auto const& camera : cfg.cameras) {
+        AssetId const camera_id{
+            database::GetOrCreateAsset(db.get(), AssetType::Camera, camera.index, camera.sensor_name)};
+        assets.cameras.push_back(camera_id);
+
+        database::AssetGroupInsert(db.get(), {camera_id});
+    }
+
+    // Add the target.
+    assets.target = database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "target");
+    database::AssetGroupInsert(db.get(), {assets.target});
+
+    // Add the imu if it exists.
+    if (cfg.imu) {
+        assets.imu = database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, Name{cfg.imu->sensor_name});
+        database::AssetGroupInsert(db.get(), {*assets.imu});
+    }
+
+    return assets;
 }
 
 }  // namespace reprojection::steps

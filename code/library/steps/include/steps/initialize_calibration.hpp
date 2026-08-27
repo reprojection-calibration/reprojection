@@ -6,18 +6,34 @@
 
 namespace reprojection::steps {
 
+struct CalibrationAssets {
+    std::vector<AssetId> cameras;
+    AssetId target;
+    std::optional<AssetId> imu;
+
+    std::vector<AssetId> All() const {
+        std::vector<AssetId> all_assets{cameras};
+        all_assets.push_back(target);
+
+        if (imu) {
+            all_assets.push_back(*imu);
+        }
+
+        return all_assets;
+    }
+};
+
 struct CalibrationContext {
     config::Config config;
-
+    // TODO STORE ID OR TYPE HERE OR BOTH?
     WorkflowId workflow_id;
-
-    AssetId camera_id;
-    AssetId target_id;
-    std::optional<AssetId> imu_id;
+    CalibrationAssets assets;
 };
 
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr db);
 
 WorkflowType DetermineWorkflowType(config::Config const& cfg);
+
+CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr const db);
 
 }  // namespace reprojection::steps
