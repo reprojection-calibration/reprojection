@@ -8,9 +8,6 @@
 
 using namespace reprojection;
 
-// TODO(Jack): Once we refactor the init logic to handle different recordings and config runs we need to test those
-// logically too!
-
 TEST(StepsInitializeCalibration, TestHappyPath) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
     toml::table const cfg_table{toml::parse(testing_utilities::calibration_config)};

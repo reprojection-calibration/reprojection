@@ -27,6 +27,7 @@ struct CalibrationContext {
     config::Config config;
     // TODO STORE ID OR TYPE HERE OR BOTH?
     WorkflowId workflow_id;
+    WorkflowType workflow_type;
     CalibrationAssets assets;
 };
 
