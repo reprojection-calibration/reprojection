@@ -97,7 +97,7 @@ TEST(ConfigParsingHelpers, TestRejectUnexpectedKeys) {
     static constexpr std::string_view table_content{R"(
         key1 = "value1"
 
-        [table]
+        [table0]
 
         [table1]
 
