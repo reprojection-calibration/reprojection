@@ -50,8 +50,10 @@ int main() {
         // NOTE(Jack): We only need to insert the camera info on the first pass when it's a cache miss. If we do it
         // again on subsequent runs we will violate the unique constraint.
         if (step_result.second == CacheStatus::CacheMiss) {
-            database::CameraInfoInsert(db.get(), step_result.first, context.camera_id,
-                                       CameraInfo{context.config.camera.camera_model, {0, 512, 0, 512}});
+            // TODO HANDLE BOTH CAMERAS!!!!
+            auto const camera_0{context.assets.cameras[0]};
+            database::CameraInfoInsert(db.get(), step_result.first, camera_0.id,
+                                       CameraInfo{camera_0.config.camera_model, {0, 512, 0, 512}});
             database::StepCacheKeyUpdate(db.get(), step_result.first, camera_info_cache_key);
         }
     } catch (...) {

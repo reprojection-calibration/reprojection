@@ -45,9 +45,14 @@ TEST(ApplicationReprojectionCalibration, TestParseSensors) {
 
     application::Sensors const sensors{application::ParseSensors(config)};
 
-    EXPECT_EQ(sensors.camera_sensor, "/cam0/image_raw");
-    ASSERT_TRUE(sensors.imu_sensor.has_value());
-    EXPECT_EQ(sensors.imu_sensor, "/imu0");
+    EXPECT_EQ(std::size(sensors.camera_names), 2);
+    for (size_t i{0}; i < std::size(sensors.camera_names); ++i) {
+        auto const& cam_i{sensors.camera_names[i]};
+        EXPECT_EQ(cam_i, std::format("/cam{}/image_raw", i));
+    }
+
+    ASSERT_TRUE(sensors.imu_name.has_value());
+    EXPECT_EQ(*sensors.imu_name, "/imu0");
 }
 
 TEST(ApplicationReprojectionCalibration, TestCalibrate) {
@@ -65,15 +70,17 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     auto step{database::GetOrCreateStep(db.get(), StepType::ImageLoading, "")};
     database::StepCacheKeyUpdate(db.get(), step.first, {hashing::HashArguments(image_sampler_signature)});
 
-    CameraInfo const camera_info{context.config.camera.camera_model, {0, 512, 0, 512}};
+    // TODO DO WE NEED/WANT TO ALSO HANDLE THE SECOND CAM?
+    auto const cam_0{context.assets.cameras[0]};
+
+    CameraInfo const camera_info{cam_0.config.camera_model, {0, 512, 0, 512}};
     step = database::GetOrCreateStep(db.get(), StepType::CameraInfo, "");
-    database::CameraInfoInsert(db.get(), step.first, context.camera_id, camera_info);
-    database::StepCacheKeyUpdate(
-        db.get(), step.first,
-        hashing::HashArguments(context.camera_id.value, context.config.camera.camera_model, EncodedImages{}));
+    database::CameraInfoInsert(db.get(), step.first, cam_0.id, camera_info);
+    database::StepCacheKeyUpdate(db.get(), step.first,
+                                 hashing::HashArguments(cam_0.id.value, cam_0.config.camera_model, EncodedImages{}));
 
     step = database::GetOrCreateStep(db.get(), StepType::IntrinsicInit, "");
-    database::IntrinsicInsert(db.get(), step.first, context.camera_id, context.config.camera.camera_model,
+    database::IntrinsicInsert(db.get(), step.first, cam_0.id, cam_0.config.camera_model,
                               {Array5d{256, 256, 256, 0, 0.5}});
     database::StepCacheKeyUpdate(db.get(), step.first, hashing::HashArguments(camera_info, CameraMeasurements{}));
 
