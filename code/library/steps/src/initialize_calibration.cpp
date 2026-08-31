@@ -26,7 +26,7 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
     log->info("{{'workflow': {{'type': '{}', 'id': {}}}, 'config': {}}}", ToString(workflow_type), workflow_id.value,
               logging::ToOneLineJson(cfg_table));
 
-    return {cfg, workflow_id, workflow_type, assets};
+    return {cfg.application, assets, workflow_id, workflow_type};
 }
 
 // NAMING!
@@ -52,15 +52,18 @@ CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr c
     for (auto const& camera : cfg.cameras) {
         AssetId const camera_id{
             database::GetOrCreateAsset(db.get(), AssetType::Camera, camera.index, camera.sensor_name)};
-        assets.cameras.push_back(camera_id);
+        assets.cameras.push_back({camera_id, camera});
     }
 
     // Add the target.
-    assets.target = database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "target");
+    // TODO(Jack): Add ability to pass/add a name from the user config.
+    AssetId const target_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "target")};
+    assets.target = {target_id, cfg.target};
 
     // Add the imu if it exists.
     if (cfg.imu) {
-        assets.imu = database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, Name{cfg.imu->sensor_name});
+        AssetId const imu_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, Name{cfg.imu->sensor_name})};
+        assets.imu = {imu_id, *cfg.imu};
     }
 
     return assets;
@@ -82,7 +85,7 @@ void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const
     // Now execute any special rules that exist depending on the workflow type.
     if (workflow_type == WorkflowType::CamImu) {
         // WARN(Jack): We are hardcoding here that the imu will always be calibrated to the first camera.
-        database::AssetGroupInsert(db.get(), {assets.cameras.at(0), *assets.imu});
+        database::AssetGroupInsert(db.get(), {assets.cameras.at(0).id, assets.imu->id});
     }
 }
 

@@ -6,17 +6,30 @@
 
 namespace reprojection::steps {
 
+// TODO(Jack): The core purpose of this struct is very similar to the config class itself, but we need some way of
+// associating the parsed config with the database asset ids. If there is a nicer way to do this without than without
+// essentially having two of the same structs and wrapping one with the Asset<> template struct lets do it.
 struct CalibrationAssets {
-    std::vector<AssetId> cameras;
-    AssetId target;
-    std::optional<AssetId> imu;
+    // TODO(Jack): Is this really the base name for what this does?
+    template <typename T>
+    struct Asset {
+        AssetId id;
+        T config;
+    };
+
+    std::vector<Asset<config::Config::Camera>> cameras;
+    Asset<config::Config::Target> target;
+    std::optional<Asset<config::Config::Imu>> imu;
 
     std::vector<AssetId> All() const {
-        std::vector<AssetId> all_assets{cameras};
-        all_assets.push_back(target);
+        std::vector<AssetId> all_assets;
 
+        for (auto const& [id, _] : cameras) {
+            all_assets.push_back(id);
+        }
+        all_assets.push_back(target.id);
         if (imu) {
-            all_assets.push_back(*imu);
+            all_assets.push_back(imu->id);
         }
 
         return all_assets;
@@ -24,11 +37,10 @@ struct CalibrationAssets {
 };
 
 struct CalibrationContext {
-    config::Config config;
-    // TODO STORE ID OR TYPE HERE OR BOTH?
+    config::Config::Application application;
+    CalibrationAssets assets;
     WorkflowId workflow_id;
     WorkflowType workflow_type;
-    CalibrationAssets assets;
 };
 
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr db);

@@ -60,9 +60,9 @@ TEST(StepsInitializeCalibration, TestCreateCalibrationAssets) {
     // date the insertion logic changes then the id values might change and we will need to update them here. The real
     // actual invariants of this test is that there are two cameras and the imu is not std::nullopt.
     EXPECT_EQ(std::size(assets.cameras), 2);
-    EXPECT_EQ(assets.cameras[0].value, 1);
-    EXPECT_EQ(assets.cameras[1].value, 2);
-    EXPECT_EQ(assets.target.value, 3);
+    EXPECT_EQ(assets.cameras[0].id.value, 1);
+    EXPECT_EQ(assets.cameras[1].id.value, 2);
+    EXPECT_EQ(assets.target.id.value, 3);
     ASSERT_TRUE(assets.imu.has_value());
-    EXPECT_EQ(assets.imu->value, 4);
+    EXPECT_EQ(assets.imu->id.value, 4);
 }
