@@ -68,7 +68,8 @@ int main() {
         }
     }
 
-    // Create the two image source inputs.
+    // Create the two empty image source inputs - note that we use the image name as the image signature which
+    // conceptually matches our hashing of the sensor name for the image loading StepCacheKeyUpdate() done above.
     application::ImageInputs image_inputs;
     for (auto const& camera : context.assets.cameras) {
         auto const& sensor_name{camera.config.sensor_name};

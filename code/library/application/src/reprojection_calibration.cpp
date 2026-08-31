@@ -66,6 +66,7 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
 
     for (auto const& camera : context.assets.cameras) {
+        // TODO(Jack): How can we guarantee that the image_inputs correlate to the provided calibration context config.
         ImageInput const& image_input{image_inputs.at(camera.config.sensor_name)};
         steps::ImageLoading const image_loading_step{camera.id, image_input.signature, image_input.source};
         StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(context.workflow_id, image_loading_step, db)};

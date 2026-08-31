@@ -70,7 +70,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     auto step{database::GetOrCreateStep(db.get(), StepType::ImageLoading, "")};
     database::StepCacheKeyUpdate(db.get(), step.first, {hashing::HashArguments(image_sampler_signature)});
 
-    // TODO DO WE NEED/WANT TO ALSO HANDLE THE SECOND CAM?
+    // TODO(Jack): Refactor this test so it also does the second camera.
     auto const cam_0{context.assets.cameras[0]};
 
     CameraInfo const camera_info{cam_0.config.camera_model, {0, 512, 0, 512}};
@@ -92,5 +92,6 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     // in the future but for now it stands.
 
     // TODO(Jack): Also enable to trigger imu calibration! See warning above.
-    EXPECT_NO_THROW(application::Calibrate(config, {{}, image_sampler_signature}, std::nullopt, db));
+    application::ImageInputs const image_inputs{{cam_0.config.sensor_name, {{}, image_sampler_signature}}};
+    EXPECT_NO_THROW(application::Calibrate(config, image_inputs, std::nullopt, db));
 }
