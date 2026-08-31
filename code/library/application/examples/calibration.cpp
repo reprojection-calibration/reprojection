@@ -13,10 +13,10 @@ int main(int argc, char* argv[]) {
 
     // TODO(Jack): How can we refactor the video file application to at least handle the stereo case?
     application::Sensors const sensors{application::ParseSensors(app_args->config)};
-    if (std::size(sensors.camera_names) or sensors.imu_name.has_value()) {
+    if (std::size(sensors.camera_names) > 1 or sensors.imu_name.has_value()) {
         std::cerr << std::format(
-            "The video file application only does monocular camera calibration - you passed a configuration for with "
-            "{} cameras and a imu is present: {}",
+            "The video file application only does monocular camera calibration - only one camera and no imu is allowed "
+            "- you passed a configuration with {} cameras and a imu is present: {}",
             std::size(sensors.camera_names), sensors.imu_name.has_value());
         return EXIT_FAILURE;
     }
@@ -36,7 +36,8 @@ int main(int argc, char* argv[]) {
         return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
     }};
 
-    application::ImageInputs const image_inputs{{"video_file", {image_source, video_capture->GetSignature()}}};
+    application::ImageInputs const image_inputs{
+        {sensors.camera_names.at(0), {image_source, video_capture->GetSignature()}}};
     application::Calibrate(app_args->config, image_inputs, std::nullopt, app_args->db);
 
     return EXIT_SUCCESS;
