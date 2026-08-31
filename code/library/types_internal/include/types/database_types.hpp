@@ -125,4 +125,11 @@ inline std::string ToString(StepType const data) {
     }
 }
 
+// TODO(Jack): Is this really the base name for what this does? We really need a better name here.
+template <typename T>
+struct Asset {
+    AssetId id;
+    T config;
+};
+
 }  // namespace reprojection

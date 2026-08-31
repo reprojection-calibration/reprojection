@@ -10,14 +10,6 @@ namespace reprojection::steps {
 // associating the parsed config with the database asset ids. If there is a nicer way to do this without than without
 // essentially having two of the same structs and wrapping one with the Asset<> template struct lets do it.
 struct CalibrationAssets {
-    // TODO(Jack): Is this really the base name for what this does?
-    // TODO MOVE TO TYPES FILE!
-    template <typename T>
-    struct Asset {
-        AssetId id;
-        T config;
-    };
-
     std::vector<Asset<config::Config::Camera>> cameras;
     Asset<config::Config::Target> target;
     std::optional<Asset<config::Config::Imu>> imu;
