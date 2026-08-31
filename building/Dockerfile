@@ -338,12 +338,19 @@ COPY code/test_data/dataset-calib-imu4_512_16.calib.db3 /data/video_file/dataset
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.calib.db3 a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d; \
+      /data/ros1/dataset-calib-imu4_512_16.calib.db3 4 a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.calib.db3 a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d; \
+      /data/ros2/dataset-calib-imu4_512_16.calib.db3 4 a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.calib.db3 422e7fddf519b1bf04a1140d44c604cc1c1d07927ad0610e610a2671a8fcec72
+      /data/video_file/dataset-calib-imu4_512_16.calib.db3 4 422e7fddf519b1bf04a1140d44c604cc1c1d07927ad0610e610a2671a8fcec72
+# NOTE(Jack): The video-file app does not support stereo calibration so we do not write the second cache key here.
+RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
+      /data/ros1/dataset-calib-imu4_512_16.calib.db3 5 b0bf752366fb86b14270aac9bf1b531d744d5249f2dee4c48326ca3724b9b842; \
+    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
+      /data/ros2/dataset-calib-imu4_512_16.calib.db3 5 b0bf752366fb86b14270aac9bf1b531d744d5249f2dee4c48326ca3724b9b842
 
+# NOTE(Jack): We remove the imu data table because we can actually load that data from the ROS bags during the test.
 ARG REMOVE_IMU_TABLE_DATA=building/scripts/remove_imu_table_data.py
 RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE_IMU_TABLE_DATA} \
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \

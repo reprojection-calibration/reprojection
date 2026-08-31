@@ -13,7 +13,7 @@ import sys
 # will need to update it manually at the call site of this script. That is not the end of the world, but it is a little
 # hacky and we should keep our eyes peeled for possible optimizations in the future.
 
-db_path, new_cache = sys.argv[1], sys.argv[2]
+db_path, step_id, new_cache = sys.argv[1], sys.argv[2], sys.argv[3]
 
 try:
     conn = sqlite3.connect(db_path)
@@ -30,9 +30,7 @@ conn.execute(
     WHERE id = ?
       AND type = 'feature_extraction';
     """,
-    # TODO(Jack): This is hacky to hardcode the step id here! This needs to be the step id of the feature extraction
-    # step already found in the database! Hack city.
-    (new_cache, 4),
+    (new_cache, step_id),
 )
 conn.commit()
 conn.close()
