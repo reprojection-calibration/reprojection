@@ -61,11 +61,12 @@ Sensors ParseSensors(toml::table const& cfg_table) {
     return Sensors{camera_names, imu_name};
 }
 
-void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
+void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {
     steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
 
     for (auto const& camera : context.assets.cameras) {
+        ImageInput const& image_input{image_inputs.at(camera.config.sensor_name)};
         steps::ImageLoading const image_loading_step{camera.id, image_input.signature, image_input.source};
         StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(context.workflow_id, image_loading_step, db)};
 
@@ -76,7 +77,7 @@ void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std:
         StepId const target_info_id{RunStep<steps::TargetInfoStep>(context.workflow_id, target_info_step, db)};
 
         steps::FeatureExtraction const feature_extraction_step{
-            camera.id,      image_loading_id, context.application.show_extraction,
+            camera.id,      image_loading_id,         context.application.show_extraction,
             target_info_id, context.assets.target.id, db};
         StepId const targets_id{RunStep<steps::FeatureExtraction>(context.workflow_id, feature_extraction_step, db)};
 

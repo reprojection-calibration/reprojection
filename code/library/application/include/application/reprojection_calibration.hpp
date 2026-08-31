@@ -27,6 +27,9 @@ struct ImageInput {
     std::string signature;
 };
 
+// A map of image inputs indexed but their sensor_name.
+using ImageInputs = std::map<std::string, ImageInput>;
+
 // TODO(Jack): Once we get the app running in unit testing with test imu data we can remove this coverage exclusion!
 struct ImuInput {  // LCOV_EXCL_LINE
     ImuSampler source;
@@ -38,7 +41,7 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
 Sensors ParseSensors(toml::table const& cfg_table);
 
 // TODO(Jack): How should we pass the ImageSourceSignature?
-void Calibrate(toml::table const& cfg_table, ImageInput const& image_input, std::optional<ImuInput> const& imu_input,
+void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr db);
 
 }  // namespace reprojection::application
