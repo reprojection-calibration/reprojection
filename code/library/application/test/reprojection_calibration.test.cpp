@@ -89,13 +89,17 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     database::IntrinsicInsert(db.get(), step.first, context.assets.cameras.at(0).id,
                               context.assets.cameras.at(0).config.camera_model, {Array5d{256, 256, 256, 0, 0.5}});
     CameraInfo const cam_info_0{context.assets.cameras.at(0).config.camera_model, {0, 512, 0, 512}};
-    database::StepCacheKeyUpdate(db.get(), step.first, hashing::HashArguments(cam_info_0, CameraMeasurements{}));
+    database::StepCacheKeyUpdate(
+        db.get(), step.first,
+        hashing::HashArguments(context.assets.cameras.at(0).id.value, cam_info_0, CameraMeasurements{}));
 
     step = database::GetOrCreateStep(db.get(), StepType::IntrinsicInit, "");
     database::IntrinsicInsert(db.get(), step.first, context.assets.cameras.at(1).id,
                               context.assets.cameras.at(1).config.camera_model, {Array5d{256, 256, 256, 0, 0.5}});
     CameraInfo const cam_info_1{context.assets.cameras.at(1).config.camera_model, {0, 512, 0, 512}};
-    database::StepCacheKeyUpdate(db.get(), step.first, hashing::HashArguments(cam_info_1, CameraMeasurements{}));
+    database::StepCacheKeyUpdate(
+        db.get(), step.first,
+        hashing::HashArguments(context.assets.cameras.at(1).id.value, cam_info_1, CameraMeasurements{}));
 
     // WARN(Jack): I would really really like to also be able to exercise the imu calibration component here but it
     // is not nearly as easy to generate cache hits for those steps with empty inputs/outputs. This requires some

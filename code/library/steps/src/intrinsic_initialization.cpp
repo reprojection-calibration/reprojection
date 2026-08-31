@@ -28,7 +28,10 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
     targets_ = database::ExtractedTargetsSelect(db.get(), targets_id, camera_id);
 }
 
-Hash IntrinsicInitialization::CacheKey() const { return hashing::HashArguments(camera_info_, targets_); }
+Hash IntrinsicInitialization::CacheKey() const {
+    // NOTE(Jack): See FeatureExtraction::CacheKey() comment as to why we need the camera asset id.
+    return hashing::HashArguments(camera_id_.value, camera_info_, targets_);
+}
 
 void IntrinsicInitialization::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const intrinsics{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
