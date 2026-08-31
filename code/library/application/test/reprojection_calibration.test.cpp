@@ -9,6 +9,7 @@
 #include "hashing/hashing.hpp"
 #include "steps/initialize_calibration.hpp"
 // cppcheck-suppress missingInclude
+#include "testing_utilities/database_setup_utils.hpp"
 #include "testing_utilities/generated/calibration_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
@@ -66,23 +67,35 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
-    std::string const image_sampler_signature{""};
-    auto step{database::GetOrCreateStep(db.get(), StepType::ImageLoading, "")};
-    database::StepCacheKeyUpdate(db.get(), step.first, {hashing::HashArguments(image_sampler_signature)});
+    std::array<testing_utilities::CameraTestData, 2> const camera_test_data{
+        {{
+             database::GetOrCreateStep(db.get(), StepType::ImageLoading, "img0").first,
+             "ftex0",
+             database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, "ftex0").first,
+             hashing::HashArguments(context.assets.cameras.at(0).id.value,
+                                    context.assets.cameras.at(0).config.camera_model, EncodedImages{}),
+         },
+         {
+             database::GetOrCreateStep(db.get(), StepType::ImageLoading, "img1").first,
+             "ftex1",
+             database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, "ftex1").first,
+             hashing::HashArguments(context.assets.cameras.at(1).id.value,
+                                    context.assets.cameras.at(1).config.camera_model, EncodedImages{}),
+         }}};
 
-    // TODO(Jack): Refactor this test so it also does the second camera.
-    auto const cam_0{context.assets.cameras[0]};
+    testing_utilities::TestDatabaseSetup(context.assets.cameras, camera_test_data, db);
 
-    CameraInfo const camera_info{cam_0.config.camera_model, {0, 512, 0, 512}};
-    step = database::GetOrCreateStep(db.get(), StepType::CameraInfo, "");
-    database::CameraInfoInsert(db.get(), step.first, cam_0.id, camera_info);
-    database::StepCacheKeyUpdate(db.get(), step.first,
-                                 hashing::HashArguments(cam_0.id.value, cam_0.config.camera_model, EncodedImages{}));
+    auto step = database::GetOrCreateStep(db.get(), StepType::IntrinsicInit, "");
+    database::IntrinsicInsert(db.get(), step.first, context.assets.cameras.at(0).id,
+                              context.assets.cameras.at(0).config.camera_model, {Array5d{256, 256, 256, 0, 0.5}});
+    CameraInfo const cam_info_0{context.assets.cameras.at(0).config.camera_model, {0, 512, 0, 512}};
+    database::StepCacheKeyUpdate(db.get(), step.first, hashing::HashArguments(cam_info_0, CameraMeasurements{}));
 
     step = database::GetOrCreateStep(db.get(), StepType::IntrinsicInit, "");
-    database::IntrinsicInsert(db.get(), step.first, cam_0.id, cam_0.config.camera_model,
-                              {Array5d{256, 256, 256, 0, 0.5}});
-    database::StepCacheKeyUpdate(db.get(), step.first, hashing::HashArguments(camera_info, CameraMeasurements{}));
+    database::IntrinsicInsert(db.get(), step.first, context.assets.cameras.at(1).id,
+                              context.assets.cameras.at(1).config.camera_model, {Array5d{256, 256, 256, 0, 0.5}});
+    CameraInfo const cam_info_1{context.assets.cameras.at(1).config.camera_model, {0, 512, 0, 512}};
+    database::StepCacheKeyUpdate(db.get(), step.first, hashing::HashArguments(cam_info_1, CameraMeasurements{}));
 
     // WARN(Jack): I would really really like to also be able to exercise the imu calibration component here but it
     // is not nearly as easy to generate cache hits for those steps with empty inputs/outputs. This requires some
@@ -92,6 +105,6 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     // in the future but for now it stands.
 
     // TODO(Jack): Also enable to trigger imu calibration! See warning above.
-    application::ImageInputs const image_inputs{{cam_0.config.sensor_name, {{}, image_sampler_signature}}};
+    application::ImageInputs const image_inputs{testing_utilities::TestDatabaseImageInputs(context.assets.cameras)};
     EXPECT_NO_THROW(application::Calibrate(config, image_inputs, std::nullopt, db));
 }

@@ -13,7 +13,7 @@ struct CameraTestData {
 
 // SPLIT INTO SOURCE FILE!
 inline void TestDatabaseSetup(std::vector<Asset<config::Config::Camera>> const& cameras,
-                          std::array<CameraTestData, 2> const& camera_test_data, SqlitePtr const db) {
+                              std::array<CameraTestData, 2> const& camera_test_data, SqlitePtr const db) {
     for (std::size_t i{0}; i < cameras.size(); ++i) {
         auto const& camera{cameras.at(i)};
         auto const& test_data{camera_test_data.at(i)};
@@ -28,10 +28,7 @@ inline void TestDatabaseSetup(std::vector<Asset<config::Config::Camera>> const& 
                     cache_status]{database::GetOrCreateStep(db.get(), StepType::CameraInfo, test_data.camera_info_key)};
         if (cache_status == CacheStatus::CacheMiss) {
             database::CameraInfoInsert(db.get(), step_id, camera.id,
-                                       CameraInfo{
-                                           camera.config.camera_model,
-                                           {0, 512, 0, 512},
-                                       });
+                                       CameraInfo{camera.config.camera_model, {0, 512, 0, 512}});
             database::StepCacheKeyUpdate(db.get(), step_id, test_data.camera_info_key);
         }
     }
