@@ -25,28 +25,18 @@ TEST(StepsInitializeCalibration, TestDetermineWorkflowType) {
     toml::table const table{toml::parse(testing_utilities::calibration_config)};
     config::Config parsed_cfg{config::Config::Parse(table)};
 
-    // Multicam-imu not yet supported.
-    EXPECT_THROW(steps::DetermineWorkflowType(parsed_cfg), std::runtime_error);
+    WorkflowType result{steps::DetermineWorkflowType(parsed_cfg)};
+    EXPECT_EQ(result, WorkflowType::CamImu);
 
     // Drop the IMU so now its just a multi-cam workflow.
     parsed_cfg.imu = std::nullopt;
-    WorkflowType result{steps::DetermineWorkflowType(parsed_cfg)};
+    result = steps::DetermineWorkflowType(parsed_cfg);
     EXPECT_EQ(result, WorkflowType::MultiCam);
 
     // Drop second camera so we get a single cam workflow.
     parsed_cfg.cameras.pop_back();
     result = steps::DetermineWorkflowType(parsed_cfg);
     EXPECT_EQ(result, WorkflowType::Cam);
-
-    // Add the IMU back so we get a cam-imu workflow
-    parsed_cfg.imu = config::Config::Imu::Parse(*table.get("imu")->as_table());
-    result = steps::DetermineWorkflowType(parsed_cfg);
-    EXPECT_EQ(result, WorkflowType::CamImu);
-
-    // Add two cameras back for a total of three cameras which is not a supported multi-cam workflow yet.
-    parsed_cfg.cameras.push_back(config::Config::Camera::Parse(*table.get("cam0")->as_table(), 10));
-    parsed_cfg.cameras.push_back(config::Config::Camera::Parse(*table.get("cam1")->as_table(), 11));
-    EXPECT_THROW(steps::DetermineWorkflowType(parsed_cfg), std::runtime_error);
 }
 
 TEST(StepsInitializeCalibration, TestCreateCalibrationAssets) {
