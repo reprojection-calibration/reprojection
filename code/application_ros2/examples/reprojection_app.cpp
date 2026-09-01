@@ -70,7 +70,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    application::Calibrate(app_args->config, image_inputs, application::ImuInput{imu_source, *imu_signature}, app_args->db);
+    application::Calibrate(app_args->config, image_inputs, application::ImuInput{imu_source, *imu_signature},
+                           app_args->db);
 
     return EXIT_SUCCESS;
 }

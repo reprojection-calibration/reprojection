@@ -50,6 +50,7 @@ Sensors ParseSensors(toml::table const& cfg_table) {
 
     std::vector<std::string> camera_names;
     for (auto const& camera : cfg.cameras) {
+        // cppcheck-suppress useStlAlgorithm
         camera_names.push_back(camera.sensor_name);
     }
 

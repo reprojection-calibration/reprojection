@@ -4,6 +4,7 @@
 
 #include <format>
 
+// cppcheck-suppress missingInclude
 #include "testing_utilities/generated/calibration_config.hpp"
 
 using namespace reprojection;

@@ -8,8 +8,8 @@
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "steps/initialize_calibration.hpp"
-// cppcheck-suppress missingInclude
 #include "testing_utilities/database_setup_utils.hpp"
+// cppcheck-suppress missingInclude
 #include "testing_utilities/generated/calibration_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
