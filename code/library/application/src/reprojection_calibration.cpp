@@ -61,10 +61,19 @@ Sensors ParseSensors(toml::table const& cfg_table) {
     return Sensors{camera_names, imu_name};
 }
 
+struct CameraCalibration {
+    AssetId camera_id;
+    StepId camera_info_id;
+    StepId targets_id;
+    StepId pose_init_id;
+    StepId bundle_adjustment_id;
+};
+
 void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {
     steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
 
+    std::vector<CameraCalibration> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {
         // TODO(Jack): How can we guarantee that the image_inputs correlate to the provided calibration context config.
         ImageInput const& image_input{image_inputs.at(camera.config.sensor_name)};
@@ -95,10 +104,47 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         StepId const bundle_adjustment_id{
             RunStep<steps::BundleAdjustment>(context.workflow_id, bundle_adjustment_step, db)};
 
-        (void)bundle_adjustment_id;
+        camera_calibrations.push_back({camera.id, camera_info_id, targets_id, pose_init_id, bundle_adjustment_id});
     }
 
-    (void)imu_input;
+    if (context.assets.imu.has_value() and imu_input.has_value()) {
+        // NOTE(Jack): We arbitrarily choose the first camera as the reference camera. This is an open point!
+        auto const& reference_camera{camera_calibrations.front()};
+
+        auto const imu_id{context.assets.imu->id};
+        steps::ImuDataLoading const imu_data_loading_step{imu_id, imu_input->signature, imu_input->source};
+        StepId const imu_data_id{steps::RunStep<steps::ImuDataLoading>(context.workflow_id, imu_data_loading_step, db)};
+
+        // ERROR(Jack): Am I crazy or should I not be passing the optimized bundle adjustment poses and not the
+        // unrefined pose init poses here? For some reason when I do that the extrinsic init does not work like before,
+        // we need to look at this in the debug dashboard and figure out what is going on here. The entire "align
+        // rotations" thing play an important part here I think. This is a known problem.
+        steps::SplineInitialization const spline_init_step{
+            reference_camera.camera_id,      reference_camera.pose_init_id,         reference_camera.targets_id,
+            reference_camera.camera_info_id, reference_camera.bundle_adjustment_id, db};
+        StepId const spline_init_id{
+            steps::RunStep<steps::SplineInitialization>(context.workflow_id, spline_init_step, db)};
+
+        steps::ExtrinsicInit const extrinsic_init_step{
+            reference_camera.camera_id, spline_init_id, imu_id, imu_data_id, context.application.threads, db};
+        StepId const extrinsic_init_id{
+            steps::RunStep<steps::ExtrinsicInit>(context.workflow_id, extrinsic_init_step, db)};
+
+        steps::ExtrinsicOptimization const extrinsic_optimization_step{reference_camera.camera_id,
+                                                                       imu_id,
+                                                                       reference_camera.targets_id,
+                                                                       imu_data_id,
+                                                                       context.application.threads,
+                                                                       reference_camera.camera_info_id,
+                                                                       reference_camera.bundle_adjustment_id,
+                                                                       spline_init_id,
+                                                                       extrinsic_init_id,
+                                                                       db};
+        StepId const extrinsic_optimization_id{
+            steps::RunStep<steps::ExtrinsicOptimization>(context.workflow_id, extrinsic_optimization_step, db)};
+
+        static_cast<void>(extrinsic_optimization_id);
+    }
 
     std::cout << "The future is calibrated!\n";
 }
