@@ -1,5 +1,7 @@
 import sqlite3
+import argparse
 import sys
+import os
 
 # NOTE(Jack): We need to do this because the integration test dataset is the TUM dataset-calib-imu4 dataset which uses
 # Kalibr compatible Aprilgrid boards which we do not support. Therefore we need to trick the process into thinking that
@@ -13,24 +15,33 @@ import sys
 # will need to update it manually at the call site of this script. That is not the end of the world, but it is a little
 # hacky and we should keep our eyes peeled for possible optimizations in the future.
 
-db_path, step_id, new_cache = sys.argv[1], sys.argv[2], sys.argv[3]
+parser = argparse.ArgumentParser()
+parser.add_argument('--db-path', type=str, required=True)
+parser.add_argument('--step-ids', nargs='+', type=int, required=True)
+parser.add_argument('--cache-keys', nargs='+', type=str, required=True)
+args = parser.parse_args()
 
-try:
-    conn = sqlite3.connect(db_path)
-except Exception as e:
-    print(type(e).__name__, str(e), db_path)
+assert len(args.cache_keys) == len(args.step_ids)
+data = list(zip(args.cache_keys, args.step_ids))
+
+if not os.path.isfile(args.db_path):
+    print(f"Database does not exist: {args.db_path}")
     sys.exit(1)
 
-conn.execute(
-    # NOTE(Jack): This "ON CONFLICT" part is what gives us "upsert" semantics.
+try:
+    conn = sqlite3.connect(args.db_path)
+except Exception as e:
+    print(type(e).__name__, str(e), args.db_path)
+    sys.exit(1)
+
+conn.executemany(
     """
     UPDATE steps
-    SET cache_key  = ?,
-        created_at = CURRENT_TIMESTAMP
+    SET cache_key = ?
     WHERE id = ?
       AND type = 'feature_extraction';
     """,
-    (new_cache, step_id),
+    data,
 )
 conn.commit()
 conn.close()

@@ -335,25 +335,26 @@ COPY code/test_data/dataset-calib-imu4_512_16.calib.db3 /data/video_file/dataset
 # (due to timestamp handling - double vs. int), they are the same. Also the removal of the IMU data is the same. That
 # means there is no reason to duplicate the process here. Is there any nice way to eliminate the duplication here that
 # is worth our time and effort?
+# NOTE(Jack): We do not update the /cam1 cache key for the video-file data because as of today (1.9.2026) we only
+# support monocular camera calibration.
 ARG UPDATE_FEATURE_EXTRACTION_CACHE=building/scripts/update_feature_extraction_cache_key.py
 RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.calib.db3 4 a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d; \
+      --db-path /data/ros1/dataset-calib-imu4_512_16.calib.db3 \
+      --step-ids 4 5  \
+      --cache-keys a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d b0bf752366fb86b14270aac9bf1b531d744d5249f2dee4c48326ca3724b9b842; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.calib.db3 4 a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d; \
+      --db-path /data/ros2/dataset-calib-imu4_512_16.calib.db3  \
+      --step-ids 4 5 \
+      --cache-keys a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d b0bf752366fb86b14270aac9bf1b531d744d5249f2dee4c48326ca3724b9b842; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/video_file/dataset-calib-imu4_512_16.calib.db3 4 422e7fddf519b1bf04a1140d44c604cc1c1d07927ad0610e610a2671a8fcec72
-# NOTE(Jack): The video-file app does not support stereo calibration so we do not write the cache key for the second \
-# camera.
-RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporary/${UPDATE_FEATURE_EXTRACTION_CACHE} \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros1/dataset-calib-imu4_512_16.calib.db3 5 b0bf752366fb86b14270aac9bf1b531d744d5249f2dee4c48326ca3724b9b842; \
-    python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
-      /data/ros2/dataset-calib-imu4_512_16.calib.db3 5 b0bf752366fb86b14270aac9bf1b531d744d5249f2dee4c48326ca3724b9b842
+      --db-path /data/video_file/dataset-calib-imu4_512_16.calib.db3  \
+      --step-ids 4  \
+      --cache-keys 422e7fddf519b1bf04a1140d44c604cc1c1d07927ad0610e610a2671a8fcec72
 
 # NOTE(Jack): We remove the imu data table because we can actually load that data from the ROS bags during the test. We
 # do not remove it from the video-file dataset because it is never there in the first place! The video file app only
-# does images.
+# does monocular camera calibration.
 ARG REMOVE_IMU_TABLE_DATA=building/scripts/remove_imu_table_data.py
 RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE_IMU_TABLE_DATA} \
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
