@@ -1,15 +1,15 @@
-#include "initialize_workflow.hpp"
+#include "steps/initialize_workflow.hpp"
 
 #include <optional>
 
 #include "database/calibration_database.hpp"
 #include "logging/logging.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
 
 namespace {
 
-auto const log{logging::Get("application")};
+auto const log{logging::Get("steps")};
 
 }
 
@@ -64,7 +64,6 @@ CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr c
     return assets;
 }
 
-// NAMING!
 void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const& assets, SqlitePtr const db) {
     // The workflow asset group contains all the assets in one.
     database::AssetGroupInsert(db.get(), assets.All());
@@ -84,4 +83,4 @@ void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const
     }
 }
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps

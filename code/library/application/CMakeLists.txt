@@ -2,7 +2,6 @@ set(LIBRARY_NAME "application")
 
 set(SRC_FILES
         src/cli_utils.cpp
-        src/initialize_workflow.cpp
         src/io.cpp
         src/reprojection_calibration.cpp
 )
@@ -31,7 +30,6 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        src/initialize_workflow.test.cpp
         src/io.test.cpp
         test/cli_utils.test.cpp
         test/reprojection_calibration.test.cpp

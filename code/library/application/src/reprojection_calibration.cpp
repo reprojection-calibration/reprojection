@@ -2,6 +2,7 @@
 
 #include <ranges>
 
+#include "../../steps/include/steps/initialize_workflow.hpp"
 #include "config/config_parse.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
@@ -17,7 +18,6 @@
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 
-#include "initialize_workflow.hpp"
 #include "io.hpp"
 
 namespace reprojection::application {
@@ -83,7 +83,7 @@ struct CameraCalibration {
 
 void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {
-    CalibrationContext const context{InitializeCalibration(cfg_table, db)};
+    steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
 
     std::vector<CameraCalibration> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {

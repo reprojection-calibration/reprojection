@@ -4,7 +4,10 @@
 #include "types/database_types.hpp"
 #include "types/io.hpp"
 
-namespace reprojection::application {
+namespace reprojection::steps {
+
+// TODO(Jack): This is not actually a step itself so why is it in the steps module? I tried to put it in the application
+// module but that interface is too public there for methods that are only used internally.
 
 // TODO(Jack): The core purpose of this struct is very similar to the config class itself, but we need some way of
 // associating the parsed config with the database asset ids. If there is a nicer way to do this without than without
@@ -45,4 +48,4 @@ CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr c
 // TODO(Jack): Is there a simple way to test this without some huge database setup and implicit behavior checking?
 void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const& assets, SqlitePtr const db);
 
-}  // namespace reprojection::application
+}  // namespace reprojection::steps
