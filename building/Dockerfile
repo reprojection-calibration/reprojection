@@ -352,9 +352,10 @@ RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporar
       --step-ids 4  \
       --cache-keys 422e7fddf519b1bf04a1140d44c604cc1c1d07927ad0610e610a2671a8fcec72
 
-# NOTE(Jack): We remove the imu data table because we can actually load that data from the ROS bags during the test. We
-# do not remove it from the video-file dataset because it is never there in the first place! The video file app only
-# does monocular camera calibration.
+# NOTE(Jack): We remove the imu data table because we can actually load that data from the ROS bags during the test. By
+# removing it and then letting the app reload it it removes one additional cache key we need to keep track of and write
+# to the database. We do not remove it from the video-file dataset because it is never there in the first place! The
+# video file app only does monocular camera calibration.
 ARG REMOVE_IMU_TABLE_DATA=building/scripts/remove_imu_table_data.py
 RUN --mount=type=bind,source=${REMOVE_IMU_TABLE_DATA},target=/temporary/${REMOVE_IMU_TABLE_DATA} \
     python3 /temporary/${REMOVE_IMU_TABLE_DATA}  \
@@ -457,6 +458,13 @@ FROM base-stage AS video-file-integration-test-stage
 COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/video_file /data
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+
+# As of 01.09.2026 the video-file application only supports monocular camera calibration.
+# TODO(Jack): Should we install the extra toml package we need here in one of the venvs and use that?
+ARG EXTRACT_MONOCULAR_CONFIG=building/scripts/extract_monocular_config.py
+RUN --mount=type=bind,source=${EXTRACT_MONOCULAR_CONFIG},target=/temporary/${EXTRACT_MONOCULAR_CONFIG} \
+    pip install tomli-w; \
+    python3 /temporary/${EXTRACT_MONOCULAR_CONFIG} /data/calibration_config.toml /data/calibration_config.toml
 
 ARG INTEGRATION_TEST=building/scripts/integration_test.sh
 RUN --mount=type=bind,source=${INTEGRATION_TEST},target=/temporary/${INTEGRATION_TEST} \

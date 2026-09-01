@@ -25,25 +25,12 @@ int main(int argc, char* argv[]) {
     // just one video file/image folder.
     application::Sensors const sensors{application::ParseSensors(app_args->config)};
     if (std::size(sensors.camera_names) > 1 or sensors.imu_name.has_value()) {
-        _log->warn(
+        _log->error(
             "{{'app': '{}', 'num_cameras': {}, 'imu': {}, 'msg': 'The video-file application is only suitable for "
             "monocular camera calibration (i.e. only '[cam0]'). Please remove any additional cameras or IMU from the "
             "configuration file.'}}",
             "video-file", std::size(sensors.camera_names), sensors.imu_name.has_value());
     }
-
-    // WARN(Jack): This is an extreme hack! And for a bad reason... The thing is is that I want to use the same script,
-    // data and config for the integration testing, but the video-file app here only support mono-camera calibration.
-    // Therefore we need to manually only take the first camera and ignore/remove the imu and other camera configs.
-    // ERROR(Jack): We hardcode it to take 'cam0' here but there is no guarantee there is such a cam in the config for
-    // any random user.
-    // TODO(Jack): I think a better behavior would be actually just to fail entirely, but that means we need to adjust
-    // our integration testing! This is the real answer.
-    toml::table monocular_config;
-    monocular_config.insert("application", app_args->config["application"]);
-    std::string const camera_key{"cam0"};
-    monocular_config.insert(camera_key, app_args->config[camera_key]);
-    monocular_config.insert("target", app_args->config["target"]);
 
     auto const video_capture{std::make_unique<video_capture::VideoCapture>(app_args->data_path)};
     // NOTE(Jack): We use a simple incremented timestamp here because we have no easily accessible time information from
@@ -63,7 +50,7 @@ int main(int argc, char* argv[]) {
     // reparse the config and use that value so we are 100% sure.
     application::ImageInputs const image_inputs{
         {sensors.camera_names.at(0), {image_source, video_capture->GetSignature()}}};
-    application::Calibrate(monocular_config, image_inputs, std::nullopt, app_args->db);
+    application::Calibrate(app_args->config, image_inputs, std::nullopt, app_args->db);
 
     return EXIT_SUCCESS;
 }
