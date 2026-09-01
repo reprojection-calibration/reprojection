@@ -24,8 +24,6 @@ using ImageSampler = std::function<std::optional<std::pair<uint64_t, cv::Mat>>()
 // [omega_x, omega_y, omega_z, acc_x, acc_y, acc_z]
 using ImuSampler = std::function<std::optional<std::pair<uint64_t, std::array<double, 6>>>()>;
 
-
-
 struct ImageInput {
     ImageSampler source;
     std::string signature;
