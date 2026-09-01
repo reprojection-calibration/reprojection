@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     //  ImageSource needs to take and store a mutable reference. This is not really a huge problem but alone the fact
     //  that we have a non owning mutable reference inside of the ImageSource is a sign we are not doing something
     //  right.
-    auto image_reader_result{ros2::SingleTopicBagReader::Create(app_args->data_path, sensors.camera_sensor)};
+    auto image_reader_result{ros2::SingleTopicBagReader::Create(app_args->data_path, sensors.camera_names[0])};
     if (std::holds_alternative<ros2::BagError>(image_reader_result)) {
         std::cerr << std::get<ros2::BagError>(image_reader_result).message << "\n";
         return EXIT_FAILURE;
@@ -40,14 +40,16 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    application::ImageInputs const inputs{{sensors.camera_names[0], {image_source, *image_signature}}};
+
     // Early execution and return for the camera only intrinsic only case.
-    if (not sensors.imu_sensor.has_value()) {
-        application::Calibrate(app_args->config, {image_source, *image_signature}, std::nullopt, app_args->db);
+    if (not sensors.imu_name.has_value()) {
+        application::Calibrate(app_args->config, inputs, std::nullopt, app_args->db);
 
         return EXIT_SUCCESS;
     }
 
-    auto imu_reader_result{ros2::SingleTopicBagReader::Create(app_args->data_path, *sensors.imu_sensor)};
+    auto imu_reader_result{ros2::SingleTopicBagReader::Create(app_args->data_path, *sensors.imu_name)};
     if (std::holds_alternative<ros2::BagError>(imu_reader_result)) {
         std::cerr << std::get<ros2::BagError>(imu_reader_result).message << "\n";
         return EXIT_FAILURE;
@@ -62,7 +64,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    application::Calibrate(app_args->config, {image_source, *image_signature},
+    application::Calibrate(app_args->config, inputs,
                            application::ImuInput{imu_source, *imu_signature}, app_args->db);
 
     return EXIT_SUCCESS;
