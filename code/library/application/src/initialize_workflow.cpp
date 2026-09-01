@@ -1,19 +1,18 @@
-#include "steps/initialize_calibration.hpp"
+#include "initialize_workflow.hpp"
 
 #include <optional>
 
 #include "database/calibration_database.hpp"
 #include "logging/logging.hpp"
 
-namespace reprojection::steps {
+namespace reprojection::application {
 
 namespace {
 
-auto const log{logging::Get("steps")};
+auto const log{logging::Get("application")};
 
 }
 
-// TODO(Jack): Why is this in the steps module and not the application module? This is not an actual official step.
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr const db) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
 
@@ -29,8 +28,6 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
     return {cfg.application, assets, workflow_id, workflow_type};
 }
 
-// NAMING!
-// TODO(Jack): Move this to the calibration module? Or application module?
 WorkflowType DetermineWorkflowType(config::Config const& cfg) {
     std::size_t const num_cams{cfg.cameras.size()};
 
@@ -43,8 +40,6 @@ WorkflowType DetermineWorkflowType(config::Config const& cfg) {
     }
 }
 
-// NAMING!
-// TODO(Jack): Move this to the calibration module? Or application module?
 CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr const db) {
     CalibrationAssets assets;
 
@@ -89,4 +84,4 @@ void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const
     }
 }
 
-}  // namespace reprojection::steps
+}  // namespace reprojection::application

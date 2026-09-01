@@ -11,13 +11,13 @@
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
-#include "steps/initialize_calibration.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
 #include "steps/spline_initialization.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/target_info.hpp"
 
+#include "initialize_workflow.hpp"
 #include "io.hpp"
 
 namespace reprojection::application {
@@ -83,7 +83,7 @@ struct CameraCalibration {
 
 void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {
-    steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
+    CalibrationContext const context{InitializeCalibration(cfg_table, db)};
 
     std::vector<CameraCalibration> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {
