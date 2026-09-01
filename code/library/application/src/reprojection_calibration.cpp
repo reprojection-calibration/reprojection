@@ -62,6 +62,8 @@ Sensors ParseSensors(toml::table const& cfg_table) {
     return Sensors{camera_names, imu_name};
 }
 
+// TODO(Jack): Should we move this to another location?
+// NOTE(Jack): We only store the values that we need to the extrinsic calibration. We could store every step id but why?
 struct CameraCalibration {
     AssetId camera_id;
     StepId camera_info_id;
@@ -76,8 +78,8 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
 
     std::vector<CameraCalibration> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {
-        // TODO(Jack): How can we guarantee that the image_inputs correlate to the provided calibration context config.
         ImageInput const& image_input{image_inputs.at(camera.config.sensor_name)};
+
         steps::ImageLoading const image_loading_step{camera.id, image_input.signature, image_input.source};
         StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(context.workflow_id, image_loading_step, db)};
 

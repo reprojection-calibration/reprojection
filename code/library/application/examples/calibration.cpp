@@ -46,10 +46,8 @@ int main(int argc, char* argv[]) {
         return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
     }};
 
-    // WARN(Jack): This is also assuming that the first camera name corresponds to 'cam0'. We should probably actually
-    // reparse the config and use that value so we are 100% sure.
     application::ImageInputs const image_inputs{
-        {sensors.camera_names.at(0), {image_source, video_capture->GetSignature()}}};
+        {sensors.camera_names.front(), application::ImageInput{image_source, video_capture->GetSignature()}}};
     application::Calibrate(app_args->config, image_inputs, std::nullopt, app_args->db);
 
     return EXIT_SUCCESS;

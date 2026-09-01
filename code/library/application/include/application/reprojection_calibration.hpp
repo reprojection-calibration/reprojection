@@ -28,6 +28,8 @@ struct ImageInput {
 };
 
 // A map of image inputs indexed but their sensor_name.
+// TODO(Jack): Wish there was a structural way to ensure that the map keys here were the sensor names as taken from the
+// parsed calibration config.
 using ImageInputs = std::map<std::string, ImageInput>;
 
 // TODO(Jack): Once we get the app running in unit testing with test imu data we can remove this coverage exclusion!
@@ -40,7 +42,6 @@ std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]);
 
 Sensors ParseSensors(toml::table const& cfg_table);
 
-// TODO(Jack): How should we pass the ImageSourceSignature?
 void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr db);
 
