@@ -28,7 +28,7 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
     return *child_table;
 }
 
-// TODO(Jack): Should we use an expected or variant or optional to return the index value from here?
+// Given 'cam0' this will return 0 and given 'cam55' this will return 55.
 std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base) {
     if (key == base or not key.starts_with(base)) {
         return std::nullopt;
@@ -50,7 +50,8 @@ void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view
     for (auto const& [key, _] : table) {
         bool const allowed{std::ranges::contains(allowed_keys, key.str()) or
                            std::ranges::any_of(indexed_keys, [&](std::string_view base) {
-                               // Use IndexedKeyIndex() optional as boolean, do not worry about actual index value.
+                               // NOTE(Jack): Here we use the IndexedKeyIndex() optional as a boolean to check if it is
+                               // an indexed key at all, we ignore and do not care about the actual index value.
                                return IndexedKeyIndex(key.str(), base).has_value();
                            })};
 

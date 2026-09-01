@@ -18,8 +18,14 @@ toml::table RequireTable(toml::table const& table, std::string_view key);
 
 std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base);
 
-// TODO ADD CONCEPT THAT PARSE METHOD IS REQUIRED?
+// TODO(Jack): Is there anywhere else we can use this concept??
 template <typename T>
+concept ParsableConfig = requires(toml::table const& table, std::size_t index) {
+    { T::Parse(table, index) } -> std::same_as<T>;
+};
+
+template <typename T>
+    requires ParsableConfig<T>
 std::vector<T> RequireIndexedTables(toml::table const& table, std::string_view base) {
     std::vector<T> result;
     for (auto const& [key, value] : table) {
@@ -32,7 +38,12 @@ std::vector<T> RequireIndexedTables(toml::table const& table, std::string_view b
     }
 
     if (std::empty(result)) {
-        throw std::runtime_error(std::format("Missing required table(s) '{}'", base));
+        // TODO(Jack): There is actually no requirement that the table header index starts at 'cam0', so the error
+        // message is a little misleading, but I think we should add this requirement/expectation explicitly.
+        throw std::runtime_error(
+            std::format("Configuration file is missing required indexed table(s) - '{}'. The configuration file must "
+                        "contain at a camera configuration with toml table header '[cam0]'",
+                        base));
     }
 
     return result;
