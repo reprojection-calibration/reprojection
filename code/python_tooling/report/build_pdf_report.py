@@ -4,6 +4,7 @@ from pathlib import Path
 
 from dashboard.tools.data_loading import refresh_database_list
 from database.data_formatting import (
+    asset_rows,
     parse_workflows,
     process_workflow,
 )
@@ -34,19 +35,19 @@ def run_report_export(workspace_dir):
         for workflow in workflows:
             workflow_data = process_workflow(db, workflow)
 
-            camera_section = build_camera_section(workflow, workflow_data)
-            imu_section = build_imu_section(workflow, workflow_data)
+            camera_sections = build_camera_sections(workflow, workflow_data)
+            imu_sections = build_imu_sections(workflow, workflow_data)
 
             # TODO(Jack): We need a more eloquent way of distinguishing the different workflows in the pdf report! But
             #  for now we just add the workflow id and type into the the sections "sensor name" heading. Not pretty or
             #  simple to understand, but it works for me.
-            if camera_section is not None:
+            for camera_section in camera_sections:
                 camera_section["sensor_name"] = (
                     f"{camera_section['sensor_name']} "
                     f"(workflow {workflow.id}: {workflow.type})"
                 )
                 sections.append(camera_section)
-            if imu_section is not None:
+            for imu_section in imu_sections:
                 imu_section["sensor_name"] = (
                     f"{imu_section['sensor_name']} "
                     f"(workflow {workflow.id}: {workflow.type})"
@@ -60,19 +61,30 @@ def run_report_export(workspace_dir):
         build_two_column_pdf(output_path, sections)
 
 
-# TODO(Jack): It would really be in our best interest to get a unit test for this function.
-def build_camera_section(workflow, workflow_data):
-    camera = workflow.assets.get("camera")
-    if camera is None:
-        return None
+def build_camera_sections(workflow, workflow_data):
+    sections = []
+    for camera in workflow.assets_of_type("camera"):
+        section = build_camera_section(workflow, workflow_data, camera)
+        if section is not None:
+            sections.append(section)
 
+    return sections
+
+
+# TODO(Jack): It would really be in our best interest to get a unit test for this function.
+def build_camera_section(workflow, workflow_data, camera):
     sensor_name = camera["name"]
     log.info(f"Processing sensor {sensor_name}")
 
-    camera_info = workflow_data.get("camera_info")
-    extracted_targets = workflow_data.get("extracted_targets")
-    reprojection_errors = workflow_data.get("reprojection_errors")
-    images = workflow_data.get("images_timestamps")
+    asset_id = camera["id"]
+    camera_info = asset_rows(workflow_data.get("camera_info"), asset_id)
+    extracted_targets = asset_rows(
+        workflow_data.get("extracted_targets"), asset_id
+    )
+    reprojection_errors = asset_rows(
+        workflow_data.get("reprojection_errors"), asset_id
+    )
+    images = asset_rows(workflow_data.get("images_timestamps"), asset_id)
 
     # TODO(Jack): Honestly all we really need to construct the coverage map is the extracted targets. That contains
     # all the information we need. We should refactor this logic here to allow the creation of the most possible
@@ -86,7 +98,7 @@ def build_camera_section(workflow, workflow_data):
     # If there is no camera info we just want an empty dict as this is technically a valid state for the coverage
     # figure because it will just use the min and max values of the extracted feature to set the bounds.
     camera_info_i = (
-        camera_info.to_dict()
+        camera_info.iloc[0].to_dict()
         if camera_info is not None and not camera_info.empty
         else {}
     )
@@ -97,14 +109,17 @@ def build_camera_section(workflow, workflow_data):
         error_figure_i = None
     else:
         # We only want to show the final optimized result so we hardcode bundle_adjustment.
-        bundle_adjustment_step_id = workflow.steps.get("bundle_adjustment")
+        bundle_adjustment_step_ids = workflow.step_ids(
+            "bundle_adjustment", asset_id=asset_id
+        )
 
-        if bundle_adjustment_step_id is None:
+        if not bundle_adjustment_step_ids:
             reprojection_errors_i = reprojection_errors.iloc[0:0]
         else:
             reprojection_errors_i = reprojection_errors[
-                reprojection_errors.index.get_level_values("step_id")
-                == bundle_adjustment_step_id
+                reprojection_errors.index.get_level_values("step_id").isin(
+                    bundle_adjustment_step_ids
+                )
             ]
 
         if reprojection_errors_i.empty or not camera_info_i:
@@ -153,17 +168,21 @@ def build_camera_section(workflow, workflow_data):
     }
 
     return camera_section_i
+def build_imu_sections(workflow, workflow_data):
+    sections = []
+    for imu in workflow.assets_of_type("imu"):
+        section = build_imu_section(workflow_data, imu)
+        if section is not None:
+            sections.append(section)
+
+    return sections
 
 
-def build_imu_section(workflow, workflow_data):
-    imu = workflow.assets.get("imu")
-    if imu is None:
-        return None
-
+def build_imu_section(workflow_data, imu):
     sensor_name = imu["name"]
     log.info(f"Processing sensor {sensor_name}")
 
-    imu_data = workflow_data.get("imu_data")
+    imu_data = asset_rows(workflow_data.get("imu_data"), imu["id"])
 
     if imu_data is None or imu_data.empty:
         log.info(

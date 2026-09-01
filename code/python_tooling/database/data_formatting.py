@@ -14,18 +14,37 @@ class Workflow:
     id: int
     type: str
     asset_group_signature: str
-    assets: dict[str, dict]
-    steps: dict[str, int]
+    assets: dict[int, dict]
+    steps: dict[int, dict]
 
+    def assets_of_type(self, asset_type):
+        return [asset for asset in self.assets.values() if asset["type"] == asset_type]
+
+    def step_ids(self, step_type=None, asset_id=None):
+        matching_step_ids = []
+        for step_id, step in self.steps.items():
+            if step_type is not None and step["type"] != step_type:
+                continue
+            if asset_id is not None and asset_id not in self.step_asset_groups_ids(step_id):
+                continue
+
+            matching_step_ids.append(step_id)
+
+        return matching_step_ids
+
+    # TODO(Jack): This is hardcoding that our asset group signature format will not changes and will continue to habe
+    # the same semantics over time. Not a deal breaker but something we need to keep in mind - its coding a lot into a
+    # single little string.
+    def step_asset_groups_ids(self, step_id):
+        signature = self.steps[step_id]["asset_group_signature"]
+
+        return {int(value) for value in signature.split("|") if value}
 
 def parse_workflows(db):
     workflows = []
     for _, workflow_row in db["workflows"].iterrows():
         workflow_id = int(workflow_row["id"])
 
-        # NOTE(Jack): By storing the assets indexed in a dict by their asset type (i.e. camera/target/imu) we are
-        # hardcoding the fact that there can only be one of each asset type in any workflow. This will not scale to
-        # multisensor setups but for now it gets the job done.
         asset_ids = db["workflow_assets"].loc[
             db["workflow_assets"]["workflow_id"] == workflow_id,
             "asset_id",
@@ -33,16 +52,20 @@ def parse_workflows(db):
         assets = (
             db["assets"]
             .loc[db["assets"]["id"].isin(asset_ids)]
-            .set_index("type")
+            .set_index("id", drop=False)
             .to_dict("index")
         )
 
-        steps = (
-            db["workflow_steps"]
-            .loc[db["workflow_steps"]["workflow_id"] == workflow_id]
-            .set_index("type")["step_id"]
-            .to_dict()
-        )
+        step_rows = db["workflow_steps"].loc[
+            db["workflow_steps"]["workflow_id"] == workflow_id
+        ]
+        steps = {
+            int(row["step_id"]): {
+                "type": row["type"],
+                "asset_group_signature": row["asset_group_signature"],
+            }
+            for _, row in step_rows.iterrows()
+        }
 
         workflows.append(
             Workflow(
@@ -62,7 +85,7 @@ def all_step_rows(table, workflow, asset_id):
     if table is None or table.empty:
         return pd.DataFrame()
 
-    mask = table.index.get_level_values("step_id").isin(workflow.steps.values())
+    mask = table.index.get_level_values("step_id").isin(workflow.steps)
     mask &= table.index.get_level_values("asset_id") == asset_id
 
     return table.loc[mask]
@@ -93,58 +116,29 @@ def step_rows(table, step_id):
 
 def process_workflow(db, workflow):
     workflow_data = {}
-
-    single_tables = {
-        "camera_info": ("camera_info", "camera"),
-        "target_info": ("target_info", "target"),
-    }
-
-    for table_name, (step_type, asset_type) in single_tables.items():
-        step_id = workflow.steps.get(step_type)
-        asset = workflow.assets.get(asset_type)
-
-        if step_id is None or asset is None:
-            continue
-
-        workflow_data[table_name] = row_or_empty(
-            db[table_name],
-            step_id,
-            asset["id"],
-        )
-
-    multi_tables = {
-        "camera_poses": "camera",
-        "extracted_targets": "camera",
-        "images_timestamps": "camera",
-        "imu_data": "imu",
-        "imu_errors": "imu",
-        "intrinsics": "camera",
-        "reprojection_errors": "camera",
-    }
-
-    for table_name, asset_type in multi_tables.items():
+    asset_ids = set(workflow.assets)
+    for table_name in (
+        "camera_info", "target_info", "camera_poses", "extracted_targets",
+        "images_timestamps", "imu_data", "imu_errors", "intrinsics",
+        "reprojection_errors",
+    ):
         table = db.get(table_name)
-        asset = workflow.assets.get(asset_type)
-
-        if table is None or asset is None:
+        if table is None or table.empty:
             continue
-
-        workflow_data[table_name] = all_step_rows(
-            db[table_name],
-            workflow,
-            asset["id"],
-        )
+        mask = table.index.get_level_values("step_id").isin(workflow.steps)
+        mask &= table.index.get_level_values("asset_id").isin(asset_ids)
+        rows = table.loc[mask]
+        if not rows.empty:
+            workflow_data[table_name] = rows
 
     # NOTE(Jack): Extrinsics are unique because they belong to a pair of assets. Here we use the logic that there
     # can only be one extrinsic for any workflow sensor pair. If this is bulletproof I am not sure.
-    extrinsic_step_id = workflow.steps.get("extrinsic_optimization")
+    extrinsic_step_ids = workflow.step_ids("extrinsic_optimization")
     extrinsics = db.get("extrinsics")
 
-    if extrinsic_step_id is not None and extrinsics is not None:
-        workflow_data["extrinsics"] = step_rows(
-            extrinsics,
-            extrinsic_step_id,
-        )
+    if extrinsic_step_ids and extrinsics is not None:
+        mask = extrinsics.index.get_level_values("step_id").isin(extrinsic_step_ids)
+        workflow_data["extrinsics"] = extrinsics.loc[mask]
 
     return workflow_data
 
@@ -152,13 +146,10 @@ def process_workflow(db, workflow):
 def to_legacy_data(workflow, workflow_data):
     data = {}
 
-    camera = workflow.assets.get("camera")
-    imu = workflow.assets.get("imu")
-
     # step_id -> step type
-    step_types = {step_id: step_type for step_type, step_id in workflow.steps.items()}
+    step_types = {step_id: step["type"] for step_id, step in workflow.steps.items()}
 
-    if camera is not None:
+    for camera in workflow.assets_of_type("camera"):
         camera_name = camera["name"]
 
         data[camera_name] = {
@@ -169,15 +160,16 @@ def to_legacy_data(workflow, workflow_data):
         }
 
         # Images
-        table = workflow_data.get("images_timestamps")
+        table = asset_rows(workflow_data.get("images_timestamps"), camera["id"])
         if table is not None and not table.empty:
             for _, row in table.iterrows():
                 timestamp_ns = int(row["timestamp_ns"])
                 data[camera_name]["measurements"]["images"][timestamp_ns] = None
 
         # Camera info
-        camera_info = workflow_data.get("camera_info")
+        camera_info = asset_rows(workflow_data.get("camera_info"), camera["id"])
         if camera_info is not None and not camera_info.empty:
+            camera_info = camera_info.iloc[0]
             data[camera_name]["camera_info"] = {
                 "camera_model": camera_info["camera_model"],
                 "height": camera_info["height"],
@@ -190,6 +182,7 @@ def to_legacy_data(workflow, workflow_data):
         # though the new schema correctly models the target as its own asset.
         target_info = workflow_data.get("target_info")
         if target_info is not None and not target_info.empty:
+            target_info = target_info.iloc[0]
             data[camera_name]["target_info"] = {
                 "target_type": TargetType(target_info["target_type"]),
                 "height": target_info["height"],
@@ -199,7 +192,7 @@ def to_legacy_data(workflow, workflow_data):
             }
 
         # Extracted targets
-        table = workflow_data.get("extracted_targets")
+        table = asset_rows(workflow_data.get("extracted_targets"), camera["id"])
         if table is not None and not table.empty:
             targets = {}
 
@@ -216,7 +209,7 @@ def to_legacy_data(workflow, workflow_data):
             data[camera_name]["measurements"]["targets"] = targets
 
         # Camera poses
-        table = workflow_data.get("camera_poses")
+        table = asset_rows(workflow_data.get("camera_poses"), camera["id"])
         if table is not None and not table.empty:
             poses = {}
 
@@ -232,7 +225,7 @@ def to_legacy_data(workflow, workflow_data):
             data[camera_name]["poses"] = poses
 
         # Reprojection errors
-        table = workflow_data.get("reprojection_errors")
+        table = asset_rows(workflow_data.get("reprojection_errors"), camera["id"])
         if table is not None and not table.empty:
             reprojection_errors = {}
 
@@ -246,7 +239,7 @@ def to_legacy_data(workflow, workflow_data):
 
             data[camera_name]["reprojection_error"] = reprojection_errors
 
-    if imu is not None:
+    for imu in workflow.assets_of_type("imu"):
         imu_name = imu["name"]
 
         data[imu_name] = {
@@ -255,7 +248,7 @@ def to_legacy_data(workflow, workflow_data):
         }
 
         # IMU measurements
-        table = workflow_data.get("imu_data")
+        table = asset_rows(workflow_data.get("imu_data"), imu["id"])
         if table is not None and not table.empty:
             for _, row in table.iterrows():
                 timestamp_ns = int(row["timestamp_ns"])
@@ -270,7 +263,7 @@ def to_legacy_data(workflow, workflow_data):
                 ]
 
         # IMU errors
-        table = workflow_data.get("imu_errors")
+        table = asset_rows(workflow_data.get("imu_errors"), imu["id"])
         if table is not None and not table.empty:
             imu_errors = {}
 
@@ -290,3 +283,12 @@ def to_legacy_data(workflow, workflow_data):
             data[imu_name]["imu_error"] = imu_errors
 
     return data
+
+
+def asset_rows(table, asset_id):
+    if table is None or table.empty:
+        return pd.DataFrame()
+
+    mask = table.index.get_level_values("asset_id") == asset_id
+
+    return table.loc[mask]

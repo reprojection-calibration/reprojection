@@ -17,15 +17,16 @@ class TestBuildCameraTomls(unittest.TestCase):
             type="cam",
             asset_group_signature="cam0",
             assets={
-                "camera": {
+                1: {
                     "id": 1,
+                    "type": "camera",
                     "index": 0,
                     "name": "/cam0/image_raw",
                 },
             },
             steps={
-                "camera_info": 1,
-                "bundle_adjustment": 2,
+                1: {"type": "camera_info", "asset_group_signature": "1|"},
+                2: {"type": "bundle_adjustment", "asset_group_signature": "1|"},
             },
         )
 
@@ -75,25 +76,67 @@ class TestBuildCameraTomls(unittest.TestCase):
 
         self.assertEqual(result, dedent(result_gt))
 
+    def test_build_intrinsic_toml_exports_every_camera(self):
+        workflow = Workflow(
+            id=1,
+            type="cam_imu",
+            asset_group_signature="1|2|3|",
+            assets={
+                1: {"id": 1, "type": "camera", "index": 0, "name": "cam0"},
+                2: {"id": 2, "type": "camera", "index": 1, "name": "cam1"},
+                3: {"id": 3, "type": "imu", "index": 0, "name": "imu0"},
+            },
+            steps={
+                11: {"type": "bundle_adjustment", "asset_group_signature": "1|"},
+                14: {"type": "bundle_adjustment", "asset_group_signature": "2|"},
+            },
+        )
+        camera_info = pd.DataFrame(
+            [
+                {"step_id": 6, "asset_id": 1, "camera_model": "double_sphere", "height": 512, "width": 512},
+                {"step_id": 7, "asset_id": 2, "camera_model": "double_sphere", "height": 480, "width": 640},
+            ]
+        ).set_index(["step_id", "asset_id"], drop=False)
+        intrinsic_data = "alpha = 0.5\ncx = 256.0\ncy = 256.0\nf = 160.0\nxi = 0.0"
+        intrinsics = pd.DataFrame(
+            [
+                {"step_id": 11, "asset_id": 1, "camera_model": "double_sphere", "data": intrinsic_data},
+                {"step_id": 14, "asset_id": 2, "camera_model": "double_sphere", "data": intrinsic_data},
+            ]
+        ).set_index(["step_id", "asset_id"])
+
+        result = build_intrinsic_toml(
+            workflow, {"camera_info": camera_info, "intrinsics": intrinsics}
+        )
+
+        self.assertIn("[workflow1.cam0]", result)
+        self.assertIn("sensor_id = 'cam0'", result)
+        self.assertIn("resolution = [512, 512]", result)
+        self.assertIn("[workflow1.cam1]", result)
+        self.assertIn("sensor_id = 'cam1'", result)
+        self.assertIn("resolution = [480, 640]", result)
+
     def test_build_extrinsic_toml(self):
         workflow = Workflow(
             id=3,
             type="cam_imu",
             asset_group_signature="cam0_imu0",
             assets={
-                "camera": {
+                1: {
                     "id": 1,
+                    "type": "camera",
                     "index": 0,
                     "name": "frame_a_1",
                 },
-                "imu": {
+                2: {
                     "id": 2,
+                    "type": "imu",
                     "index": 0,
                     "name": "frame_b_1",
                 },
             },
             steps={
-                "extrinsic_optimization": 5,
+                5: {"type": "extrinsic_optimization", "asset_group_signature": "1|2|"},
             },
         )
 
