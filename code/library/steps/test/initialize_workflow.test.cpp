@@ -12,13 +12,13 @@ TEST(ApplicationInitializeWorkflow, TestHappyPath) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
     toml::table const cfg_table{toml::parse(testing_utilities::calibration_config)};
 
+    // TODO(Jack): We could also test the specific assets ids but that is not really an invariant we need/want to
+    // enforce, that is in an implementaiton detail.
     steps::CalibrationContext const result{steps::InitializeCalibration(cfg_table, db)};
+    EXPECT_EQ(std::size(result.assets.All()), 4);
+    EXPECT_TRUE(result.assets.imu.has_value());
     EXPECT_EQ(result.workflow_id.value, 1);
-    // TODO UPDATE!
-    // EXPECT_EQ(result.camera_id.value, 1);
-    // EXPECT_EQ(result.target_id.value, 2);
-    // ASSERT_TRUE(result.imu_id.has_value());
-    // EXPECT_EQ(result.imu_id->value, 3);
+    EXPECT_EQ(result.workflow_type, WorkflowType::CamImu);
 }
 
 TEST(ApplicationInitializeWorkflow, TestDetermineWorkflowType) {
