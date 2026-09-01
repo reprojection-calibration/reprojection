@@ -15,13 +15,13 @@ set(SRC_FILES
 )
 
 set(PRIVATE_LINK_LIBRARIES
-    database
-    hashing
+        database
+        hashing
 )
 set(PUBLIC_LINK_LIBRARIES
-    config
-    types
-    types_internal
+        config
+        types
+        types_internal
 )
 
 set(REPROJECTION_INSTALL_TARGET OFF)
@@ -36,7 +36,6 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 )
 
 set(TESTS
-        test/database_setup_utils.test.cpp
         test/temporary_file.test.cpp
 )
 AddTests()
