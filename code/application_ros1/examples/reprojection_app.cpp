@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     }
     application::Sensors const sensors{application::ParseSensors(app_args->config)};
 
-    application::ImageInputs image_inputs;
+    ImageInputs image_inputs;
     // NOTE(Jack): ImageSource references its SingleTopicBagReader, so these
     // readers need to remain alive until Calibrate() has finished.
     std::vector<ros1::SingleTopicBagReader> image_bag_readers;

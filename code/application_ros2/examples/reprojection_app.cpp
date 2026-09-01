@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     std::vector<ros2::SingleTopicBagReader> image_bag_readers;
     image_bag_readers.reserve(std::size(sensors.camera_names));
 
-    application::ImageInputs image_inputs;
+    ImageInputs image_inputs;
     for (auto const& camera_name : sensors.camera_names) {
         auto image_reader_result{ros2::SingleTopicBagReader::Create(app_args->data_path, camera_name)};
         if (std::holds_alternative<ros2::BagError>(image_reader_result)) {

@@ -10,7 +10,18 @@ configure_file(
 )
 
 set(SRC_FILES
+        src/database_setup_utils.cpp
         src/temporary_file.cpp
+)
+
+set(PRIVATE_LINK_LIBRARIES
+    database
+    hashing
+)
+set(PUBLIC_LINK_LIBRARIES
+    config
+    types
+    types_internal
 )
 
 set(REPROJECTION_INSTALL_TARGET OFF)
@@ -25,6 +36,7 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 )
 
 set(TESTS
+        test/database_setup_utils.test.cpp
         test/temporary_file.test.cpp
 )
 AddTests()

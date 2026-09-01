@@ -1,6 +1,3 @@
-
-#include <sqlite3.h>
-
 #include <toml++/toml.hpp>
 
 #include "application/reprojection_calibration.hpp"
@@ -14,7 +11,10 @@
 
 using namespace reprojection;
 
-std::array<testing_utilities::CameraTestData, 2> const camera_test_data{
+// The first entry is for /cam0/image_raw and the second is for /cam1/image_raw
+// TODO(Jack): Should we add the image loading cache key here too? Not sure why we calculate this from the sensor name
+// seperately in the testing utils.
+std::vector<testing_utilities::CameraTestData> const camera_test_data{
     {{
          StepId{1},
          "1d9f6211868fc970b94631f11f02a7110c4008f76a9246dffc86da5098d7b11d",
@@ -40,11 +40,12 @@ int main() {
     // NOTE(Jack): Because we do not have the images themselves checked into the test data, and only the extracted
     // features, we need to "manufacture" cache hits for the image loading, camera info and feature extraction steps.
     testing_utilities::TestDatabaseSetup(context.assets.cameras, camera_test_data, db);
-
     // Create the two empty image source inputs - note that we use the image name as the image signature which
-    // conceptually matches our hashing of the sensor name for the image loading StepCacheKeyUpdate() done above.
-    application::ImageInputs const image_inputs{testing_utilities::TestDatabaseImageInputs(context.assets.cameras)};
-    application::Calibrate(config, image_inputs, application::ImuInput{{}, ""}, db);
+    // conceptually matches our hashing of the sensor name for the image loading in TestDatabaseSetup(), because the
+    // image signature will get hashed inside the application itself.
+    ImageInputs const image_inputs{testing_utilities::TestDatabaseImageInputs(context.assets.cameras)};
+
+    application::Calibrate(config, image_inputs, ImuInput{{}, ""}, db);
 
     return EXIT_SUCCESS;
 }

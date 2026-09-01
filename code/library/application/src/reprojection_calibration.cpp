@@ -3,6 +3,7 @@
 #include <ranges>
 
 #include "config/config_parse.hpp"
+#include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_init.hpp"
@@ -20,6 +21,14 @@
 #include "io.hpp"
 
 namespace reprojection::application {
+
+namespace {
+
+// We get a name conflict here with some math functions if we just use 'log' like we normally do, so prepend a
+// underscore.
+auto const log{logging::Get("application")};
+
+}  // namespace
 
 std::optional<AppArgs> ParseArgs(int const argc, char const* const argv[]) {
     auto const paths{ParseCommandLineInput(argc, argv)};
@@ -78,6 +87,8 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
 
     std::vector<CameraCalibration> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {
+        log->info("{{'sensor_name': '{}', 'asset_id': {}}}", camera.config.sensor_name, camera.id.value);
+
         ImageInput const& image_input{image_inputs.at(camera.config.sensor_name)};
 
         steps::ImageLoading const image_loading_step{camera.id, image_input.signature, image_input.source};
@@ -111,12 +122,14 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     }
 
     if (context.assets.imu.has_value() and imu_input.has_value()) {
-        // NOTE(Jack): We arbitrarily choose the first camera as the reference camera. This is an open point!
-        auto const& reference_camera{camera_calibrations.front()};
-
         auto const imu_id{context.assets.imu->id};
+        log->info("{{'sensor_name': '{}', 'asset_id': {}}}", context.assets.imu->config.sensor_name, imu_id.value);
+
         steps::ImuDataLoading const imu_data_loading_step{imu_id, imu_input->signature, imu_input->source};
         StepId const imu_data_id{steps::RunStep<steps::ImuDataLoading>(context.workflow_id, imu_data_loading_step, db)};
+
+        // NOTE(Jack): We arbitrarily choose the first camera as the reference camera. This is an open point!
+        auto const& reference_camera{camera_calibrations.front()};
 
         // ERROR(Jack): Am I crazy or should I not be passing the optimized bundle adjustment poses and not the
         // unrefined pose init poses here? For some reason when I do that the extrinsic init does not work like before,

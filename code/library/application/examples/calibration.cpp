@@ -10,7 +10,7 @@ namespace {
 
 // We get a name conflict here with some math functions if we just use 'log' like we normally do, so prepend a
 // underscore.
-auto const _log{logging::Get("steps")};
+auto const _log{logging::Get("application")};
 
 }  // namespace
 
@@ -46,8 +46,8 @@ int main(int argc, char* argv[]) {
         return std::pair<uint64_t, cv::Mat>{pseudo_timestamp++, img};
     }};
 
-    application::ImageInputs const image_inputs{
-        {sensors.camera_names.front(), application::ImageInput{image_source, video_capture->GetSignature()}}};
+    ImageInputs const image_inputs{{sensors.camera_names.front(), {image_source, video_capture->GetSignature()}}};
+
     application::Calibrate(app_args->config, image_inputs, std::nullopt, app_args->db);
 
     return EXIT_SUCCESS;

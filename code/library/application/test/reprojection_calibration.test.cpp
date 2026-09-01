@@ -74,7 +74,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     // TODO(Jack): Use a vector so we do not need to hardcode this to an array matching the number of cameras in the
     // config?
-    std::array<testing_utilities::CameraTestData, 2> camera_test_data;
+    std::vector<testing_utilities::CameraTestData> camera_test_data;
     for (size_t i{0}; i < std::size(context.assets.cameras); ++i) {
         auto const& camera{context.assets.cameras.at(i)};
 
@@ -85,12 +85,12 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
         // WARN(Jack): If the camera info cache key calculation method changes then we will need to update this here
         // too!
-        camera_test_data[i] = {
+        camera_test_data.push_back({
             database::GetOrCreateStep(db.get(), StepType::ImageLoading, image_cache_key).first,
             feature_cache_key,
             database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, feature_cache_key).first,
             hashing::HashArguments(camera.id.value, camera.config.camera_model, EncodedImages{}),
-        };
+        });
     }
 
     testing_utilities::TestDatabaseSetup(context.assets.cameras, camera_test_data, db);
@@ -109,7 +109,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
                                      hashing::HashArguments(camera.id.value, camera_info, CameraMeasurements{}));
     }
 
-    application::ImageInputs const image_inputs{testing_utilities::TestDatabaseImageInputs(context.assets.cameras)};
+    ImageInputs const image_inputs{testing_utilities::TestDatabaseImageInputs(context.assets.cameras)};
     // TODO(Jack): Also enable to trigger imu calibration! See warning above.
     EXPECT_NO_THROW(application::Calibrate(config, image_inputs, std::nullopt, db));
 }
