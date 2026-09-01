@@ -78,12 +78,8 @@ def build_camera_section(workflow, workflow_data, camera):
 
     asset_id = camera["id"]
     camera_info = asset_rows(workflow_data.get("camera_info"), asset_id)
-    extracted_targets = asset_rows(
-        workflow_data.get("extracted_targets"), asset_id
-    )
-    reprojection_errors = asset_rows(
-        workflow_data.get("reprojection_errors"), asset_id
-    )
+    extracted_targets = asset_rows(workflow_data.get("extracted_targets"), asset_id)
+    reprojection_errors = asset_rows(workflow_data.get("reprojection_errors"), asset_id)
     images = asset_rows(workflow_data.get("images_timestamps"), asset_id)
 
     # TODO(Jack): Honestly all we really need to construct the coverage map is the extracted targets. That contains
@@ -168,6 +164,8 @@ def build_camera_section(workflow, workflow_data, camera):
     }
 
     return camera_section_i
+
+
 def build_imu_sections(workflow, workflow_data):
     sections = []
     for imu in workflow.assets_of_type("imu"):

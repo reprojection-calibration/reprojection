@@ -25,7 +25,9 @@ class Workflow:
         for step_id, step in self.steps.items():
             if step_type is not None and step["type"] != step_type:
                 continue
-            if asset_id is not None and asset_id not in self.step_asset_groups_ids(step_id):
+            if asset_id is not None and asset_id not in self.step_asset_groups_ids(
+                step_id
+            ):
                 continue
 
             matching_step_ids.append(step_id)
@@ -39,6 +41,7 @@ class Workflow:
         signature = self.steps[step_id]["asset_group_signature"]
 
         return {int(value) for value in signature.split("|") if value}
+
 
 def parse_workflows(db):
     workflows = []
@@ -118,8 +121,14 @@ def process_workflow(db, workflow):
     workflow_data = {}
     asset_ids = set(workflow.assets)
     for table_name in (
-        "camera_info", "target_info", "camera_poses", "extracted_targets",
-        "images_timestamps", "imu_data", "imu_errors", "intrinsics",
+        "camera_info",
+        "target_info",
+        "camera_poses",
+        "extracted_targets",
+        "images_timestamps",
+        "imu_data",
+        "imu_errors",
+        "intrinsics",
         "reprojection_errors",
     ):
         table = db.get(table_name)

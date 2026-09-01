@@ -93,15 +93,37 @@ class TestBuildCameraTomls(unittest.TestCase):
         )
         camera_info = pd.DataFrame(
             [
-                {"step_id": 6, "asset_id": 1, "camera_model": "double_sphere", "height": 512, "width": 512},
-                {"step_id": 7, "asset_id": 2, "camera_model": "double_sphere", "height": 480, "width": 640},
+                {
+                    "step_id": 6,
+                    "asset_id": 1,
+                    "camera_model": "double_sphere",
+                    "height": 512,
+                    "width": 512,
+                },
+                {
+                    "step_id": 7,
+                    "asset_id": 2,
+                    "camera_model": "double_sphere",
+                    "height": 480,
+                    "width": 640,
+                },
             ]
         ).set_index(["step_id", "asset_id"], drop=False)
         intrinsic_data = "alpha = 0.5\ncx = 256.0\ncy = 256.0\nf = 160.0\nxi = 0.0"
         intrinsics = pd.DataFrame(
             [
-                {"step_id": 11, "asset_id": 1, "camera_model": "double_sphere", "data": intrinsic_data},
-                {"step_id": 14, "asset_id": 2, "camera_model": "double_sphere", "data": intrinsic_data},
+                {
+                    "step_id": 11,
+                    "asset_id": 1,
+                    "camera_model": "double_sphere",
+                    "data": intrinsic_data,
+                },
+                {
+                    "step_id": 14,
+                    "asset_id": 2,
+                    "camera_model": "double_sphere",
+                    "data": intrinsic_data,
+                },
             ]
         ).set_index(["step_id", "asset_id"])
 

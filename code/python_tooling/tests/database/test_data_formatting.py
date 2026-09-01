@@ -49,20 +49,41 @@ class TestDataFormatting(unittest.TestCase):
 
     def test_parse_multisensor_workflow_preserves_duplicate_types(self):
         db = {
-            "workflows": pd.DataFrame([{"id": 1, "type": "multi", "asset_group_signature": "1|2|"}]),
-            "workflow_assets": pd.DataFrame([{"workflow_id": 1, "asset_id": 1}, {"workflow_id": 1, "asset_id": 2}]),
-            "assets": pd.DataFrame([
-                {"id": 1, "type": "camera", "index": 0, "name": "cam0"},
-                {"id": 2, "type": "camera", "index": 1, "name": "cam1"},
-            ]),
-            "workflow_steps": pd.DataFrame([
-                {"workflow_id": 1, "step_id": 10, "type": "image_loading", "asset_group_signature": "1|"},
-                {"workflow_id": 1, "step_id": 11, "type": "image_loading", "asset_group_signature": "2|"},
-            ]),
+            "workflows": pd.DataFrame(
+                [{"id": 1, "type": "multi", "asset_group_signature": "1|2|"}]
+            ),
+            "workflow_assets": pd.DataFrame(
+                [{"workflow_id": 1, "asset_id": 1}, {"workflow_id": 1, "asset_id": 2}]
+            ),
+            "assets": pd.DataFrame(
+                [
+                    {"id": 1, "type": "camera", "index": 0, "name": "cam0"},
+                    {"id": 2, "type": "camera", "index": 1, "name": "cam1"},
+                ]
+            ),
+            "workflow_steps": pd.DataFrame(
+                [
+                    {
+                        "workflow_id": 1,
+                        "step_id": 10,
+                        "type": "image_loading",
+                        "asset_group_signature": "1|",
+                    },
+                    {
+                        "workflow_id": 1,
+                        "step_id": 11,
+                        "type": "image_loading",
+                        "asset_group_signature": "2|",
+                    },
+                ]
+            ),
         }
 
         workflow = parse_workflows(db)[0]
-        self.assertEqual([asset["name"] for asset in workflow.assets_of_type("camera")], ["cam0", "cam1"])
+        self.assertEqual(
+            [asset["name"] for asset in workflow.assets_of_type("camera")],
+            ["cam0", "cam1"],
+        )
         self.assertEqual(workflow.step_ids("image_loading"), [10, 11])
 
     def test_process_workflow(self):
