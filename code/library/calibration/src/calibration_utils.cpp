@@ -45,23 +45,33 @@ auto FindClosest(Frames const& data, uint64_t const timestamp) {
     return lower_delta <= upper_delta ? lower : upper;
 }
 
-// NOTE(Jack): We pass frames_a by value because we edit it and remove unsyncable entries and we pass frames_b by const
-// reference because we only copy out the values we actually need from it.
-std::pair<Frames, Frames> SynchronizeFrames(Frames frames_a, Frames const& frames_b, uint64_t const sync_delta_ns) {
+std::pair<Frames, Frames> SynchronizeFrames(Frames frames_a, Frames frames_b, uint64_t const sync_delta_ns) {
     Frames frames_b_synced;
-    for (auto const& [timestamp_ns_a, frame_a] : frames_a) {
+    for (auto it_a{std::cbegin(frames_a)}; it_a != std::cend(frames_a);) {
+        if (std::empty(frames_b)) {
+            // Nothing left in b to sync to so remove all the extra elements from a and break so we can return what
+            // could be successfully synced.
+            frames_a.erase(it_a, std::cend(frames_a));
+            break;
+        }
+
+        uint64_t const timestamp_ns_a{it_a->first};
         auto const closest{FindClosest(frames_b, timestamp_ns_a)};
 
-        // NOTE(Jack): We used the unsigned long type so we need to be careful to protect against underflow here! Not
-        // 100% sure this is right but I think it works for us.
         uint64_t const delta_ns{closest->first > timestamp_ns_a ? closest->first - timestamp_ns_a
                                                                 : timestamp_ns_a - closest->first};
         if (delta_ns > sync_delta_ns) {
-            frames_a.erase(timestamp_ns_a);
+            // No good match, delete and start next iteration
+            it_a = frames_a.erase(it_a);
             continue;
         }
 
+        // Got a good match, copy and frame to the new synchronized map and delete from the old one to enforce
+        // one-to-one correspondence.
         frames_b_synced.insert({timestamp_ns_a, closest->second});
+        frames_b.erase(closest);
+
+        ++it_a;
     }
 
     return {frames_a, frames_b_synced};

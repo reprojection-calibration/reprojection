@@ -38,8 +38,8 @@ TEST(CalibrationCalibrationUtils, TestSynchronizeFrames) {
 
     // All data is outside of the sync tolerance so we get no matches at all.
     Frames const data_z{{3, {pose}}, {13, {pose}}, {23, {pose}}};
-
     std::tie(frames_a, frames_b) = calibration::SynchronizeFrames(data_x, data_z, 2);
+
     expected = {};
     EXPECT_TRUE(std::ranges::equal(frames_a | std::views::keys, expected));
     EXPECT_TRUE(std::ranges::equal(frames_b | std::views::keys, expected));

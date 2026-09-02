@@ -8,6 +8,6 @@ namespace reprojection::calibration {
 
 Frames AlignRotations(Frames data);
 
-std::pair<Frames, Frames> SynchronizeFrames(Frames frames_a, Frames const& frames_b, uint64_t sync_delta_ns);
+std::pair<Frames, Frames> SynchronizeFrames(Frames frames_a, Frames frames_b, uint64_t sync_delta_ns);
 
 }  // namespace reprojection::calibration
