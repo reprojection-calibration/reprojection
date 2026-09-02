@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
             "monocular camera calibration (i.e. only '[cam0]'). Please remove any additional cameras or IMU from the "
             "configuration file.'}}",
             "video-file", std::size(sensors.camera_names), sensors.imu_name.has_value());
-        
+
         return EXIT_FAILURE;
     }
 
