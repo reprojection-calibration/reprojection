@@ -34,7 +34,7 @@ class Workflow:
 
         return matching_step_ids
 
-    # TODO(Jack): This is hardcoding that our asset group signature format will not changes and will continue to habe
+    # TODO(Jack): This is hardcoding that our asset group signature format will not changes and will continue to have
     # the same semantics over time. Not a deal breaker but something we need to keep in mind - its coding a lot into a
     # single little string.
     def step_asset_groups_ids(self, step_id):
