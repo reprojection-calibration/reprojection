@@ -212,7 +212,7 @@ jobs:
           config="${RUNNER_TEMP}/data/calibration_config.toml"
           cp code/test_data/calibration_config.toml "${config}"
           
-          # NOTE(Jack): The vidoe file application only support the monocular workflow so we need to remove the second 
+          # NOTE(Jack): The video file application only support the monocular workflow so we need to remove the second 
           # camera and imu from the config! This also happens in the integration testing.
           if [[ "${{ matrix.applications.monocular_config || false }}" == "true" ]]; then
             python3 -m pip install tomli-w
