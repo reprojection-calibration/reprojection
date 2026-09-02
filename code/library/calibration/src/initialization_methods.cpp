@@ -125,4 +125,27 @@ std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(s
     return {{aa_imu_co, diagnostics}, gravity_w};
 }
 
+// TODO ENFORCE THAT THESE TAKE SYNCHRONIZED FRAMES!
+// THIS EXPECTS THAT BOTH CAMERAS ARE LOOKING AT THE SAME TARGET OR AT LEAST SHARE THE GLOBAL REFERENCE WORLD FRAME
+Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b) {
+    // TODO(Jack): Is this at all legitimate to average the transforms like this?
+    Array6d se3_coa_cob;
+    for (auto const& [timestamp_ns, pose_a] : frames_a) {
+        Array6d const pose_b{frames_b.at(timestamp_ns).pose};
+
+        // "coa" = "camera optical a" and "cob" = "camera optical b"
+        Isometry3d const tf_coa_w{geometry::Exp(pose_a.pose)};
+        Isometry3d const tf_cob_w{geometry::Exp(pose_b)};
+
+        Isometry3d const tf_coa_cob{tf_coa_w * tf_cob_w.inverse()};
+        Array6d const se3_coa_cob_i{geometry::Log(tf_coa_cob)};
+
+        se3_coa_cob += se3_coa_cob_i;
+    }
+
+    se3_coa_cob = se3_coa_cob / std::size(frames_a);
+
+    return se3_coa_cob;
+}
+
 }  // namespace reprojection::calibration

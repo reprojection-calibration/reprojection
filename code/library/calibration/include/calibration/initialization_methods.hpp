@@ -29,4 +29,6 @@ std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(s
                                                                                ImuMeasurements const& imu_data,
                                                                                int num_threads);
 
+Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b);
+
 }  // namespace reprojection::calibration
