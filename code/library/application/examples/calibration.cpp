@@ -30,6 +30,8 @@ int main(int argc, char* argv[]) {
             "monocular camera calibration (i.e. only '[cam0]'). Please remove any additional cameras or IMU from the "
             "configuration file.'}}",
             "video-file", std::size(sensors.camera_names), sensors.imu_name.has_value());
+        
+        return EXIT_FAILURE;
     }
 
     auto const video_capture{std::make_unique<video_capture::VideoCapture>(app_args->data_path)};

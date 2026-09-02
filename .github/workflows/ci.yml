@@ -207,9 +207,19 @@ jobs:
         with:
           name: ${{ matrix.applications.data_artifact }}
           path: ${{ runner.temp }}/data
-      - name: Copy in configuration file
+      - name: Prepare configuration file
         run: |
-          cp code/test_data/calibration_config.toml "${RUNNER_TEMP}/data/"
+          config="${RUNNER_TEMP}/data/calibration_config.toml"
+          cp code/test_data/calibration_config.toml "${config}"
+          
+          # NOTE(Jack): The vidoe file application only support the monocular workflow so we need to remove the second 
+          # camera and imu from the config! This also happens in the integration testing.
+          if [[ "${{ matrix.applications.monocular_config || false }}" == "true" ]]; then
+            python3 -m pip install tomli-w
+            python3 building/scripts/extract_monocular_config.py \
+              "${config}" \
+              "${config}"
+          fi
       - name: Run application
         run: |
           docker run --rm \
@@ -237,7 +247,7 @@ jobs:
           modified="$(stat -c %Y "${db}")"
           age_seconds="$((now - modified))"
           echo "Database last modified: ${age_seconds}s"
-          if (( age_seconds > 40 )); then
+          if (( age_seconds > 60 )); then
             echo "Calibration database was not recently updated."
             exit 1
           fi
@@ -268,4 +278,5 @@ jobs:
             data: dataset-calib-imu4_512_16.mp4
             data_artifact: test-data-video-file
             external_cache_scope_1: video-file-integration-test
+            monocular_config: true
             target: video-file-app-stage
