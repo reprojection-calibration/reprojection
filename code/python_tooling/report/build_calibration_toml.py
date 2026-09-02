@@ -70,41 +70,62 @@ def run_toml_export(workspace_dir):
 
 
 def build_intrinsic_toml(workflow, workflow_data):
-    camera = workflow.assets.get("camera")
     camera_info = workflow_data.get("camera_info")
     camera_intrinsics = workflow_data.get("intrinsics")
 
-    if camera is None or camera_info is None or camera_intrinsics is None:
+    if camera_info is None or camera_intrinsics is None:
         return ""
 
     if camera_info.empty or camera_intrinsics.empty:
         return ""
 
-    bundle_adjustment_step_id = workflow.steps.get("bundle_adjustment")
-    if bundle_adjustment_step_id is None:
-        return ""
+    output = []
+    for camera in workflow.assets_of_type("camera"):
+        sensor_name = camera["name"]
+        asset_id = camera["id"]
+        bundle_adjustment_step_ids = workflow.step_ids(
+            "bundle_adjustment", asset_id=asset_id
+        )
 
-    sensor_name = camera["name"]
-    asset_id = camera["id"]
+        if not bundle_adjustment_step_ids:
+            continue
 
-    log.info(f"Processing intrinsic {sensor_name}")
+        camera_info_row = asset_row(camera_info, asset_id)
+        intrinsic_rows = camera_intrinsics.loc[
+            camera_intrinsics.index.get_level_values("step_id").isin(
+                bundle_adjustment_step_ids
+            )
+            & (camera_intrinsics.index.get_level_values("asset_id") == asset_id)
+        ]
+        if camera_info_row is None or intrinsic_rows.empty:
+            continue
 
-    # TODO(Jack): What if there is no bundle adjustment intrinsic?
-    camera_intrinsic_row = camera_intrinsics.loc[(bundle_adjustment_step_id, asset_id)]
+        log.info(f"Processing intrinsic {sensor_name}")
+        camera_intrinsic_row = intrinsic_rows.iloc[0]
 
-    intrinsics_str = camera_intrinsic_row["data"]
-    camera_model = CameraModel(camera_info["camera_model"])
-    intrinsics_arr = toml_to_intrinsic_array(intrinsics_str, camera_model)
+        intrinsics_str = camera_intrinsic_row["data"]
+        camera_model = CameraModel(camera_info_row["camera_model"])
+        intrinsics_arr = toml_to_intrinsic_array(intrinsics_str, camera_model)
 
-    camera_index = camera["index"]
+        camera_index = camera["index"]
+        output.append(
+            f"[workflow{workflow.id}.cam{camera_index}]\n"
+            f"sensor_id = '{sensor_name}'\n"
+            f"camera_model = '{camera_info_row['camera_model']}'\n"
+            f"intrinsics = {intrinsics_arr}\n"
+            f"resolution = [{int(camera_info_row['height'])}, {int(camera_info_row['width'])}]\n"
+        )
 
-    return (
-        f"[workflow{workflow.id}.cam{camera_index}]\n"
-        f"sensor_id = '{sensor_name}'\n"
-        f"camera_model = '{camera_info['camera_model']}'\n"
-        f"intrinsics = {intrinsics_arr}\n"
-        f"resolution = [{int(camera_info['height'])}, {int(camera_info['width'])}]\n"
-    )
+    return "\n".join(output)
+
+
+def asset_row(table, asset_id):
+    if table.ndim == 1:
+        return table if int(table["asset_id"]) == asset_id else None
+
+    rows = table.loc[table.index.get_level_values("asset_id") == asset_id]
+
+    return None if rows.empty else rows.iloc[0]
 
 
 def build_extrinsic_toml(workflow, workflow_data):
@@ -119,9 +140,7 @@ def build_extrinsic_toml(workflow, workflow_data):
     # TODO(Jack): We need this because the extrinsic itself contains which assets it relates so we retrieve those and
     # then convert those to the sensor names using the workflow assets.
     def asset_by_id(workflow, asset_id):
-        return next(
-            asset for asset in workflow.assets.values() if asset["id"] == asset_id
-        )
+        return workflow.assets[asset_id]
 
     frame_a = asset_by_id(workflow, data["asset_a_id"])
     frame_b = asset_by_id(workflow, data["asset_b_id"])

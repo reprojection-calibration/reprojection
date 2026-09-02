@@ -18,32 +18,36 @@ int main(int argc, char* argv[]) {
     }
     application::Sensors const sensors{application::ParseSensors(app_args->config)};
 
-    // TODO(Jack): Can we clean up the repeated logic for the image and imu construction? It is here and in the ros2
-    // app.
-    auto const image_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, sensors.camera_sensor)};
-    if (std::holds_alternative<ros1::BagError>(image_reader_result)) {
-        // TODO(Jack): Should we use the libraries logging pattern here too?
-        std::cerr << std::get<ros1::BagError>(image_reader_result).message << "\n";
-        return EXIT_FAILURE;
-    }
-    auto const& image_bag_reader{std::get<ros1::SingleTopicBagReader>(image_reader_result)};
+    ImageInputs image_inputs;
+    // NOTE(Jack): ImageSource references its SingleTopicBagReader, so these
+    // readers need to remain alive until Calibrate() has finished.
+    std::vector<ros1::SingleTopicBagReader> image_bag_readers;
+    for (auto const& camera_name : sensors.camera_names) {
+        auto reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, camera_name)};
+        if (std::holds_alternative<ros1::BagError>(reader_result)) {
+            std::cerr << std::get<ros1::BagError>(reader_result).message << "\n";
+            return EXIT_FAILURE;
+        }
+        image_bag_readers.push_back(std::move(std::get<ros1::SingleTopicBagReader>(reader_result)));
+        auto const& image_bag_reader{image_bag_readers.back()};
 
-    ros1::ImageSource image_source{image_bag_reader};
+        auto const image_data_signature{ros1::SerializeBagTopic(image_bag_reader)};
+        if (not image_data_signature) {
+            std::cerr << "Unable to calculate image data signature for " << camera_name << "!\n";
+            return EXIT_FAILURE;
+        }
 
-    auto const image_data_signature{ros1::SerializeBagTopic(image_bag_reader)};
-    if (not image_data_signature) {
-        std::cerr << "Unable to calculate image data signature!\n";
-        return EXIT_FAILURE;
+        image_inputs.emplace(camera_name, ImageInput{ros1::ImageSource{image_bag_reader}, *image_data_signature});
     }
 
     // Early execution and return for the camera only intrinsic only case.
-    if (not sensors.imu_sensor.has_value()) {
-        application::Calibrate(app_args->config, {image_source, *image_data_signature}, std::nullopt, app_args->db);
+    if (not sensors.imu_name.has_value()) {
+        application::Calibrate(app_args->config, image_inputs, std::nullopt, app_args->db);
 
         return EXIT_SUCCESS;
     }
 
-    auto const imu_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, *sensors.imu_sensor)};
+    auto const imu_reader_result{ros1::SingleTopicBagReader::Create(app_args->data_path, *sensors.imu_name)};
     if (std::holds_alternative<ros1::BagError>(imu_reader_result)) {
         std::cerr << std::get<ros1::BagError>(imu_reader_result).message << "\n";
         return EXIT_FAILURE;
@@ -63,8 +67,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Camera-imu extrinsic and intrinsic case.
-    application::Calibrate(app_args->config, {image_source, *image_data_signature},
-                           application::ImuInput{imu_source, *imu_data_signature}, app_args->db);
+    application::Calibrate(app_args->config, image_inputs, ImuInput{imu_source, *imu_data_signature}, app_args->db);
 
     return EXIT_SUCCESS;
 }

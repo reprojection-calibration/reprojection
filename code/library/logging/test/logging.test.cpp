@@ -3,17 +3,17 @@
 #include <gtest/gtest.h>
 
 // cppcheck-suppress missingInclude
-#include "testing_utilities/generated/minimum_config.hpp"
+#include "testing_utilities/generated/calibration_config.hpp"
 
 using namespace reprojection;
 
 TEST(LoggingLogging, TestToOneLineJson) {
-    toml::table const toml{toml::parse(testing_utilities::minimum_config)};
+    toml::table const toml{toml::parse(testing_utilities::calibration_config)};
 
     std::string const result{logging::ToOneLineJson(toml)};
 
     EXPECT_EQ(result,
-              "{'application': {'show_extraction': false}, 'camera': {'camera_model': 'double_sphere', 'sensor_name': "
-              "'/cam0/image_raw'}, 'imu': {'sensor_name': '/imu0'}, 'target': {'pattern_size': [5, 4], 'type': "
-              "'aprilgrid3'}}");
+              "{'application': {'show_extraction': false}, 'cam0': {'camera_model': 'double_sphere', 'sensor_name': "
+              "'/cam0/image_raw'}, 'cam1': {'camera_model': 'double_sphere', 'sensor_name': '/cam1/image_raw'}, 'imu': "
+              "{'sensor_name': '/imu0'}, 'target': {'pattern_size': [5, 4], 'type': 'aprilgrid3'}}");
 }

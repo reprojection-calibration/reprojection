@@ -5,7 +5,7 @@
 #include <ranges>
 
 // cppcheck-suppress missingInclude
-#include "testing_utilities/generated/minimum_config.hpp"
+#include "testing_utilities/generated/calibration_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
 using namespace reprojection;
@@ -43,11 +43,11 @@ TEST(ApplicationIO, TestParseCommandLineInput) {
 }
 
 TEST(ApplicationIO, TestHappyPath) {
-    TemporaryFile const config_file{".toml", testing_utilities::minimum_config};
+    TemporaryFile const config_file{".toml", testing_utilities::calibration_config};
 
     auto const result{application::LoadConfig(config_file.Path())};
     ASSERT_TRUE(result.has_value());
-    toml::table const gt_result{toml::parse(testing_utilities::minimum_config)};
+    toml::table const gt_result{toml::parse(testing_utilities::calibration_config)};
     EXPECT_EQ(*result, gt_result);
 }
 

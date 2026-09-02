@@ -28,16 +28,44 @@ toml::table RequireTable(toml::table const& table, std::string_view key) {
     return *child_table;
 }
 
+// Given 'cam0' this will return 0 and given 'cam55' this will return 55.
+std::optional<int> IndexedKeyIndex(std::string_view key, std::string_view base) {
+    if (key == base or not key.starts_with(base)) {
+        return std::nullopt;
+    }
+
+    std::string const suffix{key.substr(std::size(base))};
+
+    bool const all_digits{
+        std::ranges::all_of(suffix, [](char const c) { return std::isdigit(static_cast<unsigned char>(c)); })};
+    if (std::empty(suffix) or not all_digits) {
+        return std::nullopt;
+    }
+
+    return std::stoi(suffix);
+}
+
 void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
-                          std::string_view table_name) {
+                          std::vector<std::string_view> const& indexed_keys, std::string_view table_name) {
     for (auto const& [key, _] : table) {
-        bool const allowed{std::ranges::any_of(
-            allowed_keys, [&key](std::string_view allowed_key) { return key.str() == allowed_key; })};
+        bool const allowed{std::ranges::contains(allowed_keys, key.str()) or
+                           std::ranges::any_of(indexed_keys, [&](std::string_view base) {
+                               // NOTE(Jack): Here we use the IndexedKeyIndex() optional as a boolean to check if it is
+                               // an indexed key at all, we ignore and do not care about the actual index value.
+                               return IndexedKeyIndex(key.str(), base).has_value();
+                           })};
 
         if (not allowed) {
             throw std::runtime_error(std::format("Unexpected key '{}.{}'", table_name, key.str()));
         }
     }
+}
+
+// Convenience override because for most cases (i.e. anything but the top level table 26.08.2026) the set of indexable
+// keys is empty.
+void RejectUnexpectedKeys(toml::table const& table, std::vector<std::string_view> const& allowed_keys,
+                          std::string_view table_name) {
+    return RejectUnexpectedKeys(table, allowed_keys, {}, table_name);
 }
 
 }  // namespace reprojection::config

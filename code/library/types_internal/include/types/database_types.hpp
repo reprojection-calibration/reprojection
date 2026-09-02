@@ -69,13 +69,15 @@ inline std::string ToString(AssetType const data) {
     }
 }
 
-enum class WorkflowType { Cam, CamImu };
+enum class WorkflowType { Cam, CamImu, MultiCam };
 
 inline std::string ToString(WorkflowType const data) {
     if (data == WorkflowType::Cam) {
         return "cam";
     } else if (data == WorkflowType::CamImu) {
         return "cam_imu";
+    } else if (data == WorkflowType::MultiCam) {  // LCOV_EXCL_LINE
+        return "multi_cam";                       // LCOV_EXCL_LINE
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown WorkflowType");  // LCOV_EXCL_LINE
     }
@@ -122,5 +124,12 @@ inline std::string ToString(StepType const data) {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown StepType");  // LCOV_EXCL_LINE
     }
 }
+
+// TODO(Jack): Is this really the base name for what this does? We really need a better name here.
+template <typename T>
+struct Asset {
+    AssetId id;
+    T config;
+};
 
 }  // namespace reprojection

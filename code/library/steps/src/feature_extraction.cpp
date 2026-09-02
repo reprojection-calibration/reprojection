@@ -29,6 +29,8 @@ FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image
 }
 
 Hash FeatureExtraction::CacheKey() const {
+    // TODO(Jack): The flag show_extraction should not be part of the cache! Just cause that changes does not mean we
+    // need to rextract all the features.
     // TODO(Jack): We should not strictly need the camera_id_ here as part of they key because the target info and
     // images_ should uniquely identify the feature extraction. However a problem arises when we have artifically
     // triggered cache hits (for example in the benchmark testing) Where the images_ are empty and that causes the

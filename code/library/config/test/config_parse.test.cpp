@@ -2,73 +2,35 @@
 
 #include <gtest/gtest.h>
 
+#include <format>
+
+// cppcheck-suppress missingInclude
+#include "testing_utilities/generated/calibration_config.hpp"
+
 using namespace reprojection;
 
-TEST(ConfigParsingHelpers, TestConfigParseFull) {
-    static constexpr std::string_view full_table{R"(
-        [application]
-        show_extraction = true
-        threads = 10
-
-        [camera]
-        sensor_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [imu]
-        sensor_name = "/imu0"
-
-        [target]
-        type = "checkerboard"
-        pattern_size = [3,4]
-        unit_dimension = 0.5
-
-        [target.circle_grid]
-        asymmetric = true
-    )"};
-    toml::table const full_config{toml::parse(full_table)};
+TEST(ConfigParsingHelpers, TestConfigParse) {
+    toml::table const full_config{toml::parse(testing_utilities::calibration_config)};
     auto const result = config::Config::Parse(full_config);
 
-    EXPECT_EQ(result.application.show_extraction, true);
-    EXPECT_EQ(result.application.threads, 10);
+    EXPECT_EQ(result.application.show_extraction, false);
+    EXPECT_GE(result.application.threads, 1);
 
-    EXPECT_EQ(result.camera.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(result.camera.camera_model, CameraModel::DoubleSphere);
+    EXPECT_EQ(std::size(result.cameras), 2);
+    for (size_t i{0}; i < std::size(result.cameras); ++i) {
+        auto const& cam_i{result.cameras[i]};
+        EXPECT_EQ(cam_i.camera_model, CameraModel::DoubleSphere);
+        EXPECT_EQ(cam_i.index, i);
+        EXPECT_EQ(cam_i.sensor_name, std::format("/cam{}/image_raw", cam_i.index));
+    }
 
     ASSERT_TRUE(result.imu.has_value());
     EXPECT_EQ(result.imu->sensor_name, "/imu0");
 
-    EXPECT_EQ(result.target.target_type, TargetType::Checkerboard);
-    EXPECT_EQ(result.target.size[0], 3);
+    EXPECT_EQ(result.target.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(result.target.size[0], 5);
     EXPECT_EQ(result.target.size[1], 4);
-    EXPECT_EQ(result.target.unit_dimension, 0.5);
-    EXPECT_EQ(result.target.asymmetric, true);
-}
-
-TEST(ConfigParsingHelpers, TestConfigParseMinimum) {
-    static constexpr std::string_view minimum_table{R"(
-        [camera]
-        sensor_name = "/cam0/image_raw"
-        camera_model = "double_sphere"
-
-        [target]
-        type = "checkerboard"
-        pattern_size = [3,4]
-    )"};
-    toml::table const minimum_config{toml::parse(minimum_table)};
-    auto const result{config::Config::Parse(minimum_config)};
-
-    EXPECT_EQ(result.application.show_extraction, false);
-    EXPECT_GE(result.application.threads, 2);
-
-    EXPECT_EQ(result.camera.sensor_name, "/cam0/image_raw");
-    EXPECT_EQ(result.camera.camera_model, CameraModel::DoubleSphere);
-
-    EXPECT_FALSE(result.imu.has_value());
-
-    EXPECT_EQ(result.target.target_type, TargetType::Checkerboard);
-    EXPECT_EQ(result.target.size[0], 3);
-    EXPECT_EQ(result.target.size[1], 4);
-    EXPECT_EQ(result.target.unit_dimension, 1.0);
+    EXPECT_EQ(result.target.unit_dimension, 1);
     EXPECT_EQ(result.target.asymmetric, false);
 }
 
@@ -126,7 +88,7 @@ TEST(ConfigParsingHelpers, TestConfigCameraParse) {
     for (auto const& valid_table : valid_tables) {
         toml::table const config{toml::parse(valid_table)};
 
-        EXPECT_NO_THROW(config::Config::Camera::Parse(config));
+        EXPECT_NO_THROW(config::Config::Camera::Parse(config, 0));
     }
 
     std::vector<std::string_view> const invalid_tables{
@@ -149,7 +111,7 @@ TEST(ConfigParsingHelpers, TestConfigCameraParse) {
     for (auto const& invalid_table : invalid_tables) {
         toml::table const config{toml::parse(invalid_table)};
 
-        EXPECT_THROW(config::Config::Camera::Parse(config), std::runtime_error);
+        EXPECT_THROW(config::Config::Camera::Parse(config, 0), std::runtime_error);
     }
 }
 

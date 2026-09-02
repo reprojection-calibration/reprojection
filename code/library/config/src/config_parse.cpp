@@ -11,10 +11,12 @@ namespace reprojection::config {
 // at multiple places which is not so nice. Not a deal breaker but consider it!
 
 Config Config::Parse(toml::table const& table) {
-    RejectUnexpectedKeys(table, {"application", "camera", "imu", "target"}, "");
+    // TODO(Jack): One day it can be that we allow multiple imus and targets, but for now "cam" is the only indexable
+    // top level table.
+    RejectUnexpectedKeys(table, {"application", "imu", "target"}, {"cam"}, "");
 
     return Config{Application::Parse(OptionalTable(table, "application").value_or(toml::table{})),
-                  Camera::Parse(RequireTable(table, "camera")),
+                  RequireIndexedTables<Camera>(table, "cam"),
                   Imu::Parse(OptionalTable(table, "imu").value_or(toml::table{})),
                   Target::Parse(RequireTable(table, "target"))};
 }
@@ -30,12 +32,10 @@ Config::Application Config::Application::Parse(toml::table const& table) {
     return config;
 }
 
-Config::Camera Config::Camera::Parse(toml::table const& table) {
+Config::Camera Config::Camera::Parse(toml::table const& table, int const index) {
     RejectUnexpectedKeys(table, {"camera_model", "index", "sensor_name"}, "camera");
 
-    auto const index{Optional<int>(table, "index")};
-
-    return Camera{ToCameraModel(Require<std::string>(table, "camera_model")), index ? *index : 0,
+    return Camera{ToCameraModel(Require<std::string>(table, "camera_model")), index,
                   Require<std::string>(table, "sensor_name")};
 }
 

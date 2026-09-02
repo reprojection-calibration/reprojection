@@ -26,7 +26,9 @@ struct Config {
     };
 
     struct Camera {
-        static Camera Parse(toml::table const& table);
+        // NOTE(Jack): We have to pass the index here because that comes from the parsed table header which is already
+        // removed by the time we parse its' contents.
+        static Camera Parse(toml::table const& table, int index);
 
         CameraModel camera_model;
         int index;
@@ -70,7 +72,7 @@ struct Config {
     //
     // Look at the config_parse.test.cpp for hands-on examples of what valid configs are and are not.
     Application application;
-    Camera camera;
+    std::vector<Camera> cameras;
     std::optional<Imu> imu;
     Target target;
 };

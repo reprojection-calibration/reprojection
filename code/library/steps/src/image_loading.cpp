@@ -43,7 +43,7 @@ void ImageLoading::Execute(StepId const step_id, SqlitePtr const db) const {
         }
     }
 
-    log->info("{{'step_id': {}, 'imu_id': {}, 'num_images': {}}}", step_id.value, camera_id_.value,
+    log->info("{{'step_id': {}, 'asset_id': {}, 'num_images': {}}}", step_id.value, camera_id_.value,
               std::size(*encoded_images));
 
     database::ImagesInsert(db.get(), step_id, camera_id_, *encoded_images);
