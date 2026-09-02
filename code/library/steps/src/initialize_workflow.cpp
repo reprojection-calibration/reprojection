@@ -76,6 +76,14 @@ void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const
         database::AssetGroupInsert(db.get(), {asset});
     }
 
+    // TODO WE NEED TO ONLY DO THIS FOR THE MULTI CAM WORKFLOW! OUR WORKFLOW IDEA IS ALREADY BROKEN...
+    for (size_t i{0}; i + 1 < std::size(assets.cameras); ++i) {
+        auto const& a{assets.cameras[i]};
+        auto const& b{assets.cameras[i + 1]};
+
+        database::AssetGroupInsert(db.get(), {a.id, b.id});
+    }
+
     // Now execute any special rules that exist depending on the workflow type.
     if (workflow_type == WorkflowType::CamImu) {
         // WARN(Jack): We are hardcoding here that the imu will always be calibrated to the first camera.

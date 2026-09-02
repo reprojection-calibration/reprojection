@@ -7,6 +7,7 @@
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_init.hpp"
+#include "steps/extrinsic_init_stereo.hpp"
 #include "steps/extrinsic_optimization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
@@ -119,11 +120,23 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         camera_calibrations.push_back({camera.id, camera_info_id, targets_id, pose_init_id, bundle_adjustment_id});
     }
 
+    // TODO WHAT WORKFLOW TYPE IS THIS? WHAT IF WE ALSO HAVE AN IMU?
+    for (size_t i{0}; i + 1 < std::size(camera_calibrations); ++i) {
+        auto const& a{camera_calibrations[i]};
+        auto const& b{camera_calibrations[i + 1]};
+
+        steps::ExtrinsicInitStereo const extrinsic_init_stereo_step{a.camera_id, a.bundle_adjustment_id, b.camera_id,
+                                                                    b.bundle_adjustment_id, db};
+        StepId const extrinsic_init_stereo_id{
+            RunStep<steps::ExtrinsicInitStereo>(context.workflow_id, extrinsic_init_stereo_step, db)};
+        static_cast<void>(extrinsic_init_stereo_id);
+    }
+
     // TODO(Jack): Find a way to get this to run in a unit test! I think we could do this with the data generation
     // functions we have!
     // LCOV_EXCL_START
 
-    if (context.assets.imu.has_value() and imu_input.has_value()) {
+    if (context.workflow_type == WorkflowType::CamImu and imu_input.has_value()) {
         auto const imu_id{context.assets.imu->id};
         log->info("{{'sensor_name': '{}', 'asset_id': {}}}", context.assets.imu->config.sensor_name, imu_id.value);
 
