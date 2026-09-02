@@ -84,7 +84,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
         Hash const feature_cache_key{std::format("ftex{}", i)};
 
         // WARN(Jack): If the camera info cache key calculation method changes then we will need to update this here
-        // too!
+        // too (specifically the call to HashArguments())!
         camera_test_data.push_back({
             database::GetOrCreateStep(db.get(), StepType::ImageLoading, image_cache_key).first,
             feature_cache_key,
@@ -95,7 +95,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     testing_utilities::TestDatabaseSetup(context.assets.cameras, camera_test_data, db);
 
-    // Add the intrinsic init manually - this is the only step we are forced to manually add a value for to let the rest
+    // Add the intrinsic init manually - this is the only step we are forced to manually add a value to let the rest
     // of the workflow run successfully on the empty data structures.
     for (auto const& camera : context.assets.cameras) {
         auto const [step_id, cache_status]{database::GetOrCreateStep(db.get(), StepType::IntrinsicInit, "")};

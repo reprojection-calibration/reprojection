@@ -2,7 +2,6 @@
 
 #include <ranges>
 
-#include "../../steps/include/steps/initialize_workflow.hpp"
 #include "config/config_parse.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
@@ -12,6 +11,7 @@
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
+#include "steps/initialize_workflow.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
 #include "steps/spline_initialization.hpp"
@@ -58,10 +58,8 @@ Sensors ParseSensors(toml::table const& cfg_table) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
 
     std::vector<std::string> camera_names;
-    for (auto const& camera : cfg.cameras) {
-        // cppcheck-suppress useStlAlgorithm
-        camera_names.push_back(camera.sensor_name);
-    }
+    std::ranges::transform(cfg.cameras, std::back_inserter(camera_names),
+                           [](auto const& camera) { return camera.sensor_name; });
 
     std::optional<std::string> imu_name{std::nullopt};
     if (cfg.imu) {

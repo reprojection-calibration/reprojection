@@ -45,6 +45,19 @@ WorkflowType DetermineWorkflowType(config::Config const& cfg);
 
 CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr const db);
 
+// NOTE(Jack): There are three basic types of asset groups. This should really be officially documented somewhere but we
+// are not at that point yet. The only one you really need to actively maintain are the "custom subgroups" which can
+// change depending on which calibration types are added or refactored.
+//
+//      1) Each asset is its own asset group (assigned to steps)
+//      2) The entire set of assets is a asset group (assigned to the workflow and possible a step)
+//      3) Custom subgroups can be assets groups (assigned to steps)
+//
+// This is done to express a sort of ownership semantic for the steps. We need to specify which assets are associated
+// with process steps so we can uniquely specify them in the database. Because some steps are "owned" or involve more
+// than just one asset we created the idea of asset groups, which can include one or more asset ids.
+//
+//
 // TODO(Jack): Is there a simple way to test this without some huge database setup and implicit behavior checking?
 void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const& assets, SqlitePtr const db);
 

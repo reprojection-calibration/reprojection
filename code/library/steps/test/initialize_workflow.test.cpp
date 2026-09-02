@@ -1,4 +1,4 @@
-#include "../include/steps/initialize_workflow.hpp"
+#include "steps/initialize_workflow.hpp"
 
 #include <gtest/gtest.h>
 

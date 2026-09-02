@@ -26,6 +26,8 @@ struct Config {
     };
 
     struct Camera {
+        // NOTE(Jack): We have to pass the index here because that comes from the parsed table header which is already
+        // removed by the time we parse its' contents.
         static Camera Parse(toml::table const& table, int index);
 
         CameraModel camera_model;
