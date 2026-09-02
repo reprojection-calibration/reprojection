@@ -29,7 +29,7 @@ struct CalibrationAssets {
         }
 
         return all_assets;
-    }
+    }  // LCOV_EXCL_LINE
 };
 
 struct CalibrationContext {

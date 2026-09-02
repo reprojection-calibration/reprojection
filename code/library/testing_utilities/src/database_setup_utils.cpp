@@ -8,10 +8,12 @@ namespace reprojection::testing_utilities {
 void TestDatabaseSetup(std::vector<Asset<config::Config::Camera>> const& cameras,
                        std::vector<CameraTestData> const& camera_test_data, SqlitePtr const db) {
     if (std::size(cameras) != std::size(camera_test_data)) {
+        // LCOV_EXCL_START
         throw std::runtime_error(
             std::format("The number of cameras ({}) and the number of camera test data configurations ({}) does not "
                         "match! Cannot setup test database.",
                         std::size(cameras), std::size(camera_test_data)));
+        // LCOV_EXCL_STOP
     }
 
     for (std::size_t i{0}; i < std::size(cameras); ++i) {
@@ -46,6 +48,6 @@ ImageInputs TestDatabaseImageInputs(std::vector<Asset<config::Config::Camera>> c
     }
 
     return image_inputs;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::testing_utilities

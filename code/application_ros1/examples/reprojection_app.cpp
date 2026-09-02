@@ -37,8 +37,7 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
-        image_inputs.emplace(camera_name,
-                             application::ImageInput{ros1::ImageSource{image_bag_reader}, *image_data_signature});
+        image_inputs.emplace(camera_name, ImageInput{ros1::ImageSource{image_bag_reader}, *image_data_signature});
     }
 
     // Early execution and return for the camera only intrinsic only case.
@@ -68,8 +67,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Camera-imu extrinsic and intrinsic case.
-    application::Calibrate(app_args->config, image_inputs, application::ImuInput{imu_source, *imu_data_signature},
-                           app_args->db);
+    application::Calibrate(app_args->config, image_inputs, ImuInput{imu_source, *imu_data_signature}, app_args->db);
 
     return EXIT_SUCCESS;
 }

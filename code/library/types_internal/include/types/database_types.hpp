@@ -76,8 +76,8 @@ inline std::string ToString(WorkflowType const data) {
         return "cam";
     } else if (data == WorkflowType::CamImu) {
         return "cam_imu";
-    } else if (data == WorkflowType::MultiCam) {
-        return "multi_cam";
+    } else if (data == WorkflowType::MultiCam) {  // LCOV_EXCL_LINE
+        return "multi_cam";                       // LCOV_EXCL_LINE
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown WorkflowType");  // LCOV_EXCL_LINE
     }

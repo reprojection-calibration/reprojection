@@ -121,6 +121,10 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         camera_calibrations.push_back({camera.id, camera_info_id, targets_id, pose_init_id, bundle_adjustment_id});
     }
 
+    // TODO(Jack): Find a way to get this to run in a unit test! I think we could do this with the data generation
+    // functions we have!
+    // LCOV_EXCL_START
+
     if (context.assets.imu.has_value() and imu_input.has_value()) {
         auto const imu_id{context.assets.imu->id};
         log->info("{{'sensor_name': '{}', 'asset_id': {}}}", context.assets.imu->config.sensor_name, imu_id.value);
@@ -161,6 +165,8 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
 
         static_cast<void>(extrinsic_optimization_id);
     }
+
+    // LCOV_EXCL_STOP
 
     std::cout << "The future is calibrated!\n";
 }
