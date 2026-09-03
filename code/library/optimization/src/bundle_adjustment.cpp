@@ -2,42 +2,43 @@
 
 #include <ceres/loss_function.h>
 
-#include <ranges>
-
 #include "cost_functions/reprojection_error.hpp"
 
 namespace reprojection::optimization {
 
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
-std::tuple<OptimizationState, CeresState> BundleAdjustment(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                                           OptimizationState const& initial_state,
-                                                           int const num_threads, bool const constant_intrinsics) {
-    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
-    ceres_state.solver_options.num_threads = num_threads;
-    ceres::Problem problem{ceres_state.problem_options};
+BaResult BundleAdjustment(BaProblem const& ba_problem, int const num_threads) {
+    BaResult result{ba_problem};
+    result.ceres_state.solver_options.num_threads = num_threads;
+    ceres::Problem ceres_problem{result.ceres_state.problem_options};
 
-    OptimizationState optimized_state{initial_state};
-    for (auto const timestamp_ns : optimized_state.frames | std::views::keys) {
-        auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
+    for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
+        // TODO(Jack): We need to protect against back .at() access here!
+        auto const& [camera_info, _, camera_options]{ba_problem.cameras.at(camera_id)};
+        auto& camera_state{result.camera_states.at(camera_id)};
+        auto& frame{result.frames.at(timestamp_ns)};
 
+        auto const& [pixels, points]{bundle};
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
             ceres::CostFunction* const cost_function{
-                cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j))};
+                cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j))};
 
-            problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
-                                     optimized_state.camera_state.intrinsics.data(),
-                                     optimized_state.frames.at(timestamp_ns).pose.data());
+            ceres_problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
+                                           camera_state.intrinsic.intrinsics.data(), frame.pose.data());
+        }
+
+        if (not camera_options.optimize_intrinsic) {
+            ceres_problem.SetParameterBlockConstant(camera_state.intrinsic.intrinsics.data());
+        }
+        if (not camera_options.optimize_extrinsic) {
+            ceres_problem.SetParameterBlockConstant(camera_state.se3_co_rig.data());
         }
     }
 
-    if (constant_intrinsics) {
-        problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
-    }
+    ceres::Solve(result.ceres_state.solver_options, &ceres_problem, &result.ceres_state.solver_summary);
 
-    ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
-
-    return {optimized_state, ceres_state};
+    return result;
 }
 
 ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,

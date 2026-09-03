@@ -8,7 +8,7 @@ namespace reprojection {
 struct AssetId {
     int64_t value;
 
-    friend constexpr bool operator==(AssetId const&, AssetId const&) = default;
+    auto operator<=>(AssetId const&) const = default;
 };
 
 struct WorkflowId {
