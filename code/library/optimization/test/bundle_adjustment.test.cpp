@@ -14,18 +14,19 @@ using namespace reprojection;
 // next case where we add some noisy so it actually does some iterations.
 TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     // Generate the data
-    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
-    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 60, 1, false)};
+    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 60, 1, false)};
 
-    // Solve
-    OptimizationState const initial_state{gt_intrinsics, gt_frames};
-    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state, 1)};
-    EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
+    // Construct problem and solve
+    optimization::BaProblem const problem{
+        optimization::BuildSingleCamBaProblem(camera_info, gt_intrinsics, gt_frames, targets)};
+    auto const [frames, ceres_state, cameras]{optimization::BundleAdjustment(problem, 1)};
+    EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     // Assert
-    EXPECT_EQ(std::size(optimized_state.frames), 56);
-    for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
+    EXPECT_EQ(std::size(frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : frames) {
         Array6d const gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
         Array6d const aa_co_w{frame_i.pose};
 
@@ -34,18 +35,21 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
                                                         << gt_aa_co_w.transpose();
     }
 
-    EXPECT_TRUE(optimized_state.camera_state.intrinsics.isApprox(gt_intrinsics.intrinsics, 1e-6))
-        << "Result:\n"
-        << optimized_state.camera_state.intrinsics << "\nexpected result:\n"
-        << gt_intrinsics.intrinsics;
+    // TODO(Jack): This is a super hacky way to recover the value! What if we change the asset id used internally one
+    // day! We need to make a single camera result or something like that, or centralize this code in a helper function
+    // is we end up using single camera ba in a lot of places!
+    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.intrinsics};
+    EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.intrinsics, 1e-6)) << "Result:\n"
+                                                                     << intrinsics.transpose() << "\nexpected result:\n"
+                                                                     << gt_intrinsics.intrinsics.transpose();
 }
 
 // Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
 // and intrinsic back.
 TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
-    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
-    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(sensor, gt_intrinsics, 60, 1, false)};
+    auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 60, 1, false)};
 
     // Add gaussian noise to the initial poses
     Frames noisy_frames{gt_frames};
@@ -54,13 +58,14 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
         frame_i.pose = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
-    OptimizationState const initial_state{gt_intrinsics, noisy_frames};
-    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, targets, initial_state, 1)};
+    optimization::BaProblem const problem{
+        optimization::BuildSingleCamBaProblem(camera_info, gt_intrinsics, noisy_frames, targets)};
+    auto const [frames, ceres_state, cameras]{optimization::BundleAdjustment(problem, 1)};
 
-    EXPECT_EQ(diagnostics.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
+    EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    EXPECT_EQ(std::size(optimized_state.frames), 56);
-    for (auto const& [timestamp_ns, frame_i] : optimized_state.frames) {
+    EXPECT_EQ(std::size(frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : frames) {
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
         // happened that I will explain. This test using noisy poses had been working for months, no problems to report.
         // Comparing the Vector6d se3 poses directly worked perfectly and the optimization returned the ground truth
@@ -79,10 +84,11 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
                                                         << gt_tf_co_w.matrix();
     }
 
-    EXPECT_TRUE(optimized_state.camera_state.intrinsics.isApprox(gt_intrinsics.intrinsics, 1e-6))
-        << "Result:\n"
-        << optimized_state.camera_state.intrinsics.transpose() << "\nexpected result:\n"
-        << gt_intrinsics.intrinsics.transpose();
+    // TODO(Jack): See comment in test above about the need for a better asset id independent single camera workflow.
+    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.intrinsics};
+    EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.intrinsics, 1e-6)) << "Result:\n"
+                                                                     << intrinsics.transpose() << "\nexpected result:\n"
+                                                                     << gt_intrinsics.intrinsics.transpose();
 }
 
 TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {

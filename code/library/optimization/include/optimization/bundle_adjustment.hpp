@@ -54,4 +54,22 @@ BaResult BundleAdjustment(BaProblem const& ba_problem, int const num_threads);
 ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
                                      OptimizationState const& state);
 
+BaProblem BuildSingleCamBaProblem(CameraInfo const& camera_info, CameraState const& intrinsics, Frames const& frames,
+                                  CameraMeasurements const& targets) {
+    // For a single camera problem we do not consider the rig-co extrinsics and set those to constant identity.
+    BaCamera const camera{camera_info, BaCameraState{intrinsics, Array6d::Zero()}, BaCameraOptions{true, false}};
+
+    // Dummy id used for internal problem consistency.
+    AssetId const camera_id{0};
+
+    // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
+    // to just check once when we actually construct the problem?
+    std::vector<BaObservation> observations;
+    for (auto const& [timestamp_ns, target] : targets) {
+        observations.push_back({camera_id, timestamp_ns, target.bundle});
+    }
+
+    return {{{camera_id, camera}}, frames, observations};
+}
+
 }  // namespace  reprojection::optimization

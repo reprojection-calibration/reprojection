@@ -14,7 +14,7 @@ BaResult BundleAdjustment(BaProblem const& ba_problem, int const num_threads) {
     ceres::Problem ceres_problem{result.ceres_state.problem_options};
 
     for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
-        // TODO(Jack): We need to protect against back .at() access here!
+        // TODO(Jack): We need to protect against bad .at() access here!
         auto const& [camera_info, _, camera_options]{ba_problem.cameras.at(camera_id)};
         auto& camera_state{result.camera_states.at(camera_id)};
         auto& frame{result.frames.at(timestamp_ns)};
@@ -31,9 +31,10 @@ BaResult BundleAdjustment(BaProblem const& ba_problem, int const num_threads) {
         if (not camera_options.optimize_intrinsic) {
             ceres_problem.SetParameterBlockConstant(camera_state.intrinsic.intrinsics.data());
         }
-        if (not camera_options.optimize_extrinsic) {
-            ceres_problem.SetParameterBlockConstant(camera_state.se3_co_rig.data());
-        }
+        // ENABLE WHEN WE INTRODUCE THE RIG!
+        // if (not camera_options.optimize_extrinsic) {
+        //    ceres_problem.SetParameterBlockConstant(camera_state.se3_co_rig.data());
+        //}
     }
 
     ceres::Solve(result.ceres_state.solver_options, &ceres_problem, &result.ceres_state.solver_summary);
