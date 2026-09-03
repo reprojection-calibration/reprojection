@@ -10,6 +10,24 @@
 
 namespace reprojection::pnp {
 
+// SPLIT AND MOVE FILES!!!
+optimization::BaProblem BuildPnpBaProblem(CameraInfo const& camera_info, Bundle const& bundle,
+                                          Array3d const& pinhole_intrinsics, Array6d const& se3_co_w) {
+    // For the pnp problem we set the extrinsic to identity (i.e. rig==co) and do not optimize the extrinsic or
+    // intrinsic. We are only optimizing the world pose.
+    optimization::BaCamera const camera{camera_info, optimization::BaCameraState{{pinhole_intrinsics}, Array6d::Zero()},
+                                        optimization::BaCameraOptions{false, false}};
+
+    // We use these dummy values here so they are internally consistent in the problem construction.
+    uint64_t const timestamp_ns{0};
+    AssetId const camera_id{0};
+
+    Frames const frames{{timestamp_ns, {se3_co_w}}};
+    optimization::BaObservation const target_observation{camera_id, timestamp_ns, bundle};
+
+    return {{{camera_id, camera}}, frames, {target_observation}};
+}
+
 // WARN(Jack): When doing the Dlt22 you are restricted to being in unit image coordinates, therefore we hard code
 // the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction
 // and are instead required to pass in the bounds and the Dlt23 functions returns a K matrix in the scale of the
@@ -45,25 +63,21 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     // TODO(Jack): This is a heuristic slightly hacky looking way to check if the above DLT algorithm evaluation failed.
     //  If we had a better theoretical algorithmic understanding of what causes these failures and how we can detect
     //  them then we could improve this code here.
-    Array6d const aa_co_w{geometry::Log(tf_co_w)};
-    if (not aa_co_w.allFinite()) {
+    Array6d const se3_co_w{geometry::Log(tf_co_w)};
+    if (not se3_co_w.allFinite()) {
         return PnpErrorCode::NotAllFinite;  // LCOV_EXCL_LINE
     }
 
-    // Dummy value only for tracking and consistency of data access below
-    uint64_t const timestamp_ns{0};
+    CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
+    optimization::BaProblem const ba_problem{BuildPnpBaProblem(camera_info, bundle, pinhole_intrinsics, se3_co_w)};
 
-    // Format data into required format for the nonlinear optimization
-    CameraInfo const sensor{CameraModel::Pinhole, bounds.value()};
-    CameraMeasurements const target{{timestamp_ns, {bundle, {}}}};
-    OptimizationState const initial_state{CameraState{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
-
-    // TODO(Jack): Should we configure the bundle adjustment here to use all the threads? I think the pnp is normally
-    // such a small problem that one thread is all we need.
-    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, target, initial_state, 1, true)};
-    if (diagnostics.solver_summary.termination_type == ceres::CONVERGENCE) {
-        return PoseWithCost{geometry::Exp(optimized_state.frames.at(timestamp_ns).pose),
-                            diagnostics.solver_summary.final_cost};
+    auto const result{optimization::BundleAdjustment(ba_problem, 1)};
+    if (result.ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {
+        // TODO(Jack): This is a hacky way to get the frame, but the point of the pnp problem construction is that there
+        // is only ever one single frame, so we can get away with this here. Does it look nice? No. Is it easy to
+        // maintain and understand? No. Some future soul will save us.
+        return PoseWithCost{geometry::Exp(result.frames.begin()->second.pose),
+                            result.ceres_state.solver_summary.final_cost};
     } else {
         return PnpErrorCode::FailedRefinement;  // LCOV_EXCL_LINE
     }
