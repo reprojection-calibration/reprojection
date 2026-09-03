@@ -46,23 +46,26 @@ Hash BundleAdjustment::CacheKey() const {
 
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
-    OptimizationState const initial_state{intrinsics_, aligned_camera_poses};
 
-    auto const [optimized_state,
-                debug]{optimization::BundleAdjustment(camera_info_, targets_, initial_state, num_threads_)};
+    optimization::BaProblem const problem{
+        optimization::BuildSingleCamBaProblem(camera_info_, {intrinsics_}, aligned_camera_poses, targets_)};
+    auto const [frames, ceres_state, cameras]{optimization::BundleAdjustment(problem, num_threads_)};
+
+    // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
+    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.intrinsics};
 
     log->info(
         "{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {{'intial_cost': "
         "{:.2f}, 'final_cost': {:.2f}, 'num_successful_steps': {}, 'num_unsuccessful_steps': {}}}}}}}",
-        step_id.value, camera_id_.value, ToString(camera_info_.camera_model), optimized_state.camera_state.intrinsics,
-        debug.solver_summary.initial_cost, debug.solver_summary.final_cost, debug.solver_summary.num_successful_steps,
-        debug.solver_summary.num_unsuccessful_steps);
+        step_id.value, camera_id_.value, ToString(camera_info_.camera_model), intrinsics,
+        ceres_state.solver_summary.initial_cost, ceres_state.solver_summary.final_cost,
+        ceres_state.solver_summary.num_successful_steps, ceres_state.solver_summary.num_unsuccessful_steps);
 
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, optimized_state.frames);
-    database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, optimized_state.camera_state);
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, frames);
+    database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, {intrinsics});
 
     // Diagnostic output
-    ReprojectionErrors const errors{optimization::ReprojectionError(camera_info_, targets_, optimized_state)};
+    ReprojectionErrors const errors{optimization::ReprojectionError(camera_info_, targets_, {{intrinsics}, frames})};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
 }
 
