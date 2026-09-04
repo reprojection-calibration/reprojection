@@ -18,6 +18,7 @@ BaResult BundleAdjustment(BaProblem const& ba_problem, int const num_threads) {
 
     for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
         // TODO(Jack): We need to protect against bad .at() access here!
+        // cppcheck-suppress ignoredReturnValue
         auto const& [camera_info, _, camera_options]{ba_problem.cameras.at(camera_id)};
         auto& camera_state{result.camera_states.at(camera_id)};
         auto& frame{result.frames.at(timestamp_ns)};
