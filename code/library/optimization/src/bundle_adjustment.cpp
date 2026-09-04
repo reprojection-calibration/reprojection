@@ -9,6 +9,9 @@ namespace reprojection::optimization {
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
 BaResult BundleAdjustment(BaProblem const& ba_problem, int const num_threads) {
+    // TODO(Jack): It is a little messy how we construct the result from just part of the problem, and then iterate over
+    // the problem below but ignore the part that we copied to the result and use the result instead. Really not the end
+    // of the world but I feel like I am missing the plotline.
     BaResult result{ba_problem};
     result.ceres_state.solver_options.num_threads = num_threads;
     ceres::Problem ceres_problem{result.ceres_state.problem_options};
@@ -31,10 +34,6 @@ BaResult BundleAdjustment(BaProblem const& ba_problem, int const num_threads) {
         if (not camera_options.optimize_intrinsic) {
             ceres_problem.SetParameterBlockConstant(camera_state.intrinsic.intrinsics.data());
         }
-        // ENABLE WHEN WE INTRODUCE THE RIG!
-        // if (not camera_options.optimize_extrinsic) {
-        //    ceres_problem.SetParameterBlockConstant(camera_state.se3_co_rig.data());
-        //}
     }
 
     ceres::Solve(result.ceres_state.solver_options, &ceres_problem, &result.ceres_state.solver_summary);
@@ -72,7 +71,6 @@ ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurement
 
     return residuals;
 }  // LCOV_EXCL_LINE
-
 
 // LOCATION!
 BaProblem BuildSingleCamBaProblem(CameraInfo const& camera_info, CameraState const& intrinsics, Frames const& frames,
