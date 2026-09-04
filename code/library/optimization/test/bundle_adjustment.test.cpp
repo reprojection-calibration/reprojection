@@ -9,6 +9,8 @@
 
 using namespace reprojection;
 
+using Ba = optimization::BundleAdjustment;
+
 // Test with perfect data - means inputs will be exact same as outputs. Technically this test might miss something
 // because the optimization will likely not even execute once because the error is zero. For a real test look at the
 // next case where we add some noisy so it actually does some iterations.
@@ -19,9 +21,8 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 60, 1, false)};
 
     // Construct problem and solve
-    optimization::BundleAdjustment::Problem const problem{
-        optimization::BuildSingleCamBaProblem(camera_info, gt_intrinsics, gt_frames, targets)};
-    auto const [frames, ceres_state, cameras]{optimization::BundleAdjust(problem, 1)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, gt_frames, targets)};
+    auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     // Assert
@@ -40,8 +41,8 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     // is we end up using single camera ba in a lot of places!
     auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
     EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.value, 1e-6)) << "Result:\n"
-                                                                     << intrinsics.transpose() << "\nexpected result:\n"
-                                                                     << gt_intrinsics.value.transpose();
+                                                                << intrinsics.transpose() << "\nexpected result:\n"
+                                                                << gt_intrinsics.value.transpose();
 }
 
 // Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
@@ -58,9 +59,8 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
         frame_i.value = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
-    optimization::BundleAdjustment::Problem const problem{
-        optimization::BuildSingleCamBaProblem(camera_info, gt_intrinsics, noisy_frames, targets)};
-    auto const [frames, ceres_state, cameras]{optimization::BundleAdjust(problem, 1)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, noisy_frames, targets)};
+    auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
 
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
@@ -87,8 +87,8 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     // TODO(Jack): See comment in test above about the need for a better asset id independent single camera workflow.
     auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
     EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.value, 1e-6)) << "Result:\n"
-                                                                     << intrinsics.transpose() << "\nexpected result:\n"
-                                                                     << gt_intrinsics.value.transpose();
+                                                                << intrinsics.transpose() << "\nexpected result:\n"
+                                                                << gt_intrinsics.value.transpose();
 }
 
 TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {

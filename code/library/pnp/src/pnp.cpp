@@ -17,7 +17,7 @@ Ba::Problem BuildPnpBaProblem(CameraInfo const& camera_info, Bundle const& bundl
                               Array6d const& se3_co_w) {
     // For the pnp problem we set the extrinsic to identity (i.e. rig==co) and do not optimize the extrinsic or
     // intrinsic. We are only optimizing the world pose.
-    Ba::Camera const camera{camera_info, Ba::CameraStateXxx{{pinhole_intrinsics}, Array6d::Zero()},
+    Ba::Camera const camera{camera_info, Ba::CameraState{{pinhole_intrinsics}, Array6d::Zero()},
                             Ba::CameraOptions{false, false}};
 
     // We use these dummy values here so they are internally consistent in the problem construction.
@@ -73,7 +73,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
     Ba::Problem const ba_problem{BuildPnpBaProblem(camera_info, bundle, pinhole_intrinsics, se3_co_w)};
 
-    auto const result{optimization::BundleAdjust(ba_problem, 1)};
+    auto const result{optimization::BundleAdjustment::Solve(ba_problem, 1)};
     if (result.ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {
         // TODO(Jack): This is a hacky way to get the frame, but the point of the pnp problem construction is that there
         // is only ever one single frame, so we can get away with this here. Does it look nice? No. Is it easy to

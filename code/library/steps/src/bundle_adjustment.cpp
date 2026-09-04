@@ -17,6 +17,8 @@ auto const log{logging::Get("steps")};
 
 }
 
+using Ba = optimization::BundleAdjustment;
+
 BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets_id, int const num_threads,
                                    StepId const camera_info_id, StepId const intrinsic_id, StepId const camera_poses_id,
                                    SqlitePtr const db)
@@ -47,9 +49,8 @@ Hash BundleAdjustment::CacheKey() const {
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
 
-    optimization::BundleAdjustment::Problem const problem{
-        optimization::BuildSingleCamBaProblem(camera_info_, {intrinsics_}, aligned_camera_poses, targets_)};
-    auto const [frames, ceres_state, cameras]{optimization::BundleAdjust(problem, num_threads_)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, {intrinsics_}, aligned_camera_poses, targets_)};
+    auto const [frames, ceres_state, cameras]{Ba::Solve(problem, num_threads_)};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
     // NOTE(Jack): The database asset ids start at 1 (sql standard) so an id of zero here is somehow a sentinel value
