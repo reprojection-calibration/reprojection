@@ -50,7 +50,7 @@ void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     // Diagnostic output
     // TODO(Jack): No optimization is happening here but we still need to specify 'optimize_intrinsic'.
     Ba::Problem const ba_problem{
-        Ba::SingleCamProblem(camera_info_, intrinsic_, camera_poses, targets_, false, camera_id_)};
+        Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, camera_poses, false, camera_id_)};
 
     auto const errors{optimization::EvaluateResiduals(ba_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);

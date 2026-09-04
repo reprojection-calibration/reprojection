@@ -68,22 +68,25 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 
     uint64_t const timestamp_ns{0};
 
-    CameraInfo const sensor{CameraModel::Pinhole, tu::image_bounds};
+    CameraInfo const camera_info{CameraModel::Pinhole, tu::image_bounds};
     TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
-    auto const camera_state{Intrinsic{tu::pinhole_intrinsics}};
+    Intrinsic const intrinsic{tu::pinhole_intrinsics};
+    AssetId const camera_id{1};
 
     // The control points for a spline with one segment that is simply the constant identity transform.
     spline::Matrix2NK<double> control_points;
     control_points << Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero();
     spline::Se3Spline const spline{control_points, {0, 1}};
 
-    auto const [poses, errors]{optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
-    EXPECT_EQ(std::size(poses), 1);
-    EXPECT_TRUE(poses.at(timestamp_ns).value.isApproxToConstant(0));
-    EXPECT_EQ(std::size(errors), 1);
+    auto const ba_problem{optimization::SingleSplineCamProblem(camera_info, intrinsic, targets, spline, camera_id)};
+    auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 
-    auto const& error{errors[0]};
-    EXPECT_EQ(error.camera_id, AssetId{0});
+    EXPECT_EQ(std::size(ba_problem.rig_poses), 1);
+    EXPECT_TRUE(ba_problem.rig_poses.at(timestamp_ns).value.isApproxToConstant(0));
+
+    EXPECT_EQ(std::size(residuals), 1);
+    auto const& error{residuals[0]};
+    EXPECT_EQ(error.camera_id, camera_id);
     EXPECT_EQ(error.timestamp_ns, timestamp_ns);
     EXPECT_TRUE(error.value.isApprox(gt_residuals)) << "Result:\n"
                                                     << error.value.transpose() << "\nexpected result:\n"

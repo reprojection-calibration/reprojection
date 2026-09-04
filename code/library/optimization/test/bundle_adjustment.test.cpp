@@ -22,7 +22,7 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     AssetId const camera_id{1};
 
     // Construct problem and solve
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, gt_frames, targets, true, camera_id)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, targets, gt_frames, true, camera_id)};
     auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
@@ -58,7 +58,7 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
         frame_i.value = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, noisy_frames, targets, true, camera_id)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, targets, noisy_frames, true, camera_id)};
     auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
 
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
@@ -119,7 +119,7 @@ TEST(OptimizationBundleAdjustment, TestReprojectionError) {
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, intrinsic, frames, targets, false, camera_id)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, intrinsic, targets, frames, false, camera_id)};
 
     auto const residuals{optimization::EvaluateResiduals(problem)};
     EXPECT_EQ(std::size(residuals), 1);

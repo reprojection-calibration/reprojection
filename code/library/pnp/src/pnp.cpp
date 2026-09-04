@@ -54,7 +54,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
 
     CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
     Ba::Problem const ba_problem{
-        optimization::BundleAdjustment::SingleCamProblem(camera_info, pinhole_intrinsic, se3_co_w, bundle, false)};
+        optimization::BundleAdjustment::SingleCamProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
 
     auto const result{optimization::BundleAdjustment::Solve(ba_problem, 1)};
     if (result.ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {

@@ -8,9 +8,12 @@
 #include "cost_functions/rigid_body_angular_velocity.hpp"
 #include "cost_functions/rigid_body_linear_acceleration.hpp"
 #include "cost_functions/spline_energy.hpp"
+#include "optimization/bundle_adjustment.hpp"
 #include "spline/spline_initialization.hpp"
 
 namespace reprojection::optimization {
+
+using Ba = BundleAdjustment;
 
 std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     ImuSamples const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
@@ -95,55 +98,38 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     return {optimized_spline, optimized_extrinsic, optimized_gravity};
 }
 
-std::pair<Frames, std::vector<ReprojectionError>> ReprojectionErrorSpline(CameraInfo const& sensor,
-                                                                          TargetSamples const& targets,
-                                                                          Intrinsic const& intrinsic,
-                                                                          spline::Se3Spline const& spline_w_co) {
-    // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
-    //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
-    //  key constraint. Do we need new tables for this?
-    Frames tf_co_w;
-    std::vector<ReprojectionError> residuals;
-    residuals.reserve(std::size(targets));
+// TODO(Jack): This is not actually used for the spline optimization problem creation! I think this naming is
+// misleading. This is only used to create a problem so we can use the same reprojection error functions from the basic
+// bundle adjustment implementation.
+// NOTE(Jack): It was my original intention to calculate the reprojection errors for the spline problem using the actual
+// spline cost functions. This would mean what we observe is really what happens internally in the optimization. But to
+// do that there was a lot of complicated code duplication. Therefore instead we calculate the poses here using the
+// non-optimization path spline code (under the hood it is the same implementation)m and then pass that to the regular
+// reprojection error code from the classic bundle adjustment. We might deceive ourselves one day with this, but it
+// avoids a lot of really hard to maintain code duplication.
+Ba::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                   TargetSamples const& targets, spline::Se3Spline const& spline_w_co,
+                                   AssetId const camera_id) {
+    // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
+    Ba::Camera const camera{camera_info, Ba::CameraState{intrinsic, Array6d::Zero()}, Ba::CameraOptions{false, false}};
 
-    for (auto const timestamp_ns : targets | std::views::keys) {
-        auto const tf_w_co_i{spline_w_co.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
-        if (not tf_w_co_i) {
-            continue;  // LCOV_EXCL_LINE
-        }
-        Array6d const tf_co_w_i{geometry::InverseTransform<double>(*tf_w_co_i)};
-        tf_co_w.insert({timestamp_ns, {tf_co_w_i}});
-
-        auto const normalized_position{spline_w_co.GetTimeHandler().SplinePosition(timestamp_ns, spline_w_co.Size())};
-        if (not normalized_position.has_value()) {
-            continue;  // LCOV_EXCL_LINE
-        }
-        auto const [u_i, i]{normalized_position.value()};
-
-        std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(intrinsic.value.data());
-        for (int j{0}; j < 4; ++j) {
-            parameter_blocks.push_back(spline_w_co.ControlPoints().col(i + j).data());
+    // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
+    // to just check once when we actually construct the problem?
+    Frames frames;
+    std::vector<Ba::Observation> observations;
+    for (auto const& [timestamp_ns, target] : targets) {
+        if (auto const tf_w_co{spline_w_co.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)}) {
+            // Inverse the spline pose to put it into the classic bundle adjustment friendly convention of transforming
+            // points from the world into the camera.
+            Array6d const tf_co_w{geometry::InverseTransform<double>(*tf_w_co)};
+            frames.insert({timestamp_ns, {tf_co_w}});
         }
 
-        auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
-        Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
-        for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
-            ceres::CostFunction const* const cost_function{
-                cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j), u_i,
-                                       spline_w_co.GetTimeHandler().delta_t_ns_)};
-
-            cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(j).data(), nullptr);
-
-            // TODO(Jack): Should we use a smart pointer instead?
-            delete cost_function;
-        }
-
-        residuals.push_back({AssetId{0}, timestamp_ns, residuals_i});
+        observations.push_back({camera_id, timestamp_ns, target.bundle});
     }
 
-    return {tf_co_w, residuals};
-}  // LCOV_EXCL_LINE
+    return {{{camera_id, camera}}, frames, observations};
+}
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
                            spline::Se3Spline const& spline_w_co) {

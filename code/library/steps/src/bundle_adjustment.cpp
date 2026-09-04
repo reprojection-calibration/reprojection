@@ -50,7 +50,7 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
 
     Ba::Problem const problem{
-        Ba::SingleCamProblem(camera_info_, {intrinsic_}, aligned_camera_poses, targets_, true, camera_id_)};
+        Ba::SingleCamProblem(camera_info_, {intrinsic_}, targets_, aligned_camera_poses, true, camera_id_)};
     auto const [frames, ceres_state, cameras]{Ba::Solve(problem, num_threads_)};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
