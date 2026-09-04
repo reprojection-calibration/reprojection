@@ -6,21 +6,24 @@
 namespace reprojection {
 
 struct Position {
-    Vector3d position;
+    Vector3d value;
 };
-using PositionMeasurement = StampedData<Position>;
-using PositionMeasurements = StampedMap<PositionMeasurement>;
+
+using PositionSample = StampedData<Position>;
+using PositionSamples = StampedMap<PositionSample>;
 
 struct Velocity {
-    Vector3d velocity;
+    Vector3d value;
 };
-using VelocityMeasurement = StampedData<Velocity>;
-using VelocityMeasurements = StampedMap<VelocityMeasurement>;
+
+using VelocitySample = StampedData<Velocity>;
+using VelocitySamples = StampedMap<VelocitySample>;
 
 struct Acceleration {
-    Vector3d acceleration;
+    Vector3d value;
 };
-using AccelerationMeasurement = StampedData<Acceleration>;
-using AccelerationMeasurements = StampedMap<AccelerationMeasurement>;
+
+using AccelerationSample = StampedData<Acceleration>;
+using AccelerationSamples = StampedMap<AccelerationSample>;
 
 }  // namespace reprojection

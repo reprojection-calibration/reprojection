@@ -25,14 +25,14 @@
 
 namespace reprojection::spline {
 
-std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
+std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionSamples const& measurements,
                                                           size_t const num_segments);
 
 // TODO(Jack): Do we really need this static class for the initialization? Maybe it helped organize things when we also
 // had the omega smoothing logic here, but now that is part of the public interface this struct does not help us
 // organize anything much better.
 struct CubicBSplineC3Init {
-    static std::pair<MatrixXd, VectorXd> BuildAb(PositionMeasurements const& positions, size_t const num_segments,
+    static std::pair<MatrixXd, VectorXd> BuildAb(PositionSamples const& positions, size_t const num_segments,
                                                  TimeHandler const& time_handler);
 
     /**

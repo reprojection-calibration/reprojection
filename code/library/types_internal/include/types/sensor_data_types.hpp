@@ -13,7 +13,7 @@ using TargetSamples = StampedMap<TargetSample>;
 using ImuSample = StampedData<ImuData>;
 using ImuSamples = StampedMap<ImuSample>;
 
-// TODO(Jack): We should consider making the absent of an image explicit with std::optional.
+// TODO(Jack): We should consider making the absence of an image explicit with std::optional.
 using ImageSample = StampedData<ImageBuffer>;
 using ImageSamples = StampedMap<ImageSample>;
 

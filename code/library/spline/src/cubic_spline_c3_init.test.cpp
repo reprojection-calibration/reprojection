@@ -18,9 +18,9 @@ using namespace reprojection::spline;
 // implementation of CubicBSplineC3Init::BuildAb to understand this better. This is the reason why we get -2.0344...
 // instead if just -2 for example in the tests below.
 TEST(SplineSplineInitialization, TestInitializeSpline) {
-    PositionMeasurements const measurements{{5000, {{0, 0, 0}}},  //
-                                            {5100, {{1, 1, 1}}},
-                                            {5200, {{2, 2, 2}}}};
+    PositionSamples const measurements{{5000, {{0, 0, 0}}},  //
+                                       {5100, {{1, 1, 1}}},
+                                       {5200, {{2, 2, 2}}}};
 
     CubicBSplineC3 const one_segment_spline{spline::InitializeC3SplineState(measurements, 1)};
     EXPECT_EQ(one_segment_spline.DeltaTNs(), 200);
@@ -40,9 +40,9 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
 }
 
 TEST(SplineSplineInitialization, TestBuildAb) {
-    PositionMeasurements const measurements{{5000, {{0, 0, 0}}},  //
-                                            {5100, {{1, 1, 1}}},
-                                            {5200, {{2, 2, 2}}}};
+    PositionSamples const measurements{{5000, {{0, 0, 0}}},  //
+                                       {5100, {{1, 1, 1}}},
+                                       {5200, {{2, 2, 2}}}};
 
     int const num_segments{2};
     TimeHandler const time_handler{5000, 100};
