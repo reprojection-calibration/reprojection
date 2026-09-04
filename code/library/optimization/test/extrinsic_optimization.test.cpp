@@ -78,6 +78,7 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
     control_points << Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero();
     spline::Se3Spline const spline{control_points, {0, 1}};
 
+    // Build the problem and calculate the residuals!
     auto const ba_problem{optimization::SingleSplineCamProblem(camera_info, intrinsic, targets, spline, camera_id)};
     auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 

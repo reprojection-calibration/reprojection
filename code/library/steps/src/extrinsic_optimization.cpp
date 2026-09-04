@@ -93,12 +93,12 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
     database::GravityInsert(db.get(), step_id, optimized_gravity);
 
     // Diagnostic output - reprojection errors
-    // USE THE UPDATE OPTIMZIED VACLUES NOT THE RAW INPUT!
-    auto const [spline_poses, reprojection_errors]{
-        optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsic_, optimized_spline)};
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
-    // TODO NEED TO ADD THE ASSET ID!
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, reprojection_errors);
+    auto const ba_problem{
+        optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, optimized_spline, camera_id_)};
+    auto const residuals{optimization::EvaluateResiduals(ba_problem)};
+
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig_poses);
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, residuals);
 
     // Diagnostic output - imu errors
     ImuErrors const imu_errors{
