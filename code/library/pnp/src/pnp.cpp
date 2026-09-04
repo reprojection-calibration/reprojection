@@ -12,24 +12,6 @@ namespace reprojection::pnp {
 
 using Ba = optimization::BundleAdjustment;
 
-// SPLIT AND MOVE FILES!!!
-Ba::Problem BuildPnpBaProblem(CameraInfo const& camera_info, Bundle const& bundle, Array3d const& pinhole_intrinsics,
-                              Array6d const& se3_co_w) {
-    // For the pnp problem we set the extrinsic to identity (i.e. rig==co) and do not optimize the extrinsic or
-    // intrinsic. We are only optimizing the world pose.
-    Ba::Camera const camera{camera_info, Ba::CameraState{{pinhole_intrinsics}, Array6d::Zero()},
-                            Ba::CameraOptions{false, false}};
-
-    // We use these dummy values here so they are internally consistent in the problem construction.
-    uint64_t const timestamp_ns{0};
-    AssetId const camera_id{0};
-
-    Frames const frames{{timestamp_ns, {se3_co_w}}};
-    Ba::Observation const target_observation{camera_id, timestamp_ns, bundle};
-
-    return {{{camera_id, camera}}, frames, {target_observation}};
-}
-
 // WARN(Jack): When doing the Dlt22 you are restricted to being in unit image coordinates, therefore we hard code
 // the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction
 // and are instead required to pass in the bounds and the Dlt23 functions returns a K matrix in the scale of the
@@ -40,7 +22,7 @@ Ba::Problem BuildPnpBaProblem(CameraInfo const& camera_info, Bundle const& bundl
 //  instead?
 PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     Isometry3d tf_co_w;
-    Array3d pinhole_intrinsics;
+    Intrinsic pinhole_intrinsic;
 
     if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         auto const dlt_result{Dlt22(bundle)};
@@ -49,15 +31,15 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
         }
 
         tf_co_w = *dlt_result;
-        pinhole_intrinsics = {1, 0, 0};      // Equivalent to K = I_3x3
-        bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension bounds
+        pinhole_intrinsic.value = Array3d{1, 0, 0};  // Equivalent to K = I_3x3
+        bounds = ImageBounds{-1, 1, -1, 1};          // Unit image dimension bounds
     } else if (bundle.pixels.rows() > 6 and bounds) {
         auto const dlt_result{Dlt23(bundle)};
         if (not dlt_result) {
             return PnpErrorCode::FailedDlt;
         }
 
-        std::tie(tf_co_w, pinhole_intrinsics) = *dlt_result;
+        std::tie(tf_co_w, pinhole_intrinsic.value) = *dlt_result;
     } else {
         return PnpErrorCode::InvalidDlt;
     }
@@ -65,13 +47,14 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     // TODO(Jack): This is a heuristic slightly hacky looking way to check if the above DLT algorithm evaluation failed.
     //  If we had a better theoretical algorithmic understanding of what causes these failures and how we can detect
     //  them then we could improve this code here.
-    Array6d const se3_co_w{geometry::Log(tf_co_w)};
-    if (not se3_co_w.allFinite()) {
+    Pose const se3_co_w{geometry::Log(tf_co_w)};
+    if (not se3_co_w.value.allFinite()) {
         return PnpErrorCode::NotAllFinite;  // LCOV_EXCL_LINE
     }
 
     CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
-    Ba::Problem const ba_problem{BuildPnpBaProblem(camera_info, bundle, pinhole_intrinsics, se3_co_w)};
+    Ba::Problem const ba_problem{
+        optimization::BundleAdjustment::SingleCamProblem(camera_info, pinhole_intrinsic, se3_co_w, bundle, false)};
 
     auto const result{optimization::BundleAdjustment::Solve(ba_problem, 1)};
     if (result.ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {

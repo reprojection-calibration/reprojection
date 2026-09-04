@@ -96,7 +96,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
 }
 
 std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor, TargetSamples const& targets,
-                                                              Intrinsic const& camera_state,
+                                                              Intrinsic const& intrinsic,
                                                               spline::Se3Spline const& spline_w_co) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
     //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
@@ -118,7 +118,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
         auto const [u_i, i]{normalized_position.value()};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(camera_state.value.data());
+        parameter_blocks.push_back(intrinsic.value.data());
         for (int j{0}; j < 4; ++j) {
             parameter_blocks.push_back(spline_w_co.ControlPoints().col(i + j).data());
         }

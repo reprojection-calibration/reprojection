@@ -50,8 +50,12 @@ struct BundleAdjustment {
 
     static Result Solve(Problem const& ba_problem, int num_threads);
 
-    static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsics, Frames const& frames,
+    static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Frames const& frames,
                                     TargetSamples const& targets, bool optimize_intrinsic = true);
+
+    // Single frame override - used for pnp nonlinear refinement of the DLT estimate.
+    static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Pose const& pose,
+                                    Bundle const& bundle, bool optimize_intrinsic = false);
 };
 
 ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples const& targets,

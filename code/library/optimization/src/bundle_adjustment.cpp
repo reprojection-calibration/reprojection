@@ -46,14 +46,14 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
     return result;
 }
 
-BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsics,
+BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                              Frames const& frames, TargetSamples const& targets,
                                                              bool const optimize_intrinsic) {
-    // For a single camera problem we do not consider the rig-co extrinsics and set those to constant identity.
-    Camera const camera{camera_info, CameraState{intrinsics, Array6d::Zero()},
-                        CameraOptions{optimize_intrinsic, false}};
+    // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
+    Camera const camera{camera_info, CameraState{intrinsic, Array6d::Zero()}, CameraOptions{optimize_intrinsic, false}};
 
     // Dummy id used for internal problem consistency.
+    // NOTE(Jack): Sqlite database ids start at 1, so this should never conflict with a real database asset id. I think!
     AssetId const camera_id{0};
 
     // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
@@ -64,6 +64,16 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
     }
 
     return {{{camera_id, camera}}, frames, observations};
+}
+
+BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                                             Pose const& pose, Bundle const& bundle,
+                                                             bool optimize_intrinsic) {
+    uint64_t constexpr timestamp_ns{0};
+    ExtractedTarget const target{ExtractedTarget{bundle, {}}};
+
+    return SingleCamProblem(camera_info, intrinsic, Frames{{timestamp_ns, pose}}, TargetSamples{{timestamp_ns, target}},
+                            optimize_intrinsic);
 }
 
 // TODO(Jack): Update to use new BA problem representation
