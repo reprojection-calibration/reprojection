@@ -23,7 +23,7 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
         // Protect against the case of a missing rig pose - it can be that we have a observation for a frame where the
         // rig pose initialization was unsuccessful and we need to protect against that.
         if (not result.frames.contains(timestamp_ns)) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
         auto& frame{result.frames.at(timestamp_ns)};
 
