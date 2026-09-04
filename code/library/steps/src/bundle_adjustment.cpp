@@ -69,6 +69,8 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, {intrinsics});
 
     // Diagnostic output
+    // NOTE(Jack): Here we update the problem with the optimized rig poses and camera states before we evaluate the
+    // reprojection error.
     Ba::Problem const optimized_problem{problem, rig_poses, cameras};
     auto const errors{optimization::EvaluateResiduals(optimized_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
