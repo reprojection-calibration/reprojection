@@ -80,9 +80,8 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
                             optimize_intrinsic);
 }
 
-// TODO(Jack): Update to use new BA problem representation
-std::vector<BundleAdjustment::Error> ReprojectionError(BundleAdjustment::Problem const& ba_problem) {
-    std::vector<BundleAdjustment::Error> errors;
+std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {
+    std::vector<ReprojectionError> errors;
     errors.reserve(std::size(ba_problem.observations));
 
     for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
@@ -113,7 +112,7 @@ std::vector<BundleAdjustment::Error> ReprojectionError(BundleAdjustment::Problem
             delete cost_function;
         }
 
-        errors.push_back(BundleAdjustment::Error{camera_id, timestamp_ns, residuals_i});
+        errors.push_back({camera_id, timestamp_ns, residuals_i});
     }
 
     return errors;

@@ -103,7 +103,7 @@ void IntrinsicInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraModel 
 std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
-                              ReprojectionErrors const& data);
+                              std::vector<ReprojectionError> const& data);
 
 void SplineInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler);
 

@@ -521,7 +521,7 @@ std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* const db, StepId 
 }  // LCOV_EXCL_LINE
 
 void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
-                              AssetId const asset_id, ReprojectionErrors const& data) {
+                              std::vector<ReprojectionError> const& errors) {
     auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, reprojection_error] = data_i;
 

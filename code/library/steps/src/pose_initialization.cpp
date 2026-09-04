@@ -15,6 +15,8 @@ auto const log{logging::Get("steps")};
 
 }
 
+using Ba = optimization::BundleAdjustment;
+
 PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, StepId camera_info_id, StepId intrinsic_id,
                                        SqlitePtr const db)
     : camera_id_{camera_id},
@@ -46,8 +48,9 @@ void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, camera_poses);
 
     // Diagnostic output
-    OptimizationState const state{intrinsic_, camera_poses};
-    ReprojectionErrors const errors{optimization::ReprojectionError(camera_info_, targets_, state)};
+
+    Ba::Problem const ba_problem{Ba::SingleCamProblem(camera_info_, intrinsic_, camera_poses, targets_)};
+    auto const errors{optimization::ReprojectionError(ba_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
 }
 
