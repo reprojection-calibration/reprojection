@@ -521,9 +521,9 @@ std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* const db, StepId 
 }  // LCOV_EXCL_LINE
 
 void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
-                              AssetId const asset_id, ReprojectionErrors const& data) {
-    auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
-        auto const& [timestamp_ns, reprojection_error] = data_i;
+                              std::vector<ReprojectionError> const& data) {
+    auto const binder{[step_id, source_step_id](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [asset_id, timestamp_ns, reprojection_error] = data_i;
 
         protobuf_serialization::ArrayX2dProto const serialized{Serialize(reprojection_error)};
         std::string buffer;

@@ -346,10 +346,10 @@ TEST_F(CalibrationDatabaseFixture, TestReprojectionErrors) {
     InsertImage(image_loading_id, asset_id, timestamp_ns);
     StepId const targets_id{CreateExtractedTargets(image_loading_id, asset_id, timestamp_ns)};
 
-    ReprojectionErrors const data{{timestamp_ns, ArrayX2d{}}};
+    ReprojectionError const data{asset_id, timestamp_ns, ArrayX2d{}};
 
     StepId const reprojection_error_id{database::GetOrCreateStep(db_.get(), StepType::PoseInit, "").first};
-    EXPECT_NO_THROW(database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, targets_id, asset_id, data));
+    EXPECT_NO_THROW(database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, targets_id, {data}));
 }
 
 TEST(DatabaseCalibrationDatbase, TestSplineInfo) {

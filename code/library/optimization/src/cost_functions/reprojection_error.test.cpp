@@ -25,43 +25,48 @@ TEST(OptimizationCostFunctions, TestReprojectionErrorCreate) {
     Array2d const pixel{360, 240};
     Array3d const point{0, 0, 600};
 
-    int const num_parameter_blocks{2};  // intrinsics and pose
-    int const pose_size{6};             // se3 pose
+    int const num_parameter_blocks{3};  // intrinsic, rig extrinsic, and world pose
+    int const se3_size{6};              // se3 pose (rig extrinsic and world pose)
     int const residual_size{2};         // pixel size: {u, v}
 
     ceres::CostFunction* cost_function{
         Create(CameraModel::DoubleSphere, testing_utilities::image_bounds, pixel, point)};
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::DoubleSphere::Size);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], se3_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[2], se3_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
     cost_function = Create(CameraModel::Eucm, testing_utilities::image_bounds, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::Eucm::Size);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], se3_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[2], se3_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
     cost_function = Create(CameraModel::Pinhole, testing_utilities::image_bounds, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::Pinhole::Size);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], se3_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[2], se3_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
     cost_function = Create(CameraModel::PinholeRadtan4, testing_utilities::image_bounds, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::PinholeRadtan4::Size);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], se3_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[2], se3_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 
     cost_function = Create(CameraModel::Ucm, testing_utilities::image_bounds, pixel, point);
     EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), num_parameter_blocks);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], projection_functions::Ucm::Size);
-    EXPECT_EQ(cost_function->parameter_block_sizes()[1], pose_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], se3_size);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[2], se3_size);
     EXPECT_EQ(cost_function->num_residuals(), residual_size);
     delete cost_function;
 }
@@ -77,13 +82,15 @@ TEST(OptimizationCostFunctions, TestReprojectionErrorCreate) {
 TEST(OptimizationCostFunctions, TestReprojectionError_T) {
     using PinholeCostFunction = ReprojectionError_T<projection_functions::Pinhole>;
     Array2d const pixel{testing_utilities::pinhole_intrinsics[1], testing_utilities::pinhole_intrinsics[2]};
-    Array6d const pose{0, 0, 0, 0, 0, 0};
+    Array6d const se3_co_rig{Array6d::Zero()};
+    Array6d const se3_rig_w{Array6d::Zero()};
     Array2d residual{-1, -1};
 
     // Point on front of the camera that will project to the center of the image.
     Array3d const point{0, 0, 10};
     PinholeCostFunction const cost_function{pixel, point, testing_utilities::image_bounds};
-    bool success{cost_function(testing_utilities::pinhole_intrinsics.data(), pose.data(), residual.data())};
+    bool success{cost_function(testing_utilities::pinhole_intrinsics.data(), se3_co_rig.data(), se3_rig_w.data(),
+                               residual.data())};
     EXPECT_TRUE(success);
     EXPECT_FLOAT_EQ(residual[0], 0.0);
     EXPECT_FLOAT_EQ(residual[1], 0.0);
@@ -91,7 +98,8 @@ TEST(OptimizationCostFunctions, TestReprojectionError_T) {
     // A point behind the camera will return true but with a residual of 256 - see note in projection cost functions.
     Array3d const point_behind{0, 0, -10};
     PinholeCostFunction const cost_function_behind{pixel, point_behind, testing_utilities::image_bounds};
-    success = cost_function_behind(testing_utilities::pinhole_intrinsics.data(), pose.data(), residual.data());
+    success = cost_function_behind(testing_utilities::pinhole_intrinsics.data(), se3_co_rig.data(), se3_rig_w.data(),
+                                   residual.data());
     EXPECT_TRUE(success);
     EXPECT_FLOAT_EQ(residual[0], 256);
     EXPECT_FLOAT_EQ(residual[1], 256);
@@ -107,9 +115,10 @@ TEST(OptimizationCostFunctions, TestReprojectionError_TCreate) {
     ceres::CostFunction const* const cost_function{
         ReprojectionError_T<projection_functions::Pinhole>::Create(pixel, point, testing_utilities::image_bounds)};
 
-    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 3);
     EXPECT_EQ(cost_function->parameter_block_sizes()[0], 3);  // pinhole intrinsics
-    EXPECT_EQ(cost_function->parameter_block_sizes()[1], 6);  // camera pose
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], 6);  // rig extrinsic
+    EXPECT_EQ(cost_function->parameter_block_sizes()[2], 6);  // world pose
     EXPECT_EQ(cost_function->num_residuals(), 2);
     delete cost_function;
 }

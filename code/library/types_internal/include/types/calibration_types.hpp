@@ -54,8 +54,11 @@ struct OptimizationState {
     Frames frames;
 };
 
-using ReprojectionError = StampedData<ArrayX2d>;
-using ReprojectionErrors = StampedMap<ReprojectionError>;
+struct ReprojectionError {
+    AssetId camera_id;
+    uint64_t timestamp_ns;
+    ArrayX2d value;
+};
 
 struct ImuErrorState {
     Vector3d delta_angular_velocity;

@@ -32,8 +32,12 @@ class ReprojectionErrorSpline_T {
         Array6<T> const tf_w_co{spline::Se3Spline::EvaluatePose<T>(P, u_i_, delta_t_ns_)};
         Array6<T> const tf_co_w{geometry::InverseTransform(tf_w_co)};
 
+        // TODO(Jack): We need to refactor the spline code to also use the rig semantics. For now we just hardcode the
+        // extrinsic to identity.
+        Array6<T> const identity{Array6<T>::Zero()};
+
         return ReprojectionError_T<T_Model>(pixel_, point_w_, bounds_)
-            .template operator()<T>(intrinsics_ptr, tf_co_w.data(), residual_ptr);
+            .template operator()<T>(intrinsics_ptr, identity.data(), tf_co_w.data(), residual_ptr);
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point_w, ImageBounds const& bounds,

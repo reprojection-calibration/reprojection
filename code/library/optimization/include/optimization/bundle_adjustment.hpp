@@ -26,10 +26,22 @@ struct BundleAdjustment {
     struct Observation {
         AssetId camera_id;
         uint64_t timestamp_ns;
-        Bundle bundle;
+        Bundle value;
     };
 
     struct Problem {
+        Problem(std::map<AssetId, Camera> const& _cameras, Frames const& _rig_poses,
+                std::vector<Observation> const& _observations)
+            : cameras{_cameras}, rig_poses{_rig_poses}, observations{_observations} {}
+
+        // Update a problem with the optimized parts.
+        Problem(Problem const& problem, Frames const& _rig_poses, std::map<AssetId, CameraState> const& camera_states)
+            : cameras{problem.cameras}, rig_poses{_rig_poses}, observations{problem.observations} {
+            for (auto& [camera_id, camera] : cameras) {
+                camera.state = camera_states.at(camera_id);
+            }
+        }
+
         std::map<AssetId, Camera> cameras;
         Frames rig_poses;
         std::vector<Observation> observations;
@@ -50,15 +62,15 @@ struct BundleAdjustment {
 
     static Result Solve(Problem const& ba_problem, int num_threads);
 
-    static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Frames const& frames,
-                                    TargetSamples const& targets, bool optimize_intrinsic = true);
+    static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                    TargetSamples const& targets, Frames const& frames, bool optimize_intrinsic,
+                                    AssetId camera_id);
 
     // Single frame override - used for pnp nonlinear refinement of the DLT estimate.
-    static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Pose const& pose,
-                                    Bundle const& bundle, bool optimize_intrinsic = false);
+    static Problem SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Bundle const& bundle,
+                                      Pose const& pose, bool optimize_intrinsic);
 };
 
-ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples const& targets,
-                                     OptimizationState const& state);
+std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& problem);
 
 }  // namespace  reprojection::optimization

@@ -49,13 +49,14 @@ Hash BundleAdjustment::CacheKey() const {
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, {intrinsic_}, aligned_camera_poses, targets_)};
-    auto const [frames, ceres_state, cameras]{Ba::Solve(problem, num_threads_)};
+    Ba::Problem const problem{
+        Ba::SingleCamProblem(camera_info_, {intrinsic_}, targets_, aligned_camera_poses, true, camera_id_)};
+    auto const [rig_poses, ceres_state, cameras]{Ba::Solve(problem, num_threads_)};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
     // NOTE(Jack): The database asset ids start at 1 (sql standard) so an id of zero here is somehow a sentinel value
     // that is unique and "protected".
-    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
+    auto const intrinsics{cameras.at(camera_id_).intrinsic.value};
 
     log->info(
         "{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {{'intial_cost': "
@@ -64,12 +65,15 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
         ceres_state.solver_summary.initial_cost, ceres_state.solver_summary.final_cost,
         ceres_state.solver_summary.num_successful_steps, ceres_state.solver_summary.num_unsuccessful_steps);
 
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, frames);
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, rig_poses);
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, {intrinsics});
 
     // Diagnostic output
-    ReprojectionErrors const errors{optimization::ReprojectionError(camera_info_, targets_, {{intrinsics}, frames})};
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
+    // NOTE(Jack): Here we update the problem with the optimized rig poses and camera states before we evaluate the
+    // reprojection error.
+    Ba::Problem const optimized_problem{problem, rig_poses, cameras};
+    auto const errors{optimization::EvaluateResiduals(optimized_problem)};
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
 }
 
 }  // namespace reprojection::steps

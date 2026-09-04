@@ -1,5 +1,6 @@
 #pragma once
 
+#include "optimization/bundle_adjustment.hpp"
 #include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/ceres_types.hpp"
@@ -13,9 +14,9 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic,
     int num_threads);
 
-std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor, TargetSamples const& targets,
-                                                              Intrinsic const& intrinsic,
-                                                              spline::Se3Spline const& spline_w_co);
+BundleAdjustment::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                                 TargetSamples const& targets, spline::Se3Spline const& spline_w_co,
+                                                 AssetId camera_id);
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
                            spline::Se3Spline const& spline_w_co);

@@ -67,11 +67,11 @@ void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) con
     database::ControlPointsInsert(db.get(), step_id, camera_id_, spline.ControlPoints());
     database::SplineInfoInsert(db.get(), step_id, camera_id_, spline.GetTimeHandler());
 
-    // Diagnostic output
-    auto const [spline_poses,
-                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsic_, spline)};
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
+    auto const ba_problem{optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, spline, camera_id_)};
+    auto const residuals{optimization::EvaluateResiduals(ba_problem)};
+
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig_poses);
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, residuals);
 }
 
 }  // namespace reprojection::steps

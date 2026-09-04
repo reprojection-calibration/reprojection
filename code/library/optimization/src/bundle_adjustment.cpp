@@ -33,11 +33,15 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
                 cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j))};
 
             ceres_problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
-                                           camera_state.intrinsic.value.data(), rig_pose.value.data());
+                                           camera_state.intrinsic.value.data(), camera_state.extrinsic.data(),
+                                           rig_pose.value.data());
         }
 
         if (not camera_options.optimize_intrinsic) {
             ceres_problem.SetParameterBlockConstant(camera_state.intrinsic.value.data());
+        }
+        if (not camera_options.optimize_extrinsic) {
+            ceres_problem.SetParameterBlockConstant(camera_state.extrinsic.data());
         }
     }
 
@@ -47,17 +51,13 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                                             Frames const& frames, TargetSamples const& targets,
-                                                             bool const optimize_intrinsic) {
-    // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
+                                                             TargetSamples const& targets, Frames const& frames,
+                                                             bool const optimize_intrinsic, AssetId const camera_id) {
+    // NOTE(Jack): For a single camera problems we do not consider the rig-cam extrinsic. Therefore we set it to
+    // identity (i.e. Array6d::Zero()) and set optimize_extrinsic to false. This is essentially a central characteristic
+    // of the single cam problem.
     Camera const camera{camera_info, CameraState{intrinsic, Array6d::Zero()}, CameraOptions{optimize_intrinsic, false}};
 
-    // Dummy id used for internal problem consistency.
-    // NOTE(Jack): Sqlite database ids start at 1, so this should never conflict with a real database asset id. I think!
-    AssetId const camera_id{0};
-
-    // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
-    // to just check once when we actually construct the problem?
     std::vector<Observation> observations;
     for (auto const& [timestamp_ns, target] : targets) {
         observations.push_back({camera_id, timestamp_ns, target.bundle});
@@ -66,35 +66,43 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
     return {{{camera_id, camera}}, frames, observations};
 }
 
-BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                                             Pose const& pose, Bundle const& bundle,
-                                                             bool optimize_intrinsic) {
+BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
+                                                               Intrinsic const& intrinsic, Bundle const& bundle,
+                                                               Pose const& pose, bool const optimize_intrinsic) {
     uint64_t constexpr timestamp_ns{0};
-    ExtractedTarget const target{ExtractedTarget{bundle, {}}};
+    ExtractedTarget const target{bundle, {}};
+    AssetId const camera_id{0};
 
-    return SingleCamProblem(camera_info, intrinsic, Frames{{timestamp_ns, pose}}, TargetSamples{{timestamp_ns, target}},
-                            optimize_intrinsic);
+    return SingleCamProblem(camera_info, intrinsic, TargetSamples{{timestamp_ns, target}}, Frames{{timestamp_ns, pose}},
+                            optimize_intrinsic, camera_id);
 }
 
-// TODO(Jack): Update to use new BA problem representation
-ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples const& targets,
-                                     OptimizationState const& state) {
-    ReprojectionErrors residuals;
-    for (auto const& [timestamp_ns, frame_i] : state.frames) {
-        auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
+std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {
+    std::vector<ReprojectionError> errors;
+    errors.reserve(std::size(ba_problem.observations));
+
+    for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
+        // cppcheck-suppress ignoredReturnValue
+        auto const& [camera_info, camera_state, camera_options]{ba_problem.cameras.at(camera_id)};
+        if (not ba_problem.rig_poses.contains(timestamp_ns)) {
+            continue;
+        }
+        auto const& rig_pose{ba_problem.rig_poses.at(timestamp_ns)};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(state.camera_state.value.data());
-        parameter_blocks.push_back(frame_i.value.data());
+        parameter_blocks.push_back(camera_state.intrinsic.value.data());
+        parameter_blocks.push_back(camera_state.extrinsic.data());
+        parameter_blocks.push_back(rig_pose.value.data());
+
+        auto const& [pixels, points]{bundle};
 
         // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass
         // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two
         // column elements! That is the reason why we have to specifically specify RowMajor here!
         Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
-
         for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
             ceres::CostFunction const* const cost_function{
-                cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(i), points.row(i))};
+                cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(i), points.row(i))};
 
             cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(i).data(), nullptr);
 
@@ -102,10 +110,10 @@ ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples con
             delete cost_function;
         }
 
-        residuals.insert({timestamp_ns, residuals_i});
+        errors.push_back({camera_id, timestamp_ns, residuals_i});
     }
 
-    return residuals;
-}  // LCOV_EXCL_LINE
+    return errors;
+}
 
 }  // namespace  reprojection::optimization

@@ -102,8 +102,8 @@ void IntrinsicInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraModel 
 // TODO(Jack): Should this also return the camera_model? We have that information.
 std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
-                              ReprojectionErrors const& data);
+void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id,
+                              std::vector<ReprojectionError> const& data);
 
 void SplineInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler);
 
