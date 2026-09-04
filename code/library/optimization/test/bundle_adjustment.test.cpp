@@ -91,7 +91,7 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
                                                                 << gt_intrinsics.value.transpose();
 }
 
-TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {
+TEST(OptimizationBundleAdjustment, TestReprojectionError) {
     // NOTE(Jack): The real ground truth value for both the valid pixels here is actually the center of the image (i.e.
     // [360, 240])! But because we want to see that the reprojection error is actually the correct value we make the
     // "ground truth" pixels here have some error.
@@ -115,15 +115,21 @@ TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {
 
     uint64_t const timestamp_ns{0};  // Used to track the data frame in the maps
 
-    CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
+    CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
+    Intrinsic const intrinsic{testing_utilities::pinhole_intrinsics};
+    Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
-    OptimizationState const state{Intrinsic{testing_utilities::pinhole_intrinsics},
-                                  {{timestamp_ns, {Array6d::Zero()}}}};
 
-    ReprojectionErrors const residuals{optimization::ReprojectionError(sensor, targets, state)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, intrinsic, frames, targets)};
+
+    auto const residuals{optimization::ReprojectionError(problem)};
     EXPECT_EQ(std::size(residuals), 1);
-    EXPECT_TRUE(residuals.at(timestamp_ns).isApprox(gt_residuals))
-        << "Result:\n"
-        << residuals.at(timestamp_ns).transpose() << "\nexpected result:\n"
-        << gt_residuals.transpose();
+
+    // There is only one value so we hardcode index into the 0 spot. Does not scale but works for the test!
+    auto const residual{residuals[0]};
+    EXPECT_EQ(residual.camera_id, AssetId{0});
+    EXPECT_EQ(residual.timestamp_ns, timestamp_ns);
+    EXPECT_TRUE(residual.value.isApprox(gt_residuals)) << "Result:\n"
+                                                       << residual.value.transpose() << "\nexpected result:\n"
+                                                       << gt_residuals.transpose();
 }

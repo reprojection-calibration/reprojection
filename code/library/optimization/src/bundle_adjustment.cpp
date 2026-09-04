@@ -82,22 +82,30 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
 
 // TODO(Jack): Update to use new BA problem representation
 std::vector<BundleAdjustment::Error> ReprojectionError(BundleAdjustment::Problem const& ba_problem) {
-    ReprojectionErrors residuals;
-    for (auto const& [timestamp_ns, frame_i] : state.frames) {
-        auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
+    std::vector<BundleAdjustment::Error> errors;
+    errors.reserve(std::size(ba_problem.observations));
+
+    for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
+        auto const& [camera_info, camera_state, camera_options]{ba_problem.cameras.at(camera_id)};
+        if (not ba_problem.rig_poses.contains(timestamp_ns)) {
+            continue;
+        }
+        auto const& rig_pose{ba_problem.rig_poses.at(timestamp_ns)};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(state.camera_state.value.data());
-        parameter_blocks.push_back(frame_i.value.data());
+        parameter_blocks.push_back(camera_state.intrinsic.value.data());
+        parameter_blocks.push_back(camera_state.extrinsic.data());
+        parameter_blocks.push_back(rig_pose.value.data());
+
+        auto const& [pixels, points]{bundle};
 
         // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass
         // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two
         // column elements! That is the reason why we have to specifically specify RowMajor here!
         Eigen::Array<double, Eigen::Dynamic, 2, Eigen::RowMajor> residuals_i{pixels.rows(), 2};
-
         for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
             ceres::CostFunction const* const cost_function{
-                cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(i), points.row(i))};
+                cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(i), points.row(i))};
 
             cost_function->Evaluate(parameter_blocks.data(), residuals_i.row(i).data(), nullptr);
 
@@ -105,10 +113,10 @@ std::vector<BundleAdjustment::Error> ReprojectionError(BundleAdjustment::Problem
             delete cost_function;
         }
 
-        residuals.insert({timestamp_ns, residuals_i});
+        errors.push_back(BundleAdjustment::Error{camera_id, timestamp_ns, residuals_i});
     }
 
-    return residuals;
-}  // LCOV_EXCL_LINE
+    return errors;
+}
 
 }  // namespace  reprojection::optimization

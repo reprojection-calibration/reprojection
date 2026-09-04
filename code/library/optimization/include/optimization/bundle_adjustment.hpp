@@ -51,7 +51,7 @@ struct BundleAdjustment {
     struct Error {
         AssetId camera_id;
         uint64_t timestamp_ns;
-        ReprojectionError value;
+        ArrayX2d value;
     };
 
     static Result Solve(Problem const& ba_problem, int num_threads);
