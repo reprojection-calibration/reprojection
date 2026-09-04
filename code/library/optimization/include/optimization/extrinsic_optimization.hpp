@@ -13,9 +13,11 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic,
     int num_threads);
 
-std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor, TargetSamples const& targets,
-                                                              Intrinsic const& intrinsic,
-                                                              spline::Se3Spline const& spline_w_co);
+// RENMAE TO EvaluateResiduals
+std::pair<Frames, std::vector<ReprojectionError>> ReprojectionErrorSpline(CameraInfo const& sensor,
+                                                                          TargetSamples const& targets,
+                                                                          Intrinsic const& intrinsic,
+                                                                          spline::Se3Spline const& spline_w_co);
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
                            spline::Se3Spline const& spline_w_co);

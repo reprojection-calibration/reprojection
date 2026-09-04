@@ -71,7 +71,8 @@ void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) con
     auto const [spline_poses,
                 errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsic_, spline)};
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
+    // TODO WE NEED TO ADD THE ASSET ID TO THE ERRORS!
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
 }
 
 }  // namespace reprojection::steps

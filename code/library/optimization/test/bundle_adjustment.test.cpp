@@ -122,7 +122,7 @@ TEST(OptimizationBundleAdjustment, TestReprojectionError) {
 
     Ba::Problem const problem{Ba::SingleCamProblem(camera_info, intrinsic, frames, targets)};
 
-    auto const residuals{optimization::ReprojectionError(problem)};
+    auto const residuals{optimization::EvaluateResiduals(problem)};
     EXPECT_EQ(std::size(residuals), 1);
 
     // There is only one value so we hardcode index into the 0 spot. Does not scale but works for the test!

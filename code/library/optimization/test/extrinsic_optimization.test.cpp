@@ -81,10 +81,13 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
     EXPECT_EQ(std::size(poses), 1);
     EXPECT_TRUE(poses.at(timestamp_ns).value.isApproxToConstant(0));
     EXPECT_EQ(std::size(errors), 1);
-    EXPECT_TRUE(errors.at(timestamp_ns).isApprox(gt_residuals))
-        << "Result:\n"
-        << errors.at(timestamp_ns).transpose() << "\nexpected result:\n"
-        << gt_residuals.transpose();
+
+    auto const& error{errors[0]};
+    EXPECT_EQ(error.camera_id, AssetId{0});
+    EXPECT_EQ(error.timestamp_ns, timestamp_ns);
+    EXPECT_TRUE(error.value.isApprox(gt_residuals)) << "Result:\n"
+                                                    << error.value.transpose() << "\nexpected result:\n"
+                                                    << gt_residuals.transpose();
 }
 
 TEST(OptimizationExtrinsicOptimization, TestEvaluateImuError) {

@@ -68,8 +68,11 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, {intrinsics});
 
     // Diagnostic output
-    ReprojectionErrors const errors{optimization::ReprojectionError(camera_info_, targets_, {{intrinsics}, frames})};
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
+    // USE THE UPDATE OPTIMZIED VACLUES NOT THE RAW INPUT!
+    auto const errors{optimization::EvaluateResiduals(problem)};
+
+    // WE NEED TO ADD THE ASSET ID TO THE ERRORS!!!
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
 }
 
 }  // namespace reprojection::steps

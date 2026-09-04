@@ -95,14 +95,17 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     return {optimized_spline, optimized_extrinsic, optimized_gravity};
 }
 
-std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor, TargetSamples const& targets,
-                                                              Intrinsic const& intrinsic,
-                                                              spline::Se3Spline const& spline_w_co) {
+std::pair<Frames, std::vector<ReprojectionError>> ReprojectionErrorSpline(CameraInfo const& sensor,
+                                                                          TargetSamples const& targets,
+                                                                          Intrinsic const& intrinsic,
+                                                                          spline::Se3Spline const& spline_w_co) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
     //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
     //  key constraint. Do we need new tables for this?
     Frames tf_co_w;
-    ReprojectionErrors residuals;
+    std::vector<ReprojectionError> residuals;
+    residuals.reserve(std::size(targets));
+
     for (auto const timestamp_ns : targets | std::views::keys) {
         auto const tf_w_co_i{spline_w_co.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)};
         if (not tf_w_co_i) {
@@ -136,7 +139,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
             delete cost_function;
         }
 
-        residuals.insert({timestamp_ns, residuals_i});
+        residuals.push_back({AssetId{0}, timestamp_ns, residuals_i});
     }
 
     return {tf_co_w, residuals};

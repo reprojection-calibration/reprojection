@@ -96,7 +96,8 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
     auto const [spline_poses, reprojection_errors]{
         optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsic_, optimized_spline)};
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, reprojection_errors);
+    // TODO NEED TO ADD THE ASSET ID!
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, reprojection_errors);
 
     // Diagnostic output - imu errors
     ImuErrors const imu_errors{
