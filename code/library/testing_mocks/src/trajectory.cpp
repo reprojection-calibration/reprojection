@@ -5,8 +5,8 @@
 
 namespace reprojection::testing_mocks {
 
-std::pair<Frames, ImuSamples> Trajectory(double const duration_s, double const sample_rate_hz,
-                                              Vector3d const& origin_w, Vector3d const& target_w, double const radius) {
+std::pair<Frames, ImuSamples> Trajectory(double const duration_s, double const sample_rate_hz, Vector3d const& origin_w,
+                                         Vector3d const& target_w, double const radius) {
     auto const time_ns{SampleTimes(duration_s, sample_rate_hz)};
 
     // NOTE(Jack): We need to track the previous rotation to ensure that we make the smallest possible rotation in the

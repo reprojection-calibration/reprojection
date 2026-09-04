@@ -29,8 +29,8 @@ std::pair<ImuSamples, spline::Se3Spline> GenerateImuData(double const duration_s
 }
 
 std::pair<TargetSamples, Frames> GenerateMvgData(CameraInfo const& sensor, Intrinsic const& intrinsics,
-                                                      double const duration_s, double const sample_rate_hz,
-                                                      bool const flat) {
+                                                 double const duration_s, double const sample_rate_hz,
+                                                 bool const flat) {
     auto const [frames,
                 _]{Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 

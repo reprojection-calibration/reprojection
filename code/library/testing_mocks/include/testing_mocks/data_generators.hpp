@@ -6,13 +6,13 @@
 
 namespace reprojection::testing_mocks {
 
-std::pair<ImuSamples, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz);
+std::pair<ImuSamples, spline::Se3Spline> GenerateImuData(double duration_s, double sample_rate_hz);
 
 // MVG = "multiple view geometry"
 std::pair<TargetSamples, Frames> GenerateMvgData(CameraInfo const& sensor, Intrinsic const& intrinsics,
-                                                      double duration_s, double sample_rate_hz, bool const flat = true);
+                                                 double duration_s, double sample_rate_hz, bool flat = true);
 
 // TODO(Jack): Find a better place for this function.
-Isometry3d AddGaussianNoise(double const sigma_translation, double const sigma_rotation, Isometry3d pose);
+Isometry3d AddGaussianNoise(double sigma_translation, double sigma_rotation, Isometry3d pose);
 
 }  // namespace reprojection::testing_mocks

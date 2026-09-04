@@ -96,8 +96,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 // of the function is to unproject the pixels to 3d rays using a roughly initialized camera, then project these back to
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
-Frames PoseInitialization(CameraInfo const& camera_info, TargetSamples const& targets,
-                          Intrinsic const& intrinsic) {
+Frames PoseInitialization(CameraInfo const& camera_info, TargetSamples const& targets, Intrinsic const& intrinsic) {
     auto const camera{
         projection_functions::InitializeCamera(camera_info.camera_model, intrinsic.value, camera_info.bounds)};
 

@@ -95,8 +95,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     return {optimized_spline, optimized_extrinsic, optimized_gravity};
 }
 
-std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
-                                                              TargetSamples const& targets,
+std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor, TargetSamples const& targets,
                                                               Intrinsic const& camera_state,
                                                               spline::Se3Spline const& spline_w_co) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That

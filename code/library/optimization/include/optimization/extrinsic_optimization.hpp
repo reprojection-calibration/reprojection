@@ -11,10 +11,9 @@ namespace reprojection::optimization {
 std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     ImuSamples const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
     Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets,
-    Intrinsic const& intrinsics, int const num_threads);
+    Intrinsic const& intrinsics, int num_threads);
 
-std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
-                                                              TargetSamples const& targets,
+std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor, TargetSamples const& targets,
                                                               Intrinsic const& camera_state,
                                                               spline::Se3Spline const& spline_w_co);
 
