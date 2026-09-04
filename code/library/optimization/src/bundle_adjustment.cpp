@@ -33,11 +33,15 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
                 cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j))};
 
             ceres_problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
-                                           camera_state.intrinsic.value.data(), rig_pose.value.data());
+                                           camera_state.intrinsic.value.data(), camera_state.extrinsic.data(),
+                                           rig_pose.value.data());
         }
 
         if (not camera_options.optimize_intrinsic) {
             ceres_problem.SetParameterBlockConstant(camera_state.intrinsic.value.data());
+        }
+        if (not camera_options.optimize_extrinsic) {
+            ceres_problem.SetParameterBlockConstant(camera_state.extrinsic.data());
         }
     }
 
@@ -77,8 +81,7 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
 }
 
 // TODO(Jack): Update to use new BA problem representation
-ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples const& targets,
-                                     OptimizationState const& state) {
+std::vector<BundleAdjustment::Error> ReprojectionError(BundleAdjustment::Problem const& ba_problem) {
     ReprojectionErrors residuals;
     for (auto const& [timestamp_ns, frame_i] : state.frames) {
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};

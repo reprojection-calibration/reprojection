@@ -26,7 +26,7 @@ struct BundleAdjustment {
     struct Observation {
         AssetId camera_id;
         uint64_t timestamp_ns;
-        Bundle bundle;
+        Bundle value;
     };
 
     struct Problem {
@@ -48,6 +48,12 @@ struct BundleAdjustment {
         std::map<AssetId, CameraState> camera_states;
     };
 
+    struct Error {
+        AssetId camera_id;
+        uint64_t timestamp_ns;
+        ReprojectionError value;
+    };
+
     static Result Solve(Problem const& ba_problem, int num_threads);
 
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Frames const& frames,
@@ -58,7 +64,6 @@ struct BundleAdjustment {
                                     Bundle const& bundle, bool optimize_intrinsic = false);
 };
 
-ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples const& targets,
-                                     OptimizationState const& state);
+std::vector<BundleAdjustment::Error> ReprojectionError(BundleAdjustment::Problem const& problem);
 
 }  // namespace  reprojection::optimization

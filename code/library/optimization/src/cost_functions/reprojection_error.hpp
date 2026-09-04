@@ -45,9 +45,14 @@ template <typename T_Model>
 class ReprojectionError_T {
    public:
     template <typename T>
-    bool operator()(T const* const intrinsics_ptr, T const* const tf_co_w_ptr, T* const residual_ptr) const {
-        Eigen::Map<Eigen::Vector<T, 6> const> tf_co_w(tf_co_w_ptr);
-        Vector3<T> const point_co{TransformPoint<T>(tf_co_w, point_w_.cast<T>())};
+    bool operator()(T const* const intrinsics_ptr, T const* const se3_co_rig_ptr, T const* const se3_rig_w_ptr,
+                    T* const residual_ptr) const {
+        // World to rig.
+        Eigen::Map<Eigen::Vector<T, 6> const> se3_rig_w(se3_rig_w_ptr);
+        Vector3<T> const point_rig{TransformPoint<T>(se3_rig_w, point_w_.cast<T>())};
+        // Rig to camera optical.
+        Eigen::Map<Eigen::Vector<T, 6> const> se3_co_rig(se3_co_rig_ptr);
+        Vector3<T> const point_co{TransformPoint<T>(se3_co_rig, point_rig)};
 
         Eigen::Map<Eigen::Array<T, T_Model::Size, 1> const> intrinsics(intrinsics_ptr);
         auto const pixel{T_Model::template Project<T>(intrinsics, bounds_, point_co)};
@@ -103,7 +108,7 @@ class ReprojectionError_T {
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point_w, ImageBounds const& bounds) {
-        return new ceres::AutoDiffCostFunction<ReprojectionError_T, 2, T_Model::Size, 6>(
+        return new ceres::AutoDiffCostFunction<ReprojectionError_T, 2, T_Model::Size, 6, 6>(
             new ReprojectionError_T(pixel, point_w, bounds));
     }
 
