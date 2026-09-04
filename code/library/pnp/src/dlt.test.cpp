@@ -28,8 +28,8 @@ TEST(PnpDlt, TestDlt23) {
                                                   << gt_tf_co_w.matrix();
         EXPECT_FLOAT_EQ(tf_co_w.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
         EXPECT_TRUE(K_vec.isApprox(intrinsics.value)) << "Result:\n"
-                                                           << K_vec.transpose() << "\nexpected result:\n"
-                                                           << intrinsics.value.transpose();
+                                                      << K_vec.transpose() << "\nexpected result:\n"
+                                                      << intrinsics.value.transpose();
     }
 }
 

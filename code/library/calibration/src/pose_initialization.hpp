@@ -7,6 +7,6 @@ namespace reprojection::calibration {
 
 // TODO(Jack): Test using the mvg data generator
 std::optional<Pose> EstimatePoseViaPinholePnP(std::unique_ptr<projection_functions::Camera> const& camera,
-                                                    Bundle const& target, ImageBounds const& bounds);
+                                              Bundle const& target, ImageBounds const& bounds);
 
 }  // namespace reprojection::calibration

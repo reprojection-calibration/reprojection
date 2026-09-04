@@ -11,7 +11,7 @@ using Camera = projection_functions::Camera;
 using PinholeCamera = projection_functions::PinholeCamera;
 
 std::optional<Pose> EstimatePoseViaPinholePnP(std::unique_ptr<Camera> const& camera, Bundle const& bundle,
-                                                    ImageBounds const& bounds) {
+                                              ImageBounds const& bounds) {
     // Unproject to rays (pseudo 3D - no depth information) using the camera model provided by the user.
     auto const [rays, mask_unproject]{camera->Unproject(bundle.pixels)};
 

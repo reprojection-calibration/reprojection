@@ -34,8 +34,7 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
     auto const [frames,
                 _]{Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 
-    auto const camera{
-        projection_functions::InitializeCamera(sensor.camera_model, intrinsics.value, sensor.bounds)};
+    auto const camera{projection_functions::InitializeCamera(sensor.camera_model, intrinsics.value, sensor.bounds)};
     auto const [points, indices]{MvgHelpers::BuildTargetPoints(flat)};
 
     CameraMeasurements targets;

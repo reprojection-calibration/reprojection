@@ -35,8 +35,8 @@ TEST(CalibrationInitializationMethods, TestPoseInitialization) {
     for (auto const& [timestamp_ns, frame_i] : linear_solution) {
         Array6d const gt_aa_co_w{gt_frames.at(timestamp_ns).value};
         EXPECT_TRUE(frame_i.value.isApprox(gt_aa_co_w, 1e-12)) << "Linear pose initialization result:\n"
-                                                              << frame_i.value.transpose() << "\nGround truth:\n"
-                                                              << gt_aa_co_w.transpose();
+                                                               << frame_i.value.transpose() << "\nGround truth:\n"
+                                                               << gt_aa_co_w.transpose();
     }
 }
 
