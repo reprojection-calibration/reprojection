@@ -25,7 +25,7 @@ class BundleAdjustmentFixture : public StepTestFixture {
         targets_id_ = InsertExtractedTargets(targets);
 
         intrinsics_id_ =
-            InsertIntrinsics(CameraModel::DoubleSphere, CameraState{testing_utilities::double_sphere_intrinsics});
+            InsertIntrinsics(CameraModel::DoubleSphere, Intrinsic{testing_utilities::double_sphere_intrinsics});
 
         // TODO(Jack): Do these poses need to be inverted? Not that correctness really matters here but we should keep
         // it in mind that something might be flipped around here.
@@ -47,7 +47,7 @@ TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStepRunner) {
 
     auto const result2{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result2.has_value());
-    EXPECT_TRUE(result2->intrinsics.isApprox(testing_utilities::double_sphere_intrinsics));
+    EXPECT_TRUE(result2->value.isApprox(testing_utilities::double_sphere_intrinsics));
 }
 
 TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStep) {
@@ -64,5 +64,5 @@ TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStep) {
 
     auto const result2{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result2.has_value());
-    EXPECT_TRUE(result2->intrinsics.isApprox(testing_utilities::double_sphere_intrinsics));
+    EXPECT_TRUE(result2->value.isApprox(testing_utilities::double_sphere_intrinsics));
 }

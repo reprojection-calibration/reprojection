@@ -46,13 +46,8 @@ struct TargetInfo {
     bool asymmetric;
 };
 
-// TODO(Jack): The CameraState is a type that I regret using. It was designed with the intent that one day in
-// the future it would contain the rest of the camera state (ex. extrinsics (?)). But that has not happened yet
-// and instead we are left here everytime forced to initialize the struct with the array which seems useless and
-// verbose every time we do it. Maybe we start using other fields here soon, or maybe we should eliminate this type all
-// together.
-struct CameraState {
-    ArrayXd intrinsics;
+struct Intrinsic {
+    ArrayXd value;
 };
 
 // TODO(Jack): If it turns out we never add anything else to the frame state than we can just remove the struct and use
@@ -64,7 +59,7 @@ using Frame = StampedData<FrameState>;
 using Frames = StampedMap<Frame>;
 
 struct OptimizationState {
-    CameraState camera_state;
+    Intrinsic camera_state;
     Frames frames;
 };
 

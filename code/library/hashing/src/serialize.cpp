@@ -34,11 +34,11 @@ std::string Serialize(CameraMeasurements const& data) {
 
 std::string Serialize(CameraModel const data) { return ToString(data); }
 
-std::string Serialize(CameraState const& data) {
+std::string Serialize(Intrinsic const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
-    oss << Serialize(data.intrinsics) << "|";
+    oss << Serialize(data.value) << "|";
 
     return oss.str();
 }

@@ -54,7 +54,7 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
     // NOTE(Jack): The database asset ids start at 1 (sql standard) so an id of zero here is somehow a sentinel value
     // that is unique and "protected".
-    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.intrinsics};
+    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
 
     log->info(
         "{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {{'intial_cost': "

@@ -28,14 +28,14 @@ std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const durat
     return {imu_data, spline_w_b};
 }
 
-std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,
+std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, Intrinsic const& intrinsics,
                                                       double const duration_s, double const sample_rate_hz,
                                                       bool const flat) {
     auto const [frames,
                 _]{Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 
     auto const camera{
-        projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
+        projection_functions::InitializeCamera(sensor.camera_model, intrinsics.value, sensor.bounds)};
     auto const [points, indices]{MvgHelpers::BuildTargetPoints(flat)};
 
     CameraMeasurements targets;

@@ -23,7 +23,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel camera_model, double hei
                                             CameraMeasurements const& targets, int num_threads);
 
 Frames PoseInitialization(CameraInfo const& camera_info, CameraMeasurements const& targets,
-                          CameraState const& intrinsics);
+                          Intrinsic const& intrinsics);
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
                                                                                ImuMeasurements const& imu_data,

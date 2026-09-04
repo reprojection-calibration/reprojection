@@ -95,9 +95,9 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
 Frames PoseInitialization(CameraInfo const& camera_info, CameraMeasurements const& targets,
-                          CameraState const& intrinsics) {
+                          Intrinsic const& intrinsics) {
     auto const camera{
-        projection_functions::InitializeCamera(camera_info.camera_model, intrinsics.intrinsics, camera_info.bounds)};
+        projection_functions::InitializeCamera(camera_info.camera_model, intrinsics.value, camera_info.bounds)};
 
     Frames frames;
     for (auto const& [timestamp_ns, target_i] : targets) {

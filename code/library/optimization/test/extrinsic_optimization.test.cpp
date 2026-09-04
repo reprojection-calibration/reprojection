@@ -20,7 +20,7 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     CameraInfo const camera_info{CameraModel::Pinhole, tu::image_bounds};
 
     auto const [targets, poses_co_w]{
-        testing_mocks::GenerateMvgData(camera_info, CameraState{tu::pinhole_intrinsics}, duration_s, 10)};
+        testing_mocks::GenerateMvgData(camera_info, Intrinsic{tu::pinhole_intrinsics}, duration_s, 10)};
     auto const [imu_data, _]{testing_mocks::GenerateImuData(duration_s, 20)};
 
     Frames poses_w_co;
@@ -70,7 +70,7 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 
     CameraInfo const sensor{CameraModel::Pinhole, tu::image_bounds};
     CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
-    auto const camera_state{CameraState{tu::pinhole_intrinsics}};
+    auto const camera_state{Intrinsic{tu::pinhole_intrinsics}};
 
     // The control points for a spline with one segment that is simply the constant identity transform.
     spline::Matrix2NK<double> control_points;

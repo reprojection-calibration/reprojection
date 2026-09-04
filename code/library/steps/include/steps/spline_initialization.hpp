@@ -27,7 +27,7 @@ struct SplineInitialization {
     StepId targets_id_;
     CameraMeasurements targets_;
     CameraInfo camera_info_;
-    CameraState intrinsics_;
+    Intrinsic intrinsics_;
 };
 
 }  // namespace reprojection::steps

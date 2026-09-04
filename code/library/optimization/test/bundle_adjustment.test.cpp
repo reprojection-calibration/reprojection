@@ -15,7 +15,7 @@ using namespace reprojection;
 TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     // Generate the data
     CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
-    CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
+    Intrinsic const gt_intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 60, 1, false)};
 
     // Construct problem and solve
@@ -38,17 +38,17 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     // TODO(Jack): This is a super hacky way to recover the value! What if we change the asset id used internally one
     // day! We need to make a single camera result or something like that, or centralize this code in a helper function
     // is we end up using single camera ba in a lot of places!
-    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.intrinsics};
-    EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.intrinsics, 1e-6)) << "Result:\n"
+    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
+    EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.value, 1e-6)) << "Result:\n"
                                                                      << intrinsics.transpose() << "\nexpected result:\n"
-                                                                     << gt_intrinsics.intrinsics.transpose();
+                                                                     << gt_intrinsics.value.transpose();
 }
 
 // Given a noisy initial pose but perfect bundle (i.e. no noise in the pixels or points), we then get perfect poses
 // and intrinsic back.
 TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
-    CameraState const gt_intrinsics{testing_utilities::pinhole_intrinsics};
+    Intrinsic const gt_intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 60, 1, false)};
 
     // Add gaussian noise to the initial poses
@@ -85,10 +85,10 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     }
 
     // TODO(Jack): See comment in test above about the need for a better asset id independent single camera workflow.
-    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.intrinsics};
-    EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.intrinsics, 1e-6)) << "Result:\n"
+    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
+    EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.value, 1e-6)) << "Result:\n"
                                                                      << intrinsics.transpose() << "\nexpected result:\n"
-                                                                     << gt_intrinsics.intrinsics.transpose();
+                                                                     << gt_intrinsics.value.transpose();
 }
 
 TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {
@@ -117,7 +117,7 @@ TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {
 
     CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
     CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
-    OptimizationState const state{CameraState{testing_utilities::pinhole_intrinsics},
+    OptimizationState const state{Intrinsic{testing_utilities::pinhole_intrinsics},
                                   {{timestamp_ns, {Array6d::Zero()}}}};
 
     ReprojectionErrors const residuals{optimization::ReprojectionError(sensor, targets, state)};

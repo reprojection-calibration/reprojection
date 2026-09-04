@@ -14,7 +14,7 @@ BundleAdjustment::Result BundleAdjust(BundleAdjustment::Problem const& ba_proble
 ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
                                      OptimizationState const& state);
 
-BundleAdjustment::Problem BuildSingleCamBaProblem(CameraInfo const& camera_info, CameraState const& intrinsics,
+BundleAdjustment::Problem BuildSingleCamBaProblem(CameraInfo const& camera_info, Intrinsic const& intrinsics,
                                                   Frames const& frames, CameraMeasurements const& targets,
                                                   bool optimize_intrinsic = true);
 

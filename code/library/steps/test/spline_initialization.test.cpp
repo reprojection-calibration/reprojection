@@ -30,7 +30,7 @@ class SplineInitFixture : public StepTestFixture {
     StepId targets_id_;
     // cppcheck-suppress unusedStructMember
     StepId intrinsics_id_{
-        InsertIntrinsics(CameraModel::DoubleSphere, CameraState{testing_utilities::double_sphere_intrinsics})};
+        InsertIntrinsics(CameraModel::DoubleSphere, Intrinsic{testing_utilities::double_sphere_intrinsics})};
 };
 
 TEST_F(SplineInitFixture, TestSplineInitStepRunner) {

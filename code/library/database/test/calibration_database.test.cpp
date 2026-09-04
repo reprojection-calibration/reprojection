@@ -268,13 +268,13 @@ TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
     auto const step{database::GetOrCreateStep(db.get(), StepType::IntrinsicInit, "")};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
 
-    CameraState const intrinsic{Array3d{1, 2, 3}};
+    Intrinsic const intrinsic{Array3d{1, 2, 3}};
 
     EXPECT_NO_THROW(database::IntrinsicInsert(db.get(), step.first, asset_id, CameraModel::Pinhole, intrinsic));
 
     auto result{database::IntrinsicSelect(db.get(), step.first, asset_id)};
     ASSERT_TRUE(result.has_value());
-    EXPECT_TRUE(result->intrinsics.isApprox(intrinsic.intrinsics));
+    EXPECT_TRUE(result->value.isApprox(intrinsic.value));
 
     // Check error message.
     result = database::IntrinsicSelect(db.get(), step.first, AssetId{-1});

@@ -45,7 +45,7 @@ void IntrinsicInitialization::Execute(StepId const step_id, SqlitePtr const db) 
     log->info("{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}}}}}", step_id.value,
               camera_id_.value, ToString(camera_info_.camera_model), *intrinsics);
 
-    database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, CameraState{*intrinsics});
+    database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, Intrinsic{*intrinsics});
 }
 
 }  // namespace reprojection::steps

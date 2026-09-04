@@ -98,10 +98,10 @@ ImuMeasurements ImuDataSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 // requirement). We need to think of a better name/concept I think.
 void ImuErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id, ImuErrors const& data);
 
-void IntrinsicInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraModel camera_model, CameraState const& data);
+void IntrinsicInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraModel camera_model, Intrinsic const& data);
 
 // TODO(Jack): Should this also return the camera_model? We have that information.
-std::expected<CameraState, std::string> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
                               ReprojectionErrors const& data);

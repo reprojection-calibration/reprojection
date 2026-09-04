@@ -9,7 +9,7 @@ namespace reprojection::optimization {
 
 struct BundleAdjustment {
     struct CameraStateXxx {
-        CameraState intrinsic;
+        Intrinsic intrinsic;
         Array6d se3_co_rig;
     };
 

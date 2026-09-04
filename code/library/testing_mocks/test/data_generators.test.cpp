@@ -19,7 +19,7 @@ TEST(TestingMocksImuDataGenerator, TestGenerateImuData) {
 TEST(TestingMocksMvgGenerator, TestGenerateMvgData) {
     CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets, poses]{
-        testing_mocks::GenerateMvgData(camera_info, CameraState{testing_utilities::pinhole_intrinsics}, 60, 1, true)};
+        testing_mocks::GenerateMvgData(camera_info, Intrinsic{testing_utilities::pinhole_intrinsics}, 60, 1, true)};
 
     EXPECT_EQ(std::size(targets), 56);
     for (auto const& [_, target_i] : targets) {

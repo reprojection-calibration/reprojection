@@ -30,7 +30,7 @@ TEST(HashingSerialize, TestSerializeCameraMeasurements) {
 }
 
 TEST(HashingSerialize, TestSerializeCameraState) {
-    CameraState const camera_state{testing_utilities::pinhole_intrinsics};
+    Intrinsic const camera_state{testing_utilities::pinhole_intrinsics};
 
     std::string const result{hashing::Serialize(camera_state)};
     std::string const gt_result{"600.000;360.000;240.000;|"};

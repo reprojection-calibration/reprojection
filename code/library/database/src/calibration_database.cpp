@@ -483,19 +483,19 @@ void ImuErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId
 }
 
 void IntrinsicInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, CameraModel const camera_model,
-                     CameraState const& data) {
+                     Intrinsic const& data) {
     auto const binder{[step_id, asset_id, camera_model, data](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
         Bind(stmt, 3, ToString(camera_model));
-        Bind(stmt, 4, ToToml(camera_model, data.intrinsics));
+        Bind(stmt, 4, ToToml(camera_model, data.value));
     }};
 
     ExecuteStatement(sql_statements::intrinsics_insert, binder, db);
 }
 
-std::expected<CameraState, std::string> IntrinsicSelect(sqlite3* const db, StepId step_id, AssetId asset_id) {
-    std::optional<CameraState> intrinsic{std::nullopt};
+std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* const db, StepId step_id, AssetId asset_id) {
+    std::optional<Intrinsic> intrinsic{std::nullopt};
 
     ExecuteQuery(
         db, sql_statements::intrinsics_select,
@@ -507,7 +507,7 @@ std::expected<CameraState, std::string> IntrinsicSelect(sqlite3* const db, StepI
             CameraModel const camera_model{
                 ToCameraModel(std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0))))};
 
-            CameraState const result{
+            Intrinsic const result{
                 FromToml(camera_model, std::string(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 1))))};
             intrinsic = result;
         });

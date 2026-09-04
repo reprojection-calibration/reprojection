@@ -17,7 +17,7 @@ std::string Serialize(CameraMeasurements const& data);
 
 std::string Serialize(CameraModel const data);
 
-std::string Serialize(CameraState const& data);
+std::string Serialize(Intrinsic const& data);
 
 // TODO(Jack): Test!
 std::string Serialize(EncodedImages const& data);

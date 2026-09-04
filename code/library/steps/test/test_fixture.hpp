@@ -20,7 +20,7 @@ class StepTestFixture : public ::testing::Test {
         return step_id;
     }
 
-    StepId InsertIntrinsics(CameraModel const model, CameraState const& intrinsics) {
+    StepId InsertIntrinsics(CameraModel const model, Intrinsic const& intrinsics) {
         auto const step_id{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "").first};
         database::IntrinsicInsert(db_.get(), step_id, camera_id_, model, intrinsics);
 

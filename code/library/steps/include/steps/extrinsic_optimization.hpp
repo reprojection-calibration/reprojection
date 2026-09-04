@@ -29,7 +29,7 @@ struct ExtrinsicOptimization {
     ImuMeasurements imu_data_;
     int num_threads_;
     CameraInfo camera_info_;
-    CameraState intrinsics_;
+    Intrinsic intrinsics_;
     std::unique_ptr<spline::Se3Spline> spline_;
     // TODO(Jack): Does it make sense to combine extrinsic and gravity into one type?
     // TODO(Jack): Should we name this to reflect its the initial guess?

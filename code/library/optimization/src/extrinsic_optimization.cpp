@@ -15,7 +15,7 @@ namespace reprojection::optimization {
 std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
     Vector3d const& initial_gravity, CameraInfo const& sensor, CameraMeasurements const& targets,
-    CameraState const& intrinsics, int const num_threads) {
+    Intrinsic const& intrinsics, int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY};
     ceres_state.solver_options.num_threads = num_threads;
@@ -54,7 +54,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     }
 
     // Reprojection residuals
-    CameraState intrinsics_x{intrinsics};
+    Intrinsic intrinsics_x{intrinsics};
     for (auto const timestamp_ns : targets | std::views::keys) {
         auto const normalized_position{
             optimized_spline.GetTimeHandler().SplinePosition(timestamp_ns, optimized_spline.ControlPoints().cols())};
@@ -70,7 +70,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
                 cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j), u_i,
                                        optimized_spline.GetTimeHandler().delta_t_ns_)};
             // TODO(Jack): Should we also use robust loss here like we use for the stand alone bundle adjustment?
-            problem.AddResidualBlock(cost_function, nullptr, intrinsics_x.intrinsics.data(),
+            problem.AddResidualBlock(cost_function, nullptr, intrinsics_x.value.data(),
                                      optimized_spline.MutableControlPoints().col(i).data(),
                                      optimized_spline.MutableControlPoints().col(i + 1).data(),
                                      optimized_spline.MutableControlPoints().col(i + 2).data(),
@@ -89,7 +89,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
 
     // This was already solved for in the bundle adjustment step, therefore I do not think there is a good reason to
     // further optimize it here.
-    problem.SetParameterBlockConstant(intrinsics_x.intrinsics.data());
+    problem.SetParameterBlockConstant(intrinsics_x.value.data());
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
     return {optimized_spline, optimized_extrinsic, optimized_gravity};
@@ -97,7 +97,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
 
 std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
                                                               CameraMeasurements const& targets,
-                                                              CameraState const& camera_state,
+                                                              Intrinsic const& camera_state,
                                                               spline::Se3Spline const& spline_w_co) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
     //  means that even if there is no initial pose that we will have an evaluation. This means there can be no foreign
@@ -119,7 +119,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
         auto const [u_i, i]{normalized_position.value()};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(camera_state.intrinsics.data());
+        parameter_blocks.push_back(camera_state.value.data());
         for (int j{0}; j < 4; ++j) {
             parameter_blocks.push_back(spline_w_co.ControlPoints().col(i + j).data());
         }

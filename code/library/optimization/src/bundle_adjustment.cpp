@@ -33,11 +33,11 @@ BundleAdjustment::Result BundleAdjust(BundleAdjustment::Problem const& ba_proble
                 cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j))};
 
             ceres_problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
-                                           camera_state.intrinsic.intrinsics.data(), frame.pose.data());
+                                           camera_state.intrinsic.value.data(), frame.pose.data());
         }
 
         if (not camera_options.optimize_intrinsic) {
-            ceres_problem.SetParameterBlockConstant(camera_state.intrinsic.intrinsics.data());
+            ceres_problem.SetParameterBlockConstant(camera_state.intrinsic.value.data());
         }
     }
 
@@ -54,7 +54,7 @@ ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurement
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(state.camera_state.intrinsics.data());
+        parameter_blocks.push_back(state.camera_state.value.data());
         parameter_blocks.push_back(frame_i.pose.data());
 
         // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass
@@ -79,7 +79,7 @@ ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurement
 }  // LCOV_EXCL_LINE
 
 // LOCATION!
-BundleAdjustment::Problem BuildSingleCamBaProblem(CameraInfo const& camera_info, CameraState const& intrinsics,
+BundleAdjustment::Problem BuildSingleCamBaProblem(CameraInfo const& camera_info, Intrinsic const& intrinsics,
                                                   Frames const& frames, CameraMeasurements const& targets,
                                                   bool const optimize_intrinsic) {
     // For a single camera problem we do not consider the rig-co extrinsics and set those to constant identity.
