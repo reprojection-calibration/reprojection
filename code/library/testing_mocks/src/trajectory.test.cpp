@@ -16,7 +16,7 @@ TEST(TestingMocksTrajectory, TestTrajectory) {
 
     Frame const frame_x{*std::cbegin(poses)};
     EXPECT_EQ(frame_x.first, 2033898304);
-    EXPECT_TRUE(frame_x.second.pose.isApprox(Array6d{0.824561, 0.480256, -2.12411, 2.02368, 2.29411, 2.95548}, 1e-4));
+    EXPECT_TRUE(frame_x.second.value.isApprox(Array6d{0.824561, 0.480256, -2.12411, 2.02368, 2.29411, 2.95548}, 1e-4));
 
     ImuMeasurement const imu_data_x{*std::cbegin(imu_data)};
     EXPECT_EQ(imu_data_x.first, 2033898304);

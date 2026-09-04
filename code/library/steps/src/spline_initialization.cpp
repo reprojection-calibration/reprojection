@@ -51,7 +51,7 @@ void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) con
     // formulation to work and for the linear acceleration to be calculated in the desired frame by default.
     Frames invert_frames;
     for (auto const& [timestamp_ns, frame_i] : aligned_camera_poses) {
-        invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.pose).inverse())}});
+        invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.value).inverse())}});
     }
 
     // TODO(Jack): Parameterize frequency! Add to cache key probably?

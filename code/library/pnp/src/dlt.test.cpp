@@ -21,7 +21,7 @@ TEST(PnpDlt, TestDlt23) {
         ASSERT_TRUE(dlt_result.has_value());
         auto const [tf_co_w, K_vec]{*dlt_result};
 
-        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).value)};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
@@ -53,7 +53,7 @@ TEST(PnpDlt, TestDlt22) {
         auto const tf_co_w{pnp::Dlt22(target_i.bundle)};
         ASSERT_TRUE(tf_co_w.has_value());
 
-        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).value)};
 
         EXPECT_TRUE(tf_co_w->isApprox(gt_tf_co_w)) << "Result:\n"
                                                    << tf_co_w->matrix() << "\nexpected result:\n"

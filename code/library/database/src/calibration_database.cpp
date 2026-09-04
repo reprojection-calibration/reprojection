@@ -209,7 +209,7 @@ void CameraPosesInsert(sqlite3* const db, StepId const step_id, StepId source_st
         Bind(stmt, 2, source_step_id.value);
         Bind(stmt, 3, asset_id.value);
         Bind(stmt, 4, timestamp_ns);
-        BindEigenColumn<Array6d>(stmt, 5, frame.pose);
+        BindEigenColumn<Array6d>(stmt, 5, frame.value);
     }};
 
     BatchExecuteStatement(sql_statements::camera_poses_insert, camera_poses, binder, db);

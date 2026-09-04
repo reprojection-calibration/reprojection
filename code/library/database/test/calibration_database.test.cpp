@@ -200,7 +200,7 @@ TEST_F(CalibrationDatabaseFixture, TestCameraPoses) {
 
     auto const result{database::CameraPosesSelect(db_.get(), step_id, asset_id)};
     EXPECT_EQ(std::size(result), 1);
-    EXPECT_TRUE(result.at(0).pose.isApprox(camera_poses.at(0).pose));
+    EXPECT_TRUE(result.at(0).value.isApprox(camera_poses.at(0).value));
 }
 
 TEST(DatabaseCalibrationDatbase, TestControlPoints) {

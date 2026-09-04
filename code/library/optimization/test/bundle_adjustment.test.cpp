@@ -27,8 +27,8 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     // Assert
     EXPECT_EQ(std::size(frames), 56);
     for (auto const& [timestamp_ns, frame_i] : frames) {
-        Array6d const gt_aa_co_w{gt_frames.at(timestamp_ns).pose};
-        Array6d const aa_co_w{frame_i.pose};
+        Array6d const gt_aa_co_w{gt_frames.at(timestamp_ns).value};
+        Array6d const aa_co_w{frame_i.value};
 
         EXPECT_TRUE(aa_co_w.isApprox(gt_aa_co_w, 1e-6)) << "Result:\n"
                                                         << aa_co_w.transpose() << "\nexpected result:\n"
@@ -54,8 +54,8 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     // Add gaussian noise to the initial poses
     Frames noisy_frames{gt_frames};
     for (auto& [_, frame_i] : noisy_frames) {
-        Isometry3d const SE3_i{geometry::Exp(frame_i.pose)};
-        frame_i.pose = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
+        Isometry3d const SE3_i{geometry::Exp(frame_i.value)};
+        frame_i.value = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
     optimization::BundleAdjustment::Problem const problem{
@@ -76,8 +76,8 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
         // test to instead compare the 4x4 SE3 transformation  matrices. Now it passes again, essentially the same as
         // before, but now working in the matrix space. Why all of a sudden the optimized poses start flipping, I cannot
         // explain.
-        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
-        Isometry3d const tf_co_w{geometry::Exp(frame_i.pose)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).value)};
+        Isometry3d const tf_co_w{geometry::Exp(frame_i.value)};
 
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w, 1e-6)) << "Result:\n"
                                                         << tf_co_w.matrix() << "\nexpected result:\n"

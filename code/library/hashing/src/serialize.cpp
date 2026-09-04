@@ -71,7 +71,7 @@ std::string Serialize(Frames const& data) {
 
     for (auto const& [timestamp_ns, frame] : data) {
         oss << timestamp_ns << "|";
-        oss << Serialize(frame.pose) << "|";
+        oss << Serialize(frame.value) << "|";
     }
 
     return oss.str();

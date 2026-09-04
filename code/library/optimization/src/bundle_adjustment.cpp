@@ -33,7 +33,7 @@ BundleAdjustment::Result BundleAdjust(BundleAdjustment::Problem const& ba_proble
                 cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j))};
 
             ceres_problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
-                                           camera_state.intrinsic.value.data(), frame.pose.data());
+                                           camera_state.intrinsic.value.data(), frame.value.data());
         }
 
         if (not camera_options.optimize_intrinsic) {
@@ -55,7 +55,7 @@ ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurement
 
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(state.camera_state.value.data());
-        parameter_blocks.push_back(frame_i.pose.data());
+        parameter_blocks.push_back(frame_i.value.data());
 
         // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass
         // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two

@@ -25,7 +25,7 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
 
     Frames poses_w_co;
     for (auto const& [timestamp_ns, pose_co_w] : poses_co_w) {
-        poses_w_co.insert({timestamp_ns, {geometry::Log(geometry::Exp(pose_co_w.pose).inverse())}});
+        poses_w_co.insert({timestamp_ns, {geometry::Log(geometry::Exp(pose_co_w.value).inverse())}});
     }
     spline::Se3Spline const spline_w_co{spline::InitializeSe3SplineState(poses_w_co, 50)};
 
@@ -79,7 +79,7 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 
     auto const [poses, errors]{optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
     EXPECT_EQ(std::size(poses), 1);
-    EXPECT_TRUE(poses.at(timestamp_ns).pose.isApproxToConstant(0));
+    EXPECT_TRUE(poses.at(timestamp_ns).value.isApproxToConstant(0));
     EXPECT_EQ(std::size(errors), 1);
     EXPECT_TRUE(errors.at(timestamp_ns).isApprox(gt_residuals))
         << "Result:\n"

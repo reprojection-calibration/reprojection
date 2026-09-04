@@ -13,8 +13,8 @@ std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames
     PositionMeasurements so3;
     PositionMeasurements r3;
     for (auto const& [timestamp_ns, frame_i] : frames) {
-        so3.insert({timestamp_ns, {frame_i.pose.topRows<N>()}});
-        r3.insert({timestamp_ns, {frame_i.pose.bottomRows<N>()}});
+        so3.insert({timestamp_ns, {frame_i.value.topRows<N>()}});
+        r3.insert({timestamp_ns, {frame_i.value.bottomRows<N>()}});
     }
 
     double const delta_t_s{(std::crbegin(frames)->first - std::cbegin(frames)->first) / 1e9};

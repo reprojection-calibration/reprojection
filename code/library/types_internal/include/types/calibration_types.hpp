@@ -52,10 +52,10 @@ struct Intrinsic {
 
 // TODO(Jack): If it turns out we never add anything else to the frame state than we can just remove the struct and use
 //  the Array6d directly.
-struct FrameState {
-    Array6d pose;
+struct Pose {
+    Array6d value;
 };
-using Frame = StampedData<FrameState>;
+using Frame = StampedData<Pose>;
 using Frames = StampedMap<Frame>;
 
 struct OptimizationState {

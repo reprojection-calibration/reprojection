@@ -41,7 +41,7 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
     CameraMeasurements targets;
     Frames poses;
     for (auto const& [time_ns_i, frame] : frames) {
-        Isometry3d const tf_w_b{geometry::Exp(frame.pose)};
+        Isometry3d const tf_w_b{geometry::Exp(frame.value)};
         Isometry3d const tf_b_w{tf_w_b.inverse()};
 
         // The canonical_camera_R here is the classic "z-forward, x-right, y-down" optical camera frame.
@@ -55,7 +55,7 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
                                        indices(valid_row_ids, Eigen::all)};
 
         targets.insert({time_ns_i, target_i});
-        poses[time_ns_i].pose = geometry::Log(tf_co_w);
+        poses[time_ns_i].value = geometry::Log(tf_co_w);
     }
 
     return {targets, poses};
