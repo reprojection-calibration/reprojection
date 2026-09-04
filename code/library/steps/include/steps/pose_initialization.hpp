@@ -7,7 +7,7 @@
 namespace reprojection::steps {
 
 struct PoseInitialization {
-    PoseInitialization(AssetId camera_id, StepId targets_id, StepId camera_info_id, StepId intrinsics_id, SqlitePtr db);
+    PoseInitialization(AssetId camera_id, StepId targets_id, StepId camera_info_id, StepId intrinsic_id, SqlitePtr db);
 
     static StepType Type() { return StepType::PoseInit; }
 
@@ -22,7 +22,7 @@ struct PoseInitialization {
     StepId targets_id_;
     CameraMeasurements targets_;
     CameraInfo camera_info_;
-    Intrinsic intrinsics_;
+    Intrinsic intrinsic_;
 };
 
 }  // namespace reprojection::steps

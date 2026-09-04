@@ -6,7 +6,7 @@ namespace reprojection::projection_functions {
 
 // TODO(Jack): Add all other camera models and check the above listed TODO points.
 // TODO(Jack): Test!
-std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const& intrinsics, ImageBounds const& bounds);
+std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const& intrinsic, ImageBounds const& bounds);
 
 template <typename T_Model>
     requires ProjectionClass<T_Model>
