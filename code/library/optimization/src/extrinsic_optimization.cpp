@@ -98,20 +98,16 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     return {optimized_spline, optimized_extrinsic, optimized_gravity};
 }
 
-// TODO(Jack): This is not actually used for the spline optimization problem creation! I think this naming is
-// misleading. This is only used to create a problem so we can use the same reprojection error functions from the basic
-// bundle adjustment implementation.
-// NOTE(Jack): It was my original intention to calculate the reprojection errors for the spline problem using the actual
-// spline cost functions. This would mean what we observe is really what happens internally in the optimization. But to
-// do that there was a lot of complicated code duplication. Therefore instead we calculate the poses here using the
-// non-optimization path spline code (under the hood it is the same implementation)m and then pass that to the regular
-// reprojection error code from the classic bundle adjustment. We might deceive ourselves one day with this, but it
-// avoids a lot of really hard to maintain code duplication.
+// NOTE(Jack): We build the canonical bundle adjustment problem here ONLY so we can use the standard bundle adjustment
+// reprojection error calculation. We never optimized this problem from the spline data directly.
+// NOTE(Jack): I think there is something nice about using the same exact logic from the optimization (i.e. cost
+// functions) when calculating an optimization's residuals. That being said we eliminated a lot of code duplication by
+// just using the spline.Evaluate() interface and filling out the canonical bundle adjustment problem here.
 Ba::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                    TargetSamples const& targets, spline::Se3Spline const& spline_w_co,
                                    AssetId const camera_id) {
     // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
-    Ba::Camera const camera{camera_info, Ba::CameraState{intrinsic, Array6d::Zero()}, Ba::CameraOptions{false, false}};
+    Ba::Camera const camera{camera_info, Ba::CameraState{intrinsic, Array6d::Zero()}, {}};
 
     // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
     // to just check once when we actually construct the problem?

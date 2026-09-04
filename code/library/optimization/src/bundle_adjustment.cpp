@@ -53,11 +53,11 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                              TargetSamples const& targets, Frames const& frames,
                                                              bool const optimize_intrinsic, AssetId const camera_id) {
-    // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
+    // NOTE(Jack): For a single camera problems we do not consider the rig-cam extrinsic. Therefore we set it to
+    // identity (i.e. Array6d::Zero()) and set optimize_extrinsic to false. This is essentially a central characteristic
+    // of the single cam problem.
     Camera const camera{camera_info, CameraState{intrinsic, Array6d::Zero()}, CameraOptions{optimize_intrinsic, false}};
 
-    // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
-    // to just check once when we actually construct the problem?
     std::vector<Observation> observations;
     for (auto const& [timestamp_ns, target] : targets) {
         observations.push_back({camera_id, timestamp_ns, target.bundle});
@@ -66,11 +66,11 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
     return {{{camera_id, camera}}, frames, observations};
 }
 
-BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                                             Bundle const& bundle, Pose const& pose,
-                                                             bool const optimize_intrinsic) {
+BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
+                                                               Intrinsic const& intrinsic, Bundle const& bundle,
+                                                               Pose const& pose, bool const optimize_intrinsic) {
     uint64_t constexpr timestamp_ns{0};
-    ExtractedTarget const target{ExtractedTarget{bundle, {}}};
+    ExtractedTarget const target{bundle, {}};
     AssetId const camera_id{0};
 
     return SingleCamProblem(camera_info, intrinsic, TargetSamples{{timestamp_ns, target}}, Frames{{timestamp_ns, pose}},
