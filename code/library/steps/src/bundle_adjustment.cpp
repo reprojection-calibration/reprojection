@@ -35,7 +35,7 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets
     }  // LCOV_EXCL_LINE
 
     if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)}) {
-        intrinsics_ = *intrinsics;
+        intrinsic_ = *intrinsics;
     } else {
         log->error("{}", intrinsics.error());  // LCOV_EXCL_LINE
         std::exit(1);                          // LCOV_EXCL_LINE
@@ -43,13 +43,13 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets
 }
 
 Hash BundleAdjustment::CacheKey() const {
-    return hashing::HashArguments(camera_info_, targets_, intrinsics_, camera_poses_);
+    return hashing::HashArguments(camera_info_, targets_, intrinsic_, camera_poses_);
 }
 
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, {intrinsics_}, aligned_camera_poses, targets_)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, {intrinsic_}, aligned_camera_poses, targets_)};
     auto const [frames, ceres_state, cameras]{Ba::Solve(problem, num_threads_)};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.

@@ -14,8 +14,8 @@ namespace reprojection::optimization {
 
 std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     ImuSamples const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
-    Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets,
-    Intrinsic const& intrinsics, int const num_threads) {
+    Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic,
+    int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY};
     ceres_state.solver_options.num_threads = num_threads;
@@ -54,7 +54,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
     }
 
     // Reprojection residuals
-    Intrinsic intrinsics_x{intrinsics};
+    Intrinsic intrinsic_x{intrinsic};
     for (auto const timestamp_ns : targets | std::views::keys) {
         auto const normalized_position{
             optimized_spline.GetTimeHandler().SplinePosition(timestamp_ns, optimized_spline.ControlPoints().cols())};
@@ -70,7 +70,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
                 cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j), u_i,
                                        optimized_spline.GetTimeHandler().delta_t_ns_)};
             // TODO(Jack): Should we also use robust loss here like we use for the stand alone bundle adjustment?
-            problem.AddResidualBlock(cost_function, nullptr, intrinsics_x.value.data(),
+            problem.AddResidualBlock(cost_function, nullptr, intrinsic_x.value.data(),
                                      optimized_spline.MutableControlPoints().col(i).data(),
                                      optimized_spline.MutableControlPoints().col(i + 1).data(),
                                      optimized_spline.MutableControlPoints().col(i + 2).data(),
@@ -89,7 +89,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
 
     // This was already solved for in the bundle adjustment step, therefore I do not think there is a good reason to
     // further optimize it here.
-    problem.SetParameterBlockConstant(intrinsics_x.value.data());
+    problem.SetParameterBlockConstant(intrinsic_x.value.data());
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
     return {optimized_spline, optimized_extrinsic, optimized_gravity};

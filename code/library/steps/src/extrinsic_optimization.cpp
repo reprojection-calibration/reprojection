@@ -41,7 +41,7 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
     }
 
     if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)}) {
-        intrinsics_ = *intrinsics;
+        intrinsic_ = *intrinsics;
     } else {
         log->error("{}", intrinsics.error());
         std::exit(1);  // LCOV_EXCL_LINE
@@ -72,14 +72,14 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
 }
 
 Hash ExtrinsicOptimization::CacheKey() const {
-    return hashing::HashArguments(camera_info_, targets_, intrinsics_, imu_data_, spline_->ControlPoints(),
+    return hashing::HashArguments(camera_info_, targets_, intrinsic_, imu_data_, spline_->ControlPoints(),
                                   spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_,
                                   gravity_);
 }
 
 void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
     auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
-        imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsics_, num_threads_)};
+        imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};
 
     // TODO(Jack): We also need a way to log the final and initial costs!
     Array3d const optimized_gravity_fmt{optimized_gravity[0], optimized_gravity[1], optimized_gravity[2]};
@@ -94,7 +94,7 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
 
     // Diagnostic output - reprojection errors
     auto const [spline_poses, reprojection_errors]{
-        optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsics_, optimized_spline)};
+        optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsic_, optimized_spline)};
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, reprojection_errors);
 

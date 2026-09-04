@@ -32,7 +32,7 @@ SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const
     }  // LCOV_EXCL_LINE
 
     if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)}) {
-        intrinsics_ = *intrinsics;
+        intrinsic_ = *intrinsics;
     } else {
         log->error("{}", intrinsics.error());  // LCOV_EXCL_LINE
         std::exit(1);                          // LCOV_EXCL_LINE
@@ -40,7 +40,7 @@ SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const
 }
 
 Hash SplineInitialization::CacheKey() const {
-    return hashing::HashArguments(camera_poses_, targets_, camera_info_, intrinsics_);
+    return hashing::HashArguments(camera_poses_, targets_, camera_info_, intrinsic_);
 }
 
 void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) const {
@@ -69,7 +69,7 @@ void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) con
 
     // Diagnostic output
     auto const [spline_poses,
-                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsics_, spline)};
+                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsic_, spline)};
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
 }
