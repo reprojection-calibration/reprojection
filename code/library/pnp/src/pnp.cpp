@@ -78,7 +78,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
         // TODO(Jack): This is a hacky way to get the frame, but the point of the pnp problem construction is that there
         // is only ever one single frame, so we can get away with this here. Does it look nice? No. Is it easy to
         // maintain and understand? No. Some future soul will save us.
-        return PoseWithCost{geometry::Exp(result.frames.begin()->second.value),
+        return PoseWithCost{geometry::Exp(result.rig_poses.begin()->second.value),
                             result.ceres_state.solver_summary.final_cost};
     } else {
         return PnpErrorCode::FailedRefinement;  // LCOV_EXCL_LINE

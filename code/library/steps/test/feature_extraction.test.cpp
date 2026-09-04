@@ -38,7 +38,7 @@ TEST_F(FeatureExtractionTestFixture, TestFeatureExtractionStepRunner) {
 
     // TODO(Jack): This is kind of an anti climatic result but it's not our responsibility to check that the feature
     // extraction works here.
-    auto const result{database::ExtractedTargetsSelect(db_.get(), step_id, camera_id_)};
+    auto const result{database::TargetsSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 0);
 }
 
@@ -53,6 +53,6 @@ TEST_F(FeatureExtractionTestFixture, TestFeatureExtractionStep) {
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
-    auto const result{database::ExtractedTargetsSelect(db_.get(), step_id, camera_id_)};
+    auto const result{database::TargetsSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 0);
 }

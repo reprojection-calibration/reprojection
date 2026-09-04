@@ -25,7 +25,7 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets
     : camera_id_{camera_id},
       targets_id_{targets_id},
       num_threads_{num_threads},
-      targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)},
+      targets_{database::TargetsSelect(db.get(), targets_id, camera_id)},
       camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)} {
     if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
         camera_info_ = *camera_info;

@@ -22,10 +22,10 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
         auto& camera_state{result.camera_states.at(camera_id)};
         // Protect against the case of a missing rig pose - it can be that we have a observation for a frame where the
         // rig pose initialization was unsuccessful and we need to protect against that.
-        if (not result.frames.contains(timestamp_ns)) {
+        if (not result.rig_poses.contains(timestamp_ns)) {
             continue;  // LCOV_EXCL_LINE
         }
-        auto& frame{result.frames.at(timestamp_ns)};
+        auto& rig_pose{result.rig_poses.at(timestamp_ns)};
 
         auto const& [pixels, points]{bundle};
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
@@ -33,7 +33,7 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
                 cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j))};
 
             ceres_problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
-                                           camera_state.intrinsic.value.data(), frame.value.data());
+                                           camera_state.intrinsic.value.data(), rig_pose.value.data());
         }
 
         if (not camera_options.optimize_intrinsic) {

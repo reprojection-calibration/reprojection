@@ -43,7 +43,7 @@ class StepTestFixture : public ::testing::Test {
         auto const image_loading_id{InsertImages(images)};
 
         auto const target_step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
-        database::ExtractedTargetsInsert(db_.get(), target_step_id, image_loading_id, camera_id_, targets);
+        database::TargetsInsert(db_.get(), target_step_id, image_loading_id, camera_id_, targets);
 
         return target_step_id;
     }

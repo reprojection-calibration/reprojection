@@ -26,7 +26,7 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
     : camera_id_{camera_id},
       imu_id_{imu_id},
       targets_id_{targets_id},
-      targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)},
+      targets_{database::TargetsSelect(db.get(), targets_id, camera_id)},
       imu_data_id_{imu_data_id},
       imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
       num_threads_{num_threads} {

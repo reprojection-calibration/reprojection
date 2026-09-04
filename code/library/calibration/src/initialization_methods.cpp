@@ -28,10 +28,9 @@ using Ba = optimization::BundleAdjustment;
 
 // TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we parameterize the number
 // of targets sampled?
-//
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
                                             TargetSamples const& targets, int const num_threads) {
-    auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
+    auto const [runner, initializer]{SelectInitializationStrategy(camera_model, height, width)};
 
     // Generate all gamma estimates and sort them in ascending order.
     std::vector<double> gammas;
@@ -56,15 +55,15 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
     // TODO(Jack): What is the maximum number of samples we need to take here. At time of writing (09.07.2026) 500 seems
     // like a lot and could slow the process down on a slow computer. We need to do some testing I think.
     uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 500)};
-    std::map<double, ArrayXd> cost_intrinsic_map;
+    std::map<double, Intrinsic> cost_intrinsic_map;
     for (uint64_t i{0}; i < num_samples; ++i) {
         uint64_t const idx{i * std::size(gammas) / num_samples};
 
         double const gamma_i{gammas[idx]};
         CameraInfo const camera_info{camera_model, {0, width, 0, height}};
-        ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
+        Intrinsic const intrinsics_i{initializer(gamma_i, height, width)};
 
-        Frames const initial_poses{PoseInitialization(camera_info, target_subset, {intrinsics_i})};
+        Frames const initial_poses{PoseInitialization(camera_info, target_subset, intrinsics_i)};
         // TODO(Jack): Is the required success rate used in this condition enough, too much, or too little?
         if (std::size(initial_poses) < 0.8 * std::size(target_subset)) {
             continue;  // LCOV_EXCL_LINE
@@ -73,7 +72,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         // Do a bundle adjustment with the intrinsics constant and calculate the mean residual. Our hope is that the
         // intrinsic which will be the best initialization for the full optimization will produce the lowest mean
         // residual here on a subset of targets.
-        auto const problem{Ba::SingleCamProblem(camera_info, {intrinsics_i}, initial_poses, target_subset, false)};
+        auto const problem{Ba::SingleCamProblem(camera_info, intrinsics_i, initial_poses, target_subset, false)};
         auto const [_, ceres_state, _1]{Ba::Solve(problem, num_threads)};
 
         double const mean_residual{ceres_state.solver_summary.final_cost / ceres_state.solver_summary.num_residuals};
@@ -87,7 +86,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         return std::nullopt;  // LCOV_EXCL_LINE
     } else {
         // Take the intrinsic with the lowest mean residual.
-        return std::cbegin(cost_intrinsic_map)->second;
+        return std::cbegin(cost_intrinsic_map)->second.value;
     }
 }
 

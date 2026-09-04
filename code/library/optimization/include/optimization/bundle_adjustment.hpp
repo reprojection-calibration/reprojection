@@ -8,7 +8,8 @@ namespace reprojection::optimization {
 struct BundleAdjustment {
     struct CameraState {
         Intrinsic intrinsic;
-        Array6d se3_co_rig;
+        // TODO(Jack): Frame order convention! Should we use the extrinsic type here?
+        Array6d extrinsic;
     };
 
     struct CameraOptions {
@@ -30,19 +31,19 @@ struct BundleAdjustment {
 
     struct Problem {
         std::map<AssetId, Camera> cameras;
-        Frames frames;
+        Frames rig_poses;
         std::vector<Observation> observations;
     };
 
     struct Result {
         explicit Result(Problem const& problem)
-            : frames{problem.frames}, ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR} {
+            : rig_poses{problem.rig_poses}, ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR} {
             for (auto const& [camera_id, camera] : problem.cameras) {
                 camera_states.emplace(camera_id, camera.state);
             }
         }
 
-        Frames frames;
+        Frames rig_poses;
         CeresState ceres_state;
         std::map<AssetId, CameraState> camera_states;
     };

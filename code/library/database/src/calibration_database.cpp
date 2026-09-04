@@ -279,8 +279,8 @@ spline::Matrix2NXd ControlPointsSelect(sqlite3* const db, StepId const step_id, 
 
 // NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship
 // between two data tables.
-void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
-                            AssetId const asset_id, TargetSamples const& data) {
+void TargetsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id, AssetId const asset_id,
+                   TargetSamples const& data) {
     auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, target]{data_i};
 
@@ -303,7 +303,7 @@ void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId cons
     BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db);
 }
 
-TargetSamples ExtractedTargetsSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
+TargetSamples TargetsSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
     TargetSamples data;
 
     ExecuteQuery(

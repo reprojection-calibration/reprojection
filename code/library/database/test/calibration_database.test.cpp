@@ -178,8 +178,7 @@ class CalibrationDatabaseFixture : public ::testing::Test {
                                   uint64_t const timestamp_ns = 0) {
         auto const step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
 
-        database::ExtractedTargetsInsert(db_.get(), step_id, image_loading_id, asset_id,
-                                         {{timestamp_ns, ExtractedTarget{}}});
+        database::TargetsInsert(db_.get(), step_id, image_loading_id, asset_id, {{timestamp_ns, ExtractedTarget{}}});
 
         return step_id;
     }
@@ -291,7 +290,7 @@ TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
     StepId step_id;
     EXPECT_NO_THROW(step_id = CreateExtractedTargets(image_loading_id, asset_id));
 
-    TargetSamples const result{database::ExtractedTargetsSelect(db_.get(), step_id, asset_id)};
+    TargetSamples const result{database::TargetsSelect(db_.get(), step_id, asset_id)};
     EXPECT_EQ(std::size(result), 1);
     EXPECT_EQ(result.at(0).indices.size(), 0);
 }

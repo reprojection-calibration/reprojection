@@ -71,10 +71,9 @@ void ControlPointsInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::
 
 spline::Matrix2NXd ControlPointsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-void ExtractedTargetsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
-                            TargetSamples const& data);
+void TargetsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id, TargetSamples const& data);
 
-TargetSamples ExtractedTargetsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+TargetSamples TargetsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 void ExtrinsicInsert(sqlite3* db, StepId step_id, Extrinsic const& extrinsic);
 

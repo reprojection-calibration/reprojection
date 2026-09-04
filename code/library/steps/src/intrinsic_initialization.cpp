@@ -25,7 +25,7 @@ IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int co
         std::exit(1);                           // LCOV_EXCL_LINE
     }  // LCOV_EXCL_LINE
 
-    targets_ = database::ExtractedTargetsSelect(db.get(), targets_id, camera_id);
+    targets_ = database::TargetsSelect(db.get(), targets_id, camera_id);
 }
 
 Hash IntrinsicInitialization::CacheKey() const {

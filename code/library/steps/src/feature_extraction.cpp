@@ -55,7 +55,7 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
                 step_id.value, camera_id_.value);  // LCOV_EXCL_LINE
         }
 
-        std::optional<ExtractedTarget> const target{extractor->Extract(img)};
+        std::optional const target{extractor->Extract(img)};
         if (target.has_value()) {
             extracted_targets.insert({timestamp_ns, *target});  // LCOV_EXCL_LINE
         }
@@ -83,7 +83,7 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
         // LCOV_EXCL_STOP
     }
 
-    database::ExtractedTargetsInsert(db.get(), step_id, image_loading_id_, camera_id_, extracted_targets);
+    database::TargetsInsert(db.get(), step_id, image_loading_id_, camera_id_, extracted_targets);
 }
 
 }  // namespace reprojection::steps
