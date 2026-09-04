@@ -24,12 +24,13 @@ auto const log{logging::Get("calibration")};
 
 }
 
+using Ba = optimization::BundleAdjustment;
+
 // TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we parameterize the number
 // of targets sampled?
-//
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
-                                            CameraMeasurements const& targets, int const num_threads) {
-    auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
+                                            TargetSamples const& targets, int const num_threads) {
+    auto const [runner, initializer]{SelectInitializationStrategy(camera_model, height, width)};
 
     // Generate all gamma estimates and sort them in ascending order.
     std::vector<double> gammas;
@@ -54,15 +55,15 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
     // TODO(Jack): What is the maximum number of samples we need to take here. At time of writing (09.07.2026) 500 seems
     // like a lot and could slow the process down on a slow computer. We need to do some testing I think.
     uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 500)};
-    std::map<double, ArrayXd> cost_intrinsic_map;
+    std::map<double, Intrinsic> cost_intrinsic_map;
     for (uint64_t i{0}; i < num_samples; ++i) {
         uint64_t const idx{i * std::size(gammas) / num_samples};
 
         double const gamma_i{gammas[idx]};
         CameraInfo const camera_info{camera_model, {0, width, 0, height}};
-        ArrayXd const intrinsics_i{initialization(gamma_i, height, width)};
+        Intrinsic const intrinsics_i{initializer(gamma_i, height, width)};
 
-        Frames const initial_poses{PoseInitialization(camera_info, target_subset, {intrinsics_i})};
+        Frames const initial_poses{PoseInitialization(camera_info, target_subset, intrinsics_i)};
         // TODO(Jack): Is the required success rate used in this condition enough, too much, or too little?
         if (std::size(initial_poses) < 0.8 * std::size(target_subset)) {
             continue;  // LCOV_EXCL_LINE
@@ -71,11 +72,10 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         // Do a bundle adjustment with the intrinsics constant and calculate the mean residual. Our hope is that the
         // intrinsic which will be the best initialization for the full optimization will produce the lowest mean
         // residual here on a subset of targets.
-        OptimizationState const initial_state{{intrinsics_i}, initial_poses};
-        auto const [optimized_state, diagnostics]{
-            optimization::BundleAdjustment(camera_info, target_subset, initial_state, num_threads, true)};
+        auto const problem{Ba::SingleCamProblem(camera_info, intrinsics_i, initial_poses, target_subset, false)};
+        auto const [_, ceres_state, _1]{Ba::Solve(problem, num_threads)};
 
-        double const mean_residual{diagnostics.solver_summary.final_cost / diagnostics.solver_summary.num_residuals};
+        double const mean_residual{ceres_state.solver_summary.final_cost / ceres_state.solver_summary.num_residuals};
         cost_intrinsic_map[mean_residual] = intrinsics_i;
 
         log->debug("{{ 'idx': {}, 'gamma': {}, 'mean_residual': {}, 'num_frames_used': {}}}", idx, gamma_i,
@@ -86,7 +86,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         return std::nullopt;  // LCOV_EXCL_LINE
     } else {
         // Take the intrinsic with the lowest mean residual.
-        return std::cbegin(cost_intrinsic_map)->second;
+        return std::cbegin(cost_intrinsic_map)->second.value;
     }
 }
 
@@ -94,10 +94,9 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 // of the function is to unproject the pixels to 3d rays using a roughly initialized camera, then project these back to
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
-Frames PoseInitialization(CameraInfo const& camera_info, CameraMeasurements const& targets,
-                          CameraState const& intrinsics) {
+Frames PoseInitialization(CameraInfo const& camera_info, TargetSamples const& targets, Intrinsic const& intrinsic) {
     auto const camera{
-        projection_functions::InitializeCamera(camera_info.camera_model, intrinsics.intrinsics, camera_info.bounds)};
+        projection_functions::InitializeCamera(camera_info.camera_model, intrinsic.value, camera_info.bounds)};
 
     Frames frames;
     for (auto const& [timestamp_ns, target_i] : targets) {
@@ -111,7 +110,7 @@ Frames PoseInitialization(CameraInfo const& camera_info, CameraMeasurements cons
 }  // LCOV_EXCL_LINE
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
-                                                                               ImuMeasurements const& imu_data,
+                                                                               ImuSamples const& imu_data,
                                                                                int const num_threads) {
     auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
     auto const [aa_imu_co,

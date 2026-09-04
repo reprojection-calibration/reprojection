@@ -21,7 +21,7 @@ struct IntrinsicInitialization {
     AssetId camera_id_;
     int num_threads_;
     CameraInfo camera_info_;
-    CameraMeasurements targets_;
+    TargetSamples targets_;
 };
 
 }  // namespace reprojection::steps

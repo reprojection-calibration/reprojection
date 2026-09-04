@@ -25,7 +25,7 @@ class PoseInitializationFixture : public StepTestFixture {
         targets_id_ = InsertExtractedTargets(targets);
 
         intrinsics_id_ =
-            InsertIntrinsics(CameraModel::DoubleSphere, CameraState{testing_utilities::double_sphere_intrinsics});
+            InsertIntrinsics(CameraModel::DoubleSphere, Intrinsic{testing_utilities::double_sphere_intrinsics});
     }
 
     StepId camera_info_id_;

@@ -29,7 +29,7 @@ struct ExtrinsicInit {
     AssetId imu_id_;
     // NOTE(Jack): We only need to store this so we can use it when we save the imu error diagnostics.
     StepId imu_data_id_;
-    ImuMeasurements imu_data_;
+    ImuSamples imu_data_;
     int num_threads_;
 };
 

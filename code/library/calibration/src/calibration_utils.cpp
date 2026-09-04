@@ -12,15 +12,15 @@ Frames AlignRotations(Frames data) {
         return data;
     }
 
-    Vector3d so3_i_1{std::cbegin(data)->second.pose.head<3>()};
+    Vector3d so3_i_1{std::cbegin(data)->second.value.head<3>()};
     for (auto& frame_i : data | std::views::values) {
-        Vector3d so3_i{frame_i.pose.head<3>()};
+        Vector3d so3_i{frame_i.value.head<3>()};
         double const dp{so3_i_1.dot(so3_i)};
 
         if (dp < 0) {
             so3_i *= -1.0;
         }
-        frame_i.pose.head<3>() = so3_i;
+        frame_i.value.head<3>() = so3_i;
 
         so3_i_1 = so3_i;
     }

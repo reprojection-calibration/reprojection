@@ -20,12 +20,12 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
     CameraInfo const camera_info{CameraModel::Pinhole, tu::image_bounds};
 
     auto const [targets, poses_co_w]{
-        testing_mocks::GenerateMvgData(camera_info, CameraState{tu::pinhole_intrinsics}, duration_s, 10)};
+        testing_mocks::GenerateMvgData(camera_info, Intrinsic{tu::pinhole_intrinsics}, duration_s, 10)};
     auto const [imu_data, _]{testing_mocks::GenerateImuData(duration_s, 20)};
 
     Frames poses_w_co;
     for (auto const& [timestamp_ns, pose_co_w] : poses_co_w) {
-        poses_w_co.insert({timestamp_ns, {geometry::Log(geometry::Exp(pose_co_w.pose).inverse())}});
+        poses_w_co.insert({timestamp_ns, {geometry::Log(geometry::Exp(pose_co_w.value).inverse())}});
     }
     spline::Se3Spline const spline_w_co{spline::InitializeSe3SplineState(poses_w_co, 50)};
 
@@ -69,8 +69,8 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
     uint64_t const timestamp_ns{0};
 
     CameraInfo const sensor{CameraModel::Pinhole, tu::image_bounds};
-    CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
-    auto const camera_state{CameraState{tu::pinhole_intrinsics}};
+    TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
+    auto const camera_state{Intrinsic{tu::pinhole_intrinsics}};
 
     // The control points for a spline with one segment that is simply the constant identity transform.
     spline::Matrix2NK<double> control_points;
@@ -79,7 +79,7 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
 
     auto const [poses, errors]{optimization::ReprojectionErrorSpline(sensor, targets, camera_state, spline)};
     EXPECT_EQ(std::size(poses), 1);
-    EXPECT_TRUE(poses.at(timestamp_ns).pose.isApproxToConstant(0));
+    EXPECT_TRUE(poses.at(timestamp_ns).value.isApproxToConstant(0));
     EXPECT_EQ(std::size(errors), 1);
     EXPECT_TRUE(errors.at(timestamp_ns).isApprox(gt_residuals))
         << "Result:\n"

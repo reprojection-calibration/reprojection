@@ -36,7 +36,7 @@ TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStepRunner) {
     auto const result{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
     Array5d const gt_result{530.372, 360, 240, 0, 0.5};  // Heuristic!
-    EXPECT_TRUE(result->intrinsics.isApprox(gt_result, 1e-3));
+    EXPECT_TRUE(result->value.isApprox(gt_result, 1e-3));
 }
 
 TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStep) {
@@ -51,5 +51,5 @@ TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStep) {
     auto const result{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
     Array5d const gt_result{530.372, 360, 240, 0, 0.5};  // Heuristic!
-    EXPECT_TRUE(result->intrinsics.isApprox(gt_result, 1e-3));
+    EXPECT_TRUE(result->value.isApprox(gt_result, 1e-3));
 }

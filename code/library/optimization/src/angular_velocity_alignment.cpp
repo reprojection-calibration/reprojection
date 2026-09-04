@@ -9,7 +9,7 @@ namespace reprojection::optimization {
 // NOTE(Jack): The angular velocity initialization actually only uses the so3 rotation component of the spline. But our
 // rigid body angular velocity cost function requires the full control points because ceres does not allow parameter
 // aliasing (see comment at RigidBodyAngularVelocity::Create()).
-std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements const& omega_imu, spline::Se3Spline spline,
+std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocitySamples const& omega_imu, spline::Se3Spline spline,
                                                         int const num_threads) {
     // TODO(Jack): We need a better more uniform way of parameterizing the ceres optimizations.
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
@@ -25,7 +25,7 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocityMeasurements con
         auto const [u_i, i]{normalized_position.value()};
 
         ceres::CostFunction* const cost_function{cost_functions::RigidBodyAngularVelocity::Create(
-            omega_imu.at(timestamp_ns).velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
+            omega_imu.at(timestamp_ns).value, u_i, spline.GetTimeHandler().delta_t_ns_)};
 
         problem.AddResidualBlock(cost_function, nullptr, tf_imu_co.data(),     //
                                  spline.MutableControlPoints().col(i).data(),  //

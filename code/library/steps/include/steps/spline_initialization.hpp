@@ -25,9 +25,9 @@ struct SplineInitialization {
     // initialization at all. But we do the diagnostic calculations in the spline init/other steps directly to avoid
     // creating dedicated diagnostic calculation steps - even if it means passing some unexpected information in.
     StepId targets_id_;
-    CameraMeasurements targets_;
+    TargetSamples targets_;
     CameraInfo camera_info_;
-    CameraState intrinsics_;
+    Intrinsic intrinsic_;
 };
 
 }  // namespace reprojection::steps

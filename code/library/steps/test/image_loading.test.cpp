@@ -22,7 +22,7 @@ class ImageLoadingFixture : public StepTestFixture {
             throw std::runtime_error("cv::imencode() failed");
         }
         encoded_images_ =
-            std::make_shared<EncodedImages>(EncodedImages{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}});
+            std::make_shared<ImageSamples>(ImageSamples{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}});
 
         image_sampler_ = [itr = std::cbegin(*encoded_images_),
                           end = std::cend(*encoded_images_)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
@@ -38,7 +38,7 @@ class ImageLoadingFixture : public StepTestFixture {
         };
     }
 
-    std::shared_ptr<EncodedImages> encoded_images_;
+    std::shared_ptr<ImageSamples> encoded_images_;
     ImageSampler image_sampler_;
 };
 

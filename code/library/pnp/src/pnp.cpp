@@ -10,6 +10,8 @@
 
 namespace reprojection::pnp {
 
+using Ba = optimization::BundleAdjustment;
+
 // WARN(Jack): When doing the Dlt22 you are restricted to being in unit image coordinates, therefore we hard code
 // the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction
 // and are instead required to pass in the bounds and the Dlt23 functions returns a K matrix in the scale of the
@@ -20,7 +22,7 @@ namespace reprojection::pnp {
 //  instead?
 PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     Isometry3d tf_co_w;
-    Array3d pinhole_intrinsics;
+    Intrinsic pinhole_intrinsic;
 
     if (IsPlane(bundle.points) and bundle.pixels.rows() > 4) {
         auto const dlt_result{Dlt22(bundle)};
@@ -29,15 +31,15 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
         }
 
         tf_co_w = *dlt_result;
-        pinhole_intrinsics = {1, 0, 0};      // Equivalent to K = I_3x3
-        bounds = ImageBounds{-1, 1, -1, 1};  // Unit image dimension bounds
+        pinhole_intrinsic.value = Array3d{1, 0, 0};  // Equivalent to K = I_3x3
+        bounds = ImageBounds{-1, 1, -1, 1};          // Unit image dimension bounds
     } else if (bundle.pixels.rows() > 6 and bounds) {
         auto const dlt_result{Dlt23(bundle)};
         if (not dlt_result) {
             return PnpErrorCode::FailedDlt;
         }
 
-        std::tie(tf_co_w, pinhole_intrinsics) = *dlt_result;
+        std::tie(tf_co_w, pinhole_intrinsic.value) = *dlt_result;
     } else {
         return PnpErrorCode::InvalidDlt;
     }
@@ -45,25 +47,22 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     // TODO(Jack): This is a heuristic slightly hacky looking way to check if the above DLT algorithm evaluation failed.
     //  If we had a better theoretical algorithmic understanding of what causes these failures and how we can detect
     //  them then we could improve this code here.
-    Array6d const aa_co_w{geometry::Log(tf_co_w)};
-    if (not aa_co_w.allFinite()) {
+    Pose const se3_co_w{geometry::Log(tf_co_w)};
+    if (not se3_co_w.value.allFinite()) {
         return PnpErrorCode::NotAllFinite;  // LCOV_EXCL_LINE
     }
 
-    // Dummy value only for tracking and consistency of data access below
-    uint64_t const timestamp_ns{0};
+    CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
+    Ba::Problem const ba_problem{
+        optimization::BundleAdjustment::SingleCamProblem(camera_info, pinhole_intrinsic, se3_co_w, bundle, false)};
 
-    // Format data into required format for the nonlinear optimization
-    CameraInfo const sensor{CameraModel::Pinhole, bounds.value()};
-    CameraMeasurements const target{{timestamp_ns, {bundle, {}}}};
-    OptimizationState const initial_state{CameraState{pinhole_intrinsics}, {{timestamp_ns, {aa_co_w}}}};
-
-    // TODO(Jack): Should we configure the bundle adjustment here to use all the threads? I think the pnp is normally
-    // such a small problem that one thread is all we need.
-    auto const [optimized_state, diagnostics]{optimization::BundleAdjustment(sensor, target, initial_state, 1, true)};
-    if (diagnostics.solver_summary.termination_type == ceres::CONVERGENCE) {
-        return PoseWithCost{geometry::Exp(optimized_state.frames.at(timestamp_ns).pose),
-                            diagnostics.solver_summary.final_cost};
+    auto const result{optimization::BundleAdjustment::Solve(ba_problem, 1)};
+    if (result.ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {
+        // TODO(Jack): This is a hacky way to get the frame, but the point of the pnp problem construction is that there
+        // is only ever one single frame, so we can get away with this here. Does it look nice? No. Is it easy to
+        // maintain and understand? No. Some future soul will save us.
+        return PoseWithCost{geometry::Exp(result.rig_poses.begin()->second.value),
+                            result.ceres_state.solver_summary.final_cost};
     } else {
         return PnpErrorCode::FailedRefinement;  // LCOV_EXCL_LINE
     }

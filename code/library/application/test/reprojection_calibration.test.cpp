@@ -89,7 +89,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
             database::GetOrCreateStep(db.get(), StepType::ImageLoading, image_cache_key).first,
             feature_cache_key,
             database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, feature_cache_key).first,
-            hashing::HashArguments(camera.id.value, camera.config.camera_model, EncodedImages{}),
+            hashing::HashArguments(camera.id.value, camera.config.camera_model, ImageSamples{}),
         });
     }
 
@@ -106,7 +106,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
         // up one day! Can we make the connection explicit?
         CameraInfo const camera_info{camera.config.camera_model, {0, 512, 0, 512}};
         database::StepCacheKeyUpdate(db.get(), step_id,
-                                     hashing::HashArguments(camera.id.value, camera_info, CameraMeasurements{}));
+                                     hashing::HashArguments(camera.id.value, camera_info, TargetSamples{}));
     }
 
     ImageInputs const image_inputs{testing_utilities::TestDatabaseImageInputs(context.assets.cameras)};

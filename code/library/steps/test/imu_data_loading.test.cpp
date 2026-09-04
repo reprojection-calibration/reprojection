@@ -12,7 +12,7 @@ class ImuSamplerFixture : public ::testing::Test {
    protected:
     void SetUp() override {
         // Build the encoded images (cv::Mat -> serialized buffer)
-        imu_data_ = ImuMeasurements{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
+        imu_data_ = ImuSamples{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
 
         imu_sampler_ =
             [itr = std::cbegin(imu_data_),
@@ -33,7 +33,7 @@ class ImuSamplerFixture : public ::testing::Test {
         };
     }
 
-    ImuMeasurements imu_data_;
+    ImuSamples imu_data_;
     ImuSampler imu_sampler_;
 };
 

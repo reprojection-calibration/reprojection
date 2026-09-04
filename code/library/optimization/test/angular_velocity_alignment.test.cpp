@@ -11,8 +11,8 @@
 using namespace reprojection;
 
 // COPY AND PASTED
-VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
-    VelocityMeasurements imu_angular_velocity;
+VelocitySamples ExtractAngularVelocity(ImuSamples const& imu_data) {
+    VelocitySamples imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
         imu_angular_velocity.insert({timestamp_ns, {data_i.angular_velocity}});
     }
@@ -24,7 +24,7 @@ TEST(OptimizationAngularVelocityAlignment, TestAngularVelocityAlignment) {
     double const duration_s{30};
     auto [imu_data, spline_w_b]{testing_mocks::GenerateImuData(duration_s, 20)};
 
-    VelocityMeasurements const omega_imu{ExtractAngularVelocity(imu_data)};
+    VelocitySamples const omega_imu{ExtractAngularVelocity(imu_data)};
     auto const [aa_imu_co, diagnostics]{optimization::AngularVelocityAlignment(omega_imu, spline_w_b, 1)};
 
     EXPECT_TRUE(aa_imu_co.isZero(1e-3));  // Identity matrix

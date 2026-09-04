@@ -23,7 +23,7 @@ SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const
     : camera_id_{camera_id},
       camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)},
       targets_id_{targets_id},
-      targets_{database::ExtractedTargetsSelect(db.get(), targets_id, camera_id)} {
+      targets_{database::TargetsSelect(db.get(), targets_id, camera_id)} {
     if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
         camera_info_ = *camera_info;
     } else {
@@ -32,7 +32,7 @@ SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const
     }  // LCOV_EXCL_LINE
 
     if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsics_id, camera_id)}) {
-        intrinsics_ = *intrinsics;
+        intrinsic_ = *intrinsics;
     } else {
         log->error("{}", intrinsics.error());  // LCOV_EXCL_LINE
         std::exit(1);                          // LCOV_EXCL_LINE
@@ -40,7 +40,7 @@ SplineInitialization::SplineInitialization(AssetId const camera_id, StepId const
 }
 
 Hash SplineInitialization::CacheKey() const {
-    return hashing::HashArguments(camera_poses_, targets_, camera_info_, intrinsics_);
+    return hashing::HashArguments(camera_poses_, targets_, camera_info_, intrinsic_);
 }
 
 void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) const {
@@ -51,7 +51,7 @@ void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) con
     // formulation to work and for the linear acceleration to be calculated in the desired frame by default.
     Frames invert_frames;
     for (auto const& [timestamp_ns, frame_i] : aligned_camera_poses) {
-        invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.pose).inverse())}});
+        invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.value).inverse())}});
     }
 
     // TODO(Jack): Parameterize frequency! Add to cache key probably?
@@ -69,7 +69,7 @@ void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) con
 
     // Diagnostic output
     auto const [spline_poses,
-                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsics_, spline)};
+                errors]{optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsic_, spline)};
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, camera_id_, errors);
 }

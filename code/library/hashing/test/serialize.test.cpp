@@ -19,7 +19,7 @@ TEST(HashingSerialize, TestSerializeCameraMeasurements) {
     ExtractedTarget const target{
         Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}}, MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}}},
         {{5, 6}, {2, 3}}};
-    CameraMeasurements const camera_measurements{{0, target}, {1, target}};
+    TargetSamples const camera_measurements{{0, target}, {1, target}};
 
     std::string const result{hashing::Serialize(camera_measurements)};
     std::string const gt_result{
@@ -30,7 +30,7 @@ TEST(HashingSerialize, TestSerializeCameraMeasurements) {
 }
 
 TEST(HashingSerialize, TestSerializeCameraState) {
-    CameraState const camera_state{testing_utilities::pinhole_intrinsics};
+    Intrinsic const camera_state{testing_utilities::pinhole_intrinsics};
 
     std::string const result{hashing::Serialize(camera_state)};
     std::string const gt_result{"600.000;360.000;240.000;|"};
@@ -47,7 +47,7 @@ TEST(HashingSerialize, TestSerializeControlPointMatrix) {
     EXPECT_EQ(result, gt_result);
 }
 TEST(HashingSerialize, TestSerializeEncodedImages) {
-    EncodedImages const encoded_images{{0, ImageBuffer{}}, {1, ImageBuffer{}}};
+    ImageSamples const encoded_images{{0, ImageBuffer{}}, {1, ImageBuffer{}}};
 
     std::string const result{hashing::Serialize(encoded_images)};
     std::string const gt_result{"0|0|1|0|"};
@@ -74,7 +74,7 @@ TEST(HashingSerialize, TestSerializeFrames) {
 }
 
 TEST(HashingSerialize, TestSerializeImuMeasurements) {
-    ImuMeasurements const imu_data{{0, {{0, 1, 2}, {3, 4, 5}}}};
+    ImuSamples const imu_data{{0, {{0, 1, 2}, {3, 4, 5}}}};
 
     std::string const result{hashing::Serialize(imu_data)};
     std::string const gt_result{"0|0.000;1.000;2.000;|3.000;4.000;5.000;|"};

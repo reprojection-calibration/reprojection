@@ -13,20 +13,20 @@ namespace reprojection::hashing {
 
 std::string Serialize(CameraInfo const& data);
 
-std::string Serialize(CameraMeasurements const& data);
+std::string Serialize(TargetSamples const& data);
 
 std::string Serialize(CameraModel const data);
 
-std::string Serialize(CameraState const& data);
+std::string Serialize(Intrinsic const& data);
 
 // TODO(Jack): Test!
-std::string Serialize(EncodedImages const& data);
+std::string Serialize(ImageSamples const& data);
 
 std::string Serialize(Extrinsic const& data);
 
 std::string Serialize(Frames const& data);
 
-std::string Serialize(ImuMeasurements const& data);
+std::string Serialize(ImuSamples const& data);
 
 std::string Serialize(OptimizationState const& data);
 

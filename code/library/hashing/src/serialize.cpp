@@ -17,7 +17,7 @@ std::string Serialize(CameraInfo const& data) {
     return oss.str();
 }
 
-std::string Serialize(CameraMeasurements const& data) {
+std::string Serialize(TargetSamples const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
@@ -34,16 +34,16 @@ std::string Serialize(CameraMeasurements const& data) {
 
 std::string Serialize(CameraModel const data) { return ToString(data); }
 
-std::string Serialize(CameraState const& data) {
+std::string Serialize(Intrinsic const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 
-    oss << Serialize(data.intrinsics) << "|";
+    oss << Serialize(data.value) << "|";
 
     return oss.str();
 }
 
-std::string Serialize(EncodedImages const& data) {
+std::string Serialize(ImageSamples const& data) {
     std::ostringstream oss;
 
     for (auto const& [timestamp_ns, encoded_image] : data) {
@@ -71,13 +71,13 @@ std::string Serialize(Frames const& data) {
 
     for (auto const& [timestamp_ns, frame] : data) {
         oss << timestamp_ns << "|";
-        oss << Serialize(frame.pose) << "|";
+        oss << Serialize(frame.value) << "|";
     }
 
     return oss.str();
 }
 
-std::string Serialize(ImuMeasurements const& data) {
+std::string Serialize(ImuSamples const& data) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);
 

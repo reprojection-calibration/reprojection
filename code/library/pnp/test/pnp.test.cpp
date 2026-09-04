@@ -13,7 +13,7 @@ using namespace reprojection;
 TEST(Pnp, TestPnp) {
     CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
     auto const [targets, gt_frames]{
-        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::pinhole_intrinsics}, 60, 1, false)};
+        testing_mocks::GenerateMvgData(sensor, Intrinsic{testing_utilities::pinhole_intrinsics}, 60, 1, false)};
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle, sensor.bounds)};
@@ -22,7 +22,7 @@ TEST(Pnp, TestPnp) {
         pnp::PoseWithCost const result{std::get<pnp::PoseWithCost>(pnp_result)};
         auto const [tf_co_w, cost]{result};
 
-        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).value)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
                                                   << gt_tf_co_w.matrix();
@@ -33,7 +33,7 @@ TEST(Pnp, TestPnp) {
 TEST(Pnp, TestPnpFlat) {
     CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::unit_image_bounds};
     auto const [targets, gt_frames]{
-        testing_mocks::GenerateMvgData(sensor, CameraState{testing_utilities::unit_pinhole_intrinsics}, 60, 1, true)};
+        testing_mocks::GenerateMvgData(sensor, Intrinsic{testing_utilities::unit_pinhole_intrinsics}, 60, 1, true)};
 
     for (auto const& [timestamp_ns, target_i] : targets) {
         pnp::PnpResult const pnp_result{pnp::Pnp(target_i.bundle)};
@@ -42,7 +42,7 @@ TEST(Pnp, TestPnpFlat) {
         pnp::PoseWithCost const result{std::get<pnp::PoseWithCost>(pnp_result)};
         auto const [tf_co_w, cost]{result};
 
-        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).pose)};
+        Isometry3d const gt_tf_co_w{geometry::Exp(gt_frames.at(timestamp_ns).value)};
         EXPECT_TRUE(tf_co_w.isApprox(gt_tf_co_w)) << "Result:\n"
                                                   << tf_co_w.matrix() << "\nexpected result:\n"
                                                   << gt_tf_co_w.matrix();

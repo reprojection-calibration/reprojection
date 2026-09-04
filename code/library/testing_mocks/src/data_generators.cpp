@@ -18,7 +18,7 @@ namespace reprojection::testing_mocks {
 // enforce this is via constants here is not clear. But for now it is a solution.
 TrajectoryParams const trajectory{{1.5, 1.5, 1.5}, {0, 0, 0}, 1};
 
-std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz) {
+std::pair<ImuSamples, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz) {
     auto const [tf_w_b, imu_data]{
         Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 
@@ -28,20 +28,19 @@ std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const durat
     return {imu_data, spline_w_b};
 }
 
-std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, CameraState const& intrinsics,
-                                                      double const duration_s, double const sample_rate_hz,
-                                                      bool const flat) {
+std::pair<TargetSamples, Frames> GenerateMvgData(CameraInfo const& sensor, Intrinsic const& intrinsics,
+                                                 double const duration_s, double const sample_rate_hz,
+                                                 bool const flat) {
     auto const [frames,
                 _]{Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 
-    auto const camera{
-        projection_functions::InitializeCamera(sensor.camera_model, intrinsics.intrinsics, sensor.bounds)};
+    auto const camera{projection_functions::InitializeCamera(sensor.camera_model, intrinsics.value, sensor.bounds)};
     auto const [points, indices]{MvgHelpers::BuildTargetPoints(flat)};
 
-    CameraMeasurements targets;
+    TargetSamples targets;
     Frames poses;
     for (auto const& [time_ns_i, frame] : frames) {
-        Isometry3d const tf_w_b{geometry::Exp(frame.pose)};
+        Isometry3d const tf_w_b{geometry::Exp(frame.value)};
         Isometry3d const tf_b_w{tf_w_b.inverse()};
 
         // The canonical_camera_R here is the classic "z-forward, x-right, y-down" optical camera frame.
@@ -55,7 +54,7 @@ std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, 
                                        indices(valid_row_ids, Eigen::all)};
 
         targets.insert({time_ns_i, target_i});
-        poses[time_ns_i].pose = geometry::Log(tf_co_w);
+        poses[time_ns_i].value = geometry::Log(tf_co_w);
     }
 
     return {targets, poses};

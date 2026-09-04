@@ -5,18 +5,17 @@
 
 namespace reprojection::projection_functions {
 
-std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const& intrinsics,
-                                         ImageBounds const& bounds) {
+std::unique_ptr<Camera> InitializeCamera(CameraModel const model, ArrayXd const& intrinsic, ImageBounds const& bounds) {
     if (model == CameraModel::DoubleSphere) {
-        return MakeCamera<DoubleSphere>(intrinsics, bounds);
+        return MakeCamera<DoubleSphere>(intrinsic, bounds);
     } else if (model == CameraModel::Eucm) {
-        return MakeCamera<Eucm>(intrinsics, bounds);
+        return MakeCamera<Eucm>(intrinsic, bounds);
     } else if (model == CameraModel::Pinhole) {
-        return MakeCamera<Pinhole>(intrinsics, bounds);
+        return MakeCamera<Pinhole>(intrinsic, bounds);
     } else if (model == CameraModel::PinholeRadtan4) {
-        return MakeCamera<PinholeRadtan4>(intrinsics, bounds);
+        return MakeCamera<PinholeRadtan4>(intrinsic, bounds);
     } else if (model == CameraModel::Ucm) {
-        return MakeCamera<Ucm>(intrinsics, bounds);
+        return MakeCamera<Ucm>(intrinsic, bounds);
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - invalid camera model");  // LCOV_EXCL_LINE
     }

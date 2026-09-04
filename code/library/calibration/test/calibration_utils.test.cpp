@@ -11,5 +11,5 @@ TEST(StepsBundleAdjustment, TestAlignRotations) {
 
     Frames const output{calibration::AlignRotations(input)};
 
-    EXPECT_TRUE(output.at(1).pose.isApprox(output.at(2).pose));
+    EXPECT_TRUE(output.at(1).value.isApprox(output.at(2).value));
 }

@@ -15,7 +15,7 @@
 
 namespace reprojection::spline {
 
-std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements const& measurements,
+std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionSamples const& measurements,
                                                           size_t const num_segments) {
     // WARN(Jack): We might have some rounding error here due calculating delta_t_ns, at this time that is no known
     // problem.
@@ -68,8 +68,8 @@ std::pair<MatrixNXd, TimeHandler> InitializeC3SplineState(PositionMeasurements c
     return {Eigen::Map<MatrixNXd const>(x.data(), N, x.rows() / N), time_handler};
 }
 
-std::pair<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements const& positions,
-                                                          size_t const num_segments, TimeHandler const& time_handler) {
+std::pair<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionSamples const& positions, size_t const num_segments,
+                                                          TimeHandler const& time_handler) {
     // NOTE(Jack): For both measurement_dim and control_point_dim we are talking about the "vectorized" dimensions.
     // This means how many values are there when we stack all the individual vectors (i.e. measurements or
     // control points) into one big vector to be used in the Ax=b problem. There x is the control points vector of
@@ -103,7 +103,7 @@ std::pair<MatrixXd, VectorXd> CubicBSplineC3Init::BuildAb(PositionMeasurements c
     VectorXd b{VectorXd{measurement_dim, 1}};
 
     for (size_t i{0}; auto const& position_i : positions | std::views::values) {
-        b.segment(i * N, N) = position_i.position;
+        b.segment(i * N, N) = position_i.value;
 
         i += 1;
     }

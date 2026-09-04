@@ -26,11 +26,11 @@ namespace reprojection::calibration {
  * for an initialization method. Assuming of course the translation is not too large :)
  *
  */
-Vector3d EstimateGravity(spline::CubicBSplineC3 const& so3_spline_w_co,
-                         AccelerationMeasurements const& acceleration_imu, Matrix3d const& R_imu_co);
+Vector3d EstimateGravity(spline::CubicBSplineC3 const& so3_spline_w_co, AccelerationSamples const& acceleration_imu,
+                         Matrix3d const& R_imu_co);
 
-VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data);
+VelocitySamples ExtractAngularVelocity(ImuSamples const& imu_data);
 
-AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data);
+AccelerationSamples ExtractLinearAcceleration(ImuSamples const& imu_data);
 
 }  // namespace reprojection::calibration

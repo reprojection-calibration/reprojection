@@ -2,53 +2,90 @@
 
 #include <ceres/loss_function.h>
 
-#include <ranges>
-
 #include "cost_functions/reprojection_error.hpp"
 
 namespace reprojection::optimization {
 
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
-std::tuple<OptimizationState, CeresState> BundleAdjustment(CameraInfo const& sensor, CameraMeasurements const& targets,
-                                                           OptimizationState const& initial_state,
-                                                           int const num_threads, bool const constant_intrinsics) {
-    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
-    ceres_state.solver_options.num_threads = num_threads;
-    ceres::Problem problem{ceres_state.problem_options};
+BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int const num_threads) {
+    // TODO(Jack): It is a little messy how we construct the result from just part of the problem, and then iterate over
+    // the problem below but ignore the part that we copied to the result and use the result instead. Really not the end
+    // of the world but I feel like I am missing the plotline.
+    Result result{ba_problem};
+    result.ceres_state.solver_options.num_threads = num_threads;
+    ceres::Problem ceres_problem{result.ceres_state.problem_options};
 
-    OptimizationState optimized_state{initial_state};
-    for (auto const timestamp_ns : optimized_state.frames | std::views::keys) {
-        auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
+    for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
+        // cppcheck-suppress ignoredReturnValue
+        auto const& [camera_info, _, camera_options]{ba_problem.cameras.at(camera_id)};
+        auto& camera_state{result.camera_states.at(camera_id)};
+        // Protect against the case of a missing rig pose - it can be that we have a observation for a frame where the
+        // rig pose initialization was unsuccessful and we need to protect against that.
+        if (not result.rig_poses.contains(timestamp_ns)) {
+            continue;  // LCOV_EXCL_LINE
+        }
+        auto& rig_pose{result.rig_poses.at(timestamp_ns)};
 
+        auto const& [pixels, points]{bundle};
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
             ceres::CostFunction* const cost_function{
-                cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j))};
+                cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j))};
 
-            problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
-                                     optimized_state.camera_state.intrinsics.data(),
-                                     optimized_state.frames.at(timestamp_ns).pose.data());
+            ceres_problem.AddResidualBlock(cost_function, new ceres::HuberLoss(1.0),
+                                           camera_state.intrinsic.value.data(), rig_pose.value.data());
+        }
+
+        if (not camera_options.optimize_intrinsic) {
+            ceres_problem.SetParameterBlockConstant(camera_state.intrinsic.value.data());
         }
     }
 
-    if (constant_intrinsics) {
-        problem.SetParameterBlockConstant(optimized_state.camera_state.intrinsics.data());
-    }
+    ceres::Solve(result.ceres_state.solver_options, &ceres_problem, &result.ceres_state.solver_summary);
 
-    ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
-
-    return {optimized_state, ceres_state};
+    return result;
 }
 
-ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
+BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                                             Frames const& frames, TargetSamples const& targets,
+                                                             bool const optimize_intrinsic) {
+    // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
+    Camera const camera{camera_info, CameraState{intrinsic, Array6d::Zero()}, CameraOptions{optimize_intrinsic, false}};
+
+    // Dummy id used for internal problem consistency.
+    // NOTE(Jack): Sqlite database ids start at 1, so this should never conflict with a real database asset id. I think!
+    AssetId const camera_id{0};
+
+    // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
+    // to just check once when we actually construct the problem?
+    std::vector<Observation> observations;
+    for (auto const& [timestamp_ns, target] : targets) {
+        observations.push_back({camera_id, timestamp_ns, target.bundle});
+    }
+
+    return {{{camera_id, camera}}, frames, observations};
+}
+
+BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                                             Pose const& pose, Bundle const& bundle,
+                                                             bool optimize_intrinsic) {
+    uint64_t constexpr timestamp_ns{0};
+    ExtractedTarget const target{ExtractedTarget{bundle, {}}};
+
+    return SingleCamProblem(camera_info, intrinsic, Frames{{timestamp_ns, pose}}, TargetSamples{{timestamp_ns, target}},
+                            optimize_intrinsic);
+}
+
+// TODO(Jack): Update to use new BA problem representation
+ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples const& targets,
                                      OptimizationState const& state) {
     ReprojectionErrors residuals;
     for (auto const& [timestamp_ns, frame_i] : state.frames) {
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
 
         std::vector<double const*> parameter_blocks;
-        parameter_blocks.push_back(state.camera_state.intrinsics.data());
-        parameter_blocks.push_back(frame_i.pose.data());
+        parameter_blocks.push_back(state.camera_state.value.data());
+        parameter_blocks.push_back(frame_i.value.data());
 
         // NOTE(Jack): Eigen is column major by default. Which means that if you just make a default array here and pass
         // the row pointer blindly into the EvaluateResidualBlock function it will not fill out the row but actually two
