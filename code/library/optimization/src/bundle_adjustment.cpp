@@ -82,6 +82,7 @@ std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const
     errors.reserve(std::size(ba_problem.observations));
 
     for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
+        // cppcheck-suppress ignoredReturnValue
         auto const& [camera_info, camera_state, camera_options]{ba_problem.cameras.at(camera_id)};
         if (not ba_problem.rig_poses.contains(timestamp_ns)) {
             continue;
