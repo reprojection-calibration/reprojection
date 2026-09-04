@@ -19,9 +19,9 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 60, 1, false)};
 
     // Construct problem and solve
-    optimization::BaProblem const problem{
+    optimization::BundleAdjustment::Problem const problem{
         optimization::BuildSingleCamBaProblem(camera_info, gt_intrinsics, gt_frames, targets)};
-    auto const [frames, ceres_state, cameras]{optimization::BundleAdjustment(problem, 1)};
+    auto const [frames, ceres_state, cameras]{optimization::BundleAdjust(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     // Assert
@@ -58,9 +58,9 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
         frame_i.pose = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
-    optimization::BaProblem const problem{
+    optimization::BundleAdjustment::Problem const problem{
         optimization::BuildSingleCamBaProblem(camera_info, gt_intrinsics, noisy_frames, targets)};
-    auto const [frames, ceres_state, cameras]{optimization::BundleAdjustment(problem, 1)};
+    auto const [frames, ceres_state, cameras]{optimization::BundleAdjust(problem, 1)};
 
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
