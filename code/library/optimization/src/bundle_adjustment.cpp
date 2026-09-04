@@ -17,10 +17,14 @@ BaResult BundleAdjustment(BaProblem const& ba_problem, int const num_threads) {
     ceres::Problem ceres_problem{result.ceres_state.problem_options};
 
     for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
-        // TODO(Jack): We need to protect against bad .at() access here!
         // cppcheck-suppress ignoredReturnValue
         auto const& [camera_info, _, camera_options]{ba_problem.cameras.at(camera_id)};
         auto& camera_state{result.camera_states.at(camera_id)};
+        // Protect against the case of a missing rig pose - it can be that we have a observation for a frame where the
+        // rig pose initialization was unsuccessful and we need to protect against that.
+        if (not result.frames.contains(timestamp_ns)) {
+            continue;
+        }
         auto& frame{result.frames.at(timestamp_ns)};
 
         auto const& [pixels, points]{bundle};
