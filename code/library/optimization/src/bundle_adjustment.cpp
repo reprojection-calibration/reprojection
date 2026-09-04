@@ -52,13 +52,9 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
 
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                              Frames const& frames, TargetSamples const& targets,
-                                                             bool const optimize_intrinsic) {
+                                                             bool const optimize_intrinsic, AssetId const camera_id) {
     // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
     Camera const camera{camera_info, CameraState{intrinsic, Array6d::Zero()}, CameraOptions{optimize_intrinsic, false}};
-
-    // Dummy id used for internal problem consistency.
-    // NOTE(Jack): Sqlite database ids start at 1, so this should never conflict with a real database asset id. I think!
-    AssetId const camera_id{0};
 
     // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
     // to just check once when we actually construct the problem?
@@ -72,12 +68,13 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
 
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                              Pose const& pose, Bundle const& bundle,
-                                                             bool optimize_intrinsic) {
+                                                             bool const optimize_intrinsic) {
     uint64_t constexpr timestamp_ns{0};
     ExtractedTarget const target{ExtractedTarget{bundle, {}}};
+    AssetId const camera_id{0};
 
     return SingleCamProblem(camera_info, intrinsic, Frames{{timestamp_ns, pose}}, TargetSamples{{timestamp_ns, target}},
-                            optimize_intrinsic);
+                            optimize_intrinsic, camera_id);
 }
 
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {

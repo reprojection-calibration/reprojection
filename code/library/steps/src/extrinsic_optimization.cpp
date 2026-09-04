@@ -93,6 +93,7 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
     database::GravityInsert(db.get(), step_id, optimized_gravity);
 
     // Diagnostic output - reprojection errors
+    // USE THE UPDATE OPTIMZIED VACLUES NOT THE RAW INPUT!
     auto const [spline_poses, reprojection_errors]{
         optimization::ReprojectionErrorSpline(camera_info_, targets_, intrinsic_, optimized_spline)};
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, spline_poses);

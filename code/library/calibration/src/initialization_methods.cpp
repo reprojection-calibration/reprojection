@@ -72,7 +72,8 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         // Do a bundle adjustment with the intrinsics constant and calculate the mean residual. Our hope is that the
         // intrinsic which will be the best initialization for the full optimization will produce the lowest mean
         // residual here on a subset of targets.
-        auto const problem{Ba::SingleCamProblem(camera_info, intrinsics_i, initial_poses, target_subset, false)};
+        auto const problem{
+            Ba::SingleCamProblem(camera_info, intrinsics_i, initial_poses, target_subset,  false)};
         auto const [_, ceres_state, _1]{Ba::Solve(problem, num_threads)};
 
         double const mean_residual{ceres_state.solver_summary.final_cost / ceres_state.solver_summary.num_residuals};

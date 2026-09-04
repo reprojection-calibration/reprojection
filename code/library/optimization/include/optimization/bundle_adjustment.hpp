@@ -51,11 +51,12 @@ struct BundleAdjustment {
     static Result Solve(Problem const& ba_problem, int num_threads);
 
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Frames const& frames,
-                                    TargetSamples const& targets, bool optimize_intrinsic = true);
+                                    TargetSamples const& targets, bool optimize_intrinsic,
+                                    AssetId camera_id = AssetId{0});
 
     // Single frame override - used for pnp nonlinear refinement of the DLT estimate.
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Pose const& pose,
-                                    Bundle const& bundle, bool optimize_intrinsic = false);
+                                    Bundle const& bundle, bool optimize_intrinsic);
 };
 
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& problem);

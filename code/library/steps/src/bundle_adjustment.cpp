@@ -49,13 +49,14 @@ Hash BundleAdjustment::CacheKey() const {
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, {intrinsic_}, aligned_camera_poses, targets_)};
+    Ba::Problem const problem{
+        Ba::SingleCamProblem(camera_info_, {intrinsic_}, aligned_camera_poses, targets_, true, camera_id_)};
     auto const [frames, ceres_state, cameras]{Ba::Solve(problem, num_threads_)};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
     // NOTE(Jack): The database asset ids start at 1 (sql standard) so an id of zero here is somehow a sentinel value
     // that is unique and "protected".
-    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
+    auto const intrinsics{cameras.at(camera_id_).intrinsic.value};
 
     log->info(
         "{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {{'intial_cost': "
