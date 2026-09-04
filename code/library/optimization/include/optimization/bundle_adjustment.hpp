@@ -30,6 +30,18 @@ struct BundleAdjustment {
     };
 
     struct Problem {
+        Problem(std::map<AssetId, Camera> const& _cameras, Frames const& _rig_poses,
+                std::vector<Observation> const& _observations)
+            : cameras{_cameras}, rig_poses{_rig_poses}, observations{_observations} {}
+
+        // Update a problem with the optimized parts.
+        Problem(Problem const& problem, Frames const& _rig_poses, std::map<AssetId, CameraState> const& camera_states)
+            : cameras{problem.cameras}, rig_poses{_rig_poses}, observations{problem.observations} {
+            for (auto& [camera_id, camera] : cameras) {
+                camera.state = camera_states.at(camera_id);
+            }
+        }
+
         std::map<AssetId, Camera> cameras;
         Frames rig_poses;
         std::vector<Observation> observations;
