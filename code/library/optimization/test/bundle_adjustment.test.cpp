@@ -19,9 +19,10 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
     CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
     Intrinsic const gt_intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 60, 1, false)};
+    AssetId const camera_id{1};
 
     // Construct problem and solve
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, gt_frames, targets)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, gt_frames, targets, true, camera_id)};
     auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
@@ -36,10 +37,7 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
                                                           << gt_se3_co_w.transpose();
     }
 
-    // TODO(Jack): This is a super hacky way to recover the value! What if we change the asset id used internally one
-    // day! We need to make a single camera result or something like that, or centralize this code in a helper function
-    // is we end up using single camera ba in a lot of places!
-    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
+    auto const intrinsics{cameras.at(camera_id).intrinsic.value};
     EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.value, 1e-6)) << "Result:\n"
                                                                 << intrinsics.transpose() << "\nexpected result:\n"
                                                                 << gt_intrinsics.value.transpose();
@@ -51,6 +49,7 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
     Intrinsic const gt_intrinsics{testing_utilities::pinhole_intrinsics};
     auto const [targets, gt_frames]{testing_mocks::GenerateMvgData(camera_info, gt_intrinsics, 60, 1, false)};
+    AssetId const camera_id{1};
 
     // Add gaussian noise to the initial poses
     Frames noisy_frames{gt_frames};
@@ -59,7 +58,7 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
         frame_i.value = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, noisy_frames, targets)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, noisy_frames, targets, true, camera_id)};
     auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
 
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
@@ -84,8 +83,7 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
                                                         << gt_tf_co_w.matrix();
     }
 
-    // TODO(Jack): See comment in test above about the need for a better asset id independent single camera workflow.
-    auto const intrinsics{cameras.at(AssetId{0}).intrinsic.value};
+    auto const intrinsics{cameras.at(camera_id).intrinsic.value};
     EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.value, 1e-6)) << "Result:\n"
                                                                 << intrinsics.transpose() << "\nexpected result:\n"
                                                                 << gt_intrinsics.value.transpose();
@@ -114,20 +112,21 @@ TEST(OptimizationBundleAdjustment, TestReprojectionError) {
                                 {5, 5}};
 
     uint64_t const timestamp_ns{0};  // Used to track the data frame in the maps
+    AssetId const camera_id{1};
 
     CameraInfo const camera_info{CameraModel::Pinhole, testing_utilities::image_bounds};
     Intrinsic const intrinsic{testing_utilities::pinhole_intrinsics};
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, intrinsic, frames, targets)};
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info, intrinsic, frames, targets, false, camera_id)};
 
     auto const residuals{optimization::EvaluateResiduals(problem)};
     EXPECT_EQ(std::size(residuals), 1);
 
     // There is only one value so we hardcode index into the 0 spot. Does not scale but works for the test!
-    auto const residual{residuals[0]};
-    EXPECT_EQ(residual.camera_id, AssetId{0});
+    auto const& residual{residuals[0]};
+    EXPECT_EQ(residual.camera_id, camera_id);
     EXPECT_EQ(residual.timestamp_ns, timestamp_ns);
     EXPECT_TRUE(residual.value.isApprox(gt_residuals)) << "Result:\n"
                                                        << residual.value.transpose() << "\nexpected result:\n"
