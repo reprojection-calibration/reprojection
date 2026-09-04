@@ -6,10 +6,10 @@
 
 namespace reprojection::testing_mocks {
 
-std::pair<ImuMeasurements, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz);
+std::pair<ImuSamples, spline::Se3Spline> GenerateImuData(double const duration_s, double const sample_rate_hz);
 
 // MVG = "multiple view geometry"
-std::pair<CameraMeasurements, Frames> GenerateMvgData(CameraInfo const& sensor, Intrinsic const& intrinsics,
+std::pair<TargetSamples, Frames> GenerateMvgData(CameraInfo const& sensor, Intrinsic const& intrinsics,
                                                       double duration_s, double sample_rate_hz, bool const flat = true);
 
 // TODO(Jack): Find a better place for this function.

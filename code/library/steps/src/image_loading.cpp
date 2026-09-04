@@ -21,7 +21,7 @@ ImageLoading::ImageLoading(AssetId const camera_id, std::string_view serialized_
 Hash ImageLoading::CacheKey() const { return cache_key_; }
 
 void ImageLoading::Execute(StepId const step_id, SqlitePtr const db) const {
-    auto encoded_images = std::make_shared<EncodedImages>();
+    auto encoded_images = std::make_shared<ImageSamples>();
     int num_images{0};
     while (auto const data{image_sampler_()}) {
         auto const& [timestamp_ns, img]{*data};

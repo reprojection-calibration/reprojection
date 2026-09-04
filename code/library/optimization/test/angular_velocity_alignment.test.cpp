@@ -11,7 +11,7 @@
 using namespace reprojection;
 
 // COPY AND PASTED
-VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
+VelocityMeasurements ExtractAngularVelocity(ImuSamples const& imu_data) {
     VelocityMeasurements imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
         imu_angular_velocity.insert({timestamp_ns, {data_i.angular_velocity}});

@@ -19,7 +19,7 @@ class HashingFixture : public ::testing::Test {
     ExtractedTarget target{
         Bundle{MatrixX2d{{1.23, 1.43}, {2.75, 2.35}}, MatrixX3d{{3.25, 3.45, 5.43}, {6.18, 6.78, 4.56}}},
         {{5, 6}, {2, 3}}};
-    CameraMeasurements camera_measurements{{0, target}, {1, target}};
+    TargetSamples camera_measurements{{0, target}, {1, target}};
     Intrinsic camera_state{testing_utilities::pinhole_intrinsics};
     Frames frames{{0, {Array6d::Ones()}}, {1, {2 * Array6d::Ones()}}};
     OptimizationState optimization_state{camera_state, frames};

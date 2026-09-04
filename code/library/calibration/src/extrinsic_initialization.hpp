@@ -29,8 +29,8 @@ namespace reprojection::calibration {
 Vector3d EstimateGravity(spline::CubicBSplineC3 const& so3_spline_w_co,
                          AccelerationMeasurements const& acceleration_imu, Matrix3d const& R_imu_co);
 
-VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data);
+VelocityMeasurements ExtractAngularVelocity(ImuSamples const& imu_data);
 
-AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data);
+AccelerationMeasurements ExtractLinearAcceleration(ImuSamples const& imu_data);
 
 }  // namespace reprojection::calibration

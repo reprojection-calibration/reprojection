@@ -69,7 +69,7 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
     uint64_t const timestamp_ns{0};
 
     CameraInfo const sensor{CameraModel::Pinhole, tu::image_bounds};
-    CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
+    TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
     auto const camera_state{Intrinsic{tu::pinhole_intrinsics}};
 
     // The control points for a spline with one segment that is simply the constant identity transform.

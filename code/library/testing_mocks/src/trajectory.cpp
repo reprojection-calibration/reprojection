@@ -5,7 +5,7 @@
 
 namespace reprojection::testing_mocks {
 
-std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double const sample_rate_hz,
+std::pair<Frames, ImuSamples> Trajectory(double const duration_s, double const sample_rate_hz,
                                               Vector3d const& origin_w, Vector3d const& target_w, double const radius) {
     auto const time_ns{SampleTimes(duration_s, sample_rate_hz)};
 
@@ -79,7 +79,7 @@ std::pair<Frames, ImuMeasurements> Trajectory(double const duration_s, double co
     }
 
     Frames frames;
-    ImuMeasurements imu_measurements;
+    ImuSamples imu_measurements;
     for (int i{2}; i < std::size(time_ns) - 2; ++i) {
         Vector6d se3_w_b;
         se3_w_b << geometry::Log(R_w_b[i]), p_w[i];

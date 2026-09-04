@@ -30,7 +30,7 @@ using Ba = optimization::BundleAdjustment;
 // of targets sampled?
 //
 std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
-                                            CameraMeasurements const& targets, int const num_threads) {
+                                            TargetSamples const& targets, int const num_threads) {
     auto const [runner, initialization]{SelectInitializationStrategy(camera_model, height, width)};
 
     // Generate all gamma estimates and sort them in ascending order.
@@ -96,7 +96,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
 // of the function is to unproject the pixels to 3d rays using a roughly initialized camera, then project these back to
 // pixels using an ideal unit pinhole camera, which essentially undistorts them. Now that we have data that comes from
 // an equivalent pinhole camera we can apply dlt/pnp and get an initial pose.
-Frames PoseInitialization(CameraInfo const& camera_info, CameraMeasurements const& targets,
+Frames PoseInitialization(CameraInfo const& camera_info, TargetSamples const& targets,
                           Intrinsic const& intrinsic) {
     auto const camera{
         projection_functions::InitializeCamera(camera_info.camera_model, intrinsic.value, camera_info.bounds)};
@@ -113,7 +113,7 @@ Frames PoseInitialization(CameraInfo const& camera_info, CameraMeasurements cons
 }  // LCOV_EXCL_LINE
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
-                                                                               ImuMeasurements const& imu_data,
+                                                                               ImuSamples const& imu_data,
                                                                                int const num_threads) {
     auto const imu_angular_velocity{ExtractAngularVelocity(imu_data)};
     auto const [aa_imu_co,

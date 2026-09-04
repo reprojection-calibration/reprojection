@@ -16,7 +16,7 @@ CameraInfoStep::CameraInfoStep(AssetId const camera_id, StepId const image_loadi
                                SqlitePtr const db)
     : camera_id_{camera_id},
       camera_model_{camera_model},
-      images_{std::make_shared<EncodedImages>(database::ImagesSelect(db.get(), image_loading_id, camera_id))} {}
+      images_{std::make_shared<ImageSamples>(database::ImagesSelect(db.get(), image_loading_id, camera_id))} {}
 
 Hash CameraInfoStep::CacheKey() const {
     // NOTE(Jack): See FeatureExtraction::CacheKey() comment as to why we need the camera asset id.

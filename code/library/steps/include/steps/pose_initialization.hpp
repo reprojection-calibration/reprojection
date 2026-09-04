@@ -20,7 +20,7 @@ struct PoseInitialization {
    private:
     AssetId camera_id_;
     StepId targets_id_;
-    CameraMeasurements targets_;
+    TargetSamples targets_;
     CameraInfo camera_info_;
     Intrinsic intrinsic_;
 };

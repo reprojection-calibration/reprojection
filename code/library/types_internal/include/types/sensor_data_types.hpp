@@ -7,16 +7,14 @@
 
 namespace reprojection {
 
-using CameraMeasurement = StampedData<ExtractedTarget>;
-using CameraMeasurements = StampedMap<CameraMeasurement>;
+using TargetSample = StampedData<ExtractedTarget>;
+using TargetSamples = StampedMap<TargetSample>;
 
-using ImuMeasurement = StampedData<ImuData>;
-using ImuMeasurements = StampedMap<ImuMeasurement>;
-
-using Image = StampedData<cv::Mat>;
+using ImuSample = StampedData<ImuData>;
+using ImuSamples = StampedMap<ImuSample>;
 
 // TODO(Jack): We should consider making the absent of an image explicit with std::optional.
-using EncodedImage = StampedData<ImageBuffer>;
-using EncodedImages = StampedMap<EncodedImage>;
+using ImageSample = StampedData<ImageBuffer>;
+using ImageSamples = StampedMap<ImageSample>;
 
 }  // namespace reprojection

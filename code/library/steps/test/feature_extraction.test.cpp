@@ -19,7 +19,7 @@ class FeatureExtractionTestFixture : public StepTestFixture {
         if (not cv::imencode(".png", img, buffer)) {
             throw std::runtime_error("cv::imencode() failed");
         }
-        EncodedImages const encoded_images{{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}}};
+        ImageSamples const encoded_images{{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}}};
         image_loading_id_ = InsertImages(encoded_images);
 
         target_info_id_ = database::GetOrCreateStep(db_.get(), StepType::TargetInfo, "").first;

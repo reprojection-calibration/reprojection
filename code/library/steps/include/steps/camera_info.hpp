@@ -23,7 +23,7 @@ struct CameraInfoStep {
     // TODO(Jack): It is way overkill to load all the images here just to get the size of the first one. We need a
     // better iamge handling pipeline across the image loading/feature extraction/camera info. We need an entirely new
     // concept.
-    std::shared_ptr<EncodedImages> images_;
+    std::shared_ptr<ImageSamples> images_;
 };
 
 }  // namespace reprojection::steps

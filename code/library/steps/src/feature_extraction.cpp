@@ -19,7 +19,7 @@ FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image
     : camera_id_{camera_id},
       image_loading_id_{image_loading_id},
       show_extraction_{show_extraction},
-      images_{std::make_shared<EncodedImages>(database::ImagesSelect(db.get(), image_loading_id, camera_id))} {
+      images_{std::make_shared<ImageSamples>(database::ImagesSelect(db.get(), image_loading_id, camera_id))} {
     if (auto const target_info{database::TargetInfoSelect(db.get(), target_info_id, target_id)}) {
         target_info_ = *target_info;
     } else {
@@ -46,7 +46,7 @@ Hash FeatureExtraction::CacheKey() const {
 void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info_)};
 
-    CameraMeasurements extracted_targets;
+    TargetSamples extracted_targets;
     for (auto const& [timestamp_ns, buffer] : *images_) {
         cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
         if (img.empty()) {

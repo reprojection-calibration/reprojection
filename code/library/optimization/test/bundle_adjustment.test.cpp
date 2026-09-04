@@ -116,7 +116,7 @@ TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) {
     uint64_t const timestamp_ns{0};  // Used to track the data frame in the maps
 
     CameraInfo const sensor{CameraModel::Pinhole, testing_utilities::image_bounds};
-    CameraMeasurements const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
+    TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
     OptimizationState const state{Intrinsic{testing_utilities::pinhole_intrinsics},
                                   {{timestamp_ns, {Array6d::Zero()}}}};
 

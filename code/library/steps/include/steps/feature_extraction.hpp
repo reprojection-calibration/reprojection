@@ -24,7 +24,7 @@ struct FeatureExtraction {
     AssetId camera_id_;
     StepId image_loading_id_;
     bool show_extraction_;
-    std::shared_ptr<EncodedImages> images_;
+    std::shared_ptr<ImageSamples> images_;
     TargetInfo target_info_;
 };
 

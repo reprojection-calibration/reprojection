@@ -235,7 +235,7 @@ TEST(DatabaseCalibrationDatbase, TestImuData) {
     StepId const imu_data_id{database::GetOrCreateStep(db.get(), StepType::ImuDataLoading, "").first};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
 
-    ImuMeasurements const imu_data{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
+    ImuSamples const imu_data{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
 
     EXPECT_NO_THROW(database::ImuDataInsert(db.get(), imu_data_id, asset_id, imu_data));
 
@@ -250,7 +250,7 @@ TEST(DatabaseCalibrationDatbase, TestImuErrors) {
     StepId const imu_data_id{database::GetOrCreateStep(db.get(), StepType::ImuDataLoading, "").first};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
 
-    ImuMeasurements const imu_data{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
+    ImuSamples const imu_data{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
     database::ImuDataInsert(db.get(), imu_data_id, asset_id, imu_data);
 
     ImuErrors const imu_errors{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
@@ -291,7 +291,7 @@ TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
     StepId step_id;
     EXPECT_NO_THROW(step_id = CreateExtractedTargets(image_loading_id, asset_id));
 
-    CameraMeasurements const result{database::ExtractedTargetsSelect(db_.get(), step_id, asset_id)};
+    TargetSamples const result{database::ExtractedTargetsSelect(db_.get(), step_id, asset_id)};
     EXPECT_EQ(std::size(result), 1);
     EXPECT_EQ(result.at(0).indices.size(), 0);
 }

@@ -280,7 +280,7 @@ spline::Matrix2NXd ControlPointsSelect(sqlite3* const db, StepId const step_id, 
 // NOTE(Jack): This "source_step_id" idea here is an important part of establishing a foreign key relationship
 // between two data tables.
 void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
-                            AssetId const asset_id, CameraMeasurements const& data) {
+                            AssetId const asset_id, TargetSamples const& data) {
     auto const binder{[step_id, source_step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, target]{data_i};
 
@@ -303,8 +303,8 @@ void ExtractedTargetsInsert(sqlite3* const db, StepId const step_id, StepId cons
     BatchExecuteStatement(sql_statements::extracted_targets_insert, data, binder, db);
 }
 
-CameraMeasurements ExtractedTargetsSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
-    CameraMeasurements data;
+TargetSamples ExtractedTargetsSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
+    TargetSamples data;
 
     ExecuteQuery(
         db, sql_statements::extracted_targets_select,
@@ -390,7 +390,7 @@ std::expected<Vector3d, std::string> GravitySelect(sqlite3* const db, StepId con
     }
 }
 
-void ImagesInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, EncodedImages const& data) {
+void ImagesInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, ImageSamples const& data) {
     auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, buffer]{data_i};
 
@@ -408,8 +408,8 @@ void ImagesInsert(sqlite3* const db, StepId const step_id, AssetId const asset_i
     BatchExecuteStatement(sql_statements::images_insert, data, binder, db);
 }
 
-EncodedImages ImagesSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
-    EncodedImages data;
+ImageSamples ImagesSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
+    ImageSamples data;
 
     ExecuteQuery(
         db, sql_statements::images_select,
@@ -432,7 +432,7 @@ EncodedImages ImagesSelect(sqlite3* const db, StepId const step_id, AssetId cons
     return data;
 }  // LCOV_EXCL_LINE
 
-void ImuDataInsert(sqlite3* const db, StepId step_id, AssetId asset_id, ImuMeasurements const& data) {
+void ImuDataInsert(sqlite3* const db, StepId step_id, AssetId asset_id, ImuSamples const& data) {
     auto const binder{[step_id, asset_id](sqlite3_stmt* const stmt, auto const& data_i) {
         auto const& [timestamp_ns, imu_data_i]{data_i};
 
@@ -447,8 +447,8 @@ void ImuDataInsert(sqlite3* const db, StepId step_id, AssetId asset_id, ImuMeasu
     BatchExecuteStatement(sql_statements::imu_data_insert, data, binder, db);
 }
 
-ImuMeasurements ImuDataSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
-    ImuMeasurements data;
+ImuSamples ImuDataSelect(sqlite3* const db, StepId const step_id, AssetId const asset_id) {
+    ImuSamples data;
 
     ExecuteQuery(
         db, sql_statements::imu_data_select,
@@ -460,7 +460,7 @@ ImuMeasurements ImuDataSelect(sqlite3* const db, StepId const step_id, AssetId c
             uint64_t const timestamp_ns{static_cast<uint64_t>(sqlite3_column_int64(stmt, 0))};
             Array6d const imu_data_i{ReadEigenColumn<6>(stmt, 1)};
 
-            data.insert(ImuMeasurement{timestamp_ns, {imu_data_i.topRows<3>(), imu_data_i.bottomRows<3>()}});
+            data.insert(ImuSample{timestamp_ns, {imu_data_i.topRows<3>(), imu_data_i.bottomRows<3>()}});
         });
 
     return data;

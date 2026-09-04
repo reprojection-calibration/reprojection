@@ -45,7 +45,7 @@ Vector3d EstimateGravity(CubicBSplineC3 const& so3_spline_w_co, AccelerationMeas
     return kGravity * net_acceleration_w.normalized();
 }
 
-VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
+VelocityMeasurements ExtractAngularVelocity(ImuSamples const& imu_data) {
     VelocityMeasurements imu_angular_velocity;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
         imu_angular_velocity.insert({timestamp_ns, {data_i.angular_velocity}});
@@ -54,7 +54,7 @@ VelocityMeasurements ExtractAngularVelocity(ImuMeasurements const& imu_data) {
     return imu_angular_velocity;
 }  // LCOV_EXCL_LINE
 
-AccelerationMeasurements ExtractLinearAcceleration(ImuMeasurements const& imu_data) {
+AccelerationMeasurements ExtractLinearAcceleration(ImuSamples const& imu_data) {
     AccelerationMeasurements imu_linear_acceleration;
     for (auto const& [timestamp_ns, data_i] : imu_data) {
         imu_linear_acceleration.insert({timestamp_ns, {data_i.linear_acceleration}});

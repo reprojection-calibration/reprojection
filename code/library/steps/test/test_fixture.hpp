@@ -27,16 +27,16 @@ class StepTestFixture : public ::testing::Test {
         return step_id;
     }
 
-    StepId InsertImages(EncodedImages const& images) {
+    StepId InsertImages(ImageSamples const& images) {
         auto const step_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
         database::ImagesInsert(db_.get(), step_id, camera_id_, images);
 
         return step_id;
     }
 
-    StepId InsertExtractedTargets(CameraMeasurements const& targets) {
+    StepId InsertExtractedTargets(TargetSamples const& targets) {
         // Targets have a foreign key to images, so manufacture exactly the image rows required by the targets.
-        EncodedImages images;
+        ImageSamples images;
         for (auto const timestamp_ns : targets | std::views::keys) {
             images.emplace(timestamp_ns, ImageBuffer{});
         }

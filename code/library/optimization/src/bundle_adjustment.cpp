@@ -47,7 +47,7 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsics,
-                                                             Frames const& frames, CameraMeasurements const& targets,
+                                                             Frames const& frames, TargetSamples const& targets,
                                                              bool const optimize_intrinsic) {
     // For a single camera problem we do not consider the rig-co extrinsics and set those to constant identity.
     Camera const camera{camera_info, CameraState{intrinsics, Array6d::Zero()},
@@ -67,7 +67,7 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
 }
 
 // TODO(Jack): Update to use new BA problem representation
-ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
+ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples const& targets,
                                      OptimizationState const& state) {
     ReprojectionErrors residuals;
     for (auto const& [timestamp_ns, frame_i] : state.frames) {

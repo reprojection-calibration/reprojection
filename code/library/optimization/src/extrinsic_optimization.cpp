@@ -13,8 +13,8 @@
 namespace reprojection::optimization {
 
 std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
-    ImuMeasurements const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
-    Vector3d const& initial_gravity, CameraInfo const& sensor, CameraMeasurements const& targets,
+    ImuSamples const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
+    Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets,
     Intrinsic const& intrinsics, int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY};
@@ -96,7 +96,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
 }
 
 std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& sensor,
-                                                              CameraMeasurements const& targets,
+                                                              TargetSamples const& targets,
                                                               Intrinsic const& camera_state,
                                                               spline::Se3Spline const& spline_w_co) {
     // TODO(Jack): We are calculating the reprojection errors for all targets that are on the interpolated spline. That
@@ -143,7 +143,7 @@ std::pair<Frames, ReprojectionErrors> ReprojectionErrorSpline(CameraInfo const& 
     return {tf_co_w, residuals};
 }  // LCOV_EXCL_LINE
 
-ImuErrors EvaluateImuError(ImuMeasurements const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
+ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
                            spline::Se3Spline const& spline_w_co) {
     ImuErrors imu_residuals;
 

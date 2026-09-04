@@ -72,9 +72,9 @@ void ControlPointsInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::
 spline::Matrix2NXd ControlPointsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 void ExtractedTargetsInsert(sqlite3* db, StepId step_id, StepId source_step_id, AssetId asset_id,
-                            CameraMeasurements const& data);
+                            TargetSamples const& data);
 
-CameraMeasurements ExtractedTargetsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+TargetSamples ExtractedTargetsSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 void ExtrinsicInsert(sqlite3* db, StepId step_id, Extrinsic const& extrinsic);
 
@@ -85,13 +85,13 @@ void GravityInsert(sqlite3* db, StepId step_id, Vector3d const& gravity);
 
 std::expected<Vector3d, std::string> GravitySelect(sqlite3* db, StepId step_id);
 
-void ImagesInsert(sqlite3* db, StepId step_id, AssetId asset_id, EncodedImages const& data);
+void ImagesInsert(sqlite3* db, StepId step_id, AssetId asset_id, ImageSamples const& data);
 
-EncodedImages ImagesSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+ImageSamples ImagesSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-void ImuDataInsert(sqlite3* db, StepId step_id, AssetId asset_id, ImuMeasurements const& data);
+void ImuDataInsert(sqlite3* db, StepId step_id, AssetId asset_id, ImuSamples const& data);
 
-ImuMeasurements ImuDataSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+ImuSamples ImuDataSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 // TODO(Jack): "source_step_id" used here and elsewhere is a misleading name. In reality this step id is used only to
 // establish a foreign key constraint, there is nothing to do with the source of anything (at least that is not a

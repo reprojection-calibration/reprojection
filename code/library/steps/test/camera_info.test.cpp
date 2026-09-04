@@ -20,7 +20,7 @@ class CameraInfoTestFixture : public StepTestFixture {
         if (not cv::imencode(".png", img, buffer)) {
             throw std::runtime_error("cv::imencode() failed");
         }
-        EncodedImages const encoded_images{{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}}};
+        ImageSamples const encoded_images{{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}}};
         image_loading_id_ = InsertImages(encoded_images);
     }
 

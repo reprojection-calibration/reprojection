@@ -25,7 +25,7 @@ struct BundleAdjustment {
     AssetId camera_id_;
     StepId targets_id_;
     int num_threads_;
-    CameraMeasurements targets_;
+    TargetSamples targets_;
     CameraInfo camera_info_;
     Intrinsic intrinsics_;
     Frames camera_poses_;

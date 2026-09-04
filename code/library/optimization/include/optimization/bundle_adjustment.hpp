@@ -50,10 +50,10 @@ struct BundleAdjustment {
     static Result Solve(Problem const& ba_problem, int num_threads);
 
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsics, Frames const& frames,
-                                    CameraMeasurements const& targets, bool optimize_intrinsic = true);
+                                    TargetSamples const& targets, bool optimize_intrinsic = true);
 };
 
-ReprojectionErrors ReprojectionError(CameraInfo const& sensor, CameraMeasurements const& targets,
+ReprojectionErrors ReprojectionError(CameraInfo const& sensor, TargetSamples const& targets,
                                      OptimizationState const& state);
 
 }  // namespace  reprojection::optimization

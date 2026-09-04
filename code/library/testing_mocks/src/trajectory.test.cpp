@@ -18,7 +18,7 @@ TEST(TestingMocksTrajectory, TestTrajectory) {
     EXPECT_EQ(frame_x.first, 2033898304);
     EXPECT_TRUE(frame_x.second.value.isApprox(Array6d{0.824561, 0.480256, -2.12411, 2.02368, 2.29411, 2.95548}, 1e-4));
 
-    ImuMeasurement const imu_data_x{*std::cbegin(imu_data)};
+    ImuSample const imu_data_x{*std::cbegin(imu_data)};
     EXPECT_EQ(imu_data_x.first, 2033898304);
     EXPECT_TRUE(imu_data_x.second.angular_velocity.isApprox(Vector3d{0.00175316, 0.100484, -0.101192}, 1e-4));
     EXPECT_TRUE(imu_data_x.second.linear_acceleration.isApprox(Vector3d{-6.53247, -0.44657, 6.78529}, 1e-4));
