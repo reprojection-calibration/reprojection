@@ -74,4 +74,17 @@ struct Extrinsic {
     Array6d se3_a_b;
 };
 
+// TODO(Jack): Where on earth does this type belong?
+struct CameraProblemInput {
+    AssetId camera_id;
+    CameraInfo camera_info;
+    Intrinsic intrinsic;
+    TargetSamples targets;
+
+    Array6d extrinsic{Array6d::Zero()};
+
+    bool optimize_intrinsic{true};
+    bool optimize_extrinsic{true};
+};
+
 }  // namespace reprojection

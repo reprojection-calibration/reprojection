@@ -3,6 +3,7 @@ set(LIBRARY_NAME "steps")
 set(SRC_FILES
         src/bundle_adjustment.cpp
         src/camera_info.cpp
+        src/extrinsic_cam_optimization.cpp
         src/extrinsic_init.cpp
         src/extrinsic_optimization.cpp
         src/feature_extraction.cpp

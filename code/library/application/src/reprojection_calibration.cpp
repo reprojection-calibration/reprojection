@@ -6,6 +6,7 @@
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
+#include "steps/extrinsic_cam_optimization.hpp"
 #include "steps/extrinsic_init.hpp"
 #include "steps/extrinsic_optimization.hpp"
 #include "steps/feature_extraction.hpp"
@@ -69,16 +70,6 @@ Sensors ParseSensors(toml::table const& cfg_table) {
     return Sensors{camera_names, imu_name};
 }
 
-// TODO(Jack): Should we move this to another location?
-// NOTE(Jack): We only store the values that we need to the extrinsic calibration. We could store every step id but why?
-struct CameraCalibration {
-    AssetId camera_id;
-    StepId camera_info_id;
-    StepId targets_id;
-    StepId pose_init_id;
-    StepId bundle_adjustment_id;
-};
-
 void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {
     steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
@@ -118,6 +109,12 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
 
         camera_calibrations.push_back({camera.id, camera_info_id, targets_id, pose_init_id, bundle_adjustment_id});
     }
+
+    // TODO PUT INTO WORKLFOW CONTROL FLOW STATEMENT!
+    steps::ExtrinsicCamOptimization const extrinsic_cam_optimization_step{camera_calibrations, db};
+    StepId const extrinsic_cam_optimization_id{
+        RunStep<steps::ExtrinsicCamOptimization>(context.workflow_id, extrinsic_cam_optimization_step, db)};
+    static_cast<void>(extrinsic_cam_optimization_id);
 
     // TODO(Jack): Find a way to get this to run in a unit test! I think we could do this with the data generation
     // functions we have!

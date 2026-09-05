@@ -5,18 +5,7 @@
 
 namespace reprojection::optimization {
 
-// TODO LOCATION
-struct CameraProblemInput {
-    AssetId camera_id;
-    CameraInfo camera_info;
-    Intrinsic intrinsic;
-    TargetSamples targets;
 
-    Array6d extrinsic{Array6d::Zero()};
-
-    bool optimize_intrinsic{true};
-    bool optimize_extrinsic{true};
-};
 
 struct BundleAdjustment {
     struct CameraState {

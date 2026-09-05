@@ -76,6 +76,13 @@ void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const
         database::AssetGroupInsert(db.get(), {asset});
     }
 
+    // TODO ADD THIS TO THE WORKFLOW CONTROL FLOW LOGIC!
+    std::vector<AssetId> camera_assets;
+    for (auto const& camera : assets.cameras) {
+        camera_assets.push_back(camera.id);
+    }
+    database::AssetGroupInsert(db.get(), camera_assets);
+
     // Now execute any special rules that exist depending on the workflow type.
     if (workflow_type == WorkflowType::CamImu) {
         // WARN(Jack): We are hardcoding here that the imu will always be calibrated to the first camera.
