@@ -121,7 +121,9 @@ Ba::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic cons
             frames.insert({timestamp_ns, {tf_co_w}});
         }
 
-        observations.push_back({camera_id, timestamp_ns, target.bundle});
+        // NOTE(Jack): For a single cam the sample and frame timestamps are by definition the same! Any sensor it
+        // automatically self synchronized.
+        observations.push_back({camera_id, timestamp_ns, timestamp_ns, target.bundle});
     }
 
     return {{{camera_id, camera}}, frames, observations};

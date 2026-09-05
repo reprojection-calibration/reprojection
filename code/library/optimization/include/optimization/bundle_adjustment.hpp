@@ -25,7 +25,10 @@ struct BundleAdjustment {
 
     struct Observation {
         AssetId camera_id;
-        uint64_t timestamp_ns;
+        // This is the original measurement timestamp which we need to keep so we can satisfy foreign key constraints.
+        uint64_t sample_timestamp_ns;
+        // TODO NAMING! This is the timestamp of the synchronized rig frame!
+        uint64_t frame_timestamp_ns;
         Bundle value;
     };
 
