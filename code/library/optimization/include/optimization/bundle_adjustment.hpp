@@ -5,6 +5,19 @@
 
 namespace reprojection::optimization {
 
+// TODO LOCATION
+struct CameraProblemInput {
+    AssetId camera_id;
+    CameraInfo camera_info;
+    Intrinsic intrinsic;
+    TargetSamples targets;
+
+    Array6d extrinsic{Array6d::Zero()};
+
+    bool optimize_intrinsic{true};
+    bool optimize_extrinsic{true};
+};
+
 struct BundleAdjustment {
     struct CameraState {
         Intrinsic intrinsic;
@@ -65,6 +78,9 @@ struct BundleAdjustment {
 
     static Result Solve(Problem const& ba_problem, int num_threads);
 
+    static Problem MultiCamProblem(std::vector<CameraProblemInput> const& cameras, Frames const& rig_poses,
+                                   uint64_t max_sync_delta_ns);
+
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                     TargetSamples const& targets, Frames const& frames, bool optimize_intrinsic,
                                     AssetId camera_id);
@@ -72,6 +88,10 @@ struct BundleAdjustment {
     // Single frame override - used for pnp nonlinear refinement of the DLT estimate.
     static Problem SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Bundle const& bundle,
                                       Pose const& pose, bool optimize_intrinsic);
+
+   private:
+    static void AddCamera(CameraProblemInput const& data, uint64_t max_sync_delta_ns, bool optimize_intrinsic,
+                          bool optimize_extrinsic, Problem& problem);
 };
 
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& problem);

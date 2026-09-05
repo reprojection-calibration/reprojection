@@ -2,6 +2,8 @@
 
 #include <ceres/loss_function.h>
 
+#include <ranges>
+
 #include "cost_functions/reprojection_error.hpp"
 
 namespace reprojection::optimization {
@@ -50,6 +52,19 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
     return result;
 }
 
+BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(std::vector<CameraProblemInput> const& cameras,
+                                                            Frames const& rig_poses, uint64_t max_sync_delta_ns) {
+    auto const& reference_cam{cameras.front()};
+    Problem problem{SingleCamProblem(reference_cam.camera_info, reference_cam.intrinsic, reference_cam.targets,
+                                     rig_poses, reference_cam.optimize_intrinsic, reference_cam.camera_id)};
+
+    for (auto const& camera : cameras | std::views::drop(1)) {
+        AddCamera(camera, max_sync_delta_ns, camera.optimize_intrinsic, camera.optimize_extrinsic, problem);
+    }
+
+    return problem;
+}
+
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                              TargetSamples const& targets, Frames const& frames,
                                                              bool const optimize_intrinsic, AssetId const camera_id) {
@@ -77,6 +92,62 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
 
     return SingleCamProblem(camera_info, intrinsic, TargetSamples{{timestamp_ns, target}}, Frames{{timestamp_ns, pose}},
                             optimize_intrinsic, camera_id);
+}
+
+// TODO TEST? and split between hpp and cpp?
+auto FindClosest(TargetSamples const& data, uint64_t const timestamp) {
+    auto const upper{data.lower_bound(timestamp)};
+    if (upper == std::cbegin(data)) {
+        return upper;
+    } else if (upper == std::cend(data)) {
+        return std::prev(upper);
+    }
+
+    auto const lower{std::prev(upper)};
+
+    uint64_t const upper_delta{upper->first - timestamp};
+    uint64_t const lower_delta{timestamp - lower->first};
+
+    return lower_delta <= upper_delta ? lower : upper;
+}
+
+// TODO TEST? and split between hpp and cpp?
+// NOTE(Jack): We need this kinda funky looking logic because we are dealing with unsigned types and need to worry about
+// NOT creating negative numbers that will underflow. Probably was a dumb idea to use an unsigned type in the first
+// place.
+bool IsWithinThreshold(uint64_t const lhs, uint64_t const rhs, uint64_t const threshold_ns) {
+    uint64_t const delta{lhs > rhs ? lhs - rhs : rhs - lhs};
+
+    return delta <= threshold_ns;
+}
+
+// NOTE ALL CAMERAS GET SYNCED ONLY TO THE RIG FRAMES _ MEANS SOME FRAMES WILL HAVE ONE OR MORE OR NOT TARGETS
+void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t const max_sync_delta_ns,
+                                 bool const optimize_intrinsic, bool const optimize_extrinsic, Problem& problem) {
+    problem.cameras.emplace(
+        camera.camera_id,
+        Camera{camera.camera_info, {camera.intrinsic, camera.extrinsic}, {optimize_intrinsic, optimize_extrinsic}});
+
+    // NOTE(Jack): Kinda surprisingly but this is the place where all the time synchronization happens!
+    // TODO NOTE ON SYNC ALGO AND ITS LIMITS!
+    TargetSamples remaining_targets{camera.targets};
+    for (auto const& [frame_timestamp_ns, _] : problem.rig_poses) {
+        auto const target_it{FindClosest(remaining_targets, frame_timestamp_ns)};
+        if (target_it == std::cend(remaining_targets)) {
+            continue;
+        }
+
+        auto const sample_timestamp_ns{target_it->first};
+        if (not IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns, max_sync_delta_ns)) {
+            continue;
+        }
+
+        problem.observations.push_back(
+            {camera.camera_id, sample_timestamp_ns, frame_timestamp_ns, target_it->second.bundle});
+
+        // Remove it so a double match cannot happen.
+        remaining_targets.erase(target_it);
+    }
 }
 
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {
