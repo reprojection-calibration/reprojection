@@ -68,10 +68,4 @@ struct ImuErrorState {
 using ImuError = StampedData<ImuErrorState>;
 using ImuErrors = StampedMap<ImuError>;
 
-struct Extrinsic {
-    AssetId frame_a;
-    AssetId frame_b;
-    Array6d se3_a_b;
-};
-
 }  // namespace reprojection

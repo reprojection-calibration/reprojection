@@ -4,6 +4,7 @@
 #include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/ceres_types.hpp"
+#include "types/transform_types.hpp"
 
 namespace reprojection::optimization {
 
