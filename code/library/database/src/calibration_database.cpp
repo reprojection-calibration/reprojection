@@ -544,8 +544,20 @@ void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, StepId co
     BatchExecuteStatement(sql_statements::reprojection_errors_insert, data, binder, db);
 }
 
-void RigStateInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id, RigState const& data) {
-    return;
+void RigStateInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
+                    transforms::RigState const& data) {
+    // TODO REFACTOR TO RigPosesInsert()?
+    CameraPosesInsert(db, step_id, source_step_id, data.rig_frame_asset_id, data.poses);
+
+    // WARN(Jack): Should we manually insert the identity transform here? We cannot put it into the Extrinsics object
+    // because that forbids self-cycles.
+
+    // TODO(Jack): Should we make the extrinsic insertion operation a batch insertion operation so we can remove this
+    // loop? Not critical but consider for consistency across all other functions. This is the only one where we
+    // manually iterate I think.
+    for (auto const& extrinsic_i : data.extrinsics.Values()) {
+        ExtrinsicInsert(db, step_id, extrinsic_i);
+    }
 }
 
 void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler) {

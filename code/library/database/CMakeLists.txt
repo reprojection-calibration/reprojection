@@ -117,6 +117,7 @@ set(PRIVATE_LINK_LIBRARIES
 set(PUBLIC_LINK_LIBRARIES
         SQLite3::SQLite3
         spline
+        transforms
         types
 )
 AddLibrary()
