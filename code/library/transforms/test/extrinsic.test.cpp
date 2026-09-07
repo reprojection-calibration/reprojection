@@ -43,13 +43,13 @@ TEST(TransformsExtrinsic, TestHasPath) {
 }
 
 TEST(TransformsExtrinsic, TestFindPath) {
-    std::vector<Extrinsic> extrinsics{};
     // Even for an empty extrinsic there is always a self transform returned for any two same frames.
+    std::vector<Extrinsic> extrinsics{};
     auto result{transforms::Extrinsics::FindPath(extrinsics, AssetId{1}, AssetId{1})};
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(std::size(*result), 0);
 
-    // Any non-same frames will not have a valid path given the empty intrinsic.
+    // Any non-same frames will not have a valid path given the empty extrinsic initialization.
     result = transforms::Extrinsics::FindPath(extrinsics, AssetId{1}, AssetId{2});
     EXPECT_FALSE(result.has_value());
 
