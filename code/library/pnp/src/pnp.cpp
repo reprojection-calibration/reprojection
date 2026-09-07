@@ -56,7 +56,7 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     Ba::Problem const ba_problem{
         optimization::BundleAdjustment::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
 
-    auto const [rig_poses, ceres_state, _]{optimization::BundleAdjustment::Solve(ba_problem, 1)};
+    auto const [_, rig_poses, _1, ceres_state]{optimization::BundleAdjustment::Solve(ba_problem, 1)};
     if (ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {
         // TODO(Jack): This is a hacky way to get the frame, but the point of the pnp problem construction is that there
         // is only ever one single frame, so we can get away with this here. Does it look nice? No. Is it easy to

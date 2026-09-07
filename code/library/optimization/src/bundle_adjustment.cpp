@@ -63,7 +63,7 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
         observations.push_back({camera_id, timestamp_ns, target.bundle});
     }
 
-    return {{{camera_id, camera}}, frames, observations};
+    return {camera_id, frames, {{camera_id, camera}}, observations};
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,

@@ -23,8 +23,9 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
 
     // Construct problem and solve
     Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, targets, gt_frames, true, camera_id)};
-    auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
+    auto const [ref_asset, frames, cameras, ceres_state]{Ba::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
+    EXPECT_EQ(ref_asset, camera_id);
 
     // Assert
     EXPECT_EQ(std::size(frames), 56);
@@ -59,9 +60,9 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     }
 
     Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, targets, noisy_frames, true, camera_id)};
-    auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
-
+    auto const [ref_asset, frames, cameras, ceres_state]{Ba::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
+    EXPECT_EQ(ref_asset, camera_id);
 
     EXPECT_EQ(std::size(frames), 56);
     for (auto const& [timestamp_ns, frame_i] : frames) {

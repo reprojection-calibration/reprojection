@@ -124,7 +124,7 @@ Ba::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic cons
         observations.push_back({camera_id, timestamp_ns, target.bundle});
     }
 
-    return {{{camera_id, camera}}, frames, observations};
+    return {camera_id, frames, {{camera_id, camera}}, observations};
 }
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
