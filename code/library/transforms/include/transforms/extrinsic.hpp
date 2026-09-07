@@ -10,6 +10,8 @@ class Extrinsics {
    public:
     explicit Extrinsics(std::vector<Extrinsic> const& values);
 
+    std::vector<Extrinsic> Values() const { return values_; }
+
     bool HasPath(AssetId frame_a, AssetId frame_b) const;
 
     Array6d Resolve(AssetId frame_a, AssetId frame_b) const;
