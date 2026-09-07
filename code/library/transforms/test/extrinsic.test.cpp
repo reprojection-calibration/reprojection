@@ -4,6 +4,26 @@
 
 using namespace reprojection;
 
+TEST(TransformsExtrinsic, TestExtrinsicsConstructor) {
+    // Good examples - happy path. For now (07.09.2026) we consider an empty extrinsic acceptable, that might change!
+    EXPECT_NO_THROW(transforms::Extrinsics{{}});
+    std::vector<Extrinsic> data{{0, 1, Array6d::Zero()}};
+    EXPECT_NO_THROW(transforms::Extrinsics{data});
+
+    // Self transform is not allowed!
+    data = std::vector<Extrinsic>{{0, 0, Array6d::Zero()}};
+    EXPECT_THROW(transforms::Extrinsics{data}, std::invalid_argument);
+
+    // Creating a cycle (i.e. more than one way to do a transform) is now allowed! Here we do that by adding the same
+    // transform twice.
+    data = std::vector<Extrinsic>{{0, 1, Array6d::Zero()}, {0, 1, Array6d::Zero()}};
+    EXPECT_THROW(transforms::Extrinsics{data}, std::invalid_argument);
+
+    // Basically the same thing as before but here we have the inverse of the transform instead of just a duplicate.
+    data = std::vector<Extrinsic>{{0, 1, Array6d::Zero()}, {1, 0, Array6d::Zero()}};
+    EXPECT_THROW(transforms::Extrinsics{data}, std::invalid_argument);
+}
+
 TEST(TransformsExtrinsic, TestHasPath) {
     // An empty extrinsic will not find a path between two different assets but it can still get the identity tf between
     // the same asset.
