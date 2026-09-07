@@ -46,7 +46,7 @@ void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     // style problem is identity, here and in the bundle adjustment problem construction. Should we actually be
     // returning a more informative type from the pose initialization than just the Frames? Could be but for now lets
     // refactor the interface stepwise.
-    RigState const rig_state{camera_id_, camera_poses, {{camera_id_, Array6d::Zero()}}};
+    transforms::RigState const rig_state{camera_id_, camera_poses, transforms::Extrinsics{{}}};
 
     // TODO(Jack): Refactor log message to log rig state?
     log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
