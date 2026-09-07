@@ -14,7 +14,8 @@ class Extrinsics {
 
     Array6d Resolve(AssetId frame_a, AssetId frame_b) const;
 
-   private:
+    // NOTE(Jack): This is the real core graph/path search algorithm below here. We made FindPath() static so we could
+    // easily test it.
     struct PathEdge {
         Extrinsic const* extrinsic;
         // true: b -> a
@@ -23,8 +24,9 @@ class Extrinsics {
     };
     using Path = std::vector<PathEdge>;
 
-    std::optional<Path> FindPath(AssetId frame_a, AssetId frame_b) const;
+    static std::optional<Path> FindPath(std::vector<Extrinsic> const& values, AssetId frame_a, AssetId frame_b);
 
+   private:
     std::vector<Extrinsic> values_;
 };
 

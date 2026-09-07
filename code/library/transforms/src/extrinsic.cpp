@@ -10,11 +10,11 @@ namespace reprojection::transforms {
 Extrinsics::Extrinsics(std::vector<Extrinsic> const& values) : values_{values} {}
 
 bool Extrinsics::HasPath(AssetId const frame_a, AssetId const frame_b) const {
-    return this->FindPath(frame_a, frame_b).has_value();
+    return this->FindPath(values_, frame_a, frame_b).has_value();
 }
 
 Array6d Extrinsics::Resolve(AssetId const frame_a, AssetId const frame_b) const {
-    auto const path{FindPath(frame_a, frame_b)};
+    auto const path{FindPath(values_, frame_a, frame_b)};
     if (not path) {
         throw std::runtime_error{
             std::format("No extrinsic path between frames! frame_a (asset_id {}) and frame_b (asset_id {})",
@@ -31,7 +31,8 @@ Array6d Extrinsics::Resolve(AssetId const frame_a, AssetId const frame_b) const 
     return geometry::Log(tf_a_b);
 }
 
-std::optional<Extrinsics::Path> Extrinsics::FindPath(AssetId const frame_a, AssetId const frame_b) const {
+std::optional<Extrinsics::Path> Extrinsics::FindPath(std::vector<Extrinsic> const& values, AssetId const frame_a,
+                                                     AssetId const frame_b) {
     // TODO(Jack): Does it make sense that even if the frames are not present inside of the intrinsic vector that it
     // still returns identity here? It almost seems like it makes more sense to throw and error if you ask for a tf
     // between two frames that are not even present in the extrinsic.
@@ -55,7 +56,7 @@ std::optional<Extrinsics::Path> Extrinsics::FindPath(AssetId const frame_a, Asse
             continue;
         }
 
-        for (auto const& extrinsic : values_) {
+        for (auto const& extrinsic : values) {
             AssetId next_frame;
             bool forward;
 
