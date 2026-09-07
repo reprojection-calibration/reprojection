@@ -96,7 +96,10 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
         optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, optimized_spline, camera_id_)};
     auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 
-    transforms::RigState const rig_state{camera_id_, ba_problem.rig_poses, transforms::Extrinsics{{optimized_extrinsic}}};
+    // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
+    // here like we do for the regular bundle adjustment.
+    transforms::RigState const rig_state{camera_id_, ba_problem.rig_poses,
+                                         transforms::Extrinsics{{optimized_extrinsic}}};
     database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, residuals);
 

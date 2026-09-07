@@ -6,6 +6,7 @@
 #include "hashing/hashing.hpp"
 #include "logging/logging.hpp"
 #include "optimization/bundle_adjustment.hpp"
+#include "steps/bundle_adjustment.hpp"
 
 namespace reprojection::steps {
 
@@ -42,23 +43,20 @@ Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(target
 void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsic_)};
 
-    // TODO(Jack): We repeat some information here, ex. the idea that the extrinsic calibration for the "single cam"
-    // style problem is identity, here and in the bundle adjustment problem construction. Should we actually be
-    // returning a more informative type from the pose initialization than just the Frames? Could be but for now lets
-    // refactor the interface stepwise.
-    transforms::RigState const rig_state{camera_id_, camera_poses, transforms::Extrinsics{{}}};
-
     // TODO(Jack): Refactor log message to log rig state?
     log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
               camera_id_.value, std::size(targets_), std::size(camera_poses));
-
-    database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
 
     // Diagnostic output
     // TODO(Jack): No optimization is happening here because we are just building the problem to use the reprojection
     // error evaluation function, but we still need to specify 'optimize_intrinsic' regardless.
     Ba::Problem const ba_problem{
         Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, camera_poses, {}, camera_id_)};
+
+    // TODO(Jack): This is kind of a little crazy how we need to go from Problem to Result to RigState, but hey it gets
+    // the job done and the abstraction avoids copy paste... If its the end solution I am not sure.
+    database::RigStateInsert(db.get(), step_id, targets_id_,
+                             optimization::ToRigState(optimization::BundleAdjustment::Result(ba_problem)));
 
     auto const errors{optimization::EvaluateResiduals(ba_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);

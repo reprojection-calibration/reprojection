@@ -51,7 +51,8 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
 
     Ba::Problem const problem{
         Ba::SingleCamProblem(camera_info_, {intrinsic_}, targets_, aligned_camera_poses, true, camera_id_)};
-    auto const [_, rig_poses, cameras, ceres_state]{Ba::Solve(problem, num_threads_)};
+    auto const result{Ba::Solve(problem, num_threads_)};
+    auto const& [_, rig_poses, cameras, ceres_state]{result};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
     // NOTE(Jack): The database asset ids start at 1 (sql standard) so an id of zero here is somehow a sentinel value
@@ -65,10 +66,7 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
         ceres_state.solver_summary.initial_cost, ceres_state.solver_summary.final_cost,
         ceres_state.solver_summary.num_successful_steps, ceres_state.solver_summary.num_unsuccessful_steps);
 
-    // TODO(Jack): See note in pose init about repeated information! We should construct this directly from the ba
-    // optimization result.
-    transforms::RigState const rig_state{camera_id_, rig_poses, transforms::Extrinsics{{}}};
-    database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
+    database::RigStateInsert(db.get(), step_id, targets_id_, optimization::ToRigState(result));
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, {intrinsics});
 
     // Diagnostic output

@@ -10,11 +10,11 @@ set(SRC_FILES
 set(PRIVATE_LINK_LIBRARIES
         geometry
         projection_functions
-        transforms
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES
         spline
+        transforms
 )
 AddLibrary()
 

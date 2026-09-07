@@ -77,9 +77,16 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
                             optimize_intrinsic, camera_id);
 }
 
+// TODO(Jack): The ceres state in the result are not used at all, a problem or missed abstraction? Not critical either
+// way.
 transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
     std::vector<Extrinsic> rig_cam_extrinsics;
     for (auto const& [camera_id, state_i] : result.camera_states) {
+        // The Extrinsics() type does not allow self-connections/cycles!
+        if (camera_id == result.rig_frame_asset_id) {
+            continue;
+        }
+
         // TODO(Jack): I do not know why this came as a little bit of a surprise to me that our extrinsic configuration
         // optimizes all the cameras with respect to the reference camera (see how rig_frame_asset_id is hardcoded
         // here). I think we need to think hard about this and make that is what we want! For some reason I thought it
