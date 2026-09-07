@@ -42,12 +42,17 @@ Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(target
 void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsic_)};
 
-    // RigState const rig_state{camera_id_, camera_poses, {{camera_id_, Array6d::Zero()}}};
+    // TODO(Jack): We repeat some information here, ex. the idea that the extrinsic calibration for the "single cam"
+    // style problem is identity, here and in the bundle adjustment problem construction. Should we actually be
+    // returning a more informative type from the pose initialization than just the Frames? Could be but for now lets
+    // refactor the interface stepwise.
+    RigState const rig_state{camera_id_, camera_poses, {{camera_id_, Array6d::Zero()}}};
 
+    // TODO(Jack): Refactor log message to log rig state?
     log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
               camera_id_.value, std::size(targets_), std::size(camera_poses));
 
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, camera_poses);
+    database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
 
     // Diagnostic output
     // TODO(Jack): No optimization is happening here because we are just building the problem to use the reprojection

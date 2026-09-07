@@ -544,6 +544,10 @@ void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, StepId co
     BatchExecuteStatement(sql_statements::reprojection_errors_insert, data, binder, db);
 }
 
+void RigStateInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id, RigState const& data) {
+    return;
+}
+
 void SplineInfoInsert(sqlite3* const db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler) {
     auto const binder{[step_id, asset_id, time_handler](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);

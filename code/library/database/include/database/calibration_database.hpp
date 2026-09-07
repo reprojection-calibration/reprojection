@@ -106,6 +106,8 @@ std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* db, StepId step_i
 void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id,
                               std::vector<ReprojectionError> const& data);
 
+void RigStateInsert(sqlite3* db, StepId step_id, StepId source_step_id, RigState const& data);
+
 void SplineInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::TimeHandler const& time_handler);
 
 std::expected<spline::TimeHandler, std::string> SplineInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
