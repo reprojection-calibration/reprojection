@@ -4,6 +4,7 @@ set(SRC_FILES
         src/extrinsic.cpp
 )
 set(PRIVATE_LINK_LIBRARIES
+        geometry
         types_internal
 )
 AddLibrary()

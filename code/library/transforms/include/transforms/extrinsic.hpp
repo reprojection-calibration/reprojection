@@ -15,6 +15,16 @@ class Extrinsics {
     Array6d Resolve(AssetId frame_a, AssetId frame_b) const;
 
    private:
+    struct PathEdge {
+        Extrinsic const* extrinsic;
+        // true: b -> a
+        // false: a -> b
+        bool forward;
+    };
+    using Path = std::vector<PathEdge>;
+
+    std::optional<Path> FindPath(AssetId frame_a, AssetId frame_b) const;
+
     std::vector<Extrinsic> values_;
 };
 

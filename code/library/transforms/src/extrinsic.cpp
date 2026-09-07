@@ -1,58 +1,89 @@
 #include "transforms/extrinsic.hpp"
 
+#include <format>
 #include <set>
+
+#include "geometry/lie.hpp"
 
 namespace reprojection::transforms {
 
 Extrinsics::Extrinsics(std::vector<Extrinsic> const& values) : values_{values} {}
 
 bool Extrinsics::HasPath(AssetId const frame_a, AssetId const frame_b) const {
-    // TODO(Jack): Is that weird that an asset to itself always works even if the assets are not even in the extrinsic
-    // set? I would almost expect and error.
-    if (frame_a == frame_b) {
-        return true;
+    return this->FindPath(frame_a, frame_b).has_value();
+}
+
+Array6d Extrinsics::Resolve(AssetId const frame_a, AssetId const frame_b) const {
+    auto const path{FindPath(frame_a, frame_b)};
+    if (not path) {
+        throw std::runtime_error{
+            std::format("No extrinsic path between frames! frame_a (asset_id {}) and frame_b (asset_id {})",
+                        frame_a.value, frame_b.value)};
     }
 
+    Isometry3d tf_a_b{Isometry3d::Identity()};
+    for (auto const& [extrinsic, forward] : *path) {
+        Isometry3d const tf_i{geometry::Exp(extrinsic->se3_a_b)};
+
+        tf_a_b = (forward ? tf_i : tf_i.inverse()) * tf_a_b;
+    }
+
+    return geometry::Log(tf_a_b);
+}
+
+std::optional<Extrinsics::Path> Extrinsics::FindPath(AssetId const frame_a, AssetId const frame_b) const {
+    // TODO(Jack): Does it make sense that even if the frames are not present inside of the intrinsic vector that it
+    // still returns identity here? It almost seems like it makes more sense to throw and error if you ask for a tf
+    // between two frames that are not even present in the extrinsic.
+    if (frame_a == frame_b) {
+        return Path{};
+    }
+
+    struct PendingFrame {
+        AssetId frame;
+        Path path;
+    };
+    std::vector<PendingFrame> pending_frames{{frame_b, {}}};
     std::set<AssetId> visited_frames;
-    std::vector pending_frames{frame_a};
+
     while (not std::empty(pending_frames)) {
-        AssetId const current_frame{pending_frames.back()};
+        auto [current_frame, path] = std::move(pending_frames.back());
         pending_frames.pop_back();
 
-        // NOTE(Jack): Here 'set.insert()' returns a pair with a boolean that tells you if the insertion was successful
-        // (element not already in the set) or not (element already in the set). This is what prevents us from visiting
-        // the same frame twice.
+        // Insert on a set returns false if the value is already present in the set.
         if (not visited_frames.insert(current_frame).second) {
             continue;
         }
 
         for (auto const& extrinsic : values_) {
+            AssetId next_frame;
+            bool forward;
+
             if (extrinsic.frame_a == current_frame) {
-                if (extrinsic.frame_b == frame_b) {
-                    return true;
-                } else {
-                    pending_frames.push_back(extrinsic.frame_b);
-                }
+                next_frame = extrinsic.frame_b;
+                forward = true;
             } else if (extrinsic.frame_b == current_frame) {
-                if (extrinsic.frame_a == frame_b) {
-                    return true;
-                } else {
-                    pending_frames.push_back(extrinsic.frame_a);
-                }
+                next_frame = extrinsic.frame_a;
+                forward = false;
+            } else {
+                continue;
             }
+
+            auto next_path{path};
+            next_path.push_back({&extrinsic, forward});
+
+            if (next_frame == frame_a) {
+                return next_path;
+            }
+
+            pending_frames.push_back({
+                next_frame,
+                std::move(next_path),
+            });
         }
     }
 
-    return false;
-}
-
-Array6d Extrinsics::Resolve(AssetId const frame_a, AssetId const frame_b) const {
-    // TODO(Jack): See note in HasPath() about this maybe being an error.
-    if (frame_a == frame_b) {
-        return Array6d::Zero();
-    }
-
-    return Array6d::Zero();
+    return std::nullopt;
 }
 
 }  // namespace reprojection::transforms
