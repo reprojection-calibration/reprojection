@@ -47,9 +47,6 @@ void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
               camera_id_.value, std::size(targets_), std::size(camera_poses));
 
-    // Diagnostic output
-    // TODO(Jack): No optimization is happening here because we are just building the problem to use the reprojection
-    // error evaluation function, but we still need to specify 'optimize_intrinsic' regardless.
     Ba::Problem const ba_problem{
         Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, camera_poses, {}, camera_id_)};
 
