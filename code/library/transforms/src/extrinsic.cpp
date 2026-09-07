@@ -23,7 +23,7 @@ Array6d Extrinsics::Resolve(AssetId const frame_a, AssetId const frame_b) const 
 
     Isometry3d tf_a_b{Isometry3d::Identity()};
     for (auto const& [extrinsic, forward] : *path) {
-        Isometry3d const tf_i{geometry::Exp(extrinsic->se3_a_b)};
+        Isometry3d const tf_i{geometry::Exp(extrinsic.se3_a_b)};
 
         tf_a_b = (forward ? tf_i : tf_i.inverse()) * tf_a_b;
     }
@@ -62,16 +62,16 @@ std::optional<Extrinsics::Path> Extrinsics::FindPath(std::vector<Extrinsic> cons
 
             if (extrinsic.frame_a == current_frame) {
                 next_frame = extrinsic.frame_b;
-                forward = true;
+                forward = false;
             } else if (extrinsic.frame_b == current_frame) {
                 next_frame = extrinsic.frame_a;
-                forward = false;
+                forward = true;
             } else {
                 continue;
             }
 
             auto next_path{path};
-            next_path.push_back({&extrinsic, forward});
+            next_path.push_back({extrinsic, forward});
 
             if (next_frame == frame_a) {
                 return next_path;

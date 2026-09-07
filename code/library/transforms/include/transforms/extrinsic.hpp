@@ -17,7 +17,7 @@ class Extrinsics {
     // NOTE(Jack): This is the real core graph/path search algorithm below here. We made FindPath() static so we could
     // easily test it.
     struct PathEdge {
-        Extrinsic const* extrinsic;
+        Extrinsic extrinsic;
         // true: b -> a
         // false: a -> b
         bool forward;
