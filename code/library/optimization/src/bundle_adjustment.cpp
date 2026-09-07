@@ -77,6 +77,24 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
                             optimize_intrinsic, camera_id);
 }
 
+transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
+    std::vector<Extrinsic> rig_cam_extrinsics;
+    for (auto const& [camera_id, state_i] : result.camera_states) {
+        // TODO(Jack): I do not know why this came as a little bit of a surprise to me that our extrinsic configuration
+        // optimizes all the cameras with respect to the reference camera (see how rig_frame_asset_id is hardcoded
+        // here). I think we need to think hard about this and make that is what we want! For some reason I thought it
+        // would be that the extrinsic goes from neighbouring camera to neighbouring camera in a chain, but our current
+        // setup is a tree. If we went from camera to camera I think this would make the optimization process ugly
+        // because then we would need to chain them together and our cost function would have to accept a variable
+        // number of extrinsics chained together! Does that make sense? We need to do some thinking here!!!
+        Extrinsic const extrinsic_i{camera_id, result.rig_frame_asset_id, state_i.extrinsic};
+        rig_cam_extrinsics.push_back(extrinsic_i);
+    }
+
+    return transforms::RigState{result.rig_frame_asset_id, result.rig_poses,
+                                transforms::Extrinsics{{rig_cam_extrinsics}}};
+}
+
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {
     std::vector<ReprojectionError> errors;
     errors.reserve(std::size(ba_problem.observations));

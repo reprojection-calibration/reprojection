@@ -1,5 +1,6 @@
 #pragma once
 
+#include "transforms/rig_state.hpp"
 #include "types/calibration_types.hpp"
 #include "types/ceres_types.hpp"
 
@@ -80,6 +81,11 @@ struct BundleAdjustment {
     static Problem SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Bundle const& bundle,
                                       Pose const& pose, bool optimize_intrinsic);
 };
+
+// TODO LOCATION!!!
+// TODO LOCATION!!!
+// TODO LOCATION!!!
+transforms::RigState ToRigState(BundleAdjustment::Result const& result);
 
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& problem);
 
