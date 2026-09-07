@@ -70,7 +70,8 @@ std::optional<Extrinsics::Path> Extrinsics::FindPath(std::vector<Extrinsic> cons
         pending_frames.pop_back();
 
         // Insert on a set returns false if the value is already present in the set. If we already visited it then we
-        // can skip it.
+        // can skip it. I think this kinda assumes that our graph does not have cycles, which is not actually guaranteed
+        // in this function, but it works for now regardless.
         if (not visited_frames.insert(current_frame).second) {
             continue;
         }
