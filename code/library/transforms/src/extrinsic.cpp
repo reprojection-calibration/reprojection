@@ -27,7 +27,7 @@ Extrinsics::Extrinsics(std::vector<Extrinsic> const& values) {
 }
 
 bool Extrinsics::HasPath(AssetId const frame_a, AssetId const frame_b) const {
-    return this->FindPath(values_, frame_a, frame_b).has_value();
+    return FindPath(values_, frame_a, frame_b).has_value();
 }
 
 Array6d Extrinsics::Resolve(AssetId const frame_a, AssetId const frame_b) const {
@@ -41,7 +41,6 @@ Array6d Extrinsics::Resolve(AssetId const frame_a, AssetId const frame_b) const 
     Isometry3d tf_a_b{Isometry3d::Identity()};
     for (auto const& [extrinsic, forward] : *path) {
         Isometry3d const tf_i{geometry::Exp(extrinsic.se3_a_b)};
-
         tf_a_b = (forward ? tf_i : tf_i.inverse()) * tf_a_b;
     }
 
@@ -63,34 +62,35 @@ std::optional<Extrinsics::Path> Extrinsics::FindPath(std::vector<Extrinsic> cons
         AssetId frame;
         Path path;
     };
+
     std::vector<PendingFrame> pending_frames{{frame_b, {}}};
     std::set<AssetId> visited_frames;
-
     while (not std::empty(pending_frames)) {
-        auto [current_frame, path] = std::move(pending_frames.back());
+        auto const [current_frame, path]{pending_frames.back()};
         pending_frames.pop_back();
 
-        // Insert on a set returns false if the value is already present in the set.
+        // Insert on a set returns false if the value is already present in the set. If we already visited it then we
+        // can skip it.
         if (not visited_frames.insert(current_frame).second) {
             continue;
         }
 
-        for (auto const& extrinsic : values) {
+        for (auto const& extrinsic_i : values) {
             bool forward;
             AssetId next_frame;
-            if (extrinsic.frame_a == current_frame) {
+
+            if (extrinsic_i.frame_a == current_frame) {
                 forward = false;
-                next_frame = extrinsic.frame_b;
-            } else if (extrinsic.frame_b == current_frame) {
+                next_frame = extrinsic_i.frame_b;
+            } else if (extrinsic_i.frame_b == current_frame) {
                 forward = true;
-                next_frame = extrinsic.frame_a;
+                next_frame = extrinsic_i.frame_a;
             } else {
                 continue;
             }
 
-            auto next_path{path};
-            next_path.push_back({extrinsic, forward});
-
+            Path next_path{path};
+            next_path.push_back({extrinsic_i, forward});
             if (next_frame == frame_a) {
                 return next_path;
             }
