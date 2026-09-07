@@ -76,15 +76,14 @@ std::optional<Extrinsics::Path> Extrinsics::FindPath(std::vector<Extrinsic> cons
         }
 
         for (auto const& extrinsic : values) {
-            AssetId next_frame;
             bool forward;
-
+            AssetId next_frame;
             if (extrinsic.frame_a == current_frame) {
-                next_frame = extrinsic.frame_b;
                 forward = false;
+                next_frame = extrinsic.frame_b;
             } else if (extrinsic.frame_b == current_frame) {
-                next_frame = extrinsic.frame_a;
                 forward = true;
+                next_frame = extrinsic.frame_a;
             } else {
                 continue;
             }
@@ -96,10 +95,7 @@ std::optional<Extrinsics::Path> Extrinsics::FindPath(std::vector<Extrinsic> cons
                 return next_path;
             }
 
-            pending_frames.push_back({
-                next_frame,
-                std::move(next_path),
-            });
+            pending_frames.push_back({next_frame, next_path});
         }
     }
 

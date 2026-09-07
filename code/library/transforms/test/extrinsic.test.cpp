@@ -42,6 +42,28 @@ TEST(TransformsExtrinsic, TestHasPath) {
     EXPECT_FALSE(value.HasPath(AssetId{0}, AssetId{4}));
 }
 
+TEST(TransformsExtrinsic, TestResolve) {
+    // Self transform should always return identity.
+    transforms::Extrinsics value{{}};
+    auto result{value.Resolve(AssetId{1}, AssetId{1})};
+    EXPECT_TRUE(result.isZero());
+
+    // Trying to resolve between two nonexistent frames throws.
+    EXPECT_THROW(value.Resolve(AssetId{1}, AssetId{2}), std::runtime_error);
+
+    // We keep it simple here and only put in some heuristic translations. The core geometry package should have testing
+    // already to make sure that transform composition with rotations works as intended.
+    value = transforms::Extrinsics{std::vector<Extrinsic>{
+        {1, 0, Array6d{0, 0, 0, 1, 2, 3}},
+        {2, 1, Array6d{0, 0, 0, 1, 2, 3}},
+    }};
+
+    result = value.Resolve(AssetId{2}, AssetId{0});
+    EXPECT_TRUE(result.isApprox(2 * Array6d{0, 0, 0, 1, 2, 3}));
+    result = value.Resolve(AssetId{0}, AssetId{2});
+    EXPECT_TRUE(result.isApprox(-2 * Array6d{0, 0, 0, 1, 2, 3}));
+}
+
 TEST(TransformsExtrinsic, TestFindPath) {
     // Even for an empty extrinsic there is always a self transform returned for any two same frames.
     std::vector<Extrinsic> extrinsics{};
