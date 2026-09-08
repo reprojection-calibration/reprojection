@@ -11,13 +11,13 @@ Extrinsics::Extrinsics(std::vector<Extrinsic> const& values) {
     // Check that the provided extrinsic do not make a invalid extrinsic tree (i.e. no cycles and no self transform).
     for (auto const& extrinsic : values) {
         if (extrinsic.frame_a == extrinsic.frame_b) {
-            throw std::invalid_argument{
-                std::format("No extrinsic path between frames! frame_a (asset_id {}) and frame_b (asset_id {})",
-                            extrinsic.frame_a.value, extrinsic.frame_b.value)};
+            throw std::invalid_argument{std::format(                                                  // LCOV_EXCL_LINE
+                "No extrinsic path between frames! frame_a (asset_id {}) and frame_b (asset_id {})",  // LCOV_EXCL_LINE
+                extrinsic.frame_a.value, extrinsic.frame_b.value)};
         } else if (FindPath(values_, extrinsic.frame_a, extrinsic.frame_b)) {
-            throw std::invalid_argument{
-                std::format("No extrinsic path between frames! frame_a (asset_id {}) and frame_b (asset_id {})",
-                            extrinsic.frame_a.value, extrinsic.frame_b.value)};
+            throw std::invalid_argument{std::format(                                                  // LCOV_EXCL_LINE
+                "No extrinsic path between frames! frame_a (asset_id {}) and frame_b (asset_id {})",  // LCOV_EXCL_LINE
+                extrinsic.frame_a.value, extrinsic.frame_b.value)};
         }
 
         // We incrementally "accept" the provided extrinsics so we can check that there are no cycles that get created
