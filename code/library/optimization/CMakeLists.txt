@@ -14,6 +14,7 @@ set(PRIVATE_LINK_LIBRARIES
 )
 set(PUBLIC_LINK_LIBRARIES
         spline
+        transforms
 )
 AddLibrary()
 

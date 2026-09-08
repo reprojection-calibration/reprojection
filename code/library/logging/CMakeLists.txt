@@ -6,9 +6,12 @@ set(SRC_FILES
 )
 
 set(PUBLIC_LINK_LIBRARIES
+        Ceres::ceres
         Eigen3::Eigen
+        optimization
         spdlog::spdlog
         tomlplusplus::tomlplusplus
+        transforms
 )
 AddLibrary()
 
@@ -18,6 +21,7 @@ set(TEST_LINK_LIBRARIES
         types_internal
 )
 set(TESTS
+        test/fmt.test.cpp
         test/logging.test.cpp
 )
 AddTests()

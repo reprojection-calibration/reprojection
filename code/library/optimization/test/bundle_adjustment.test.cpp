@@ -23,8 +23,10 @@ TEST(OptimizationBundleAdjustment, TestBundleAdjustmentBatch) {
 
     // Construct problem and solve
     Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, targets, gt_frames, true, camera_id)};
-    auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
+    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    auto const& [ref_asset, frames, cameras]{result};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
+    EXPECT_EQ(ref_asset, camera_id);
 
     // Assert
     EXPECT_EQ(std::size(frames), 56);
@@ -59,9 +61,10 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     }
 
     Ba::Problem const problem{Ba::SingleCamProblem(camera_info, gt_intrinsics, targets, noisy_frames, true, camera_id)};
-    auto const [frames, ceres_state, cameras]{Ba::Solve(problem, 1)};
-
+    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    auto const& [ref_asset, frames, cameras]{result};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
+    EXPECT_EQ(ref_asset, camera_id);
 
     EXPECT_EQ(std::size(frames), 56);
     for (auto const& [timestamp_ns, frame_i] : frames) {
@@ -87,6 +90,31 @@ TEST(OptimizationBundleAdjustment, TestNoisyBundleAdjustment) {
     EXPECT_TRUE(intrinsics.isApprox(gt_intrinsics.value, 1e-6)) << "Result:\n"
                                                                 << intrinsics.transpose() << "\nexpected result:\n"
                                                                 << gt_intrinsics.value.transpose();
+}
+
+TEST(OptimizationBundleAdjustment, TestToRigState) {
+    AssetId const reference_cam{1};
+    std::map<AssetId, Ba::CameraState> camera_states{{reference_cam, {{Array3d::Zero()}, Array6d::Zero()}}};
+    Ba::Result data{reference_cam, Frames{{100, {Array6d::Zero()}}}, camera_states};
+
+    // Single camera case - a special case where the rig_frame_asset_id is the came as the only camera state present.
+    auto result{optimization::ToRigState(data)};
+    EXPECT_EQ(result.rig_frame_asset_id, AssetId{1});
+    EXPECT_EQ(std::size(result.poses), 1);
+    // NOTE(Jack): At time of writing (08.09.2026) the identity self extrinsic is not supported because cycles are not
+    // supported by out Extrinsics{} abstraction. Therefore the rig state here has no extrinsic values stored, because
+    // if you query the ref_id->ref_id extrinsic it automatically knows that is the identity and returns it.
+    EXPECT_EQ(std::size(result.extrinsics.Values()), 0);
+
+    // Add a second non-reference camera - no we actually will have an extrinsic transform in the extrinsics state.
+    AssetId const second_cam{2};
+    data.camera_states.insert({second_cam, {{Array3d::Zero()}, Array6d::Zero()}});
+
+    result = optimization::ToRigState(data);
+    EXPECT_EQ(result.rig_frame_asset_id, AssetId{1});
+    EXPECT_EQ(std::size(result.poses), 1);
+    EXPECT_EQ(std::size(result.extrinsics.Values()), 1);
+    EXPECT_TRUE(result.extrinsics.HasPath(reference_cam, second_cam));
 }
 
 TEST(OptimizationBundleAdjustment, TestReprojectionError) {

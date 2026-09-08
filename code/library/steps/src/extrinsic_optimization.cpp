@@ -89,7 +89,6 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
 
     database::SplineInfoInsert(db.get(), step_id, camera_id_, optimized_spline.GetTimeHandler());
     database::ControlPointsInsert(db.get(), step_id, camera_id_, optimized_spline.ControlPoints());
-    database::ExtrinsicInsert(db.get(), step_id, optimized_extrinsic);
     database::GravityInsert(db.get(), step_id, optimized_gravity);
 
     // Diagnostic output - reprojection errors
@@ -97,7 +96,11 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
         optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, optimized_spline, camera_id_)};
     auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig_poses);
+    // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
+    // here like we do for the regular bundle adjustment.
+    transforms::RigState const rig_state{camera_id_, ba_problem.rig_poses,
+                                         transforms::Extrinsics{{optimized_extrinsic}}};
+    database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, residuals);
 
     // Diagnostic output - imu errors

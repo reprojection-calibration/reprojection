@@ -4,6 +4,7 @@
 #include "calibration/initialization_methods.hpp"
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "optimization/bundle_adjustment.hpp"
 
@@ -42,18 +43,20 @@ Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(target
 void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsic_)};
 
-    log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
-              camera_id_.value, std::size(targets_), std::size(camera_poses));
+    // TODO(Jack): It is a little crazy how we go from Ba::Problem to Ba::Result to RigState for the output and logging
+    // here. But we are currently searching for the stable abstractions and this is where we landed, it will probably
+    // change.
+    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, camera_poses, {}, camera_id_)};
+    auto const rig_state{optimization::ToRigState(Ba::Result(problem))};
 
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, camera_poses);
-
-    // Diagnostic output
-    // TODO(Jack): No optimization is happening here but we still need to specify 'optimize_intrinsic'.
-    Ba::Problem const ba_problem{
-        Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, camera_poses, false, camera_id_)};
-
-    auto const errors{optimization::EvaluateResiduals(ba_problem)};
+    database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
+    auto const errors{optimization::EvaluateResiduals(problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
+
+    // TODO(Jack): That we log the problem here is a little confusing as it is not really a problem but a result, but I
+    // think it gives all the information the user could possibly want. But I think there exists a better naming or
+    // abstraction somewhere out there.
+    log->info("{{'step_id': {}, 'problem': {}}}}}", step_id.value, problem);
 }
 
 }  // namespace reprojection::steps

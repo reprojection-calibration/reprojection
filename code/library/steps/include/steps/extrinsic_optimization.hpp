@@ -4,6 +4,7 @@
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 #include "types/io.hpp"
+#include "types/transform_types.hpp"
 
 namespace reprojection::steps {
 

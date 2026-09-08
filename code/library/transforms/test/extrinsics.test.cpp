@@ -1,0 +1,112 @@
+#include "transforms/extrinsics.hpp"
+
+#include <gtest/gtest.h>
+
+using namespace reprojection;
+
+TEST(TransformsExtrinsic, TestExtrinsicsConstructor) {
+    // Good examples - happy path. For now (07.09.2026) we consider an empty extrinsic acceptable, that might change!
+    EXPECT_NO_THROW(transforms::Extrinsics{{}});
+    std::vector<Extrinsic> data{{0, 1, Array6d::Zero()}};
+    EXPECT_NO_THROW(transforms::Extrinsics{data});
+
+    // Self transform is not allowed!
+    data = std::vector<Extrinsic>{{0, 0, Array6d::Zero()}};
+    EXPECT_THROW(transforms::Extrinsics{data}, std::invalid_argument);
+
+    // Creating a cycle (i.e. more than one way to do a transform) is now allowed! Here we do that by adding the same
+    // transform twice.
+    data = std::vector<Extrinsic>{{0, 1, Array6d::Zero()}, {0, 1, Array6d::Zero()}};
+    EXPECT_THROW(transforms::Extrinsics{data}, std::invalid_argument);
+
+    // Basically the same thing as before but here we have the inverse of the transform instead of just a duplicate.
+    data = std::vector<Extrinsic>{{0, 1, Array6d::Zero()}, {1, 0, Array6d::Zero()}};
+    EXPECT_THROW(transforms::Extrinsics{data}, std::invalid_argument);
+}
+
+TEST(TransformsExtrinsic, TestHasPath) {
+    // An empty extrinsic will not find a path between two different assets but it can still get the identity tf between
+    // the same asset.
+    transforms::Extrinsics value{{}};
+    EXPECT_TRUE(value.HasPath(AssetId{1}, AssetId{1}));
+    EXPECT_FALSE(value.HasPath(AssetId{1}, AssetId{2}));
+
+    value = transforms::Extrinsics{{
+        // These first two are connected!
+        {0, 1, Array6d::Zero()},
+        {2, 1, Array6d::Zero()},
+        // This one is disconnected!
+        {3, 4, Array6d::Zero()},
+    }};
+    EXPECT_TRUE(value.HasPath(AssetId{0}, AssetId{2}));
+    EXPECT_FALSE(value.HasPath(AssetId{0}, AssetId{4}));
+}
+
+TEST(TransformsExtrinsic, TestResolve) {
+    // Self transform should always return identity.
+    transforms::Extrinsics value{{}};
+    auto result{value.Resolve(AssetId{1}, AssetId{1})};
+    EXPECT_TRUE(result.isZero());
+
+    // Trying to resolve between two nonexistent frames throws.
+    EXPECT_THROW(value.Resolve(AssetId{1}, AssetId{2}), std::runtime_error);
+
+    // We keep it simple here and only put in some heuristic translations. The core geometry package should have testing
+    // already to make sure that transform composition with rotations works as intended.
+    value = transforms::Extrinsics{std::vector<Extrinsic>{
+        {1, 0, Array6d{0, 0, 0, 1, 2, 3}},
+        {2, 1, Array6d{0, 0, 0, 1, 2, 3}},
+    }};
+
+    result = value.Resolve(AssetId{2}, AssetId{0});
+    EXPECT_TRUE(result.isApprox(2 * Array6d{0, 0, 0, 1, 2, 3}));
+    result = value.Resolve(AssetId{0}, AssetId{2});
+    EXPECT_TRUE(result.isApprox(-2 * Array6d{0, 0, 0, 1, 2, 3}));
+}
+
+TEST(TransformsExtrinsic, TestFindPath) {
+    // Even for an empty extrinsic there is always a self transform returned for any two same frames.
+    std::vector<Extrinsic> extrinsics{};
+    auto result{transforms::Extrinsics::FindPath(extrinsics, AssetId{1}, AssetId{1})};
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(std::size(*result), 0);
+
+    // Any non-same frames will not have a valid path given the empty extrinsic initialization.
+    result = transforms::Extrinsics::FindPath(extrinsics, AssetId{1}, AssetId{2});
+    EXPECT_FALSE(result.has_value());
+
+    extrinsics = {
+        // These first two are connected!
+        {0, 1, Array6d::Zero()},
+        {2, 1, Array6d::Zero()},
+        // This one is disconnected!
+        {3, 4, Array6d::Zero()},
+    };
+
+    // Transform within a single extrinsic element.
+    result = transforms::Extrinsics::FindPath(extrinsics, AssetId{1}, AssetId{2});
+    ASSERT_TRUE(result.has_value());
+    // The second extrinsic captures this relation directly which is why there is only one path element.
+    EXPECT_EQ(std::size(*result), 1);
+    // We asked for 2->1 but the extrinsic has 1->2 which is why 'forward' is false.
+    EXPECT_FALSE(result->at(0).forward);
+
+    // Transform across two extrinsic elements.
+    result = transforms::Extrinsics::FindPath(extrinsics, AssetId{2}, AssetId{0});
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(std::size(*result), 2);
+    // The first transform will need to take us from 0 to 1 therefore it is an inverse (i.e. forward==false).
+    auto const& tf_0{result->at(0)};
+    EXPECT_FALSE(tf_0.forward);
+    EXPECT_EQ(tf_0.extrinsic.frame_a, AssetId{0});
+    EXPECT_EQ(tf_0.extrinsic.frame_b, AssetId{1});
+    // The second transform needs to take us from 1 to 2 and therefore it the given extrinsic is forward==true!
+    auto const& tf_1{result->at(1)};
+    EXPECT_TRUE(tf_1.forward);
+    EXPECT_EQ(tf_1.extrinsic.frame_a, AssetId{2});
+    EXPECT_EQ(tf_1.extrinsic.frame_b, AssetId{1});
+
+    // Attempted transform across two disconnected extrinsic elements.
+    result = transforms::Extrinsics::FindPath(extrinsics, AssetId{4}, AssetId{0});
+    EXPECT_FALSE(result.has_value());
+}

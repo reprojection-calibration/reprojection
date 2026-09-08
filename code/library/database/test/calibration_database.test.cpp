@@ -352,6 +352,24 @@ TEST_F(CalibrationDatabaseFixture, TestReprojectionErrors) {
     EXPECT_NO_THROW(database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, targets_id, {data}));
 }
 
+TEST_F(CalibrationDatabaseFixture, TestRigState) {
+    // Satisfy foreign key dependencies - a pose depends on a target which depends on an image.
+    AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
+    StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
+    InsertImage(image_loading_id, asset_id);
+    StepId const extracted_targets_id{CreateExtractedTargets(image_loading_id, asset_id)};
+
+    // Build rig  - needs a second asset id so the extrinsic table foreign key constraint will be satisfied - also
+    // because we cannot create self referencing identity extrinsic in the rig state.
+    Frames const rig_poses{Frame{0, Array6d::Ones()}};
+    AssetId const asset_id_2{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 1, "")};
+    Extrinsic const extrinsic{asset_id, asset_id_2, Array6d::Ones()};
+    transforms::RigState const rig_state{asset_id, rig_poses, transforms::Extrinsics{{extrinsic}}};
+
+    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicOptimization, "").first};
+    EXPECT_NO_THROW(database::RigStateInsert(db_.get(), step_id, extracted_targets_id, rig_state));
+}
+
 TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
     auto db{database::OpenCalibrationDatabase(":memory:", true)};
 

@@ -8,13 +8,16 @@ namespace reprojection::optimization {
 
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
-BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int const num_threads) {
+std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem const& ba_problem,
+                                                                        int const num_threads) {
     // TODO(Jack): It is a little messy how we construct the result from just part of the problem, and then iterate over
     // the problem below but ignore the part that we copied to the result and use the result instead. Really not the end
     // of the world but I feel like I am missing the plotline.
     Result result{ba_problem};
-    result.ceres_state.solver_options.num_threads = num_threads;
-    ceres::Problem ceres_problem{result.ceres_state.problem_options};
+
+    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
+    ceres_state.solver_options.num_threads = num_threads;
+    ceres::Problem ceres_problem{ceres_state.problem_options};
 
     for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
         // cppcheck-suppress ignoredReturnValue
@@ -45,9 +48,9 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
         }
     }
 
-    ceres::Solve(result.ceres_state.solver_options, &ceres_problem, &result.ceres_state.solver_summary);
+    ceres::Solve(ceres_state.solver_options, &ceres_problem, &ceres_state.solver_summary);
 
-    return result;
+    return {result, ceres_state};
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
@@ -63,7 +66,7 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
         observations.push_back({camera_id, timestamp_ns, target.bundle});
     }
 
-    return {{{camera_id, camera}}, frames, observations};
+    return {camera_id, frames, {{camera_id, camera}}, observations};
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
@@ -75,6 +78,29 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
 
     return SingleCamProblem(camera_info, intrinsic, TargetSamples{{timestamp_ns, target}}, Frames{{timestamp_ns, pose}},
                             optimize_intrinsic, camera_id);
+}
+
+transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
+    std::vector<Extrinsic> rig_cam_extrinsics;
+    for (auto const& [camera_id, state_i] : result.camera_states) {
+        // The Extrinsics() type does not allow self-connections/cycles!
+        if (camera_id == result.rig_frame_asset_id) {
+            continue;
+        }
+
+        // TODO(Jack): I do not know why this came as a little bit of a surprise to me that our extrinsic configuration
+        // optimizes all the cameras with respect to the reference camera (see how rig_frame_asset_id is hardcoded
+        // here). I think we need to think hard about this and make that is what we want! For some reason I thought it
+        // would be that the extrinsic goes from neighbouring camera to neighbouring camera in a chain, but our current
+        // setup is a tree. If we went from camera to camera I think this would make the optimization process ugly
+        // because then we would need to chain them together and our cost function would have to accept a variable
+        // number of extrinsics chained together! Does that make sense? We need to do some thinking here!!!
+        Extrinsic const extrinsic_i{camera_id, result.rig_frame_asset_id, state_i.extrinsic};
+        rig_cam_extrinsics.push_back(extrinsic_i);
+    }
+
+    return transforms::RigState{result.rig_frame_asset_id, result.rig_poses,
+                                transforms::Extrinsics{{rig_cam_extrinsics}}};
 }
 
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {

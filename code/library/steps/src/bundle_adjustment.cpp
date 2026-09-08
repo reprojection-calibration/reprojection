@@ -1,7 +1,5 @@
 #include "optimization/bundle_adjustment.hpp"
 
-#include <ranges>
-
 #include "calibration/calibration_utils.hpp"
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
@@ -51,21 +49,15 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
 
     Ba::Problem const problem{
         Ba::SingleCamProblem(camera_info_, {intrinsic_}, targets_, aligned_camera_poses, true, camera_id_)};
-    auto const [rig_poses, ceres_state, cameras]{Ba::Solve(problem, num_threads_)};
+    auto const [result, ceres_state]{Ba::Solve(problem, num_threads_)};
+    auto const& [_, rig_poses, cameras]{result};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
     // NOTE(Jack): The database asset ids start at 1 (sql standard) so an id of zero here is somehow a sentinel value
     // that is unique and "protected".
     auto const intrinsics{cameras.at(camera_id_).intrinsic.value};
 
-    log->info(
-        "{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {{'intial_cost': "
-        "{:.2f}, 'final_cost': {:.2f}, 'num_successful_steps': {}, 'num_unsuccessful_steps': {}}}}}}}",
-        step_id.value, camera_id_.value, ToString(camera_info_.camera_model), intrinsics,
-        ceres_state.solver_summary.initial_cost, ceres_state.solver_summary.final_cost,
-        ceres_state.solver_summary.num_successful_steps, ceres_state.solver_summary.num_unsuccessful_steps);
-
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, rig_poses);
+    database::RigStateInsert(db.get(), step_id, targets_id_, optimization::ToRigState(result));
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, {intrinsics});
 
     // Diagnostic output
@@ -74,6 +66,10 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     Ba::Problem const optimized_problem{problem, rig_poses, cameras};
     auto const errors{optimization::EvaluateResiduals(optimized_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
+
+    log->info("{{'step_id': {}, 'problem': {}}}}}", step_id.value, problem);
+    log->info("{{'step_id': {}, 'result': {}, 'solver_summary': {}}}}}", step_id.value, result,
+              ceres_state.solver_summary);
 }
 
 }  // namespace reprojection::steps

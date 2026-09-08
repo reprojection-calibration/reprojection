@@ -5,6 +5,7 @@
 #include "config/config_parse.hpp"
 #include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
+#include "types/transform_types.hpp"
 
 // TODO(Jack): I would like these to be private to the module here but the fact is that HashArguments() needs access to
 // these functions, and therefore they need to be part of the modules public interface. Is that right?

@@ -30,8 +30,8 @@ StepId RunStep(WorkflowId const workflow_id, T const& step, SqlitePtr const db) 
     // Regardless if it is a cache hit or miss we need to add it to the assigned workflow.
     database::WorkflowStepUpsert(db.get(), workflow_id, step_id, step.Type(), step.Assets());
 
-    log->info("{{'step_type': '{}', 'cache_status': '{}', 'step_id': {:2}}}", ToString(step.Type()),
-              ToString(cache_status), step_id.value);
+    log->info("{{'step_type': '{}', 'step_id': {:2}, 'cache_status': '{}'}}", ToString(step.Type()), step_id.value,
+              ToString(cache_status));
 
     if (cache_status == CacheStatus::CacheHit) {
         return step_id;
