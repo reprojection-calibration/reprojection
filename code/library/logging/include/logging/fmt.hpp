@@ -5,6 +5,7 @@
 
 #include <Eigen/Dense>
 
+#include "optimization/bundle_adjustment.hpp"
 #include "transforms/rig_state.hpp"
 #include "types/transform_types.hpp"
 
@@ -64,6 +65,37 @@ struct fmt::formatter<reprojection::transforms::RigState> {
             }
 
             out = format_to(out, "{}", extrinsic);
+            first = false;
+        }
+
+        return format_to(out, "]}}");
+    }
+};
+
+template <>
+struct fmt::formatter<reprojection::optimization::BundleAdjustment::CameraState> {
+    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+
+    auto format(reprojection::optimization::BundleAdjustment::CameraState const& state, format_context& ctx) const {
+        return format_to(ctx.out(), "{{'intrinsic': {}, 'extrinsic': {}}}", state.intrinsic.value, state.extrinsic);
+    }
+};
+
+template <>
+struct fmt::formatter<reprojection::optimization::BundleAdjustment::Result> {
+    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+
+    auto format(reprojection::optimization::BundleAdjustment::Result const& result, format_context& ctx) const {
+        auto out{fmt::format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'camera_states': [",
+                                result.rig_frame_asset_id.value, std::size(result.rig_poses))};
+
+        bool first{true};
+        for (auto const& [camera_id, camera_state] : result.camera_states) {
+            if (not first) {
+                out = format_to(out, ", ");
+            }
+
+            out = format_to(out, "{{'asset_id': {}, 'state': {}}}", camera_id.value, camera_state);
             first = false;
         }
 

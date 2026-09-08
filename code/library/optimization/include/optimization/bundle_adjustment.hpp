@@ -63,6 +63,10 @@ struct BundleAdjustment {
             }
         }
 
+        Result(AssetId const& _rig_frame_asset_id, Frames const& _rig_poses,
+               std::map<AssetId, CameraState> const& _camera_states)
+            : rig_frame_asset_id{_rig_frame_asset_id}, rig_poses{_rig_poses}, camera_states{_camera_states} {}
+
         AssetId rig_frame_asset_id;
         Frames rig_poses;
         std::map<AssetId, CameraState> camera_states;
