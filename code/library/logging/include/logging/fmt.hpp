@@ -82,12 +82,39 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::CameraState>
 };
 
 template <>
+struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
+    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+
+    auto format(reprojection::optimization::BundleAdjustment::Problem const& problem, format_context& ctx) const {
+        auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'num_targets': {}, 'cameras': [",
+                           problem.rig_frame_asset_id.value, std::size(problem.rig_poses),
+                           std::size(problem.observations))};
+
+        bool first{true};
+        for (auto const& [camera_id, camera] : problem.cameras) {
+            if (not first) {
+                out = format_to(out, ", ");
+            }
+
+            out = format_to(out,
+                            "{{'asset_id': {}, 'camera_model': '{}', 'state': {}, "
+                            "'optimize_intrinsic': {}, 'optimize_extrinsic': {}}}",
+                            camera_id.value, ToString(camera.camera_info.camera_model), camera.state,
+                            camera.options.optimize_intrinsic, camera.options.optimize_extrinsic);
+            first = false;
+        }
+
+        return format_to(out, "]}}");
+    }
+};
+
+template <>
 struct fmt::formatter<reprojection::optimization::BundleAdjustment::Result> {
     constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::Result const& result, format_context& ctx) const {
-        auto out{fmt::format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'camera_states': [",
-                                result.rig_frame_asset_id.value, std::size(result.rig_poses))};
+        auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'camera_states': [",
+                           result.rig_frame_asset_id.value, std::size(result.rig_poses))};
 
         bool first{true};
         for (auto const& [camera_id, camera_state] : result.camera_states) {
@@ -107,7 +134,7 @@ template <>
 struct fmt::formatter<ceres::Solver::Summary> {
     constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
 
-    auto format(ceres::Solver::Summary const& summary, fmt::format_context& ctx) const {
+    auto format(ceres::Solver::Summary const& summary, format_context& ctx) const {
         return format_to(ctx.out(),
                          "{{'initial_cost': {:.2f}, 'final_cost': {:.2f}, "
                          "'num_successful_steps': {}, 'num_unsuccessful_steps': {}}}",

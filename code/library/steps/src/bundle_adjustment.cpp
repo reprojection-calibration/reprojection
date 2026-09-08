@@ -57,10 +57,6 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     // that is unique and "protected".
     auto const intrinsics{cameras.at(camera_id_).intrinsic.value};
 
-    log->info("{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {}}}",
-              step_id.value, camera_id_.value, ToString(camera_info_.camera_model), intrinsics,
-              ceres_state.solver_summary);
-
     database::RigStateInsert(db.get(), step_id, targets_id_, optimization::ToRigState(result));
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, {intrinsics});
 
@@ -70,6 +66,9 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     Ba::Problem const optimized_problem{problem, rig_poses, cameras};
     auto const errors{optimization::EvaluateResiduals(optimized_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
+
+    log->info("{{'step_id': {}, 'result': {}, 'solver_summary': {}}}}}", step_id.value, result,
+              ceres_state.solver_summary);
 }
 
 }  // namespace reprojection::steps
