@@ -81,6 +81,7 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::CameraState>
     }
 };
 
+// TODO(Jack): Unit test!
 template <>
 struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
     constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
@@ -96,11 +97,13 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
                 out = format_to(out, ", ");
             }
 
-            out = format_to(out,
-                            "{{'asset_id': {}, 'camera_model': '{}', 'state': {}, "
-                            "'optimize_intrinsic': {}, 'optimize_extrinsic': {}}}",
-                            camera_id.value, ToString(camera.camera_info.camera_model), camera.state,
-                            camera.options.optimize_intrinsic, camera.options.optimize_extrinsic);
+            // WARN(Jack): For some reason we need to fully qualify fmt::format_to() here and only here, otherwise the
+            // camera.state gives us compilation errors!
+            out = fmt::format_to(out,
+                                 "{{'asset_id': {}, 'camera_model': '{}', 'state': {}, "
+                                 "'optimize_intrinsic': {}, 'optimize_extrinsic': {}}}",
+                                 camera_id.value, ToString(camera.camera_info.camera_model), camera.state,
+                                 camera.options.optimize_intrinsic, camera.options.optimize_extrinsic);
             first = false;
         }
 

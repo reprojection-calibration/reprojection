@@ -36,9 +36,6 @@ TEST(LoggingFmt, TestBaCameraState) {
 }
 
 TEST(LoggingFmt, TestBaResult) {
-    // AssetId rig_frame_asset_id;
-    // Frames rig_poses;
-    // std::map<AssetId, CameraState> camera_states;
     Frames const rig_poses{Frame{1, Array6d::Ones()}, Frame{2, Array6d::Ones()}};
     std::map<AssetId, optimization::BundleAdjustment::CameraState> camera_states{
         {AssetId{1}, {Intrinsic{Array3d::Ones()}, Array6d::Ones()}},

@@ -67,6 +67,7 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const errors{optimization::EvaluateResiduals(optimized_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
 
+    log->info("{{'step_id': {}, 'problem': {}}}}}", step_id.value, problem);
     log->info("{{'step_id': {}, 'result': {}, 'solver_summary': {}}}}}", step_id.value, result,
               ceres_state.solver_summary);
 }
