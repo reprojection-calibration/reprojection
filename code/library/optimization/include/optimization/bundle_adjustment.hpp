@@ -83,9 +83,8 @@ struct BundleAdjustment {
                                       Pose const& pose, bool optimize_intrinsic);
 };
 
-// TODO LOCATION!!!
-// TODO LOCATION!!!
-// TODO LOCATION!!!
+// TODO(Jack): Does this function really belong here in this file? Or would it be better organized with more like minded
+// functions?
 transforms::RigState ToRigState(BundleAdjustment::Result const& result);
 
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& problem);

@@ -66,7 +66,7 @@ struct fmt::formatter<reprojection::transforms::RigState> {
 
             out = format_to(out, "{}", extrinsic);
             first = false;
-        }
+        }  // LCOV_EXCL_LINE
 
         return format_to(out, "]}}");
     }
@@ -94,7 +94,7 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
         bool first{true};
         for (auto const& [camera_id, camera] : problem.cameras) {
             if (not first) {
-                out = format_to(out, ", ");
+                out = format_to(out, ", ");  // LCOV_EXCL_LINE
             }
 
             // WARN(Jack): For some reason we need to fully qualify fmt::format_to() here and only here, otherwise the

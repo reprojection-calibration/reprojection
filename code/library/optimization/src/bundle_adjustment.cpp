@@ -80,8 +80,7 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
                             optimize_intrinsic, camera_id);
 }
 
-// TODO(Jack): The ceres state in the result are not used at all, a problem or missed abstraction? Not critical either
-// way.
+
 transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
     std::vector<Extrinsic> rig_cam_extrinsics;
     for (auto const& [camera_id, state_i] : result.camera_states) {
