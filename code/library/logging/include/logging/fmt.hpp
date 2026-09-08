@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ceres/solver.h>
 #include <spdlog/fmt/fmt.h>
 
 #include <Eigen/Dense>
@@ -67,5 +68,18 @@ struct fmt::formatter<reprojection::transforms::RigState> {
         }
 
         return format_to(out, "]}}");
+    }
+};
+
+template <>
+struct fmt::formatter<ceres::Solver::Summary> {
+    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+
+    auto format(ceres::Solver::Summary const& summary, fmt::format_context& ctx) const {
+        return format_to(ctx.out(),
+                         "{{'initial_cost': {:.2f}, 'final_cost': {:.2f}, "
+                         "'num_successful_steps': {}, 'num_unsuccessful_steps': {}}}",
+                         summary.initial_cost, summary.final_cost, summary.num_successful_steps,
+                         summary.num_unsuccessful_steps);
     }
 };

@@ -6,6 +6,7 @@ set(SRC_FILES
 )
 
 set(PUBLIC_LINK_LIBRARIES
+        Ceres::ceres
         Eigen3::Eigen
         spdlog::spdlog
         tomlplusplus::tomlplusplus

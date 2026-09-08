@@ -1,7 +1,5 @@
 #include "optimization/bundle_adjustment.hpp"
 
-#include <ranges>
-
 #include "calibration/calibration_utils.hpp"
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
@@ -59,12 +57,9 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     // that is unique and "protected".
     auto const intrinsics{cameras.at(camera_id_).intrinsic.value};
 
-    log->info(
-        "{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {{'intial_cost': "
-        "{:.2f}, 'final_cost': {:.2f}, 'num_successful_steps': {}, 'num_unsuccessful_steps': {}}}}}}}",
-        step_id.value, camera_id_.value, ToString(camera_info_.camera_model), intrinsics,
-        ceres_state.solver_summary.initial_cost, ceres_state.solver_summary.final_cost,
-        ceres_state.solver_summary.num_successful_steps, ceres_state.solver_summary.num_unsuccessful_steps);
+    log->info("{{'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}, 'solver_summary': {}}}",
+              step_id.value, camera_id_.value, ToString(camera_info_.camera_model), intrinsics,
+              ceres_state.solver_summary);
 
     database::RigStateInsert(db.get(), step_id, targets_id_, optimization::ToRigState(result));
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, {intrinsics});
