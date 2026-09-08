@@ -74,7 +74,7 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         // residual here on a subset of targets.
         auto const problem{
             Ba::SingleCamProblem(camera_info, intrinsics_i, target_subset, initial_poses, false, AssetId{0})};
-        auto const [_, _1, _2, ceres_state]{Ba::Solve(problem, num_threads)};
+        auto const [_, ceres_state]{Ba::Solve(problem, num_threads)};
 
         double const mean_residual{ceres_state.solver_summary.final_cost / ceres_state.solver_summary.num_residuals};
         cost_intrinsic_map[mean_residual] = intrinsics_i;

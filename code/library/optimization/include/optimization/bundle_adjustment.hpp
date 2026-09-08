@@ -57,9 +57,7 @@ struct BundleAdjustment {
 
     struct Result {
         explicit Result(Problem const& problem)
-            : rig_frame_asset_id{problem.rig_frame_asset_id},
-              rig_poses{problem.rig_poses},
-              ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR} {
+            : rig_frame_asset_id{problem.rig_frame_asset_id}, rig_poses{problem.rig_poses} {
             for (auto const& [camera_id, camera] : problem.cameras) {
                 camera_states.emplace(camera_id, camera.state);
             }
@@ -68,10 +66,9 @@ struct BundleAdjustment {
         AssetId rig_frame_asset_id;
         Frames rig_poses;
         std::map<AssetId, CameraState> camera_states;
-        CeresState ceres_state;
     };
 
-    static Result Solve(Problem const& ba_problem, int num_threads);
+    static std::pair<Result, CeresState> Solve(Problem const& ba_problem, int num_threads);
 
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                     TargetSamples const& targets, Frames const& frames, bool optimize_intrinsic,

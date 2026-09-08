@@ -8,13 +8,16 @@ namespace reprojection::optimization {
 
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
-BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int const num_threads) {
+std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem const& ba_problem,
+                                                                        int const num_threads) {
     // TODO(Jack): It is a little messy how we construct the result from just part of the problem, and then iterate over
     // the problem below but ignore the part that we copied to the result and use the result instead. Really not the end
     // of the world but I feel like I am missing the plotline.
     Result result{ba_problem};
-    result.ceres_state.solver_options.num_threads = num_threads;
-    ceres::Problem ceres_problem{result.ceres_state.problem_options};
+
+    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
+    ceres_state.solver_options.num_threads = num_threads;
+    ceres::Problem ceres_problem{ceres_state.problem_options};
 
     for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
         // cppcheck-suppress ignoredReturnValue
@@ -45,9 +48,9 @@ BundleAdjustment::Result BundleAdjustment::Solve(Problem const& ba_problem, int 
         }
     }
 
-    ceres::Solve(result.ceres_state.solver_options, &ceres_problem, &result.ceres_state.solver_summary);
+    ceres::Solve(ceres_state.solver_options, &ceres_problem, &ceres_state.solver_summary);
 
-    return result;
+    return {result, ceres_state};
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,

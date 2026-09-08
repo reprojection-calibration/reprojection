@@ -49,8 +49,8 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
 
     Ba::Problem const problem{
         Ba::SingleCamProblem(camera_info_, {intrinsic_}, targets_, aligned_camera_poses, true, camera_id_)};
-    auto const result{Ba::Solve(problem, num_threads_)};
-    auto const& [_, rig_poses, cameras, ceres_state]{result};
+    auto const [result, ceres_state]{Ba::Solve(problem, num_threads_)};
+    auto const& [_, rig_poses, cameras]{result};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
     // NOTE(Jack): The database asset ids start at 1 (sql standard) so an id of zero here is somehow a sentinel value
