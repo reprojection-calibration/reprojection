@@ -11,7 +11,7 @@ TEST(LoggingFmt, TestFmtExtrinsic) {
 
     std::string const result{fmt::format("{}", data)};
 
-    EXPECT_EQ(result, "{'frame_a': 1, 'frame_b': 2, 'se3_a_b': [1, 1, 1, 1, 1, 1]}");
+    EXPECT_EQ(result, "{'frame_a': 1, 'frame_b': 2, 'se3_a_b': [1.000, 1.000, 1.000, 1.000, 1.000, 1.000]}");
 }
 
 TEST(LoggingFmt, TestRigState) {
@@ -23,8 +23,9 @@ TEST(LoggingFmt, TestRigState) {
     std::string const result{fmt::format("{}", data)};
 
     EXPECT_EQ(result,
-              "{'rig_frame_asset_id': 1, 'num_poses': 2, 'extrinsics': [{'frame_a': 1, 'frame_b': 2, 'se3_a_b': [1, 1, "
-              "1, 1, 1, 1]}, {'frame_a': 2, 'frame_b': 3, 'se3_a_b': [1, 1, 1, 1, 1, 1]}]}");
+              "{'rig_frame_asset_id': 1, 'num_poses': 2, 'extrinsics': [{'frame_a': 1, 'frame_b': 2, 'se3_a_b': "
+              "[1.000, 1.000, 1.000, 1.000, 1.000, 1.000]}, {'frame_a': 2, 'frame_b': 3, 'se3_a_b': [1.000, 1.000, "
+              "1.000, 1.000, 1.000, 1.000]}]}");
 }
 
 TEST(LoggingFmt, TestBaCameraState) {

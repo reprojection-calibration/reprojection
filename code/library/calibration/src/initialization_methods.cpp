@@ -110,6 +110,84 @@ Frames PoseInitialization(CameraInfo const& camera_info, TargetSamples const& ta
     return frames;
 }  // LCOV_EXCL_LINE
 
+// TODO TEST? and split between hpp and cpp?
+// TODO TEMPLATE SO IT CAN HANDLE FRAMES NAD TARGETS!
+auto FindClosest(std::set<uint64_t> const& data, uint64_t const timestamp) {
+    auto const upper{data.lower_bound(timestamp)};
+    if (upper == std::cbegin(data)) {
+        return upper;
+    } else if (upper == std::cend(data)) {
+        return std::prev(upper);
+    }
+
+    auto const lower{std::prev(upper)};
+
+    uint64_t const upper_delta{*upper - timestamp};
+    uint64_t const lower_delta{timestamp - *lower};
+
+    return lower_delta <= upper_delta ? lower : upper;
+}
+
+// TODO TEST? and split between hpp and cpp?
+bool IsWithinThreshold(uint64_t const lhs, uint64_t const rhs, uint64_t const threshold_ns) {
+    // NOTE(Jack): We need this kinda funky looking logic because we are dealing with unsigned types and need to worry
+    // about NOT creating negative numbers that will underflow. Probably was a dumb idea to use an unsigned type in the
+    // first place.
+    uint64_t const delta{lhs > rhs ? lhs - rhs : rhs - lhs};
+
+    return delta <= threshold_ns;
+}
+
+// NOTE(Jack): This method depends on the fact that the both frame sets are calculated with respect to the same target
+// or world coordinate frame. For single target calibration data acquisitions this is the case, but if we ever move more
+// complicated scenarios we need to remember that assumption is built in here.
+// TODO(Jack): Do we need to do some sort of validation for the input frames? I.e. that they are not both empty or do
+// not have any synchronized matches? At this point I am not sure how we would express such a failure in the step, but
+// the lack of frames or lack of sync-ability is a very real risk.
+Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b, uint64_t const max_sync_delta_ns) {
+    auto const timestamps{frames_b | std::views::keys};
+    std::set<uint64_t> remaining_b{std::cbegin(timestamps), std::cend(timestamps)};
+
+    Array6d se3_coa_cob{Array6d::Zero()};
+    int num{0};
+    for (auto const& [a_timestamp_ns, pose_a] : frames_a) {
+        // TODO(Jack): The fact that we hand roll the time sync logic here is not so nice. There are a couple places we
+        // need this same logic and we need to consider how to unify them into a central implementation if we start
+        // duplicating code.
+        auto const b_timestamp_it{FindClosest(remaining_b, a_timestamp_ns)};
+        if (b_timestamp_it == std::cend(remaining_b)) {
+            continue;
+        }
+
+        auto const b_timestamp_ns{*b_timestamp_it};
+        if (not IsWithinThreshold(b_timestamp_ns, a_timestamp_ns, max_sync_delta_ns)) {
+            continue;
+        }
+
+        // Remove it so a double match cannot happen.
+        remaining_b.erase(b_timestamp_it);
+
+        // THis is now the pose_b pose that is synchronized to the current pose_a given the max_sync_delta_ns
+        // tolerance.
+        Pose const pose_b{frames_b.at(b_timestamp_ns)};
+
+        // "coa" = "camera optical a" and "cob" = "camera optical b"
+        Isometry3d const tf_coa_w{geometry::Exp(pose_a.value)};
+        Isometry3d const tf_cob_w{geometry::Exp(pose_b.value)};
+        Isometry3d const tf_coa_cob{tf_coa_w * tf_cob_w.inverse()};
+        Array6d const se3_coa_cob_i{geometry::Log(tf_coa_cob)};
+
+        se3_coa_cob += se3_coa_cob_i;
+        num++;
+    }
+
+    // TODO(Jack): Is this legitimate to average the transforms like this?
+    // ERROR(Jack): What happens when 'num' is zero!?
+    se3_coa_cob = se3_coa_cob / num;
+
+    return se3_coa_cob;
+}
+
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,
                                                                                ImuSamples const& imu_data,
                                                                                int const num_threads) {

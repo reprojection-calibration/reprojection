@@ -1,6 +1,7 @@
 #include "steps/initialize_workflow.hpp"
 
 #include <optional>
+#include <ranges>
 
 #include "database/calibration_database.hpp"
 #include "logging/logging.hpp"
@@ -15,29 +16,15 @@ auto const log{logging::Get("steps")};
 
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr const db) {
     config::Config const cfg{config::Config::Parse(cfg_table)};
-
-    WorkflowType const workflow_type{DetermineWorkflowType(cfg)};
     CalibrationAssets const assets{CreateCalibrationAssets(cfg, db)};
+    InsertAssetGroups(assets, db);
 
-    InsertAssetGroups(workflow_type, assets, db);
-    WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), workflow_type, assets.All())};
+    // ERROR(Jack): We hardcode the workflow type here but we should just remove the workflow type entirely!!!
+    WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, assets.All())};
 
-    log->info("{{'workflow': {{'type': '{}', 'id': {}}}, 'config': {}}}", ToString(workflow_type), workflow_id.value,
-              logging::ToOneLineJson(cfg_table));
+    log->info("{{'workflow': {{'id': {}}}, 'config': {}}}", workflow_id.value, logging::ToOneLineJson(cfg_table));
 
-    return {cfg.application, assets, workflow_id, workflow_type};
-}
-
-WorkflowType DetermineWorkflowType(config::Config const& cfg) {
-    std::size_t const num_cams{cfg.cameras.size()};
-
-    if (cfg.imu) {
-        return WorkflowType::CamImu;
-    } else if (num_cams == 1) {
-        return WorkflowType::Cam;
-    } else {
-        return WorkflowType::MultiCam;
-    }
+    return {cfg.application, assets, workflow_id};
 }
 
 CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr const db) {
@@ -80,6 +67,32 @@ void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const
     if (workflow_type == WorkflowType::CamImu) {
         // WARN(Jack): We are hardcoding here that the imu will always be calibrated to the first camera.
         database::AssetGroupInsert(db.get(), {assets.cameras.at(0).id, assets.imu->id});
+    }
+}
+
+void InsertAssetGroups(CalibrationAssets const& assets, SqlitePtr const db) {
+    auto const asset_ids{assets.All()};
+
+    // The complete calibration asset group.
+    database::AssetGroupInsert(db.get(), asset_ids);
+
+    // Each individual asset.
+    for (auto const& asset_id : asset_ids) {
+        database::AssetGroupInsert(db.get(), {asset_id});
+    }
+
+    // Add all camera pairs - used in cam-cam extrinsic initialization (at minimum).
+    for (auto const& camera_id_b : assets.cameras | std::views::drop(1)) {
+        // WARN(Jack): Hardcoded importance of the first camera!
+        auto const& camera_id_a{assets.cameras.front()};
+
+        database::AssetGroupInsert(db.get(), {camera_id_a.id, camera_id_b.id});
+    }
+
+    // The IMU is calibrated relative to the reference camera.
+    if (assets.imu.has_value()) {
+        // WARN(Jack): Hardcoded importance of the first camera!
+        database::AssetGroupInsert(db.get(), {assets.cameras.front().id, assets.imu->id});
     }
 }
 

@@ -36,14 +36,11 @@ struct CalibrationContext {
     config::Config::Application application;
     CalibrationAssets assets;
     WorkflowId workflow_id;
-    WorkflowType workflow_type;
 };
 
 CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr db);
 
-WorkflowType DetermineWorkflowType(config::Config const& cfg);
-
-CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr const db);
+CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr db);
 
 // NOTE(Jack): There are three basic types of asset groups. This should really be officially documented somewhere but we
 // are not at that point yet. The only one you really need to actively maintain are the "custom subgroups" which can
@@ -59,6 +56,6 @@ CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr c
 //
 //
 // TODO(Jack): Is there a simple way to test this without some huge database setup and implicit behavior checking?
-void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const& assets, SqlitePtr const db);
+void InsertAssetGroups(CalibrationAssets const& assets, SqlitePtr db);
 
 }  // namespace reprojection::steps

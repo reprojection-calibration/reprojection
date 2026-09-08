@@ -17,22 +17,9 @@ std::string Serialize(CameraInfo const& data) {
     return oss.str();
 }
 
-std::string Serialize(TargetSamples const& data) {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(3);
-
-    for (auto const& [timestamp_ns, target] : data) {
-        oss << timestamp_ns << "|";
-
-        oss << Serialize(target.bundle.pixels) << "|";
-        oss << Serialize(target.bundle.points) << "|";
-        oss << Serialize(target.indices) << "|";
-    }
-
-    return oss.str();
-}
-
 std::string Serialize(CameraModel const data) { return ToString(data); }
+
+std::string Serialize(Hash const& data) { return data.value; }
 
 std::string Serialize(Intrinsic const& data) {
     std::ostringstream oss;
@@ -112,6 +99,21 @@ std::string Serialize(TargetInfo const& data) {
         data.target_type, {data.height, data.width}, data.unit_dimension, data.asymmetric};
 
     return Serialize(data1);
+}
+
+std::string Serialize(TargetSamples const& data) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+
+    for (auto const& [timestamp_ns, target] : data) {
+        oss << timestamp_ns << "|";
+
+        oss << Serialize(target.bundle.pixels) << "|";
+        oss << Serialize(target.bundle.points) << "|";
+        oss << Serialize(target.indices) << "|";
+    }
+
+    return oss.str();
 }
 
 // NOTE(Jack): It is kind of dumb this version exists because it does not really do anything, but we need it to work

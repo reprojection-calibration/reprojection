@@ -132,4 +132,15 @@ struct Asset {
     T config;
 };
 
+// TODO(Jack): Where does this belong?
+// NOTE(Jack): We only store the values that we need to the extrinsic calibration (imu). We could store every step id
+// but why?
+struct CameraCalibration {
+    AssetId camera_id;
+    StepId camera_info_id;
+    StepId targets_id;
+    StepId pose_init_id;
+    StepId bundle_adjustment_id;
+};
+
 }  // namespace reprojection

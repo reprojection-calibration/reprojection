@@ -14,9 +14,9 @@ namespace reprojection::hashing {
 
 std::string Serialize(CameraInfo const& data);
 
-std::string Serialize(TargetSamples const& data);
+std::string Serialize(CameraModel data);
 
-std::string Serialize(CameraModel const data);
+std::string Serialize(Hash const& data);
 
 std::string Serialize(Intrinsic const& data);
 
@@ -32,6 +32,8 @@ std::string Serialize(ImuSamples const& data);
 std::string Serialize(OptimizationState const& data);
 
 std::string Serialize(TargetInfo const& data);
+
+std::string Serialize(TargetSamples const& data);
 
 std::string Serialize(config::Config::Target const& data);
 
