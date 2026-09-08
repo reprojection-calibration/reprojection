@@ -18,7 +18,7 @@
 
 template <typename Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
 struct fmt::formatter<Eigen::Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols>> {
-    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     template <typename FormatContext>
     auto format(Eigen::Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols> const& arr, FormatContext& ctx) const {
@@ -40,7 +40,7 @@ struct fmt::formatter<Eigen::Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols
 
 template <>
 struct fmt::formatter<reprojection::Extrinsic> {
-    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::Extrinsic const& value, format_context& ctx) const {
         auto const& tf{value.se3_a_b};
@@ -52,7 +52,7 @@ struct fmt::formatter<reprojection::Extrinsic> {
 
 template <>
 struct fmt::formatter<reprojection::transforms::RigState> {
-    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::transforms::RigState const& value, format_context& ctx) const {
         auto out{format_to(ctx.out(), R"({{'rig_frame_asset_id': {}, 'num_poses': {}, 'extrinsics': [)",
@@ -74,7 +74,7 @@ struct fmt::formatter<reprojection::transforms::RigState> {
 
 template <>
 struct fmt::formatter<reprojection::optimization::BundleAdjustment::CameraState> {
-    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::CameraState const& state, format_context& ctx) const {
         return format_to(ctx.out(), "{{'intrinsic': {}, 'extrinsic': {}}}", state.intrinsic.value, state.extrinsic);
@@ -84,7 +84,7 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::CameraState>
 // TODO(Jack): Unit test!
 template <>
 struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
-    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::Problem const& problem, format_context& ctx) const {
         auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'num_targets': {}, 'cameras': [",
@@ -113,7 +113,7 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
 
 template <>
 struct fmt::formatter<reprojection::optimization::BundleAdjustment::Result> {
-    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::Result const& result, format_context& ctx) const {
         auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'camera_states': [",
@@ -135,7 +135,7 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::Result> {
 
 template <>
 struct fmt::formatter<ceres::Solver::Summary> {
-    constexpr auto parse(format_parse_context& ctx) { return std::cbegin(ctx); }
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(ceres::Solver::Summary const& summary, format_context& ctx) const {
         return format_to(ctx.out(),

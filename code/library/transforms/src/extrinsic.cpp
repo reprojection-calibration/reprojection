@@ -58,12 +58,7 @@ std::optional<Extrinsics::Path> Extrinsics::FindPath(std::vector<Extrinsic> cons
         return Path{};
     }
 
-    struct PendingFrame {
-        AssetId frame;
-        Path path;
-    };
-
-    std::vector<PendingFrame> pending_frames{{frame_b, {}}};
+    std::vector<std::pair<AssetId, Path>> pending_frames{{frame_b, {}}};
     std::set<AssetId> visited_frames;
     while (not std::empty(pending_frames)) {
         auto const [current_frame, path]{pending_frames.back()};
