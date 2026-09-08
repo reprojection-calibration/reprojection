@@ -9,6 +9,7 @@ set(PUBLIC_LINK_LIBRARIES
         Eigen3::Eigen
         spdlog::spdlog
         tomlplusplus::tomlplusplus
+        transforms
 )
 AddLibrary()
 
@@ -18,6 +19,7 @@ set(TEST_LINK_LIBRARIES
         types_internal
 )
 set(TESTS
+        test/fmt.test.cpp
         test/logging.test.cpp
 )
 AddTests()

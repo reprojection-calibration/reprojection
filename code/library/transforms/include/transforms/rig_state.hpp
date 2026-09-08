@@ -1,6 +1,7 @@
 #pragma once
 
 #include "transforms/extrinsic.hpp"
+#include "types/calibration_types.hpp"
 
 // TODO(Jack): Does this need to be a public header?
 

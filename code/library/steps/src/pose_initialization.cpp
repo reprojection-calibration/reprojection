@@ -4,9 +4,9 @@
 #include "calibration/initialization_methods.hpp"
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "optimization/bundle_adjustment.hpp"
-#include "steps/bundle_adjustment.hpp"
 
 namespace reprojection::steps {
 
@@ -43,20 +43,22 @@ Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(target
 void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsic_)};
 
-    // TODO(Jack): Refactor log message to log rig state?
-    log->info("{{'step_id': {}, 'asset_id': {}, 'num_targets': '{}', 'num_poses: {}}}}}", step_id.value,
-              camera_id_.value, std::size(targets_), std::size(camera_poses));
-
+    // TODO(Jack): It is a little crazy how we go from Ba::Problem to Ba::Result to RigState for the output and logging
+    // here. But we are currently searching for the stable abstractions and this is where we landed, it will probably
+    // change.
     Ba::Problem const ba_problem{
         Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, camera_poses, {}, camera_id_)};
+    auto const rig_state{optimization::ToRigState(Ba::Result(ba_problem))};
 
-    // TODO(Jack): This is kind of a little crazy how we need to go from Problem to Result to RigState, but hey it gets
-    // the job done and the abstraction avoids copy paste... If its the end solution I am not sure.
-    database::RigStateInsert(db.get(), step_id, targets_id_,
-                             optimization::ToRigState(optimization::BundleAdjustment::Result(ba_problem)));
-
+    database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
     auto const errors{optimization::EvaluateResiduals(ba_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
+
+    // TODO(Jack): Should we log the rig state here or the bundle adjustment result? They have some duplicated
+    // information but considering pose init uses the intrinsics and targets it almost feels like we should log the BA
+    // states here.
+    log->info("{{'step_id': {}, 'num_targets': '{}', 'rig_state: {}}}}}", step_id.value, std::size(targets_),
+              rig_state);
 }
 
 }  // namespace reprojection::steps
