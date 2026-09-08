@@ -2,8 +2,6 @@
 
 #include "types/transform_types.hpp"
 
-// TODO(Jack): Does this need to be a public header?
-
 namespace reprojection::transforms {
 
 class Extrinsics {
@@ -16,14 +14,13 @@ class Extrinsics {
 
     Array6d Resolve(AssetId frame_a, AssetId frame_b) const;
 
-    // NOTE(Jack): This is the real core graph/path search algorithm below here. We made FindPath() static so we could
-    // easily test it.
+    // NOTE(Jack): Below this point is the real core "path finding" algorithm logic which drives the actually useful
+    // class interface above. We made FindPath() static so it was easily testable.
     struct PathEdge {
         Extrinsic extrinsic;
-        // true: b -> a
-        // false: a -> b
         bool forward;
     };
+
     using Path = std::vector<PathEdge>;
 
     static std::optional<Path> FindPath(std::vector<Extrinsic> const& values, AssetId frame_a, AssetId frame_b);

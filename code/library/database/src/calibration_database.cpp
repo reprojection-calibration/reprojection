@@ -546,15 +546,16 @@ void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, StepId co
 
 void RigStateInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
                     transforms::RigState const& data) {
-    // TODO REFACTOR TO RigPosesInsert()?
+    // TODO(Jack): The refactor to a rig centric schema is not yet complete (08.09.2026) and this is a clear place where
+    // you can see it. Instead of migrating to a rig_poses table and adding a "RigStateSelect()" method we are only
+    // writing the RigState struct to the database using the legacy tooling. This migration will complete itself one
+    // day soon I hope!
     CameraPosesInsert(db, step_id, source_step_id, data.rig_frame_asset_id, data.poses);
 
     // WARN(Jack): Should we manually insert the identity transform here? We cannot put it into the Extrinsics object
     // because that forbids self-cycles.
 
-    // TODO(Jack): Should we make the extrinsic insertion operation a batch insertion operation so we can remove this
-    // loop? Not critical but consider for consistency across all other functions. This is the only one where we
-    // manually iterate I think.
+    // TODO(Jack): Should we make the extrinsic insertion operation a batch insertion operation?
     for (auto const& extrinsic_i : data.extrinsics.Values()) {
         ExtrinsicInsert(db, step_id, extrinsic_i);
     }

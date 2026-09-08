@@ -1,13 +1,11 @@
 #pragma once
 
-#include "transforms/extrinsic.hpp"
+#include "transforms/extrinsics.hpp"
 #include "types/calibration_types.hpp"
-
-// TODO(Jack): Does this need to be a public header?
+#include "types/database_types.hpp"
 
 namespace reprojection::transforms {
 
-// TODO(Jack): Is this the right file for this type?
 struct RigState {
     // NOTE(Jack): As of now we have the logical constraint that the rig must always be referenced to one of the
     // existing sensors (really only the cameras) because we have no other way ot initializing the rigs poses and

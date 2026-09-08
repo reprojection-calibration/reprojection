@@ -1,7 +1,7 @@
 set(LIBRARY_NAME "transforms")
 
 set(SRC_FILES
-        src/extrinsic.cpp
+        src/extrinsics.cpp
 )
 set(PRIVATE_LINK_LIBRARIES
         geometry
@@ -10,6 +10,6 @@ set(PRIVATE_LINK_LIBRARIES
 AddLibrary()
 
 set(TESTS
-        test/extrinsic.test.cpp
+        test/extrinsics.test.cpp
 )
 AddTests()
