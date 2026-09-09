@@ -15,9 +15,10 @@ using namespace reprojection;
 class IntrinsicInitializationFixture : public StepTestFixture {
    protected:
     void SetUp() override {
+        // WARN(Jack): The methods below can only be called after the base fixtures SetUp method has been called!
         StepTestFixture::SetUp();
 
-        // WARN(Jack): These can only be called after the base fixtures SetUp method has been called!
+        // NOTE(Jack): For the "single camera" workflow we arbitrarily select the first camera.
         camera_id_ = context_.assets.cameras.front().id;
         camera_info_id_ = InsertCameraInfo(camera_id_);
         targets_id_ = InsertExtractedTargets(camera_id_);

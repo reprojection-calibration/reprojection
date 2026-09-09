@@ -71,6 +71,26 @@ class StepTestFixture : public ::testing::Test {
         return target_step_id;
     }
 
+    StepId InsertIntrinsic(AssetId const camera_id) {
+        auto const camera{GetCamera(camera_id)};
+        CameraModel const camera_model{camera.config.camera_model};
+
+        // TODO(Jack): This logic is now copy and pasted here and in the extracted target insertion!
+        Intrinsic intrinsic;
+        if (camera_model == CameraModel::DoubleSphere) {
+            intrinsic = {testing_utilities::double_sphere_intrinsics};
+        } else if (camera_model == CameraModel::Pinhole) {
+            intrinsic = {testing_utilities::pinhole_intrinsics};
+        } else {
+            throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_model))};
+        }
+
+        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "").first};
+        database::IntrinsicInsert(db_.get(), step_id, camera_id, camera_model, intrinsic);
+
+        return step_id;
+    }
+
    private:
     Asset<config::Config::Camera> GetCamera(AssetId const camera_id) {
         auto const& cameras{context_.assets.cameras};
