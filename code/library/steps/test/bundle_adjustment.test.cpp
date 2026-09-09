@@ -17,30 +17,23 @@ class BundleAdjustmentFixture : public StepTestFixture {
     void SetUp() override {
         StepTestFixture::SetUp();
 
-        CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
-        camera_info_id_ = InsertCameraInfo(camera_info);
-
-        auto const [targets, poses]{
-            testing_mocks::GenerateMvgData(camera_info, {testing_utilities::double_sphere_intrinsics}, 11, 1)};
-        targets_id_ = InsertExtractedTargets(targets);
-
-        intrinsics_id_ =
-            InsertIntrinsics(CameraModel::DoubleSphere, Intrinsic{testing_utilities::double_sphere_intrinsics});
-
-        // TODO(Jack): Do these poses need to be inverted? Not that correctness really matters here but we should keep
-        // it in mind that something might be flipped around here.
-        database::CameraPosesInsert(db_.get(), pose_init_id_, targets_id_, camera_id_, poses);
+        camera_id_ = context_.assets.cameras.front().id;
+        camera_info_id_ = InsertCameraInfo(camera_id_);
+        targets_id_ = InsertExtractedTargets(camera_id_);
+        intrinsics_id_ = InsertIntrinsic(camera_id_);
+        pose_init_id_ = InsertPoses(camera_id_, targets_id_);
     }
 
+    AssetId camera_id_;
     StepId camera_info_id_;
     StepId targets_id_;
     StepId intrinsics_id_;
-    StepId pose_init_id_{database::GetOrCreateStep(db_.get(), StepType::PoseInit, "").first};
+    StepId pose_init_id_;
 };
 
 TEST_F(BundleAdjustmentFixture, TestBundleAdjustmentStepRunner) {
     steps::BundleAdjustment const step{camera_id_, targets_id_, 1, camera_info_id_, intrinsics_id_, pose_init_id_, db_};
-    StepId const step_id{RunStep<steps::BundleAdjustment>(workflow_id_, step, db_)};
+    StepId const step_id{RunStep<steps::BundleAdjustment>(context_.workflow_id, step, db_)};
 
     auto const result{database::CameraPosesSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 7);
