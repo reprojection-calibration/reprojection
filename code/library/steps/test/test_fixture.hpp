@@ -128,6 +128,30 @@ class StepTestFixture : public ::testing::Test {
         return step_id;
     }
 
+    // TODO(Jack): Does both the imu data itself and source spline! If it really makes sense to do both at once is still
+    // not clear. But for now at least it keeps the problem setup smaller.
+    // TODO(Jack): This camera_id here is not just any random one, it is also the camera which defines the rig/is the
+    // reference camera. Should we reflect in the naming or any other way?
+    std::pair<StepId, StepId> InsertImuSetup(AssetId const camera_id) {
+        auto const imu_id{context_.assets.imu};
+        if (not imu_id) {
+            throw std::runtime_error{std::format("Imu asset not found!")};
+        }
+
+        // WARN(Jack): Normally the spline would be initialized with the poses from the camera initialization. Here
+        // however we get the poses and interpolated spline directly from the data generator.
+        auto const [imu_data, spline]{testing_mocks::GenerateImuData(11, 5)};
+
+        StepId const imu_data_id{database::GetOrCreateStep(db_.get(), StepType::ImuDataLoading, "").first};
+        database::ImuDataInsert(db_.get(), imu_data_id, imu_id->id, imu_data);
+
+        StepId const spline_id{database::GetOrCreateStep(db_.get(), StepType::SplineInit, "").first};
+        database::ControlPointsInsert(db_.get(), spline_id, camera_id, spline.ControlPoints());
+        database::SplineInfoInsert(db_.get(), spline_id, camera_id, spline.GetTimeHandler());
+
+        return {imu_data_id, spline_id};
+    }
+
     static ImageSamples TestImageSamples() {
         cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
 

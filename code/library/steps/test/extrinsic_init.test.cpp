@@ -10,23 +10,28 @@
 
 using namespace reprojection;
 
-class ExtrinsicInitFixture : public ::testing::Test {
+class ExtrinsicInitFixture : public StepTestFixture {
    protected:
     void SetUp() override {
-        database::AssetGroupInsert(db_.get(), {camera_id_, imu_id_});
+        StepTestFixture::SetUp();
 
-        auto const [imu_data, spline]{testing_mocks::GenerateImuData(11, 5)};
-
-        database::ImuDataInsert(db_.get(), imu_data_id_, imu_id_, imu_data);
-        database::ControlPointsInsert(db_.get(), spline_id_, camera_id_, spline.ControlPoints());
-        database::SplineInfoInsert(db_.get(), spline_id_, camera_id_, spline.GetTimeHandler());
+        camera_id_ = context_.assets.cameras.front().id;
+        imu_id_ = context_.assets.imu->id;  // Unprotected optional access!
+        camera_info_id_ = InsertCameraInfo(camera_id_);
+        targets_id_ = InsertExtractedTargets(camera_id_);
+        intrinsics_id_ = InsertIntrinsic(camera_id_);
+        poses_id_ = InsertPoses(camera_id_, targets_id_);
+        std::tie(imu_data_id_, spline_id_) = InsertImuSetup(camera_id_);
     }
 
-    SqlitePtr db_{database::OpenCalibrationDatabase(":memory:", true)};
-    AssetId camera_id_{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
-    AssetId imu_id_{database::GetOrCreateAsset(db_.get(), AssetType::Imu, 0, "")};
-    StepId imu_data_id_{database::GetOrCreateStep(db_.get(), StepType::ImuDataLoading, "").first};
-    StepId spline_id_{database::GetOrCreateStep(db_.get(), StepType::SplineInit, "").first};
+    AssetId camera_id_;
+    AssetId imu_id_;
+    StepId camera_info_id_;
+    StepId targets_id_;
+    StepId intrinsics_id_;
+    StepId poses_id_;
+    StepId imu_data_id_;
+    StepId spline_id_;
 };
 
 TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
@@ -45,6 +50,7 @@ TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
 
 TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStep) {
     steps::ExtrinsicInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
+
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
     std::vector const gt_assets{camera_id_, imu_id_};
     EXPECT_EQ(step.Assets(), gt_assets);
@@ -56,9 +62,9 @@ TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStep) {
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, camera_id_)};
     ASSERT_TRUE(result.has_value());
-    EXPECT_LT(result->se3_a_b.sum(), 0.001);  // Heuristic!
+    EXPECT_LT(result->se3_a_b.sum(), 0.001);
 
     auto const result2{database::GravitySelect(db_.get(), step_id)};
     ASSERT_TRUE(result2.has_value());
-    EXPECT_NEAR(result2->norm(), kGravity, 1e-3);  // Heuristic!
+    EXPECT_NEAR(result2->norm(), kGravity, 1e-3);
 }
