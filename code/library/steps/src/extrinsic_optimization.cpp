@@ -6,12 +6,7 @@
 #include "logging/logging.hpp"
 #include "steps/extrinsic_optimization.hpp"
 
-// ERROR(Jack): We really really need to test this step! It is just so complicated and I got lazy during a the huge
-// workflow refactor.
-
 namespace reprojection::steps {
-
-// LCOV_EXCL_START
 
 namespace {
 
@@ -36,15 +31,15 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
     if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
         camera_info_ = *camera_info;
     } else {
-        log->error("{}", camera_info.error());
-        std::exit(1);  // LCOV_EXCL_LINE
-    }
+        log->error("{}", camera_info.error());  // LCOV_EXCL_LINE
+        std::exit(1);                           // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     if (auto const intrinsics{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)}) {
         intrinsic_ = *intrinsics;
     } else {
-        log->error("{}", intrinsics.error());
-        std::exit(1);  // LCOV_EXCL_LINE
+        log->error("{}", intrinsics.error());  // LCOV_EXCL_LINE
+        std::exit(1);                          // LCOV_EXCL_LINE
     }
 
     if (auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)}) {
@@ -52,23 +47,23 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
 
         spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
     } else {
-        log->error("{}", time_handler.error());
-        std::exit(1);  // LCOV_EXCL_LINE
-    }
+        log->error("{}", time_handler.error());  // LCOV_EXCL_LINE
+        std::exit(1);                            // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     if (auto const extrinsic{database::ExtrinsicSelect(db.get(), extrinsic_init_id, imu_id_, camera_id_)}) {
         extrinsic_ = *extrinsic;
     } else {
-        log->error("{}", extrinsic.error());
-        std::exit(1);  // LCOV_EXCL_LINE
-    }
+        log->error("{}", extrinsic.error());  // LCOV_EXCL_LINE
+        std::exit(1);                         // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 
     if (auto const gravity{database::GravitySelect(db.get(), extrinsic_init_id)}) {
         gravity_ = *gravity;
     } else {
-        log->error("{}", gravity.error());
-        std::exit(1);  // LCOV_EXCL_LINE
-    }
+        log->error("{}", gravity.error());  // LCOV_EXCL_LINE
+        std::exit(1);                       // LCOV_EXCL_LINE
+    }  // LCOV_EXCL_LINE
 }
 
 Hash ExtrinsicOptimization::CacheKey() const {
@@ -108,7 +103,5 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
         optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_gravity, optimized_spline)};
     database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, imu_errors);
 }
-
-// LCOV_EXCL_STOP
 
 }  // namespace reprojection::steps

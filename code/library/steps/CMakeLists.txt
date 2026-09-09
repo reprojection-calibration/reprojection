@@ -40,6 +40,7 @@ set(TESTS
         test/bundle_adjustment.test.cpp
         test/camera_info.test.cpp
         test/extrinsic_init.test.cpp
+        test/extrinsic_optimization.test.cpp
         test/feature_extraction.test.cpp
         test/image_loading.test.cpp
         test/imu_data_loading.test.cpp

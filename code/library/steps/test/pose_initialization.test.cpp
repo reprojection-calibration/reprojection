@@ -17,17 +17,13 @@ class PoseInitializationFixture : public StepTestFixture {
     void SetUp() override {
         StepTestFixture::SetUp();
 
-        CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
-        camera_info_id_ = InsertCameraInfo(camera_info);
-
-        auto const [targets, _]{
-            testing_mocks::GenerateMvgData(camera_info, {testing_utilities::double_sphere_intrinsics}, 11, 1)};
-        targets_id_ = InsertExtractedTargets(targets);
-
-        intrinsics_id_ =
-            InsertIntrinsics(CameraModel::DoubleSphere, Intrinsic{testing_utilities::double_sphere_intrinsics});
+        camera_id_ = context_.assets.cameras.front().id;
+        camera_info_id_ = InsertCameraInfo(camera_id_);
+        targets_id_ = InsertExtractedTargets(camera_id_);
+        intrinsics_id_ = InsertIntrinsic(camera_id_);
     }
 
+    AssetId camera_id_;
     StepId camera_info_id_;
     StepId targets_id_;
     StepId intrinsics_id_;
@@ -35,7 +31,7 @@ class PoseInitializationFixture : public StepTestFixture {
 
 TEST_F(PoseInitializationFixture, TestPoseInitializationStepRunner) {
     steps::PoseInitialization const step{camera_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
-    StepId const step_id{RunStep<steps::PoseInitialization>(workflow_id_, step, db_)};
+    StepId const step_id{RunStep<steps::PoseInitialization>(context_.workflow_id, step, db_)};
 
     auto const result{database::CameraPosesSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 7);

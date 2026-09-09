@@ -13,23 +13,17 @@ class CameraInfoTestFixture : public StepTestFixture {
     void SetUp() override {
         StepTestFixture::SetUp();
 
-        // TODO(Jack): This block of code is copy and pasted across multiple fixtures!
-        // Build the encoded images (cv::Mat -> serialized buffer)
-        cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
-        std::vector<uchar> buffer;
-        if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error("cv::imencode() failed");
-        }
-        ImageSamples const encoded_images{{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}}};
-        image_loading_id_ = InsertImages(encoded_images);
+        camera_id_ = context_.assets.cameras.front().id;
+        image_loading_id_ = InsertImages(camera_id_, TestImageSamples());
     }
 
+    AssetId camera_id_;
     StepId image_loading_id_;
 };
 
 TEST_F(CameraInfoTestFixture, TestCameraInfoStepRunner) {
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
-    StepId const step_id{RunStep<steps::CameraInfoStep>(workflow_id_, step, db_)};
+    StepId const step_id{RunStep<steps::CameraInfoStep>(context_.workflow_id, step, db_)};
 
     auto const result{database::CameraInfoSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
@@ -45,7 +39,7 @@ TEST_F(CameraInfoTestFixture, TestCameraInfoStep) {
     steps::CameraInfoStep const step{camera_id_, image_loading_id_, CameraModel::DoubleSphere, db_};
     EXPECT_EQ(step.Type(), StepType::CameraInfo);
     EXPECT_EQ(step.Assets(), std::vector{camera_id_});
-    EXPECT_EQ(step.CacheKey().value, "9a845e2b13b28d7676c58c24d20b68ce5b427d855d0fc06b136a682e881ed75f");
+    EXPECT_EQ(step.CacheKey().value, "a280620d0fa47563aa82125715dc11f22fa92b56ccff7bf90216a50ad396cbea");
 
     // Build the actual database step id and execute the step.
     auto const [step_id, _]{database::GetOrCreateStep(db_.get(), StepType::CameraInfo, "")};

@@ -13,28 +13,21 @@ class FeatureExtractionTestFixture : public StepTestFixture {
     void SetUp() override {
         StepTestFixture::SetUp();
 
-        // TODO(Jack): This block of code is copy and pasted across multiple fixtures!
-        cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
-        std::vector<uchar> buffer;
-        if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error("cv::imencode() failed");
-        }
-        ImageSamples const encoded_images{{{1, ImageBuffer{buffer}}, {2, ImageBuffer{buffer}}}};
-        image_loading_id_ = InsertImages(encoded_images);
-
-        target_info_id_ = database::GetOrCreateStep(db_.get(), StepType::TargetInfo, "").first;
-        TargetInfo const target_info{TargetType::Aprilgrid3, 6, 8, 0.1, false};
-        database::TargetInfoInsert(db_.get(), target_info_id_, target_id_, target_info);
+        camera_id_ = context_.assets.cameras.front().id;
+        target_id_ = context_.assets.target.id;
+        image_loading_id_ = InsertImages(camera_id_, TestImageSamples());
+        target_info_id_ = InsertTargetInfo();
     }
 
+    AssetId camera_id_;
+    AssetId target_id_;
     StepId image_loading_id_;
     StepId target_info_id_;
-    AssetId target_id_{database::GetOrCreateAsset(db_.get(), AssetType::Target, 0, "")};
 };
 
 TEST_F(FeatureExtractionTestFixture, TestFeatureExtractionStepRunner) {
     steps::FeatureExtraction const step{camera_id_, image_loading_id_, false, target_info_id_, target_id_, db_};
-    StepId const step_id{RunStep<steps::FeatureExtraction>(workflow_id_, step, db_)};
+    StepId const step_id{RunStep<steps::FeatureExtraction>(context_.workflow_id, step, db_)};
 
     // TODO(Jack): This is kind of an anti climatic result but it's not our responsibility to check that the feature
     // extraction works here.
@@ -47,7 +40,7 @@ TEST_F(FeatureExtractionTestFixture, TestFeatureExtractionStep) {
     steps::FeatureExtraction const step{camera_id_, image_loading_id_, false, target_info_id_, target_id_, db_};
     EXPECT_EQ(step.Type(), StepType::FeatureExtraction);
     EXPECT_EQ(step.Assets(), std::vector{camera_id_});
-    EXPECT_EQ(step.CacheKey().value, "cebb7a03270d515c4a1fe8be46ce42e546b3958e655f3af29197303d055e5b1a");
+    EXPECT_EQ(step.CacheKey().value, "efde0415f6bbd3b38ab818c62ef0c95208624f9867445c29e60dac88c1b81d5a");
 
     // Build the actual database step id and execute the step.
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
