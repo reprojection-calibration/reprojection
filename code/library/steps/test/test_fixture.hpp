@@ -6,6 +6,8 @@
 
 #include "database/calibration_database.hpp"
 #include "steps/initialize_workflow.hpp"
+#include "testing_mocks/data_generators.hpp"
+#include "testing_utilities/constants.hpp"
 
 using namespace reprojection;
 
@@ -87,6 +89,29 @@ class StepTestFixture : public ::testing::Test {
 
         StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "").first};
         database::IntrinsicInsert(db_.get(), step_id, camera_id, camera_model, intrinsic);
+
+        return step_id;
+    }
+
+    StepId InsertPoses(AssetId const camera_id, StepId const target_step_id) {
+        auto const camera{GetCamera(camera_id)};
+        CameraInfo const camera_info{camera.config.camera_model, testing_utilities::image_bounds};
+
+        // TODO(Jack): Logic is now repeated three times!
+        Intrinsic intrinsic;
+        if (camera_info.camera_model == CameraModel::DoubleSphere) {
+            intrinsic = {testing_utilities::double_sphere_intrinsics};
+        } else if (camera_info.camera_model == CameraModel::Pinhole) {
+            intrinsic = {testing_utilities::pinhole_intrinsics};
+        } else {
+            throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_info.camera_model))};
+        }
+
+        // ERROR(Jack): Use common timing parameterization across all methods!
+        auto const [_, poses]{testing_mocks::GenerateMvgData(camera_info, intrinsic, 11, 1)};
+
+        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "").first};
+        database::CameraPosesInsert(db_.get(), step_id, target_step_id, camera.id, poses);
 
         return step_id;
     }
