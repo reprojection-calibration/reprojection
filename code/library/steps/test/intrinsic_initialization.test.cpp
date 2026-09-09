@@ -17,21 +17,20 @@ class IntrinsicInitializationFixture : public StepTestFixture {
     void SetUp() override {
         StepTestFixture::SetUp();
 
-        CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
-        camera_info_id_ = InsertCameraInfo(camera_info);
-
-        auto const [targets, _]{
-            testing_mocks::GenerateMvgData(camera_info, {testing_utilities::double_sphere_intrinsics}, 11, 1)};
-        targets_id_ = InsertExtractedTargets(targets);
+        // WARN(Jack): These can only be called after the base fixtures SetUp method has been called!
+        camera_id_ = context_.assets.cameras.front().id;
+        camera_info_id_ = InsertCameraInfo(camera_id_);
+        targets_id_ = InsertExtractedTargets(camera_id_);
     }
 
+    AssetId camera_id_;
     StepId camera_info_id_;
     StepId targets_id_;
 };
 
 TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStepRunner) {
     steps::IntrinsicInitialization const step{camera_id_, 1, camera_info_id_, targets_id_, db_};
-    StepId const step_id{RunStep<steps::IntrinsicInitialization>(workflow_id_, step, db_)};
+    StepId const step_id{RunStep<steps::IntrinsicInitialization>(context_.workflow_id, step, db_)};
 
     auto const result{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
