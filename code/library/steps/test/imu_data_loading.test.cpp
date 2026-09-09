@@ -11,7 +11,6 @@ using namespace reprojection;
 class ImuSamplerFixture : public ::testing::Test {
    protected:
     void SetUp() override {
-        // Build the encoded images (cv::Mat -> serialized buffer)
         imu_data_ = ImuSamples{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
 
         imu_sampler_ =
