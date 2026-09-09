@@ -1,4 +1,4 @@
-#include "steps/extrinsic_init.hpp"
+#include "steps/extrinsic_optimization.hpp"
 
 #include <gtest/gtest.h>
 
@@ -10,10 +10,14 @@
 
 using namespace reprojection;
 
-class ExtrinsicInitFixture : public StepTestFixture {
+class ExtrinsicOptimizationFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         StepTestFixture::SetUp();
+
+        // Requires higher frequency data to actually return a result which makes sense! We do not set these as the
+        // default time for the test fixture because then the tests take too long.
+        timing_ = TimingParameters{11, 10, 20};
 
         camera_id_ = context_.assets.cameras.front().id;
         imu_id_ = context_.assets.imu->id;  // Unprotected optional access!
@@ -22,6 +26,7 @@ class ExtrinsicInitFixture : public StepTestFixture {
         intrinsics_id_ = InsertIntrinsic(camera_id_);
         poses_id_ = InsertPoses(camera_id_, targets_id_);
         std::tie(imu_data_id_, spline_id_) = InsertImuSetup(camera_id_);
+        extrinsic_init_id_ = InsertImuCamExtrinsic(imu_id_, camera_id_);
     }
 
     AssetId camera_id_;
@@ -32,11 +37,13 @@ class ExtrinsicInitFixture : public StepTestFixture {
     StepId poses_id_;
     StepId imu_data_id_;
     StepId spline_id_;
+    StepId extrinsic_init_id_;
 };
 
-TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
-    steps::ExtrinsicInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
-    StepId const step_id{RunStep<steps::ExtrinsicInit>(context_.workflow_id, step, db_)};
+TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
+    steps::ExtrinsicOptimization const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
+                                            camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
+    StepId const step_id{RunStep<steps::ExtrinsicOptimization>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, camera_id_)};
     ASSERT_TRUE(result.has_value());
@@ -47,13 +54,14 @@ TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
     EXPECT_NEAR(result2->norm(), kGravity, 1e-3);  // Heuristic!
 }
 
-TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStep) {
-    steps::ExtrinsicInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
+TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicInitStep) {
+    steps::ExtrinsicOptimization const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
+                                            camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
 
-    EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
+    EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
     std::vector const gt_assets{camera_id_, imu_id_};
     EXPECT_EQ(step.Assets(), gt_assets);
-    EXPECT_EQ(step.CacheKey().value, "d78f7d0b3bf9ef156ed4b8c9c31eaf1fcefb3174b239d1b5e471de80c488bc05");
+    EXPECT_EQ(step.CacheKey().value, "eab0d38464e832d533dce71257fb939d1691ff44144e082e05de35a4f14eb551");
 
     // Build the actual database step id and execute the step.
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
