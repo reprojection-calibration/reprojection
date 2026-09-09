@@ -15,8 +15,9 @@ class ExtrinsicOptimizationFixture : public StepTestFixture {
     void SetUp() override {
         StepTestFixture::SetUp();
 
-        // Requires higher frequency data to actually return a result which makes sense! We do not set these as the
-        // default time for the test fixture because then the tests take too long.
+        // NOTE(Jack): Requires higher frequency data to actually return a result which makes sense! We do not set these
+        // as the default time for the test fixture because then the tests take too long. It is important this gets
+        // updated before we call the data generation functions below.
         timing_ = TimingParameters{11, 10, 20};
 
         camera_id_ = context_.assets.cameras.front().id;
@@ -40,7 +41,7 @@ class ExtrinsicOptimizationFixture : public StepTestFixture {
     StepId extrinsic_init_id_;
 };
 
-TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
+TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicOptimizationStepRunner) {
     steps::ExtrinsicOptimization const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
                                             camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
     StepId const step_id{RunStep<steps::ExtrinsicOptimization>(context_.workflow_id, step, db_)};
@@ -54,7 +55,7 @@ TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
     EXPECT_NEAR(result2->norm(), kGravity, 1e-3);  // Heuristic!
 }
 
-TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicInitStep) {
+TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicOptimizationStep) {
     steps::ExtrinsicOptimization const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
                                             camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
 
