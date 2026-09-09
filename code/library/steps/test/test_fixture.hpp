@@ -33,6 +33,18 @@ class StepTestFixture : public ::testing::Test {
         return step_id;
     }
 
+    StepId InsertTargetInfo() {
+        auto const target{context_.assets.target};
+        // TODO(Jack): We need a constructor to to this! This is copy and pasted here from the step itself...
+        TargetInfo const target_info{target.config.target_type, target.config.size[0], target.config.size[1],
+                                     target.config.unit_dimension, target.config.asymmetric};
+
+        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::TargetInfo, "").first};
+        database::TargetInfoInsert(db_.get(), step_id, target.id, target_info);
+
+        return step_id;
+    }
+
     StepId InsertImages(AssetId const camera_id, ImageSamples const& images) {
         auto const step_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
         database::ImagesInsert(db_.get(), step_id, camera_id, images);
@@ -114,6 +126,18 @@ class StepTestFixture : public ::testing::Test {
         database::CameraPosesInsert(db_.get(), step_id, target_step_id, camera.id, poses);
 
         return step_id;
+    }
+
+    static ImageSamples TestImageSamples() {
+        cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
+
+        std::vector<uchar> buffer;
+        if (not cv::imencode(".png", img, buffer)) {
+            throw std::runtime_error("cv::imencode() failed");
+        }
+        ImageSamples const encoded_images{{{1, ImageBuffer{buffer}}}};
+
+        return encoded_images;
     }
 
    private:

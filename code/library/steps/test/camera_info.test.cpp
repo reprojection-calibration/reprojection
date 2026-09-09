@@ -14,16 +14,7 @@ class CameraInfoTestFixture : public StepTestFixture {
         StepTestFixture::SetUp();
 
         camera_id_ = context_.assets.cameras.front().id;
-
-        // TODO(Jack): This block of code is copy and pasted across multiple fixtures!
-        // Build the encoded images (cv::Mat -> serialized buffer)
-        cv::Mat const img{cv::Mat::zeros(10, 20, CV_8UC1)};
-        std::vector<uchar> buffer;
-        if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error("cv::imencode() failed");
-        }
-        ImageSamples const encoded_images{{{1, ImageBuffer{buffer}}}};
-        image_loading_id_ = InsertImages(camera_id_, encoded_images);
+        image_loading_id_ = InsertImages(camera_id_, TestImageSamples());
     }
 
     AssetId camera_id_;
