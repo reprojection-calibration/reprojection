@@ -2,6 +2,7 @@
 
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "optimization/bundle_adjustment.hpp"
 
@@ -84,11 +85,13 @@ void CamCamExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) co
     Ba::Problem const problem{Ba::MultiCamProblem(cameras_, rig_poses_, 1000)};
     auto const [result, ceres_state]{Ba::Solve(problem, 1)};
 
-    // TODO(Jack): We need to think about if we are really saving camera poses or rig poses!
-    database::CameraPosesInsert(db.get(), step_id, reference_camera_.targets_id, reference_camera_.camera_id,
-                                result.rig_poses);
+    database::RigStateInsert(db.get(), step_id, reference_camera_.targets_id, optimization::ToRigState(result));
 
-    // TODO ALSO SAVED ALL OPTIMIZED EXTRINSICS AND INTRINSICS!
+    // TODO WRITE REPROJECTION ERRORS!
+
+    log->info("{{{}, 'problem': {}}}}}", StepLogInfo{Type(), step_id}, problem);
+    log->info("{{{}, 'result': {}, 'solver_summary': {}}}}}", StepLogInfo{Type(), step_id}, result,
+              ceres_state.solver_summary);
 }
 
 }  // namespace reprojection::steps

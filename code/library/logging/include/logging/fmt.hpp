@@ -83,9 +83,9 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::Problem const& problem, format_context& ctx) const {
-        auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'num_targets': {}, 'cameras': [",
-                           problem.rig_frame_asset_id.value, std::size(problem.rig_poses),
-                           std::size(problem.observations))};
+        auto out{format_to(
+            ctx.out(), "{{'rig_frame_asset_id': {}, 'num_rig_poses': {}, 'num_observations': {}, 'cameras': [",
+            problem.rig_frame_asset_id.value, std::size(problem.rig_poses), std::size(problem.observations))};
 
         bool first{true};
         for (auto const& [camera_id, camera] : problem.cameras) {
