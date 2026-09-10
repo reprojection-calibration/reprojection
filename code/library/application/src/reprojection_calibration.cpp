@@ -6,6 +6,7 @@
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/cam_cam_extrinsic_init.hpp"
+#include "steps/cam_cam_extrinsic_optimization.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_init.hpp"
 #include "steps/extrinsic_optimization.hpp"
@@ -117,7 +118,12 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         StepId const cam_cam_extrinsic_init_id{
             RunStep<steps::CamCamExtrinsicInit>(context.workflow_id, cam_cam_extrinsic_init_step, db)};
 
-        static_cast<void>(cam_cam_extrinsic_init_id);
+        steps::CamCamExtrinsicOptimization const extrinsic_cam_optimization_step{camera_calibrations,
+                                                                                 cam_cam_extrinsic_init_id, db};
+        StepId const extrinsic_cam_optimization_id{
+            RunStep<steps::CamCamExtrinsicOptimization>(context.workflow_id, extrinsic_cam_optimization_step, db)};
+
+        static_cast<void>(extrinsic_cam_optimization_id);
     }
 
     // TODO(Jack): Find a way to get this to run in a unit test! I think we could do this with the data generation

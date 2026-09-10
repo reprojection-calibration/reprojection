@@ -31,7 +31,7 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
         // later?
         optimization::CameraProblemInput camera_input;
         camera_input.camera_id = camera_calibration.camera_id;
-        camera_input.optimize_intrinsic = true;  // Are we sure???
+        camera_input.optimize_intrinsic = false;
         camera_input.optimize_extrinsic = true;
 
         if (auto const camera_info{
@@ -51,13 +51,18 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
             std::exit(1);  // LCOV_EXCL_LINE
         }
 
-        if (auto const extrinsic{database::ExtrinsicSelect(db.get(), extrinsic_init_id, camera_input.camera_id,
-                                                           reference_camera_.camera_id)}) {
-            camera_input.extrinsic = extrinsic->se3_a_b;
+        // TODO MEGA HACK! WE NEED TO WRITE THE IDENTITY INTRINSICS TO THE DB?
+        if (camera_input.camera_id == reference_camera_.camera_id) {
+            camera_input.extrinsic = Array6d::Zero();
         } else {
-            log->error("{}", extrinsic.error());  // LCOV_EXCL_LINE
-            std::exit(1);                         // LCOV_EXCL_LINE
-        }  // LCOV_EXCL_LINE
+            if (auto const extrinsic{database::ExtrinsicSelect(db.get(), extrinsic_init_id, camera_input.camera_id,
+                                                               reference_camera_.camera_id)}) {
+                camera_input.extrinsic = extrinsic->se3_a_b;
+            } else {
+                log->error("{}", extrinsic.error());  // LCOV_EXCL_LINE
+                std::exit(1);                         // LCOV_EXCL_LINE
+            }  // LCOV_EXCL_LINE
+        }
 
         camera_input.targets = database::TargetsSelect(db.get(), camera_calibration.targets_id, camera_input.camera_id);
 
