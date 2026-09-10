@@ -14,10 +14,10 @@ using namespace reprojection;
 // The first entry is for /cam0/image_raw and the second is for /cam1/image_raw
 // TODO(Jack): Should we add the image loading cache key here too? Not sure why we calculate this from the sensor name
 // separately in the testing utils.
-// TODO(Jack): The camera model information here should come from the loaded and parsed config and NOT be hardcoded
-// here!
 std::vector<testing_utilities::CameraTestData> const camera_test_data{
     {{
+         // TODO(Jack): The camera model information here should come from the loaded and parsed config and NOT be
+         // hardcoded here!
          CameraInfo{CameraModel::DoubleSphere, {0, 512, 0, 512}},
          StepId{1},
          "1d9f6211868fc970b94631f11f02a7110c4008f76a9246dffc86da5098d7b11d",
@@ -25,6 +25,7 @@ std::vector<testing_utilities::CameraTestData> const camera_test_data{
          "a9af3e877da0c5e5d457c51a4302f3e4c2c8891cf7d16a5f5f7c1e547d542e47",
      },
      {
+         // TODO(Jack): See above! Camera model should come from config!
          CameraInfo{CameraModel::DoubleSphere, {0, 512, 0, 512}},
          StepId{2},
          "954f15331b067523ad1792e880ffc349841b1bf4254e18be44f918af3936ea34",
