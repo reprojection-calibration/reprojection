@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ceres/solver.h>
+#include <spdlog/fmt/bundled/ranges.h>
 #include <spdlog/fmt/fmt.h>
 
 #include <Eigen/Dense>
@@ -16,28 +17,6 @@
 // to be compiled into the shared object for it to be recognized and used by fmt. Anyone who is more familiar can take
 // a look if his becomes a problem.
 
-template <typename Scalar, int Rows, int Cols, int Options, int MaxRows, int MaxCols>
-struct fmt::formatter<Eigen::Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols>> {
-    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
-
-    template <typename FormatContext>
-    auto format(Eigen::Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols> const& arr, FormatContext& ctx) const {
-        auto out{ctx.out()};
-
-        out = format_to(out, "[");
-        for (int i{0}; i < arr.size(); ++i) {
-            if (i > 0) {
-                out = format_to(out, ", ");
-            }
-
-            out = format_to(out, "{:.3f}", arr(i));
-        }
-        out = format_to(out, "]");
-
-        return out;
-    }
-};
-
 template <>
 struct fmt::formatter<reprojection::Extrinsic> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
@@ -45,8 +24,8 @@ struct fmt::formatter<reprojection::Extrinsic> {
     auto format(reprojection::Extrinsic const& value, format_context& ctx) const {
         auto const& tf{value.se3_a_b};
 
-        return format_to(ctx.out(), R"({{'frame_a': {}, 'frame_b': {}, 'se3_a_b': [{}, {}, {}, {}, {}, {}]}})",
-                         value.frame_a.value, value.frame_b.value, tf[0], tf[1], tf[2], tf[3], tf[4], tf[5]);
+        return format_to(ctx.out(), R"({{'frame_a': {}, 'frame_b': {}, 'se3_a_b': [{:.3f}]}})", value.frame_a.value,
+                         value.frame_b.value, join(tf, ", "));
     }
 };
 
@@ -77,7 +56,8 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::CameraState>
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::CameraState const& state, format_context& ctx) const {
-        return format_to(ctx.out(), "{{'intrinsic': {}, 'extrinsic': {}}}", state.intrinsic.value, state.extrinsic);
+        return format_to(ctx.out(), "{{'intrinsic': [{:.3f}], 'extrinsic': [{:.3f}]}}",
+                         join(state.intrinsic.value, ", "), join(state.extrinsic, ", "));
     }
 };
 

@@ -2,6 +2,7 @@ set(LIBRARY_NAME "steps")
 
 set(SRC_FILES
         src/bundle_adjustment.cpp
+        src/cam_cam_extrinsic_init.cpp
         src/camera_info.cpp
         src/extrinsic_init.cpp
         src/extrinsic_optimization.cpp
@@ -38,6 +39,7 @@ set(TEST_LINK_LIBRARIES
 )
 set(TESTS
         test/bundle_adjustment.test.cpp
+        test/cam_cam_extrinsic_init.test.cpp
         test/camera_info.test.cpp
         test/extrinsic_init.test.cpp
         test/extrinsic_optimization.test.cpp

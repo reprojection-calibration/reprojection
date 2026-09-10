@@ -5,6 +5,7 @@
 #include "config/config_parse.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
+#include "steps/cam_cam_extrinsic_init.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_init.hpp"
 #include "steps/extrinsic_optimization.hpp"
@@ -69,19 +70,13 @@ Sensors ParseSensors(toml::table const& cfg_table) {
     return Sensors{camera_names, imu_name};
 }
 
-// TODO(Jack): Should we move this to another location?
-// NOTE(Jack): We only store the values that we need to the extrinsic calibration. We could store every step id but why?
-struct CameraCalibration {
-    AssetId camera_id;
-    StepId camera_info_id;
-    StepId targets_id;
-    StepId pose_init_id;
-    StepId bundle_adjustment_id;
-};
-
 void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {
     steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
+
+    // Only one target is allowed.
+    steps::TargetInfoStep const target_info_step{context.assets.target.id, context.assets.target.config};
+    StepId const target_info_id{RunStep<steps::TargetInfoStep>(context.workflow_id, target_info_step, db)};
 
     std::vector<CameraCalibration> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {
@@ -94,9 +89,6 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
 
         steps::CameraInfoStep const camera_info_step{camera.id, image_loading_id, camera.config.camera_model, db};
         StepId const camera_info_id{RunStep<steps::CameraInfoStep>(context.workflow_id, camera_info_step, db)};
-
-        steps::TargetInfoStep const target_info_step{context.assets.target.id, context.assets.target.config};
-        StepId const target_info_id{RunStep<steps::TargetInfoStep>(context.workflow_id, target_info_step, db)};
 
         steps::FeatureExtraction const feature_extraction_step{
             camera.id,      image_loading_id,         context.application.show_extraction,
@@ -119,11 +111,21 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         camera_calibrations.push_back({camera.id, camera_info_id, targets_id, pose_init_id, bundle_adjustment_id});
     }
 
+    bool const is_multicam{std::size(context.assets.cameras) > 1};
+    if (is_multicam) {
+        steps::CamCamExtrinsicInit const cam_cam_extrinsic_init_step{camera_calibrations, db};
+        StepId const cam_cam_extrinsic_init_id{
+            RunStep<steps::CamCamExtrinsicInit>(context.workflow_id, cam_cam_extrinsic_init_step, db)};
+
+        static_cast<void>(cam_cam_extrinsic_init_id);
+    }
+
     // TODO(Jack): Find a way to get this to run in a unit test! I think we could do this with the data generation
     // functions we have!
     // LCOV_EXCL_START
 
-    if (context.assets.imu.has_value() and imu_input.has_value()) {
+    bool const has_imu{context.assets.imu.has_value() && imu_input.has_value()};
+    if (has_imu) {
         auto const imu_id{context.assets.imu->id};
         log->info("{{'sensor_name': '{}', 'asset_id': {}}}", context.assets.imu->config.sensor_name, imu_id.value);
 

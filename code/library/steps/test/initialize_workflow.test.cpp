@@ -18,25 +18,6 @@ TEST(ApplicationInitializeWorkflow, TestHappyPath) {
     EXPECT_EQ(std::size(result.assets.All()), 4);
     EXPECT_TRUE(result.assets.imu.has_value());
     EXPECT_EQ(result.workflow_id.value, 1);
-    EXPECT_EQ(result.workflow_type, WorkflowType::CamImu);
-}
-
-TEST(ApplicationInitializeWorkflow, TestDetermineWorkflowType) {
-    toml::table const table{toml::parse(testing_utilities::calibration_config)};
-    config::Config parsed_cfg{config::Config::Parse(table)};
-
-    WorkflowType result{steps::DetermineWorkflowType(parsed_cfg)};
-    EXPECT_EQ(result, WorkflowType::CamImu);
-
-    // Drop the IMU so now its just a multi-cam workflow.
-    parsed_cfg.imu = std::nullopt;
-    result = steps::DetermineWorkflowType(parsed_cfg);
-    EXPECT_EQ(result, WorkflowType::MultiCam);
-
-    // Drop second camera so we get a single cam workflow.
-    parsed_cfg.cameras.pop_back();
-    result = steps::DetermineWorkflowType(parsed_cfg);
-    EXPECT_EQ(result, WorkflowType::Cam);
 }
 
 TEST(ApplicationInitializeWorkflow, TestCreateCalibrationAssets) {

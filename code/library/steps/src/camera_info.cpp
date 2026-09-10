@@ -28,26 +28,33 @@ void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {
     // cache hit then. But it seems like if we can already know this is a problem then that we should not let
     // construction finish.
     if (std::size(*images_) == 0) {
-        log->error("{{'step_id': {}, 'asset_id': {}, 'msg': 'No images loaded.'}}", step_id.value,  // LCOV_EXCL_LINE
-                   camera_id_.value, ToString(camera_model_));                                      // LCOV_EXCL_LINE
-        std::exit(1);                                                                               // LCOV_EXCL_LINE
+        // LCOV_EXCL_START
+        log->error("{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'msg': 'No images loaded.'}}", ToString(Type()),
+                   step_id.value, camera_id_.value, ToString(camera_model_));
+        std::exit(1);
+        // LCOV_EXCL_STOP
     }
 
     // Check the size of the first image to get the image dimensions.
     cv::Mat const img{cv::imdecode(images_->begin()->second.data, cv::IMREAD_COLOR)};
     if (img.empty()) {
-        log->error(  // LCOV_EXCL_LINE
-            "{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",
-            step_id.value, camera_id_.value, ToString(camera_model_));  // LCOV_EXCL_LINE
-        std::exit(1);                                                   // LCOV_EXCL_LINE
+        // LCOV_EXCL_START
+        log->error(
+            "{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was "
+            "empty.'}}",
+            step_id.value, camera_id_.value, ToString(camera_model_));
+        std::exit(1);
+        // LCOV_EXCL_STOP
     }
 
     CameraInfo const camera_info{camera_model_,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
-    log->info("{{'step_id': {}, 'asset_id': {}, 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
-              step_id.value, camera_id_.value, ToString(camera_model_), camera_info.bounds.v_max,
-              camera_info.bounds.u_max);
+    log->info(
+        "{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'camera_info': {{'camera_model': {}, 'height': {}, "
+        "'width': {}}}}}",
+        ToString(Type()), step_id.value, camera_id_.value, ToString(camera_model_), camera_info.bounds.v_max,
+        camera_info.bounds.u_max);
 
     database::CameraInfoInsert(db.get(), step_id, camera_id_, camera_info);
 }

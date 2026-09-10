@@ -40,6 +40,22 @@ TEST(CalibrationInitializationMethods, TestPoseInitialization) {
     }
 }
 
+// TODO(Jack): We do not strictly need to use the trajectory here as we could just generate random frames. Not critical
+// but it would lower our external dependencies here.
+// NOTE(Jack): Yes this test would be better if we actually had a simulated stereo data and got back a result that was
+// not just identity. I agree, but getting back identity is also good and demonstrates the method is basically
+// consistent.
+TEST(CalibrationInitializationMethods, TestInitializeCamCamExtrinsic) {
+    CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
+    Intrinsic const intrinsics{testing_utilities::double_sphere_intrinsics};
+    auto const [_, frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 60, 1)};
+
+    // Passing the same set of frames for both a and b means we are guaranteed to get identity back because there is
+    // no extrinsic at all.
+    Array6d const result{calibration::InitializeCamCamExtrinsic(frames, frames, 1'000'000)};
+    EXPECT_NEAR(result.sum(), 0.0, 1e-6);
+}
+
 TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
     auto [imu_data, spline_w_b]{testing_mocks::GenerateImuData(10, 50)};
 

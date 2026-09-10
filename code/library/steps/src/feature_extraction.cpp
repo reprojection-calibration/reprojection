@@ -50,9 +50,12 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
     for (auto const& [timestamp_ns, buffer] : *images_) {
         cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
         if (img.empty()) {
-            log->error(  // LCOV_EXCL_LINE
-                "{{'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was empty.'}}",  // LCOV_EXCL_LINE
-                step_id.value, camera_id_.value);  // LCOV_EXCL_LINE
+            // LCOV_EXCL_START
+            log->error(
+                "{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was "
+                "empty.'}}",
+                ToString(Type()), step_id.value, camera_id_.value);
+            // LCOV_EXCL_STOP
         }
 
         std::optional const target{extractor->Extract(img)};
