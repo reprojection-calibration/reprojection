@@ -19,16 +19,16 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
     ceres_state.solver_options.num_threads = num_threads;
     ceres::Problem ceres_problem{ceres_state.problem_options};
 
-    for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
+    for (auto const& [camera_id, _, frame_timestamp_ns, bundle] : ba_problem.observations) {
         // cppcheck-suppress ignoredReturnValue
-        auto const& [camera_info, _, camera_options]{ba_problem.cameras.at(camera_id)};
+        auto const& [camera_info, _1, camera_options]{ba_problem.cameras.at(camera_id)};
         auto& camera_state{result.camera_states.at(camera_id)};
         // Protect against the case of a missing rig pose - it can be that we have a observation for a frame where the
         // rig pose initialization was unsuccessful and we need to protect against that.
-        if (not result.rig_poses.contains(timestamp_ns)) {
+        if (not result.rig_poses.contains(frame_timestamp_ns)) {
             continue;  // LCOV_EXCL_LINE
         }
-        auto& rig_pose{result.rig_poses.at(timestamp_ns)};
+        auto& rig_pose{result.rig_poses.at(frame_timestamp_ns)};
 
         auto const& [pixels, points]{bundle};
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
@@ -63,7 +63,9 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
 
     std::vector<Observation> observations;
     for (auto const& [timestamp_ns, target] : targets) {
-        observations.push_back({camera_id, timestamp_ns, target.bundle});
+        // NOTE(Jack): For the single cam problems the data is by its very nature "synchronized", therefore we use the
+        // same timestamp for both observation timestamps.
+        observations.push_back({camera_id, timestamp_ns, timestamp_ns, target.bundle});
     }
 
     return {camera_id, frames, {{camera_id, camera}}, observations};
@@ -107,13 +109,13 @@ std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const
     std::vector<ReprojectionError> errors;
     errors.reserve(std::size(ba_problem.observations));
 
-    for (auto const& [camera_id, timestamp_ns, bundle] : ba_problem.observations) {
+    for (auto const& [camera_id, sample_timestamp_ns, frame_timestamp_ns, bundle] : ba_problem.observations) {
         // cppcheck-suppress ignoredReturnValue
-        auto const& [camera_info, camera_state, camera_options]{ba_problem.cameras.at(camera_id)};
-        if (not ba_problem.rig_poses.contains(timestamp_ns)) {
+        auto const& [camera_info, camera_state, _]{ba_problem.cameras.at(camera_id)};
+        if (not ba_problem.rig_poses.contains(frame_timestamp_ns)) {
             continue;
         }
-        auto const& rig_pose{ba_problem.rig_poses.at(timestamp_ns)};
+        auto const& rig_pose{ba_problem.rig_poses.at(frame_timestamp_ns)};
 
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(camera_state.intrinsic.value.data());
@@ -136,7 +138,10 @@ std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const
             delete cost_function;
         }
 
-        errors.push_back({camera_id, timestamp_ns, residuals_i});
+        // NOTE(Jack): Here you see clearly how the observation was matched to the rig pose via the "frame" timestamp
+        // (i.e. the approximate synchronization) but the output is saved out to the database under the original
+        // "sample" timestamp so that the foreign key relationships are preserved.
+        errors.push_back({camera_id, sample_timestamp_ns, residuals_i});
     }
 
     return errors;
