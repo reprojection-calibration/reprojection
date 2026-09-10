@@ -56,6 +56,7 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
     return {result, ceres_state};
 }
 
+// TODO(Jack): Refactor this to use the AddCamera method! We repeate the observation iteration which is not so nice.
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                              TargetSamples const& targets, Frames const& frames,
                                                              bool const optimize_intrinsic, AssetId const camera_id) {
