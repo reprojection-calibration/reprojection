@@ -8,6 +8,7 @@
 
 #include "optimization/bundle_adjustment.hpp"
 #include "transforms/rig_state.hpp"
+#include "types/database_types.hpp"
 #include "types/transform_types.hpp"
 
 // TODO(Jack): For some reason here we are forced here to use the spdlog bundled fmt and not the standard std::format.
@@ -16,6 +17,21 @@
 // TODO(Jack): I am honestly not 100% sure the best practices for such an adapter struct. All I know is that this needs
 // to be compiled into the shared object for it to be recognized and used by fmt. Anyone who is more familiar can take
 // a look if his becomes a problem.
+
+template <>
+struct fmt::formatter<reprojection::StepLogInfo> {
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
+
+    template <typename FormatContext>
+    auto format(reprojection::StepLogInfo const& info, FormatContext& ctx) const {
+        if (info.asset_id) {
+            return fmt::format_to(ctx.out(), "'step_type': '{}', 'step_id': {}, 'asset_id': {}", ToString(info.type),
+                                  info.step_id.value, info.asset_id->value);
+        }
+
+        return fmt::format_to(ctx.out(), "'step_type': '{}', 'step_id': {}", ToString(info.type), info.step_id.value);
+    }
+};
 
 template <>
 struct fmt::formatter<reprojection::Extrinsic> {

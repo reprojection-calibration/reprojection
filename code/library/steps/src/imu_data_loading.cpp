@@ -2,6 +2,7 @@
 
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::steps {
@@ -29,8 +30,7 @@ void ImuDataLoading::Execute(StepId const step_id, SqlitePtr const db) const {
         imu_data.insert({timestamp_ns, {angular_velocity, linear_acceleration}});
     }
 
-    log->info("{{'step_type': '{}', 'step_id': {}, 'imu_id': {}, 'num_imu_data': {}}}", ToString(Type()), step_id.value,
-              imu_id_.value, std::size(imu_data));
+    log->info("{{{}, 'num_imu_data': {}}}", StepLogInfo{Type(), step_id, imu_id_}, std::size(imu_data));
 
     database::ImuDataInsert(db.get(), step_id, imu_id_, imu_data);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "database/calibration_database.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "types/database_types.hpp"
 #include "types/io.hpp"
@@ -30,8 +31,7 @@ StepId RunStep(WorkflowId const workflow_id, T const& step, SqlitePtr const db) 
     // Regardless if it is a cache hit or miss we need to add it to the assigned workflow.
     database::WorkflowStepUpsert(db.get(), workflow_id, step_id, step.Type(), step.Assets());
 
-    log->info("{{'step_type': '{}', 'step_id': {:2}, 'cache_status': '{}'}}", ToString(step.Type()), step_id.value,
-              ToString(cache_status));
+    log->info("{{{}, 'cache_status': '{}'}}", StepLogInfo{step.Type(), step_id}, ToString(cache_status));
 
     if (cache_status == CacheStatus::CacheHit) {
         return step_id;

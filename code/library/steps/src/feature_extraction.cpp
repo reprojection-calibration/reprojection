@@ -4,6 +4,7 @@
 #include "feature_extraction/target_extraction.hpp"
 #include "hashing/hashing.hpp"
 #include "image_viewer/image_viewer.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::steps {
@@ -51,10 +52,8 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
         cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
         if (img.empty()) {
             // LCOV_EXCL_START
-            log->error(
-                "{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was "
-                "empty.'}}",
-                ToString(Type()), step_id.value, camera_id_.value);
+            log->error("{{{}, 'msg': 'Attempted to decode image but result was empty.'}}",
+                       StepLogInfo{Type(), step_id, camera_id_});
             // LCOV_EXCL_STOP
         }
 
