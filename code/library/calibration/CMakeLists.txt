@@ -7,7 +7,6 @@ set(SRC_FILES
         src/intrinsic_initialization.cpp
         src/parabola_line_initialization.cpp
         src/pose_initialization.cpp
-        src/time_synchronization.cpp
         src/utilities.cpp
         src/vanishing_point_initialization.cpp
 )
@@ -33,7 +32,6 @@ set(TESTS
         src/extrinsic_initialization.test.cpp
         src/intrinsic_initialization.test.cpp
         src/parabola_line_initialization.test.cpp
-        src/time_synchronization.test.cpp
         src/utilities.test.cpp
         src/vanishing_point_initialization.test.cpp
         test/calibration_utils.test.cpp
