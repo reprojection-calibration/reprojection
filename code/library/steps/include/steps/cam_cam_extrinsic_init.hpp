@@ -31,7 +31,7 @@ struct CamCamExtrinsicInit {
         }
 
         return assets;
-    }
+    }  // LCOV_EXCL_LINE
 
     Hash CacheKey() const;
 

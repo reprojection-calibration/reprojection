@@ -28,20 +28,23 @@ void ImageLoading::Execute(StepId const step_id, SqlitePtr const db) const {
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", img, buffer)) {
-            log->error(  // LCOV_EXCL_LINE
+            // LCOV_EXCL_START
+            log->error(
                 "{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'msg': 'cv::imencode() failed at timestamp_ns "
-                "{}.'}}",                                                          // LCOV_EXCL_LINE
-                ToString(Type()), step_id.value, camera_id_.value, timestamp_ns);  // LCOV_EXCL_LINE
-            std::exit(1);                                                          // LCOV_EXCL_LINE
+                "{}.'}}",
+                ToString(Type()), step_id.value, camera_id_.value, timestamp_ns);
+            std::exit(1);
+            // LCOV_EXCL_STOP
         }
 
         encoded_images->insert({timestamp_ns, ImageBuffer{buffer}});
 
         ++num_images;
         if (num_images % 50 == 0) {
+            // LCOV_EXCL_START
             log->debug("{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'num_images': {}}}", ToString(Type()),
-                       step_id.value,                  // LCOV_EXCL_LINE
-                       camera_id_.value, num_images);  // LCOV_EXCL_LINE
+                       step_id.value, camera_id_.value, num_images);
+            // LCOV_EXCL_STOP
         }
     }
 

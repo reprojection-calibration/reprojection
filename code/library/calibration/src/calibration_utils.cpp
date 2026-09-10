@@ -9,7 +9,7 @@ namespace reprojection::calibration {
 // term.
 Frames AlignRotations(Frames data) {
     if (std::empty(data)) {
-        return data;
+        return data;  // LCOV_EXCL_LINE
     }
 
     Vector3d so3_i_1{std::cbegin(data)->second.value.head<3>()};

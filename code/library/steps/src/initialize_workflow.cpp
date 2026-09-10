@@ -51,25 +51,6 @@ CalibrationAssets CreateCalibrationAssets(config::Config const& cfg, SqlitePtr c
     return assets;
 }
 
-void InsertAssetGroups(WorkflowType const workflow_type, CalibrationAssets const& assets, SqlitePtr const db) {
-    // The workflow asset group contains all the assets in one.
-    database::AssetGroupInsert(db.get(), assets.All());
-
-    // Each individual asset is also added - most steps are just owned by one single asset.
-    // TODO(Jack): Here we see the problem of the naming - "asset groups" would lead the normal person to believe there
-    // is probably at least two or more assets in any group, but that is not true! We need a name that reflects better
-    // it is simple a unique asset based identifier for worklow components.
-    for (auto const& asset : assets.All()) {
-        database::AssetGroupInsert(db.get(), {asset});
-    }
-
-    // Now execute any special rules that exist depending on the workflow type.
-    if (workflow_type == WorkflowType::CamImu) {
-        // WARN(Jack): We are hardcoding here that the imu will always be calibrated to the first camera.
-        database::AssetGroupInsert(db.get(), {assets.cameras.at(0).id, assets.imu->id});
-    }
-}
-
 void InsertAssetGroups(CalibrationAssets const& assets, SqlitePtr const db) {
     auto const asset_ids{assets.All()};
 
@@ -77,6 +58,9 @@ void InsertAssetGroups(CalibrationAssets const& assets, SqlitePtr const db) {
     database::AssetGroupInsert(db.get(), asset_ids);
 
     // Each individual asset.
+    // TODO(Jack): Here we see the problem of the naming - "asset groups" would lead the normal person to believe there
+    // is probably at least two or more assets in any group, but that is not true! We need a name that reflects better
+    // it is simple a unique asset based identifier for worklow components.
     for (auto const& asset_id : asset_ids) {
         database::AssetGroupInsert(db.get(), {asset_id});
     }
