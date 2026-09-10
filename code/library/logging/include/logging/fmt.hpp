@@ -24,10 +24,8 @@ struct fmt::formatter<reprojection::Extrinsic> {
     auto format(reprojection::Extrinsic const& value, format_context& ctx) const {
         auto const& tf{value.se3_a_b};
 
-        return format_to(
-            ctx.out(),
-            R"({{'frame_a': {}, 'frame_b': {}, 'se3_a_b': [{:.3f}]}})",
-            value.frame_a.value, value.frame_b.value, join(tf, ", "));
+        return format_to(ctx.out(), R"({{'frame_a': {}, 'frame_b': {}, 'se3_a_b': [{:.3f}]}})", value.frame_a.value,
+                         value.frame_b.value, join(tf, ", "));
     }
 };
 
@@ -58,8 +56,8 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::CameraState>
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::CameraState const& state, format_context& ctx) const {
-        return format_to(ctx.out(), "{{'intrinsic': [{:.3f}], 'extrinsic': [{:.3f}]}}", join(state.intrinsic.value, ", "),
-                         join(state.extrinsic, ", "));
+        return format_to(ctx.out(), "{{'intrinsic': [{:.3f}], 'extrinsic': [{:.3f}]}}",
+                         join(state.intrinsic.value, ", "), join(state.extrinsic, ", "));
     }
 };
 

@@ -20,9 +20,8 @@ auto const log{logging::Get("steps")};
 
 CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CameraCalibration> const& camera_calibrations, SqlitePtr db) {
     // Extract only the parts we actually need.
-    for (auto const& calibration : camera_calibrations) {
-        states_.push_back(CamCamExtrinsicInitState{calibration});
-    }
+    std::ranges::transform(camera_calibrations, std::back_inserter(states_),
+                           [](auto const& calibration) { return CamCamExtrinsicInitState{calibration}; });
 
     for (auto const& state : states_) {
         Frames const frames{database::CameraPosesSelect(db.get(), state.frames_id, state.camera_id)};
@@ -31,12 +30,10 @@ CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CameraCalibration> const& c
 }
 
 Hash CamCamExtrinsicInit::CacheKey() const {
-    Hash hash;
-    for (auto const& frames : camera_frames_ | std::views::values) {
-        hash = hashing::HashArguments(hash, frames);
-    }
-
-    return hash;
+    // Only hash the frame pose values so we are not dependent on the camera asset ids.
+    return std::ranges::fold_left(
+        camera_frames_ | std::views::values, Hash{},
+        [](Hash const& hash, auto const& frames) { return hashing::HashArguments(hash, frames); });
 }
 
 void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {

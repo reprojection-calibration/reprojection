@@ -15,8 +15,6 @@ TEST(HashingSerialize, TestSerializeCameraInfo) {
     EXPECT_EQ(result, gt_result);
 }
 
-
-
 TEST(HashingSerialize, TestSerializeCameraState) {
     Intrinsic const camera_state{testing_utilities::pinhole_intrinsics};
 
