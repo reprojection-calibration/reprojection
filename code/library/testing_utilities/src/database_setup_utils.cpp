@@ -29,8 +29,7 @@ void TestDatabaseSetup(std::vector<Asset<config::Config::Camera>> const& cameras
         auto const [step_id,
                     cache_status]{database::GetOrCreateStep(db.get(), StepType::CameraInfo, test_data.camera_info_key)};
         if (cache_status == CacheStatus::CacheMiss) {
-            database::CameraInfoInsert(db.get(), step_id, camera.id,
-                                       CameraInfo{camera.config.camera_model, {0, 512, 0, 512}});
+            database::CameraInfoInsert(db.get(), step_id, camera.id, test_data.camera_info);
             database::StepCacheKeyUpdate(db.get(), step_id, test_data.camera_info_key);
         }
     }

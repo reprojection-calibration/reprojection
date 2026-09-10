@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config/config_parse.hpp"
+#include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 #include "types/io.hpp"
 
@@ -9,6 +10,7 @@ namespace reprojection::testing_utilities {
 // This is approximately the information that you will need to fill out the checked in test database with in order to
 // trigger a cache hit so you can run the calibration without the images.
 struct CameraTestData {
+    CameraInfo camera_info;
     StepId image_loading_id;
     Hash feature_extraction_key;
     StepId feature_extraction_id;
