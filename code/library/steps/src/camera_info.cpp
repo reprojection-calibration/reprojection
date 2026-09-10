@@ -2,6 +2,7 @@
 
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::steps {
@@ -50,11 +51,9 @@ void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {
     CameraInfo const camera_info{camera_model_,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
 
-    log->info(
-        "{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'camera_info': {{'camera_model': {}, 'height': {}, "
-        "'width': {}}}}}",
-        ToString(Type()), step_id.value, camera_id_.value, ToString(camera_model_), camera_info.bounds.v_max,
-        camera_info.bounds.u_max);
+    log->info("{{{}, 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
+              StepLogInfo{Type(), step_id, camera_id_}, ToString(camera_model_), camera_info.bounds.v_max,
+              camera_info.bounds.u_max);
 
     database::CameraInfoInsert(db.get(), step_id, camera_id_, camera_info);
 }

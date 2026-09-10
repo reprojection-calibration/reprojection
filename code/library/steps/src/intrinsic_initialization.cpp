@@ -38,14 +38,13 @@ void IntrinsicInitialization::Execute(StepId const step_id, SqlitePtr const db) 
                                                             camera_info_.bounds.u_max, targets_, num_threads_)};
     if (not intrinsics.has_value()) {
         // LCOV_EXCL_START
-        log->error("{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'msg': 'Failed to initialize intrinsics.'}}",
-                   ToString(Type()), step_id.value, camera_id_.value);
+        log->error("{{{}, 'msg': 'Failed to initialize intrinsics.'}}", StepLogInfo{Type(), step_id, camera_id_});
         std::exit(1);
         // LCOV_EXCL_STOP
     }
 
-    log->info("{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'camera_model': '{}', 'intrinsic: {}}}}}",
-              ToString(Type()), step_id.value, camera_id_.value, ToString(camera_info_.camera_model), *intrinsics);
+    log->info("{{{}, 'camera_model': '{}', 'intrinsic: {}}}}}", StepLogInfo{Type(), step_id, camera_id_},
+              ToString(camera_info_.camera_model), *intrinsics);
 
     database::IntrinsicInsert(db.get(), step_id, camera_id_, camera_info_.camera_model, Intrinsic{*intrinsics});
 }

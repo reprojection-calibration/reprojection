@@ -77,8 +77,8 @@ void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};
 
     // TODO(Jack): We also need a way to log the final and initial costs!
-    log->info("{{'step_type': '{}', 'step_id': {}, 'extrinsic': {}, 'gravity': [{:.3f}]}}", ToString(Type()),
-              step_id.value, optimized_extrinsic, fmt::join(optimized_gravity, ", "));
+    log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}]}}", StepLogInfo{Type(), step_id}, optimized_extrinsic,
+              fmt::join(optimized_gravity, ", "));
 
     database::SplineInfoInsert(db.get(), step_id, camera_id_, optimized_spline.GetTimeHandler());
     database::ControlPointsInsert(db.get(), step_id, camera_id_, optimized_spline.ControlPoints());

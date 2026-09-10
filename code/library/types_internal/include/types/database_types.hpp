@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -141,6 +142,18 @@ struct CameraCalibration {
     StepId targets_id;
     StepId pose_init_id;
     StepId bundle_adjustment_id;
+};
+
+// TODO(Jack): Where does this belong? It is only used for the steps fmt logging really.
+struct StepLogInfo {
+    StepLogInfo(StepType const _type, StepId const _step_id) : type{_type}, step_id{_step_id}, asset_id{std::nullopt} {}
+
+    StepLogInfo(StepType const _type, StepId const _step_id, AssetId const _asset_id)
+        : type{_type}, step_id{_step_id}, asset_id{_asset_id} {}
+
+    StepType type;
+    StepId step_id;
+    std::optional<AssetId> asset_id;
 };
 
 }  // namespace reprojection
