@@ -12,11 +12,6 @@
 
 using namespace reprojection;
 
-// TODO(Jack): When we use the second camera in an extrinsic calibration cam-cam workflow we can remove this START/STOP
-// lcov exclusion!
-
-// LCOV_EXCL_START
-
 class StepTestFixture : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -212,5 +207,3 @@ class StepTestFixture : public ::testing::Test {
 
     TimingParameters timing_{};
 };
-
-// LCOV_EXCL_STOP

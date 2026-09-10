@@ -72,8 +72,6 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
-    // TODO(Jack): Use a vector so we do not need to hardcode this to an array matching the number of cameras in the
-    // config?
     std::vector<testing_utilities::CameraTestData> camera_test_data;
     for (size_t i{0}; i < std::size(context.assets.cameras); ++i) {
         auto const& camera{context.assets.cameras.at(i)};
