@@ -26,7 +26,6 @@ CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CameraCalibration> const& c
 
     for (auto const& state : states_) {
         Frames const frames{database::CameraPosesSelect(db.get(), state.frames_id, state.camera_id)};
-
         camera_frames_.insert({state.camera_id, frames});
     }
 }
