@@ -66,7 +66,6 @@ class StepTestFixture : public ::testing::Test {
             throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_info.camera_model))};
         }
 
-        // ERROR(Jack): Use common timing parameterization across all methods!
         auto const [targets,
                     _]{testing_mocks::GenerateMvgData(camera_info, intrinsic, timing_.duration_s, timing_.camera_hz)};
 
@@ -121,7 +120,6 @@ class StepTestFixture : public ::testing::Test {
             throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_info.camera_model))};
         }
 
-        // ERROR(Jack): Use common timing parameterization across all methods!
         auto const [_, poses]{
             testing_mocks::GenerateMvgData(camera_info, intrinsic, timing_.duration_s, timing_.camera_hz)};
 
