@@ -45,10 +45,6 @@ void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {
         auto const& camera_b{states_.front()};
 
         // TODO(Jack): Set the sync tolerance from a config!
-        //         // TODO(Jack): Set the sync tolerance from a config!
-        //                 // TODO(Jack): Set the sync tolerance from a config!
-        //                         // TODO(Jack): Set the sync tolerance from a config!
-        //                                 // TODO(Jack): Set the sync tolerance from a config!
         // ERROR(Jack): 1'000'000ns is a very tight tolerance!
         Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(camera_frames_.at(camera_a.camera_id),
                                                                      camera_frames_.at(camera_b.camera_id), 1'000'000)};

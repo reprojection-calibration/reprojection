@@ -59,12 +59,12 @@ TEST(ApplicationReprojectionCalibration, TestParseSensors) {
     EXPECT_EQ(*sensors.imu_name, "/imu0");
 }
 
-// ERROR(Jack): Copy and pasted from the steps test fixture in large part!
+// TODO(Jack): Copy and pasted from the steps test fixture in large part! We should move this to a common testing
+// utility and use it in both places.
 std::tuple<StepId, StepId, ImageSamples> InsertExtractedTargets(AssetId const camera_id, CameraInfo const& camera_info,
                                                                 Intrinsic const& intrinsic, SqlitePtr db) {
-    // ERROR(Jack): Use common timing parameterization across all methods!
-    // ERROR(Jack): Use common timing parameterization across all methods!
-    // ERROR(Jack): Use common timing parameterization across all methods!
+    // WARN(Jack): If we add the imu data generation here make sure to use a common duration across both data generation
+    // calls!
     auto const [targets, _]{testing_mocks::GenerateMvgData(camera_info, intrinsic, 11, 2)};
 
     // Initialize empty image data using the target timestamps and then write them to the db to satisfy the foreign
@@ -100,6 +100,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
         auto const& camera{context.assets.cameras.at(i)};
         CameraInfo const camera_info{camera.config.camera_model, testing_utilities::image_bounds};
 
+        // TODO(Jack): Copy and pasted hardcoded/hacked logic!
         Intrinsic intrinsic;
         if (camera_info.camera_model == CameraModel::DoubleSphere) {
             intrinsic = {testing_utilities::double_sphere_intrinsics};
@@ -127,9 +128,6 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
     ImageInputs const image_inputs{testing_utilities::TestDatabaseImageInputs(context.assets.cameras)};
 
-    // TODO(Jack): Also enable to trigger imu calibration! See warning above.
-    // TODO(Jack): Also enable to trigger imu calibration! See warning above.
-    // TODO(Jack): Also enable to trigger imu calibration! See warning above.
-    // TODO(Jack): Also enable to trigger imu calibration! See warning above.
+    // TODO(Jack): Also enable to trigger imu calibration!
     EXPECT_NO_THROW(application::Calibrate(config, image_inputs, std::nullopt, db));
 }

@@ -2,7 +2,7 @@
 
 set -eou pipefail
 
-# NOTE(Jack): THis will install a python virtual environment on your host system! Things you should be aware of:
+# NOTE(Jack): This will install a python virtual environment on your host system! Things you should be aware of:
 #   1) Only tested on ubuntu 24.04
 #   2) Apt installs system packages (requires sudo)
 #   3) Install pyenv and builds and install a python venv

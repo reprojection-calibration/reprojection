@@ -141,7 +141,7 @@ Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b
         // Remove it so a double match cannot happen.
         remaining_b.erase(b_timestamp_it);
 
-        // THis is now the pose_b pose that is synchronized to the current pose_a given the max_sync_delta_ns
+        // This is now the pose_b pose that is synchronized to the current pose_a given the max_sync_delta_ns
         // tolerance.
         Pose const pose_b{frames_b.at(b_timestamp_ns)};
 
