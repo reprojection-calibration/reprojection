@@ -3,17 +3,16 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <ranges>
 
 #include "config/config_parse.hpp"
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "steps/initialize_workflow.hpp"
-#include "testing_utilities/database_setup_utils.hpp"
-// cppcheck-suppress missingInclude
-#include <ranges>
-
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
+#include "testing_utilities/database_setup_utils.hpp"
+// cppcheck-suppress missingInclude
 #include "testing_utilities/generated/calibration_config.hpp"
 #include "testing_utilities/temporary_file.hpp"
 
