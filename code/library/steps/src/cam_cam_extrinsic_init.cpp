@@ -12,21 +12,22 @@
 
 namespace reprojection::steps {
 
-// TODO UNIT TEST!
-
 namespace {
 
 auto const log{logging::Get("steps")};
 
 }
 
-CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CameraCalibration> const& camera_calibrations, SqlitePtr db)
-    : camera_calibrations_{camera_calibrations} {
-    for (auto const& camera_calibration : camera_calibrations_) {
-        Frames const frames{database::CameraPosesSelect(db.get(), camera_calibration.bundle_adjustment_id,
-                                                        camera_calibration.camera_id)};
+CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CameraCalibration> const& camera_calibrations, SqlitePtr db) {
+    // Extract only the parts we actually need.
+    for (auto const& calibration : camera_calibrations) {
+        states_.push_back(CamCamExtrinsicInitState{calibration});
+    }
 
-        camera_frames_.insert({camera_calibration.camera_id, frames});
+    for (auto const& state : states_) {
+        Frames const frames{database::CameraPosesSelect(db.get(), state.frames_id, state.camera_id)};
+
+        camera_frames_.insert({state.camera_id, frames});
     }
 }
 
@@ -43,11 +44,15 @@ void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {
     // Iterate over the the first camera paired with every other camera. Remember we are working with a tree here not a
     // chain!
     std::vector<Extrinsic> log_data;
-    for (auto const& camera_a : camera_calibrations_ | std::views::drop(1)) {
+    for (auto const& camera_a : states_ | std::views::drop(1)) {
         // TODO(Jack): Formalize this "first cam is always reference" logic!
-        auto const& camera_b{camera_calibrations_.front()};
+        auto const& camera_b{states_.front()};
 
         // TODO(Jack): Set the sync tolerance from a config!
+        //         // TODO(Jack): Set the sync tolerance from a config!
+        //                 // TODO(Jack): Set the sync tolerance from a config!
+        //                         // TODO(Jack): Set the sync tolerance from a config!
+        //                                 // TODO(Jack): Set the sync tolerance from a config!
         // ERROR(Jack): 1'000'000ns is a very tight tolerance!
         Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(camera_frames_.at(camera_a.camera_id),
                                                                      camera_frames_.at(camera_b.camera_id), 1'000'000)};
