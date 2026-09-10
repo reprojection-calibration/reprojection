@@ -14,6 +14,7 @@
 #include "extrinsic_initialization.hpp"
 #include "intrinsic_initialization.hpp"
 #include "pose_initialization.hpp"
+#include "time_synchronization.hpp"
 #include "utilities.hpp"
 
 namespace reprojection::calibration {
@@ -109,34 +110,6 @@ Frames PoseInitialization(CameraInfo const& camera_info, TargetSamples const& ta
 
     return frames;
 }  // LCOV_EXCL_LINE
-
-// TODO TEST? and split between hpp and cpp?
-// TODO TEMPLATE SO IT CAN HANDLE FRAMES NAD TARGETS!
-auto FindClosest(std::set<uint64_t> const& data, uint64_t const timestamp) {
-    auto const upper{data.lower_bound(timestamp)};
-    if (upper == std::cbegin(data)) {
-        return upper;
-    } else if (upper == std::cend(data)) {
-        return std::prev(upper);
-    }
-
-    auto const lower{std::prev(upper)};
-
-    uint64_t const upper_delta{*upper - timestamp};
-    uint64_t const lower_delta{timestamp - *lower};
-
-    return lower_delta <= upper_delta ? lower : upper;
-}
-
-// TODO TEST? and split between hpp and cpp?
-bool IsWithinThreshold(uint64_t const lhs, uint64_t const rhs, uint64_t const threshold_ns) {
-    // NOTE(Jack): We need this kinda funky looking logic because we are dealing with unsigned types and need to worry
-    // about NOT creating negative numbers that will underflow. Probably was a dumb idea to use an unsigned type in the
-    // first place.
-    uint64_t const delta{lhs > rhs ? lhs - rhs : rhs - lhs};
-
-    return delta <= threshold_ns;
-}
 
 // NOTE(Jack): This method depends on the fact that the both frame sets are calculated with respect to the same target
 // or world coordinate frame. For single target calibration data acquisitions this is the case, but if we ever move more
