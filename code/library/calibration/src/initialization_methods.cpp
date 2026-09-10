@@ -10,11 +10,11 @@
 #include "optimization/angular_velocity_alignment.hpp"
 #include "optimization/bundle_adjustment.hpp"
 #include "projection_functions/initialize_camera.hpp"
+#include "time_synchronization/time_synchronization.hpp"
 
 #include "extrinsic_initialization.hpp"
 #include "intrinsic_initialization.hpp"
 #include "pose_initialization.hpp"
-#include "time_synchronization.hpp"
 #include "utilities.hpp"
 
 namespace reprojection::calibration {
@@ -128,13 +128,13 @@ Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b
         // need this same logic and we need to consider how to unify them into a central implementation if we start
         // duplicating code.
         // TODO(Jack): We need to find a way to unit test this time sync code!
-        auto const b_timestamp_it{FindClosest(remaining_b, a_timestamp_ns)};
+        auto const b_timestamp_it{time_synchronization::FindClosest(remaining_b, a_timestamp_ns)};
         if (b_timestamp_it == std::cend(remaining_b)) {
             continue;  // LCOV_EXCL_LINE
         }
 
         auto const b_timestamp_ns{*b_timestamp_it};
-        if (not IsWithinThreshold(b_timestamp_ns, a_timestamp_ns, max_sync_delta_ns)) {
+        if (not time_synchronization::IsWithinThreshold(b_timestamp_ns, a_timestamp_ns, max_sync_delta_ns)) {
             continue;  // LCOV_EXCL_LINE
         }
 

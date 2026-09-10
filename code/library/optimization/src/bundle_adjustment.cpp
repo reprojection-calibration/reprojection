@@ -2,7 +2,10 @@
 
 #include <ceres/loss_function.h>
 
+#include <ranges>
+
 #include "cost_functions/reprojection_error.hpp"
+#include "time_synchronization/time_synchronization.hpp"
 
 namespace reprojection::optimization {
 
@@ -80,6 +83,49 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
 
     return SingleCamProblem(camera_info, intrinsic, TargetSamples{{timestamp_ns, target}}, Frames{{timestamp_ns, pose}},
                             optimize_intrinsic, camera_id);
+}
+
+BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(std::vector<CameraProblemInput> const& cameras,
+                                                            Frames const& rig_poses, uint64_t max_sync_delta_ns) {
+    // TODO(Jack): Hardcoding the "first camera is reference" in this function a lot! This might bite us in the but
+    // later!
+    auto const& reference_cam{cameras.front()};
+    Problem problem{SingleCamProblem(reference_cam.camera_info, reference_cam.intrinsic, reference_cam.targets,
+                                     rig_poses, reference_cam.optimize_intrinsic, reference_cam.camera_id)};
+
+    for (auto const& camera : cameras | std::views::drop(1)) {
+        AddCamera(camera, max_sync_delta_ns, problem);
+    }
+
+    return problem;
+}
+
+// NOTE ALL CAMERAS GET SYNCED ONLY TO THE RIG FRAMES _ MEANS SOME FRAMES WILL HAVE ONE OR MORE OR NOT TARGETS
+void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t const max_sync_delta_ns, Problem& problem) {
+    problem.cameras.emplace(camera.camera_id, Camera{camera.camera_info,
+                                                     {camera.intrinsic, camera.extrinsic},
+                                                     {camera.optimize_intrinsic, camera.optimize_extrinsic}});
+
+    auto const timestamps{camera.targets | std::views::keys};
+    std::set<uint64_t> remaining_targets{std::cbegin(timestamps), std::cend(timestamps)};
+
+    for (auto const& [frame_timestamp_ns, _] : problem.rig_poses) {
+        auto const target_timestamps_it{time_synchronization::FindClosest(remaining_targets, frame_timestamp_ns)};
+        if (target_timestamps_it == std::cend(remaining_targets)) {
+            continue;
+        }
+
+        auto const sample_timestamp_ns{*target_timestamps_it};
+        if (not time_synchronization::IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns, max_sync_delta_ns)) {
+            continue;
+        }
+
+        problem.observations.push_back(
+            {camera.camera_id, sample_timestamp_ns, frame_timestamp_ns, camera.targets.at(sample_timestamp_ns).bundle});
+
+        // Remove it so a double match cannot happen.
+        remaining_targets.erase(target_timestamps_it);
+    }
 }
 
 transforms::RigState ToRigState(BundleAdjustment::Result const& result) {

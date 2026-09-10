@@ -6,10 +6,25 @@
 
 namespace reprojection::optimization {
 
+// TODO LOCATION NAMING AND STRUCTURE!
+struct CameraProblemInput {
+    AssetId camera_id;
+    CameraInfo camera_info;
+    Intrinsic intrinsic;
+    TargetSamples targets;
+
+    Array6d extrinsic{Array6d::Zero()};
+
+    bool optimize_intrinsic{true};
+    bool optimize_extrinsic{true};
+};
+
 struct BundleAdjustment {
     struct CameraState {
         Intrinsic intrinsic;
-        // TODO(Jack): Frame order convention! Should we use the extrinsic type here?
+        // TODO(Jack): Frame order convention! Should we use the extrinsic type here? One reason that we do not is that
+        // all the bundle adjustment extrinsics are with respect the reference rig asset. Therefore having the extrinsic
+        // type here would almost be duplicating information. This is not clear yet.
         Array6d extrinsic;
     };
 
@@ -84,6 +99,12 @@ struct BundleAdjustment {
     // Single frame override - used for pnp nonlinear refinement of the DLT estimate.
     static Problem SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Bundle const& bundle,
                                       Pose const& pose, bool optimize_intrinsic);
+
+    static Problem MultiCamProblem(std::vector<CameraProblemInput> const& cameras, Frames const& rig_poses,
+                                   uint64_t max_sync_delta_ns);
+
+   private:
+    static void AddCamera(CameraProblemInput const& camera, uint64_t max_sync_delta_ns, Problem& problem);
 };
 
 // TODO(Jack): Does this function really belong here in this file? Or would it be better organized with more like minded
