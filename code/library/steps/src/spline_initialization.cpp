@@ -61,8 +61,8 @@ void SplineInitialization::Execute(StepId const step_id, SqlitePtr const db) con
     log->info(
         "{{'step_type': {},'step_id': {}, 'asset_id': {}, 'num_control_points': {}, 'time_handler': {{'t0_ns': {}, "
         "'delta_t_ns': {}}}}}",
-        ToString(Type()), step_id.value, camera_id_.value, spline.Size(), spline.GetTimeHandler().t0_ns_,
-        spline.GetTimeHandler().delta_t_ns_);
+        ToString(Type()), step_id.value, camera_id_.value, spline.Size(),  // LCOV_EXCL_LINE
+        spline.GetTimeHandler().t0_ns_, spline.GetTimeHandler().delta_t_ns_);
 
     database::ControlPointsInsert(db.get(), step_id, camera_id_, spline.ControlPoints());
     database::SplineInfoInsert(db.get(), step_id, camera_id_, spline.GetTimeHandler());

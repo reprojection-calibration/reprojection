@@ -51,7 +51,7 @@ TEST(CalibrationInitializationMethods, TestInitializeCamCamExtrinsic) {
     auto const [_, frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 60, 1)};
 
     // Passing the same set of frames for both a and b means we are guaranteed to get identity back because there is
-    // essentially no extrinsic at all.
+    // no extrinsic at all.
     Array6d const result{calibration::InitializeCamCamExtrinsic(frames, frames, 1'000'000)};
     EXPECT_NEAR(result.sum(), 0.0, 1e-6);
 }

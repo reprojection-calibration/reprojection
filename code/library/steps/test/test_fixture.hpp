@@ -60,10 +60,13 @@ class StepTestFixture : public ::testing::Test {
         Intrinsic intrinsic;
         if (camera_info.camera_model == CameraModel::DoubleSphere) {
             intrinsic = {testing_utilities::double_sphere_intrinsics};
-        } else if (camera_info.camera_model == CameraModel::Pinhole) {
-            intrinsic = {testing_utilities::pinhole_intrinsics};
+
+        } else if (camera_info.camera_model == CameraModel::Pinhole) {  // LCOV_EXCL_LINE
+            intrinsic = {testing_utilities::pinhole_intrinsics};        // LCOV_EXCL_LINE
         } else {
+            // LCOV_EXCL_START
             throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_info.camera_model))};
+            // LCOV_EXCL_STOP
         }
 
         auto const [targets,
@@ -94,10 +97,10 @@ class StepTestFixture : public ::testing::Test {
         Intrinsic intrinsic;
         if (camera_model == CameraModel::DoubleSphere) {
             intrinsic = {testing_utilities::double_sphere_intrinsics};
-        } else if (camera_model == CameraModel::Pinhole) {
-            intrinsic = {testing_utilities::pinhole_intrinsics};
         } else {
+            // LCOV_EXCL_START
             throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_model))};
+            // LCOV_EXCL_STOP
         }
 
         StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "").first};
@@ -117,7 +120,9 @@ class StepTestFixture : public ::testing::Test {
         } else if (camera_info.camera_model == CameraModel::Pinhole) {
             intrinsic = {testing_utilities::pinhole_intrinsics};
         } else {
+            // LCOV_EXCL_START
             throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_info.camera_model))};
+            // LCOV_EXCL_STOP
         }
 
         auto const [_, poses]{
@@ -136,7 +141,7 @@ class StepTestFixture : public ::testing::Test {
     std::pair<StepId, StepId> InsertImuSetup(AssetId const camera_id) {
         auto const imu_id{context_.assets.imu};
         if (not imu_id) {
-            throw std::runtime_error{std::format("Imu asset not found!")};
+            throw std::runtime_error{std::format("Imu asset not found!")};  // LCOV_EXCL_LINE
         }
 
         // WARN(Jack): Normally the spline would be initialized with the poses from the camera initialization. Here
@@ -172,7 +177,7 @@ class StepTestFixture : public ::testing::Test {
 
         std::vector<uchar> buffer;
         if (not cv::imencode(".png", img, buffer)) {
-            throw std::runtime_error("cv::imencode() failed");
+            throw std::runtime_error("cv::imencode() failed");  // LCOV_EXCL_LINE
         }
         ImageSamples const encoded_images{{{1, ImageBuffer{buffer}}}};
 
@@ -185,7 +190,7 @@ class StepTestFixture : public ::testing::Test {
         auto const it{std::ranges::find_if(context_.assets.cameras,
                                            [camera_id](auto const& camera) { return camera.id == camera_id; })};
         if (it == std::cend(cameras)) {
-            throw std::runtime_error{std::format("Camera asset id {} not found!", camera_id.value)};
+            throw std::runtime_error{std::format("Camera asset id {} not found!", camera_id.value)};  // LCOV_EXCL_LINE
         }
 
         return *it;

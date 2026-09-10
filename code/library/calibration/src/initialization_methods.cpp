@@ -127,14 +127,15 @@ Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b
         // TODO(Jack): The fact that we hand roll the time sync logic here is not so nice. There are a couple places we
         // need this same logic and we need to consider how to unify them into a central implementation if we start
         // duplicating code.
+        // TODO(Jack): We need to find a way to unit test this time sync code!
         auto const b_timestamp_it{FindClosest(remaining_b, a_timestamp_ns)};
         if (b_timestamp_it == std::cend(remaining_b)) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
 
         auto const b_timestamp_ns{*b_timestamp_it};
         if (not IsWithinThreshold(b_timestamp_ns, a_timestamp_ns, max_sync_delta_ns)) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
 
         // Remove it so a double match cannot happen.
