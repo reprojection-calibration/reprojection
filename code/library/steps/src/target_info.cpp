@@ -22,10 +22,10 @@ void TargetInfoStep::Execute(StepId step_id, SqlitePtr const db) const {
                                  target_.asymmetric};
 
     log->info(
-        "{{'step_id': {}, 'asset_id': {}, 'target_info': {{'target_type': {}, 'rows': {}, 'cols': {}, "
-        "'unit_dimension': {}, 'asymmetric': {}}}}}}}",
-        step_id.value, target_id_.value, ToString(target_info.target_type), target_info.height, target_info.width,
-        target_info.unit_dimension, target_info.asymmetric);
+        "{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'target_info': {{'target_type': {}, 'rows': {}, 'cols': "
+        "{}, 'unit_dimension': {}, 'asymmetric': {}}}}}}}",
+        ToString(Type()), step_id.value, target_id_.value, ToString(target_info.target_type), target_info.height,
+        target_info.width, target_info.unit_dimension, target_info.asymmetric);
 
     database::TargetInfoInsert(db.get(), step_id, target_id_, target_info);
 }

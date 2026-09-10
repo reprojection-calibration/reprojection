@@ -56,7 +56,7 @@ void PoseInitialization::Execute(StepId step_id, SqlitePtr const db) const {
     // TODO(Jack): That we log the problem here is a little confusing as it is not really a problem but a result, but I
     // think it gives all the information the user could possibly want. But I think there exists a better naming or
     // abstraction somewhere out there.
-    log->info("{{'step_id': {}, 'problem': {}}}}}", step_id.value, problem);
+    log->info("{{'step_type': '{}', 'step_id': {}, 'problem': {}}}}}", ToString(Type()), step_id.value, problem);
 }
 
 }  // namespace reprojection::steps

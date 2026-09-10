@@ -60,12 +60,13 @@ TEST(ApplicationReprojectionCalibration, TestParseSensors) {
     EXPECT_EQ(*sensors.imu_name, "/imu0");
 }
 
+// ERROR(Jack): Copy and pasted from the steps test fixture in large part!
 std::tuple<StepId, StepId, ImageSamples> InsertExtractedTargets(AssetId const camera_id, CameraInfo const& camera_info,
                                                                 Intrinsic const& intrinsic, SqlitePtr db) {
     // ERROR(Jack): Use common timing parameterization across all methods!
     // ERROR(Jack): Use common timing parameterization across all methods!
     // ERROR(Jack): Use common timing parameterization across all methods!
-    auto const [targets, _]{testing_mocks::GenerateMvgData(camera_info, intrinsic, 60, 2)};
+    auto const [targets, _]{testing_mocks::GenerateMvgData(camera_info, intrinsic, 11, 2)};
 
     // Initialize empty image data using the target timestamps and then write them to the db to satisfy the foreign
     // key constraint.
@@ -85,11 +86,9 @@ std::tuple<StepId, StepId, ImageSamples> InsertExtractedTargets(AssetId const ca
     return {image_loading_id, target_step_id, images};
 }
 
-
-// TODO(Jack): This test is a little sketchy because we are trying to induce cache hits to avoid actually having to
-// calculate anything. As a principle we do not want to use the checked in test database which means this is as much
-// as we can do here. I guess we could also use the MVG test data generator, but that will be for a future
-// contributor :)
+// TODO(Jack): There is a lot of logic here copied from the steps test fixture! The basic idea of what we are trying to
+// do is setup test data for two cameras (one pinhole and one double sphere). We should be able to use the same
+// implementation for both the steps and here!
 TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     toml::table config{toml::parse(testing_utilities::calibration_config)};
     config["cam1"].as_table()->insert_or_assign("camera_model", "pinhole");
@@ -114,10 +113,10 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
         auto const [images_id, targets_id,
                     image_samples]{InsertExtractedTargets(camera.id, camera_info, intrinsic, db)};
 
-
         // WARN(Jack): If the camera info cache key calculation method changes then we will need to update this here
         // too (specifically the call to HashArguments())!
         camera_test_data.push_back({
+            camera_info,
             images_id,
             hashing::HashArguments(camera.id.value, false, context.assets.target.config, image_samples),
             targets_id,
@@ -128,6 +127,10 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     testing_utilities::TestDatabaseSetup(context.assets.cameras, camera_test_data, db);
 
     ImageInputs const image_inputs{testing_utilities::TestDatabaseImageInputs(context.assets.cameras)};
+
+    // TODO(Jack): Also enable to trigger imu calibration! See warning above.
+    // TODO(Jack): Also enable to trigger imu calibration! See warning above.
+    // TODO(Jack): Also enable to trigger imu calibration! See warning above.
     // TODO(Jack): Also enable to trigger imu calibration! See warning above.
     EXPECT_NO_THROW(application::Calibrate(config, image_inputs, std::nullopt, db));
 }

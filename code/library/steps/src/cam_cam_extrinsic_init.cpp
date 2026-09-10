@@ -58,7 +58,8 @@ void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {
         log_data.push_back(extrinsic_a_b);
     }
 
-    log->info("{{'step_id': {}, 'result': [{}]}}", step_id.value, fmt::join(log_data, ", "));
+    log->info("{{'step_type': '{}', 'step_id': {}, 'result': [{}]}}", ToString(Type()), step_id.value,
+              fmt::join(log_data, ", "));
 }
 
 }  // namespace reprojection::steps
