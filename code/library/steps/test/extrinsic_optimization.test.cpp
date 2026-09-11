@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 
 #include "steps/step_runner.hpp"
-#include "testing_mocks/data_generators.hpp"
 #include "types/physics_constants.hpp"
 
 #include "test_fixture.hpp"
