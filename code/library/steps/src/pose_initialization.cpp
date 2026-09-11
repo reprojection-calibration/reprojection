@@ -8,6 +8,8 @@
 #include "logging/logging.hpp"
 #include "optimization/bundle_adjustment.hpp"
 
+#include "utilities.hpp"
+
 namespace reprojection::steps {
 
 namespace {
@@ -22,21 +24,9 @@ PoseInitialization::PoseInitialization(AssetId camera_id, StepId targets_id, Ste
                                        SqlitePtr const db)
     : camera_id_{camera_id},
       targets_id_{targets_id},
-      targets_{database::TargetsSelect(db.get(), targets_id, camera_id)} {
-    if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
-        camera_info_ = *camera_info;
-    } else {
-        log->error("{}", camera_info.error());  // LCOV_EXCL_LINE
-        std::exit(1);                           // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
-
-    if (auto const intrinsic{database::IntrinsicSelect(db.get(), intrinsic_id, camera_id)}) {
-        intrinsic_ = *intrinsic;
-    } else {
-        log->error("{}", intrinsic.error());  // LCOV_EXCL_LINE
-        std::exit(1);                         // LCOV_EXCL_LINE
-    }
-}
+      targets_{database::TargetsSelect(db.get(), targets_id, camera_id)},
+      camera_info_{ValueOrExit(database::CameraInfoSelect(db.get(), camera_info_id, camera_id), log)},
+      intrinsic_{ValueOrExit(database::IntrinsicSelect(db.get(), intrinsic_id, camera_id), log)} {}
 
 Hash PoseInitialization::CacheKey() const { return hashing::HashArguments(targets_, camera_info_, intrinsic_); }
 

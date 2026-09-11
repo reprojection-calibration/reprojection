@@ -30,8 +30,8 @@ void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {
     // construction finish.
     if (std::size(*images_) == 0) {
         // LCOV_EXCL_START
-        log->error("{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'msg': 'No images loaded.'}}", ToString(Type()),
-                   step_id.value, camera_id_.value, ToString(camera_model_));
+        log->error("{{{}, 'msg': 'No images loaded.'}}", StepLogInfo{Type(), step_id, camera_id_},
+                   ToString(camera_model_));
         std::exit(1);
         // LCOV_EXCL_STOP
     }
@@ -40,10 +40,8 @@ void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {
     cv::Mat const img{cv::imdecode(images_->begin()->second.data, cv::IMREAD_COLOR)};
     if (img.empty()) {
         // LCOV_EXCL_START
-        log->error(
-            "{{'step_type': '{}', 'step_id': {}, 'asset_id': {}, 'msg': 'Attempted to decode image but result was "
-            "empty.'}}",
-            step_id.value, camera_id_.value, ToString(camera_model_));
+        log->error("{{{}, 'msg': 'Attempted to decode image but result was empty.'}}",
+                   StepLogInfo{Type(), step_id, camera_id_}, ToString(camera_model_));
         std::exit(1);
         // LCOV_EXCL_STOP
     }

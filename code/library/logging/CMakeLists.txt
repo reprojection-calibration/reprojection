@@ -8,6 +8,7 @@ set(SRC_FILES
 set(PUBLIC_LINK_LIBRARIES
         Ceres::ceres
         Eigen3::Eigen
+        config
         optimization
         spdlog::spdlog
         tomlplusplus::tomlplusplus

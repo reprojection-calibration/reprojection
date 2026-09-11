@@ -6,6 +6,7 @@
 
 #include <Eigen/Dense>
 
+#include "config/config_parse.hpp"
 #include "optimization/bundle_adjustment.hpp"
 #include "transforms/rig_state.hpp"
 #include "types/database_types.hpp"
@@ -83,9 +84,9 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::Problem const& problem, format_context& ctx) const {
-        auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'num_targets': {}, 'cameras': [",
-                           problem.rig_frame_asset_id.value, std::size(problem.rig_poses),
-                           std::size(problem.observations))};
+        auto out{format_to(
+            ctx.out(), "{{'rig_frame_asset_id': {}, 'num_rig_poses': {}, 'num_observations': {}, 'cameras': [",
+            problem.rig_frame_asset_id.value, std::size(problem.rig_poses), std::size(problem.observations))};
 
         bool first{true};
         for (auto const& [camera_id, camera] : problem.cameras) {
@@ -135,9 +136,42 @@ struct fmt::formatter<ceres::Solver::Summary> {
 
     auto format(ceres::Solver::Summary const& summary, format_context& ctx) const {
         return format_to(ctx.out(),
-                         "{{'initial_cost': {:.2f}, 'final_cost': {:.2f}, "
-                         "'num_successful_steps': {}, 'num_unsuccessful_steps': {}}}",
+                         "{{'initial_cost': {:.2f}, 'final_cost': {:.2f}, 'num_successful_steps': {}, "
+                         "'num_unsuccessful_steps': {}, 'num_threads_given': {}, 'num_threads_used': {}, 'msg': {}}}",
                          summary.initial_cost, summary.final_cost, summary.num_successful_steps,
-                         summary.num_unsuccessful_steps);
+                         summary.num_unsuccessful_steps, summary.num_threads_given, summary.num_threads_used,
+                         summary.message);
+    }
+};
+
+template <>
+struct fmt::formatter<reprojection::Asset<reprojection::config::Config::Camera>> {
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
+
+    auto format(reprojection::Asset<reprojection::config::Config::Camera> const& camera, format_context& ctx) const {
+        return format_to(ctx.out(), "{{'sensor_name': '{}', 'asset_id': {}}}", camera.config.sensor_name,
+                         camera.id.value);
+    }
+};
+
+template <>
+struct fmt::formatter<std::vector<reprojection::Asset<reprojection::config::Config::Camera>>> {
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
+
+    auto format(std::vector<reprojection::Asset<reprojection::config::Config::Camera>> const& cameras,
+                format_context& ctx) const {
+        auto out{format_to(ctx.out(), "[")};
+
+        bool first{true};
+        for (auto const& camera : cameras) {
+            if (not first) {
+                out = format_to(out, ", ");
+            }
+
+            out = format_to(out, "{}", camera);
+            first = false;
+        }
+
+        return format_to(out, "]");
     }
 };

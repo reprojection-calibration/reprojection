@@ -54,6 +54,8 @@ void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {
         log_data.push_back(extrinsic_a_b);
     }
 
+    // TODO WRITE REPROJECTION ERRORS!
+
     log->info("{{{}, 'result': [{}]}}", StepLogInfo{Type(), step_id}, fmt::join(log_data, ", "));
 }
 

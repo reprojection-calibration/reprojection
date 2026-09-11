@@ -121,7 +121,9 @@ Ba::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic cons
             frames.insert({timestamp_ns, {tf_co_w}});
         }
 
-        observations.push_back({camera_id, timestamp_ns, target.bundle});
+        // NOTE(Jack): Same as for the non-spline single camera problems - the data is by its very nature
+        // "synchronized", therefore we use the same timestamp for both observation timestamps.
+        observations.push_back({camera_id, timestamp_ns, timestamp_ns, target.bundle});
     }
 
     return {camera_id, frames, {{camera_id, camera}}, observations};

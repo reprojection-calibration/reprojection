@@ -1,9 +1,9 @@
 
-#include "time_synchronization.hpp"
+#include "time_synchronization/time_synchronization.hpp"
 
 #include <stdexcept>
 
-namespace reprojection::calibration {
+namespace reprojection::time_synchronization {
 
 std::set<uint64_t>::const_iterator FindClosest(std::set<uint64_t> const& data, uint64_t const timestamp) {
     // TODO(Jack): I highly doubt throwing at this point is the right strategy here, but for now lets fail loud!
@@ -35,4 +35,4 @@ bool IsWithinThreshold(uint64_t const lhs, uint64_t const rhs, uint64_t const th
     return delta <= threshold_ns;
 }
 
-}  // namespace reprojection::calibration
+}  // namespace reprojection::time_synchronization

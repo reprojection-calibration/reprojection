@@ -10,6 +10,7 @@ set(SRC_FILES
 set(PRIVATE_LINK_LIBRARIES
         geometry
         projection_functions
+        time_synchronization
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES
