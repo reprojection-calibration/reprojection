@@ -47,7 +47,7 @@ void ExtrinsicInit::Execute(StepId const step_id, SqlitePtr const db) const {
     Array6d const tf_imu_co{aa_imu_co(0), aa_imu_co(1), aa_imu_co(2), 0, 0, 0};
     Extrinsic const extrinsic{imu_id_, camera_id_, tf_imu_co};
 
-    log->info("{{ {}, 'extrinsic': {}, 'gravity': [{:.3f}]}}", StepLogInfo{Type(), step_id}, extrinsic,
+    log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}]}}", StepLogInfo{Type(), step_id}, extrinsic,
               fmt::join(gravity_w, ", "));
 
     database::ExtrinsicInsert(db.get(), step_id, extrinsic);
