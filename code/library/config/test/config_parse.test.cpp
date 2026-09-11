@@ -15,6 +15,7 @@ TEST(ConfigParsingHelpers, TestConfigParse) {
 
     EXPECT_EQ(result.application.show_extraction, false);
     EXPECT_GE(result.application.threads, 1);
+    EXPECT_EQ(result.application.approx_sync_delta_ns, 3'000'000);
 
     EXPECT_EQ(std::size(result.cameras), 2);
     for (size_t i{0}; i < std::size(result.cameras); ++i) {
@@ -40,12 +41,16 @@ TEST(ConfigParsingHelpers, TestConfigApplicationParse) {
         R"(
             show_extraction = true
             threads = 10
+            approx_sync_delta_ms = 0.1
         )",
         R"(
             show_extraction = true
         )",
         R"(
             threads = 10
+        )",
+        R"(
+            approx_sync_delta_ms = 0.1
         )",
     };
 
@@ -67,6 +72,10 @@ TEST(ConfigParsingHelpers, TestConfigApplicationParse) {
         )",
         R"(
             unexpected_key = "value1"
+        )",
+        // Should be ms not ns! Humans don't know how to interpret nanoseconds.
+        R"(
+            approx_sync_delta_ns = 0.1
         )",
     };
 

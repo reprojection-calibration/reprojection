@@ -1,4 +1,4 @@
-#include "steps/cam_cam_extrinsic_optimization.hpp"
+#include "steps/stereo_rig_opt.hpp"
 
 #include <gtest/gtest.h>
 
@@ -8,7 +8,7 @@
 
 using namespace reprojection;
 
-class CamCamExtrinsicOptimizationFixture : public StepTestFixture {
+class StereoRigOptFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         StepTestFixture::SetUp();
@@ -34,7 +34,7 @@ class CamCamExtrinsicOptimizationFixture : public StepTestFixture {
                 }
             }
 
-            calibrations_.push_back({id, camera_info_id, targets_id, {0}, bundle_adjustment_id});
+            cam_stages_.push_back({id, camera_info_id, targets_id, {0}, bundle_adjustment_id});
         }
 
         extrinsic_id_ = InsertExtrinsic(camera_a_id_, camera_b_id_);
@@ -43,13 +43,13 @@ class CamCamExtrinsicOptimizationFixture : public StepTestFixture {
     AssetId camera_a_id_;
     AssetId camera_b_id_;
 
-    std::vector<CameraCalibration> calibrations_;
+    std::vector<CamStageIds> cam_stages_;
     StepId extrinsic_id_;
 };
 
-TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
-    steps::CamCamExtrinsicOptimization const step{calibrations_, extrinsic_id_, db_};
-    StepId const step_id{RunStep<steps::CamCamExtrinsicOptimization>(context_.workflow_id, step, db_)};
+TEST_F(StereoRigOptFixture, TestExtrinsicInitStepRunner) {
+    steps::StereoRigOpt const step{cam_stages_, extrinsic_id_, 1, 0, db_};
+    StepId const step_id{RunStep<steps::StereoRigOpt>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, camera_a_id_, camera_b_id_)};
     ASSERT_TRUE(result.has_value());
@@ -58,13 +58,13 @@ TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
     EXPECT_EQ(result->frame_b, camera_b_id_);
 }
 
-TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStep) {
-    steps::CamCamExtrinsicOptimization const step{calibrations_, extrinsic_id_, db_};
+TEST_F(StereoRigOptFixture, TestExtrinsicInitStep) {
+    steps::StereoRigOpt const step{cam_stages_, extrinsic_id_, 1, 0, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
     std::vector const gt_assets{camera_b_id_, camera_a_id_};
     EXPECT_EQ(step.Assets(), gt_assets);
-    EXPECT_EQ(step.CacheKey().value, "43ffc4797fdd4e4aaea0dd29aad68cd49c8321b60915e828899fbb12ba952665");
+    EXPECT_EQ(step.CacheKey().value, "e2dce0022f9fc213b45a9b5cbeccf9f63892de59b0f224ce02c8c40fa7670830");
 
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));

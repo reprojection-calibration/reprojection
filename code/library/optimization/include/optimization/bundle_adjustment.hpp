@@ -17,8 +17,8 @@ struct CameraProblemInput {
 
     Array6d extrinsic{Array6d::Zero()};
 
-    bool optimize_intrinsic{true};
-    bool optimize_extrinsic{true};
+    bool optimize_intrinsic{false};
+    bool optimize_extrinsic{false};
 };
 
 struct BundleAdjustment {
@@ -31,8 +31,8 @@ struct BundleAdjustment {
     };
 
     struct CameraOptions {
-        bool optimize_intrinsic{true};
-        bool optimize_extrinsic{true};
+        bool optimize_intrinsic{false};
+        bool optimize_extrinsic{false};
     };
 
     struct Camera {
@@ -51,12 +51,16 @@ struct BundleAdjustment {
     };
 
     struct Problem {
+        // TODO DO WE STILL NEED THIS?
         Problem(AssetId const _rig_frame_asset_id, Frames const& _rig_poses, std::map<AssetId, Camera> const& _cameras,
                 std::vector<Observation> const& _observations)
             : rig_frame_asset_id{_rig_frame_asset_id},
               rig_poses{_rig_poses},
               cameras{_cameras},
               observations{_observations} {}
+
+        Problem(AssetId const _rig_frame_asset_id, Frames const& _rig_poses)
+            : rig_frame_asset_id{_rig_frame_asset_id}, rig_poses{_rig_poses} {}
 
         // Update a problem with the optimized parts.
         Problem(Problem const& problem, Frames const& _rig_poses, std::map<AssetId, CameraState> const& camera_states)
@@ -94,6 +98,9 @@ struct BundleAdjustment {
 
     static std::pair<Result, CeresState> Solve(Problem const& ba_problem, int num_threads);
 
+    static Problem MultiCamProblem(CameraProblemInput const& cam0, Frames const& cam0_poses,
+                                   std::span<CameraProblemInput const> cams, uint64_t approx_sync_delta_ns);
+
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                     TargetSamples const& targets, Frames const& frames, bool optimize_intrinsic,
                                     AssetId camera_id);
@@ -102,13 +109,8 @@ struct BundleAdjustment {
     static Problem SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Bundle const& bundle,
                                       Pose const& pose, bool optimize_intrinsic);
 
-    // TODO(Jack): The single camera problems are just a more simple version of the multi-cam problem. At the end of the
-    // day all overrides should be calling this method!
-    static Problem MultiCamProblem(std::vector<CameraProblemInput> const& cameras, Frames const& rig_poses,
-                                   uint64_t max_sync_delta_ns);
-
    private:
-    static void AddCamera(CameraProblemInput const& camera, uint64_t max_sync_delta_ns, Problem& problem);
+    static void AddCamera(CameraProblemInput const& camera, uint64_t approx_sync_delta_ns, Problem& problem);
 };
 
 // TODO(Jack): Does this function really belong here in this file? Or would it be better organized with more like minded

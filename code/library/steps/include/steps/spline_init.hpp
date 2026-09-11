@@ -6,9 +6,8 @@
 
 namespace reprojection::steps {
 
-struct SplineInitialization {
-    SplineInitialization(AssetId camera_id, StepId camera_poses_id, StepId targets_id, StepId camera_info_id,
-                         StepId intrinsics_id, SqlitePtr db);
+struct SplineInit {
+    SplineInit(CamStageIds const& cam, SqlitePtr db);
 
     static StepType Type() { return StepType::SplineInit; }
 

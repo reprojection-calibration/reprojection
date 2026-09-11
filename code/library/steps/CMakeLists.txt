@@ -2,19 +2,19 @@ set(LIBRARY_NAME "steps")
 
 set(SRC_FILES
         src/bundle_adjustment.cpp
-        src/cam_cam_extrinsic_init.cpp
-        src/cam_cam_extrinsic_optimization.cpp
         src/camera_info.cpp
-        src/extrinsic_init.cpp
-        src/extrinsic_optimization.cpp
         src/feature_extraction.cpp
         src/image_loading.cpp
         src/imu_data_loading.cpp
         src/initialize_workflow.cpp
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
-        src/spline_initialization.cpp
+        src/spline_init.cpp
+        src/stereo_rig_init.cpp
+        src/stereo_rig_opt.cpp
         src/target_info.cpp
+        src/visual_inertial_init.cpp
+        src/visual_inertial_opt.cpp
 )
 
 set(PRIVATE_LINK_LIBRARIES
@@ -40,19 +40,19 @@ set(TEST_LINK_LIBRARIES
 )
 set(TESTS
         test/bundle_adjustment.test.cpp
-        test/cam_cam_extrinsic_init.test.cpp
-        test/cam_cam_extrinsic_optimization.test.cpp
         test/camera_info.test.cpp
-        test/extrinsic_init.test.cpp
-        test/extrinsic_optimization.test.cpp
         test/feature_extraction.test.cpp
         test/image_loading.test.cpp
         test/imu_data_loading.test.cpp
         test/initialize_workflow.test.cpp
         test/intrinsic_initialization.test.cpp
         test/pose_initialization.test.cpp
-        test/spline_initialization.test.cpp
+        test/spline_init.test.cpp
         test/step_runner.test.cpp
+        test/stereo_rig_init.test.cpp
+        test/stereo_rig_opt.test.cpp
         test/target_info.test.cpp
+        test/visual_inertial_init.test.cpp
+        test/visual_inertial_opt.test.cpp
 )
 AddTests()
