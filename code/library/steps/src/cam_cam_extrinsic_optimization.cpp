@@ -20,7 +20,7 @@ using Ba = optimization::BundleAdjustment;
 
 // TODO(Jack): Implicitly making the first values in the vectors the "reference" camera somehow leaving a lot up to
 // fate. Is there some way we can formalize this role?
-CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CamStageIds> const& cams,
+StereoRigOpt::StereoRigOpt(std::vector<CamStageIds> const& cams,
                                                          StepId const extrinsic_init_id, int const num_threads,
                                                          uint64_t const approx_sync_delta_ns, SqlitePtr db)
     : cam0_{cams.front()}, num_threads_{num_threads}, approx_sync_delta_ns_{approx_sync_delta_ns} {
@@ -49,7 +49,7 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CamStageIds
     }
 }
 
-Hash CamCamExtrinsicOptimization::CacheKey() const {
+Hash StereoRigOpt::CacheKey() const {
     Hash const initial_hash{hashing::HashArguments(rig_poses_, approx_sync_delta_ns_)};
 
     // TODO(Jack): If we end up keeping the CameraProblemInput type we should add a serialize function for it directly!
@@ -59,7 +59,7 @@ Hash CamCamExtrinsicOptimization::CacheKey() const {
     });
 }
 
-void CamCamExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
+void StereoRigOpt::Execute(StepId step_id, SqlitePtr const db) const {
     // ERROR(Jack): Parameterize the sync delta!
     // TODO(Jack): Pass number of threads!
     // NOTE(Jack): Here an important things happens and that is that we pick the first camera in cameras_ as the

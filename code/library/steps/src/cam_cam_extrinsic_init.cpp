@@ -18,7 +18,7 @@ auto const log{logging::Get("steps")};
 
 }
 
-CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations,
+StereoRigInit::StereoRigInit(std::vector<CamStageIds> const& camera_calibrations,
                                          uint64_t const approx_sync_delta_ns, SqlitePtr db)
     : approx_sync_delta_ns_{approx_sync_delta_ns} {
     for (auto const& camera : camera_calibrations) {
@@ -28,7 +28,7 @@ CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_
     }
 }
 
-Hash CamCamExtrinsicInit::CacheKey() const {
+Hash StereoRigInit::CacheKey() const {
     Hash const initial_hash{hashing::HashArguments(approx_sync_delta_ns_)};
 
     // Only hash the frame pose values so we are not dependent on the camera asset ids.
@@ -37,7 +37,7 @@ Hash CamCamExtrinsicInit::CacheKey() const {
         [](Hash const& hash, auto const& frames) { return hashing::HashArguments(hash, frames); });
 }
 
-void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {
+void StereoRigInit::Execute(StepId step_id, SqlitePtr db) const {
     // Iterate over the the first camera paired with every other camera. Remember we are working with a tree here not a
     // chain!
     std::vector<Extrinsic> log_data;

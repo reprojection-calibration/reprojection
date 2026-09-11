@@ -10,8 +10,8 @@
 
 namespace reprojection::steps {
 
-struct CamCamExtrinsicOptimization {
-    CamCamExtrinsicOptimization(std::vector<CamStageIds> const& cams, StepId extrinsic_init_id, int num_threads,
+struct StereoRigOpt {
+    StereoRigOpt(std::vector<CamStageIds> const& cams, StepId extrinsic_init_id, int num_threads,
                                 uint64_t approx_sync_delta_ns, SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }

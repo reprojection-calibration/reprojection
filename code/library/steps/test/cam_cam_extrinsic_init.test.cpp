@@ -35,8 +35,8 @@ class CamCamExtrinsicInitFixture : public StepTestFixture {
 };
 
 TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
-    steps::CamCamExtrinsicInit const step{calibrations_, 0, db_};
-    StepId const step_id{RunStep<steps::CamCamExtrinsicInit>(context_.workflow_id, step, db_)};
+    steps::StereoRigInit const step{calibrations_, 0, db_};
+    StepId const step_id{RunStep<steps::StereoRigInit>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, camera_a_id_, camera_b_id_)};
     ASSERT_TRUE(result.has_value());
@@ -46,7 +46,7 @@ TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
 }
 
 TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStep) {
-    steps::CamCamExtrinsicInit const step{calibrations_, 0, db_};
+    steps::StereoRigInit const step{calibrations_, 0, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
     std::vector const gt_assets{camera_b_id_, camera_a_id_};

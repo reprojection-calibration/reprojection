@@ -8,10 +8,10 @@
 
 namespace reprojection::steps {
 
-struct CamCamExtrinsicInit {
-    CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations, uint64_t approx_sync_delta_ns,
-                        SqlitePtr db);
+struct StereoRigInit {
+    StereoRigInit(std::vector<CamStageIds> const& camera_calibrations, uint64_t approx_sync_delta_ns, SqlitePtr db);
 
+    // TODO(Jack): Should we rename to reflect "stereo rig init"?
     static StepType Type() { return StepType::ExtrinsicInit; }
 
     std::vector<AssetId> Assets() const {

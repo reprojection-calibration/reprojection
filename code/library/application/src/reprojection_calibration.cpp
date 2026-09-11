@@ -96,14 +96,8 @@ Sensors ParseSensors(toml::table const& cfg_table) {
     return Sensors{camera_names, imu_name};
 }
 
-void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
-               SqlitePtr const db) {
-    steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
-
-    // Only one target is allowed.
-    steps::TargetInfoStep const target_info_step{context.assets.target.id, context.assets.target.config};
-    StepId const target_info_id{RunStep<steps::TargetInfoStep>(context.workflow_id, target_info_step, db)};
-
+std::vector<CamStageIds> CamStages(steps::CalibrationContext const& context, StepId const& target_info_id,
+                                   ImageInputs const& image_inputs, SqlitePtr const db) {
     std::vector<CamStageIds> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {
         log->info("\033[35m{{'stage': 'single_cam', 'asset': {}}}\033[0m", camera);
@@ -137,23 +131,37 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         camera_calibrations.push_back({camera.id, camera_info_id, targets_id, pose_init_id, bundle_adjustment_id});
     }
 
+    return camera_calibrations;
+}
+
+void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
+               SqlitePtr const db) {
+    steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
+
+    // Only one target is allowed.
+    steps::TargetInfoStep const target_info_step{context.assets.target.id, context.assets.target.config};
+    StepId const target_info_id{RunStep<steps::TargetInfoStep>(context.workflow_id, target_info_step, db)};
+
+    std::vector const cam_stages{CamStages(context, target_info_id, image_inputs, db)};
+
+    // TODO USE THE SAME REFERENCE CAMERA FOR THE MULTICAM STEPS!
+    // TODO(Jack): What is better, 'cam0' or 'reference_cam'?
+    // NOTE(Jack): We arbitrarily choose the first camera as the reference camera. This is an open point!
+    auto const& cam0{cam_stages.front()};
+
     bool const is_multicam{std::size(context.assets.cameras) > 1};
     if (is_multicam) {
         log->info("\033[35m{{'stage': 'multi_cam', 'assets': {}}}\033[0m", context.assets.cameras);
 
-        steps::CamCamExtrinsicInit const cam_cam_extrinsic_init_step{camera_calibrations,
-                                                                     context.application.approx_sync_delta_ns, db};
-        StepId const cam_cam_extrinsic_init_id{
-            RunStep<steps::CamCamExtrinsicInit>(context.workflow_id, cam_cam_extrinsic_init_step, db)};
+        steps::StereoRigInit const stereo_rig_init{cam_stages, context.application.approx_sync_delta_ns, db};
+        StepId const stereo_rig_init_id{RunStep<steps::StereoRigInit>(context.workflow_id, stereo_rig_init, db)};
 
-        steps::CamCamExtrinsicOptimization const extrinsic_cam_optimization_step{
-            camera_calibrations, cam_cam_extrinsic_init_id, context.application.threads,
-            context.application.approx_sync_delta_ns, db};
-        StepId const extrinsic_cam_optimization_id{
-            RunStep<steps::CamCamExtrinsicOptimization>(context.workflow_id, extrinsic_cam_optimization_step, db)};
+        steps::StereoRigOpt const stereo_rig_opt{cam_stages, stereo_rig_init_id, context.application.threads,
+                                                 context.application.approx_sync_delta_ns, db};
+        StepId const stereo_rig_opt_id{RunStep<steps::StereoRigOpt>(context.workflow_id, stereo_rig_opt, db)};
 
         // TODO(Jack): Should we be using the rig poses here for the cam-imu extrinsic calibration? I think so.
-        static_cast<void>(extrinsic_cam_optimization_id);
+        static_cast<void>(stereo_rig_opt_id);
     }
 
     // TODO(Jack): Find a way to get this to run in a unit test! I think we could do this with the data generation
@@ -170,31 +178,27 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         steps::ImuDataLoading const imu_data_loading_step{imu_id, imu_input->signature, imu_input->source};
         StepId const imu_data_id{steps::RunStep<steps::ImuDataLoading>(context.workflow_id, imu_data_loading_step, db)};
 
-        // NOTE(Jack): We arbitrarily choose the first camera as the reference camera. This is an open point!
-        auto const& reference_camera{camera_calibrations.front()};
-
         // ERROR(Jack): Am I crazy or should I not be passing the optimized bundle adjustment poses and not the
         // unrefined pose init poses here? For some reason when I do that the extrinsic init does not work like before,
         // we need to look at this in the debug dashboard and figure out what is going on here. The entire "align
         // rotations" thing play an important part here I think. This is a known problem.
         steps::SplineInitialization const spline_init_step{
-            reference_camera.camera_id,      reference_camera.pose_init_id,         reference_camera.targets_id,
-            reference_camera.camera_info_id, reference_camera.bundle_adjustment_id, db};
+            cam0.camera_id, cam0.pose_init_id, cam0.targets_id, cam0.camera_info_id, cam0.bundle_adjustment_id, db};
         StepId const spline_init_id{
             steps::RunStep<steps::SplineInitialization>(context.workflow_id, spline_init_step, db)};
 
         steps::ExtrinsicInit const extrinsic_init_step{
-            reference_camera.camera_id, spline_init_id, imu_id, imu_data_id, context.application.threads, db};
+            cam0.camera_id, spline_init_id, imu_id, imu_data_id, context.application.threads, db};
         StepId const extrinsic_init_id{
             steps::RunStep<steps::ExtrinsicInit>(context.workflow_id, extrinsic_init_step, db)};
 
-        steps::ExtrinsicOptimization const extrinsic_optimization_step{reference_camera.camera_id,
+        steps::ExtrinsicOptimization const extrinsic_optimization_step{cam0.camera_id,
                                                                        imu_id,
-                                                                       reference_camera.targets_id,
+                                                                       cam0.targets_id,
                                                                        imu_data_id,
                                                                        context.application.threads,
-                                                                       reference_camera.camera_info_id,
-                                                                       reference_camera.bundle_adjustment_id,
+                                                                       cam0.camera_info_id,
+                                                                       cam0.bundle_adjustment_id,
                                                                        spline_init_id,
                                                                        extrinsic_init_id,
                                                                        db};

@@ -48,8 +48,8 @@ class CamCamExtrinsicOptimizationFixture : public StepTestFixture {
 };
 
 TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
-    steps::CamCamExtrinsicOptimization const step{calibrations_, extrinsic_id_, 1, 0, db_};
-    StepId const step_id{RunStep<steps::CamCamExtrinsicOptimization>(context_.workflow_id, step, db_)};
+    steps::StereoRigOpt const step{calibrations_, extrinsic_id_, 1, 0, db_};
+    StepId const step_id{RunStep<steps::StereoRigOpt>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, camera_a_id_, camera_b_id_)};
     ASSERT_TRUE(result.has_value());
@@ -59,7 +59,7 @@ TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
 }
 
 TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStep) {
-    steps::CamCamExtrinsicOptimization const step{calibrations_, extrinsic_id_, 1, 0, db_};
+    steps::StereoRigOpt const step{calibrations_, extrinsic_id_, 1, 0, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
     std::vector const gt_assets{camera_b_id_, camera_a_id_};
