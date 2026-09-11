@@ -18,7 +18,9 @@ auto const log{logging::Get("steps")};
 
 }
 
-CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations, SqlitePtr db) {
+CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations,
+                                         uint64_t const approx_sync_delta_ns, SqlitePtr db)
+    : approx_sync_delta_ns_{approx_sync_delta_ns} {
     for (auto const& camera : camera_calibrations) {
         cam_ids_.emplace_back(camera.camera_id);
         camera_frames_.emplace(camera.camera_id,
@@ -27,9 +29,11 @@ CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_
 }
 
 Hash CamCamExtrinsicInit::CacheKey() const {
+    Hash const initial_hash{hashing::HashArguments(approx_sync_delta_ns_)};
+
     // Only hash the frame pose values so we are not dependent on the camera asset ids.
     return std::ranges::fold_left(
-        camera_frames_ | std::views::values, Hash{},
+        camera_frames_ | std::views::values, initial_hash,
         [](Hash const& hash, auto const& frames) { return hashing::HashArguments(hash, frames); });
 }
 
@@ -43,8 +47,8 @@ void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {
 
         // TODO(Jack): Set the sync tolerance from a config!
         // ERROR(Jack): 1'000'000ns is a very tight tolerance!
-        Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(camera_frames_.at(camera_a_id),
-                                                                     camera_frames_.at(camera_b_id), 1'000'000)};
+        Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(
+            camera_frames_.at(camera_a_id), camera_frames_.at(camera_b_id), approx_sync_delta_ns_)};
         Extrinsic const extrinsic_a_b{camera_a_id, camera_b_id, se3_a_b};
 
         database::ExtrinsicInsert(db.get(), step_id, extrinsic_a_b);

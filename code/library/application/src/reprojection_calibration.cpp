@@ -141,12 +141,14 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     if (is_multicam) {
         log->info("\033[35m{{'stage': 'multi_cam', 'assets': {}}}\033[0m", context.assets.cameras);
 
-        steps::CamCamExtrinsicInit const cam_cam_extrinsic_init_step{camera_calibrations, db};
+        steps::CamCamExtrinsicInit const cam_cam_extrinsic_init_step{camera_calibrations,
+                                                                     context.application.approx_sync_delta_ns, db};
         StepId const cam_cam_extrinsic_init_id{
             RunStep<steps::CamCamExtrinsicInit>(context.workflow_id, cam_cam_extrinsic_init_step, db)};
 
-        steps::CamCamExtrinsicOptimization const extrinsic_cam_optimization_step{camera_calibrations,
-                                                                                 cam_cam_extrinsic_init_id, db};
+        steps::CamCamExtrinsicOptimization const extrinsic_cam_optimization_step{
+            camera_calibrations, cam_cam_extrinsic_init_id, context.application.threads,
+            context.application.approx_sync_delta_ns, db};
         StepId const extrinsic_cam_optimization_id{
             RunStep<steps::CamCamExtrinsicOptimization>(context.workflow_id, extrinsic_cam_optimization_step, db)};
 

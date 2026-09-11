@@ -99,7 +99,7 @@ struct BundleAdjustment {
     static std::pair<Result, CeresState> Solve(Problem const& ba_problem, int num_threads);
 
     static Problem MultiCamProblem(CameraProblemInput const& cam0, Frames const& cam0_poses,
-                                   std::span<CameraProblemInput const> cams, uint64_t max_sync_delta_ns);
+                                   std::span<CameraProblemInput const> cams, uint64_t approx_sync_delta_ns);
 
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                     TargetSamples const& targets, Frames const& frames, bool optimize_intrinsic,
@@ -110,7 +110,7 @@ struct BundleAdjustment {
                                       Pose const& pose, bool optimize_intrinsic);
 
    private:
-    static void AddCamera(CameraProblemInput const& camera, uint64_t max_sync_delta_ns, Problem& problem);
+    static void AddCamera(CameraProblemInput const& camera, uint64_t approx_sync_delta_ns, Problem& problem);
 };
 
 // TODO(Jack): Does this function really belong here in this file? Or would it be better organized with more like minded

@@ -12,7 +12,7 @@ namespace reprojection::steps {
 
 struct CamCamExtrinsicOptimization {
     CamCamExtrinsicOptimization(std::vector<CamStageIds> const& camera_calibrations, StepId extrinsic_init_id,
-                                SqlitePtr db);
+                                int num_threads, uint64_t approx_sync_delta_ns, SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }
 
@@ -35,6 +35,8 @@ struct CamCamExtrinsicOptimization {
     CamStageIds reference_camera_;
     std::vector<optimization::CameraProblemInput> cameras_;
     Frames rig_poses_;
+    int num_threads_;
+    uint64_t approx_sync_delta_ns_;
 };
 
 }  // namespace reprojection::steps

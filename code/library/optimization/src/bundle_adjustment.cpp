@@ -61,7 +61,7 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
 // TODO UNIT TEST!
 BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(CameraProblemInput const& cam0, Frames const& cam0_poses,
                                                             std::span<CameraProblemInput const> cams,
-                                                            uint64_t const max_sync_delta_ns) {
+                                                            uint64_t const approx_sync_delta_ns) {
     // TODO(Jack): Maybe one day we can engineer the need for this check away, but right now we do not guarantee that
     // the rig reference has optimize_extrinsic==false and an identity transform. So to solve our headaches prematurely
     // we add this check for both properties, but like I said hopefully one day we can engineer this away!
@@ -72,10 +72,10 @@ BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(CameraProblemInput c
     }
 
     Problem problem{cam0.camera_id, cam0_poses};
-    AddCamera(cam0, max_sync_delta_ns, problem);
+    AddCamera(cam0, approx_sync_delta_ns, problem);
 
     for (auto const& cam_i : cams) {
-        AddCamera(cam_i, max_sync_delta_ns, problem);
+        AddCamera(cam_i, approx_sync_delta_ns, problem);
     }
 
     return problem;
@@ -110,7 +110,8 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
 // are therefore never used. This is a simplifying assumption and does not cost us much but prevents us from have to
 // implement a more intricate "changing reference camera" problem construction logic. Maybe we are just missing the
 // abstraction to do that simply?
-void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t const max_sync_delta_ns, Problem& problem) {
+void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t const approx_sync_delta_ns,
+                                 Problem& problem) {
     problem.cameras.emplace(camera.camera_id, Camera{camera.camera_info,  // LCOV_EXCL_LINE
                                                      {camera.intrinsic, camera.extrinsic},
                                                      {camera.optimize_intrinsic, camera.optimize_extrinsic}});
@@ -127,7 +128,8 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t cons
         }
 
         auto const sample_timestamp_ns{*target_timestamps_it};
-        if (not time_synchronization::IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns, max_sync_delta_ns)) {
+        if (not time_synchronization::IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns,
+                                                        approx_sync_delta_ns)) {
             continue;  // LCOV_EXCL_LINE
         }
 

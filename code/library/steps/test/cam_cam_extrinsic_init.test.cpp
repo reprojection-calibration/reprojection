@@ -35,7 +35,7 @@ class CamCamExtrinsicInitFixture : public StepTestFixture {
 };
 
 TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
-    steps::CamCamExtrinsicInit const step{calibrations_, db_};
+    steps::CamCamExtrinsicInit const step{calibrations_, 0, db_};
     StepId const step_id{RunStep<steps::CamCamExtrinsicInit>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, camera_a_id_, camera_b_id_)};
@@ -46,12 +46,12 @@ TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
 }
 
 TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStep) {
-    steps::CamCamExtrinsicInit const step{calibrations_, db_};
+    steps::CamCamExtrinsicInit const step{calibrations_, 0, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
     std::vector const gt_assets{camera_b_id_, camera_a_id_};
     EXPECT_EQ(step.Assets(), gt_assets);
-    EXPECT_EQ(step.CacheKey().value, "7b4ed2350ce31cd9ae8245bb52284620d672c18db82b4616289067d452d16f29");
+    EXPECT_EQ(step.CacheKey().value, "cdb3147fbcc9ca2299fc3c10ace0f92af1331886a862f5e9804f79df89e77d9b");
 
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));

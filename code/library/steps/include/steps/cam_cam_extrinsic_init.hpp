@@ -9,7 +9,8 @@
 namespace reprojection::steps {
 
 struct CamCamExtrinsicInit {
-    CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations, SqlitePtr db);
+    CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations, uint64_t approx_sync_delta_ns,
+                        SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicInit; }
 
@@ -28,12 +29,10 @@ struct CamCamExtrinsicInit {
     void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
+    uint64_t approx_sync_delta_ns_;
     // NOTE(Jack): We keep this a vector because we in many places implicitly using the first element as the reference
     // camera. Hopefully can can engineer this away.
     std::vector<AssetId> cam_ids_;
-    // TODO(Jack): Technically we should probably be working with multiple rig states here, but the rig-state and frame
-    // state for the single camera workflows is still interchangeable for now so we ignore it. We will regret it one day
-    // :)
     std::map<AssetId, Frames> camera_frames_;
 };
 
