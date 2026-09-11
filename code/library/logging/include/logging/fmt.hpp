@@ -135,9 +135,10 @@ struct fmt::formatter<ceres::Solver::Summary> {
 
     auto format(ceres::Solver::Summary const& summary, format_context& ctx) const {
         return format_to(ctx.out(),
-                         "{{'initial_cost': {:.2f}, 'final_cost': {:.2f}, "
-                         "'num_successful_steps': {}, 'num_unsuccessful_steps': {}}}",
+                         "{{'initial_cost': {:.2f}, 'final_cost': {:.2f}, 'num_successful_steps': {}, "
+                         "'num_unsuccessful_steps': {}, 'num_threads_given': {}, 'num_threads_used': {}, 'msg': {}}}",
                          summary.initial_cost, summary.final_cost, summary.num_successful_steps,
-                         summary.num_unsuccessful_steps);
+                         summary.num_unsuccessful_steps, summary.num_threads_given, summary.num_threads_used,
+                         summary.message);
     }
 };
