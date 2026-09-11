@@ -41,6 +41,7 @@ set(TEST_LINK_LIBRARIES
 set(TESTS
         test/bundle_adjustment.test.cpp
         test/cam_cam_extrinsic_init.test.cpp
+        test/cam_cam_extrinsic_optimization.test.cpp
         test/camera_info.test.cpp
         test/extrinsic_init.test.cpp
         test/extrinsic_optimization.test.cpp

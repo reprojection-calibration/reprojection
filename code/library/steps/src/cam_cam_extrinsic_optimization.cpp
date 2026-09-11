@@ -28,6 +28,8 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
     rig_poses_ =
         database::CameraPosesSelect(db.get(), reference_camera_.bundle_adjustment_id, reference_camera_.camera_id);
 
+    std::cout << std::size(rig_poses_)<<std::endl;
+
     cameras_.reserve(std::size(camera_calibrations));
     for (auto const& calib_i : camera_calibrations) {
         // TODO(Jack): Should we construct this directly in the vector and then reference it instead of pushing it back
