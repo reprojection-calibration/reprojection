@@ -1,4 +1,4 @@
-#include "steps/cam_cam_extrinsic_optimization.hpp"
+#include "steps/stereo_rig_opt.hpp"
 
 #include <gtest/gtest.h>
 
@@ -8,7 +8,7 @@
 
 using namespace reprojection;
 
-class CamCamExtrinsicOptimizationFixture : public StepTestFixture {
+class StereoRigOptFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         StepTestFixture::SetUp();
@@ -34,7 +34,7 @@ class CamCamExtrinsicOptimizationFixture : public StepTestFixture {
                 }
             }
 
-            calibrations_.push_back({id, camera_info_id, targets_id, {0}, bundle_adjustment_id});
+            cam_stages_.push_back({id, camera_info_id, targets_id, {0}, bundle_adjustment_id});
         }
 
         extrinsic_id_ = InsertExtrinsic(camera_a_id_, camera_b_id_);
@@ -43,12 +43,12 @@ class CamCamExtrinsicOptimizationFixture : public StepTestFixture {
     AssetId camera_a_id_;
     AssetId camera_b_id_;
 
-    std::vector<CamStageIds> calibrations_;
+    std::vector<CamStageIds> cam_stages_;
     StepId extrinsic_id_;
 };
 
-TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
-    steps::StereoRigOpt const step{calibrations_, extrinsic_id_, 1, 0, db_};
+TEST_F(StereoRigOptFixture, TestExtrinsicInitStepRunner) {
+    steps::StereoRigOpt const step{cam_stages_, extrinsic_id_, 1, 0, db_};
     StepId const step_id{RunStep<steps::StereoRigOpt>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, camera_a_id_, camera_b_id_)};
@@ -58,8 +58,8 @@ TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
     EXPECT_EQ(result->frame_b, camera_b_id_);
 }
 
-TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStep) {
-    steps::StereoRigOpt const step{calibrations_, extrinsic_id_, 1, 0, db_};
+TEST_F(StereoRigOptFixture, TestExtrinsicInitStep) {
+    steps::StereoRigOpt const step{cam_stages_, extrinsic_id_, 1, 0, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
     std::vector const gt_assets{camera_b_id_, camera_a_id_};

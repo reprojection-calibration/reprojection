@@ -5,8 +5,6 @@
 #include "config/config_parse.hpp"
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
-#include "steps/cam_cam_extrinsic_init.hpp"
-#include "steps/cam_cam_extrinsic_optimization.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/extrinsic_init.hpp"
 #include "steps/extrinsic_optimization.hpp"
@@ -18,6 +16,8 @@
 #include "steps/pose_initialization.hpp"
 #include "steps/spline_initialization.hpp"
 #include "steps/step_runner.hpp"
+#include "steps/stereo_rig_init.hpp"
+#include "steps/stereo_rig_opt.hpp"
 #include "steps/target_info.hpp"
 
 #include "io.hpp"

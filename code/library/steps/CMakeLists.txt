@@ -2,8 +2,6 @@ set(LIBRARY_NAME "steps")
 
 set(SRC_FILES
         src/bundle_adjustment.cpp
-        src/cam_cam_extrinsic_init.cpp
-        src/cam_cam_extrinsic_optimization.cpp
         src/camera_info.cpp
         src/extrinsic_init.cpp
         src/extrinsic_optimization.cpp
@@ -14,6 +12,8 @@ set(SRC_FILES
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
         src/spline_initialization.cpp
+        src/stereo_rig_init.cpp
+        src/stereo_rig_opt.cpp
         src/target_info.cpp
 )
 
@@ -40,8 +40,6 @@ set(TEST_LINK_LIBRARIES
 )
 set(TESTS
         test/bundle_adjustment.test.cpp
-        test/cam_cam_extrinsic_init.test.cpp
-        test/cam_cam_extrinsic_optimization.test.cpp
         test/camera_info.test.cpp
         test/extrinsic_init.test.cpp
         test/extrinsic_optimization.test.cpp
@@ -53,6 +51,8 @@ set(TESTS
         test/pose_initialization.test.cpp
         test/spline_initialization.test.cpp
         test/step_runner.test.cpp
+        test/stereo_rig_init.test.cpp
+        test/stereo_rig_opt.test.cpp
         test/target_info.test.cpp
 )
 AddTests()

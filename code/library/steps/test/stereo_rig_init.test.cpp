@@ -1,4 +1,4 @@
-#include "steps/cam_cam_extrinsic_init.hpp"
+#include "steps/stereo_rig_init.hpp"
 
 #include <gtest/gtest.h>
 
@@ -8,7 +8,7 @@
 
 using namespace reprojection;
 
-class CamCamExtrinsicInitFixture : public StepTestFixture {
+class StereoRigInitFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         StepTestFixture::SetUp();
@@ -24,18 +24,18 @@ class CamCamExtrinsicInitFixture : public StepTestFixture {
             StepId const targets_id{InsertExtractedTargets(id)};
             StepId const poses_id{InsertPoses(id, targets_id)};
 
-            calibrations_.push_back({id, {0}, {0}, {0}, poses_id});
+            cam_stages_.push_back({id, {0}, {0}, {0}, poses_id});
         }
     }
 
     AssetId camera_a_id_;
     AssetId camera_b_id_;
 
-    std::vector<CamStageIds> calibrations_;
+    std::vector<CamStageIds> cam_stages_;
 };
 
-TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
-    steps::StereoRigInit const step{calibrations_, 0, db_};
+TEST_F(StereoRigInitFixture, TestExtrinsicInitStepRunner) {
+    steps::StereoRigInit const step{cam_stages_, 0, db_};
     StepId const step_id{RunStep<steps::StereoRigInit>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, camera_a_id_, camera_b_id_)};
@@ -45,8 +45,8 @@ TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
     EXPECT_EQ(result->frame_b, camera_b_id_);
 }
 
-TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStep) {
-    steps::StereoRigInit const step{calibrations_, 0, db_};
+TEST_F(StereoRigInitFixture, TestExtrinsicInitStep) {
+    steps::StereoRigInit const step{cam_stages_, 0, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
     std::vector const gt_assets{camera_b_id_, camera_a_id_};

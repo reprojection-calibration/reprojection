@@ -1,4 +1,4 @@
-#include "steps/cam_cam_extrinsic_init.hpp"
+#include "steps/stereo_rig_init.hpp"
 
 #include <spdlog/fmt/bundled/ranges.h>
 
@@ -18,8 +18,8 @@ auto const log{logging::Get("steps")};
 
 }
 
-StereoRigInit::StereoRigInit(std::vector<CamStageIds> const& camera_calibrations,
-                                         uint64_t const approx_sync_delta_ns, SqlitePtr db)
+StereoRigInit::StereoRigInit(std::vector<CamStageIds> const& camera_calibrations, uint64_t const approx_sync_delta_ns,
+                             SqlitePtr db)
     : approx_sync_delta_ns_{approx_sync_delta_ns} {
     for (auto const& camera : camera_calibrations) {
         cam_ids_.emplace_back(camera.camera_id);

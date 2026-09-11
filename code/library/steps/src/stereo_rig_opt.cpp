@@ -1,4 +1,4 @@
-#include "steps/cam_cam_extrinsic_optimization.hpp"
+#include "steps/stereo_rig_opt.hpp"
 
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
@@ -20,9 +20,8 @@ using Ba = optimization::BundleAdjustment;
 
 // TODO(Jack): Implicitly making the first values in the vectors the "reference" camera somehow leaving a lot up to
 // fate. Is there some way we can formalize this role?
-StereoRigOpt::StereoRigOpt(std::vector<CamStageIds> const& cams,
-                                                         StepId const extrinsic_init_id, int const num_threads,
-                                                         uint64_t const approx_sync_delta_ns, SqlitePtr db)
+StereoRigOpt::StereoRigOpt(std::vector<CamStageIds> const& cams, StepId const extrinsic_init_id, int const num_threads,
+                           uint64_t const approx_sync_delta_ns, SqlitePtr db)
     : cam0_{cams.front()}, num_threads_{num_threads}, approx_sync_delta_ns_{approx_sync_delta_ns} {
     rig_poses_ = database::CameraPosesSelect(db.get(), cam0_.bundle_adjustment_id, cam0_.camera_id);
 
