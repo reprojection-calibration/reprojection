@@ -86,6 +86,7 @@ void CamCamExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) co
     Ba::Problem const problem{
         Ba::MultiCamProblem(cameras_.front(), rig_poses_, std::span{cameras_}.subspan(1), approx_sync_delta_ns_)};
     auto const [result, ceres_state]{Ba::Solve(problem, num_threads_)};
+
     database::RigStateInsert(db.get(), step_id, reference_camera_.targets_id, optimization::ToRigState(result));
 
     // TODO(Jack): As we are basically just doing another bundle adjustment here we should also write the reprojection

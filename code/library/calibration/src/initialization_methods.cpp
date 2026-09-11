@@ -122,7 +122,7 @@ Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b
     std::set<uint64_t> remaining_b{std::cbegin(timestamps), std::cend(timestamps)};
 
     Array6d se3_coa_cob{Array6d::Zero()};
-    int num{0};
+    int num_synced{0};
     for (auto const& [a_timestamp_ns, pose_a] : frames_a) {
         // TODO(Jack): The fact that we hand roll the time sync logic here is not so nice. There are a couple places we
         // need this same logic and we need to consider how to unify them into a central implementation if we start
@@ -152,14 +152,24 @@ Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b
         Array6d const se3_coa_cob_i{geometry::Log(tf_coa_cob)};
 
         se3_coa_cob += se3_coa_cob_i;
-        num++;
+        num_synced++;
     }
 
-    // TODO(Jack): Is this legitimate to average the transforms like this?
-    // ERROR(Jack): What happens when 'num' is zero!?
-    se3_coa_cob = se3_coa_cob / num;
+    std::string const log_msg{
+        std::format("{{ 'num_frames_a': {}, 'num_frames_b': {}, 'num_frames_synced': {}, 'approx_sync_delta_ns': {}}}",
+                    std::size(frames_a), std::size(frames_b), num_synced, approx_sync_delta_ns)};
+    if (num_synced == 0) {
+        log->error(log_msg);
 
-    return se3_coa_cob;
+        // TODO(Jack): Is this legitimate to return an identity transform if the initialization otherwise failed due to
+        // failed syncing?
+        return Array6d::Zero();
+    } else {
+        log->debug(log_msg);
+
+        // TODO(Jack): Is this legitimate to average the transforms like this?
+        return se3_coa_cob / num_synced;
+    }
 }
 
 std::pair<std::pair<Array3d, CeresState>, Vector3d> EstimateCameraImuAlignment(spline::Se3Spline const& spline,

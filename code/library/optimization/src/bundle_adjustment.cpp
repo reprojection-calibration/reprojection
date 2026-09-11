@@ -119,6 +119,7 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t cons
     auto const timestamps{camera.targets | std::views::keys};
     std::set<uint64_t> remaining_targets{std::cbegin(timestamps), std::cend(timestamps)};
 
+    // TODO(Jack): We need to provide some information to the user regarding how the data was synced.
     for (auto const& [frame_timestamp_ns, _] : problem.rig_poses) {
         // TODO(Jack): Hand rolling the time synchronization logic here is not so nice, as we need it in multiple
         // places.
