@@ -8,33 +8,36 @@
 
 namespace reprojection::steps {
 
+// VisualInertialInit(AssetId imu_id, StepId imu_data_id, AssetId cam_id, StepId spline_id, int num_threads, SqlitePtr
+// db);
+
 struct VisualInertialOpt {
-    VisualInertialOpt(AssetId camera_id, AssetId imu_id, StepId targets_id, StepId imu_data_id, int num_threads,
-                      StepId camera_info_id, StepId intrinsic_id, StepId spline_id, StepId extrinsic_init_id,
-                      SqlitePtr db);
+    // TODO(Jack): Can we refactor this to take a CamStageIds struct to shorten this up a little?
+    VisualInertialOpt(AssetId imu_id, StepId imu_data_id, AssetId cam_id, StepId spline_id, StepId extrinsic_init_id,
+                      StepId targets_id, StepId camera_info_id, StepId intrinsic_id, int num_threads, SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }
 
-    std::vector<AssetId> Assets() const { return {camera_id_, imu_id_}; }  // LCOV_EXCL_LINE
+    std::vector<AssetId> Assets() const { return {imu_id_, cam_id_}; }  // LCOV_EXCL_LINE
 
     Hash CacheKey() const;
 
     void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
-    AssetId camera_id_;
     AssetId imu_id_;
-    StepId targets_id_;
-    TargetSamples targets_;
     StepId imu_data_id_;
     ImuSamples imu_data_;
-    int num_threads_;
-    CameraInfo camera_info_;
-    Intrinsic intrinsic_;
-    // TODO(Jack): Should we name this to reflect its the initial guess?
+    AssetId cam_id_;
+    std::unique_ptr<spline::Se3Spline> spline_;
     Extrinsic extrinsic_;
     Vector3d gravity_;
-    std::unique_ptr<spline::Se3Spline> spline_;
+    StepId targets_id_;
+    TargetSamples targets_;
+    CameraInfo camera_info_;
+    Intrinsic intrinsic_;
+
+    int num_threads_;
 };
 
 }  // namespace reprojection::steps
