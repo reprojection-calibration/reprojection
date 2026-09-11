@@ -1,40 +1,32 @@
+#include "steps/visual_inertial_init.hpp"
+
 #include <gtest/gtest.h>
 
 #include "steps/step_runner.hpp"
-#include "steps/visual_inertial_init.hpp"
-#include "testing_mocks/data_generators.hpp"
 #include "types/physics_constants.hpp"
 
 #include "test_fixture.hpp"
 
 using namespace reprojection;
 
-class ExtrinsicInitFixture : public StepTestFixture {
+class VisualInertialInitFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         StepTestFixture::SetUp();
 
         camera_id_ = context_.assets.cameras.front().id;
         imu_id_ = context_.assets.imu->id;  // Unprotected optional access!
-        camera_info_id_ = InsertCameraInfo(camera_id_);
-        targets_id_ = InsertExtractedTargets(camera_id_);
-        intrinsics_id_ = InsertIntrinsic(camera_id_);
-        poses_id_ = InsertPoses(camera_id_, targets_id_);
         std::tie(imu_data_id_, spline_id_) = InsertImuSetup(camera_id_);
     }
 
     AssetId camera_id_;
     AssetId imu_id_;
-    StepId camera_info_id_;
-    StepId targets_id_;
-    StepId intrinsics_id_;
-    StepId poses_id_;
     StepId imu_data_id_;
     StepId spline_id_;
 };
 
-TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
-    steps::VisualInertialInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
+TEST_F(VisualInertialInitFixture, TestExtrinsicInitStepRunner) {
+    steps::VisualInertialInit const step{imu_id_, imu_data_id_, camera_id_, spline_id_, 1, db_};
     StepId const step_id{RunStep<steps::VisualInertialInit>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, camera_id_)};
@@ -46,8 +38,8 @@ TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
     EXPECT_NEAR(result2->norm(), kGravity, 1e-3);  // Heuristic!
 }
 
-TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStep) {
-    steps::VisualInertialInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
+TEST_F(VisualInertialInitFixture, TestExtrinsicInitStep) {
+    steps::VisualInertialInit const step{imu_id_, imu_data_id_, camera_id_, spline_id_, 1, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
     std::vector const gt_assets{camera_id_, imu_id_};

@@ -1,14 +1,15 @@
+#include "steps/visual_inertial_opt.hpp"
+
 #include <gtest/gtest.h>
 
 #include "steps/step_runner.hpp"
-#include "steps/visual_inertial_opt.hpp"
 #include "types/physics_constants.hpp"
 
 #include "test_fixture.hpp"
 
 using namespace reprojection;
 
-class ExtrinsicOptimizationFixture : public StepTestFixture {
+class VisualInertialOptFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         StepTestFixture::SetUp();
@@ -39,9 +40,9 @@ class ExtrinsicOptimizationFixture : public StepTestFixture {
     StepId extrinsic_init_id_;
 };
 
-TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicOptimizationStepRunner) {
+TEST_F(VisualInertialOptFixture, TestExtrinsicOptimizationStepRunner) {
     steps::VisualInertialOpt const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
-                                            camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
+                                        camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
     StepId const step_id{RunStep<steps::VisualInertialOpt>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, camera_id_)};
@@ -53,9 +54,9 @@ TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicOptimizationStepRunner) {
     EXPECT_NEAR(result2->norm(), kGravity, 1e-3);  // Heuristic!
 }
 
-TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicOptimizationStep) {
+TEST_F(VisualInertialOptFixture, TestExtrinsicOptimizationStep) {
     steps::VisualInertialOpt const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
-                                            camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
+                                        camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
     std::vector const gt_assets{camera_id_, imu_id_};
