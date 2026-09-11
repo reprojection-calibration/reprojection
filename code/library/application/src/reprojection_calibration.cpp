@@ -182,7 +182,7 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         StepId const spline_init_id{steps::RunStep<steps::SplineInit>(context.workflow_id, spline_init_step, db)};
 
         steps::VisualInertialInit const visual_inertial_init{
-            cam0.asset_id, spline_init_id, imu_id, imu_data_id, context.application.threads, db};
+            imu_id, imu_data_id, cam0.asset_id, spline_init_id, context.application.threads, db};
         StepId const visual_inertial_init_id{
             steps::RunStep<steps::VisualInertialInit>(context.workflow_id, visual_inertial_init, db)};
 
