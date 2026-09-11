@@ -65,7 +65,7 @@ TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStep) {
     EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
     std::vector const gt_assets{camera_b_id_, camera_a_id_};
     EXPECT_EQ(step.Assets(), gt_assets);
-    EXPECT_EQ(step.CacheKey().value, "7b4ed2350ce31cd9ae8245bb52284620d672c18db82b4616289067d452d16f29");
+    EXPECT_EQ(step.CacheKey().value, "43ffc4797fdd4e4aaea0dd29aad68cd49c8321b60915e828899fbb12ba952665");
 
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));

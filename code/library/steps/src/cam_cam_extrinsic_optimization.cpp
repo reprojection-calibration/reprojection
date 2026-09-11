@@ -28,7 +28,7 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
     rig_poses_ =
         database::CameraPosesSelect(db.get(), reference_camera_.bundle_adjustment_id, reference_camera_.camera_id);
 
-    std::cout << std::size(rig_poses_)<<std::endl;
+    std::cout << std::size(rig_poses_) << std::endl;
 
     cameras_.reserve(std::size(camera_calibrations));
     for (auto const& calib_i : camera_calibrations) {
@@ -65,11 +65,13 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
 }
 
 Hash CamCamExtrinsicOptimization::CacheKey() const {
-    // TODO TODO TODO
-    // TODO TODO TODO
-    // TODO TODO TODO
-    // TODO TODO TODO
-    return hashing::HashArguments(1, 2, 3);
+    Hash const rig_pose_hash{hashing::HashArguments(rig_poses_)};
+
+    // TODO(Jack): If we end up keeping the CameraProblemInput type we should add a serialize function for it directly!
+    return std::ranges::fold_left(cameras_, rig_pose_hash, [](Hash const& hash, auto const& camera) {
+        return hashing::HashArguments(hash, camera.camera_info, camera.intrinsic, camera.targets, camera.extrinsic,
+                                      camera.optimize_intrinsic, camera.optimize_extrinsic);
+    });
 }
 
 void CamCamExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
