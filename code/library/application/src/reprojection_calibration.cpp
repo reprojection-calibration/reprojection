@@ -6,8 +6,6 @@
 #include "logging/logging.hpp"
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
-#include "steps/extrinsic_init.hpp"
-#include "steps/extrinsic_optimization.hpp"
 #include "steps/feature_extraction.hpp"
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
@@ -19,6 +17,8 @@
 #include "steps/stereo_rig_init.hpp"
 #include "steps/stereo_rig_opt.hpp"
 #include "steps/target_info.hpp"
+#include "steps/visual_inertial_init.hpp"
+#include "steps/visual_inertial_opt.hpp"
 
 #include "io.hpp"
 

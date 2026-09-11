@@ -1,11 +1,10 @@
-#include "steps/extrinsic_init.hpp"
-
 #include "calibration/initialization_methods.hpp"
 #include "database/calibration_database.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "optimization/extrinsic_optimization.hpp"
+#include "steps/visual_inertial_init.hpp"
 
 #include "utilities.hpp"
 
