@@ -89,6 +89,8 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
         camera_id, camera_info, intrinsic, targets, Array6d::Zero(), optimize_intrinsic, false,
     };
 
+    // NOTE(Jack): Setting the sync tolerance to zero enforces exact matches only. Which considering that the frames
+    // have to come from the camera's targets makes sense!
     return MultiCamProblem(camera, frames, {}, 0);
 }
 

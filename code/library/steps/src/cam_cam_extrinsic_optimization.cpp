@@ -76,9 +76,12 @@ Hash CamCamExtrinsicOptimization::CacheKey() const {
 void CamCamExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
     // ERROR(Jack): Parameterize the sync delta!
     // TODO(Jack): Pass number of threads!
+    // NOTE(Jack): Here an important things happens and that is that we pick the first camera in cameras_ as the
+    // reference camera. For now we can implicitly do this but it might turn out one day that we need to be explicit
+    // here to make sure we are consistent with the cam-imu extrinsic calibration too. I am not really a 'span' api
+    // user, but we use it here to pass all the non-reference cameras.
     Ba::Problem const problem{Ba::MultiCamProblem(cameras_.front(), rig_poses_, std::span{cameras_}.subspan(1), 1000)};
     auto const [result, ceres_state]{Ba::Solve(problem, 1)};
-
     database::RigStateInsert(db.get(), step_id, reference_camera_.targets_id, optimization::ToRigState(result));
 
     // TODO(Jack): As we are basically just doing another bundle adjustment here we should also write the reprojection
