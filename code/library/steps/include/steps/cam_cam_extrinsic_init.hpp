@@ -6,20 +6,21 @@
 
 namespace reprojection::steps {
 
-// TODO(Jack): The CameraCalibration has way too much information for the extrinsic initialization so we cut it down
+// TODO(Jack): The CamStageIds has way too much information for the extrinsic initialization so we cut it down
 // here just to what we need here. But regardless the type handling is ugly and we need to somehow make this more
 // explicit!
+// TODO(Jack): Engineer this struct away!
 struct CamCamExtrinsicInitState {
     AssetId camera_id;
     StepId frames_id;
 
     // NOTE(Jack): This is hardcoded to take the bundle adjustment frames!
-    explicit CamCamExtrinsicInitState(CameraCalibration const& camera_calibration)
+    explicit CamCamExtrinsicInitState(CamStageIds const& camera_calibration)
         : camera_id{camera_calibration.camera_id}, frames_id{camera_calibration.bundle_adjustment_id} {}
 };
 
 struct CamCamExtrinsicInit {
-    CamCamExtrinsicInit(std::vector<CameraCalibration> const& camera_calibrations, SqlitePtr db);
+    CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations, SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicInit; }
 

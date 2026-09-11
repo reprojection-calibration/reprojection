@@ -133,10 +133,13 @@ struct Asset {
     T config;
 };
 
-// TODO(Jack): Where does this belong?
-// NOTE(Jack): We only store the values that we need to the extrinsic calibration (imu). We could store every step id
-// but why?
-struct CameraCalibration {
+// TODO(Jack): Does this belong here?
+// TODO(Jack): Should we formalize the idea of "stages"? We kind of do it in the terminal logging from the application
+// but the formal concept of a stage does not exist. But what is apparent is that we need some way to represent related
+// bundles of steps.
+// NOTE(Jack): These are all the steps required to do the cam-imu extrinsic calibration. It is not clear that this is
+// the best abstraction to also support the multicam workflow.
+struct CamStageIds {
     AssetId camera_id;
     StepId camera_info_id;
     StepId targets_id;

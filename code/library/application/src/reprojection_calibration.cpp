@@ -104,7 +104,7 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     steps::TargetInfoStep const target_info_step{context.assets.target.id, context.assets.target.config};
     StepId const target_info_id{RunStep<steps::TargetInfoStep>(context.workflow_id, target_info_step, db)};
 
-    std::vector<CameraCalibration> camera_calibrations;
+    std::vector<CamStageIds> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {
         log->info("\033[35m{{'stage': 'single_cam', 'asset': {}}}\033[0m", camera);
 

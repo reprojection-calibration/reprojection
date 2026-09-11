@@ -31,7 +31,7 @@ class CamCamExtrinsicInitFixture : public StepTestFixture {
     AssetId camera_a_id_;
     AssetId camera_b_id_;
 
-    std::vector<CameraCalibration> calibrations_;
+    std::vector<CamStageIds> calibrations_;
 };
 
 TEST_F(CamCamExtrinsicInitFixture, TestExtrinsicInitStepRunner) {

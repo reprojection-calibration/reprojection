@@ -11,7 +11,7 @@
 namespace reprojection::steps {
 
 struct CamCamExtrinsicOptimization {
-    CamCamExtrinsicOptimization(std::vector<CameraCalibration> const& camera_calibrations, StepId extrinsic_init_id,
+    CamCamExtrinsicOptimization(std::vector<CamStageIds> const& camera_calibrations, StepId extrinsic_init_id,
                                 SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }
@@ -32,7 +32,7 @@ struct CamCamExtrinsicOptimization {
 
    private:
     // TODO(Jack): We really have wayyy too many types of "camera". Is there really nothing we can do better here?
-    CameraCalibration reference_camera_;
+    CamStageIds reference_camera_;
     std::vector<optimization::CameraProblemInput> cameras_;
     Frames rig_poses_;
 };

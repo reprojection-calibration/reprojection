@@ -18,7 +18,7 @@ auto const log{logging::Get("steps")};
 
 }
 
-CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CameraCalibration> const& camera_calibrations, SqlitePtr db) {
+CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations, SqlitePtr db) {
     // Extract only the parts we actually need.
     std::ranges::transform(camera_calibrations, std::back_inserter(states_),
                            [](auto const& calibration) { return CamCamExtrinsicInitState{calibration}; });

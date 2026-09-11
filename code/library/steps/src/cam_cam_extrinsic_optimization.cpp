@@ -20,7 +20,7 @@ using Ba = optimization::BundleAdjustment;
 
 // TODO(Jack): Implicitly making the first values in the vectors the "reference" camera somehow leaving a lot up to
 // fate. Is there some way we can formalize this role?
-CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalibration> const& camera_calibrations,
+CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CamStageIds> const& camera_calibrations,
                                                          StepId const extrinsic_init_id, SqlitePtr db)
     : reference_camera_{camera_calibrations.front()} {
     // TODO(Jack): Out database was designed with the concept of "camera poses" and not "rig poses" so we need to do
