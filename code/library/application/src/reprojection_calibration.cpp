@@ -187,25 +187,25 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         StepId const spline_init_id{
             steps::RunStep<steps::SplineInitialization>(context.workflow_id, spline_init_step, db)};
 
-        steps::VisualInertialInit const extrinsic_init_step{
+        steps::VisualInertialInit const visual_inertial_init{
             cam0.camera_id, spline_init_id, imu_id, imu_data_id, context.application.threads, db};
-        StepId const extrinsic_init_id{
-            steps::RunStep<steps::VisualInertialInit>(context.workflow_id, extrinsic_init_step, db)};
+        StepId const visual_inertial_init_id{
+            steps::RunStep<steps::VisualInertialInit>(context.workflow_id, visual_inertial_init, db)};
 
-        steps::VisualInertialOpt const extrinsic_optimization_step{cam0.camera_id,
-                                                                       imu_id,
-                                                                       cam0.targets_id,
-                                                                       imu_data_id,
-                                                                       context.application.threads,
-                                                                       cam0.camera_info_id,
-                                                                       cam0.bundle_adjustment_id,
-                                                                       spline_init_id,
-                                                                       extrinsic_init_id,
-                                                                       db};
-        StepId const extrinsic_optimization_id{
-            steps::RunStep<steps::VisualInertialOpt>(context.workflow_id, extrinsic_optimization_step, db)};
+        steps::VisualInertialOpt const visual_inertial_opt_step{cam0.camera_id,
+                                                                imu_id,
+                                                                cam0.targets_id,
+                                                                imu_data_id,
+                                                                context.application.threads,
+                                                                cam0.camera_info_id,
+                                                                cam0.bundle_adjustment_id,
+                                                                spline_init_id,
+                                                                visual_inertial_init_id,
+                                                                db};
+        StepId const visual_inertial_opt_id{
+            steps::RunStep<steps::VisualInertialOpt>(context.workflow_id, visual_inertial_opt_step, db)};
 
-        static_cast<void>(extrinsic_optimization_id);
+        static_cast<void>(visual_inertial_opt_id);
     }
 
     // LCOV_EXCL_STOP
