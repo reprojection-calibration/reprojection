@@ -24,6 +24,8 @@
 
 namespace reprojection::application {
 
+// NOTE(Jack): The logging colors! Having the terminal log all be one single color made it a little to interpret sometimes.
+
 namespace {
 
 // We get a name conflict here with some math functions if we just use 'log' like we normally do, so prepend a
@@ -82,7 +84,7 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     std::vector<CameraCalibration> camera_calibrations;
     for (auto const& camera : context.assets.cameras) {
         // magenta - \033[35m and reset - \033[0m
-        log->info("\033[35m{{'sensor_name': '{}', 'asset_id': {}}}\033[0m", camera.config.sensor_name, camera.id.value);
+        log->info("\033[35m{{'stage': 'single_cam', 'asset': {}}}\033[0m", camera);
 
         ImageInput const& image_input{image_inputs.at(camera.config.sensor_name)};
 
@@ -115,8 +117,7 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
 
     bool const is_multicam{std::size(context.assets.cameras) > 1};
     if (is_multicam) {
-        // TODO(Jack): Add proper multicam log statement!
-        log->info("\033[35m MULTICAM \033[0m");
+        log->info("\033[35m{{'stage': 'multi_cam', 'assets': {}}}\033[0m", context.assets.cameras);
 
         steps::CamCamExtrinsicInit const cam_cam_extrinsic_init_step{camera_calibrations, db};
         StepId const cam_cam_extrinsic_init_id{
@@ -138,8 +139,9 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     if (has_imu) {
         auto const imu_id{context.assets.imu->id};
         // magenta - \033[35m and reset - \033[0m
-        log->info("\033[35m{{'sensor_name': '{}', 'asset_id': {}}}\033[0m", context.assets.imu->config.sensor_name,
-                  imu_id.value);
+        // WARN(Jack): Again hardcoding here that the first camera is the reference camera!
+        log->info("\033[35m{{'stage': 'cam_imu', 'assets': [{}, {{'sensor_name': '{}', 'asset_id': {}}}]}}\033[0m",
+                  *context.assets.cameras.begin(), context.assets.imu->config.sensor_name, imu_id.value);
 
         steps::ImuDataLoading const imu_data_loading_step{imu_id, imu_input->signature, imu_input->source};
         StepId const imu_data_id{steps::RunStep<steps::ImuDataLoading>(context.workflow_id, imu_data_loading_step, db)};

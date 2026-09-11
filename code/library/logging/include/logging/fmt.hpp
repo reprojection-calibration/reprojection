@@ -142,3 +142,35 @@ struct fmt::formatter<ceres::Solver::Summary> {
                          summary.message);
     }
 };
+
+template <>
+struct fmt::formatter<reprojection::Asset<reprojection::config::Config::Camera>> {
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
+
+    auto format(reprojection::Asset<reprojection::config::Config::Camera> const& camera, format_context& ctx) const {
+        return format_to(ctx.out(), "{{'sensor_name': '{}', 'asset_id': {}}}", camera.config.sensor_name,
+                         camera.id.value);
+    }
+};
+
+template <>
+struct fmt::formatter<std::vector<reprojection::Asset<reprojection::config::Config::Camera>>> {
+    constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
+
+    auto format(std::vector<reprojection::Asset<reprojection::config::Config::Camera>> const& cameras,
+                format_context& ctx) const {
+        auto out{format_to(ctx.out(), "[")};
+
+        bool first{true};
+        for (auto const& camera : cameras) {
+            if (not first) {
+                out = format_to(out, ", ");
+            }
+
+            out = format_to(out, "{}", camera);
+            first = false;
+        }
+
+        return format_to(out, "]");
+    }
+};
