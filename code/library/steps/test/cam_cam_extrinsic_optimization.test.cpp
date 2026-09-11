@@ -58,7 +58,6 @@ TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStepRunner) {
     EXPECT_EQ(result->frame_b, camera_b_id_);
 }
 
-
 TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStep) {
     steps::CamCamExtrinsicOptimization const step{calibrations_, extrinsic_id_, db_};
 
@@ -76,4 +75,3 @@ TEST_F(CamCamExtrinsicOptimizationFixture, TestExtrinsicInitStep) {
     EXPECT_EQ(result->frame_a, camera_a_id_);
     EXPECT_EQ(result->frame_b, camera_b_id_);
 }
-

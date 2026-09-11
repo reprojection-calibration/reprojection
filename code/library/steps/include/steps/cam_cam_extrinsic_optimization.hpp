@@ -17,9 +17,9 @@ struct CamCamExtrinsicOptimization {
     static StepType Type() { return StepType::ExtrinsicOptimization; }
 
     std::vector<AssetId> Assets() const {
-        // TODO(Jack): Do we also need to add the target id?
         std::vector<AssetId> assets;
         for (auto const& camera : cameras_) {
+            // cppcheck-suppress useStlAlgorithm
             assets.push_back(camera.camera_id);
         }
 
