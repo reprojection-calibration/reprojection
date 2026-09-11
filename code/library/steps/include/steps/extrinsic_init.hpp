@@ -7,9 +7,9 @@
 
 namespace reprojection::steps {
 
-struct ExtrinsicInit {
-    ExtrinsicInit(AssetId camera_id, StepId spline_id, AssetId imu_id, StepId imu_data_id, int num_threads,
-                  SqlitePtr db);
+struct VisualInertialInit {
+    VisualInertialInit(AssetId camera_id, StepId spline_id, AssetId imu_id, StepId imu_data_id, int num_threads,
+                       SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicInit; }
 

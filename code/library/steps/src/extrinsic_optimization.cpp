@@ -16,7 +16,7 @@ auto const log{logging::Get("steps")};
 
 }
 
-ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId const imu_id, StepId const targets_id,
+VisualInertialOpt::VisualInertialOpt(AssetId const camera_id, AssetId const imu_id, StepId const targets_id,
                                              StepId const imu_data_id, int const num_threads,
                                              StepId const camera_info_id, StepId const intrinsic_id,
                                              StepId const spline_id, StepId const extrinsic_init_id, SqlitePtr const db)
@@ -37,13 +37,13 @@ ExtrinsicOptimization::ExtrinsicOptimization(AssetId const camera_id, AssetId co
     spline_ = std::make_unique<spline::Se3Spline>(control_points, time_handler);
 }
 
-Hash ExtrinsicOptimization::CacheKey() const {
+Hash VisualInertialOpt::CacheKey() const {
     return hashing::HashArguments(camera_info_, targets_, intrinsic_, imu_data_, spline_->ControlPoints(),
                                   spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_,
                                   gravity_);
 }
 
-void ExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
+void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};
 

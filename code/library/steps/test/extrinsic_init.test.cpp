@@ -35,8 +35,8 @@ class ExtrinsicInitFixture : public StepTestFixture {
 };
 
 TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
-    steps::ExtrinsicInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
-    StepId const step_id{RunStep<steps::ExtrinsicInit>(context_.workflow_id, step, db_)};
+    steps::VisualInertialInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
+    StepId const step_id{RunStep<steps::VisualInertialInit>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, camera_id_)};
     ASSERT_TRUE(result.has_value());
@@ -48,7 +48,7 @@ TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStepRunner) {
 }
 
 TEST_F(ExtrinsicInitFixture, TestExtrinsicInitStep) {
-    steps::ExtrinsicInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
+    steps::VisualInertialInit const step{camera_id_, spline_id_, imu_id_, imu_data_id_, 1, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
     std::vector const gt_assets{camera_id_, imu_id_};

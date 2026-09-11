@@ -187,12 +187,12 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         StepId const spline_init_id{
             steps::RunStep<steps::SplineInitialization>(context.workflow_id, spline_init_step, db)};
 
-        steps::ExtrinsicInit const extrinsic_init_step{
+        steps::VisualInertialInit const extrinsic_init_step{
             cam0.camera_id, spline_init_id, imu_id, imu_data_id, context.application.threads, db};
         StepId const extrinsic_init_id{
-            steps::RunStep<steps::ExtrinsicInit>(context.workflow_id, extrinsic_init_step, db)};
+            steps::RunStep<steps::VisualInertialInit>(context.workflow_id, extrinsic_init_step, db)};
 
-        steps::ExtrinsicOptimization const extrinsic_optimization_step{cam0.camera_id,
+        steps::VisualInertialOpt const extrinsic_optimization_step{cam0.camera_id,
                                                                        imu_id,
                                                                        cam0.targets_id,
                                                                        imu_data_id,
@@ -203,7 +203,7 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
                                                                        extrinsic_init_id,
                                                                        db};
         StepId const extrinsic_optimization_id{
-            steps::RunStep<steps::ExtrinsicOptimization>(context.workflow_id, extrinsic_optimization_step, db)};
+            steps::RunStep<steps::VisualInertialOpt>(context.workflow_id, extrinsic_optimization_step, db)};
 
         static_cast<void>(extrinsic_optimization_id);
     }

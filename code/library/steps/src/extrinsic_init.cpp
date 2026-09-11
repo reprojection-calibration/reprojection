@@ -17,7 +17,7 @@ auto const log{logging::Get("steps")};
 
 }
 
-ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, AssetId const imu_id,
+VisualInertialInit::VisualInertialInit(AssetId const camera_id, StepId const spline_id, AssetId const imu_id,
                              StepId const imu_data_id, int num_threads, SqlitePtr const db)
     : camera_id_{camera_id},
       imu_id_{imu_id},
@@ -32,12 +32,12 @@ ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, As
     spline_ = std::make_unique<spline::Se3Spline>(control_points, time_handler);
 }
 
-Hash ExtrinsicInit::CacheKey() const {
+Hash VisualInertialInit::CacheKey() const {
     return hashing::HashArguments(imu_data_, spline_->ControlPoints(), spline_->GetTimeHandler().t0_ns_,
                                   spline_->GetTimeHandler().delta_t_ns_);
 }
 
-void ExtrinsicInit::Execute(StepId const step_id, SqlitePtr const db) const {
+void VisualInertialInit::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(*spline_, imu_data_, num_threads_)};
 
     // TODO(Jack): We should log these diagnostics like we did for the bundle adjustment!

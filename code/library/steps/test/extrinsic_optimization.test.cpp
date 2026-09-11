@@ -41,9 +41,9 @@ class ExtrinsicOptimizationFixture : public StepTestFixture {
 };
 
 TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicOptimizationStepRunner) {
-    steps::ExtrinsicOptimization const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
+    steps::VisualInertialOpt const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
                                             camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
-    StepId const step_id{RunStep<steps::ExtrinsicOptimization>(context_.workflow_id, step, db_)};
+    StepId const step_id{RunStep<steps::VisualInertialOpt>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, camera_id_)};
     ASSERT_TRUE(result.has_value());
@@ -55,7 +55,7 @@ TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicOptimizationStepRunner) {
 }
 
 TEST_F(ExtrinsicOptimizationFixture, TestExtrinsicOptimizationStep) {
-    steps::ExtrinsicOptimization const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
+    steps::VisualInertialOpt const step{camera_id_,      imu_id_,        targets_id_, imu_data_id_,       1,
                                             camera_info_id_, intrinsics_id_, spline_id_,  extrinsic_init_id_, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
