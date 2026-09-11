@@ -35,7 +35,6 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
         optimization::CameraProblemInput cam_i;
         cam_i.camera_id = calib_i.camera_id;
         cam_i.optimize_intrinsic = false;
-        cam_i.optimize_extrinsic = true;
 
         cam_i.camera_info =
             ValueOrExit(database::CameraInfoSelect(db.get(), calib_i.camera_info_id, cam_i.camera_id), log);
@@ -46,18 +45,22 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
         // extrinsic. We need to uniformly solve this as already noted elsewhere.
         if (cam_i.camera_id == reference_camera_.camera_id) {
             cam_i.extrinsic = Array6d::Zero();
+            cam_i.optimize_extrinsic = false;
         } else {
             auto const extrinsic_i{ValueOrExit(
                 database::ExtrinsicSelect(db.get(), extrinsic_init_id, cam_i.camera_id, reference_camera_.camera_id),
                 log)};
 
             cam_i.extrinsic = extrinsic_i.se3_a_b;
+            cam_i.optimize_extrinsic = true;
         }
 
         cam_i.targets = database::TargetsSelect(db.get(), calib_i.targets_id, cam_i.camera_id);
 
         cameras_.push_back(cam_i);
     }
+
+    // TODO(Jack): Should we throw and error here if cameras_ is empty?
 }
 
 Hash CamCamExtrinsicOptimization::CacheKey() const {
@@ -73,7 +76,7 @@ Hash CamCamExtrinsicOptimization::CacheKey() const {
 void CamCamExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) const {
     // ERROR(Jack): Parameterize the sync delta!
     // TODO(Jack): Pass number of threads!
-    Ba::Problem const problem{Ba::MultiCamProblem(cameras_, rig_poses_, 1000)};
+    Ba::Problem const problem{Ba::MultiCamProblem(cameras_.front(), rig_poses_, std::span{cameras_}.subspan(1), 1000)};
     auto const [result, ceres_state]{Ba::Solve(problem, 1)};
 
     database::RigStateInsert(db.get(), step_id, reference_camera_.targets_id, optimization::ToRigState(result));

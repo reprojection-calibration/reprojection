@@ -56,23 +56,40 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
     return {result, ceres_state};
 }
 
+// TODO UNIT TEST!
+// TODO UNIT TEST!
+// TODO UNIT TEST!
+BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(CameraProblemInput const& cam0, Frames const& cam0_poses,
+                                                            std::span<CameraProblemInput const> cams,
+                                                            uint64_t const max_sync_delta_ns) {
+    // TODO(Jack): Maybe one day we can engineer the need for this check away, but right now we do not guarantee that
+    // the rig reference has optimize_extrinsic==false and an identity transform. So to solve our headaches prematurely
+    // we add this check for both properties, but like I said hopefully one day we can engineer this away!
+    if (cam0.optimize_extrinsic or cam0.extrinsic.sum() > 1e-12) {
+        throw std::logic_error(
+            "Cannot optimize the extrinsic of the rig defining reference camera or set it to anything besides "
+            "identity!");
+    }
+
+    Problem problem{cam0.camera_id, cam0_poses};
+    AddCamera(cam0, max_sync_delta_ns, problem);
+
+    for (auto const& cam_i : cams) {
+        AddCamera(cam_i, max_sync_delta_ns, problem);
+    }
+
+    return problem;
+}  // LCOV_EXCL_LINE
+
 // TODO(Jack): Refactor this to use the AddCamera method! We repeate the observation iteration which is not so nice.
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                              TargetSamples const& targets, Frames const& frames,
                                                              bool const optimize_intrinsic, AssetId const camera_id) {
-    // NOTE(Jack): For a single camera problems we do not consider the rig-cam extrinsic. Therefore we set it to
-    // identity (i.e. Array6d::Zero()) and set optimize_extrinsic to false. This is essentially a central characteristic
-    // of the single cam problem.
-    Camera const camera{camera_info, CameraState{intrinsic, Array6d::Zero()}, CameraOptions{optimize_intrinsic, false}};
+    CameraProblemInput const camera{
+        camera_id, camera_info, intrinsic, targets, Array6d::Zero(), optimize_intrinsic, false,
+    };
 
-    std::vector<Observation> observations;
-    for (auto const& [timestamp_ns, target] : targets) {
-        // NOTE(Jack): For the single cam problems the data is by its very nature "synchronized", therefore we use the
-        // same timestamp for both observation timestamps.
-        observations.push_back({camera_id, timestamp_ns, timestamp_ns, target.bundle});
-    }
-
-    return {camera_id, frames, {{camera_id, camera}}, observations};
+    return MultiCamProblem(camera, frames, {}, 0);
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
@@ -85,21 +102,6 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
     return SingleCamProblem(camera_info, intrinsic, TargetSamples{{timestamp_ns, target}}, Frames{{timestamp_ns, pose}},
                             optimize_intrinsic, camera_id);
 }
-
-BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(std::vector<CameraProblemInput> const& cameras,
-                                                            Frames const& rig_poses, uint64_t max_sync_delta_ns) {
-    // TODO(Jack): Hardcoding the "first camera is reference" in this function a lot! This might bite us in the but
-    // later!
-    auto const& reference_cam{cameras.front()};
-    Problem problem{SingleCamProblem(reference_cam.camera_info, reference_cam.intrinsic, reference_cam.targets,
-                                     rig_poses, reference_cam.optimize_intrinsic, reference_cam.camera_id)};
-
-    for (auto const& camera : cameras | std::views::drop(1)) {
-        AddCamera(camera, max_sync_delta_ns, problem);
-    }
-
-    return problem;
-}  // LCOV_EXCL_LINE
 
 // NOTE(Jack): All observations get synced to the rig_poses. This means that there might be poses that only have one
 // target (i.e. the reference camera's target) and there might be non-reference camera observations that do not sync and

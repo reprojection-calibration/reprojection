@@ -11,6 +11,7 @@ using namespace reprojection;
 
 using Ba = optimization::BundleAdjustment;
 
+
 // Test with perfect data - means inputs will be exact same as outputs. Technically this test might miss something
 // because the optimization will likely not even execute once because the error is zero. For a real test look at the
 // next case where we add some noisy so it actually does some iterations.
