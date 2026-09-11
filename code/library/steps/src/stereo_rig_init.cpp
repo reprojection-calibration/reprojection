@@ -23,7 +23,7 @@ StereoRigInit::StereoRigInit(std::vector<CamStageIds> const& cams, uint64_t cons
     for (auto const& cam_i : cams) {
         cam_ids_.emplace_back(cam_i.asset_id);
         cam_frames_.emplace(cam_i.asset_id,
-                               database::CameraPosesSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id));
+                            database::CameraPosesSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id));
     }
 }
 
