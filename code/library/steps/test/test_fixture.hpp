@@ -97,13 +97,15 @@ class StepTestFixture : public ::testing::Test {
         Intrinsic intrinsic;
         if (camera_model == CameraModel::DoubleSphere) {
             intrinsic = {testing_utilities::double_sphere_intrinsics};
+        } else if (camera_model == CameraModel::Pinhole) {
+            intrinsic = {testing_utilities::pinhole_intrinsics};
         } else {
             // LCOV_EXCL_START
             throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_model))};
             // LCOV_EXCL_STOP
         }
 
-        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "").first};
+        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::BundleAdjustment, "").first};
         database::IntrinsicInsert(db_.get(), step_id, camera_id, camera_model, intrinsic);
 
         return step_id;
@@ -128,8 +130,19 @@ class StepTestFixture : public ::testing::Test {
         auto const [_, poses]{
             testing_mocks::GenerateMvgData(camera_info, intrinsic, timing_.duration_s, timing_.camera_hz)};
 
-        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "").first};
+        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::BundleAdjustment, "").first};
         database::CameraPosesInsert(db_.get(), step_id, target_step_id, camera.id, poses);
+
+        return step_id;
+    }
+
+    StepId InsertExtrinsic(AssetId const asset_a, AssetId const asset_b) {
+        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
+
+        // WARN(Jack): Technically this identity transform is actually internal state of the core data generation code.
+        // We should be getting these values from the data generation code directly and not hardcode them here.
+        Extrinsic const extrinsic{asset_a, asset_b, Array6d::Zero()};
+        database::ExtrinsicInsert(db_.get(), step_id, extrinsic);
 
         return step_id;
     }
@@ -159,14 +172,11 @@ class StepTestFixture : public ::testing::Test {
     }
 
     StepId InsertImuCamExtrinsic(AssetId const imu_id, AssetId const camera_id) {
-        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::SplineInit, "").first};
+        StepId const step_id{InsertExtrinsic(imu_id, camera_id)};
 
-        // WARN(Jack): Technically this is actually internal state of the core data generation code. We should be
-        // getting these values from the data generation code directly and not hardcode them here.
-        Extrinsic const extrinsic{imu_id, camera_id, Array6d::Zero()};
+        // WARN(Jack): Technically this gravity value is actually internal state of the core data generation code. We
+        // should be getting these values from the data generation code directly and not hardcode them here.
         Array3d const gravity{Array3d{0, 0, kGravity}};
-
-        database::ExtrinsicInsert(db_.get(), step_id, extrinsic);
         database::GravityInsert(db_.get(), step_id, gravity);
 
         return step_id;
