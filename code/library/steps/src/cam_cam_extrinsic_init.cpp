@@ -19,13 +19,10 @@ auto const log{logging::Get("steps")};
 }
 
 CamCamExtrinsicInit::CamCamExtrinsicInit(std::vector<CamStageIds> const& camera_calibrations, SqlitePtr db) {
-    // Extract only the parts we actually need.
-    std::ranges::transform(camera_calibrations, std::back_inserter(states_),
-                           [](auto const& calibration) { return CamCamExtrinsicInitState{calibration}; });
-
-    for (auto const& state : states_) {
-        Frames const frames{database::CameraPosesSelect(db.get(), state.frames_id, state.camera_id)};
-        camera_frames_.insert({state.camera_id, frames});
+    for (auto const& camera : camera_calibrations) {
+        cam_ids_.emplace_back(camera.camera_id);
+        camera_frames_.emplace(camera.camera_id,
+                               database::CameraPosesSelect(db.get(), camera.bundle_adjustment_id, camera.camera_id));
     }
 }
 
@@ -40,15 +37,15 @@ void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {
     // Iterate over the the first camera paired with every other camera. Remember we are working with a tree here not a
     // chain!
     std::vector<Extrinsic> log_data;
-    for (auto const& camera_a : states_ | std::views::drop(1)) {
+    for (auto const& camera_a_id : cam_ids_ | std::views::drop(1)) {
         // TODO(Jack): Formalize this "first cam is always reference" logic!
-        auto const& camera_b{states_.front()};
+        auto const& camera_b_id{cam_ids_.front()};
 
         // TODO(Jack): Set the sync tolerance from a config!
         // ERROR(Jack): 1'000'000ns is a very tight tolerance!
-        Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(camera_frames_.at(camera_a.camera_id),
-                                                                     camera_frames_.at(camera_b.camera_id), 1'000'000)};
-        Extrinsic const extrinsic_a_b{camera_a.camera_id, camera_b.camera_id, se3_a_b};
+        Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(camera_frames_.at(camera_a_id),
+                                                                     camera_frames_.at(camera_b_id), 1'000'000)};
+        Extrinsic const extrinsic_a_b{camera_a_id, camera_b_id, se3_a_b};
 
         database::ExtrinsicInsert(db.get(), step_id, extrinsic_a_b);
         log_data.push_back(extrinsic_a_b);
