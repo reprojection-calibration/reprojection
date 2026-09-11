@@ -1,7 +1,6 @@
-#include "steps/spline_initialization.hpp"
-
 #include <gtest/gtest.h>
 
+#include "steps/spline_init.hpp"
 #include "steps/step_runner.hpp"
 
 #include "test_fixture.hpp"
@@ -28,8 +27,8 @@ class SplineInitFixture : public StepTestFixture {
 };
 
 TEST_F(SplineInitFixture, TestSplineInitStepRunner) {
-    steps::SplineInitialization const step{camera_id_, poses_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
-    StepId const step_id{RunStep<steps::SplineInitialization>(context_.workflow_id, step, db_)};
+    steps::SplineInit const step{camera_id_, poses_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
+    StepId const step_id{RunStep<steps::SplineInit>(context_.workflow_id, step, db_)};
 
     auto const result{database::ControlPointsSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 3978);  // Heuristic
@@ -41,7 +40,7 @@ TEST_F(SplineInitFixture, TestSplineInitStepRunner) {
 }
 
 TEST_F(SplineInitFixture, TestSplineInitStep) {
-    steps::SplineInitialization const step{camera_id_, poses_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
+    steps::SplineInit const step{camera_id_, poses_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
     EXPECT_EQ(step.Type(), StepType::SplineInit);
     EXPECT_EQ(step.Assets(), std::vector{camera_id_});
     EXPECT_EQ(step.CacheKey().value, "46d20a41437bc2c70b8497e5d0cebef0fcfb8bed7854b6e4ac1f1664ef006d02");

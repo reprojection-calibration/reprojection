@@ -9,7 +9,7 @@ set(SRC_FILES
         src/initialize_workflow.cpp
         src/intrinsic_initialization.cpp
         src/pose_initialization.cpp
-        src/spline_initialization.cpp
+        src/spline_init.cpp
         src/stereo_rig_init.cpp
         src/stereo_rig_opt.cpp
         src/target_info.cpp
@@ -47,7 +47,7 @@ set(TESTS
         test/initialize_workflow.test.cpp
         test/intrinsic_initialization.test.cpp
         test/pose_initialization.test.cpp
-        test/spline_initialization.test.cpp
+        test/spline_init.test.cpp
         test/step_runner.test.cpp
         test/stereo_rig_init.test.cpp
         test/stereo_rig_opt.test.cpp

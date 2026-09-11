@@ -12,7 +12,7 @@
 #include "steps/initialize_workflow.hpp"
 #include "steps/intrinsic_initialization.hpp"
 #include "steps/pose_initialization.hpp"
-#include "steps/spline_initialization.hpp"
+#include "steps/spline_init.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/stereo_rig_init.hpp"
 #include "steps/stereo_rig_opt.hpp"
@@ -182,10 +182,9 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         // unrefined pose init poses here? For some reason when I do that the extrinsic init does not work like before,
         // we need to look at this in the debug dashboard and figure out what is going on here. The entire "align
         // rotations" thing play an important part here I think. This is a known problem.
-        steps::SplineInitialization const spline_init_step{
-            cam0.camera_id, cam0.pose_init_id, cam0.targets_id, cam0.camera_info_id, cam0.bundle_adjustment_id, db};
-        StepId const spline_init_id{
-            steps::RunStep<steps::SplineInitialization>(context.workflow_id, spline_init_step, db)};
+        steps::SplineInit const spline_init_step{cam0.camera_id,      cam0.pose_init_id,         cam0.targets_id,
+                                                 cam0.camera_info_id, cam0.bundle_adjustment_id, db};
+        StepId const spline_init_id{steps::RunStep<steps::SplineInit>(context.workflow_id, spline_init_step, db)};
 
         steps::VisualInertialInit const visual_inertial_init{
             cam0.camera_id, spline_init_id, imu_id, imu_data_id, context.application.threads, db};
