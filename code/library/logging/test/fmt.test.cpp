@@ -59,6 +59,6 @@ TEST(LoggingFmt, TestCeresSolverSummary) {
     std::string const result{fmt::format("{}", data)};
 
     EXPECT_EQ(result,
-              "{'initial_cost': -1.00, 'final_cost': -1.00, 'num_successful_steps': -1, "
-              "'num_unsuccessful_steps': -1}");
+              "{'initial_cost': -1.00, 'final_cost': -1.00, 'num_successful_steps': -1, 'num_unsuccessful_steps': -1, "
+              "'num_threads_given': -1, 'num_threads_used': -1, 'msg': ceres::Solve was not called.}");
 }
