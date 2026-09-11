@@ -13,7 +13,7 @@ struct VisualInertialInit {
 
     static StepType Type() { return StepType::ExtrinsicInit; }
 
-    std::vector<AssetId> Assets() const { return {cam_id_, imu_id_}; }
+    std::vector<AssetId> Assets() const { return {imu_id_, cam_id_}; }
 
     Hash CacheKey() const;
 
