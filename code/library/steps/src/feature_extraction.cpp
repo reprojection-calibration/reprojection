@@ -7,6 +7,8 @@
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 
+#include "utilities.hpp"
+
 namespace reprojection::steps {
 
 namespace {
@@ -20,14 +22,8 @@ FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image
     : camera_id_{camera_id},
       image_loading_id_{image_loading_id},
       show_extraction_{show_extraction},
-      images_{std::make_shared<ImageSamples>(database::ImagesSelect(db.get(), image_loading_id, camera_id))} {
-    if (auto const target_info{database::TargetInfoSelect(db.get(), target_info_id, target_id)}) {
-        target_info_ = *target_info;
-    } else {
-        log->error("{}", target_info.error());  // LCOV_EXCL_LINE
-        std::exit(1);                           // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
-}
+      images_{std::make_shared<ImageSamples>(database::ImagesSelect(db.get(), image_loading_id, camera_id))},
+      target_info_{ValueOrExit(database::TargetInfoSelect(db.get(), target_info_id, target_id), log)} {}
 
 Hash FeatureExtraction::CacheKey() const {
     // TODO(Jack): The flag show_extraction should not be part of the cache! Just cause that changes does not mean we

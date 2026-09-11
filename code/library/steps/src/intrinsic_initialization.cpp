@@ -6,6 +6,8 @@
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 
+#include "utilities.hpp"
+
 namespace reprojection::steps {
 
 namespace {
@@ -17,16 +19,10 @@ auto const log{logging::Get("steps")};
 IntrinsicInitialization::IntrinsicInitialization(AssetId const camera_id, int const num_threads,
                                                  StepId const camera_info_id, StepId const targets_id,
                                                  SqlitePtr const db)
-    : camera_id_{camera_id}, num_threads_{num_threads} {
-    if (auto const camera_info{database::CameraInfoSelect(db.get(), camera_info_id, camera_id)}) {
-        camera_info_ = *camera_info;
-    } else {
-        log->error("{}", camera_info.error());  // LCOV_EXCL_LINE
-        std::exit(1);                           // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
-
-    targets_ = database::TargetsSelect(db.get(), targets_id, camera_id);
-}
+    : camera_id_{camera_id},
+      num_threads_{num_threads},
+      camera_info_{ValueOrExit(database::CameraInfoSelect(db.get(), camera_info_id, camera_id), log)},
+      targets_{database::TargetsSelect(db.get(), targets_id, camera_id)} {}
 
 Hash IntrinsicInitialization::CacheKey() const {
     // NOTE(Jack): See FeatureExtraction::CacheKey() comment as to why we need the camera asset id.

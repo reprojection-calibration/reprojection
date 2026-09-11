@@ -6,6 +6,8 @@
 #include "logging/logging.hpp"
 #include "optimization/bundle_adjustment.hpp"
 
+#include "utilities.hpp"
+
 namespace reprojection::steps {
 
 namespace {
@@ -27,47 +29,36 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
         database::CameraPosesSelect(db.get(), reference_camera_.bundle_adjustment_id, reference_camera_.camera_id);
 
     cameras_.reserve(std::size(camera_calibrations));
-    for (auto const& camera_calibration : camera_calibrations) {
+    for (auto const& calib_i : camera_calibrations) {
         // TODO(Jack): Should we construct this directly in the vector and then reference it instead of pushing it back
         // later?
-        optimization::CameraProblemInput camera_input;
-        camera_input.camera_id = camera_calibration.camera_id;
-        camera_input.optimize_intrinsic = false;
-        camera_input.optimize_extrinsic = true;
+        optimization::CameraProblemInput cam_i;
+        cam_i.camera_id = calib_i.camera_id;
+        cam_i.optimize_intrinsic = false;
+        cam_i.optimize_extrinsic = true;
 
-        if (auto const camera_info{
-                database::CameraInfoSelect(db.get(), camera_calibration.camera_info_id, camera_input.camera_id)}) {
-            camera_input.camera_info = *camera_info;
-        } else {
-            // TODO(Jack): This method of getting values back from the db is so ridiculously verbose it makes me want to
-            // cry. Do something!
-            log->error("{}", camera_info.error());
-            std::exit(1);  // LCOV_EXCL_LINE
-        }
-        if (auto const intrinsics{
-                database::IntrinsicSelect(db.get(), camera_calibration.bundle_adjustment_id, camera_input.camera_id)}) {
-            camera_input.intrinsic = *intrinsics;
-        } else {
-            log->error("{}", intrinsics.error());
-            std::exit(1);  // LCOV_EXCL_LINE
-        }
+        cam_i.camera_info =
+            ValueOrExit(database::CameraInfoSelect(db.get(), calib_i.camera_info_id, cam_i.camera_id), log);
+        cam_i.intrinsic =
+            ValueOrExit(database::IntrinsicSelect(db.get(), calib_i.bundle_adjustment_id, cam_i.camera_id), log);
 
         // TODO MEGA HACK! WE NEED TO WRITE THE IDENTITY INTRINSICS TO THE DB?
-        if (camera_input.camera_id == reference_camera_.camera_id) {
-            camera_input.extrinsic = Array6d::Zero();
+        // TODO MEGA HACK! WE NEED TO WRITE THE IDENTITY INTRINSICS TO THE DB?
+        // TODO MEGA HACK! WE NEED TO WRITE THE IDENTITY INTRINSICS TO THE DB?
+        // TODO OR LOAD THE RIG STATE INTO AN EXTRINSICS AND LET IT AUTOMATICALLY RESOLVE THEM!
+        if (cam_i.camera_id == reference_camera_.camera_id) {
+            cam_i.extrinsic = Array6d::Zero();
         } else {
-            if (auto const extrinsic{database::ExtrinsicSelect(db.get(), extrinsic_init_id, camera_input.camera_id,
-                                                               reference_camera_.camera_id)}) {
-                camera_input.extrinsic = extrinsic->se3_a_b;
-            } else {
-                log->error("{}", extrinsic.error());  // LCOV_EXCL_LINE
-                std::exit(1);                         // LCOV_EXCL_LINE
-            }  // LCOV_EXCL_LINE
+            auto const extrinsic_i{ValueOrExit(
+                database::ExtrinsicSelect(db.get(), extrinsic_init_id, cam_i.camera_id, reference_camera_.camera_id),
+                log)};
+
+            cam_i.extrinsic = extrinsic_i.se3_a_b;
         }
 
-        camera_input.targets = database::TargetsSelect(db.get(), camera_calibration.targets_id, camera_input.camera_id);
+        cam_i.targets = database::TargetsSelect(db.get(), calib_i.targets_id, cam_i.camera_id);
 
-        cameras_.push_back(camera_input);
+        cameras_.push_back(cam_i);
     }
 }
 

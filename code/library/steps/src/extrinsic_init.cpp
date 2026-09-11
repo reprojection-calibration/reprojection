@@ -7,6 +7,8 @@
 #include "logging/logging.hpp"
 #include "optimization/extrinsic_optimization.hpp"
 
+#include "utilities.hpp"
+
 namespace reprojection::steps {
 
 namespace {
@@ -22,14 +24,12 @@ ExtrinsicInit::ExtrinsicInit(AssetId const camera_id, StepId const spline_id, As
       imu_data_id_{imu_data_id},
       imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
       num_threads_{num_threads} {
-    if (auto const time_handler{database::SplineInfoSelect(db.get(), spline_id, camera_id)}) {
-        auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
+    // TODO(Jack): The spline can only be created if the time_handler here is successfully loaded. While the ValueOrExit
+    // cuts down the boilerplate it make this relationship less clear.
+    auto const time_handler{ValueOrExit(database::SplineInfoSelect(db.get(), spline_id, camera_id), log)};
+    auto const control_points{database::ControlPointsSelect(db.get(), spline_id, camera_id)};
 
-        spline_ = std::make_unique<spline::Se3Spline>(control_points, *time_handler);
-    } else {
-        log->error("{}", time_handler.error());  // LCOV_EXCL_LINE
-        std::exit(1);                            // LCOV_EXCL_LINE
-    }  // LCOV_EXCL_LINE
+    spline_ = std::make_unique<spline::Se3Spline>(control_points, time_handler);
 }
 
 Hash ExtrinsicInit::CacheKey() const {
