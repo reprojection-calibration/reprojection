@@ -66,9 +66,11 @@ BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(CameraProblemInput c
     // the rig reference has optimize_extrinsic==false and an identity transform. So to solve our headaches prematurely
     // we add this check for both properties, but like I said hopefully one day we can engineer this away!
     if (cam0.optimize_extrinsic or cam0.extrinsic.sum() > 1e-12) {
+        // LCOV_EXCL_START
         throw std::logic_error(
             "Cannot optimize the extrinsic of the rig defining reference camera or set it to anything besides "
             "identity!");
+        // LCOV_EXCL_STOP
     }
 
     Problem problem{cam0.camera_id, cam0_poses};

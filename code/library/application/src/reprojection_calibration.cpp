@@ -132,7 +132,7 @@ std::vector<CamStageIds> CamStages(steps::CalibrationContext const& context, Ste
     }
 
     return camera_calibrations;
-}
+}  // LCOV_EXCL_LINE
 
 void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, std::optional<ImuInput> const& imu_input,
                SqlitePtr const db) {

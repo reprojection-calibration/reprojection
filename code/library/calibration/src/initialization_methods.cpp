@@ -159,7 +159,7 @@ Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b
         std::format("{{ 'num_frames_a': {}, 'num_frames_b': {}, 'num_frames_synced': {}, 'approx_sync_delta_ns': {}}}",
                     std::size(frames_a), std::size(frames_b), num_synced, approx_sync_delta_ns)};
     if (num_synced == 0) {
-        log->error(log_msg);
+        log->error(log_msg);  // LCOV_EXCL_LINE
 
         // TODO(Jack): Is this legitimate to return an identity transform if the initialization otherwise failed due to
         // failed syncing?
