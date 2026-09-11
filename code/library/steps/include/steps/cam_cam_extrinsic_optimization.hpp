@@ -11,14 +11,14 @@
 namespace reprojection::steps {
 
 struct CamCamExtrinsicOptimization {
-    CamCamExtrinsicOptimization(std::vector<CamStageIds> const& camera_calibrations, StepId extrinsic_init_id,
-                                int num_threads, uint64_t approx_sync_delta_ns, SqlitePtr db);
+    CamCamExtrinsicOptimization(std::vector<CamStageIds> const& cams, StepId extrinsic_init_id, int num_threads,
+                                uint64_t approx_sync_delta_ns, SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }
 
     std::vector<AssetId> Assets() const {
         std::vector<AssetId> assets;
-        for (auto const& camera : cameras_) {
+        for (auto const& camera : ba_input_) {
             // cppcheck-suppress useStlAlgorithm
             assets.push_back(camera.camera_id);
         }
@@ -31,9 +31,9 @@ struct CamCamExtrinsicOptimization {
     void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
-    // TODO(Jack): We really have wayyy too many types of "camera". Is there really nothing we can do better here?
-    CamStageIds reference_camera_;
-    std::vector<optimization::CameraProblemInput> cameras_;
+    // TODO(Jack): Should we actually name this the reference camera? cam0 is  little ambiguous.
+    CamStageIds cam0_;
+    std::vector<optimization::CameraProblemInput> ba_input_;
     Frames rig_poses_;
     int num_threads_;
     uint64_t approx_sync_delta_ns_;
