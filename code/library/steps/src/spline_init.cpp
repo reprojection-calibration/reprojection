@@ -1,4 +1,4 @@
-#include "spline/spline_initialization.hpp"
+#include "steps/spline_init.hpp"
 
 #include "calibration/calibration_utils.hpp"
 #include "database/calibration_database.hpp"
@@ -8,7 +8,7 @@
 #include "logging/logging.hpp"
 #include "optimization/extrinsic_optimization.hpp"
 #include "spline/se3_spline.hpp"
-#include "steps/spline_init.hpp"
+#include "spline/spline_initialization.hpp"
 
 #include "utilities.hpp"
 
@@ -20,19 +20,19 @@ auto const log{logging::Get("steps")};
 
 }
 
-SplineInit::SplineInit(AssetId const camera_id, StepId const camera_poses_id,
-                                           StepId const targets_id, StepId const camera_info_id,
-                                           StepId const intrinsic_id, SqlitePtr const db)
-    : camera_id_{camera_id},
-      camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)},
-      targets_id_{targets_id},
-      targets_{database::TargetsSelect(db.get(), targets_id, camera_id)},
-      camera_info_{ValueOrExit(database::CameraInfoSelect(db.get(), camera_info_id, camera_id), log)},
-      intrinsic_{ValueOrExit(database::IntrinsicSelect(db.get(), intrinsic_id, camera_id), log)} {}
+SplineInit::SplineInit(CamStageIds const& cam, SqlitePtr const db)
+    : camera_id_{cam.camera_id},
+      // ERROR(Jack): Am I crazy or should I not be using the optimized bundle adjustment poses and not the
+      // unrefined pose init poses here? For some reason when I do that the extrinsic init does not work properly,
+      // we need to look at this in the debug dashboard and figure out what is going on here. The entire "align
+      // rotations" thing play an important part here I think. This is a known problem.
+      camera_poses_{database::CameraPosesSelect(db.get(), cam.pose_init_id, cam.camera_id)},
+      targets_id_{cam.targets_id},
+      targets_{database::TargetsSelect(db.get(), cam.targets_id, cam.camera_id)},
+      camera_info_{ValueOrExit(database::CameraInfoSelect(db.get(), cam.camera_info_id, cam.camera_id), log)},
+      intrinsic_{ValueOrExit(database::IntrinsicSelect(db.get(), cam.bundle_adjustment_id, cam.camera_id), log)} {}
 
-Hash SplineInit::CacheKey() const {
-    return hashing::HashArguments(camera_poses_, targets_, camera_info_, intrinsic_);
-}
+Hash SplineInit::CacheKey() const { return hashing::HashArguments(camera_poses_, targets_, camera_info_, intrinsic_); }
 
 void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};

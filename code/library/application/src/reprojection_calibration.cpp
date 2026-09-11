@@ -178,12 +178,7 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         steps::ImuDataLoading const imu_data_loading_step{imu_id, imu_input->signature, imu_input->source};
         StepId const imu_data_id{steps::RunStep<steps::ImuDataLoading>(context.workflow_id, imu_data_loading_step, db)};
 
-        // ERROR(Jack): Am I crazy or should I not be passing the optimized bundle adjustment poses and not the
-        // unrefined pose init poses here? For some reason when I do that the extrinsic init does not work like before,
-        // we need to look at this in the debug dashboard and figure out what is going on here. The entire "align
-        // rotations" thing play an important part here I think. This is a known problem.
-        steps::SplineInit const spline_init_step{cam0.camera_id,      cam0.pose_init_id,         cam0.targets_id,
-                                                 cam0.camera_info_id, cam0.bundle_adjustment_id, db};
+        steps::SplineInit const spline_init_step{cam0, db};
         StepId const spline_init_id{steps::RunStep<steps::SplineInit>(context.workflow_id, spline_init_step, db)};
 
         steps::VisualInertialInit const visual_inertial_init{
