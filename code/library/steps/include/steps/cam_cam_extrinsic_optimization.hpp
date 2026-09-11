@@ -24,7 +24,7 @@ struct CamCamExtrinsicOptimization {
         }
 
         return assets;
-    }
+    }  // LCOV_EXCL_LINE
 
     Hash CacheKey() const;
 

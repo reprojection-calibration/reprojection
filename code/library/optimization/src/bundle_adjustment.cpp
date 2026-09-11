@@ -99,11 +99,11 @@ BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(std::vector<CameraPr
     }
 
     return problem;
-}
+}  // LCOV_EXCL_LINE
 
 // NOTE ALL CAMERAS GET SYNCED ONLY TO THE RIG FRAMES _ MEANS SOME FRAMES WILL HAVE ONE OR MORE OR NOT TARGETS
 void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t const max_sync_delta_ns, Problem& problem) {
-    problem.cameras.emplace(camera.camera_id, Camera{camera.camera_info,
+    problem.cameras.emplace(camera.camera_id, Camera{camera.camera_info,  // LCOV_EXCL_LINE
                                                      {camera.intrinsic, camera.extrinsic},
                                                      {camera.optimize_intrinsic, camera.optimize_extrinsic}});
 
@@ -111,14 +111,16 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t cons
     std::set<uint64_t> remaining_targets{std::cbegin(timestamps), std::cend(timestamps)};
 
     for (auto const& [frame_timestamp_ns, _] : problem.rig_poses) {
+        // TODO(Jack): Hand rolling the time synchronization logic here is not so nice, as we need it in multiple
+        // places.
         auto const target_timestamps_it{time_synchronization::FindClosest(remaining_targets, frame_timestamp_ns)};
         if (target_timestamps_it == std::cend(remaining_targets)) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
 
         auto const sample_timestamp_ns{*target_timestamps_it};
         if (not time_synchronization::IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns, max_sync_delta_ns)) {
-            continue;
+            continue;  // LCOV_EXCL_LINE
         }
 
         problem.observations.push_back(

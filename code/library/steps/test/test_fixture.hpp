@@ -61,8 +61,8 @@ class StepTestFixture : public ::testing::Test {
         if (camera_info.camera_model == CameraModel::DoubleSphere) {
             intrinsic = {testing_utilities::double_sphere_intrinsics};
 
-        } else if (camera_info.camera_model == CameraModel::Pinhole) {  // LCOV_EXCL_LINE
-            intrinsic = {testing_utilities::pinhole_intrinsics};        // LCOV_EXCL_LINE
+        } else if (camera_info.camera_model == CameraModel::Pinhole) {
+            intrinsic = {testing_utilities::pinhole_intrinsics};
         } else {
             // LCOV_EXCL_START
             throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_info.camera_model))};
