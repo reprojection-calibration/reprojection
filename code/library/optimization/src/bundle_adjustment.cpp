@@ -101,7 +101,11 @@ BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(std::vector<CameraPr
     return problem;
 }  // LCOV_EXCL_LINE
 
-// NOTE ALL CAMERAS GET SYNCED ONLY TO THE RIG FRAMES _ MEANS SOME FRAMES WILL HAVE ONE OR MORE OR NOT TARGETS
+// NOTE(Jack): All observations get synced to the rig_poses. This means that there might be poses that only have one
+// target (i.e. the reference camera's target) and there might be non-reference camera observations that do not sync and
+// are therefore never used. This is a simplifying assumption and does not cost us much but prevents us from have to
+// implement a more intricate "changing reference camera" problem construction logic. Maybe we are just missing the
+// abstraction to do that simply?
 void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t const max_sync_delta_ns, Problem& problem) {
     problem.cameras.emplace(camera.camera_id, Camera{camera.camera_info,  // LCOV_EXCL_LINE
                                                      {camera.intrinsic, camera.extrinsic},

@@ -22,7 +22,6 @@ CalibrationContext InitializeCalibration(toml::table const& cfg_table, SqlitePtr
     // ERROR(Jack): We hardcode the workflow type here but we should just remove the workflow type entirely!!!
     WorkflowId const workflow_id{database::GetOrCreateWorkflow(db.get(), WorkflowType::Cam, assets.All())};
 
-    // green - \033[35m and reset - \033[0m
     log->info("\033[32m{{'workflow': {{'id': {}}}, 'config': {}}}\033[0m", workflow_id.value,
               logging::ToOneLineJson(cfg_table));
 

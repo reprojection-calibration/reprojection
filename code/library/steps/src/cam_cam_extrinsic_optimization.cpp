@@ -28,8 +28,6 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
     rig_poses_ =
         database::CameraPosesSelect(db.get(), reference_camera_.bundle_adjustment_id, reference_camera_.camera_id);
 
-    std::cout << std::size(rig_poses_) << std::endl;
-
     cameras_.reserve(std::size(camera_calibrations));
     for (auto const& calib_i : camera_calibrations) {
         // TODO(Jack): Should we construct this directly in the vector and then reference it instead of pushing it back
@@ -44,10 +42,8 @@ CamCamExtrinsicOptimization::CamCamExtrinsicOptimization(std::vector<CameraCalib
         cam_i.intrinsic =
             ValueOrExit(database::IntrinsicSelect(db.get(), calib_i.bundle_adjustment_id, cam_i.camera_id), log);
 
-        // TODO MEGA HACK! WE NEED TO WRITE THE IDENTITY INTRINSICS TO THE DB?
-        // TODO MEGA HACK! WE NEED TO WRITE THE IDENTITY INTRINSICS TO THE DB?
-        // TODO MEGA HACK! WE NEED TO WRITE THE IDENTITY INTRINSICS TO THE DB?
-        // TODO OR LOAD THE RIG STATE INTO AN EXTRINSICS AND LET IT AUTOMATICALLY RESOLVE THEM!
+        // ERROR(Jack): This is a mega hack coming from out current inconsistency around how to handle the identity
+        // extrinsic. We need to uniformly solve this as already noted elsewhere.
         if (cam_i.camera_id == reference_camera_.camera_id) {
             cam_i.extrinsic = Array6d::Zero();
         } else {
@@ -82,7 +78,9 @@ void CamCamExtrinsicOptimization::Execute(StepId step_id, SqlitePtr const db) co
 
     database::RigStateInsert(db.get(), step_id, reference_camera_.targets_id, optimization::ToRigState(result));
 
-    // TODO WRITE REPROJECTION ERRORS!
+    // TODO(Jack): As we are basically just doing another bundle adjustment here we should also write the reprojection
+    // errors! The only problem is that the current reprojection error database interface does not handle the new rig
+    // idea.
 
     log->info("{{{}, 'problem': {}}}}}", StepLogInfo{Type(), step_id}, problem);
     log->info("{{{}, 'result': {}, 'solver_summary': {}}}}}", StepLogInfo{Type(), step_id}, result,

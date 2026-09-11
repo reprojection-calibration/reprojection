@@ -6,6 +6,7 @@
 
 #include <Eigen/Dense>
 
+#include "config/config_parse.hpp"
 #include "optimization/bundle_adjustment.hpp"
 #include "transforms/rig_state.hpp"
 #include "types/database_types.hpp"

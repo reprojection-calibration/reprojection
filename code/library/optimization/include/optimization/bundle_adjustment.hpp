@@ -6,7 +6,9 @@
 
 namespace reprojection::optimization {
 
-// TODO LOCATION NAMING AND STRUCTURE!
+// TODO(Jack): This is basically the data format that we need to do a bundle adjustment. As you can see it is highly
+// duplicated from the native bundle adjustment types and therefore I think we have some representation unification
+// coming in our future.
 struct CameraProblemInput {
     AssetId camera_id;
     CameraInfo camera_info;
@@ -100,6 +102,8 @@ struct BundleAdjustment {
     static Problem SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic, Bundle const& bundle,
                                       Pose const& pose, bool optimize_intrinsic);
 
+    // TODO(Jack): The single camera problems are just a more simple version of the multi-cam problem. At the end of the
+    // day all overrides should be calling this method!
     static Problem MultiCamProblem(std::vector<CameraProblemInput> const& cameras, Frames const& rig_poses,
                                    uint64_t max_sync_delta_ns);
 
