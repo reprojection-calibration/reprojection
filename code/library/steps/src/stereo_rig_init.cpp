@@ -22,9 +22,9 @@ StereoRigInit::StereoRigInit(std::vector<CamStageIds> const& camera_calibrations
                              SqlitePtr db)
     : approx_sync_delta_ns_{approx_sync_delta_ns} {
     for (auto const& camera : camera_calibrations) {
-        cam_ids_.emplace_back(camera.camera_id);
-        camera_frames_.emplace(camera.camera_id,
-                               database::CameraPosesSelect(db.get(), camera.bundle_adjustment_id, camera.camera_id));
+        cam_ids_.emplace_back(camera.asset_id);
+        camera_frames_.emplace(camera.asset_id,
+                               database::CameraPosesSelect(db.get(), camera.bundle_adjustment_id, camera.asset_id));
     }
 }
 

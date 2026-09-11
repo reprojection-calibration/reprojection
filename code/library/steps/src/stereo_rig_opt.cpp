@@ -23,24 +23,24 @@ using Ba = optimization::BundleAdjustment;
 StereoRigOpt::StereoRigOpt(std::vector<CamStageIds> const& cams, StepId const extrinsic_init_id, int const num_threads,
                            uint64_t const approx_sync_delta_ns, SqlitePtr db)
     : cam0_{cams.front()}, num_threads_{num_threads}, approx_sync_delta_ns_{approx_sync_delta_ns} {
-    rig_poses_ = database::CameraPosesSelect(db.get(), cam0_.bundle_adjustment_id, cam0_.camera_id);
+    rig_poses_ = database::CameraPosesSelect(db.get(), cam0_.bundle_adjustment_id, cam0_.asset_id);
 
     ba_input_.reserve(std::size(cams));
     for (auto const& cam_i : cams) {
-        bool const is_reference_cam{cam_i.camera_id == cam0_.camera_id};
+        bool const is_reference_cam{cam_i.asset_id == cam0_.asset_id};
 
         // TODO(Jack): This is really hard to read, but the basic idea is if the camera is the reference camera then
         // hardcode the extrinsic identity and do not optimize it. Otherwise load and optimize the extrinsic.
         optimization::CameraProblemInput const ba_input_i{
-            cam_i.camera_id,
+            cam_i.asset_id,
             ValueOrExit(database::CameraInfoSelect(db.get(), cam_i.camera_info_id, ba_input_i.camera_id), log),
             ValueOrExit(database::IntrinsicSelect(db.get(), cam_i.bundle_adjustment_id, ba_input_i.camera_id), log),
             database::TargetsSelect(db.get(), cam_i.targets_id, ba_input_i.camera_id),
-            is_reference_cam ? Array6d::Zero()
-                             : ValueOrExit(database::ExtrinsicSelect(db.get(), extrinsic_init_id, ba_input_i.camera_id,
-                                                                     cam0_.camera_id),
-                                           log)
-                                   .se3_a_b,
+            is_reference_cam
+                ? Array6d::Zero()
+                : ValueOrExit(
+                      database::ExtrinsicSelect(db.get(), extrinsic_init_id, ba_input_i.camera_id, cam0_.asset_id), log)
+                      .se3_a_b,
             false,
             not is_reference_cam};
 

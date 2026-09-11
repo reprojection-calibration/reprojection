@@ -140,7 +140,7 @@ struct Asset {
 // NOTE(Jack): These are all the steps required to do the cam-imu extrinsic calibration. It is not clear that this is
 // the best abstraction to also support the multicam workflow.
 struct CamStageIds {
-    AssetId camera_id;
+    AssetId asset_id;
     StepId camera_info_id;
     StepId targets_id;
     StepId pose_init_id;
