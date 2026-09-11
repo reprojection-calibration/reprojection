@@ -51,7 +51,7 @@ void CamCamExtrinsicInit::Execute(StepId step_id, SqlitePtr db) const {
         log_data.push_back(extrinsic_a_b);
     }
 
-    // TODO WRITE REPROJECTION ERRORS!
+    // TODO(Jack): Should we be writing the reprojection errors here? I think that is a really good idea.
 
     log->info("{{{}, 'result': [{}]}}", StepLogInfo{Type(), step_id}, fmt::join(log_data, ", "));
 }
