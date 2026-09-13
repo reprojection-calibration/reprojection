@@ -9,14 +9,14 @@
 namespace reprojection::steps {
 
 struct StereoRigInit {
-    StereoRigInit(std::vector<CamStageIds> const& cams, uint64_t approx_sync_delta_ns, SqlitePtr db);
+    StereoRigInit(AssetId cam0_id, uint64_t approx_sync_delta_ns, std::vector<CamStageIds> const& cams, SqlitePtr db);
 
     // TODO(Jack): Should we rename to reflect "stereo rig init"?
     static StepType Type() { return StepType::ExtrinsicInit; }
 
     std::vector<AssetId> Assets() const {
         std::vector<AssetId> assets;
-        for (auto const& cam_id : cam_ids_) {
+        for (auto const& cam_id : cam_frames_ | std::views::keys) {
             // cppcheck-suppress useStlAlgorithm
             assets.push_back(cam_id);
         }
@@ -29,10 +29,10 @@ struct StereoRigInit {
     void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
+    AssetId cam0_id_;
     uint64_t approx_sync_delta_ns_;
     // NOTE(Jack): We keep this a vector because we in many places implicitly using the first element as the reference
     // camera. Hopefully can can engineer this away.
-    std::vector<AssetId> cam_ids_;
     std::map<AssetId, Frames> cam_frames_;
 };
 

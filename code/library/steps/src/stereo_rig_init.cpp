@@ -18,10 +18,10 @@ auto const log{logging::Get("steps")};
 
 }
 
-StereoRigInit::StereoRigInit(std::vector<CamStageIds> const& cams, uint64_t const approx_sync_delta_ns, SqlitePtr db)
-    : approx_sync_delta_ns_{approx_sync_delta_ns} {
+StereoRigInit::StereoRigInit(AssetId const cam0_id, uint64_t const approx_sync_delta_ns,
+                             std::vector<CamStageIds> const& cams, SqlitePtr db)
+    : cam0_id_{cam0_id}, approx_sync_delta_ns_{approx_sync_delta_ns} {
     for (auto const& cam_i : cams) {
-        cam_ids_.emplace_back(cam_i.asset_id);
         cam_frames_.emplace(cam_i.asset_id,
                             database::CameraPosesSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id));
     }
@@ -37,18 +37,14 @@ Hash StereoRigInit::CacheKey() const {
 }
 
 void StereoRigInit::Execute(StepId step_id, SqlitePtr db) const {
-    // Iterate over the the first camera paired with every other camera. Remember we are working with a tree here not a
-    // chain!
+    // NOTE(Jack): Iterate over the the cam0 paired with all cameras. Remember we are working with a tree here not a
+    // chain! Also don't forget that when cam0 pais with itself it better produce the identity transform! This is a
+    // little redundant but it then eliminates the need for special logic around the reference camera case.
     std::vector<Extrinsic> log_data;
-    for (auto const& camera_a_id : cam_ids_ | std::views::drop(1)) {
-        // TODO(Jack): Formalize this "first cam is always reference" logic!
-        auto const& camera_b_id{cam_ids_.front()};
-
-        // TODO(Jack): Set the sync tolerance from a config!
-        // ERROR(Jack): 1'000'000ns is a very tight tolerance!
-        Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(
-            cam_frames_.at(camera_a_id), cam_frames_.at(camera_b_id), approx_sync_delta_ns_)};
-        Extrinsic const extrinsic_a_b{camera_a_id, camera_b_id, se3_a_b};
+    for (auto const& cam_a_id : cam_frames_ | std::views::keys) {
+        Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(cam_frames_.at(cam_a_id), cam_frames_.at(cam0_id_),
+                                                                     approx_sync_delta_ns_)};
+        Extrinsic const extrinsic_a_b{cam_a_id, cam0_id_, se3_a_b};
 
         database::ExtrinsicInsert(db.get(), step_id, extrinsic_a_b);
         log_data.push_back(extrinsic_a_b);

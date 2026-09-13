@@ -144,7 +144,6 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
 
     std::vector const cam_stages{CamStages(context, target_info_id, image_inputs, db)};
 
-    // TODO USE THE SAME REFERENCE CAMERA FOR THE MULTICAM STEPS!
     // TODO(Jack): What is better, 'cam0' or 'reference_cam'?
     // NOTE(Jack): We arbitrarily choose the first camera as the reference camera. This is an open point!
     auto const& cam0{cam_stages.front()};
@@ -153,7 +152,8 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     if (is_multicam) {
         log->info("\033[35m{{'stage': 'multi_cam', 'assets': {}}}\033[0m", context.assets.cameras);
 
-        steps::StereoRigInit const stereo_rig_init{cam_stages, context.application.approx_sync_delta_ns, db};
+        steps::StereoRigInit const stereo_rig_init{cam0.asset_id, context.application.approx_sync_delta_ns, cam_stages,
+                                                   db};
         StepId const stereo_rig_init_id{RunStep<steps::StereoRigInit>(context.workflow_id, stereo_rig_init, db)};
 
         steps::StereoRigOpt const stereo_rig_opt{cam_stages, stereo_rig_init_id, context.application.threads,

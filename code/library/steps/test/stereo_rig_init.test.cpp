@@ -13,12 +13,7 @@ class StereoRigInitFixture : public StepTestFixture {
     void SetUp() override {
         StepTestFixture::SetUp();
 
-        // NOTE(Jack): The order here is the opposite of whats expected! We kinda invert the order, meaning 'a' is the
-        // second camera and 'b' the first camera. We do this because the order of the transformation in the extrinsic
-        // initialization is from the first camera to all other cameras and we want to maintain some sort of consistency
-        // with our se3_a_b extrinsic notation even if this might be a little misleading.
-        camera_a_id_ = context_.assets.cameras.back().id;
-        camera_b_id_ = context_.assets.cameras.front().id;
+        cam0_ = context_.assets.cameras.front().id;
 
         for (auto const& [id, _] : context_.assets.cameras) {
             StepId const targets_id{InsertExtractedTargets(id)};
@@ -26,39 +21,46 @@ class StereoRigInitFixture : public StepTestFixture {
 
             cam_stages_.push_back({id, {0}, {0}, {0}, poses_id});
         }
+
+        // Just make sure this isn't accidentally empty and we iterate over nothing.
+        ASSERT_EQ(std::size(cam_stages_), 2);
     }
 
-    AssetId camera_a_id_;
-    AssetId camera_b_id_;
-
+    AssetId cam0_;
     std::vector<CamStageIds> cam_stages_;
 };
 
 TEST_F(StereoRigInitFixture, TestExtrinsicInitStepRunner) {
-    steps::StereoRigInit const step{cam_stages_, 0, db_};
+    steps::StereoRigInit const step{cam0_, 0, cam_stages_, db_};
     StepId const step_id{RunStep<steps::StereoRigInit>(context_.workflow_id, step, db_)};
 
-    auto const result{database::ExtrinsicSelect(db_.get(), step_id, camera_a_id_, camera_b_id_)};
-    ASSERT_TRUE(result.has_value());
-    EXPECT_LT(result->se3_a_b.sum(), 0.001);  // Heuristic!
-    EXPECT_EQ(result->frame_a, camera_a_id_);
-    EXPECT_EQ(result->frame_b, camera_b_id_);
+    for (auto const& cam : cam_stages_) {
+        auto const result{database::ExtrinsicSelect(db_.get(), step_id, cam.asset_id, cam0_)};
+        ASSERT_TRUE(result.has_value());
+
+        EXPECT_NEAR(result->se3_a_b.sum(), 0, 1e-12);  // Identity!
+        EXPECT_EQ(result->frame_a, cam.asset_id);
+        EXPECT_EQ(result->frame_b, cam0_);
+    }
 }
 
 TEST_F(StereoRigInitFixture, TestExtrinsicInitStep) {
-    steps::StereoRigInit const step{cam_stages_, 0, db_};
+    steps::StereoRigInit const step{cam0_, 0, cam_stages_, db_};
 
     EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
-    std::vector const gt_assets{camera_b_id_, camera_a_id_};
+    std::vector const gt_assets{cam0_, context_.assets.cameras.back().id};
     EXPECT_EQ(step.Assets(), gt_assets);
     EXPECT_EQ(step.CacheKey().value, "cdb3147fbcc9ca2299fc3c10ace0f92af1331886a862f5e9804f79df89e77d9b");
 
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
-    auto const result{database::ExtrinsicSelect(db_.get(), step_id, camera_a_id_, camera_b_id_)};
-    ASSERT_TRUE(result.has_value());
-    EXPECT_LT(result->se3_a_b.sum(), 0.001);
-    EXPECT_EQ(result->frame_a, camera_a_id_);
-    EXPECT_EQ(result->frame_b, camera_b_id_);
+    for (auto const& cam : cam_stages_) {
+        auto const result{database::ExtrinsicSelect(db_.get(), step_id, cam.asset_id, cam0_)};
+        ASSERT_TRUE(result.has_value());
+
+        EXPECT_NEAR(result->se3_a_b.sum(), 0, 1e-12);
+        EXPECT_EQ(result->frame_a, cam.asset_id);
+        EXPECT_EQ(result->frame_b, cam0_);
+    }
 }
