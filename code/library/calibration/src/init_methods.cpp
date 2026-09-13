@@ -12,8 +12,8 @@
 #include "projection_functions/initialize_camera.hpp"
 #include "time_synchronization/time_synchronization.hpp"
 
+#include "camera_pose_init.hpp"
 #include "intrinsic_initialization.hpp"
-#include "pose_initialization.hpp"
 #include "utilities.hpp"
 #include "visual_inertial_init.hpp"
 

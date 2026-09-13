@@ -2,10 +2,10 @@ set(LIBRARY_NAME "calibration")
 
 set(SRC_FILES
         src/calibration_utils.cpp
+        src/camera_pose_init.cpp
         src/init_methods.cpp
         src/intrinsic_initialization.cpp
         src/parabola_line_initialization.cpp
-        src/pose_initialization.cpp
         src/utilities.cpp
         src/vanishing_point_initialization.cpp
         src/visual_inertial_init.cpp
