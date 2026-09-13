@@ -1,9 +1,9 @@
-#include "extrinsic_initialization.hpp"
-
 #include <gtest/gtest.h>
 
 #include "spline/spline_initialization.hpp"
 #include "testing_mocks/data_generators.hpp"
+
+#include "visual_inertial_init.hpp"
 
 using namespace reprojection;
 

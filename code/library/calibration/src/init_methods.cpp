@@ -1,9 +1,10 @@
+#include "calibration/init_methods.hpp"
+
 #include <algorithm>
 #include <map>
 #include <ranges>
 #include <vector>
 
-#include "calibration/init_methods.hpp"
 #include "geometry/lie.hpp"
 #include "logging/logging.hpp"
 #include "optimization/angular_velocity_alignment.hpp"
@@ -11,10 +12,10 @@
 #include "projection_functions/initialize_camera.hpp"
 #include "time_synchronization/time_synchronization.hpp"
 
-#include "extrinsic_initialization.hpp"
 #include "intrinsic_initialization.hpp"
 #include "pose_initialization.hpp"
 #include "utilities.hpp"
+#include "visual_inertial_init.hpp"
 
 namespace reprojection::calibration {
 

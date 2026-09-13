@@ -1,5 +1,3 @@
-#include "extrinsic_initialization.hpp"
-
 #include <ranges>
 
 #include "optimization/angular_velocity_alignment.hpp"
@@ -9,6 +7,8 @@
 #include "spline/types.hpp"
 #include "types/physics_constants.hpp"
 #include "types/spline_types.hpp"
+
+#include "visual_inertial_init.hpp"
 
 namespace reprojection::calibration {
 
