@@ -25,6 +25,7 @@ StereoRigOpt::StereoRigOpt(AssetId const cam0_id, std::vector<CamStageIds> const
     for (auto const& cam_i : cams) {
         bool const is_reference_cam{cam_i.asset_id == cam0_id_};
         if (is_reference_cam) {
+            cam0_targets_id_ = cam_i.targets_id;
             rig_poses_ = database::CameraPosesSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id);
         }
 
@@ -59,17 +60,14 @@ Hash StereoRigOpt::CacheKey() const {
 }
 
 void StereoRigOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    // ERROR(Jack): Parameterize the sync delta!
-    // TODO(Jack): Pass number of threads!
-    // NOTE(Jack): Here an important things happens and that is that we pick the first camera in cameras_ as the
-    // reference camera. For now we can implicitly do this but it might turn out one day that we need to be explicit
-    // here to make sure we are consistent with the cam-imu extrinsic calibration too. I am not really a 'span' api
-    // user, but we use it here to pass all the non-reference cameras.
+    // ERROR: DO NOT PASS ba_input_.front() HERE!!! SPECIFY cam0_id_ EXPLICITLY!!!!
+    //     // ERROR: DO NOT PASS ba_input_.front() HERE!!! SPECIFY cam0_id_ EXPLICITLY!!!!
+    //         // ERROR: DO NOT PASS ba_input_.front() HERE!!! SPECIFY cam0_id_ EXPLICITLY!!!!
     Ba::Problem const problem{
         Ba::MultiCamProblem(ba_input_.front(), rig_poses_, std::span{ba_input_}.subspan(1), approx_sync_delta_ns_)};
     auto const [result, ceres_state]{Ba::Solve(problem, num_threads_)};
 
-    database::RigStateInsert(db.get(), step_id, cam0_.targets_id, optimization::ToRigState(result));
+    database::RigStateInsert(db.get(), step_id, cam0_targets_id_, optimization::ToRigState(result));
 
     // TODO(Jack): As we are basically just doing another bundle adjustment here we should also write the reprojection
     // errors! The only problem is that the current reprojection error database interface does not handle the new rig

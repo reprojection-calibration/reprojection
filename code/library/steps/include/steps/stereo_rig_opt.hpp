@@ -31,8 +31,8 @@ struct StereoRigOpt {
     void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
-    // TODO(Jack): Should we actually name this the reference camera? cam0 is  little ambiguous.
     AssetId cam0_id_;
+    StepId cam0_targets_id_;
     std::vector<optimization::CameraProblemInput> ba_input_;
     Frames rig_poses_;
     int num_threads_;
