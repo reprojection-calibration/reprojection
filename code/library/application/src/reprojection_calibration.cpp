@@ -156,6 +156,10 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
                                                    db};
         StepId const stereo_rig_init_id{RunStep<steps::StereoRigInit>(context.workflow_id, stereo_rig_init, db)};
 
+        // SPECIFY REFERENCE CAM!!!!
+        // SPECIFY REFERENCE CAM!!!!
+        // SPECIFY REFERENCE CAM!!!!
+        // SPECIFY REFERENCE CAM!!!!
         steps::StereoRigOpt const stereo_rig_opt{cam_stages, stereo_rig_init_id, context.application.threads,
                                                  context.application.approx_sync_delta_ns, db};
         StepId const stereo_rig_opt_id{RunStep<steps::StereoRigOpt>(context.workflow_id, stereo_rig_opt, db)};

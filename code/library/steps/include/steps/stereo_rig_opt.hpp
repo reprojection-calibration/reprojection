@@ -11,7 +11,7 @@
 namespace reprojection::steps {
 
 struct StereoRigOpt {
-    StereoRigOpt(std::vector<CamStageIds> const& cams, StepId extrinsic_init_id, int num_threads,
+    StereoRigOpt(AssetId cam0_id, std::vector<CamStageIds> const& cams, StepId extrinsic_init_id, int num_threads,
                  uint64_t approx_sync_delta_ns, SqlitePtr db);
 
     static StepType Type() { return StepType::ExtrinsicOptimization; }
@@ -32,7 +32,7 @@ struct StereoRigOpt {
 
    private:
     // TODO(Jack): Should we actually name this the reference camera? cam0 is  little ambiguous.
-    CamStageIds cam0_;
+    AssetId cam0_id_;
     std::vector<optimization::CameraProblemInput> ba_input_;
     Frames rig_poses_;
     int num_threads_;

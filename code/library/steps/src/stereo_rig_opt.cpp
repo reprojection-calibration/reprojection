@@ -18,33 +18,33 @@ auto const log{logging::Get("steps")};
 
 using Ba = optimization::BundleAdjustment;
 
-// TODO(Jack): Implicitly making the first values in the vectors the "reference" camera somehow leaving a lot up to
-// fate. Is there some way we can formalize this role?
-StereoRigOpt::StereoRigOpt(std::vector<CamStageIds> const& cams, StepId const extrinsic_init_id, int const num_threads,
-                           uint64_t const approx_sync_delta_ns, SqlitePtr db)
-    : cam0_{cams.front()}, num_threads_{num_threads}, approx_sync_delta_ns_{approx_sync_delta_ns} {
-    rig_poses_ = database::CameraPosesSelect(db.get(), cam0_.bundle_adjustment_id, cam0_.asset_id);
-
+StereoRigOpt::StereoRigOpt(AssetId const cam0_id, std::vector<CamStageIds> const& cams, StepId const extrinsic_init_id,
+                           int const num_threads, uint64_t const approx_sync_delta_ns, SqlitePtr db)
+    : cam0_id_{cam0_id}, num_threads_{num_threads}, approx_sync_delta_ns_{approx_sync_delta_ns} {
     ba_input_.reserve(std::size(cams));
     for (auto const& cam_i : cams) {
-        bool const is_reference_cam{cam_i.asset_id == cam0_.asset_id};
+        bool const is_reference_cam{cam_i.asset_id == cam0_id_};
+        if (is_reference_cam) {
+            rig_poses_ = database::CameraPosesSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id);
+        }
 
-        // TODO(Jack): This is really hard to read, but the basic idea is if the camera is the reference camera then
-        // hardcode the extrinsic identity and do not optimize it. Otherwise load and optimize the extrinsic.
-        optimization::CameraProblemInput const ba_input_i{
+        auto const camera_info{
+            ValueOrExit(database::CameraInfoSelect(db.get(), cam_i.camera_info_id, cam_i.asset_id), log)};
+        auto const intrinsic{
+            ValueOrExit(database::IntrinsicSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id), log)};
+        auto const targets{database::TargetsSelect(db.get(), cam_i.targets_id, cam_i.asset_id)};
+        auto const extrinsic{
+            ValueOrExit(database::ExtrinsicSelect(db.get(), extrinsic_init_id, cam_i.asset_id, cam0_id_), log)};
+
+        ba_input_.emplace_back(optimization::CameraProblemInput{
             cam_i.asset_id,
-            ValueOrExit(database::CameraInfoSelect(db.get(), cam_i.camera_info_id, ba_input_i.camera_id), log),
-            ValueOrExit(database::IntrinsicSelect(db.get(), cam_i.bundle_adjustment_id, ba_input_i.camera_id), log),
-            database::TargetsSelect(db.get(), cam_i.targets_id, ba_input_i.camera_id),
-            is_reference_cam
-                ? Array6d::Zero()
-                : ValueOrExit(
-                      database::ExtrinsicSelect(db.get(), extrinsic_init_id, ba_input_i.camera_id, cam0_.asset_id), log)
-                      .se3_a_b,
+            camera_info,
+            intrinsic,
+            targets,
+            extrinsic.se3_a_b,
             false,
-            not is_reference_cam};
-
-        ba_input_.push_back(ba_input_i);
+            not is_reference_cam,
+        });
     }
 }
 
