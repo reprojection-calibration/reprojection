@@ -35,4 +35,4 @@ bool IsWithinThreshold(uint64_t const lhs, uint64_t const rhs, uint64_t const th
     return delta <= threshold_ns;
 }
 
-}  // namespace reprojection::time_synchronization
+}  // namespace reprojection::time_sync

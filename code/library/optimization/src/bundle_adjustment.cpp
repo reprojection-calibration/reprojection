@@ -118,8 +118,7 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t cons
         }
 
         auto const sample_timestamp_ns{*target_timestamps_it};
-        if (not time_sync::IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns,
-                                                        approx_sync_delta_ns)) {
+        if (not time_sync::IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns, approx_sync_delta_ns)) {
             continue;  // LCOV_EXCL_LINE
         }
 

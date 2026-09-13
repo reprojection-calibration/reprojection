@@ -8,9 +8,9 @@
 
 namespace reprojection::database {
 
-std::optional<std::pair<AssetId, Name>> ReadAssetId(sqlite3* const db, AssetType const type, size_t const index);
+std::optional<std::pair<AssetId, Name>> ReadAssetId(sqlite3* db, AssetType type, size_t index);
 
-AssetId InsertAsset(sqlite3* const db, AssetType const type, size_t const index, Name const& name);
+AssetId InsertAsset(sqlite3* db, AssetType type, size_t index, Name const& name);
 
 std::optional<WorkflowId> ReadWorkflowId(sqlite3* db, WorkflowType type, std::string_view signature);
 

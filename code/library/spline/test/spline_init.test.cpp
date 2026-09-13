@@ -1,8 +1,7 @@
+#include "spline/spline_init.hpp"
+
 #include <gtest/gtest.h>
 
-#include "spline/spline_init.hpp"
-#include "spline/spline_state.hpp"
-#include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;

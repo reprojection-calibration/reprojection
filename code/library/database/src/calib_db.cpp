@@ -1,7 +1,8 @@
+#include "database/calib_db.hpp"
+
 #include <format>
 #include <ranges>
 
-#include "database/calib_db.hpp"
 #include "database/sqlite_exception.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"

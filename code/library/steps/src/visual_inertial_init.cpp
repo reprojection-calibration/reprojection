@@ -30,7 +30,7 @@ VisualInertialInit::VisualInertialInit(AssetId const imu_id, StepId const imu_da
 
 Hash VisualInertialInit::CacheKey() const {
     return hashing::HashArgs(imu_data_, spline_->ControlPoints(), spline_->GetTimeHandler().t0_ns_,
-                                  spline_->GetTimeHandler().delta_t_ns_);
+                             spline_->GetTimeHandler().delta_t_ns_);
 }
 
 void VisualInertialInit::Execute(StepId const step_id, SqlitePtr const db) const {

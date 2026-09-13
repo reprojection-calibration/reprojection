@@ -1,8 +1,9 @@
+#include "database/calib_db.hpp"
+
 #include <gtest/gtest.h>
 
 #include <string>
 
-#include "database/calib_db.hpp"
 #include "database/sqlite_exception.hpp"
 #include "types/database_types.hpp"
 

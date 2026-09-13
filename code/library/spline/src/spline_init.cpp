@@ -1,5 +1,6 @@
-#include "spline/r3_spline.hpp"
 #include "spline/spline_init.hpp"
+
+#include "spline/r3_spline.hpp"
 
 #include "cubic_spline_c3_init.hpp"
 #include "sparse_utilities.hpp"

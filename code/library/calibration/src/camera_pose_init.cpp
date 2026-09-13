@@ -1,9 +1,9 @@
+#include "camera_pose_init.hpp"
+
 #include "eigen_utilities/grid.hpp"
 #include "geometry/lie.hpp"
 #include "pnp/pnp.hpp"
 #include "projection_functions/camera_model.hpp"
-
-#include "camera_pose_init.hpp"
 
 namespace reprojection::calibration {
 

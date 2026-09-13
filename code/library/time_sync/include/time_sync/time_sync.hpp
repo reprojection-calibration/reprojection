@@ -17,4 +17,4 @@ std::set<uint64_t>::const_iterator FindClosest(std::set<uint64_t> const& data, u
 
 bool IsWithinThreshold(uint64_t lhs, uint64_t rhs, uint64_t threshold_ns);
 
-}  // namespace reprojection::time_synchronization
+}  // namespace reprojection::time_sync

@@ -30,9 +30,7 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets
       intrinsic_{ValueOrExit(database::IntrinsicSelect(db.get(), intrinsic_id, camera_id), log)},
       camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)} {}
 
-Hash BundleAdjustment::CacheKey() const {
-    return hashing::HashArgs(camera_info_, targets_, intrinsic_, camera_poses_);
-}
+Hash BundleAdjustment::CacheKey() const { return hashing::HashArgs(camera_info_, targets_, intrinsic_, camera_poses_); }
 
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
