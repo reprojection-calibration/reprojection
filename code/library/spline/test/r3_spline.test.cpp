@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "spline/constants.hpp"
-#include "spline/spline_evaluation.hpp"
+#include "spline/spline_eval.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 

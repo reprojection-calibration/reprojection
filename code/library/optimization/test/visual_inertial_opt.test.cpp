@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "spline/spline_initialization.hpp"
+#include "spline/spline_init.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
@@ -27,7 +27,7 @@ TEST(OptimizationVisualInertialOpt, TestVisualInertialOpt) {
     for (auto const& [timestamp_ns, pose_co_w] : poses_co_w) {
         poses_w_co.insert({timestamp_ns, {geometry::Log(geometry::Exp(pose_co_w.value).inverse())}});
     }
-    spline::Se3Spline const spline_w_co{spline::InitializeSe3SplineState(poses_w_co, 50)};
+    spline::Se3Spline const spline_w_co{spline::InitSe3SplineState(poses_w_co, 50)};
 
     // TODO(Jack): These are heuristic values from running the optimization. We start the optimization here so it runs
     // the test as fast as possible. Ideally the result would actually be the values that the test data was created with

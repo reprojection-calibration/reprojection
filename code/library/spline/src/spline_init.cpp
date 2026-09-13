@@ -1,6 +1,5 @@
-#include "spline/spline_initialization.hpp"
-
 #include "spline/r3_spline.hpp"
+#include "spline/spline_init.hpp"
 
 #include "cubic_spline_c3_init.hpp"
 #include "sparse_utilities.hpp"
@@ -9,7 +8,7 @@ namespace reprojection::spline {
 
 // TODO(Jack): Unit test!
 // TODO(Jack): Rename frequency to sample_rate_hz? And change type to double?
-std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames, int const frequency) {
+std::pair<Matrix2NXd, TimeHandler> InitSe3SplineState(Frames const& frames, int const frequency) {
     PositionSamples so3;
     PositionSamples r3;
     for (auto const& [timestamp_ns, frame_i] : frames) {

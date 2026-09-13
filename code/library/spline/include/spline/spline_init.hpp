@@ -7,7 +7,7 @@ namespace reprojection::spline {
 
 // TODO(Jack): Does this belong in the calibration package? Using Frames here is a little too far away from the core
 //  pure spline logic. Or maybe even in the optimization package?
-std::pair<Matrix2NXd, TimeHandler> InitializeSe3SplineState(Frames const& frames, int const frequency);
+std::pair<Matrix2NXd, TimeHandler> InitSe3SplineState(Frames const& frames, int const frequency);
 
 // NOTE(Jack): This was originally intended just for the internal spline interpolation code. But it turns out we also
 // need the minimum energy constraint when we are doing the extrinsic optimization itself, otherwise the imu data camera

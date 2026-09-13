@@ -8,7 +8,7 @@
 #include "logging/logging.hpp"
 #include "optimization/visual_inertial_opt.hpp"
 #include "spline/se3_spline.hpp"
-#include "spline/spline_initialization.hpp"
+#include "spline/spline_init.hpp"
 
 #include "utilities.hpp"
 
@@ -46,7 +46,7 @@ void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
     }
 
     // TODO(Jack): Parameterize frequency! Add to cache key probably?
-    spline::Se3Spline const spline{spline::InitializeSe3SplineState(invert_frames, 100)};
+    spline::Se3Spline const spline{spline::InitSe3SplineState(invert_frames, 100)};
 
     // TODO(Jack): Should we print out the time handler in more practical units than nanoseconds?
     log->info(

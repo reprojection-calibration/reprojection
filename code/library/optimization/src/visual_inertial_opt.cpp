@@ -1,3 +1,5 @@
+#include "optimization/visual_inertial_opt.hpp"
+
 #include <ceres/loss_function.h>
 
 #include <ranges>
@@ -7,8 +9,7 @@
 #include "cost_functions/rigid_body_linear_acceleration.hpp"
 #include "cost_functions/spline_energy.hpp"
 #include "optimization/bundle_adjustment.hpp"
-#include "optimization/visual_inertial_opt.hpp"
-#include "spline/spline_initialization.hpp"
+#include "spline/spline_init.hpp"
 
 namespace reprojection::optimization {
 

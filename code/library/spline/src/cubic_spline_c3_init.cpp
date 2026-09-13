@@ -6,7 +6,7 @@
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
 #include "spline/r3_spline.hpp"
-#include "spline/spline_initialization.hpp"
+#include "spline/spline_init.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"

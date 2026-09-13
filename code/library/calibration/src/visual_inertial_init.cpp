@@ -1,14 +1,14 @@
+#include "visual_inertial_init.hpp"
+
 #include <ranges>
 
 #include "optimization/angular_velocity_alignment.hpp"
 #include "spline/so3_spline.hpp"
-#include "spline/spline_evaluation.hpp"
+#include "spline/spline_eval.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/physics_constants.hpp"
 #include "types/spline_types.hpp"
-
-#include "visual_inertial_init.hpp"
 
 namespace reprojection::calibration {
 

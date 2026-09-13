@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <optional>
 
-#include "spline/spline_evaluation_concept.hpp"
+#include "spline/spline_eval_concept.hpp"
 #include "spline/spline_state.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"

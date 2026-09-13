@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "spline/spline_initialization.hpp"
+#include "spline/spline_init.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/eigen_types.hpp"
