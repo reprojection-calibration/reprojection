@@ -6,7 +6,7 @@
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
-#include "optimization/extrinsic_optimization.hpp"
+#include "optimization/visual_inertial_opt.hpp"
 #include "spline/se3_spline.hpp"
 #include "spline/spline_initialization.hpp"
 

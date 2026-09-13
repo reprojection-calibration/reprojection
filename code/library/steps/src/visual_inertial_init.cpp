@@ -5,7 +5,7 @@
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
-#include "optimization/extrinsic_optimization.hpp"
+#include "optimization/visual_inertial_opt.hpp"
 
 #include "utilities.hpp"
 

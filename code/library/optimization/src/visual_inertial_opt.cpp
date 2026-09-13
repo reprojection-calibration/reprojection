@@ -1,5 +1,3 @@
-#include "optimization/extrinsic_optimization.hpp"
-
 #include <ceres/loss_function.h>
 
 #include <ranges>
@@ -9,13 +7,14 @@
 #include "cost_functions/rigid_body_linear_acceleration.hpp"
 #include "cost_functions/spline_energy.hpp"
 #include "optimization/bundle_adjustment.hpp"
+#include "optimization/visual_inertial_opt.hpp"
 #include "spline/spline_initialization.hpp"
 
 namespace reprojection::optimization {
 
 using Ba = BundleAdjustment;
 
-std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
+std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
     ImuSamples const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
     Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic,
     int const num_threads) {

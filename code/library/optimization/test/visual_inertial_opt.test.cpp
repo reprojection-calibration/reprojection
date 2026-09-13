@@ -1,4 +1,4 @@
-#include "optimization/extrinsic_optimization.hpp"
+#include "optimization/visual_inertial_opt.hpp"
 
 #include <gtest/gtest.h>
 
@@ -15,7 +15,7 @@ namespace tu = testing_utilities;
 // code coverage works fine, but it did change the nature of some of the false positives which I then had to suppress.
 // Bottom line is that this was so slow that we had to find a work around to get it faster and changing the build type
 // seems ok... for now.
-TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
+TEST(OptimizationVisualInertialOpt, TestVisualInertialOpt) {
     double const duration_s{10};
     CameraInfo const camera_info{CameraModel::Pinhole, tu::image_bounds};
 
@@ -41,7 +41,7 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
                                       Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}};
     Vector3d const initial_gravity{Vector3d{-0.212548, -0.293729, 9.79995}};
 
-    auto const [_1, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
+    auto const [_1, optimized_extrinsic, optimized_gravity]{optimization::VisualInertialOpt(
         imu_data, spline_w_co, initial_extrinsic, initial_gravity, camera_info, targets, {tu::pinhole_intrinsics}, 1)};
 
     EXPECT_TRUE(optimized_extrinsic.se3_a_b.isApprox(initial_extrinsic.se3_a_b, 1e-2));
@@ -49,7 +49,7 @@ TEST(OptimizationExtrinsicOptimization, TestExtrinsicOptimization) {
 }
 
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
-TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
+TEST(OptimizationVisualInertialOpt, TestReprojectionErrorSpline) {
     MatrixX2d const gt_pixels{{-1, -1},  //
                               {350, 230},
                               {-1, -1},
@@ -94,7 +94,7 @@ TEST(OptimizationExtrinsicOptimization, TestReprojectionErrorSpline) {
                                                     << gt_residuals.transpose();
 }
 
-TEST(OptimizationExtrinsicOptimization, TestEvaluateImuError) {
+TEST(OptimizationVisualInertialOpt, TestEvaluateImuError) {
     auto const [imu_data, spline_w_co]{testing_mocks::GenerateImuData(10, 20)};
 
     // TODO(Jack): I am getting the sneaking suspicion that because the functions here do not actually use the assetid

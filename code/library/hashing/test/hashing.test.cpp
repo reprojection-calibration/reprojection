@@ -26,14 +26,14 @@ class HashingFixture : public ::testing::Test {
     // cppcheck-suppress-end unusedStructMember
 };
 
-TEST_F(HashingFixture, FocalLengthInitialization) {
+TEST_F(HashingFixture, FocalLengthInit) {
     Hash const result{hashing::HashArgs(camera_info, camera_measurements)};
     Hash const gt_result{"430782805bd5d77fa692e90432f3d6ae6cc997c75896ada95d1db828601f3e17"};
 
     EXPECT_EQ(result, gt_result);
 }
 
-TEST_F(HashingFixture, PoseInitialization) {
+TEST_F(HashingFixture, PoseInit) {
     Hash const result{hashing::HashArgs(camera_info, camera_measurements, camera_state)};
     Hash const gt_result{"f1e08743677a82f725c0f7c5125bbf3819121e1c0ce6222106abaae5d71726c9"};
 

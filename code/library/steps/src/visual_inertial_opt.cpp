@@ -4,7 +4,7 @@
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
-#include "optimization/extrinsic_optimization.hpp"
+#include "optimization/visual_inertial_opt.hpp"
 
 #include "utilities.hpp"
 
@@ -37,12 +37,12 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
 
 Hash VisualInertialOpt::CacheKey() const {
     return hashing::HashArgs(camera_info_, targets_, intrinsic_, imu_data_, spline_->ControlPoints(),
-                                  spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_,
-                                  gravity_);
+                             spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_,
+                             gravity_);
 }
 
 void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::ExtrinsicOptimization(
+    auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::VisualInertialOpt(
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};
 
     // TODO(Jack): We also need a way to log the final and initial costs!

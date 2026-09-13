@@ -1,6 +1,6 @@
 #pragma once
 
-#include "optimization/extrinsic_optimization.hpp"
+#include "optimization/visual_inertial_opt.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 #include "types/io.hpp"

@@ -10,7 +10,7 @@ namespace reprojection::optimization {
 
 // TODO(Jack): This has way too many arguments... is that just how it is? Or a sign that we are missing a clean
 // abstraction?
-std::tuple<spline::Se3Spline, Extrinsic, Vector3d> ExtrinsicOptimization(
+std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
     ImuSamples const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
     Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic,
     int num_threads);

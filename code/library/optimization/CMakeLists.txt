@@ -3,7 +3,7 @@ set(LIBRARY_NAME "optimization")
 set(SRC_FILES
         src/angular_velocity_alignment.cpp
         src/bundle_adjustment.cpp
-        src/extrinsic_optimization.cpp
+        src/visual_inertial_opt.cpp
         src/cost_functions/reprojection_error.cpp
         src/cost_functions/reprojection_error_spline.cpp
 )
@@ -32,6 +32,6 @@ set(TESTS
         src/cost_functions/spline_energy.test.cpp
         test/angular_velocity_alignment.test.cpp
         test/bundle_adjustment.test.cpp
-        test/extrinsic_optimization.test.cpp
+        test/visual_inertial_opt.test.cpp
 )
 AddTests()
