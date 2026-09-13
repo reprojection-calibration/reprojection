@@ -11,7 +11,7 @@
 #include "steps/imu_data_loading.hpp"
 #include "steps/initialize_workflow.hpp"
 #include "steps/intrinsic_init.hpp"
-#include "steps/pose_initialization.hpp"
+#include "steps/pose_init.hpp"
 #include "steps/spline_init.hpp"
 #include "steps/step_runner.hpp"
 #include "steps/stereo_rig_init.hpp"
@@ -119,8 +119,8 @@ std::vector<CamStageIds> CamStages(steps::CalibrationContext const& context, Ste
                                                        targets_id, db};
         StepId const intrinsic_init_id{RunStep<steps::IntrinsicInit>(context.workflow_id, intrinsic_init_step, db)};
 
-        steps::PoseInitialization const pose_init_step{camera.id, targets_id, camera_info_id, intrinsic_init_id, db};
-        StepId const pose_init_id{RunStep<steps::PoseInitialization>(context.workflow_id, pose_init_step, db)};
+        steps::PoseInit const pose_init_step{camera.id, targets_id, camera_info_id, intrinsic_init_id, db};
+        StepId const pose_init_id{RunStep<steps::PoseInit>(context.workflow_id, pose_init_step, db)};
 
         steps::BundleAdjustment const bundle_adjustment_step{
             camera.id, targets_id, context.application.threads, camera_info_id, intrinsic_init_id, pose_init_id, db};

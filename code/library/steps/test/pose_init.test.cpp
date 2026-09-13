@@ -1,4 +1,4 @@
-#include "steps/pose_initialization.hpp"
+#include "steps/pose_init.hpp"
 
 #include <gtest/gtest.h>
 
@@ -10,7 +10,7 @@
 
 using namespace reprojection;
 
-class PoseInitializationFixture : public StepTestFixture {
+class PoseInitFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         StepTestFixture::SetUp();
@@ -27,16 +27,16 @@ class PoseInitializationFixture : public StepTestFixture {
     StepId intrinsics_id_;
 };
 
-TEST_F(PoseInitializationFixture, TestPoseInitializationStepRunner) {
-    steps::PoseInitialization const step{camera_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
-    StepId const step_id{RunStep<steps::PoseInitialization>(context_.workflow_id, step, db_)};
+TEST_F(PoseInitFixture, TestPoseInitStepRunner) {
+    steps::PoseInit const step{camera_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
+    StepId const step_id{RunStep<steps::PoseInit>(context_.workflow_id, step, db_)};
 
     auto const result{database::CameraPosesSelect(db_.get(), step_id, camera_id_)};
     EXPECT_EQ(std::size(result), 7);
 }
 
-TEST_F(PoseInitializationFixture, TestPoseInitializationStep) {
-    steps::PoseInitialization const step{camera_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
+TEST_F(PoseInitFixture, TestPoseInitStep) {
+    steps::PoseInit const step{camera_id_, targets_id_, camera_info_id_, intrinsics_id_, db_};
     EXPECT_EQ(step.Type(), StepType::PoseInit);
     EXPECT_EQ(step.Assets(), std::vector{camera_id_});
     EXPECT_EQ(step.CacheKey().value, "723245d956786cad6abadb69629b5bccc8db6596c0864a6c77380c9f818351a1");
