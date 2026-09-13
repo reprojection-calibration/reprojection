@@ -98,8 +98,8 @@ struct BundleAdjustment {
 
     static std::pair<Result, CeresState> Solve(Problem const& ba_problem, int num_threads);
 
-    static Problem MultiCamProblem(CameraProblemInput const& cam0, Frames const& cam0_poses,
-                                   std::span<CameraProblemInput const> cams, uint64_t approx_sync_delta_ns);
+    static Problem MultiCamProblem(AssetId const& cam0_id, Frames const& cam0_poses,
+                                   std::vector<CameraProblemInput> const& cams, uint64_t approx_sync_delta_ns);
 
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                     TargetSamples const& targets, Frames const& frames, bool optimize_intrinsic,

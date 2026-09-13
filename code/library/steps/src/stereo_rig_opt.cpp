@@ -60,11 +60,7 @@ Hash StereoRigOpt::CacheKey() const {
 }
 
 void StereoRigOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    // ERROR: DO NOT PASS ba_input_.front() HERE!!! SPECIFY cam0_id_ EXPLICITLY!!!!
-    //     // ERROR: DO NOT PASS ba_input_.front() HERE!!! SPECIFY cam0_id_ EXPLICITLY!!!!
-    //         // ERROR: DO NOT PASS ba_input_.front() HERE!!! SPECIFY cam0_id_ EXPLICITLY!!!!
-    Ba::Problem const problem{
-        Ba::MultiCamProblem(ba_input_.front(), rig_poses_, std::span{ba_input_}.subspan(1), approx_sync_delta_ns_)};
+    Ba::Problem const problem{Ba::MultiCamProblem(cam0_id_, rig_poses_, ba_input_, approx_sync_delta_ns_)};
     auto const [result, ceres_state]{Ba::Solve(problem, num_threads_)};
 
     database::RigStateInsert(db.get(), step_id, cam0_targets_id_, optimization::ToRigState(result));

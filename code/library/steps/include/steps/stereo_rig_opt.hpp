@@ -31,9 +31,11 @@ struct StereoRigOpt {
     void Execute(StepId step_id, SqlitePtr db) const;
 
    private:
+    // TODO(Jack): Naming inconsistency between cam0 and rig!
     AssetId cam0_id_;
     StepId cam0_targets_id_;
     std::vector<optimization::CameraProblemInput> ba_input_;
+    // TODO(Jack): Naming inconsistency between cam0 and rig!
     Frames rig_poses_;
     int num_threads_;
     uint64_t approx_sync_delta_ns_;

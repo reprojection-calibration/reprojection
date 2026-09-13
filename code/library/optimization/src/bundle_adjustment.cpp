@@ -59,23 +59,10 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
 // TODO UNIT TEST!
 // TODO UNIT TEST!
 // TODO UNIT TEST!
-BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(CameraProblemInput const& cam0, Frames const& cam0_poses,
-                                                            std::span<CameraProblemInput const> cams,
+BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(AssetId const& cam0_id, Frames const& cam0_poses,
+                                                            std::vector<CameraProblemInput> const& cams,
                                                             uint64_t const approx_sync_delta_ns) {
-    // TODO(Jack): Maybe one day we can engineer the need for this check away, but right now we do not guarantee that
-    // the rig reference has optimize_extrinsic==false and an identity transform. So to solve our headaches prematurely
-    // we add this check for both properties, but like I said hopefully one day we can engineer this away!
-    if (cam0.optimize_extrinsic or cam0.extrinsic.sum() > 1e-12) {
-        // LCOV_EXCL_START
-        throw std::logic_error(
-            "Cannot optimize the extrinsic of the rig defining reference camera or set it to anything besides "
-            "identity!");
-        // LCOV_EXCL_STOP
-    }
-
-    Problem problem{cam0.camera_id, cam0_poses};
-    AddCamera(cam0, approx_sync_delta_ns, problem);
-
+    Problem problem{cam0_id, cam0_poses};
     for (auto const& cam_i : cams) {
         AddCamera(cam_i, approx_sync_delta_ns, problem);
     }
@@ -87,13 +74,13 @@ BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(CameraProblemInput c
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                              TargetSamples const& targets, Frames const& frames,
                                                              bool const optimize_intrinsic, AssetId const camera_id) {
-    CameraProblemInput const camera{
+    CameraProblemInput const cam0{
         camera_id, camera_info, intrinsic, targets, Array6d::Zero(), optimize_intrinsic, false,
     };
 
     // NOTE(Jack): Setting the sync tolerance to zero enforces exact matches only. Which considering that the frames
     // have to come from the camera's targets makes sense!
-    return MultiCamProblem(camera, frames, {}, 0);
+    return MultiCamProblem(camera_id, frames, {cam0}, 0);
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
