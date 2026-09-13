@@ -1,25 +1,24 @@
-#include "database/calibration_database.hpp"
-
 #include <gtest/gtest.h>
 
 #include <string>
 
+#include "database/calib_db.hpp"
 #include "database/sqlite_exception.hpp"
 #include "types/database_types.hpp"
 
 using namespace reprojection;
 
-TEST(DatabaseCalibrationDatbase, TestOpenCalibrationDatabase) {
+TEST(DatabaseCalibDb, TestOpenCalibDb) {
     // Cannot create a read only database because it requires writing to it to create it!
-    EXPECT_THROW(auto db{database::OpenCalibrationDatabase(":memory:", true, true)}, std::runtime_error);
+    EXPECT_THROW(auto db{database::OpenCalibDb(":memory:", true, true)}, std::runtime_error);
 
     // Happy paths
-    EXPECT_NO_THROW(auto db{database::OpenCalibrationDatabase(":memory:", true)});
-    EXPECT_NO_THROW(auto db{database::OpenCalibrationDatabase(":memory:", false, true)});
+    EXPECT_NO_THROW(auto db{database::OpenCalibDb(":memory:", true)});
+    EXPECT_NO_THROW(auto db{database::OpenCalibDb(":memory:", false, true)});
 }
 
-TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestGetOrCreateAsset) {
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     // Repeated insert returns the same id with no problems.
     AssetId result{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "/cam0/image_raw")};
@@ -39,8 +38,8 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateAsset) {
     EXPECT_THROW(database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "/cam1/image_raw"), std::runtime_error);
 }
 
-TEST(DatabaseCalibrationDatbase, TestGetOrCreateWorkflow) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestGetOrCreateWorkflow) {
+    auto db{database::OpenCalibDb(":memory:", true)};
     AssetId const asset_id_1{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
     database::AssetGroupInsert(db.get(), {asset_id_1});
 
@@ -65,8 +64,8 @@ TEST(DatabaseCalibrationDatbase, TestGetOrCreateWorkflow) {
     EXPECT_EQ(result, WorkflowId{3});
 }
 
-TEST(DatabaseCalibrationDatbase, TestAssetWorkflowState) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestAssetWorkflowState) {
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     AssetId cam_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
     EXPECT_EQ(cam_id, AssetId{1});
@@ -77,8 +76,8 @@ TEST(DatabaseCalibrationDatbase, TestAssetWorkflowState) {
     EXPECT_EQ(cam_id, AssetId{1});
 }
 
-TEST(DatabaseCalibrationDatbase, TestStepWorkflowState) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestStepWorkflowState) {
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
     database::AssetGroupInsert(db.get(), {asset_id});
@@ -112,8 +111,8 @@ TEST(DatabaseCalibrationDatbase, TestStepWorkflowState) {
     EXPECT_EQ(step_id, StepId{3});
 }
 
-TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestGetOrCreateStep) {
+    auto const db{database::OpenCalibDb(":memory:", true)};
     Hash const hash_a{"sha256-aaa"};
 
     // Insert a new step - cache miss.
@@ -142,8 +141,8 @@ TEST(DatabaseCalibrationDatabase, TestGetOrCreateStep) {
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 }
 
-TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestCameraInfo) {
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     auto const step{database::GetOrCreateStep(db.get(), StepType::CameraInfo, "")};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
@@ -168,7 +167,7 @@ TEST(DatabaseCalibrationDatabase, TestCameraInfo) {
     EXPECT_EQ(result.error(), "{'database::': 'CameraInfoSelect', 'step_id': 1, 'asset_id': -1}");
 }
 
-class CalibrationDatabaseFixture : public ::testing::Test {
+class CalibDbFixture : public ::testing::Test {
    protected:
     void InsertImage(StepId const step_id, AssetId const asset_id, uint64_t const timestamp_ns = 0) {
         database::ImagesInsert(db_.get(), step_id, asset_id, {{timestamp_ns, ImageBuffer{}}});
@@ -183,10 +182,10 @@ class CalibrationDatabaseFixture : public ::testing::Test {
         return step_id;
     }
 
-    SqlitePtr db_{database::OpenCalibrationDatabase(":memory:", true)};
+    SqlitePtr db_{database::OpenCalibDb(":memory:", true)};
 };
 
-TEST_F(CalibrationDatabaseFixture, TestCameraPoses) {
+TEST_F(CalibDbFixture, TestCameraPoses) {
     // Satisfy foreign key dependencies - a pose depends on a target which depends on an image.
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
     StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
@@ -202,8 +201,8 @@ TEST_F(CalibrationDatabaseFixture, TestCameraPoses) {
     EXPECT_TRUE(result.at(0).value.isApprox(camera_poses.at(0).value));
 }
 
-TEST(DatabaseCalibrationDatbase, TestControlPoints) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestControlPoints) {
+    auto const db{database::OpenCalibDb(":memory:", true)};
 
     StepId const step_id{database::GetOrCreateStep(db.get(), StepType::SplineInit, "").first};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
@@ -216,7 +215,7 @@ TEST(DatabaseCalibrationDatbase, TestControlPoints) {
     EXPECT_TRUE(result.isApprox(control_points));
 }
 
-TEST_F(CalibrationDatabaseFixture, TestImages) {
+TEST_F(CalibDbFixture, TestImages) {
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
 
@@ -228,8 +227,8 @@ TEST_F(CalibrationDatabaseFixture, TestImages) {
     EXPECT_EQ(std::size(result.at(timestamp_ns).data), 0);
 }
 
-TEST(DatabaseCalibrationDatbase, TestImuData) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestImuData) {
+    auto const db{database::OpenCalibDb(":memory:", true)};
 
     StepId const imu_data_id{database::GetOrCreateStep(db.get(), StepType::ImuDataLoading, "").first};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
@@ -243,8 +242,8 @@ TEST(DatabaseCalibrationDatbase, TestImuData) {
     EXPECT_TRUE(result.at(0).angular_velocity.isApprox(imu_data.at(0).angular_velocity));
 }
 
-TEST(DatabaseCalibrationDatbase, TestImuErrors) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestImuErrors) {
+    auto const db{database::OpenCalibDb(":memory:", true)};
 
     StepId const imu_data_id{database::GetOrCreateStep(db.get(), StepType::ImuDataLoading, "").first};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
@@ -258,8 +257,8 @@ TEST(DatabaseCalibrationDatbase, TestImuErrors) {
     EXPECT_NO_THROW(database::ImuErrorsInsert(db.get(), extrinsic_init_id, imu_data_id, asset_id, imu_errors));
 }
 
-TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
-    auto const db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestIntrinsics) {
+    auto const db{database::OpenCalibDb(":memory:", true)};
 
     // TODO(Jack): We absolutely need to add logic to the database that checks the owning step for a camera intrinsic is
     // valid (ex. comes from a step which produces an intrinsic) and that the asset id is a camera. We need this kind of
@@ -281,7 +280,7 @@ TEST(DatabaseCalibrationDatbase, TestIntrinsics) {
     EXPECT_EQ(result.error(), "{'database::': 'IntrinsicSelect', 'step_id': 1, 'asset_id': -1}");
 }
 
-TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
+TEST_F(CalibDbFixture, TestExtractedTargets) {
     // Satisfy foreign keys - a target requires a corresponding image to be present.
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
     StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
@@ -295,8 +294,8 @@ TEST_F(CalibrationDatabaseFixture, TestExtractedTargets) {
     EXPECT_EQ(result.at(0).indices.size(), 0);
 }
 
-TEST(DatabaseCalibrationDatbase, TestExtrinsics) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestExtrinsics) {
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     StepId const step_id{database::GetOrCreateStep(db.get(), StepType::ExtrinsicInit, "").first};
     AssetId const cam_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
@@ -317,8 +316,8 @@ TEST(DatabaseCalibrationDatbase, TestExtrinsics) {
     EXPECT_EQ(result.error(), "{'database::': 'ExtrinsicSelect', 'step_id': 1, 'asset_a_id': 1, 'asset_b_id': -1}");
 }
 
-TEST(DatabaseCalibrationDatbase, TestGravity) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestGravity) {
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     StepId const step_id{database::GetOrCreateStep(db.get(), StepType::ExtrinsicInit, "").first};
 
@@ -335,7 +334,7 @@ TEST(DatabaseCalibrationDatbase, TestGravity) {
     EXPECT_EQ(result.error(), "{'database::': 'GravitySelect', 'step_id': -1}");
 }
 
-TEST_F(CalibrationDatabaseFixture, TestReprojectionErrors) {
+TEST_F(CalibDbFixture, TestReprojectionErrors) {
     // Use a common timestamp across image, target and reprojection error to make sure the foreign key constraint is
     // met.
     int const timestamp_ns{0};
@@ -352,7 +351,7 @@ TEST_F(CalibrationDatabaseFixture, TestReprojectionErrors) {
     EXPECT_NO_THROW(database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, targets_id, {data}));
 }
 
-TEST_F(CalibrationDatabaseFixture, TestRigState) {
+TEST_F(CalibDbFixture, TestRigState) {
     // Satisfy foreign key dependencies - a pose depends on a target which depends on an image.
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
     StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
@@ -370,8 +369,8 @@ TEST_F(CalibrationDatabaseFixture, TestRigState) {
     EXPECT_NO_THROW(database::RigStateInsert(db_.get(), step_id, extracted_targets_id, rig_state));
 }
 
-TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestSplineInfo) {
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     // Satisfy foreign key constraints
     StepId const step_id{database::GetOrCreateStep(db.get(), StepType::SplineInit, "").first};
@@ -391,8 +390,8 @@ TEST(DatabaseCalibrationDatbase, TestSplineInfo) {
     EXPECT_EQ(result.error(), "{'database::': 'SplineInfoSelect', 'step_id': 1, 'asset_id': -1}");
 }
 
-TEST(DatabaseCalibrationDatbase, TestTargetInfo) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+TEST(DatabaseCalibDb, TestTargetInfo) {
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     // Satisfy foreign key constraints
     auto const step_id{database::GetOrCreateStep(db.get(), StepType::TargetInfo, "").first};

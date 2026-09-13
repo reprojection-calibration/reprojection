@@ -1,6 +1,6 @@
 #include "testing_utilities/database_setup_utils.hpp"
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "hashing/hashing.hpp"
 
 namespace reprojection::testing_utilities {

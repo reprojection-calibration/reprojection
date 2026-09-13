@@ -4,7 +4,7 @@
 
 #include <testing_utilities/generated/calibration_config.hpp>
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "steps/initialize_workflow.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
@@ -207,7 +207,7 @@ class StepTestFixture : public ::testing::Test {
     }
 
    public:
-    SqlitePtr db_{database::OpenCalibrationDatabase(":memory:", true)};
+    SqlitePtr db_{database::OpenCalibDb(":memory:", true)};
     steps::CalibrationContext context_;
 
     // NOTE(Jack): At least one test (extrinsic optimization) requires higher frequency data to return a correct result

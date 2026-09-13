@@ -14,7 +14,7 @@
 
 namespace reprojection::database {
 
-SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool create, bool read_only = false);
+SqlitePtr OpenCalibDb(std::filesystem::path const& db_path, bool create, bool read_only = false);
 
 // TODO(Jack): An "asset group" is a unique and still unfinished idea within the calibration database idea. The basic
 // motivation came from us needing to disambiguate steps and workflows among themselves. In any given database we might

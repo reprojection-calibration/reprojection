@@ -3,7 +3,7 @@
 #include <optional>
 #include <ranges>
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::steps {

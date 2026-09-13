@@ -1,6 +1,6 @@
-#include "database_semantics.hpp"
-
 #include <sqlite3.h>
+
+#include "db_semantics.hpp"
 
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"

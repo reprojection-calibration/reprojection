@@ -1,20 +1,19 @@
-#include "database/calibration_database.hpp"
-
 #include <format>
 #include <ranges>
 
+#include "database/calib_db.hpp"
 #include "database/sqlite_exception.hpp"
 // cppcheck-suppress missingInclude
 #include "generated/sql.hpp"
 
-#include "database_semantics.hpp"
+#include "db_semantics.hpp"
 #include "serialization.hpp"
 #include "sqlite_helpers.hpp"
 #include "toml_converters.hpp"
 
 namespace reprojection::database {
 
-SqlitePtr OpenCalibrationDatabase(std::filesystem::path const& db_path, bool const create, bool const read_only) {
+SqlitePtr OpenCalibDb(std::filesystem::path const& db_path, bool const create, bool const read_only) {
     if (create and read_only) {
         throw std::runtime_error(
             "You requested to open a database object with both options 'create' and 'read_only' true. This is "

@@ -2,14 +2,14 @@
 
 #include <gtest/gtest.h>
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 // cppcheck-suppress missingInclude
 #include "testing_utilities/generated/calibration_config.hpp"
 
 using namespace reprojection;
 
 TEST(ApplicationInitializeWorkflow, TestHappyPath) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibDb(":memory:", true)};
     toml::table const cfg_table{toml::parse(testing_utilities::calibration_config)};
 
     // TODO(Jack): We could also test the specific assets ids but that is not really an invariant we need/want to
@@ -23,7 +23,7 @@ TEST(ApplicationInitializeWorkflow, TestHappyPath) {
 TEST(ApplicationInitializeWorkflow, TestCreateCalibrationAssets) {
     toml::table const table{toml::parse(testing_utilities::calibration_config)};
     config::Config const parsed_cfg{config::Config::Parse(table)};
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     steps::CalibrationAssets const assets{steps::CreateCalibrationAssets(parsed_cfg, db)};
 

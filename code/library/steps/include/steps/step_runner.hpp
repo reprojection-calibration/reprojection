@@ -1,6 +1,6 @@
 #pragma once
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
 #include "types/database_types.hpp"
