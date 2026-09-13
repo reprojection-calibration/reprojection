@@ -25,7 +25,7 @@ IntrinsicInit::IntrinsicInit(AssetId const camera_id, int const num_threads, Ste
 
 Hash IntrinsicInit::CacheKey() const {
     // NOTE(Jack): See FeatureExtraction::CacheKey() comment as to why we need the camera asset id.
-    return hashing::HashArguments(camera_id_.value, camera_info_, targets_);
+    return hashing::HashArgs(camera_id_.value, camera_info_, targets_);
 }
 
 void IntrinsicInit::Execute(StepId const step_id, SqlitePtr const db) const {

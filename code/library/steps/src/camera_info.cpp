@@ -21,7 +21,7 @@ CameraInfoStep::CameraInfoStep(AssetId const camera_id, StepId const image_loadi
 
 Hash CameraInfoStep::CacheKey() const {
     // NOTE(Jack): See FeatureExtraction::CacheKey() comment as to why we need the camera asset id.
-    return hashing::HashArguments(camera_id_.value, camera_model_, *images_);
+    return hashing::HashArgs(camera_id_.value, camera_model_, *images_);
 }
 
 void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {

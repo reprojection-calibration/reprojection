@@ -29,7 +29,7 @@ VisualInertialInit::VisualInertialInit(AssetId const imu_id, StepId const imu_da
       num_threads_{num_threads} {}
 
 Hash VisualInertialInit::CacheKey() const {
-    return hashing::HashArguments(imu_data_, spline_->ControlPoints(), spline_->GetTimeHandler().t0_ns_,
+    return hashing::HashArgs(imu_data_, spline_->ControlPoints(), spline_->GetTimeHandler().t0_ns_,
                                   spline_->GetTimeHandler().delta_t_ns_);
 }
 

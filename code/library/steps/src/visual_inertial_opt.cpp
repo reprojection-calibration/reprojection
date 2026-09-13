@@ -36,7 +36,7 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
       num_threads_{num_threads} {}
 
 Hash VisualInertialOpt::CacheKey() const {
-    return hashing::HashArguments(camera_info_, targets_, intrinsic_, imu_data_, spline_->ControlPoints(),
+    return hashing::HashArgs(camera_info_, targets_, intrinsic_, imu_data_, spline_->ControlPoints(),
                                   spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_,
                                   gravity_);
 }

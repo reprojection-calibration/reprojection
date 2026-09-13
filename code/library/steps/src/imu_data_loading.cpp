@@ -15,7 +15,7 @@ auto const log{logging::Get("steps")};
 
 ImuDataLoading::ImuDataLoading(AssetId const imu_id, std::string_view serialized_imu_sampler,
                                ImuSampler const& imu_sampler)
-    : imu_id_{imu_id}, cache_key_{hashing::HashArguments(serialized_imu_sampler)}, imu_sampler_{imu_sampler} {}
+    : imu_id_{imu_id}, cache_key_{hashing::HashArgs(serialized_imu_sampler)}, imu_sampler_{imu_sampler} {}
 
 Hash ImuDataLoading::CacheKey() const { return cache_key_; }
 

@@ -16,7 +16,7 @@ auto const log{logging::Get("steps")};
 ImageLoading::ImageLoading(AssetId const camera_id, std::string_view serialized_image_sampler,
                            ImageSampler const& image_sampler)
     : camera_id_{camera_id},
-      cache_key_{hashing::HashArguments(serialized_image_sampler)},
+      cache_key_{hashing::HashArgs(serialized_image_sampler)},
       image_sampler_{image_sampler} {}
 
 Hash ImageLoading::CacheKey() const { return cache_key_; }

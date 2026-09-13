@@ -27,7 +27,7 @@ PoseInit::PoseInit(AssetId camera_id, StepId targets_id, StepId camera_info_id, 
       camera_info_{ValueOrExit(database::CameraInfoSelect(db.get(), camera_info_id, camera_id), log)},
       intrinsic_{ValueOrExit(database::IntrinsicSelect(db.get(), intrinsic_id, camera_id), log)} {}
 
-Hash PoseInit::CacheKey() const { return hashing::HashArguments(targets_, camera_info_, intrinsic_); }
+Hash PoseInit::CacheKey() const { return hashing::HashArgs(targets_, camera_info_, intrinsic_); }
 
 void PoseInit::Execute(StepId step_id, SqlitePtr const db) const {
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsic_)};

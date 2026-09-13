@@ -28,12 +28,11 @@ StereoRigInit::StereoRigInit(AssetId const cam0_id, uint64_t const approx_sync_d
 }
 
 Hash StereoRigInit::CacheKey() const {
-    Hash const initial_hash{hashing::HashArguments(approx_sync_delta_ns_)};
+    Hash const initial_hash{hashing::HashArgs(approx_sync_delta_ns_)};
 
     // Only hash the frame pose values so we are not dependent on the camera asset ids.
-    return std::ranges::fold_left(
-        cam_frames_ | std::views::values, initial_hash,
-        [](Hash const& hash, auto const& frames) { return hashing::HashArguments(hash, frames); });
+    return std::ranges::fold_left(cam_frames_ | std::views::values, initial_hash,
+                                  [](Hash const& hash, auto const& frames) { return hashing::HashArgs(hash, frames); });
 }
 
 void StereoRigInit::Execute(StepId step_id, SqlitePtr db) const {

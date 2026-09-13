@@ -32,7 +32,7 @@ SplineInit::SplineInit(CamStageIds const& cam, SqlitePtr const db)
       camera_info_{ValueOrExit(database::CameraInfoSelect(db.get(), cam.camera_info_id, cam.asset_id), log)},
       intrinsic_{ValueOrExit(database::IntrinsicSelect(db.get(), cam.bundle_adjustment_id, cam.asset_id), log)} {}
 
-Hash SplineInit::CacheKey() const { return hashing::HashArguments(camera_poses_, targets_, camera_info_, intrinsic_); }
+Hash SplineInit::CacheKey() const { return hashing::HashArgs(camera_poses_, targets_, camera_info_, intrinsic_); }
 
 void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};

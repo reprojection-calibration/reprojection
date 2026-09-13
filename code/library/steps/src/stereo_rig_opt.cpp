@@ -50,12 +50,12 @@ StereoRigOpt::StereoRigOpt(AssetId const cam0_id, std::vector<CamStageIds> const
 }
 
 Hash StereoRigOpt::CacheKey() const {
-    Hash const initial_hash{hashing::HashArguments(rig_poses_, approx_sync_delta_ns_)};
+    Hash const initial_hash{hashing::HashArgs(rig_poses_, approx_sync_delta_ns_)};
 
     // TODO(Jack): If we end up keeping the CameraProblemInput type we should add a serialize function for it directly!
     return std::ranges::fold_left(ba_input_, initial_hash, [](Hash const& hash, auto const& camera) {
-        return hashing::HashArguments(hash, camera.camera_info, camera.intrinsic, camera.targets, camera.extrinsic,
-                                      camera.optimize_intrinsic, camera.optimize_extrinsic);
+        return hashing::HashArgs(hash, camera.camera_info, camera.intrinsic, camera.targets, camera.extrinsic,
+                                 camera.optimize_intrinsic, camera.optimize_extrinsic);
     });
 }
 

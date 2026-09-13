@@ -118,9 +118,9 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
         camera_test_data.push_back({
             camera_info,
             images_id,
-            hashing::HashArguments(camera.id.value, false, context.assets.target.config, image_samples),
+            hashing::HashArgs(camera.id.value, false, context.assets.target.config, image_samples),
             targets_id,
-            hashing::HashArguments(camera.id.value, camera.config.camera_model, image_samples),
+            hashing::HashArgs(camera.id.value, camera.config.camera_model, image_samples),
         });
     }
 

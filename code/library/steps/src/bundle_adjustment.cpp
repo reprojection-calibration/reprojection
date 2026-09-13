@@ -31,7 +31,7 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets
       camera_poses_{database::CameraPosesSelect(db.get(), camera_poses_id, camera_id)} {}
 
 Hash BundleAdjustment::CacheKey() const {
-    return hashing::HashArguments(camera_info_, targets_, intrinsic_, camera_poses_);
+    return hashing::HashArgs(camera_info_, targets_, intrinsic_, camera_poses_);
 }
 
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
