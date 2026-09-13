@@ -1,10 +1,9 @@
-#include "calibration/initialization_methods.hpp"
-
 #include <algorithm>
 #include <map>
 #include <ranges>
 #include <vector>
 
+#include "calibration/init_methods.hpp"
 #include "geometry/lie.hpp"
 #include "logging/logging.hpp"
 #include "optimization/angular_velocity_alignment.hpp"

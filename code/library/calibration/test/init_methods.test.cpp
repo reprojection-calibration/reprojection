@@ -1,4 +1,4 @@
-#include "calibration/initialization_methods.hpp"
+#include "calibration/init_methods.hpp"
 
 #include <gtest/gtest.h>
 
