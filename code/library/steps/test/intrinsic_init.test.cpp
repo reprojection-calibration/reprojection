@@ -1,18 +1,15 @@
-#include "steps/intrinsic_initialization.hpp"
+#include "steps/intrinsic_init.hpp"
 
 #include <gtest/gtest.h>
 
-#include <ranges>
-
 #include "steps/step_runner.hpp"
 #include "testing_mocks/data_generators.hpp"
-#include "testing_utilities/constants.hpp"
 
 #include "test_fixture.hpp"
 
 using namespace reprojection;
 
-class IntrinsicInitializationFixture : public StepTestFixture {
+class IntrinsicInitFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         // WARN(Jack): The methods below can only be called after the base fixtures SetUp method has been called!
@@ -29,9 +26,9 @@ class IntrinsicInitializationFixture : public StepTestFixture {
     StepId targets_id_;
 };
 
-TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStepRunner) {
-    steps::IntrinsicInitialization const step{camera_id_, 1, camera_info_id_, targets_id_, db_};
-    StepId const step_id{RunStep<steps::IntrinsicInitialization>(context_.workflow_id, step, db_)};
+TEST_F(IntrinsicInitFixture, TestIntrinsicInitStepRunner) {
+    steps::IntrinsicInit const step{camera_id_, 1, camera_info_id_, targets_id_, db_};
+    StepId const step_id{RunStep<steps::IntrinsicInit>(context_.workflow_id, step, db_)};
 
     auto const result{database::IntrinsicSelect(db_.get(), step_id, camera_id_)};
     ASSERT_TRUE(result.has_value());
@@ -39,8 +36,8 @@ TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStepRunner) {
     EXPECT_TRUE(result->value.isApprox(gt_result, 1e-3));
 }
 
-TEST_F(IntrinsicInitializationFixture, TestIntrinsicInitializationStep) {
-    steps::IntrinsicInitialization const step{camera_id_, 1, camera_info_id_, targets_id_, db_};
+TEST_F(IntrinsicInitFixture, TestIntrinsicInitStep) {
+    steps::IntrinsicInit const step{camera_id_, 1, camera_info_id_, targets_id_, db_};
     EXPECT_EQ(step.Type(), StepType::IntrinsicInit);
     EXPECT_EQ(step.Assets(), std::vector{camera_id_});
     EXPECT_EQ(step.CacheKey().value, "4fca2c782d81fcebe010feed2bc34a6d3eb75f575956154f3c18ce70f0218058");

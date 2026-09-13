@@ -6,8 +6,8 @@
 
 namespace reprojection::steps {
 
-struct IntrinsicInitialization {
-    IntrinsicInitialization(AssetId camera_id, int num_threads, StepId camera_info_id, StepId targets_id, SqlitePtr db);
+struct IntrinsicInit {
+    IntrinsicInit(AssetId camera_id, int num_threads, StepId camera_info_id, StepId targets_id, SqlitePtr db);
 
     static StepType Type() { return StepType::IntrinsicInit; }
 

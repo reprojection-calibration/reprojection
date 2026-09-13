@@ -10,7 +10,7 @@
 #include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
 #include "steps/initialize_workflow.hpp"
-#include "steps/intrinsic_initialization.hpp"
+#include "steps/intrinsic_init.hpp"
 #include "steps/pose_initialization.hpp"
 #include "steps/spline_init.hpp"
 #include "steps/step_runner.hpp"
@@ -115,10 +115,9 @@ std::vector<CamStageIds> CamStages(steps::CalibrationContext const& context, Ste
             target_info_id, context.assets.target.id, db};
         StepId const targets_id{RunStep<steps::FeatureExtraction>(context.workflow_id, feature_extraction_step, db)};
 
-        steps::IntrinsicInitialization const intrinsic_init_step{camera.id, context.application.threads, camera_info_id,
-                                                                 targets_id, db};
-        StepId const intrinsic_init_id{
-            RunStep<steps::IntrinsicInitialization>(context.workflow_id, intrinsic_init_step, db)};
+        steps::IntrinsicInit const intrinsic_init_step{camera.id, context.application.threads, camera_info_id,
+                                                       targets_id, db};
+        StepId const intrinsic_init_id{RunStep<steps::IntrinsicInit>(context.workflow_id, intrinsic_init_step, db)};
 
         steps::PoseInitialization const pose_init_step{camera.id, targets_id, camera_info_id, intrinsic_init_id, db};
         StepId const pose_init_id{RunStep<steps::PoseInitialization>(context.workflow_id, pose_init_step, db)};

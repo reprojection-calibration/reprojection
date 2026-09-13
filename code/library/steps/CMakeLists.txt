@@ -7,7 +7,7 @@ set(SRC_FILES
         src/image_loading.cpp
         src/imu_data_loading.cpp
         src/initialize_workflow.cpp
-        src/intrinsic_initialization.cpp
+        src/intrinsic_init.cpp
         src/pose_initialization.cpp
         src/spline_init.cpp
         src/stereo_rig_init.cpp
@@ -45,7 +45,7 @@ set(TESTS
         test/image_loading.test.cpp
         test/imu_data_loading.test.cpp
         test/initialize_workflow.test.cpp
-        test/intrinsic_initialization.test.cpp
+        test/intrinsic_init.test.cpp
         test/pose_initialization.test.cpp
         test/spline_init.test.cpp
         test/step_runner.test.cpp
