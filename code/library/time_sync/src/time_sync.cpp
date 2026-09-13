@@ -1,9 +1,9 @@
 
-#include "time_synchronization/time_synchronization.hpp"
+#include "time_sync/time_sync.hpp"
 
 #include <stdexcept>
 
-namespace reprojection::time_synchronization {
+namespace reprojection::time_sync {
 
 std::set<uint64_t>::const_iterator FindClosest(std::set<uint64_t> const& data, uint64_t const timestamp) {
     // TODO(Jack): I highly doubt throwing at this point is the right strategy here, but for now lets fail loud!

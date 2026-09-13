@@ -5,7 +5,7 @@
 #include <ranges>
 
 #include "cost_functions/reprojection_error.hpp"
-#include "time_synchronization/time_synchronization.hpp"
+#include "time_sync/time_sync.hpp"
 
 namespace reprojection::optimization {
 
@@ -112,13 +112,13 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t cons
     for (auto const& [frame_timestamp_ns, _] : problem.rig_poses) {
         // TODO(Jack): Hand rolling the time synchronization logic here is not so nice, as we need it in multiple
         // places.
-        auto const target_timestamps_it{time_synchronization::FindClosest(remaining_targets, frame_timestamp_ns)};
+        auto const target_timestamps_it{time_sync::FindClosest(remaining_targets, frame_timestamp_ns)};
         if (target_timestamps_it == std::cend(remaining_targets)) {
             continue;  // LCOV_EXCL_LINE
         }
 
         auto const sample_timestamp_ns{*target_timestamps_it};
-        if (not time_synchronization::IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns,
+        if (not time_sync::IsWithinThreshold(sample_timestamp_ns, frame_timestamp_ns,
                                                         approx_sync_delta_ns)) {
             continue;  // LCOV_EXCL_LINE
         }

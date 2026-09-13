@@ -17,7 +17,7 @@ set(PRIVATE_LINK_LIBRARIES
         optimization
         pnp
         projection_functions
-        time_synchronization
+        time_sync
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES

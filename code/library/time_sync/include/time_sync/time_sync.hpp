@@ -11,7 +11,7 @@
 // NOTE(Jack): The sync logic we do makes no guarantees that the best matching across the entire set is made (ex.
 // minimizing the sum of time deltas etc.) It is a greedy algorithm and should not be expected to save the world.
 
-namespace reprojection::time_synchronization {
+namespace reprojection::time_sync {
 
 std::set<uint64_t>::const_iterator FindClosest(std::set<uint64_t> const& data, uint64_t timestamp);
 
