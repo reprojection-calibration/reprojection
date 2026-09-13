@@ -552,8 +552,11 @@ void RigStateInsert(sqlite3* const db, StepId const step_id, StepId const source
     // day soon I hope!
     CameraPosesInsert(db, step_id, source_step_id, data.rig_frame_asset_id, data.poses);
 
-    // WARN(Jack): Should we manually insert the identity transform here? We cannot put it into the Extrinsics object
-    // because that forbids self-cycles.
+    // NOTE(Jack): Every rig has a self referencing identity extrinsic for the reference cam/cam0.
+    // TODO(Jack): One day should our rig state support the identity self transform or define a separate rig asset so we
+    // can put this tf in the extrinsic container without problem?
+    Extrinsic const identity{data.rig_frame_asset_id, data.rig_frame_asset_id, Array6d::Zero()};
+    ExtrinsicInsert(db, step_id, identity);
 
     // TODO(Jack): Should we make the extrinsic insertion operation a batch insertion operation?
     for (auto const& extrinsic_i : data.extrinsics.Values()) {
