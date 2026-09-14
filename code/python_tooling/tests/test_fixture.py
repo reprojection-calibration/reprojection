@@ -212,11 +212,12 @@ def construct_visualization_db(db_path):
                     (29 + asset_id, 19 + asset_id, asset_id, timestamp),
                 )
                 conn.execute(
-                    "INSERT INTO reprojection_errors VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO reprojection_errors VALUES (?, ?, ?, ?, ?, ?)",
                     (
                         29 + asset_id,
                         19 + asset_id,
                         asset_id,
+                        timestamp,
                         timestamp,
                         error.SerializeToString(),
                     ),
@@ -249,7 +250,7 @@ def construct_staged_visualization_db(db_path):
                 (step_id,),
             )
             conn.execute(
-                "INSERT INTO reprojection_errors SELECT ?, source_step_id, asset_id, timestamp_ns, data FROM reprojection_errors WHERE step_id IN (30, 31)",
+                "INSERT INTO reprojection_errors SELECT ?, source_step_id, asset_id, sample_timestamp_ns, frame_timestamp_ns, data FROM reprojection_errors WHERE step_id IN (30, 31)",
                 (step_id,),
             )
             conn.execute(
@@ -260,6 +261,6 @@ def construct_staged_visualization_db(db_path):
             "INSERT INTO camera_poses SELECT 60, source_step_id, asset_id, timestamp_ns, rx, ry, rz, x, y, z FROM camera_poses WHERE step_id=30"
         )
         conn.execute(
-            "INSERT INTO reprojection_errors SELECT 60, source_step_id, asset_id, timestamp_ns, data FROM reprojection_errors WHERE step_id=30"
+            "INSERT INTO reprojection_errors SELECT 60, source_step_id, asset_id, sample_timestamp_ns, frame_timestamp_ns, data FROM reprojection_errors WHERE step_id=30"
         )
         assert not conn.execute("PRAGMA foreign_key_check").fetchall()

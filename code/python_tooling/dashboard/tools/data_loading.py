@@ -52,9 +52,12 @@ def serialize_workflow(workflow, tables):
     records = {}
     for name, table in tables.items():
         table = table.copy()
-        if "timestamp_ns" in table:
-            table = table.sort_values(["timestamp_ns", "step_id", "asset_id"])
-            table["timestamp_ns"] = table["timestamp_ns"].map(str)
+        timestamp_column = (
+            "sample_timestamp_ns" if name == "reprojection_errors" else "timestamp_ns"
+        )
+        if timestamp_column in table:
+            table = table.sort_values([timestamp_column, "step_id", "asset_id"])
+            table[timestamp_column] = table[timestamp_column].map(str)
         records[name] = table.to_dict("records")
     return {
         "id": workflow.id,

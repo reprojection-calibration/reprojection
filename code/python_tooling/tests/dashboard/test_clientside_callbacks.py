@@ -36,12 +36,12 @@ class TestClientsideCallbacks(unittest.TestCase):
             step_id=30,
             source_step_id=20,
             asset_id=1,
-            timestamp_ns=target["timestamp_ns"],
+            sample_timestamp_ns=target["timestamp_ns"],
             data=[[3, 4]],
         )
         other_errors = [
             dict(error, source_step_id=21, data=[[90, 0]]),
-            dict(error, timestamp_ns="1700000000000000002", data=[[80, 0]]),
+            dict(error, sample_timestamp_ns="1700000000000000002", data=[[80, 0]]),
             dict(error, asset_id=2, data=[[70, 0]]),
             dict(error, step_id=31, data=[[60, 0]]),
         ]
