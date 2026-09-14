@@ -22,7 +22,7 @@ class BaFixture : public ::testing::Test {
         ASSERT_EQ(std::size(targets_), std::size(frames_));
     }
 
-    AssetId camera_id_{1};
+    AssetId camera_id_{1};  // cppcheck-suppress unusedStructMember
     CameraInfo camera_info_{CameraModel::Pinhole, testing_utilities::image_bounds};
     Intrinsic intrinsic_{testing_utilities::pinhole_intrinsics};
     TargetSamples targets_;
