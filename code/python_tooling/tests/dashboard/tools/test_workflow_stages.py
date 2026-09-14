@@ -74,15 +74,26 @@ class TestWorkflowStages(unittest.TestCase):
         options, default = imu_step_selector_options(4, self.metadata)
         self.assertIn({"label": "Visual-inertial initialization", "value": 59}, options)
         self.assertEqual(default, 60)
-        self.assertNotIn(59, [o["value"] for o in step_selector_options(1, self.metadata, "cam_imu")[0]])
+        self.assertNotIn(
+            59,
+            [o["value"] for o in step_selector_options(1, self.metadata, "cam_imu")[0]],
+        )
         panel = render_sensor_panel(1, self.metadata, "cam_imu")
         selector = panel.children[1].children[1].children[1]
         self.assertEqual(selector.options, options)
         self.assertEqual(selector.value, default)
         self.assertEqual(step_selector_options(2, self.metadata, "cam_imu"), ([], None))
-        self.assertNotIn(59, [o["value"] for o in step_selector_options(1, self.metadata, "single_cam")[0]])
+        self.assertNotIn(
+            59,
+            [
+                o["value"]
+                for o in step_selector_options(1, self.metadata, "single_cam")[0]
+            ],
+        )
 
-        self.metadata["counts"] = [r for r in self.metadata["counts"] if r["step_id"] == 59]
+        self.metadata["counts"] = [
+            r for r in self.metadata["counts"] if r["step_id"] == 59
+        ]
         self.assertEqual(step_selector_options(1, self.metadata, "cam_imu"), ([], None))
         self.assertEqual(imu_step_selector_options(4, self.metadata)[1], 59)
         self.assertEqual(imu_step_selector_options(99, self.metadata), ([], None))

@@ -7,8 +7,14 @@ from database.types import SensorType
 
 
 @app.callback(
-    Output({"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Camera}, "figure"),
-    Input({"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Camera}, "id"),
+    Output(
+        {"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Camera},
+        "figure",
+    ),
+    Input(
+        {"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Camera},
+        "id",
+    ),
     Input("step-selector", "value"),
     Input("workflow-data-store", "data"),
 )
@@ -17,7 +23,10 @@ def update_camera_timeseries(composite_id, step_id, workflow_data):
 
 
 @app.callback(
-    Output({"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Imu}, "figure"),
+    Output(
+        {"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Imu},
+        "figure",
+    ),
     Input({"type": "imu-step-selector", "asset_id": MATCH}, "id"),
     Input({"type": "imu-step-selector", "asset_id": MATCH}, "value"),
     Input("workflow-data-store", "data"),

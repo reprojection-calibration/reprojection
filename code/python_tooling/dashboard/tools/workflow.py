@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from dash import html
 
+
 @dataclass(frozen=True)
 class Stage:
     id: str

@@ -1,5 +1,5 @@
-import unittest
 import json
+import unittest
 
 from dashboard.app import app
 
@@ -95,38 +95,74 @@ class TestDashboardLayout(unittest.TestCase):
 
     def test_imu_callback_uses_local_selection_and_updates_residuals(self):
         callback_id = next(
-            key for key in app.callback_map
-            if '"sensor_type":"imu"' in key and 'timeseries' in key
+            key
+            for key in app.callback_map
+            if '"sensor_type":"imu"' in key and "timeseries" in key
         )
         dependencies = app.callback_map[callback_id]["inputs"]
         self.assertNotIn("step-selector", [item["id"] for item in dependencies])
         selector_id = {"type": "imu-step-selector", "asset_id": 4}
         graph_id = {"type": "timeseries", "asset_id": 4, "sensor_type": "imu"}
-        measurement = dict(step_id=3, asset_id=4, timestamp_ns="100",
-                           omega_x=1, omega_y=2, omega_z=3, ax=4, ay=5, az=6)
-        data = {"tables": {
-            "imu_data": [measurement],
-            "imu_errors": [dict(measurement, step_id=step, source_step_id=3, omega_x=error)
-                           for step, error in [(18, -0.5), (19, -0.1)]],
-        }}
-        for step, error in [(18, 0.5), (19, 0.1), (None, None)]:
-            response = self.client.post("/_dash-update-component", json={
-                "output": callback_id,
-                "outputs": {"id": graph_id, "property": "figure"},
-                "inputs": [
-                    {"id": json.dumps(selector_id, sort_keys=True, separators=(",", ":")),
-                     "property": "id", "value": selector_id},
-                    {"id": json.dumps(selector_id, sort_keys=True, separators=(",", ":")),
-                     "property": "value", "value": step},
-                    {"id": "workflow-data-store", "property": "data", "value": data},
+        measurement = dict(
+            step_id=3,
+            asset_id=4,
+            timestamp_ns="100",
+            omega_x=1,
+            omega_y=2,
+            omega_z=3,
+            ax=4,
+            ay=5,
+            az=6,
+        )
+        data = {
+            "tables": {
+                "imu_data": [measurement],
+                "imu_errors": [
+                    dict(measurement, step_id=step, source_step_id=3, omega_x=error)
+                    for step, error in [(18, -0.5), (19, -0.1)]
                 ],
-                "state": [],
-                "changedPropIds": [json.dumps(selector_id, sort_keys=True, separators=(",", ":")) + ".value"],
-            })
+            }
+        }
+        for step, error in [(18, 0.5), (19, 0.1), (None, None)]:
+            response = self.client.post(
+                "/_dash-update-component",
+                json={
+                    "output": callback_id,
+                    "outputs": {"id": graph_id, "property": "figure"},
+                    "inputs": [
+                        {
+                            "id": json.dumps(
+                                selector_id, sort_keys=True, separators=(",", ":")
+                            ),
+                            "property": "id",
+                            "value": selector_id,
+                        },
+                        {
+                            "id": json.dumps(
+                                selector_id, sort_keys=True, separators=(",", ":")
+                            ),
+                            "property": "value",
+                            "value": step,
+                        },
+                        {
+                            "id": "workflow-data-store",
+                            "property": "data",
+                            "value": data,
+                        },
+                    ],
+                    "state": [],
+                    "changedPropIds": [
+                        json.dumps(selector_id, sort_keys=True, separators=(",", ":"))
+                        + ".value"
+                    ],
+                },
+            )
             self.assertEqual(response.status_code, 200)
             figure = next(iter(response.get_json()["response"].values()))["figure"]
-            values = {tuple(op["location"]): op["params"]["value"]
-                      for op in figure["operations"]}
+            values = {
+                tuple(op["location"]): op["params"]["value"]
+                for op in figure["operations"]
+            }
             self.assertEqual(values[("data", 0, "y")], [1])
             residual = values[("data", 0, "error_y")]
             self.assertEqual(residual["visible"], error is not None)

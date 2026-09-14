@@ -2,6 +2,7 @@ from dataclasses import replace
 
 from dash import dcc, html
 
+from dashboard.tools.metadata import imu_step_selector_options
 from dashboard.tools.timeseries_plotting import (
     AxisConfig,
     FigureConfig,
@@ -9,7 +10,6 @@ from dashboard.tools.timeseries_plotting import (
     build_figure_layout,
 )
 from database.types import SensorType
-from dashboard.tools.metadata import imu_step_selector_options
 
 TARGET_VISUALIZATION = FigureConfig(
     "Target detections & reprojection errors",
@@ -186,8 +186,11 @@ def imu_layout(asset_id, label="IMU", metadata=None):
                         value=value,
                         className="result-selector",
                     ),
-                    html.P("No IMU residuals available.", className="empty-state")
-                    if not options else None,
+                    (
+                        html.P("No IMU residuals available.", className="empty-state")
+                        if not options
+                        else None
+                    ),
                 ],
                 className="result-control",
             ),
