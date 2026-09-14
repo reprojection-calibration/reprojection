@@ -11,7 +11,7 @@ struct VisualInertialInit {
     VisualInertialInit(AssetId imu_id, StepId imu_data_id, AssetId cam_id, StepId spline_id, int num_threads,
                        SqlitePtr db);
 
-    static StepType Type() { return StepType::ExtrinsicInit; }
+    static StepType Type() { return StepType::VisualInertialInit; }
 
     std::vector<AssetId> Assets() const { return {imu_id_, cam_id_}; }
 

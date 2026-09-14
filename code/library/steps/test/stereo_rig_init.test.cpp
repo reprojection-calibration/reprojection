@@ -30,7 +30,7 @@ class StereoRigInitFixture : public StepTestFixture {
     std::vector<CamStageIds> cam_stages_;
 };
 
-TEST_F(StereoRigInitFixture, TestExtrinsicInitStepRunner) {
+TEST_F(StereoRigInitFixture, TestStereoRigInitStepRunner) {
     steps::StereoRigInit const step{cam0_, 0, cam_stages_, db_};
     StepId const step_id{RunStep<steps::StereoRigInit>(context_.workflow_id, step, db_)};
 
@@ -44,15 +44,15 @@ TEST_F(StereoRigInitFixture, TestExtrinsicInitStepRunner) {
     }
 }
 
-TEST_F(StereoRigInitFixture, TestExtrinsicInitStep) {
+TEST_F(StereoRigInitFixture, TestStereoRigInitStep) {
     steps::StereoRigInit const step{cam0_, 0, cam_stages_, db_};
 
-    EXPECT_EQ(step.Type(), StepType::ExtrinsicInit);
+    EXPECT_EQ(step.Type(), StepType::StereoRigInit);
     std::vector const gt_assets{cam0_, context_.assets.cameras.back().id};
     EXPECT_EQ(step.Assets(), gt_assets);
     EXPECT_EQ(step.CacheKey().value, "cdb3147fbcc9ca2299fc3c10ace0f92af1331886a862f5e9804f79df89e77d9b");
 
-    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
+    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::StereoRigInit, "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
     for (auto const& cam : cam_stages_) {

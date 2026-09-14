@@ -67,12 +67,12 @@ TEST_F(StereoRigOptFixture, TestStereoRigOptRunner) {
 TEST_F(StereoRigOptFixture, TestStereoRigOptStep) {
     steps::StereoRigOpt const step{cam0_, cam_stages_, extrinsic_id_, 1, 0, db_};
 
-    EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
+    EXPECT_EQ(step.Type(), StepType::StereoRigOpt);
     std::vector const gt_assets{cam0_, context_.assets.cameras.back().id};
     EXPECT_EQ(step.Assets(), gt_assets);
     EXPECT_EQ(step.CacheKey().value, "e2dce0022f9fc213b45a9b5cbeccf9f63892de59b0f224ce02c8c40fa7670830");
 
-    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicOptimization, "").first};
+    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::StereoRigOpt, "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
     for (auto const& cam : cam_stages_) {

@@ -14,7 +14,7 @@ struct StereoRigOpt {
     StereoRigOpt(AssetId cam0_id, std::vector<CamStageIds> const& cams, StepId extrinsic_init_id, int num_threads,
                  uint64_t approx_sync_delta_ns, SqlitePtr db);
 
-    static StepType Type() { return StepType::ExtrinsicOptimization; }
+    static StepType Type() { return StepType::StereoRigOpt; }
 
     std::vector<AssetId> Assets() const {
         std::vector<AssetId> assets;

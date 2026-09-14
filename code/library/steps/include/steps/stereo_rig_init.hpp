@@ -11,8 +11,7 @@ namespace reprojection::steps {
 struct StereoRigInit {
     StereoRigInit(AssetId cam0_id, uint64_t approx_sync_delta_ns, std::vector<CamStageIds> const& cams, SqlitePtr db);
 
-    // TODO(Jack): Should we rename to reflect "stereo rig init"?
-    static StepType Type() { return StepType::ExtrinsicInit; }
+    static StepType Type() { return StepType::StereoRigInit; }
 
     std::vector<AssetId> Assets() const {
         std::vector<AssetId> assets;

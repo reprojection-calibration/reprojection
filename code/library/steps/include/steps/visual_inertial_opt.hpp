@@ -16,7 +16,7 @@ struct VisualInertialOpt {
     VisualInertialOpt(AssetId imu_id, StepId imu_data_id, AssetId cam_id, StepId spline_id, StepId extrinsic_init_id,
                       StepId targets_id, StepId camera_info_id, StepId intrinsic_id, int num_threads, SqlitePtr db);
 
-    static StepType Type() { return StepType::ExtrinsicOptimization; }
+    static StepType Type() { return StepType::VisualInertialOpt; }
 
     std::vector<AssetId> Assets() const { return {imu_id_, cam_id_}; }  // LCOV_EXCL_LINE
 

@@ -40,7 +40,7 @@ class VisualInertialOptFixture : public StepTestFixture {
     StepId extrinsic_init_id_;
 };
 
-TEST_F(VisualInertialOptFixture, TestExtrinsicOptimizationStepRunner) {
+TEST_F(VisualInertialOptFixture, TestVisualInertialOptStepRunner) {
     steps::VisualInertialOpt const step{imu_id_,     imu_data_id_,    cam_id_,        spline_id_, extrinsic_init_id_,
                                         targets_id_, camera_info_id_, intrinsics_id_, 1,          db_};
     StepId const step_id{RunStep<steps::VisualInertialOpt>(context_.workflow_id, step, db_)};
@@ -54,17 +54,17 @@ TEST_F(VisualInertialOptFixture, TestExtrinsicOptimizationStepRunner) {
     EXPECT_NEAR(result2->norm(), kGravity, 1e-3);  // Heuristic!
 }
 
-TEST_F(VisualInertialOptFixture, TestExtrinsicOptimizationStep) {
+TEST_F(VisualInertialOptFixture, TestVisualInertialOptStep) {
     steps::VisualInertialOpt const step{imu_id_,     imu_data_id_,    cam_id_,        spline_id_, extrinsic_init_id_,
                                         targets_id_, camera_info_id_, intrinsics_id_, 1,          db_};
 
-    EXPECT_EQ(step.Type(), StepType::ExtrinsicOptimization);
+    EXPECT_EQ(step.Type(), StepType::VisualInertialOpt);
     std::vector const gt_assets{imu_id_, cam_id_};
     EXPECT_EQ(step.Assets(), gt_assets);
     EXPECT_EQ(step.CacheKey().value, "eab0d38464e832d533dce71257fb939d1691ff44144e082e05de35a4f14eb551");
 
     // Build the actual database step id and execute the step.
-    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
+    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::VisualInertialInit, "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, cam_id_)};

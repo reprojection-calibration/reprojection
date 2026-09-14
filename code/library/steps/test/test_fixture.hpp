@@ -137,7 +137,7 @@ class StepTestFixture : public ::testing::Test {
     }
 
     StepId InsertExtrinsic(AssetId const asset_a, AssetId const asset_b) {
-        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
+        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::VisualInertialInit, "").first};
 
         // WARN(Jack): Technically this identity transform is actually internal state of the core data generation code.
         // We should be getting these values from the data generation code directly and not hardcode them here.

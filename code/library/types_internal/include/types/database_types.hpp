@@ -87,15 +87,17 @@ inline std::string ToString(WorkflowType const data) {
 enum class StepType {
     BundleAdjustment,
     CameraInfo,
-    ExtrinsicInit,
-    ExtrinsicOptimization,
     FeatureExtraction,
     ImageLoading,
     ImuDataLoading,
     IntrinsicInit,
     PoseInit,
     SplineInit,
+    StereoRigInit,
+    StereoRigOpt,
     TargetInfo,
+    VisualInertialInit,
+    VisualInertialOpt,
 };
 
 inline std::string ToString(StepType const data) {
@@ -103,10 +105,6 @@ inline std::string ToString(StepType const data) {
         return "bundle_adjustment";
     } else if (data == StepType::CameraInfo) {
         return "camera_info";
-    } else if (data == StepType::ExtrinsicInit) {
-        return "extrinsic_initialization";
-    } else if (data == StepType::ExtrinsicOptimization) {
-        return "extrinsic_optimization";  // LCOV_EXCL_LINE
     } else if (data == StepType::FeatureExtraction) {
         return "feature_extraction";
     } else if (data == StepType::ImageLoading) {
@@ -119,8 +117,16 @@ inline std::string ToString(StepType const data) {
         return "pose_initialization";
     } else if (data == StepType::SplineInit) {
         return "spline_initialization";
+    } else if (data == StepType::StereoRigInit) {
+        return "stereo_rig_init";
+    } else if (data == StepType::StereoRigOpt) {
+        return "stereo_rig_opt";
     } else if (data == StepType::TargetInfo) {
         return "target_info";
+    } else if (data == StepType::VisualInertialInit) {
+        return "visual_inertial_init";
+    } else if (data == StepType::VisualInertialOpt) {
+        return "visual_inertial_opt";
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown StepType");  // LCOV_EXCL_LINE
     }

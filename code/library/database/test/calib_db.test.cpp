@@ -254,8 +254,8 @@ TEST(DatabaseCalibDb, TestImuErrors) {
 
     ImuErrors const imu_errors{{0, {{1, 2, 3}, {4, 5, 6}}}, {1, {{1, 2, 3}, {4, 5, 6}}}};
 
-    StepId const extrinsic_init_id{database::GetOrCreateStep(db.get(), StepType::ExtrinsicInit, "").first};
-    EXPECT_NO_THROW(database::ImuErrorsInsert(db.get(), extrinsic_init_id, imu_data_id, asset_id, imu_errors));
+    StepId const vi_init{database::GetOrCreateStep(db.get(), StepType::VisualInertialInit, "").first};
+    EXPECT_NO_THROW(database::ImuErrorsInsert(db.get(), vi_init, imu_data_id, asset_id, imu_errors));
 }
 
 TEST(DatabaseCalibDb, TestIntrinsics) {
@@ -298,7 +298,7 @@ TEST_F(CalibDbFixture, TestExtractedTargets) {
 TEST(DatabaseCalibDb, TestExtrinsics) {
     auto db{database::OpenCalibDb(":memory:", true)};
 
-    StepId const step_id{database::GetOrCreateStep(db.get(), StepType::ExtrinsicInit, "").first};
+    StepId const step_id{database::GetOrCreateStep(db.get(), StepType::VisualInertialInit, "").first};
     AssetId const cam_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
     AssetId const imu_id{database::GetOrCreateAsset(db.get(), AssetType::Imu, 0, "")};
 
@@ -320,7 +320,7 @@ TEST(DatabaseCalibDb, TestExtrinsics) {
 TEST(DatabaseCalibDb, TestGravity) {
     auto db{database::OpenCalibDb(":memory:", true)};
 
-    StepId const step_id{database::GetOrCreateStep(db.get(), StepType::ExtrinsicInit, "").first};
+    StepId const step_id{database::GetOrCreateStep(db.get(), StepType::VisualInertialInit, "").first};
 
     Vector3d const gravity{Vector3d::Random()};
     EXPECT_NO_THROW(database::GravityInsert(db.get(), step_id, gravity));
@@ -366,7 +366,7 @@ TEST_F(CalibDbFixture, TestRigState) {
     Extrinsic const extrinsic{asset_id, asset_id_2, Array6d::Ones()};
     transforms::RigState const rig_state{asset_id, rig_poses, transforms::Extrinsics{{extrinsic}}};
 
-    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicOptimization, "").first};
+    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::VisualInertialOpt, "").first};
     EXPECT_NO_THROW(database::RigStateInsert(db_.get(), step_id, extracted_targets_id, rig_state));
 }
 
