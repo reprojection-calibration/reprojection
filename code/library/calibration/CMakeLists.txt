@@ -2,13 +2,13 @@ set(LIBRARY_NAME "calibration")
 
 set(SRC_FILES
         src/calibration_utils.cpp
-        src/extrinsic_initialization.cpp
-        src/initialization_methods.cpp
+        src/camera_pose_init.cpp
+        src/init_methods.cpp
         src/intrinsic_initialization.cpp
         src/parabola_line_initialization.cpp
-        src/pose_initialization.cpp
         src/utilities.cpp
         src/vanishing_point_initialization.cpp
+        src/visual_inertial_init.cpp
 )
 set(PRIVATE_LINK_LIBRARIES
         eigen_utilities
@@ -17,7 +17,7 @@ set(PRIVATE_LINK_LIBRARIES
         optimization
         pnp
         projection_functions
-        time_synchronization
+        time_sync
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES
@@ -30,12 +30,12 @@ set(TEST_LINK_LIBRARIES
         testing_utilities
 )
 set(TESTS
-        src/extrinsic_initialization.test.cpp
         src/intrinsic_initialization.test.cpp
         src/parabola_line_initialization.test.cpp
         src/utilities.test.cpp
         src/vanishing_point_initialization.test.cpp
+        src/visual_inertial_init.test.cpp
         test/calibration_utils.test.cpp
-        test/initialization_methods.test.cpp
+        test/init_methods.test.cpp
 )
 AddTests()

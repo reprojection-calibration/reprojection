@@ -23,6 +23,7 @@ struct Config {
 
         bool show_extraction{false};
         int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
+        uint64_t approx_sync_delta_ns{3'000'000};  // 3ms, Roughly 10% of a 30Hz camera measurement interval.
     };
 
     struct Camera {

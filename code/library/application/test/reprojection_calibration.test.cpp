@@ -6,7 +6,7 @@
 #include <ranges>
 
 #include "config/config_parse.hpp"
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "hashing/hashing.hpp"
 #include "steps/initialize_workflow.hpp"
 #include "testing_mocks/data_generators.hpp"
@@ -92,7 +92,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
     toml::table config{toml::parse(testing_utilities::calibration_config)};
     config["cam1"].as_table()->insert_or_assign("camera_model", "pinhole");
 
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibDb(":memory:", true)};
     steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};
 
     std::vector<testing_utilities::CameraTestData> camera_test_data;
@@ -118,9 +118,9 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
         camera_test_data.push_back({
             camera_info,
             images_id,
-            hashing::HashArguments(camera.id.value, false, context.assets.target.config, image_samples),
+            hashing::HashArgs(camera.id.value, false, context.assets.target.config, image_samples),
             targets_id,
-            hashing::HashArguments(camera.id.value, camera.config.camera_model, image_samples),
+            hashing::HashArgs(camera.id.value, camera.config.camera_model, image_samples),
         });
     }
 

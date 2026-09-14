@@ -1,6 +1,6 @@
 #include "steps/target_info.hpp"
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
@@ -16,7 +16,7 @@ auto const log{logging::Get("steps")};
 TargetInfoStep::TargetInfoStep(AssetId target_id, config::Config::Target const& target)
     : target_id_{target_id}, target_{target} {}
 
-Hash TargetInfoStep::CacheKey() const { return hashing::HashArguments(target_id_.value, target_); }
+Hash TargetInfoStep::CacheKey() const { return hashing::HashArgs(target_id_.value, target_); }
 
 void TargetInfoStep::Execute(StepId step_id, SqlitePtr const db) const {
     TargetInfo const target_info{target_.target_type, target_.size[0], target_.size[1], target_.unit_dimension,

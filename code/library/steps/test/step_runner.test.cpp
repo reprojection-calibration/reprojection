@@ -25,7 +25,7 @@ struct ExampleStep {
 };
 
 TEST(StepsStepRunner, TestExampleStep) {
-    auto db{database::OpenCalibrationDatabase(":memory:", true)};
+    auto db{database::OpenCalibDb(":memory:", true)};
 
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Camera, 0, "")};
     database::AssetGroupInsert(db.get(), {asset_id});

@@ -4,7 +4,7 @@
 
 #include <testing_utilities/generated/calibration_config.hpp>
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "steps/initialize_workflow.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
@@ -137,7 +137,7 @@ class StepTestFixture : public ::testing::Test {
     }
 
     StepId InsertExtrinsic(AssetId const asset_a, AssetId const asset_b) {
-        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ExtrinsicInit, "").first};
+        StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::VisualInertialInit, "").first};
 
         // WARN(Jack): Technically this identity transform is actually internal state of the core data generation code.
         // We should be getting these values from the data generation code directly and not hardcode them here.
@@ -207,7 +207,7 @@ class StepTestFixture : public ::testing::Test {
     }
 
    public:
-    SqlitePtr db_{database::OpenCalibrationDatabase(":memory:", true)};
+    SqlitePtr db_{database::OpenCalibDb(":memory:", true)};
     steps::CalibrationContext context_;
 
     // NOTE(Jack): At least one test (extrinsic optimization) requires higher frequency data to return a correct result

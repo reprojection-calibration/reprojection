@@ -23,11 +23,19 @@ Config Config::Parse(toml::table const& table) {
 
 // The table is not required, but we have sensible defaults.
 Config::Application Config::Application::Parse(toml::table const& table) {
-    RejectUnexpectedKeys(table, {"show_extraction", "threads"}, "application");
+    RejectUnexpectedKeys(table, {"show_extraction", "threads", "approx_sync_delta_ms"}, "application");
 
     Application config{};
     OverrideIfPresent(table, "show_extraction", config.show_extraction);
     OverrideIfPresent(table, "threads", config.threads);
+
+    // NOTE(Jack): This is a kinda hacky way to do this, but we need to offer the user a more interpreateble unit in the
+    // config (i.e. milliseconds) but the library needs nanoseconds.
+    double approx_sync_delta_ms{0};
+    OverrideIfPresent(table, "approx_sync_delta_ms", approx_sync_delta_ms);
+    if (approx_sync_delta_ms > 1e-12) {
+        config.approx_sync_delta_ns = static_cast<uint64_t>(1e6 * approx_sync_delta_ms);
+    }
 
     return config;
 }

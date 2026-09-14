@@ -1,0 +1,68 @@
+#include "steps/spline_init.hpp"
+
+#include "calibration/calibration_utils.hpp"
+#include "database/calib_db.hpp"
+#include "geometry/lie.hpp"
+#include "hashing/hashing.hpp"
+#include "logging/fmt.hpp"
+#include "logging/logging.hpp"
+#include "optimization/visual_inertial_opt.hpp"
+#include "spline/se3_spline.hpp"
+#include "spline/spline_init.hpp"
+
+#include "utilities.hpp"
+
+namespace reprojection::steps {
+
+namespace {
+
+auto const log{logging::Get("steps")};
+
+}
+
+SplineInit::SplineInit(CamStageIds const& cam, SqlitePtr const db)
+    : camera_id_{cam.asset_id},
+      // ERROR(Jack): Am I crazy or should I not be using the optimized bundle adjustment poses and not the
+      // unrefined pose init poses here? For some reason when I do that the extrinsic init does not work properly,
+      // we need to look at this in the debug dashboard and figure out what is going on here. The entire "align
+      // rotations" thing play an important part here I think. This is a known problem.
+      camera_poses_{database::CameraPosesSelect(db.get(), cam.pose_init_id, cam.asset_id)},
+      targets_id_{cam.targets_id},
+      targets_{database::TargetsSelect(db.get(), cam.targets_id, cam.asset_id)},
+      camera_info_{ValueOrExit(database::CameraInfoSelect(db.get(), cam.camera_info_id, cam.asset_id), log)},
+      intrinsic_{ValueOrExit(database::IntrinsicSelect(db.get(), cam.bundle_adjustment_id, cam.asset_id), log)} {}
+
+Hash SplineInit::CacheKey() const { return hashing::HashArgs(camera_poses_, targets_, camera_info_, intrinsic_); }
+
+void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
+    auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
+
+    // NOTE(Jack): We normally store our frames so that they transform a world point to the camera optical frame (ex.
+    // bundle adjustment optimizes that directly). But the spline needs the inverse of that for its cumulative rotation
+    // formulation to work and for the linear acceleration to be calculated in the desired frame by default.
+    Frames invert_frames;
+    for (auto const& [timestamp_ns, frame_i] : aligned_camera_poses) {
+        invert_frames.insert({timestamp_ns, {geometry::Log(geometry::Exp(frame_i.value).inverse())}});
+    }
+
+    // TODO(Jack): Parameterize frequency! Add to cache key probably?
+    spline::Se3Spline const spline{spline::InitSe3SplineState(invert_frames, 100)};
+
+    // TODO(Jack): Should we print out the time handler in more practical units than nanoseconds?
+    log->info(
+        "{{{}, 'num_control_points': {}, 'time_handler': {{'t0_ns': {}, "
+        "'delta_t_ns': {}}}}}",
+        StepLogInfo{Type(), step_id, camera_id_}, spline.Size(),  // LCOV_EXCL_LINE
+        spline.GetTimeHandler().t0_ns_, spline.GetTimeHandler().delta_t_ns_);
+
+    database::ControlPointsInsert(db.get(), step_id, camera_id_, spline.ControlPoints());
+    database::SplineInfoInsert(db.get(), step_id, camera_id_, spline.GetTimeHandler());
+
+    auto const ba_problem{optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, spline, camera_id_)};
+    auto const residuals{optimization::EvaluateResiduals(ba_problem)};
+
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig_poses);
+    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, residuals);
+}
+
+}  // namespace reprojection::steps

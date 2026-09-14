@@ -4,7 +4,7 @@
 #include "geometry/lie.hpp"
 #include "projection_functions/camera_model.hpp"
 #include "projection_functions/initialize_camera.hpp"
-#include "spline/spline_initialization.hpp"
+#include "spline/spline_init.hpp"
 
 #include "mvg_helpers.hpp"
 #include "noise_generation.hpp"
@@ -23,7 +23,7 @@ std::pair<ImuSamples, spline::Se3Spline> GenerateImuData(double const duration_s
         Trajectory(duration_s, sample_rate_hz, trajectory.origin_w, trajectory.target_w, trajectory.radius)};
 
     // TODO(Jack): Is this the right frequency to pass in?
-    spline::Se3Spline const spline_w_b{spline::InitializeSe3SplineState(tf_w_b, sample_rate_hz)};
+    spline::Se3Spline const spline_w_b{spline::InitSe3SplineState(tf_w_b, sample_rate_hz)};
 
     return {imu_data, spline_w_b};
 }

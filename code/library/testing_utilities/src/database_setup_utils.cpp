@@ -1,6 +1,6 @@
 #include "testing_utilities/database_setup_utils.hpp"
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "hashing/hashing.hpp"
 
 namespace reprojection::testing_utilities {
@@ -22,7 +22,7 @@ void TestDatabaseSetup(std::vector<Asset<config::Config::Camera>> const& cameras
 
         // Write the image loading and feature extraction cache keys
         database::StepCacheKeyUpdate(db.get(), test_data.image_loading_id,
-                                     hashing::HashArguments(camera.config.sensor_name));
+                                     hashing::HashArgs(camera.config.sensor_name));
         database::StepCacheKeyUpdate(db.get(), test_data.feature_extraction_id, test_data.feature_extraction_key);
 
         // Write the camera info if not already present (allows us to rerun this script without reverting the db).

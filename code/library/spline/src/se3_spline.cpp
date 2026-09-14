@@ -3,7 +3,7 @@
 #include "geometry/lie.hpp"
 #include "spline/r3_spline.hpp"
 #include "spline/so3_spline.hpp"
-#include "spline/spline_evaluation.hpp"
+#include "spline/spline_eval.hpp"
 
 namespace reprojection::spline {
 

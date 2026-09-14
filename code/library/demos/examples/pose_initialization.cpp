@@ -2,7 +2,7 @@
 
 #include "application/reprojection_calibration.hpp"
 #include "config/config_parse.hpp"
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "hashing/hashing.hpp"
 #include "steps/initialize_workflow.hpp"
 #include "testing_utilities/database_setup_utils.hpp"
@@ -37,7 +37,7 @@ int main() {
     // ERROR(Jack): Hardcoded to work in clion, is there a reproducible way to do this, or at least some philosophy we
     // can officially document?
     std::string const record_path{"/tmp/reprojection/code/test_data/dataset-calib-imu4_512_16.calib.db3"};
-    auto db{database::OpenCalibrationDatabase(record_path, false)};
+    auto db{database::OpenCalibDb(record_path, false)};
 
     toml::table const config{toml::parse(testing_utilities::calibration_config)};
     steps::CalibrationContext const context{steps::InitializeCalibration(config, db)};

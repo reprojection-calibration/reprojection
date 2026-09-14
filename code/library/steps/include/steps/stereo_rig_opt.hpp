@@ -1,0 +1,44 @@
+#pragma once
+
+#include "optimization/visual_inertial_opt.hpp"
+#include "types/calibration_types.hpp"
+#include "types/database_types.hpp"
+#include "types/io.hpp"
+
+// TODO(Jack): One day can we just have a single bundle adjustment step that generically does a "rig" whether it is
+// single or multi-cam, I think we are not too far away.
+
+namespace reprojection::steps {
+
+struct StereoRigOpt {
+    StereoRigOpt(AssetId cam0_id, std::vector<CamStageIds> const& cams, StepId extrinsic_init_id, int num_threads,
+                 uint64_t approx_sync_delta_ns, SqlitePtr db);
+
+    static StepType Type() { return StepType::StereoRigOpt; }
+
+    std::vector<AssetId> Assets() const {
+        std::vector<AssetId> assets;
+        for (auto const& camera : ba_input_) {
+            // cppcheck-suppress useStlAlgorithm
+            assets.push_back(camera.camera_id);
+        }
+
+        return assets;
+    }  // LCOV_EXCL_LINE
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    // TODO(Jack): Naming inconsistency between cam0 and rig!
+    AssetId cam0_id_;
+    StepId cam0_targets_id_;
+    std::vector<optimization::CameraProblemInput> ba_input_;
+    // TODO(Jack): Naming inconsistency between cam0 and rig!
+    Frames rig_poses_;
+    int num_threads_;
+    uint64_t approx_sync_delta_ns_;
+};
+
+}  // namespace reprojection::steps

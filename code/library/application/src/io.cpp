@@ -2,7 +2,7 @@
 
 #include "application/cli_utils.hpp"
 #include "config/config_loading.hpp"
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "logging/logging.hpp"
 
 namespace reprojection::application {
@@ -83,7 +83,7 @@ std::optional<SqlitePtr> Open(fs::path const& workspace_dir, fs::path const& dat
     bool const db_exists{fs::exists(db_path)};
     log->info("{{'db_path': '{}', 'exists': {}}}", db_path.string(), db_exists);
 
-    return database::OpenCalibrationDatabase(db_path, not db_exists);
+    return database::OpenCalibDb(db_path, not db_exists);
 }
 
 }  // namespace reprojection::application

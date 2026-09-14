@@ -87,15 +87,17 @@ inline std::string ToString(WorkflowType const data) {
 enum class StepType {
     BundleAdjustment,
     CameraInfo,
-    ExtrinsicInit,
-    ExtrinsicOptimization,
     FeatureExtraction,
     ImageLoading,
     ImuDataLoading,
     IntrinsicInit,
     PoseInit,
     SplineInit,
+    StereoRigInit,
+    StereoRigOpt,
     TargetInfo,
+    VisualInertialInit,
+    VisualInertialOpt,
 };
 
 inline std::string ToString(StepType const data) {
@@ -103,10 +105,6 @@ inline std::string ToString(StepType const data) {
         return "bundle_adjustment";
     } else if (data == StepType::CameraInfo) {
         return "camera_info";
-    } else if (data == StepType::ExtrinsicInit) {
-        return "extrinsic_initialization";
-    } else if (data == StepType::ExtrinsicOptimization) {
-        return "extrinsic_optimization";  // LCOV_EXCL_LINE
     } else if (data == StepType::FeatureExtraction) {
         return "feature_extraction";
     } else if (data == StepType::ImageLoading) {
@@ -114,13 +112,21 @@ inline std::string ToString(StepType const data) {
     } else if (data == StepType::ImuDataLoading) {
         return "imu_data_loading";
     } else if (data == StepType::IntrinsicInit) {
-        return "intrinsic_initialization";
+        return "intrinsic_init";
     } else if (data == StepType::PoseInit) {
-        return "pose_initialization";
+        return "pose_init";
     } else if (data == StepType::SplineInit) {
-        return "spline_initialization";
+        return "spline_init";
+    } else if (data == StepType::StereoRigInit) {
+        return "stereo_rig_init";
+    } else if (data == StepType::StereoRigOpt) {
+        return "stereo_rig_opt";
     } else if (data == StepType::TargetInfo) {
         return "target_info";
+    } else if (data == StepType::VisualInertialInit) {
+        return "visual_inertial_init";
+    } else if (data == StepType::VisualInertialOpt) {
+        return "visual_inertial_opt";
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unknown StepType");  // LCOV_EXCL_LINE
     }
@@ -133,11 +139,14 @@ struct Asset {
     T config;
 };
 
-// TODO(Jack): Where does this belong?
-// NOTE(Jack): We only store the values that we need to the extrinsic calibration (imu). We could store every step id
-// but why?
-struct CameraCalibration {
-    AssetId camera_id;
+// TODO(Jack): Does this belong here?
+// TODO(Jack): Should we formalize the idea of "stages"? We kind of do it in the terminal logging from the application
+// but the formal concept of a stage does not exist. But what is apparent is that we need some way to represent related
+// bundles of steps.
+// NOTE(Jack): These are all the steps required to do the cam-imu extrinsic calibration. It is not clear that this is
+// the best abstraction to also support the multicam workflow.
+struct CamStageIds {
+    AssetId asset_id;
     StepId camera_info_id;
     StepId targets_id;
     StepId pose_init_id;

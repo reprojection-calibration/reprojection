@@ -3,7 +3,7 @@
 #include <ceres/autodiff_cost_function.h>
 
 #include "cost_functions/utils.hpp"
-#include "spline/spline_initialization.hpp"
+#include "spline/spline_init.hpp"
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 

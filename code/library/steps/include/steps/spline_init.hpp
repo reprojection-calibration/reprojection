@@ -1,0 +1,32 @@
+#pragma once
+
+#include "types/calibration_types.hpp"
+#include "types/database_types.hpp"
+#include "types/io.hpp"
+
+namespace reprojection::steps {
+
+struct SplineInit {
+    SplineInit(CamStageIds const& cam, SqlitePtr db);
+
+    static StepType Type() { return StepType::SplineInit; }
+
+    std::vector<AssetId> Assets() const { return {camera_id_}; }
+
+    Hash CacheKey() const;
+
+    void Execute(StepId step_id, SqlitePtr db) const;
+
+   private:
+    AssetId camera_id_;
+    Frames camera_poses_;
+    // NOTE(Jack): These are only needed for the reprojection error calculation. They are not needed for the spline
+    // initialization at all. But we do the diagnostic calculations in the spline init/other steps directly to avoid
+    // creating dedicated diagnostic calculation steps - even if it means passing some unexpected information in.
+    StepId targets_id_;
+    TargetSamples targets_;
+    CameraInfo camera_info_;
+    Intrinsic intrinsic_;
+};
+
+}  // namespace reprojection::steps

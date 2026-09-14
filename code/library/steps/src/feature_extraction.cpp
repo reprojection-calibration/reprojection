@@ -1,6 +1,6 @@
 #include "steps/feature_extraction.hpp"
 
-#include "database/calibration_database.hpp"
+#include "database/calib_db.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "hashing/hashing.hpp"
 #include "image_viewer/image_viewer.hpp"
@@ -34,7 +34,7 @@ Hash FeatureExtraction::CacheKey() const {
     // cache key to no longer be unique across different cameras. To prevent this we added the asset id. If this is
     // really a good way to solve this is unclear. The problem I see is that the asset id is not some universal
     // "forever" identifier, and therefore its use here seems like it might causes problems down the line.
-    return hashing::HashArguments(camera_id_.value, show_extraction_, target_info_, *images_);
+    return hashing::HashArgs(camera_id_.value, show_extraction_, target_info_, *images_);
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!

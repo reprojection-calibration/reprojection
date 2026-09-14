@@ -4,7 +4,7 @@
 
 #include "geometry/lie.hpp"
 #include "spline/constants.hpp"
-#include "spline/spline_evaluation.hpp"
+#include "spline/spline_eval.hpp"
 #include "types/eigen_types.hpp"
 
 using namespace reprojection;

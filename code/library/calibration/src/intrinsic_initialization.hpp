@@ -10,11 +10,10 @@ namespace reprojection::calibration {
 using CandidateGenerator = std::function<std::vector<double>(ExtractedTarget const&)>;
 using IntrinsicsInitializer = std::function<ArrayXd(double, double, double)>;
 
-std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrategy(CameraModel const camera_model,
-                                                                                  double const height,
-                                                                                  double const width);
+std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrategy(CameraModel camera_model,
+                                                                                  double height, double width);
 
-std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target, double const cx, double const cy);
+std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target, double cx, double cy);
 
 std::vector<double> EstimateCandidatesVanishingPoint(ExtractedTarget const& target);
 

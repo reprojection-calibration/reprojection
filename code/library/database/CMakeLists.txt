@@ -92,8 +92,8 @@ protobuf_generate_cpp(proto_sources proto_headers
 )
 
 set(SRC_FILES
-        src/calibration_database.cpp
-        src/database_semantics.cpp
+        src/calib_db.cpp
+        src/db_semantics.cpp
         src/serialization.cpp
         src/sqlite_helpers.cpp
         src/sqlite_exception.cpp
@@ -130,7 +130,7 @@ set(TEST_LINK_LIBRARIES
 set(TESTS
         src/serialization.test.cpp
         src/toml_converters.test.cpp
-        test/calibration_database.test.cpp
+        test/calib_db.test.cpp
         test/sqlite_exception.test.cpp
 )
 AddTests()
