@@ -56,9 +56,6 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
     return {result, ceres_state};
 }
 
-// TODO UNIT TEST!
-// TODO UNIT TEST!
-// TODO UNIT TEST!
 BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(AssetId const& cam0_id, Frames const& cam0_poses,
                                                             std::vector<CameraProblemInput> const& cams,
                                                             uint64_t const approx_sync_delta_ns) {

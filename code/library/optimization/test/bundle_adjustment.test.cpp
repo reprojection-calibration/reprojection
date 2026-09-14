@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ranges>
+
 #include "geometry/lie.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
@@ -26,6 +28,48 @@ class BaFixture : public ::testing::Test {
     TargetSamples targets_;
     Frames frames_;
 };
+
+TEST_F(BaFixture, TestMultiCam) {
+    // NOTE(Jack): The real meat and potatoes of this test is that we initialize the second and third cam with random
+    // non zero extrinsic. We then assert that we recover the identity extrinsic after the optimization.
+    std::vector<optimization::CameraProblemInput> const cams{
+        {camera_id_, camera_info_, intrinsic_, targets_, Array6d::Zero(), true, false},
+        {AssetId{2}, camera_info_, intrinsic_, targets_, Array6d::Random(), true, true},
+        {AssetId{3}, camera_info_, intrinsic_, targets_, Array6d::Random(), true, true},
+    };
+
+    Ba::Problem const problem{Ba::MultiCamProblem(camera_id_, frames_, cams, 0)};
+
+    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
+
+    auto const& [ref_asset, frames, cameras]{result};
+    EXPECT_EQ(ref_asset, camera_id_);
+    EXPECT_EQ(std::size(cameras), 3);
+
+    // Assert
+    EXPECT_EQ(std::size(frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : frames) {
+        Array6d const gt_se3_co_w{frames_.at(timestamp_ns).value};
+        Array6d const se3_co_w{frame_i.value};
+
+        EXPECT_TRUE(se3_co_w.isApprox(gt_se3_co_w, 1e-6)) << "Result:\n"
+                                                          << se3_co_w.transpose() << "\nexpected result:\n"
+                                                          << gt_se3_co_w.transpose();
+    }
+
+    for (auto const& camera_i : cameras | std::views::values) {
+        auto const intrinsic_i{camera_i.intrinsic.value};
+        EXPECT_TRUE(intrinsic_i.isApprox(intrinsic_.value, 1e-6)) << "Result:\n"
+                                                                  << intrinsic_i.transpose() << "\nexpected result:\n"
+                                                                  << intrinsic_.value.transpose();
+
+        // TODO(Jack): It would be smarter to get the ground truth extrinsic from some sort of problem creation logic,
+        // but for now we just hardcode it to identity like we have done elsewhere. Not clean!
+        auto const extrinsic_i{camera_i.extrinsic};
+        EXPECT_TRUE(extrinsic_i.isZero(1e-9));
+    }
+}
 
 // Test with perfect data - means inputs will be exact same as outputs. Technically this test might miss something
 // because the optimization will likely not even execute once because the error is zero. For a real test look at the
