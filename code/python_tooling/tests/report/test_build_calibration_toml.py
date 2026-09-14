@@ -1,4 +1,7 @@
 import unittest
+import tomllib
+
+import numpy as np
 from textwrap import dedent
 
 import pandas as pd
@@ -197,3 +200,54 @@ class TestBuildCameraTomls(unittest.TestCase):
         """
 
         self.assertEqual(result, dedent(result_gt))
+
+    def test_extrinsics_export_only_final_optimized_sensor_pairs(self):
+        workflow = Workflow(
+            id=1, type="cam_imu", asset_group_signature="1|2|3|",
+            assets={
+                1: {"id": 1, "name": "cam0", "type": "camera"},
+                2: {"id": 2, "name": "cam1", "type": "camera"},
+                3: {"id": 3, "name": "imu", "type": "imu"},
+            },
+            steps={
+                step: {"type": kind, "asset_group_signature": "1|2|3|"}
+                for step, kind in [
+                    (10, "stereo_rig_init"), (11, "stereo_rig_opt"),
+                    (12, "stereo_rig_opt"), (20, "visual_inertial_init"),
+                    (21, "visual_inertial_opt"), (22, "visual_inertial_opt"),
+                    (30, "visual_inertial_init"), (31, "bundle_adjustment"),
+                ]
+            },
+        )
+
+        def row(step, a, b, x):
+            return dict(step_id=step, asset_a_id=a, asset_b_id=b,
+                        rx=0, ry=0, rz=0, x=x, y=0, z=0)
+
+        extrinsics = pd.DataFrame([
+            row(22, 3, 1, 0.2), row(11, 2, 1, 9), row(10, 2, 1, 8),
+            row(12, 2, 1, 0.1), row(20, 3, 1, 7), row(21, 3, 1, 6),
+            row(12, 1, 1, 0), row(22, 3, 3, 0),
+            row(30, 3, 1, 5), row(31, 1, 1, 0),
+            # Distinct sensors may legitimately have an identity transform.
+            row(22, 3, 2, 0),
+            # An optimized result outside this workflow must not be exported.
+            row(99, 3, 1, 4),
+        ])
+        original = extrinsics.copy(deep=True)
+        result = tomllib.loads(build_extrinsic_toml(workflow, {"extrinsics": extrinsics}))
+        exported = result["workflow1"]
+        self.assertEqual(list(exported), ["extrinsic0", "extrinsic1", "extrinsic2"])
+        self.assertEqual(
+            [(r["step_id"], r["frame_a"], r["frame_b"]) for r in exported.values()],
+            [(12, "cam1", "cam0"), (22, "imu", "cam0"), (22, "imu", "cam1")],
+        )
+        self.assertEqual(exported["extrinsic0"]["tf_a_b"][0][3], 0.1)
+        self.assertEqual(exported["extrinsic1"]["tf_a_b"][0][3], 0.2)
+        np.testing.assert_allclose(exported["extrinsic2"]["tf_a_b"], np.eye(4))
+        pd.testing.assert_frame_equal(extrinsics, original)
+
+        for rows in [extrinsics.iloc[:0], pd.DataFrame([row(10, 2, 1, 8)]),
+                     pd.DataFrame([row(12, 1, 1, 0)])]:
+            self.assertFalse(build_extrinsic_toml(workflow, {"extrinsics": rows}))
+        self.assertFalse(build_extrinsic_toml(workflow, {}))

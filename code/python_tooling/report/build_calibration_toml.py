@@ -114,9 +114,23 @@ def format_toml_matrix(matrix, precision=12):
 
 
 def build_extrinsic_toml(workflow, workflow_data):
+    """Export the latest optimized result for each distinct, directed sensor pair."""
     extrinsics = workflow_data.get("extrinsics")
     if extrinsics is None or extrinsics.empty:
         return None
+
+    optimized_steps = workflow.step_ids("stereo_rig_opt") + workflow.step_ids(
+        "visual_inertial_opt"
+    )
+    extrinsics = extrinsics.loc[
+        extrinsics["step_id"].isin(optimized_steps)
+        & (extrinsics["asset_a_id"] != extrinsics["asset_b_id"])
+    ]
+    # Step IDs identify successive recorded results. Keep the latest per pair,
+    # so the camera rig and camera/IMU optimizations both survive the export.
+    extrinsics = extrinsics.sort_values("step_id").drop_duplicates(
+        ["asset_a_id", "asset_b_id"], keep="last"
+    )
 
     output = []
     for index, (_, row) in enumerate(
