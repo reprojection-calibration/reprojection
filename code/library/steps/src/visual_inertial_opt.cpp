@@ -41,6 +41,8 @@ Hash VisualInertialOpt::CacheKey() const {
                              gravity_);
 }
 
+// TODO(Jack): There is really no reason for us to limit us here to only passing the cam0 targets. We should really
+// consider this a calibration to the entire stereo rig we optimized before. Assuming we have a stereo rig of course!
 void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::VisualInertialOpt(
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};

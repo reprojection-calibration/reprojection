@@ -54,9 +54,13 @@ struct OptimizationState {
     Frames frames;
 };
 
+// TODO(Jack): Does this belong in the bundle adjustment class?
+// NOTE(Jack): We write the frame timestamp directly into the struct here so that we do not need to separately track
+// synchronization logic of resynchronize again later. This is the sync signal directly!
 struct ReprojectionError {
     AssetId camera_id;
     uint64_t sample_timestamp_ns;
+    uint64_t frame_timestamp_ns;
     ArrayX2d value;
 };
 
