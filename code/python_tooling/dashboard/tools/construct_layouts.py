@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from dash import dcc, html
 
 from dashboard.tools.timeseries_plotting import (
@@ -9,7 +11,7 @@ from dashboard.tools.timeseries_plotting import (
 from database.types import SensorType
 
 TARGET_VISUALIZATION = FigureConfig(
-    "Feature Extraction",
+    "Target detections & reprojection errors",
     (
         SubplotConfig(
             "Target",
@@ -55,87 +57,71 @@ POSE_VISUALIZATION = FigureConfig(
 )
 
 
-# NOTE(Jack): We use pattern matching callbacks to facilitate the dynamic layout -
-#       https://dash.plotly.com/pattern-matching-callbacks
-def camera_layout(asset_id):
-    return html.Div(
+def camera_layout(asset_id, label="Camera", pose_title="Camera motion"):
+    return html.Section(
         [
-            html.H3("Camera Layout"),
             html.Div(
-                id={
-                    "type": "current_timestamp",
-                    "asset_id": asset_id,
-                    "sensor_type": SensorType.Camera,
-                },
-                children="N/A",
-            ),
-            dcc.Input(
-                id={
-                    "type": "max_error",
-                    "asset_id": asset_id,
-                },
-                min=1e-6,
-                type="number",
-                value=1,
-                style={
-                    "width": "10%",
-                    "minWidth": "60px",
-                },
-            ),
-            dcc.Graph(
-                id={
-                    "type": "extracted_targets",
-                    "asset_id": asset_id,
-                },
-                figure=build_figure_layout(TARGET_VISUALIZATION),
+                [
+                    html.H3(label),
+                    html.P(
+                        "Inspect target detections frame by frame. Colours show reprojection error for the selected result.",
+                        className="muted",
+                    ),
+                ],
+                className="plot-heading",
             ),
             html.Div(
                 [
-                    html.Div(
-                        html.Button(
-                            "Pause",
-                            id={"type": "pause_button", "asset_id": asset_id},
-                            # TODO(Jack): Style largely copy and pasted from the metadata cards. Centralize!
-                            style={
-                                "backgroundColor": "white",
-                                "border": "1px solid #ddd",
-                                "borderRadius": "6px",
-                                "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
-                                "width": "90%",
-                            },
-                        ),
-                        style={
-                            "width": "10%",
-                            "minWidth": "60px",
-                        },
+                    html.Button(
+                        "Pause", id={"type": "pause_button", "asset_id": asset_id}
                     ),
                     html.Div(
-                        dcc.Slider(
-                            id={
-                                "type": "slider",
-                                "asset_id": asset_id,
-                                "sensor_type": SensorType.Camera,
-                            },
-                            min=0,
-                            value=0,
-                            step=1,
-                            marks=None,
-                            updatemode="drag",
-                            tooltip={
-                                "placement": "top",
-                                "always_visible": True,
-                            },
-                        ),
-                        style={
-                            "width": "90%",
-                        },
+                        [
+                            html.Label("Colour scale max (px)"),
+                            dcc.Input(
+                                id={"type": "max_error", "asset_id": asset_id},
+                                min=1e-6,
+                                type="number",
+                                value=1,
+                            ),
+                        ],
+                        className="error-control",
+                    ),
+                    html.Div(
+                        [
+                            html.Span("Timestamp (ns)", className="muted"),
+                            html.Code(
+                                id={
+                                    "type": "current_timestamp",
+                                    "asset_id": asset_id,
+                                    "sensor_type": SensorType.Camera,
+                                },
+                                children="—",
+                            ),
+                        ],
+                        className="timestamp-display",
                     ),
                 ],
-                style={
-                    "display": "flex",
-                    "alignItems": "center",
-                    "width": "100%",  # full row width
+                className="playback-controls",
+            ),
+            dcc.Slider(
+                id={
+                    "type": "slider",
+                    "asset_id": asset_id,
+                    "sensor_type": SensorType.Camera,
                 },
+                min=0,
+                max=0,
+                value=0,
+                step=1,
+                marks=None,
+                updatemode="drag",
+                tooltip={"placement": "bottom", "always_visible": False},
+            ),
+            dcc.Graph(
+                id={"type": "extracted_targets", "asset_id": asset_id},
+                figure=build_figure_layout(TARGET_VISUALIZATION),
+                config={"displaylogo": False},
             ),
             dcc.Graph(
                 id={
@@ -143,14 +129,18 @@ def camera_layout(asset_id):
                     "asset_id": asset_id,
                     "sensor_type": SensorType.Camera,
                 },
-                figure=build_figure_layout(POSE_VISUALIZATION),
+                figure=build_figure_layout(
+                    replace(POSE_VISUALIZATION, title=pose_title)
+                ),
+                config={"displaylogo": False},
             ),
-        ]
+        ],
+        className="plot-panel",
     )
 
 
 IMU_DATA_VISUALIZATION = FigureConfig(
-    "Imu Data",
+    "IMU measurements and residuals",
     (
         SubplotConfig(
             "Angular Velocity",
@@ -172,10 +162,19 @@ IMU_DATA_VISUALIZATION = FigureConfig(
 )
 
 
-def imu_layout(asset_id):
-    return html.Div(
+def imu_layout(asset_id, label="IMU"):
+    return html.Section(
         [
-            html.H3("IMU Layout"),
+            html.Div(
+                [
+                    html.H3(f"IMU · {label}"),
+                    html.P(
+                        "Measured angular velocity and acceleration, with residuals from the selected visual-inertial result when available.",
+                        className="muted",
+                    ),
+                ],
+                className="plot-heading",
+            ),
             dcc.Graph(
                 id={
                     "type": "timeseries",
@@ -183,6 +182,8 @@ def imu_layout(asset_id):
                     "sensor_type": SensorType.Imu,
                 },
                 figure=build_figure_layout(IMU_DATA_VISUALIZATION),
+                config={"displaylogo": False},
             ),
-        ]
+        ],
+        className="plot-panel",
     )

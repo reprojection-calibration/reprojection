@@ -80,7 +80,7 @@ app.clientside_callback(
     }
     """,
     Output(
-        {"type": "timeseries", "asset_id": MATCH, "sensor_type": MATCH},
+        {"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Camera},
         "figure",
         allow_duplicate=True,
     ),
@@ -88,7 +88,7 @@ app.clientside_callback(
         {
             "type": "current_timestamp",
             "asset_id": MATCH,
-            "sensor_type": MATCH,
+            "sensor_type": SensorType.Camera,
         },
         "children",
     ),

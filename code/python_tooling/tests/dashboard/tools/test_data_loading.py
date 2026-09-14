@@ -75,17 +75,17 @@ class TestDataLoading(unittest.TestCase):
 
         gt_sensor_list = [
             {
-                "label": "/cam0/image_raw (camera, 1)",
+                "label": "Camera 1 · /cam0/image_raw",
                 "value": 1,
             }
         ]
-        gt_sensor_list.append({"label": "/cam0/image_raw (camera, 2)", "value": 2})
+        gt_sensor_list.append({"label": "Camera 2 · /cam0/image_raw", "value": 2})
         self.assertEqual(sensor_list, gt_sensor_list)
         self.assertEqual(first_sensor, gt_sensor_list[0]["value"])
 
     def test_refresh_sensor_list_adversarial(self):
         sensor_data = refresh_sensor_list(None)
-        self.assertEqual(sensor_data, ([], ""))
+        self.assertEqual(sensor_data, ([], None))
 
         sensor_data = refresh_sensor_list({})
-        self.assertEqual(sensor_data, ([], ""))
+        self.assertEqual(sensor_data, ([], None))

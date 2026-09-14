@@ -48,3 +48,25 @@ Node.js when available.
 Create a **Python tests** run configuration targeting
 `<repository>/code/python_tooling/tests`, select the project's Python environment,
 and set `REPROJECTION_SQL_PYTHON_DIR=<repository>/code/resources/sql`.
+
+## Dashboard stages
+
+The main navigation follows `application/src/reprojection_calibration.cpp`:
+
+1. **Individual cameras** — inspect each camera's initial poses and bundle
+   adjustment results independently.
+2. **Stereo rig** — compare rig initialization and optimization. Reprojection
+   results can be inspected for each camera; rig poses belong to the reference
+   camera.
+3. **Visual-inertial** — inspect the reference camera alongside the IMU. As in
+   `Calibrate()`, this stage uses the first camera's individual calibration,
+   independently of the stereo result.
+
+Stage definitions and ordering live in `dashboard/tools/workflow.py`. Optional
+stages are disabled when their sensors are absent. Stages with sensors but no
+results remain visible with an explicit empty state. Result choices are scoped
+to the stage and camera, include only steps with poses or reprojection errors,
+and open the final available result by default. Camera and target metadata are
+in an expandable details table; relative transforms are shown with joint-stage
+results. Global navigation components stay in the permanent layout to support
+startup and workflow changes safely.

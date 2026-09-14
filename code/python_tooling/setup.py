@@ -8,6 +8,7 @@ setup(
     description="A package for handling and visualization of calibration data.",
     license="GNU AGPL",
     url="https://github.com/reprojection-calibration/reprojection",
+    package_data={"dashboard": ["assets/*.css"]},
     packages=[
         "business_logic",
         "dashboard",

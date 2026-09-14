@@ -1,5 +1,6 @@
 import os
 
+from dashboard.tools.workflow import camera_label, stage_cameras
 from database.calculate_metadata import workflow_metadata
 from database.data_formatting import parse_workflows, process_workflow
 from database.sql_table_loading import load_calibration_database
@@ -14,7 +15,8 @@ def refresh_workflow_list(db_file):
 
     result = [
         {
-            "label": f"{workflow.type} ({workflow.asset_group_signature})",
+            "label": f"Workflow {workflow.id} · {len(workflow.assets_of_type("camera"))} cameras"
+            + (" + IMU" if workflow.assets_of_type("imu") else ""),
             "value": workflow.id,
         }
         for workflow in workflows
@@ -66,13 +68,9 @@ def serialize_workflow(workflow, tables):
     }
 
 
-def refresh_sensor_list(metadata):
+def refresh_sensor_list(metadata, stage_id="single_cam"):
     result = [
-        {
-            "label": f"{asset['name']} ({asset['type']}, {asset['id']})",
-            "value": asset["id"],
-        }
-        for asset in (metadata or {}).get("assets", [])
-        if asset["type"] in ("camera", "imu")
+        {"label": camera_label(camera), "value": camera["id"]}
+        for camera in stage_cameras(metadata, stage_id)
     ]
-    return result, result[0]["value"] if result else ""
+    return result, result[0]["value"] if result else None

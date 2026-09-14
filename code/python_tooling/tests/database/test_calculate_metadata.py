@@ -56,14 +56,14 @@ class TestCalculateMetadata(unittest.TestCase):
         self.assertEqual(
             step_selector_options(1, metadata)[0],
             [
-                {"label": "bundle_adjustment (10)", "value": 10},
-                {"label": "bundle_adjustment (11)", "value": 11},
+                {"label": "Bundle adjustment (10)", "value": 10},
+                {"label": "Bundle adjustment (11)", "value": 11},
             ],
         )
         # Reprojection errors alone qualify; intrinsics, extrinsics, and another
         # camera's poses do not, even when the selected asset belongs to the step.
         self.assertEqual(
             step_selector_options(2, metadata),
-            ([{"label": "stereo_rig_opt (14)", "value": 14}], 14),
+            ([{"label": "Rig optimization", "value": 14}], 14),
         )
         self.assertEqual(step_selector_options(3, metadata), ([], None))

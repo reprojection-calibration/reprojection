@@ -229,3 +229,37 @@ def construct_visualization_db(db_path):
         )
         conn.execute("INSERT INTO extrinsics VALUES (60, 1, 4, 0, 0, 0, 1, 2, 3)")
         assert not conn.execute("PRAGMA foreign_key_check").fetchall()
+
+
+def construct_staged_visualization_db(db_path):
+    construct_visualization_db(db_path)
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("INSERT INTO asset_groups(signature) VALUES ('1|2|')")
+        for step_id, step_type in [(70, "stereo_rig_init"), (71, "stereo_rig_opt")]:
+            conn.execute(
+                "INSERT INTO steps(id, type) VALUES (?, ?)", (step_id, step_type)
+            )
+            conn.execute(
+                "INSERT INTO workflow_steps VALUES (1, ?, ?, '1|2|')",
+                (step_id, step_type),
+            )
+            conn.execute(
+                "INSERT INTO camera_poses SELECT ?, source_step_id, asset_id, timestamp_ns, rx, ry, rz, x, y, z FROM camera_poses WHERE step_id=30",
+                (step_id,),
+            )
+            conn.execute(
+                "INSERT INTO reprojection_errors SELECT ?, source_step_id, asset_id, timestamp_ns, data FROM reprojection_errors WHERE step_id IN (30, 31)",
+                (step_id,),
+            )
+            conn.execute(
+                "INSERT INTO extrinsics VALUES (?, 1, 2, 0, 0, 0, 0.1, 0, 0)",
+                (step_id,),
+            )
+        conn.execute(
+            "INSERT INTO camera_poses SELECT 60, source_step_id, asset_id, timestamp_ns, rx, ry, rz, x, y, z FROM camera_poses WHERE step_id=30"
+        )
+        conn.execute(
+            "INSERT INTO reprojection_errors SELECT 60, source_step_id, asset_id, timestamp_ns, data FROM reprojection_errors WHERE step_id=30"
+        )
+        assert not conn.execute("PRAGMA foreign_key_check").fetchall()

@@ -1,6 +1,7 @@
 from dash import html
 
 from dashboard.tools.selection import table_rows
+from dashboard.tools.workflow import STAGES, STEP_LABELS, result_step_ids
 
 
 def extract_labeled_metadata(data, parent_keys=None):
@@ -20,103 +21,66 @@ def extract_labeled_metadata(data, parent_keys=None):
     return statistics
 
 
-# TODO(Jack): Test?!
 def build_sensor_statistics_html(sensor_metadata):
-    stats = extract_labeled_metadata(sensor_metadata)
-    stats = sorted(stats, key=lambda x: x[0][0])
-
-    stat_cards = []
-    for key, value in stats:
-        is_ok = value != 0
-
-        stat_cards.append(
-            html.Div(
-                [
-                    html.Div(
-                        [
-                            html.Div(
-                                style={
-                                    "width": "10px",
-                                    "height": "10px",
-                                    "borderRadius": "50%",
-                                    "backgroundColor": "green" if is_ok else "red",
-                                    "marginRight": "6px",
-                                }
-                            ),
-                            html.Div(
-                                key[0],
-                                style={
-                                    "fontSize": "13px",
-                                    "fontWeight": "500",
-                                },
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "marginBottom": "6px",
-                        },
-                    ),
-                    html.Div(
-                        str(value),
-                        style={
-                            "fontSize": "18px",
-                            "fontWeight": "bold",
-                        },
-                    ),
-                    html.Div(
-                        key[-1] if len(key) > 1 else "",
-                        style={
-                            "fontSize": "12px",
-                            "color": "#666",
-                        },
-                    ),
-                ],
-                style={
-                    "minWidth": "200px",
-                    "padding": "10px",
-                    "backgroundColor": "white",
-                    "border": "1px solid #ddd",
-                    "borderRadius": "6px",
-                    "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
-                },
-            )
+    return [
+        html.Table(
+            [
+                html.Thead(
+                    html.Tr([html.Th("Source"), html.Th("Property"), html.Th("Value")])
+                ),
+                html.Tbody(
+                    [
+                        html.Tr(
+                            [
+                                html.Td(path[0]),
+                                html.Td(" / ".join(path[1:])),
+                                html.Td(str(value)),
+                            ]
+                        )
+                        for path, value in extract_labeled_metadata(sensor_metadata)
+                    ]
+                ),
+            ],
+            className="details-table",
         )
+    ]
 
-    return stat_cards
 
-
-def step_selector_options(asset_id, metadata):
+def step_selector_options(asset_id, metadata, stage_id=None):
     if asset_id is None or not metadata:
         return [], None
-
-    artifact_steps = {
-        count["step_id"]
-        for count in metadata["counts"]
-        if count["asset_id"] == asset_id
-        and count["table"] in ("camera_poses", "reprojection_errors")
-        and count["count"] > 0
+    available = result_step_ids(metadata, asset_id, stage_id)
+    order = {
+        step_type: index
+        for index, step_type in enumerate(
+            step_type for stage in STAGES for step_type in stage.steps
+        )
     }
+    steps = sorted(
+        (step for step in metadata["steps"] if step["step_id"] in available),
+        key=lambda step: (order.get(step["type"], len(order)), step["step_id"]),
+    )
     options = [
-        {"label": f"{step['type']} ({step['step_id']})", "value": step["step_id"]}
-        for step in metadata["steps"]
-        if step["step_id"] in artifact_steps
+        {
+            "label": STEP_LABELS.get(step["type"], step["type"])
+            + (
+                f" ({step['step_id']})"
+                if sum(other["type"] == step["type"] for other in steps) > 1
+                else ""
+            ),
+            "value": step["step_id"],
+        }
+        for step in steps
     ]
-    options.sort(key=lambda option: (option["label"], option["value"]))
-    return options, options[0]["value"] if options else None
+    # Open the final available result; earlier results remain available for comparison.
+    return options, options[-1]["value"] if options else None
 
 
 def build_sensor_metadata_layout(asset_id, metadata, workflow_data):
     if asset_id is None or not metadata:
         return []
 
-    # Table and step remain visible instead of inferring steps from nested keys.
     statistics = {}
-    for count in metadata["counts"]:
-        if count["asset_id"] == asset_id:
-            statistics.setdefault(count["table"], {})[str(count["step_id"])] = count[
-                "count"
-            ]
     for row in table_rows(workflow_data, "camera_info", asset_id=asset_id):
         statistics[f"camera_info (step {row['step_id']})"] = {
             key: value

@@ -42,6 +42,7 @@ def load_database_callback(db_file, workflow_id):
     Output("sensor-selection-dropdown", "options"),
     Output("sensor-selection-dropdown", "value"),
     Input("metadata-store", "data"),
+    Input("stage-selector", "value"),
 )
-def refresh_sensor_list_callback(metadata):
-    return refresh_sensor_list(metadata)
+def refresh_sensor_list_callback(metadata, stage_id):
+    return refresh_sensor_list(metadata, stage_id)
