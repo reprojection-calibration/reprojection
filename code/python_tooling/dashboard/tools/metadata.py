@@ -1,4 +1,7 @@
-from dash import dcc, html
+from dash import html
+
+from dashboard.tools.selection import table_rows
+from dashboard.tools.workflow import STAGES, STEP_LABELS, result_step_ids
 
 
 def extract_labeled_metadata(data, parent_keys=None):
@@ -18,100 +21,95 @@ def extract_labeled_metadata(data, parent_keys=None):
     return statistics
 
 
-# TODO(Jack): Test?!
 def build_sensor_statistics_html(sensor_metadata):
-    stats = extract_labeled_metadata(sensor_metadata)
-    stats = sorted(stats, key=lambda x: x[0][0])
-
-    stat_cards = []
-    for key, value in stats:
-        is_ok = value != 0
-
-        stat_cards.append(
-            html.Div(
-                [
-                    html.Div(
-                        [
-                            html.Div(
-                                style={
-                                    "width": "10px",
-                                    "height": "10px",
-                                    "borderRadius": "50%",
-                                    "backgroundColor": "green" if is_ok else "red",
-                                    "marginRight": "6px",
-                                }
-                            ),
-                            html.Div(
-                                key[0],
-                                style={
-                                    "fontSize": "13px",
-                                    "fontWeight": "500",
-                                },
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "marginBottom": "6px",
-                        },
-                    ),
-                    html.Div(
-                        str(value),
-                        style={
-                            "fontSize": "18px",
-                            "fontWeight": "bold",
-                        },
-                    ),
-                    html.Div(
-                        key[-1] if len(key) > 1 else "",
-                        style={
-                            "fontSize": "12px",
-                            "color": "#666",
-                        },
-                    ),
-                ],
-                style={
-                    "minWidth": "200px",
-                    "padding": "10px",
-                    "backgroundColor": "white",
-                    "border": "1px solid #ddd",
-                    "borderRadius": "6px",
-                    "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
-                },
-            )
+    return [
+        html.Table(
+            [
+                html.Thead(
+                    html.Tr([html.Th("Source"), html.Th("Property"), html.Th("Value")])
+                ),
+                html.Tbody(
+                    [
+                        html.Tr(
+                            [
+                                html.Td(path[0]),
+                                html.Td(" / ".join(path[1:])),
+                                html.Td(str(value)),
+                            ]
+                        )
+                        for path, value in extract_labeled_metadata(sensor_metadata)
+                    ]
+                ),
+            ],
+            className="details-table",
         )
+    ]
 
-    return stat_cards
+
+def step_selector_options(asset_id, metadata, stage_id=None):
+    if asset_id is None or not metadata:
+        return [], None
+    available = result_step_ids(metadata, asset_id, stage_id)
+    return result_selector_options(metadata, available)
 
 
-def build_step_selector(sensor_metadata):
-    step_names = sorted(
-        list(
-            {
-                key
-                for x in sensor_metadata
-                # NOTE(Jack): This is a critical piece of business logic! The values here are the only keys from which
-                # calibrations steps will be retrieved from. If for example we add camera intrinsic display we should
-                # also add that here because a camera intrinsic is associated with a step, and it might be a step that
-                # is not present in poses or reprojection error. Is there a more eloquent way to do this?
-                if x == "poses" or x == "reprojection_error" or x == "imu_error"
-                for key in sensor_metadata[x]
-            }
+def imu_step_selector_options(asset_id, metadata):
+    available = {
+        row["step_id"]
+        for row in (metadata or {}).get("counts", [])
+        if row["asset_id"] == asset_id
+        and row["table"] == "imu_errors"
+        and row["count"] > 0
+    }
+    return result_selector_options(metadata or {}, available)
+
+
+def result_selector_options(metadata, available):
+    order = {
+        step_type: index
+        for index, step_type in enumerate(
+            step_type for stage in STAGES for step_type in stage.steps
         )
+    }
+    steps = sorted(
+        (step for step in metadata.get("steps", []) if step["step_id"] in available),
+        key=lambda step: (order.get(step["type"], len(order)), step["step_id"]),
     )
+    options = [
+        {
+            "label": STEP_LABELS.get(step["type"], step["type"])
+            + (
+                f" ({step['step_id']})"
+                if sum(other["type"] == step["type"] for other in steps) > 1
+                else ""
+            ),
+            "value": step["step_id"],
+        }
+        for step in steps
+    ]
+    # Open the final available result; earlier results remain available for comparison.
+    return options, options[-1]["value"] if options else None
 
-    return dcc.RadioItems(
-        id="step-selector",
-        options=step_names,
-        value=step_names[0] if step_names else "",
-    )
 
-
-def build_sensor_metadata_layout(sensor_name, metadata):
-    if sensor_name is None or metadata is None or sensor_name not in metadata:
+def build_sensor_metadata_layout(asset_id, metadata, workflow_data):
+    if asset_id is None or not metadata:
         return []
 
-    stat_cards = build_sensor_statistics_html(metadata[sensor_name])
-    step_selector = build_step_selector(metadata[sensor_name])
-
-    return [step_selector] + stat_cards
+    statistics = {}
+    for row in table_rows(workflow_data, "camera_info", asset_id=asset_id):
+        statistics[f"camera_info (step {row['step_id']})"] = {
+            key: value
+            for key, value in row.items()
+            if key not in ("step_id", "asset_id")
+        }
+    # Target descriptions belong to workflow target assets, not the selected camera.
+    assets = {asset["id"]: asset for asset in metadata["assets"]}
+    for row in table_rows(workflow_data, "target_info"):
+        target = assets[row["asset_id"]]
+        label = f"Target {target['name']} ({target['id']}, step {row['step_id']})"
+        statistics[label] = {
+            key: value
+            for key, value in row.items()
+            if key not in ("step_id", "asset_id")
+        }
+    return build_sensor_statistics_html(statistics)

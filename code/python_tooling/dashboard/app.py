@@ -1,10 +1,9 @@
-# NOTE(Jack): These might look unused but they need to be imported here so that the callbacks can be registered with the
-# Dash instance. Please see the answer here
-# https://community.plotly.com/t/splitting-callback-definitions-in-multiple-files/10583/2
 from dash import dcc, html
 
 from dashboard.server import app
+from dashboard.tools.workflow import stage_navigation
 
+# Importing these modules registers their callbacks with the shared Dash instance.
 from .callbacks import (
     data_loading,
     extracted_targets,
@@ -12,124 +11,146 @@ from .callbacks import (
     populate_sensor_panel,
     slider,
     timeseries_6d_figures,
+    workflow,
 )
-
-# TODO(Jack): Use a css style sheet instead of individually specifying the properties everywhere! This does not scale.
-
 
 app.layout = html.Div(
     [
-        html.Div(
+        html.Header(
             [
                 html.Div(
                     [
+                        html.Span("REPROJECTION", className="eyebrow"),
+                        html.H1("Calibration workspace"),
+                    ]
+                ),
+                html.P(
+                    "Individual cameras → Stereo rig → Visual-inertial",
+                    className="workflow-path",
+                ),
+            ],
+            className="app-header",
+        ),
+        html.Section(
+            [
+                html.Div(
+                    [
+                        html.Label(
+                            "Database directory", htmlFor="database-directory-input"
+                        ),
                         html.Div(
                             [
-                                html.Label("Database Directory"),
                                 dcc.Input(
                                     id="database-directory-input",
                                     type="text",
-                                    placeholder="Enter path to database directory...",
                                     debounce=True,
-                                    style={"width": "100%"},
                                     value="/workspace/",
                                     persistence=True,
                                     persistence_type="local",
                                 ),
-                            ],
-                            style={"flex": "3", "minWidth": "250px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Label(" "),
                                 html.Button(
                                     "Refresh",
                                     id="refresh-database-list-button",
                                     n_clicks=0,
-                                    style={"width": "100%"},
                                 ),
                             ],
-                            style={"flex": "1", "minWidth": "120px"},
+                            className="directory-control",
                         ),
+                    ],
+                    className="database-field",
+                ),
+                html.Div(
+                    [
+                        html.Label("Database", htmlFor="database-selection-dropdown"),
+                        dcc.Dropdown(
+                            id="database-selection-dropdown",
+                            options=[],
+                            value=None,
+                            placeholder="Choose database…",
+                            clearable=False,
+                        ),
+                    ],
+                    className="database-field",
+                ),
+                html.Div(
+                    [
+                        html.Label("Workflow", htmlFor="workflow-selection-dropdown"),
+                        dcc.Dropdown(
+                            id="workflow-selection-dropdown",
+                            options=[],
+                            value=None,
+                            placeholder="Choose workflow…",
+                            clearable=False,
+                        ),
+                    ],
+                    className="database-field",
+                ),
+            ],
+            className="database-controls",
+        ),
+        html.Nav(
+            [
+                dcc.RadioItems(
+                    id="stage-selector",
+                    options=stage_navigation(None)[0],
+                    value=None,
+                    className="stage-navigation",
+                    labelClassName="stage-choice",
+                ),
+            ],
+            **{"aria-label": "Calibration stages"}
+        ),
+        html.Main(
+            [
+                html.Section(id="stage-overview", className="stage-overview"),
+                html.Section(
+                    [
                         html.Div(
                             [
-                                html.Label("Select Database"),
-                                dcc.Dropdown(
-                                    id="database-selection-dropdown",
-                                    options=[],
-                                    value=None,
-                                    placeholder="Choose database...",
-                                    clearable=False,
+                                html.Label(
+                                    "Inspect camera",
+                                    htmlFor="sensor-selection-dropdown",
                                 ),
-                            ],
-                            style={"flex": "2", "minWidth": "200px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Label("Select Workflow"),
-                                dcc.Dropdown(
-                                    id="workflow-selection-dropdown",
-                                    options=[],
-                                    value=None,
-                                    placeholder="Choose workflow...",
-                                    clearable=False,
-                                ),
-                            ],
-                            style={"flex": "2", "minWidth": "200px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Label("Select Sensor"),
                                 dcc.Dropdown(
                                     id="sensor-selection-dropdown",
                                     options=[],
                                     value=None,
-                                    placeholder="Choose sensor...",
+                                    placeholder="Choose camera…",
                                     clearable=False,
                                 ),
                             ],
-                            style={"flex": "2", "minWidth": "200px"},
+                            className="camera-control",
+                        ),
+                        html.Div(
+                            [
+                                html.Label("Compare camera results"),
+                                dcc.RadioItems(
+                                    id="step-selector",
+                                    options=[],
+                                    value=None,
+                                    className="result-selector",
+                                ),
+                            ],
+                            className="result-control",
                         ),
                     ],
-                    style={
-                        "display": "flex",
-                        "gap": "15px",
-                        "alignItems": "flex-end",
-                    },
+                    className="result-controls",
                 ),
-                html.Div(
-                    id="sensor-statistics-container",
-                    style={
-                        "marginTop": "15px",
-                        "paddingTop": "10px",
-                        "borderTop": "1px solid #ddd",
-                        "display": "flex",
-                        "flexWrap": "nowrap",
-                        "gap": "20px",
-                        "overflowX": "auto",
-                    },
+                html.Section(id="result-summary", className="result-summary"),
+                html.Div(id="sensor-content-container"),
+                html.Details(
+                    [
+                        html.Summary("Camera and target details"),
+                        html.Div(id="sensor-statistics-container"),
+                    ],
+                    className="data-details",
                 ),
-            ],
-            style={
-                "backgroundColor": "#f9f9f9",
-                "borderBottom": "1px solid #ddd",
-                "display": "flex",
-                "flexDirection": "column",
-                "padding": "15px",
-                "position": "sticky",
-                "top": "0",
-                "zIndex": "1000",
-            },
+            ]
         ),
-        # Dynamic content container that holds all the sensor data visualizations
-        html.Div(id="sensor-content-container"),
-        # Non-visual components
-        dcc.Interval(
-            disabled=False,
-            id="play-interval",
-            interval=50,
-        ),
-        dcc.Store(id="raw-data-store"),
+        dcc.Interval(disabled=False, id="play-interval", interval=50),
+        dcc.Store(id="workflow-data-store"),
+        dcc.Store(id="selected-targets-store"),
         dcc.Store(id="metadata-store"),
-    ]
+    ],
+    className="calibration-app",
 )

@@ -1,32 +1,9 @@
 import os
-from enum import Enum
 
-from database.calculate_metadata import count_data
-from database.data_formatting import parse_workflows, process_workflow, to_legacy_data
+from dashboard.tools.workflow import camera_label, stage_cameras
+from database.calculate_metadata import workflow_metadata
+from database.data_formatting import parse_workflows, process_workflow
 from database.sql_table_loading import load_calibration_database
-
-
-def refresh_database_list(db_dir):
-    if db_dir is None or not os.path.exists(db_dir):
-        return [], ""
-
-    result = []
-    for file_name in sorted(os.listdir(db_dir)):
-        if not file_name.endswith(".calib.db3"):
-            continue
-
-        full_path = os.path.join(db_dir, file_name)
-        result.append(
-            {
-                "label": file_name,
-                "value": full_path,
-            }
-        )
-
-    if len(result) == 0:
-        return [], ""
-
-    return result, result[0]["value"] if result else ""
 
 
 def refresh_workflow_list(db_file):
@@ -38,7 +15,8 @@ def refresh_workflow_list(db_file):
 
     result = [
         {
-            "label": f"{workflow.type} ({workflow.asset_group_signature})",
+            "label": f"Workflow {workflow.id} · {len(workflow.assets_of_type("camera"))} cameras"
+            + (" + IMU" if workflow.assets_of_type("imu") else ""),
             "value": workflow.id,
         }
         for workflow in workflows
@@ -64,27 +42,35 @@ def load_database(db_file, workflow_id):
 
     workflow_data = process_workflow(db, workflow)
 
-    raw_data = to_legacy_data(workflow, workflow_data)
-    metadata = count_data(raw_data)
+    return serialize_workflow(workflow, workflow_data), workflow_metadata(
+        workflow, workflow_data
+    )
 
-    return raw_data, metadata
+
+def serialize_workflow(workflow, tables):
+    """JSON transport only: retain SQL rows, with lossless timestamp strings."""
+    records = {}
+    for name, table in tables.items():
+        table = table.copy()
+        if "timestamp_ns" in table:
+            table = table.sort_values(["timestamp_ns", "step_id", "asset_id"])
+            table["timestamp_ns"] = table["timestamp_ns"].map(str)
+        records[name] = table.to_dict("records")
+    return {
+        "id": workflow.id,
+        "type": workflow.type,
+        "asset_group_signature": workflow.asset_group_signature,
+        "assets": list(workflow.assets.values()),
+        "steps": [
+            dict(step_id=step_id, **step) for step_id, step in workflow.steps.items()
+        ],
+        "tables": records,
+    }
 
 
-def refresh_sensor_list(metadata):
-    if metadata is None:
-        return [], ""
-
-    result = []
-    for sensor_name, value in metadata.items():
-        sensor_type = value.get("type")
-        if isinstance(sensor_name, Enum):
-            sensor_type = sensor_type.name
-
-        result.append(
-            {
-                "label": f"{sensor_name} ({sensor_type})",
-                "value": sensor_name,
-            }
-        )
-
-    return result, result[0]["value"] if result else ""
+def refresh_sensor_list(metadata, stage_id="single_cam"):
+    result = [
+        {"label": camera_label(camera), "value": camera["id"]}
+        for camera in stage_cameras(metadata, stage_id)
+    ]
+    return result, result[0]["value"] if result else None

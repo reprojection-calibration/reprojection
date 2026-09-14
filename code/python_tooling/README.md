@@ -5,6 +5,5 @@ To get a test target in CLion working you need to add a target with the followin
 * Type: "Python tests"
 * Target.script_path = /home/stable-genius-gram/github/reprojection-calibration/reprojection/code/python_tooling/tests
 * Environmental variables:
-  * REPROJECTION_SQL_DIR=<your_root_dir>/reprojection/code/resources/sql
+   * REPROJECTION_SQL_DIR=<your_root_dir>/reprojection/code/resources/sql
 * Python_interpreter.use_specified_interpreter = (.reprojection_venv)
-

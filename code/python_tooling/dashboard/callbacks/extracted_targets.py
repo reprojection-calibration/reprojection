@@ -1,86 +1,25 @@
-from dash import MATCH, Input, Output, State, no_update
+from dash import MATCH, Input, Output, State
 
 from dashboard.server import app
 from database.types import SensorType
 
-
-@app.callback(
-    Output({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
-    Input("sensor-content-container", "children"),
-    State("sensor-selection-dropdown", "value"),
-    State("raw-data-store", "data"),
-    State({"type": "extracted_targets", "sensor_name": MATCH}, "figure"),
-)
-def update_extracted_target_figure_size(_, sensor_name, raw_data, fig):
-    if sensor_name is None or raw_data is None or fig is None:
-        # TODO(Jack): We do not yet have a logging policy/strategy for the visualization code, but here is a good
-        # example of a place where it might help us as this condition should never really happen.
-        return no_update
-
-    target_info = raw_data[sensor_name].get("target_info")
-    if not target_info:
-        return no_update
-
-    target_unit_dimension = target_info.get("unit_dimension")
-    target_width = target_unit_dimension * target_info.get("width")
-    target_height = target_unit_dimension * target_info.get("height")
-
-    camera_info = raw_data[sensor_name].get("camera_info")
-    if not camera_info:
-        return no_update
-
-    image_width = camera_info.get("width")
-    image_height = camera_info.get("height")
-
-    # NOTE(Jack): We have subplots in the figure but the process of json dict serialization that dash does prevent us
-    # from reforming a proper subplot figure here. Therefore, we have to acces the values directly here which is
-    # looks extremely brittle to me and I am quite sure will be annoying to maintain over time. But for now we have no
-    # other choice!
-
-    fig["layout"]["xaxis"]["range"] = [
-        -0.05 * target_width,
-        target_width + 0.05 * target_width,
-    ]
-    fig["layout"]["xaxis"]["autorange"] = False
-
-    fig["layout"]["yaxis"]["range"] = [
-        -0.05 * target_height,
-        target_height + 0.05 * target_height,
-    ]
-    fig["layout"]["yaxis"]["autorange"] = False
-
-    # Here "axis2" should be the extracted image figure on the right side.
-    fig["layout"]["xaxis2"]["range"] = [0, image_width]
-    fig["layout"]["xaxis2"]["autorange"] = False
-
-    fig["layout"]["yaxis2"]["range"] = [0, image_height]
-    fig["layout"]["yaxis2"]["autorange"] = False
-
-    return fig
-
-
-# TODO(Jack): Do not hardcode counter ID!
 app.clientside_callback(
     """
-    function(frame_idx, composite_id, step_name, raw_data, cmax) {
-        if (!composite_id || frame_idx == null || !raw_data || !cmax) {
+    function(frame_idx, targets, step_id, workflow_data, cmax, composite_id) {
+        if (!composite_id || !workflow_data) {
             return dash_clientside.no_update;
         }
-    
-        const sensor_name = composite_id["sensor_name"];
-        const targets = raw_data?.[sensor_name]?.measurements?.targets;
-        if (!targets) {
-            return dash_clientside.no_update;
+        const asset_id = composite_id.asset_id;
+        const row = (targets || [])[frame_idx];
+        if (!row || row.asset_id !== asset_id) {
+            const empty = new dash_clientside.Patch();
+            for (let i = 0; i < 2; i++) {
+                empty.assign(['data', i, 'x'], []);
+                empty.assign(['data', i, 'y'], []);
+            }
+            return empty.build();
         }
-    
-        const keys = Object.keys(targets ?? {});
-        const key = keys[frame_idx];
-        if (!key) {
-            throw new Error(`Invalid frame_idx: ${frame_idx}`);
-        }
-    
-        const target = targets[key];
-    
+        const target = row.data;
         // WARN(Jack): We are hardcoding that the points are 2D here, only taking into account (x,y) while ignoring z.
         const points = target.points.map(row => row.slice(0, 2));
         const pixels = target.pixels.map(row => row.slice(0, 2));
@@ -102,10 +41,11 @@ app.clientside_callback(
         patch.assign(['data', 0, 'customdata'], indices);
         patch.assign(['data', 1, 'customdata'], indices);
     
-        const reprojection_errors = raw_data?.[sensor_name]?.reprojection_error?.[step_name];
-        if (reprojection_errors && (key in reprojection_errors)) {
-            const reprojection_error = reprojection_errors[key]
-    
+        const error = ((workflow_data.tables || {}).reprojection_errors || []).find(error =>
+            error.asset_id === asset_id && error.step_id === step_id &&
+            error.source_step_id === row.step_id && error.timestamp_ns === row.timestamp_ns);
+        if (error && cmax > 0) {
+            const reprojection_error = error.data;
             patch.assign(['data', 0, 'marker'], {
                 size: 12,
                 color: reprojection_error.map(p => Math.sqrt(p[0] * p[0] + p[1] * p[1])),
@@ -136,21 +76,39 @@ app.clientside_callback(
             "error: %{marker.color:.2f}<extra></extra>"
         );
     
+        // Extracted points give target bounds without inventing a camera/target relationship.
+        for (const [axis, coordinate] of [['xaxis', 0], ['yaxis', 1]]) {
+            const values = points.map(point => point[coordinate]);
+            if (values.length) {
+                const low = values.reduce((a, b) => Math.min(a, b));
+                const high = values.reduce((a, b) => Math.max(a, b));
+                const margin = Math.max((high - low) * 0.05, 0.001);
+                patch.assign(['layout', axis, 'range'], [low - margin, high + margin]);
+                patch.assign(['layout', axis, 'autorange'], false);
+            }
+        }
+        const camera = ((workflow_data.tables || {}).camera_info || []).find(info => info.asset_id === asset_id);
+        if (camera) {
+            patch.assign(['layout', 'xaxis2', 'range'], [0, camera.width]);
+            patch.assign(['layout', 'yaxis2', 'range'], [0, camera.height]);
+            patch.assign(['layout', 'xaxis2', 'autorange'], false);
+            patch.assign(['layout', 'yaxis2', 'autorange'], false);
+        }
+
         return patch.build();
     }
     """,
     Output(
-        {"type": "extracted_targets", "sensor_name": MATCH},
+        {"type": "extracted_targets", "asset_id": MATCH},
         "figure",
-        allow_duplicate=True,
     ),
     Input(
-        {"type": "slider", "sensor_name": MATCH, "sensor_type": SensorType.Camera},
+        {"type": "slider", "asset_id": MATCH, "sensor_type": SensorType.Camera},
         "value",
     ),
-    State({"type": "extracted_targets", "sensor_name": MATCH}, "id"),
-    State("step-selector", "value"),
-    State("raw-data-store", "data"),
-    State({"type": "max_error", "sensor_name": MATCH}, "value"),
-    prevent_initial_call=True,
+    Input("selected-targets-store", "data"),
+    Input("step-selector", "value"),
+    Input("workflow-data-store", "data"),
+    Input({"type": "max_error", "asset_id": MATCH}, "value"),
+    State({"type": "extracted_targets", "asset_id": MATCH}, "id"),
 )

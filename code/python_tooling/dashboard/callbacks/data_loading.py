@@ -3,10 +3,10 @@ from dash import Input, Output
 from dashboard.server import app
 from dashboard.tools.data_loading import (
     load_database,
-    refresh_database_list,
     refresh_sensor_list,
     refresh_workflow_list,
 )
+from database.discovery import refresh_database_list
 
 
 @app.callback(
@@ -29,7 +29,7 @@ def refresh_workflow_list_callback(db_file):
 
 
 @app.callback(
-    Output("raw-data-store", "data"),
+    Output("workflow-data-store", "data"),
     Output("metadata-store", "data"),
     Input("database-selection-dropdown", "value"),
     Input("workflow-selection-dropdown", "value"),
@@ -42,6 +42,7 @@ def load_database_callback(db_file, workflow_id):
     Output("sensor-selection-dropdown", "options"),
     Output("sensor-selection-dropdown", "value"),
     Input("metadata-store", "data"),
+    Input("stage-selector", "value"),
 )
-def refresh_sensor_list_callback(metadata):
-    return refresh_sensor_list(metadata)
+def refresh_sensor_list_callback(metadata, stage_id):
+    return refresh_sensor_list(metadata, stage_id)

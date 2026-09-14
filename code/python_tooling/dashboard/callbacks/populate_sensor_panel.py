@@ -1,27 +1,38 @@
-from dash import Input, Output, State, html
+from dash import Input, Output, html
 
 from dashboard.server import app
 from dashboard.tools.construct_layouts import camera_layout, imu_layout
-from database.types import SensorType
+from dashboard.tools.workflow import assets_of_type, camera_label, stage_cameras
 
 
-# TODO(Jack): At this time do we really need timestamps?
-# TODO(Jack): Refactor to get sensor type from metadata!
 @app.callback(
     Output("sensor-content-container", "children"),
     Input("sensor-selection-dropdown", "value"),
-    State("raw-data-store", "data"),
+    Input("metadata-store", "data"),
+    Input("stage-selector", "value"),
 )
-def render_sensor_panel(sensor_name, raw_data):
-    if sensor_name is None or raw_data is None:
-        return html.P("Calibration data not loaded.")
-
-    # TODO(Jack): Should we check that this exists here or at a certain point can we take this for a given?
-    sensor_type = raw_data[sensor_name]["type"]
-
-    if sensor_type == SensorType.Camera:
-        return camera_layout(sensor_name)
-    elif sensor_type == SensorType.Imu:
-        return imu_layout(sensor_name)
-    else:
-        return html.P(f"Unknown sensor type selected: {sensor_type}.")
+def render_sensor_panel(asset_id, metadata, stage_id="single_cam"):
+    camera = next(
+        (
+            camera
+            for camera in stage_cameras(metadata, stage_id)
+            if camera["id"] == asset_id
+        ),
+        None,
+    )
+    if camera is None:
+        return html.P(
+            "Choose a camera to inspect its calibration.", className="empty-state"
+        )
+    pose_title = (
+        "Rig motion (reference camera)"
+        if stage_id == "multi_cam" and camera == assets_of_type(metadata, "camera")[0]
+        else "Camera motion"
+    )
+    panels = [camera_layout(asset_id, camera_label(camera), pose_title)]
+    if stage_id == "cam_imu":
+        panels.extend(
+            imu_layout(imu["id"], imu["name"], metadata)
+            for imu in assets_of_type(metadata, "imu")
+        )
+    return html.Div(panels, className="sensor-panels")

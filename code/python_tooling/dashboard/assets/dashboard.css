@@ -1,0 +1,84 @@
+:root {
+    color-scheme: light;
+    --ink: #203346;
+    --muted: #617487;
+    --accent: #087f8c;
+    --line: #dbe4ec;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #f3f6f9; color: var(--ink); font-family: system-ui, -apple-system, sans-serif; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { margin-bottom: 0; font-size: 28px; letter-spacing: -0.7px; }
+h2 { margin-bottom: 10px; font-size: 25px; }
+h3 { margin-bottom: 8px; font-size: 19px; }
+button { cursor: pointer; background: white; border: 1px solid var(--line); border-radius: 7px; padding: 9px 14px; color: var(--ink); font: inherit; }
+button:hover { border-color: var(--accent); }
+input[type="text"], input[type="number"] { min-width: 0; border: 1px solid var(--line); border-radius: 6px; padding: 9px; font: inherit; color: var(--ink); }
+input[type="radio"] { accent-color: var(--accent); }
+label { font-size: 13px; font-weight: 600; }
+.calibration-app { max-width: 1500px; margin: 0 auto; padding: 28px 36px 60px; }
+.app-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.eyebrow { display: block; color: var(--accent); font-size: 11px; letter-spacing: 2px; font-weight: 750; margin-bottom: 8px; }
+.workflow-path { color: var(--muted); font-size: 13px; margin: 0; }
+.database-controls { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 18px; padding: 20px; background: white; border: 1px solid var(--line); border-radius: 10px; }
+.database-field > label, .camera-control > label, .result-control > label { display: block; margin-bottom: 8px; }
+.directory-control { display: flex; gap: 8px; }
+.directory-control > input { flex: 1; width: 100%; }
+.stage-navigation { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 24px 0; }
+.stage-navigation > label { display: flex; align-items: center; gap: 12px; padding: 20px 16px; border: 1px solid var(--line); border-radius: 10px; background: white; cursor: pointer; }
+.stage-navigation > label:has(input:checked) { background: #e9f6f6; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.stage-navigation > label:has(input:disabled) { opacity: 0.55; cursor: default; }
+.stage-navigation > label:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
+.stage-choice { width: 100%; }
+.stage-navigation .dash-options-list-option-text { margin: 0; }
+.stage-option { display: flex; align-items: center; gap: 12px; }
+.stage-option strong { display: block; font-size: 16px; }
+.stage-option small { display: block; margin-top: 6px; color: var(--muted); font-weight: 400; line-height: 1.4; }
+.stage-number { color: var(--accent); font-size: 21px; font-weight: 400; }
+.stage-overview { padding: 8px 0 20px; }
+.stage-description { color: var(--muted); line-height: 1.6; max-width: 880px; }
+.stage-note { border-left: 3px solid var(--accent); padding: 10px 14px; margin-bottom: 0; background: #eaf2f6; color: #40576c; font-size: 14px; line-height: 1.6; }
+.camera-progress-list { display: flex; flex-wrap: wrap; gap: 12px; }
+.camera-progress { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line); background: white; border-radius: 8px; padding: 14px 18px; min-width: 240px; }
+.camera-progress strong { font-size: 14px; }
+.camera-progress span { font-size: 12px; }
+.status-available { color: var(--accent); }
+.muted { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.result-controls { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 28px; padding: 20px; border: 1px solid var(--line); background: white; border-radius: 10px; }
+.camera-control { flex: 0 1 350px; min-width: 220px; }
+.result-control { flex: 1; min-width: 240px; }
+.result-selector { display: flex; flex-wrap: wrap; gap: 10px; }
+.result-selector label { padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.result-selector label:has(input:checked) { border-color: var(--accent); background: #e9f6f6; }
+.result-selector input { margin-right: 7px; }
+.result-summary { margin: 16px 0; }
+.result-metrics { display: flex; flex-wrap: wrap; gap: 36px; margin: 22px 4px; }
+.result-metric { display: flex; flex-direction: column; gap: 5px; }
+.result-metric strong { font-size: 23px; font-variant-numeric: tabular-nums; }
+.result-metric span { color: var(--muted); font-size: 12px; }
+.plot-panel { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 22px 18px 4px; margin-bottom: 20px; overflow: hidden; }
+.plot-heading { padding: 0 10px; }
+.playback-controls { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; margin: 20px 10px; }
+.error-control { display: flex; flex-shrink: 0; align-items: center; gap: 10px; }
+.error-control > label { white-space: nowrap; }
+.error-control > .dash-input-container { width: 100px; }
+.error-control input { width: 100%; }
+.timestamp-display { margin-left: auto; display: flex; flex-direction: column; gap: 4px; }
+.timestamp-display code { font-size: 13px; }
+.data-details, .transform-details { border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; background: white; }
+.data-details summary, .transform-details summary { cursor: pointer; font-weight: 600; }
+.data-details[open] summary, .transform-details[open] summary { margin-bottom: 16px; }
+.transform-details p { color: var(--muted); font-size: 13px; margin-top: 12px; }
+.details-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+.details-table th { color: var(--muted); font-weight: 500; }
+.details-table td, .details-table th { border-bottom: 1px solid #edf1f5; padding: 10px 12px; }
+.table-scroll, #sensor-statistics-container { overflow-x: auto; }
+.empty-state { padding: 20px 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+@media (max-width: 900px) {
+    .calibration-app { padding: 20px 16px 40px; }
+    .app-header { align-items: flex-start; flex-direction: column; gap: 12px; }
+    .database-controls { grid-template-columns: 1fr; }
+    .stage-navigation { grid-template-columns: 1fr; }
+    .stage-navigation > label { padding: 14px; }
+    .timestamp-display { margin-left: 0; }
+}

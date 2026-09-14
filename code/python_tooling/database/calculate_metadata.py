@@ -1,35 +1,33 @@
-def traverse_timeseries_data(d, apply):
-    # Leaf is not a dict, just return it.
-    if not isinstance(d, dict):
-        return d
-
-    # Leaf is a timeseries leaf (contains all int - assumes those are timestamp_ns) - call apply() method on it
-    if d and all(isinstance(k, int) for k in d.keys()):
-        return apply(d)
-
-    # Is a nested dict, continue recursion
-    return {k: traverse_timeseries_data(v, apply) for k, v in d.items()}
-
-
-def count_data(d):
-    def process(timestamped_dict):
-        return len(timestamped_dict)
-
-    return traverse_timeseries_data(d, process)
-
-
-# TODO(Jack): We do not use this anywhere in the dashboard logic, but it is tested, and we might use it, so we will
-#  keep it...
-# NOTE(Jack): We store the reference timestamps as strings because otherwise dash, when it json serializes this data on
-# its way to the browse, will itself cast it to a string. During that process, because we have really large ints here we
-# loose some precision which makes correspondence impossible. Therefore, we preempt this mess by ourselves storing the
-# the timestamps as strings directly.
-def reference_timestamps(d):
-    def process(timestamped_dict):
-        timestamps = list(timestamped_dict.keys())
-        timestamps = sorted(timestamps)
-        timestamps = [str(t) for t in timestamps]
-
-        return timestamps
-
-    return traverse_timeseries_data(d, process)
+def workflow_metadata(workflow, tables):
+    """Count artifact rows by their SQL identities, including both extrinsic frames."""
+    counts = []
+    for name, table in tables.items():
+        asset_columns = [
+            column
+            for column in ("asset_id", "asset_a_id", "asset_b_id")
+            if column in table
+        ]
+        for asset_column in asset_columns:
+            for (step_id, asset_id), count in (
+                table.groupby(["step_id", asset_column]).size().items()
+            ):
+                counts.append(
+                    {
+                        "table": name,
+                        "step_id": int(step_id),
+                        "asset_id": int(asset_id),
+                        "count": int(count),
+                    }
+                )
+    return {
+        "assets": list(workflow.assets.values()),
+        "steps": [
+            dict(
+                step_id=step_id,
+                asset_ids=sorted(workflow.step_asset_ids(step_id)),
+                **step
+            )
+            for step_id, step in workflow.steps.items()
+        ],
+        "counts": counts,
+    }

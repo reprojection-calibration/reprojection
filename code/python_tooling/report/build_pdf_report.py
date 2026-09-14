@@ -2,12 +2,8 @@ import logging
 import textwrap
 from pathlib import Path
 
-from dashboard.tools.data_loading import refresh_database_list
-from database.data_formatting import (
-    asset_rows,
-    parse_workflows,
-    process_workflow,
-)
+from database.data_formatting import parse_workflows, process_workflow, select_rows
+from database.discovery import refresh_database_list
 from database.sql_table_loading import load_calibration_database
 
 from .camera_figures import coverage_figure, error_figure
@@ -77,10 +73,14 @@ def build_camera_section(workflow, workflow_data, camera):
     log.info(f"Processing sensor {sensor_name}")
 
     asset_id = camera["id"]
-    camera_info = asset_rows(workflow_data.get("camera_info"), asset_id)
-    extracted_targets = asset_rows(workflow_data.get("extracted_targets"), asset_id)
-    reprojection_errors = asset_rows(workflow_data.get("reprojection_errors"), asset_id)
-    images = asset_rows(workflow_data.get("images_timestamps"), asset_id)
+    camera_info = select_rows(workflow_data.get("camera_info"), asset_id=asset_id)
+    extracted_targets = select_rows(
+        workflow_data.get("extracted_targets"), asset_id=asset_id
+    )
+    reprojection_errors = select_rows(
+        workflow_data.get("reprojection_errors"), asset_id=asset_id
+    )
+    images = select_rows(workflow_data.get("images_timestamps"), asset_id=asset_id)
 
     # TODO(Jack): Honestly all we really need to construct the coverage map is the extracted targets. That contains
     # all the information we need. We should refactor this logic here to allow the creation of the most possible
@@ -113,9 +113,7 @@ def build_camera_section(workflow, workflow_data, camera):
             reprojection_errors_i = reprojection_errors.iloc[0:0]
         else:
             reprojection_errors_i = reprojection_errors[
-                reprojection_errors.index.get_level_values("step_id").isin(
-                    bundle_adjustment_step_ids
-                )
+                reprojection_errors["step_id"].isin(bundle_adjustment_step_ids)
             ]
 
         if reprojection_errors_i.empty or not camera_info_i:
@@ -180,7 +178,7 @@ def build_imu_section(workflow_data, imu):
     sensor_name = imu["name"]
     log.info(f"Processing sensor {sensor_name}")
 
-    imu_data = asset_rows(workflow_data.get("imu_data"), imu["id"])
+    imu_data = select_rows(workflow_data.get("imu_data"), asset_id=imu["id"])
 
     if imu_data is None or imu_data.empty:
         log.info(

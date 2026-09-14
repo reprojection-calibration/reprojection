@@ -1,36 +1,38 @@
 from dash import MATCH, Input, Output, State, no_update
 
 from dashboard.server import app
-from database.types import SensorType
+from dashboard.tools.selection import selected_targets
 
 
 @app.callback(
-    Output({"type": "slider", "sensor_name": MATCH, "sensor_type": MATCH}, "max"),
-    Input({"type": "slider", "sensor_name": MATCH, "sensor_type": MATCH}, "id"),
-    State("metadata-store", "data"),
+    Output("selected-targets-store", "data"),
+    Input("sensor-selection-dropdown", "value"),
+    Input("step-selector", "value"),
+    Input("workflow-data-store", "data"),
 )
-def update_slider_properties(composite_id, metadata):
-    if composite_id is None or metadata is None:
-        return 0
-
-    sensor_name = composite_id["sensor_name"]
-    sensor_type = composite_id["sensor_type"]
-
-    if sensor_type == SensorType.Camera:
-        n_frames = metadata[sensor_name]["measurements"]["targets"]
-    else:
-        # TODO(Jack): Add the case for IMU when we need it!
-        return 0
-
-    return n_frames - 1
+def update_selected_targets(asset_id, step_id, workflow_data):
+    if asset_id is None:
+        return []
+    return selected_targets(workflow_data, asset_id, step_id)
 
 
 @app.callback(
-    Output({"type": "slider", "sensor_name": MATCH, "sensor_type": MATCH}, "value"),
+    Output({"type": "slider", "asset_id": MATCH, "sensor_type": MATCH}, "max"),
+    Input({"type": "slider", "asset_id": MATCH, "sensor_type": MATCH}, "id"),
+    Input("selected-targets-store", "data"),
+)
+def update_slider_properties(composite_id, targets):
+    if not composite_id:
+        return 0
+    return max(0, len(targets or []) - 1)
+
+
+@app.callback(
+    Output({"type": "slider", "asset_id": MATCH, "sensor_type": MATCH}, "value"),
     Input("play-interval", "n_intervals"),
-    Input({"type": "pause_button", "sensor_name": MATCH}, "n_clicks"),
-    State({"type": "slider", "sensor_name": MATCH, "sensor_type": MATCH}, "value"),
-    State({"type": "slider", "sensor_name": MATCH, "sensor_type": MATCH}, "max"),
+    Input({"type": "pause_button", "asset_id": MATCH}, "n_clicks"),
+    State({"type": "slider", "asset_id": MATCH, "sensor_type": MATCH}, "value"),
+    State({"type": "slider", "asset_id": MATCH, "sensor_type": MATCH}, "max"),
 )
 def advance_slider(_, n_clicks, value, max_value):
     paused = (n_clicks or 0) % 2 == 1
@@ -47,8 +49,8 @@ def advance_slider(_, n_clicks, value, max_value):
 
 
 @app.callback(
-    Output({"type": "pause_button", "sensor_name": MATCH}, "children"),
-    Input({"type": "pause_button", "sensor_name": MATCH}, "n_clicks"),
+    Output({"type": "pause_button", "asset_id": MATCH}, "children"),
+    Input({"type": "pause_button", "asset_id": MATCH}, "n_clicks"),
 )
 def update_pause_button_label(n_clicks):
     paused = (n_clicks or 0) % 2 == 1
@@ -58,47 +60,22 @@ def update_pause_button_label(n_clicks):
 
 app.clientside_callback(
     """
-    function(composite_id, frame_idx, raw_data) {    
-        if (!composite_id || frame_idx == null || !raw_data) {
-            return dash_clientside.no_update;
-        }
-        
-        const sensor_name = composite_id["sensor_name"];
-        const sensor_type = composite_id["sensor_type"];
-        
-        let keys;
-        if(sensor_type == "camera"){
-            const targets = raw_data?.[sensor_name]?.measurements?.targets;
-            if (!targets) {
-                return dash_clientside.no_update;
-            }
-            
-            keys = Object.keys(targets ?? {});
-        } else{
-            // TODO(Jack): Add logic for IMU case
-            return dash_clientside.no_update;
-        }
-
-        const key = keys[frame_idx];
-        if (!key) {
-            throw new Error(`Invalid frame_idx: ${frame_idx}`);
-        }
-        
-        return key;
+    function(frame_idx, targets) {
+        const row = (targets || [])[frame_idx];
+        return row ? row.timestamp_ns : "";
     }
     """,
     Output(
         {
             "type": "current_timestamp",
-            "sensor_name": MATCH,
+            "asset_id": MATCH,
             "sensor_type": MATCH,
         },
         "children",
     ),
-    Input({"type": "slider", "sensor_name": MATCH, "sensor_type": MATCH}, "id"),
     Input(
-        {"type": "slider", "sensor_name": MATCH, "sensor_type": MATCH},
+        {"type": "slider", "asset_id": MATCH, "sensor_type": MATCH},
         "value",
     ),
-    State("raw-data-store", "data"),
+    Input("selected-targets-store", "data"),
 )
