@@ -2,15 +2,6 @@ from dataclasses import dataclass
 
 from dash import html
 
-from enum import Enum
-
-
-class WorkflowType(Enum):
-    SingleCam = "single_cam"
-    StereoRig = "stereo_rig"
-    VisualInertial = "visual_inertial"
-
-
 @dataclass(frozen=True)
 class Stage:
     id: str
@@ -21,11 +12,9 @@ class Stage:
 
 STAGES = (
     Stage(
-        str(WorkflowType.SingleCam),
+        "single_cam",
         "Individual cameras",
-        "Calibrate each camera individually. The targets are extracted, intrinsic initialized, camera poses calculated "
-        "using DLT (one frame at a time), and then the entire sequence is optimized using bundle adjustment (poses and "
-        "intrinsic).",
+        "Calibrate each camera independently: extract targets, initialize intrinsics and poses, then refine with bundle adjustment.",
         (
             "image_loading",
             "camera_info",
@@ -36,19 +25,15 @@ STAGES = (
         ),
     ),
     Stage(
-        str(WorkflowType.StereoRig),
+        "multi_cam",
         "Stereo rig",
-        "Calibrate all cameras together. The extrinsic from the reference camera (cam0) to all cameras is initialized "
-        "using the synchronized poses from the individual camera stage, and then the entire 'rig' is optimized using "
-        "bundle adjustment (rig poses and rig extrinsics only)",
+        "Combine the individual camera calibrations: initialize relative camera transforms, then optimize the rig.",
         ("stereo_rig_init", "stereo_rig_opt"),
     ),
     Stage(
-        str(WorkflowType.VisualInertial),
+        "cam_imu",
         "Visual-inertial",
-        "Calibrate the reference camera to the IMU. A motion spline is fitted to the reference camera's (cam0) pose, "
-        "the extrinsic is initialized using velocity and acceleration constraints, and then the entire sequence is "
-        "optimized using a visual-inertial bundle adjustment (cam-imu extrinsic only).",
+        "Combine the reference camera's individual calibration with IMU measurements: fit a motion spline, initialize alignment, then optimize.",
         (
             "imu_data_loading",
             "spline_init",
@@ -59,10 +44,10 @@ STAGES = (
 )
 
 STEP_LABELS = {
-    "pose_init": "Dlt camera pose initialization",
-    "bundle_adjustment": "Single camera bundle adjustment",
-    "stereo_rig_init": "Stereo rig initialization",
-    "stereo_rig_opt": "Stereo rig bundle adjustment",
+    "pose_init": "Pose initialization",
+    "bundle_adjustment": "Bundle adjustment",
+    "stereo_rig_init": "Rig initialization",
+    "stereo_rig_opt": "Rig optimization",
     "visual_inertial_init": "Visual-inertial initialization",
     "visual_inertial_opt": "Visual-inertial optimization",
 }
@@ -89,7 +74,6 @@ def camera_label(camera):
 
 def stage_step_ids(metadata, stage_id):
     stage = stage_by_id(stage_id)
-
     return {
         step["step_id"]
         for step in (metadata or {}).get("steps", [])
@@ -99,11 +83,11 @@ def stage_step_ids(metadata, stage_id):
 
 def stage_available(metadata, stage_id):
     cameras = assets_of_type(metadata, "camera")
-    if stage_id == WorkflowType.SingleCam:
+    if stage_id == "single_cam":
         return bool(cameras)
-    if stage_id == WorkflowType.StereoRig:
+    if stage_id == "multi_cam":
         return len(cameras) > 1 or bool(stage_step_ids(metadata, stage_id))
-    if stage_id == WorkflowType.VisualInertial:
+    if stage_id == "cam_imu":
         return bool(cameras and assets_of_type(metadata, "imu")) or bool(
             stage_step_ids(metadata, stage_id)
         )
@@ -113,9 +97,7 @@ def stage_available(metadata, stage_id):
 def stage_cameras(metadata, stage_id):
     if not stage_available(metadata, stage_id):
         return []
-
     cameras = assets_of_type(metadata, "camera")
-
     # Calibrate() uses cam_stages.front() for visual-inertial calibration.
     return cameras[:1] if stage_id == "cam_imu" else cameras
 
@@ -126,9 +108,9 @@ def result_step_ids(metadata, asset_id, stage_id=None):
         row["step_id"]
         for row in (metadata or {}).get("counts", [])
         if row["asset_id"] == asset_id
-           and row["table"] in ("camera_poses", "reprojection_errors")
-           and row["count"] > 0
-           and (allowed is None or row["step_id"] in allowed)
+        and row["table"] in ("camera_poses", "reprojection_errors")
+        and row["count"] > 0
+        and (allowed is None or row["step_id"] in allowed)
     }
 
 
