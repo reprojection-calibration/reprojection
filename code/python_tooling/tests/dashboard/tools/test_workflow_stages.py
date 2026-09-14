@@ -3,7 +3,7 @@ from tempfile import NamedTemporaryFile
 
 from dashboard.callbacks.populate_sensor_panel import render_sensor_panel
 from dashboard.tools.data_loading import load_database, refresh_sensor_list
-from dashboard.tools.metadata import step_selector_options
+from dashboard.tools.metadata import imu_step_selector_options, step_selector_options
 from dashboard.tools.results import build_result_summary
 from dashboard.tools.workflow import build_stage_overview, stage_navigation
 from tests.test_fixture import construct_staged_visualization_db
@@ -63,6 +63,30 @@ class TestWorkflowStages(unittest.TestCase):
         description = str(build_stage_overview("cam_imu", self.metadata))
         self.assertIn("individual camera calibration", description)
         self.assertIn("Camera 0", description)
+
+    def test_imu_results_are_selected_independently_of_camera(self):
+        self.metadata["steps"].append(
+            {"step_id": 59, "type": "visual_inertial_init", "asset_ids": [1, 4]}
+        )
+        self.metadata["counts"].append(
+            {"table": "imu_errors", "step_id": 59, "asset_id": 4, "count": 2}
+        )
+        options, default = imu_step_selector_options(4, self.metadata)
+        self.assertIn({"label": "Visual-inertial initialization", "value": 59}, options)
+        self.assertEqual(default, 60)
+        self.assertNotIn(59, [o["value"] for o in step_selector_options(1, self.metadata, "cam_imu")[0]])
+        panel = render_sensor_panel(1, self.metadata, "cam_imu")
+        selector = panel.children[1].children[1].children[1]
+        self.assertEqual(selector.options, options)
+        self.assertEqual(selector.value, default)
+        self.assertEqual(step_selector_options(2, self.metadata, "cam_imu"), ([], None))
+        self.assertNotIn(59, [o["value"] for o in step_selector_options(1, self.metadata, "single_cam")[0]])
+
+        self.metadata["counts"] = [r for r in self.metadata["counts"] if r["step_id"] == 59]
+        self.assertEqual(step_selector_options(1, self.metadata, "cam_imu"), ([], None))
+        self.assertEqual(imu_step_selector_options(4, self.metadata)[1], 59)
+        self.assertEqual(imu_step_selector_options(99, self.metadata), ([], None))
+        self.assertEqual(imu_step_selector_options(4, None), ([], None))
 
     def test_shared_results_and_missing_results_are_explained(self):
         result = str(build_result_summary(2, 71, self.metadata, self.data, "multi_cam"))

@@ -32,7 +32,7 @@ def render_sensor_panel(asset_id, metadata, stage_id="single_cam"):
     panels = [camera_layout(asset_id, camera_label(camera), pose_title)]
     if stage_id == "cam_imu":
         panels.extend(
-            imu_layout(imu["id"], imu["name"])
+            imu_layout(imu["id"], imu["name"], metadata)
             for imu in assets_of_type(metadata, "imu")
         )
     return html.Div(panels, className="sensor-panels")

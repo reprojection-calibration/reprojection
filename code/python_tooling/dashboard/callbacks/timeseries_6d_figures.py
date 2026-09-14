@@ -6,15 +6,30 @@ from dashboard.tools.timeseries_6d import timeseries_6d_to_patch
 from database.types import SensorType
 
 
-# TODO(Jack): That fact that we have two inputs here means that when we switch between sensors we get two calls here,
-#  once when the step-selector gets triggered and once when we the composite_id arrives once the dynamic layout has been
-#  updated. This seems like we are missing some abstraction here.
 @app.callback(
-    Output({"type": "timeseries", "asset_id": MATCH, "sensor_type": MATCH}, "figure"),
-    Input({"type": "timeseries", "asset_id": MATCH, "sensor_type": MATCH}, "id"),
+    Output({"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Camera}, "figure"),
+    Input({"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Camera}, "id"),
     Input("step-selector", "value"),
     Input("workflow-data-store", "data"),
 )
+def update_camera_timeseries(composite_id, step_id, workflow_data):
+    return update_timeseries(composite_id, step_id, workflow_data)
+
+
+@app.callback(
+    Output({"type": "timeseries", "asset_id": MATCH, "sensor_type": SensorType.Imu}, "figure"),
+    Input({"type": "imu-step-selector", "asset_id": MATCH}, "id"),
+    Input({"type": "imu-step-selector", "asset_id": MATCH}, "value"),
+    Input("workflow-data-store", "data"),
+)
+def update_imu_timeseries(composite_id, step_id, workflow_data):
+    if composite_id is None:
+        return no_update
+    return update_timeseries(
+        dict(composite_id, sensor_type=SensorType.Imu), step_id, workflow_data
+    )
+
+
 def update_timeseries(composite_id, step_id, workflow_data):
     if composite_id is None or workflow_data is None:
         return no_update

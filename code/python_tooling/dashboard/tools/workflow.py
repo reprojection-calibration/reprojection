@@ -46,6 +46,7 @@ STAGES = (
 STEP_LABELS = {
     "pose_init": "Pose initialization",
     "bundle_adjustment": "Bundle adjustment",
+    "spline_init": "Spline initialization",
     "stereo_rig_init": "Rig initialization",
     "stereo_rig_opt": "Rig optimization",
     "visual_inertial_init": "Visual-inertial initialization",
@@ -104,7 +105,7 @@ def stage_cameras(metadata, stage_id):
 
 def result_step_ids(metadata, asset_id, stage_id=None):
     allowed = stage_step_ids(metadata, stage_id) if stage_id is not None else None
-    return {
+    results = {
         row["step_id"]
         for row in (metadata or {}).get("counts", [])
         if row["asset_id"] == asset_id
@@ -112,6 +113,7 @@ def result_step_ids(metadata, asset_id, stage_id=None):
         and row["count"] > 0
         and (allowed is None or row["step_id"] in allowed)
     }
+    return results
 
 
 def stage_navigation(metadata):

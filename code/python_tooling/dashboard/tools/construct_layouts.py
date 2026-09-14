@@ -9,6 +9,7 @@ from dashboard.tools.timeseries_plotting import (
     build_figure_layout,
 )
 from database.types import SensorType
+from dashboard.tools.metadata import imu_step_selector_options
 
 TARGET_VISUALIZATION = FigureConfig(
     "Target detections & reprojection errors",
@@ -162,18 +163,33 @@ IMU_DATA_VISUALIZATION = FigureConfig(
 )
 
 
-def imu_layout(asset_id, label="IMU"):
+def imu_layout(asset_id, label="IMU", metadata=None):
+    options, value = imu_step_selector_options(asset_id, metadata)
     return html.Section(
         [
             html.Div(
                 [
                     html.H3(f"IMU · {label}"),
                     html.P(
-                        "Measured angular velocity and acceleration, with residuals from the selected visual-inertial result when available.",
+                        "Measured angular velocity and acceleration. Select IMU residuals independently of the camera result above.",
                         className="muted",
                     ),
                 ],
                 className="plot-heading",
+            ),
+            html.Div(
+                [
+                    html.Label("IMU residual result"),
+                    dcc.RadioItems(
+                        id={"type": "imu-step-selector", "asset_id": asset_id},
+                        options=options,
+                        value=value,
+                        className="result-selector",
+                    ),
+                    html.P("No IMU residuals available.", className="empty-state")
+                    if not options else None,
+                ],
+                className="result-control",
             ),
             dcc.Graph(
                 id={

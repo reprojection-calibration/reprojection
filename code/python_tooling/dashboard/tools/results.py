@@ -25,17 +25,6 @@ def build_result_summary(asset_id, step_id, metadata, workflow_data, stage_id):
             ("Pose samples", counts.get("camera_poses", 0)),
             ("Frames with reprojection errors", counts.get("reprojection_errors", 0)),
         ]
-        if stage_id == "cam_imu":
-            metrics.append(
-                (
-                    "IMU residual samples",
-                    sum(
-                        row["count"]
-                        for row in metadata["counts"]
-                        if row["step_id"] == step_id and row["table"] == "imu_errors"
-                    ),
-                )
-            )
         content.append(
             html.Div(
                 [
@@ -59,7 +48,9 @@ def build_result_summary(asset_id, step_id, metadata, workflow_data, stage_id):
         assets = {asset["id"]: asset for asset in metadata["assets"]}
         steps = {step["step_id"]: step for step in metadata["steps"]}
         allowed = (
-            {step_id} if step_id is not None else stage_step_ids(metadata, stage_id)
+            {step_id}
+            if step_id is not None and stage_id == "multi_cam"
+            else stage_step_ids(metadata, stage_id)
         )
         extrinsics = [
             row

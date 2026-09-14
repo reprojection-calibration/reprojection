@@ -50,6 +50,21 @@ def step_selector_options(asset_id, metadata, stage_id=None):
     if asset_id is None or not metadata:
         return [], None
     available = result_step_ids(metadata, asset_id, stage_id)
+    return result_selector_options(metadata, available)
+
+
+def imu_step_selector_options(asset_id, metadata):
+    available = {
+        row["step_id"]
+        for row in (metadata or {}).get("counts", [])
+        if row["asset_id"] == asset_id
+        and row["table"] == "imu_errors"
+        and row["count"] > 0
+    }
+    return result_selector_options(metadata or {}, available)
+
+
+def result_selector_options(metadata, available):
     order = {
         step_type: index
         for index, step_type in enumerate(
@@ -57,7 +72,7 @@ def step_selector_options(asset_id, metadata, stage_id=None):
         )
     }
     steps = sorted(
-        (step for step in metadata["steps"] if step["step_id"] in available),
+        (step for step in metadata.get("steps", []) if step["step_id"] in available),
         key=lambda step: (order.get(step["type"], len(order)), step["step_id"]),
     )
     options = [

@@ -123,7 +123,7 @@ app.layout = html.Div(
                         ),
                         html.Div(
                             [
-                                html.Label("Compare results"),
+                                html.Label("Compare camera results"),
                                 dcc.RadioItems(
                                     id="step-selector",
                                     options=[],
