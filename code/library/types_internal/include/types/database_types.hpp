@@ -112,11 +112,11 @@ inline std::string ToString(StepType const data) {
     } else if (data == StepType::ImuDataLoading) {
         return "imu_data_loading";
     } else if (data == StepType::IntrinsicInit) {
-        return "intrinsic_initialization";
+        return "intrinsic_init";
     } else if (data == StepType::PoseInit) {
-        return "pose_initialization";
+        return "pose_init";
     } else if (data == StepType::SplineInit) {
-        return "spline_initialization";
+        return "spline_init";
     } else if (data == StepType::StereoRigInit) {
         return "stereo_rig_init";
     } else if (data == StepType::StereoRigOpt) {
