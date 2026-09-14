@@ -56,7 +56,7 @@ struct OptimizationState {
 
 struct ReprojectionError {
     AssetId camera_id;
-    uint64_t timestamp_ns;
+    uint64_t sample_timestamp_ns;
     ArrayX2d value;
 };
 
