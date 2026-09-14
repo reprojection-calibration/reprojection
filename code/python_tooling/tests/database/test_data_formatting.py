@@ -3,7 +3,7 @@ from tempfile import NamedTemporaryFile
 
 import pandas as pd
 
-from database.data_formatting import parse_workflows, process_workflow
+from database.data_formatting import Workflow, parse_workflows, process_workflow
 from database.sql_table_loading import load_calibration_database
 from tests.test_fixture import construct_test_db
 
@@ -102,7 +102,7 @@ class TestDataFormatting(unittest.TestCase):
                         "timestamp_ns": 0,
                     }
                 ]
-            ).set_index(["step_id", "asset_id"]),
+            ),
             "imu_data": pd.DataFrame(
                 [
                     {
@@ -117,7 +117,7 @@ class TestDataFormatting(unittest.TestCase):
                         "az": 2.0,
                     }
                 ]
-            ).set_index(["step_id", "asset_id"]),
+            ),
         }
 
         workflow_data_0 = process_workflow(db, workflows[0])
@@ -136,4 +136,31 @@ class TestDataFormatting(unittest.TestCase):
         pd.testing.assert_frame_equal(
             workflow_data_1["imu_data"],
             expected["imu_data"],
+        )
+
+    def test_workflow_filters_extrinsics_by_step_and_both_assets(self):
+        workflow = Workflow(
+            1,
+            "multi_cam",
+            "1|2|",
+            {1: {}, 2: {}},
+            {
+                10: {"type": "stereo_rig_opt", "asset_group_signature": "1|2|"},
+            },
+        )
+        db = {
+            "extrinsics": pd.DataFrame(
+                [
+                    {"step_id": 10, "asset_a_id": 1, "asset_b_id": 2},
+                    {"step_id": 11, "asset_a_id": 1, "asset_b_id": 2},
+                    {"step_id": 10, "asset_a_id": 3, "asset_b_id": 2},
+                    {"step_id": 10, "asset_a_id": 1, "asset_b_id": 3},
+                ]
+            )
+        }
+        self.assertEqual(
+            process_workflow(db, workflow)["extrinsics"].to_dict("records"),
+            [
+                {"step_id": 10, "asset_a_id": 1, "asset_b_id": 2},
+            ],
         )

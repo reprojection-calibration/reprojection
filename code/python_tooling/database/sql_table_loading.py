@@ -34,7 +34,7 @@ def load_table_blob(db_path, sql_query_file, parser, blob_column_id="data"):
     elif blob_column_id not in table.columns:
         raise KeyError("Column '{}' not found in query result.", blob_column_id)
 
-    table["data"] = table["data"].apply(parser)
+    table[blob_column_id] = table[blob_column_id].apply(parser)
 
     return table
 
@@ -70,39 +70,6 @@ def load_calibration_database(db_path):
         if table is not None:
             db[table_name] = table
 
-    # Explicitly keep the IDs as columns in the "single row" tables.
-    for table_name in (
-        "camera_info",
-        "target_info",
-    ):
-        if table_name not in db:
-            continue
-
-        db[table_name] = db[table_name].set_index(["step_id", "asset_id"], drop=False)
-
-    # For the "multi row" tables the ID is automatically preserved in the table even when using a multindex like we do
-    # here. If we also set drop=False here then it would be repeated twice which would not be so nice - that is why we
-    # treat the single row and multi row tables separately.
-    for table_name in (
-        "camera_poses",
-        "extracted_targets",
-        "images_timestamps",
-        "imu_data",
-        "imu_errors",
-        "intrinsics",
-        "reprojection_errors",
-    ):
-        if table_name not in db:
-            continue
-
-        db[table_name] = db[table_name].set_index(["step_id", "asset_id"])
-
-    # WARN(Jack): The extrinsics table is unique because it has two assets not just a single one. We need to figure a
-    # canonical robust way to handle this.
-    if "extrinsics" in db:
-        db["extrinsics"] = db["extrinsics"].set_index(
-            ["step_id"],
-            drop=False,
-        )
-
+    # Keep SQL identifiers as ordinary columns in every table. In particular,
+    # source_step_id is part of the relationship to the source measurements.
     return db

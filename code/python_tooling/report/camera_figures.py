@@ -8,7 +8,7 @@ def coverage_figure(camera_info, extracted_target_df):
     all_x = []
     all_y = []
     for row in extracted_target_df.itertuples():
-        pixels = np.asarray(row.data["pixels"])
+        pixels = np.asarray(row.data["pixels"]).reshape(-1, 2)
 
         all_x.extend(pixels[:, 0])
         all_y.extend(pixels[:, 1])
@@ -27,12 +27,12 @@ def coverage_figure(camera_info, extracted_target_df):
     )
 
     # We can calculate a sensible default for the bounds even if the height and width are not given.
-    if camera_info is not None:
+    if camera_info:
         x_range = [0, camera_info["width"]]
         y_range = [camera_info["height"], 0]
     else:
-        x_range = [min(all_x), max(all_x)]
-        y_range = [max(all_y), min(all_y)]
+        x_range = [min(all_x), max(all_x)] if all_x else None
+        y_range = [max(all_y), min(all_y)] if all_y else None
 
     fig.update_layout(
         title=f"Pixel coverage",
@@ -60,7 +60,9 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df):
 
     rows = extracted_target_df.merge(
         reprojection_error_df,
-        on="timestamp_ns",
+        left_on=["step_id", "asset_id", "timestamp_ns"],
+        right_on=["source_step_id", "asset_id", "timestamp_ns"],
+        validate="one_to_many",
         suffixes=("_target", "_error"),
     )
 

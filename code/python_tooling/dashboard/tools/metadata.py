@@ -1,4 +1,6 @@
-from dash import dcc, html
+from dash import html
+
+from dashboard.tools.selection import table_rows
 
 
 def extract_labeled_metadata(data, parent_keys=None):
@@ -84,34 +86,51 @@ def build_sensor_statistics_html(sensor_metadata):
     return stat_cards
 
 
-def build_step_selector(sensor_metadata):
-    step_names = sorted(
-        list(
-            {
-                key
-                for x in sensor_metadata
-                # NOTE(Jack): This is a critical piece of business logic! The values here are the only keys from which
-                # calibrations steps will be retrieved from. If for example we add camera intrinsic display we should
-                # also add that here because a camera intrinsic is associated with a step, and it might be a step that
-                # is not present in poses or reprojection error. Is there a more eloquent way to do this?
-                if x == "poses" or x == "reprojection_error" or x == "imu_error"
-                for key in sensor_metadata[x]
-            }
-        )
-    )
+def step_selector_options(asset_id, metadata):
+    if asset_id is None or not metadata:
+        return [], None
 
-    return dcc.RadioItems(
-        id="step-selector",
-        options=step_names,
-        value=step_names[0] if step_names else "",
-    )
+    artifact_steps = {
+        count["step_id"]
+        for count in metadata["counts"]
+        if count["asset_id"] == asset_id
+        and count["table"] in ("camera_poses", "reprojection_errors")
+        and count["count"] > 0
+    }
+    options = [
+        {"label": f"{step['type']} ({step['step_id']})", "value": step["step_id"]}
+        for step in metadata["steps"]
+        if step["step_id"] in artifact_steps
+    ]
+    options.sort(key=lambda option: (option["label"], option["value"]))
+    return options, options[0]["value"] if options else None
 
 
-def build_sensor_metadata_layout(sensor_name, metadata):
-    if sensor_name is None or metadata is None or sensor_name not in metadata:
+def build_sensor_metadata_layout(asset_id, metadata, workflow_data):
+    if asset_id is None or not metadata:
         return []
 
-    stat_cards = build_sensor_statistics_html(metadata[sensor_name])
-    step_selector = build_step_selector(metadata[sensor_name])
-
-    return [step_selector] + stat_cards
+    # Table and step remain visible instead of inferring steps from nested keys.
+    statistics = {}
+    for count in metadata["counts"]:
+        if count["asset_id"] == asset_id:
+            statistics.setdefault(count["table"], {})[str(count["step_id"])] = count[
+                "count"
+            ]
+    for row in table_rows(workflow_data, "camera_info", asset_id=asset_id):
+        statistics[f"camera_info (step {row['step_id']})"] = {
+            key: value
+            for key, value in row.items()
+            if key not in ("step_id", "asset_id")
+        }
+    # Target descriptions belong to workflow target assets, not the selected camera.
+    assets = {asset["id"]: asset for asset in metadata["assets"]}
+    for row in table_rows(workflow_data, "target_info"):
+        target = assets[row["asset_id"]]
+        label = f"Target {target['name']} ({target['id']}, step {row['step_id']})"
+        statistics[label] = {
+            key: value
+            for key, value in row.items()
+            if key not in ("step_id", "asset_id")
+        }
+    return build_sensor_statistics_html(statistics)

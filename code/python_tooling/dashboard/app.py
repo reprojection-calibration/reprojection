@@ -98,7 +98,13 @@ app.layout = html.Div(
                     },
                 ),
                 html.Div(
-                    id="sensor-statistics-container",
+                    [
+                        dcc.RadioItems(id="step-selector", options=[], value=None),
+                        html.Div(
+                            id="sensor-statistics-container",
+                            style={"display": "contents"},
+                        ),
+                    ],
                     style={
                         "marginTop": "15px",
                         "paddingTop": "10px",
@@ -129,7 +135,8 @@ app.layout = html.Div(
             id="play-interval",
             interval=50,
         ),
-        dcc.Store(id="raw-data-store"),
+        dcc.Store(id="workflow-data-store"),
+        dcc.Store(id="selected-targets-store"),
         dcc.Store(id="metadata-store"),
     ]
 )

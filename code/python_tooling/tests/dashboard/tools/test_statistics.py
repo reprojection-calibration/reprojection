@@ -10,14 +10,15 @@ class TestStatistics(unittest.TestCase):
         # like we expect! As of now we normally do not see that given the current data structure.
         sensor_metadata = {
             "type": SensorType.Camera,
-            "measurements": {"images": 879, "targets": 879},
+            "images_timestamps": {"10": 879},
+            "extracted_targets": {"20": 879},
             "test1": {"test2": {"test3": 0}},
         }
 
         gt_result = [
             (["type"], SensorType.Camera),
-            (["measurements", "images"], 879),
-            (["measurements", "targets"], 879),
+            (["images_timestamps", "10"], 879),
+            (["extracted_targets", "20"], 879),
             (["test1", "test2", "test3"], 0),
         ]
 

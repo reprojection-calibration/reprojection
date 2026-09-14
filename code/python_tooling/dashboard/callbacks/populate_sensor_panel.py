@@ -1,27 +1,29 @@
-from dash import Input, Output, State, html
+from dash import Input, Output, html
 
 from dashboard.server import app
 from dashboard.tools.construct_layouts import camera_layout, imu_layout
 from database.types import SensorType
 
 
-# TODO(Jack): At this time do we really need timestamps?
-# TODO(Jack): Refactor to get sensor type from metadata!
 @app.callback(
     Output("sensor-content-container", "children"),
     Input("sensor-selection-dropdown", "value"),
-    State("raw-data-store", "data"),
+    Input("metadata-store", "data"),
 )
-def render_sensor_panel(sensor_name, raw_data):
-    if sensor_name is None or raw_data is None:
+def render_sensor_panel(asset_id, metadata):
+    if asset_id is None or metadata is None:
         return html.P("Calibration data not loaded.")
 
-    # TODO(Jack): Should we check that this exists here or at a certain point can we take this for a given?
-    sensor_type = raw_data[sensor_name]["type"]
+    asset = next(
+        (asset for asset in metadata.get("assets", []) if asset["id"] == asset_id), None
+    )
+    if asset is None:
+        return html.P("Calibration data not loaded.")
+    sensor_type = asset["type"]
 
     if sensor_type == SensorType.Camera:
-        return camera_layout(sensor_name)
+        return camera_layout(asset_id)
     elif sensor_type == SensorType.Imu:
-        return imu_layout(sensor_name)
+        return imu_layout(asset_id)
     else:
         return html.P(f"Unknown sensor type selected: {sensor_type}.")

@@ -2,13 +2,8 @@ import unittest
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
-from dashboard.tools.data_loading import (
-    load_database,
-    refresh_database_list,
-    refresh_sensor_list,
-)
-from database.calculate_metadata import count_data
-from database.types import SensorType
+from dashboard.tools.data_loading import load_database, refresh_sensor_list
+from database.discovery import refresh_database_list
 from tests.test_fixture import construct_test_db
 
 
@@ -48,12 +43,16 @@ class TestDataLoading(unittest.TestCase):
         with NamedTemporaryFile(suffix=".db3") as tmp:
             construct_test_db(tmp.name)
 
-            raw_data, metadata = load_database(tmp.name, 1)
+            workflow_data, metadata = load_database(tmp.name, 1)
 
-        gt_metadata = {"": {"measurements": {"images": 1}, "type": SensorType.Camera}}
-
-        self.assertEqual(count_data(raw_data), gt_metadata)
-        self.assertEqual(metadata, gt_metadata)
+        self.assertEqual(
+            workflow_data["tables"]["images_timestamps"],
+            [{"step_id": 1, "asset_id": 1, "timestamp_ns": "0"}],
+        )
+        self.assertEqual(
+            metadata["counts"],
+            [{"table": "images_timestamps", "step_id": 1, "asset_id": 1, "count": 1}],
+        )
 
     def test_load_database_adversarial(self):
         result = load_database(None, 1)
@@ -65,20 +64,22 @@ class TestDataLoading(unittest.TestCase):
 
     def test_refresh_sensor_list(self):
         metadata = {
-            "/cam0/image_raw": {
-                "measurements": {"images": 1},
-                "type": SensorType.Camera,
-            }
+            "assets": [
+                {"id": 1, "name": "/cam0/image_raw", "type": "camera"},
+                {"id": 2, "name": "/cam0/image_raw", "type": "camera"},
+                {"id": 3, "name": "board", "type": "target"},
+            ]
         }
 
         sensor_list, first_sensor = refresh_sensor_list(metadata)
 
         gt_sensor_list = [
             {
-                "label": "/cam0/image_raw (SensorType.Camera)",
-                "value": "/cam0/image_raw",
+                "label": "/cam0/image_raw (camera, 1)",
+                "value": 1,
             }
         ]
+        gt_sensor_list.append({"label": "/cam0/image_raw (camera, 2)", "value": 2})
         self.assertEqual(sensor_list, gt_sensor_list)
         self.assertEqual(first_sensor, gt_sensor_list[0]["value"])
 

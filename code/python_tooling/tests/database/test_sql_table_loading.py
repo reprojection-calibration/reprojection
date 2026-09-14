@@ -64,7 +64,8 @@ class TestDatabaseSqlTableLoading(unittest.TestCase):
             # Assert some of its properties.
             self.assertTrue(table.empty)
             self.assertEqual(
-                list(table.columns), ["step_id", "asset_id", "timestamp_ns", "data"]
+                list(table.columns),
+                ["step_id", "source_step_id", "asset_id", "timestamp_ns", "data"],
             )
 
     def test_load_calibration_database(self):

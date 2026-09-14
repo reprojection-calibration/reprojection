@@ -37,14 +37,14 @@ POSE_VISUALIZATION = FigureConfig(
     (
         SubplotConfig(
             "Orientation",
-            AxisConfig("Time", "s"),
+            AxisConfig("Time", "ns"),
             AxisConfig("Axis Angle", "rad"),
             3,
             ["rx", "ry", "rz"],
         ),
         SubplotConfig(
             "Translation",
-            AxisConfig("Time", "s"),
+            AxisConfig("Time", "ns"),
             AxisConfig("Position", "m"),
             3,
             ["x", "y", "z"],
@@ -57,14 +57,14 @@ POSE_VISUALIZATION = FigureConfig(
 
 # NOTE(Jack): We use pattern matching callbacks to facilitate the dynamic layout -
 #       https://dash.plotly.com/pattern-matching-callbacks
-def camera_layout(sensor_name):
+def camera_layout(asset_id):
     return html.Div(
         [
             html.H3("Camera Layout"),
             html.Div(
                 id={
                     "type": "current_timestamp",
-                    "sensor_name": sensor_name,
+                    "asset_id": asset_id,
                     "sensor_type": SensorType.Camera,
                 },
                 children="N/A",
@@ -72,7 +72,7 @@ def camera_layout(sensor_name):
             dcc.Input(
                 id={
                     "type": "max_error",
-                    "sensor_name": sensor_name,
+                    "asset_id": asset_id,
                 },
                 min=1e-6,
                 type="number",
@@ -85,7 +85,7 @@ def camera_layout(sensor_name):
             dcc.Graph(
                 id={
                     "type": "extracted_targets",
-                    "sensor_name": sensor_name,
+                    "asset_id": asset_id,
                 },
                 figure=build_figure_layout(TARGET_VISUALIZATION),
             ),
@@ -94,7 +94,7 @@ def camera_layout(sensor_name):
                     html.Div(
                         html.Button(
                             "Pause",
-                            id={"type": "pause_button", "sensor_name": sensor_name},
+                            id={"type": "pause_button", "asset_id": asset_id},
                             # TODO(Jack): Style largely copy and pasted from the metadata cards. Centralize!
                             style={
                                 "backgroundColor": "white",
@@ -113,7 +113,7 @@ def camera_layout(sensor_name):
                         dcc.Slider(
                             id={
                                 "type": "slider",
-                                "sensor_name": sensor_name,
+                                "asset_id": asset_id,
                                 "sensor_type": SensorType.Camera,
                             },
                             min=0,
@@ -140,7 +140,7 @@ def camera_layout(sensor_name):
             dcc.Graph(
                 id={
                     "type": "timeseries",
-                    "sensor_name": sensor_name,
+                    "asset_id": asset_id,
                     "sensor_type": SensorType.Camera,
                 },
                 figure=build_figure_layout(POSE_VISUALIZATION),
@@ -154,14 +154,14 @@ IMU_DATA_VISUALIZATION = FigureConfig(
     (
         SubplotConfig(
             "Angular Velocity",
-            AxisConfig("Time", "s"),
+            AxisConfig("Time", "ns"),
             AxisConfig("omega", "rad/s"),
             3,
             ["omega_x", "omega_y", "omega_z"],
         ),
         SubplotConfig(
             "Linear Acceleration",
-            AxisConfig("Time", "s"),
+            AxisConfig("Time", "ns"),
             AxisConfig("a", "m/s^2"),
             3,
             ["acc_x", "acc_y", "acc_z"],
@@ -172,14 +172,14 @@ IMU_DATA_VISUALIZATION = FigureConfig(
 )
 
 
-def imu_layout(sensor_name):
+def imu_layout(asset_id):
     return html.Div(
         [
             html.H3("IMU Layout"),
             dcc.Graph(
                 id={
                     "type": "timeseries",
-                    "sensor_name": sensor_name,
+                    "asset_id": asset_id,
                     "sensor_type": SensorType.Imu,
                 },
                 figure=build_figure_layout(IMU_DATA_VISUALIZATION),

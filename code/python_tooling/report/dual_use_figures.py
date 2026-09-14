@@ -24,10 +24,14 @@ def measurement_delta_time_figures(df, label="Measurement"):
     assert not df.empty, "df is empty"
     assert "timestamp_ns" in df.columns, "Missing column: timestamp_ns"
 
-    rows = df.sort_values("timestamp_ns").copy()
+    rows = df.sort_values(["step_id", "asset_id", "timestamp_ns"]).copy()
 
+    # Nullable integers preserve nanoseconds when group shifts introduce missing values.
+    rows["timestamp_ns"] = rows["timestamp_ns"].astype("Int64")
     rows["time_s"] = (rows["timestamp_ns"] - rows["timestamp_ns"].iloc[0]) * 1e-9
-    rows["delta_ms"] = rows["timestamp_ns"].diff() * 1e-6
+    rows["delta_ms"] = (
+        rows.groupby(["step_id", "asset_id"])["timestamp_ns"].diff() * 1e-6
+    )
 
     # The first measurement has no previous value to calculate the time delta with which results in a NaN. This removes
     # that value.

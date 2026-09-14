@@ -4,10 +4,7 @@ from textwrap import dedent
 import pandas as pd
 
 from database.data_formatting import Workflow
-from report.build_calibration_toml import (
-    build_extrinsic_toml,
-    build_intrinsic_toml,
-)
+from report.build_calibration_toml import build_extrinsic_toml, build_intrinsic_toml
 
 
 class TestBuildCameraTomls(unittest.TestCase):
@@ -30,14 +27,16 @@ class TestBuildCameraTomls(unittest.TestCase):
             },
         )
 
-        camera_info = pd.Series(
-            {
-                "step_id": 1,
-                "asset_id": 1,
-                "camera_model": "pinhole_radtan4",
-                "height": 720,
-                "width": 1080,
-            }
+        camera_info = pd.DataFrame(
+            [
+                {
+                    "step_id": 1,
+                    "asset_id": 1,
+                    "camera_model": "pinhole_radtan4",
+                    "height": 720,
+                    "width": 1080,
+                }
+            ]
         )
 
         camera_intrinsics = pd.DataFrame(
@@ -57,14 +56,14 @@ class TestBuildCameraTomls(unittest.TestCase):
                         """,
                 },
             ]
-        ).set_index(["step_id", "asset_id"])
+        )
 
-        raw_data = {
+        workflow_data = {
             "camera_info": camera_info,
             "intrinsics": camera_intrinsics,
         }
 
-        result = build_intrinsic_toml(workflow, raw_data)
+        result = build_intrinsic_toml(workflow, workflow_data)
 
         result_gt = """\
         [workflow1.cam0]
@@ -108,7 +107,7 @@ class TestBuildCameraTomls(unittest.TestCase):
                     "width": 640,
                 },
             ]
-        ).set_index(["step_id", "asset_id"], drop=False)
+        )
         intrinsic_data = "alpha = 0.5\ncx = 256.0\ncy = 256.0\nf = 160.0\nxi = 0.0"
         intrinsics = pd.DataFrame(
             [
@@ -125,7 +124,7 @@ class TestBuildCameraTomls(unittest.TestCase):
                     "data": intrinsic_data,
                 },
             ]
-        ).set_index(["step_id", "asset_id"])
+        )
 
         result = build_intrinsic_toml(
             workflow, {"camera_info": camera_info, "intrinsics": intrinsics}
@@ -158,7 +157,7 @@ class TestBuildCameraTomls(unittest.TestCase):
                 },
             },
             steps={
-                5: {"type": "extrinsic_optimization", "asset_group_signature": "1|2|"},
+                5: {"type": "visual_inertial_opt", "asset_group_signature": "1|2|"},
             },
         )
 
@@ -178,14 +177,15 @@ class TestBuildCameraTomls(unittest.TestCase):
             ]
         )
 
-        raw_data = {
+        workflow_data = {
             "extrinsics": extrinsics,
         }
 
-        result = build_extrinsic_toml(workflow, raw_data)
+        result = build_extrinsic_toml(workflow, workflow_data)
 
         result_gt = """\
         [workflow3.extrinsic0]
+        step_id = 5
         frame_a = 'frame_a_1'
         frame_b = 'frame_b_1'
         tf_a_b = [
