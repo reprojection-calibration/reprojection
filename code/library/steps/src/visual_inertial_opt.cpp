@@ -64,7 +64,7 @@ void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     // here like we do for the regular bundle adjustment.
     transforms::RigState const rig_state{cam_id_, ba_problem.rig_poses, transforms::Extrinsics{{optimized_extrinsic}}};
     database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, residuals);
+    database::ReprojectionErrorsInsert(db.get(), step_id, {{cam_id_, targets_id_}}, residuals);
 
     // Diagnostic output - imu errors
     ImuErrors const imu_errors{

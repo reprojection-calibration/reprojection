@@ -349,7 +349,8 @@ TEST_F(CalibDbFixture, TestReprojectionErrors) {
     ReprojectionError const data{asset_id, timestamp_ns, timestamp_ns, ArrayX2d{}};
 
     StepId const reprojection_error_id{database::GetOrCreateStep(db_.get(), StepType::PoseInit, "").first};
-    EXPECT_NO_THROW(database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, targets_id, {data}));
+    EXPECT_NO_THROW(
+        database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, {{asset_id, targets_id}}, {data}));
 }
 
 TEST_F(CalibDbFixture, TestRigState) {
