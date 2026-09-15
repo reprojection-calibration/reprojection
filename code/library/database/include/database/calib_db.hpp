@@ -104,7 +104,11 @@ void IntrinsicInsert(sqlite3* db, StepId step_id, AssetId asset_id, CameraModel 
 // TODO(Jack): Should this also return the camera_model? We have that information.
 std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
-void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, StepId source_step_id,
+// TODO(Jack): I do now want to give up on foreign key constrains entirely which is why we have the std::map<AssetId,
+// StepId> passed here. This provides the mapping between camera asset and its target extraction step. I believe the
+// reprojection error is literally inextricably linked to the target, therefore making this extra effort to get a
+// foreign key constraint here makes sense.
+void ReprojectionErrorsInsert(sqlite3* db, StepId step_id, std::map<AssetId, StepId> const& cam_target_ids,
                               std::vector<ReprojectionError> const& data);
 
 void RigStateInsert(sqlite3* db, StepId step_id, StepId source_step_id, transforms::RigState const& data);

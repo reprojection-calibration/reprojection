@@ -61,7 +61,7 @@ def error_figure(camera_info, extracted_target_df, reprojection_error_df):
     rows = extracted_target_df.merge(
         reprojection_error_df,
         left_on=["step_id", "asset_id", "timestamp_ns"],
-        right_on=["source_step_id", "asset_id", "timestamp_ns"],
+        right_on=["source_step_id", "asset_id", "sample_timestamp_ns"],
         validate="one_to_many",
         suffixes=("_target", "_error"),
     )

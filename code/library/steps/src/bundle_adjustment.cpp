@@ -53,7 +53,7 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     // reprojection error.
     Ba::Problem const optimized_problem{problem, rig_poses, cameras};
     auto const errors{optimization::EvaluateResiduals(optimized_problem)};
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
+    database::ReprojectionErrorsInsert(db.get(), step_id, {{camera_id_, targets_id_}}, errors);
 
     log->info("{{{}, 'problem': {}}}}}", StepLogInfo{Type(), step_id}, problem);
     log->info("{{{}, 'result': {}, 'solver_summary': {}}}}}", StepLogInfo{Type(), step_id}, result,

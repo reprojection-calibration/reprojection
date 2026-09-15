@@ -43,7 +43,7 @@ app.clientside_callback(
     
         const error = ((workflow_data.tables || {}).reprojection_errors || []).find(error =>
             error.asset_id === asset_id && error.step_id === step_id &&
-            error.source_step_id === row.step_id && error.timestamp_ns === row.timestamp_ns);
+            error.source_step_id === row.step_id && error.sample_timestamp_ns === row.timestamp_ns);
         if (error && cmax > 0) {
             const reprojection_error = error.data;
             patch.assign(['data', 0, 'marker'], {
