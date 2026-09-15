@@ -528,11 +528,13 @@ void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, std::map<
         protobuf_serialization::ArrayX2dProto const serialized{Serialize(reprojection_error)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
-            throw std::runtime_error(  // LCOV_EXCL_LINE
+            // LCOV_EXCL_START
+            throw std::runtime_error(
                 std::format("ArrayX2dProto.SerializeToString() failed: 'step_id' {}, 'source_step_id' {}, "
                             "'asset_id' {}, 'sample_timestamp_ns' {}, 'frame_timestamp_ns' {}.",
                             step_id.value, cam_target_ids.at(asset_id).value, asset_id.value, sample_timestamp_ns,
-                            frame_timestamp_ns));  // LCOV_EXCL_LINE
+                            frame_timestamp_ns));
+            // LCOV_EXCL_STOP
         }
 
         Bind(stmt, 1, step_id.value);
