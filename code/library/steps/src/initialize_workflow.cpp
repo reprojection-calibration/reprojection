@@ -81,6 +81,7 @@ void InsertAssetGroups(CalibrationAssets const& assets, SqlitePtr const db) {
         // TODO(Jack): Can we assemble these ids in a more eloquent way?
         std::vector<AssetId> data;
         for (auto const& cam : assets.cameras) {
+            // cppcheck-suppress useStlAlgorithm
             data.push_back(cam.id);
         }
         data.push_back(assets.imu->id);
