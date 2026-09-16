@@ -76,7 +76,7 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
 
     // NOTE(Jack): Setting the sync tolerance to zero enforces exact matches only. Which considering that the frames
     // have to come from the camera's targets makes sense!
-    return MultiCamProblem(camera_id, frames, {cam0}, 0);
+    return MultiCamProblem(cam0.camera_id, frames, {cam0}, 0);
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
@@ -90,18 +90,41 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
                             optimize_intrinsic, camera_id);
 }
 
+BundleAdjustment::ViProblem BundleAdjustment::ViMultiCamProblem(AssetId const& cam0_id,
+                                                                spline::Se3Spline const& rig_spline,
+                                                                Array6d const& se3_imu_rig, Vector3d const& gravity_w,
+                                                                std::vector<CameraProblemInput> const& cams) {
+    ViProblem problem{cam0_id, rig_spline, se3_imu_rig, gravity_w};
+    for (auto const& cam_i : cams) {
+        ViAddCamera(cam_i, problem);
+    }
+
+    return problem;
+}
+
+BundleAdjustment::ViProblem BundleAdjustment::ViSingleCamProblem(
+    CameraInfo const& camera_info, Intrinsic const& intrinsic, TargetSamples const& targets,
+    spline::Se3Spline const& rig_spline, Array6d const& se3_imu_rig, Vector3d const& gravity_w, AssetId camera_id) {
+    // NOTE(Jack): For the visual inertial extrinsic optimization we already have the intrinsic and cam extrinsic
+    // results so we do not need to optimize these further.
+    CameraProblemInput const cam0{
+        camera_id, camera_info, intrinsic, targets, Array6d::Zero(), false, false,
+    };
+
+    return ViMultiCamProblem(cam0.camera_id, rig_spline, se3_imu_rig, gravity_w, {cam0});
+}
+
 // NOTE(Jack): All observations get synced to the rig_poses. This means that there might be poses that only have one
 // target (i.e. the reference camera's target) and there might be non-reference camera observations that do not sync and
 // are therefore never used. This is a simplifying assumption and does not cost us much but prevents us from have to
 // implement a more intricate "changing reference camera" problem construction logic. Maybe we are just missing the
 // abstraction to do that simply?
-void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t const approx_sync_delta_ns,
-                                 Problem& problem) {
-    problem.cameras.emplace(camera.camera_id, Camera{camera.camera_info,  // LCOV_EXCL_LINE
-                                                     {camera.intrinsic, camera.extrinsic},
-                                                     {camera.optimize_intrinsic, camera.optimize_extrinsic}});
+void BundleAdjustment::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sync_delta_ns, Problem& problem) {
+    problem.cameras.emplace(cam.camera_id, Camera{cam.camera_info,  // LCOV_EXCL_LINE
+                                                  {cam.intrinsic, cam.extrinsic},
+                                                  {cam.optimize_intrinsic, cam.optimize_extrinsic}});
 
-    auto const timestamps{camera.targets | std::views::keys};
+    auto const timestamps{cam.targets | std::views::keys};
     std::set<uint64_t> remaining_targets{std::cbegin(timestamps), std::cend(timestamps)};
 
     // TODO(Jack): We need to provide some information to the user regarding how the data was synced.
@@ -119,10 +142,22 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t cons
         }
 
         problem.observations.push_back(
-            {camera.camera_id, sample_timestamp_ns, frame_timestamp_ns, camera.targets.at(sample_timestamp_ns).bundle});
+            {cam.camera_id, sample_timestamp_ns, frame_timestamp_ns, cam.targets.at(sample_timestamp_ns).bundle});
 
         // Remove it so a double match cannot happen.
         remaining_targets.erase(target_timestamps_it);
+    }
+}
+
+void BundleAdjustment::ViAddCamera(CameraProblemInput const& cam, ViProblem& problem) {
+    problem.cameras.emplace(
+        cam.camera_id,
+        Camera{cam.camera_info, {cam.intrinsic, cam.extrinsic}, {cam.optimize_intrinsic, cam.optimize_extrinsic}});
+
+    // NOTE(Jack): Here we do not need any time sync logic because we are using a spline! If the target it not found on
+    // the spline then that will be handled during the actual problem construction.
+    for (auto const& [timestamp_ns, target] : cam.targets) {
+        problem.observations.push_back({cam.camera_id, timestamp_ns, timestamp_ns, target.bundle});
     }
 }
 

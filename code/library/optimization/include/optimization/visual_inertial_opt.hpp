@@ -8,12 +8,12 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): This has way too many arguments... is that just how it is? Or a sign that we are missing a clean
-// abstraction?
-std::tuple<spline::Se3Spline, Array6d, Vector3d, CeresState> VisualInertialOpt(
-    ImuSamples const& imu_data, spline::Se3Spline spline, Array6d se3_imu_rig, Vector3d gravity,
-    CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic, int num_threads);
+// TODO(Jack): If the targets are part of the ViProblem shouldnt the imu data also be?
+std::pair<BundleAdjustment::ViResult, CeresState> VisualInertialOpt(ImuSamples const& imu_data,
+                                                                    BundleAdjustment::ViProblem const& problem,
+                                                                    int num_threads);
 
+// TODO(Jack): Convert directly from the ViProblem/ViResult instead of all the input parts!
 BundleAdjustment::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                  TargetSamples const& targets, spline::Se3Spline const& spline_w_co,
                                                  AssetId camera_id);
