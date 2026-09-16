@@ -20,51 +20,52 @@ class VisualInertialOptFixture : public StepTestFixture {
         timing_ = TimingParameters{11, 10, 20};
 
         cam_id_ = context_.assets.cameras.front().id;
-        targets_id_ = InsertExtractedTargets(cam_id_);
-        camera_info_id_ = InsertCameraInfo(cam_id_);
-        intrinsics_id_ = InsertIntrinsic(cam_id_);
-        poses_id_ = InsertPoses(cam_id_, targets_id_);
+        StepId const targets_id{InsertExtractedTargets(cam_id_)};
         imu_id_ = context_.assets.imu->id;  // Unprotected optional access!
         std::tie(imu_data_id_, spline_id_) = InsertImuSetup(cam_id_);
+
+        // NOTE(Jack): We need to insert both the imu-cam and cam-cam identity intrinsic under the same id.
         extrinsic_init_id_ = InsertImuCamExtrinsic(imu_id_, cam_id_);
+        database::StepCacheKeyUpdate(db_.get(), extrinsic_init_id_, "");
+        InsertExtrinsic(cam_id_, cam_id_);
+
+        stage_ids_ = CamStageIds{cam_id_, InsertCameraInfo(cam_id_), targets_id, InsertPoses(cam_id_, targets_id),
+                                 InsertIntrinsic(cam_id_)};
     }
 
     AssetId cam_id_;
-    StepId targets_id_;
-    StepId camera_info_id_;
-    StepId intrinsics_id_;
-    StepId poses_id_;
     AssetId imu_id_;
     StepId imu_data_id_;
     StepId spline_id_;
     StepId extrinsic_init_id_;
+    CamStageIds stage_ids_;
 };
 
 TEST_F(VisualInertialOptFixture, TestVisualInertialOptStepRunner) {
-    steps::VisualInertialOpt const step{imu_id_,     imu_data_id_,    cam_id_,        spline_id_, extrinsic_init_id_,
-                                        targets_id_, camera_info_id_, intrinsics_id_, 1,          db_};
+    steps::VisualInertialOpt const step{imu_id_,    imu_data_id_,       cam_id_, {stage_ids_},
+                                        spline_id_, extrinsic_init_id_, 1,       db_};
     StepId const step_id{RunStep<steps::VisualInertialOpt>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, cam_id_)};
     ASSERT_TRUE(result.has_value());
-    EXPECT_LT(result->se3_a_b.sum(), 0.001);  // Heuristic!
+    EXPECT_LT(result->se3_a_b.sum(), 0.001);
 
     auto const result2{database::GravitySelect(db_.get(), step_id)};
     ASSERT_TRUE(result2.has_value());
-    EXPECT_NEAR(result2->norm(), kGravity, 1e-3);  // Heuristic!
+    EXPECT_NEAR(result2->norm(), kGravity, 1e-3);
 }
 
 TEST_F(VisualInertialOptFixture, TestVisualInertialOptStep) {
-    steps::VisualInertialOpt const step{imu_id_,     imu_data_id_,    cam_id_,        spline_id_, extrinsic_init_id_,
-                                        targets_id_, camera_info_id_, intrinsics_id_, 1,          db_};
+    steps::VisualInertialOpt const step{imu_id_,    imu_data_id_,       cam_id_, {stage_ids_},
+                                        spline_id_, extrinsic_init_id_, 1,       db_};
 
     EXPECT_EQ(step.Type(), StepType::VisualInertialOpt);
     std::vector const gt_assets{imu_id_, cam_id_};
     EXPECT_EQ(step.Assets(), gt_assets);
-    EXPECT_EQ(step.CacheKey().value, "eab0d38464e832d533dce71257fb939d1691ff44144e082e05de35a4f14eb551");
+    EXPECT_EQ(step.CacheKey().value, "5c7bb34547a0aac16e1408fe2c8fe3c515ec51fd5d6d777c4ef995205bd9f8bd");
 
     // Build the actual database step id and execute the step.
-    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::VisualInertialInit, "").first};
+    StepId const step_id{database::GetOrCreateStep(db_.get(), steps::VisualInertialOpt::Type(), "").first};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, cam_id_)};

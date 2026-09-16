@@ -65,7 +65,6 @@ Hash VisualInertialOpt::CacheKey() const {
 void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     auto const problem{VisualInertial::MultiCamProblem(cam0_id_, *spline_, extrinsic_imu_rig_.se3_a_b, gravity_,
                                                        ba_input_, imu_data_)};
-
     auto const [result, ceres_state]{optimization::VisualInertialOpt(problem, num_threads_)};
 
     // TOOD(Jack): Should we add a constructor/factory that just lets us update the se3 part?
