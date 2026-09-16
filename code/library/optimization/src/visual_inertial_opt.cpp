@@ -19,9 +19,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
     ImuSamples const& imu_data, spline::Se3Spline spline, Extrinsic extrinsic, Vector3d gravity,
     CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic, int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
-    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY};
-    ceres_state.solver_options.num_threads = num_threads;
-
+    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY,num_threads};
     ceres::Problem problem{ceres_state.problem_options};
 
     // Imu residuals
