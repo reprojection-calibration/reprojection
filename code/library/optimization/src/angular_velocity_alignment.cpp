@@ -27,16 +27,17 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocitySamples const& o
         ceres::CostFunction* const cost_function{cost_functions::RigidBodyAngularVelocity::Create(
             omega_imu.at(timestamp_ns).value, u_i, spline.GetTimeHandler().delta_t_ns_)};
 
-        problem.AddResidualBlock(cost_function, nullptr, tf_imu_co.data(),     //
-                                 spline.MutableControlPoints().col(i).data(),  //
-                                 spline.MutableControlPoints().col(i + 1).data(),
-                                 spline.MutableControlPoints().col(i + 2).data(),
-                                 spline.MutableControlPoints().col(i + 3).data());
+        problem.AddResidualBlock(cost_function, nullptr,      //
+                                 tf_imu_co.data(),            //
+                                 spline.ControlPoint(i),      //
+                                 spline.ControlPoint(i + 1),  //
+                                 spline.ControlPoint(i + 2),  //
+                                 spline.ControlPoint(i + 3));
 
         // NOTE(Jack): We only want to initialize the extrinsic orientation between the imu and camera therefore we set
         // the control points constant.
         for (int j{0}; j < 4; ++j) {
-            problem.SetParameterBlockConstant(spline.MutableControlPoints().col(i + j).data());
+            problem.SetParameterBlockConstant(spline.ControlPoint(i + j));
         }
     }
 

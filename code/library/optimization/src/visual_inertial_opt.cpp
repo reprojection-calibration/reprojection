@@ -37,17 +37,22 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
         // only uses the top three rows of all. Is there a better design?
         ceres::CostFunction* const gyroscope_cost_function{cost_functions::RigidBodyAngularVelocity::Create(
             imu_data.at(timestamp_ns).angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
-        problem.AddResidualBlock(
-            gyroscope_cost_function, nullptr, extrinsic.se3_a_b.data(), spline.MutableControlPoints().col(i).data(),
-            spline.MutableControlPoints().col(i + 1).data(), spline.MutableControlPoints().col(i + 2).data(),
-            spline.MutableControlPoints().col(i + 3).data());
+        problem.AddResidualBlock(gyroscope_cost_function, nullptr,  //
+                                 extrinsic.se3_a_b.data(),          //
+                                 spline.ControlPoint(i),            //
+                                 spline.ControlPoint(i + 1),        //
+                                 spline.ControlPoint(i + 2),        //
+                                 spline.ControlPoint(i + 3));
 
         ceres::CostFunction* const accelerometer_cost_function{cost_functions::RigidBodyLinearAcceleration::Create(
             imu_data.at(timestamp_ns).linear_acceleration, u_i, spline.GetTimeHandler().delta_t_ns_)};
-        problem.AddResidualBlock(
-            accelerometer_cost_function, nullptr, extrinsic.se3_a_b.data(), gravity.data(),
-            spline.MutableControlPoints().col(i).data(), spline.MutableControlPoints().col(i + 1).data(),
-            spline.MutableControlPoints().col(i + 2).data(), spline.MutableControlPoints().col(i + 3).data());
+        problem.AddResidualBlock(accelerometer_cost_function, nullptr,  //
+                                 extrinsic.se3_a_b.data(),              //
+                                 gravity.data(),                        //
+                                 spline.ControlPoint(i),                //
+                                 spline.ControlPoint(i + 1),            //
+                                 spline.ControlPoint(i + 2),            //
+                                 spline.ControlPoint(i + 3));
     }
 
     // Reprojection residuals
@@ -67,20 +72,23 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
                                                                             pixels.row(j), points.row(j), u_i,
                                                                             spline.GetTimeHandler().delta_t_ns_)};
             // TODO(Jack): Should we also use robust loss here like we use for the stand alone bundle adjustment?
-            problem.AddResidualBlock(
-                cost_function, nullptr, intrinsic_x.value.data(), spline.MutableControlPoints().col(i).data(),
-                spline.MutableControlPoints().col(i + 1).data(), spline.MutableControlPoints().col(i + 2).data(),
-                spline.MutableControlPoints().col(i + 3).data());
+            problem.AddResidualBlock(cost_function, nullptr,      //
+                                     intrinsic_x.value.data(),    //
+                                     spline.ControlPoint(i),      //
+                                     spline.ControlPoint(i + 1),  //
+                                     spline.ControlPoint(i + 2),  //
+                                     spline.ControlPoint(i + 3));
         }
     }
 
     // Smoothness/minimum energy constraint
     for (int i{0}; i < spline.Size() - 3; ++i) {
         ceres::CostFunction* const cost_function{cost_functions::SplineEnergy::Create(1)};
-        problem.AddResidualBlock(cost_function, nullptr, spline.MutableControlPoints().col(i).data(),
-                                 spline.MutableControlPoints().col(i + 1).data(),
-                                 spline.MutableControlPoints().col(i + 2).data(),
-                                 spline.MutableControlPoints().col(i + 3).data());
+        problem.AddResidualBlock(cost_function, nullptr,      //
+                                 spline.ControlPoint(i),      //
+                                 spline.ControlPoint(i + 1),  //
+                                 spline.ControlPoint(i + 2),  //
+                                 spline.ControlPoint(i + 3));
     }
 
     // This was already solved for in the bundle adjustment step, therefore I do not think there is a good reason to
@@ -138,7 +146,7 @@ ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsi
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(extrinsic.se3_a_b.data());
         for (int j{0}; j < 4; ++j) {
-            parameter_blocks.push_back(spline_w_co.ControlPoints().col(i + j).data());
+            parameter_blocks.push_back(spline_w_co.ControlPoint(i + j));
         }
         ceres::CostFunction const* const cost_function_1{cost_functions::RigidBodyAngularVelocity::Create(
             imu_data.at(timestamp_ns).angular_velocity, u_i, spline_w_co.GetTimeHandler().delta_t_ns_)};
