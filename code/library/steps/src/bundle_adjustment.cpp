@@ -38,7 +38,7 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     Discrete::Problem const problem{
         Discrete::SingleCamProblem(camera_info_, {intrinsic_}, targets_, aligned_camera_poses, true, camera_id_)};
     auto const [result, ceres_state]{Discrete::Solve(problem, num_threads_)};
-    auto const& [_, rig_poses, cameras]{result};
+    auto const& [rig, cameras]{result};
 
     // TODO(Jack): See comment in ba tests about the need for a better asset id independent single camera workflow.
     // NOTE(Jack): The database asset ids start at 1 (sql standard) so an id of zero here is somehow a sentinel value
@@ -51,7 +51,7 @@ void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     // Diagnostic output
     // NOTE(Jack): Here we update the problem with the optimized rig poses and camera states before we evaluate the
     // reprojection error.
-    Discrete::Problem const optimized_problem{problem, rig_poses, cameras};
+    Discrete::Problem const optimized_problem{problem, rig.frames, cameras};
     auto const errors{EvaluateResiduals(optimized_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, {{camera_id_, targets_id_}}, errors);
 

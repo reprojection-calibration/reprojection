@@ -42,13 +42,13 @@ TEST_F(BaFixture, TestMultiCam) {
     auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    auto const& [ref_asset, frames, cameras]{result};
-    EXPECT_EQ(ref_asset, camera_id_);
+    auto const& [rig, cameras]{result};
+    EXPECT_EQ(rig.asset_id, camera_id_);
     EXPECT_EQ(std::size(cameras), 3);
 
     // Assert
-    EXPECT_EQ(std::size(frames), 56);
-    for (auto const& [timestamp_ns, frame_i] : frames) {
+    EXPECT_EQ(std::size(rig.frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : rig.frames) {
         Array6d const gt_se3_co_w{frames_.at(timestamp_ns).value};
         Array6d const se3_co_w{frame_i.value};
 
@@ -80,12 +80,12 @@ TEST_F(BaFixture, TestBundleAdjustmentBatch) {
     auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    auto const& [ref_asset, frames, cameras]{result};
-    EXPECT_EQ(ref_asset, camera_id_);
+    auto const& [rig, cameras]{result};
+    EXPECT_EQ(rig.asset_id, camera_id_);
 
     // Assert
-    EXPECT_EQ(std::size(frames), 56);
-    for (auto const& [timestamp_ns, frame_i] : frames) {
+    EXPECT_EQ(std::size(rig.frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : rig.frames) {
         Array6d const gt_se3_co_w{frames_.at(timestamp_ns).value};
         Array6d const se3_co_w{frame_i.value};
 
@@ -116,11 +116,11 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
     auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    auto const& [ref_asset, frames, cameras]{result};
-    EXPECT_EQ(ref_asset, camera_id_);
+    auto const& [rig, cameras]{result};
+    EXPECT_EQ(rig.asset_id, camera_id_);
 
-    EXPECT_EQ(std::size(frames), 56);
-    for (auto const& [timestamp_ns, frame_i] : frames) {
+    EXPECT_EQ(std::size(rig.frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : rig.frames) {
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
         // happened that I will explain. This test using noisy poses had been working for months, no problems to report.
         // Comparing the Vector6d se3 poses directly worked perfectly and the optimization returned the ground truth

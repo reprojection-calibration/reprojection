@@ -9,8 +9,8 @@
 namespace reprojection::optimization {
 
 // TODO(Jack): If the targets are part of the ViProblem shouldnt the imu data also be?
-std::pair<bundle_adjustment::Continuous::Result, CeresState> VisualInertialOpt(
-    ImuSamples const& imu_data, bundle_adjustment::Continuous::Problem const& problem, int num_threads);
+std::pair<bundle_adjustment::VisualInertial::Result, CeresState> VisualInertialOpt(
+    bundle_adjustment::VisualInertial::Problem const& problem, int num_threads);
 
 // TODO(Jack): Convert directly from the continuous result/problem instead of all the input parts!
 // NOTE(Jack): We convert the continious problem to the discrete problem so that we can use the same reprojection error

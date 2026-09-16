@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 
@@ -51,6 +52,22 @@ struct Observation {
     // This is the timestamp of the synchronized rig frame!
     uint64_t frame_timestamp_ns;
     Bundle value;
+};
+
+// TODO DO THESE THREE TYPES BELONG HERE?
+struct DiscreteRig {
+    AssetId asset_id;
+    Frames frames;
+};
+
+struct ContinuousRig {
+    AssetId asset_id;
+    spline::Se3Spline spline;
+};
+
+struct InertialState {
+    Array6d se3_imu_rig;
+    Vector3d gravity_w;
 };
 
 }  // namespace reprojection::optimization::bundle_adjustment

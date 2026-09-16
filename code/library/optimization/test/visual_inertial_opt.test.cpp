@@ -40,13 +40,14 @@ TEST(OptimizationVisualInertialOpt, TestVisualInertialOpt) {
     Array6d const initial_se3_imu_rig{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949};
     Vector3d const initial_gravity{Vector3d{-0.212548, -0.293729, 9.79995}};
 
-    auto const problem{optimization::bundle_adjustment::Continuous::SingleCamProblem(
-        camera_info, {tu::pinhole_intrinsics}, targets, spline_w_co, initial_se3_imu_rig, initial_gravity, AssetId{0})};
-    auto const [result, ceres_state]{optimization::VisualInertialOpt(imu_data, problem, 1)};
+    auto const problem{optimization::bundle_adjustment::VisualInertial::SingleCamProblem(
+        camera_info, {tu::pinhole_intrinsics}, targets, spline_w_co, initial_se3_imu_rig, initial_gravity, AssetId{0},
+        imu_data)};
+    auto const [result, ceres_state]{optimization::VisualInertialOpt(problem, 1)};
 
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
-    EXPECT_TRUE(result.se3_imu_rig.isApprox(initial_se3_imu_rig, 1e-2));
-    EXPECT_TRUE(result.gravity_w.isApprox(initial_gravity, 1e-2));
+    EXPECT_TRUE(result.inertial_state.se3_imu_rig.isApprox(initial_se3_imu_rig, 1e-2));
+    EXPECT_TRUE(result.inertial_state.gravity_w.isApprox(initial_gravity, 1e-2));
 }
 
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.
@@ -83,8 +84,8 @@ TEST(OptimizationVisualInertialOpt, TestReprojectionErrorSpline) {
     auto const ba_problem{optimization::SingleSplineCamProblem(camera_info, intrinsic, targets, spline, camera_id)};
     auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
-    EXPECT_EQ(std::size(ba_problem.rig_poses), 1);
-    EXPECT_TRUE(ba_problem.rig_poses.at(timestamp_ns).value.isApproxToConstant(0));
+    EXPECT_EQ(std::size(ba_problem.rig.frames), 1);
+    EXPECT_TRUE(ba_problem.rig.frames.at(timestamp_ns).value.isApproxToConstant(0));
 
     EXPECT_EQ(std::size(residuals), 1);
     auto const& error{residuals[0]};

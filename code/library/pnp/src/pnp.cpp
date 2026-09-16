@@ -53,16 +53,17 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     }
 
     CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
-    Discrete::Problem const ba_problem{
-        Discrete::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
 
-    auto const [result, ceres_state]{Discrete::Solve(ba_problem, 1)};
-    auto const& [_, rig_poses, _1]{result};
+    Discrete::Problem const problem{
+        Discrete::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
+    auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
+    auto const& [rig, _1]{result};
+
     if (ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {
         // TODO(Jack): This is a hacky way to get the frame, but the point of the pnp problem construction is that there
         // is only ever one single frame, so we can get away with this here. Does it look nice? No. Is it easy to
         // maintain and understand? No. Some future soul will save us.
-        return PoseWithCost{geometry::Exp(rig_poses.begin()->second.value), ceres_state.solver_summary.final_cost};
+        return PoseWithCost{geometry::Exp(rig.frames.begin()->second.value), ceres_state.solver_summary.final_cost};
     } else {
         return PnpErrorCode::FailedRefinement;  // LCOV_EXCL_LINE
     }

@@ -61,7 +61,7 @@ void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const ba_problem{optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, spline, camera_id_)};
     auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
-    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig_poses);
+    database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig.frames);
     database::ReprojectionErrorsInsert(db.get(), step_id, {{camera_id_, targets_id_}}, residuals);
 }
 

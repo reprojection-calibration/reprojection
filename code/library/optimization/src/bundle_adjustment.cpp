@@ -26,10 +26,10 @@ std::pair<Discrete::Result, CeresState> Discrete::Solve(Problem const& problem, 
         auto& camera_state{result.camera_states.at(camera_id)};
         // Protect against the case of a missing rig pose - it can be that we have a observation for a frame where the
         // rig pose initialization was unsuccessful and we need to protect against that.
-        if (not result.rig_poses.contains(frame_timestamp_ns)) {
+        if (not result.rig.frames.contains(frame_timestamp_ns)) {
             continue;  // LCOV_EXCL_LINE
         }
-        auto& rig_pose{result.rig_poses.at(frame_timestamp_ns)};
+        auto& rig_pose{result.rig.frames.at(frame_timestamp_ns)};
 
         auto const& [pixels, points]{bundle};
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
@@ -88,10 +88,10 @@ Discrete::Problem Discrete::SingleFrameProblem(CameraInfo const& camera_info, In
                             optimize_intrinsic, camera_id);
 }
 
-Continuous::Problem Continuous::MultiCamProblem(AssetId const& cam0_id, spline::Se3Spline const& rig_spline,
-                                                Array6d const& se3_imu_rig, Vector3d const& gravity_w,
-                                                std::vector<CameraProblemInput> const& cams) {
-    Problem problem{cam0_id, rig_spline, se3_imu_rig, gravity_w};
+VisualInertial::Problem VisualInertial::MultiCamProblem(AssetId const& cam0_id, spline::Se3Spline const& rig_spline,
+                                                        Array6d const& se3_imu_rig, Vector3d const& gravity_w,
+                                                        std::vector<CameraProblemInput> const& cams, ImuSamples const& imu_data) {
+    Problem problem{cam0_id, rig_spline, se3_imu_rig, gravity_w, imu_data};
     for (auto const& cam_i : cams) {
         AddCamera(cam_i, problem);
     }
@@ -99,17 +99,18 @@ Continuous::Problem Continuous::MultiCamProblem(AssetId const& cam0_id, spline::
     return problem;
 }  // LCOV_EXCL_LINE
 
-Continuous::Problem Continuous::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                                 TargetSamples const& targets, spline::Se3Spline const& rig_spline,
-                                                 Array6d const& se3_imu_rig, Vector3d const& gravity_w,
-                                                 AssetId camera_id) {
+VisualInertial::Problem VisualInertial::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                                         TargetSamples const& targets,
+                                                         spline::Se3Spline const& rig_spline,
+                                                         Array6d const& se3_imu_rig, Vector3d const& gravity_w,
+                                                         AssetId const camera_id, ImuSamples const& imu_data) {
     // NOTE(Jack): For the visual inertial extrinsic optimization we already have the intrinsic and cam extrinsic
     // results so we do not need to optimize these further.
     CameraProblemInput const cam0{
         camera_id, camera_info, intrinsic, targets, Array6d::Zero(), false, false,
     };
 
-    return MultiCamProblem(cam0.camera_id, rig_spline, se3_imu_rig, gravity_w, {cam0});
+    return MultiCamProblem(cam0.camera_id, rig_spline, se3_imu_rig, gravity_w, {cam0}, imu_data);
 }
 
 // NOTE(Jack): All observations get synced to the rig_poses. This means that there might be poses that only have one
@@ -126,7 +127,7 @@ void Discrete::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sy
     std::set<uint64_t> remaining_targets{std::cbegin(timestamps), std::cend(timestamps)};
 
     // TODO(Jack): We need to provide some information to the user regarding how the data was synced.
-    for (auto const& [frame_timestamp_ns, _] : problem.rig_poses) {
+    for (auto const& [frame_timestamp_ns, _] : problem.rig.frames) {
         // TODO(Jack): Hand rolling the time synchronization logic here is not so nice, as we need it in multiple
         // places.
         auto const target_timestamps_it{time_sync::FindClosest(remaining_targets, frame_timestamp_ns)};
@@ -147,7 +148,7 @@ void Discrete::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sy
     }
 }
 
-void Continuous::AddCamera(CameraProblemInput const& cam, Problem& problem) {
+void VisualInertial::AddCamera(CameraProblemInput const& cam, Problem& problem) {
     problem.cameras.emplace(cam.camera_id, Camera{cam.camera_info,  // LCOV_EXCL_LINE
                                                   {cam.intrinsic, cam.extrinsic},
                                                   {cam.optimize_intrinsic, cam.optimize_extrinsic}});
@@ -163,7 +164,7 @@ transforms::RigState ToRigState(Discrete::Result const& result) {
     std::vector<Extrinsic> rig_cam_extrinsics;
     for (auto const& [camera_id, state_i] : result.camera_states) {
         // The Extrinsics() type does not allow self-connections/cycles!
-        if (camera_id == result.rig_frame_asset_id) {
+        if (camera_id == result.rig.asset_id) {
             continue;
         }
 
@@ -174,12 +175,11 @@ transforms::RigState ToRigState(Discrete::Result const& result) {
         // setup is a tree. If we went from camera to camera I think this would make the optimization process ugly
         // because then we would need to chain them together and our cost function would have to accept a variable
         // number of extrinsics chained together! Does that make sense? We need to do some thinking here!!!
-        Extrinsic const extrinsic_i{camera_id, result.rig_frame_asset_id, state_i.extrinsic};
+        Extrinsic const extrinsic_i{camera_id, result.rig.asset_id, state_i.extrinsic};
         rig_cam_extrinsics.push_back(extrinsic_i);
     }
 
-    return transforms::RigState{result.rig_frame_asset_id, result.rig_poses,
-                                transforms::Extrinsics{{rig_cam_extrinsics}}};
+    return transforms::RigState{result.rig.asset_id, result.rig.frames, transforms::Extrinsics{{rig_cam_extrinsics}}};
 }
 
 std::vector<ReprojectionError> EvaluateResiduals(Discrete::Problem const& ba_problem) {
@@ -189,10 +189,10 @@ std::vector<ReprojectionError> EvaluateResiduals(Discrete::Problem const& ba_pro
     for (auto const& [camera_id, sample_timestamp_ns, frame_timestamp_ns, bundle] : ba_problem.observations) {
         // cppcheck-suppress ignoredReturnValue
         auto const& [camera_info, camera_state, _]{ba_problem.cameras.at(camera_id)};
-        if (not ba_problem.rig_poses.contains(frame_timestamp_ns)) {
+        if (not ba_problem.rig.frames.contains(frame_timestamp_ns)) {
             continue;
         }
-        auto const& rig_pose{ba_problem.rig_poses.at(frame_timestamp_ns)};
+        auto const& rig_pose{ba_problem.rig.frames.at(frame_timestamp_ns)};
 
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(camera_state.intrinsic.value.data());

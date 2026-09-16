@@ -66,7 +66,7 @@ void StereoRigOpt::Execute(StepId step_id, SqlitePtr const db) const {
 
     database::RigStateInsert(db.get(), step_id, cam_target_ids_.at(cam0_id_), ToRigState(result));
 
-    Discrete::Problem const optimized_problem{problem, result.rig_poses, result.camera_states};
+    Discrete::Problem const optimized_problem{problem, result.rig.frames, result.camera_states};
     auto const errors{EvaluateResiduals(optimized_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, cam_target_ids_, errors);
 

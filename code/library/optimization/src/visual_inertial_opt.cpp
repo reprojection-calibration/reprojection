@@ -13,49 +13,52 @@
 
 namespace reprojection::optimization {
 
-std::pair<bundle_adjustment::Continuous::Result, CeresState> VisualInertialOpt(
-    ImuSamples const& imu_data, bundle_adjustment::Continuous::Problem const& problem, int num_threads) {
-    bundle_adjustment::Continuous::Result result{problem};
+std::pair<bundle_adjustment::VisualInertial::Result, CeresState> VisualInertialOpt(
+    bundle_adjustment::VisualInertial::Problem const& problem, int num_threads) {
+    bundle_adjustment::VisualInertial::Result result{problem};
+    auto& spline{result.rig.spline};
 
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY, num_threads};
     ceres::Problem ceres_problem{ceres_state.problem_options};
 
     // Imu residuals
-    for (auto const timestamp_ns : imu_data | std::views::keys) {
+    for (auto const timestamp_ns : problem.imu_data | std::views::keys) {
         auto const normalized_position{
-            result.rig_spline.GetTimeHandler().SplinePosition(timestamp_ns, result.rig_spline.ControlPoints().cols())};
+            spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
         if (not normalized_position.has_value()) {
             continue;  // LCOV_EXCL_LINE
         }
         auto const [u_i, i]{normalized_position.value()};
 
+        auto const& imu_data_i{problem.imu_data.at(timestamp_ns)};
+
         // WARN(Jack): We pass in the pointer to the full tf and control points but the angular velocity cost function
         // only uses the top three rows of all. Is there a better design?
         ceres::CostFunction* const gyroscope_cost_function{cost_functions::RigidBodyAngularVelocity::Create(
-            imu_data.at(timestamp_ns).angular_velocity, u_i, result.rig_spline.GetTimeHandler().delta_t_ns_)};
-        ceres_problem.AddResidualBlock(gyroscope_cost_function, nullptr,       //
-                                       result.se3_imu_rig.data(),              //
-                                       result.rig_spline.ControlPoint(i),      //
-                                       result.rig_spline.ControlPoint(i + 1),  //
-                                       result.rig_spline.ControlPoint(i + 2),  //
-                                       result.rig_spline.ControlPoint(i + 3));
+            imu_data_i.angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
+        ceres_problem.AddResidualBlock(gyroscope_cost_function, nullptr,          //
+                                       result.inertial_state.se3_imu_rig.data(),  //
+                                       spline.ControlPoint(i),                    //
+                                       spline.ControlPoint(i + 1),                //
+                                       spline.ControlPoint(i + 2),                //
+                                       spline.ControlPoint(i + 3));
 
         ceres::CostFunction* const accelerometer_cost_function{cost_functions::RigidBodyLinearAcceleration::Create(
-            imu_data.at(timestamp_ns).linear_acceleration, u_i, result.rig_spline.GetTimeHandler().delta_t_ns_)};
-        ceres_problem.AddResidualBlock(accelerometer_cost_function, nullptr,   //
-                                       result.se3_imu_rig.data(),              //
-                                       result.gravity_w.data(),                //
-                                       result.rig_spline.ControlPoint(i),      //
-                                       result.rig_spline.ControlPoint(i + 1),  //
-                                       result.rig_spline.ControlPoint(i + 2),  //
-                                       result.rig_spline.ControlPoint(i + 3));
+            imu_data_i.linear_acceleration, u_i, spline.GetTimeHandler().delta_t_ns_)};
+        ceres_problem.AddResidualBlock(accelerometer_cost_function, nullptr,      //
+                                       result.inertial_state.se3_imu_rig.data(),  //
+                                       result.inertial_state.gravity_w.data(),    //
+                                       spline.ControlPoint(i),                    //
+                                       spline.ControlPoint(i + 1),                //
+                                       spline.ControlPoint(i + 2),                //
+                                       spline.ControlPoint(i + 3));
     }
 
     // Reprojection residuals
     for (auto const& [camera_id, sample_timestamp_ns, _, bundle] : problem.observations) {
-        auto const normalized_position{result.rig_spline.GetTimeHandler().SplinePosition(
-            sample_timestamp_ns, result.rig_spline.ControlPoints().cols())};
+        auto const normalized_position{
+            spline.GetTimeHandler().SplinePosition(sample_timestamp_ns, spline.ControlPoints().cols())};
         if (not normalized_position.has_value()) {
             continue;
         }
@@ -69,16 +72,16 @@ std::pair<bundle_adjustment::Continuous::Result, CeresState> VisualInertialOpt(
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
             ceres::CostFunction* const cost_function{
                 cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j), u_i,
-                                       result.rig_spline.GetTimeHandler().delta_t_ns_)};
+                                       spline.GetTimeHandler().delta_t_ns_)};
 
             // TODO(Jack): Should we also use robust loss here like we use for the stand alone bundle adjustment?
-            ceres_problem.AddResidualBlock(cost_function, nullptr,                 //
-                                           camera_state.intrinsic.value.data(),    //
-                                           camera_state.extrinsic.data(),          //
-                                           result.rig_spline.ControlPoint(i),      //
-                                           result.rig_spline.ControlPoint(i + 1),  //
-                                           result.rig_spline.ControlPoint(i + 2),  //
-                                           result.rig_spline.ControlPoint(i + 3));
+            ceres_problem.AddResidualBlock(cost_function, nullptr,               //
+                                           camera_state.intrinsic.value.data(),  //
+                                           camera_state.extrinsic.data(),        //
+                                           spline.ControlPoint(i),               //
+                                           spline.ControlPoint(i + 1),           //
+                                           spline.ControlPoint(i + 2),           //
+                                           spline.ControlPoint(i + 3));
         }
 
         if (not camera_options.optimize_intrinsic) {
@@ -90,13 +93,13 @@ std::pair<bundle_adjustment::Continuous::Result, CeresState> VisualInertialOpt(
     }
 
     // Smoothness/minimum energy constraint
-    for (int i{0}; i < result.rig_spline.Size() - 3; ++i) {
+    for (int i{0}; i < spline.Size() - 3; ++i) {
         ceres::CostFunction* const cost_function{cost_functions::SplineEnergy::Create(1)};
-        ceres_problem.AddResidualBlock(cost_function, nullptr,                 //
-                                       result.rig_spline.ControlPoint(i),      //
-                                       result.rig_spline.ControlPoint(i + 1),  //
-                                       result.rig_spline.ControlPoint(i + 2),  //
-                                       result.rig_spline.ControlPoint(i + 3));
+        ceres_problem.AddResidualBlock(cost_function, nullptr,      //
+                                       spline.ControlPoint(i),      //
+                                       spline.ControlPoint(i + 1),  //
+                                       spline.ControlPoint(i + 2),  //
+                                       spline.ControlPoint(i + 3));
     }
 
     ceres::Solve(ceres_state.solver_options, &ceres_problem, &ceres_state.solver_summary);

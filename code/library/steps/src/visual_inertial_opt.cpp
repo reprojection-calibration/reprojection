@@ -16,7 +16,7 @@ auto const log{logging::Get("steps")};
 
 }
 
-using Continuous = optimization::bundle_adjustment::Continuous;
+using Continuous = optimization::bundle_adjustment::VisualInertial;
 
 VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data_id, AssetId const cam_id,
                                      StepId const spline_id, StepId const extrinsic_init_id, StepId const targets_id,
@@ -48,34 +48,34 @@ Hash VisualInertialOpt::CacheKey() const {
 void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     // USE ALL CAMERAS! THIS IS HARDCODED TO SINGLE CAM PROBLEM!
     auto const problem{Continuous::SingleCamProblem(camera_info_, intrinsic_, targets_, *spline_,
-                                                    extrinsic_imu_rig_.se3_a_b, gravity_, cam_id_)};
+                                                    extrinsic_imu_rig_.se3_a_b, gravity_, cam_id_, imu_data_)};
 
-    auto const [result, ceres_state]{optimization::VisualInertialOpt(imu_data_, problem, num_threads_)};
+    auto const [result, ceres_state]{optimization::VisualInertialOpt(problem, num_threads_)};
 
     // TOOD(Jack): Should we add a constructor/factory that just lets us update the se3 part?
-    Extrinsic const extrinsic_imu_rig{imu_id_, cam_id_, result.se3_imu_rig};
+    Extrinsic const extrinsic_imu_rig{imu_id_, cam_id_, result.inertial_state.se3_imu_rig};
     log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}], 'solver_summary': {}}}", StepLogInfo{Type(), step_id},
-              extrinsic_imu_rig, fmt::join(result.gravity_w, ", "), ceres_state.solver_summary);
+              extrinsic_imu_rig, fmt::join(result.inertial_state.gravity_w, ", "), ceres_state.solver_summary);
 
-    database::SplineInfoInsert(db.get(), step_id, cam_id_, result.rig_spline.GetTimeHandler());
-    database::ControlPointsInsert(db.get(), step_id, cam_id_, result.rig_spline.ControlPoints());
-    database::GravityInsert(db.get(), step_id, result.gravity_w);
+    database::SplineInfoInsert(db.get(), step_id, cam_id_, result.rig.spline.GetTimeHandler());
+    database::ControlPointsInsert(db.get(), step_id, cam_id_, result.rig.spline.ControlPoints());
+    database::GravityInsert(db.get(), step_id, result.inertial_state.gravity_w);
 
     // Diagnostic output - reprojection errors
     // REFACTOR TO EITHER CALCULTE DIRECRTL FROM VI BA PROBLEM OR CONVERT FROM VI PROBLEM TO REGULAR PROBLEM DIRECTLY!
     auto const ba_problem{
-        optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, result.rig_spline, cam_id_)};
+        optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, result.rig.spline, cam_id_)};
     auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
     // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
     // here like we do for the regular bundle adjustment.
-    transforms::RigState const rig_state{cam_id_, ba_problem.rig_poses, transforms::Extrinsics{{extrinsic_imu_rig}}};
+    transforms::RigState const rig_state{cam_id_, ba_problem.rig.frames, transforms::Extrinsics{{extrinsic_imu_rig}}};
     database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
     database::ReprojectionErrorsInsert(db.get(), step_id, {{cam_id_, targets_id_}}, residuals);
 
     // Diagnostic output - imu errors
-    ImuErrors const imu_errors{
-        optimization::EvaluateImuError(imu_data_, extrinsic_imu_rig, result.gravity_w, result.rig_spline)};
+    ImuErrors const imu_errors{optimization::EvaluateImuError(imu_data_, extrinsic_imu_rig,
+                                                              result.inertial_state.gravity_w, result.rig.spline)};
     database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, imu_errors);
 }
 

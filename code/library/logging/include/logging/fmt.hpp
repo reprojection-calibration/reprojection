@@ -85,9 +85,9 @@ struct fmt::formatter<reprojection::optimization::bundle_adjustment::Discrete::P
 
     auto format(reprojection::optimization::bundle_adjustment::Discrete::Problem const& problem,
                 format_context& ctx) const {
-        auto out{format_to(
-            ctx.out(), "{{'rig_frame_asset_id': {}, 'num_rig_poses': {}, 'num_observations': {}, 'cameras': [",
-            problem.rig_frame_asset_id.value, std::size(problem.rig_poses), std::size(problem.observations))};
+        auto out{format_to(ctx.out(),
+                           "{{'rig_frame_asset_id': {}, 'num_rig_poses': {}, 'num_observations': {}, 'cameras': [",
+                           problem.rig.asset_id.value, std::size(problem.rig.frames), std::size(problem.observations))};
 
         bool first{true};
         for (auto const& [camera_id, camera] : problem.cameras) {
@@ -116,7 +116,7 @@ struct fmt::formatter<reprojection::optimization::bundle_adjustment::Discrete::R
     auto format(reprojection::optimization::bundle_adjustment::Discrete::Result const& result,
                 format_context& ctx) const {
         auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'camera_states': [",
-                           result.rig_frame_asset_id.value, std::size(result.rig_poses))};
+                           result.rig.asset_id.value, std::size(result.rig.frames))};
 
         bool first{true};
         for (auto const& [camera_id, camera_state] : result.camera_states) {

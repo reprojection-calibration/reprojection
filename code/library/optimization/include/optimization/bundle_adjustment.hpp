@@ -11,47 +11,40 @@ namespace reprojection::optimization::bundle_adjustment {
 struct Discrete {
     struct Problem {
         // TODO(Jack): Do we need all three constructors?
-        Problem(AssetId const _rig_frame_asset_id, Frames const& _rig_poses, std::map<AssetId, Camera> const& _cameras,
+        Problem(AssetId const rig_frame_asset_id, Frames const& rig_poses, std::map<AssetId, Camera> const& _cameras,
                 std::vector<Observation> const& _observations)
-            : rig_frame_asset_id{_rig_frame_asset_id},
-              rig_poses{_rig_poses},
-              cameras{_cameras},
-              observations{_observations} {}
+            : rig{rig_frame_asset_id, rig_poses}, cameras{_cameras}, observations{_observations} {}
 
-        Problem(AssetId const _rig_frame_asset_id, Frames const& _rig_poses)
-            : rig_frame_asset_id{_rig_frame_asset_id}, rig_poses{_rig_poses} {}
+        Problem(AssetId const rig_frame_asset_id, Frames const& rig_poses) : rig{rig_frame_asset_id, rig_poses} {}
 
         // Update a problem with the optimized parts.
-        Problem(Problem const& problem, Frames const& _rig_poses, std::map<AssetId, CameraState> const& camera_states)
-            : rig_frame_asset_id{problem.rig_frame_asset_id},
-              rig_poses{_rig_poses},
-              cameras{problem.cameras},
-              observations{problem.observations} {
+        Problem(Problem const& problem, Frames const& rig_poses, std::map<AssetId, CameraState> const& camera_states)
+            : rig{problem.rig.asset_id, rig_poses}, cameras{problem.cameras}, observations{problem.observations} {
             for (auto& [camera_id, camera] : cameras) {
                 camera.state = camera_states.at(camera_id);
             }
         }
 
-        AssetId rig_frame_asset_id;
-        Frames rig_poses;
+        // State/parameterization
+        DiscreteRig rig;
         std::map<AssetId, Camera> cameras;
+
+        // Measurements
         std::vector<Observation> observations;
     };
 
     struct Result {
-        explicit Result(Problem const& problem)
-            : rig_frame_asset_id{problem.rig_frame_asset_id}, rig_poses{problem.rig_poses} {
+        explicit Result(Problem const& problem) : rig{problem.rig} {
             for (auto const& [camera_id, camera] : problem.cameras) {
                 camera_states.emplace(camera_id, camera.state);
             }
         }
 
-        Result(AssetId const& _rig_frame_asset_id, Frames const& _rig_poses,
+        Result(AssetId const& rig_frame_asset_id, Frames const& rig_poses,
                std::map<AssetId, CameraState> const& _camera_states)
-            : rig_frame_asset_id{_rig_frame_asset_id}, rig_poses{_rig_poses}, camera_states{_camera_states} {}
+            : rig{rig_frame_asset_id, rig_poses}, camera_states{_camera_states} {}
 
-        AssetId rig_frame_asset_id;
-        Frames rig_poses;
+        DiscreteRig rig;
         std::map<AssetId, CameraState> camera_states;
     };
 
@@ -73,37 +66,28 @@ struct Discrete {
 };
 
 // TODO(Jack): This is not merely continious it is also visual intertial! We should factor out the inertial part!
-struct Continuous {
-    // TODO WE NEED TO REFACTOR THE CLASS LAYOUTS! PUTTING THIS ALL IN ONE BA CLASS DOES NOT MAKE SENSE!
+struct VisualInertial {
     struct Problem {
-        Problem(AssetId const _rig_frame_asset_id, spline::Se3Spline const& _rig_spline, Array6d const& _se3_imu_rig,
-                Vector3d const& _gravity_w)
-            : rig_frame_asset_id{_rig_frame_asset_id},
-              rig_spline{_rig_spline},
-              se3_imu_rig{_se3_imu_rig},
-              gravity_w{_gravity_w} {}
+        Problem(AssetId const rig_frame_asset_id, spline::Se3Spline const& rig_spline, Array6d const& se3_imu_rig,
+                Vector3d const& gravity_w, ImuSamples const& _imu_data)
+            : rig{rig_frame_asset_id, rig_spline}, inertial_state{se3_imu_rig, gravity_w}, imu_data{_imu_data} {}
 
-        AssetId rig_frame_asset_id;
-        spline::Se3Spline rig_spline;
-        Array6d se3_imu_rig;
-        Vector3d gravity_w;
+        // State/parameterization
+        ContinuousRig rig;
+        InertialState inertial_state;
         std::map<AssetId, Camera> cameras;
+
+        // Measurements
         std::vector<Observation> observations;
+        ImuSamples imu_data;
     };
 
-    // TODO clearly the spline, imu_rig extrinsic, and gravity form a vi ba relevant type.
     struct Result {
-        AssetId rig_frame_asset_id;
-        spline::Se3Spline rig_spline;
-        Array6d se3_imu_rig;
-        Vector3d gravity_w;
+        ContinuousRig rig;
+        InertialState inertial_state;
         std::map<AssetId, CameraState> camera_states;
 
-        explicit Result(Problem const& problem)
-            : rig_frame_asset_id{problem.rig_frame_asset_id},
-              rig_spline{problem.rig_spline},
-              se3_imu_rig{problem.se3_imu_rig},
-              gravity_w{problem.gravity_w} {
+        explicit Result(Problem const& problem) : rig{problem.rig}, inertial_state{problem.inertial_state} {
             for (auto const& [camera_id, camera] : problem.cameras) {
                 camera_states.emplace(camera_id, camera.state);
             }
@@ -114,12 +98,14 @@ struct Continuous {
 
     static Problem MultiCamProblem(AssetId const& cam0_id, spline::Se3Spline const& rig_spline,
                                    Array6d const& se3_imu_rig, Vector3d const& gravity_w,
-                                   std::vector<CameraProblemInput> const& cams);
+                                   std::vector<CameraProblemInput> const& cams, ImuSamples const& imu_data);
 
     // TODO(Jack): Rename from cam to rig?
+    // TODO THIS SHOULD BE REMOVED ONCE WE STOP DOING SINGLE CAM PROBLEMS!
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                     TargetSamples const& targets, spline::Se3Spline const& rig_spline,
-                                    Array6d const& se3_imu_rig, Vector3d const& gravity_w, AssetId camera_id);
+                                    Array6d const& se3_imu_rig, Vector3d const& gravity_w, AssetId camera_id,
+                                    ImuSamples const& imu_data);
 
    private:
     static void AddCamera(CameraProblemInput const& cam, Problem& problem);
