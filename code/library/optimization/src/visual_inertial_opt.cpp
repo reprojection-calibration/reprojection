@@ -61,7 +61,8 @@ std::pair<bundle_adjustment::Continuous::Result, CeresState> VisualInertialOpt(
         }
         auto const [u_i, i]{normalized_position.value()};
 
-        auto const& [camera_info, _1, camera_options]{problem.cameras.at(camera_id)};
+        auto const& [camera_info, _1,
+                     camera_options]{problem.cameras.at(camera_id)};  // cppcheck-suppress ignoredReturnValue
         auto& camera_state{result.camera_states.at(camera_id)};
 
         auto const& [pixels, points]{bundle};

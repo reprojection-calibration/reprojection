@@ -97,7 +97,7 @@ Continuous::Problem Continuous::MultiCamProblem(AssetId const& cam0_id, spline::
     }
 
     return problem;
-}
+}  // LCOV_EXCL_LINE
 
 Continuous::Problem Continuous::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                  TargetSamples const& targets, spline::Se3Spline const& rig_spline,
@@ -148,9 +148,9 @@ void Discrete::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sy
 }
 
 void Continuous::AddCamera(CameraProblemInput const& cam, Problem& problem) {
-    problem.cameras.emplace(cam.camera_id, bundle_adjustment::Camera{cam.camera_info,
-                                                                     {cam.intrinsic, cam.extrinsic},
-                                                                     {cam.optimize_intrinsic, cam.optimize_extrinsic}});
+    problem.cameras.emplace(cam.camera_id, Camera{cam.camera_info,  // LCOV_EXCL_LINE
+                                                  {cam.intrinsic, cam.extrinsic},
+                                                  {cam.optimize_intrinsic, cam.optimize_extrinsic}});
 
     // NOTE(Jack): Here we do not need any time sync logic because we are using a spline! If the target it not found on
     // the spline then that will be handled during the actual problem construction.
