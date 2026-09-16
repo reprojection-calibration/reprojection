@@ -90,7 +90,8 @@ Discrete::Problem Discrete::SingleFrameProblem(CameraInfo const& camera_info, In
 
 VisualInertial::Problem VisualInertial::MultiCamProblem(AssetId const& cam0_id, spline::Se3Spline const& rig_spline,
                                                         Array6d const& se3_imu_rig, Vector3d const& gravity_w,
-                                                        std::vector<CameraProblemInput> const& cams, ImuSamples const& imu_data) {
+                                                        std::vector<CameraProblemInput> const& cams,
+                                                        ImuSamples const& imu_data) {
     Problem problem{cam0_id, rig_spline, se3_imu_rig, gravity_w, imu_data};
     for (auto const& cam_i : cams) {
         AddCamera(cam_i, problem);
