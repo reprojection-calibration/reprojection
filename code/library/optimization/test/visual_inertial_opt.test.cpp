@@ -88,7 +88,7 @@ TEST(OptimizationVisualInertialOpt, TestReprojectionErrorSpline) {
     EXPECT_EQ(std::size(residuals), 1);
     auto const& error{residuals[0]};
     EXPECT_EQ(error.camera_id, camera_id);
-    EXPECT_EQ(error.timestamp_ns, timestamp_ns);
+    EXPECT_EQ(error.sample_timestamp_ns, timestamp_ns);
     EXPECT_TRUE(error.value.isApprox(gt_residuals)) << "Result:\n"
                                                     << error.value.transpose() << "\nexpected result:\n"
                                                     << gt_residuals.transpose();

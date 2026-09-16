@@ -40,7 +40,7 @@ void PoseInit::Execute(StepId step_id, SqlitePtr const db) const {
 
     database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
     auto const errors{optimization::EvaluateResiduals(problem)};
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, errors);
+    database::ReprojectionErrorsInsert(db.get(), step_id, {{camera_id_, targets_id_}}, errors);
 
     // TODO(Jack): That we log the problem here is a little confusing as it is not really a problem but a result, but I
     // think it gives all the information the user could possibly want. But I think there exists a better naming or

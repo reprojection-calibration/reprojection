@@ -41,6 +41,8 @@ Hash VisualInertialOpt::CacheKey() const {
                              gravity_);
 }
 
+// TODO(Jack): There is really no reason for us to limit us here to only passing the cam0 targets. We should really
+// consider this a calibration to the entire stereo rig we optimized before. Assuming we have a stereo rig of course!
 void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::VisualInertialOpt(
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};
@@ -62,7 +64,7 @@ void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     // here like we do for the regular bundle adjustment.
     transforms::RigState const rig_state{cam_id_, ba_problem.rig_poses, transforms::Extrinsics{{optimized_extrinsic}}};
     database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
-    database::ReprojectionErrorsInsert(db.get(), step_id, targets_id_, residuals);
+    database::ReprojectionErrorsInsert(db.get(), step_id, {{cam_id_, targets_id_}}, residuals);
 
     // Diagnostic output - imu errors
     ImuErrors const imu_errors{

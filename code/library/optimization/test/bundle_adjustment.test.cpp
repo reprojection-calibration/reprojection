@@ -202,7 +202,7 @@ TEST_F(BaFixture, TestReprojectionError) {
     // There is only one value so we hardcode index into the 0 spot. Does not scale but works for the test!
     auto const& residual{residuals[0]};
     EXPECT_EQ(residual.camera_id, camera_id_);
-    EXPECT_EQ(residual.timestamp_ns, timestamp_ns);
+    EXPECT_EQ(residual.sample_timestamp_ns, timestamp_ns);
     EXPECT_TRUE(residual.value.isApprox(gt_residuals)) << "Result:\n"
                                                        << residual.value.transpose() << "\nexpected result:\n"
                                                        << gt_residuals.transpose();

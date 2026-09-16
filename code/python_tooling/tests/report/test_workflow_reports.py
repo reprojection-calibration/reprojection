@@ -64,7 +64,7 @@ class TestWorkflowReports(unittest.TestCase):
                     step_id=20,
                     source_step_id=10,
                     asset_id=1,
-                    timestamp_ns=100,
+                    sample_timestamp_ns=100,
                     data=[[3, 4]],
                 ),
             ]

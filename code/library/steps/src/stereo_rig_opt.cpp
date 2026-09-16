@@ -23,9 +23,10 @@ StereoRigOpt::StereoRigOpt(AssetId const cam0_id, std::vector<CamStageIds> const
     : cam0_id_{cam0_id}, num_threads_{num_threads}, approx_sync_delta_ns_{approx_sync_delta_ns} {
     ba_input_.reserve(std::size(cams));
     for (auto const& cam_i : cams) {
+        cam_target_ids_.emplace(cam_i.asset_id, cam_i.targets_id);
+
         bool const is_reference_cam{cam_i.asset_id == cam0_id_};
         if (is_reference_cam) {
-            cam0_targets_id_ = cam_i.targets_id;
             rig_poses_ = database::CameraPosesSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id);
         }
 
@@ -63,11 +64,11 @@ void StereoRigOpt::Execute(StepId step_id, SqlitePtr const db) const {
     Ba::Problem const problem{Ba::MultiCamProblem(cam0_id_, rig_poses_, ba_input_, approx_sync_delta_ns_)};
     auto const [result, ceres_state]{Ba::Solve(problem, num_threads_)};
 
-    database::RigStateInsert(db.get(), step_id, cam0_targets_id_, optimization::ToRigState(result));
+    database::RigStateInsert(db.get(), step_id, cam_target_ids_.at(cam0_id_), optimization::ToRigState(result));
 
-    // TODO(Jack): As we are basically just doing another bundle adjustment here we should also write the reprojection
-    // errors! The only problem is that the current reprojection error database interface does not handle the new rig
-    // idea.
+    Ba::Problem const optimized_problem{problem, result.rig_poses, result.camera_states};
+    auto const errors{optimization::EvaluateResiduals(optimized_problem)};
+    database::ReprojectionErrorsInsert(db.get(), step_id, cam_target_ids_, errors);
 
     log->info("{{{}, 'problem': {}}}}}", StepLogInfo{Type(), step_id}, problem);
     log->info("{{{}, 'result': {}, 'solver_summary': {}}}}}", StepLogInfo{Type(), step_id}, result,

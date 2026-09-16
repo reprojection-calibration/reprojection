@@ -183,10 +183,7 @@ std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const
             delete cost_function;
         }
 
-        // NOTE(Jack): Here you see clearly how the observation was matched to the rig pose via the "frame" timestamp
-        // (i.e. the approximate synchronization) but the output is saved out to the database under the original
-        // "sample" timestamp so that the foreign key relationships are preserved.
-        errors.push_back({camera_id, sample_timestamp_ns, residuals_i});
+        errors.push_back({camera_id, sample_timestamp_ns, frame_timestamp_ns, residuals_i});
     }
 
     return errors;

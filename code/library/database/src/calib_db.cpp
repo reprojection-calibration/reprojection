@@ -520,25 +520,29 @@ std::expected<Intrinsic, std::string> IntrinsicSelect(sqlite3* const db, StepId 
     }
 }  // LCOV_EXCL_LINE
 
-void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, StepId const source_step_id,
+void ReprojectionErrorsInsert(sqlite3* const db, StepId const step_id, std::map<AssetId, StepId> const& cam_target_ids,
                               std::vector<ReprojectionError> const& data) {
-    auto const binder{[step_id, source_step_id](sqlite3_stmt* const stmt, auto const& data_i) {
-        auto const& [asset_id, timestamp_ns, reprojection_error] = data_i;
+    auto const binder{[step_id, cam_target_ids](sqlite3_stmt* const stmt, auto const& data_i) {
+        auto const& [asset_id, sample_timestamp_ns, frame_timestamp_ns, reprojection_error] = data_i;
 
         protobuf_serialization::ArrayX2dProto const serialized{Serialize(reprojection_error)};
         std::string buffer;
         if (not serialized.SerializeToString(&buffer)) {
-            throw std::runtime_error(  // LCOV_EXCL_LINE
-                std::format("ArrayX2dProto.SerializeToString() failed: step_id '{}', source_step_id '{}', "
-                            "asset_id '{}', timestamp_ns '{}'",
-                            step_id.value, source_step_id.value, asset_id.value, timestamp_ns));  // LCOV_EXCL_LINE
+            // LCOV_EXCL_START
+            throw std::runtime_error(
+                std::format("ArrayX2dProto.SerializeToString() failed: 'step_id' {}, 'source_step_id' {}, "
+                            "'asset_id' {}, 'sample_timestamp_ns' {}, 'frame_timestamp_ns' {}.",
+                            step_id.value, cam_target_ids.at(asset_id).value, asset_id.value, sample_timestamp_ns,
+                            frame_timestamp_ns));
+            // LCOV_EXCL_STOP
         }
 
         Bind(stmt, 1, step_id.value);
-        Bind(stmt, 2, source_step_id.value);
+        Bind(stmt, 2, cam_target_ids.at(asset_id).value);
         Bind(stmt, 3, asset_id.value);
-        Bind(stmt, 4, timestamp_ns);
-        BindBlob(stmt, 5, std::as_bytes(std::span{buffer}));
+        Bind(stmt, 4, sample_timestamp_ns);
+        Bind(stmt, 5, frame_timestamp_ns);
+        BindBlob(stmt, 6, std::as_bytes(std::span{buffer}));
     }};
 
     BatchExecuteStatement(sql_statements::reprojection_errors_insert, data, binder, db);
