@@ -108,35 +108,30 @@ std::pair<bundle_adjustment::VisualInertial::Result, CeresState> VisualInertialO
 }
 
 // NOTE(Jack): We build the canonical bundle adjustment problem here ONLY so we can use the standard bundle adjustment
-// reprojection error calculation. We never optimized this problem from the spline data directly.
-// NOTE(Jack): I think there is something nice about using the same exact logic from the optimization (i.e. cost
-// functions) when calculating an optimization's residuals. That being said we eliminated a lot of code duplication by
-// just using the spline.Evaluate() interface and filling out the canonical bundle adjustment problem here.
-bundle_adjustment::Discrete::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                                            TargetSamples const& targets,
-                                                            spline::Se3Spline const& spline_w_co,
-                                                            AssetId const camera_id) {
-    // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
-    bundle_adjustment::Camera const camera{camera_info, bundle_adjustment::CameraState{intrinsic, Array6d::Zero()}, {}};
-
-    // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
-    // to just check once when we actually construct the problem?
+// reprojection error calculation.
+// NOTE(Jack): There is something nice about using the same exact logic from the optimization (i.e. cost functions) when
+// calculating an optimization's residuals. That being said we eliminated a lot of code duplication by just using the
+// spline.Evaluate() interface and filling out the canonical bundle adjustment problem here.
+bundle_adjustment::Discrete::Problem ToBaProblem(bundle_adjustment::VisualInertial::Problem const& problem) {
+    // NOTE(Jack): Something actually really important is happening here that is a result of the continuous spline
+    // representation. And that is that observations which maybe did not have a matching discrete frame, and therefore
+    // would have been ignored, can be handled here because the spline can interpolate the pose for any "on spline"
+    // time. Note that this will be the rig frame pose and you will need the extrinsic to get it into the actualy camera
+    // frame the target observation comes from.
     Frames frames;
-    std::vector<bundle_adjustment::Observation> observations;
-    for (auto const& [timestamp_ns, target] : targets) {
-        if (auto const tf_w_co{spline_w_co.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)}) {
-            // Inverse the spline pose to put it into the classic bundle adjustment friendly convention of transforming
-            // points from the world into the camera.
+    for (auto const& [_, sample_timestamp_ns, _1, target] : problem.observations) {
+        if (auto const tf_w_co{problem.rig.spline.Evaluate(sample_timestamp_ns, spline::DerivativeOrder::Null)}) {
+            // NOTE(Jack): Inverse the spline pose to put it into the classic bundle adjustment friendly convention of
+            // transforming points from the world into the camera.
             Array6d const tf_co_w{geometry::InverseTransform<double>(*tf_w_co)};
-            frames.insert({timestamp_ns, {tf_co_w}});
+            // NOTE(Jack): map.insert() will NOT update the value if one already exists. So if you have exact matching
+            // timestamps (i.e. a perfectly synced stereo camera) then only the first spline interpolation will be
+            // added. That is fine because at any one timestamp the rig pose has to be the same!
+            frames.insert({sample_timestamp_ns, {tf_co_w}});
         }
-
-        // NOTE(Jack): Same as for the non-spline single camera problems - the data is by its very nature
-        // "synchronized", therefore we use the same timestamp for both observation timestamps.
-        observations.push_back({camera_id, timestamp_ns, timestamp_ns, target.bundle});
     }
 
-    return bundle_adjustment::Discrete::Problem{camera_id, frames, {{camera_id, camera}}, observations};
+    return bundle_adjustment::Discrete::Problem{problem.rig.asset_id, frames, problem.cameras, problem.observations};
 }
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,

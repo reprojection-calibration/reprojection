@@ -20,6 +20,9 @@ auto const log{logging::Get("steps")};
 
 }
 
+// TODO(Jack): Do we actually want to maybe use all cameras to initialize the spline? That might help us cover some
+// blind spots if we loose tracking with one camera. Using the known extrinsics we can ge the rig pose at every cameras
+// timestamps that is available. If measurements are duplicated we just take the first one.
 SplineInit::SplineInit(CamStageIds const& cam, SqlitePtr const db)
     : camera_id_{cam.asset_id},
       // ERROR(Jack): Am I crazy or should I not be using the optimized bundle adjustment poses and not the
@@ -58,7 +61,7 @@ void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
     database::ControlPointsInsert(db.get(), step_id, camera_id_, spline.ControlPoints());
     database::SplineInfoInsert(db.get(), step_id, camera_id_, spline.GetTimeHandler());
 
-    auto const ba_problem{optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, spline, camera_id_)};
+    auto const ba_problem{optimization::ToBaProblem(camera_info_, intrinsic_, targets_, spline, camera_id_)};
     auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig.frames);
