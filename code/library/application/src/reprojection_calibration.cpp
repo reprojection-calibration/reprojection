@@ -192,11 +192,9 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         steps::VisualInertialOpt const visual_inertial_opt_step{imu_id,
                                                                 imu_data_id,
                                                                 cam0.asset_id,
+                                                                cam_stages,
                                                                 spline_init_id,
                                                                 visual_inertial_init_id,
-                                                                cam0.targets_id,
-                                                                cam0.camera_info_id,
-                                                                cam0.bundle_adjustment_id,
                                                                 context.application.threads,
                                                                 db};
         StepId const visual_inertial_opt_id{

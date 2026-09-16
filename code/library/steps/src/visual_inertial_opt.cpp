@@ -79,15 +79,14 @@ void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
 
     // Diagnostic output - reprojection errors
     VisualInertial::Problem const optimized_problem{problem, result.rig, result.inertial_state, result.camera_states};
-    auto const ba_problem{
-        optimization::ToBaProblem(optimized_problem)};
+    auto const ba_problem{optimization::ToBaProblem(optimized_problem)};
     auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
     // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
     // here like we do for the regular bundle adjustment.
     transforms::RigState const rig_state{cam0_id_, ba_problem.rig.frames, transforms::Extrinsics{{extrinsic_imu_rig}}};
-    database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
-    database::ReprojectionErrorsInsert(db.get(), step_id, {{cam0_id_, targets_id_}}, residuals);
+    database::RigStateInsert(db.get(), step_id, cam_target_ids_.at(cam0_id_), rig_state);
+    database::ReprojectionErrorsInsert(db.get(), step_id, cam_target_ids_, residuals);
 
     // Diagnostic output - imu errors
     ImuErrors const imu_errors{optimization::EvaluateImuError(imu_data_, extrinsic_imu_rig,

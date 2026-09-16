@@ -112,7 +112,7 @@ struct VisualInertial {
                                    std::vector<CameraProblemInput> const& cams, ImuSamples const& imu_data);
 
     // TODO(Jack): Rename from cam to rig?
-    // TODO THIS SHOULD BE REMOVED ONCE WE STOP DOING SINGLE CAM PROBLEMS!
+    // TODO(Jack): I think this is only used for testing! Can we refactor this away?
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                     TargetSamples const& targets, spline::Se3Spline const& rig_spline,
                                     Array6d const& se3_imu_rig, Vector3d const& gravity_w, AssetId camera_id,

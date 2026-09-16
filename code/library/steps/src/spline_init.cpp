@@ -61,7 +61,10 @@ void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
     database::ControlPointsInsert(db.get(), step_id, camera_id_, spline.ControlPoints());
     database::SplineInfoInsert(db.get(), step_id, camera_id_, spline.GetTimeHandler());
 
-    auto const ba_problem{optimization::ToBaProblem(camera_info_, intrinsic_, targets_, spline, camera_id_)};
+    // TODO NAMESPACE!
+    auto const vi_problem{optimization::bundle_adjustment::VisualInertial::SingleCamProblem(
+        camera_info_, intrinsic_, targets_, spline, Array6d::Zero(), Array3d::Zero(), camera_id_, {})};
+    auto const ba_problem{optimization::ToBaProblem(vi_problem)};
     auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig.frames);

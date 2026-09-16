@@ -80,8 +80,12 @@ TEST(OptimizationVisualInertialOpt, TestReprojectionErrorSpline) {
     control_points << Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero(), Vector6d::Zero();
     spline::Se3Spline const spline{control_points, {0, 1}};
 
+    // TODO NAMESPACE!
+    auto const vi_problem{optimization::bundle_adjustment::VisualInertial::SingleCamProblem(
+        camera_info, intrinsic, targets, spline, Array6d::Zero(), Array3d::Zero(), camera_id, {})};
+
     // Build the problem and calculate the residuals!
-    auto const ba_problem{optimization::ToBaProblem(camera_info, intrinsic, targets, spline, camera_id)};
+    auto const ba_problem{optimization::ToBaProblem(vi_problem)};
     auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
     EXPECT_EQ(std::size(ba_problem.rig.frames), 1);
