@@ -27,7 +27,7 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
       spline_{std::make_unique<spline::Se3Spline>(
           database::ControlPointsSelect(db.get(), spline_id, cam_id),
           ValueOrExit(database::SplineInfoSelect(db.get(), spline_id, cam_id), log))},
-      extrinsic_{ValueOrExit(database::ExtrinsicSelect(db.get(), extrinsic_init_id, imu_id_, cam_id), log)},
+      extrinsic_imu_rig_{ValueOrExit(database::ExtrinsicSelect(db.get(), extrinsic_init_id, imu_id, cam_id), log)},
       gravity_{ValueOrExit(database::GravitySelect(db.get(), extrinsic_init_id), log)},
       targets_id_{targets_id},
       targets_{database::TargetsSelect(db.get(), targets_id, cam_id)},
@@ -37,18 +37,20 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
 
 Hash VisualInertialOpt::CacheKey() const {
     return hashing::HashArgs(camera_info_, targets_, intrinsic_, imu_data_, spline_->ControlPoints(),
-                             spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_, extrinsic_,
-                             gravity_);
+                             spline_->GetTimeHandler().t0_ns_, spline_->GetTimeHandler().delta_t_ns_,
+                             extrinsic_imu_rig_, gravity_);
 }
 
 // TODO(Jack): There is really no reason for us to limit us here to only passing the cam0 targets. We should really
 // consider this a calibration to the entire stereo rig we optimized before. Assuming we have a stereo rig of course!
 void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    auto const [spline, extrinsic, gravity, ceres_state]{optimization::VisualInertialOpt(
-        imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};
+    auto const [spline, se3_imu_rig, gravity, ceres_state]{optimization::VisualInertialOpt(
+        imu_data_, *spline_, extrinsic_imu_rig_.se3_a_b, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};
 
+    // TOOD(Jack): Should we add a constructor/factory that just lets us update the se3 part?
+    Extrinsic const extrinsic_imu_rig{imu_id_, cam_id_, se3_imu_rig};
     log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}], 'solver_summary': {}}}", StepLogInfo{Type(), step_id},
-              extrinsic, fmt::join(gravity, ", "), ceres_state.solver_summary);
+              extrinsic_imu_rig, fmt::join(gravity, ", "), ceres_state.solver_summary);
 
     database::SplineInfoInsert(db.get(), step_id, cam_id_, spline.GetTimeHandler());
     database::ControlPointsInsert(db.get(), step_id, cam_id_, spline.ControlPoints());
@@ -60,12 +62,12 @@ void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
 
     // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
     // here like we do for the regular bundle adjustment.
-    transforms::RigState const rig_state{cam_id_, ba_problem.rig_poses, transforms::Extrinsics{{extrinsic}}};
+    transforms::RigState const rig_state{cam_id_, ba_problem.rig_poses, transforms::Extrinsics{{extrinsic_imu_rig}}};
     database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
     database::ReprojectionErrorsInsert(db.get(), step_id, {{cam_id_, targets_id_}}, residuals);
 
     // Diagnostic output - imu errors
-    ImuErrors const imu_errors{optimization::EvaluateImuError(imu_data_, extrinsic, gravity, spline)};
+    ImuErrors const imu_errors{optimization::EvaluateImuError(imu_data_, extrinsic_imu_rig, gravity, spline)};
     database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, imu_errors);
 }
 

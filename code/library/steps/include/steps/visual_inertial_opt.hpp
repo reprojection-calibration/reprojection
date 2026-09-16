@@ -30,7 +30,7 @@ struct VisualInertialOpt {
     ImuSamples imu_data_;
     AssetId cam_id_;
     std::unique_ptr<spline::Se3Spline> spline_;
-    Extrinsic extrinsic_;
+    Extrinsic extrinsic_imu_rig_;
     Vector3d gravity_;
     StepId targets_id_;
     TargetSamples targets_;

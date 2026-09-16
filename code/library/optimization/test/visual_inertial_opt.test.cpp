@@ -37,15 +37,15 @@ TEST(OptimizationVisualInertialOpt, TestVisualInertialOpt) {
     // optimizes the spline to have minimum energy. Constraints like that might introduce errors elsewhere as we do not
     // handle the relative weighting between these things in any intelligent or principled manner. For now these test
     // values are close enough and serve as the canary in the coal mine :)
-    Extrinsic const initial_extrinsic{AssetId{1}, AssetId{2},
-                                      Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}};
+    Array6d const initial_se3_imu_rig{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949};
     Vector3d const initial_gravity{Vector3d{-0.212548, -0.293729, 9.79995}};
 
-    auto const [_1, extrinsic, gravity, ceres_state]{optimization::VisualInertialOpt(
-        imu_data, spline_w_co, initial_extrinsic, initial_gravity, camera_info, targets, {tu::pinhole_intrinsics}, 1)};
+    auto const [_1, se3_imu_rig, gravity, ceres_state]{
+        optimization::VisualInertialOpt(imu_data, spline_w_co, initial_se3_imu_rig, initial_gravity, camera_info,
+                                        targets, {tu::pinhole_intrinsics}, 1)};
 
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
-    EXPECT_TRUE(extrinsic.se3_a_b.isApprox(initial_extrinsic.se3_a_b, 1e-2));
+    EXPECT_TRUE(se3_imu_rig.isApprox(initial_se3_imu_rig, 1e-2));
     EXPECT_TRUE(gravity.isApprox(initial_gravity, 1e-2));
 }
 

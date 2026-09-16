@@ -15,8 +15,8 @@ namespace reprojection::optimization {
 
 using Ba = BundleAdjustment;
 
-std::tuple<spline::Se3Spline, Extrinsic, Vector3d, CeresState> VisualInertialOpt(
-    ImuSamples const& imu_data, spline::Se3Spline spline, Extrinsic extrinsic, Vector3d gravity,
+std::tuple<spline::Se3Spline, Array6d, Vector3d, CeresState> VisualInertialOpt(
+    ImuSamples const& imu_data, spline::Se3Spline spline, Array6d se3_imu_rig, Vector3d gravity,
     CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic, int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY, num_threads};
@@ -36,7 +36,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d, CeresState> VisualInertialOpt
         ceres::CostFunction* const gyroscope_cost_function{cost_functions::RigidBodyAngularVelocity::Create(
             imu_data.at(timestamp_ns).angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
         problem.AddResidualBlock(gyroscope_cost_function, nullptr,  //
-                                 extrinsic.se3_a_b.data(),          //
+                                 se3_imu_rig.data(),                //
                                  spline.ControlPoint(i),            //
                                  spline.ControlPoint(i + 1),        //
                                  spline.ControlPoint(i + 2),        //
@@ -45,7 +45,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d, CeresState> VisualInertialOpt
         ceres::CostFunction* const accelerometer_cost_function{cost_functions::RigidBodyLinearAcceleration::Create(
             imu_data.at(timestamp_ns).linear_acceleration, u_i, spline.GetTimeHandler().delta_t_ns_)};
         problem.AddResidualBlock(accelerometer_cost_function, nullptr,  //
-                                 extrinsic.se3_a_b.data(),              //
+                                 se3_imu_rig.data(),                    //
                                  gravity.data(),                        //
                                  spline.ControlPoint(i),                //
                                  spline.ControlPoint(i + 1),            //
@@ -95,7 +95,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d, CeresState> VisualInertialOpt
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    return {spline, extrinsic, gravity, ceres_state};
+    return {spline, se3_imu_rig, gravity, ceres_state};
 }
 
 // NOTE(Jack): We build the canonical bundle adjustment problem here ONLY so we can use the standard bundle adjustment
