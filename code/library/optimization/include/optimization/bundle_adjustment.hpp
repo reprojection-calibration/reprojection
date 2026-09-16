@@ -77,7 +77,11 @@ struct VisualInertial {
         // and split definitions. It got messy so I decided just to pass the args directly for now.
         Problem(Problem const& problem, ContinuousRig const& _rig, InertialState const& _inertial_state,
                 std::map<AssetId, CameraState> const& camera_states)
-            : rig{_rig}, inertial_state{_inertial_state}, cameras{problem.cameras} {
+            : rig{_rig},
+              inertial_state{_inertial_state},
+              cameras{problem.cameras},
+              observations{problem.observations},
+              imu_data{problem.imu_data} {
             for (auto& [camera_id, camera] : cameras) {
                 camera.state = camera_states.at(camera_id);
             }
