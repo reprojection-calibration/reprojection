@@ -16,22 +16,18 @@ namespace reprojection::optimization {
 using Ba = BundleAdjustment;
 
 std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
-    ImuSamples const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
-    Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic,
-    int const num_threads) {
+    ImuSamples const& imu_data, spline::Se3Spline spline, Extrinsic extrinsic, Vector3d gravity,
+    CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic, int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY};
     ceres_state.solver_options.num_threads = num_threads;
-    ceres::Problem problem{ceres_state.problem_options};
 
-    spline::Se3Spline optimized_spline{initial_spline};
-    Extrinsic optimized_extrinsic{initial_extrinsic};
-    Vector3d optimized_gravity{initial_gravity};
+    ceres::Problem problem{ceres_state.problem_options};
 
     // Imu residuals
     for (auto const timestamp_ns : imu_data | std::views::keys) {
         auto const normalized_position{
-            optimized_spline.GetTimeHandler().SplinePosition(timestamp_ns, optimized_spline.ControlPoints().cols())};
+            spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
         if (not normalized_position.has_value()) {
             continue;  // LCOV_EXCL_LINE
         }
@@ -40,27 +36,25 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
         // WARN(Jack): We pass in the pointer to the full tf and control points but the angular velocity cost function
         // only uses the top three rows of all. Is there a better design?
         ceres::CostFunction* const gyroscope_cost_function{cost_functions::RigidBodyAngularVelocity::Create(
-            imu_data.at(timestamp_ns).angular_velocity, u_i, optimized_spline.GetTimeHandler().delta_t_ns_)};
-        problem.AddResidualBlock(gyroscope_cost_function, nullptr, optimized_extrinsic.se3_a_b.data(),
-                                 optimized_spline.MutableControlPoints().col(i).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 1).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 2).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 3).data());
+            imu_data.at(timestamp_ns).angular_velocity, u_i, spline.GetTimeHandler().delta_t_ns_)};
+        problem.AddResidualBlock(
+            gyroscope_cost_function, nullptr, extrinsic.se3_a_b.data(), spline.MutableControlPoints().col(i).data(),
+            spline.MutableControlPoints().col(i + 1).data(), spline.MutableControlPoints().col(i + 2).data(),
+            spline.MutableControlPoints().col(i + 3).data());
 
         ceres::CostFunction* const accelerometer_cost_function{cost_functions::RigidBodyLinearAcceleration::Create(
-            imu_data.at(timestamp_ns).linear_acceleration, u_i, optimized_spline.GetTimeHandler().delta_t_ns_)};
-        problem.AddResidualBlock(accelerometer_cost_function, nullptr, optimized_extrinsic.se3_a_b.data(),
-                                 optimized_gravity.data(), optimized_spline.MutableControlPoints().col(i).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 1).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 2).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 3).data());
+            imu_data.at(timestamp_ns).linear_acceleration, u_i, spline.GetTimeHandler().delta_t_ns_)};
+        problem.AddResidualBlock(
+            accelerometer_cost_function, nullptr, extrinsic.se3_a_b.data(), gravity.data(),
+            spline.MutableControlPoints().col(i).data(), spline.MutableControlPoints().col(i + 1).data(),
+            spline.MutableControlPoints().col(i + 2).data(), spline.MutableControlPoints().col(i + 3).data());
     }
 
     // Reprojection residuals
     Intrinsic intrinsic_x{intrinsic};
     for (auto const timestamp_ns : targets | std::views::keys) {
         auto const normalized_position{
-            optimized_spline.GetTimeHandler().SplinePosition(timestamp_ns, optimized_spline.ControlPoints().cols())};
+            spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.ControlPoints().cols())};
         if (not normalized_position.has_value()) {
             continue;  // LCOV_EXCL_LINE
         }
@@ -69,33 +63,33 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
         // TODO(Jack): Copy and pasted from reprojectiom error below
         auto const& [pixels, points]{targets.at(timestamp_ns).bundle};
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
-            ceres::CostFunction* const cost_function{
-                cost_functions::Create(sensor.camera_model, sensor.bounds, pixels.row(j), points.row(j), u_i,
-                                       optimized_spline.GetTimeHandler().delta_t_ns_)};
+            ceres::CostFunction* const cost_function{cost_functions::Create(sensor.camera_model, sensor.bounds,
+                                                                            pixels.row(j), points.row(j), u_i,
+                                                                            spline.GetTimeHandler().delta_t_ns_)};
             // TODO(Jack): Should we also use robust loss here like we use for the stand alone bundle adjustment?
-            problem.AddResidualBlock(cost_function, nullptr, intrinsic_x.value.data(),
-                                     optimized_spline.MutableControlPoints().col(i).data(),
-                                     optimized_spline.MutableControlPoints().col(i + 1).data(),
-                                     optimized_spline.MutableControlPoints().col(i + 2).data(),
-                                     optimized_spline.MutableControlPoints().col(i + 3).data());
+            problem.AddResidualBlock(
+                cost_function, nullptr, intrinsic_x.value.data(), spline.MutableControlPoints().col(i).data(),
+                spline.MutableControlPoints().col(i + 1).data(), spline.MutableControlPoints().col(i + 2).data(),
+                spline.MutableControlPoints().col(i + 3).data());
         }
     }
 
     // Smoothness/minimum energy constraint
-    for (int i{0}; i < optimized_spline.Size() - 3; ++i) {
+    for (int i{0}; i < spline.Size() - 3; ++i) {
         ceres::CostFunction* const cost_function{cost_functions::SplineEnergy::Create(1)};
-        problem.AddResidualBlock(cost_function, nullptr, optimized_spline.MutableControlPoints().col(i).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 1).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 2).data(),
-                                 optimized_spline.MutableControlPoints().col(i + 3).data());
+        problem.AddResidualBlock(cost_function, nullptr, spline.MutableControlPoints().col(i).data(),
+                                 spline.MutableControlPoints().col(i + 1).data(),
+                                 spline.MutableControlPoints().col(i + 2).data(),
+                                 spline.MutableControlPoints().col(i + 3).data());
     }
 
     // This was already solved for in the bundle adjustment step, therefore I do not think there is a good reason to
     // further optimize it here.
     problem.SetParameterBlockConstant(intrinsic_x.value.data());
+
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    return {optimized_spline, optimized_extrinsic, optimized_gravity};
+    return {spline, extrinsic, gravity};
 }
 
 // NOTE(Jack): We build the canonical bundle adjustment problem here ONLY so we can use the standard bundle adjustment

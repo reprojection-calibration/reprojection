@@ -10,10 +10,11 @@ namespace reprojection::optimization {
 
 // TODO(Jack): This has way too many arguments... is that just how it is? Or a sign that we are missing a clean
 // abstraction?
-std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
-    ImuSamples const& imu_data, spline::Se3Spline const& initial_spline, Extrinsic const& initial_extrinsic,
-    Vector3d const& initial_gravity, CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic,
-    int num_threads);
+std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(ImuSamples const& imu_data,
+                                                                     spline::Se3Spline spline, Extrinsic extrinsic,
+                                                                     Vector3d gravity, CameraInfo const& sensor,
+                                                                     TargetSamples const& targets,
+                                                                     Intrinsic const& intrinsic, int num_threads);
 
 BundleAdjustment::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                  TargetSamples const& targets, spline::Se3Spline const& spline_w_co,
