@@ -15,7 +15,8 @@ namespace reprojection::steps {
 struct VisualInertialOpt {
     // TODO(Jack): Can we refactor this to take a CamStageIds struct to shorten this up a little?
     VisualInertialOpt(AssetId imu_id, StepId imu_data_id, AssetId cam0_id, std::vector<CamStageIds> const& cams,
-                      StepId spline_id, StepId extrinsic_init_id, int num_threads, SqlitePtr db);
+                      StepId spline_id, StepId vi_extrinsic_init_id, StepId stereo_extrinsic_init_id, int num_threads,
+                      SqlitePtr db);
 
     static StepType Type() { return StepType::VisualInertialOpt; }
 

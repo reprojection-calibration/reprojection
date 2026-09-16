@@ -20,7 +20,8 @@ using VisualInertial = optimization::bundle_adjustment::VisualInertial;
 
 VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data_id, AssetId const cam0_id,
                                      std::vector<CamStageIds> const& cams, StepId const spline_id,
-                                     StepId const extrinsic_init_id, int const num_threads, SqlitePtr const db)
+                                     StepId const vi_extrinsic_init_id, StepId const stereo_extrinsic_init_id,
+                                     int const num_threads, SqlitePtr const db)
     : imu_id_{imu_id},
       imu_data_id_{imu_data_id},
       imu_data_{database::ImuDataSelect(db.get(), imu_data_id, imu_id)},
@@ -28,8 +29,8 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
       spline_{std::make_unique<spline::Se3Spline>(
           database::ControlPointsSelect(db.get(), spline_id, cam0_id),
           ValueOrExit(database::SplineInfoSelect(db.get(), spline_id, cam0_id), log))},
-      extrinsic_imu_rig_{ValueOrExit(database::ExtrinsicSelect(db.get(), extrinsic_init_id, imu_id, cam0_id), log)},
-      gravity_{ValueOrExit(database::GravitySelect(db.get(), extrinsic_init_id), log)},
+      extrinsic_imu_rig_{ValueOrExit(database::ExtrinsicSelect(db.get(), vi_extrinsic_init_id, imu_id, cam0_id), log)},
+      gravity_{ValueOrExit(database::GravitySelect(db.get(), vi_extrinsic_init_id), log)},
       num_threads_{num_threads} {
     // TODO(Jack): This loading loop is copied almost verbatim (except the optimization boolean flags and frame
     // loading). Can we avoid the copy and paste?
@@ -43,7 +44,7 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
             ValueOrExit(database::IntrinsicSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id), log)};
         auto const targets{database::TargetsSelect(db.get(), cam_i.targets_id, cam_i.asset_id)};
         auto const extrinsic{
-            ValueOrExit(database::ExtrinsicSelect(db.get(), extrinsic_init_id, cam_i.asset_id, cam0_id_), log)};
+            ValueOrExit(database::ExtrinsicSelect(db.get(), stereo_extrinsic_init_id, cam_i.asset_id, cam0_id_), log)};
 
         ba_input_.emplace_back(optimization::CameraProblemInput{cam_i.asset_id, camera_info, intrinsic, targets,
                                                                 extrinsic.se3_a_b, false, false});

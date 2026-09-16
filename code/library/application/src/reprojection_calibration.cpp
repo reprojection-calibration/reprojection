@@ -148,6 +148,14 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     auto const& cam0{cam_stages.front()};
 
     bool const is_multicam{std::size(context.assets.cameras) > 1};
+
+    // ERROR(Jack): What happens if its a mono-camera setup and the stereo_rig_opt_id is never set??? We need to handle
+    // the identity case better!
+    // ERROR ERROR ERROR
+    // ERROR ERROR ERROR
+    // ERROR ERROR ERROR
+    // ERROR ERROR ERROR
+    StepId stereo_rig_opt_id{-1};
     if (is_multicam) {
         log->info("\033[35m{{'stage': 'multi_cam', 'assets': {}}}\033[0m", context.assets.cameras);
 
@@ -161,10 +169,9 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
                                                  context.application.threads,
                                                  context.application.approx_sync_delta_ns,
                                                  db};
-        StepId const stereo_rig_opt_id{RunStep<steps::StereoRigOpt>(context.workflow_id, stereo_rig_opt, db)};
+        stereo_rig_opt_id = RunStep<steps::StereoRigOpt>(context.workflow_id, stereo_rig_opt, db);
 
         // TODO(Jack): Should we be using the rig poses here for the cam-imu extrinsic calibration? I think so.
-        static_cast<void>(stereo_rig_opt_id);
     }
 
     // TODO(Jack): Find a way to get this to run in a unit test! I think we could do this with the data generation
@@ -195,6 +202,7 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
                                                                 cam_stages,
                                                                 spline_init_id,
                                                                 visual_inertial_init_id,
+                                                                stereo_rig_opt_id,
                                                                 context.application.threads,
                                                                 db};
         StepId const visual_inertial_opt_id{

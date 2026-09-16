@@ -24,7 +24,9 @@ class VisualInertialOptFixture : public StepTestFixture {
         imu_id_ = context_.assets.imu->id;  // Unprotected optional access!
         std::tie(imu_data_id_, spline_id_) = InsertImuSetup(cam_id_);
 
-        // NOTE(Jack): We need to insert both the imu-cam and cam-cam identity intrinsic under the same id.
+        // NOTE(Jack): We need to insert both the imu-cam and cam-cam extrinsic. In a real application one of these
+        // usually comes from the stereo init and another from the inertial init but here we just put them both under
+        // the same step id.
         extrinsic_init_id_ = InsertImuCamExtrinsic(imu_id_, cam_id_);
         database::StepCacheKeyUpdate(db_.get(), extrinsic_init_id_, "");
         InsertExtrinsic(cam_id_, cam_id_);
@@ -42,8 +44,8 @@ class VisualInertialOptFixture : public StepTestFixture {
 };
 
 TEST_F(VisualInertialOptFixture, TestVisualInertialOptStepRunner) {
-    steps::VisualInertialOpt const step{imu_id_,    imu_data_id_,       cam_id_, {stage_ids_},
-                                        spline_id_, extrinsic_init_id_, 1,       db_};
+    steps::VisualInertialOpt const step{
+        imu_id_, imu_data_id_, cam_id_, {stage_ids_}, spline_id_, extrinsic_init_id_, extrinsic_init_id_, 1, db_};
     StepId const step_id{RunStep<steps::VisualInertialOpt>(context_.workflow_id, step, db_)};
 
     auto const result{database::ExtrinsicSelect(db_.get(), step_id, imu_id_, cam_id_)};
@@ -56,8 +58,8 @@ TEST_F(VisualInertialOptFixture, TestVisualInertialOptStepRunner) {
 }
 
 TEST_F(VisualInertialOptFixture, TestVisualInertialOptStep) {
-    steps::VisualInertialOpt const step{imu_id_,    imu_data_id_,       cam_id_, {stage_ids_},
-                                        spline_id_, extrinsic_init_id_, 1,       db_};
+    steps::VisualInertialOpt const step{
+        imu_id_, imu_data_id_, cam_id_, {stage_ids_}, spline_id_, extrinsic_init_id_, extrinsic_init_id_, 1, db_};
 
     EXPECT_EQ(step.Type(), StepType::VisualInertialOpt);
     std::vector const gt_assets{imu_id_, cam_id_};

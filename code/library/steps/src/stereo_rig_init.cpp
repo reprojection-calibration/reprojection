@@ -41,8 +41,8 @@ void StereoRigInit::Execute(StepId step_id, SqlitePtr db) const {
     // little redundant but it then eliminates the need for special logic around the reference camera case.
     std::vector<Extrinsic> log_data;
     for (auto const& cam_a_id : cam_frames_ | std::views::keys) {
-        Array6d const se3_a_b{calibration::InitializeCamCamExtrinsic(cam_frames_.at(cam_a_id), cam_frames_.at(cam0_id_),
-                                                                     approx_sync_delta_ns_)};
+        Array6d const se3_a_b{calibration::StereoExtrinsicInit(cam_frames_.at(cam_a_id), cam_frames_.at(cam0_id_),
+                                                               approx_sync_delta_ns_)};
         Extrinsic const extrinsic_a_b{cam_a_id, cam0_id_, se3_a_b};
 
         database::ExtrinsicInsert(db.get(), step_id, extrinsic_a_b);

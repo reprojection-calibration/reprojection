@@ -117,7 +117,7 @@ Frames PoseInitialization(CameraInfo const& camera_info, TargetSamples const& ta
 // TODO(Jack): Do we need to do some sort of validation for the input frames? I.e. that they are not both empty or do
 // not have any synchronized matches? At this point I am not sure how we would express such a failure in the step, but
 // the lack of frames or lack of sync-ability is a very real risk.
-Array6d InitializeCamCamExtrinsic(Frames const& frames_a, Frames const& frames_b, uint64_t const approx_sync_delta_ns) {
+Array6d StereoExtrinsicInit(Frames const& frames_a, Frames const& frames_b, uint64_t const approx_sync_delta_ns) {
     auto const timestamps{frames_b | std::views::keys};
     std::set<uint64_t> remaining_b{std::cbegin(timestamps), std::cend(timestamps)};
 
