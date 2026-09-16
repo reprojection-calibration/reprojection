@@ -41,11 +41,12 @@ TEST(OptimizationVisualInertialOpt, TestVisualInertialOpt) {
                                       Vector6d{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949}};
     Vector3d const initial_gravity{Vector3d{-0.212548, -0.293729, 9.79995}};
 
-    auto const [_1, optimized_extrinsic, optimized_gravity]{optimization::VisualInertialOpt(
+    auto const [_1, extrinsic, gravity, ceres_state]{optimization::VisualInertialOpt(
         imu_data, spline_w_co, initial_extrinsic, initial_gravity, camera_info, targets, {tu::pinhole_intrinsics}, 1)};
 
-    EXPECT_TRUE(optimized_extrinsic.se3_a_b.isApprox(initial_extrinsic.se3_a_b, 1e-2));
-    EXPECT_TRUE(optimized_gravity.isApprox(initial_gravity, 1e-2));
+    EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
+    EXPECT_TRUE(extrinsic.se3_a_b.isApprox(initial_extrinsic.se3_a_b, 1e-2));
+    EXPECT_TRUE(gravity.isApprox(initial_gravity, 1e-2));
 }
 
 // See comments in TEST(OptimizationBundleAdjustment, TestEvaluateReprojectionResiduals) for context.

@@ -44,31 +44,28 @@ Hash VisualInertialOpt::CacheKey() const {
 // TODO(Jack): There is really no reason for us to limit us here to only passing the cam0 targets. We should really
 // consider this a calibration to the entire stereo rig we optimized before. Assuming we have a stereo rig of course!
 void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    auto const [optimized_spline, optimized_extrinsic, optimized_gravity]{optimization::VisualInertialOpt(
+    auto const [spline, extrinsic, gravity, ceres_state]{optimization::VisualInertialOpt(
         imu_data_, *spline_, extrinsic_, gravity_, camera_info_, targets_, intrinsic_, num_threads_)};
 
-    // TODO(Jack): We also need a way to log the final and initial costs!
-    log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}]}}", StepLogInfo{Type(), step_id}, optimized_extrinsic,
-              fmt::join(optimized_gravity, ", "));
+    log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}], 'solver_summary': {}}}", StepLogInfo{Type(), step_id},
+              extrinsic, fmt::join(gravity, ", "), ceres_state.solver_summary);
 
-    database::SplineInfoInsert(db.get(), step_id, cam_id_, optimized_spline.GetTimeHandler());
-    database::ControlPointsInsert(db.get(), step_id, cam_id_, optimized_spline.ControlPoints());
-    database::GravityInsert(db.get(), step_id, optimized_gravity);
+    database::SplineInfoInsert(db.get(), step_id, cam_id_, spline.GetTimeHandler());
+    database::ControlPointsInsert(db.get(), step_id, cam_id_, spline.ControlPoints());
+    database::GravityInsert(db.get(), step_id, gravity);
 
     // Diagnostic output - reprojection errors
-    auto const ba_problem{
-        optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, optimized_spline, cam_id_)};
+    auto const ba_problem{optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, spline, cam_id_)};
     auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 
     // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
     // here like we do for the regular bundle adjustment.
-    transforms::RigState const rig_state{cam_id_, ba_problem.rig_poses, transforms::Extrinsics{{optimized_extrinsic}}};
+    transforms::RigState const rig_state{cam_id_, ba_problem.rig_poses, transforms::Extrinsics{{extrinsic}}};
     database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
     database::ReprojectionErrorsInsert(db.get(), step_id, {{cam_id_, targets_id_}}, residuals);
 
     // Diagnostic output - imu errors
-    ImuErrors const imu_errors{
-        optimization::EvaluateImuError(imu_data_, optimized_extrinsic, optimized_gravity, optimized_spline)};
+    ImuErrors const imu_errors{optimization::EvaluateImuError(imu_data_, extrinsic, gravity, spline)};
     database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, imu_errors);
 }
 

@@ -15,11 +15,11 @@ namespace reprojection::optimization {
 
 using Ba = BundleAdjustment;
 
-std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
+std::tuple<spline::Se3Spline, Extrinsic, Vector3d, CeresState> VisualInertialOpt(
     ImuSamples const& imu_data, spline::Se3Spline spline, Extrinsic extrinsic, Vector3d gravity,
     CameraInfo const& sensor, TargetSamples const& targets, Intrinsic const& intrinsic, int const num_threads) {
     // TODO(Jack): What is the correct linear solver?
-    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY,num_threads};
+    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY, num_threads};
     ceres::Problem problem{ceres_state.problem_options};
 
     // Imu residuals
@@ -95,7 +95,7 @@ std::tuple<spline::Se3Spline, Extrinsic, Vector3d> VisualInertialOpt(
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    return {spline, extrinsic, gravity};
+    return {spline, extrinsic, gravity, ceres_state};
 }
 
 // NOTE(Jack): We build the canonical bundle adjustment problem here ONLY so we can use the standard bundle adjustment
