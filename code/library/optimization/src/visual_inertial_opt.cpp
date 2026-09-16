@@ -118,12 +118,12 @@ Ba::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic cons
                                    TargetSamples const& targets, spline::Se3Spline const& spline_w_co,
                                    AssetId const camera_id) {
     // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
-    Ba::Camera const camera{camera_info, Ba::CameraState{intrinsic, Array6d::Zero()}, {}};
+    bundle_adjustment::Camera const camera{camera_info, bundle_adjustment::CameraState{intrinsic, Array6d::Zero()}, {}};
 
     // TODO(Jack): Should we do any check that the frame times match all the target times? Or is that something we need
     // to just check once when we actually construct the problem?
     Frames frames;
-    std::vector<Ba::Observation> observations;
+    std::vector<bundle_adjustment::Observation> observations;
     for (auto const& [timestamp_ns, target] : targets) {
         if (auto const tf_w_co{spline_w_co.Evaluate(timestamp_ns, spline::DerivativeOrder::Null)}) {
             // Inverse the spline pose to put it into the classic bundle adjustment friendly convention of transforming

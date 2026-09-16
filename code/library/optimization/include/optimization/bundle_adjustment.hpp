@@ -1,5 +1,6 @@
 #pragma once
 
+#include "optimization/types.hpp"
 #include "spline/se3_spline.hpp"
 #include "transforms/rig_state.hpp"
 #include "types/calibration_types.hpp"
@@ -7,54 +8,12 @@
 
 namespace reprojection::optimization {
 
-// TODO(Jack): This is basically the data format that we need to do a bundle adjustment. As you can see it is highly
-// duplicated from the native bundle adjustment types and therefore I think we have some representation unification
-// coming in our future.
-struct CameraProblemInput {
-    AssetId camera_id;
-    CameraInfo camera_info;
-    Intrinsic intrinsic;
-    TargetSamples targets;
-
-    Array6d extrinsic{Array6d::Zero()};
-
-    bool optimize_intrinsic{false};
-    bool optimize_extrinsic{false};
-};
-
 struct BundleAdjustment {
-    struct CameraState {
-        Intrinsic intrinsic;
-        // TODO(Jack): Frame order convention! Should we use the extrinsic type here? One reason that we do not is that
-        // all the bundle adjustment extrinsics are with respect the reference rig asset. Therefore having the extrinsic
-        // type here would almost be duplicating information. This is not clear yet.
-        Array6d extrinsic;
-    };
-
-    struct CameraOptions {
-        bool optimize_intrinsic{false};
-        bool optimize_extrinsic{false};
-    };
-
-    struct Camera {
-        CameraInfo camera_info;
-        CameraState state;
-        CameraOptions options;
-    };
-
-    struct Observation {
-        AssetId camera_id;
-        // This is the original measurement timestamp which we need to keep so we can satisfy foreign key constraints.
-        uint64_t sample_timestamp_ns;
-        // This is the timestamp of the synchronized rig frame!
-        uint64_t frame_timestamp_ns;
-        Bundle value;
-    };
-
     struct Problem {
         // TODO DO WE STILL NEED THIS?
-        Problem(AssetId const _rig_frame_asset_id, Frames const& _rig_poses, std::map<AssetId, Camera> const& _cameras,
-                std::vector<Observation> const& _observations)
+        Problem(AssetId const _rig_frame_asset_id, Frames const& _rig_poses,
+                std::map<AssetId, bundle_adjustment::Camera> const& _cameras,
+                std::vector<bundle_adjustment::Observation> const& _observations)
             : rig_frame_asset_id{_rig_frame_asset_id},
               rig_poses{_rig_poses},
               cameras{_cameras},
@@ -64,7 +23,8 @@ struct BundleAdjustment {
             : rig_frame_asset_id{_rig_frame_asset_id}, rig_poses{_rig_poses} {}
 
         // Update a problem with the optimized parts.
-        Problem(Problem const& problem, Frames const& _rig_poses, std::map<AssetId, CameraState> const& camera_states)
+        Problem(Problem const& problem, Frames const& _rig_poses,
+                std::map<AssetId, bundle_adjustment::CameraState> const& camera_states)
             : rig_frame_asset_id{problem.rig_frame_asset_id},
               rig_poses{_rig_poses},
               cameras{problem.cameras},
@@ -76,8 +36,8 @@ struct BundleAdjustment {
 
         AssetId rig_frame_asset_id;
         Frames rig_poses;
-        std::map<AssetId, Camera> cameras;
-        std::vector<Observation> observations;
+        std::map<AssetId, bundle_adjustment::Camera> cameras;
+        std::vector<bundle_adjustment::Observation> observations;
     };
 
     // TODO WE NEED TO REFACTOR THE CLASS LAYOUTS! PUTTING THIS ALL IN ONE BA CLASS DOES NOT MAKE SENSE!
@@ -93,8 +53,8 @@ struct BundleAdjustment {
         spline::Se3Spline rig_spline;
         Array6d se3_imu_rig;
         Vector3d gravity_w;
-        std::map<AssetId, Camera> cameras;
-        std::vector<Observation> observations;
+        std::map<AssetId, bundle_adjustment::Camera> cameras;
+        std::vector<bundle_adjustment::Observation> observations;
     };
 
     struct Result {
@@ -106,12 +66,12 @@ struct BundleAdjustment {
         }
 
         Result(AssetId const& _rig_frame_asset_id, Frames const& _rig_poses,
-               std::map<AssetId, CameraState> const& _camera_states)
+               std::map<AssetId, bundle_adjustment::CameraState> const& _camera_states)
             : rig_frame_asset_id{_rig_frame_asset_id}, rig_poses{_rig_poses}, camera_states{_camera_states} {}
 
         AssetId rig_frame_asset_id;
         Frames rig_poses;
-        std::map<AssetId, CameraState> camera_states;
+        std::map<AssetId, bundle_adjustment::CameraState> camera_states;
     };
 
     // TODO clearly the spline, imu_rig extrinsic, and gravity form a vi ba relevant type.
@@ -120,7 +80,7 @@ struct BundleAdjustment {
         spline::Se3Spline rig_spline;
         Array6d se3_imu_rig;
         Vector3d gravity_w;
-        std::map<AssetId, CameraState> camera_states;
+        std::map<AssetId, bundle_adjustment::CameraState> camera_states;
 
         explicit ViResult(ViProblem const& problem)
             : rig_frame_asset_id{problem.rig_frame_asset_id},
@@ -155,8 +115,8 @@ struct BundleAdjustment {
 
     // TODO RENAME FROM CAM TO RIG ID?
     static ViProblem ViSingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                      TargetSamples const& targets, spline::Se3Spline const& rig_spline,
-                                      Array6d const& se3_imu_rig, Vector3d const& gravity_w, AssetId camera_id);
+                                        TargetSamples const& targets, spline::Se3Spline const& rig_spline,
+                                        Array6d const& se3_imu_rig, Vector3d const& gravity_w, AssetId camera_id);
 
    private:
     static void AddCamera(CameraProblemInput const& cam, uint64_t approx_sync_delta_ns, Problem& problem);

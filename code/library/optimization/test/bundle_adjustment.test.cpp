@@ -145,7 +145,8 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
 }
 
 TEST_F(BaFixture, TestToRigState) {
-    std::map<AssetId, Ba::CameraState> camera_states{{camera_id_, {intrinsic_, Array6d::Zero()}}};
+    std::map<AssetId, optimization::bundle_adjustment::CameraState> camera_states{
+        {camera_id_, {intrinsic_, Array6d::Zero()}}};
     Ba::Result data{camera_id_, frames_, camera_states};
 
     // Single camera case - a special case where the rig_frame_asset_id is the came as the only camera state present.

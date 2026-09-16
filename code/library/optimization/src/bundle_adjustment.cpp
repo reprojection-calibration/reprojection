@@ -120,9 +120,9 @@ BundleAdjustment::ViProblem BundleAdjustment::ViSingleCamProblem(
 // implement a more intricate "changing reference camera" problem construction logic. Maybe we are just missing the
 // abstraction to do that simply?
 void BundleAdjustment::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sync_delta_ns, Problem& problem) {
-    problem.cameras.emplace(cam.camera_id, Camera{cam.camera_info,  // LCOV_EXCL_LINE
-                                                  {cam.intrinsic, cam.extrinsic},
-                                                  {cam.optimize_intrinsic, cam.optimize_extrinsic}});
+    problem.cameras.emplace(cam.camera_id, bundle_adjustment::Camera{cam.camera_info,  // LCOV_EXCL_LINE
+                                                                     {cam.intrinsic, cam.extrinsic},
+                                                                     {cam.optimize_intrinsic, cam.optimize_extrinsic}});
 
     auto const timestamps{cam.targets | std::views::keys};
     std::set<uint64_t> remaining_targets{std::cbegin(timestamps), std::cend(timestamps)};
@@ -150,9 +150,9 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& cam, uint64_t const a
 }
 
 void BundleAdjustment::ViAddCamera(CameraProblemInput const& cam, ViProblem& problem) {
-    problem.cameras.emplace(
-        cam.camera_id,
-        Camera{cam.camera_info, {cam.intrinsic, cam.extrinsic}, {cam.optimize_intrinsic, cam.optimize_extrinsic}});
+    problem.cameras.emplace(cam.camera_id, bundle_adjustment::Camera{cam.camera_info,
+                                                                     {cam.intrinsic, cam.extrinsic},
+                                                                     {cam.optimize_intrinsic, cam.optimize_extrinsic}});
 
     // NOTE(Jack): Here we do not need any time sync logic because we are using a spline! If the target it not found on
     // the spline then that will be handled during the actual problem construction.
